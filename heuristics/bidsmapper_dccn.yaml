@@ -1,0 +1,135 @@
+# ------------------------------------------------------------------------------
+# Config file that maps the fields from the DCCN datasets to the
+# BIDS modalities and BIDS labels (taking precedence over [bidsmapper.yaml]
+# ------------------------------------------------------------------------------
+
+Options:
+
+DICOM:
+  participant_label: ~
+  session_label: ~
+  anat:
+    - &anat
+      modality:
+        - SeriesDescription: ~
+          SeqName: tfl
+      acq_label: <SeriesDescription>
+      modality_label: T1w
+      ce_label: ~
+    - <<: *anat
+      modality_label: T2w
+    - <<: *anat
+      modality:
+        - SeriesDescription: .*T1.*
+          SeqName: tfl
+      modality_label: T1rho
+    - <<: *anat
+      modality:
+        - SeriesDescription: .*T1.*
+          SeqName: tfl
+      modality_label: T1map
+    - <<: *anat
+      modality:
+        - SeriesDescription: .*T1.*
+          SeqName: tfl
+      modality_label: T2map
+    - <<: *anat
+      modality:
+        - SeriesDescription: .*T1.*
+          SeqName: tfl
+      modality_label: T2star
+    - <<: *anat
+      modality:
+        - SeriesDescription: .*T1.*
+          SeqName: tfl
+      modality_label: FLAIR
+    - <<: *anat
+      modality:
+        - SeriesDescription: .*T1.*
+          SeqName: tfl
+      modality_label: T2star
+    - <<: *anat
+      modality:
+        - SeriesDescription: .*T1.*
+          SeqName: tfl
+      modality_label: T2star
+
+  func:
+    - &func
+      modality:
+        - SeriesDescription: .*fmri.*
+          SeqName: epi2d
+      task_label: <SeriesDescription>
+      acq_label: ~
+      rec_label: ~
+      run_index: ~
+      echo_index: ~
+    - <<: *func
+      task_label: reward
+      acq_label: ~
+      rec_label: ~
+      run_index: 01
+      echo_index: ~
+    - modality:
+        - SeriesDescription: [fMRI_Reward_02, fmri_rewardtask_02]
+          SeqName: epi2d
+      task_label: reward
+      acq_label: ~
+      rec_label: ~
+      run_index: 02
+      echo_index: ~
+
+  beh: ~
+
+  dwi:
+    - modality:
+        - SeriesDescription: [dti, dsi]
+          SeqName: epi2ddiff
+      acq_label: <SeriesDescription>
+      run_index: ~
+
+  fmap:
+    - modality:
+        - SeriesDescription: dti
+          SeqName: epi2d
+      acq_label: <SeriesDescription>
+      run_index: ~
+      dir_label: ~
+
+  seriesnr_seriesdescription:
+    - modality:
+        - SeriesDescription: SWI
+          SeqName: tfl
+      acq_label: <SeriesNumber>_<SeriesDescription>
+    - modality:
+        - SeriesDescription: ASL*
+          SeqName: ~
+      acq_label: ASl
+  
+  
+# ------------------------------------------------------------------------------
+# PAR key-value logic (Philips PAR fields that are mapped to the BIDS labels)
+# ------------------------------------------------------------------------------
+PAR: ~
+
+
+# ------------------------------------------------------------------------------
+# P*.7 key-value logic (GE fields that are mapped to the BIDS labels)
+# -------------------------------------------------------------------------------
+P7: ~
+
+  
+# ------------------------------------------------------------------------------
+# Nifti key-value logic (Nifti fields that are mapped to the BIDS labels)
+# ------------------------------------------------------------------------------
+Nifti: ~
+
+
+# ------------------------------------------------------------------------------
+# File system key-value logic (these file- and foldernames will be mapped to the
+# BIDS labels; Special substitutions can be performed using python's Format
+# Specification Mini-Language)
+# ------------------------------------------------------------------------------
+FileSystem:
+  participant_label: ^sub-{.*}
+  session_label: ^ses-{.*}

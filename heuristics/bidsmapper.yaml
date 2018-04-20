@@ -1,0 +1,207 @@
+# ------------------------------------------------------------------------------
+# Generic config file for bidsmapper with the default values for identifying the
+# BIDS modalities and BIDS labels. Create a [bidsmapper_<YourTagHere>.yaml]
+# file with the same format to set your site/study-specific fields (see
+# [bidsmapper_dccn.yaml] and [bidsmapper.py] for details). Together these are
+# taken by [bidsmapper.py] to generate the bidsmap.yaml mapper file (see
+# [bidsmapper_example.yaml])
+# ------------------------------------------------------------------------------
+
+# --- Raw data template (this is how your raw input data structure is expected to be)
+#
+# raw/<participant_label>/[<session_label>]/<acq_label>/[<acq_label>|*].[IMA|dcm]
+# [beh/<participant_label>[/<session_label>]<events_label>/[<events_label>|*].[log|txt|csv|tsv]]
+
+
+# --- BIDS 1.0.2 template (this is how your BIDS output data structure will look like)
+#
+# participants.tsv
+# participants.json
+# phenotype/<measurement_tool_name>.tsv
+# phenotype/<measurement_tool_name>.json
+# dataset_description.json
+# README
+# CHANGES
+# code/
+#     bidsmap.yaml
+#     bidscoiner.py
+# derivatives/README
+# [stimuli/]
+# [sourcedata/]
+# raw/
+# [beh/]
+# sub-<participant_label>/[sub-<participant_label>_sessions.tsv]
+# sub-<participant_label>/[ses-<session_label>/]
+# 	sub-<participant_label>_scans.tsv
+# 	anat/
+# 		sub-<participant_label>[_ses-<session_label>][_acq-<acq_label>][_ce-<ce_label>][_rec-<rec_label>][_run-<run_index>][_mod-<mod_label>]_<modality_label>.nii[.gz]
+# 	func/
+# 		sub-<participant_label>[_ses-<session_label>]_task-<task_label>[_acq-<label>][_rec-<label>][_run-<index>][_echo-<index>]_bold.nii[.gz]
+# 		<matches>_events.tsv
+# 		<matches>[_recording-<recording_label>]_physio.tsv.gz
+# 		<matches>[_recording-<recording_label>]_physio.json
+# 		<matches>[_recording-<recording_label>]_stim.tsv.gz
+# 		<matches>[_recording-<recording_label>]_stim.json
+# 	beh/
+# 		sub-<participant_label>[_ses-<session_label>]_task-<task_name>_events.tsv
+# 		<matches>_beh.json
+# 		<matches>_physio.tsv.gz
+# 		<matches>_physio.json
+# 		<matches>_stim.tsv.gz
+# 		<matches>_stim.json
+# 	dwi/
+# 		sub-<participant_label>[_ses-<session_label>][_acq-<acq_label>][_run-<run_index>]_dwi.nii[.gz]
+# 		<matches>_dwi.bval
+# 		<matches>_dwi.bvec
+# 		<matches>_dwi.json
+# 	fmap/
+# 		sub-<participant_label>[_ses-<session_label>][_acq-<label>][_run-<run_index>]_phasediff.nii[.gz]
+# 		<matches>_magnitude1.nii[.gz]
+# 		<matches>_magnitude2.nii[.gz]
+# 		<matches>_phasediff.nii[.gz]
+# 		<matches>_phasediff.json
+# 		<matches>_phase1.nii[.gz]
+# 		<matches>_phase1.json
+# 		<matches>_phase2.nii[.gz]
+# 		<matches>_phase2.json
+# 		<matches>_magnitude.nii[.gz]
+# 		<matches>_fieldmap.nii[.gz]
+# 		<matches>_fieldmap.json
+# 		sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
+# 		<matches>.json
+---
+
+
+Options:
+
+DICOM:
+  participant_label: ~
+  session_label: ~
+  anat:
+    - &anat
+      modality:
+        - SeriesDescription: ~
+          SeqName: tfl
+      acq_label: <SeriesDescription>
+      rec_label: ~
+      run_index: ~
+      mod_label: ~
+      modality_label: T1w
+      ce_label: ~
+    - <<: *anat
+      modality_label: T2w
+    - <<: *anat
+      modality:
+        - SeriesDescription: .*T1.*
+          SeqName: tfl
+      modality_label: T1rho
+    - <<: *anat
+      modality:
+        - SeriesDescription: .*T1.*
+          SeqName: tfl
+      modality_label: T1map
+    - <<: *anat
+      modality:
+        - SeriesDescription: .*T1.*
+          SeqName: tfl
+      modality_label: T2map
+    - <<: *anat
+      modality:
+        - SeriesDescription: .*T1.*
+          SeqName: tfl
+      modality_label: T2star
+    - <<: *anat
+      modality:
+        - SeriesDescription: .*T1.*
+          SeqName: tfl
+      modality_label: FLAIR
+    - <<: *anat
+      modality:
+        - SeriesDescription: .*T1.*
+          SeqName: tfl
+      modality_label: T2star
+    - <<: *anat
+      modality:
+        - SeriesDescription: .*T1.*
+          SeqName: tfl
+      modality_label: T2star
+
+  func:
+    - &func
+      modality:
+        - SeriesDescription: .*fmri.*
+          SeqName: epi2d
+      task_label: <SeriesDescription>
+      acq_label: ~
+      rec_label: ~
+      run_index: ~
+      echo_index: ~
+    - <<: *func
+      task_label: reward
+      acq_label: ~
+      rec_label: ~
+      run_index: 01
+      echo_index: ~
+    - modality:
+        - SeriesDescription: [fMRI_Reward_02, fmri_rewardtask_02]
+          SeqName: epi2d
+      task_label: reward
+      acq_label: ~
+      rec_label: ~
+      run_index: 02
+      echo_index: ~
+
+  beh: ~
+
+  dwi:
+    - modality:
+        - SeriesDescription: [dti, dsi]
+          SeqName: epi2ddiff
+      acq_label: <SeriesDescription>
+      run_index: ~
+
+  fmap:
+    - modality:
+        - SeriesDescription: dti
+          SeqName: epi2d
+      acq_label: <SeriesDescription>
+      run_index: ~
+      dir_label: ~
+
+  seriesnr_seriesdescription:
+    - modality:
+        - SeriesDescription: SWI
+          SeqName: tfl
+      acq_label: <SeriesNumber>_<SeriesDescription>
+    - modality:
+        - SeriesDescription: ASL*
+          SeqName: ~
+      acq_label: ASl
+  
+  
+# ------------------------------------------------------------------------------
+# PAR key-value logic (Philips PAR fields that are mapped to the BIDS labels)
+# ------------------------------------------------------------------------------
+PAR: ~
+
+
+# ------------------------------------------------------------------------------
+# P*.7 key-value logic (GE fields that are mapped to the BIDS labels)
+# -------------------------------------------------------------------------------
+P7: ~
+
+  
+# ------------------------------------------------------------------------------
+# Nifti key-value logic (Nifti fields that are mapped to the BIDS labels)
+# ------------------------------------------------------------------------------
+Nifti: ~
+
+
+# ------------------------------------------------------------------------------
+# File system key-value logic (these file- and foldernames will be mapped to the
+# BIDS labels; Special substitutions can be performed using python's Format
+# Specification Mini-Language)
+# ------------------------------------------------------------------------------
+FileSystem:
+  participant_label: ^sub-{.*}
+  session_label: ^ses-{.*}
