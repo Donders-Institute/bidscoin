@@ -9,127 +9,119 @@ DICOM:
   participant_label: ~
   session_label: ~
   anat:
-    - &anat
+    - &anat                                 # modality_label: T1w
       modality:
         - SeriesDescription: ~
-          SeqName: tfl
+          SequenceName: ~
+          ScanningSequence: ~
+          EchoNumbers: ~
+          ImageType: ~
+          ProtocolName: ~
       acq_label: <SeriesDescription>
-      modality_label: T1w
+      rec_label: ~
+      run_index: ~
+      mod_label: ~
       ce_label: ~
-    - <<: *anat
-      modality_label: T2w
-    - <<: *anat
-      modality:
-        - SeriesDescription: .*T1.*
-          SeqName: tfl
-      modality_label: T1rho
-    - <<: *anat
-      modality:
-        - SeriesDescription: .*T1.*
-          SeqName: tfl
-      modality_label: T1map
-    - <<: *anat
-      modality:
-        - SeriesDescription: .*T1.*
-          SeqName: tfl
-      modality_label: T2map
-    - <<: *anat
-      modality:
-        - SeriesDescription: .*T1.*
-          SeqName: tfl
-      modality_label: T2star
-    - <<: *anat
-      modality:
-        - SeriesDescription: .*T1.*
-          SeqName: tfl
-      modality_label: FLAIR
-    - <<: *anat
-      modality:
-        - SeriesDescription: .*T1.*
-          SeqName: tfl
-      modality_label: T2star
-    - <<: *anat
-      modality:
-        - SeriesDescription: .*T1.*
-          SeqName: tfl
-      modality_label: T2star
+    - <<: *anat                             # modality_label: T2w
+    - <<: *anat                             # modality_label: T1rho
+    - <<: *anat                             # modality_label: T1map
+    - <<: *anat                             # modality_label: T2map
+    - <<: *anat                             # modality_label: T2star
+    - <<: *anat                             # modality_label: FLAIR
+    - <<: *anat                             # modality_label: FLASH
+    - <<: *anat                             # modality_label: PD
+    - <<: *anat                             # modality_label: PDmap
+    - <<: *anat                             # modality_label: PDT2
+    - <<: *anat                             # modality_label: inplaneT1
+    - <<: *anat                             # modality_label: inplaneT2
+    - <<: *anat                             # modality_label: angio
+    - <<: *anat                             # modality_label: defacemask
+    - <<: *anat                             # modality_label: SWImagandphase
 
   func:
-    - &func
+    - &func                                 # suffix: bold
       modality:
-        - SeriesDescription: .*fmri.*
-          SeqName: epi2d
+        - SeriesDescription: ~
+          SequenceName: ~
+          ScanningSequence: ~
+          EchoNumbers: ~
+          ImageType: ~
+          ProtocolName: ~
       task_label: <SeriesDescription>
       acq_label: ~
       rec_label: ~
       run_index: ~
       echo_index: ~
-    - <<: *func
-      task_label: reward
-      acq_label: ~
-      rec_label: ~
-      run_index: 01
-      echo_index: ~
-    - modality:
-        - SeriesDescription: [fMRI_Reward_02, fmri_rewardtask_02]
-          SeqName: epi2d
-      task_label: reward
-      acq_label: ~
-      rec_label: ~
-      run_index: 02
-      echo_index: ~
+    - <<: *func                             # suffix: sbref
 
   beh: ~
 
   dwi:
-    - modality:
-        - SeriesDescription: [dti, dsi]
-          SeqName: epi2ddiff
+    - &dwi
+      modality:
+        - SeriesDescription: ~
+          SequenceName: ~
+          ScanningSequence: ~
+          EchoNumbers: ~
+          ImageType: ~
+          ProtocolName: ~
       acq_label: <SeriesDescription>
       run_index: ~
 
   fmap:
-    - modality:
-        - SeriesDescription: dti
-          SeqName: epi2d
+    - &fmap                                 # suffix: magnitude1
+      modality:
+        - SeriesDescription: ~
+          SequenceName: ~
+          ScanningSequence: ~
+          EchoNumbers: ~
+          ImageType: ~
+          ProtocolName: ~
       acq_label: <SeriesDescription>
       run_index: ~
       dir_label: ~
+      <<: *fmap                             # suffix: magnitude2
+      <<: *fmap                             # suffix: phasediff
+      <<: *fmap                             # suffix: phase1
+      <<: *fmap                             # suffix: phase2
+      <<: *fmap                             # suffix: magnitude
+      <<: *fmap                             # suffix: fieldmap
+      # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
-  seriesnr_seriesdescription:
-    - modality:
-        - SeriesDescription: SWI
-          SeqName: tfl
-      acq_label: <SeriesNumber>_<SeriesDescription>
-    - modality:
-        - SeriesDescription: ASL*
-          SeqName: ~
-      acq_label: ASl
-  
-  
+
 # ------------------------------------------------------------------------------
-# PAR key-value logic (Philips PAR fields that are mapped to the BIDS labels)
+# PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
 # ------------------------------------------------------------------------------
 PAR: ~
 
 
 # ------------------------------------------------------------------------------
-# P*.7 key-value logic (GE fields that are mapped to the BIDS labels)
+# P*.7 key-value heuristics (GE fields that are mapped to the BIDS labels)
 # -------------------------------------------------------------------------------
 P7: ~
 
-  
+
 # ------------------------------------------------------------------------------
-# Nifti key-value logic (Nifti fields that are mapped to the BIDS labels)
+# Nifti key-value heuristics (Nifti fields that are mapped to the BIDS labels)
 # ------------------------------------------------------------------------------
 Nifti: ~
 
 
 # ------------------------------------------------------------------------------
-# File system key-value logic (these file- and foldernames will be mapped to the
-# BIDS labels; Special substitutions can be performed using python's Format
-# Specification Mini-Language)
+# File system key-value heuristics (these file- and foldernames will be mapped
+# to the BIDS labels; Special substitutions can be performed using python's
+# Format Specification Mini-Language)
 # ------------------------------------------------------------------------------
 FileSystem:
   participant_label: ^sub-{.*}
   session_label: ^ses-{.*}
+  func:                                     # suffix: events
+    - *func
+      modality:
+        - FileName: ~
+    - *func                                 # suffix: physio
+      modality:
+        - FileName: ~
+    - *func                                 # suffix: stim
+      modality:
+        - FileName: ~
