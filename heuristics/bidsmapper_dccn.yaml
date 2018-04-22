@@ -1,6 +1,7 @@
 # ------------------------------------------------------------------------------
-# Config file that maps the fields from the DCCN datasets to the
-# BIDS modalities and BIDS labels (taking precedence over [bidsmapper.yaml]
+# Config file that maps the fields from the DCCN Siemens datasets to the BIDS
+# modalities and BIDS labels. The values in this file take precedence over
+# [bidsmapper.yaml] (so just put key-value pairs here that you want to override)
 # ------------------------------------------------------------------------------
 
 Options:

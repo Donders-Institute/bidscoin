@@ -1,11 +1,13 @@
 # ------------------------------------------------------------------------------
-# Generic config file for bidsmapper with the default values for identifying the
-# BIDS modalities and BIDS labels. Create a [bidsmapper_<YourTagHere>.yaml]
-# file with the same format to set your site/study-specific fields (see
-# [bidsmapper_dccn.yaml] and [bidsmapper.py] for details). Together these are
-# taken by [bidsmapper.py] to generate the bidsmap.yaml mapper file (see
-# [bidsmapper_example.yaml])
+# Generic config file for bidsmapper with the default heuristics for identifying
+# the BIDS modalities and BIDS labels. Do not change this file but create a
+# separate [bidsmapper_<YourTagHere>.yaml] file with the same format to set your
+# site/study-specific heuristics (see [bidsmapper_dccn.yaml] and [bidsmapper.py].
+# Together these two config files are taken by [bidsmapper.py] when traversing
+# through the datasets to generate the bidsmap.yaml mapper file (see
+# [bidsmap_example.yaml] for details).
 # ------------------------------------------------------------------------------
+
 
 # --- Raw data template (this is how your raw input data structure is expected to be)
 #
