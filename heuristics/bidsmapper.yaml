@@ -1,11 +1,13 @@
 # ------------------------------------------------------------------------------
 # Generic config file for bidsmapper with the default heuristics for identifying
-# the BIDS modalities and BIDS labels. Do not change this file but create a
-# separate [bidsmapper_<YourTagHere>.yaml] file with the same format to set your
-# site/study-specific heuristics (see [bidsmapper_dccn.yaml] and [bidsmapper.py].
-# Together these two config files are taken by [bidsmapper.py] when traversing
-# through the datasets to generate the bidsmap.yaml mapper file (see
-# [bidsmap_example.yaml] for details).
+# the BIDS modalities and BIDS labels. Do not change/use this file but create a
+# separate file (e.g.  [bidsmapper_<YourTagHere>.yaml]) with the same format to
+# set your site/study-specific heuristics (see [bidsmapper_dccn.yaml] and
+# [bidsmapper.py]). The bidsmapper config file can be passed to [bidsmapper.py]
+# which uses it when traversing through the datasets to generate the bidsmap.yaml
+# mapper file (see [bidsmap_example.yaml] for details). The datastructure of a
+# bidsmapper config file should be 5 levels deep and follow:
+# dict > dict > list > dict > list
 # ------------------------------------------------------------------------------
 
 
@@ -76,7 +78,7 @@
 
 Options:
 
-DICOM:
+DICOM: &dicom
   participant_label: ~
   session_label: ~
   anat:
@@ -213,20 +215,27 @@ Nifti: ~
 # Format Specification Mini-Language)
 # ------------------------------------------------------------------------------
 FileSystem:
+  <<: *dicom
   participant_label: ^sub-{.*}
   session_label: ^ses-{.*}
   func:
-    - *func
+    - <<: *func
       modality:
         - FileName: ~
       suffix: events
-    - *func
+    - <<: *func
       modality:
         - FileName: ~
       recording_label: <FileName>
       suffix: physio
-    - *func
+    - <<: *func
       modality:
         - FileName: ~
       recording_label: <FileName>
       suffix: stim
+
+
+# ------------------------------------------------------------------------------
+# Plugin to edit the key-value heuristics (see [bidsmapper.py] for the API)
+# ------------------------------------------------------------------------------
+PlugIn: ~
