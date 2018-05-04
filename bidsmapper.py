@@ -182,25 +182,6 @@ def get_dicomfield(dicomtag, dicomfile):
     return value
 
 
-def is_incomplete_acquisition(folder):
-    """
-    If a scan was aborted in the middle of the experiment, it is likely that DICOMs will
-    land in the PACS anyway. We want to avoid converting these incomplete directories.
-    This function checks the number of measurements specified in the protocol against the
-    number of DICOMs.
-    """
-    # TODO: make it work for non- (Siemens) DICOM too or move it to DICOM level checking
-    dicomfile = get_dicom_file(folder)
-    nrep      = get_dicomfield('lRepetitions', dicomfile)
-    nfiles    = len(os.listdir(folder))
-    if nrep and nrep > nfiles:
-        warnings.warn('Incomplete acquisition found in: {}'\
-                      '\nExpected {}, found {} dicomfiles'.format(folder, nrep, nfiles))
-        return True
-    else:
-        return False
-
-
 def get_heuristics(yamlfile):
 
     # Get the full paths to the bidsmapper yaml-file
@@ -427,7 +408,6 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
             for series in mriseries:
 
                 print('Parsing: ' + series)
-                is_incomplete_acquisition(series)
 
                 # Update / append the dicom mapping
                 if heuristics['DICOM']:

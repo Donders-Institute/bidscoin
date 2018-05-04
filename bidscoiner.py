@@ -1,6 +1,24 @@
 import os
 
 
+def is_incomplete_acquisition(folder):
+    """
+    If a scan was aborted in the middle of the experiment, it is likely that DICOMs will
+    land in the PACS anyway. We want to avoid converting these incomplete directories.
+    This function checks the number of measurements specified in the protocol against the
+    number of DICOMs.
+    """
+    dicomfile = get_dicom_file(folder)
+    nrep      = get_dicomfield('lRepetitions', dicomfile)
+    nfiles    = len(os.listdir(folder))
+    if nrep and nrep > nfiles:
+        warnings.warn('Incomplete acquisition found in: {}'\
+                      '\nExpected {}, found {} dicomfiles'.format(folder, nrep, nfiles))
+        return True
+    else:
+        return False
+
+
 def run_dicomcoiner(seriesfolder, heuristics):
     """
     TODO: Run the dicom coiner to cast the series into the bids folder
