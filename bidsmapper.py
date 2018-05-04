@@ -13,6 +13,7 @@ https://github.com/dangom/dac2bids/blob/master/dac2bids.py
 
 # Global imports (specific modules may be imported when needed)
 import os.path
+import glob
 import warnings
 import re
 import textwrap
@@ -52,7 +53,7 @@ def lsdirs(folder, wildcard='*'):
     """
     return filter(lambda x:
                   os.path.isdir(os.path.join(folder, x)),
-                  os.listdir(os.path.join(folder, wildcard)))
+                  glob.glob(os.path.join(folder, wildcard)))
 
 
 def is_dicomfile(file):
@@ -103,7 +104,7 @@ def get_dicom_file(folder):
     Returns the first dicom file from a folder.
     """
     for file in os.listdir(folder):
-        if is_dicomfile(file):
+        if is_dicomfile(os.path.join(folder, file)):
             return os.path.join(folder, file)
     warnings.warn('Cannot find dicom files in:' + folder)
 
@@ -154,7 +155,7 @@ def parse_from_x_protocol(pattern, dicomfile):
             match = regex.match(line)
             if match:
                 return int(match.group(1).decode('utf-8'))
-    warnings.warn('Pattern ' + regexp + ' not found in: ' + dicomfile)
+    warnings.warn('Pattern: "' + regexp.encode('unicode_escape').decode() + '" not found in: ' + dicomfile)
 
 
 def get_dicomfield(dicomtag, dicomfile):
@@ -170,6 +171,7 @@ def get_dicomfield(dicomtag, dicomfile):
     except IOError:
         warnings.warn('Cannot read' + dicomfile)
     try:
+        # TODO: implement regexp
         value = dicomdict[dicomtag]
     except:
         try:
@@ -189,11 +191,11 @@ def is_incomplete_acquisition(folder):
     """
     # TODO: make it work for non- (Siemens) DICOM too or move it to DICOM level checking
     dicomfile = get_dicom_file(folder)
-    nrep      = int(get_dicomfield('lRepetitions', dicomfile))
-    nfiles    = len(os.listdir(folder)) - 1
-    if nrep > nfiles:
-        warnings.warn('Incomplete acquisition found in: ' + folder +
-                      '\nExpected ' + nrep + ', found ' + nfiles + ' dicomfiles')
+    nrep      = get_dicomfield('lRepetitions', dicomfile)
+    nfiles    = len(os.listdir(folder))
+    if nrep and nrep > nfiles:
+        warnings.warn('Incomplete acquisition found in: {}'\
+                      '\nExpected {}, found {} dicomfiles'.format(folder, nrep, nfiles))
         return True
     else:
         return False
@@ -277,7 +279,7 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
             for attribute,value in series['attributes']:
                 if value:
                     if not 'match' in locals(): match = True
-                    match = match and (get_dicomfield(attribute,dicomfile) == value)
+                    match = match and (get_dicomfield(attribute,dicomfile) == value)    # TODO: implement regexp
 
             # If so, try to fill all the series attibutes, bids-labels
             if 'match' in locals() and match:
@@ -362,6 +364,8 @@ def built_filesystemmap(seriesfolder, bidsmap, heuristics):
     if not seriesfolder or not heuristics['FileSystem']:
         return bidsmap
 
+    #
+
 
 def built_pluginmap(seriesfolder, bidsmap):
     """
@@ -395,6 +399,11 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
     :return: bidsmap:     bidsmap.yaml file
     """
 
+    # Input checking
+    rawfolder  = os.path.abspath(rawfolder)
+    bidsfolder = os.path.abspath(bidsfolder)
+
+
     # Get the heuristics for creating the bidsmap
     heuristics = get_heuristics(bidsmapper)
 
@@ -417,7 +426,8 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
             mriseries = lsdirs(session)
             for series in mriseries:
 
-                is_incomplete_acquisition(mriseries)
+                print('Parsing: ' + series)
+                is_incomplete_acquisition(series)
 
                 # Update / append the dicom mapping
                 if heuristics['DICOM']:
@@ -453,13 +463,13 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
 
     # Initiate the bidsmap with some helpful text and write the bidsmap
     bidsmap.yaml_set_start_comment = textwrap.dedent("""\
-        # ------------------------------------------------------------------------------
-        # Config file that maps the extracted fields to the BIDS modalities and BIDS
-        # labels (see also [bidsmapper.yaml] and [bidsmapper.py]). You can edit these.
-        # fields before passing it to [bidscoiner.py] which uses it to cast the datasets
-        # into the BIDS folder. The datastructure of this config file should be 5 levels
-        # deep and follow: dict > dict > list > dict > list
-        # ------------------------------------------------------------------------------""")
+        ------------------------------------------------------------------------------
+        Config file that maps the extracted fields to the BIDS modalities and BIDS
+        labels (see also [bidsmapper.yaml] and [bidsmapper.py]). You can edit these.
+        fields before passing it to [bidscoiner.py] which uses it to cast the datasets
+        into the BIDS folder. The datastructure of this config file should be 5 levels
+        deep and follow: dict > dict > list > dict > list
+        ------------------------------------------------------------------------------""")
     with open(bidsmapfile, 'w') as stream:
         yaml.dump(bidsmap, stream)
 
