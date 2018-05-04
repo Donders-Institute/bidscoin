@@ -8,7 +8,8 @@
 # ------------------------------------------------------------------------------
 
 
-# --- Raw data template (this is how your raw input data structure is expected to be)
+# --- Raw data template (this is how your raw input data structure is expected to be). See:
+#     https://github.com/robertoostenveld/bids/blob/master/doc/reorganize_dicom_dataset.md
 #
 # raw/<participant_label>/[<session_label>]/<acq_label>/[<acq_label>|*].[IMA|dcm]
 # [beh/<participant_label>[/<session_label>]<events_label>/[<events_label>|*].[log|txt|csv|tsv]]
@@ -70,7 +71,6 @@
 # 		<matches>_fieldmap.json
 # 		sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 # 		<matches>.json
----
 
 
 Options:
@@ -80,7 +80,7 @@ DICOM: &dicom
   session_label: ~
   anat:
     - &anat
-      modality:
+      attributes:
         - SeriesDescription: ~
           SequenceName: ~
           ScanningSequence: ~
@@ -102,6 +102,13 @@ DICOM: &dicom
     - <<: *anat
       modality_label: T2map
     - <<: *anat
+      attributes:
+        - SeriesDescription: ~
+          SequenceName: "*fl3d11r"
+          ScanningSequence: ~
+          EchoNumbers: ~
+          ImageType: ~
+          ProtocolName: ~
       modality_label: T2star
     - <<: *anat
       modality_label: FLAIR
@@ -126,10 +133,10 @@ DICOM: &dicom
 
   func:
     - &func
-      modality:
+      attributes:
         - SeriesDescription: ~
           SequenceName: ~
-          ScanningSequence: ~
+          ScanningSequence: EP
           EchoNumbers: ~
           ImageType: ~
           ProtocolName: ~
@@ -146,7 +153,7 @@ DICOM: &dicom
 
   dwi:
     - &dwi
-      modality:
+      attributes:
         - SeriesDescription: ~
           SequenceName: ~
           ScanningSequence: ~
@@ -158,9 +165,9 @@ DICOM: &dicom
 
   fmap:
     - &fmap
-      modality:
+      attributes:
         - SeriesDescription: ~
-          SequenceName: ~
+          SequenceName: "*fm2d2r"
           ScanningSequence: ~
           EchoNumbers: ~
           ImageType: ~
@@ -185,6 +192,13 @@ DICOM: &dicom
       # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
   unknown:
+      attributes:
+        - SeriesDescription: ~
+          SequenceName: ~
+          ScanningSequence: ~
+          EchoNumbers: ~
+          ImageType: ~
+          ProtocolName: ~
       acq_label: <SeriesNumber>_<SeriesDescription>
 
 
@@ -217,16 +231,16 @@ FileSystem:
   session_label: ^ses-{.*}
   func:
     - <<: *func
-      modality:
+      attributes:
         - FileName: ~
       suffix: events
     - <<: *func
-      modality:
+      attributes:
         - FileName: ~
       recording_label: <FileName>
       suffix: physio
     - <<: *func
-      modality:
+      attributes:
         - FileName: ~
       recording_label: <FileName>
       suffix: stim
