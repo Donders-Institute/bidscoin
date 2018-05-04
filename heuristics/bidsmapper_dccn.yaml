@@ -75,7 +75,7 @@
 
 Options:
 
-DICOM: &dicom
+DICOM:
   participant_label: ~
   session_label: ~
   anat:
@@ -149,7 +149,17 @@ DICOM: &dicom
     - <<: *func
       suffix: sbref
 
-  beh: ~
+  beh:
+    - &beh
+      attributes:
+        - SeriesDescription: ~
+          SequenceName: ~
+          ScanningSequence: ~
+          EchoNumbers: ~
+          ImageType: ~
+          ProtocolName: ~
+      acq_label: <SeriesDescription>
+      run_index: ~
 
   dwi:
     - &dwi
@@ -199,7 +209,8 @@ DICOM: &dicom
           EchoNumbers: ~
           ImageType: ~
           ProtocolName: ~
-      acq_label: <SeriesNumber>_<SeriesDescription>
+      acq_label: <SeriesNumber>_
+      run_index: <SeriesDescription>
 
 
 # ------------------------------------------------------------------------------
@@ -226,24 +237,123 @@ Nifti: ~
 # Format Specification Mini-Language)
 # ------------------------------------------------------------------------------
 FileSystem:
-  <<: *dicom
-  participant_label: ^sub-{.*}
-  session_label: ^ses-{.*}
+  participant_label: \sub-{.*}\
+  session_label: \ses-{.*}\
+  anat:
+    - &anat_filesystem
+      attributes:
+        - FolderName: ~
+          FileName: ~
+          FileExt: ~
+      acq_label: <FileName>
+      rec_label: ~
+      run_index: ~
+      mod_label: ~
+      modality_label: T1w
+      ce_label: ~
+    - <<: *anat_filesystem
+      modality_label: T2w
+    - <<: *anat_filesystem
+      modality_label: T1rho
+    - <<: *anat_filesystem
+      modality_label: T1map
+    - <<: *anat_filesystem
+      modality_label: T2map
+    - <<: *anat_filesystem
+      modality_label: T2star
+    - <<: *anat_filesystem
+      modality_label: FLAIR
+    - <<: *anat_filesystem
+      modality_label: FLASH
+    - <<: *anat_filesystem
+      modality_label: PD
+    - <<: *anat_filesystem
+      modality_label: PDmap
+    - <<: *anat_filesystem
+      modality_label: PDT2
+    - <<: *anat_filesystem
+      modality_label: inplaneT1
+    - <<: *anat_filesystem
+      modality_label: inplaneT2
+    - <<: *anat_filesystem
+      modality_label: angio
+    - <<: *anat_filesystem
+      modality_label: defacemask
+    - <<: *anat_filesystem
+      modality_label: SWImagandphase
+
   func:
-    - <<: *func
+    - &func_filesystem
       attributes:
-        - FileName: ~
+        - FolderName: ~
+          FileName: ~
+          FileExt: ~
+      task_label: <FileName>
+      acq_label: ~
+      rec_label: ~
+      run_index: ~
+      echo_index: ~
+      suffix: bold
+    - <<: *func_filesystem
+      suffix: sbref
+    - <<: *func_filesystem
       suffix: events
-    - <<: *func
-      attributes:
-        - FileName: ~
+    - <<: *func_filesystem
       recording_label: <FileName>
       suffix: physio
-    - <<: *func
-      attributes:
-        - FileName: ~
+    - <<: *func_filesystem
       recording_label: <FileName>
       suffix: stim
+
+  beh:
+    - &beh_filesystem
+      attributes:
+        - FolderName: ~
+          FileName: ~
+          FileExt: ~
+      acq_label: <FileName>
+      run_index: ~
+
+  dwi:
+    - &dwi_filesystem
+      attributes:
+        - FolderName: ~
+          FileName: ~
+          FileExt: ~
+      acq_label: <FileName>
+      run_index: ~
+
+  fmap:
+    - &fmap_filesystem
+      attributes:
+        - FolderName: ~
+          FileName: ~
+          FileExt: ~
+      acq_label: <FileName>
+      run_index: ~
+      dir_label: ~
+      suffix: magnitude1
+      IntendedFor: ~
+    - <<: *fmap_filesystem
+      suffix: magnitude2
+    - <<: *fmap_filesystem
+      suffix: phasediff
+    - <<: *fmap_filesystem
+      suffix: phase1
+    - <<: *fmap_filesystem
+      suffix: phase2
+    - <<: *fmap_filesystem
+      suffix: magnitude
+    - <<: *fmap_filesystem
+      suffix: fieldmap
+      # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
+
+  unknown:
+      attributes:
+        - FolderName: ~
+          FileName: ~
+          FileExt: ~
+      acq_label: <FileName>
 
 
 # ------------------------------------------------------------------------------

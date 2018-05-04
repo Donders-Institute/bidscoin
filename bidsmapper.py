@@ -17,6 +17,7 @@ import glob
 import warnings
 import re
 import textwrap
+import copy
 from ruamel_yaml import YAML
 yaml = YAML()
 
@@ -345,7 +346,42 @@ def built_filesystemmap(seriesfolder, bidsmap, heuristics):
     if not seriesfolder or not heuristics['FileSystem']:
         return bidsmap
 
+    # TODO: Loop through all bidsmodalities and series
+    # for modality in bidsmodalities:
+    #     for series in heuristics['DICOM'][modality]:
     #
+    #         # Try to see if the dicomfile matches all of the attributes of any of the modalities
+    #         for attribute,value in series['attributes']:
+    #             if value:
+    #                 if not 'match' in locals(): match = True
+    #                 match = match and (value in seriesfolder)    # TODO: implement regexp
+    #
+    #         # If so, try to fill all the series attibutes, bids-labels
+    #         if 'match' in locals() and match:
+    #             for key,value in series:
+    #                 if value:
+    #
+    #                     # Fill all the series attributes
+    #                     if key == 'attributes':
+    #                         for attribute in series[key]:
+    #                             series[key][attribute] = None # TODO
+    #
+    #                     # Intelligent filling of the run-index is done runtime by bidscoiner
+    #                     elif key == 'run_index' and value == '<automatic>':
+    #                         pass
+    #
+    #                     # Fill any bids-label with the series attribute
+    #                     elif value[0,-1] == '<>':
+    #                         attribute   = value[1,-2]
+    #                         series[key] = None # TODO
+    #
+    #             # Copy the filled-in series over to bidsmap
+    #             if not exist_series(series, bidsmap['DICOM'][modality]):
+    #                 bidsmap['DICOM'][modality].append(series)
+    #
+    #             del match
+
+    return bidsmap
 
 
 def built_pluginmap(seriesfolder, bidsmap):
@@ -381,15 +417,14 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
     """
 
     # Input checking
-    rawfolder  = os.path.abspath(rawfolder)
-    bidsfolder = os.path.abspath(bidsfolder)
-
+    rawfolder  = os.path.abspath(os.path.expanduser(rawfolder))
+    bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
 
     # Get the heuristics for creating the bidsmap
     heuristics = get_heuristics(bidsmapper)
 
     # Create a copy / bidsmap skeleton with no modality entries
-    bidsmap = heuristics
+    bidsmap = copy.deepcopy(heuristics)
     for datasource in ('DICOM', 'PAR', 'P7', 'Nifti', 'FileSystem'):
         for bidsmodality in bidsmodalities:
             if bidsmap[datasource] and bidsmodality in bidsmap[datasource]:
@@ -451,6 +486,7 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
         deep and follow: dict > dict > list > dict > list
         ------------------------------------------------------------------------------""")
     with open(bidsmapfile, 'w') as stream:
+        print('Writing bidsmap to: ' + bidsmapfile)
         yaml.dump(bidsmap, stream)
 
     return bidsmapfile
