@@ -21,7 +21,8 @@ import copy
 from ruamel_yaml import YAML
 yaml = YAML()
 
-bidsmodalities = ('anat', 'func', 'beh', 'dwi', 'fmap', 'unknown')
+bidsmodalities  = ('anat', 'func', 'beh', 'dwi', 'fmap')
+unknownmodality = ('unknown',)
 
 # -----------------------------------------------------------------------------
 # Will need to create a nifti file for each directory in folder.
@@ -253,43 +254,65 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
     if not dicomfile or not heuristics['DICOM']:
         return bidsmap
 
-    # Loop through all bidsmodalities and series
-    for modality in bidsmodalities:
-        for series in heuristics['DICOM'][modality]:
+    # Loop through all bidsmodalities and series; all info goes into series
+    for bidsmodality in bidsmodalities:
 
-            # Try to see if the dicomfile matches all of the attributes of any of the modalities
-            attributes = series['attributes'][0]    # TODO: figure out why the data lives one level deeper
-            for attribute in attributes:
-                value = attributes[attribute]
-                if value:
-                    if not 'match' in locals(): match = True
-                    match = match and (get_dicomfield(attribute,dicomfile) == value)    # TODO: implement regexp
+        for series in heuristics['DICOM'][bidsmodality]:
 
-            # If so, try to fill all the series attibutes, bids-labels
+            for item in series:
+
+                # Try to see if the dicomfile matches all of the attributes and try to fill all of them
+                if item == 'attributes':
+
+                    attributes = series['attributes'][0]    # TODO: figure out why the data lives one level deeper
+
+                    for attrkey in attributes:
+
+                        attrvalue  = attributes[attrkey]       # for attrkey,attrvalue doesn't work...?
+                        dicomvalue = get_dicomfield(attrkey, dicomfile)
+
+                        # Check if the attribute value matches with the info from the dicomfile
+                        if attrvalue:
+                            if not 'match' in locals(): match = True
+                            match = match and (attrvalue == dicomvalue)    # TODO: implement regexp
+
+                        # Else, fill the empty attribute with the info from the dicomfile
+                        else:
+                            attributes[attrkey] = dicomvalue
+
+                    series['attributes'][0] = attributes    # TODO: figure out why the data lives one level deeper
+
+                # Try to fill all the bids-labels
+                else:
+
+                    bidsvalue = series[item]
+                    if bidsvalue:
+                        print(bidsvalue)
+
+                    # Intelligent filling of the run-index is done runtime by bidscoiner
+                    if item == 'run_index' and bidsvalue == '<automatic>':
+                        pass
+
+                    # Fill any bids-label with the series attribute
+                    elif bidsvalue[0,-1] == '<>':
+                        attribute   = bidsvalue[1,-2]
+                        series[item] = get_dicomfield(attribute, dicomfile)
+
+            # If we have a match, copy the filled-in series over to the bidsmap as a know bidsmodality
             if 'match' in locals() and match:
-                print('We have a match!')
-                for key,value in series:
-                    if value:
 
-                        # Fill all the series attributes
-                        if key == 'attributes':
-                            for attribute in series[key]:
-                                series[key][attribute] = get_dicomfield(attribute, dicomfile)
+                print('We have a match! :-)') # DEBUG
+                if not exist_series(series, bidsmap['DICOM'][bidsmodality]):
+                    bidsmap['DICOM'][bidsmodality].append(series)
 
-                        # Intelligent filling of the run-index is done runtime by bidscoiner
-                        elif key == 'run_index' and value == '<automatic>':
-                            pass
+            # If not, copy the filled-in series over to the bidsmap as an unknown modality
+            else:
 
-                        # Fill any bids-label with the series attribute
-                        elif value[0,-1] == '<>':
-                            attribute   = value[1,-2]
-                            series[key] = get_dicomfield(attribute, dicomfile)
+                print('We have a mismatch! :-(') # DEBUG
+                if not exist_series(series, bidsmap['DICOM'][unknownmodality]):
+                    bidsmap['DICOM'][unknownmodality].append(series)
 
-                # Copy the filled-in series over to bidsmap
-                if not exist_series(series, bidsmap['DICOM'][modality]):
-                    bidsmap['DICOM'][modality].append(series)
-
-                del match
+            del match
 
     return bidsmap
 
@@ -350,39 +373,11 @@ def built_filesystemmap(seriesfolder, bidsmap, heuristics):
         return bidsmap
 
     # TODO: Loop through all bidsmodalities and series
-    # for modality in bidsmodalities:
-    #     for series in heuristics['DICOM'][modality]:
+    # for bidsmodality in bidsmodalities:
+    #     for series in heuristics['DICOM'][bidsmodality]:
     #
     #         # Try to see if the dicomfile matches all of the attributes of any of the modalities
-    #         for attribute,value in series['attributes']:
-    #             if value:
-    #                 if not 'match' in locals(): match = True
-    #                 match = match and (value in seriesfolder)    # TODO: implement regexp
-    #
-    #         # If so, try to fill all the series attibutes, bids-labels
-    #         if 'match' in locals() and match:
-    #             for key,value in series:
-    #                 if value:
-    #
-    #                     # Fill all the series attributes
-    #                     if key == 'attributes':
-    #                         for attribute in series[key]:
-    #                             series[key][attribute] = None # TODO
-    #
-    #                     # Intelligent filling of the run-index is done runtime by bidscoiner
-    #                     elif key == 'run_index' and value == '<automatic>':
-    #                         pass
-    #
-    #                     # Fill any bids-label with the series attribute
-    #                     elif value[0,-1] == '<>':
-    #                         attribute   = value[1,-2]
-    #                         series[key] = None # TODO
-    #
-    #             # Copy the filled-in series over to bidsmap
-    #             if not exist_series(series, bidsmap['DICOM'][modality]):
-    #                 bidsmap['DICOM'][modality].append(series)
-    #
-    #             del match
+    # ETC
 
     return bidsmap
 
@@ -429,9 +424,9 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
     # Create a copy / bidsmap skeleton with no modality entries
     bidsmap = copy.deepcopy(heuristics)
     for datasource in ('DICOM', 'PAR', 'P7', 'Nifti', 'FileSystem'):
-        for bidsmodality in bidsmodalities:
-            if bidsmap[datasource] and bidsmodality in bidsmap[datasource]:
-                bidsmap[datasource][bidsmodality] = []
+        for modality in bidsmodalities + unknownmodality:
+            if bidsmap[datasource] and modality in bidsmap[datasource]:
+                bidsmap[datasource][modality] = []
 
     # Loop over all subjects and sessions and built up the bidsmap entries
     subjects = lsdirs(rawfolder, 'sub-*')
