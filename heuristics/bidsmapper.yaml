@@ -198,7 +198,7 @@ DICOM:
       # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
   unknown:
-      attributes:
+    - attributes:
         - SeriesDescription: ~
           SequenceName: ~
           ScanningSequence: ~
@@ -345,7 +345,7 @@ FileSystem:
       # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
   unknown:
-      attributes:
+    - attributes:
         - FolderName: ~
           FileName: ~
           FileExt: ~

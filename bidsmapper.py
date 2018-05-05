@@ -159,10 +159,10 @@ def parse_from_x_protocol(pattern, dicomfile):
     warnings.warn('Pattern: "' + regexp.encode('unicode_escape').decode() + '" not found in: ' + dicomfile)
 
 
-def get_dicomfield(dicomtag, dicomfile):
+def get_dicomfield(tagname, dicomfile):
     """
     Robustly reads a DICOM tag from a dictionary or from vendor specific fields
-    :param dicomtag:
+    :param tagname:
     :param dicomfile:
     :return:
     """
@@ -173,13 +173,13 @@ def get_dicomfield(dicomtag, dicomfile):
         warnings.warn('Cannot read' + dicomfile)
     try:
         # TODO: implement regexp
-        value = dicomdict[dicomtag]
+        value = dicomdict.get(tagname)
     except:
         try:
-            value = parse_from_x_protocol(dicomtag, dicomfile)
+            value = parse_from_x_protocol(tagname, dicomfile)
         except:
             value = ''
-            warnings.warn('Could not extract {} tag from {}'.format(dicomtag, dicomfile))
+            warnings.warn('Could not extract {} tag from {}'.format(tagname, dicomfile))
     return value
 
 
@@ -258,13 +258,16 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
         for series in heuristics['DICOM'][modality]:
 
             # Try to see if the dicomfile matches all of the attributes of any of the modalities
-            for attribute,value in series['attributes']:
+            attributes = series['attributes'][0]    # TODO: figure out why the data lives one level deeper
+            for attribute in attributes:
+                value = attributes[attribute]
                 if value:
                     if not 'match' in locals(): match = True
                     match = match and (get_dicomfield(attribute,dicomfile) == value)    # TODO: implement regexp
 
             # If so, try to fill all the series attibutes, bids-labels
             if 'match' in locals() and match:
+                print('We have a match!')
                 for key,value in series:
                     if value:
 
