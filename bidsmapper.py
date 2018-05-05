@@ -160,18 +160,28 @@ def parse_from_x_protocol(pattern, dicomfile):
     warnings.warn('Pattern: "' + regexp.encode('unicode_escape').decode() + '" not found in: ' + dicomfile)
 
 
+DICOMDICT_MEMO = None
+DICOMFILE_MEMO = None
 def get_dicomfield(tagname, dicomfile):
     """
     Robustly reads a DICOM tag from a dictionary or from vendor specific fields
-    NB: profiling shows this is currently the most expensive function
+    NB: profiling shows this is currently the most expensive function, so therefore
+    the (primitive) DICOMDICT_MEMO optimization
     :param tagname:
     :param dicomfile:
     :return:
     """
     import pydicom
+    global DICOMDICT_MEMO, DICOMFILE_MEMO
+
     try:
         # TODO: implement regexp
-        dicomdict = pydicom.dcmread(dicomfile)
+        if dicomfile != DICOMFILE_MEMO:
+            dicomdict      = pydicom.dcmread(dicomfile)
+            DICOMDICT_MEMO = dicomdict
+            DICOMFILE_MEMO = dicomfile
+        else:
+            dicomdict = DICOMDICT_MEMO
         value     = dicomdict.get(tagname)
     except IOError:
         warnings.warn('Cannot read' + dicomfile)
@@ -179,7 +189,7 @@ def get_dicomfield(tagname, dicomfile):
         try:
             value = parse_from_x_protocol(tagname, dicomfile)
         except Exception:
-            value = ''
+            value = None
             warnings.warn('Could not extract {} tag from {}'.format(tagname, dicomfile))
     return value
 
@@ -344,6 +354,10 @@ def built_parmap(parfile, bidsmap, heuristics):
     if not parfile or not heuristics['PAR']:
         return bidsmap
 
+    # TODO: Loop through all bidsmodalities and series
+
+    return bidsmap
+
 
 def built_p7map(p7file, bidsmap, heuristics):
     """
@@ -358,6 +372,10 @@ def built_p7map(p7file, bidsmap, heuristics):
     if not p7file or not heuristics['P7']:
         return bidsmap
 
+    # TODO: Loop through all bidsmodalities and series
+
+    return bidsmap
+
 
 def built_niftimap(niftifile, bidsmap, heuristics):
     """
@@ -371,6 +389,10 @@ def built_niftimap(niftifile, bidsmap, heuristics):
     # Input checks
     if not niftifile or not heuristics['Nifti']:
         return bidsmap
+
+    # TODO: Loop through all bidsmodalities and series
+
+    return bidsmap
 
 
 def built_filesystemmap(seriesfolder, bidsmap, heuristics):
@@ -387,11 +409,6 @@ def built_filesystemmap(seriesfolder, bidsmap, heuristics):
         return bidsmap
 
     # TODO: Loop through all bidsmodalities and series
-    # for bidsmodality in bidsmodalities:
-    #     for series in heuristics['DICOM'][bidsmodality]:
-    #
-    #         # Try to see if the dicomfile matches all of the attributes of any of the modalities
-    # ETC
 
     return bidsmap
 
@@ -413,6 +430,7 @@ def built_pluginmap(seriesfolder, bidsmap):
     for pluginfunction in bidsmap['PlugIn']:
         plugin  = import_module(os.path.join(__file__, 'plugins', pluginfunction))
         bidsmap = plugin.map(seriesfolder, bidsmap)
+
     return bidsmap
 
 
@@ -499,9 +517,9 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
         ------------------------------------------------------------------------------""")
 
     # Save the bidsmap to the bidsmap yaml-file
-    with open(bidsmapfile, 'w') as stream:
-        print('Writing bidsmap to: ' + bidsmapfile)
-        yaml.dump(bidsmap, stream)
+    # with open(bidsmapfile, 'w') as stream:
+    #     print('Writing bidsmap to: ' + bidsmapfile)
+    #     yaml.dump(bidsmap, stream)
 
     return bidsmapfile
 
