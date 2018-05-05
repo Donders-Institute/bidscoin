@@ -22,7 +22,7 @@ from ruamel_yaml import YAML
 yaml = YAML()
 
 bidsmodalities  = ('anat', 'func', 'beh', 'dwi', 'fmap')
-unknownmodality = ('unknown',)
+unknownmodality = 'unknown'
 
 # -----------------------------------------------------------------------------
 # Will need to create a nifti file for each directory in folder.
@@ -205,17 +205,34 @@ def exist_series(series, serieslist):
     """
     for seriesitem in serieslist:
 
-        match = []
-        for key,value in series:
+        match = True
 
-            # Compare all key-value pairs, including the pairs in the attribute list
-            if type(series[key]) is list:
-                for attribute in series[key]:
-                    match.append(series[key][attribute] == seriesitem[key][attribute])
-            else:
-                match.append(series[key] == seriesitem[key])
+        # Search for a case where all series items match with the seriesitem items
+        for item in series:
 
-        if all(match):
+            try:
+                if item=='attributes':
+
+                    seriesattributes = series['attributes'][0]      # TODO: figure out why the data lives one level deeper
+                    itemattributes   = seriesitem['attributes'][0]  # TODO: figure out why the data lives one level deeper
+
+                    for attrkey in seriesattributes:
+
+                        seriesvalue = seriesattributes[attrkey]  # for attrkey,attrvalue doesn't work...?
+                        itemvalue   = itemattributes[attrkey]
+                        match       = match and (seriesvalue == itemvalue)
+
+                else:
+
+                    seriesvalue = series[item]  # for attrkey,attrvalue doesn't work...?
+                    itemvalue   = seriesitem[item]
+                    match       = match and (seriesvalue == itemvalue)
+
+            except KeyError:    # Errors may be evoked when matching bids-labels which exist in one modality but not in the other
+                match = False
+
+        # Stop if we found one (i.e. match is still True after all the tests)
+        if match:
             return True
 
     return False
@@ -286,33 +303,35 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
                 else:
 
                     bidsvalue = series[item]
-                    if bidsvalue:
-                        print(bidsvalue)
+                    if not bidsvalue:
+                        continue
+                    else:
+                        print(bidsvalue)  # DEBUG
 
                     # Intelligent filling of the run-index is done runtime by bidscoiner
                     if item == 'run_index' and bidsvalue == '<automatic>':
                         pass
 
-                    # Fill any bids-label with the series attribute
-                    elif bidsvalue[0,-1] == '<>':
-                        attribute   = bidsvalue[1,-2]
-                        series[item] = get_dicomfield(attribute, dicomfile)
+                    # Fill any bids-label with the annotated series attribute
+                    elif bidsvalue.startswith('<') and bidsvalue.endswith('>'):
+                        attrkey      = bidsvalue[1:-2]
+                        series[item] = get_dicomfield(attrkey, dicomfile)
 
             # If we have a match, copy the filled-in series over to the bidsmap as a know bidsmodality
             if 'match' in locals() and match:
 
-                print('We have a match! :-)') # DEBUG
+                print('We have a match! :-)')       # DEBUG
                 if not exist_series(series, bidsmap['DICOM'][bidsmodality]):
                     bidsmap['DICOM'][bidsmodality].append(series)
 
             # If not, copy the filled-in series over to the bidsmap as an unknown modality
             else:
 
-                print('We have a mismatch! :-(') # DEBUG
+                print('We have a mismatch! :-(')    # DEBUG
                 if not exist_series(series, bidsmap['DICOM'][unknownmodality]):
                     bidsmap['DICOM'][unknownmodality].append(series)
 
-            del match
+            if 'match' in locals(): del match
 
     return bidsmap
 
@@ -424,7 +443,7 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
     # Create a copy / bidsmap skeleton with no modality entries
     bidsmap = copy.deepcopy(heuristics)
     for datasource in ('DICOM', 'PAR', 'P7', 'Nifti', 'FileSystem'):
-        for modality in bidsmodalities + unknownmodality:
+        for modality in bidsmodalities + (unknownmodality,):
             if bidsmap[datasource] and modality in bidsmap[datasource]:
                 bidsmap[datasource][modality] = []
 
