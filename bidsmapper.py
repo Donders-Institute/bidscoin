@@ -170,12 +170,11 @@ def get_dicomfield(tagname, dicomfile):
     """
     import pydicom
     try:
+        # TODO: implement regexp
         dicomdict = pydicom.dcmread(dicomfile)
+        value     = dicomdict.get(tagname)
     except IOError:
         warnings.warn('Cannot read' + dicomfile)
-    try:
-        # TODO: implement regexp
-        value = dicomdict.get(tagname)
     except:
         try:
             value = parse_from_x_protocol(tagname, dicomfile)
