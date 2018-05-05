@@ -163,6 +163,7 @@ def parse_from_x_protocol(pattern, dicomfile):
 def get_dicomfield(tagname, dicomfile):
     """
     Robustly reads a DICOM tag from a dictionary or from vendor specific fields
+    NB: profiling shows this is currently the most expensive function
     :param tagname:
     :param dicomfile:
     :return:
@@ -186,9 +187,11 @@ def get_dicomfield(tagname, dicomfile):
 
 def get_heuristics(yamlfile):
 
-    # Get the full paths to the bidsmapper yaml-file
+    # Get the full paths to the bidsmapper yaml-file and add a standard file-extension if needed
     if os.path.basename(yamlfile)==yamlfile:
         yamlfile = os.path.join(os.path.dirname(__file__), 'heuristics', yamlfile)
+    if not os.path.splitext(yamlfile)[1] and not os.path.exists(yamlfile):
+        yamlfile = yamlfile + '.yaml'
 
     # Read the heuristics from the bidsmapper files
     with open(yamlfile, 'r') as stream:
@@ -273,9 +276,7 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
 
     # Loop through all bidsmodalities and series; all info goes into series
     for bidsmodality in bidsmodalities:
-
         for series in heuristics['DICOM'][bidsmodality]:
-
             for item in series:
 
                 # Try to see if the dicomfile matches all of the attributes and try to fill all of them
@@ -305,8 +306,6 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
                     bidsvalue = series[item]
                     if not bidsvalue:
                         continue
-                    else:
-                        print(bidsvalue)  # DEBUG
 
                     # Intelligent filling of the run-index is done runtime by bidscoiner
                     if item == 'run_index' and bidsvalue == '<automatic>':
@@ -317,17 +316,14 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
                         attrkey      = bidsvalue[1:-2]
                         series[item] = get_dicomfield(attrkey, dicomfile)
 
-            # If we have a match, copy the filled-in series over to the bidsmap as a know bidsmodality
+            # TODO: check if copying over like done below is possible/allowed with ruamel.yaml (raising yaml.dump errors)
+            # If we have a match, copy the filled-in series over to the bidsmap as a standard bidsmodality
             if 'match' in locals() and match:
-
-                print('We have a match! :-)')       # DEBUG
                 if not exist_series(series, bidsmap['DICOM'][bidsmodality]):
                     bidsmap['DICOM'][bidsmodality].append(series)
 
             # If not, copy the filled-in series over to the bidsmap as an unknown modality
             else:
-
-                print('We have a mismatch! :-(')    # DEBUG
                 if not exist_series(series, bidsmap['DICOM'][unknownmodality]):
                     bidsmap['DICOM'][unknownmodality].append(series)
 
@@ -489,11 +485,11 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
                 if heuristics['PlugIn']:
                     bidsmap   = built_pluginmap(series, bidsmap)
 
-    # Create the bidsmap yaml-file
+    # Create the bidsmap yaml-file in bidsfolder/code
     os.makedirs(os.path.join(bidsfolder,'code'), exist_ok=True)
     bidsmapfile = os.path.join(bidsfolder,'code','bidsmap.yaml')
 
-    # Initiate the bidsmap with some helpful text and write the bidsmap
+    # Initiate the bidsmap with some helpful text
     bidsmap.yaml_set_start_comment = textwrap.dedent("""\
         ------------------------------------------------------------------------------
         Config file that maps the extracted fields to the BIDS modalities and BIDS
@@ -502,6 +498,8 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
         into the BIDS folder. The datastructure of this config file should be 5 levels
         deep and follow: dict > dict > list > dict > list
         ------------------------------------------------------------------------------""")
+
+    # Save the bidsmap to the bidsmap yaml-file
     with open(bidsmapfile, 'w') as stream:
         print('Writing bidsmap to: ' + bidsmapfile)
         yaml.dump(bidsmap, stream)
@@ -516,7 +514,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
-                                     epilog='example:\n  bidsmapper.py /project/foo/raw /project/foo/bids bidsmapper_dccn.yaml')
+                                     epilog='example:\n  bidsmapper.py /project/foo/raw /project/foo/bids bidsmapper_dccn')
     parser.add_argument('rawfolder',  help='The source folder containing the raw data in sub-###/ses-##/series format')
     parser.add_argument('bidsfolder', help='The destination folder with the bids data structure')
     parser.add_argument('bidsmapper', help='The bidsmapper yaml-file with the BIDS heuristics (default: ./heuristics/bidsmapper.yaml)')

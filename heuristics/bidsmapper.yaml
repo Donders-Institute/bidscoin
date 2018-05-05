@@ -205,7 +205,7 @@ DICOM:
           EchoNumbers: ~
           ImageType: ~
           ProtocolName: ~
-      acq_label: <SeriesNumber>_
+      acq_label: <SeriesNumber>
       run_index: <SeriesDescription>
 
 
