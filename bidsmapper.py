@@ -175,10 +175,10 @@ def get_dicomfield(tagname, dicomfile):
         value     = dicomdict.get(tagname)
     except IOError:
         warnings.warn('Cannot read' + dicomfile)
-    except:
+    except Exception:
         try:
             value = parse_from_x_protocol(tagname, dicomfile)
-        except:
+        except Exception:
             value = ''
             warnings.warn('Could not extract {} tag from {}'.format(tagname, dicomfile))
     return value
