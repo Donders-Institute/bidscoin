@@ -7,7 +7,7 @@
 # which uses it when traversing through the datasets to generate the bidsmap.yaml
 # mapper file (see [bidsmap_example.yaml] for details). The datastructure of a
 # bidsmapper config file should be 5 levels deep and follow:
-# dict > dict > list > dict > list
+# dict > dict > list > dict > dict
 # ------------------------------------------------------------------------------
 
 
@@ -84,12 +84,12 @@ DICOM:
   anat:
     - &anat
       attributes:
-        - SeriesDescription: ~
-          SequenceName: ~
-          ScanningSequence: ~
-          EchoNumbers: ~
-          ImageType: ~
-          ProtocolName: ~
+        SeriesDescription: ~
+        SequenceName: ~
+        ScanningSequence: ~
+        EchoNumbers: ~
+        ImageType: ~
+        ProtocolName: ~
       acq_label: <SeriesDescription>
       rec_label: ~
       run_index: ~
@@ -130,12 +130,12 @@ DICOM:
   func:
     - &func
       attributes:
-        - SeriesDescription: ~
-          SequenceName: ~
-          ScanningSequence: ~
-          EchoNumbers: ~
-          ImageType: ~
-          ProtocolName: ~
+        SeriesDescription: ~
+        SequenceName: ~
+        ScanningSequence: ~
+        EchoNumbers: ~
+        ImageType: ~
+        ProtocolName: ~
       task_label: <SeriesDescription>
       acq_label: ~
       rec_label: ~
@@ -148,36 +148,36 @@ DICOM:
   beh:
     - &beh
       attributes:
-        - SeriesDescription: ~
-          SequenceName: ~
-          ScanningSequence: ~
-          EchoNumbers: ~
-          ImageType: ~
-          ProtocolName: ~
+        SeriesDescription: ~
+        SequenceName: ~
+        ScanningSequence: ~
+        EchoNumbers: ~
+        ImageType: ~
+        ProtocolName: ~
       acq_label: <SeriesDescription>
       run_index: ~
 
   dwi:
     - &dwi
       attributes:
-        - SeriesDescription: ~
-          SequenceName: ~
-          ScanningSequence: ~
-          EchoNumbers: ~
-          ImageType: ~
-          ProtocolName: ~
+        SeriesDescription: ~
+        SequenceName: ~
+        ScanningSequence: ~
+        EchoNumbers: ~
+        ImageType: ~
+        ProtocolName: ~
       acq_label: <SeriesDescription>
       run_index: ~
 
   fmap:
     - &fmap
       attributes:
-        - SeriesDescription: ~
-          SequenceName: ~
-          ScanningSequence: ~
-          EchoNumbers: ~
-          ImageType: ~
-          ProtocolName: ~
+        SeriesDescription: ~
+        SequenceName: ~
+        ScanningSequence: ~
+        EchoNumbers: ~
+        ImageType: ~
+        ProtocolName: ~
       acq_label: <SeriesDescription>
       run_index: ~
       dir_label: ~
@@ -199,12 +199,12 @@ DICOM:
 
   unknown:
     - attributes:
-        - SeriesDescription: ~
-          SequenceName: ~
-          ScanningSequence: ~
-          EchoNumbers: ~
-          ImageType: ~
-          ProtocolName: ~
+        SeriesDescription: ~
+        SequenceName: ~
+        ScanningSequence: ~
+        EchoNumbers: ~
+        ImageType: ~
+        ProtocolName: ~
       acq_label: <SeriesNumber>
       run_index: <SeriesDescription>
 
@@ -238,9 +238,9 @@ FileSystem:
   anat:
     - &anat_filesystem
       attributes:
-        - FolderName: ~
-          FileName: ~
-          FileExt: ~
+        FolderName: ~
+        FileName: ~
+        FileExt: ~
       acq_label: <FileName>
       rec_label: ~
       run_index: ~
@@ -281,9 +281,9 @@ FileSystem:
   func:
     - &func_filesystem
       attributes:
-        - FolderName: ~
-          FileName: ~
-          FileExt: ~
+        FolderName: ~
+        FileName: ~
+        FileExt: ~
       task_label: <FileName>
       acq_label: ~
       rec_label: ~
@@ -304,27 +304,27 @@ FileSystem:
   beh:
     - &beh_filesystem
       attributes:
-        - FolderName: ~
-          FileName: ~
-          FileExt: ~
+        FolderName: ~
+        FileName: ~
+        FileExt: ~
       acq_label: <FileName>
       run_index: ~
 
   dwi:
     - &dwi_filesystem
       attributes:
-        - FolderName: ~
-          FileName: ~
-          FileExt: ~
+        FolderName: ~
+        FileName: ~
+        FileExt: ~
       acq_label: <FileName>
       run_index: ~
 
   fmap:
     - &fmap_filesystem
       attributes:
-        - FolderName: ~
-          FileName: ~
-          FileExt: ~
+        FolderName: ~
+        FileName: ~
+        FileExt: ~
       acq_label: <FileName>
       run_index: ~
       dir_label: ~
@@ -346,9 +346,9 @@ FileSystem:
 
   unknown:
     - attributes:
-        - FolderName: ~
-          FileName: ~
-          FileExt: ~
+        FolderName: ~
+        FileName: ~
+        FileExt: ~
       acq_label: <FileName>
 
 

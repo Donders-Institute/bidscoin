@@ -237,7 +237,7 @@ def exist_series(series, serieslist):
     """
     for seriesitem in serieslist:
 
-        match = any(series['attributes'][0])                        # TODO: figure out why the data lives one level deeper
+        match = any(series['attributes'])
 
         # Search for a case where all series items match with the seriesitem items
         for item in series:
@@ -245,13 +245,9 @@ def exist_series(series, serieslist):
             try:
                 if item=='attributes':
 
-                    seriesattributes = series['attributes'][0]      # TODO: figure out why the data lives one level deeper
-                    itemattributes   = seriesitem['attributes'][0]  # TODO: figure out why the data lives one level deeper
-
-                    for attrkey in seriesattributes:
-
-                        seriesvalue = seriesattributes[attrkey]  # for attrkey,attrvalue doesn't work...?
-                        itemvalue   = itemattributes[attrkey]
+                    for attrkey in series['attributes']:
+                        seriesvalue = series['attributes'][attrkey]  # for attrkey,attrvalue doesn't work...?
+                        itemvalue   = seriesitem['attributes'][attrkey]
                         match       = match and (seriesvalue == itemvalue)
 
                 else:
@@ -311,17 +307,15 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
     for bidsmodality in bidsmodalities:
         for _series in heuristics['DICOM'][bidsmodality]:
 
-            series = copy.deepcopy(_series)                 # NB: Make sure we don't change the original heuristics object
+            series = copy.deepcopy(_series)                 # NB: Make sure we don't change the original heuristics object. TODO: This is a very expensive operation, optimize it!
             for item in series:
 
                 # Try to see if the dicomfile matches all of the attributes and try to fill all of them
                 if item == 'attributes':
 
-                    attributes = series['attributes'][0]    # TODO: figure out why the data lives one level deeper
+                    for attrkey in series['attributes']:
 
-                    for attrkey in attributes:              # TODO: skip ruamel entries
-
-                        attrvalue  = attributes[attrkey]       # for attrkey,attrvalue doesn't work...?
+                        attrvalue  = series['attributes'][attrkey]       # for attrkey,attrvalue doesn't work...?
                         dicomvalue = get_dicomfield(attrkey, dicomfile)
 
                         # Check if the attribute value matches with the info from the dicomfile
@@ -331,9 +325,7 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
 
                         # Else, fill the empty attribute with the info from the dicomfile
                         else:
-                            attributes[attrkey] = dicomvalue
-
-                    series['attributes'][0] = attributes    # TODO: figure out why the data lives one level deeper
+                            series['attributes'][attrkey] = dicomvalue
 
                 # Try to fill all the bids-labels
                 else:
@@ -354,12 +346,12 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
             # If we have a match, copy the filled-in series over to the bidsmap as a standard bidsmodality
             if 'match' in locals() and match:
                 if not exist_series(series, bidsmap['DICOM'][bidsmodality]):
-                    bidsmap['DICOM'][bidsmodality].append(series)
+                    bidsmap['DICOM'][bidsmodality].append(series)       # append(copy.deepcopy(series)) DEBUG ???
 
             # If not, copy the filled-in series over to the bidsmap as an unknown modality
             else:
                 if not exist_series(series, bidsmap['DICOM'][unknownmodality]):
-                    bidsmap['DICOM'][unknownmodality].append(series)
+                    bidsmap['DICOM'][unknownmodality].append(series)    # append(copy.deepcopy(series)) DEBUG ???
 
             if 'match' in locals(): del match
 
@@ -478,7 +470,7 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
     # Get the heuristics for creating the bidsmap
     heuristics = get_heuristics(bidsmapper)
 
-    # Create a copy / bidsmap skeleton with no modality entries
+    # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmapper with empty lists)
     bidsmap = copy.deepcopy(heuristics)
     for logic in ('DICOM', 'PAR', 'P7', 'Nifti', 'FileSystem'):
         for modality in bidsmodalities + (unknownmodality,):
@@ -545,7 +537,7 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
     # Save the bidsmap to the bidsmap yaml-file
     with open(bidsmapfile, 'w') as stream:
         print('Writing bidsmap to: ' + bidsmapfile)
-        # yaml.dump(bidsmap, stream)
+        yaml.dump(bidsmap, stream)
 
     return bidsmapfile
 
