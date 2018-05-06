@@ -283,7 +283,7 @@ def cleanup_label(label):
     """
     Return the given label converted to a label that can be used as a clean BIDS label.
     Remove leading and trailing spaces; convert other spaces, special BIDS characters
-    and anything that is not an alphanumeric, dash, underscore, or dot to #.
+    and anything that is not an alphanumeric, dash, underscore, or dot to a dot.
     >> cleanup_label("Joe's reward_task")
     'Joesxreward_task'
     :param label:
@@ -292,9 +292,9 @@ def cleanup_label(label):
     special_characters = (' ', '_', '-',)
 
     for special in special_characters:
-        label = str(label).strip().replace(special, '#')
+        label = str(label).strip().replace(special, '.')
 
-    return re.sub(r'(?u)[^-\w.]', '#', label)
+    return re.sub(r'(?u)[^-\w.]', '.', label)
 
 
 # -----------------------------------------------------------------------------
@@ -342,42 +342,57 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
 
                     bidsvalue = series[item]
                     if not bidsvalue:
-                        continue
+                        pass
 
                     # Intelligent filling of the run-index is done runtime by bidscoiner
-                    if item == 'run_index' and bidsvalue == '<automatic>':
+                    elif item == 'run_index' and bidsvalue == '<automatic>':
                         pass
 
                     # Fill any bids-label with the <annotated> dicom attribute
                     elif bidsvalue.startswith('<') and bidsvalue.endswith('>'):
-                        series[item] = get_dicomfield(bidsvalue[1:-1], dicomfile)
+                        label        = get_dicomfield(bidsvalue[1:-1], dicomfile)
+                        series[item] = cleanup_label(label)
 
             # If we have a match, copy the filled-in series over to the bidsmap as a standard bidsmodality
             if match:
+
+                if not series['attributes']['SeriesDescription']:
+                    pass        # DEBUG
+
                 if not exist_series(series, bidsmap['DICOM'][bidsmodality]):
                     bidsmap['DICOM'][bidsmodality].append(series)       # append(copy.deepcopy(series)) DEBUG ???
 
-            # If not, copy the filled-in series over to the bidsmap as an unknown modality
+                return bidsmap
+
+    # If nothing matched, copy the filled-in attributes series over to the bidsmap as an unknown modality and fill the unknown labels
+    unknownseries = dict()
+    for item in heuristics['DICOM'][unknownmodality]:
+        if item == 'attributes':
+
+            # Taking the last tested series is a convenient but arbitrary choice (potentially, other series can have different attributes listed in the bidsmapper)
+            unknownseries['attributes'] = series['attributes']
+
+        else:
+
+            unknownvalue = heuristics['DICOM'][unknownmodality][item]
+            if not unknownvalue:
+                unknownseries[item] = None
+
+            # Intelligent filling of the run-index is done runtime by bidscoiner
+            elif item=='run_index' and unknownvalue=='<automatic>':
+                unknownseries[item] = '<automatic>'
+
+            # Fill any bids-label with the <annotated> dicom attribute
+            elif unknownvalue and unknownvalue.startswith('<') and unknownvalue.endswith('>'):
+                label               = get_dicomfield(unknownvalue[1:-1], dicomfile)
+                unknownseries[item] = cleanup_label(label)
+
             else:
-                # Refill using only the labels from the bidsmapper
-                unknownseries = dict()
-                for item in heuristics['DICOM'][unknownmodality]:
-                    if item == 'attributes':
+                warnings.warn('Do not know what to do with unknown bidsmapper-value:\n {}: {}'.format(item, unknownvalue))
+                unknownseries[item] = unknownvalue
 
-                        unknownseries['attributes'] = series['attributes']
-
-                    else:
-
-                        # Fill any unknown-label with the <annotated> dicom attribute
-                        unknownvalue = heuristics['DICOM'][unknownmodality][item]
-                        if not unknownvalue:
-                            continue
-                        elif unknownvalue.startswith('<') and unknownvalue.endswith('>'):
-
-                            unknownseries[item] = get_dicomfield(unknownvalue[1:-1], dicomfile)
-
-                if not exist_series(unknownseries, bidsmap['DICOM'][unknownmodality]):
-                    bidsmap['DICOM'][unknownmodality].append(unknownseries)    # append(copy.deepcopy(series)) DEBUG ???
+    if not exist_series(unknownseries, bidsmap['DICOM'][unknownmodality]):
+        bidsmap['DICOM'][unknownmodality].append(unknownseries)
 
     return bidsmap
 

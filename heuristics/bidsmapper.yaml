@@ -92,7 +92,7 @@ DICOM:
         ProtocolName: ~
       acq_label: <SeriesDescription>
       rec_label: ~
-      run_index: ~
+      run_index: <automatic>
       mod_label: ~
       modality_label: T1w
       ce_label: ~
@@ -139,7 +139,7 @@ DICOM:
       task_label: <SeriesDescription>
       acq_label: ~
       rec_label: ~
-      run_index: ~
+      run_index: <automatic>
       echo_index: ~
       suffix: bold
     - <<: *func
@@ -155,7 +155,7 @@ DICOM:
         ImageType: ~
         ProtocolName: ~
       acq_label: <SeriesDescription>
-      run_index: ~
+      run_index: <automatic>
 
   dwi:
     - &dwi
@@ -167,7 +167,7 @@ DICOM:
         ImageType: ~
         ProtocolName: ~
       acq_label: <SeriesDescription>
-      run_index: ~
+      run_index: <automatic>
 
   fmap:
     - &fmap
@@ -179,7 +179,7 @@ DICOM:
         ImageType: ~
         ProtocolName: ~
       acq_label: <SeriesDescription>
-      run_index: ~
+      run_index: <automatic>
       dir_label: ~
       suffix: magnitude1
       IntendedFor: ~
@@ -206,7 +206,7 @@ DICOM:
       ImageType: ~
       ProtocolName: ~
     acq_label: <SeriesDescription>
-    run_index: <SeriesNumber>
+    run_index: <automatic>
 
 
 # ------------------------------------------------------------------------------
@@ -243,7 +243,7 @@ FileSystem:
         FileExt: ~
       acq_label: <FileName>
       rec_label: ~
-      run_index: ~
+      run_index: <automatic>
       mod_label: ~
       modality_label: T1w
       ce_label: ~
@@ -287,7 +287,7 @@ FileSystem:
       task_label: <FileName>
       acq_label: ~
       rec_label: ~
-      run_index: ~
+      run_index: <automatic>
       echo_index: ~
       suffix: bold
     - <<: *func_filesystem
@@ -308,7 +308,7 @@ FileSystem:
         FileName: ~
         FileExt: ~
       acq_label: <FileName>
-      run_index: ~
+      run_index: <automatic>
 
   dwi:
     - &dwi_filesystem
@@ -317,7 +317,7 @@ FileSystem:
         FileName: ~
         FileExt: ~
       acq_label: <FileName>
-      run_index: ~
+      run_index: <automatic>
 
   fmap:
     - &fmap_filesystem
@@ -326,7 +326,7 @@ FileSystem:
         FileName: ~
         FileExt: ~
       acq_label: <FileName>
-      run_index: ~
+      run_index: <automatic>
       dir_label: ~
       suffix: magnitude1
       IntendedFor: ~
@@ -350,7 +350,7 @@ FileSystem:
       FileName: ~
       FileExt: ~
     acq_label: <FileName>
-    run_index: ~
+    run_index: <automatic>
 
 
 # ------------------------------------------------------------------------------
