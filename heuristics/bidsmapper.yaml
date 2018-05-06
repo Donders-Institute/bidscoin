@@ -197,16 +197,16 @@ DICOM:
       suffix: fieldmap
       # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
-  unknown:
-    - attributes:
-        SeriesDescription: ~
-        SequenceName: ~
-        ScanningSequence: ~
-        EchoNumbers: ~
-        ImageType: ~
-        ProtocolName: ~
-      acq_label: <SeriesNumber>
-      run_index: <SeriesDescription>
+  unknown:   # NB: A dict, should not be a list
+    attributes:
+      SeriesDescription: ~
+      SequenceName: ~
+      ScanningSequence: ~
+      EchoNumbers: ~
+      ImageType: ~
+      ProtocolName: ~
+    acq_label: <SeriesDescription>
+    run_index: <SeriesNumber>
 
 
 # ------------------------------------------------------------------------------
@@ -344,12 +344,13 @@ FileSystem:
       suffix: fieldmap
       # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
-  unknown:
-    - attributes:
-        FolderName: ~
-        FileName: ~
-        FileExt: ~
-      acq_label: <FileName>
+  unknown:   # NB: A dict, should not be a list
+    attributes:
+      FolderName: ~
+      FileName: ~
+      FileExt: ~
+    acq_label: <FileName>
+    run_index: ~
 
 
 # ------------------------------------------------------------------------------

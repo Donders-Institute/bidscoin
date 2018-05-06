@@ -18,9 +18,9 @@ import warnings
 import re
 import textwrap
 import copy
-# from ruamel_yaml import YAML  DEBUG : commented out
-# yaml = YAML()
-import yaml
+from ruamel_yaml import YAML
+yaml = YAML()
+# import yaml
 
 bidsmodalities  = ('anat', 'func', 'beh', 'dwi', 'fmap')
 unknownmodality = 'unknown'
@@ -210,7 +210,17 @@ def get_dicomfield(tagname, dicomfile):
             value = None
             warnings.warn('Could not extract {} tag from {}'.format(tagname, dicomfile))
 
-    return value
+    if tagname=='SeriesDescription': pass   # DEBUG
+
+    # Cast the dicom datatype to standard to int or str (i.e. to something that yaml.dump can handle)
+    if isinstance(value, int):
+        return int(value)
+
+    elif not isinstance(value, str):    # Assume it's a MultiValue type and flatten it (TODO: deal with this properly)
+        return str(value)
+
+    else:
+        return str(value)
 
 
 def get_heuristics(yamlfile):
@@ -338,10 +348,9 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
                     if item == 'run_index' and bidsvalue == '<automatic>':
                         pass
 
-                    # Fill any bids-label with the annotated series attribute
+                    # Fill any bids-label with the <annotated> dicom attribute
                     elif bidsvalue.startswith('<') and bidsvalue.endswith('>'):
-                        attrkey      = bidsvalue[1:-2]
-                        series[item] = get_dicomfield(attrkey, dicomfile)
+                        series[item] = get_dicomfield(bidsvalue[1:-1], dicomfile)
 
             # If we have a match, copy the filled-in series over to the bidsmap as a standard bidsmodality
             if match:
@@ -350,8 +359,25 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
 
             # If not, copy the filled-in series over to the bidsmap as an unknown modality
             else:
-                if not exist_series(series, bidsmap['DICOM'][unknownmodality]):
-                    bidsmap['DICOM'][unknownmodality].append(series)    # append(copy.deepcopy(series)) DEBUG ???
+                # Refill using only the labels from the bidsmapper
+                unknownseries = dict()
+                for item in heuristics['DICOM'][unknownmodality]:
+                    if item == 'attributes':
+
+                        unknownseries['attributes'] = series['attributes']
+
+                    else:
+
+                        # Fill any unknown-label with the <annotated> dicom attribute
+                        unknownvalue = heuristics['DICOM'][unknownmodality][item]
+                        if not unknownvalue:
+                            continue
+                        elif unknownvalue.startswith('<') and unknownvalue.endswith('>'):
+
+                            unknownseries[item] = get_dicomfield(unknownvalue[1:-1], dicomfile)
+
+                if not exist_series(unknownseries, bidsmap['DICOM'][unknownmodality]):
+                    bidsmap['DICOM'][unknownmodality].append(unknownseries)    # append(copy.deepcopy(series)) DEBUG ???
 
     return bidsmap
 
@@ -523,14 +549,14 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
     bidsmapfile = os.path.join(bidsfolder,'code','bidsmap.yaml')
 
     # Initiate the bidsmap with some helpful text
-    # bidsmap.yaml_set_start_comment = textwrap.dedent("""\ DEBUG : commented out
-    #     ------------------------------------------------------------------------------
-    #     Config file that maps the extracted fields to the BIDS modalities and BIDS
-    #     labels (see also [bidsmapper.yaml] and [bidsmapper.py]). You can edit these.
-    #     fields before passing it to [bidscoiner.py] which uses it to cast the datasets
-    #     into the BIDS folder. The datastructure of this config file should be 5 levels
-    #     deep and follow: dict > dict > list > dict > list
-    #     ------------------------------------------------------------------------------""")
+    bidsmap.yaml_set_start_comment = textwrap.dedent("""\
+        ------------------------------------------------------------------------------
+        Config file that maps the extracted fields to the BIDS modalities and BIDS
+        labels (see also [bidsmapper.yaml] and [bidsmapper.py]). You can edit these.
+        fields before passing it to [bidscoiner.py] which uses it to cast the datasets
+        into the BIDS folder. The datastructure of this config file should be 5 levels
+        deep and follow: dict > dict > list > dict > list
+        ------------------------------------------------------------------------------""")
 
     # Save the bidsmap to the bidsmap yaml-file
     print('Writing bidsmap to: ' + bidsmapfile)
