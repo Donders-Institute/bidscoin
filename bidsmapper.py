@@ -108,7 +108,9 @@ def get_dicom_file(folder):
     for file in os.listdir(folder):
         if is_dicomfile(os.path.join(folder, file)):
             return os.path.join(folder, file)
+
     warnings.warn('Cannot find dicom files in:' + folder)
+    return None
 
 
 def get_par_file(folder):
@@ -118,7 +120,9 @@ def get_par_file(folder):
     for file in os.listdir(folder):
         if is_parfile(file):
             return os.path.join(folder, file)
+
     warnings.warn('Cannot find PAR files in:' + folder)
+    return None
 
 
 def get_p7_file(folder):
@@ -128,7 +132,9 @@ def get_p7_file(folder):
     for file in os.listdir(folder):
         if is_p7file(file):
             return os.path.join(folder, file)
+
     warnings.warn('Cannot find P7 files in:' + folder)
+    return None
 
 
 def get_nifti_file(folder):
@@ -138,7 +144,9 @@ def get_nifti_file(folder):
     for file in os.listdir(folder):
         if is_niftifile(file):
             return os.path.join(folder, file)
+
     warnings.warn('Cannot find nifti files in:' + folder)
+    return None
 
 
 def parse_from_x_protocol(pattern, dicomfile):
@@ -150,47 +158,58 @@ def parse_from_x_protocol(pattern, dicomfile):
     """
     if not is_dicomfile_siemens(dicomfile):
         warnings.warn('This does not seem to be a Siemens DICOM file')
+
     with open(dicomfile, 'rb') as openfile:
+
         regexp = '^' + pattern + '\t = \t(.*)\n'
         regex  = re.compile(regexp.encode('utf-8'))
+
         for line in openfile:
             match = regex.match(line)
             if match:
-                return int(match.group(1).decode('utf-8'))
+                return match.group(1).decode('utf-8')
+
     warnings.warn('Pattern: "' + regexp.encode('unicode_escape').decode() + '" not found in: ' + dicomfile)
+    return None
 
 
-DICOMDICT_MEMO = None
-DICOMFILE_MEMO = None
+_DICOMDICT_MEMO = None
+_DICOMFILE_MEMO = None
 def get_dicomfield(tagname, dicomfile):
     """
     Robustly reads a DICOM tag from a dictionary or from vendor specific fields
     NB: profiling shows this is currently the most expensive function, so therefore
-    the (primitive) DICOMDICT_MEMO optimization
+    the (primitive but effective) _DICOMDICT_MEMO optimization
     :param tagname:
     :param dicomfile:
     :return:
     """
     import pydicom
-    global DICOMDICT_MEMO, DICOMFILE_MEMO
+    global _DICOMDICT_MEMO, _DICOMFILE_MEMO
 
     try:
-        # TODO: implement regexp
-        if dicomfile != DICOMFILE_MEMO:
-            dicomdict      = pydicom.dcmread(dicomfile)
-            DICOMDICT_MEMO = dicomdict
-            DICOMFILE_MEMO = dicomfile
+
+        if dicomfile != _DICOMFILE_MEMO:
+            dicomdict       = pydicom.dcmread(dicomfile)
+            _DICOMDICT_MEMO = dicomdict
+            _DICOMFILE_MEMO = dicomfile
         else:
-            dicomdict = DICOMDICT_MEMO
-        value     = dicomdict.get(tagname)
-    except IOError:
-        warnings.warn('Cannot read' + dicomfile)
+            dicomdict = _DICOMDICT_MEMO
+
+        # TODO: implement regexp
+        value = dicomdict.get(tagname)
+
+    except IOError: warnings.warn('Cannot read' + dicomfile)
     except Exception:
         try:
+
             value = parse_from_x_protocol(tagname, dicomfile)
+
         except Exception:
+
             value = None
             warnings.warn('Could not extract {} tag from {}'.format(tagname, dicomfile))
+
     return value
 
 
@@ -205,6 +224,7 @@ def get_heuristics(yamlfile):
     # Read the heuristics from the bidsmapper files
     with open(yamlfile, 'r') as stream:
         heuristics = yaml.load(stream)
+
     return heuristics
 
 
@@ -217,7 +237,7 @@ def exist_series(series, serieslist):
     """
     for seriesitem in serieslist:
 
-        match = True
+        match = any(series['attributes'][0])                        # TODO: figure out why the data lives one level deeper
 
         # Search for a case where all series items match with the seriesitem items
         for item in series:
@@ -243,7 +263,10 @@ def exist_series(series, serieslist):
             except KeyError:    # Errors may be evoked when matching bids-labels which exist in one modality but not in the other
                 match = False
 
-        # Stop if we found one (i.e. match is still True after all the tests)
+            if not match:       # There is no point in searching further within the series now that we've found a mismatch
+                break
+
+        # Stop searching if we found a matching series (i.e. which is the case if match is still True after all item tests)
         if match:
             return True
 
@@ -264,6 +287,7 @@ def cleanup_label(label):
 
     for special in special_characters:
         label = str(label).strip().replace(special, '#')
+
     return re.sub(r'(?u)[^-\w.]', '#', label)
 
 
@@ -285,7 +309,9 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
 
     # Loop through all bidsmodalities and series; all info goes into series
     for bidsmodality in bidsmodalities:
-        for series in heuristics['DICOM'][bidsmodality]:
+        for _series in heuristics['DICOM'][bidsmodality]:
+
+            series = copy.deepcopy(_series)                 # NB: Make sure we don't change the original heuristics object
             for item in series:
 
                 # Try to see if the dicomfile matches all of the attributes and try to fill all of them
@@ -293,7 +319,7 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
 
                     attributes = series['attributes'][0]    # TODO: figure out why the data lives one level deeper
 
-                    for attrkey in attributes:
+                    for attrkey in attributes:              # TODO: skip ruamel entries
 
                         attrvalue  = attributes[attrkey]       # for attrkey,attrvalue doesn't work...?
                         dicomvalue = get_dicomfield(attrkey, dicomfile)
@@ -325,7 +351,6 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
                         attrkey      = bidsvalue[1:-2]
                         series[item] = get_dicomfield(attrkey, dicomfile)
 
-            # TODO: check if copying over like done below is possible/allowed with ruamel.yaml (raising yaml.dump errors)
             # If we have a match, copy the filled-in series over to the bidsmap as a standard bidsmodality
             if 'match' in locals() and match:
                 if not exist_series(series, bidsmap['DICOM'][bidsmodality]):
@@ -455,10 +480,11 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
 
     # Create a copy / bidsmap skeleton with no modality entries
     bidsmap = copy.deepcopy(heuristics)
-    for datasource in ('DICOM', 'PAR', 'P7', 'Nifti', 'FileSystem'):
+    for logic in ('DICOM', 'PAR', 'P7', 'Nifti', 'FileSystem'):
         for modality in bidsmodalities + (unknownmodality,):
-            if bidsmap[datasource] and modality in bidsmap[datasource]:
-                bidsmap[datasource][modality] = []
+
+            if bidsmap[logic] and modality in bidsmap[logic]:
+                bidsmap[logic][modality] = []
 
     # Loop over all subjects and sessions and built up the bidsmap entries
     subjects = lsdirs(rawfolder, 'sub-*')
@@ -469,10 +495,10 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
             sessions = subject
         for session in sessions:
 
+            print('Parsing: ' + session)
+
             mriseries = lsdirs(session)
             for series in mriseries:
-
-                print('Parsing: ' + series)
 
                 # Update / append the dicom mapping
                 if heuristics['DICOM']:
@@ -517,9 +543,9 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
         ------------------------------------------------------------------------------""")
 
     # Save the bidsmap to the bidsmap yaml-file
-    # with open(bidsmapfile, 'w') as stream:
-    #     print('Writing bidsmap to: ' + bidsmapfile)
-    #     yaml.dump(bidsmap, stream)
+    with open(bidsmapfile, 'w') as stream:
+        print('Writing bidsmap to: ' + bidsmapfile)
+        # yaml.dump(bidsmap, stream)
 
     return bidsmapfile
 
