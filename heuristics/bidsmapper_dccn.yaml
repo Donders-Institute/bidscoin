@@ -88,9 +88,13 @@ DICOM:
     - &anat
       attributes:
         SeriesDescription: ~
-        SequenceName: ~
-        ScanningSequence: ~
-        EchoNumbers: ~
+        SequenceVariant:
+        SequenceName: '*tfl3d1_16ns'
+        ScanningSequence:
+        MRAcquisitionType: ~
+        EchoNumbers:
+        FlipAngle:
+        RepetitionTime: ~
         ImageType: ~
         ProtocolName: ~
       acq_label: <SeriesDescription>
@@ -110,13 +114,28 @@ DICOM:
     - <<: *anat
       attributes:
         SeriesDescription: ~
-        SequenceName: "*fl3d11r"
+        SequenceVariant:
+        SequenceName: '*fl3d11r'
         ScanningSequence: ~
-        EchoNumbers: ~
+        MRAcquisitionType: ~
+        EchoNumbers:
+        FlipAngle:
+        RepetitionTime: ~
         ImageType: ~
         ProtocolName: ~
       modality_label: T2star
     - <<: *anat
+      attributes:
+        SeriesDescription: ~
+        SequenceVariant:
+        SequenceName: '*fm2d2r'
+        ScanningSequence: "['SE', 'IR']"
+        MRAcquisitionType: ~
+        EchoNumbers:
+        FlipAngle:
+        RepetitionTime: ~
+        ImageType: ~
+        ProtocolName: ~
       modality_label: FLAIR
     - <<: *anat
       modality_label: FLASH
@@ -141,9 +160,13 @@ DICOM:
     - &func
       attributes:
         SeriesDescription: ~
-        SequenceName: ~
-        ScanningSequence: EP
-        EchoNumbers: ~
+        SequenceVariant:
+        SequenceName: [epfid2d1rs88, epfid2d1rs104, '*fm2d2r']
+        ScanningSequence: [EP, GR]
+        MRAcquisitionType: ~
+        EchoNumbers:
+        FlipAngle:
+        RepetitionTime: ~
         ImageType: ~
         ProtocolName: ~
       task_label: <SeriesDescription>
@@ -159,9 +182,13 @@ DICOM:
     - &beh
       attributes:
         SeriesDescription: ~
+        SequenceVariant:
         SequenceName: ~
         ScanningSequence: ~
-        EchoNumbers: ~
+        MRAcquisitionType: ~
+        EchoNumbers:
+        FlipAngle:
+        RepetitionTime: ~
         ImageType: ~
         ProtocolName: ~
       acq_label: <SeriesDescription>
@@ -171,9 +198,13 @@ DICOM:
     - &dwi
       attributes:
         SeriesDescription: ~
-        SequenceName: ~
-        ScanningSequence: ~
-        EchoNumbers: ~
+        SequenceVariant:
+        SequenceName: ['epse2d1_104', 'ep_b5#1', 'ep_b1000#1']
+        ScanningSequence: EP
+        MRAcquisitionType: ~
+        EchoNumbers:
+        FlipAngle:
+        RepetitionTime: ~
         ImageType: ~
         ProtocolName: ~
       acq_label: <SeriesDescription>
@@ -183,9 +214,13 @@ DICOM:
     - &fmap
       attributes:
         SeriesDescription: ~
+        SequenceVariant:
         SequenceName: "*fm2d2r"
         ScanningSequence: ~
-        EchoNumbers: ~
+        MRAcquisitionType: ~
+        EchoNumbers:
+        FlipAngle:
+        RepetitionTime: ~
         ImageType: ~
         ProtocolName: ~
       acq_label: <SeriesDescription>
@@ -212,6 +247,7 @@ DICOM:
       SeriesDescription: ~
       SequenceName: ~
       ScanningSequence: ~
+      MRAcquisitionType: ~
       EchoNumbers: ~
       ImageType: ~
       ProtocolName: ~

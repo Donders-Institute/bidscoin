@@ -223,7 +223,7 @@ def get_dicomfield(tagname, dicomfile):
 def get_heuristics(yamlfile):
 
     # Get the full paths to the bidsmapper yaml-file and add a standard file-extension if needed
-    if os.path.basename(yamlfile)==yamlfile:
+    if os.path.basename(yamlfile) == yamlfile:
         yamlfile = os.path.join(os.path.dirname(__file__), 'heuristics', yamlfile)
     if not os.path.splitext(yamlfile)[1] and not os.path.exists(yamlfile):
         yamlfile = yamlfile + '.yaml'
@@ -324,12 +324,12 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
 
                     for attrkey in series['attributes']:
 
-                        attrvalue  = series['attributes'][attrkey]       # for attrkey,attrvalue doesn't work...?
+                        attrvalue  = series['attributes'][attrkey]
                         dicomvalue = get_dicomfield(attrkey, dicomfile)
 
                         # Check if the attribute value matches with the info from the dicomfile
                         if attrvalue:
-                            match = match and (attrvalue == dicomvalue)    # TODO: implement regexp
+                            match = match and (dicomvalue in attrvalue)    # TODO: implement regexp
 
                         # Else, fill the empty attribute with the info from the dicomfile
                         else:
