@@ -352,7 +352,7 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
                         label        = get_dicomfield(bidsvalue[1:-1], dicomfile)
                         series[item] = cleanup_label(label)
 
-            # If we have a match, copy the filled-in series over to the bidsmap as a standard bidsmodality
+            # If we have a match, copy the filled-in series over to the bidsmap as a standard bidsmodality and we are done!
             if match:
                 if not exist_series(series, bidsmap['DICOM'][bidsmodality]):
                     bidsmap['DICOM'][bidsmodality].append(series)       # append(copy.deepcopy(series)) DEBUG ???
@@ -360,7 +360,7 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
                 return bidsmap
 
     # If nothing matched, copy the filled-in attributes series over to the bidsmap as an unknown modality and fill the unknown labels
-    unknownseries = dict()
+    unknownseries = dict()      # Here we loose comments and formatting from the bidsmapper, but that is probably very minor
     for item in heuristics['DICOM'][unknownmodality]:
         if item == 'attributes':
 

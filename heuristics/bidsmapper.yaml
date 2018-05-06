@@ -76,12 +76,18 @@
 # 		<matches>.json
 
 
+# ------------------------------------------------------------------------------
+# General options
+# ------------------------------------------------------------------------------
 Options:
 
+# ------------------------------------------------------------------------------
+# DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
+# ------------------------------------------------------------------------------
 DICOM:
   participant_label: ~
   session_label: ~
-  anat:
+  anat: # ------------------- All anatomical data -------------------
     - &anat
       attributes:
         SeriesDescription: ~
@@ -127,7 +133,7 @@ DICOM:
     - <<: *anat
       modality_label: SWImagandphase
 
-  func:
+  func: # ------------------- All functional data -------------------
     - &func
       attributes:
         SeriesDescription: ~
@@ -145,7 +151,7 @@ DICOM:
     - <<: *func
       suffix: sbref
 
-  beh:
+  beh:  # ------------------- All behavioural data -------------------
     - &beh
       attributes:
         SeriesDescription: ~
@@ -157,7 +163,7 @@ DICOM:
       acq_label: <SeriesDescription>
       run_index: <automatic>
 
-  dwi:
+  dwi:  # ------------------- All diffusion data -------------------
     - &dwi
       attributes:
         SeriesDescription: ~
@@ -169,7 +175,7 @@ DICOM:
       acq_label: <SeriesDescription>
       run_index: <automatic>
 
-  fmap:
+  fmap: # ------------------- All fieldmap data -------------------
     - &fmap
       attributes:
         SeriesDescription: ~
@@ -197,8 +203,8 @@ DICOM:
       suffix: fieldmap
       # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
-  unknown:   # NB: A dict, should not be a list
-    attributes:
+  unknown: # ------------------- All non-BIDS data -------------------
+    attributes:   # NB: A dict, should not be a list
       SeriesDescription: ~
       SequenceName: ~
       ScanningSequence: ~
@@ -235,7 +241,7 @@ Nifti: ~
 FileSystem:
   participant_label: ~
   session_label: ~
-  anat:
+  anat: # ------------------- All anatomical data -------------------
     - &anat_filesystem
       attributes:
         FolderName: ~
@@ -278,7 +284,7 @@ FileSystem:
     - <<: *anat_filesystem
       modality_label: SWImagandphase
 
-  func:
+  func: # ------------------- All functional data -------------------
     - &func_filesystem
       attributes:
         FolderName: ~
@@ -301,7 +307,7 @@ FileSystem:
       recording_label: <FileName>
       suffix: stim
 
-  beh:
+  beh:  # ------------------- All behavioural data -------------------
     - &beh_filesystem
       attributes:
         FolderName: ~
@@ -310,7 +316,7 @@ FileSystem:
       acq_label: <FileName>
       run_index: <automatic>
 
-  dwi:
+  dwi:  # ------------------- All diffusion data -------------------
     - &dwi_filesystem
       attributes:
         FolderName: ~
@@ -319,7 +325,7 @@ FileSystem:
       acq_label: <FileName>
       run_index: <automatic>
 
-  fmap:
+  fmap: # ------------------- All fieldmap data -------------------
     - &fmap_filesystem
       attributes:
         FolderName: ~
@@ -344,8 +350,8 @@ FileSystem:
       suffix: fieldmap
       # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
-  unknown:   # NB: A dict, should not be a list
-    attributes:
+  unknown: # ------------------- All non-BIDS data -------------------
+    attributes:   # NB: A dict, should not be a list
       FolderName: ~
       FileName: ~
       FileExt: ~
