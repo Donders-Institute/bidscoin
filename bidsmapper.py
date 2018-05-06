@@ -210,8 +210,6 @@ def get_dicomfield(tagname, dicomfile):
             value = None
             warnings.warn('Could not extract {} tag from {}'.format(tagname, dicomfile))
 
-    if tagname=='SeriesDescription': pass   # DEBUG
-
     # Cast the dicom datatype to standard to int or str (i.e. to something that yaml.dump can handle)
     if isinstance(value, int):
         return int(value)
@@ -317,7 +315,8 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
     for bidsmodality in bidsmodalities:
         for _series in heuristics['DICOM'][bidsmodality]:
 
-            series = copy.deepcopy(_series)                 # NB: Make sure we don't change the original heuristics object. TODO: This is a very expensive operation, optimize it!
+            #  TODO: deepcopy is a very expensive operation, optimize it! (e.g. by creating a dict(), but then we loose all comments and formatting
+            series = copy.deepcopy(_series)                 # NB: Make sure we don't change the original heuristics object
             match  = any([series['attributes'][key] is not None for key in series['attributes']])   # Make match False if all attributes are empty
             for item in series:
 
@@ -355,10 +354,6 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
 
             # If we have a match, copy the filled-in series over to the bidsmap as a standard bidsmodality
             if match:
-
-                if not series['attributes']['SeriesDescription']:
-                    pass        # DEBUG
-
                 if not exist_series(series, bidsmap['DICOM'][bidsmodality]):
                     bidsmap['DICOM'][bidsmodality].append(series)       # append(copy.deepcopy(series)) DEBUG ???
 
