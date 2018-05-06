@@ -20,7 +20,6 @@ import textwrap
 import copy
 from ruamel_yaml import YAML
 yaml = YAML()
-# import yaml
 
 bidsmodalities  = ('anat', 'func', 'beh', 'dwi', 'fmap')
 unknownmodality = 'unknown'
@@ -354,8 +353,10 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
 
             # If we have a match, copy the filled-in series over to the bidsmap as a standard bidsmodality and we are done!
             if match:
-                if not exist_series(series, bidsmap['DICOM'][bidsmodality]):
-                    bidsmap['DICOM'][bidsmodality].append(series)       # append(copy.deepcopy(series)) DEBUG ???
+                if bidsmap['DICOM'][bidsmodality] is None:
+                    bidsmap['DICOM'][bidsmodality] = [series]
+                elif not exist_series(series, bidsmap['DICOM'][bidsmodality]):
+                    bidsmap['DICOM'][bidsmodality].append(series)
 
                 return bidsmap
 
@@ -386,7 +387,9 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
                 warnings.warn('Do not know what to do with unknown bidsmapper-value:\n {}: {}'.format(item, unknownvalue))
                 unknownseries[item] = unknownvalue
 
-    if not exist_series(unknownseries, bidsmap['DICOM'][unknownmodality]):
+    if bidsmap['DICOM'][unknownmodality] is None:
+        bidsmap['DICOM'][unknownmodality] = [unknownseries]
+    elif not exist_series(unknownseries, bidsmap['DICOM'][unknownmodality]):
         bidsmap['DICOM'][unknownmodality].append(unknownseries)
 
     return bidsmap
@@ -510,7 +513,7 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
         for modality in bidsmodalities + (unknownmodality,):
 
             if bidsmap[logic] and modality in bidsmap[logic]:
-                bidsmap[logic][modality] = []
+                bidsmap[logic][modality] = None
 
     # Loop over all subjects and sessions and built up the bidsmap entries
     subjects = lsdirs(rawfolder, 'sub-*')

@@ -25,6 +25,9 @@
 # Special substitutions can be performed using python's Format
 # Specification Mini-Language), <> denote subsitution by DICOM field
 # ------------------------------------------------------------------------------
+
+# TODO: update with a newer layout
+
 DICOM:
 
   participant_label: ~
