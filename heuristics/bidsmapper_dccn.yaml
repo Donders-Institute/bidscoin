@@ -84,7 +84,7 @@ Options:
 DICOM:
   participant_label: ~
   session_label: ~
-  anat: # ------------------- All anatomical data -------------------
+  anat:   # ------------------- All anatomical data -------------------
     - &anat
       attributes:
         SeriesDescription: ~
@@ -137,7 +137,7 @@ DICOM:
     - <<: *anat
       modality_label: SWImagandphase
 
-  func: # ------------------- All functional data -------------------
+  func:   # ------------------- All functional data -------------------
     - &func
       attributes:
         SeriesDescription: ~
@@ -155,7 +155,7 @@ DICOM:
     - <<: *func
       suffix: sbref
 
-  beh:  # ------------------- All behavioural data -------------------
+  beh:    # ------------------- All behavioural data -------------------
     - &beh
       attributes:
         SeriesDescription: ~
@@ -167,7 +167,7 @@ DICOM:
       acq_label: <SeriesDescription>
       run_index: <automatic>
 
-  dwi:  # ------------------- All diffusion data -------------------
+  dwi:    # ------------------- All diffusion data -------------------
     - &dwi
       attributes:
         SeriesDescription: ~
@@ -179,7 +179,7 @@ DICOM:
       acq_label: <SeriesDescription>
       run_index: <automatic>
 
-  fmap: # ------------------- All fieldmap data -------------------
+  fmap:   # ------------------- All fieldmap data -------------------
     - &fmap
       attributes:
         SeriesDescription: ~
@@ -245,7 +245,7 @@ Nifti: ~
 FileSystem:
   participant_label: \sub-{.*}\
   session_label: \ses-{.*}\
-  anat: # ------------------- All anatomical data -------------------
+  anat:   # ------------------- All anatomical data -------------------
     - &anat_filesystem
       attributes:
         FolderName: ~
@@ -288,7 +288,7 @@ FileSystem:
     - <<: *anat_filesystem
       modality_label: SWImagandphase
 
-  func: # ------------------- All functional data -------------------
+  func:   # ------------------- All functional data -------------------
     - &func_filesystem
       attributes:
         FolderName: ~
@@ -311,7 +311,7 @@ FileSystem:
       recording_label: <FileName>
       suffix: stim
 
-  beh:  # ------------------- All behavioural data -------------------
+  beh:    # ------------------- All behavioural data -------------------
     - &beh_filesystem
       attributes:
         FolderName: ~
@@ -320,7 +320,7 @@ FileSystem:
       acq_label: <FileName>
       run_index: <automatic>
 
-  dwi:  # ------------------- All diffusion data -------------------
+  dwi:    # ------------------- All diffusion data -------------------
     - &dwi_filesystem
       attributes:
         FolderName: ~
@@ -329,7 +329,7 @@ FileSystem:
       acq_label: <FileName>
       run_index: <automatic>
 
-  fmap: # ------------------- All fieldmap data -------------------
+  fmap:   # ------------------- All fieldmap data -------------------
     - &fmap_filesystem
       attributes:
         FolderName: ~
