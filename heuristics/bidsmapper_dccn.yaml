@@ -128,7 +128,7 @@ DICOM:
       attributes:
         SeriesDescription: ~
         SequenceVariant: ~
-        SequenceName: '*fm2d2r'
+        SequenceName: ['*fm2d2r', '*spc']
         ScanningSequence: "['SE', 'IR']"
         MRAcquisitionType: ~
         FlipAngle: ~
