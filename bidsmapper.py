@@ -315,8 +315,8 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
     for bidsmodality in bidsmodalities:
         for series in heuristics['DICOM'][bidsmodality]:
 
-            # series_ = copy.deepcopy(series)       # NB: Deepcopy makes sure we don't change the original heuristics object, however, it is a very expensive operation.
-            series_ = dict(attributes={})           # NB: This way is also safe, however, we loose all comments and formatting within the series (which is not such a disaster probably)
+            # series_ = copy.deepcopy(series)       # Deepcopy makes sure we don't change the original heuristics object, however, it is a very expensive operation.
+            series_ = dict(attributes={})           # This way is also safe, however, we loose all comments and formatting within the series (which is not such a disaster probably). It is also more robust with aliases
             match   = any([series['attributes'][key] is not None for key in series['attributes']])   # Make match False if all attributes are empty
             for item in series:
 
@@ -390,7 +390,6 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
                 unknownseries[item] = cleanup_label(label)
 
             else:
-                warnings.warn('Do not know what to do with unknown bidsmapper-value:\n {}: {}'.format(item, unknownvalue))
                 unknownseries[item] = unknownvalue
 
     if bidsmap['DICOM'][unknownmodality] is None:
