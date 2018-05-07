@@ -315,7 +315,7 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
     for bidsmodality in bidsmodalities:
         for _series in heuristics['DICOM'][bidsmodality]:
 
-            #  TODO: deepcopy is a very expensive operation, optimize it! (e.g. by creating a dict(), but then we loose all comments and formatting
+            # TODO: deepcopy is a very expensive operation, optimize it! (e.g. by creating a dict(), but then we loose all comments and formatting
             series = copy.deepcopy(_series)                 # NB: Make sure we don't change the original heuristics object
             match  = any([series['attributes'][key] is not None for key in series['attributes']])   # Make match False if all attributes are empty
             for item in series:
@@ -331,8 +331,7 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
                         # Check if the attribute value matches with the info from the dicomfile
                         if attrvalue:
                             if isinstance(attrvalue, list):
-                                for attrvalue_ in attrvalue:
-                                    match = match and (attrvalue_ in dicomvalue)    # TODO: implement regexp
+                                match = match and any([attrvalue_ in dicomvalue for attrvalue_ in attrvalue])    # TODO: implement regexp
                             else:
                                 match = match and (attrvalue in dicomvalue)         # TODO: implement regexp
 

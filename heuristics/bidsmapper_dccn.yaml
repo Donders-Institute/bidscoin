@@ -162,8 +162,8 @@ DICOM:
       attributes:
         SeriesDescription: ~
         SequenceVariant: ~
-        SequenceName: [epfid2d1rs88, epfid2d1rs104, '*fm2d2r']
-        ScanningSequence: [EP, GR]
+        SequenceName: [epfid2d1rs, '*fm2d2r']
+        ScanningSequence: EP
         MRAcquisitionType: ~
         FlipAngle: ~
         EchoNumbers: ~
@@ -202,7 +202,7 @@ DICOM:
       attributes:
         SeriesDescription: ~
         SequenceVariant: ~
-        SequenceName: ['epse2d1_104', 'ep_b5#1', 'ep_b1000#1']
+        SequenceName: [epse2d1_, ep_]
         ScanningSequence: EP
         MRAcquisitionType: ~
         FlipAngle: ~
@@ -250,10 +250,14 @@ DICOM:
   unknown:  # ------------------- All non-BIDS data -------------------
     attributes:   # NB: A dict, should not be a list
       SeriesDescription: ~
+      SequenceVariant: ~
       SequenceName: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
+      FlipAngle: ~
       EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
       ImageType: ~
       ProtocolName: ~
     acq_label: <SeriesDescription>
