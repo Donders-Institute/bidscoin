@@ -235,11 +235,12 @@ def get_heuristics(yamlfile):
     return heuristics
 
 
-def exist_series(series, serieslist):
+def exist_series(series, serieslist, matchbidslabels=True):
     """
     Checks if there is already an entry in [serieslist] with the same attributes and labels as [series]
     :param series:
     :param serieslist:
+    :param matchbidslabels:
     :return: Boolean
     """
     for seriesitem in serieslist:
@@ -253,13 +254,13 @@ def exist_series(series, serieslist):
                 if item=='attributes':
 
                     for attrkey in series['attributes']:
-                        seriesvalue = series['attributes'][attrkey]  # for attrkey,attrvalue doesn't work...?
+                        seriesvalue = series['attributes'][attrkey]
                         itemvalue   = seriesitem['attributes'][attrkey]
                         match       = match and (seriesvalue == itemvalue)
 
-                else:
+                elif matchbidslabels:
 
-                    seriesvalue = series[item]  # for attrkey,attrvalue doesn't work...?
+                    seriesvalue = series[item]
                     itemvalue   = seriesitem[item]
                     match       = match and (seriesvalue == itemvalue)
 
@@ -329,13 +330,15 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
 
                         # Check if the attribute value matches with the info from the dicomfile
                         if attrvalue:
-                            match = match and (dicomvalue in attrvalue)    # TODO: implement regexp
+                            if isinstance(attrvalue, list):
+                                match = match and (dicomvalue in attrvalue)    # TODO: implement regexp
+                            else:
+                                match = match and (attrvalue in dicomvalue)    # TODO: implement regexp
 
-                        # Else, fill the empty attribute with the info from the dicomfile
-                        else:
-                            series['attributes'][attrkey] = dicomvalue
+                        # Fill the empty attribute with the info from the dicomfile
+                        series['attributes'][attrkey] = dicomvalue
 
-                # Try to fill all the bids-labels
+                # Try to fill the bids-labels
                 else:
 
                     bidsvalue = series[item]
@@ -526,8 +529,7 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
 
             print('Parsing: ' + session)
 
-            mriseries = lsdirs(session)
-            for series in mriseries:
+            for series in lsdirs(session):
 
                 # Update / append the dicom mapping
                 if heuristics['DICOM']:
