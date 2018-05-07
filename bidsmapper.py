@@ -331,9 +331,10 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
                         # Check if the attribute value matches with the info from the dicomfile
                         if attrvalue:
                             if isinstance(attrvalue, list):
-                                match = match and (dicomvalue in attrvalue)    # TODO: implement regexp
+                                for attrvalue_ in attrvalue:
+                                    match = match and (attrvalue_ in dicomvalue)    # TODO: implement regexp
                             else:
-                                match = match and (attrvalue in dicomvalue)    # TODO: implement regexp
+                                match = match and (attrvalue in dicomvalue)         # TODO: implement regexp
 
                         # Fill the empty attribute with the info from the dicomfile
                         series['attributes'][attrkey] = dicomvalue
