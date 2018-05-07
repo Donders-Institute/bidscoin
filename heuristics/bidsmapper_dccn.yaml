@@ -89,7 +89,7 @@ DICOM:
       attributes:
         SeriesDescription: ~
         SequenceVariant: ~
-        SequenceName: '*tfl3d1_16ns'
+        SequenceName: '*tfl3d1'
         ScanningSequence:
         MRAcquisitionType: ~
         FlipAngle: ~
