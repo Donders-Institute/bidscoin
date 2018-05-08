@@ -21,10 +21,6 @@ def built_dicommapper(dicomfile, bidsmapper, heuristics):
     :return: bidsmapper
     """
 
-    # Input checks
-    if not dicomfile or not heuristics['DICOM']:
-        return bidsmapper
-
     # Get the bidsmodality and dirname (= bidslabel) from the pathname
     dirname = os.path.basename(os.path.dirname(dicomfile))
     if dirname in bids.bidsmodalities:
@@ -33,6 +29,10 @@ def built_dicommapper(dicomfile, bidsmapper, heuristics):
         bidsmodality = os.path.basename(os.path.dirname(os.path.dirname(dicomfile)))
     if bidsmodality not in bids.bidsmodalities:
         raise ValueError("Don't know what to do with this bidsmodality directory name: {}\n{}".format(bidsmodality, dicomfile))
+
+    # Input checks
+    if not dicomfile or not heuristics['DICOM'] or not heuristics['DICOM'][bidsmodality]:
+        return bidsmapper
 
     # Copy the bids-labels over from the matching series in heuristics to series_, Then fill the attributes and append it to bidsmapper
     for series in heuristics['DICOM'][bidsmodality]:

@@ -35,7 +35,7 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
     # Loop through all bidsmodalities and series; all info goes into series_
     for bidsmodality in bids.bidsmodalities:
 
-        if heuristics['DICOM'][bidsmodality] is None: continue
+        if not heuristics['DICOM'][bidsmodality]: continue
         for series in heuristics['DICOM'][bidsmodality]:
 
             # series_ = copy.deepcopy(series)       # Deepcopy makes sure we don't change the original heuristics object, however, it is a very expensive operation.
