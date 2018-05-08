@@ -90,7 +90,7 @@ DICOM:
         SeriesDescription: ~
         SequenceVariant: ~
         SequenceName: '*tfl3d1'
-        ScanningSequence:
+        ScanningSequence: ~
         MRAcquisitionType: ~
         FlipAngle: ~
         EchoNumbers: ~

@@ -39,10 +39,10 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
             # series_ = copy.deepcopy(series)       # Deepcopy makes sure we don't change the original heuristics object, however, it is a very expensive operation.
             series_ = dict(attributes={})           # This way is also safe, however, we lose all comments and formatting within the series (which is not such a disaster probably). It is also more robust with aliases
             match   = any([series['attributes'][key] is not None for key in series['attributes']])   # Make match False if all attributes are empty
-            for item in series:
+            for key in series:
 
                 # Try to see if the dicomfile matches all of the attributes and try to fill all of them
-                if item == 'attributes':
+                if key == 'attributes':
 
                     for attrkey in series['attributes']:
 
@@ -62,21 +62,21 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
                 # Try to fill the bids-labels
                 else:
 
-                    bidsvalue = series[item]
+                    bidsvalue = series[key]
                     if not bidsvalue:
-                        series_[item] = bidsvalue
+                        series_[key] = bidsvalue
 
                     # Intelligent filling of the run-index is done runtime by bidscoiner
-                    elif item == 'run_index' and bidsvalue == '<automatic>':
-                        series_[item] = bidsvalue
+                    elif key == 'run_index' and bidsvalue == '<automatic>':
+                        series_[key] = bidsvalue
 
                     # Fill any bids-label with the <annotated> dicom attribute
                     elif bidsvalue.startswith('<') and bidsvalue.endswith('>'):
-                        label         = bids.get_dicomfield(bidsvalue[1:-1], dicomfile)
-                        series_[item] = bids.cleanup_label(label)
+                        label        = bids.get_dicomfield(bidsvalue[1:-1], dicomfile)
+                        series_[key] = bids.cleanup_label(label)
 
                     else:
-                        series_[item] = bidsvalue
+                        series_[key] = bidsvalue
 
             # If we have a match, copy the filled-in series over to the bidsmap as a standard bidsmodality and we are done!
             if match:
@@ -89,29 +89,29 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
 
     # If nothing matched, copy the filled-in attributes series over to the bidsmap as an unknown modality and fill the unknown labels
     unknownseries = dict()      # Here we loose comments and formatting from the bidsmapper, but that is probably very minor
-    for item in heuristics['DICOM'][bids.unknownmodality]:
-        if item == 'attributes':
+    for key in heuristics['DICOM'][bids.unknownmodality]:
+        if key == 'attributes':
 
             # Taking the last tested series is a convenient but arbitrary choice (potentially, other series can have different attributes listed in the bidsmapper)
             unknownseries['attributes'] = series_['attributes']
 
         else:
 
-            unknownvalue = heuristics['DICOM'][bids.unknownmodality][item]
+            unknownvalue = heuristics['DICOM'][bids.unknownmodality][key]
             if not unknownvalue:
-                unknownseries[item] = None
+                unknownseries[key] = None
 
             # Intelligent filling of the run-index is done runtime by bidscoiner
-            elif item=='run_index' and unknownvalue=='<automatic>':
-                unknownseries[item] = '<automatic>'
+            elif key=='run_index' and unknownvalue=='<automatic>':
+                unknownseries[key] = '<automatic>'
 
             # Fill any bids-label with the <annotated> dicom attribute
             elif unknownvalue and unknownvalue.startswith('<') and unknownvalue.endswith('>'):
                 label               = bids.get_dicomfield(unknownvalue[1:-1], dicomfile)
-                unknownseries[item] = bids.cleanup_label(label)
+                unknownseries[key] = bids.cleanup_label(label)
 
             else:
-                unknownseries[item] = unknownvalue
+                unknownseries[key] = unknownvalue
 
     if bidsmap['DICOM'][bids.unknownmodality] is None:
         bidsmap['DICOM'][bids.unknownmodality] = [unknownseries]
@@ -312,9 +312,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='example:\n  bidsmapper.py /project/foo/raw /project/foo/bids bidsmapper_dccn')
-    parser.add_argument('rawfolder',  help='The source folder containing the raw data in sub-###/ses-##/series format')
-    parser.add_argument('bidsfolder', help='The destination folder with the bids data structure')
-    parser.add_argument('bidsmapper', help='The bidsmapper yaml-file with the BIDS heuristics (default: ./heuristics/bidsmapper.yaml)')
+    parser.add_argument('rawfolder',    help='The source folder containing the raw data in sub-###/ses-##/series format')
+    parser.add_argument('bidsfolder',   help='The destination folder with the bids data structure')
+    parser.add_argument('bidsmapper',   help='The bidsmapper yaml-file with the BIDS heuristics (default: ./heuristics/bidsmapper.yaml)', nargs='?', default='bidsmapper.yaml')
     args = parser.parse_args()
 
     bidsmapfile = create_bidsmap(args.rawfolder, args.bidsfolder, args.bidsmapper)
