@@ -221,11 +221,13 @@ def get_heuristics(yamlfile):
     :param yamlfile:
     :return: yaml data structure
     """
+
     # Get the full paths to the bidsmapper yaml-file and add a standard file-extension if needed
     if not os.path.splitext(yamlfile)[1]:
         yamlfile = yamlfile + '.yaml'
     if os.path.basename(yamlfile) == yamlfile:
         yamlfile = os.path.join(os.path.dirname(__file__), 'heuristics', yamlfile)
+    yamlfile = os.path.abspath(os.path.expanduser(yamlfile))
 
     # Read the heuristics from the bidsmapper file
     with open(yamlfile, 'r') as stream:
