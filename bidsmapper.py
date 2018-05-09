@@ -5,9 +5,6 @@ BIDS modalities and BIDS labels (see also [bidsmapper.yaml] and [bidsmapper.py])
 You can edit the bidsmap file before passing it to [bidscoiner.py] which uses it
 to cast the datasets into the BIDS folder structure
 
-Derived from dac2bids.py from Daniel Gomez 29.08.2016
-https://github.com/dangom/dac2bids/blob/master/dac2bids.py
-
 @author: marzwi
 """
 
@@ -20,7 +17,7 @@ from ruamel_yaml import YAML
 yaml = YAML()
 
 
-def built_dicommap(dicomfile, bidsmap, heuristics):
+def built_dicommap(dicomfile, bidsmap, heuristics, automatic):
     """
     All the logic to map dicomfields onto bids labels go into this function
     :param dicomfile:
@@ -58,7 +55,7 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
                             elif isinstance(attrvalue, list):
                                 match = match and any([attrvalue_ in dicomvalue for attrvalue_ in attrvalue])  # TODO: implement regexp
                             else:
-                                match = match and (attrvalue in dicomvalue)                                     # TODO: implement regexp
+                                match = match and (attrvalue in dicomvalue)                                    # TODO: implement regexp
 
                         # Fill the empty attribute with the info from the dicomfile
                         series_['attributes'][attrkey] = dicomvalue
@@ -84,6 +81,7 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
 
             # If we have a match, copy the filled-in series over to the bidsmap as a standard bidsmodality and we are done!
             if match:
+                # TODO: check if there are more matches (i.e. conflicts)
                 if bidsmap['DICOM'][bidsmodality] is None:
                     bidsmap['DICOM'][bidsmodality] = [series_]
                 elif not bids.exist_series(series_, bidsmap['DICOM'][bidsmodality]):
@@ -91,36 +89,48 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
 
                 return bidsmap
 
-    # If nothing matched, copy the filled-in attributes series over to the bidsmap as an unknown modality and fill the unknown labels
-    unknownseries = dict()      # Here we loose comments and formatting from the bidsmapper, but that is probably very minor
-    for key in heuristics['DICOM'][bids.unknownmodality]:
-        if key == 'attributes':
+    # If nothing matched, ask the user for help
+    if automatic:
+        answer = bids.ask_for_mapping(heuristics['DICOM'], series_, dicomfile)      # Note: series_ will be referenced since heuristics['DICOM'][bidsmodality] should not all be empty
 
-            # Taking the last tested series is a convenient but arbitrary choice (potentially, other series can have different attributes listed in the bidsmapper)
-            unknownseries['attributes'] = series_['attributes']
+    if 'answer' in locals() and answer:                                             # A catch for users canceling the question for help
+        series   = answer['series']
+        modality = answer['modality']
 
-        else:
+    # Otherwise treat the series as as an unknown modality and fill the unknown labels
+    else:
+        series   = dict()                                       # Here we loose comments and formatting from the bidsmapper, but that is probably very minor
+        modality = bids.unknownmodality
 
-            unknownvalue = heuristics['DICOM'][bids.unknownmodality][key]
-            if not unknownvalue:
-                unknownseries[key] = None
+        for key in heuristics['DICOM'][modality]:
 
-            # Intelligent filling of the run-index is done runtime by bidscoiner
-            elif key=='run_index' and unknownvalue=='<automatic>':
-                unknownseries[key] = '<automatic>'
-
-            # Fill any bids-label with the <annotated> dicom attribute
-            elif unknownvalue and unknownvalue.startswith('<') and unknownvalue.endswith('>'):
-                label               = bids.get_dicomfield(unknownvalue[1:-1], dicomfile)
-                unknownseries[key] = bids.cleanup_label(label)
+            if key == 'attributes':
+                series['attributes'] = series_['attributes']    # Taking the last tested series is a convenient but arbitrary choice (potentially, other series can have different attributes listed in the bidsmapper)
 
             else:
-                unknownseries[key] = unknownvalue
+                value = heuristics['DICOM'][modality][key]
 
-    if bidsmap['DICOM'][bids.unknownmodality] is None:
-        bidsmap['DICOM'][bids.unknownmodality] = [unknownseries]
-    elif not bids.exist_series(unknownseries, bidsmap['DICOM'][bids.unknownmodality]):
-        bidsmap['DICOM'][bids.unknownmodality].append(unknownseries)
+                if not value:
+                    series[key] = None
+
+                # Intelligent filling of the run-index is done runtime by bidscoiner
+                elif key=='run_index' and value=='<automatic>':
+                    series[key] = '<automatic>'
+
+                # Fill any bids-label with the <annotated> dicom attribute
+                elif value and value.startswith('<') and value.endswith('>'):
+                    label       = bids.get_dicomfield(value[1:-1], dicomfile)
+                    series[key] = bids.cleanup_label(label)
+
+                else:
+                    series[key] = value
+
+    # Copy the filled-in attributes series over to the bidsmap
+    if bidsmap['DICOM'][modality] is None:
+        bidsmap['DICOM'][modality] = [series]
+
+    elif not bids.exist_series(series, bidsmap['DICOM'][modality]):
+        bidsmap['DICOM'][modality].append(series)
 
     return bidsmap
 
@@ -218,7 +228,7 @@ def built_pluginmap(seriesfolder, bidsmap):
     return bidsmap
 
 
-def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
+def bidsmapper(rawfolder, bidsfolder, bidsmapper='bidsmapper_sample.yaml', automatic=False):
     """
     Main function that processes all the subjects and session in the rawfolder
     and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code.
@@ -235,7 +245,7 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
     bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
 
     # Get the heuristics for creating the bidsmap
-    heuristics = bids.get_heuristics(bidsmapper)
+    heuristics = bids.get_heuristics(bidsmapper, bidsfolder)
 
     # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmapper with empty lists)
     bidsmap = copy.deepcopy(heuristics)
@@ -250,8 +260,7 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
     for subject in subjects:
 
         sessions = bids.lsdirs(subject, 'ses-*')
-        if not sessions:
-            sessions = subject
+        if not sessions: sessions = subject
         for session in sessions:
 
             print('Parsing: ' + session)
@@ -261,7 +270,7 @@ def create_bidsmap(rawfolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
                 # Update / append the dicom mapping
                 if heuristics['DICOM']:
                     dicomfile = bids.get_dicom_file(series)
-                    bidsmap   = built_dicommap(dicomfile, bidsmap, heuristics)
+                    bidsmap   = built_dicommap(dicomfile, bidsmap, heuristics, automatic)
 
                 # Update / append the PAR/REC mapping
                 if heuristics['PAR']:
@@ -316,9 +325,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='example:\n  bidsmapper.py /project/foo/raw /project/foo/bids bidsmapper_dccn')
-    parser.add_argument('rawfolder',    help='The source folder containing the raw data in sub-###/ses-##/series format')
-    parser.add_argument('bidsfolder',   help='The destination folder with the bids data structure')
-    parser.add_argument('bidsmapper',   help='The bidsmapper yaml-file with the BIDS heuristics (default: ./heuristics/bidsmapper.yaml)', nargs='?', default='bidsmapper.yaml')
+    parser.add_argument('rawfolder',        help='The source folder containing the raw data in sub-###/ses-##/series format')
+    parser.add_argument('bidsfolder',       help='The destination folder with the bids data structure')
+    parser.add_argument('bidsmapper',       help='The bidsmapper yaml-file with the BIDS heuristics (default: bidsfolder/code/bidsmapper_sample.yaml)', nargs='?', default='bidsmapper_sample.yaml')
+    parser.add_argument('-a','--automatic', help='If this flag is given the user will not be asked for help if an unknown series is encountered', action='store_true')
     args = parser.parse_args()
 
-    bidsmapfile = create_bidsmap(args.rawfolder, args.bidsfolder, args.bidsmapper)
+    bidsmapfile = bidsmapper(args.rawfolder, args.bidsfolder, args.bidsmapper, args.automatic)

@@ -27,12 +27,13 @@ def built_dicommapper(dicomfile, bidsmapper, heuristics):
         bidsmodality = dirname
     else:
         bidsmodality = os.path.basename(os.path.dirname(os.path.dirname(dicomfile)))
-    if bidsmodality not in bids.bidsmodalities:
-        raise ValueError("Don't know what to do with this bidsmodality directory name: {}\n{}".format(bidsmodality, dicomfile))
 
     # Input checks
     if not dicomfile or not heuristics['DICOM'] or not heuristics['DICOM'][bidsmodality]:
         return bidsmapper
+
+    if bidsmodality not in bids.bidsmodalities:
+        raise ValueError("Don't know what to do with this bidsmodality directory name: {}\n{}".format(bidsmodality, dicomfile))
 
     # Copy the bids-labels over from the matching series in heuristics to series_, Then fill the attributes and append it to bidsmapper
     for series in heuristics['DICOM'][bidsmodality]:
@@ -181,7 +182,7 @@ def built_pluginmapper(sample, bidsmapper):
     return bidsmapper
 
 
-def create_bidsmapper(samplefolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
+def bidstrainer(samplefolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
     """
     Main function that processes all samples in the samplefolder and that generates a
     maximally filled-in bidsmapper_sample.yaml file in bidsfolder/code.
@@ -273,4 +274,4 @@ if __name__ == "__main__":
     parser.add_argument('bidsmapper',   help='The bidsmapper yaml-file with the BIDS heuristics (default: ./heuristics/bidsmapper.yaml)', nargs='?', default='bidsmapper.yaml')
     args = parser.parse_args()
 
-    bidsmapperfile = create_bidsmapper(args.samplefolder, args.bidsfolder, args.bidsmapper)
+    bidsmapperfile = bidstrainer(args.samplefolder, args.bidsfolder, args.bidsmapper)
