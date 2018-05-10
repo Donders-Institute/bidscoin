@@ -215,12 +215,13 @@ def built_pluginmap(seriesfolder, bidsmap):
     :return: bidsmap
     """
 
+    from importlib import import_module
+
     # Input checks
     if not seriesfolder or not bidsmap['PlugIn']:
         return bidsmap
 
     # Import and run the plugins
-    from importlib import import_module
     for pluginfunction in bidsmap['PlugIn']:
         plugin  = import_module(os.path.join(__file__, 'plugins', pluginfunction))
         bidsmap = plugin.map(seriesfolder, bidsmap)

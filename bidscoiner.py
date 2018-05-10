@@ -12,34 +12,62 @@ import os
 import bids
 import pandas as pd
 
-def coin_dicom(sessionfolder, heuristics):
+
+def coin_dicom(session, heuristics, bidsfolder):
     """
-    TODO: Run the dicom coiner to cast the series into the bids folder
-    :param sessionfolder:
-    :param heuristics:
-    :return: personals
+    Converts the session dicom files into a nifti bids structure
+    :param session:     Name of the subject/session folder
+    :param heuristics:  Mapping from the bidsmap yaml-file
+    :return:            Personals extracted from the dicom header
     """
+
     global logfile
+
+    for series in bids.lsdirs(session):
+        bids.printlog('Processing dicomfolder: ' + series, logfile)
+
+        # Get the bids labels and filename and create a bidsfolder
+        bidsname   =
+        sub_sess   =
+        bidsseries = os.path.join(bidsfolder, sub_sess)
+        os.makedirs(bidsseries, exist_ok=True)
+
+        # Convert the folder to nifti
+        command = 'module add dcm2niix; dcm2niix {options} -f {filename} -o {outfolder} {infolder}'.format(
+            options   = heuristics['Options']['dcm2niix'],
+            filename  = bidsname,
+            outfolder = bidsseries,
+            infolder  = session)
+        bids.printlog('Executing: ' + command, logfile)
+
+    # Collect personal data from the DICOM header
+    dicomfile           = bids.get_dicom_file(series)
+    personals           = dict()
+    personals['age']    = bids.get_dicomfield('PatientAge',    dicomfile)
+    personals['sex']    = bids.get_dicomfield('PatientSex',    dicomfile)
+    personals['size']   = bids.get_dicomfield('PatientSize',   dicomfile)
+    personals['weight'] = bids.get_dicomfield('PatientWeight', dicomfile)
+
+    return personals
 
 
 def coin_plugin(sessionfolder, heuristics):
     """
-    TODO: Run the plugin coiner to cast the series into the bids folder
+    Run the plugin coiner to cast the series into the bids folder
     :param sessionfolder:
     :param heuristics:
     :return: personals
     """
 
-    # Input checks
-    if not sessionfolder or not heuristics['PlugIn']:
-        return heuristics
+    from importlib import import_module
+    global logfile
 
     # Import and run the plugins
-    from importlib import import_module
     for pluginfunction in heuristics['PlugIn']:
-        plugin     = import_module(os.path.join(__file__, 'plugins', pluginfunction))
-        heuristics = plugin.coin(sessionfolder, heuristics)
-    return heuristics
+        plugin    = import_module(os.path.join(__file__, 'plugins', pluginfunction))
+        personals = plugin.coin(sessionfolder, heuristics)
+
+    return personals
 
 
 def bidscoiner(rawfolder, bidsfolder, bidsmap='code/bidsmap.yaml', force=False):
@@ -85,8 +113,6 @@ def bidscoiner(rawfolder, bidsfolder, bidsmap='code/bidsmap.yaml', force=False):
         sessions = bids.lsdirs(subject, 'ses-*')
         if not sessions: sessions = subject
         for session in sessions:
-
-            bids.printlog('Converting: ' + session, logfile)
 
             # Update / append the dicom mapping
             if heuristics['DICOM']:

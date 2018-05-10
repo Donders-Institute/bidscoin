@@ -169,12 +169,13 @@ def built_pluginmapper(sample, bidsmapper):
     :return: bidsmapper
     """
 
+    from importlib import import_module
+
     # Input checks
     if not sample or not bidsmapper['PlugIn']:
         return bidsmapper
 
     # Import and run the plugins
-    from importlib import import_module
     for pluginfunction in bidsmapper['PlugIn']:
         plugin     = import_module(os.path.join(__file__, 'plugins', pluginfunction))
         bidsmapper = plugin.map(sample, bidsmapper)
