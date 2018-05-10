@@ -340,7 +340,7 @@ def bidsmapper(rawfolder, bidsfolder, bidsmapper='bidsmapper_sample.yaml', autom
 # Shell usage
 if __name__ == "__main__":
 
-    # Check input arguments and run the main create_bidsmap(args) function
+    # Parse the input arguments and run bidsmapper(args)
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
