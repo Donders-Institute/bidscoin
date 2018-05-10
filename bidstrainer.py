@@ -2,7 +2,7 @@
 """
 Takes example files from the samples folder to create a bidsmapper config file
 
-@author: marzwi
+@author: Marcel Zwiers
 """
 
 import bids
@@ -16,9 +16,12 @@ yaml = YAML()
 def built_dicommapper(dicomfile, bidsmapper, heuristics):
     """
     All the logic to map dicomfields onto bids labels go into this function
-    :param dicomfile:
-    :param heuristics:
-    :return: bidsmapper
+
+    :param str dicomfile: The full-path name of the source dicom-file
+    :param dict bidsmapper: The bidsmapper as we had it
+    :param dict heuristics:
+    :return: The bidsmapper with new entries in it
+    :rtype: dict
     """
 
     # Get the bidsmodality and dirname (= bidslabel) from the pathname
@@ -92,10 +95,12 @@ def built_dicommapper(dicomfile, bidsmapper, heuristics):
 def built_parmapper(parfile, bidsmapper, heuristics):
     """
     All the logic to map PAR/REC fields onto bids labels go into this function
-    :param parfile:
-    :param bidsmapper:
-    :param heuristics:
-    :return: bidsmapper
+
+    :param str parfile: The full-path name of the source PAR-file
+    :param dict bidsmapper: The bidsmapper as we had it
+    :param dict heuristics:
+    :return: The bidsmapper with new entries in it
+    :rtype: dict
     """
 
     # Input checks
@@ -110,10 +115,12 @@ def built_parmapper(parfile, bidsmapper, heuristics):
 def built_p7mapper(p7file, bidsmapper, heuristics):
     """
     All the logic to map P7-fields onto bids labels go into this function
-    :param pyfile:
-    :param bidsmapper:
-    :param heuristics:
-    :return: bidsmapper
+
+    :param str p7file: The full-path name of the source P7-file
+    :param dict bidsmapper: The bidsmapper as we had it
+    :param dict heuristics:
+    :return: The bidsmapper with new entries in it
+    :rtype: dict
     """
 
     # Input checks
@@ -128,10 +135,12 @@ def built_p7mapper(p7file, bidsmapper, heuristics):
 def built_niftimapper(niftifile, bidsmapper, heuristics):
     """
     All the logic to map nifti-info onto bids labels go into this function
-    :param niftifile:
-    :param bidsmapper:
-    :param heuristics:
-    :return: bidsmapper
+
+    :param str niftifile: The full-path name of the source nifti-file
+    :param dict bidsmapper: The bidsmapper as we had it
+    :param dict heuristics:
+    :return: The bidsmapper with new entries in it
+    :rtype: dict
     """
 
     # Input checks
@@ -146,10 +155,12 @@ def built_niftimapper(niftifile, bidsmapper, heuristics):
 def built_filesystemmapper(seriesfolder, bidsmapper, heuristics):
     """
     All the logic to map filesystem-info onto bids labels go into this function
-    :param seriesfolder:
-    :param bidsmapper:
-    :param heuristics:
-    :return: bidsmapper
+
+    :param str seriesfolder: The full-path name of the source-folder
+    :param dict bidsmapper: The bidsmapper as we had it
+    :param dict heuristics:
+    :return: The bidsmapper with new entries in it
+    :rtype: dict
     """
 
     # Input checks
@@ -164,9 +175,10 @@ def built_filesystemmapper(seriesfolder, bidsmapper, heuristics):
 def built_pluginmapper(sample, bidsmapper):
     """
     Call the plugin to map info onto bids labels
-    :param sample:
-    :param bidsmapper:
-    :return: bidsmapper
+    :param str sample: The full-path name of the source-file
+    :param dict bidsmapper: The bidsmapper as we had it
+    :return: The bidsmapper with new entries in it
+    :rtype: dict
     """
 
     from importlib import import_module
@@ -185,13 +197,14 @@ def built_pluginmapper(sample, bidsmapper):
 
 def bidstrainer(samplefolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
     """
-    Main function that processes all samples in the samplefolder and that generates a
-    maximally filled-in bidsmapper_sample.yaml file in bidsfolder/code.
+    Main function uses all samples in the samplefolder as training / example  data to generate a
+    maximally filled-in bidsmapper_sample.yaml file.
 
-    :param samplefolder:  BIDS tree containing folders with sample files
-    :param bidsfolder:    BIDS root folder
-    :param bidsmapper:    bidsmapper yaml-file
-    :return: bidsmapper:  bidsmapper.yaml file
+    :param str samplefolder:  The root folder-name Hierarchical BIDS tree containing the sample files
+    :param str bidsfolder:    The name of the BIDS root folder
+    :param dict bidsmapper:   The name of the bidsmapper yaml-file
+    :return:                  The name of the new (trained) bidsmapper yaml-file that is save in bidsfolder/code
+    :rtype: str
     """
 
     # Input checking

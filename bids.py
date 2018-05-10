@@ -25,12 +25,12 @@ unknownmodality = 'unknown'
 
 def printlog(message, logfile=None):
     """
-    Print an annotated logmessage to screen and optionally to a logfile
+    Print an annotated log-message to screen and optionally to a logfile
 
     :param str message: The output text
     :param str logfile: The full pathname of the logile
     :return: Nothing
-    :rtype: none
+    :rtype: NoneType
     """
 
     # Get the name of the caller
@@ -435,16 +435,16 @@ def ask_for_mapping(heuristics, series, filename=''):
     return None # {'modality': modality, 'series': series}
 
 
-def ask_for_append(modality, series, bidsmapper):
+def ask_for_append(modality, series, bidsmapperfile):
     """
     Ask the user to add the labelled series to their bidsmapper yaml-file or send it to a central database
     WIP!!!
 
     :param str modality: Name of the BIDS modality
     :param dict series: Dictionary with BIDS labels and attributes
-    :param str bidsmapper: The full-path name of the bidsmapper yaml-file to which the series should be saved
+    :param str bidsmapperfile: The full-path name of the bidsmapper yaml-file to which the series should be saved
     :return: Nothing
-    :rtype: None
+    :rtype: NoneType
     """
 
     # TODO: implement code

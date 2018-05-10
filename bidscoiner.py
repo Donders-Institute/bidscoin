@@ -5,7 +5,7 @@ BIDS modalities and BIDS labels (see also [bidsmapper.yaml] and [bidsmapper.py])
 You can edit the bidsmap file before passing it to [bidscoiner.py] which uses it
 to cast the datasets into the BIDS folder structure
 
-@author: marzwi
+@author: Marcel Zwiers
 """
 
 import os
@@ -16,9 +16,11 @@ import pandas as pd
 def coin_dicom(session, heuristics, bidsfolder):
     """
     Converts the session dicom files into a nifti bids structure
-    :param session:     Name of the subject/session folder
-    :param heuristics:  Mapping from the bidsmap yaml-file
-    :return:            Personals extracted from the dicom header
+
+    :param dict session:     Name of the subject/session folder
+    :param dict heuristics:  Mapping from the bidsmap yaml-file
+    :return:                 Personals extracted from the dicom header
+    :rtype: dict
     """
 
     global logfile
@@ -54,9 +56,11 @@ def coin_dicom(session, heuristics, bidsfolder):
 def coin_plugin(sessionfolder, heuristics):
     """
     Run the plugin coiner to cast the series into the bids folder
-    :param sessionfolder:
-    :param heuristics:
+
+    :param str sessionfolder:
+    :param dict heuristics:
     :return: personals
+    :rtype: dict
     """
 
     from importlib import import_module
@@ -72,15 +76,15 @@ def coin_plugin(sessionfolder, heuristics):
 
 def bidscoiner(rawfolder, bidsfolder, bidsmap='code/bidsmap.yaml', force=False):
     """
-    Main function that processes all the subjects and session in the rawfolder
-    and uses the bidsmap.yaml file in bidsfolder/code to cast the data into the
-    BIDS folder.
+    Main function that processes all the subjects and session in the rawfolder and uses the
+    bidsmap.yaml file in bidsfolder/code to cast the data into the BIDS folder.
 
-    :param rawfolder:     folder tree containing folders with dicom files
-    :param bidsfolder:    BIDS root folder
-    :param bidsmapper:    bidsmapper yaml-file
-    :param force:         If True all subjects in the rawfolder will be processed, otherwise only subjects not in particpants.tsv
-    :return: None
+    :param str rawfolder:  The root folder-name of the sub/ses/data/file tree containing the source data files
+    :param str bidsfolder: The name of the BIDS root folder
+    :param dict bidsmap:   The name of the bidsmap yaml-file
+    :param bool force:     If True all subjects in the rawfolder will be processed, otherwise only subjects not in particpants.tsv
+    :return: Nothing
+    :rtype: NoneType
     """
 
     # Start logging

@@ -5,7 +5,7 @@ BIDS modalities and BIDS labels (see also [bidsmapper.yaml] and [bidsmapper.py])
 You can edit the bidsmap file before passing it to [bidscoiner.py] which uses it
 to cast the datasets into the BIDS folder structure
 
-@author: marzwi
+@author: Marcel Zwiers
 """
 
 # Global imports (specific modules may be imported when needed)
@@ -19,10 +19,14 @@ yaml = YAML()
 
 def built_dicommap(dicomfile, bidsmap, heuristics, automatic):
     """
-    All the logic to map dicomfields onto bids labels go into this function
-    :param dicomfile:
-    :param heuristics:
-    :return: bidsmap
+    All the logic to map dicom-attributes (fields/tags) onto bids-labels go into this function
+
+    :param str dicomfile: The full-path name of the source dicom-file
+    :param dict bidsmap: The bidsmap as we had it
+    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param bool automatic: If True, the user will not be asked for help if an unknown series is encountered
+    :return: The bidsmap with new entries in it
+    :rtype: dict
     """
 
     # Input checks
@@ -135,13 +139,16 @@ def built_dicommap(dicomfile, bidsmap, heuristics, automatic):
     return bidsmap
 
 
-def built_parmap(parfile, bidsmap, heuristics):
+def built_parmap(parfile, bidsmap, heuristics, automatic):
     """
     All the logic to map PAR/REC fields onto bids labels go into this function
-    :param parfile:
-    :param bidsmap:
-    :param heuristics:
-    :return: bidsmap
+
+    :param str parfile: The full-path name of the source PAR-file
+    :param dict bidsmap: The bidsmap as we had it
+    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param bool automatic: If True, the user will not be asked for help if an unknown series is encountered
+    :return: The bidsmap with new entries in it
+    :rtype: dict
     """
 
     # Input checks
@@ -153,13 +160,16 @@ def built_parmap(parfile, bidsmap, heuristics):
     return bidsmap
 
 
-def built_p7map(p7file, bidsmap, heuristics):
+def built_p7map(p7file, bidsmap, heuristics, automatic):
     """
-    All the logic to map P7-fields onto bids labels go into this function
-    :param pyfile:
-    :param bidsmap:
-    :param heuristics:
-    :return: bidsmap
+    All the logic to map P*.7-fields onto bids labels go into this function
+
+    :param str p7file: The full-path name of the source P7-file
+    :param dict bidsmap: The bidsmap as we had it
+    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param bool automatic: If True, the user will not be asked for help if an unknown series is encountered
+    :return: The bidsmap with new entries in it
+    :rtype: dict
     """
 
     # Input checks
@@ -171,13 +181,16 @@ def built_p7map(p7file, bidsmap, heuristics):
     return bidsmap
 
 
-def built_niftimap(niftifile, bidsmap, heuristics):
+def built_niftimap(niftifile, bidsmap, heuristics, automatic):
     """
     All the logic to map nifti-info onto bids labels go into this function
-    :param niftifile:
-    :param bidsmap:
-    :param heuristics:
-    :return: bidsmap
+
+    :param str niftifile: The full-path name of the source nifti-file
+    :param dict bidsmap: The bidsmap as we had it
+    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param bool automatic: If True, the user will not be asked for help if an unknown series is encountered
+    :return: The bidsmap with new entries in it
+    :rtype: dict
     """
 
     # Input checks
@@ -189,13 +202,16 @@ def built_niftimap(niftifile, bidsmap, heuristics):
     return bidsmap
 
 
-def built_filesystemmap(seriesfolder, bidsmap, heuristics):
+def built_filesystemmap(seriesfolder, bidsmap, heuristics, automatic):
     """
     All the logic to map filesystem-info onto bids labels go into this function
-    :param seriesfolder:
-    :param bidsmap:
-    :param heuristics:
-    :return: bidsmap
+
+    :param seriesfolder: The full-path name of the source folder
+    :param dict bidsmap: The bidsmap as we had it
+    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param bool automatic: If True, the user will not be asked for help if an unknown series is encountered
+    :return: The bidsmap with new entries in it
+    :rtype: dict
     """
 
     # Input checks
@@ -210,9 +226,11 @@ def built_filesystemmap(seriesfolder, bidsmap, heuristics):
 def built_pluginmap(seriesfolder, bidsmap):
     """
     Call the plugin to map info onto bids labels
-    :param seriesfolder:
-    :param bidsmap:
-    :return: bidsmap
+
+    :param seriesfolder: The full-path name of the source folder
+    :param dict bidsmap: The bidsmap as we had it
+    :return: The bidsmap with new entries in it
+    :rtype: dict
     """
 
     from importlib import import_module
@@ -235,10 +253,11 @@ def bidsmapper(rawfolder, bidsfolder, bidsmapper='bidsmapper_sample.yaml', autom
     and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code.
     Folders in rawfolder are assumed to contain a single dataset.
 
-    :param rawfolder:     sub/ses/data/file tree containing folders with data files
-    :param bidsfolder:    BIDS root folder
-    :param bidsmapper:    bidsmapper yaml-file
-    :return: bidsmap:     bidsmap.yaml file
+    :param str rawfolder:     The root folder-name of the sub/ses/data/file tree containing the source data files
+    :param str bidsfolder:    The name of the BIDS root folder
+    :param dict bidsmapper:   The name of the bidsmapper yaml-file
+    :return: dict bidsmap:    The name of the bidsmap.yaml file
+    :rtype: str
     """
 
     # Input checking
@@ -276,21 +295,21 @@ def bidsmapper(rawfolder, bidsfolder, bidsmapper='bidsmapper_sample.yaml', autom
                 # Update / append the PAR/REC mapping
                 if heuristics['PAR']:
                     parfile   = bids.get_par_file(series)
-                    bidsmap   = built_parmap(parfile, bidsmap, heuristics)
+                    bidsmap   = built_parmap(parfile, bidsmap, heuristics, automatic)
 
                 # Update / append the P7 mapping
                 if heuristics['P7']:
                     p7file    = bids.get_p7_file(series)
-                    bidsmap   = built_p7map(p7file, bidsmap, heuristics)
+                    bidsmap   = built_p7map(p7file, bidsmap, heuristics, automatic)
 
                 # Update / append the nifti mapping
                 if heuristics['Nifti']:
                     niftifile = bids.get_nifti_file(series)
-                    bidsmap   = built_niftimap(niftifile, bidsmap, heuristics)
+                    bidsmap   = built_niftimap(niftifile, bidsmap, heuristics, automatic)
 
                 # Update / append the file-system mapping
                 if heuristics['FileSystem']:
-                    bidsmap   = built_filesystemmap(series, bidsmap, heuristics)
+                    bidsmap   = built_filesystemmap(series, bidsmap, heuristics, automatic)
 
                 # Update / append the plugin mapping
                 if heuristics['PlugIn']:
