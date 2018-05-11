@@ -175,8 +175,6 @@ def bidscoiner(rawfolder, bidsfolder, subjects=[], force=False, participants=Fal
     # Input checking
     rawfolder  = os.path.abspath(os.path.expanduser(rawfolder))
     bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
-    if os.path.basename(bidsmapfile) == bidsmapfile:                  # The default: Get the full paths to the bidsmapper yaml-file
-        bidsmapfile = os.path.join(bidsfolder, 'code', bidsmapfile)
 
     # Start logging
     global logfile
@@ -185,7 +183,7 @@ def bidscoiner(rawfolder, bidsfolder, subjects=[], force=False, participants=Fal
         arg1=rawfolder, arg2=bidsfolder, arg3=subjects, arg4=force, arg5=participants, arg6=bidsmapfile), logfile)
 
     # Get the bidsmap heuristics from the bidsmap yaml-file
-    bidsmap = bids.get_heuristics(bidsmapfile, bidsfolder)
+    bidsmap = bids.get_heuristics(bidsmapfile, os.path.join(bidsfolder,'code'))
 
     # Read the table with subjects that have been processed
     participants_file = os.path.join(bidsfolder, 'participants.tsv')

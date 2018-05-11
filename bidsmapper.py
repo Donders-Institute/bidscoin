@@ -182,7 +182,7 @@ def bidsmapper(rawfolder, bidsfolder, bidsmapper='bidsmapper_sample.yaml', autom
     bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
 
     # Get the heuristics for creating the bidsmap
-    heuristics = bids.get_heuristics(bidsmapper, bidsfolder)
+    heuristics = bids.get_heuristics(bidsmapper, os.path.join(bidsfolder,'code'))
 
     # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmapper with empty lists)
     bidsmap = copy.deepcopy(heuristics)

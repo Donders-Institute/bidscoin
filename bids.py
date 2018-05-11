@@ -328,13 +328,13 @@ def get_heuristics(yamlfile, folder=None):
 
     # Input checking
     if not folder:
-        folder = __file__
+        folder = os.path.join(__file__,'heuristics')
 
     if not os.path.splitext(yamlfile)[1]:           # Add a standard file-extension if needed
         yamlfile = yamlfile + '.yaml'
 
     if os.path.basename(yamlfile) == yamlfile:      # Get the full paths to the bidsmapper yaml-file
-        yamlfile = os.path.join(os.path.dirname(folder), 'heuristics', yamlfile)
+        yamlfile = os.path.join(os.path.dirname(folder), yamlfile)
 
     yamlfile = os.path.abspath(os.path.expanduser(yamlfile))
 
