@@ -25,6 +25,7 @@
 # README
 # CHANGES
 # code/
+#     bidsmapper_sample.yaml
 #     bidsmap.yaml
 #     bidscoiner.py
 # derivatives/README
@@ -73,183 +74,184 @@
 # 		<matches>.json
 
 
-# ------------------------------------------------------------------------------
-# General options
-# ------------------------------------------------------------------------------
 Options:
+# --------------------------------------------------------------------------------
+# General options
+# --------------------------------------------------------------------------------
   dcm2niix: '-ba'
 
-# ------------------------------------------------------------------------------
-# DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
-# ------------------------------------------------------------------------------
+
 DICOM:
+# --------------------------------------------------------------------------------
+# DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
   participant_label: ~
   session_label: ~
-  anat:     # ------------------- All anatomical data -------------------
-    - &anat
-      attributes:
-        SeriesDescription: ~
-        SequenceVariant: ~
-        SequenceName: '*tfl3d1'
-        ScanningSequence: ~
-        MRAcquisitionType: ~
-        FlipAngle: ~
-        EchoNumbers: ~
-        EchoTime: ~
-        RepetitionTime: ~
-        ImageType: ~
-        ProtocolName: ~
-      acq_label: <SeriesDescription>
-      rec_label: ~
-      run_index: <automatic>
-      mod_label: ~
-      modality_label: T1w
-      ce_label: ~
-    - <<: *anat
-      modality_label: T2w
-    - <<: *anat
-      modality_label: T1rho
-    - <<: *anat
-      modality_label: T1map
-    - <<: *anat
-      modality_label: T2map
-    - <<: *anat
-      attributes:
-        SeriesDescription: ~
-        SequenceVariant: ~
-        SequenceName: '*fl3d11r'
-        ScanningSequence: ~
-        MRAcquisitionType: ~
-        FlipAngle: ~
-        RepetitionTime:
-        ImageType: ~
-        ProtocolName: ~
-      modality_label: T2star
-    - <<: *anat
-      attributes:
-        SeriesDescription: ~
-        SequenceVariant: ~
-        SequenceName: ['*fm2d2r', '*spc']
-        ScanningSequence: "['SE', 'IR']"
-        MRAcquisitionType: ~
-        FlipAngle: ~
-        EchoNumbers: ~
-        EchoTime: ~
-        RepetitionTime: ~
-        ImageType: ~
-        ProtocolName: ~
-      modality_label: FLAIR
-    - <<: *anat
-      modality_label: FLASH
-    - <<: *anat
-      modality_label: PD
-    - <<: *anat
-      modality_label: PDmap
-    - <<: *anat
-      modality_label: PDT2
-    - <<: *anat
-      modality_label: inplaneT1
-    - <<: *anat
-      modality_label: inplaneT2
-    - <<: *anat
-      modality_label: angio
-    - <<: *anat
-      modality_label: defacemask
-    - <<: *anat
-      modality_label: SWImagandphase
+  anat:     # ----------------------- All anatomical data -----------------------
+  - &anat
+    attributes:
+      SeriesDescription: ~
+      SequenceVariant: ~
+      SequenceName: '*tfl3d1'
+      ScanningSequence: ~
+      MRAcquisitionType: ~
+      FlipAngle: ~
+      EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
+      ImageType: ~
+      ProtocolName: ~
+    acq_label: <SeriesDescription>
+    rec_label: ~
+    run_index: <automatic>
+    mod_label: ~
+    modality_label: T1w
+    ce_label: ~
+  - <<: *anat
+    modality_label: T2w
+  - <<: *anat
+    modality_label: T1rho
+  - <<: *anat
+    modality_label: T1map
+  - <<: *anat
+    modality_label: T2map
+  - <<: *anat
+    attributes:
+      SeriesDescription: ~
+      SequenceVariant: ~
+      SequenceName: '*fl3d11r'
+      ScanningSequence: ~
+      MRAcquisitionType: ~
+      FlipAngle: ~
+      RepetitionTime:
+      ImageType: ~
+      ProtocolName: ~
+    modality_label: T2star
+  - <<: *anat
+    attributes:
+      SeriesDescription: ~
+      SequenceVariant: ~
+      SequenceName: ['*fm2d2r', '*spc']
+      ScanningSequence: "['SE', 'IR']"
+      MRAcquisitionType: ~
+      FlipAngle: ~
+      EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
+      ImageType: ~
+      ProtocolName: ~
+    modality_label: FLAIR
+  - <<: *anat
+    modality_label: FLASH
+  - <<: *anat
+    modality_label: PD
+  - <<: *anat
+    modality_label: PDmap
+  - <<: *anat
+    modality_label: PDT2
+  - <<: *anat
+    modality_label: inplaneT1
+  - <<: *anat
+    modality_label: inplaneT2
+  - <<: *anat
+    modality_label: angio
+  - <<: *anat
+    modality_label: defacemask
+  - <<: *anat
+    modality_label: SWImagandphase
 
-  func:     # ------------------- All functional data -------------------
-    - &func
-      attributes:
-        SeriesDescription: ~
-        SequenceVariant: ~
-        SequenceName: [epfid2d1rs, '*fm2d2r']
-        ScanningSequence: EP
-        MRAcquisitionType: ~
-        FlipAngle: ~
-        EchoNumbers: ~
-        EchoTime: ~
-        RepetitionTime: ~
-        ImageType: ~
-        ProtocolName: ~
-      task_label: <SeriesDescription>
-      acq_label: ~
-      rec_label: ~
-      run_index: <automatic>
-      echo_index: ~
-      suffix: bold
-    - <<: *func
-      suffix: sbref
+  func:     # ----------------------- All functional data -----------------------
+  - &func
+    attributes:
+      SeriesDescription: ~
+      SequenceVariant: ~
+      SequenceName: [epfid2d1rs, '*fm2d2r']
+      ScanningSequence: EP
+      MRAcquisitionType: ~
+      FlipAngle: ~
+      EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
+      ImageType: ~
+      ProtocolName: ~
+    task_label: <SeriesDescription>
+    acq_label: ~
+    rec_label: ~
+    run_index: <automatic>
+    echo_index: ~
+    suffix: bold
+  - <<: *func
+    suffix: sbref
 
-  beh:      # ------------------- All behavioural data -------------------
-    - &beh
-      attributes:
-        SeriesDescription: ~
-        SequenceVariant: ~
-        SequenceName: ~
-        ScanningSequence: ~
-        MRAcquisitionType: ~
-        FlipAngle: ~
-        EchoNumbers: ~
-        EchoTime: ~
-        RepetitionTime: ~
-        ImageType: ~
-        ProtocolName: ~
-      acq_label: <SeriesDescription>
-      run_index: <automatic>
+  beh:      # ----------------------- All behavioural data ----------------------
+  - &beh
+    attributes:
+      SeriesDescription: ~
+      SequenceVariant: ~
+      SequenceName: ~
+      ScanningSequence: ~
+      MRAcquisitionType: ~
+      FlipAngle: ~
+      EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
+      ImageType: ~
+      ProtocolName: ~
+    acq_label: <SeriesDescription>
+    run_index: <automatic>
 
-  dwi:      # ------------------- All diffusion data -------------------
-    - &dwi
-      attributes:
-        SeriesDescription: ~
-        SequenceVariant: ~
-        SequenceName: [epse2d1_, ep_]
-        ScanningSequence: EP
-        MRAcquisitionType: ~
-        FlipAngle: ~
-        EchoNumbers: ~
-        EchoTime: ~
-        RepetitionTime: ~
-        ImageType: ~
-        ProtocolName: ~
-      acq_label: <SeriesDescription>
-      run_index: <automatic>
+  dwi:      # ----------------------- All diffusion data ------------------------
+  - &dwi
+    attributes:
+      SeriesDescription: ~
+      SequenceVariant: ~
+      SequenceName: [epse2d1_, ep_]
+      ScanningSequence: EP
+      MRAcquisitionType: ~
+      FlipAngle: ~
+      EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
+      ImageType: ~
+      ProtocolName: ~
+    acq_label: <SeriesDescription>
+    run_index: <automatic>
 
-  fmap:     # ------------------- All fieldmap data -------------------
-    - &fmap
-      attributes:
-        SeriesDescription: ~
-        SequenceVariant: ~
-        SequenceName: "*fm2d2r"
-        ScanningSequence: ~
-        MRAcquisitionType: ~
-        FlipAngle: ~
-        EchoNumbers: ~
-        EchoTime: ~
-        RepetitionTime: ~
-        ImageType: ~
-        ProtocolName: ~
-      acq_label: <SeriesDescription>
-      run_index: <automatic>
-      dir_label: ~
-      suffix: magnitude1
-      IntendedFor: ~
-    - <<: *fmap
-      suffix: magnitude2
-    - <<: *fmap
-      suffix: phasediff
-    - <<: *fmap
-      suffix: phase1
-    - <<: *fmap
-      suffix: phase2
-    - <<: *fmap
-      suffix: magnitude
-    - <<: *fmap
-      suffix: fieldmap
-      # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
+  fmap:     # ----------------------- All fieldmap data -------------------------
+  - &fmap
+    attributes:
+      SeriesDescription: ~
+      SequenceVariant: ~
+      SequenceName: "*fm2d2r"
+      ScanningSequence: ~
+      MRAcquisitionType: ~
+      FlipAngle: ~
+      EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
+      ImageType: ~
+      ProtocolName: ~
+    acq_label: <SeriesDescription>
+    run_index: <automatic>
+    dir_label: ~
+    suffix: magnitude1
+    IntendedFor: ~
+  - <<: *fmap
+    suffix: magnitude2
+  - <<: *fmap
+    suffix: phasediff
+  - <<: *fmap
+    suffix: phase1
+  - <<: *fmap
+    suffix: phase2
+  - <<: *fmap
+    suffix: magnitude
+  - <<: *fmap
+    suffix: fieldmap
+    # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
-  unknown:  # ------------------- All non-BIDS data -------------------
-    attributes:   # NB: A dict, should not be a list
+  unknown:  # ----------------------- All non-BIDS data -------------------------
+  - attributes:
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -265,143 +267,143 @@ DICOM:
     run_index: <automatic>
 
 
-# ------------------------------------------------------------------------------
-# PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
-# ------------------------------------------------------------------------------
 PAR: ~
+# --------------------------------------------------------------------------------
+# PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
 
 
-# ------------------------------------------------------------------------------
+P7: ~
+# --------------------------------------------------------------------------------
 # P*.7 key-value heuristics (GE fields that are mapped to the BIDS labels)
 # -------------------------------------------------------------------------------
-P7: ~
 
 
-# ------------------------------------------------------------------------------
-# Nifti key-value heuristics (Nifti fields that are mapped to the BIDS labels)
-# ------------------------------------------------------------------------------
 Nifti: ~
+# --------------------------------------------------------------------------------
+# Nifti key-value heuristics (Nifti fields that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
 
 
-# ------------------------------------------------------------------------------
+FileSystem:
+# --------------------------------------------------------------------------------
 # File system key-value heuristics (these file- and foldernames will be mapped
 # to the BIDS labels; Special substitutions can be performed using python's
 # Format Specification Mini-Language)
-# ------------------------------------------------------------------------------
-FileSystem:
+# --------------------------------------------------------------------------------
   participant_label: \sub-{.*}\
   session_label: \ses-{.*}\
-  anat:     # ------------------- All anatomical data -------------------
-    - &anat_filesystem
-      attributes:
-        FolderName: ~
-        FileName: ~
-        FileExt: ~
-      acq_label: <FileName>
-      rec_label: ~
-      run_index: <automatic>
-      mod_label: ~
-      modality_label: T1w
-      ce_label: ~
-    - <<: *anat_filesystem
-      modality_label: T2w
-    - <<: *anat_filesystem
-      modality_label: T1rho
-    - <<: *anat_filesystem
-      modality_label: T1map
-    - <<: *anat_filesystem
-      modality_label: T2map
-    - <<: *anat_filesystem
-      modality_label: T2star
-    - <<: *anat_filesystem
-      modality_label: FLAIR
-    - <<: *anat_filesystem
-      modality_label: FLASH
-    - <<: *anat_filesystem
-      modality_label: PD
-    - <<: *anat_filesystem
-      modality_label: PDmap
-    - <<: *anat_filesystem
-      modality_label: PDT2
-    - <<: *anat_filesystem
-      modality_label: inplaneT1
-    - <<: *anat_filesystem
-      modality_label: inplaneT2
-    - <<: *anat_filesystem
-      modality_label: angio
-    - <<: *anat_filesystem
-      modality_label: defacemask
-    - <<: *anat_filesystem
-      modality_label: SWImagandphase
+  anat:     # ----------------------- All anatomical data -----------------------
+  - &anat_filesystem
+    attributes:
+      FolderName: ~
+      FileName: ~
+      FileExt: ~
+    acq_label: <FileName>
+    rec_label: ~
+    run_index: <automatic>
+    mod_label: ~
+    modality_label: T1w
+    ce_label: ~
+  - <<: *anat_filesystem
+    modality_label: T2w
+  - <<: *anat_filesystem
+    modality_label: T1rho
+  - <<: *anat_filesystem
+    modality_label: T1map
+  - <<: *anat_filesystem
+    modality_label: T2map
+  - <<: *anat_filesystem
+    modality_label: T2star
+  - <<: *anat_filesystem
+    modality_label: FLAIR
+  - <<: *anat_filesystem
+    modality_label: FLASH
+  - <<: *anat_filesystem
+    modality_label: PD
+  - <<: *anat_filesystem
+    modality_label: PDmap
+  - <<: *anat_filesystem
+    modality_label: PDT2
+  - <<: *anat_filesystem
+    modality_label: inplaneT1
+  - <<: *anat_filesystem
+    modality_label: inplaneT2
+  - <<: *anat_filesystem
+    modality_label: angio
+  - <<: *anat_filesystem
+    modality_label: defacemask
+  - <<: *anat_filesystem
+    modality_label: SWImagandphase
 
-  func:     # ------------------- All functional data -------------------
-    - &func_filesystem
-      attributes:
-        FolderName: ~
-        FileName: ~
-        FileExt: ~
-      task_label: <FileName>
-      acq_label: ~
-      rec_label: ~
-      run_index: <automatic>
-      echo_index: ~
-      suffix: bold
-    - <<: *func_filesystem
-      suffix: sbref
-    - <<: *func_filesystem
-      suffix: events
-    - <<: *func_filesystem
-      recording_label: <FileName>
-      suffix: physio
-    - <<: *func_filesystem
-      recording_label: <FileName>
-      suffix: stim
+  func:     # ----------------------- All functional data -----------------------
+  - &func_filesystem
+    attributes:
+      FolderName: ~
+      FileName: ~
+      FileExt: ~
+    task_label: <FileName>
+    acq_label: ~
+    rec_label: ~
+    run_index: <automatic>
+    echo_index: ~
+    suffix: bold
+  - <<: *func_filesystem
+    suffix: sbref
+  - <<: *func_filesystem
+    suffix: events
+  - <<: *func_filesystem
+    recording_label: <FileName>
+    suffix: physio
+  - <<: *func_filesystem
+    recording_label: <FileName>
+    suffix: stim
 
-  beh:      # ------------------- All behavioural data -------------------
-    - &beh_filesystem
-      attributes:
-        FolderName: ~
-        FileName: ~
-        FileExt: ~
-      acq_label: <FileName>
-      run_index: <automatic>
+  beh:      # ----------------------- All behavioural data ----------------------
+  - &beh_filesystem
+    attributes:
+      FolderName: ~
+      FileName: ~
+      FileExt: ~
+    acq_label: <FileName>
+    run_index: <automatic>
 
-  dwi:      # ------------------- All diffusion data -------------------
-    - &dwi_filesystem
-      attributes:
-        FolderName: ~
-        FileName: ~
-        FileExt: ~
-      acq_label: <FileName>
-      run_index: <automatic>
+  dwi:      # ----------------------- All diffusion data ------------------------
+  - &dwi_filesystem
+    attributes:
+      FolderName: ~
+      FileName: ~
+      FileExt: ~
+    acq_label: <FileName>
+    run_index: <automatic>
 
-  fmap:     # ------------------- All fieldmap data -------------------
-    - &fmap_filesystem
-      attributes:
-        FolderName: ~
-        FileName: ~
-        FileExt: ~
-      acq_label: <FileName>
-      run_index: <automatic>
-      dir_label: ~
-      suffix: magnitude1
-      IntendedFor: ~
-    - <<: *fmap_filesystem
-      suffix: magnitude2
-    - <<: *fmap_filesystem
-      suffix: phasediff
-    - <<: *fmap_filesystem
-      suffix: phase1
-    - <<: *fmap_filesystem
-      suffix: phase2
-    - <<: *fmap_filesystem
-      suffix: magnitude
-    - <<: *fmap_filesystem
-      suffix: fieldmap
-      # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
+  fmap:     # ----------------------- All fieldmap data -------------------------
+  - &fmap_filesystem
+    attributes:
+      FolderName: ~
+      FileName: ~
+      FileExt: ~
+    acq_label: <FileName>
+    run_index: <automatic>
+    dir_label: ~
+    suffix: magnitude1
+    IntendedFor: ~
+  - <<: *fmap_filesystem
+    suffix: magnitude2
+  - <<: *fmap_filesystem
+    suffix: phasediff
+  - <<: *fmap_filesystem
+    suffix: phase1
+  - <<: *fmap_filesystem
+    suffix: phase2
+  - <<: *fmap_filesystem
+    suffix: magnitude
+  - <<: *fmap_filesystem
+    suffix: fieldmap
+    # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
-  unknown:  # ------------------- All non-BIDS data -------------------
-    attributes:   # NB: A dict, should not be a list
+  unknown:  # ----------------------- All non-BIDS data -------------------------
+  - attributes:
       FolderName: ~
       FileName: ~
       FileExt: ~
@@ -409,7 +411,7 @@ FileSystem:
     run_index: <automatic>
 
 
-# ------------------------------------------------------------------------------
-# Plugin to edit the key-value heuristics (see [bidsmapper.py] for the API)
-# ------------------------------------------------------------------------------
 PlugIn: ~
+# --------------------------------------------------------------------------------
+# Plugin to edit the key-value heuristics (see [bidsmapper.py] for the API)
+# --------------------------------------------------------------------------------
