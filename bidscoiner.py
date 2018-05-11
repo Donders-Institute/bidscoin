@@ -55,7 +55,7 @@ def coin_dicom(session, bidsmap, bidsfolder):
         bidsname = bids.get_bidsname(subid, sesid, modality, series_, runindex)
 
         # Convert the dicom-files in the source folder to nifti's in the BIDS-folder
-        command = 'module add dcm2niix; dcm2niix {options} -f {filename} -o {outfolder} {infolder}'.format(
+        command = 'module add dcm2niix; rm -f {outfolder}/{filename}.*; dcm2niix {options} -f {filename} -o {outfolder} {infolder}'.format(
             options   = bidsmap['Options']['dcm2niix'],
             filename  = bidsname,
             outfolder = bidsmodality,
@@ -76,6 +76,62 @@ def coin_dicom(session, bidsmap, bidsfolder):
     personals['weight'] = bids.get_dicomfield('PatientWeight', dicomfile)
 
     return personals
+
+
+def coin_par(session, bidsmap, bidsfolder):
+    """
+
+    :param str session:     The full-path name of the subject/session source folder
+    :param dict bidsmap:    The full mapping heuristics from the bidsmap yaml-file
+    :param str bidsfolder:  The full-path name of the BIDS root-folder
+    :return:                Nothing
+    :rtype: NoneType
+    """
+
+    global logfile
+    bids.printlog('coin_par is WIP!!!', logfile)
+
+
+def coin_p7(session, bidsmap, bidsfolder):
+    """
+
+    :param str session:     The full-path name of the subject/session source folder
+    :param dict bidsmap:    The full mapping heuristics from the bidsmap yaml-file
+    :param str bidsfolder:  The full-path name of the BIDS root-folder
+    :return:                Nothing
+    :rtype: NoneType
+    """
+
+    global logfile
+    bids.printlog('coin_p7 is WIP!!!', logfile)
+
+
+def coin_nifti(session, bidsmap, bidsfolder):
+    """
+
+    :param str session:     The full-path name of the subject/session source folder
+    :param dict bidsmap:    The full mapping heuristics from the bidsmap yaml-file
+    :param str bidsfolder:  The full-path name of the BIDS root-folder
+    :return:                Nothing
+    :rtype: NoneType
+    """
+
+    global logfile
+    bids.printlog('coin_nifti is WIP!!!', logfile)
+
+
+def coin_filesystem(session, bidsmap, bidsfolder):
+    """
+
+    :param str session:     The full-path name of the subject/session source folder
+    :param dict bidsmap:    The full mapping heuristics from the bidsmap yaml-file
+    :param str bidsfolder:  The full-path name of the BIDS root-folder
+    :return:                Nothing
+    :rtype: NoneType
+    """
+
+    global logfile
+    bids.printlog('coin_filesystem is WIP!!!', logfile)
 
 
 def coin_plugin(session, bidsmap, bidsfolder):
@@ -187,7 +243,7 @@ def bidscoiner(rawfolder, bidsfolder, bidsmapfile='code/bidsmap.yaml', subjects=
             for key in personals:
                 if key not in participants_table.columns:
                     participants_table[key] = None
-            participants_table = participants_table.append(personals, ignore_index=False, verify_integrity=True)
+            participants_table = participants_table.append(personals, ignore_index=True, verify_integrity=True)
             participants_table.to_csv(participants_file, sep='\t', encoding='utf-8', index=False)
 
     bids.printlog('------------ FINISHED! ------------', logfile)
