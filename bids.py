@@ -512,7 +512,7 @@ def get_bidsname(subid, sesid, modality, series, run=''):
     :rtype: str
     """
 
-    # Compose the BIDS filename
+    # Compose the BIDS filename (-> switch statement)
     if modality == 'anat':
 
         defacemask = False       # TODO: account for the 'defacemask' possibility
@@ -534,7 +534,7 @@ def get_bidsname(subid, sesid, modality, series, run=''):
             _mod    = add_prefix('_mod-', mod),
             suffix  = suffix)
 
-    if modality == 'func':
+    elif modality == 'func':
 
         # bidsname: sub-<participant_label>[_ses-<session_label>]_task-<task_label>[_acq-<label>][_rec-<label>][_run-<index>][_echo-<index>]_suffix
         bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}{_echo}_{suffix}'.format(
@@ -547,7 +547,7 @@ def get_bidsname(subid, sesid, modality, series, run=''):
             _echo   = add_prefix('_echo-', series['echo_index']),
             suffix  = series['suffix'])
 
-    if modality == 'dwi':
+    elif modality == 'dwi':
 
         # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_run-<index>]_dwi
         bidsname = '{sub}{_ses}{_acq}{_run}_dwi'.format(
@@ -556,12 +556,12 @@ def get_bidsname(subid, sesid, modality, series, run=''):
             _acq    = add_prefix('_acq-', series['acq_label']),
             _run    = add_prefix('_run-', run))
 
-    if modality == 'fmap':
+    elif modality == 'fmap':
 
         # TODO: add fieldmap logic
 
         # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_dir-<dir_label>][_run-<run_index>]_suffix
-        bidsname = '{sub}{_ses}{_acq}{_rec}{_run}{_echo}_{suffix}'.format(
+        bidsname = '{sub}{_ses}{_acq}{_dir}{_run}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
             _acq    = add_prefix('_acq-', series['acq_label']),
@@ -569,7 +569,7 @@ def get_bidsname(subid, sesid, modality, series, run=''):
             _run    = add_prefix('_run-', run),
             suffix  = series['suffix'])
 
-    if modality == 'beh':
+    elif modality == 'beh':
 
         # bidsname: sub-<participant_label>[_ses-<session_label>]_task-<task_name>_suffix
         bidsname = '{sub}{_ses}_{task}_{suffix}'.format(
@@ -578,7 +578,7 @@ def get_bidsname(subid, sesid, modality, series, run=''):
             task    = series['task_name'],
             suffix  = series['suffix'])
 
-    if modality == unknownmodality:
+    elif modality == unknownmodality:
 
         # bidsname: sub-<participant_label>[_ses-<session_label>]_acq-<label>[_run-<index>]
         bidsname = '{sub}{_ses}_{acq}{_run}'.format(
@@ -587,7 +587,7 @@ def get_bidsname(subid, sesid, modality, series, run=''):
             acq     = series['acq_label'],
             _run    = add_prefix('_run-', run))
 
-    if not bidsname:
+    else:
         raise ValueError('Critical error: Invalid modality "{}" found'.format(modality))
 
     return bidsname
