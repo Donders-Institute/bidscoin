@@ -24,8 +24,15 @@ def coin_dicom(session, bidsmap, bidsfolder):
 
     global logfile
 
+    # Get the subject and session identifiers from the foldername
+    subid = 'sub-' + session.rsplit('/sub-')[1].rsplit('/ses-')[0]
+    if '/ses-' in session:
+        sesid = 'ses-' + session.rsplit('/ses-')[1]
+    else:
+        sesid = ''
+
     # Create the BIDS session-folder
-    bidsseries = os.path.join(bidsfolder, session.rsplit('/sub-')[1])
+    bidsseries = os.path.join(bidsfolder, subid, sesid)         # NB: This gives a trailing '/' if ses=='', but that should be ok
     os.makedirs(bidsseries, exist_ok=True)
 
     # Process the individual series
@@ -33,31 +40,35 @@ def coin_dicom(session, bidsmap, bidsfolder):
 
         bids.printlog('Processing dicom-folder: ' + series, logfile)
 
-        # Get the bids labels from a dicom-file and bidsmap to compose the BIDS filename
-        dicomfile = bids.get_dicom_file(series)
-        for modality in bids.bidsmodalities:
-            series_ = bids.get_matching_series(series, bidsmap['DICOM'][modality])
-            if series_:
-                seriesdict =
+        # Get the cleaned-up bids labels from a dicom-file and bidsmap
+        dicomfile = bids.get_dicomfile(series)
+        result    = bids.get_matching_dicomseries(dicomfile, bidsmap)
+        series_   = result['series']
+        modality  = result['modality']
 
-        bidsname   = ''     # TODO
+        # Create the BIDS session/modality folder
+        bidsmodality = os.path.join(bidsseries, modality)
+        os.makedirs(bidsmodality, exist_ok=True)
+
+        # Compose the BIDS filename using the bids labels and run-index
+        runindex = ''    #  TODO: dynamically resolve the run-index. Idea: use the index of the ordered SeriesNumber list
+        bidsname = bids.get_bidsname(subid, sesid, modality, series_, runindex)
 
         # Convert the dicom-files in the source folder to nifti's in the BIDS-folder
         command = 'module add dcm2niix; dcm2niix {options} -f {filename} -o {outfolder} {infolder}'.format(
             options   = bidsmap['Options']['dcm2niix'],
             filename  = bidsname,
-            outfolder = bidsseries,
+            outfolder = bidsmodality,
             infolder  = series)
-        bids.printlog('Executing: ' + command, logfile)
+        bids.printlog('$ ' + command, logfile)
         process = subprocess.run(command, stdout=subprocess.PIPE, shell=True)
         bids.printlog('TODO: print dcm2niix stdout &> stderr', logfile)
         if process.returncode != 0:
             errormsg = 'Failed to process {} (errorcode {})'.format(series, process.returncode)
             bids.printlog(errormsg, logfile)
 
-
     # Collect personal data from the DICOM header
-    dicomfile           = bids.get_dicom_file(series)
+    dicomfile           = bids.get_dicomfile(series)
     personals           = dict()
     personals['age']    = bids.get_dicomfield('PatientAge',    dicomfile)
     personals['sex']    = bids.get_dicomfield('PatientSex',    dicomfile)
@@ -105,22 +116,20 @@ def bidscoiner(rawfolder, bidsfolder, bidsmapfile='code/bidsmap.yaml', subjects=
     :rtype: NoneType
     """
 
-    # Start logging
-    global logfile
-    logfile = os.path.join(bidsfolder, 'code', 'bidscoiner.log')
-    bids.printlog('---------- START ----------\nbidscoiner {arg1} {arg2} {arg3} {arg4} {arg5} {arg6}'.format(
-        arg1=rawfolder, arg2=bidsfolder, arg3=bidsmapfile, arg4=subjects, arg5=participants, arg6=force), logfile)
-
     # Input checking
     rawfolder  = os.path.abspath(os.path.expanduser(rawfolder))
     bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
-    if not subjects:
-        subjects = bids.lsdirs(rawfolder, 'sub-*')
+
+    # Start logging
+    global logfile
+    logfile = os.path.join(bidsfolder, 'code', 'bidscoiner.log')
+    bids.printlog('------------ START ------------\n$ bidscoiner {arg1} {arg2} {arg3} {arg4} {arg5} {arg6}'.format(
+        arg1=rawfolder, arg2=bidsfolder, arg3=bidsmapfile, arg4=subjects, arg5=participants, arg6=force), logfile)
 
     # Get the bidsmap heuristics from the bidsmap yaml-file
     bidsmap = bids.get_heuristics(bidsmapfile, bidsfolder)
 
-    # See which subjects have not been processed
+    # Read the table with subjects that have been processed
     participants_file = os.path.join(bidsfolder, 'participants.tsv')
     if participants and os.path.exists(participants_file):
         participants_table = pd.read_table(participants_file)
@@ -129,6 +138,8 @@ def bidscoiner(rawfolder, bidsfolder, bidsmapfile='code/bidsmap.yaml', subjects=
         participants_table = pd.DataFrame(columns = ['participant_id'])
 
     # Loop over all subjects and sessions and convert them using the bidsmap entries
+    if not subjects:
+        subjects = bids.lsdirs(rawfolder, 'sub-*')
     for subject in subjects:
 
         if subject in list(participants_table.participant_id): continue
@@ -138,7 +149,8 @@ def bidscoiner(rawfolder, bidsfolder, bidsmapfile='code/bidsmap.yaml', subjects=
         for session in sessions:
 
             # Check if we should skip the session-folder
-            if not force and os.path.isdir(session):
+            personals = dict()
+            if not force and os.path.isdir(session.replace(rawfolder, bidsfolder)):
                 continue
 
             # Update / append the dicom mapping
@@ -168,16 +180,17 @@ def bidscoiner(rawfolder, bidsfolder, bidsmapfile='code/bidsmap.yaml', subjects=
                 personals_ = coin_plugin(session, bidsmap, bidsfolder)
                 if personals_: personals = personals_
 
-        personals['participant_id'] = os.path.basename(subject)
+        if personals:
+            personals['participant_id'] = os.path.basename(subject)
 
-        # Write the collected personals to the participants_file
-        for key in personals:
-            if key not in participants_table.columns:
-                participants_table[key] = None
-        participants_table = participants_table.append(personals, ignore_index=False, verify_integrity=True)
-        participants_table.to_csv(participants_file, sep='\t', encoding='utf-8', index=False)
+            # Write the collected personals to the participants_file
+            for key in personals:
+                if key not in participants_table.columns:
+                    participants_table[key] = None
+            participants_table = participants_table.append(personals, ignore_index=False, verify_integrity=True)
+            participants_table.to_csv(participants_file, sep='\t', encoding='utf-8', index=False)
 
-    bids.printlog('---------- FINISHED! ----------', logfile)
+    bids.printlog('------------ FINISHED! ------------', logfile)
 
 
 # Shell usage
@@ -197,4 +210,4 @@ if __name__ == "__main__":
     parser.add_argument('-f','--force',        help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')
     args = parser.parse_args()
 
-    bidscoiner(args.rawfolder, args.bidsfolder, args.bidsmapper, args.subject, args.participants, args.force)
+    bidscoiner(args.rawfolder, args.bidsfolder, args.bidsmap, args.subjects, args.participants, args.force)

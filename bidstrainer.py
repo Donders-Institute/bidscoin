@@ -42,8 +42,7 @@ def built_dicommapper(dicomfile, bidsmapper, heuristics):
     for series in heuristics['DICOM'][bidsmodality]:
 
         match   = False
-        # series_ = copy.deepcopy(series)   # Deepcopy makes sure we don't change the original heuristics object, however, it is a very expensive operation.
-        series_ = dict()                    # This way is also safe, however, we lose all comments and formatting within the series (which is not such a disaster probably). It is also more robust with aliases
+        series_ = dict()    # Creating a new object is safe in that we don't change the original heuristics object. However, we lose all comments and formatting within the series (which is not such a disaster probably). It is also much faster and more robust with aliases compared with a deepcopy
 
         # Copy the bids labels for the different bidsmodality matches (having a switch / case statement in python would be nice)
         if bidsmodality == 'anat':
@@ -58,11 +57,6 @@ def built_dicommapper(dicomfile, bidsmapper, heuristics):
                     series_[key] = series[key]
                 match = True
 
-        elif bidsmodality == 'beh':
-            for key in series:
-                series_[key] = series[key]
-            match = True
-
         elif bidsmodality == 'dwi':
             for key in series:
                 series_[key] = series[key]
@@ -73,6 +67,11 @@ def built_dicommapper(dicomfile, bidsmapper, heuristics):
                 for key in series:
                     series_[key] = series[key]
                 match = True
+
+        elif bidsmodality == 'beh':
+            for key in series:
+                series_[key] = series[key]
+            match = True
 
         if match:
 

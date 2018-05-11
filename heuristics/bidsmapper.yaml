@@ -81,7 +81,7 @@ Options:
 # --------------------------------------------------------------------------------
 # General options
 # --------------------------------------------------------------------------------
-  dcm2niix: '-ba'
+  dcm2niix: '-b y'   # String that is passed to dcm2niix. Tip: SPM users may want to use '-b y -z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
 
 
 DICOM:
@@ -164,23 +164,6 @@ DICOM:
   - <<: *func
     suffix: sbref
 
-  beh:      # ----------------------- All behavioural data ----------------------
-  - &beh
-    attributes:
-      SeriesDescription: ~
-      SequenceVariant: ~
-      SequenceName: ~
-      ScanningSequence: ~
-      MRAcquisitionType: ~
-      FlipAngle: ~
-      EchoNumbers: ~
-      EchoTime: ~
-      RepetitionTime: ~
-      ImageType: ~
-      ProtocolName: ~
-    acq_label: <SeriesDescription>
-    run_index: <automatic>
-
   dwi:      # ----------------------- All diffusion data ------------------------
   - &dwi
     attributes:
@@ -230,6 +213,23 @@ DICOM:
   - <<: *fmap
     suffix: fieldmap
     # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
+
+  beh:      # ----------------------- All behavioural data ----------------------
+  - &beh
+    attributes:
+      SeriesDescription: ~
+      SequenceVariant: ~
+      SequenceName: ~
+      ScanningSequence: ~
+      MRAcquisitionType: ~
+      FlipAngle: ~
+      EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
+      ImageType: ~
+      ProtocolName: ~
+    task_name: <SeriesDescription>
+    suffix: ~
 
   unknown:  # ----------------------- All non-BIDS data -------------------------
   - attributes:
@@ -340,15 +340,6 @@ FileSystem:
     recording_label: <FileName>
     suffix: stim
 
-  beh:      # ----------------------- All behavioural data ----------------------
-  - &beh_filesystem
-    attributes:
-      FolderName: ~
-      FileName: ~
-      FileExt: ~
-    acq_label: <FileName>
-    run_index: <automatic>
-
   dwi:      # ----------------------- All diffusion data ------------------------
   - &dwi_filesystem
     attributes:
@@ -382,6 +373,15 @@ FileSystem:
   - <<: *fmap_filesystem
     suffix: fieldmap
     # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
+
+  beh:      # ----------------------- All behavioural data ----------------------
+  - &beh_filesystem
+    attributes:
+      FolderName: ~
+      FileName: ~
+      FileExt: ~
+    task_name: <FileName>
+    suffix: ~
 
   unknown:  # ----------------------- All non-BIDS data -------------------------
   - attributes:

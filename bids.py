@@ -19,7 +19,7 @@ import re
 from ruamel_yaml import YAML
 yaml = YAML()
 
-bidsmodalities  = ('anat', 'func', 'beh', 'dwi', 'fmap')
+bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh')
 unknownmodality = 'unknown'
 
 
@@ -33,13 +33,13 @@ def printlog(message, logfile=None):
     :rtype: NoneType
     """
 
-    # Get the name of the caller
+    # Get the name of the calling function
     frame  = inspect.stack()[1]
     module = inspect.getmodule(frame[0])
     caller = os.path.basename(module.__file__)
 
     # Print the logmessage
-    logmessage = '{time} - {caller}:\n{message}'.format(
+    logmessage = '\n{time} - {caller}:\n{message}\n'.format(
         time    = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         caller  = caller,
         message = textwrap.indent(message, '\t'))
@@ -61,9 +61,11 @@ def lsdirs(folder, wildcard='*'):
     :rtype: iterable
     """
 
-    return filter(lambda x:
-                  os.path.isdir(os.path.join(folder, x)),
-                  glob.glob(os.path.join(folder, wildcard)))
+    # This produces an iterable, which is not handy
+    # return filter(lambda x:
+    #               os.path.isdir(os.path.join(folder, x)),
+    #               glob.glob(os.path.join(folder, wildcard)))
+    return [fname for fname in glob.glob(os.path.join(folder, wildcard)) if os.path.isdir(fname)]
 
 
 def is_dicomfile(file):
@@ -160,7 +162,7 @@ def is_incomplete_acquisition(folder):
     :rtype: bool
     """
 
-    dicomfile = get_dicom_file(folder)
+    dicomfile = get_dicomfile(folder)
     nrep      = get_dicomfield('lRepetitions', dicomfile)
     nfiles    = len(os.listdir(folder))     # TODO: filter out non-imaging files
 
@@ -172,7 +174,7 @@ def is_incomplete_acquisition(folder):
         return False
 
 
-def get_dicom_file(folder):
+def get_dicomfile(folder):
     """
     Gets a dicom-file from the folder
 
@@ -189,7 +191,7 @@ def get_dicom_file(folder):
     return None
 
 
-def get_par_file(folder):
+def get_parfile(folder):
     """
     Gets a Philips PAR-file from the folder
 
@@ -206,7 +208,7 @@ def get_par_file(folder):
     return None
 
 
-def get_p7_file(folder):
+def get_p7file(folder):
     """
     Gets a GE P*.7-file from the folder
 
@@ -223,7 +225,7 @@ def get_p7_file(folder):
     return None
 
 
-def get_nifti_file(folder):
+def get_niftifile(folder):
     """
     Gets a nifti-file from the folder
 
@@ -240,7 +242,7 @@ def get_nifti_file(folder):
     return None
 
 
-def parse_from_x_protocol(pattern, dicomfile):
+def parse_x_protocol(pattern, dicomfile):
     """
     Siemens writes a protocol structure as text into each DICOM file.
     This structure is necessary to recreate a scanning protocol from a DICOM,
@@ -268,9 +270,9 @@ def parse_from_x_protocol(pattern, dicomfile):
     return None
 
 
-# Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) _DICOMDICT_MEMO optimization
-_DICOMDICT_MEMO = None
-_DICOMFILE_MEMO = None
+# Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) _DICOMDICT_CACHE optimization
+_DICOMDICT_CACHE = None
+_DICOMFILE_CACHE = None
 def get_dicomfield(tagname, dicomfile):
     """
     Robustly extracts a DICOM field/tag from a dictionary or from vendor specific fields
@@ -282,16 +284,16 @@ def get_dicomfield(tagname, dicomfile):
     """
 
     import pydicom
-    global _DICOMDICT_MEMO, _DICOMFILE_MEMO
+    global _DICOMDICT_CACHE, _DICOMFILE_CACHE
 
     try:
 
-        if dicomfile != _DICOMFILE_MEMO:
-            dicomdict       = pydicom.dcmread(dicomfile)
-            _DICOMDICT_MEMO = dicomdict
-            _DICOMFILE_MEMO = dicomfile
+        if dicomfile != _DICOMFILE_CACHE:
+            dicomdict        = pydicom.dcmread(dicomfile)
+            _DICOMDICT_CACHE = dicomdict
+            _DICOMFILE_CACHE = dicomfile
         else:
-            dicomdict = _DICOMDICT_MEMO
+            dicomdict = _DICOMDICT_CACHE
 
         # TODO: implement regexp
         value = dicomdict.get(tagname)
@@ -300,7 +302,7 @@ def get_dicomfield(tagname, dicomfile):
     except Exception:
         try:
 
-            value = parse_from_x_protocol(tagname, dicomfile)
+            value = parse_x_protocol(tagname, dicomfile)
 
         except Exception:
 
@@ -349,7 +351,7 @@ def get_heuristics(yamlfile, folder=None):
 
 def get_matching_dicomseries(dicomfile, heuristics):
     """
-    Find the matching series in the bidsmap heuristics using the dicom attributes. Then fill-in the missing values
+    Find the matching series in the bidsmap heuristics using the dicom attributes. Then fill-in the missing values (values are cleaned-up to be BIDS-valid)
 
     :param str dicomfile:   The full pathname of the dicom-file
     :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
@@ -407,7 +409,7 @@ def get_matching_dicomseries(dicomfile, heuristics):
                         series_[key] = cleanup_label(label)
 
                     else:
-                        series_[key] = bidsvalue
+                        series_[key] = cleanup_label(bidsvalue)
 
             # Stop if we have a match
             if match:
@@ -483,7 +485,119 @@ def cleanup_label(label):
     return re.sub(r'(?u)[^-\w.]', '.', label)
 
 
-def ask_for_mapping(heuristics, series, filename=''):
+def add_prefix(prefix, tag):
+    """
+    Simple function to account for optional BIDS tags in the bids file names, i.e. it prefixes 'prefix' only when tag is not empty
+
+    :param str prefix:  The prefix (e.g. '_sub-')
+    :param str tag:     The tag (e.g. 'control01')
+    :return             The tag with the leading prefix (e.g. '_sub-control01') or just the empty tag ''
+    :rtype: str
+    """
+
+    if tag:
+        tag = prefix + tag
+    else:
+        tag = ''
+
+    return tag
+
+
+def get_bidsname(subid, sesid, modality, series, run=''):
+    """
+    Composes a filename as it should be according to the BIDS standard using the BIDS labels in series
+
+    :param str subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-01')
+    :param str sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'sub-01'). Can be left ''
+    :param str modality:    The bidsmodality (choose from bids.bidsmodalities)
+    :param dict series:     The series mapping with the BIDS labels
+    :param: str run:        The optional runindex label (e.g. 'run-01'). Can be left ''
+    :return:                The composed BIDS file-name (without file-extension)
+    :rtype: str
+    """
+
+    # Compose the BIDS filename
+    if modality == 'anat':
+
+        defacemask = False       # TODO: account for the 'defacemask' possibility
+        if defacemask:
+            suffix = 'defacemask'
+            mod    = series['modality_label']
+        else:
+            suffix = series['modality_label']
+            mod    = ''
+
+        # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_ce-<label>][_rec-<label>][_run-<index>][_mod-<label>]_suffix
+        bidsname = '{sub}{_ses}{_acq}{_ce}{_rec}{_run}{_mod}_{suffix}'.format(
+            sub     = subid,
+            _ses    = add_prefix('_', sesid),
+            _acq    = add_prefix('_acq-', series['acq_label']),
+            _ce     = add_prefix('_ce-', series['ce_label']),
+            _rec    = add_prefix('_rec-', series['rec_label']),
+            _run    = add_prefix('_run-', run),
+            _mod    = add_prefix('_mod-', mod),
+            suffix  = suffix)
+
+    if modality == 'func':
+
+        # bidsname: sub-<participant_label>[_ses-<session_label>]_task-<task_label>[_acq-<label>][_rec-<label>][_run-<index>][_echo-<index>]_suffix
+        bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}{_echo}_{suffix}'.format(
+            sub     = subid,
+            _ses    = add_prefix('_', sesid),
+            task    = series['task_label'],
+            _acq    = add_prefix('_acq-', series['acq_label']),
+            _rec    = add_prefix('_rec-', series['rec_label']),
+            _run    = add_prefix('_run-', run),
+            _echo   = add_prefix('_echo-', series['echo_index']),
+            suffix  = series['suffix'])
+
+    if modality == 'dwi':
+
+        # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_run-<index>]_dwi
+        bidsname = '{sub}{_ses}{_acq}{_run}_dwi'.format(
+            sub     = subid,
+            _ses    = add_prefix('_', sesid),
+            _acq    = add_prefix('_acq-', series['acq_label']),
+            _run    = add_prefix('_run-', run))
+
+    if modality == 'fmap':
+
+        # TODO: add fieldmap logic
+
+        # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_dir-<dir_label>][_run-<run_index>]_suffix
+        bidsname = '{sub}{_ses}{_acq}{_rec}{_run}{_echo}_{suffix}'.format(
+            sub     = subid,
+            _ses    = add_prefix('_', sesid),
+            _acq    = add_prefix('_acq-', series['acq_label']),
+            _dir    = add_prefix('_dir-', series['dir_label']),
+            _run    = add_prefix('_run-', run),
+            suffix  = series['suffix'])
+
+    if modality == 'beh':
+
+        # bidsname: sub-<participant_label>[_ses-<session_label>]_task-<task_name>_suffix
+        bidsname = '{sub}{_ses}_{task}_{suffix}'.format(
+            sub     = subid,
+            _ses    = add_prefix('_', sesid),
+            task    = series['task_name'],
+            suffix  = series['suffix'])
+
+    if modality == unknownmodality:
+
+        # bidsname: sub-<participant_label>[_ses-<session_label>]_acq-<label>[_run-<index>]
+        bidsname = '{sub}{_ses}_{acq}{_run}'.format(
+            sub     = subid,
+            _ses    = add_prefix('_', sesid),
+            acq     = series['acq_label'],
+            _run    = add_prefix('_run-', run))
+
+    if not bidsname:
+        raise ValueError('Critical error: Invalid modality "{}" found'.format(modality))
+
+    return bidsname
+
+
+def askfor_mapping(heuristics, series, filename=''):
     """
     Ask the user for help to resolve the mapping from the series attributes to the BIDS labels
     WIP!!!
@@ -505,7 +619,7 @@ def ask_for_mapping(heuristics, series, filename=''):
     return None # {'modality': modality, 'series': series}
 
 
-def ask_for_append(modality, series, bidsmapperfile):
+def askfor_append(modality, series, bidsmapperfile):
     """
     Ask the user to add the labelled series to their bidsmapper yaml-file or send it to a central database
     WIP!!!

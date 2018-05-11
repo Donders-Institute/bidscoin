@@ -40,9 +40,8 @@ def built_dicommap(dicomfile, bidsmap, heuristics, automatic):
 
     # If nothing matched, ask the user for help
     if modality == bids.unknownmodality and automatic:
-        answer = bids.ask_for_mapping(heuristics['DICOM'], series, dicomfile)       # Note: series_ will be referenced since heuristics['DICOM'][bidsmodality] should not all be empty
-
-    if 'answer' in locals() and answer:                                             # A catch for users canceling the question for help
+        answer = bids.askfor_mapping(heuristics['DICOM'], series, dicomfile)
+    if 'answer' in locals() and answer:                                            # A catch for users canceling the question for help
         series   = answer['series']
         modality = answer['modality']
 
@@ -207,22 +206,22 @@ def bidsmapper(rawfolder, bidsfolder, bidsmapper='bidsmapper_sample.yaml', autom
 
                 # Update / append the dicom mapping
                 if heuristics['DICOM']:
-                    dicomfile = bids.get_dicom_file(series)
+                    dicomfile = bids.get_dicomfile(series)
                     bidsmap   = built_dicommap(dicomfile, bidsmap, heuristics, automatic)
 
                 # Update / append the PAR/REC mapping
                 if heuristics['PAR']:
-                    parfile   = bids.get_par_file(series)
+                    parfile   = bids.get_parfile(series)
                     bidsmap   = built_parmap(parfile, bidsmap, heuristics, automatic)
 
                 # Update / append the P7 mapping
                 if heuristics['P7']:
-                    p7file    = bids.get_p7_file(series)
+                    p7file    = bids.get_p7file(series)
                     bidsmap   = built_p7map(p7file, bidsmap, heuristics, automatic)
 
                 # Update / append the nifti mapping
                 if heuristics['Nifti']:
-                    niftifile = bids.get_nifti_file(series)
+                    niftifile = bids.get_niftifile(series)
                     bidsmap   = built_niftimap(niftifile, bidsmap, heuristics, automatic)
 
                 # Update / append the file-system mapping
