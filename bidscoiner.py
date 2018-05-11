@@ -157,17 +157,17 @@ def coin_plugin(session, bidsmap, bidsfolder):
     return personals
 
 
-def bidscoiner(rawfolder, bidsfolder, bidsmapfile='code/bidsmap.yaml', subjects=[], participants=False, force=False):
+def bidscoiner(rawfolder, bidsfolder, subjects=[], force=False, participants=False, bidsmapfile='code/bidsmap.yaml'):
     """
     Main function that processes all the subjects and session in the rawfolder and uses the
     bidsmap.yaml file in bidsfolder/code to cast the data into the BIDS folder.
 
     :param str rawfolder:     The root folder-name of the sub/ses/data/file tree containing the source data files
     :param str bidsfolder:    The name of the BIDS root folder
-    :param str bidsmapfile:   The name of the bidsmap yaml-file
     :param list subjects:     List of selected sub-# names / folders to be processed. Otherwise all subjects in the rawfolder will be selected
-    :param bool participants: If True only subjects not in particpants.tsv will be processed
     :param bool force:        If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped
+    :param bool participants: If True only subjects not in particpants.tsv will be processed (this could be used e.g. to protect these subjects from being reprocessed)
+    :param str bidsmapfile:   The name of the bidsmap yaml-file
     :return: Nothing
     :rtype: NoneType
     """
@@ -175,12 +175,14 @@ def bidscoiner(rawfolder, bidsfolder, bidsmapfile='code/bidsmap.yaml', subjects=
     # Input checking
     rawfolder  = os.path.abspath(os.path.expanduser(rawfolder))
     bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
+    if os.path.basename(bidsmapfile) == bidsmapfile:                  # The default: Get the full paths to the bidsmapper yaml-file
+        bidsmapfile = os.path.join(bidsfolder, 'code', bidsmapfile)
 
     # Start logging
     global logfile
     logfile = os.path.join(bidsfolder, 'code', 'bidscoiner.log')
-    bids.printlog('------------ START ------------\n$ bidscoiner {arg1} {arg2} {arg3} {arg4} {arg5} {arg6}'.format(
-        arg1=rawfolder, arg2=bidsfolder, arg3=bidsmapfile, arg4=subjects, arg5=participants, arg6=force), logfile)
+    bids.printlog('------------ START ------------\n>>> bidscoiner rawfolder={arg1} bidsfolder={arg2} subjects={arg3} force={arg4} participants={arg5} bidsmap={arg6}'.format(
+        arg1=rawfolder, arg2=bidsfolder, arg3=subjects, arg4=force, arg5=participants, arg6=bidsmapfile), logfile)
 
     # Get the bidsmap heuristics from the bidsmap yaml-file
     bidsmap = bids.get_heuristics(bidsmapfile, bidsfolder)
@@ -193,9 +195,13 @@ def bidscoiner(rawfolder, bidsfolder, bidsmapfile='code/bidsmap.yaml', subjects=
     else:
         participants_table = pd.DataFrame(columns = ['participant_id'])
 
-    # Loop over all subjects and sessions and convert them using the bidsmap entries
+    # Get the list of subjects
     if not subjects:
         subjects = bids.lsdirs(rawfolder, 'sub-*')
+    else:
+        subjects = [os.path.join(rawfolder,subject) for subject in subjects if os.path.isdir(os.path.join(rawfolder,subject))]
+
+    # Loop over all subjects and sessions and convert them using the bidsmap entries
     for subject in subjects:
 
         if subject in list(participants_table.participant_id): continue
@@ -257,13 +263,13 @@ if __name__ == "__main__":
     import textwrap
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
-                                     epilog='examples:\n  bidscoiner.py -f /project/raw /project/bids')
+                                     epilog='examples:\n  bidscoiner.py /project/raw /project/bids\n  bidscoiner.py -f /project/raw /project/bids -s sub-009 sub-030')
     parser.add_argument('rawfolder',           help='The source folder containing the raw data in sub-#/ses-#/series format')
     parser.add_argument('bidsfolder',          help='The destination folder with the bids data structure')
-    parser.add_argument('bidsmap',             help='The bidsmap yaml-file with the study heuristics. Default: bidsfolder/code/bidsmap.yaml', nargs='?', default='bidsmap.yaml')
-    parser.add_argument('-s','--subjects',     help='Space seperated list of selected sub-# names / folders to be processed. Otherwise all subjects in the rawfolder will be selected')    # TODO: Add space seperated list options
-    parser.add_argument('-p','--participants', help='If this flag is given only those subjects that are not in particpants.tsv will be processed', action='store_true')
+    parser.add_argument('-s','--subjects',     help='Space seperated list of selected sub-# names / folders to be processed. Otherwise all subjects in the rawfolder will be selected', nargs='*')
     parser.add_argument('-f','--force',        help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')
+    parser.add_argument('-p','--participants', help='If this flag is given only those subjects that are not in particpants.tsv will be processed (this could be used e.g. to protect these subjects from being reprocessed)', action='store_true')
+    parser.add_argument('-b','--bidsmap',      help='The bidsmap yaml-file with the study heuristics. Default: bidsfolder/code/bidsmap.yaml', default='bidsmap.yaml')
     args = parser.parse_args()
 
-    bidscoiner(args.rawfolder, args.bidsfolder, args.bidsmap, args.subjects, args.participants, args.force)
+    bidscoiner(rawfolder=args.rawfolder, bidsfolder=args.bidsfolder, subjects=args.subjects, force=args.force, participants=args.participants, bidsmapfile=args.bidsmap)
