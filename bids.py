@@ -29,7 +29,7 @@ def printlog(message, logfile=None):
 
     :param str message: The output text
     :param str logfile: The full pathname of the logile
-    :return: Nothing
+    :return:            Nothing
     :rtype: NoneType
     """
 
@@ -55,9 +55,9 @@ def lsdirs(folder, wildcard='*'):
     """
     Gets all directories in a folder, ignores files
 
-    :param str folder: The full pathname of the folder
+    :param str folder:   The full pathname of the folder
     :param str wildcard: Simple (glob.glob) shell-style wildcards. Foldernames starting with a dot are special cases that are not matched by '*' and '?' patterns.") wildcard
-    :return: folders: An iterable filter object with all directories in a folder
+    :return: folders:    An iterable filter object with all directories in a folder
     :rtype: iterable
     """
 
@@ -71,7 +71,7 @@ def is_dicomfile(file):
     Checks whether a file is a DICOM-file. It uses the feature that Dicoms have the string DICM hardcoded at offset 0x80.
 
     :param str file: The full pathname of the file
-    :return: Returns true if a file is a DICOM-file
+    :return:         Returns true if a file is a DICOM-file
     :rtype: bool
     """
 
@@ -83,13 +83,12 @@ def is_dicomfile(file):
 
 def is_dicomfile_siemens(file):
     """
-    Checks whether a file is a *SIEMENS* DICOM-file.
-    All Siemens Dicoms contain a dump of the MrProt structure.
-    The dump is marked with a header starting with 'ASCCONV BEGIN'.
-    Though this check is not foolproof, it is very unlikely to fail.
+    Checks whether a file is a *SIEMENS* DICOM-file. All Siemens Dicoms contain a dump of the
+    MrProt structure. The dump is marked with a header starting with 'ASCCONV BEGIN'. Though
+    this check is not foolproof, it is very unlikely to fail.
 
     :param str file: The full pathname of the file
-    :return: Returns true if a file is a Siemens DICOM-file
+    :return:         Returns true if a file is a Siemens DICOM-file
     :rtype: bool
     """
 
@@ -103,7 +102,7 @@ def is_parfile(file):
     WIP!!!!!!
 
     :param str file: The full pathname of the file
-    :return: Returns true if a file is a Philips PAR-file
+    :return:         Returns true if a file is a Philips PAR-file
     :rtype: bool
     """
 
@@ -121,7 +120,7 @@ def is_p7file(file):
     WIP!!!!!!
 
     :param str file: The full pathname of the file
-    :return: Returns true if a file is a GE P7-file
+    :return:         Returns true if a file is a GE P7-file
     :rtype: bool
     """
 
@@ -139,7 +138,7 @@ def is_niftifile(file):
     WIP!!!!!!
 
     :param str file: The full pathname of the file
-    :return: Returns true if a file is a nifti-file
+    :return:         Returns true if a file is a nifti-file
     :rtype: bool
     """
 
@@ -156,8 +155,8 @@ def is_incomplete_acquisition(folder):
     anyway. We want to avoid converting these incomplete directories. This function checks the number
     of measurements specified in the protocol against the number of imaging files in the folder.
 
-    :param str folder: The full pathname of the folder
-    :return: Returns true if the acquisition was incomplete
+    :param str folder:  The full pathname of the folder
+    :return:            Returns true if the acquisition was incomplete
     :rtype: bool
     """
 
@@ -178,7 +177,7 @@ def get_dicom_file(folder):
     Gets a dicom-file from the folder
 
     :param str folder: The full pathname of the folder
-    :return: filename of the first dicom-file in the folder.
+    :return:           The filename of the first dicom-file in the folder.
     :rtype: str
     """
 
@@ -195,7 +194,7 @@ def get_par_file(folder):
     Gets a Philips PAR-file from the folder
 
     :param str folder: The full pathname of the folder
-    :return: filename of the first PAR-file in the folder.
+    :return:           The filename of the first PAR-file in the folder.
     :rtype: str
     """
 
@@ -212,7 +211,7 @@ def get_p7_file(folder):
     Gets a GE P*.7-file from the folder
 
     :param str folder: The full pathname of the folder
-    :return: filename of the first P7-file in the folder.
+    :return:           The filename of the first P7-file in the folder.
     :rtype: str
     """
 
@@ -229,7 +228,7 @@ def get_nifti_file(folder):
     Gets a nifti-file from the folder
 
     :param str folder: The full pathname of the folder
-    :return: filename of the first nifti-file in the folder.
+    :return:           The filename of the first nifti-file in the folder.
     :rtype: str
     """
 
@@ -247,9 +246,9 @@ def parse_from_x_protocol(pattern, dicomfile):
     This structure is necessary to recreate a scanning protocol from a DICOM,
     since the DICOM information alone wouldn't be sufficient.
 
-    :param str pattern: A regexp expression: '^' + pattern + '\t = \t(.*)\\n'
-    :param str dicomfile: The full pathname of the dicom-file
-    :return: string extracted values from the dicom-file according to the given pattern
+    :param str pattern:    A regexp expression: '^' + pattern + '\t = \t(.*)\\n'
+    :param str dicomfile:  The full pathname of the dicom-file
+    :return:               The string extracted values from the dicom-file according to the given pattern
     :rtype: str
     """
 
@@ -276,9 +275,9 @@ def get_dicomfield(tagname, dicomfile):
     """
     Robustly extracts a DICOM field/tag from a dictionary or from vendor specific fields
 
-    :param tagname: Name of the DICOM field
+    :param tagname:       Name of the DICOM field
     :param str dicomfile: The full pathname of the dicom-file
-    :return: Extracted tag-values from the dicom-file
+    :return:              Extracted tag-values from the dicom-file
     :rtype: str
     """
 
@@ -324,8 +323,8 @@ def get_heuristics(yamlfile, folder=None):
     Read the heuristics from the bidsmapper yaml-file
 
     :param str yamlfile: The full pathname of the bidsmapper yaml-file
-    :param str folder: Searches in the ./heuristics folder if folder=None
-    :return: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param str folder:   Searches in the ./heuristics folder if folder=None
+    :return:             Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     :rtype: ruamel_yaml.comments.CommentedMap
     """
 
@@ -348,14 +347,85 @@ def get_heuristics(yamlfile, folder=None):
     return heuristics
 
 
+def get_matching_dicomseries(dicomfile, heuristics):
+    """
+    Find the matching series in the bidsmap heuristics using the dicom attributes. Then fill-in the missing values
+
+    :param str dicomfile:   The full pathname of the dicom-file
+    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :return:                The matching and filled-in series item and modality (NB: not run_index) from the heuristics {'series': series, 'modality': modality}
+    :rtype: dict
+    """
+
+    # TODO: generalize for non-DICOM (dicomfile -> file)?
+
+    # Loop through all bidsmodalities and series; all info goes into series_
+    for modality in bidsmodalities + (unknownmodality,):
+        if not heuristics['DICOM'][modality]: continue
+
+        for series in heuristics['DICOM'][modality]:
+
+            match   = any([series['attributes'][key] is not None for key in series['attributes']])      # Make match False if all attributes are empty
+            series_ = dict(attributes={})                                                               # Creating a new object is safe in that we don't change the original heuristics object. However, we lose all comments and formatting within the series (which is not such a disaster probably). It is also much faster and more robust with aliases compared with a deepcopy
+
+            for key in series:
+
+                # Try to see if the dicomfile matches all of the attributes and fill all of them
+                if key == 'attributes':
+
+                    for attrkey in series['attributes']:
+
+                        attrvalue  = series['attributes'][attrkey]
+                        dicomvalue = get_dicomfield(attrkey, dicomfile)
+
+                        # Check if the attribute value matches with the info from the dicomfile
+                        if attrvalue:
+                            if isinstance(attrvalue, int):
+                                match = match and attrvalue == dicomvalue
+                            elif isinstance(attrvalue, list):
+                                match = match and any([attrvalue_ in dicomvalue for attrvalue_ in attrvalue])
+                            else:
+                                match = match and (attrvalue in dicomvalue)
+
+                        # Fill the empty attribute with the info from the dicomfile
+                        series_['attributes'][attrkey] = dicomvalue
+
+                # Try to fill the bids-labels
+                else:
+
+                    bidsvalue = series[key]
+                    if not bidsvalue:
+                        series_[key] = bidsvalue
+
+                    # Intelligent filling of the run-index is done runtime by bidscoiner
+                    elif key == 'run_index' and bidsvalue == '<automatic>':
+                        series_[key] = bidsvalue
+
+                    # Fill any bids-label with the <annotated> dicom attribute
+                    elif bidsvalue.startswith('<') and bidsvalue.endswith('>'):
+                        label        = get_dicomfield(bidsvalue[1:-1], dicomfile)
+                        series_[key] = cleanup_label(label)
+
+                    else:
+                        series_[key] = bidsvalue
+
+            # Stop if we have a match
+            if match:
+                # TODO: check if there are more matches (i.e. conflicts)
+                return {'series': series_, 'modality': modality}
+
+    # We don't have a match (all tests failed, so modality should be the last one, i.e. unknownmodality)
+    return {'series': series_, 'modality': modality}
+
+
 def exist_series(series, serieslist, matchbidslabels=True):
     """
     Checks if there is already an entry in serieslist with the same attributes and, optionally, labels as series
 
-    :param dict series: The series labels and attributes that are to be searched for
-    :param list serieslist: List of series that is being searched
+    :param dict series:          The series labels and attributes that are to be searched for
+    :param list serieslist:      List of series that is being searched
     :param bool matchbidslabels: If True, also matches the BIDS-labels, otherwise only series['attributes']
-    :return: True if the series exists in serieslist
+    :return:                     True if the series exists in serieslist
     :rtype: bool
     """
 
@@ -401,7 +471,7 @@ def cleanup_label(label):
     example map "Joe's reward_task" to "Joes.reward_task"
 
     :param str label: The given label that potentially contains undesired characters
-    :return: The cleaned-up / BIDS-valid label
+    :return:          The cleaned-up / BIDS-valid label
     :rtype: str
     """
 
@@ -419,9 +489,9 @@ def ask_for_mapping(heuristics, series, filename=''):
     WIP!!!
 
     :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param dict series: Dictionary with BIDS labels and attributes
-    :param str filename: The full-path name of the sourcefile for which the attributes could not be 'bidsmapped'
-    :return: Dictionary with return variables: {'modality':name of the modality, 'series': dictionary with the filled-in series labels and attributes}
+    :param dict series:     Dictionary with BIDS labels and attributes
+    :param str filename:    The full-path name of the sourcefile for which the attributes could not be 'bidsmapped'
+    :return:                Dictionary with return variables: {'modality':name of the modality, 'series': dictionary with the filled-in series labels and attributes}
     :rtype: dict
     """
 
@@ -440,10 +510,10 @@ def ask_for_append(modality, series, bidsmapperfile):
     Ask the user to add the labelled series to their bidsmapper yaml-file or send it to a central database
     WIP!!!
 
-    :param str modality: Name of the BIDS modality
-    :param dict series: Dictionary with BIDS labels and attributes
+    :param str modality:       Name of the BIDS modality
+    :param dict series:        Dictionary with BIDS labels and attributes
     :param str bidsmapperfile: The full-path name of the bidsmapper yaml-file to which the series should be saved
-    :return: Nothing
+    :return:                   Nothing
     :rtype: NoneType
     """
 

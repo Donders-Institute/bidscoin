@@ -11,38 +11,46 @@ import pandas as pd
 import subprocess
 
 
-def coin_dicom(session, heuristics, bidsfolder):
+def coin_dicom(session, bidsmap, bidsfolder):
     """
-    Converts the session dicom-files into BIDS-valid nifti files in the corresponding bidsfolder
+    Converts the session dicom-files into BIDS-valid nifti-files in the corresponding bidsfolder
 
-    :param dict session:    The full-path name of the subject/session folder
-    :param dict heuristics: Mapping heuristics from the bidsmap yaml-file
-    :param str bidsfolder:  The full-path name of the BIDS root-folder
-    :return:                Personals extracted from the dicom header
+    :param str session:    The full-path name of the subject/session source folder
+    :param dict bidsmap:   The full mapping heuristics from the bidsmap yaml-file
+    :param str bidsfolder: The full-path name of the BIDS root-folder
+    :return:               Personals extracted from the dicom header
     :rtype: dict
     """
 
     global logfile
 
+    # Create the BIDS session-folder
+    bidsseries = os.path.join(bidsfolder, session.rsplit('/sub-')[1])
+    os.makedirs(bidsseries, exist_ok=True)
+
+    # Process the individual series
     for series in bids.lsdirs(session):
 
-        bids.printlog('Processing dicomfolder: ' + series, logfile)
+        bids.printlog('Processing dicom-folder: ' + series, logfile)
 
-        # Get the bids labels and filename and create a bidsfolder
+        # Get the bids labels from a dicom-file and bidsmap to compose the BIDS filename
+        dicomfile = bids.get_dicom_file(series)
+        for modality in bids.bidsmodalities:
+            series_ = bids.get_matching_series(series, bidsmap['DICOM'][modality])
+            if series_:
+                seriesdict =
+
         bidsname   = ''     # TODO
-        sub_sess   = ''     # TODO
-        bidsseries = os.path.join(bidsfolder, sub_sess)
-        os.makedirs(bidsseries, exist_ok=True)
 
-        # Convert the folder to nifti
+        # Convert the dicom-files in the source folder to nifti's in the BIDS-folder
         command = 'module add dcm2niix; dcm2niix {options} -f {filename} -o {outfolder} {infolder}'.format(
-            options   = heuristics['Options']['dcm2niix'],
+            options   = bidsmap['Options']['dcm2niix'],
             filename  = bidsname,
             outfolder = bidsseries,
-            infolder  = session)
+            infolder  = series)
         bids.printlog('Executing: ' + command, logfile)
         process = subprocess.run(command, stdout=subprocess.PIPE, shell=True)
-        bids.printlog('TODO: stdout &> stderr', logfile)
+        bids.printlog('TODO: print dcm2niix stdout &> stderr', logfile)
         if process.returncode != 0:
             errormsg = 'Failed to process {} (errorcode {})'.format(series, process.returncode)
             bids.printlog(errormsg, logfile)
@@ -59,13 +67,14 @@ def coin_dicom(session, heuristics, bidsfolder):
     return personals
 
 
-def coin_plugin(sessionfolder, heuristics):
+def coin_plugin(session, bidsmap, bidsfolder):
     """
     Run the plugin coiner to cast the series into the bids folder
 
-    :param str sessionfolder:
-    :param dict heuristics:
-    :return: personals
+    :param str session:     The full-path name of the subject/session source folder
+    :param dict bidsmap:    The full mapping heuristics from the bidsmap yaml-file
+    :param str bidsfolder:  The full-path name of the BIDS root-folder
+    :return:                Personals extracted from the dicom header
     :rtype: dict
     """
 
@@ -73,21 +82,22 @@ def coin_plugin(sessionfolder, heuristics):
     global logfile
 
     # Import and run the plugins
-    for pluginfunction in heuristics['PlugIn']:
+    for pluginfunction in bidsmap['PlugIn']:
         plugin    = import_module(os.path.join(__file__, 'plugins', pluginfunction))
-        personals = plugin.coin(sessionfolder, heuristics)
+        # TODO: check first if the plug-in function exist
+        personals = plugin.bidscoiner(session, bidsmap, bidsfolder)
 
     return personals
 
 
-def bidscoiner(rawfolder, bidsfolder, bidsmap='code/bidsmap.yaml', subjects=[], participants=False, force=False):
+def bidscoiner(rawfolder, bidsfolder, bidsmapfile='code/bidsmap.yaml', subjects=[], participants=False, force=False):
     """
     Main function that processes all the subjects and session in the rawfolder and uses the
     bidsmap.yaml file in bidsfolder/code to cast the data into the BIDS folder.
 
     :param str rawfolder:     The root folder-name of the sub/ses/data/file tree containing the source data files
     :param str bidsfolder:    The name of the BIDS root folder
-    :param str bidsmap:       The name of the bidsmap yaml-file
+    :param str bidsmapfile:   The name of the bidsmap yaml-file
     :param list subjects:     List of selected sub-# names / folders to be processed. Otherwise all subjects in the rawfolder will be selected
     :param bool participants: If True only subjects not in particpants.tsv will be processed
     :param bool force:        If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped
@@ -99,7 +109,7 @@ def bidscoiner(rawfolder, bidsfolder, bidsmap='code/bidsmap.yaml', subjects=[], 
     global logfile
     logfile = os.path.join(bidsfolder, 'code', 'bidscoiner.log')
     bids.printlog('---------- START ----------\nbidscoiner {arg1} {arg2} {arg3} {arg4} {arg5} {arg6}'.format(
-        arg1=rawfolder, arg2=bidsfolder, arg3=bidsmap, arg4=subjects, arg5=participants, arg6=force), logfile)
+        arg1=rawfolder, arg2=bidsfolder, arg3=bidsmapfile, arg4=subjects, arg5=participants, arg6=force), logfile)
 
     # Input checking
     rawfolder  = os.path.abspath(os.path.expanduser(rawfolder))
@@ -107,8 +117,8 @@ def bidscoiner(rawfolder, bidsfolder, bidsmap='code/bidsmap.yaml', subjects=[], 
     if not subjects:
         subjects = bids.lsdirs(rawfolder, 'sub-*')
 
-    # Get the heuristics from the created bidsmap
-    heuristics = bids.get_heuristics(bidsmap, bidsfolder)
+    # Get the bidsmap heuristics from the bidsmap yaml-file
+    bidsmap = bids.get_heuristics(bidsmapfile, bidsfolder)
 
     # See which subjects have not been processed
     participants_file = os.path.join(bidsfolder, 'participants.tsv')
@@ -132,30 +142,30 @@ def bidscoiner(rawfolder, bidsfolder, bidsmap='code/bidsmap.yaml', subjects=[], 
                 continue
 
             # Update / append the dicom mapping
-            if heuristics['DICOM']:
-                personals = coin_dicom(session, heuristics, bidsfolder)
+            if bidsmap['DICOM']:
+                personals = coin_dicom(session, bidsmap, bidsfolder)
 
             # Update / append the PAR/REC mapping
-            if heuristics['PAR']:
-                personals_ = coin_par(session, heuristics, bidsfolder)
+            if bidsmap['PAR']:
+                personals_ = coin_par(session, bidsmap, bidsfolder)
                 if personals_: personals = personals_
 
             # Update / append the P7 mapping
-            if heuristics['P7']:
-                personals_ = coin_p7(session, heuristics, bidsfolder)
+            if bidsmap['P7']:
+                personals_ = coin_p7(session, bidsmap, bidsfolder)
                 if personals_: personals = personals_
 
             # Update / append the nifti mapping
-            if heuristics['Nifti']:
-                coin_nifti(session, heuristics, bidsfolder)
+            if bidsmap['Nifti']:
+                coin_nifti(session, bidsmap, bidsfolder)
 
             # Update / append the file-system mapping
-            if heuristics['FileSystem']:
-                coin_filesystem(session, heuristics, bidsfolder)
+            if bidsmap['FileSystem']:
+                coin_filesystem(session, bidsmap, bidsfolder)
 
             # Update / append the plugin mapping
-            if heuristics['PlugIn']:
-                personals_ = coin_plugin(session, heuristics, bidsfolder)
+            if bidsmap['PlugIn']:
+                personals_ = coin_plugin(session, bidsmap, bidsfolder)
                 if personals_: personals = personals_
 
         personals['participant_id'] = os.path.basename(subject)
@@ -179,7 +189,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n  bidscoiner.py -f /project/raw /project/bids')
-    parser.add_argument('rawfolder',           help='The source folder containing the raw data in sub-###/ses-##/series format')
+    parser.add_argument('rawfolder',           help='The source folder containing the raw data in sub-#/ses-#/series format')
     parser.add_argument('bidsfolder',          help='The destination folder with the bids data structure')
     parser.add_argument('bidsmap',             help='The bidsmap yaml-file with the study heuristics. Default: bidsfolder/code/bidsmap.yaml', nargs='?', default='bidsmap.yaml')
     parser.add_argument('-s','--subjects',     help='Space seperated list of selected sub-# names / folders to be processed. Otherwise all subjects in the rawfolder will be selected')    # TODO: Add space seperated list options

@@ -21,11 +21,11 @@ def built_dicommap(dicomfile, bidsmap, heuristics, automatic):
     """
     All the logic to map dicom-attributes (fields/tags) onto bids-labels go into this function
 
-    :param str dicomfile: The full-path name of the source dicom-file
-    :param dict bidsmap: The bidsmap as we had it
+    :param str dicomfile:   The full-path name of the source dicom-file
+    :param dict bidsmap:    The bidsmap as we had it
     :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param bool automatic: If True, the user will not be asked for help if an unknown series is encountered
-    :return: The bidsmap with new entries in it
+    :param bool automatic:  If True, the user will not be asked for help if an unknown series is encountered
+    :return:                The bidsmap with new entries in it
     :rtype: dict
     """
 
@@ -33,101 +33,18 @@ def built_dicommap(dicomfile, bidsmap, heuristics, automatic):
     if not dicomfile or not heuristics['DICOM']:
         return bidsmap
 
-    # Loop through all bidsmodalities and series; all info goes into series_
-    for bidsmodality in bids.bidsmodalities:
-
-        if not heuristics['DICOM'][bidsmodality]: continue
-        for series in heuristics['DICOM'][bidsmodality]:
-
-            # series_ = copy.deepcopy(series)       # Deepcopy makes sure we don't change the original heuristics object, however, it is a very expensive operation.
-            series_ = dict(attributes={})           # This way is also safe, however, we lose all comments and formatting within the series (which is not such a disaster probably). It is also more robust with aliases
-            match   = any([series['attributes'][key] is not None for key in series['attributes']])   # Make match False if all attributes are empty
-            for key in series:
-
-                # Try to see if the dicomfile matches all of the attributes and try to fill all of them
-                if key == 'attributes':
-
-                    for attrkey in series['attributes']:
-
-                        attrvalue  = series['attributes'][attrkey]
-                        dicomvalue = bids.get_dicomfield(attrkey, dicomfile)
-
-                        # Check if the attribute value matches with the info from the dicomfile
-                        if attrvalue:
-                            if isinstance(attrvalue, int):
-                                match = match and attrvalue == dicomvalue
-                            elif isinstance(attrvalue, list):
-                                match = match and any([attrvalue_ in dicomvalue for attrvalue_ in attrvalue])  # TODO: implement regexp
-                            else:
-                                match = match and (attrvalue in dicomvalue)                                    # TODO: implement regexp
-
-                        # Fill the empty attribute with the info from the dicomfile
-                        series_['attributes'][attrkey] = dicomvalue
-
-                # Try to fill the bids-labels
-                else:
-
-                    bidsvalue = series[key]
-                    if not bidsvalue:
-                        series_[key] = bidsvalue
-
-                    # Intelligent filling of the run-index is done runtime by bidscoiner
-                    elif key == 'run_index' and bidsvalue == '<automatic>':
-                        series_[key] = bidsvalue
-
-                    # Fill any bids-label with the <annotated> dicom attribute
-                    elif bidsvalue.startswith('<') and bidsvalue.endswith('>'):
-                        label        = bids.get_dicomfield(bidsvalue[1:-1], dicomfile)
-                        series_[key] = bids.cleanup_label(label)
-
-                    else:
-                        series_[key] = bidsvalue
-
-            # If we have a match, copy the filled-in series over to the bidsmap as a standard bidsmodality and we are done!
-            if match:
-                # TODO: check if there are more matches (i.e. conflicts)
-                if bidsmap['DICOM'][bidsmodality] is None:
-                    bidsmap['DICOM'][bidsmodality] = [series_]
-                elif not bids.exist_series(series_, bidsmap['DICOM'][bidsmodality]):
-                    bidsmap['DICOM'][bidsmodality].append(series_)
-
-                return bidsmap
+    # Get the matching series
+    result   = bids.get_matching_dicomseries(dicomfile, heuristics)
+    series   = result['series']
+    modality = result['modality']
 
     # If nothing matched, ask the user for help
-    if automatic:
-        answer = bids.ask_for_mapping(heuristics['DICOM'], series_, dicomfile)      # Note: series_ will be referenced since heuristics['DICOM'][bidsmodality] should not all be empty
+    if modality == bids.unknownmodality and automatic:
+        answer = bids.ask_for_mapping(heuristics['DICOM'], series, dicomfile)      # Note: series_ will be referenced since heuristics['DICOM'][bidsmodality] should not all be empty
 
-    if 'answer' in locals() and answer:                                             # A catch for users canceling the question for help
+    if 'answer' in locals() and answer:                                            # A catch for users canceling the question for help
         series   = answer['series']
         modality = answer['modality']
-
-    # Otherwise treat the series as as an unknown modality and fill the unknown labels
-    else:
-        series   = dict()                                       # Here we loose comments and formatting from the bidsmapper, but that is probably very minor
-        modality = bids.unknownmodality
-
-        for key in heuristics['DICOM'][modality]:
-
-            if key == 'attributes':
-                series['attributes'] = series_['attributes']    # Taking the last tested series is a convenient but arbitrary choice (potentially, other series can have different attributes listed in the bidsmapper)
-
-            else:
-                value = heuristics['DICOM'][modality][key]
-
-                if not value:
-                    series[key] = None
-
-                # Intelligent filling of the run-index is done runtime by bidscoiner
-                elif key=='run_index' and value=='<automatic>':
-                    series[key] = '<automatic>'
-
-                # Fill any bids-label with the <annotated> dicom attribute
-                elif value and value.startswith('<') and value.endswith('>'):
-                    label       = bids.get_dicomfield(value[1:-1], dicomfile)
-                    series[key] = bids.cleanup_label(label)
-
-                else:
-                    series[key] = value
 
     # Copy the filled-in attributes series over to the bidsmap
     if bidsmap['DICOM'][modality] is None:
@@ -143,11 +60,11 @@ def built_parmap(parfile, bidsmap, heuristics, automatic):
     """
     All the logic to map PAR/REC fields onto bids labels go into this function
 
-    :param str parfile: The full-path name of the source PAR-file
-    :param dict bidsmap: The bidsmap as we had it
+    :param str parfile:     The full-path name of the source PAR-file
+    :param dict bidsmap:    The bidsmap as we had it
     :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param bool automatic: If True, the user will not be asked for help if an unknown series is encountered
-    :return: The bidsmap with new entries in it
+    :param bool automatic:  If True, the user will not be asked for help if an unknown series is encountered
+    :return:                The bidsmap with new entries in it
     :rtype: dict
     """
 
@@ -164,11 +81,11 @@ def built_p7map(p7file, bidsmap, heuristics, automatic):
     """
     All the logic to map P*.7-fields onto bids labels go into this function
 
-    :param str p7file: The full-path name of the source P7-file
-    :param dict bidsmap: The bidsmap as we had it
+    :param str p7file:      The full-path name of the source P7-file
+    :param dict bidsmap:    The bidsmap as we had it
     :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param bool automatic: If True, the user will not be asked for help if an unknown series is encountered
-    :return: The bidsmap with new entries in it
+    :param bool automatic:  If True, the user will not be asked for help if an unknown series is encountered
+    :return:                The bidsmap with new entries in it
     :rtype: dict
     """
 
@@ -185,11 +102,11 @@ def built_niftimap(niftifile, bidsmap, heuristics, automatic):
     """
     All the logic to map nifti-info onto bids labels go into this function
 
-    :param str niftifile: The full-path name of the source nifti-file
-    :param dict bidsmap: The bidsmap as we had it
+    :param str niftifile:   The full-path name of the source nifti-file
+    :param dict bidsmap:    The bidsmap as we had it
     :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param bool automatic: If True, the user will not be asked for help if an unknown series is encountered
-    :return: The bidsmap with new entries in it
+    :param bool automatic:  If True, the user will not be asked for help if an unknown series is encountered
+    :return:                The bidsmap with new entries in it
     :rtype: dict
     """
 
@@ -206,11 +123,11 @@ def built_filesystemmap(seriesfolder, bidsmap, heuristics, automatic):
     """
     All the logic to map filesystem-info onto bids labels go into this function
 
-    :param seriesfolder: The full-path name of the source folder
-    :param dict bidsmap: The bidsmap as we had it
+    :param seriesfolder:    The full-path name of the source folder
+    :param dict bidsmap:    The bidsmap as we had it
     :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param bool automatic: If True, the user will not be asked for help if an unknown series is encountered
-    :return: The bidsmap with new entries in it
+    :param bool automatic:  If True, the user will not be asked for help if an unknown series is encountered
+    :return:                The bidsmap with new entries in it
     :rtype: dict
     """
 
@@ -229,7 +146,7 @@ def built_pluginmap(seriesfolder, bidsmap):
 
     :param seriesfolder: The full-path name of the source folder
     :param dict bidsmap: The bidsmap as we had it
-    :return: The bidsmap with new entries in it
+    :return:             The bidsmap with new entries in it
     :rtype: dict
     """
 
@@ -242,7 +159,8 @@ def built_pluginmap(seriesfolder, bidsmap):
     # Import and run the plugins
     for pluginfunction in bidsmap['PlugIn']:
         plugin  = import_module(os.path.join(__file__, 'plugins', pluginfunction))
-        bidsmap = plugin.map(seriesfolder, bidsmap)
+        # TODO: check first if the plug-in function exist
+        bidsmap = plugin.bidsmapper(seriesfolder, bidsmap)
 
     return bidsmap
 
@@ -253,10 +171,10 @@ def bidsmapper(rawfolder, bidsfolder, bidsmapper='bidsmapper_sample.yaml', autom
     and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code.
     Folders in rawfolder are assumed to contain a single dataset.
 
-    :param str rawfolder:     The root folder-name of the sub/ses/data/file tree containing the source data files
-    :param str bidsfolder:    The name of the BIDS root folder
-    :param dict bidsmapper:   The name of the bidsmapper yaml-file
-    :return: dict bidsmap:    The name of the bidsmap.yaml file
+    :param str rawfolder:   The root folder-name of the sub/ses/data/file tree containing the source data files
+    :param str bidsfolder:  The name of the BIDS root folder
+    :param dict bidsmapper: The name of the bidsmapper yaml-file
+    :return: dict bidsmap:  The name of the bidsmap.yaml file
     :rtype: str
     """
 
@@ -345,7 +263,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='example:\n  bidsmapper.py /project/foo/raw /project/foo/bids bidsmapper_dccn')
-    parser.add_argument('rawfolder',        help='The source folder containing the raw data in sub-###/ses-##/series format')
+    parser.add_argument('rawfolder',        help='The source folder containing the raw data in sub-#/ses-#/series format')
     parser.add_argument('bidsfolder',       help='The destination folder with the bids data structure')
     parser.add_argument('bidsmapper',       help='The bidsmapper yaml-file with the BIDS heuristics (default: bidsfolder/code/bidsmapper_sample.yaml)', nargs='?', default='bidsmapper_sample.yaml')
     parser.add_argument('-a','--automatic', help='If this flag is given the user will not be asked for help if an unknown series is encountered', action='store_true')

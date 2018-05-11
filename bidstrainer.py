@@ -17,10 +17,10 @@ def built_dicommapper(dicomfile, bidsmapper, heuristics):
     """
     All the logic to map dicomfields onto bids labels go into this function
 
-    :param str dicomfile: The full-path name of the source dicom-file
+    :param str dicomfile:   The full-path name of the source dicom-file
     :param dict bidsmapper: The bidsmapper as we had it
-    :param dict heuristics:
-    :return: The bidsmapper with new entries in it
+    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :return:                The bidsmapper with new entries in it
     :rtype: dict
     """
 
@@ -45,7 +45,7 @@ def built_dicommapper(dicomfile, bidsmapper, heuristics):
         # series_ = copy.deepcopy(series)   # Deepcopy makes sure we don't change the original heuristics object, however, it is a very expensive operation.
         series_ = dict()                    # This way is also safe, however, we lose all comments and formatting within the series (which is not such a disaster probably). It is also more robust with aliases
 
-        # Copy the bids labels
+        # Copy the bids labels for the different bidsmodality matches (having a switch / case statement in python would be nice)
         if bidsmodality == 'anat':
             if series['modality_label'] == dirname:
                 for key in series:
@@ -96,10 +96,10 @@ def built_parmapper(parfile, bidsmapper, heuristics):
     """
     All the logic to map PAR/REC fields onto bids labels go into this function
 
-    :param str parfile: The full-path name of the source PAR-file
+    :param str parfile:     The full-path name of the source PAR-file
     :param dict bidsmapper: The bidsmapper as we had it
-    :param dict heuristics:
-    :return: The bidsmapper with new entries in it
+    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :return:                The bidsmapper with new entries in it
     :rtype: dict
     """
 
@@ -116,10 +116,10 @@ def built_p7mapper(p7file, bidsmapper, heuristics):
     """
     All the logic to map P7-fields onto bids labels go into this function
 
-    :param str p7file: The full-path name of the source P7-file
+    :param str p7file:      The full-path name of the source P7-file
     :param dict bidsmapper: The bidsmapper as we had it
-    :param dict heuristics:
-    :return: The bidsmapper with new entries in it
+    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :return:                The bidsmapper with new entries in it
     :rtype: dict
     """
 
@@ -136,10 +136,10 @@ def built_niftimapper(niftifile, bidsmapper, heuristics):
     """
     All the logic to map nifti-info onto bids labels go into this function
 
-    :param str niftifile: The full-path name of the source nifti-file
+    :param str niftifile:   The full-path name of the source nifti-file
     :param dict bidsmapper: The bidsmapper as we had it
-    :param dict heuristics:
-    :return: The bidsmapper with new entries in it
+    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :return:                The bidsmapper with new entries in it
     :rtype: dict
     """
 
@@ -157,9 +157,9 @@ def built_filesystemmapper(seriesfolder, bidsmapper, heuristics):
     All the logic to map filesystem-info onto bids labels go into this function
 
     :param str seriesfolder: The full-path name of the source-folder
-    :param dict bidsmapper: The bidsmapper as we had it
-    :param dict heuristics:
-    :return: The bidsmapper with new entries in it
+    :param dict bidsmapper:  The bidsmapper as we had it
+    :param dict heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :return:                 The bidsmapper with new entries in it
     :rtype: dict
     """
 
@@ -175,9 +175,10 @@ def built_filesystemmapper(seriesfolder, bidsmapper, heuristics):
 def built_pluginmapper(sample, bidsmapper):
     """
     Call the plugin to map info onto bids labels
-    :param str sample: The full-path name of the source-file
+
+    :param str sample:      The full-path name of the source-file
     :param dict bidsmapper: The bidsmapper as we had it
-    :return: The bidsmapper with new entries in it
+    :return:                The bidsmapper with new entries in it
     :rtype: dict
     """
 
@@ -190,7 +191,8 @@ def built_pluginmapper(sample, bidsmapper):
     # Import and run the plugins
     for pluginfunction in bidsmapper['PlugIn']:
         plugin     = import_module(os.path.join(__file__, 'plugins', pluginfunction))
-        bidsmapper = plugin.map(sample, bidsmapper)
+        # TODO: check first if the plug-in function exist
+        bidsmapper = plugin.bidstrainer(sample, bidsmapper)
 
     return bidsmapper
 
@@ -283,7 +285,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='example:\n  bidsmapper.py /project/foo/samples /project/foo/bids bidsmapper_dccn')
-    parser.add_argument('samplefolder', help='The source folder containing the raw data in sub-###/ses-##/series format')
+    parser.add_argument('samplefolder', help='The source folder containing the raw data in sub-#/ses-#/series format')
     parser.add_argument('bidsfolder',   help='The destination folder with the bids data structure')
     parser.add_argument('bidsmapper',   help='The bidsmapper yaml-file with the BIDS heuristics (default: ./heuristics/bidsmapper.yaml)', nargs='?', default='bidsmapper.yaml')
     args = parser.parse_args()
