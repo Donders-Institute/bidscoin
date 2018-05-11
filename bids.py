@@ -61,10 +61,6 @@ def lsdirs(folder, wildcard='*'):
     :rtype: iterable
     """
 
-    # This produces an iterable, which is not handy
-    # return filter(lambda x:
-    #               os.path.isdir(os.path.join(folder, x)),
-    #               glob.glob(os.path.join(folder, wildcard)))
     return [fname for fname in glob.glob(os.path.join(folder, wildcard)) if os.path.isdir(fname)]
 
 
