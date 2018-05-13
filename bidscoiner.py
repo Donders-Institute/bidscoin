@@ -61,8 +61,8 @@ def coin_dicom(session, bidsmap, bidsfolder):
             outfolder = bidsmodality,
             infolder  = series)
         bids.printlog('$ ' + command, logfile)
-        process = subprocess.run(command, stdout=subprocess.PIPE, shell=True)
-        bids.printlog('TODO: print dcm2niix stdout &> stderr', logfile)
+        process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        bids.printlog(process.stdout.decode('utf-8'), logfile)
         if process.returncode != 0:
             errormsg = 'Failed to process {} (errorcode {})'.format(series, process.returncode)
             bids.printlog(errormsg, logfile)

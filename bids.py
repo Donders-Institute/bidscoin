@@ -338,7 +338,7 @@ def get_dicomfield(tagname, dicomfile):
     if isinstance(value, int):
         return int(value)
 
-    elif not isinstance(value, str):    # Assume it's a MultiValue type and flatten it (TODO: deal with this properly)
+    elif not isinstance(value, str):    # Assume it's a MultiValue type and flatten it
         return str(value)
 
     else:
