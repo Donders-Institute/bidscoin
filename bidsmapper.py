@@ -49,7 +49,7 @@ def built_dicommap(dicomfile, bidsmap, heuristics, automatic):
     if bidsmap['DICOM'][modality] is None:
         bidsmap['DICOM'][modality] = [series]
 
-    elif not bids.exist_series(series, bidsmap['DICOM'][modality]):
+    elif not bids.exist_series(series, bidsmap['DICOM'][modality], matchbidslabels=False):      # NB: the bidsmapper may still have annotated labels (which are replaced by their value in the bidsmap)
         bidsmap['DICOM'][modality].append(series)
 
     return bidsmap

@@ -34,7 +34,6 @@ def built_dicommapper(dicomfile, bidsmapper, heuristics):
     # Input checks
     if not dicomfile or not heuristics['DICOM'] or not heuristics['DICOM'][bidsmodality]:
         return bidsmapper
-
     if bidsmodality not in bids.bidsmodalities:
         raise ValueError("Don't know what to do with this bidsmodality directory name: {}\n{}".format(bidsmodality, dicomfile))
 
@@ -44,34 +43,17 @@ def built_dicommapper(dicomfile, bidsmapper, heuristics):
         match   = False
         series_ = dict()    # Creating a new object is safe in that we don't change the original heuristics object. However, we lose all comments and formatting within the series (which is not such a disaster probably). It is also much faster and more robust with aliases compared with a deepcopy
 
-        # Copy the bids labels for the different bidsmodality matches (having a switch / case statement in python would be nice)
-        if bidsmodality == 'anat':
-            if series['modality_label'] == dirname:
-                for key in series:
-                    series_[key] = series[key]
-                match = True
-
-        elif bidsmodality == 'func':
-            if series['suffix'] == dirname:
-                for key in series:
-                    series_[key] = series[key]
-                match = True
-
-        elif bidsmodality == 'dwi':
+        # Copy the bids labels for the different bidsmodality matches
+        if bidsmodality == 'beh':       # beh should not have subdirectories as it (in the cuurent BIDS version doesn't have a suffix)
             for key in series:
                 series_[key] = series[key]
             match = True
 
-        elif bidsmodality == 'fmap':
-            if series['suffix'] == dirname:
+        else:
+            if ('modality_label' in series and dirname==series['modality_label']) or ('suffix' in series and dirname==series['suffix']):
                 for key in series:
                     series_[key] = series[key]
                 match = True
-
-        elif bidsmodality == 'beh':
-            for key in series:
-                series_[key] = series[key]
-            match = True
 
         if match:
 

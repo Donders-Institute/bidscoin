@@ -238,6 +238,35 @@ def get_niftifile(folder):
     return None
 
 
+def get_heuristics(yamlfile, folder=None):
+    """
+    Read the heuristics from the bidsmapper yaml-file
+
+    :param str yamlfile: The full pathname of the bidsmapper yaml-file
+    :param str folder:   Searches in the ./heuristics folder if folder=None
+    :return:             Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :rtype: ruamel_yaml.comments.CommentedMap
+    """
+
+    # Input checking
+    if not folder:
+        folder = os.path.join(os.path.dirname(__file__),'heuristics')
+
+    if not os.path.splitext(yamlfile)[1]:           # Add a standard file-extension if needed
+        yamlfile = yamlfile + '.yaml'
+
+    if os.path.basename(yamlfile) == yamlfile:      # Get the full paths to the bidsmapper yaml-file
+        yamlfile = os.path.join(folder, yamlfile)
+
+    yamlfile = os.path.abspath(os.path.expanduser(yamlfile))
+
+    # Read the heuristics from the bidsmapper file
+    with open(yamlfile, 'r') as stream:
+        heuristics = yaml.load(stream)
+
+    return heuristics
+
+
 def parse_x_protocol(pattern, dicomfile):
     """
     Siemens writes a protocol structure as text into each DICOM file.
@@ -316,104 +345,69 @@ def get_dicomfield(tagname, dicomfile):
         return str(value)
 
 
-def get_heuristics(yamlfile, folder=None):
+def add_prefix(prefix, tag):
     """
-    Read the heuristics from the bidsmapper yaml-file
+    Simple function to account for optional BIDS tags in the bids file names, i.e. it prefixes 'prefix' only when tag is not empty
 
-    :param str yamlfile: The full pathname of the bidsmapper yaml-file
-    :param str folder:   Searches in the ./heuristics folder if folder=None
-    :return:             Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :rtype: ruamel_yaml.comments.CommentedMap
+    :param str prefix:  The prefix (e.g. '_sub-')
+    :param str tag:     The tag (e.g. 'control01')
+    :return             The tag with the leading prefix (e.g. '_sub-control01') or just the empty tag ''
+    :rtype: str
     """
 
-    # Input checking
-    if not folder:
-        folder = os.path.join(__file__,'heuristics')
+    if tag:
+        tag = prefix + tag
+    else:
+        tag = ''
 
-    if not os.path.splitext(yamlfile)[1]:           # Add a standard file-extension if needed
-        yamlfile = yamlfile + '.yaml'
-
-    if os.path.basename(yamlfile) == yamlfile:      # Get the full paths to the bidsmapper yaml-file
-        yamlfile = os.path.join(os.path.dirname(folder), yamlfile)
-
-    yamlfile = os.path.abspath(os.path.expanduser(yamlfile))
-
-    # Read the heuristics from the bidsmapper file
-    with open(yamlfile, 'r') as stream:
-        heuristics = yaml.load(stream)
-
-    return heuristics
+    return tag
 
 
-def get_matching_dicomseries(dicomfile, heuristics):
+def strip_suffix(series):
     """
-    Find the matching series in the bidsmap heuristics using the dicom attributes. Then fill-in the missing values (values are cleaned-up to be BIDS-valid)
+    Certain attributes such as SeriesDescriptions (but not ProtocolName!?) may get a suffix like '_SBRef' from the vendor,
+    try to strip it off from the BIDS labels
 
-    :param str dicomfile:   The full pathname of the dicom-file
-    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:                The matching and filled-in series item and modality (NB: not run_index) from the heuristics {'series': series, 'modality': modality}
+    :param dict series: The series with potentially added suffixes that are the same as the BIDS suffixes
+    :return:            The series with these suffixes removed
     :rtype: dict
     """
 
-    # TODO: generalize for non-DICOM (dicomfile -> file)?
+    # See if we have a suffix for this modality
+    if 'suffix' in series:
+        suffix = series['suffix'].lower()
+    elif 'modality_label' in series:
+        suffix = series['modality_label'].lower()
+    else:
+        return series
 
-    # Loop through all bidsmodalities and series; all info goes into series_
-    for modality in bidsmodalities + (unknownmodality,):
-        if not heuristics['DICOM'][modality]: continue
+    # See if any of the BIDS labels ends with the same suffix. If so, then remove it
+    for key in series:
+        if key in ('attributes', 'modality_label', 'suffix'):
+            continue
+        if series[key] and (series[key].lower().endswith('_' + suffix) or series[key].lower().endswith('.' + suffix)):
+            series[key] = series[key][0:-len(suffix)-1]
 
-        for series in heuristics['DICOM'][modality]:
+    return series
 
-            match   = any([series['attributes'][key] is not None for key in series['attributes']])      # Make match False if all attributes are empty
-            series_ = dict(attributes={})                                                               # Creating a new object is safe in that we don't change the original heuristics object. However, we lose all comments and formatting within the series (which is not such a disaster probably). It is also much faster and more robust with aliases compared with a deepcopy
 
-            for key in series:
+def cleanup_label(label):
+    """
+    Converts a given label to a cleaned-up label that can be used as a BIDS label. Remove leading and trailing spaces;
+    convert other spaces, special BIDS characters and anything that is not an alphanumeric to a dot. This will for
+    example map "Joe's reward_task" to "Joes.reward_task"
 
-                # Try to see if the dicomfile matches all of the attributes and fill all of them
-                if key == 'attributes':
+    :param str label: The given label that potentially contains undesired characters
+    :return:          The cleaned-up / BIDS-valid label
+    :rtype: str
+    """
 
-                    for attrkey in series['attributes']:
+    special_characters = (' ', '_', '-',)
 
-                        attrvalue  = series['attributes'][attrkey]
-                        dicomvalue = get_dicomfield(attrkey, dicomfile)
+    for special in special_characters:
+        label = str(label).strip().replace(special, '.')
 
-                        # Check if the attribute value matches with the info from the dicomfile
-                        if attrvalue:
-                            if isinstance(attrvalue, int):
-                                match = match and attrvalue == dicomvalue
-                            elif isinstance(attrvalue, list):
-                                match = match and any([attrvalue_ in dicomvalue for attrvalue_ in attrvalue])
-                            else:
-                                match = match and (attrvalue in dicomvalue)
-
-                        # Fill the empty attribute with the info from the dicomfile
-                        series_['attributes'][attrkey] = dicomvalue
-
-                # Try to fill the bids-labels
-                else:
-
-                    bidsvalue = series[key]
-                    if not bidsvalue:
-                        series_[key] = bidsvalue
-
-                    # Intelligent filling of the run-index is done runtime by bidscoiner
-                    elif key == 'run_index' and bidsvalue == '<automatic>':
-                        series_[key] = bidsvalue
-
-                    # Fill any bids-label with the <annotated> dicom attribute
-                    elif bidsvalue.startswith('<') and bidsvalue.endswith('>'):
-                        label        = get_dicomfield(bidsvalue[1:-1], dicomfile)
-                        series_[key] = cleanup_label(label)
-
-                    else:
-                        series_[key] = cleanup_label(bidsvalue)
-
-            # Stop if we have a match
-            if match:
-                # TODO: check if there are more matches (i.e. conflicts)
-                return {'series': series_, 'modality': modality}
-
-    # We don't have a match (all tests failed, so modality should be the last one, i.e. unknownmodality)
-    return {'series': series_, 'modality': modality}
+    return re.sub(r'(?u)[^-\w.]', '.', label)
 
 
 def exist_series(series, serieslist, matchbidslabels=True):
@@ -462,41 +456,79 @@ def exist_series(series, serieslist, matchbidslabels=True):
     return False
 
 
-def cleanup_label(label):
+def get_matching_dicomseries(dicomfile, heuristics):
     """
-    Converts a given label to a cleaned-up label that can be used as a BIDS label. Remove leading and trailing spaces;
-    convert other spaces, special BIDS characters and anything that is not an alphanumeric to a dot. This will for
-    example map "Joe's reward_task" to "Joes.reward_task"
+    Find the matching series in the bidsmap heuristics using the dicom attributes. Then fill-in the missing values (values are cleaned-up to be BIDS-valid)
 
-    :param str label: The given label that potentially contains undesired characters
-    :return:          The cleaned-up / BIDS-valid label
-    :rtype: str
-    """
-
-    special_characters = (' ', '_', '-',)
-
-    for special in special_characters:
-        label = str(label).strip().replace(special, '.')
-
-    return re.sub(r'(?u)[^-\w.]', '.', label)
-
-
-def add_prefix(prefix, tag):
-    """
-    Simple function to account for optional BIDS tags in the bids file names, i.e. it prefixes 'prefix' only when tag is not empty
-
-    :param str prefix:  The prefix (e.g. '_sub-')
-    :param str tag:     The tag (e.g. 'control01')
-    :return             The tag with the leading prefix (e.g. '_sub-control01') or just the empty tag ''
-    :rtype: str
+    :param str dicomfile:   The full pathname of the dicom-file
+    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :return:                The matching and filled-in series item and modality (NB: not run_index) from the heuristics {'series': series, 'modality': modality}
+    :rtype: dict
     """
 
-    if tag:
-        tag = prefix + tag
-    else:
-        tag = ''
+    # TODO: generalize for non-DICOM (dicomfile -> file)?
 
-    return tag
+    # Loop through all bidsmodalities and series; all info goes into series_
+    for modality in bidsmodalities + (unknownmodality,):
+        if not heuristics['DICOM'][modality]: continue
+
+        for series in heuristics['DICOM'][modality]:
+
+            series_ = dict(attributes={})           # Creating a new object is safe in that we don't change the original heuristics object. However, we lose all comments and formatting within the series (which is not such a disaster probably). It is also much faster and more robust with aliases compared with a deepcopy
+            match   = any([series['attributes'][key] is not None for key in series['attributes']])  # Make match False if all attributes are empty
+
+            for key in series:
+
+                # Try to see if the dicomfile matches all of the attributes and fill all of them
+                if key == 'attributes':
+
+                    for attrkey in series['attributes']:
+
+                        attrvalue  = series['attributes'][attrkey]
+                        dicomvalue = get_dicomfield(attrkey, dicomfile)
+
+                        # Check if the attribute value matches with the info from the dicomfile
+                        if attrvalue:
+                            if isinstance(attrvalue, int):
+                                match = match and attrvalue == dicomvalue
+                            elif isinstance(attrvalue, list):
+                                match = match and any([attrvalue_ in dicomvalue for attrvalue_ in attrvalue])
+                            else:
+                                match = match and (attrvalue in dicomvalue)
+
+                        # Fill the empty attribute with the info from the dicomfile
+                        series_['attributes'][attrkey] = dicomvalue
+
+                # Try to fill the bids-labels
+                else:
+
+                    bidsvalue = series[key]
+                    if not bidsvalue:
+                        series_[key] = bidsvalue
+
+                    # Intelligent filling of the run-index is done runtime by bidscoiner
+                    elif key == 'run_index' and bidsvalue == '<automatic>':
+                        series_[key] = bidsvalue
+
+                    # Fill any bids-label with the <annotated> dicom attribute
+                    elif bidsvalue.startswith('<') and bidsvalue.endswith('>'):
+                        label        = get_dicomfield(bidsvalue[1:-1], dicomfile)
+                        series_[key] = cleanup_label(label)
+
+                    else:
+                        series_[key] = cleanup_label(bidsvalue)
+
+                # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
+                series_ = strip_suffix(series_)
+
+            # Stop if we have a match
+            if match:
+                # TODO: check if there are more matches (i.e. conflicts)
+                return {'series': series_, 'modality': modality}
+
+    # We don't have a match (all tests failed, so modality should be the last one, i.e. unknownmodality)
+
+    return {'series': series_, 'modality': modality}
 
 
 def get_bidsname(subid, sesid, modality, series, run=''):
@@ -549,12 +581,13 @@ def get_bidsname(subid, sesid, modality, series, run=''):
 
     elif modality == 'dwi':
 
-        # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_run-<index>]_dwi
-        bidsname = '{sub}{_ses}{_acq}{_run}_dwi'.format(
+        # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_run-<index>]_suffix
+        bidsname = '{sub}{_ses}{_acq}{_run}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
             _acq    = add_prefix('_acq-', series['acq_label']),
-            _run    = add_prefix('_run-', run))
+            _run    = add_prefix('_run-', run),
+            suffix  = series['suffix'])
 
     elif modality == 'fmap':
 
