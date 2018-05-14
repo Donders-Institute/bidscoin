@@ -637,7 +637,7 @@ def get_runindex(seriesfolder):
 
     #  TODO: Use the dicomheaders instead of the directory names
     seriesnumber, protocolname = os.path.basename(seriesfolder).split('-',1)
-    protocollist = [os.path.basename(dirname) for dirname in lsdirs(os.path.dirname(seriesfolder)) if protocolname in os.path.basename(dirname)]
+    protocollist = [os.path.basename(dirname) for dirname in lsdirs(os.path.dirname(seriesfolder)) if protocolname == os.path.basename(dirname).split('-',1)[1]]
     protocollist.sort()
     runindex     = protocollist.index(seriesnumber + '-' + protocolname) + 1
 
