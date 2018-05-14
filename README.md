@@ -10,6 +10,6 @@ BIDScoiner maps the data in your [raw] data folder to a [sourcedata] BIDS data f
 So, key-value mapping from the file structure takes precedence over key-value mapping from the nifti headers, which takes precedence over key-value mapping from the MRI headers.
 
 The mapping to map the (currently only DICOM header) attributes to the BIDS labels can be built using the following pipeline:
-1) bidsmap.yaml skeleton file -> bidsmapper.yaml
+1) bidsmap.yaml    -> skeleton file  -> bidsmapper.yaml
 2) bidsmapper yaml -> bidstrainer.py -> bidsmap.yaml (user editable mapping)
-3) bidsmap.yaml -> bidscoiner.py -> the nifti-converted BIDS datastructure (runs fully automatic)
+3) bidsmap.yaml    -> bidscoiner.py  -> the nifti-converted BIDS datastructure (runs fully automatic)
