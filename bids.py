@@ -626,6 +626,25 @@ def get_bidsname(subid, sesid, modality, series, run=''):
     return bidsname
 
 
+def get_runindex(seriesfolder):
+    """
+    Dynamically resolve the run-index by using the indez of the ordered directory names (e.g. 02_stroop, 03_stroop)
+
+    :param str seriesfolder:
+    :return:                    runindex
+    :rtype: int
+    """
+
+    #  TODO: Use the dicomheaders instead of the directory names
+    protocolname = os.path.basename(seriesfolder).split('-',1)[1]
+    seriesnumber = os.path.basename(seriesfolder).split('-',1)[0]
+    protocollist = [os.path.basename(dirname) for dirname in lsdirs(os.path.dirname(seriesfolder)) if protocolname in dirname]
+    protocollist.sort()
+    runindex     = protocollist.index(seriesnumber + '-' + protocolname) + 1
+
+    return runindex
+
+
 def askfor_mapping(heuristics, series, filename=''):
     """
     Ask the user for help to resolve the mapping from the series attributes to the BIDS labels

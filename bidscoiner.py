@@ -25,7 +25,7 @@ def coin_dicom(session, bidsmap, bidsfolder):
     global logfile
 
     # Get the subject and session identifiers from the foldername
-    subid = 'sub-' + session.rsplit('/sub-')[1].rsplit('/ses-')[0]
+    subid = 'sub-' + session.rsplit('/sub-',1)[1].split('/ses-',1)[0]
     if '/ses-' in session:
         sesid = 'ses-' + session.rsplit('/ses-')[1]
     else:
@@ -51,8 +51,8 @@ def coin_dicom(session, bidsmap, bidsfolder):
         os.makedirs(bidsmodality, exist_ok=True)
 
         # Compose the BIDS filename using the bids labels and run-index
-        runindex = ''    #  TODO: dynamically resolve the run-index. Idea: use the index of the ordered SeriesNumber list
-        bidsname = bids.get_bidsname(subid, sesid, modality, series_, runindex)
+        runindex = bids.get_runindex(series)
+        bidsname = bids.get_bidsname(subid, sesid, modality, series_, str(runindex))
 
         # Convert the dicom-files in the source folder to nifti's in the BIDS-folder
         command = 'module add dcm2niix; rm -f {outfolder}/{filename}.*; dcm2niix {options} -f {filename} -o {outfolder} {infolder}'.format(
