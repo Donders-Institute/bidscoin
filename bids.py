@@ -630,12 +630,12 @@ def get_runindex(seriesfolder):
     """
     Dynamically resolve the run-index by using the indez of the ordered directory names (e.g. 02_stroop, 03_stroop)
 
-    :param str seriesfolder:
-    :return:                    runindex
+    :param str seriesfolder:    The full pathname of the seriesfolder (.e.g. /foo/bar/001-localizer)
+    :return:                    The runindex that can be used for naming the BIDS files
     :rtype: int
     """
 
-    #  TODO: Use the dicomheaders instead of the directory names
+    # TODO: Use the dicomheaders instead of the directory names because it is more general and the foldernames contain seriesdecription, which may differ with ProtocolName in the attributes
     seriesnumber, protocolname = os.path.basename(seriesfolder).split('-',1)
     protocollist = [os.path.basename(dirname) for dirname in lsdirs(os.path.dirname(seriesfolder)) if protocolname == os.path.basename(dirname).split('-',1)[1]]
     protocollist.sort()
