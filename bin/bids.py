@@ -250,7 +250,7 @@ def get_heuristics(yamlfile, folder=None):
 
     # Input checking
     if not folder:
-        folder = os.path.join(os.path.dirname(__file__),'heuristics')
+        folder = os.path.join(os.path.dirname(__file__),'..','heuristics')
 
     if not os.path.splitext(yamlfile)[1]:           # Add a standard file-extension if needed
         yamlfile = yamlfile + '.yaml'
