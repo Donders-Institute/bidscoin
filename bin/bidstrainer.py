@@ -171,7 +171,7 @@ def built_pluginmapper(sample, bidsmapper):
 
     # Import and run the plugins
     for pluginfunction in bidsmapper['PlugIn']:
-        plugin     = import_module(os.path.join(__file__, 'plugins', pluginfunction))
+        plugin     = import_module(os.path.join(__file__,'..','plugins', pluginfunction))
         # TODO: check first if the plug-in function exist
         bidsmapper = plugin.bidstrainer(sample, bidsmapper)
 

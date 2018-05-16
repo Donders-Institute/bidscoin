@@ -150,7 +150,7 @@ def coin_plugin(session, bidsmap, bidsfolder):
 
     # Import and run the plugins
     for pluginfunction in bidsmap['PlugIn']:
-        plugin    = import_module(os.path.join(__file__, 'plugins', pluginfunction))
+        plugin    = import_module(os.path.join(__file__,'..','plugins', pluginfunction))
         # TODO: check first if the plug-in function exist
         personals = plugin.bidscoiner(session, bidsmap, bidsfolder)
 
