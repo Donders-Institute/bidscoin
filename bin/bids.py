@@ -257,6 +257,7 @@ def get_heuristics(yamlfile, folder=None):
 
     if os.path.basename(yamlfile) == yamlfile:      # Get the full paths to the bidsmapper yaml-file
         yamlfile = os.path.join(folder, yamlfile)
+        print('Using: ' + os.path.abspath(yamlfile))
 
     yamlfile = os.path.abspath(os.path.expanduser(yamlfile))
 
