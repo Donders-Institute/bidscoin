@@ -61,7 +61,7 @@ def lsdirs(folder, wildcard='*'):
     :rtype: iterable
     """
 
-    return [fname for fname in glob.glob(os.path.join(folder, wildcard)) if os.path.isdir(fname)]
+    return [fname for fname in sorted(glob.glob(os.path.join(folder, wildcard))) if os.path.isdir(fname)]
 
 
 def is_dicomfile(file):
@@ -179,7 +179,7 @@ def get_dicomfile(folder):
     :rtype: str
     """
 
-    for file in os.listdir(folder):
+    for file in sorted(os.listdir(folder)):
         if is_dicomfile(os.path.join(folder, file)):
             return os.path.join(folder, file)
 
@@ -196,7 +196,7 @@ def get_parfile(folder):
     :rtype: str
     """
 
-    for file in os.listdir(folder):
+    for file in sorted(os.listdir(folder)):
         if is_parfile(file):
             return os.path.join(folder, file)
 
@@ -213,7 +213,7 @@ def get_p7file(folder):
     :rtype: str
     """
 
-    for file in os.listdir(folder):
+    for file in sorted(os.listdir(folder)):
         if is_p7file(file):
             return os.path.join(folder, file)
 
@@ -230,7 +230,7 @@ def get_niftifile(folder):
     :rtype: str
     """
 
-    for file in os.listdir(folder):
+    for file in sorted(os.listdir(folder)):
         if is_niftifile(file):
             return os.path.join(folder, file)
 
