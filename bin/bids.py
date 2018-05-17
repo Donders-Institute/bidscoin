@@ -405,9 +405,9 @@ def cleanup_label(label):
     special_characters = (' ', '_', '-','.')
 
     for special in special_characters:
-        label = str(label).strip().replace(special, '^')
+        label = str(label).strip().replace(special, '')
 
-    return re.sub(r'(?u)[^-\w.]', '^', label)
+    return re.sub(r'(?u)[^-\w.]', '', label)
 
 
 def exist_series(series, serieslist, matchbidslabels=True):
