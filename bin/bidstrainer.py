@@ -24,7 +24,7 @@ def built_dicommapper(dicomfile, bidsmapper, heuristics):
     :rtype: dict
     """
 
-    # Get the bidsmodality and dirname (= bidslabel) from the pathname
+    # Get the bidsmodality and dirname (= bidslabel) from the pathname (samples/bidsmodality/[dirname/]dicomfile)
     dirname = os.path.basename(os.path.dirname(dicomfile))
     if dirname in bids.bidsmodalities:
         bidsmodality = dirname

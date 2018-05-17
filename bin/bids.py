@@ -540,7 +540,7 @@ def get_bidsname(subid, sesid, modality, series, run=''):
     :param str sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'sub-01'). Can be left ''
     :param str modality:    The bidsmodality (choose from bids.bidsmodalities)
     :param dict series:     The series mapping with the BIDS labels
-    :param: str run:        The optional runindex label (e.g. 'run-01'). Can be left ''
+    :param str run:         The optional runindex label (e.g. 'run-01'). Can be left ''
     :return:                The composed BIDS file-name (without file-extension)
     :rtype: str
     """
@@ -629,7 +629,8 @@ def get_bidsname(subid, sesid, modality, series, run=''):
 
 def get_runindex(seriesfolder):
     """
-    Dynamically resolve the run-index by using the indez of the ordered directory names (e.g. 02_stroop, 03_stroop)
+    Dynamically resolve the run-index by using the index of the ordered directory names (e.g. 02_stroop, 03_stroop).
+    NB: Obsolete, better use increment_runindex
 
     :param str seriesfolder:    The full pathname of the seriesfolder (.e.g. /foo/bar/001-localizer)
     :return:                    The runindex that can be used for naming the BIDS files
@@ -637,12 +638,42 @@ def get_runindex(seriesfolder):
     """
 
     # TODO: Use the dicomheaders instead of the directory names because it is more general and the foldernames contain seriesdecription, which may differ with ProtocolName in the attributes
-    seriesnumber, protocolname = os.path.basename(seriesfolder).split('-',1)
-    protocollist = [os.path.basename(dirname) for dirname in lsdirs(os.path.dirname(seriesfolder)) if protocolname == os.path.basename(dirname).split('-',1)[1]]
+    seriesnumber, seriesdescription = os.path.basename(seriesfolder).split('-',1)
+    protocollist = [os.path.basename(dirname) for dirname in lsdirs(os.path.dirname(seriesfolder)) if seriesdescription == os.path.basename(dirname).split('-',1)[1]]
     protocollist.sort()
-    runindex     = protocollist.index(seriesnumber + '-' + protocolname) + 1
+    runindex     = protocollist.index(seriesnumber + '-' + seriesdescription) + 1
 
     return runindex
+
+
+def increment_runindex(bidsfolder, bidsname):
+    """
+    Checks if a file with the same the bidsname already exists in the folder and then increments the runindex (if any)
+    until no such file is found
+
+    :param str bidsfolder:  The full pathname of the bidsfolder
+    :param str bidsname:    The bidsname with a provisional runindex
+    :return:                The bidsname with the incremented runindex
+    :rtype: str
+    """
+    if not '_run-' in bidsname:
+        return bidsname
+
+    while glob.glob(os.path.join(bidsfolder, bidsname + '.*')):
+
+        basename, runindex = bidsname.rsplit('_run-', 1)
+        if '_' in runindex:
+            runindex, suffix = runindex.split('_',1)
+            suffix = '_' + suffix
+        else:
+            suffix = ''
+
+        bidsname = '{basename}_run-{runindex}{suffix}'.format(
+            basename = basename,
+            runindex = int(runindex) + 1,
+            suffix = suffix)
+
+    return bidsname
 
 
 def askfor_mapping(heuristics, series, filename=''):

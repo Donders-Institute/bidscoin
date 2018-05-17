@@ -51,8 +51,8 @@ def coin_dicom(session, bidsmap, bidsfolder):
         os.makedirs(bidsmodality, exist_ok=True)
 
         # Compose the BIDS filename using the bids labels and run-index
-        runindex = bids.get_runindex(series)
-        bidsname = bids.get_bidsname(subid, sesid, modality, series_, str(runindex))
+        bidsname = bids.get_bidsname(subid, sesid, modality, series_, '1')
+        bidsname = bids.increment_runindex(bidsmodality, bidsname)
 
         # Convert the dicom-files in the source folder to nifti's in the BIDS-folder
         command = 'module add dcm2niix; dcm2niix {options} -f {filename} -o {outfolder} {infolder}'.format(
