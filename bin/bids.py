@@ -394,20 +394,20 @@ def strip_suffix(series):
 def cleanup_label(label):
     """
     Converts a given label to a cleaned-up label that can be used as a BIDS label. Remove leading and trailing spaces;
-    convert other spaces, special BIDS characters and anything that is not an alphanumeric to a dot. This will for
-    example map "Joe's reward_task" to "Joes.reward_task"
+    convert other spaces, special BIDS characters and anything that is not an alphanumeric to a '^'. This will for
+    example map "Joe's reward_task" to "Joes^reward^task"
 
     :param str label: The given label that potentially contains undesired characters
     :return:          The cleaned-up / BIDS-valid label
     :rtype: str
     """
 
-    special_characters = (' ', '_', '-',)
+    special_characters = (' ', '_', '-','.')
 
     for special in special_characters:
-        label = str(label).strip().replace(special, '.')
+        label = str(label).strip().replace(special, '^')
 
-    return re.sub(r'(?u)[^-\w.]', '.', label)
+    return re.sub(r'(?u)[^-\w.]', '^', label)
 
 
 def exist_series(series, serieslist, matchbidslabels=True):
