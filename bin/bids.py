@@ -394,8 +394,8 @@ def strip_suffix(series):
 def cleanup_label(label):
     """
     Converts a given label to a cleaned-up label that can be used as a BIDS label. Remove leading and trailing spaces;
-    convert other spaces, special BIDS characters and anything that is not an alphanumeric to a '^'. This will for
-    example map "Joe's reward_task" to "Joes^reward^task"
+    convert other spaces, special BIDS characters and anything that is not an alphanumeric to a ''. This will for
+    example map "Joe's reward_task" to "Joesrewardtask"
 
     :param str label: The given label that potentially contains undesired characters
     :return:          The cleaned-up / BIDS-valid label
@@ -572,7 +572,7 @@ def get_bidsname(subid, sesid, modality, series, run=''):
         bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}{_echo}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            task    = series['task_label'],
+            task    = '_task-' + series['task_label'],
             _acq    = add_prefix('_acq-', series['acq_label']),
             _rec    = add_prefix('_rec-', series['rec_label']),
             _run    = add_prefix('_run-', run),
@@ -608,7 +608,7 @@ def get_bidsname(subid, sesid, modality, series, run=''):
         bidsname = '{sub}{_ses}_{task}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            task    = series['task_name'],
+            task    = '_task-' + series['task_name'],
             suffix  = series['suffix'])
 
     elif modality == unknownmodality:
