@@ -617,7 +617,7 @@ def get_bidsname(subid, sesid, modality, series, run=''):
         bidsname = '{sub}{_ses}_{acq}{_run}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            acq     = series['acq_label'],
+            acq     = '_acq-' + series['acq_label'],
             _run    = add_prefix('_run-', run))
 
     else:
