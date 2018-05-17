@@ -321,7 +321,6 @@ def get_dicomfield(tagname, dicomfile):
         else:
             dicomdict = _DICOMDICT_CACHE
 
-        # TODO: implement regexp
         value = dicomdict.get(tagname)
 
     except IOError: warnings.warn('Cannot read' + dicomfile)
