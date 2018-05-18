@@ -101,6 +101,7 @@ DICOM:
       RepetitionTime: ~
       ImageType: ~
       ProtocolName: ~
+      PhaseEncodingDirection: ~
     acq_label: <ProtocolName>
     rec_label: ~
     run_index: <automatic>
@@ -178,7 +179,7 @@ DICOM:
     acq_label: ~
     rec_label: ~
     run_index: <automatic>
-    echo_index: ~
+    echo_index: <EchoNumbers>
     suffix: bold
   - <<: *func
     suffix: sbref
@@ -197,6 +198,7 @@ DICOM:
       RepetitionTime: ~
       ImageType: ~
       ProtocolName: ~
+      PhaseEncodingDirection: ~
     acq_label: <ProtocolName>
     run_index: <automatic>
     suffix: dwi
@@ -217,9 +219,10 @@ DICOM:
       RepetitionTime: ~
       ImageType: ~
       ProtocolName: ~
-    acq_label: <SeriesDescription>
+      PhaseEncodingDirection: ~
+    acq_label: <ProtocolName>
     run_index: <automatic>
-    dir_label: ~
+    dir_label: <PhaseEncodingDirection>
     suffix: magnitude1
     IntendedFor: ~
   - <<: *fmap
@@ -266,6 +269,7 @@ DICOM:
       RepetitionTime: ~
       ImageType: ~
       ProtocolName: ~
+      PhaseEncodingDirection: ~
     acq_label: <ProtocolName>
     run_index: <automatic>
 

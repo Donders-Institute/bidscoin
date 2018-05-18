@@ -626,39 +626,64 @@ def get_bidsname(subid, sesid, modality, series, run=''):
     return bidsname
 
 
-def get_runindex(seriesfolder):
+def set_bidslabel(bidsname, bidskey, newvalue=''):
     """
-    Dynamically resolve the run-index by using the index of the ordered directory names (e.g. 02_stroop, 03_stroop).
-    NB: Obsolete, better use increment_runindex
+    Sets the bidslabel, i.e. '*_bidskey-*_' is replaced with '*_bidskey-bidsvalue_'. If the key is not in the bidsname
+    then the newvalue is appended to the acquisition label. If newvalue is empty (= default), then the parsed existing
+    bidsvalue is returned and nothing is set
 
-    :param str seriesfolder:    The full pathname of the seriesfolder (.e.g. /foo/bar/001-localizer)
-    :return:                    The runindex that can be used for naming the BIDS files
-    :rtype: int
+    :param str bidsname:    The bidsname (e.g. as returned from get_bidsname or fullpath)
+    :param str bidskey:     The name of the bidskey, e.g. 'echo'
+    :param str newvalue:    The new bidsvalue
+    :return:                The bidsname with the new bidsvalue or, if newvalue is empty, the existing bidsvalue
+    :rtype: str
     """
 
-    # TODO: Use the dicomheaders instead of the directory names because it is more general and the foldernames contain seriesdecription, which may differ with ProtocolName in the attributes
-    seriesnumber, seriesdescription = os.path.basename(seriesfolder).split('-',1)
-    protocollist = [os.path.basename(dirname) for dirname in lsdirs(os.path.dirname(seriesfolder)) if seriesdescription == os.path.basename(dirname).split('-',1)[1]]
-    protocollist.sort()
-    runindex     = protocollist.index(seriesnumber + '-' + seriesdescription) + 1
+    newvalue = cleanup_label(newvalue)
+    pathname = os.path.dirname(bidsname)
+    bidsname = os.path.basename(bidsname)
 
-    return runindex
+    # Get the existing bidsvalue
+    acqkey   = 'acq'
+    acqvalue = ''
+    oldvalue = ''
+    for label in bidsname.split('_'):
+        if '-' in str(label):
+            key, value = str(label).split('-', 1)
+            if key == bidskey:
+                oldvalue = value
+            if key == acqkey:
+                acqvalue = value
+
+    # Replace the existing bidsvalue with the new value or append the newvalue to the acquisition value
+    if newvalue:
+        if not oldvalue and acqvalue:
+            bidskey  = acqkey
+            oldvalue = acqvalue
+            newvalue = acqvalue + newvalue
+        return os.path.join(pathname, bidsname.replace(bidskey + '-' + oldvalue, bidskey + '-' + newvalue))
+
+    # Or just return the parsed old bidsvalue
+    else:
+        return oldvalue
 
 
-def increment_runindex(bidsfolder, bidsname):
+def increment_runindex(bidsfolder, bidsname, ext='.*'):
     """
     Checks if a file with the same the bidsname already exists in the folder and then increments the runindex (if any)
     until no such file is found
 
     :param str bidsfolder:  The full pathname of the bidsfolder
     :param str bidsname:    The bidsname with a provisional runindex
+    :param str ext:         The fileextension for which the runindex is incremented (default = '.*')
     :return:                The bidsname with the incremented runindex
     :rtype: str
     """
+
     if not '_run-' in bidsname:
         return bidsname
 
-    while glob.glob(os.path.join(bidsfolder, bidsname + '.*')):
+    while glob.glob(os.path.join(bidsfolder, bidsname + ext)):
 
         basename, runindex = bidsname.rsplit('_run-', 1)
         if '_' in runindex:

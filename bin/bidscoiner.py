@@ -7,6 +7,7 @@ Converts datasets in the rawfolder to nifti datasets in the bidsfolder according
 
 import os
 import bids
+import glob
 import pandas as pd
 import subprocess
 
@@ -66,6 +67,20 @@ def coin_dicom(session, bidsmap, bidsfolder):
         if process.returncode != 0:
             errormsg = 'Failed to process {} (errorcode {})'.format(series, process.returncode)
             bids.printlog(errormsg, logfile)
+
+        # Check for files with _c%d, _e%d and _ph: These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
+        for suffix in ('_c', '_e', '_ph'):
+            for filename in glob.glob(os.path.join(bidsmodality, bidsname) + suffix + '*'):
+                basepath, ext   = os.path.splitext(filename)
+                basepath, index = basepath.rsplit(suffix,1)
+                if index and bids.set_bidslabel(basepath, 'echo'):
+                    basepath = bids.set_bidslabel(basepath, 'echo', index)
+                else:
+                    basepath = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + index)            # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
+                newbidsname = bids.increment_runindex(bidsmodality, os.path.basename(basepath), ext)    # Update the runindex now that the acq-label has changed
+                newfilename = os.path.join(bidsmodality, newbidsname + ext)
+                bids.printlog('Found dcm2niix {} suffix, renaming\n {} ->\n{}'.format(suffix, filename, newfilename))
+                os.rename(filename, newfilename)
 
     # Collect personal data from the DICOM header
     dicomfile           = bids.get_dicomfile(series)
