@@ -74,7 +74,7 @@ def coin_dicom(session, bidsmap, bidsfolder):
                 basepath, ext1  = os.path.splitext(filename)
                 basepath, ext2  = os.path.splitext(basepath)        # Account for .nii.gz files
                 basepath, index = basepath.rsplit(suffix,1)
-                if index and bids.set_bidslabel(basepath, 'echo'):
+                if suffix=='_e' and bids.set_bidslabel(basepath, 'echo') and index:
                     basepath = bids.set_bidslabel(basepath, 'echo', index)
                 else:
                     basepath = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + index)                # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
