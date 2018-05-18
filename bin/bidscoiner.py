@@ -80,7 +80,7 @@ def coin_dicom(session, bidsmap, bidsfolder):
                     basepath = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + index)                # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
                 newbidsname = bids.increment_runindex(bidsmodality, os.path.basename(basepath), ext2+ext1)  # Update the runindex now that the acq-label has changed
                 newfilename = os.path.join(bidsmodality, newbidsname + ext2+ext1)
-                bids.printlog('Found dcm2niix {} suffix, renaming\n{} ->\n{}'.format(suffix, filename, newfilename))
+                bids.printlog('Found dcm2niix {} suffix, renaming\n{} ->\n{}'.format(suffix, filename, newfilename), logfile)
                 os.rename(filename, newfilename)
 
     # Collect personal data from the DICOM header
