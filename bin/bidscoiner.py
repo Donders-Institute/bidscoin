@@ -71,15 +71,16 @@ def coin_dicom(session, bidsmap, bidsfolder):
         # Check for files with _c%d, _e%d and _ph: These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
         for suffix in ('_c', '_e', '_ph'):
             for filename in glob.glob(os.path.join(bidsmodality, bidsname) + suffix + '*'):
-                basepath, ext   = os.path.splitext(filename)
+                basepath, ext1  = os.path.splitext(filename)
+                basepath, ext2  = os.path.splitext(basepath)        # Account for .nii.gz files
                 basepath, index = basepath.rsplit(suffix,1)
                 if index and bids.set_bidslabel(basepath, 'echo'):
                     basepath = bids.set_bidslabel(basepath, 'echo', index)
                 else:
-                    basepath = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + index)            # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
-                newbidsname = bids.increment_runindex(bidsmodality, os.path.basename(basepath), ext)    # Update the runindex now that the acq-label has changed
-                newfilename = os.path.join(bidsmodality, newbidsname + ext)
-                bids.printlog('Found dcm2niix {} suffix, renaming\n {} ->\n{}'.format(suffix, filename, newfilename))
+                    basepath = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + index)                # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
+                newbidsname = bids.increment_runindex(bidsmodality, os.path.basename(basepath), ext2+ext1)  # Update the runindex now that the acq-label has changed
+                newfilename = os.path.join(bidsmodality, newbidsname + ext2+ext1)
+                bids.printlog('Found dcm2niix {} suffix, renaming\n{} ->\n{}'.format(suffix, filename, newfilename))
                 os.rename(filename, newfilename)
 
     # Collect personal data from the DICOM header
