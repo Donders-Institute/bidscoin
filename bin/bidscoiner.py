@@ -183,7 +183,7 @@ def bidscoiner(rawfolder, bidsfolder, subjects=[], force=False, participants=Fal
     :param list subjects:     List of selected sub-# names / folders to be processed. Otherwise all subjects in the rawfolder will be selected
     :param bool force:        If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped
     :param bool participants: If True only subjects not in particpants.tsv will be processed (this could be used e.g. to protect these subjects from being reprocessed)
-    :param str bidsmapfile:   The name of the bidsmap yaml-file
+    :param str bidsmapfile:   The name of the bidsmap yaml-file. If the bidsmapfile is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidsmapfile
     :return: Nothing
     :rtype: NoneType
     """
@@ -191,6 +191,10 @@ def bidscoiner(rawfolder, bidsfolder, subjects=[], force=False, participants=Fal
     # Input checking
     rawfolder  = os.path.abspath(os.path.expanduser(rawfolder))
     bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
+    os.makedirs(os.path.join(bidsfolder,'code'), exist_ok=True)
+    if not os.path.isfile(os.path.join(bidsfolder,'.bidsignore')):
+        with open(os.path.join(bidsfolder,'.bidsignore'), 'w') as bidsignore:
+            bidsignore.write('unknown/')
 
     # Start logging
     global logfile
@@ -283,7 +287,7 @@ if __name__ == "__main__":
     parser.add_argument('-s','--subjects',     help='Space seperated list of selected sub-# names / folders to be processed. Otherwise all subjects in the rawfolder will be selected', nargs='*')
     parser.add_argument('-f','--force',        help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')
     parser.add_argument('-p','--participants', help='If this flag is given only those subjects that are not in particpants.tsv will be processed (this could be used e.g. to protect these subjects from being reprocessed)', action='store_true')
-    parser.add_argument('-b','--bidsmap',      help='The bidsmap yaml-file with the study heuristics. Default: bidsfolder/code/bidsmap.yaml', default='bidsmap.yaml')
+    parser.add_argument('-b','--bidsmap',      help='The bidsmap yaml-file with the study heuristics. If there is no "/" in the name, then the path is taken to be bidsfolder/code/. Default: bidsmap.yaml, ', default='bidsmap.yaml')
     args = parser.parse_args()
 
     bidscoiner(rawfolder=args.rawfolder, bidsfolder=args.bidsfolder, subjects=args.subjects, force=args.force, participants=args.participants, bidsmapfile=args.bidsmap)
