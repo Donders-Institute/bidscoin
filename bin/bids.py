@@ -675,7 +675,7 @@ def increment_runindex(bidsfolder, bidsname, ext='.*'):
 
     :param str bidsfolder:  The full pathname of the bidsfolder
     :param str bidsname:    The bidsname with a provisional runindex
-    :param str ext:         The fileextension for which the runindex is incremented (default = '.*')
+    :param str ext:         The file extension for which the runindex is incremented (default = '.*')
     :return:                The bidsname with the incremented runindex
     :rtype: str
     """
