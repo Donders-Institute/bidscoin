@@ -194,7 +194,7 @@ def bidscoiner(rawfolder, bidsfolder, subjects=[], force=False, participants=Fal
     os.makedirs(os.path.join(bidsfolder,'code'), exist_ok=True)
     if not os.path.isfile(os.path.join(bidsfolder,'.bidsignore')):
         with open(os.path.join(bidsfolder,'.bidsignore'), 'w') as bidsignore:
-            bidsignore.write('unknown/')
+            bidsignore.write(bids.unknownmodality + '/')
 
     # Start logging
     global logfile
