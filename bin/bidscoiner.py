@@ -71,13 +71,13 @@ def coin_dicom(session, bidsmap, bidsfolder):
 
         # Add the TaskName to the generated func json-file.
         if modality == 'func':
-            jsonfile = glob.glob(os.path.join(bidsmodality, bidsname + '*.json'))[0]    # Account for files with _c%d, _e%d and _ph suffixes (see below)
-            with open(jsonfile, 'r') as json_fid:
-                data = json.load(json_fid)
-            if not 'TaskName' in data:
-                with open(jsonfile, 'w') as json_fid:
-                    data['TaskName'] = bidsname.rsplit('_task-', 1)[1].split('_', 1)[0]
-                    json.dump(data, json_fid, indent=4)
+            for jsonfile in glob.glob(os.path.join(bidsmodality, bidsname + '*.json')):    # Account for files with _c%d, _e%d and _ph suffixes (see below)
+                with open(jsonfile, 'r') as json_fid:
+                    data = json.load(json_fid)
+                if not 'TaskName' in data:
+                    with open(jsonfile, 'w') as json_fid:
+                        data['TaskName'] = bidsname.rsplit('_task-', 1)[1].split('_', 1)[0]
+                        json.dump(data, json_fid, indent=4)
 
         # Check for files with _c%d, _e%d and _ph: These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
         for suffix in ('_c', '_e', '_ph'):
