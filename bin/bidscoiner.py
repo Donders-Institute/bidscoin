@@ -69,9 +69,9 @@ def coin_dicom(session, bidsmap, bidsfolder):
             errormsg = 'Failed to process {} (errorcode {})'.format(series, process.returncode)
             bids.printlog(errormsg, logfile)
 
-        # Add the TaskName to the generated func json-file. TODO: account for _c%d, _e%d and _ph files (see below)
+        # Add the TaskName to the generated func json-file.
         if modality == 'func':
-            jsonfile = os.path.join(bidsmodality, bidsname + '.json')
+            jsonfile = glob.glob(os.path.join(bidsmodality, bidsname + '*.json'))[0]    # Account for files with _c%d, _e%d and _ph suffixes (see below)
             with open(jsonfile, 'r') as json_fid:
                 data = json.load(json_fid)
             if not 'TaskName' in data:
