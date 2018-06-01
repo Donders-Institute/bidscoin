@@ -10,6 +10,7 @@ import bids
 import glob
 import pandas as pd
 import subprocess
+import json
 
 
 def coin_dicom(session, bidsmap, bidsfolder):
@@ -67,6 +68,16 @@ def coin_dicom(session, bidsmap, bidsfolder):
         if process.returncode != 0:
             errormsg = 'Failed to process {} (errorcode {})'.format(series, process.returncode)
             bids.printlog(errormsg, logfile)
+
+        # Add the TaskName to the generated func json-file. TODO: account for _c%d, _e%d and _ph files (see below)
+        if modality == 'func':
+            jsonfile = os.path.join(bidsmodality, bidsname + '.json')
+            with open(jsonfile, 'r') as json_fid:
+                data = json.load(json_fid)
+            if not 'TaskName' in data:
+                with open(jsonfile, 'w') as json_fid:
+                    data['TaskName'] = bidsname.rsplit('_task-', 1)[1].split('_', 1)[0]
+                    json.dump(data, json_fid, indent=4)
 
         # Check for files with _c%d, _e%d and _ph: These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
         for suffix in ('_c', '_e', '_ph'):
