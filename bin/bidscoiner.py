@@ -69,6 +69,20 @@ def coin_dicom(session, bidsmap, bidsfolder):
             errormsg = 'Failed to process {} (errorcode {})'.format(series, process.returncode)
             bids.printlog(errormsg, logfile)
 
+        # Add a dummy b0 bval- and bvec-file for any file without a bval/bvec file (e.g. sbref, b0 scans)
+        if modality == 'dwi':
+            for jsonfile in glob.glob(os.path.join(bidsmodality, bidsname + '*.json')):    # Account for files with _c%d, _e%d and _ph suffixes (see below)
+                bvecfile = os.path.splitext(jsonfile)[0] + '.bvec'
+                bvalfile = os.path.splitext(jsonfile)[0] + '.bval'
+                if not os.path.isfile(bvecfile):
+                    with open(bvecfile, 'w') as bvec_fid:
+                        bids.printlog('Adding dummy bvec file: ' + bvecfile, logfile)
+                        bvec_fid.write('0\n0\n0\n')
+                if not os.path.isfile(bvalfile):
+                    with open(bvalfile, 'w') as bval_fid:
+                        bids.printlog('Adding dummy bval file: ' + bvalfile, logfile)
+                        bval_fid.write('0\n')
+
         # Add the TaskName to the generated func json-file.
         if modality == 'func':
             for jsonfile in glob.glob(os.path.join(bidsmodality, bidsname + '*.json')):    # Account for files with _c%d, _e%d and _ph suffixes (see below)
