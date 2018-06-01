@@ -20,7 +20,7 @@ from ruamel_yaml import YAML
 yaml = YAML()
 
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh')
-unknownmodality = 'unknown'
+unknownmodality = 'extra_data'
 
 
 def printlog(message, logfile=None):

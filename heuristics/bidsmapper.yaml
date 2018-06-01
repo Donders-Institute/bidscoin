@@ -90,7 +90,7 @@ DICOM:
 # --------------------------------------------------------------------------------
   participant_label: ~
   session_label: ~
-  anat:     # ----------------------- All anatomical data -----------------------
+  anat:       # ----------------------- All anatomical data ----------------------
   - &anat
     attributes:
       SeriesDescription: ~
@@ -142,7 +142,7 @@ DICOM:
   - <<: *anat
     modality_label: SWImagandphase
 
-  func:     # ----------------------- All functional data -----------------------
+  func:       # ----------------------- All functional data ----------------------
   - &func
     attributes:
       SeriesDescription: ~
@@ -166,7 +166,7 @@ DICOM:
   - <<: *func
     suffix: sbref
 
-  dwi:      # ----------------------- All diffusion data ------------------------
+  dwi:        # ----------------------- All diffusion data -----------------------
   - &dwi
     attributes:
       SeriesDescription: ~
@@ -187,7 +187,7 @@ DICOM:
   - <<: *dwi
     suffix: sbref
 
-  fmap:     # ----------------------- All fieldmap data -------------------------
+  fmap:       # ----------------------- All fieldmap data ------------------------
   - &fmap
     attributes:
       SeriesDescription: ~
@@ -221,7 +221,7 @@ DICOM:
     suffix: fieldmap
     # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
-  beh:      # ----------------------- All behavioural data ----------------------
+  beh:        # ----------------------- All behavioural data ---------------------
   - &beh
     attributes:
       SeriesDescription: ~
@@ -238,7 +238,7 @@ DICOM:
     task_name: <ProtocolName>
     suffix: ~
 
-  unknown:  # ----------------------- All non-BIDS data -------------------------
+  extra_data: # ----------------------- All non-BIDS data -------------------------
   - attributes:
       SeriesDescription: ~
       SequenceVariant: ~
@@ -282,7 +282,7 @@ FileSystem:
 # --------------------------------------------------------------------------------
   participant_label: ~
   session_label: ~
-  anat:     # ----------------------- All anatomical data -----------------------
+  anat:       # ----------------------- All anatomical data ----------------------
   - &anat_filesystem
     attributes:
       FolderName: ~
@@ -325,7 +325,7 @@ FileSystem:
   - <<: *anat_filesystem
     modality_label: SWImagandphase
 
-  func:     # ----------------------- All functional data -----------------------
+  func:       # ----------------------- All functional data ----------------------
   - &func_filesystem
     attributes:
       FolderName: ~
@@ -348,7 +348,7 @@ FileSystem:
     recording_label: <FileName>
     suffix: stim
 
-  dwi:      # ----------------------- All diffusion data ------------------------
+  dwi:        # ----------------------- All diffusion data -----------------------
   - &dwi_filesystem
     attributes:
       FolderName: ~
@@ -358,7 +358,7 @@ FileSystem:
     run_index: <automatic>
     suffix: dwi
 
-  fmap:     # ----------------------- All fieldmap data -------------------------
+  fmap:       # ----------------------- All fieldmap data ------------------------
   - &fmap_filesystem
     attributes:
       FolderName: ~
@@ -383,7 +383,7 @@ FileSystem:
     suffix: fieldmap
     # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
-  beh:      # ----------------------- All behavioural data ----------------------
+  beh:        # ----------------------- All behavioural data ---------------------
   - &beh_filesystem
     attributes:
       FolderName: ~
@@ -392,7 +392,7 @@ FileSystem:
     task_name: <FileName>
     suffix: ~
 
-  unknown:  # ----------------------- All non-BIDS data -------------------------
+  extra_data: # ----------------------- All non-BIDS data ------------------------
   - attributes:
       FolderName: ~
       FileName: ~
