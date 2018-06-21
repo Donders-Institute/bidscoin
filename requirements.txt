@@ -1,0 +1,4 @@
+setuptools
+pandas
+pydicom>=1.0.2
+ruamel_yaml>=0.15.35
