@@ -208,7 +208,7 @@ def bidscoiner(rawfolder, bidsfolder, subjects=[], force=False, participants=Fal
     :param str bidsfolder:    The name of the BIDS root folder
     :param list subjects:     List of selected sub-# names / folders to be processed. Otherwise all subjects in the rawfolder will be selected
     :param bool force:        If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped
-    :param bool participants: If True only subjects not in particpants.tsv will be processed (this could be used e.g. to protect these subjects from being reprocessed)
+    :param bool participants: If True, subjects in particpants.tsv will not be processed (this could be used e.g. to protect these subjects from being reprocessed), also when force=True
     :param str bidsmapfile:   The name of the bidsmap yaml-file. If the bidsmapfile is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidsmapfile
     :return: Nothing
     :rtype: NoneType
@@ -231,11 +231,10 @@ def bidscoiner(rawfolder, bidsfolder, subjects=[], force=False, participants=Fal
     # Get the bidsmap heuristics from the bidsmap yaml-file
     bidsmap = bids.get_heuristics(bidsmapfile, os.path.join(bidsfolder,'code'))
 
-    # Read the table with subjects that have been processed
+    # Get the table with subjects that have been processed
     participants_file = os.path.join(bidsfolder, 'participants.tsv')
-    if participants and os.path.exists(participants_file):
+    if os.path.exists(participants_file):
         participants_table = pd.read_table(participants_file)
-
     else:
         participants_table = pd.DataFrame(columns = ['participant_id'])
 
@@ -248,7 +247,7 @@ def bidscoiner(rawfolder, bidsfolder, subjects=[], force=False, participants=Fal
     # Loop over all subjects and sessions and convert them using the bidsmap entries
     for subject in subjects:
 
-        if subject in list(participants_table.participant_id): continue
+        if participants and subject in list(participants_table.participant_id): continue
 
         sessions = bids.lsdirs(subject, 'ses-*')
         if not sessions: sessions = subject
@@ -312,7 +311,7 @@ if __name__ == "__main__":
     parser.add_argument('bidsfolder',          help='The destination folder with the bids data structure')
     parser.add_argument('-s','--subjects',     help='Space seperated list of selected sub-# names / folders to be processed. Otherwise all subjects in the rawfolder will be selected', nargs='*')
     parser.add_argument('-f','--force',        help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')
-    parser.add_argument('-p','--participants', help='If this flag is given only those subjects that are not in particpants.tsv will be processed (this could be used e.g. to protect these subjects from being reprocessed)', action='store_true')
+    parser.add_argument('-p','--participants', help='If this flag is given those subjects that are in particpants.tsv will not be processed (also when force=true). By default the participants.tsv table is ignored', action='store_true')
     parser.add_argument('-b','--bidsmap',      help='The bidsmap yaml-file with the study heuristics. If there is no "/" in the name, then the path is taken to be bidsfolder/code/. Default: bidsmap.yaml, ', default='bidsmap.yaml')
     args = parser.parse_args()
 
