@@ -10,7 +10,7 @@ import os.path
 import glob
 import copy
 import textwrap
-from ruamel_yaml import YAML
+from ruamel.yaml import YAML
 yaml = YAML()
 
 def built_dicommapper(dicomfile, bidsmapper, heuristics):

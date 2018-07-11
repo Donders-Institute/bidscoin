@@ -2,4 +2,4 @@
 # python=3
 pandas
 pydicom>=1.0.2
-ruamel_yaml>=0.15.35
+ruamel.yaml>=0.15.35

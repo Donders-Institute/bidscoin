@@ -13,7 +13,7 @@ import bids
 import os.path
 import textwrap
 import copy
-from ruamel_yaml import YAML
+from ruamel.yaml import YAML
 yaml = YAML()
 
 

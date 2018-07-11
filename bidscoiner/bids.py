@@ -16,7 +16,7 @@ import inspect
 import datetime
 import textwrap
 import re
-from ruamel_yaml import YAML
+from ruamel.yaml import YAML
 yaml = YAML()
 
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh')
