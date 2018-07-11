@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 """
 Converts datasets in the rawfolder to nifti datasets in the bidsfolder according to the BIDS standard
-
-@author: Marcel Zwiers
 """
 
 import os
@@ -26,9 +24,15 @@ def coin_dicom(session, bidsmap, bidsfolder):
 
     global logfile
 
-    # Get the subject and session identifiers from the foldername
-    subid = 'sub-' + session.rsplit('/sub-',1)[1].split('/ses-',1)[0]
-    if '/ses-' in session:
+    # Get the BIDS subject and session identifiers from the (first) dicom-header or from the session source folder
+    if bidsmap['DICOM']['participant_label'] and bidsmap['DICOM']['participant_label'].startswith('<') and bidsmap['DICOM']['participant_label'].endswith('>'):
+        subid = 'sub-' + bids.get_dicomfield(bidsmap['DICOM']['participant_label'][1:-1], bids.get_dicomfile(bids.lsdirs(session)[0]))
+    else:
+        subid = 'sub-' + session.rsplit('/sub-',1)[1].split('/ses-',1)[0]
+
+    if bidsmap['DICOM']['session_label'] and bidsmap['DICOM']['session_label'].startswith('<') and bidsmap['DICOM']['session_label'].endswith('>'):
+        sesid = 'ses-' + bids.get_dicomfield(bidsmap['DICOM']['session_label'][1:-1], bids.get_dicomfile(bids.lsdirs(session)[0]))
+    elif '/ses-' in session:
         sesid = 'ses-' + session.rsplit('/ses-')[1]
     else:
         sesid = ''
@@ -37,7 +41,7 @@ def coin_dicom(session, bidsmap, bidsfolder):
     bidsseries = os.path.join(bidsfolder, subid, sesid)         # NB: This gives a trailing '/' if ses=='', but that should be ok
     os.makedirs(bidsseries, exist_ok=True)
 
-    # Process the individual series
+    # Process all the dicom series subfolders
     for series in bids.lsdirs(session):
 
         bids.printlog('Processing dicom-folder: ' + series, logfile)
@@ -56,7 +60,7 @@ def coin_dicom(session, bidsmap, bidsfolder):
         bidsname = bids.get_bidsname(subid, sesid, modality, series_, '1')
         bidsname = bids.increment_runindex(bidsmodality, bidsname)
 
-        # Convert the dicom-files in the source folder to nifti's in the BIDS-folder
+        # Convert the dicom-files in the series folder to nifti's in the BIDS-folder
         command = 'module add dcm2niix; dcm2niix {options} -f {filename} -o {outfolder} {infolder}'.format(
             options   = bidsmap['Options']['dcm2niix'],
             filename  = bidsname,
@@ -110,12 +114,14 @@ def coin_dicom(session, bidsmap, bidsfolder):
                 os.rename(filename, newfilename)
 
     # Collect personal data from the DICOM header
-    dicomfile           = bids.get_dicomfile(series)
-    personals           = dict()
-    personals['age']    = bids.get_dicomfield('PatientAge',    dicomfile)
-    personals['sex']    = bids.get_dicomfield('PatientSex',    dicomfile)
-    personals['size']   = bids.get_dicomfield('PatientSize',   dicomfile)
-    personals['weight'] = bids.get_dicomfield('PatientWeight', dicomfile)
+    dicomfile                   = bids.get_dicomfile(series)
+    personals                   = dict()
+    personals['participant_id'] = subid
+    personals['session_id']     = sesid                                                     # TODO: Check if this can be in the participants.tsv file according to BIDS
+    personals['age']            = bids.get_dicomfield('PatientAge',    dicomfile)
+    personals['sex']            = bids.get_dicomfield('PatientSex',    dicomfile)
+    personals['size']           = bids.get_dicomfield('PatientSize',   dicomfile)
+    personals['weight']         = bids.get_dicomfield('PatientWeight', dicomfile)
 
     return personals
 
@@ -285,10 +291,8 @@ def bidscoiner(rawfolder, bidsfolder, subjects=[], force=False, participants=Fal
                 personals_ = coin_plugin(session, bidsmap, bidsfolder)
                 if personals_: personals = personals_
 
+        # Write the collected personals to the participants_file
         if personals:
-            personals['participant_id'] = os.path.basename(subject)
-
-            # Write the collected personals to the participants_file
             for key in personals:
                 if key not in participants_table.columns:
                     participants_table[key] = None
@@ -306,7 +310,7 @@ if __name__ == "__main__":
     import textwrap
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
-                                     epilog='examples:\n  bidscoiner.py /project/raw /project/bids\n  bidscoiner.py -f /project/raw /project/bids -s sub-009 sub-030')
+                                     epilog='examples:\n  bidscoiner.py /project/raw /project/bids\n  bidscoiner.py -f /project/raw /project/bids -s sub-009 sub-030\n ')
     parser.add_argument('rawfolder',           help='The source folder containing the raw data in sub-#/ses-#/series format')
     parser.add_argument('bidsfolder',          help='The destination folder with the bids data structure')
     parser.add_argument('-s','--subjects',     help='Space seperated list of selected sub-# names / folders to be processed. Otherwise all subjects in the rawfolder will be selected', nargs='*')
