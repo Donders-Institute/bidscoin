@@ -11,15 +11,17 @@ import subprocess
 import json
 
 
-def coin_dicom(session, bidsmap, bidsfolder):
+def coin_dicom(session, bidsmap, bidsfolder, personals):
     """
-    Converts the session dicom-files into BIDS-valid nifti-files in the corresponding bidsfolder
+    Converts the session dicom-files into BIDS-valid nifti-files in the corresponding bidsfolder and
+    extracts personals (e.g. Age, Sex) from the dicom header
 
     :param str session:    The full-path name of the subject/session source folder
     :param dict bidsmap:   The full mapping heuristics from the bidsmap yaml-file
     :param str bidsfolder: The full-path name of the BIDS root-folder
-    :return:               Personals extracted from the dicom header
-    :rtype: dict
+    :param dict personals: The dictionary with the personal information
+    :return:               Nothing
+    :rtype: NoneType
     """
 
     global logfile
@@ -115,7 +117,6 @@ def coin_dicom(session, bidsmap, bidsfolder):
 
     # Collect personal data from the DICOM header
     dicomfile                   = bids.get_dicomfile(series)
-    personals                   = dict()
     personals['participant_id'] = subid
     personals['session_id']     = sesid                                                     # TODO: Check if this can be in the participants.tsv file according to BIDS
     personals['age']            = bids.get_dicomfield('PatientAge',    dicomfile)
@@ -123,16 +124,15 @@ def coin_dicom(session, bidsmap, bidsfolder):
     personals['size']           = bids.get_dicomfield('PatientSize',   dicomfile)
     personals['weight']         = bids.get_dicomfield('PatientWeight', dicomfile)
 
-    return personals
 
-
-def coin_par(session, bidsmap, bidsfolder):
+def coin_par(session, bidsmap, bidsfolder, personals):
     """
 
-    :param str session:     The full-path name of the subject/session source folder
-    :param dict bidsmap:    The full mapping heuristics from the bidsmap yaml-file
-    :param str bidsfolder:  The full-path name of the BIDS root-folder
-    :return:                Nothing
+    :param str session:    The full-path name of the subject/session source folder
+    :param dict bidsmap:   The full mapping heuristics from the bidsmap yaml-file
+    :param str bidsfolder: The full-path name of the BIDS root-folder
+    :param dict personals: The dictionary with the personal information
+    :return:               Nothing
     :rtype: NoneType
     """
 
@@ -140,13 +140,14 @@ def coin_par(session, bidsmap, bidsfolder):
     bids.printlog('coin_par is WIP!!!', logfile)
 
 
-def coin_p7(session, bidsmap, bidsfolder):
+def coin_p7(session, bidsmap, bidsfolder, personals):
     """
 
-    :param str session:     The full-path name of the subject/session source folder
-    :param dict bidsmap:    The full mapping heuristics from the bidsmap yaml-file
-    :param str bidsfolder:  The full-path name of the BIDS root-folder
-    :return:                Nothing
+    :param str session:    The full-path name of the subject/session source folder
+    :param dict bidsmap:   The full mapping heuristics from the bidsmap yaml-file
+    :param str bidsfolder: The full-path name of the BIDS root-folder
+    :param dict personals: The dictionary with the personal information
+    :return:               Nothing
     :rtype: NoneType
     """
 
@@ -154,13 +155,14 @@ def coin_p7(session, bidsmap, bidsfolder):
     bids.printlog('coin_p7 is WIP!!!', logfile)
 
 
-def coin_nifti(session, bidsmap, bidsfolder):
+def coin_nifti(session, bidsmap, bidsfolder, personals):
     """
 
-    :param str session:     The full-path name of the subject/session source folder
-    :param dict bidsmap:    The full mapping heuristics from the bidsmap yaml-file
-    :param str bidsfolder:  The full-path name of the BIDS root-folder
-    :return:                Nothing
+    :param str session:    The full-path name of the subject/session source folder
+    :param dict bidsmap:   The full mapping heuristics from the bidsmap yaml-file
+    :param str bidsfolder: The full-path name of the BIDS root-folder
+    :param dict personals: The dictionary with the personal information
+    :return:               Nothing
     :rtype: NoneType
     """
 
@@ -168,13 +170,14 @@ def coin_nifti(session, bidsmap, bidsfolder):
     bids.printlog('coin_nifti is WIP!!!', logfile)
 
 
-def coin_filesystem(session, bidsmap, bidsfolder):
+def coin_filesystem(session, bidsmap, bidsfolder, personals):
     """
 
-    :param str session:     The full-path name of the subject/session source folder
-    :param dict bidsmap:    The full mapping heuristics from the bidsmap yaml-file
-    :param str bidsfolder:  The full-path name of the BIDS root-folder
-    :return:                Nothing
+    :param str session:    The full-path name of the subject/session source folder
+    :param dict bidsmap:   The full mapping heuristics from the bidsmap yaml-file
+    :param str bidsfolder: The full-path name of the BIDS root-folder
+    :param dict personals: The dictionary with the personal information
+    :return:               Nothing
     :rtype: NoneType
     """
 
@@ -182,15 +185,16 @@ def coin_filesystem(session, bidsmap, bidsfolder):
     bids.printlog('coin_filesystem is WIP!!!', logfile)
 
 
-def coin_plugin(session, bidsmap, bidsfolder):
+def coin_plugin(session, bidsmap, bidsfolder, personals):
     """
     Run the plugin coiner to cast the series into the bids folder
 
-    :param str session:     The full-path name of the subject/session source folder
-    :param dict bidsmap:    The full mapping heuristics from the bidsmap yaml-file
-    :param str bidsfolder:  The full-path name of the BIDS root-folder
-    :return:                Personals extracted from the dicom header
-    :rtype: dict
+    :param str session:    The full-path name of the subject/session source folder
+    :param dict bidsmap:   The full mapping heuristics from the bidsmap yaml-file
+    :param str bidsfolder: The full-path name of the BIDS root-folder
+    :param dict personals: The dictionary with the personal information
+    :return:               Nothing
+    :rtype: NoneType
     """
 
     from importlib import import_module
@@ -200,9 +204,7 @@ def coin_plugin(session, bidsmap, bidsfolder):
     for pluginfunction in bidsmap['PlugIn']:
         plugin    = import_module(os.path.join(__file__,'..','plugins', pluginfunction))
         # TODO: check first if the plug-in function exist
-        personals = plugin.bidscoiner(session, bidsmap, bidsfolder)
-
-    return personals
+        plugin.bidscoiner(session, bidsmap, bidsfolder, personals)
 
 
 def bidscoiner(rawfolder, bidsfolder, subjects=[], force=False, participants=False, bidsmapfile='code/bidsmap.yaml'):
@@ -216,7 +218,7 @@ def bidscoiner(rawfolder, bidsfolder, subjects=[], force=False, participants=Fal
     :param bool force:        If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped
     :param bool participants: If True, subjects in particpants.tsv will not be processed (this could be used e.g. to protect these subjects from being reprocessed), also when force=True
     :param str bidsmapfile:   The name of the bidsmap yaml-file. If the bidsmapfile is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/
-    :return: Nothing
+    :return:                  Nothing
     :rtype: NoneType
     """
 
@@ -266,30 +268,27 @@ def bidscoiner(rawfolder, bidsfolder, subjects=[], force=False, participants=Fal
 
             # Update / append the dicom mapping
             if bidsmap['DICOM']:
-                personals = coin_dicom(session, bidsmap, bidsfolder)
+                coin_dicom(session, bidsmap, bidsfolder, personals)
 
             # Update / append the PAR/REC mapping
             if bidsmap['PAR']:
-                personals_ = coin_par(session, bidsmap, bidsfolder)
-                if personals_: personals = personals_
+                coin_par(session, bidsmap, bidsfolder, personals)
 
             # Update / append the P7 mapping
             if bidsmap['P7']:
-                personals_ = coin_p7(session, bidsmap, bidsfolder)
-                if personals_: personals = personals_
+                coin_p7(session, bidsmap, bidsfolder, personals)
 
             # Update / append the nifti mapping
             if bidsmap['Nifti']:
-                coin_nifti(session, bidsmap, bidsfolder)
+                coin_nifti(session, bidsmap, bidsfolder, personals)
 
             # Update / append the file-system mapping
             if bidsmap['FileSystem']:
-                coin_filesystem(session, bidsmap, bidsfolder)
+                coin_filesystem(session, bidsmap, bidsfolder, personals)
 
             # Update / append the plugin mapping
             if bidsmap['PlugIn']:
-                personals_ = coin_plugin(session, bidsmap, bidsfolder)
-                if personals_: personals = personals_
+                coin_plugin(session, bidsmap, bidsfolder, personals)
 
         # Write the collected personals to the participants_file
         if personals:
