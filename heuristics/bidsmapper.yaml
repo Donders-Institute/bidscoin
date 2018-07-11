@@ -238,7 +238,7 @@ DICOM:
     task_name: <ProtocolName>
     suffix: ~
 
-  extra_data: # ----------------------- All non-BIDS data -------------------------
+  extra_data: # ----------------------- All non-BIDS data ------------------------
   - attributes:
       SeriesDescription: ~
       SequenceVariant: ~
