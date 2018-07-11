@@ -4,8 +4,6 @@ Creates a bidsmap.yaml config file that maps the information from the data to th
 BIDS modalities and BIDS labels (see also [bidsmapper.yaml] and [bidsmapper.py]).
 You can edit the bidsmap file before passing it to [bidscoiner.py] which uses it
 to cast the datasets into the BIDS folder structure
-
-@author: Marcel Zwiers
 """
 
 # Global imports (specific modules may be imported when needed)

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 """
 Takes example files from the samples folder to create a bidsmapper config file
-
-@author: Marcel Zwiers
 """
 
 import bids
