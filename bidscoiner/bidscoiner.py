@@ -118,7 +118,8 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
     # Collect personal data from the DICOM header
     dicomfile                   = bids.get_dicomfile(series)
     personals['participant_id'] = subid
-    personals['session_id']     = sesid                                                     # TODO: Check if this can be in the participants.tsv file according to BIDS
+    if sesid:
+        personals['session_id'] = sesid                                                     # TODO: Check if this can be in the participants.tsv file according to BIDS
     personals['age']            = bids.get_dicomfield('PatientAge',    dicomfile)
     personals['sex']            = bids.get_dicomfield('PatientSex',    dicomfile)
     personals['size']           = bids.get_dicomfield('PatientSize',   dicomfile)
