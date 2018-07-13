@@ -26,12 +26,16 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
 
     global logfile
 
-    # Get the BIDS subject and session identifiers from the (first) dicom-header or from the session source folder
+    # Get a valid BIDS subject identifier from the (first) dicom-header or from the session source folder
     if bidsmap['DICOM']['participant_label'] and bidsmap['DICOM']['participant_label'].startswith('<') and bidsmap['DICOM']['participant_label'].endswith('>'):
         subid = 'sub-' + bids.get_dicomfield(bidsmap['DICOM']['participant_label'][1:-1], bids.get_dicomfile(bids.lsdirs(session)[0]))
     else:
         subid = 'sub-' + session.rsplit('/sub-',1)[1].split('/ses-',1)[0]
+    if subid == 'sub-':
+        bids.printlog('Error: No valid subject identifier found for: ' + session, logfile)
+        return
 
+    # Get a BIDS session identifier from the (first) dicom-header or from the session source folder
     if bidsmap['DICOM']['session_label'] and bidsmap['DICOM']['session_label'].startswith('<') and bidsmap['DICOM']['session_label'].endswith('>'):
         sesid = 'ses-' + bids.get_dicomfield(bidsmap['DICOM']['session_label'][1:-1], bids.get_dicomfile(bids.lsdirs(session)[0]))
     elif '/ses-' in session:
@@ -72,8 +76,9 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
         process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         bids.printlog(process.stdout.decode('utf-8'), logfile)
         if process.returncode != 0:
-            errormsg = 'Failed to process {} (errorcode {})'.format(series, process.returncode)
+            errormsg = 'Error: Failed to process {} (errorcode {})'.format(series, process.returncode)
             bids.printlog(errormsg, logfile)
+            continue
 
         # Add a dummy b0 bval- and bvec-file for any file without a bval/bvec file (e.g. sbref, b0 scans)
         if modality == 'dwi':
@@ -316,7 +321,7 @@ if __name__ == "__main__":
     parser.add_argument('-s','--subjects',     help='Space seperated list of selected sub-# names / folders to be processed. Otherwise all subjects in the rawfolder will be selected', nargs='*')
     parser.add_argument('-f','--force',        help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')
     parser.add_argument('-p','--participants', help='If this flag is given those subjects that are in particpants.tsv will not be processed (also when the --force flag is given). Otherwise the participants.tsv table is ignored', action='store_true')
-    parser.add_argument('-b','--bidsmap',      help='The bidsmap yaml-file with the study heuristics.  If the bidsmapfile is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap.yaml', default='bidsmap.yaml')
+    parser.add_argument('-b','--bidsmap',      help='The bidsmap yaml-file with the study heuristics. If the bidsmapfile is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap.yaml', default='bidsmap.yaml')
     args = parser.parse_args()
 
     bidscoiner(rawfolder=args.rawfolder, bidsfolder=args.bidsfolder, subjects=args.subjects, force=args.force, participants=args.participants, bidsmapfile=args.bidsmap)

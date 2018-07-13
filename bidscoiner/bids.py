@@ -306,14 +306,13 @@ def get_dicomfield(tagname, dicomfile):
     :param tagname:       Name of the DICOM field
     :param str dicomfile: The full pathname of the dicom-file
     :return:              Extracted tag-values from the dicom-file
-    :rtype: str
+    :rtype: str or int
     """
 
     import pydicom
     global _DICOMDICT_CACHE, _DICOMFILE_CACHE
 
     try:
-
         if dicomfile != _DICOMFILE_CACHE:
             dicomdict        = pydicom.dcmread(dicomfile)
             _DICOMDICT_CACHE = dicomdict
@@ -324,6 +323,7 @@ def get_dicomfield(tagname, dicomfile):
         value = dicomdict.get(tagname)
 
     except IOError: warnings.warn('Cannot read' + dicomfile)
+
     except Exception:
         try:
 
@@ -335,7 +335,10 @@ def get_dicomfield(tagname, dicomfile):
             warnings.warn('Could not extract {} tag from {}'.format(tagname, dicomfile))
 
     # Cast the dicom datatype to standard to int or str (i.e. to something that yaml.dump can handle)
-    if isinstance(value, int):
+    if not value:
+        return
+
+    elif isinstance(value, int):
         return int(value)
 
     elif not isinstance(value, str):    # Assume it's a MultiValue type and flatten it
