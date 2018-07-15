@@ -28,7 +28,7 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield='PatientCommen
 
     # Create a output mapping-file
     mappingfile = os.path.join(outfolder, 'rawmapper_{}.tsv'.format(dicomfield))
-    with open(mappingfile, 'w') as fid:
+    with open(mappingfile, 'x') as fid:
         if rename:
             fid.write('{}\t{}\t{}\t{}\n'.format('subid', 'sesid', 'newsubid', 'newsesid'))
         else:
@@ -47,41 +47,39 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield='PatientCommen
 
             # Parse the new subject and session identifiers from the dicomfield
             dcmid = bids.get_dicomfield(dicomfield, bids.get_dicomfile(bids.lsdirs(session)[0]))   # TODO: test how newlines from the console work out
-            if not dcmid:
-                warnings.warn('Skipping renaming because the dicom-field was empty for: ' + session)
-                newsubid = subid
-                newsesid = sesid
-
-            elif rename:
-                if '/' in dcmid:
-                    delim = '/'
-                elif '\\' in dcmid:
-                    delim = '\\'
-                else:
-                    delim = '\n'
-                newsubsesid = dcmid.split(delim)
-                newsubid    = 'sub-' + newsubsesid[0].replace('sub-', '')
-                if len(newsubsesid)==1:
-                    newsesid = sesid
-                elif len(newsubsesid)==2:
-                    newsesid = 'ses-' + newsubsesid[1].replace('ses-', '')
-                else:
-                    warnings.warn('Skipping renaming of {} because the dicom-field "{}" could not be parsed into [subid, sesid]'.format(session, dcmid))
+            if rename:
+                if not dcmid:
+                    warnings.warn('Skipping renaming because the dicom-field was empty for: ' + session)
                     newsubid = subid
                     newsesid = sesid
+                else:
+                    if '/' in dcmid:
+                        delim = '/'
+                    elif '\\' in dcmid:
+                        delim = '\\'
+                    else:
+                        delim = '\n'
+                    newsubsesid = dcmid.split(delim)
+                    newsubid    = 'sub-' + newsubsesid[0].replace('sub-', '')
+                    if len(newsubsesid)==1:
+                        newsesid = sesid
+                    elif len(newsubsesid)==2:
+                        newsesid = 'ses-' + newsubsesid[1].replace('ses-', '')
+                    else:
+                        warnings.warn('Skipping renaming of {} because the dicom-field "{}" could not be parsed into [subid, sesid]'.format(session, dcmid))
+                        newsubid = subid
+                        newsesid = sesid
             else:
                 newsubid = dcmid
                 newsesid = ''
 
-            # Save the subid/sesid mapping to disk
+            # Save the dicomfield / sub-ses mapping to disk
             print('{}\{} -> \t{}\{}'.format(subid, sesid, newsubid, newsesid))
             with open(os.path.join(outfolder,mappingfile), 'a') as fid:
                 fid.write('{}\t{}\t{}\t{}\n'.format(subid, sesid, newsubid, newsesid))
 
-            # Rename the session subfolder in the rawfolder
+            # Rename the session subfolder in the rawfolder (but skip if it already exists)
             if rename:
-
-                # Check if the target directory already exists
                 newsession = os.path.join(rawfolder, newsubid, newsesid)
                 if session != newsession:
                     if os.path.isdir(newsession):
@@ -93,12 +91,12 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield='PatientCommen
 # Shell usage
 if __name__ == "__main__":
 
-    # Parse the input arguments and run sub2pep(args)
+    # Parse the input arguments and run the rawmapper(args)
     import argparse
     import textwrap
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
-                                     epilog='examples:\n  rawmapper.py -r /project/3022026.01/raw\n  rawmapper -d AcquisitionDate /project/3022026.01/raw\n ')
+                                     epilog='examples:\n  rawmapper.py -r /project/3022026.01/raw\n  rawmapper.py -d AcquisitionDate /project/3022026.01/raw\n ')
     parser.add_argument('rawfolder',         help='The source folder with the raw data in sub-#/ses-#/series organisation')
     parser.add_argument('-r','--rename',     help='If this flag is given sub-subid/ses-sesid directories in the rawfolder will be renamed to sub-dcmid/ses-dcmid', action='store_true')
     parser.add_argument('-o','--outfolder',  help='The destination folder with the mapper-file is saved (default = rawfolder)')
