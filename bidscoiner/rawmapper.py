@@ -88,6 +88,8 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield='PatientCommen
                         warnings.warn('{} already exists, skipping renaming of {}'.format(newsession, session))
                     elif not dryrun:
                         os.renames(session, newsession)
+                    else:
+                        print(session + '->' + newsession)
 
 
 # Shell usage
