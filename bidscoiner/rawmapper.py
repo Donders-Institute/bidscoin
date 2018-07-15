@@ -73,11 +73,11 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield='PatientCommen
 
             # Save the dicomfield / sub-ses mapping to disk
             if rename:
-                print('{}\{} -> \t{}\{}'.format(subid, sesid, newsubid, newsesid))
+                print('{}\{}\t-> {}\{}'.format(subid, sesid, newsubid, newsesid))
                 with open(os.path.join(outfolder,mappingfile), 'a') as fid:
                     fid.write('{}\t{}\t{}\t{}\n'.format(subid, sesid, newsubid, newsesid))
             else:
-                print('{}\{} -> \t{}'.format(subid, sesid, dcmval))
+                print('{}\{}\t-> {}'.format(subid, sesid, dcmval))
                 with open(os.path.join(outfolder,mappingfile), 'a') as fid:
                     fid.write('{}\t{}\t{}\n'.format(subid, sesid, dcmval))
 
@@ -104,8 +104,7 @@ if __name__ == "__main__":
     parser.add_argument('-r','--rename',     help='If this flag is given sub-subid/ses-sesid directories in the rawfolder will be renamed to sub-dcmval/ses-dcmval', action='store_true')
     parser.add_argument('-o','--outfolder',  help='The destination folder with the mapper-file is saved (default = rawfolder)')
     parser.add_argument('-d','--dicomfield', help='The name of the dicomfield that is mapped / used to rename the subid/sesid foldernames', default='PatientComments')
-    parser.add_argument('-r','--rename',     help='If this flag is given sub-subid/ses-sesid directories in the rawfolder will be renamed to sub-dcmval/ses-dcmval', action='store_true')
     parser.add_argument('--dryrun',          help='Add this flag to dryrun (test) the renaming of the sub-subid/ses-sesid directories (i.e. directory names are not actually changed))', action='store_true')
     args = parser.parse_args()
 
-    rawmapper(rawfolder=args.rawfolder, outfolder=args.outfolder, rename=args.rename, dicomfield=args.dicomfield)
+    rawmapper(rawfolder=args.rawfolder, outfolder=args.outfolder, rename=args.rename, dicomfield=args.dicomfield, dryrun=args.dryrun)
