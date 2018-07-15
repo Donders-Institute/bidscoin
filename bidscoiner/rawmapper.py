@@ -89,7 +89,7 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield='PatientCommen
                     elif not dryrun:
                         os.renames(session, newsession)
                     else:
-                        print(session + '->' + newsession)
+                        print(session + ' -> ' + newsession)
 
 
 # Shell usage
