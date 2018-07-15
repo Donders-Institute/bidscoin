@@ -33,7 +33,7 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield='PatientCommen
         if rename:
             fid.write('{}\t{}\t{}\t{}\n'.format('subid', 'sesid', 'newsubid', 'newsesid'))
         else:
-            fid.write('{}\t{}\t{}\t{}\n'.format('subid', 'sesid', dicomfield, ''))
+            fid.write('{}\t{}\t{}\n'.format('subid', 'sesid', dicomfield))
 
     # Loop over all subjects and sessions and convert them using the bidsmap entries
     for subject in bids.lsdirs(rawfolder, 'sub-*'):
@@ -70,14 +70,16 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield='PatientCommen
                         warnings.warn('Skipping renaming of {} because the dicom-field "{}" could not be parsed into [subid, sesid]'.format(session, dcmval))
                         newsubid = subid
                         newsesid = sesid
-            else:
-                newsubid = dcmval
-                newsesid = ''
 
             # Save the dicomfield / sub-ses mapping to disk
-            print('{}\{} -> \t{}\{}'.format(subid, sesid, newsubid, newsesid))
-            with open(os.path.join(outfolder,mappingfile), 'a') as fid:
-                fid.write('{}\t{}\t{}\t{}\n'.format(subid, sesid, newsubid, newsesid))
+            if rename:
+                print('{}\{} -> \t{}\{}'.format(subid, sesid, newsubid, newsesid))
+                with open(os.path.join(outfolder,mappingfile), 'a') as fid:
+                    fid.write('{}\t{}\t{}\t{}\n'.format(subid, sesid, newsubid, newsesid))
+            else:
+                print('{}\{} -> \t{}'.format(subid, sesid, dcmval))
+                with open(os.path.join(outfolder,mappingfile), 'a') as fid:
+                    fid.write('{}\t{}\t{}\n'.format(subid, sesid, dcmval))
 
             # Rename the session subfolder in the rawfolder (but skip if it already exists)
             if rename:
