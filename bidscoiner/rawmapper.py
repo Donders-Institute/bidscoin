@@ -6,7 +6,6 @@ Maps dicom fields in the rawfolder and, optionally, uses that info to rename the
 import os
 import sys
 import warnings
-sys.path.append(os.path.join('/opt/bidscoiner/1.1/bidscoiner'))
 import bids
 
 
