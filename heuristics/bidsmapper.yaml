@@ -238,7 +238,7 @@ DICOM:
     task_name: <ProtocolName>
     suffix: ~
 
-  extra_data: # ----------------------- All non-BIDS data ------------------------
+  extra_data: # ----------------------- All extra data ---------------------------
   - attributes:
       SeriesDescription: ~
       SequenceVariant: ~
@@ -265,7 +265,7 @@ PAR: ~
 P7: ~
 # --------------------------------------------------------------------------------
 # P*.7 key-value heuristics (GE fields that are mapped to the BIDS labels)
-# -------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
 
 
 Nifti: ~
@@ -392,7 +392,7 @@ FileSystem:
     task_name: <FileName>
     suffix: ~
 
-  extra_data: # ----------------------- All non-BIDS data ------------------------
+  extra_data: # ----------------------- All extra data ---------------------------
   - attributes:
       FolderName: ~
       FileName: ~

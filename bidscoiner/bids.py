@@ -322,15 +322,14 @@ def get_dicomfield(tagname, dicomfile):
 
         value = dicomdict.get(tagname)
 
-    except IOError: warnings.warn('Cannot read' + dicomfile)
+    except IOError:
+        warnings.warn('Cannot read' + dicomfile)
 
     except Exception:
         try:
-
             value = parse_x_protocol(tagname, dicomfile)
 
         except Exception:
-
             value = None
             warnings.warn('Could not extract {} tag from {}'.format(tagname, dicomfile))
 
@@ -491,8 +490,10 @@ def get_matching_dicomseries(dicomfile, heuristics):
                         dicomvalue = get_dicomfield(attrkey, dicomfile)
 
                         # Check if the attribute value matches with the info from the dicomfile
-                        if attrvalue and dicomvalue:
-                            if isinstance(attrvalue, int):
+                        if attrvalue:
+                            if not dicomvalue:
+                                match = False
+                            elif isinstance(attrvalue, int):
                                 match = match and attrvalue == dicomvalue
                             elif isinstance(attrvalue, list):
                                 match = match and any([attrvalue_ in dicomvalue for attrvalue_ in attrvalue])
@@ -524,7 +525,7 @@ def get_matching_dicomseries(dicomfile, heuristics):
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 series_ = strip_suffix(series_)
 
-            # Stop if we have a match
+            # Stop searching the heuristics if we have a match
             if match:
                 # TODO: check if there are more matches (i.e. conflicts)
                 return {'series': series_, 'modality': modality}
