@@ -491,7 +491,7 @@ def get_matching_dicomseries(dicomfile, heuristics):
                         dicomvalue = get_dicomfield(attrkey, dicomfile)
 
                         # Check if the attribute value matches with the info from the dicomfile
-                        if attrvalue:
+                        if attrvalue and dicomvalue:
                             if isinstance(attrvalue, int):
                                 match = match and attrvalue == dicomvalue
                             elif isinstance(attrvalue, list):
