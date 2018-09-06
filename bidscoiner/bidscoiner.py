@@ -107,14 +107,43 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
 
         # Check for files with _c%d, _e%d and _ph: These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
         for suffix in ('_c', '_e', '_ph'):
-            for filename in glob.glob(os.path.join(bidsmodality, bidsname) + suffix + '*'):
+            TE = [None, None]
+            for filename in sorted(glob.glob(os.path.join(bidsmodality, bidsname) + suffix + '*')):
                 basepath, ext1  = os.path.splitext(filename)
-                basepath, ext2  = os.path.splitext(basepath)        # Account for .nii.gz files
+                basepath, ext2  = os.path.splitext(basepath)                                # Account for .nii.gz files
                 basepath, index = basepath.rsplit(suffix,1)
+
                 if suffix=='_e' and bids.set_bidslabel(basepath, 'echo') and index:
                     basepath = bids.set_bidslabel(basepath, 'echo', index)
+
+                elif suffix=='_e' and basepath.rsplit('_',1)[1] in ['magnitude1','magnitude2'] and index:   # i.e. modality == 'fmap'
+                    basepath = basepath[0:-1] + index
+                    if os.path.splitext(filename)[1] == '.json':
+                        with open(filename, 'r') as json_fid:
+                            data = json.load(json_fid)
+                        TE[int(index)-1] = data['EchoTime']                                                 # Read the echo times that need to be added to the json-file (see below)
+
+                elif suffix=='_ph' and basepath.rsplit('_',1)[1] in ['phase1','phase2'] and index:          # i.e. modality == 'fmap' (TODO: untested)
+                    basepath = basepath[0:-1] + index
+                    bids.printlog('WARNING: Untested dcm2niix "_ph"-filetype: ' + basepath, logfile)
+
+                elif suffix=='_e' and basepath.rsplit('_',1)[1]=='phasediff' and index:                     # i.e. modality == 'fmap' (NB: strangely, dcm2niix adds an '_e' suffix here too)
+                    # Add the the echo times used to create the difference image to the json-file
+                    if os.path.splitext(filename)[1] == '.json':
+                        with open(filename, 'r') as json_fid:
+                            data = json.load(json_fid)
+                        if not 'EchoTime1' in data:
+                            with open(filename, 'w') as json_fid:
+                                data['EchoTime1'] = TE[0]
+                                data['EchoTime2'] = TE[1]
+                                bids.printlog('Adding EchoTime1 and EchoTime2 to: ' + filename, logfile)
+                                json.dump(data, json_fid, indent=4)
+
+                    # TODO: Add 'IntendedFor' to the json-file
+
                 else:
                     basepath = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + index)                # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
+
                 newbidsname = bids.increment_runindex(bidsmodality, os.path.basename(basepath), ext2+ext1)  # Update the runindex now that the acq-label has changed
                 newfilename = os.path.join(bidsmodality, newbidsname + ext2+ext1)
                 bids.printlog('Found dcm2niix {} suffix, renaming\n{} ->\n{}'.format(suffix, filename, newfilename), logfile)

@@ -204,9 +204,11 @@ DICOM:
       PhaseEncodingDirection: ~
     acq_label: <ProtocolName>
     run_index: <automatic>
-    dir_label: <PhaseEncodingDirection>
-    suffix: magnitude1
+    dir_label: ~
+    suffix: magnitude
     IntendedFor: ~
+  - <<: *fmap
+    suffix: magnitude1
   - <<: *fmap
     suffix: magnitude2
   - <<: *fmap
@@ -216,9 +218,10 @@ DICOM:
   - <<: *fmap
     suffix: phase2
   - <<: *fmap
-    suffix: magnitude
-  - <<: *fmap
     suffix: fieldmap
+  - <<: *fmap
+    dir_label: <PhaseEncodingDirection>
+    suffix: epi
     # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
   beh:        # ----------------------- All behavioural data ---------------------

@@ -73,6 +73,7 @@
 # 		sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 # 		<matches>.json
 
+# TODO: update against bidsmapper.yaml
 
 Options:
 # --------------------------------------------------------------------------------
