@@ -25,6 +25,7 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
     """
 
     global logfile
+    TE = [None, None]
 
     # Get a valid BIDS subject identifier from the (first) dicom-header or from the session source folder
     if bidsmap['DICOM']['participant_label'] and bidsmap['DICOM']['participant_label'].startswith('<') and bidsmap['DICOM']['participant_label'].endswith('>'):
@@ -107,7 +108,6 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
 
         # Check for files with _c%d, _e%d and _ph: These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
         for suffix in ('_c', '_e', '_ph'):
-            TE = [None, None]
             for filename in sorted(glob.glob(os.path.join(bidsmodality, bidsname) + suffix + '*')):
                 basepath, ext1  = os.path.splitext(filename)
                 basepath, ext2  = os.path.splitext(basepath)                                # Account for .nii.gz files
