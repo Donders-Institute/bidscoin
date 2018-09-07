@@ -122,6 +122,7 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
                         with open(filename, 'r') as json_fid:
                             data = json.load(json_fid)
                         TE[int(index)-1] = data['EchoTime']                                                 # Read the echo times that need to be added to the json-file (see below)
+                        bids.printlog('Reading EchoTime{} = {} from: {}'.format(index,data['EchoTime'],filename), logfile)
 
                 elif suffix=='_ph' and basepath.rsplit('_',1)[1] in ['phase1','phase2'] and index:          # i.e. modality == 'fmap' (TODO: untested)
                     basepath = basepath[0:-1] + index
