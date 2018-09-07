@@ -130,14 +130,14 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
                 elif suffix=='_e' and basepath.rsplit('_',1)[1]=='phasediff' and index:                     # i.e. modality == 'fmap' (NB: strangely, dcm2niix adds an '_e' suffix here too)
                     # Add the the echo times used to create the difference image to the json-file
                     if os.path.splitext(filename)[1] == '.json':
-                        with open(filename, 'r') as json_fid:
-                            data = json.load(json_fid)
-                        if not 'EchoTime1' in data:
-                            with open(filename, 'w') as json_fid:
-                                data['EchoTime1'] = TE[0]
-                                data['EchoTime2'] = TE[1]
-                                bids.printlog('Adding EchoTime1 and EchoTime2 to: ' + filename, logfile)
-                                json.dump(data, json_fid, indent=4)
+                        with open(filename, 'r+') as json_fid:
+                            data              = json.load(json_fid)
+                            data['EchoTime1'] = TE[0]                                                       # Assuming the magnitude series have already been parsed
+                            data['EchoTime2'] = TE[1]
+                            bids.printlog('Adding EchoTime1 and EchoTime2 to: ' + filename, logfile)
+                            json.dump(data, json_fid, indent=4)
+                            if TE[0]>TE[1]:
+                                bids.printlog('WARNING: EchoTime1 > EchoTime2 in: ' + filename, logfile)
 
                     # TODO: Add 'IntendedFor' to the json-file
 
