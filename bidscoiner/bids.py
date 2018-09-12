@@ -510,8 +510,8 @@ def get_matching_dicomseries(dicomfile, heuristics):
                     if not bidsvalue:
                         series_[key] = bidsvalue
 
-                    # Intelligent filling of the run-index is done runtime by bidscoiner
-                    elif key == 'run_index' and bidsvalue == '<automatic>':
+                    # Intelligent filling of the value is done runtime by bidscoiner
+                    elif bidsvalue.startswith('<<') and bidsvalue.endswith('>>'):
                         series_[key] = bidsvalue
 
                     # Fill any bids-label with the <annotated> dicom attribute
@@ -595,7 +595,7 @@ def get_bidsname(subid, sesid, modality, series, run=''):
 
     elif modality == 'fmap':
 
-        # TODO: add fieldmap logic
+        # TODO: add more fieldmap logic?
 
         # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_dir-<dir_label>][_run-<run_index>]_suffix
         bidsname = '{sub}{_ses}{_acq}{_dir}{_run}_{suffix}'.format(

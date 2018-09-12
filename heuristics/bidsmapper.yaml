@@ -107,7 +107,7 @@ DICOM:
       PhaseEncodingDirection: ~
     acq_label: <ProtocolName>
     rec_label: ~
-    run_index: <automatic>
+    run_index: <<1>>
     mod_label: ~
     modality_label: T1w
     ce_label: ~
@@ -160,7 +160,7 @@ DICOM:
     task_label: <ProtocolName>
     acq_label: ~
     rec_label: ~
-    run_index: <automatic>
+    run_index: <<1>>
     echo_index: <EchoNumbers>
     suffix: bold
   - <<: *func
@@ -182,7 +182,7 @@ DICOM:
       ProtocolName: ~
       PhaseEncodingDirection: ~
     acq_label: <ProtocolName>
-    run_index: <automatic>
+    run_index: <<1>>
     suffix: dwi
   - <<: *dwi
     suffix: sbref
@@ -203,7 +203,7 @@ DICOM:
       ProtocolName: ~
       PhaseEncodingDirection: ~
     acq_label: <ProtocolName>
-    run_index: <automatic>
+    run_index: <<1>>
     dir_label: ~
     suffix: magnitude
     IntendedFor: ~
@@ -256,7 +256,7 @@ DICOM:
       ProtocolName: ~
       PhaseEncodingDirection: ~
     acq_label: <ProtocolName>
-    run_index: <automatic>
+    run_index: <<1>>
 
 
 PAR: ~
@@ -293,7 +293,7 @@ FileSystem:
       FileExt: ~
     acq_label: <FileName>
     rec_label: ~
-    run_index: <automatic>
+    run_index: <<1>>
     mod_label: ~
     modality_label: T1w
     ce_label: ~
@@ -337,7 +337,7 @@ FileSystem:
     task_label: <FileName>
     acq_label: ~
     rec_label: ~
-    run_index: <automatic>
+    run_index: <<1>>
     echo_index: ~
     suffix: bold
   - <<: *func_filesystem
@@ -358,7 +358,7 @@ FileSystem:
       FileName: ~
       FileExt: ~
     acq_label: <FileName>
-    run_index: <automatic>
+    run_index: <<1>>
     suffix: dwi
 
   fmap:       # ----------------------- All fieldmap data ------------------------
@@ -368,7 +368,7 @@ FileSystem:
       FileName: ~
       FileExt: ~
     acq_label: <FileName>
-    run_index: <automatic>
+    run_index: <<1>>
     dir_label: ~
     suffix: magnitude1
     IntendedFor: ~
@@ -401,7 +401,7 @@ FileSystem:
       FileName: ~
       FileExt: ~
     acq_label: <FileName>
-    run_index: <automatic>
+    run_index: <<1>>
 
 
 PlugIn: ~
