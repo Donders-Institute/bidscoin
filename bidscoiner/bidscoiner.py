@@ -104,6 +104,8 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
                             data = json.load(json_fid)
                         TE[int(index)-1] = data['EchoTime']
                         bids.printlog('Reading EchoTime{} = {} from: {}'.format(index,data['EchoTime'],filename), logfile)
+                elif suffix=='_e' and basepath.rsplit('_',1)[1]=='phasediff' and index:                         # i.e. modality == 'fmap'
+                    pass
 
                 elif suffix=='_ph' and basepath.rsplit('_',1)[1] in ['phase1','phase2'] and index:              # i.e. modality == 'fmap' (TODO: untested)
                     basepath = basepath[0:-1] + index
@@ -125,11 +127,11 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
         # Loop over and adapt all the newly produced json files (every nifti file comes with a json file)
         if not jsonfiles:
             jsonfiles = [os.path.join(bidsmodality, bidsname + '.json')]
+
         for jsonfile in jsonfiles:
 
             # Add a dummy b0 bval- and bvec-file for any file without a bval/bvec file (e.g. sbref, b0 scans)
             if modality == 'dwi':
-
                 bvecfile = os.path.splitext(jsonfile)[0] + '.bvec'
                 bvalfile = os.path.splitext(jsonfile)[0] + '.bval'
                 if not os.path.isfile(bvecfile):
@@ -143,7 +145,6 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
 
             # Add the TaskName to the func json-file
             elif modality == 'func':
-
                 with open(jsonfile, 'r') as json_fid:
                     data = json.load(json_fid)
                 if not 'TaskName' in data:
@@ -152,35 +153,35 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
                         data['TaskName'] = series_['task_label']
                         json.dump(data, json_fid, indent=4)
 
-            # Add the EchoTime(s) and IntendedFor to the fmap json-file
+            # Add the EchoTime(s) used to create the difference image to the fmap json-file. NB: This assumes the magnitude series have already been parsed (i.e. their nifti's had an _e suffix) -- This is normally the case for Siemens (phase-series being saved after the magnitude series
             elif modality == 'fmap':
-
-                # Add the the echo times used to create the difference image to the json-file
                 if series_['suffix'] == 'phasediff':
                     bids.printlog('Adding EchoTime1 and EchoTime2 to: ' + jsonfile, logfile)
                     with open(jsonfile, 'r') as json_fid:
                         data = json.load(json_fid)
-                    data['EchoTime1'] = TE[0]               # Assuming the magnitude series have already been parsed (i.e. their nifti's had an _e suffix)
+                    data['EchoTime1'] = TE[0]
                     data['EchoTime2'] = TE[1]
                     with open(jsonfile, 'w') as json_fid:
                         json.dump(data, json_fid, indent=4)
                     if TE[0]>TE[1]:
                         bids.printlog('WARNING: EchoTime1 > EchoTime2 in: ' + jsonfile, logfile)
 
-                # Search for the IntendedFor images and add them to the json-file
-                intendedfor = series_['IntendedFor']
-                if intendedfor:
-                    if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
-                        intendedfor = intendedfor[2:-2].split('><')
-                    else:
-                        intendedfor = [intendedfor]
-                    niifiles = [niifile.split('/'+subid+'/', 1)[1] for niifile in sorted(glob.glob(os.path.join(bidsses, '**/*' + '*'.join(intendedfor) + '*.nii*')))]     # Use a relative path
-                    bids.printlog('Adding IntendedFor to: ' + jsonfile, logfile)
-                    with open(jsonfile, 'r') as json_fid:
-                        data = json.load(json_fid)
-                    data['IntendedFor'] = niifiles
-                    with open(jsonfile, 'w') as json_fid:
-                        json.dump(data, json_fid, indent=4)
+    # Search for the IntendedFor images and add them to the json-files. This has been postponed untill all modalities have been processed (i.e. so that all target images are indeed on disk)
+    for fieldmap in bidsmap['DICOM']['fmap']:
+        if 'IntendedFor' in fieldmap and fieldmap['IntendedFor']:
+            intendedfor = fieldmap['IntendedFor']
+            if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
+                intendedfor = intendedfor[2:-2].split('><')
+            else:
+                intendedfor = [intendedfor]
+            niifiles = [niifile.split('/'+subid+'/', 1)[1] for niifile in sorted(glob.glob(os.path.join(bidsses, '**/*' + '*'.join(intendedfor) + '*.nii*')))]     # Use a relative path
+            jsonfile = os.path.join(bidsses, 'fmap', bids.get_bidsname(subid, sesid, 'fmap', fieldmap, '1') + '.json')       # TODO: Assumes that there is only 1 fieldmap acquired for each bidsmap entry / series
+            bids.printlog('Adding IntendedFor to: ' + jsonfile, logfile)
+            with open(jsonfile, 'r') as json_fid:
+                data = json.load(json_fid)
+            data['IntendedFor'] = niifiles
+            with open(jsonfile, 'w') as json_fid:
+                json.dump(data, json_fid, indent=4)
 
     # Collect personal data from the DICOM header
     dicomfile                   = bids.get_dicomfile(series)
