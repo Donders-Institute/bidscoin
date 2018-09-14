@@ -14,7 +14,7 @@ def sortsession(sessionfolder, pattern):
     Sorts dicomfiles into (3-digit) SeriesNumber-SeriesDescription subfolders (e.g. '003-T1MPRAGE')
 
     :param str sessionfolder:   The name of the folder that contains the dicom files
-    :param str pattern:         The regular expression pattern used in re.match() to select the dicom files
+    :param str pattern:         The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files
     :return:                    Nothing
     :rtype: NoneType
     """
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     parser.add_argument('rawfolder',   help='The root folder containing the source [sub/][ses/]dicomfiles')
     parser.add_argument('--subjectid', help='The prefix of the subject folders in rawfolder (empty value means no recursive search)', default='')
     parser.add_argument('--sessionid', help='The prefix of the session folders in the subject folder (empty value means no recursive search)', default='')
-    parser.add_argument('--pattern',   help='The regular expression pattern used in re.match() to select the dicom files', default='.*\.(IMA|dcm)$')
+    parser.add_argument('--pattern',   help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')
     args = parser.parse_args()
 
     sortsessions(rawfolder=args.rawfolder, subjectid=args.subjectid, sessionid=args.sessionid, pattern=args.pattern)
