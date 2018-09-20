@@ -273,8 +273,8 @@ if __name__ == "__main__":
                                      description=textwrap.dedent(__doc__),
                                      epilog='example:\n  bidsmapper.py /project/foo/bids\n  bidsmapper.py /project/foo/bids /project/foo/samples bidsmapper_dccn')
     parser.add_argument('bidsfolder',   help='The destination folder with the bids data structure')
-    parser.add_argument('samplefolder', help='The root folder of the directory tree containing the sample files / training data. If left empty, bidsfolder/code/samples is used or such an empty directory tree is created', nargs='?', default='')
-    parser.add_argument('bidsmapper',   help='The bidsmapper yaml-file with the BIDS heuristics (default: ./heuristics/bidsmapper.yaml)', nargs='?', default='bidsmapper.yaml')
+    parser.add_argument('samplefolder', help='The root folder of the directory tree containing the sample files / training data. Optional argument, if left empty, bidsfolder/code/samples is used or such an empty directory tree is created', nargs='?', default='')
+    parser.add_argument('bidsmapper',   help='The bidsmapper yaml-file with the BIDS heuristics (optional argument, default: ./heuristics/bidsmapper.yaml)', nargs='?', default='bidsmapper.yaml')
     args = parser.parse_args()
 
     bidsmapperfile = bidstrainer(samplefolder=args.samplefolder, bidsfolder=args.bidsfolder, bidsmapper=args.bidsmapper)

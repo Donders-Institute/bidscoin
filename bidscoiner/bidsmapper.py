@@ -263,7 +263,7 @@ if __name__ == "__main__":
                                      epilog='example:\n  bidsmapper.py /project/foo/raw /project/foo/bids\n  bidsmapper.py /project/foo/raw /project/foo/bids bidsmapper_dccn')
     parser.add_argument('rawfolder',        help='The source folder containing the raw data in sub-#/ses-#/series format')
     parser.add_argument('bidsfolder',       help='The destination folder with the bids data structure')
-    parser.add_argument('bidsmapper',       help='The bidsmapper yaml-file with the BIDS heuristics (default: bidsfolder/code/bidsmapper_sample.yaml)', nargs='?', default='bidsmapper_sample.yaml')
+    parser.add_argument('bidsmapper',       help='The bidsmapper yaml-file with the BIDS heuristics (optional argument, default: bidsfolder/code/bidsmapper_sample.yaml)', nargs='?', default='bidsmapper_sample.yaml')
     parser.add_argument('-a','--automatic', help='If this flag is given the user will not be asked for help if an unknown series is encountered', action='store_true')
     args = parser.parse_args()
 
