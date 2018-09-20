@@ -6,6 +6,7 @@ Takes example files from the samples folder to create a bidsmapper config file
 import bids
 import os.path
 import glob
+import shutil
 import copy
 import textwrap
 from ruamel.yaml import YAML
@@ -176,21 +177,27 @@ def built_pluginmapper(sample, bidsmapper):
     return bidsmapper
 
 
-def bidstrainer(samplefolder, bidsfolder, bidsmapper='bidsmapper.yaml'):
+def bidstrainer(bidsfolder, samplefolder='', bidsmapper='bidsmapper.yaml'):
     """
     Main function uses all samples in the samplefolder as training / example  data to generate a
     maximally filled-in bidsmapper_sample.yaml file.
 
-    :param str samplefolder:  The root folder-name Hierarchical BIDS tree containing the sample files
     :param str bidsfolder:    The name of the BIDS root folder
+    :param str samplefolder:  The name of the root directory of the tree containing the sample files / training data. If left empty, an empty directory tree is then created in bidsfolder/code/samples
     :param dict bidsmapper:   The name of the bidsmapper yaml-file
     :return:                  The name of the new (trained) bidsmapper yaml-file that is save in bidsfolder/code
     :rtype: str
     """
 
     # Input checking
-    samplefolder = os.path.abspath(os.path.expanduser(samplefolder))
+    if not samplefolder:
+        samplefolder = os.path.join(bidsfolder,'code','samples')
+        print('Creating an empty samples directory tree: ' + samplefolder)
+        shutil.copytree(os.path.join(os.path.dirname(__file__),'..','heuristics','samples'), samplefolder)
+        print('Fill the directory tree with example DICOM files and re-run bidstrainer.py')
+        return
     bidsfolder   = os.path.abspath(os.path.expanduser(bidsfolder))
+    samplefolder = os.path.abspath(os.path.expanduser(samplefolder))
 
     # Get the heuristics for creating the bidsmapper
     heuristics = bids.get_heuristics(bidsmapper)
@@ -263,10 +270,10 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
-                                     epilog='example:\n  bidsmapper.py /project/foo/samples /project/foo/bids bidsmapper_dccn')
-    parser.add_argument('samplefolder', help='The source folder containing the raw data in sub-#/ses-#/series format')
+                                     epilog='example:\n  bidsmapper.py /project/foo/bids\n  bidsmapper.py /project/foo/bids /project/foo/samples bidsmapper_dccn')
     parser.add_argument('bidsfolder',   help='The destination folder with the bids data structure')
+    parser.add_argument('samplefolder', help='The root folder of the directory tree containing the sample files / training data. If left empty, an empty directory tree is then created in bidsfolder/code/samples', nargs='?', default='')
     parser.add_argument('bidsmapper',   help='The bidsmapper yaml-file with the BIDS heuristics (default: ./heuristics/bidsmapper.yaml)', nargs='?', default='bidsmapper.yaml')
     args = parser.parse_args()
 
-    bidsmapperfile = bidstrainer(args.samplefolder, args.bidsfolder, args.bidsmapper)
+    bidsmapperfile = bidstrainer(samplefolder=args.samplefolder, bidsfolder=args.bidsfolder, bidsmapper=args.bidsmapper)
