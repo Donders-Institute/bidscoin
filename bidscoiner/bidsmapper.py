@@ -37,11 +37,13 @@ def built_dicommap(dicomfile, bidsmap, heuristics, automatic):
     modality = result['modality']
 
     # If nothing matched, ask the user for help
-    if modality == bids.unknownmodality and automatic:
-        answer = bids.askfor_mapping(heuristics['DICOM'], series, dicomfile)
-    if 'answer' in locals() and answer:                                                         # A catch for users canceling the question for help
-        series   = answer['series']
-        modality = answer['modality']
+    if modality == bids.unknownmodality:
+        print('Unknown modality found: ' + dicomfile)
+        if not automatic:
+            answer = bids.askfor_mapping(heuristics['DICOM'], series, dicomfile)
+        if 'answer' in locals() and answer:                                                     # A catch for users canceling the question for help
+            series   = answer['series']
+            modality = answer['modality']
 
     # Copy the filled-in attributes series over to the bidsmap
     if bidsmap['DICOM'][modality] is None:
