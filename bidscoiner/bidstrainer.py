@@ -183,7 +183,7 @@ def bidstrainer(bidsfolder, samplefolder='', bidsmapper='bidsmapper.yaml'):
     maximally filled-in bidsmapper_sample.yaml file.
 
     :param str bidsfolder:    The name of the BIDS root folder
-    :param str samplefolder:  The name of the root directory of the tree containing the sample files / training data. If left empty, an empty directory tree is then created in bidsfolder/code/samples
+    :param str samplefolder:  The name of the root directory of the tree containing the sample files / training data. If left empty, bidsfolder/code/samples is used or such an empty directory tree is created
     :param dict bidsmapper:   The name of the bidsmapper yaml-file
     :return:                  The name of the new (trained) bidsmapper yaml-file that is save in bidsfolder/code
     :rtype: str
@@ -192,10 +192,11 @@ def bidstrainer(bidsfolder, samplefolder='', bidsmapper='bidsmapper.yaml'):
     # Input checking
     if not samplefolder:
         samplefolder = os.path.join(bidsfolder,'code','samples')
-        print('Creating an empty samples directory tree: ' + samplefolder)
-        shutil.copytree(os.path.join(os.path.dirname(__file__),'..','heuristics','samples'), samplefolder)
-        print('Fill the directory tree with example DICOM files and re-run bidstrainer.py')
-        return
+        if not os.path.isdir(samplefolder):
+            print('Creating an empty samples directory tree: ' + samplefolder)
+            shutil.copytree(os.path.join(os.path.dirname(__file__),'..','heuristics','samples'), samplefolder)
+            print('Fill the directory tree with example DICOM files and re-run bidstrainer.py')
+            return
     bidsfolder   = os.path.abspath(os.path.expanduser(bidsfolder))
     samplefolder = os.path.abspath(os.path.expanduser(samplefolder))
 
@@ -272,7 +273,7 @@ if __name__ == "__main__":
                                      description=textwrap.dedent(__doc__),
                                      epilog='example:\n  bidsmapper.py /project/foo/bids\n  bidsmapper.py /project/foo/bids /project/foo/samples bidsmapper_dccn')
     parser.add_argument('bidsfolder',   help='The destination folder with the bids data structure')
-    parser.add_argument('samplefolder', help='The root folder of the directory tree containing the sample files / training data. If left empty, an empty directory tree is then created in bidsfolder/code/samples', nargs='?', default='')
+    parser.add_argument('samplefolder', help='The root folder of the directory tree containing the sample files / training data. If left empty, bidsfolder/code/samples is used or such an empty directory tree is created', nargs='?', default='')
     parser.add_argument('bidsmapper',   help='The bidsmapper yaml-file with the BIDS heuristics (default: ./heuristics/bidsmapper.yaml)', nargs='?', default='bidsmapper.yaml')
     args = parser.parse_args()
 
