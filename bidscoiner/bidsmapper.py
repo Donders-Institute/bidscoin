@@ -260,7 +260,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
-                                     epilog='example:\n  bidsmapper.py /project/foo/raw /project/foo/bids bidsmapper_dccn')
+                                     epilog='example:\n  bidsmapper.py /project/foo/raw /project/foo/bids\n  bidsmapper.py /project/foo/raw /project/foo/bids bidsmapper_dccn')
     parser.add_argument('rawfolder',        help='The source folder containing the raw data in sub-#/ses-#/series format')
     parser.add_argument('bidsfolder',       help='The destination folder with the bids data structure')
     parser.add_argument('bidsmapper',       help='The bidsmapper yaml-file with the BIDS heuristics (default: bidsfolder/code/bidsmapper_sample.yaml)', nargs='?', default='bidsmapper_sample.yaml')
