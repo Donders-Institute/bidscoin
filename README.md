@@ -8,7 +8,7 @@ BIDScoiner is a python toolkit that converts source-level (raw) MRI data-sets to
 
 Currently, BIDScoiner is fully functional, although only option (1) has been implemented. (NB: Options (2) and (3) are planned for future versions, such that (3) takes precedence over (2), which in turn takes precedence over (1)).
 
-Using BIDScoiner requires no programming knowledge, just some basic file handling and, possibly, minor text editing.
+BIDScoiner is a command-line tool that requires no programming knowledge to use, just some basic file handling and, possibly, minor text editing.
 
 ## The BIDScoiner workflow
 
@@ -124,3 +124,4 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
       bidscoiner.py /project/raw /project/bids
       bidscoiner.py -f /project/raw /project/bids -s sub-009 sub-030
 
+## The BIDScoiner bidsmap
