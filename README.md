@@ -10,7 +10,7 @@ Currently, BIDScoiner is fully functional, although only option (1) has been imp
 
 Using BIDScoiner requires no programming knowledge, just some basic file handling and, possibly, minor text editing.
 
-## Running BIDScoiner
+## The BIDScoiner workflow
 
 BIDScoiner will take your raw data as well as a [YAML](http://yaml.org/) file with the key-value mapping information as input, and returns a BIDS folder as output. Here is how to prepare the BIDScoiner inputs:
 
@@ -38,6 +38,8 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
 > bidsmapper.yaml -> bidstrainer.py  -> bidsmapper_sample.yaml (from template to a first mapping)
 > bidsmapper_sample.yaml -> bidsmapper.py -> bidsmap.yaml (user editable mapping)
 > bidsmap.yaml    -> bidscoiner.py  -> the nifti-converted BIDS datastructure (runs fully automatic)
+
+## The BIDScoiner tools
 
 ### The bidstrainer
 
