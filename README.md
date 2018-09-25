@@ -63,7 +63,7 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
       bidsmapper.py /project/foo/bids
       bidsmapper.py /project/foo/bids /project/foo/samples bidsmapper_dccn
 
-The bidstrainer reads the key information from sample files that are placed at the right location in a hierarchical folder structure
+The bidstrainer reads attributes from sample files that are placed by the user at the right location in a hierarchical folder structure. The full pathname is indicative for the BIDS modality and the lowest foldername signifies the BIDS suffix. Which attributes are read can be defined in a bidsmapper yaml file that serves as a template for the final bidsmap. In this way, a unique key-value mapping can be defined for each of the sample files.
       
 ### The bidsmapper
 
