@@ -63,6 +63,8 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
       bidsmapper.py /project/foo/bids
       bidsmapper.py /project/foo/bids /project/foo/samples bidsmapper_dccn
 
+The bidstrainer reads the key information from sample files that are placed at the right location in a hierarchical folder structure
+      
 ### The bidsmapper
 
     usage: bidsmapper.py [-h] [-a] rawfolder bidsfolder [bidsmapper]
