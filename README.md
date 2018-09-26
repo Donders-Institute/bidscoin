@@ -18,7 +18,7 @@ BIDScoiner will take your raw data as well as a YAML file with the key-value map
 
  1. **A minimally organised raw data folder**, following a  
  /raw/sub-[identifier]/ses-[identifier]/[seriesfolder]/[dicomfile]  
- structure. This data organization is how users receive their data from the (Siemens) scanners at the DCCN (NB: the ses-[identifier] sub-folder is optional and can be left out). 
+ structure. This data organization is how users receive their data from the (Siemens) scanners at the DCCN (NB: the ses-[identifier] sub-folder is optional and can be left out).
 
     If your data is not already organized in this way, you can use the *dicomsort.py* command-line utility to move your unordered dicom-files into a [seriesfolder] organization with the series folders being named [SeriesNumber]-[SeriesDescription].
  
@@ -136,7 +136,7 @@ The bidsmapper inspects all raw data folders of your dataset and saves the known
 
 The bidscoiner tool is the workhorse of the toolkit that will fully automatically convert your source-level (raw) MRI data-sets to BIDS organized data-sets. You can run this tool after all data is collected, or whenever new data has been added to the raw folder.
 
-After a successful run of bidscoiner, you can (and should) run the web-based [bidsvalidator](https://incf.github.io/bids-validator/) to check for inconsistencies or missing files in your bids data-set or use a [command-line version](https://github.com/INCF/bids-validator). For instance, if you have behavioural log-files you will find that the bidscoiner tool does not (yet) support converting these into BIDS compliant events.tsv files. Advanced users are encouraged to use the bidscoiner plug-in possibility and write their own log-file parser (undocumented feature, don't be afraid to ask for help).
+After a successful run of bidscoiner, you can (and should) run the web-based [bidsvalidator](https://incf.github.io/bids-validator/) to check for inconsistencies or missing files in your bids data-set or use a [command-line version](https://github.com/INCF/bids-validator). For instance, if you have behavioural log-files you will find that the bidscoiner tool does not (yet) support converting these into BIDS compliant *_events.tsv/json files. Advanced users are encouraged to use the bidscoiner plug-in possibility and write their own log-file parser (undocumented feature, don't be afraid to ask for help).
 
 NB: The provenance of the produced BIDS data-sets is stored in the bids/code/bidscoiner.log file. This file is also very useful for debugging / tracking down bidsmapping issues.
 
@@ -144,8 +144,16 @@ NB: The provenance of the produced BIDS data-sets is stored in the bids/code/bid
 
 The bidsmap.yaml file is a key-value store that contains all the mapping heuristics for converting the raw data files into BIDS. The bidsmap_template.yaml and the bidsmap_sample.yaml files can be seen as precursors of the bidsmap.yaml file and will not be explained separately. Put differently, they have parent-child relationships and only the differences will be mentioned where they exist.
 
-The bidsmap file consists of a header and 
+The bidsmap file consists of help-text, followed by several key-value mapping sections:
 
+ 1. General options
+    DICOM
+ 3. PAR
+ 4. P7
+ 5. Nifti
+ 6. FileSystem
+ 7. PlugIn
+ 
     # --------------------------------------------------------------------------------
     # Generic config file for bidsmapper with the default heuristics for identifying
     # the BIDS modalities and BIDS labels. Do not change/use this file but create a
