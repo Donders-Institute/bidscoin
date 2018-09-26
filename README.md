@@ -36,7 +36,7 @@ BIDScoiner will take your raw data as well as a YAML file with the key-value map
 
     <img src="./docs/workflow.png" alt="BIDScoiner workflow" width="600"/>
 
-    *BIDScoiner workflow. New users would start withthe bidstrainer, which output can be fed into the bidsmapper to produce the bidsmap.yaml file. This file can (and should) be inspected and, in case of incorrect mappings, have the user to add data samples and re-run the training procedure (dashed arrow)*
+    *BIDScoiner workflow. New users would start with the bidstrainer, which output can be fed into the bidsmapper to produce the bidsmap.yaml file. This file can (and should) be inspected and, in case of incorrect mappings, have the user to add training data samples and re-run the training procedure (dashed arrow)*
 
 Having an organized raw data folder and a correct bidsmap, the actual data-set conversion to BIDS can now be performed fully automatically by running the *bidscoiner.py* tool (see the workflow diagram and *the bidscoiner* section below).
 
@@ -54,19 +54,19 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
                     files / training data. Optional argument, if left empty,
                     bidsfolder/code/samples is used or such an empty directory
                     tree is created
-      bidsmapper    The bidsmapper yaml-file with the BIDS heuristics (optional
-                    argument, default: ./heuristics/bidsmapper.yaml)
+      bidsmap       The bidsmap yaml-file with the BIDS heuristics (optional
+                    argument, default: ./heuristics/bidsmap_template.yaml)
     
     optional arguments:
       -h, --help    show this help message and exit
     
     example:
       bidsmapper.py /project/foo/bids
-      bidsmapper.py /project/foo/bids /project/foo/samples bidsmapper_dccn
+      bidsmapper.py /project/foo/bids /project/foo/samples bidsmap_dccn
 
 The central idea of the bidstrainer is that you know your own scan protocol and can therefore point out which files should go where in the BIDS. In order to do so, you have to put sample files for each of the scan modalities / series in your protocol (e.g. T1, fMRI, etc) in the right folder of a semantic folder tree (named 'samples', see bidstrainer example below). If you run bidstrainer with just the name of your bidsfolder, bidstrainer will create this semantic folder tree for you in the *code* subfolder (if it is not already there). Generally, when placing your sample files, it will be fairly straightforward to find your way in this semantic folder tree, but in doubt you should have a look at the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf). Note that the deepest foldername in the tree denotes the BIDS suffix (e.g. 'T1w').
 
-If all sample files have been put in the right location, you can (re)run the bidstrainer to create a bidsmap YAML file for your study. How this works is that the bidstrainer will read a predefined set of (e.g. key dicom) attributes from your sample files that uniquely identify the particular scan sequence and, on the other, take the path-names of the sample files to infer the associated BIDS modality labels. In this way, a unique key-value mapping is defined that can be used as input for the bidsmapper tool (see next section). If this mapping is not unique (not likely but possible), or if you prefer to use more or other attributes than the predefined ones, you can (copy and) edit the bidsmapper.yaml file in the heuristics folder and use that as an additional input for the bidstrainer.
+If all sample files have been put in the right location, you can (re)run the bidstrainer to create a bidsmap YAML file for your study. How this works is that the bidstrainer will read a predefined set of (e.g. key dicom) attributes from your sample files that uniquely identify the particular scan sequence and, on the other, take the path-names of the sample files to infer the associated BIDS modality labels. In this way, a unique key-value mapping is defined that can be used as input for the bidsmapper tool (see next section). If this mapping is not unique (not likely but possible), or if you prefer to use more or other attributes than the predefined ones, you can (copy and) edit the bidsmap_template.yaml file in the heuristics folder and use that as an additional input for the bidstrainer.
 
 ![Bidstrainer example](./docs/sample_tree.png)
 *Bidstrainer example. The red arrow depicts a raw data sample (left file browser) that is put (copied over) into the right location in the semantic folder tree (right file browser)*
@@ -84,8 +84,8 @@ If all sample files have been put in the right location, you can (re)run the bid
       rawfolder        The source folder containing the raw data in
                        sub-#/ses-#/series format
       bidsfolder       The destination folder with the bids data structure
-      bidsmapper       The bidsmapper yaml-file with the BIDS heuristics (optional
-                       argument, default: bidsfolder/code/bidsmapper_sample.yaml)
+      bidsmap          The bidsmap yaml-file with the BIDS heuristics (optional
+                       argument, default: bidsfolder/code/bidsmap_sample.yaml)
     
     optional arguments:
       -h, --help       show this help message and exit
@@ -96,7 +96,7 @@ If all sample files have been put in the right location, you can (re)run the bid
       bidsmapper.py /project/foo/raw /project/foo/bids
       bidsmapper.py /project/foo/raw /project/foo/bids bidsmapper_dccn
 
-The bidsmapper inspects all raw data folders of your dataset and saves the known and unknown key-value mappings in a (study specific) bidsmap YAML file. You can consider it as a dry-run for how exactly bidscoiner will convert the raw data into BIDS folders. It is therefore advised to inspect the resulting bidsmap.yaml file to see if all scan series were recognized correctly with proper BIDS labels (for more details, see *The bidsmap YAML file* section). This can be the case if your bidstraining or the bidsmapper.yaml file that was provided to you was incomplete. If so, you should either get an updated bidsmapper.yaml file or redo the bidstraining with new sample files, rerun the bidstrainer and bidsmapper until you have a suitable bidsmap.yaml file. You can of course also directly edit the bidsmap.yaml file yourself, for instance by changing some of the automatically generated BIDS labels to your needs (e.g. task_label).
+The bidsmapper inspects all raw data folders of your dataset and saves the known and unknown key-value mappings in a (study specific) bidsmap YAML file. You can consider it as a dry-run for how exactly bidscoiner will convert the raw data into BIDS folders. It is therefore advised to inspect the resulting bidsmap.yaml file to see if all scan series were recognized correctly with proper BIDS labels (for more details, see *The bidsmap YAML file* section). This can be the case if your bidstraining or the bidsmap YAML file that was provided to you was incomplete. If so, you should either get an updated bidsmap YAML file or redo the bidstraining with new sample files, rerun the bidstrainer and bidsmapper until you have a suitable bidsmap.yaml file. You can of course also directly edit the bidsmap.yaml file yourself, for instance by changing some of the automatically generated BIDS labels to your needs (e.g. task_label).
 
 ### The bidscoiner
 
@@ -142,7 +142,7 @@ NB: The provenance of the produced BIDS data-sets is stored in the bids/code/bid
 
 ## The bidsmap YAML file
 
-The bidsmap.yaml file is a key-value store that contains all the mapping logic / heuristics for converting the raw data files into BIDS. The bidsmapper.yaml and the bidsmapper_sample.yaml files can be seen as precursors / templates of the bidsmap.yaml file and will not be explained separately. Put differently, they have parent-child relationships and only their differences will be mentioned.
+The bidsmap.yaml file is a key-value store that contains all the mapping logic / heuristics for converting the raw data files into BIDS. The bidsmap_template.yaml and the bidsmap_sample.yaml files can be seen as precursors / templates of the bidsmap.yaml file and will not be explained separately. Put differently, they have parent-child relationships and only their differences will be mentioned.
 
 The bidsmap.yaml file consists of a header and 
 
