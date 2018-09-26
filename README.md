@@ -146,15 +146,23 @@ The bidsmap.yaml file is a key-value store that contains all the mapping heurist
 
 The bidsmap file consists of help-text, followed by several key-value mapping sections (see the reference bidsmap_template below):
 
- 1. **Options**. A list of general options that
- 2. **DICOM**.
- 3. **PAR**.
- 4. **P7**.
- 5. **Nifti**.
- 6. **FileSystem**.
- 7. **PlugIn**. Name of the python plug-in function. Supported but this is an experimental (untested) feature
+ - **Options**. A list of general options that can be passed to the bidscoiner and its plug-ins
+ - **DICOM**
+   - participant_label
+   - session_label
+   - anat
+   - func
+   - dwi
+   - fmap
+   - beh
+   - extra_data
+ - **PAR**.
+ - **P7**.
+ - **Nifti**.
+ - **FileSystem**.
+ - **PlugIn**. Name of the python plug-in function. Supported but this is an experimental (untested) feature
 
-### The bidsmap_template:
+### The bidsmap_template
 
     # --------------------------------------------------------------------------------
     # Generic config file for bidsmapper with the default heuristics for identifying
