@@ -22,7 +22,7 @@ BIDScoiner will take your raw data as well as a YAML file with the key-value map
 
     If your data is not already organized in this way, you can use the *dicomsort.py* command-line utility to move your unordered dicom-files into a [seriesfolder] organization with the series folders being named [SeriesNumber]-[SeriesDescription].
  
-    Another command-line utility that can be helpful in organizing your raw data is *rawmapper.py*. This utility can show you the overview (map) of all the values of dicom-fields of interest in your data-set and, optionally, use these fields to rename your raw data sub-folders (this can be handy e.g. if you manually entered subject-identifiers at the scanner console and you want to use these to rename your subject folders).
+    Another command-line utility that can be helpful in organizing your raw data is *rawmapper.py*. This utility can show you the overview (map) of all the values of dicom-fields of interest in your data-set and, optionally, use these fields to rename your raw data sub-folders (this can be handy e.g. if you manually entered subject-identifiers as "Additional info" at the scanner console and you want to use these to rename your subject folders).
  
     If these utilities do not satisfy your needs, then have a look at this more elaborate [reorganize_dicom_files](https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md) tool.
 
@@ -142,7 +142,7 @@ NB: The provenance of the produced BIDS data-sets is stored in the bids/code/bid
 
 ## The bidsmap YAML file
 
-The bidsmap.yaml file is a key-value store that contains all the mapping logic / heuristics for converting the raw data files into BIDS. The bidsmap_template.yaml and the bidsmap_sample.yaml files can be seen as precursors / templates of the bidsmap.yaml file and will not be explained separately. Put differently, they have parent-child relationships and only their differences will be mentioned.
+The bidsmap.yaml file is a key-value store that contains all the mapping logic / heuristics for converting the raw data files into BIDS. The bidsmap_template.yaml and the bidsmap_sample.yaml files can be seen as precursors of the bidsmap.yaml file and will not be explained separately. Put differently, they have parent-child relationships and only their differences will be mentioned.
 
 The bidsmap.yaml file consists of a header and 
 
