@@ -44,9 +44,9 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
 
 ### The bidstrainer
 
-    usage: bidstrainer.py [-h] bidsfolder [samplefolder] [bidsmapper]
+    usage: bidstrainer.py [-h] bidsfolder [samplefolder] [bidsmap]
     
-    Takes example files from the samples folder to create a bidsmapper config file
+    Takes example files from the samples folder to create a bidsmap config file
     
     positional arguments:
       bidsfolder    The destination folder with the bids data structure
@@ -61,8 +61,8 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
       -h, --help    show this help message and exit
     
     example:
-      bidsmapper.py /project/foo/bids
-      bidsmapper.py /project/foo/bids /project/foo/samples bidsmap_dccn
+      bidstrainer.py /project/foo/bids
+      bidstrainer.py /project/foo/bids /project/foo/samples bidsmap_custom
 
 The central idea of the bidstrainer is that you know your own scan protocol and can therefore point out which files should go where in the BIDS. In order to do so, you have to put sample files for each of the scan modalities / series in your protocol (e.g. T1, fMRI, etc) in the right folder of a semantic folder tree (named 'samples', see bidstrainer example below). If you run bidstrainer with just the name of your bidsfolder, bidstrainer will create this semantic folder tree for you in the *code* subfolder (if it is not already there). Generally, when placing your sample files, it will be fairly straightforward to find your way in this semantic folder tree, but in doubt you should have a look at the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf). Note that the deepest foldername in the tree denotes the BIDS suffix (e.g. 'T1w').
 
@@ -73,10 +73,10 @@ If all sample files have been put in the right location, you can (re)run the bid
 
 ### The bidsmapper
 
-    usage: bidsmapper.py [-h] [-a] rawfolder bidsfolder [bidsmapper]
+    usage: bidsmapper.py [-h] [-a] rawfolder bidsfolder [bidsmap]
     
     Creates a bidsmap.yaml config file that maps the information from the data to the
-    BIDS modalities and BIDS labels (see also [bidsmapper.yaml] and [bidstrainer.py]).
+    BIDS modalities and BIDS labels (see also [bidsmap_sample.yaml] and [bidstrainer.py]).
     You can edit the bidsmap file before passing it to [bidscoiner.py] which uses it
     to cast the datasets into BIDS folders
     
