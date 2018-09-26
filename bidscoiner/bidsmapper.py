@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
 Creates a bidsmap.yaml config file that maps the information from the data to the
-BIDS modalities and BIDS labels (see also [bidsmapper.yaml] and [bidsmapper.py]).
+BIDS modalities and BIDS labels (see also [bidsmapper.yaml] and [bidstrainer.py]).
 You can edit the bidsmap file before passing it to [bidscoiner.py] which uses it
-to cast the datasets into the BIDS folder structure
+to cast the datasets into BIDS folders
 """
 
 # Global imports (specific modules may be imported when needed)

@@ -30,7 +30,7 @@ BIDScoiner will take your raw data as well as a [YAML](http://yaml.org/) file wi
 
     If you have run the bidstrainer or, e.g. if you work in an institute where someone else (i.e. your MR physicist ;-)) has already performed the training procedure, you can use the training data to map all the files in your data-set with the *bidsmapper.py* tool (see *the bidsmapper* section below).
 
-    The output of the bidsmapper is the desired bidsmap that you can inspect to see if your raw data will be correctly mapped onto BIDS. If this is not the case you can go back to the training procedure and change or add new samples, and rerun the bidsmapper until you have a correct bidsmap. Alternatively, or in addition to, you can directly edit the bidsmap yourself (this requires more expert knowledge but can also be more powerful). 
+    The output of the bidsmapper is the desired bidsmap that you can inspect to see if your raw data will be correctly mapped onto BIDS. If this is not the case you can go back to the training procedure and change or add new samples, and rerun the bidstrainer and bidsmapper until you have a suitable bidsmap. Alternatively, or in addition to, you can directly edit the bidsmap yourself (this requires more expert knowledge but can also be more powerful). 
       
 Having an organized raw data folder and a correct bidsmap, the actual data-set conversion to BIDS can now be performed fully automatically by running the *bidscoiner.py* tool (see the workflow diagram and *the bidscoiner* section below).
 
@@ -63,7 +63,7 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
       bidsmapper.py /project/foo/bids
       bidsmapper.py /project/foo/bids /project/foo/samples bidsmapper_dccn
 
-The central idea of the bidstrainer is that you know your own scan protocol and can therefore point out which files should go where in the BIDS. In order to do so, you have to put sample files for each of the scan modalities / series in your protocol (e.g. T1, fMRI, etc) in the right folder of a semantic folder tree (see bidstrainer example below). If you run bidstrainer with just the name of your bidsfolder, bidstrainer will create this semantic folder tree for you in the *code* subfolder (if it is not already there). Generally, when placing your sample files, it will be fairly straightforward to find your way in this semantic folder tree, but in doubt you should have a look at the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf). Note that the deepest foldername in the tree denotes the BIDS suffix (e.g. 'T1w').
+The central idea of the bidstrainer is that you know your own scan protocol and can therefore point out which files should go where in the BIDS. In order to do so, you have to put sample files for each of the scan modalities / series in your protocol (e.g. T1, fMRI, etc) in the right folder of a semantic folder tree (named 'samples', see bidstrainer example below). If you run bidstrainer with just the name of your bidsfolder, bidstrainer will create this semantic folder tree for you in the *code* subfolder (if it is not already there). Generally, when placing your sample files, it will be fairly straightforward to find your way in this semantic folder tree, but in doubt you should have a look at the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf). Note that the deepest foldername in the tree denotes the BIDS suffix (e.g. 'T1w').
 
 If all sample files have been put in the right location, you can (re)run the bidstrainer to create a bidsmap YAML file for your study. How this works is that the bidstrainer will read a predefined set of (e.g. key dicom) attributes from your sample files that uniquely identify the particular scan sequence and, on the other, take the path-names of the sample files to infer the associated BIDS modality labels. In this way, a unique key-value mapping is defined that can be used as input for the bidsmapper tool (see next section). If this mapping is not unique (not likely but possible), or if you prefer to use more or other attributes than the predefined ones, you can (copy and) edit the bidsmapper.yaml file in the heuristics folder and use that as an additional input for the bidstrainer.
 
@@ -75,9 +75,9 @@ If all sample files have been put in the right location, you can (re)run the bid
     usage: bidsmapper.py [-h] [-a] rawfolder bidsfolder [bidsmapper]
     
     Creates a bidsmap.yaml config file that maps the information from the data to the
-    BIDS modalities and BIDS labels (see also [bidsmapper.yaml] and [bidsmapper.py]).
+    BIDS modalities and BIDS labels (see also [bidsmapper.yaml] and [bidstrainer.py]).
     You can edit the bidsmap file before passing it to [bidscoiner.py] which uses it
-    to cast the datasets into the BIDS folder structure
+    to cast the datasets into BIDS folders
     
     positional arguments:
       rawfolder        The source folder containing the raw data in
@@ -94,6 +94,8 @@ If all sample files have been put in the right location, you can (re)run the bid
     example:
       bidsmapper.py /project/foo/raw /project/foo/bids
       bidsmapper.py /project/foo/raw /project/foo/bids bidsmapper_dccn
+
+The bidsmapper inspects all raw data folders of your dataset and saves the known and unknown key-value mappings in a (study specific) bidsmap YAML file. You can consider it as a dry-run for how exactly bidscoiner will convert the raw data into BIDS folders. It is therefore advised to inspect the resulting bidsmap.yaml file to see if all scan series were recognized correctly with proper BIDS labels (for more details, see *The bidsmap yaml file* section). If this is not the case, you can change or add missing sample files in the semantic folder tree and rerun the bidstrainer and bidsmapper until you have a suitable bidsmap.yaml file. You can also directly edit the bidsmap yourself, for instance by changing some of the automatically generated BIDS labels to your needs (e.g. task_label).
 
 ### The bidscoiner
 
