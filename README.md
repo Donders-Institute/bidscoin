@@ -36,7 +36,7 @@ BIDScoiner will take your raw data as well as a YAML file with the key-value map
       
 Having an organized raw data folder and a correct bidsmap, the actual data-set conversion to BIDS can now be performed fully automatically by running the *bidscoiner.py* tool (see the workflow diagram and *the bidscoiner* section below).
 
-![BIDScoiner workflow](https://github.com/Donders-Institute/bidscoiner/blob/master/docs/workflow.png)
+![BIDScoiner workflow](./docs/workflow.png)
 
 ## The BIDScoiner tools
 
