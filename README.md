@@ -36,7 +36,7 @@ BIDScoiner will take your raw data as well as a YAML file with the key-value map
 
     <img src="./docs/workflow.png" alt="BIDScoiner workflow" width="400"/>
 
-    *BIDScoiner workflow. New users would start with the bidstrainer, which output can be fed into the bidsmapper to produce the bidsmap.yaml file. This file can (and should) be inspected and, in case of incorrect mappings, have the user to add training samples and re-run the training procedure (dashed arrowline)*
+    *BIDScoiner workflow. New users would start with the bidstrainer, which output can be fed into the bidsmapper to produce the bidsmap.yaml file. This file can (and should) be inspected and, in case of incorrect mappings, have the user to add training samples and re-run the training procedure (dashed arrowlines)*
 
 Having an organized raw data folder and a correct bidsmap, the actual data-set conversion to BIDS can now be performed fully automatically by running the *bidscoiner.py* tool (see the workflow diagram and *the bidscoiner* section below).
 
