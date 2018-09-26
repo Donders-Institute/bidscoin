@@ -154,7 +154,7 @@ The bidsmap file consists of help-text, followed by several key-value mapping se
  6. **FileSystem**.
  7. **PlugIn**. Name of the python plug-in function. Supported but this is an experimental (untested) feature
 
-For reference, the bidsmap_template.yaml file:
+### The bidsmap_template:
 
     # --------------------------------------------------------------------------------
     # Generic config file for bidsmapper with the default heuristics for identifying
