@@ -63,7 +63,9 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
       bidsmapper.py /project/foo/bids
       bidsmapper.py /project/foo/bids /project/foo/samples bidsmapper_dccn
 
-The bidstrainer reads attributes from sample files that are placed by the user at the right location in a hierarchical folder structure. The full pathname is indicative for the BIDS modality and the deepest foldername signifies the BIDS suffix. Which exact attributes are read can be defined in a bidsmapper yaml file that serves as a template for the final bidsmap (but the default template will probably work fine). In this way, a unique key-value mapping can be defined for each of the sample files.
+The central idea of the bidstrainer is that you know your own scan protocol and can therefore point out which files should go where in the BIDS. In order to do so, you have to place sample files for each of the scan modalities / series in your protocol (e.g. T1, fMRI, etc) in the right folder of a semantic folder tree. If you run bidstrainer with just the name of your bidsfolder, bidstrainer will create this semantic folder tree for you in the *code* subfolder (if it is not already there). Generally, when placing your sample files, it will be fairly straightforward to find your way in this semantic folder tree, but in doubt you should have a look at the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf). Note that the deepest foldername in the tree signifies the BIDS suffix.
+
+If all the sample files has been placed in the right location, you can run the bidstrainer (once more) to create a bidsmap YAML file for your study. How this works is that the bidstrainer will read the (e.g. key dicom) attributes from your sample files that uniquely identify the scan sequence and, on the other, that the location / pathname of the file is informative about the associated BIDS modality (with ). The set of attributes is defined in a yaml template file, i.e. in the bidsmapper (the default will probably work fine, but you can define your own). In this way, a unique key-value mapping can be defined by placing a sample files in the folder structure for all the different scan sequences in the dataset.
 
 > TODO: insert bidstrainer folder structure here
 
@@ -128,4 +130,4 @@ The bidstrainer reads attributes from sample files that are placed by the user a
       bidscoiner.py /project/raw /project/bids
       bidscoiner.py -f /project/raw /project/bids -s sub-009 sub-030
 
-## The BIDScoiner bidsmap
+## The bidsmap yaml file
