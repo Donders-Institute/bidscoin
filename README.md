@@ -147,13 +147,16 @@ The bidsmap.yaml file is a key-value store that contains all the mapping heurist
 The bidsmap file consists of help-text, followed by several key-value mapping sections:
 
  1. General options
+ 
     DICOM
+
  3. PAR
  4. P7
  5. Nifti
  6. FileSystem
  7. PlugIn
- 
+
+
     # --------------------------------------------------------------------------------
     # Generic config file for bidsmapper with the default heuristics for identifying
     # the BIDS modalities and BIDS labels. Do not change/use this file but create a
