@@ -144,18 +144,17 @@ NB: The provenance of the produced BIDS data-sets is stored in the bids/code/bid
 
 The bidsmap.yaml file is a key-value store that contains all the mapping heuristics for converting the raw data files into BIDS. The bidsmap_template.yaml and the bidsmap_sample.yaml files can be seen as precursors of the bidsmap.yaml file and will not be explained separately. Put differently, they have parent-child relationships and only the differences will be mentioned where they exist.
 
-The bidsmap file consists of help-text, followed by several key-value mapping sections:
+The bidsmap file consists of help-text, followed by several key-value mapping sections (see the reference bidsmap_template below):
 
- 1. General options
-    DICOM
+ 1. **Options**. A list of general options that
+ 2. **DICOM**.
+ 3. **PAR**.
+ 4. **P7**.
+ 5. **Nifti**.
+ 6. **FileSystem**.
+ 7. **PlugIn**. Name of the python plug-in function. Supported but this is an experimental (untested) feature
 
- 3. PAR
- 4. P7
- 5. Nifti
- 6. FileSystem
- 7. PlugIn
-
-For reference the bidsmap_template.yaml file:
+For reference, the bidsmap_template.yaml file:
 
     # --------------------------------------------------------------------------------
     # Generic config file for bidsmapper with the default heuristics for identifying
