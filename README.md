@@ -156,6 +156,7 @@ The bidsmap file consists of help-text, followed by several key-value mapping se
  6. FileSystem
  7. PlugIn
 
+For reference the bidsmap_template.yaml file:
 
     # --------------------------------------------------------------------------------
     # Generic config file for bidsmapper with the default heuristics for identifying
