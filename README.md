@@ -95,7 +95,7 @@ If all sample files have been put in the right location, you can (re)run the bid
       bidsmapper.py /project/foo/raw /project/foo/bids
       bidsmapper.py /project/foo/raw /project/foo/bids bidsmapper_dccn
 
-The bidsmapper inspects all raw data folders of your dataset and saves the known and unknown key-value mappings in a (study specific) bidsmap YAML file. You can consider it as a dry-run for how exactly bidscoiner will convert the raw data into BIDS folders. It is therefore advised to inspect the resulting bidsmap.yaml file to see if all scan series were recognized correctly with proper BIDS labels (for more details, see *The bidsmap yaml file* section). If this is not the case, you can change or add missing sample files in the semantic folder tree and rerun the bidstrainer and bidsmapper until you have a suitable bidsmap.yaml file. You can also directly edit the bidsmap yourself, for instance by changing some of the automatically generated BIDS labels to your needs (e.g. task_label).
+The bidsmapper inspects all raw data folders of your dataset and saves the known and unknown key-value mappings in a (study specific) bidsmap YAML file. You can consider it as a dry-run for how exactly bidscoiner will convert the raw data into BIDS folders. It is therefore advised to inspect the resulting bidsmap.yaml file to see if all scan series were recognized correctly with proper BIDS labels (for more details, see *The bidsmap yaml file* section). This can be the case if your bidstraining or the bidsmapper.yaml file that was provided to you was incomplete. If so, you should either get an updated bidsmapper.yaml file or redo the bidstraining with new sample files, rerun the bidstrainer and bidsmapper until you have a suitable bidsmap.yaml file. You can of course also directly edit the bidsmap.yaml file yourself, for instance by changing some of the automatically generated BIDS labels to your needs (e.g. task_label).
 
 ### The bidscoiner
 
@@ -133,4 +133,14 @@ The bidsmapper inspects all raw data folders of your dataset and saves the known
       bidscoiner.py /project/raw /project/bids
       bidscoiner.py -f /project/raw /project/bids -s sub-009 sub-030
 
+The bidscoiner tool is the workhorse of the toolkit that will fully automatically convert your source-level (raw) MRI data-sets to BIDS organized data-sets. You can run this tool after all data is collected, or repeatedly as new data is added to the raw folder.
+
+After a successful run of bidscoiner, you can run the web-based [bidsvalidator](https://incf.github.io/bids-validator/) to check for inconsistencies or missing files in your bids data-set or use a [command-line version](https://github.com/INCF/bids-validator).
+
+NB: The provenance of the produced BIDS data-sets is stored in the bids/code/bidscoiner.log file. This file is also very useful for debugging / tracking down bidsmapping issues.
+
 ## The bidsmap yaml file
+
+The bidsmap.yaml file is a key-value store that contains all the mapping logic / heuristics for converting the raw data files into BIDS. The bidsmapper.yaml and the bidsmapper_sample.yaml files can be seen as precursors / templates of the bidsmap.yaml file and will not be explained separately. Put differently, they have parent-child relationships and only their differences will be mentioned.
+
+The bidsmap.yaml file consists of a header and 
