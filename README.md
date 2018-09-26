@@ -1,6 +1,6 @@
 # BIDScoiner
 
-BIDScoiner is a python toolkit that converts source-level (raw) MRI data-sets to nifti data-sets that are organized according to the Brain Imaging Data Standard, a.k.a. [BIDS](bids.neuroimaging.io). Rather then depending on logic, BIDScoiner uses a straightforward key-value approach to map the source data onto BIDS. The key values that can be used in BIDScoiner to map ("coin") the data are:
+BIDScoiner is a python toolkit that converts ("coins") source-level (raw) MRI data-sets to nifti data-sets that are organized according to the Brain Imaging Data Standard, a.k.a. [BIDS](bids.neuroimaging.io). Rather then depending on logic, BIDScoiner uses a straightforward key-value approach to map the source data onto BIDS. The key values that can be used in BIDScoiner to map the data are:
 
  1. Information in the MRI header files (DICOM, PAR/REC or .7 format, e.g. SeriesDescription)
  2. Information from nifti headers (e.g. image dimensionality)
@@ -28,15 +28,15 @@ BIDScoiner will take your raw data as well as a YAML file with the key-value map
 
  2. **A YAML file with the key-value mapping information**, i.e. a bidsmap.  There are two ways to create such a bidsmap.
 
-    The first is if you are a new user and are working from scratch. In this case you would start with the *bidstrainer.py* tool (see *the bidstrainer* section below).
+    The first is if you are a new user and are working from scratch. In this case you would start with the *bidstrainer.py* tool (see the *BIDScoiner workflow* diagram and *the bidstrainer* section below).
 
     If you have run the bidstrainer or, e.g. if you work in an institute where someone else (i.e. your MR physicist ;-)) has already performed the training procedure, you can use the training data to map all the files in your data-set with the *bidsmapper.py* tool (see *the bidsmapper* section below).
 
-    The output of the bidsmapper is the desired bidsmap that you can inspect to see if your raw data will be correctly mapped onto BIDS. If this is not the case you can go back to the training procedure and change or add new samples, and rerun the bidstrainer and bidsmapper until you have a suitable bidsmap. Alternatively, or in addition to, you can directly edit the bidsmap yourself (this requires more expert knowledge but can also be more powerful). 
+    The output of the bidsmapper is the complete bidsmap that you can inspect to see if your raw data will be correctly mapped onto BIDS. If this is not the case you can go back to the training procedure and change or add new samples, and rerun the bidstrainer and bidsmapper until you have a suitable bidsmap. Alternatively, or in addition to, you can directly edit the bidsmap yourself (this requires more expert knowledge but can also be more powerful). 
 
     <img src="./docs/workflow.png" alt="BIDScoiner workflow" width="600"/>
 
-    *Bidscoiner workflow. New users would start withthe bidstrainer, which output can be fed into the bidsmapper to produce the bidsmap.yaml file. This file can (and should) be inspected and, in case of incorrect mappings, have the user to add data samples and re-run the training procedure (dashed arrow)*
+    *BIDScoiner workflow. New users would start withthe bidstrainer, which output can be fed into the bidsmapper to produce the bidsmap.yaml file. This file can (and should) be inspected and, in case of incorrect mappings, have the user to add data samples and re-run the training procedure (dashed arrow)*
 
 Having an organized raw data folder and a correct bidsmap, the actual data-set conversion to BIDS can now be performed fully automatically by running the *bidscoiner.py* tool (see the workflow diagram and *the bidscoiner* section below).
 
