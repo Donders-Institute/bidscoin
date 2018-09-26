@@ -1,6 +1,6 @@
 # BIDScoiner
 
-BIDScoiner is a python toolkit that converts ("coins") source-level (raw) MRI data-sets to nifti data-sets that are organized according to the Brain Imaging Data Standard, a.k.a. [BIDS](bids.neuroimaging.io). Rather then depending on logic, BIDScoiner uses a simple (but powerful) key-value approach to map the source data onto BIDS. The key values that can be used in BIDScoiner to map the data are:
+BIDScoiner is a python toolkit that converts ("coins") source-level (raw) MRI data-sets to nifti data-sets that are organized according to the Brain Imaging Data Standard, a.k.a. [BIDS](http://bids.neuroimaging.io). Rather then depending on logic, BIDScoiner uses a simple (but powerful) key-value approach to map the source data onto BIDS. The key values that can be used in BIDScoiner to map the data are:
 
  1. Information in the MRI header files (DICOM, PAR/REC or .7 format, e.g. SeriesDescription)
  2. Information from nifti headers (e.g. image dimensionality)
@@ -36,7 +36,7 @@ BIDScoiner will take your raw data as well as a YAML file with the key-value map
 
     <img src="./docs/workflow.png" alt="BIDScoiner workflow" width="400"/>
 
-    *BIDScoiner workflow. New users would start with the bidstrainer, which output can be fed into the bidsmapper to produce the bidsmap.yaml file. This file can (and should) be inspected and, in case of incorrect mappings, have the user to add raw training samples and re-run the training procedure (dashed arrowlines)*
+    *BIDScoiner workflow. New users would start with the bidstrainer, which output can be fed into the bidsmapper to produce the bidsmap.yaml file. This file can (and should) be inspected and, in case of incorrect mappings, inform the user to add raw training samples and re-run the training procedure (dashed arrowlines)*
 
 Having an organized raw data folder and a correct bidsmap, the actual data-set conversion to BIDS can now be performed fully automatically by running the *bidscoiner.py* tool (see the workflow diagram and *the bidscoiner* section below).
 
@@ -134,17 +134,17 @@ The bidsmapper inspects all raw data folders of your dataset and saves the known
       bidscoiner.py /project/raw /project/bids
       bidscoiner.py -f /project/raw /project/bids -s sub-009 sub-030
 
-The bidscoiner tool is the workhorse of the toolkit that will fully automatically convert your source-level (raw) MRI data-sets to BIDS organized data-sets. You can run this tool after all data is collected, or repeatedly as new data is added to the raw folder.
+The bidscoiner tool is the workhorse of the toolkit that will fully automatically convert your source-level (raw) MRI data-sets to BIDS organized data-sets. You can run this tool after all data is collected, or whenever new data has been added to the raw folder.
 
-After a successful run of bidscoiner, you can (and should) run the web-based [bidsvalidator](https://incf.github.io/bids-validator/) to check for inconsistencies or missing files in your bids data-set or use a [command-line version](https://github.com/INCF/bids-validator).
+After a successful run of bidscoiner, you can (and should) run the web-based [bidsvalidator](https://incf.github.io/bids-validator/) to check for inconsistencies or missing files in your bids data-set or use a [command-line version](https://github.com/INCF/bids-validator). For instance, if you have behavioural log-files you will find that the bidscoiner tool does not (yet) support converting these into BIDS compliant events.tsv files. Advanced users are encouraged to use the bidscoiner plug-in possibility and write their own log-file parser (undocumented feature, don't be afraid to ask for help).
 
 NB: The provenance of the produced BIDS data-sets is stored in the bids/code/bidscoiner.log file. This file is also very useful for debugging / tracking down bidsmapping issues.
 
 ## The bidsmap YAML file
 
-The bidsmap.yaml file is a key-value store that contains all the mapping logic / heuristics for converting the raw data files into BIDS. The bidsmap_template.yaml and the bidsmap_sample.yaml files can be seen as precursors of the bidsmap.yaml file and will not be explained separately. Put differently, they have parent-child relationships and only their differences will be mentioned.
+The bidsmap.yaml file is a key-value store that contains all the mapping heuristics for converting the raw data files into BIDS. The bidsmap_template.yaml and the bidsmap_sample.yaml files can be seen as precursors of the bidsmap.yaml file and will not be explained separately. Put differently, they have parent-child relationships and only the differences will be mentioned where they exist.
 
-The bidsmap.yaml file consists of a header and 
+The bidsmap file consists of a header and 
 
     # --------------------------------------------------------------------------------
     # Generic config file for bidsmapper with the default heuristics for identifying
