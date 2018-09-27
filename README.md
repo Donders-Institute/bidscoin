@@ -68,7 +68,7 @@ The central idea of the bidstrainer is that you know your own scan protocol and 
 If all sample files have been put in the appropriate location, you can (re)run the bidstrainer to create a bidsmap YAML file for your study. How this works is that the bidstrainer will read a predefined set of (e.g. key dicom) attributes from your sample files that uniquely identify the particular scan sequence and, on the other, take the path-names of the sample files to infer the associated BIDS modality labels. In this way, a unique key-value mapping is defined that can be used as input for the bidsmapper tool (see next section). If this mapping is not unique (not likely but possible), or if you prefer to use more or other attributes than the predefined ones, you can (copy and) edit the bidsmap_template.yaml file in the heuristics folder and use that as an additional input for the bidstrainer.
 
 ![Bidstrainer example](./docs/sample_tree.png)
-*Bidstrainer example. The red arrow depicts a raw data sample (left file browser) that is put (copied over) to the right location in the semantic folder tree (right file browser)*
+*Bidstrainer example. The red arrow depicts a raw data sample (left file browser) that is put (copied over) to the appropriate location in the semantic folder tree (right file browser)*
 
 ### The bidsmapper
 
