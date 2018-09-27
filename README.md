@@ -151,6 +151,12 @@ The bidsmap file consists of help-text, followed by several key-value mapping se
    - session_label
    - anat
      - attributes
+     - acq_label
+     - rec_label
+     - run_index
+     - mod_label
+     - modality_label
+     - ce_label
    - func
    - dwi
    - fmap
