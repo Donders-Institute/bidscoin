@@ -60,9 +60,9 @@ def sortsessions(rawfolder, subjectid='', sessionid='', pattern='.*\.(IMA|dcm)$'
     """
 
     if subjectid:
-        for subfolder in bids.lsdirs(os.path.join(rawfolder, subjectid + '*')):
+        for subfolder in bids.lsdirs(rawfolder, subjectid + '*'):
             if sessionid:
-                for sesfolder in bids.lsdirs(os.path.join(subfolder, sessionid + '*')):
+                for sesfolder in bids.lsdirs(subfolder, sessionid + '*'):
                     sortsession(sesfolder, pattern)
             else:
                 sortsession(subfolder, pattern)
@@ -78,10 +78,10 @@ if __name__ == "__main__":
     import textwrap
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
-                                     epilog='examples:\n  rawmapper.py -r /project/3022026.01/raw\n  rawmapper.py -d AcquisitionDate /project/3022026.01/raw\n ')
+                                     epilog='examples:\n  dicomsort.py /project/3022026.01/raw\n  dicomsort.py /project/3022026.01/raw --subjectid sub\n  dicomsort.py /project/3022026.01/raw --subjectid sub --sessionid ses')
     parser.add_argument('rawfolder',   help='The root folder containing the source [sub/][ses/]dicomfiles')
-    parser.add_argument('--subjectid', help='The prefix of the subject folders in rawfolder (empty value means no recursive search)', default='')
-    parser.add_argument('--sessionid', help='The prefix of the session folders in the subject folder (empty value means no recursive search)', default='')
+    parser.add_argument('--subjectid', help='The prefix of the subject folders in rawfolder to search in (e.g. "sub")', default='')
+    parser.add_argument('--sessionid', help='The prefix of the session folders in the subject folder to search in (e.g. "ses")', default='')
     parser.add_argument('--pattern',   help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')
     args = parser.parse_args()
 
