@@ -61,7 +61,9 @@ def lsdirs(folder, wildcard='*'):
     :rtype: iterable
     """
 
-    return [fname for fname in sorted(glob.glob(os.path.join(folder, wildcard))) if os.path.isdir(fname)]
+    if wildcard:
+        folder = os.path.join(folder, wildcard)
+    return [fname for fname in sorted(glob.glob(folder)) if os.path.isdir(fname)]
 
 
 def is_dicomfile(file):
