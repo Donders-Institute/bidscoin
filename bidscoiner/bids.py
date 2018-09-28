@@ -242,9 +242,9 @@ def get_niftifile(folder):
 
 def get_heuristics(yamlfile, folder=None):
     """
-    Read the heuristics from the bidsmapper yaml-file
+    Read the heuristics from the bidsmap yaml-file
 
-    :param str yamlfile: The full pathname of the bidsmapper yaml-file
+    :param str yamlfile: The full pathname of the bidsmap yaml-file
     :param str folder:   Searches in the ./heuristics folder if folder=None
     :return:             Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     :rtype: ruamel_yaml.comments.CommentedMap
@@ -257,13 +257,13 @@ def get_heuristics(yamlfile, folder=None):
     if not os.path.splitext(yamlfile)[1]:           # Add a standard file-extension if needed
         yamlfile = yamlfile + '.yaml'
 
-    if os.path.basename(yamlfile) == yamlfile:      # Get the full paths to the bidsmapper yaml-file
+    if os.path.basename(yamlfile) == yamlfile:      # Get the full paths to the bidsmap yaml-file
         yamlfile = os.path.join(folder, yamlfile)
         print('Using: ' + os.path.abspath(yamlfile))
 
     yamlfile = os.path.abspath(os.path.expanduser(yamlfile))
 
-    # Read the heuristics from the bidsmapper file
+    # Read the heuristics from the bidsmap file
     with open(yamlfile, 'r') as stream:
         heuristics = yaml.load(stream)
 
@@ -728,15 +728,15 @@ def askfor_mapping(heuristics, series, filename=''):
     return None # {'modality': modality, 'series': series}
 
 
-def askfor_append(modality, series, bidsmapperfile):
+def askfor_append(modality, series, bidsmapfile):
     """
-    Ask the user to add the labelled series to their bidsmapper yaml-file or send it to a central database
+    Ask the user to add the labelled series to their bidsmap yaml-file or send it to a central database
     WIP!!!
 
-    :param str modality:       Name of the BIDS modality
-    :param dict series:        Dictionary with BIDS labels and attributes
-    :param str bidsmapperfile: The full-path name of the bidsmapper yaml-file to which the series should be saved
-    :return:                   Nothing
+    :param str modality:    Name of the BIDS modality
+    :param dict series:     Dictionary with BIDS labels and attributes
+    :param str bidsmapfile: The full-path name of the bidsmap yaml-file to which the series should be saved
+    :return:                Nothing
     :rtype: NoneType
     """
 

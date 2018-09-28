@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Creates a bidsmap.yaml config file that maps the information from the data to the
-BIDS modalities and BIDS labels (see also [bidsmapper.yaml] and [bidstrainer.py]).
+BIDS modalities and BIDS labels (see also [bidsmap_template.yaml] and [bidstrainer.py]).
 You can edit the bidsmap file before passing it to [bidscoiner.py] which uses it
 to cast the datasets into BIDS folders
 """
@@ -48,7 +48,7 @@ def built_dicommap(dicomfile, bidsmap, heuristics, automatic):
     # Copy the filled-in attributes series over to the bidsmap
     if bidsmap['DICOM'][modality] is None:
         bidsmap['DICOM'][modality] = [series]
-    elif not bids.exist_series(series, bidsmap['DICOM'][modality], matchbidslabels=False):      # NB: the bidsmapper may still have annotated labels (which are replaced by their value in the bidsmap)
+    elif not bids.exist_series(series, bidsmap['DICOM'][modality], matchbidslabels=False):      # NB: the bidsmap may still have annotated labels (which are replaced by their value in the mapped bidsmap)
         bidsmap['DICOM'][modality].append(series)
 
     return bidsmap
@@ -163,16 +163,16 @@ def built_pluginmap(seriesfolder, bidsmap):
     return bidsmap
 
 
-def bidsmapper(rawfolder, bidsfolder, bidsmapper='bidsmapper_sample.yaml', automatic=False):
+def bidsmapper(rawfolder, bidsfolder, bidsmapfile='bidsmap_sample.yaml', automatic=False):
     """
     Main function that processes all the subjects and session in the rawfolder
     and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code.
     Folders in rawfolder are assumed to contain a single dataset.
 
-    :param str rawfolder:   The root folder-name of the sub/ses/data/file tree containing the source data files
-    :param str bidsfolder:  The name of the BIDS root folder
-    :param dict bidsmapper: The name of the bidsmapper yaml-file
-    :return: dict bidsmap:  The name of the bidsmap.yaml file
+    :param str rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
+    :param str bidsfolder:      The name of the BIDS root folder
+    :param str bidsmapfile:     The name of the bidsmap yaml-file
+    :return: str bidsmapfile:   The name of the mapped bidsmap yaml-file
     :rtype: str
     """
 
@@ -181,9 +181,9 @@ def bidsmapper(rawfolder, bidsfolder, bidsmapper='bidsmapper_sample.yaml', autom
     bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
 
     # Get the heuristics for creating the bidsmap
-    heuristics = bids.get_heuristics(bidsmapper, os.path.join(bidsfolder,'code'))
+    heuristics = bids.get_heuristics(bidsmapfile, os.path.join(bidsfolder,'code'))
 
-    # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmapper with empty lists)
+    # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     bidsmap = copy.deepcopy(heuristics)
     for logic in ('DICOM', 'PAR', 'P7', 'Nifti', 'FileSystem'):
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
@@ -239,7 +239,7 @@ def bidsmapper(rawfolder, bidsfolder, bidsmapper='bidsmapper_sample.yaml', autom
     bidsmap.yaml_set_start_comment = textwrap.dedent("""\
         ------------------------------------------------------------------------------
         Config file that maps the extracted fields to the BIDS modalities and BIDS
-        labels (see also [bidsmapper.yaml] and [bidsmapper.py]). You can edit these.
+        labels (see also [bidsmap_template.yaml] and [bidsmapper.py]). You can edit these.
         fields before passing it to [bidscoiner.py] which uses it to cast the datasets
         into the BIDS folder. The datastructure of this config file should be 5 or 6
         levels deep and follow: dict > dict > list > dict > dict [> list]
@@ -260,11 +260,11 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
-                                     epilog='example:\n  bidsmapper.py /project/foo/raw /project/foo/bids\n  bidsmapper.py /project/foo/raw /project/foo/bids bidsmapper_dccn')
+                                     epilog='example:\n  bidsmapper.py /project/foo/raw /project/foo/bids\n  bidsmapper.py /project/foo/raw /project/foo/bids bidsmap_dccn')
     parser.add_argument('rawfolder',        help='The source folder containing the raw data in sub-#/ses-#/series format')
     parser.add_argument('bidsfolder',       help='The destination folder with the bids data structure')
-    parser.add_argument('bidsmapper',       help='The bidsmapper yaml-file with the BIDS heuristics (optional argument, default: bidsfolder/code/bidsmapper_sample.yaml)', nargs='?', default='bidsmapper_sample.yaml')
+    parser.add_argument('bidsmap',          help='The bidsmap yaml-file with the BIDS heuristics (optional argument, default: bidsfolder/code/bidsmap_sample.yaml)', nargs='?', default='bidsmap_sample.yaml')
     parser.add_argument('-a','--automatic', help='If this flag is given the user will not be asked for help if an unknown series is encountered', action='store_true')
     args = parser.parse_args()
 
-    bidsmapfile = bidsmapper(args.rawfolder, args.bidsfolder, args.bidsmapper, args.automatic)
+    bidsmapfile = bidsmapper(args.rawfolder, args.bidsfolder, args.bidsmap, args.automatic)

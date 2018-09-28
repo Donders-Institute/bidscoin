@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Takes example files from the samples folder to create a bidsmapper config file
+Takes example files from the samples folder to create a bidsmap config file
 """
 
 import bids
@@ -12,14 +12,15 @@ import textwrap
 from ruamel.yaml import YAML
 yaml = YAML()
 
-def built_dicommapper(dicomfile, bidsmapper, heuristics):
+
+def built_dicommap(dicomfile, bidsmap, heuristics):
     """
     All the logic to map dicomfields onto bids labels go into this function
 
     :param str dicomfile:   The full-path name of the source dicom-file
-    :param dict bidsmapper: The bidsmapper as we had it
+    :param dict bidsmap:    The bidsmap as we had it
     :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:                The bidsmapper with new entries in it
+    :return:                The bidsmap with new entries in it
     :rtype: dict
     """
 
@@ -32,11 +33,11 @@ def built_dicommapper(dicomfile, bidsmapper, heuristics):
 
     # Input checks
     if not dicomfile or not heuristics['DICOM'] or not heuristics['DICOM'][bidsmodality]:
-        return bidsmapper
+        return bidsmap
     if bidsmodality not in bids.bidsmodalities:
         raise ValueError("Don't know what to do with this bidsmodality directory name: {}\n{}".format(bidsmodality, dicomfile))
 
-    # Copy the bids-labels over from the matching series in heuristics to series_, Then fill the attributes and append it to bidsmapper
+    # Copy the bids-labels over from the matching series in heuristics to series_, Then fill the attributes and append it to bidsmap
     for series in heuristics['DICOM'][bidsmodality]:
 
         match   = False
@@ -61,131 +62,131 @@ def built_dicommapper(dicomfile, bidsmapper, heuristics):
             for attrkey in series['attributes']:
                 series_['attributes'][attrkey] = bids.get_dicomfield(attrkey, dicomfile)
 
-            # Copy the filled-in series over to the bidsmapper
-            if bidsmapper['DICOM'][bidsmodality] is None:
-                bidsmapper['DICOM'][bidsmodality] = [series_]
-            elif not bids.exist_series(series_, bidsmapper['DICOM'][bidsmodality]):
-                bidsmapper['DICOM'][bidsmodality].append(series_)
+            # Copy the filled-in series over to the bidsmap
+            if bidsmap['DICOM'][bidsmodality] is None:
+                bidsmap['DICOM'][bidsmodality] = [series_]
+            elif not bids.exist_series(series_, bidsmap['DICOM'][bidsmodality]):
+                bidsmap['DICOM'][bidsmodality].append(series_)
 
-            return bidsmapper
+            return bidsmap
 
     raise ValueError("Oops, this should not happen! BIDS modality '{}' or one of the bidslabels is not accounted for in the code\n{}".format(bidsmodality, dicomfile))
 
 
-def built_parmapper(parfile, bidsmapper, heuristics):
+def built_parmap(parfile, bidsmap, heuristics):
     """
     All the logic to map PAR/REC fields onto bids labels go into this function
 
     :param str parfile:     The full-path name of the source PAR-file
-    :param dict bidsmapper: The bidsmapper as we had it
+    :param dict bidsmap:    The bidsmap as we had it
     :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:                The bidsmapper with new entries in it
+    :return:                The bidsmap with new entries in it
     :rtype: dict
     """
 
     # Input checks
     if not parfile or not heuristics['PAR']:
-        return bidsmapper
+        return bidsmap
 
     # TODO: Loop through all bidsmodalities and series
 
-    return bidsmapper
+    return bidsmap
 
 
-def built_p7mapper(p7file, bidsmapper, heuristics):
+def built_p7map(p7file, bidsmap, heuristics):
     """
     All the logic to map P7-fields onto bids labels go into this function
 
     :param str p7file:      The full-path name of the source P7-file
-    :param dict bidsmapper: The bidsmapper as we had it
+    :param dict bidsmap:    The bidsmap as we had it
     :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:                The bidsmapper with new entries in it
+    :return:                The bidsmap with new entries in it
     :rtype: dict
     """
 
     # Input checks
     if not p7file or not heuristics['P7']:
-        return bidsmapper
+        return bidsmap
 
     # TODO: Loop through all bidsmodalities and series
 
-    return bidsmapper
+    return bidsmap
 
 
-def built_niftimapper(niftifile, bidsmapper, heuristics):
+def built_niftimap(niftifile, bidsmap, heuristics):
     """
     All the logic to map nifti-info onto bids labels go into this function
 
     :param str niftifile:   The full-path name of the source nifti-file
-    :param dict bidsmapper: The bidsmapper as we had it
+    :param dict bidsmap:    The bidsmap as we had it
     :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:                The bidsmapper with new entries in it
+    :return:                The bidsmap with new entries in it
     :rtype: dict
     """
 
     # Input checks
     if not niftifile or not heuristics['Nifti']:
-        return bidsmapper
+        return bidsmap
 
     # TODO: Loop through all bidsmodalities and series
 
-    return bidsmapper
+    return bidsmap
 
 
-def built_filesystemmapper(seriesfolder, bidsmapper, heuristics):
+def built_filesystemmap(seriesfolder, bidsmap, heuristics):
     """
     All the logic to map filesystem-info onto bids labels go into this function
 
     :param str seriesfolder: The full-path name of the source-folder
-    :param dict bidsmapper:  The bidsmapper as we had it
+    :param dict bidsmap:     The bidsmap as we had it
     :param dict heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:                 The bidsmapper with new entries in it
+    :return:                 The bidsmap with new entries in it
     :rtype: dict
     """
 
     # Input checks
     if not seriesfolder or not heuristics['FileSystem']:
-        return bidsmapper
+        return bidsmap
 
     # TODO: Loop through all bidsmodalities and series
 
-    return bidsmapper
+    return bidsmap
 
 
-def built_pluginmapper(sample, bidsmapper):
+def built_pluginmap(sample, bidsmap):
     """
     Call the plugin to map info onto bids labels
 
-    :param str sample:      The full-path name of the source-file
-    :param dict bidsmapper: The bidsmapper as we had it
-    :return:                The bidsmapper with new entries in it
+    :param str sample:   The full-path name of the source-file
+    :param dict bidsmap: The bidsmap as we had it
+    :return:             The bidsmap with new entries in it
     :rtype: dict
     """
 
     from importlib import import_module
 
     # Input checks
-    if not sample or not bidsmapper['PlugIn']:
-        return bidsmapper
+    if not sample or not bidsmap['PlugIn']:
+        return bidsmap
 
     # Import and run the plugins
-    for pluginfunction in bidsmapper['PlugIn']:
+    for pluginfunction in bidsmap['PlugIn']:
         plugin     = import_module(os.path.join(__file__,'..','plugins', pluginfunction))
         # TODO: check first if the plug-in function exist
-        bidsmapper = plugin.bidstrainer(sample, bidsmapper)
+        bidsmap = plugin.bidstrainer(sample, bidsmap)
 
-    return bidsmapper
+    return bidsmap
 
 
-def bidstrainer(bidsfolder, samplefolder='', bidsmapper='bidsmapper.yaml'):
+def bidstrainer(bidsfolder, samplefolder='', bidsmap='bidsmap_template.yaml'):
     """
     Main function uses all samples in the samplefolder as training / example  data to generate a
-    maximally filled-in bidsmapper_sample.yaml file.
+    maximally filled-in bidsmap_sample.yaml file.
 
     :param str bidsfolder:    The name of the BIDS root folder
     :param str samplefolder:  The name of the root directory of the tree containing the sample files / training data. If left empty, bidsfolder/code/samples is used or such an empty directory tree is created
-    :param dict bidsmapper:   The name of the bidsmapper yaml-file
-    :return:                  The name of the new (trained) bidsmapper yaml-file that is save in bidsfolder/code
+    :param dict bidsmap:      The name of the bidsmap yaml-file
+    :return:                  The name of the new (trained) bidsmap yaml-file that is save in bidsfolder/code
     :rtype: str
     """
 
@@ -200,18 +201,18 @@ def bidstrainer(bidsfolder, samplefolder='', bidsmapper='bidsmapper.yaml'):
     bidsfolder   = os.path.abspath(os.path.expanduser(bidsfolder))
     samplefolder = os.path.abspath(os.path.expanduser(samplefolder))
 
-    # Get the heuristics for creating the bidsmapper
-    heuristics = bids.get_heuristics(bidsmapper)
+    # Get the heuristics for creating the bidsmap
+    heuristics = bids.get_heuristics(bidsmap)
 
-    # Create a copy / bidsmapper skeleton with no modality entries (i.e. bidsmapper with empty lists)
-    bidsmapper = copy.deepcopy(heuristics)
+    # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
+    bidsmap = copy.deepcopy(heuristics)
     for logic in ('DICOM', 'PAR', 'P7', 'Nifti', 'FileSystem'):
         for modality in bids.bidsmodalities:
 
-            if bidsmapper[logic] and modality in bidsmapper[logic]:
-                bidsmapper[logic][modality] = None
+            if bidsmap[logic] and modality in bidsmap[logic]:
+                bidsmap[logic][modality] = None
 
-    # Loop over all bidsmodalities and instances and built up the bidsmapper entries
+    # Loop over all bidsmodalities and instances and built up the bidsmap entries
     samples = glob.glob(os.path.join(samplefolder,'**'), recursive=True)
     for sample in samples:
 
@@ -220,48 +221,48 @@ def bidstrainer(bidsfolder, samplefolder='', bidsmapper='bidsmapper.yaml'):
 
         # Try to get a dicom mapping
         if bids.is_dicomfile(sample) and heuristics['DICOM']:
-            bidsmapper = built_dicommapper(sample, bidsmapper, heuristics)
+            bidsmap = built_dicommap(sample, bidsmap, heuristics)
 
         # Try to get a PAR/REC mapping
         if bids.is_parfile(sample) and heuristics['PAR']:
-            bidsmapper = built_parmapper(sample, bidsmapper, heuristics)
+            bidsmap = built_parmap(sample, bidsmap, heuristics)
 
         # Try to get a P7 mapping
         if bids.is_p7file(sample) and heuristics['P7']:
-            bidsmapper = built_p7mapper(sample, bidsmapper, heuristics)
+            bidsmap = built_p7map(sample, bidsmap, heuristics)
 
         # Try to get a nifti mapping
         if bids.is_niftifile(sample) and heuristics['Nifti']:
-            bidsmapper = built_niftimapper(sample, bidsmapper, heuristics)
+            bidsmap = built_niftimap(sample, bidsmap, heuristics)
 
         # Try to get a file-system mapping
         if heuristics['FileSystem']:
-            bidsmapper = built_filesystemmapper(sample, bidsmapper, heuristics)
+            bidsmap = built_filesystemmap(sample, bidsmap, heuristics)
 
         # Try to get a plugin mapping
         if heuristics['PlugIn']:
-            bidsmapper = built_pluginmapper(sample, bidsmapper)
+            bidsmap = built_pluginmap(sample, bidsmap)
 
-    # Create the bidsmapper_sample yaml-file in bidsfolder/code
+    # Create the bidsmap_sample yaml-file in bidsfolder/code
     os.makedirs(os.path.join(bidsfolder,'code'), exist_ok=True)
-    bidsmapperfile = os.path.join(bidsfolder,'code','bidsmapper_sample.yaml')
+    bidsmapfile = os.path.join(bidsfolder,'code','bidsmap_sample.yaml')
 
-    # Initiate the bidsmapper with some helpful text
-    bidsmapper.yaml_set_start_comment = textwrap.dedent("""\
+    # Initiate the bidsmap with some helpful text
+    bidsmap.yaml_set_start_comment = textwrap.dedent("""\
         ------------------------------------------------------------------------------
         Config file that maps the extracted fields to the BIDS modalities and BIDS
-        labels (see also [bidsmapper.yaml] and [bidsmapper.py]). You can edit these.
+        labels (see also [bidsmap_template.yaml] and [bidsmapper.py]). You can edit these.
         fields before passing it to [bidscoiner.py] which uses it to cast the datasets
         into the BIDS folder. The datastructure of this config file should be 5 or 6
         levels deep and follow: dict > dict > list > dict > dict [> list]
         ------------------------------------------------------------------------------""")
 
-    # Save the bidsmapper to the bidsmapper yaml-file
-    print('Writing bidsmapper to: ' + bidsmapperfile)
-    with open(bidsmapperfile, 'w') as stream:
-        yaml.dump(bidsmapper, stream)
+    # Save the bidsmap to the bidsmap yaml-file
+    print('Writing bidsmap to: ' + bidsmapfile)
+    with open(bidsmapfile, 'w') as stream:
+        yaml.dump(bidsmap, stream)
 
-    return bidsmapperfile
+    return bidsmapfile
 
 
 # Shell usage
@@ -271,10 +272,10 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
-                                     epilog='example:\n  bidsmapper.py /project/foo/bids\n  bidsmapper.py /project/foo/bids /project/foo/samples bidsmapper_dccn')
+                                     epilog='example:\n  bidstrainer.py /project/foo/bids\n  bidstrainer.py /project/foo/bids /project/foo/samples bidsmap_custom')
     parser.add_argument('bidsfolder',   help='The destination folder with the bids data structure')
     parser.add_argument('samplefolder', help='The root folder of the directory tree containing the sample files / training data. Optional argument, if left empty, bidsfolder/code/samples is used or such an empty directory tree is created', nargs='?', default='')
-    parser.add_argument('bidsmapper',   help='The bidsmapper yaml-file with the BIDS heuristics (optional argument, default: ./heuristics/bidsmapper.yaml)', nargs='?', default='bidsmapper.yaml')
+    parser.add_argument('bidsmap',      help='The bidsmap yaml-file with the BIDS heuristics (optional argument, default: ./heuristics/bidsmap_template.yaml)', nargs='?', default='bidsmap_template.yaml')
     args = parser.parse_args()
 
-    bidsmapperfile = bidstrainer(samplefolder=args.samplefolder, bidsfolder=args.bidsfolder, bidsmapper=args.bidsmapper)
+    bidsmapfile = bidstrainer(samplefolder=args.samplefolder, bidsfolder=args.bidsfolder, bidsmap=args.bidsmap)

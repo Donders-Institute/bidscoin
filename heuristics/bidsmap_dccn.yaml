@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------
 # Config file that maps the fields from the DCCN Siemens datasets to the BIDS
-# modalities and BIDS labels (see also [bidsmapper.yaml] and [bidsmapper.py]).
+# modalities and BIDS labels (see also [bidsmap_template.yaml] and [bidsmapper.py]).
 # The bidsmapper config file can be passed to [bidsmapper.py] which uses it when
 # traversing through the datasets to generate the bidsmap.yaml mapper file (see
 # [bidsmap_example.yaml] for details). The datastructure of a bidsmapper config
@@ -73,7 +73,7 @@
 # 		sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 # 		<matches>.json
 
-# TODO: update against bidsmapper.yaml
+# TODO: update against bidsmap_template.yaml
 
 Options:
 # --------------------------------------------------------------------------------

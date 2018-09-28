@@ -93,7 +93,7 @@ If all sample files have been put in the appropriate location, you can (re)run t
     
     example:
       bidsmapper.py /project/foo/raw /project/foo/bids
-      bidsmapper.py /project/foo/raw /project/foo/bids bidsmapper_dccn
+      bidsmapper.py /project/foo/raw /project/foo/bids bidsmap_dccn
 
 The bidsmapper inspects all raw data folders of your dataset and saves the known and unknown key-value mappings in a (study specific) bidsmap YAML file. You can consider it as a dry-run for how exactly bidscoiner will convert the raw data into BIDS folders. It is therefore advised to inspect the resulting bidsmap.yaml file to see if all scan series were recognized correctly with proper BIDS labels (for more details, see *The bidsmap YAML file* section). This can be the case if your bidstraining or the bidsmap YAML file that was provided to you was incomplete. If so, you should either get an updated bidsmap YAML file or redo the bidstraining with new sample files, rerun the bidstrainer and bidsmapper until you have a suitable bidsmap.yaml file. You can of course also directly edit the bidsmap.yaml file yourself, for instance by changing some of the automatically generated BIDS labels to your needs (e.g. task_label).
 
@@ -171,11 +171,11 @@ The bidsmap file consists of help-text, followed by several key-value mapping se
 ### The bidsmap_template
 
     # --------------------------------------------------------------------------------
-    # Generic config file for bidsmapper with the default heuristics for identifying
+    # Generic config file for bidsmaps with the default heuristics for identifying
     # the BIDS modalities and BIDS labels. Do not change/use this file but create a
-    # separate file (e.g. [bidsmapper_<YourTagHere>.yaml]) with the same format to
-    # set your site/study-specific heuristics (see [bidsmapper_dccn.yaml] and
-    # [bidsmapper.py]). The bidsmapper config file can be passed to [bidsmapper.py]
+    # separate file (e.g. [bidsmap_<YourTagHere>.yaml]) with the same format to
+    # set your site/study-specific heuristics (see [bidsmap_dccn.yaml] and
+    # [bidsmapper.py]). The bidsmap config file can be passed to [bidsmapper.py]
     # which uses it when traversing through the datasets to generate the bidsmap.yaml
     # mapper file (see [bidsmap_example.yaml] for details). The datastructure of a
     # bidsmapper config file should be 5 levels deep and follow:
@@ -200,7 +200,7 @@ The bidsmap file consists of help-text, followed by several key-value mapping se
     # README
     # CHANGES
     # code/
-    #     bidsmapper_sample.yaml
+    #     bidsmap_sample.yaml
     #     bidsmap.yaml
     #     bidscoiner.py
     # derivatives/README
