@@ -182,7 +182,7 @@ The bidsmap file consists of help-text, followed by several key-value mapping se
  - **FileSystem**.
  - **PlugIn**. Name of the python plug-in function. Supported but this is an experimental (untested) feature
 
-The key-value mappings are mappings from the (e.g. DICOM) modality [attributes] to the BIDS [labels] (e.g. [task_label]), as indicated below:
+Inside each BIDS modality (depending on the training), there can be multiple key-value mappings that map (e.g. DICOM) modality [attributes] to the BIDS [labels] (e.g. [task_label]), as indicated below:
 
 ![bidsmap_sample example](./docs/bidsmap_sample.png)
 *Bidsmap_sample example. As indicated bij the solid arrowline, the set of DICOM value (suitable to uniquely identify the dicom series) are used here a key-set that maps onto the set of BIDS labels. The BIDS labels can contain special tags, i.e. \<attribute name> and \<\<argument>>. When running the bidsmapper or bidscoiner, the \<attribute name> will be replaced by the DICOM value, as indicated by the dashed arrowline (so here, \<ProtocolName> will be replaced by "t1_mprage_sag_p2_iso_1.0"). The \<\<argument>> is an intelligent value, meaning that it will be dynamically updated (e.g. the runindex will be increased if a file with the same runindex already exists).*
