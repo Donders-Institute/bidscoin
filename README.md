@@ -45,7 +45,7 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
 
     usage: bidstrainer.py [-h] bidsfolder [samplefolder] [bidsmap]
     
-    Takes example files from the samples folder to create a bidsmap config file
+    Takes example files from the samples folder to create a bidsmap file
     
     positional arguments:
       bidsfolder    The destination folder with the bids data structure
@@ -74,8 +74,8 @@ If all sample files have been put in the appropriate location, you can (re)run t
 
     usage: bidsmapper.py [-h] [-a] rawfolder bidsfolder [bidsmap]
     
-    Creates a bidsmap.yaml config file that maps the information from the data to the
-    BIDS modalities and BIDS labels (see also [bidsmap_sample.yaml] and [bidstrainer.py]).
+    Creates a bidsmap.yaml file that maps the information from the data to the BIDS
+    modalities and BIDS labels (see also [bidsmap_sample.yaml] and [bidstrainer.py]).
     You can edit the bidsmap file before passing it to [bidscoiner.py] which uses it
     to cast the datasets into BIDS folders
     
@@ -171,14 +171,14 @@ The bidsmap file consists of help-text, followed by several key-value mapping se
 ### The bidsmap_template
 
     # --------------------------------------------------------------------------------
-    # Generic config file for bidsmaps with the default heuristics for identifying
+    # Generic YAML file for bidsmaps with the default heuristics for identifying
     # the BIDS modalities and BIDS labels. Do not change/use this file but create a
     # separate file (e.g. [bidsmap_<YourTagHere>.yaml]) with the same format to
     # set your site/study-specific heuristics (see [bidsmap_dccn.yaml] and
-    # [bidsmapper.py]). The bidsmap config file can be passed to [bidsmapper.py]
+    # [bidsmapper.py]). The bidsmap YAML file can be passed to [bidsmapper.py]
     # which uses it when traversing through the datasets to generate the bidsmap.yaml
     # mapper file (see [bidsmap_example.yaml] for details). The datastructure of a
-    # bidsmapper config file should be 5 levels deep and follow:
+    # bidsmap YAML file should be 5 levels deep and follow:
     # dict > dict > list > dict > dict
     # --------------------------------------------------------------------------------
     
