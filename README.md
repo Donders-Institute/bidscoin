@@ -59,7 +59,7 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
     optional arguments:
       -h, --help    show this help message and exit
     
-    example:
+    examples:
       bidstrainer.py /project/foo/bids
       bidstrainer.py /project/foo/bids /project/foo/samples bidsmap_custom
 
@@ -91,7 +91,7 @@ If all sample files have been put in the appropriate location, you can (re)run t
       -a, --automatic  If this flag is given the user will not be asked for help
                        if an unknown series is encountered
     
-    example:
+    examples:
       bidsmapper.py /project/foo/raw /project/foo/bids
       bidsmapper.py /project/foo/raw /project/foo/bids bidsmap_dccn
 
