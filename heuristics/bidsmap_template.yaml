@@ -1,12 +1,12 @@
 # --------------------------------------------------------------------------------
-# Generic config file for bidsmaps with the default heuristics for identifying
+# Generic YAML file for bidsmaps with the default heuristics for identifying
 # the BIDS modalities and BIDS labels. Do not change/use this file but create a
 # separate file (e.g.  [bidsmap_<YourTagHere>.yaml]) with the same format to
 # set your site/study-specific heuristics (see [bidsmap_dccn.yaml] and
-# [bidsmapper.py]). The bidsmap config file can be passed to [bidsmapper.py]
+# [bidsmapper.py]). The bidsmap YAML file can be passed to [bidsmapper.py]
 # which uses it when traversing through the datasets to generate the bidsmap.yaml
 # mapping file (see [bidsmap_example.yaml] for details). The datastructure of a
-# bidsmap config file should be 5 levels deep and follow:
+# bidsmap YAML file should be 5 levels deep and follow:
 # dict > dict > list > dict > dict
 # --------------------------------------------------------------------------------
 
