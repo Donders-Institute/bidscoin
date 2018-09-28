@@ -178,19 +178,20 @@ def built_pluginmap(sample, bidsmap):
     return bidsmap
 
 
-def bidstrainer(bidsfolder, samplefolder='', bidsmap='bidsmap_template.yaml'):
+def bidstrainer(bidsfolder, samplefolder='', bidsmapfile='bidsmap_template.yaml'):
     """
     Main function uses all samples in the samplefolder as training / example  data to generate a
     maximally filled-in bidsmap_sample.yaml file.
 
     :param str bidsfolder:    The name of the BIDS root folder
     :param str samplefolder:  The name of the root directory of the tree containing the sample files / training data. If left empty, bidsfolder/code/samples is used or such an empty directory tree is created
-    :param dict bidsmap:      The name of the bidsmap yaml-file
+    :param str bidsmapfile:   The name of the bidsmap yaml-file
     :return:                  The name of the new (trained) bidsmap yaml-file that is save in bidsfolder/code
     :rtype: str
     """
 
     # Input checking
+    bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
     if not samplefolder:
         samplefolder = os.path.join(bidsfolder,'code','samples')
         if not os.path.isdir(samplefolder):
@@ -198,11 +199,10 @@ def bidstrainer(bidsfolder, samplefolder='', bidsmap='bidsmap_template.yaml'):
             shutil.copytree(os.path.join(os.path.dirname(__file__),'..','heuristics','samples'), samplefolder)
             print('Fill the directory tree with example DICOM files and re-run bidstrainer.py')
             return
-    bidsfolder   = os.path.abspath(os.path.expanduser(bidsfolder))
     samplefolder = os.path.abspath(os.path.expanduser(samplefolder))
 
     # Get the heuristics for creating the bidsmap
-    heuristics = bids.get_heuristics(bidsmap)
+    heuristics = bids.get_heuristics(bidsmapfile)
 
     # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     bidsmap = copy.deepcopy(heuristics)
