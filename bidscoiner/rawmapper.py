@@ -9,12 +9,13 @@ import warnings
 import bids
 
 
-def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield='PatientComments', dryrun=False):
+def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield='PatientComments', wildcard='*', dryrun=False):
     """
     :param str rawfolder:   The root folder-name of the sub/ses/data/file tree containing the source data files
     :param str outfolder:   The name of the folder where the mapping-file is saved (default = rawfolder)
     :param bool rename:     Flag for renaming the sub-subid folders to sub-dicomfield
     :param str dicomfield:  The name of the dicomfield that is mapped
+    :param str wildcard:    The wildcard that is used to select the series from which the dicomfield is being mapped
     :param bool dryrun:     Flag for dry-running renaming the sub-subid folders
     :return:                Nothing
     :rtype: NoneType
@@ -46,7 +47,13 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield='PatientCommen
             sesid = 'ses-' + session.rsplit('/ses-')[1]
 
             # Parse the new subject and session identifiers from the dicomfield
-            dcmval = bids.get_dicomfield(dicomfield, bids.get_dicomfile(bids.lsdirs(session)[0]))   # TODO: test how newlines from the console work out
+            series = bids.lsdirs(session, wildcard)
+            if not series:
+                series = ''
+                dcmval = ''
+            else:
+                series = series[0]                                                      # TODO: loop over series?
+                dcmval = bids.get_dicomfield(dicomfield, bids.get_dicomfile(series))    # TODO: test how newlines from the console work out
             if rename:
                 if not dcmval:
                     warnings.warn('Skipping renaming because the dicom-field was empty for: ' + session)
@@ -72,13 +79,13 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield='PatientCommen
 
             # Save the dicomfield / sub-ses mapping to disk
             if rename:
-                print('{}\{}\t-> {}\{}'.format(subid, sesid, newsubid, newsesid))
+                print('{}/{}\t-> {}/{}'.format(subid, sesid, newsubid, newsesid))
                 with open(os.path.join(outfolder,mappingfile), 'a') as fid:
                     fid.write('{}\t{}\t{}\t{}\n'.format(subid, sesid, newsubid, newsesid))
             else:
-                print('{}\{}\t-> {}'.format(subid, sesid, dcmval))
+                print('{}/{}/{}\t-> {}'.format(subid, sesid, os.path.basename(series), dcmval))
                 with open(os.path.join(outfolder,mappingfile), 'a') as fid:
-                    fid.write('{}\t{}\t{}\n'.format(subid, sesid, dcmval))
+                    fid.write('{}\t{}\t{}\t{}\n'.format(subid, sesid, os.path.basename(series), dcmval))
 
             # Rename the session subfolder in the rawfolder (but skip if it already exists)
             if rename:
@@ -105,7 +112,8 @@ if __name__ == "__main__":
     parser.add_argument('-r','--rename',     help='If this flag is given sub-subid/ses-sesid directories in the rawfolder will be renamed to sub-dcmval/ses-dcmval', action='store_true')
     parser.add_argument('-o','--outfolder',  help='The destination folder with the mapper-file is saved (default = rawfolder)')
     parser.add_argument('-d','--dicomfield', help='The name of the dicomfield that is mapped / used to rename the subid/sesid foldernames', default='PatientComments')
+    parser.add_argument('-w','--wildcard',   help='The wildcard that is used to select the series from which the dicomfield is being mapped', default='*')
     parser.add_argument('--dryrun',          help='Add this flag to dryrun (test) the renaming of the sub-subid/ses-sesid directories (i.e. directory names are not actually changed))', action='store_true')
     args = parser.parse_args()
 
-    rawmapper(rawfolder=args.rawfolder, outfolder=args.outfolder, rename=args.rename, dicomfield=args.dicomfield, dryrun=args.dryrun)
+    rawmapper(rawfolder=args.rawfolder, outfolder=args.outfolder, rename=args.rename, dicomfield=args.dicomfield, wildcard=args.wildcard, dryrun=args.dryrun)
