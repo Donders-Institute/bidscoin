@@ -182,7 +182,7 @@ The bidsmap file consists of help-text, followed by several key-value mapping se
  - **FileSystem**.
  - **PlugIn**. Name of the python plug-in function. Supported but this is an experimental (untested) feature
 
-Inside each BIDS modality (depending on the training), there can be multiple key-value mappings that map (e.g. DICOM) modality [attributes] to the BIDS [labels] (e.g. [task_label]), as indicated below:
+Inside each BIDS modality, there can be multiple key-value mappings that map (e.g. DICOM) modality [attributes] to the BIDS [labels] (e.g. [task_label]), as indicated below:
 
 <img src="./docs/bidsmap_sample.png" alt="bidsmap_sample example" width="700">
 
