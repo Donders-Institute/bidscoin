@@ -147,8 +147,8 @@ The bidsmap file consists of help-text, followed by several key-value mapping se
 
  - **Options** *(A list of general options that can be passed to the bidscoiner and its plug-ins)*
  - **DICOM**
-   - participant_label *(for future use)*
-   - session_label *(for future use)*
+   - participant_label *(a dynamic <\<DICOM field>>)*
+   - session_label *(a dynamic <\<DICOM field>>)*
    - anat
      - attributes
        - [a DICOM field]
@@ -186,4 +186,4 @@ Inside each BIDS modality, there can be multiple key-value mappings that map (e.
 
 <img src="./docs/bidsmap_sample.png" alt="bidsmap_sample example" width="700">
 
-*Bidsmap_sample example. As indicated by the solid arrowline, the set of DICOM value (suitable to uniquely identify the dicom series) are used here a key-set that maps onto the set of BIDS labels. The BIDS labels can contain special tags, i.e. \<attribute name> and \<\<argument>>. When running the bidsmapper or bidscoiner, the \<attribute name> will be replaced by the DICOM value, as indicated by the dashed arrowline (so in this example \<ProtocolName> will be replaced by "t1_mprage_sag_p2_iso_1.0"). The \<\<argument>> is an intelligent value, meaning that it will be dynamically updated (e.g. the runindex will be increased if a file with the same runindex already exists). Also not that in this example there was only 1 T1-image, but there where two different fMRI series (here because of multi-echo, but multiple tasks could also be listed)*
+*Bidsmap_sample example. As indicated by the solid arrowline, the set of DICOM value (suitable to uniquely identify the dicom series) are used here a key-set that maps onto the set of BIDS labels. The BIDS labels can contain special tags, i.e. \<attribute name> and \<\<argument>>. When running the bidsmapper or bidscoiner, the \<attribute name> will be replaced by the DICOM value, as indicated by the dashed arrowline (so in this example \<ProtocolName> will be replaced by "t1_mprage_sag_p2_iso_1.0"). The \<\<argument>> is an intelligent value, meaning that it will be dynamically updated during bidscoiner runtime (e.g. the runindex will be increased if a file with the same runindex already exists). Also not that in this example there was only 1 T1-image, but there where two different fMRI series (here because of multi-echo, but multiple tasks could also be listed)*
