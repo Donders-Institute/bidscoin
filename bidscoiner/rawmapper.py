@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
 Maps out the values of a dicom field of all subjects in the rawfolder, saves
-the result in a mapper-file and, optionally, uses that info to rename the
-sub-/ses-id's of the subfolders
+the result in a mapper-file and, optionally, uses the dicom values to rename
+the sub-/ses-id's of the subfolders
 """
 
 import os
