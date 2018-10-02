@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
-Converts datasets in the rawfolder to nifti datasets in the bidsfolder according to the BIDS standard
+Converts datasets in the rawfolder to nifti / json / tsv datasets in the
+bidsfolder according to the BIDS standard
 """
 
 import os

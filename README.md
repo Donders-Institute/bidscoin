@@ -8,7 +8,7 @@ BIDScoiner is a python toolkit that converts ("coins") source-level (raw) MRI da
 
 The key-value heuristics are stored in flexible, human readable and broadly supported [YAML](http://yaml.org/) files.
 
-Currently, BIDScoiner is fully functional, although only option (1) has been implemented. (NB: Options (2) and (3) are planned for future versions, such that (3) takes precedence over (2), which in turn takes precedence over (1)).
+Currently, BIDScoiner is fully functional, although only option (1) has been implemented for DICOM. (NB: Options (2) and (3) are planned for future versions, such that (3) takes precedence over (2), which in turn takes precedence over (1)).
 
 BIDScoiner is a command-line tool that requires no programming knowledge in order to use it, just some basic file handling and, possibly, minor (YAML) text editing.
 
@@ -37,7 +37,7 @@ BIDScoiner will take your raw data as well as a YAML file with the key-value map
     ![BIDScoiner workflow](./docs/workflow.png)
     *BIDScoiner workflow. Left: New users would start with the bidstrainer, which output can be fed into the bidsmapper to produce the bidsmap.yaml file. This file can (and should) be inspected and, in case of incorrect mappings, inform the user to add raw training samples and re-run the training procedure (dashed arrowlines). Right: Institute users could start with an institute provided bidsmap file (e.g. bidsmap_dccn.yaml) and directly use the bidsmapper. In case of incorrect mappings they could ask the institute for an updated bidsmap (dashed arrowline).*
 
-Having an organized raw data folder and a correct bidsmap, the actual data-set conversion to BIDS can now be performed fully automatically by running the *bidscoiner.py* tool (see the workflow diagram and *the bidscoiner* section below).
+Having an organized raw data folder and a correct bidsmap, the actual data-set conversion to BIDS can now be performed fully automatically by simply running the *bidscoiner.py* tool (see the workflow diagram and *the bidscoiner* section below).
 
 ## The BIDScoiner tools
 
