@@ -31,6 +31,8 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
     # Get a valid BIDS subject identifier from the (first) dicom-header or from the session source folder
     if bidsmap['DICOM']['participant_label'] and bidsmap['DICOM']['participant_label'].startswith('<<') and bidsmap['DICOM']['participant_label'].endswith('>>'):
         subid = 'sub-' + bids.get_dicomfield(bidsmap['DICOM']['participant_label'][2:-2], bids.get_dicomfile(bids.lsdirs(session)[0]))
+    elif bidsmap['DICOM']['participant_label']:
+        subid = 'sub-' + bidsmap['DICOM']['participant_label']
     else:
         subid = 'sub-' + session.rsplit('/sub-',1)[1].split('/ses-',1)[0]
     if subid == 'sub-':
@@ -40,6 +42,8 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
     # Get a BIDS session identifier from the (first) dicom-header or from the session source folder
     if bidsmap['DICOM']['session_label'] and bidsmap['DICOM']['session_label'].startswith('<<') and bidsmap['DICOM']['session_label'].endswith('>>'):
         sesid = 'ses-' + bids.get_dicomfield(bidsmap['DICOM']['session_label'][2:-2], bids.get_dicomfile(bids.lsdirs(session)[0]))
+    elif bidsmap['DICOM']['session_label']:
+        sesid = 'ses-' + bidsmap['DICOM']['session_label']
     elif '/ses-' in session:
         sesid = 'ses-' + session.rsplit('/ses-')[1]
     else:

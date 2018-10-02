@@ -147,8 +147,8 @@ The bidsmap file consists of help-text, followed by several key-value mapping se
 
  - **Options** *(A list of general options that can be passed to the bidscoiner and its plug-ins)*
  - **DICOM**
-   - participant_label *(a dynamic <\<DICOM field>>)*
-   - session_label *(a dynamic <\<DICOM field>>)*
+   - participant_label [a DICOM field]
+   - session_label [a DICOM field]
    - anat
      - attributes
        - [a DICOM field]
