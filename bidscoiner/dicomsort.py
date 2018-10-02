@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
                                      description=textwrap.dedent(__doc__),
-                                     epilog='examples:\n  dicomsort.py /project/3022026.01/raw\n  dicomsort.py /project/3022026.01/raw --subjectid sub\n  dicomsort.py /project/3022026.01/raw --subjectid sub --sessionid ses')
+                                     epilog='examples:\n  dicomsort.py /project/3022026.01/raw\n  dicomsort.py /project/3022026.01/raw --subjectid sub\n  dicomsort.py /project/3022026.01/raw --subjectid sub --sessionid ses\n ')
     parser.add_argument('rawfolder',   help='The root folder containing the source [sub/][ses/]dicomfiles')
     parser.add_argument('--subjectid', help='The prefix of the subject folders in rawfolder to search in (e.g. "sub")')
     parser.add_argument('--sessionid', help='The prefix of the session folders in the subject folder to search in (e.g. "ses")')
