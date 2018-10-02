@@ -76,12 +76,16 @@ if __name__ == "__main__":
     # Parse the input arguments and run the sortsessions(args)
     import argparse
     import textwrap
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+
+    class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
+        pass
+
+    parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n  dicomsort.py /project/3022026.01/raw\n  dicomsort.py /project/3022026.01/raw --subjectid sub\n  dicomsort.py /project/3022026.01/raw --subjectid sub --sessionid ses')
     parser.add_argument('rawfolder',   help='The root folder containing the source [sub/][ses/]dicomfiles')
-    parser.add_argument('--subjectid', help='The prefix of the subject folders in rawfolder to search in (e.g. "sub")', default='')
-    parser.add_argument('--sessionid', help='The prefix of the session folders in the subject folder to search in (e.g. "ses")', default='')
+    parser.add_argument('--subjectid', help='The prefix of the subject folders in rawfolder to search in (e.g. "sub")')
+    parser.add_argument('--sessionid', help='The prefix of the session folders in the subject folder to search in (e.g. "ses")')
     parser.add_argument('--pattern',   help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')
     args = parser.parse_args()
 
