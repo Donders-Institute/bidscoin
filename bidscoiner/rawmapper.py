@@ -3,8 +3,8 @@
 Maps out the values of a dicom field of all subjects in the rawfolder, saves
 the result in a mapper-file and, optionally, uses the dicom values to rename
 the sub-/ses-id's of the subfolders. This latter option can be used, e.g.
-when an alternative subject id was entered in the [Addition info] field during
-subject registration (i.e. stored in the PatientComments dicom field)
+when an alternative subject id was entered in the [Additional info] field
+during subject registration (i.e. stored in the PatientComments dicom field)
 """
 
 import os
