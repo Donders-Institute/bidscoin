@@ -13,12 +13,12 @@ import warnings
 import bids
 
 
-def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield='PatientComments', wildcard='*', dryrun=False):
+def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=['PatientComments'], wildcard='*', dryrun=False):
     """
     :param str rawfolder:   The root folder-name of the sub/ses/data/file tree containing the source data files
     :param str outfolder:   The name of the folder where the mapping-file is saved (default = rawfolder)
     :param bool rename:     Flag for renaming the sub-subid folders to sub-dicomfield
-    :param str dicomfield:  The name of the dicomfield that is mapped
+    :param list dicomfield: The names of the dicomfields that are mapped (/ renamed to sub-dcmval/ses-dcmval)
     :param str wildcard:    The wildcard that is used to select the series from which the dicomfield is being mapped
     :param bool dryrun:     Flag for dry-running renaming the sub-subid folders
     :return:                Nothing
@@ -32,12 +32,12 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield='PatientCommen
     outfolder = os.path.abspath(os.path.expanduser(outfolder))
 
     # Create a output mapping-file
-    mappingfile = os.path.join(outfolder, 'rawmapper_{}.tsv'.format(dicomfield))
+    mappingfile = os.path.join(outfolder, 'rawmapper_{}.tsv'.format('_'.join(dicomfield)))
     with open(mappingfile, 'x') as fid:
         if rename:
             fid.write('{}\t{}\t{}\t{}\n'.format('subid', 'sesid', 'newsubid', 'newsesid'))
         else:
-            fid.write('{}\t{}\t{}\n'.format('subid', 'sesid', dicomfield))
+            fid.write('{}\t{}\t{}\t{}\n'.format('subid', 'sesid', *dicomfield))
 
     # Loop over all subjects and sessions and convert them using the bidsmap entries
     for subject in bids.lsdirs(rawfolder, 'sub-*'):
@@ -56,8 +56,10 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield='PatientCommen
                 series = ''
                 dcmval = ''
             else:
-                series = series[0]                                                      # TODO: loop over series?
-                dcmval = bids.get_dicomfield(dicomfield, bids.get_dicomfile(series))    # TODO: test how newlines from the console work out
+                series = series[0]                                                          # TODO: loop over series?
+                dcmval = bids.get_dicomfield(dicomfield[0], bids.get_dicomfile(series))     # TODO: test how newlines from the console work out
+                if len(dicomfield) == 2:
+                    dcmval = dcmval + '/' + bids.get_dicomfield(dicomfield[1], bids.get_dicomfile(series))
             if rename:
                 if not dcmval:
                     warnings.warn('Skipping renaming because the dicom-field was empty for: ' + session)
@@ -115,9 +117,9 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
                                      description=textwrap.dedent(__doc__),
-                                     epilog='examples:\n  rawmapper.py -r /project/3022026.01/raw\n  rawmapper.py -d AcquisitionDate /project/3022026.01/raw\n  rawmapper.py -d EchoTime -w *fMRI* /project/3022026.01/raw\n ')
+                                     epilog='examples:\n  rawmapper.py -r /project/3022026.01/raw\n  rawmapper.py /project/3022026.01/raw -d AcquisitionDate\n  rawmapper.py /project/3022026.01/raw -r -d ManufacturersModelName AcquisitionDate --dryrun\n  rawmapper.py -d EchoTime -w *fMRI* /project/3022026.01/raw\n ')
     parser.add_argument('rawfolder',         help='The source folder with the raw data in sub-#/ses-#/series organisation')
-    parser.add_argument('-d','--dicomfield', help='The name of the dicomfield that is mapped / used to rename the subid/sesid foldernames', default='PatientComments')
+    parser.add_argument('-d','--dicomfield', help='The name of the dicomfield that is mapped / used to rename the subid/sesid foldernames', default=['PatientComments'], nargs='*')
     parser.add_argument('-w','--wildcard',   help='The wildcard that is used to select the series from which the dicomfield is being mapped', default='*')
     parser.add_argument('-o','--outfolder',  help='The mapper-file is normally saved in rawfolder or, when using this option, in outfolder')
     parser.add_argument('-r','--rename',     help='If this flag is given sub-subid/ses-sesid directories in the rawfolder will be renamed to sub-dcmval/ses-dcmval', action='store_true')
