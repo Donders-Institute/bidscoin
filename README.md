@@ -182,7 +182,7 @@ The bidsmap file consists of help-text, followed by several key-value mapping se
  - **FileSystem**.
  - **PlugIn**. Name of the python plug-in function. Supported but this is an experimental (untested) feature
 
-Inside each BIDS modality, there can be multiple key-value mappings that map (e.g. DICOM) modality [attributes] to the BIDS [labels] (e.g. [task_label]), as indicated below:
+Inside each BIDS modality, there can be multiple key-value mappings that map (e.g. DICOM) modality [attributes] to the BIDS [labels] (e.g. *task_label*), as indicated below:
 
 <img src="./docs/bidsmap_sample.png" alt="bidsmap_sample example" width="700">
 
@@ -193,7 +193,7 @@ Inside each BIDS modality, there can be multiple key-value mappings that map (e.
 #### Dynamic values
 The BIDS labels can be static, in which case the value is just a normal string, or dynamic, when the string is enclosed with pointy brackets like \<attribute name> or \<\<argument>> (see *bidsmap_sample example* above). In case of single pointy brackets the value will be replaced during bidsmapper and bidscoiner runtime by the value of the attribute with that name. In case of double pointy brackets, the value will be updated for each subject/session during bidscoiner runtime (e.g. the \<\<runindex>> value will be increased if a file with the same runindex already exists in that directory).
  
-#### Field maps
-You can use the IntendedFor field to indicate for which series (scans) the fieldmap was intended. To value of the IntendedFor field can be a list of string patterns (e.g. ['Stop*Go','RewardTask']) that is used to include those series that have that string pattern in their pathname. 
+#### Field maps: IntendedFor
+You can use the *IntendedFor* field to indicate for which series (scans) the fieldmap was intended. To value of the *IntendedFor* field can be a list of string patterns (e.g. ["Stop*Go","RewardTask"]) that is used to include those series (nifti-files) that have that string pattern in their pathname.
 
 #### Plug-in functions
