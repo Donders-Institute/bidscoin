@@ -186,4 +186,14 @@ Inside each BIDS modality, there can be multiple key-value mappings that map (e.
 
 <img src="./docs/bidsmap_sample.png" alt="bidsmap_sample example" width="700">
 
-*Bidsmap_sample example. As indicated by the solid arrowline, the set of DICOM value (suitable to uniquely identify the dicom series) are used here a key-set that maps onto the set of BIDS labels. The BIDS labels can contain special tags, i.e. \<attribute name> and \<\<argument>>. When running the bidsmapper or bidscoiner, the \<attribute name> will be replaced by the DICOM value, as indicated by the dashed arrowline (so in this example \<ProtocolName> will be replaced by "t1_mprage_sag_p2_iso_1.0"). The \<\<argument>> is an intelligent value, meaning that it will be dynamically updated during bidscoiner runtime (e.g. the runindex will be increased if a file with the same runindex already exists). Also not that in this example there was only 1 T1-image, but there where two different fMRI series (here because of multi-echo, but multiple tasks could also be listed)*
+*Bidsmap_sample example. As indicated by the solid arrowline, the set of DICOM values (suitable to uniquely identify the dicom series) are used here a key-set that maps onto the set of BIDS labels. Note that certain BIDS labels are enclosed by pointy brackets, marking their dynamic value. In this bidsmap, as indicated by the dashed arrowline, that means that \<ProtocolName> will be replaced in a later stage by "t1_mprage_sag_p2_iso_1.0" (for more details see *Tips and tricks*). Also note that in this bidsmap there was only one T1-image, but there where two different fMRI series (here because of multi-echo, but multiple tasks could also be listed)*
+
+### Tips and tricks
+
+#### Dynamic values
+The BIDS labels can be static, in which case the value is just a normal string, or dynamic, when the string is enclosed with pointy brackets like \<attribute name> or \<\<argument>> (see *bidsmap_sample example* above). In case of single pointy brackets the value will be replaced during bidsmapper and bidscoiner runtime by the value of the attribute with that name. In case of double pointy brackets, the value will be updated for each subject/session during bidscoiner runtime (e.g. the \<\<runindex>> value will be increased if a file with the same runindex already exists in that directory).
+ 
+#### Field maps
+You can use the IntendedFor field to indicate for which series (scans) the fieldmap was intended. To value of the IntendedFor field can be a list of string patterns (e.g. ['Stop*Go','RewardTask']) that is used to include those series that have that string pattern in their pathname. 
+
+#### Plug-in functions
