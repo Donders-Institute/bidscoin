@@ -56,10 +56,11 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=['PatientComme
                 series = ''
                 dcmval = ''
             else:
-                series = series[0]                                                          # TODO: loop over series?
-                dcmval = bids.get_dicomfield(dicomfield[0], bids.get_dicomfile(series))     # TODO: test how newlines from the console work out
-                if len(dicomfield) == 2:
-                    dcmval = dcmval + '/' + bids.get_dicomfield(dicomfield[1], bids.get_dicomfile(series))
+                series = series[0]                                                                      # TODO: loop over series?
+                dcmval = ''
+                for dcmfield in dicomfield:
+                    dcmval = dcmval + '/' + bids.get_dicomfield(dcmfield, bids.get_dicomfile(series))   # TODO: test how newlines from the console work out
+                dcmval = dcmval[1:]
             if rename:
                 if not dcmval:
                     warnings.warn('Skipping renaming because the dicom-field was empty for: ' + session)
