@@ -188,6 +188,17 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
             with open(jsonfile, 'w') as json_fid:
                 json.dump(data, json_fid, indent=4)
 
+            # Catch magnitude2 files produced by dcm2niix
+            if jsonfile.endswith('magnitude1.json'):
+                jsonfile2 = jsonfile.rsplit('1.json',1)[0] + '2.json'
+                if os.path.isfile(jsonfile2):
+                    bids.printlog('Adding IntendedFor to: ' + jsonfile2, logfile)
+                    with open(jsonfile2, 'r') as json_fid:
+                        data = json.load(json_fid)
+                    data['IntendedFor'] = niifiles
+                    with open(jsonfile2, 'w') as json_fid:
+                        json.dump(data, json_fid, indent=4)
+
     # Collect personal data from the DICOM header
     dicomfile                   = bids.get_dicomfile(series)
     personals['participant_id'] = subid
