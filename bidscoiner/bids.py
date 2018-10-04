@@ -305,7 +305,7 @@ def get_dicomfield(tagname, dicomfile):
     """
     Robustly extracts a DICOM field/tag from a dictionary or from vendor specific fields
 
-    :param tagname:       Name of the DICOM field
+    :param str tagname:   Name of the DICOM field
     :param str dicomfile: The full pathname of the dicom-file
     :return:              Extracted tag-values from the dicom-file
     :rtype: str or int
