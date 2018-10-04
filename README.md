@@ -190,7 +190,7 @@ Inside each BIDS modality, there can be multiple key-value mappings that map (e.
 
 ### Tips and tricks
 
-#### Attribute lists
+#### Attribute list
 The attribute value can also be a list, in which case a dicom series is positively identified if its attribute value is in this list.
 
 #### Dynamic values
