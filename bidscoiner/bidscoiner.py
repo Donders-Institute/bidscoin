@@ -174,19 +174,19 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
     # Search for the IntendedFor images and add them to the json-files. This has been postponed untill all modalities have been processed (i.e. so that all target images are indeed on disk)
     for fieldmap in bidsmap['DICOM']['fmap']:
         if 'IntendedFor' in fieldmap and fieldmap['IntendedFor']:
+            jsonfile = os.path.join(bidsses, 'fmap', bids.get_bidsname(subid, sesid, 'fmap', fieldmap, '1') + '.json')       # TODO: Assumes that there is only 1 fieldmap acquired for each bidsmap entry / series
+            if not os.path.isfile(jsonfile):
+                continue
             intendedfor = fieldmap['IntendedFor']
             if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
                 intendedfor = intendedfor[2:-2].split('><')
             else:
                 intendedfor = [intendedfor]
-            jsonfile = os.path.join(bidsses, 'fmap', bids.get_bidsname(subid, sesid, 'fmap', fieldmap, '1') + '.json')       # TODO: Assumes that there is only 1 fieldmap acquired for each bidsmap entry / series
-            if not os.path.isfile(jsonfile):
-                continue
-            bids.printlog('Adding IntendedFor to: ' + jsonfile, logfile)
             with open(jsonfile, 'r') as json_fid:
                 data = json.load(json_fid)
             niifiles = [niifile.split('/'+subid+'/', 1)[1] for niifile in sorted(glob.glob(os.path.join(bidsses, '**/*' + '*'.join(intendedfor) + '*.nii*')))]     # Use a relative path
             data['IntendedFor'] = niifiles
+            bids.printlog('Adding IntendedFor to: ' + jsonfile, logfile)
             with open(jsonfile, 'w') as json_fid:
                 json.dump(data, json_fid, indent=4)
 
@@ -194,10 +194,10 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
             if jsonfile.endswith('magnitude1.json'):
                 jsonfile2 = jsonfile.rsplit('1.json',1)[0] + '2.json'
                 if os.path.isfile(jsonfile2):
-                    bids.printlog('Adding IntendedFor to: ' + jsonfile2, logfile)
                     with open(jsonfile2, 'r') as json_fid:
                         data = json.load(json_fid)
                     data['IntendedFor'] = niifiles
+                    bids.printlog('Adding IntendedFor to: ' + jsonfile2, logfile)
                     with open(jsonfile2, 'w') as json_fid:
                         json.dump(data, json_fid, indent=4)
 
