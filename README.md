@@ -197,3 +197,21 @@ The BIDS labels can be static, in which case the value is just a normal string, 
 You can use the *IntendedFor* field to indicate for which series (scans) a fieldmap was intended. To value of the *IntendedFor* field can be a list of string patterns (e.g. ["Stop*Go","RewardTask"]) that is used to include those series (nifti-files) that have that string pattern in their pathname.
 
 #### Plug-in functions
+
+WIP
+
+## DCCN specific workflow
+ - Read the docs at https://github.com/Donders-Institute/bidscoiner
+ - Activate the bidscoiner environment by using these bash commands: 
+   - **module add anaconda3**
+   - **source activate /opt/bidscoiner**
+   - **PATH=/opt/bidscoiner/1.3/bidscoiner:$PATH**
+ - Train the bidsoiner by performing these steps 
+   - Create a sample foldertree with this bash command: **bidstrainer.py [thenameofyourbidsfolder]**
+   - Put your training files in the right folders in this tree
+   - Do the training by re-running the above bidstrainer command
+ - Run the bidsmapper by performing these steps: 
+   - Run this bash command: **bidsmapper.py [thenameofyourrawfolder] [thenameofyourbidsfolder]**
+   - Check the "extra_data" section in your [thenameofyourbidsfolder]/code/bidsmap.yaml file for images that should go in the BIDS sections (e.g. T1, fMRI or DWI data). If so, add training samples and redo the training steps etc
+ - Run the bidscoiner command: **bidscoiner.py [thenameofyourrawfolder] [thenameofyourbidsfolder]**
+
