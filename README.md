@@ -200,18 +200,31 @@ You can use the *IntendedFor* field to indicate for which series (scans) a field
 
 WIP
 
-## DCCN specific workflow
- - Read the docs at https://github.com/Donders-Institute/bidscoiner
- - Activate the bidscoiner environment by using these bash commands: 
-   - **module add anaconda3**
-   - **source activate /opt/bidscoiner**
-   - **PATH=/opt/bidscoiner/1.3/bidscoiner:$PATH**
- - Train the bidsoiner by performing these steps 
-   - Create a sample foldertree with this bash command: **bidstrainer.py [thenameofyourbidsfolder]**
-   - Put your training files in the right folders in this tree
+## BIDScoiner tutorial
+This tutorial is specific for researchers from the DCCN and makes use of data stored on its central file-system. However, it should not be difficult to use this tutorial for other data as well.
+ 
+1. Activate the bidscoiner environment and create a working directory for this tutorial by using these bash commands:  
+   **module add anaconda3**  
+   **source activate /opt/bidscoiner**  
+   **PATH=/opt/bidscoiner/1.3/bidscoiner:$PATH**
+   **mkdir ~/bids_tutorial**
+   
+2. Train the bidsoiner by performing these steps
+   - Create a sample foldertree in your bids output folder with this bash command:  
+     **bidstrainer.py ~/bids_tutorial**
+   - Put files in the right folders in this tree
    - Do the training by re-running the above bidstrainer command
- - Run the bidsmapper by performing these steps: 
-   - Run this bash command: **bidsmapper.py [thenameofyourrawfolder] [thenameofyourbidsfolder]**
-   - Check the "extra_data" section in your [thenameofyourbidsfolder]/code/bidsmap.yaml file for images that should go in the BIDS sections (e.g. T1, fMRI or DWI data). If so, add training samples and redo the training steps etc
- - Run the bidscoiner command: **bidscoiner.py [thenameofyourrawfolder] [thenameofyourbidsfolder]**
-
+   
+3. Run the bidsmapper by performing these steps: 
+   - Run this bash command:  
+   **bidsmapper.py /opt/bidscoiner/tutorial/raw ~/bids_tutorial**
+   - Check the "extra_data" section in your *~/bids_tutorial/code/bidsmap.yaml* file for images that should go in the BIDS sections (e.g. T1, fMRI or DWI data). If so, add training samples and redo the training steps etc
+   - Rename the *task_label* of the functional scans into something more readable, e.g. "Reward" and "Stop"
+   - Add a search pattern to the *IntendedFor* field such that it will select your fMRI series
+   
+4. Run the bidscoiner command (note that the input is the same as for the bidsmapper):  
+   **bidscoiner.py /opt/bidscoiner/tutorial/raw ~/bids_tutorial**
+   - Check your *~/bids_tutorial/code/bidscoiner.log* file for any errors or warnings 
+   - Compare your result in your *~/bids_tutorial* subject folders with the reference result in */opt/bidscoiner/tutorial/bids*. Do the results look the same? Also check the json sidecar files of the fieldmaps. Do they have the right *EchoTime* and *IntendedFor* fields?
+   - Check the *~/bids_tutorial/participants.tsv* file
+   - Run the [bids-validator](https://github.com/INCF/bids-validator) on your *~/bids_tutorial* folder 
