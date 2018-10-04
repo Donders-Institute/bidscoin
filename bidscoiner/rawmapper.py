@@ -79,11 +79,11 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=['PatientComme
                     else:
                         delim = '\n'
                     newsubsesid = dcmval.split(delim)
-                    newsubid    = 'sub-' + newsubsesid[0].replace('sub-', '')
+                    newsubid    = 'sub-' + bids.cleanup_label(newsubsesid[0].replace('sub-', ''))
                     if len(newsubsesid)==1:
                         newsesid = sesid
                     elif len(newsubsesid)==2:
-                        newsesid = 'ses-' + newsubsesid[1].replace('ses-', '')
+                        newsesid = 'ses-' + bids.cleanup_label(newsubsesid[1].replace('ses-', ''))
                     else:
                         warnings.warn('Skipping renaming of {} because the dicom-field "{}" could not be parsed into [subid, sesid]'.format(session, dcmval))
                         continue
