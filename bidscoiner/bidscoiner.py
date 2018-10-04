@@ -179,11 +179,13 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
                 intendedfor = intendedfor[2:-2].split('><')
             else:
                 intendedfor = [intendedfor]
-            niifiles = [niifile.split('/'+subid+'/', 1)[1] for niifile in sorted(glob.glob(os.path.join(bidsses, '**/*' + '*'.join(intendedfor) + '*.nii*')))]     # Use a relative path
             jsonfile = os.path.join(bidsses, 'fmap', bids.get_bidsname(subid, sesid, 'fmap', fieldmap, '1') + '.json')       # TODO: Assumes that there is only 1 fieldmap acquired for each bidsmap entry / series
+            if not os.path.isfile(jsonfile):
+                continue
             bids.printlog('Adding IntendedFor to: ' + jsonfile, logfile)
             with open(jsonfile, 'r') as json_fid:
                 data = json.load(json_fid)
+            niifiles = [niifile.split('/'+subid+'/', 1)[1] for niifile in sorted(glob.glob(os.path.join(bidsses, '**/*' + '*'.join(intendedfor) + '*.nii*')))]     # Use a relative path
             data['IntendedFor'] = niifiles
             with open(jsonfile, 'w') as json_fid:
                 json.dump(data, json_fid, indent=4)
