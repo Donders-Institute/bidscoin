@@ -194,7 +194,7 @@ Inside each BIDS modality, there can be multiple key-value mappings that map (e.
 The BIDS labels can be static, in which case the value is just a normal string, or dynamic, when the string is enclosed with pointy brackets like \<attribute name> or \<\<argument>> (see *bidsmap_sample example* above). In case of single pointy brackets the value will be replaced during bidsmapper and bidscoiner runtime by the value of the attribute with that name. In case of double pointy brackets, the value will be updated for each subject/session during bidscoiner runtime (e.g. the \<\<runindex>> value will be increased if a file with the same runindex already exists in that directory).
  
 #### Field maps: IntendedFor
-You can use the *IntendedFor* field to indicate for which series (scans) a fieldmap was intended. The dynamic value of the *IntendedFor* field can be a list of string patterns (e.g. <<["Stop*Go","RewardTask"]>>) that is used to include those series (nifti-files) that have that string pattern in their pathname.
+You can use the *IntendedFor* field to indicate for which series (scans) a fieldmap was intended. The dynamic value of the *IntendedFor* field can be a list of string patterns (e.g. <<[Stop*Go, RewardTask]>>) that is used to include those series (nifti-files) that have that string pattern in their pathname.
 
 #### Plug-in functions
 
