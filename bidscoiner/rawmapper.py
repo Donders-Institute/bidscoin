@@ -32,8 +32,8 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=['PatientComme
     outfolder = os.path.abspath(os.path.expanduser(outfolder))
 
     # Create a output mapper-file
-    mapperfile = os.path.join(outfolder, 'rawmapper_{}.tsv'.format('_'.join(dicomfield)))
     if not dryrun:
+        mapperfile = os.path.join(outfolder, 'rawmapper_{}.tsv'.format('_'.join(dicomfield)))
         if rename:
             with open(mapperfile, 'a') as fid:
                 fid.write('{}\t{}\t{}\t{}\n'.format('subid', 'sesid', 'newsubid', 'newsesid'))
