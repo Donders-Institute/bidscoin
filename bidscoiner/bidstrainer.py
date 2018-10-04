@@ -278,4 +278,4 @@ if __name__ == "__main__":
     parser.add_argument('bidsmap',      help='The bidsmap yaml-file with the BIDS heuristics (optional argument, default: ./heuristics/bidsmap_template.yaml)', nargs='?', default='bidsmap_template.yaml')
     args = parser.parse_args()
 
-    bidsmapfile = bidstrainer(samplefolder=args.samplefolder, bidsfolder=args.bidsfolder, bidsmap=args.bidsmap)
+    bidsmapfile = bidstrainer(bidsfolder=args.bidsfolder, samplefolder=args.samplefolder, bidsmapfile=args.bidsmap)
