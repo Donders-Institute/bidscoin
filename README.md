@@ -45,7 +45,9 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
 
     usage: bidstrainer.py [-h] bidsfolder [samplefolder] [bidsmap]
     
-    Takes example files from the samples folder to create a bidsmap file
+    Takes example files from the samples folder as training data and creates a key-value
+    mapping, i.e. a bidsmap_sample.yaml file, by associating the file attributes with the
+    file's BIDS-semantic pathname
     
     positional arguments:
       bidsfolder    The destination folder with the bids data structure
@@ -74,10 +76,9 @@ If all sample files have been put in the appropriate location, you can (re)run t
 
     usage: bidsmapper.py [-h] [-a] rawfolder bidsfolder [bidsmap]
     
-    Creates a bidsmap.yaml file that maps the information from the data to the BIDS
-    modalities and BIDS labels (see also [bidsmap_sample.yaml] and [bidstrainer.py]).
-    You can edit the bidsmap file before passing it to [bidscoiner.py] which uses it
-    to cast the datasets into BIDS folders
+    Creates a bidsmap.yaml YAML file that maps the information from all raw data to the
+    BIDS labels (see also [bidsmap_template.yaml] and [bidstrainer.py]). You can check
+    and edit the bidsmap.yaml file before passing it to [bidscoiner.py]
     
     positional arguments:
       rawfolder        The source folder containing the raw data in
@@ -103,7 +104,10 @@ The bidsmapper inspects all raw data folders of your dataset and saves the known
                          [-b BIDSMAP]
                          rawfolder bidsfolder
     
-    Converts datasets in the rawfolder to nifti datasets in the bidsfolder according to the BIDS standard
+    Converts ("coins") datasets in the rawfolder to nifti / json / tsv datasets in the
+    bidsfolder according to the BIDS standard. Check and edit the bidsmap.yaml file to
+    your needs before running this function. Provenance, warnings and error messages are
+    stored in the ../bidsfolder/code/bidscoiner.log file
     
     positional arguments:
       rawfolder             The source folder containing the raw data in
