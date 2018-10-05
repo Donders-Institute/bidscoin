@@ -213,7 +213,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
 1. Activate the bidscoiner environment and create a working directory for this tutorial by using these bash commands:  
    **module add anaconda3**  
    **source activate /opt/bidscoiner**  
-   **PATH=/opt/bidscoiner/1.3/bidscoiner:$PATH**
+   **PATH=/opt/bidscoiner/1.3/bidscoiner:$PATH**  
    **mkdir ~/bids_tutorial**
    
 2. Train the bidsoiner by performing these steps
