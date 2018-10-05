@@ -210,7 +210,7 @@ WIP
 ## BIDScoiner tutorial
 This tutorial is specific for researchers from the DCCN and makes use of data-sets stored on its central file-system. However, it should not be difficult to use (at least part of) this tutorial for other data-sets as well.
  
-1. Activate the bidscoiner environment and create a working directory for this tutorial by using these bash commands:  
+1. Activate the bidscoiner environment and create a BIDS output directory for this tutorial by using these bash commands:  
    **module add anaconda3**  
    **source activate /opt/bidscoiner**  
    **PATH=/opt/bidscoiner/1.3/bidscoiner:$PATH**  
