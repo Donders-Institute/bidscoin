@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 """
-Creates a bidsmap.yaml config file that maps the information from the data to the
-BIDS modalities and BIDS labels (see also [bidsmap_template.yaml] and [bidstrainer.py]).
-You can edit the bidsmap file before passing it to [bidscoiner.py] which uses it
-to cast the datasets into BIDS folders
+Creates a bidsmap.yaml YAML file that maps the information from all raw data to the
+BIDS labels (see also [bidsmap_template.yaml] and [bidstrainer.py]). You can check
+and edit the bidsmap.yaml file before passing it to [bidscoiner.py]
 """
 
 # Global imports (specific modules may be imported when needed)
@@ -234,16 +233,6 @@ def bidsmapper(rawfolder, bidsfolder, bidsmapfile='bidsmap_sample.yaml', automat
     # Create the bidsmap yaml-file in bidsfolder/code
     os.makedirs(os.path.join(bidsfolder,'code'), exist_ok=True)
     bidsmapfile = os.path.join(bidsfolder,'code','bidsmap.yaml')
-
-    # Initiate the bidsmap with some helpful text
-    bidsmap.yaml_set_start_comment = textwrap.dedent("""\
-        ------------------------------------------------------------------------------
-        Config file that maps the extracted fields to the BIDS modalities and BIDS
-        labels (see also [bidsmap_template.yaml] and [bidsmapper.py]). You can edit these.
-        fields before passing it to [bidscoiner.py] which uses it to cast the datasets
-        into the BIDS folder. The datastructure of this config file should be 5 or 6
-        levels deep and follow: dict > dict > list > dict > dict [> list]
-        ------------------------------------------------------------------------------""")
 
     # Save the bidsmap to the bidsmap yaml-file
     print('Writing bidsmap to: ' + bidsmapfile)

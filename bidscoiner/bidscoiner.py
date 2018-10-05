@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """
-Converts datasets in the rawfolder to nifti / json / tsv datasets in the
-bidsfolder according to the BIDS standard
+Converts ("coins") datasets in the rawfolder to nifti / json / tsv datasets in the
+bidsfolder according to the BIDS standard. Check and edit the bidsmap.yaml file to
+your needs before running this function. Provenance, warnings and error messages are
+stored in the ../bidsfolder/code/bidscoiner.log file
 """
 
 import os

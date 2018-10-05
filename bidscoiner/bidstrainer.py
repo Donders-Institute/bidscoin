@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """
-Takes example files from the samples folder to create a bidsmap config file
+Takes example files from the samples folder as training data and creates a key-value
+mapping -- a.k.a. a bidsmap YAML file -- by associating the file attributes with the
+file's BIDS-semantic pathname
 """
 
 import bids
@@ -246,16 +248,6 @@ def bidstrainer(bidsfolder, samplefolder='', bidsmapfile='bidsmap_template.yaml'
     # Create the bidsmap_sample yaml-file in bidsfolder/code
     os.makedirs(os.path.join(bidsfolder,'code'), exist_ok=True)
     bidsmapfile = os.path.join(bidsfolder,'code','bidsmap_sample.yaml')
-
-    # Initiate the bidsmap with some helpful text
-    bidsmap.yaml_set_start_comment = textwrap.dedent("""\
-        ------------------------------------------------------------------------------
-        Config file that maps the extracted fields to the BIDS modalities and BIDS
-        labels (see also [bidsmap_template.yaml] and [bidsmapper.py]). You can edit these.
-        fields before passing it to [bidscoiner.py] which uses it to cast the datasets
-        into the BIDS folder. The datastructure of this config file should be 5 or 6
-        levels deep and follow: dict > dict > list > dict > dict [> list]
-        ------------------------------------------------------------------------------""")
 
     # Save the bidsmap to the bidsmap yaml-file
     print('Writing bidsmap to: ' + bidsmapfile)
