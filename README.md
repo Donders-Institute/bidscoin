@@ -26,7 +26,7 @@ BIDScoiner will take your raw data as well as a YAML file with the key-value map
  
     If these utilities do not satisfy your needs, then have a look at this more elaborate [reorganize_dicom_files](https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md) tool.
 
- 2. **A YAML file with the key-value mapping information**, i.e. a bidsmap.  There are two ways to create such a bidsmap.
+ 2. **A YAML file with the key-value mapping information, i.e. a bidsmap**.  There are two ways to create such a bidsmap.
 
     The first is if you are a new user and are working from scratch. In this case you would start with the `bidstrainer.py` command-line tool (see the *BIDScoiner workflow* diagram and *the bidstrainer* section below).
 
@@ -67,7 +67,7 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
 
 The central idea of the bidstrainer is that you know your own scan protocol and can therefore point out which files should go where in the BIDS. In order to do so, you have to put raw sample files for each of the scan modalities / series in your protocol (e.g. T1, fMRI, etc) in the appropriate folder of a semantic folder tree (named 'samples', see bidstrainer example below). If you run bidstrainer with just the name of your bidsfolder, bidstrainer will create this semantic folder tree for you in the *code* subfolder (if it is not already there). Generally, when placing your sample files, it will be fairly straightforward to find your way in this semantic folder tree, but in doubt you should have a look at the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf). Note that the deepest foldername in the tree denotes the BIDS suffix (e.g. 'T1w').
 
-If all sample files have been put in the appropriate location, you can (re)run the bidstrainer to create a bidsmap YAML file for your study. How this works is that the bidstrainer will read a predefined set of (e.g. key dicom) attributes from your sample files that uniquely identify the particular scan sequence and, on the other, take the path-names of the sample files to infer the associated BIDS modality labels. In this way, a unique key-value mapping is defined that can be used as input for the bidsmapper tool (see next section). If this mapping is not unique (not likely but possible), or if you prefer to use more or other attributes than the predefined ones, you can (copy and) edit the bidsmap_template.yaml file in the heuristics folder and use that as an additional input for the bidstrainer.
+If all sample files have been put in the appropriate location, you can (re)run the bidstrainer to create a bidsmap file for your study. How this works is that the bidstrainer will read a predefined set of (e.g. key dicom) attributes from your sample files that uniquely identify the particular scan sequence and, on the other, take the path-names of the sample files to infer the associated BIDS modality labels. In this way, a unique key-value mapping is defined that can be used as input for the bidsmapper tool (see next section). If this mapping is not unique (not likely but possible), or if you prefer to use more or other attributes than the predefined ones, you can (copy and) edit the bidsmap_template.yaml file in the heuristics folder and use that as an additional input for the bidstrainer.
 
 ![Bidstrainer example](./docs/sample_tree.png)
 *Bidstrainer example. The red arrow depicts a raw data sample (left file browser) that is put (copied over) to the appropriate location in the semantic folder tree (right file browser)*
@@ -96,7 +96,7 @@ If all sample files have been put in the appropriate location, you can (re)run t
       bidsmapper.py /project/foo/raw /project/foo/bids
       bidsmapper.py /project/foo/raw /project/foo/bids bidsmap_dccn
 
-The bidsmapper inspects all raw data folders of your dataset and saves the known and unknown key-value mappings in a (study specific) bidsmap YAML file. You can consider it as a dry-run for how exactly bidscoiner will convert the raw data into BIDS folders. It is therefore advised to inspect the resulting bidsmap.yaml file to see if all scan series were recognized correctly with proper BIDS labels (for more details, see *The bidsmap YAML file* section). This can be the case if your bidstraining or the bidsmap YAML file that was provided to you was incomplete. If so, you should either get an updated bidsmap YAML file or redo the bidstraining with new sample files, rerun the bidstrainer and bidsmapper until you have a suitable bidsmap.yaml file. You can of course also directly edit the bidsmap.yaml file yourself, for instance by changing some of the automatically generated BIDS labels to your needs (e.g. task_label).
+The bidsmapper inspects all raw data folders of your dataset and saves the known and unknown key-value mappings in a (study specific) bidsmap file. You can consider it as a dry-run for how exactly bidscoiner will convert the raw data into BIDS folders. It is therefore advised to inspect the resulting bidsmap.yaml file to see if all scan series were recognized correctly with proper BIDS labels (for more details, see *The bidsmap file* section). This can be the case if your bidstraining or the bidsmap file that was provided to you was incomplete. If so, you should either get an updated bidsmap file or redo the bidstraining with new sample files, rerun the bidstrainer and bidsmapper until you have a suitable bidsmap.yaml file. You can of course also directly edit the bidsmap.yaml file yourself, for instance by changing some of the automatically generated BIDS labels to your needs (e.g. task_label).
 
 ### The bidscoiner
 
@@ -143,11 +143,11 @@ After a successful run of bidscoiner, you can (and should) run the web-based [bi
 
 NB: The provenance of the produced BIDS data-sets is stored in the bids/code/bidscoiner.log file. This file is also very useful for debugging / tracking down bidsmapping issues.
 
-## The bidsmap YAML file
+## The bidsmap files
 
-The bidsmap.yaml file is a key-value store that contains all the mapping heuristics for converting the raw data files into BIDS. The bidsmap_template.yaml and the bidsmap_sample.yaml files can be seen as precursors of the bidsmap.yaml file and will not be explained separately. Put differently, they have parent-child relationships and only the differences will be mentioned where they exist.
+A bidsmap file contains a collection of key-value dictionaries that define unique mappings between different types of raw data files (e.g. DICOM series) and their corresponding BIDS labels. As bidsmap files are both inputs as well as outputs for the different BIDScoiner tools (except for `bidscoiner.py`, which has BIDS data as output; see the *BIDScoiner workflow*), they are derivatives of eachother and, as such, share the same basic structure. The template bidsmap is relatively empty and defines only which attributes (but not their values) are mapped to which BIDS-labels. The sample/site bidsmap contains actual attribute values (e.g. from training samples from a certain study or site) and their associated BIDS-values. The final bidsmap contains the attribute and associated BIDS values for all types of data found in entire raw data collection.
 
-The bidsmap file consists of help-text, followed by several key-value mapping sections, i.e. Options, DICOM, PAR, P7, Nifti, FileSystem and Plugin. Within each of these sections there different sub-sections for the different BIDS modalities, i.e. for anat, func, dwi, fmap and beh. There are a few additional sections, i.e. participant_label, session_label and extra_data. Schematically, this looks as follows:
+A bidsmap file consists of help-text, followed by several mapping sections, i.e. Options, DICOM, PAR, P7, Nifti, FileSystem and Plugin. Within each of these sections there different sub-sections for the different BIDS modalities, i.e. for anat, func, dwi, fmap and beh. There are a few additional sections, i.e. participant_label, session_label and extra_data. Schematically, a bidsmap file has the following structure:
 
  - **Options** *(A list of general options that can be passed to the bidscoiner and its plug-ins)*
  - **DICOM**
