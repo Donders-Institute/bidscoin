@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Takes example files from the samples folder as training data and creates a key-value
-mapping -- a.k.a. a bidsmap YAML file -- by associating the file attributes with the
+mapping, i.e. a bidsmap_sample.yaml file, by associating the file attributes with the
 file's BIDS-semantic pathname
 """
 
