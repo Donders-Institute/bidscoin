@@ -218,7 +218,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    mkdir ~/bids_tutorial
    ```
    
-2. Train the bidsoiner by performing these steps
+2. Perform training on some raw data samples:
    - Create a sample foldertree in your bids output folder with this bash command:  
    ```
    bidstrainer.py ~/bids_tutorial
@@ -226,7 +226,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    - Put files in the right folders in this tree
    - Do the training by re-running the above bidstrainer command
    
-3. Run the bidsmapper bash command:  
+3. Scan your raw data collection by running the bidsmapper bash command:  
    ```
    bidsmapper.py /opt/bidscoiner/tutorial/raw ~/bids_tutorial
    ```
@@ -234,7 +234,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    - Rename the *task_label* of the functional scans into something more readable, e.g. "Reward" and "Stop"
    - Add a search pattern to the *IntendedFor* field such that it will select your fMRI series
    
-4. Run the bidscoiner command (note that the input is the same as for the bidsmapper):  
+4. Convert your raw data collection into BIDS by running the bidscoiner bash command (note that the input is the same as for the bidsmapper):  
    ```
    bidscoiner.py /opt/bidscoiner/tutorial/raw ~/bids_tutorial
    ```
