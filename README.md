@@ -30,11 +30,11 @@ BIDScoiner is a command-line tool that requires no programming knowledge in orde
 
 BIDScoiner will take your raw data as well as a YAML file with the key-value mapping information as input, and returns a BIDS folder as output. Here is how to prepare the BIDScoiner inputs:
 
- 1. **A minimally organised raw data folder**, following a  
- /raw/sub-[identifier]/ses-[identifier]/[seriesfolder]/[dicomfile]  
- structure. This data organization is how users receive their data from the (Siemens) scanners at the DCCN (NB: the ses-[identifier] sub-folder is optional and can be left out).
+ 1. **A minimally organised raw data folder**, following a
+ `/raw/sub-[identifier]/ses-[identifier]/[seriesfolder]/[dicomfile]`
+ structure. This data organization is how users receive their data from the (Siemens) scanners at the [DCCN](https://www.ru.nl/donders/) (NB: the `ses-[identifier]` sub-folder is optional and can be left out).
 
-    If your data is not already organized in this way, you can use the `dicomsort.py` command-line utility to move your unordered dicom-files into a [seriesfolder] organization with the series folders being named [SeriesNumber]-[SeriesDescription].
+    If your data is not already organized in this way, you can use the `dicomsort.py` command-line utility to move your unordered dicom-files into a `seriesfolder` organization with the series folders being named [SeriesNumber]-[SeriesDescription].
  
     Another command-line utility that can be helpful in organizing your raw data is `rawmapper.py`. This utility can show you the overview (map) of all the values of dicom-fields of interest in your data-set and, optionally, use these fields to rename your raw data sub-folders (this can be handy e.g. if you manually entered subject-identifiers as "Additional info" at the scanner console and you want to use these to rename your subject folders).
  
