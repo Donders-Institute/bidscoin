@@ -42,9 +42,9 @@ BIDScoiner will take your raw data as well as a YAML file with the key-value map
 
  2. **A YAML file with the key-value mapping information, i.e. a bidsmap**.  There are two ways to create such a bidsmap.
 
-    The first is if you are a new user and are working from scratch. In this case you would start with the `bidstrainer.py` command-line tool (see the *BIDScoiner workflow* diagram and *the bidstrainer* section below).
+    The first is if you are a new user and are working from scratch. In this case you would start with the `bidstrainer.py` command-line tool (see the [BIDScoiner workflow](#bidscoiner-workflow) diagram and [the bidstrainer](#the-bidstrainer) section below).
 
-    If you have run the bidstrainer or, e.g. if you work in an institute where someone else (i.e. your MR physicist ;-)) has already performed the training procedure, you can use the training data to map all the files in your data-set with the `bidsmapper.py` command-line tool (see *the bidsmapper* section below).
+    If you have run the bidstrainer or, e.g. if you work in an institute where someone else (i.e. your MR physicist ;-)) has already performed the training procedure, you can use the training data to map all the files in your data-set with the `bidsmapper.py` command-line tool (see [the bidsmapper](#the-bidsmapper) section below).
 
     The output of the bidsmapper is the complete bidsmap that you can inspect to see if your raw data will be correctly mapped onto BIDS. If this is not the case you can go back to the training procedure and change or add new samples, and rerun the bidstrainer and bidsmapper until you have a suitable bidsmap. Alternatively, or in addition to, you can directly edit the bidsmap yourself (this requires more expert knowledge but can also be more powerful). 
 
