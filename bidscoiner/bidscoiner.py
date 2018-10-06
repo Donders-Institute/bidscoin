@@ -325,6 +325,29 @@ def bidscoiner(rawfolder, bidsfolder, subjects=[], force=False, participants=Fal
     bids.printlog('------------ START ------------\n>>> bidscoiner rawfolder={arg1} bidsfolder={arg2} subjects={arg3} force={arg4} participants={arg5} bidsmap={arg6}'.format(
         arg1=rawfolder, arg2=bidsfolder, arg3=subjects, arg4=force, arg5=participants, arg6=bidsmapfile), logfile)
 
+    # Create a dataset description file if it does not exist
+    dataset_file = os.path.join(bidsfolder, 'dataset_description.json')
+    if not os.path.isfile(dataset_file):
+        dataset_description = {"Name":                  "REQUIRED. Name of the dataset",
+                               "BIDSVersion":           "1.1.1",
+                               "License":               "RECOMMENDED. What license is this dataset distributed under?. The use of license name abbreviations is suggested for specifying a license",
+                               "Authors":               ["OPTIONAL. List of individuals who contributed to the creation/curation of the dataset"],
+                               "Acknowledgements":      "OPTIONAL. List of individuals who contributed to the creation/curation of the dataset",
+                               "HowToAcknowledge":      "OPTIONAL. Instructions how researchers using this dataset should acknowledge the original authors. This field can also be used to define a publication that should be cited in publications that use the dataset",
+                               "Funding":               ["OPTIONAL. List of sources of funding (grant numbers)"],
+                               "ReferencesAndLinks":    ["OPTIONAL. List of references to publication that contain information on the dataset, or links"],
+                               "DatasetDOI":            "OPTIONAL. The Document Object Identifier of the dataset (not the corresponding paper)"}
+        bids.printlog('Creating dataset description file: ' + dataset_file, logfile)
+        with open(dataset_file, 'w') as fid:
+            json.dump(dataset_description, fid, indent=4)
+
+    # Create a README file if it does not exist
+    readme_file = os.path.join(bidsfolder, 'README')
+    if not os.path.isfile(readme_file):
+        bids.printlog('Creating README file: ' + readme_file, logfile)
+        with open(readme_file, 'w') as fid:
+            fid.write('A free form text ( README ) describing the dataset in more details that SHOULD be provided')
+
     # Get the bidsmap heuristics from the bidsmap yaml-file
     bidsmap = bids.get_heuristics(bidsmapfile, os.path.join(bidsfolder,'code'))
 
@@ -385,6 +408,7 @@ def bidscoiner(rawfolder, bidsfolder, subjects=[], force=False, participants=Fal
                 if key not in participants_table.columns:
                     participants_table[key] = None
             participants_table = participants_table.append(personals, ignore_index=True, verify_integrity=True)
+            bids.printlog('Writing subject data to: ' + participants_file, logfile)
             participants_table.to_csv(participants_file, sep='\t', encoding='utf-8', index=False)
 
     bids.printlog('------------ FINISHED! ------------', logfile)
