@@ -11,7 +11,7 @@
     + [Dynamic values](#dynamic-values)
     + [Field maps: IntendedFor](#field-maps-intendedfor)
     + [Plug-in functions](#plug-in-functions)
-- [BIDScoiner support / TODO](#bidscoiner-support--todo)
+- [BIDScoiner functionality / TODO](#bidscoiner-functionality--todo)
 - [BIDScoiner tutorial](#bidscoiner-tutorial)
 
 BIDScoiner is a python commandline toolkit that converts ("coins") source-level (raw) MRI data-sets to [nifti](https://nifti.nimh.nih.gov/) / [json](https://www.json.org/) / [tsv](https://en.wikipedia.org/wiki/Tab-separated_values) data-sets that are organized according to the Brain Imaging Data Standard, a.k.a. [BIDS](http://bids.neuroimaging.io). Rather then depending on complex or ambiguous logic, BIDScoiner uses a simple (but powerful) key-value approach to convert the raw source data into BIDS data. The key values that can be used in BIDScoiner to map the data are:
@@ -22,7 +22,7 @@ BIDScoiner is a python commandline toolkit that converts ("coins") source-level 
 
 The key-value heuristics are stored in flexible, human readable and broadly supported [YAML](http://yaml.org/) files. The nifti- and json-files are generated with [dcm2niix](https://github.com/rordenlab/dcm2niix).
 
-Currently, BIDScoiner is quite [functional](#bidscoiner-support--todo), although only option (1) has been implemented for DICOM. (NB: Options (2) and (3) are planned for future versions, such that (3) takes precedence over (2), which in turn takes precedence over (1)).
+Currently, BIDScoiner is quite [functional](#bidscoiner-functionality--todo), although only option (1) has been implemented for DICOM. (NB: Options (2) and (3) are planned for future versions, such that (3) takes precedence over (2), which in turn takes precedence over (1)).
 
 BIDScoiner is a user friendly toolkit that requires no programming knowledge in order to use it, just some basic file handling and, possibly, minor (YAML) text editing.
 
@@ -153,7 +153,7 @@ The `bidsmapper.py` tool goes over all raw data folders of your dataset and save
 
 The `bidscoiner.py` tool is the workhorse of the toolkit that will fully automatically convert your source-level (raw) MRI data-sets to BIDS organized data-sets. You can run this tool after all data is collected, or whenever new data has been added to the raw folder.
 
-After a successful run of bidscoiner, you can (and should) run the web-based [bidsvalidator](https://incf.github.io/bids-validator/) to check for inconsistencies or missing files in your bids data-set or use a [command-line version](https://github.com/INCF/bids-validator). For instance, if you have behavioural log-files you will find that the bidscoiner tool does not (yet) [support](#bidscoiner-support--todo) converting these into BIDS compliant *_events.tsv/json files. Advanced users are encouraged to use the bidscoiner [plug-in](#plug-in-functions) possibility and write their own log-file parser.
+After a successful run of bidscoiner, you can (and should) run the web-based [bidsvalidator](https://incf.github.io/bids-validator/) to check for inconsistencies or missing files in your bids data-set or use a [command-line version](https://github.com/INCF/bids-validator). For instance, if you have behavioural log-files you will find that the bidscoiner tool does not (yet) [support](#bidscoiner-functionality--todo) converting these into BIDS compliant *_events.tsv/json files. Advanced users are encouraged to use the bidscoiner [plug-in](#plug-in-functions) possibility and write their own log-file parser.
 
 NB: The provenance of the produced BIDS data-sets is stored in the `bids/code/bidscoiner.log` file. This file is also very useful for debugging / tracking down bidsmapping issues.
 
@@ -221,7 +221,7 @@ You can use the "IntendedFor" field to indicate for which series (scans) a field
 
 WIP
 
-## BIDScoiner support / TODO
+## BIDScoiner functionality / TODO
 - [x] DICOM source data
 - [ ] PAR / REC source data
 - [ ] P7 source data
