@@ -9,7 +9,7 @@
   * [Tips and tricks](#tips-and-tricks)
     + [Attribute list](#attribute-list)
     + [Dynamic values](#dynamic-values)
-    + [Field maps: IntendedFor](#field-maps:-intendedfor)
+    + [Field maps: IntendedFor](#field-maps--intendedfor)
     + [Plug-in functions](#plug-in-functions)
 - [BIDScoiner support / TODO](#bidscoiner-support---todo)
 - [BIDScoiner tutorial](#bidscoiner-tutorial)
@@ -22,7 +22,7 @@ BIDScoiner is a python toolkit that converts ("coins") source-level (raw) MRI da
 
 The key-value heuristics are stored in flexible, human readable and broadly supported [YAML](http://yaml.org/) files. The nifti- and json-files are generated with [dcm2niix](https://github.com/rordenlab/dcm2niix).
 
-Currently, BIDScoiner is quite functional, although only option (1) has been [implemented](#bidscoiner-support-/-TODO) for DICOM. (NB: Options (2) and (3) are planned for future versions, such that (3) takes precedence over (2), which in turn takes precedence over (1)).
+Currently, BIDScoiner is quite functional, although only option (1) has been [implemented](#bidscoiner-support---TODO) for DICOM. (NB: Options (2) and (3) are planned for future versions, such that (3) takes precedence over (2), which in turn takes precedence over (1)).
 
 BIDScoiner is a command-line tool that requires no programming knowledge in order to use it, just some basic file handling and, possibly, minor (YAML) text editing.
 
@@ -256,7 +256,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    ```
    - Check the "extra_data" section in your `~/bids_tutorial/code/bidsmap.yaml` file for images that should go in the BIDS sections (e.g. T1, fMRI or DWI data). If so, add training samples and redo the training steps etc
    - Rename the *task_label* of the functional scans into something more readable, e.g. "Reward" and "Stop"
-   - Add a search pattern to the [IntendedFor field](#field-maps:-intendedfor) such that it will select your fMRI series
+   - Add a search pattern to the [IntendedFor field](#field-maps--intendedfor) such that it will select your fMRI series
    
 4. Convert your raw data collection into BIDS by running the bidscoiner bash command (note that the input is the same as for the bidsmapper):  
    ```
