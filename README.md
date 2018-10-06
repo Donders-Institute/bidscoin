@@ -207,6 +207,16 @@ You can use the *IntendedFor* field to indicate for which series (scans) a field
 
 WIP
 
+## Support / TODO
+- [x] DICOM source data
+- [ ] PAR / REC source data
+- [ ] P7 source data
+- [ ] Nifti source data
+- [x] Fieldmaps
+- [x] Multi-echo data
+- [x] Multi-coil data
+- [ ] Stimulus / behavioural logfiles
+
 ## BIDScoiner tutorial
 This tutorial is specific for researchers from the DCCN and makes use of data-sets stored on its central file-system. However, it should not be difficult to use (at least part of) this tutorial for other data-sets as well.
  
@@ -242,13 +252,3 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    - Compare your result in your *~/bids_tutorial* subject folders with the reference result in */opt/bidscoiner/tutorial/bids*. Do the results look the same? Also check the json sidecar files of the fieldmaps. Do they have the right *EchoTime* and *IntendedFor* fields?
    - Check the *~/bids_tutorial/participants.tsv* file
    - Run the [bids-validator](https://github.com/INCF/bids-validator) on your *~/bids_tutorial* folder 
-
-## Support / TODO
-- [x] DICOM source data
-- [ ] PAR / REC source data
-- [ ] P7 source data
-- [ ] Nifti source data
-- [x] Fieldmaps
-- [x] Multi-echo data
-- [x] Multi-coil data
-- [ ] Stimulus / behavioural logfiles
