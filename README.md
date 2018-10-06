@@ -24,7 +24,7 @@ The key-value heuristics are stored in flexible, human readable and broadly supp
 
 Currently, BIDScoiner is quite [functional](#bidscoiner-functionality--todo), although only option (1) has been implemented for DICOM. (NB: Options (2) and (3) are planned for future versions, such that (3) takes precedence over (2), which in turn takes precedence over (1)).
 
-BIDScoiner is a user friendly toolkit that requires no programming knowledge in order to use it, just some basic file handling and, possibly, minor (YAML) text editing.
+BIDScoiner is a user friendly toolkit that requires no programming knowledge in order to use it, just some basic file handling and, possibly, minor (YAML) text editing skills.
 
 ## The BIDScoiner workflow
 
