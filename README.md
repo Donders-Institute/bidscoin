@@ -14,7 +14,7 @@
 - [BIDScoiner support / TODO](#bidscoiner-support--todo)
 - [BIDScoiner tutorial](#bidscoiner-tutorial)
 
-BIDScoiner is a python toolkit that converts ("coins") source-level (raw) MRI data-sets to nifti / json / tsv data-sets that are organized according to the Brain Imaging Data Standard, a.k.a. [BIDS](http://bids.neuroimaging.io). Rather then depending on logic, BIDScoiner uses a simple (but powerful) key-value approach to convert the raw source data into BIDS data. The key values that can be used in BIDScoiner to map the data are:
+BIDScoiner is a python toolkit that converts ("coins") source-level (raw) MRI data-sets to [nifti](https://nifti.nimh.nih.gov/) / [json](https://www.json.org/) / [tsv](https://en.wikipedia.org/wiki/Tab-separated_values) data-sets that are organized according to the Brain Imaging Data Standard, a.k.a. [BIDS](http://bids.neuroimaging.io). Rather then depending on logic, BIDScoiner uses a simple (but powerful) key-value approach to convert the raw source data into BIDS data. The key values that can be used in BIDScoiner to map the data are:
 
  1. Information in the MRI header files (DICOM, PAR/REC or .7 format, e.g. SeriesDescription)
  2. Information from nifti headers (e.g. image dimensionality)
@@ -79,7 +79,7 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
       bidstrainer.py /project/foo/bids
       bidstrainer.py /project/foo/bids /project/foo/samples bidsmap_custom
 
-The core idea of the bidstrainer is that you know your own scan protocol and can therefore point out which files should go where in the BIDS. In order to do so, you have to place raw sample files for each of the scan modalities / series in your protocol (e.g. T1, fMRI, etc) in the appropriate folder of a semantic folder tree (named 'samples', see the [bidstrainer example](#bidstrainer-example)). If you run `bidstrainer.py` with just the name of your bidsfolder, bidstrainer will create this semantic folder tree for you in the *code* subfolder (if it is not already there). Generally, when placing your sample files, it will be fairly straightforward to find your way in this semantic folder tree, but in doubt you should have a look at the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf). Note that the deepest foldername in the tree denotes the BIDS suffix (e.g. 'T1w').
+The core idea of the bidstrainer is that you know your own scan protocol and can therefore point out which files should go where in the BIDS. In order to do so, you have to place raw sample files for each of the scan modalities / series in your protocol (e.g. T1, fMRI, etc) in the appropriate folder of a semantic folder tree (named `samples`, see the [bidstrainer example](#bidstrainer-example)). If you run `bidstrainer.py` with just the name of your bidsfolder, bidstrainer will create this semantic folder tree for you in the `code` subfolder (if it is not already there). Generally, when placing your sample files, it will be fairly straightforward to find your way in this semantic folder tree, but in doubt you should have a look at the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf). Note that the deepest foldername in the tree denotes the BIDS suffix (e.g. "T1w").
 
 If all sample files have been put in the appropriate location, you can (re)run the bidstrainer to create a bidsmap file for your study. How this works is that the bidstrainer will read a predefined set of (e.g. key dicom) attributes from your sample files that uniquely identify the particular scan sequence and, on the other, take the path-names of the sample files to infer the associated BIDS modality labels. In this way, a unique key-value mapping is defined that can be used as input for the [bidsmapper tool](#the-bidsmapper). If this mapping is not unique (not likely but possible), or if you prefer to use more or other attributes than the predefined ones, you can (copy and) edit the [bidsmap_template.yaml](./heuristics/bidsmap_template.yaml) file in the heuristics folder and re-run the bidstrainer whith this customized template as an input argument.
 
@@ -110,7 +110,7 @@ If all sample files have been put in the appropriate location, you can (re)run t
       bidsmapper.py /project/foo/raw /project/foo/bids
       bidsmapper.py /project/foo/raw /project/foo/bids bidsmap_dccn
 
-The `bidsmapper.py` tool goes over all raw data folders of your dataset and saves the known and unknown key-value mappings in a (study specific) [bidsmap file](#the-bidsmap-files). You can consider it as a dry-run for how exactly the [bidscoiner](#the-bidscoiner) will convert the raw data into BIDS folders. It gives you the opportunity to inspect the resulting `bidsmap.yaml` file to see if all scan series were recognized correctly with proper BIDS labels before doing the actual conversion to BIDS. Unexpected mappings or poor BIDS labels can be found if your bidstraining or the bidsmap file that was provided to you was incomplete. In that case you should either get an updated bidsmap file or redo the bidstraining with new sample files, rerun the bidstrainer and bidsmapper until you have a suitable `bidsmap.yaml` file. You can of course also directly edit the `bidsmap.yaml` file yourself, for instance by changing some of the automatically generated BIDS labels to your needs (e.g. 'task_label').
+The `bidsmapper.py` tool goes over all raw data folders of your dataset and saves the known and unknown key-value mappings in a (study specific) [bidsmap file](#the-bidsmap-files). You can consider it as a dry-run for how exactly the [bidscoiner](#the-bidscoiner) will convert the raw data into BIDS folders. It gives you the opportunity to inspect the resulting `bidsmap.yaml` file to see if all scan series were recognized correctly with proper BIDS labels before doing the actual conversion to BIDS. Unexpected mappings or poor BIDS labels can be found if your bidstraining or the bidsmap file that was provided to you was incomplete. In that case you should either get an updated bidsmap file or redo the bidstraining with new sample files, rerun the bidstrainer and bidsmapper until you have a suitable `bidsmap.yaml` file. You can of course also directly edit the `bidsmap.yaml` file yourself, for instance by changing some of the automatically generated BIDS labels to your needs (e.g. "task_label").
 
 ### The bidscoiner
 
@@ -200,11 +200,11 @@ A bidsmap file consists of help-text, followed by several mapping sections, i.e.
  - **FileSystem**.
  - **PlugIn**. Name of the python plug-in function. Supported but this is an experimental (untested) feature
 
-Inside each BIDS modality, there can be multiple key-value mappings that map (e.g. DICOM) modality [attributes] to the BIDS [labels] (e.g. *task_label*), as indicated below:
+Inside each BIDS modality, there can be multiple key-value mappings that map (e.g. DICOM) modality [attributes] to the BIDS [labels] (e.g. "task_label"), as indicated below:
 
 <img name="bidsmap-sample" src="./docs/bidsmap_sample.png" alt="bidsmap_sample example" width="700">
 
-*Bidsmap_sample example. As indicated by the solid arrowline, the set of DICOM values (suitable to uniquely identify the dicom series) are used here a key-set that maps onto the set of BIDS labels. Note that certain BIDS labels are enclosed by pointy brackets, marking their [dynamic value](#dynamic-values). In this bidsmap, as indicated by the dashed arrowline, that means that \<ProtocolName> will be replaced in a later stage by "t1_mprage_sag_p2_iso_1.0" (for more details see *Tips and tricks*). Also note that in this bidsmap there was only one T1-image, but there where two different fMRI series (here because of multi-echo, but multiple tasks could also be listed)*
+*Bidsmap_sample example. As indicated by the solid arrowline, the set of DICOM values (suitable to uniquely identify the dicom series) are used here a key-set that maps onto the set of BIDS labels. Note that certain BIDS labels are enclosed by pointy brackets, marking their [dynamic value](#dynamic-values). In this bidsmap, as indicated by the dashed arrowline, that means that \<ProtocolName> will be replaced in a later stage by "t1_mprage_sag_p2_iso_1.0". Also note that in this bidsmap there was only one T1-image, but there where two different fMRI series (here because of multi-echo, but multiple tasks could also be listed)*
 
 ### Tips and tricks
 
@@ -255,7 +255,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    bidsmapper.py /opt/bidscoiner/tutorial/raw ~/bids_tutorial
    ```
    - Check the "extra_data" section in your `~/bids_tutorial/code/bidsmap.yaml` file for images that should go in the BIDS sections (e.g. T1, fMRI or DWI data). If so, add training samples and redo the training steps etc
-   - Rename the *task_label* of the functional scans into something more readable, e.g. "Reward" and "Stop"
+   - Rename the "task_label" of the functional scans into something more readable, e.g. "Reward" and "Stop"
    - Add a search pattern to the [IntendedFor](#field-maps-intendedfor) field such that it will select your fMRI series
    
 4. Convert your raw data collection into BIDS by running the bidscoiner bash command (note that the input is the same as for the bidsmapper):  
@@ -263,6 +263,6 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    bidscoiner.py /opt/bidscoiner/tutorial/raw ~/bids_tutorial
    ```
    - Check your `~/bids_tutorial/code/bidscoiner.log` file for any errors or warnings 
-   - Compare your result in your `~/bids_tutorial` subject folders with the reference result in `/opt/bidscoiner/tutorial/bids`. Do the results look the same? Also check the json sidecar files of the fieldmaps. Do they have the right *EchoTime* and *IntendedFor* fields?
+   - Compare your result in your `~/bids_tutorial` subject folders with the reference result in `/opt/bidscoiner/tutorial/bids`. Do the results look the same? Also check the json sidecar files of the fieldmaps. Do they have the right "EchoTime" and "IntendedFor" fields?
    - Check the `~/bids_tutorial/participants.tsv` file
-   - Run the [bids-validator](https://github.com/INCF/bids-validator) on your *~/bids_tutorial* folder 
+   - Run the [bids-validator](https://github.com/INCF/bids-validator) on your `~/bids_tutorial` folder 
