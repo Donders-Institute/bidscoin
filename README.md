@@ -1,5 +1,19 @@
 # BIDScoiner
 
+- [The BIDScoiner workflow](#the-bidscoiner-workflow)
+- [The BIDScoiner tools](#the-bidscoiner-tools)
+  * [The bidstrainer](#the-bidstrainer)
+  * [The bidsmapper](#the-bidsmapper)
+  * [The bidscoiner](#the-bidscoiner)
+- [The bidsmap files](#the-bidsmap-files)
+  * [Tips and tricks](#tips-and-tricks)
+    + [Attribute list](#attribute-list)
+    + [Dynamic values](#dynamic-values)
+    + [Field maps: IntendedFor](#field-maps--intendedfor)
+    + [Plug-in functions](#plug-in-functions)
+- [BIDScoiner support / TODO](#bidscoiner-support---todo)
+- [BIDScoiner tutorial](#bidscoiner-tutorial)
+
 BIDScoiner is a python toolkit that converts ("coins") source-level (raw) MRI data-sets to nifti / json / tsv data-sets that are organized according to the Brain Imaging Data Standard, a.k.a. [BIDS](http://bids.neuroimaging.io). Rather then depending on logic, BIDScoiner uses a simple (but powerful) key-value approach to convert the raw source data into BIDS data. The key values that can be used in BIDScoiner to map the data are:
 
  1. Information in the MRI header files (DICOM, PAR/REC or .7 format, e.g. SeriesDescription)
