@@ -38,7 +38,7 @@ BIDScoiner will take your raw data as well as a YAML file with the key-value map
  
     Another command-line utility that can be helpful in organizing your raw data is `rawmapper.py`. This utility can show you the overview (map) of all the values of dicom-fields of interest in your data-set and, optionally, use these fields to rename your raw data sub-folders (this can be handy e.g. if you manually entered subject-identifiers as [Additional info] at the scanner console and you want to use these to rename your subject folders).
  
-    If these utilities do not satisfy your needs, then have a look at this more elaborate [reorganize_dicom_files](https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md) tool.
+    If these utilities do not satisfy your needs, then have a look at this [reorganize_dicom_files](https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md) tool.
 
  2. **A YAML file with the key-value mapping information, i.e. a bidsmap**.  There are two ways to create such a [bidsmap](#the-bidsmap-files).
 
