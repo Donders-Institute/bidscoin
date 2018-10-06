@@ -207,7 +207,7 @@ You can use the *IntendedFor* field to indicate for which series (scans) a field
 
 WIP
 
-## Support / TODO
+## BIDScoiner support / TODO
 - [x] DICOM source data
 - [ ] PAR / REC source data
 - [ ] P7 source data
