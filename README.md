@@ -48,7 +48,7 @@ BIDScoiner will take your raw data as well as a YAML file with the key-value map
 
     The output of the bidsmapper is the complete bidsmap that you can inspect to see if your raw data will be correctly mapped onto BIDS. If this is not the case you can go back to the training procedure and change or add new samples, and rerun the bidstrainer and bidsmapper until you have a suitable bidsmap. Alternatively, or in addition to, you can directly edit the bidsmap yourself (this requires more expert knowledge but can also be more powerful). 
 
-    <a name="bidscoiner-workflow">![BIDScoiner workflow](./docs/workflow.png)</a>
+    <a name="bidscoiner-workflow">![BIDScoiner workflow](./docs/workflow.png)</a>  
     *BIDScoiner workflow. Left: New users would start with the bidstrainer, which output can be fed into the bidsmapper to produce the bidsmap.yaml file. This file can (and should) be inspected and, in case of incorrect mappings, inform the user to add raw training samples and re-run the training procedure (dashed arrowlines). Right: Institute users could start with an institute provided bidsmap file (e.g. bidsmap_dccn.yaml) and directly use the bidsmapper. In case of incorrect mappings they could ask the institute for an updated bidsmap (dashed arrowline).*
 
 Having an organized raw data folder and a correct bidsmap, the actual data-set conversion to BIDS can now be performed fully automatically by simply running the `bidscoiner.py` command-line tool (see the [BIDScoiner workflow](#bidscoiner-workflow) diagram and [the bidscoiner](#the-bidscoiner) section).
@@ -83,7 +83,7 @@ The core idea of the bidstrainer is that you know your own scan protocol and can
 
 If all sample files have been put in the appropriate location, you can (re)run the bidstrainer to create a bidsmap file for your study. How this works is that the bidstrainer will read a predefined set of (e.g. key dicom) attributes from your sample files that uniquely identify the particular scan sequence and, on the other, take the path-names of the sample files to infer the associated BIDS modality labels. In this way, a unique key-value mapping is defined that can be used as input for the [bidsmapper tool](#the-bidsmapper). If this mapping is not unique (not likely but possible), or if you prefer to use more or other attributes than the predefined ones, you can (copy and) edit the [bidsmap_template.yaml](./heuristics/bidsmap_template.yaml) file in the heuristics folder and re-run the bidstrainer whith this customized template as an input argument.
 
-<a name="bidstrainer-example">![Bidstrainer example](./docs/sample_tree.png)<\a>
+<a name="bidstrainer-example">![Bidstrainer example](./docs/sample_tree.png)<\a>  
 *Bidstrainer example. The red arrow depicts a raw data sample (left file browser) that is put (copied over) to the appropriate location in the semantic folder tree (right file browser)*
 
 ### The bidsmapper
