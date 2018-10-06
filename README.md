@@ -65,7 +65,7 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
       bidstrainer.py /project/foo/bids
       bidstrainer.py /project/foo/bids /project/foo/samples bidsmap_custom
 
-The central idea of the bidstrainer is that you know your own scan protocol and can therefore point out which files should go where in the BIDS. In order to do so, you have to place raw sample files for each of the scan modalities / series in your protocol (e.g. T1, fMRI, etc) in the appropriate folder of a semantic folder tree (named 'samples', see bidstrainer example below). If you run bidstrainer with just the name of your bidsfolder, bidstrainer will create this semantic folder tree for you in the *code* subfolder (if it is not already there). Generally, when placing your sample files, it will be fairly straightforward to find your way in this semantic folder tree, but in doubt you should have a look at the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf). Note that the deepest foldername in the tree denotes the BIDS suffix (e.g. 'T1w').
+The core idea of the bidstrainer is that you know your own scan protocol and can therefore point out which files should go where in the BIDS. In order to do so, you have to place raw sample files for each of the scan modalities / series in your protocol (e.g. T1, fMRI, etc) in the appropriate folder of a semantic folder tree (named 'samples', see bidstrainer example below). If you run bidstrainer with just the name of your bidsfolder, bidstrainer will create this semantic folder tree for you in the *code* subfolder (if it is not already there). Generally, when placing your sample files, it will be fairly straightforward to find your way in this semantic folder tree, but in doubt you should have a look at the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf). Note that the deepest foldername in the tree denotes the BIDS suffix (e.g. 'T1w').
 
 If all sample files have been put in the appropriate location, you can (re)run the bidstrainer to create a bidsmap file for your study. How this works is that the bidstrainer will read a predefined set of (e.g. key dicom) attributes from your sample files that uniquely identify the particular scan sequence and, on the other, take the path-names of the sample files to infer the associated BIDS modality labels. In this way, a unique key-value mapping is defined that can be used as input for the bidsmapper tool (see next section). If this mapping is not unique (not likely but possible), or if you prefer to use more or other attributes than the predefined ones, you can (copy and) edit the bidsmap_template.yaml file in the heuristics folder and re-run the bidstrainer whith this customized template as an input argument.
 
@@ -242,3 +242,13 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    - Compare your result in your *~/bids_tutorial* subject folders with the reference result in */opt/bidscoiner/tutorial/bids*. Do the results look the same? Also check the json sidecar files of the fieldmaps. Do they have the right *EchoTime* and *IntendedFor* fields?
    - Check the *~/bids_tutorial/participants.tsv* file
    - Run the [bids-validator](https://github.com/INCF/bids-validator) on your *~/bids_tutorial* folder 
+
+## Support / TODO
+- [x] DICOM source data
+- [ ] PAR / REC source data
+- [ ] P7 source data
+- [ ] Nifti source data
+- [x] Fieldmaps
+- [x] Multi-echo data
+- [x] Multi-coil data
+- [ ] Stimulus / behavioural logfiles
