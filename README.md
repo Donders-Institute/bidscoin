@@ -265,4 +265,5 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    - Check your `~/bids_tutorial/code/bidscoiner.log` file for any errors or warnings 
    - Compare your result in your `~/bids_tutorial` subject folders with the reference result in `/opt/bidscoiner/tutorial/bids`. Do the results look the same? Also check the json sidecar files of the fieldmaps. Do they have the right "EchoTime" and "IntendedFor" fields?
    - Check the `~/bids_tutorial/participants.tsv` file
+   - Update the `dataset_description.json` and `README` files in your bids folder
    - Run the [bids-validator](https://github.com/INCF/bids-validator) on your `~/bids_tutorial` folder 
