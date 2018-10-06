@@ -22,7 +22,7 @@ BIDScoiner is a python toolkit that converts ("coins") source-level (raw) MRI da
 
 The key-value heuristics are stored in flexible, human readable and broadly supported [YAML](http://yaml.org/) files. The nifti- and json-files are generated with [dcm2niix](https://github.com/rordenlab/dcm2niix).
 
-Currently, BIDScoiner is quite functional, although only option (1) has been [implemented](#bidscoiner-support-TODO) for DICOM. (NB: Options (2) and (3) are planned for future versions, such that (3) takes precedence over (2), which in turn takes precedence over (1)).
+Currently, BIDScoiner is quite functional, although only option (1) has been [implemented](#bidscoiner-support---TODO) for DICOM. (NB: Options (2) and (3) are planned for future versions, such that (3) takes precedence over (2), which in turn takes precedence over (1)).
 
 BIDScoiner is a command-line tool that requires no programming knowledge in order to use it, just some basic file handling and, possibly, minor (YAML) text editing.
 
@@ -83,7 +83,7 @@ The core idea of the bidstrainer is that you know your own scan protocol and can
 
 If all sample files have been put in the appropriate location, you can (re)run the bidstrainer to create a bidsmap file for your study. How this works is that the bidstrainer will read a predefined set of (e.g. key dicom) attributes from your sample files that uniquely identify the particular scan sequence and, on the other, take the path-names of the sample files to infer the associated BIDS modality labels. In this way, a unique key-value mapping is defined that can be used as input for the [bidsmapper tool](#the-bidsmapper). If this mapping is not unique (not likely but possible), or if you prefer to use more or other attributes than the predefined ones, you can (copy and) edit the [bidsmap_template.yaml](./heuristics/bidsmap_template.yaml) file in the heuristics folder and re-run the bidstrainer whith this customized template as an input argument.
 
-<a name="bidstrainer-example">![Bidstrainer example](./docs/sample_tree.png)<\a>  
+<a name="bidstrainer-example">![Bidstrainer example](./docs/sample_tree.png)</a>
 *Bidstrainer example. The red arrow depicts a raw data sample (left file browser) that is put (copied over) to the appropriate location in the semantic folder tree (right file browser)*
 
 ### The bidsmapper
