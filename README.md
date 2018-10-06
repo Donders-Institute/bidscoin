@@ -14,7 +14,7 @@
 - [BIDScoiner support / TODO](#bidscoiner-support--todo)
 - [BIDScoiner tutorial](#bidscoiner-tutorial)
 
-BIDScoiner is a python toolkit that converts ("coins") source-level (raw) MRI data-sets to [nifti](https://nifti.nimh.nih.gov/) / [json](https://www.json.org/) / [tsv](https://en.wikipedia.org/wiki/Tab-separated_values) data-sets that are organized according to the Brain Imaging Data Standard, a.k.a. [BIDS](http://bids.neuroimaging.io). Rather then depending on logic, BIDScoiner uses a simple (but powerful) key-value approach to convert the raw source data into BIDS data. The key values that can be used in BIDScoiner to map the data are:
+BIDScoiner is a python commandline toolkit that converts ("coins") source-level (raw) MRI data-sets to [nifti](https://nifti.nimh.nih.gov/) / [json](https://www.json.org/) / [tsv](https://en.wikipedia.org/wiki/Tab-separated_values) data-sets that are organized according to the Brain Imaging Data Standard, a.k.a. [BIDS](http://bids.neuroimaging.io). Rather then depending on logic, BIDScoiner uses a simple (but powerful) key-value approach to convert the raw source data into BIDS data. The key values that can be used in BIDScoiner to map the data are:
 
  1. Information in the MRI header files (DICOM, PAR/REC or .7 format, e.g. SeriesDescription)
  2. Information from nifti headers (e.g. image dimensionality)
@@ -24,7 +24,7 @@ The key-value heuristics are stored in flexible, human readable and broadly supp
 
 Currently, BIDScoiner is quite functional, although only option (1) has been [implemented](#bidscoiner-support--todo) for DICOM. (NB: Options (2) and (3) are planned for future versions, such that (3) takes precedence over (2), which in turn takes precedence over (1)).
 
-BIDScoiner is a command-line tool that requires no programming knowledge in order to use it, just some basic file handling and, possibly, minor (YAML) text editing.
+BIDScoiner is a user friendly toolkit that requires no programming knowledge in order to use it, just some basic file handling and, possibly, minor (YAML) text editing.
 
 ## The BIDScoiner workflow
 
