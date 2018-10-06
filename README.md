@@ -9,7 +9,7 @@
   * [Tips and tricks](#tips-and-tricks)
     + [Attribute list](#attribute-list)
     + [Dynamic values](#dynamic-values)
-    + [Field maps: IntendedFor](#field-maps--intendedfor)
+    + [Field maps: IntendedFor](#field-maps:-intendedfor)
     + [Plug-in functions](#plug-in-functions)
 - [BIDScoiner support / TODO](#bidscoiner-support---todo)
 - [BIDScoiner tutorial](#bidscoiner-tutorial)
