@@ -256,7 +256,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    ```
    - Check the "extra_data" section in your `~/bids_tutorial/code/bidsmap.yaml` file for images that should go in the BIDS sections (e.g. T1, fMRI or DWI data). If so, add training samples and redo the training steps etc
    - Rename the *task_label* of the functional scans into something more readable, e.g. "Reward" and "Stop"
-   - Add a search pattern to the [IntendedFor field](#field-maps-intendedfor) such that it will select your fMRI series
+   - Add a search pattern to the [IntendedFor](#field-maps-intendedfor) field such that it will select your fMRI series
    
 4. Convert your raw data collection into BIDS by running the bidscoiner bash command (note that the input is the same as for the bidsmapper):  
    ```
