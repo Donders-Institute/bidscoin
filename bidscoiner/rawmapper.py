@@ -80,7 +80,7 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=['PatientComme
                         delim = '\n'
                     newsubsesid = dcmval.split(delim)
                     newsubid    = 'sub-' + bids.cleanup_label(newsubsesid[0].replace('sub-', ''))
-                    if newsubid=='sub-None':
+                    if newsubid=='sub-' or newsubid=='sub-None':
                         newsubid = subid
                         warnings.warn('Could not rename {} because the dicom-field was empty for: {}'.format(subid, session))
                     if len(newsubsesid)==1:
@@ -90,7 +90,7 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=['PatientComme
                     else:
                         warnings.warn('Skipping renaming of {} because the dicom-field "{}" could not be parsed into [subid, sesid]'.format(session, dcmval))
                         continue
-                    if newsesid=='ses-None':
+                    if newsesid=='ses-' or newsesid=='ses-None':
                         newsesid = sesid
                         warnings.warn('Could not rename {} because the dicom-field was empty for: {}'.format(sesid, session))
 
