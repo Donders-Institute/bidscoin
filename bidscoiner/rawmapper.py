@@ -68,7 +68,7 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=['PatientComme
             if rename:
 
                 # Get the new subid and sesid
-                if not dcmval:
+                if not dcmval or dcmval=='None':
                     warnings.warn('Skipping renaming because the dicom-field was empty for: ' + session)
                     continue
                 else:
@@ -82,6 +82,7 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=['PatientComme
                     newsubid    = 'sub-' + bids.cleanup_label(newsubsesid[0].replace('sub-', ''))
                     if newsubid=='sub-None':
                         newsubid = subid
+                        warnings.warn('Could not rename {} because the dicom-field was empty for: {}'.format(subid, session))
                     if len(newsubsesid)==1:
                         newsesid = sesid
                     elif len(newsubsesid)==2:
@@ -91,6 +92,7 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=['PatientComme
                         continue
                     if newsesid=='ses-None':
                         newsesid = sesid
+                        warnings.warn('Could not rename {} because the dicom-field was empty for: {}'.format(sesid, session))
 
                 # Save the dicomfield / sub-ses mapping to disk and rename the session subfolder (but skip if it already exists)
                 newsession = os.path.join(rawfolder, newsubid, newsesid)
