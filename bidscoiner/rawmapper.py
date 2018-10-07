@@ -97,9 +97,11 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=['PatientComme
                 # Save the dicomfield / sub-ses mapping to disk and rename the session subfolder (but skip if it already exists)
                 newsession = os.path.join(rawfolder, newsubid, newsesid)
                 print(session + ' -> ' + newsession)
+                if newsession == session:
+                    continue
                 if os.path.isdir(newsession):
                     warnings.warn('{} already exists, skipping renaming of {}'.format(newsession, session))
-                elif not dryrun and session != newsession:
+                elif not dryrun:
                     with open(os.path.join(outfolder, mapperfile), 'a') as fid:
                         fid.write('{}\t{}\t{}\t{}\n'.format(subid, sesid, newsubid, newsesid))
                     os.renames(session, newsession)
