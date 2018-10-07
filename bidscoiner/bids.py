@@ -24,7 +24,7 @@ unknownmodality = 'extra_data'
 
 
 def format_warning(message, category, filename, lineno, line=''):
-    return str(filename) + ':' + str(lineno) + ': ' + category.__name__ + ': ' +str(message) + '\n'
+    return category.__name__ + ': ' + str(filename) + ':' + str(lineno) + ':\n\t' + str(message) + '\n'
 
 warnings.formatwarning = format_warning
 
