@@ -23,6 +23,12 @@ bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh')
 unknownmodality = 'extra_data'
 
 
+def format_warning(message, category, filename, lineno, line=''):
+    return str(filename) + ':' + str(lineno) + ': ' + category.__name__ + ': ' +str(message) + '\n'
+
+warnings.formatwarning = format_warning
+
+
 def printlog(message, logfile=None):
     """
     Print an annotated log-message to screen and optionally to a logfile
