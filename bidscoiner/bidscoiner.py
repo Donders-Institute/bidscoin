@@ -296,7 +296,7 @@ def coin_plugin(session, bidsmap, bidsfolder, personals):
         plugin.bidscoiner(session, bidsmap, bidsfolder, personals)
 
 
-def bidscoiner(rawfolder, bidsfolder, subjects=[], force=False, participants=False, bidsmapfile='code/bidsmap.yaml'):
+def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=False, bidsmapfile='code/bidsmap.yaml'):
     """
     Main function that processes all the subjects and session in the rawfolder and uses the
     bidsmap.yaml file in bidsfolder/code to cast the data into the BIDS folder.
@@ -369,12 +369,13 @@ def bidscoiner(rawfolder, bidsfolder, subjects=[], force=False, participants=Fal
 
         if participants and subject in list(participants_table.participant_id): continue
 
-        sessions = bids.lsdirs(subject, 'ses-*')
-        if not sessions: sessions = subject
+        personals = dict()
+        sessions  = bids.lsdirs(subject, 'ses-*')
+        if not sessions:
+            sessions = subject
         for session in sessions:
 
             # Check if we should skip the session-folder
-            personals = dict()
             if not force and os.path.isdir(session.replace(rawfolder, bidsfolder)):
                 continue
 

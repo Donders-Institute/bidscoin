@@ -13,7 +13,7 @@ import warnings
 import bids
 
 
-def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=['PatientComments'], wildcard='*', dryrun=False):
+def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=('PatientComments',), wildcard='*', dryrun=False):
     """
     :param str rawfolder:   The root folder-name of the sub/ses/data/file tree containing the source data files
     :param str outfolder:   The name of the folder where the mapping-file is saved (default = rawfolder)
