@@ -69,7 +69,7 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
                     files / training data. Optional argument, if left empty,
                     bidsfolder/code/samples is used or such an empty directory
                     tree is created
-      bidsmap       The bidsmap yaml-file with the BIDS heuristics (optional
+      bidsmap       The bidsmap YAML-file with the BIDS heuristics (optional
                     argument, default: ./heuristics/bidsmap_template.yaml)
     
     optional arguments:
@@ -98,7 +98,7 @@ If all sample files have been put in the appropriate location, you can (re)run t
       rawfolder        The source folder containing the raw data in
                        sub-#/ses-#/series format
       bidsfolder       The destination folder with the bids data structure
-      bidsmap          The bidsmap yaml-file with the BIDS heuristics (optional
+      bidsmap          The bidsmap YAML-file with the BIDS heuristics (optional
                        argument, default: bidsfolder/code/bidsmap_sample.yaml)
     
     optional arguments:
@@ -142,7 +142,7 @@ The `bidsmapper.py` tool goes over all raw data folders of your dataset and save
                             --force flag is given). Otherwise the participants.tsv
                             table is ignored
       -b BIDSMAP, --bidsmap BIDSMAP
-                            The bidsmap yaml-file with the study heuristics. If
+                            The bidsmap YAML-file with the study heuristics. If
                             the bidsmapfile is relative (i.e. no "/" in the name)
                             then it is assumed to be located in bidsfolder/code/.
                             Default: bidsmap.yaml
