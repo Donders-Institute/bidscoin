@@ -20,7 +20,7 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
     extracts personals (e.g. Age, Sex) from the dicom header
 
     :param str session:    The full-path name of the subject/session source folder
-    :param dict bidsmap:   The full mapping heuristics from the bidsmap yaml-file
+    :param dict bidsmap:   The full mapping heuristics from the bidsmap YAML-file
     :param str bidsfolder: The full-path name of the BIDS root-folder
     :param dict personals: The dictionary with the personal information
     :return:               Nothing
@@ -218,7 +218,7 @@ def coin_par(session, bidsmap, bidsfolder, personals):
     """
 
     :param str session:    The full-path name of the subject/session source folder
-    :param dict bidsmap:   The full mapping heuristics from the bidsmap yaml-file
+    :param dict bidsmap:   The full mapping heuristics from the bidsmap YAML-file
     :param str bidsfolder: The full-path name of the BIDS root-folder
     :param dict personals: The dictionary with the personal information
     :return:               Nothing
@@ -233,7 +233,7 @@ def coin_p7(session, bidsmap, bidsfolder, personals):
     """
 
     :param str session:    The full-path name of the subject/session source folder
-    :param dict bidsmap:   The full mapping heuristics from the bidsmap yaml-file
+    :param dict bidsmap:   The full mapping heuristics from the bidsmap YAML-file
     :param str bidsfolder: The full-path name of the BIDS root-folder
     :param dict personals: The dictionary with the personal information
     :return:               Nothing
@@ -248,7 +248,7 @@ def coin_nifti(session, bidsmap, bidsfolder, personals):
     """
 
     :param str session:    The full-path name of the subject/session source folder
-    :param dict bidsmap:   The full mapping heuristics from the bidsmap yaml-file
+    :param dict bidsmap:   The full mapping heuristics from the bidsmap YAML-file
     :param str bidsfolder: The full-path name of the BIDS root-folder
     :param dict personals: The dictionary with the personal information
     :return:               Nothing
@@ -263,7 +263,7 @@ def coin_filesystem(session, bidsmap, bidsfolder, personals):
     """
 
     :param str session:    The full-path name of the subject/session source folder
-    :param dict bidsmap:   The full mapping heuristics from the bidsmap yaml-file
+    :param dict bidsmap:   The full mapping heuristics from the bidsmap YAML-file
     :param str bidsfolder: The full-path name of the BIDS root-folder
     :param dict personals: The dictionary with the personal information
     :return:               Nothing
@@ -279,7 +279,7 @@ def coin_plugin(session, bidsmap, bidsfolder, personals):
     Run the plugin coiner to cast the series into the bids folder
 
     :param str session:    The full-path name of the subject/session source folder
-    :param dict bidsmap:   The full mapping heuristics from the bidsmap yaml-file
+    :param dict bidsmap:   The full mapping heuristics from the bidsmap YAML-file
     :param str bidsfolder: The full-path name of the BIDS root-folder
     :param dict personals: The dictionary with the personal information
     :return:               Nothing
@@ -306,7 +306,7 @@ def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=Fal
     :param list subjects:     List of selected sub-# names / folders to be processed. Otherwise all subjects in the rawfolder will be selected
     :param bool force:        If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped
     :param bool participants: If True, subjects in particpants.tsv will not be processed (this could be used e.g. to protect these subjects from being reprocessed), also when force=True
-    :param str bidsmapfile:   The name of the bidsmap yaml-file. If the bidsmapfile is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/
+    :param str bidsmapfile:   The name of the bidsmap YAML-file. If the bidsmapfile is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/
     :return:                  Nothing
     :rtype: NoneType
     """
@@ -348,7 +348,7 @@ def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=Fal
         with open(readme_file, 'w') as fid:
             fid.write('A free form text ( README ) describing the dataset in more details that SHOULD be provided')
 
-    # Get the bidsmap heuristics from the bidsmap yaml-file
+    # Get the bidsmap heuristics from the bidsmap YAML-file
     bidsmap = bids.get_heuristics(bidsmapfile, os.path.join(bidsfolder,'code'))
 
     # Get the table with subjects that have been processed
@@ -429,7 +429,7 @@ if __name__ == "__main__":
     parser.add_argument('-s','--subjects',     help='Space seperated list of selected sub-# names / folders to be processed. Otherwise all subjects in the rawfolder will be selected', nargs='*')
     parser.add_argument('-f','--force',        help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')
     parser.add_argument('-p','--participants', help='If this flag is given those subjects that are in particpants.tsv will not be processed (also when the --force flag is given). Otherwise the participants.tsv table is ignored', action='store_true')
-    parser.add_argument('-b','--bidsmap',      help='The bidsmap yaml-file with the study heuristics. If the bidsmapfile is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap.yaml', default='bidsmap.yaml')
+    parser.add_argument('-b','--bidsmap',      help='The bidsmap YAML-file with the study heuristics. If the bidsmapfile is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap.yaml', default='bidsmap.yaml')
     args = parser.parse_args()
 
     bidscoiner(rawfolder=args.rawfolder, bidsfolder=args.bidsfolder, subjects=args.subjects, force=args.force, participants=args.participants, bidsmapfile=args.bidsmap)
