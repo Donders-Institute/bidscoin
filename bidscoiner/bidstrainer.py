@@ -187,8 +187,8 @@ def bidstrainer(bidsfolder, samplefolder='', bidsmapfile='bidsmap_template.yaml'
 
     :param str bidsfolder:    The name of the BIDS root folder
     :param str samplefolder:  The name of the root directory of the tree containing the sample files / training data. If left empty, bidsfolder/code/samples is used or such an empty directory tree is created
-    :param str bidsmapfile:   The name of the bidsmap yaml-file
-    :return:                  The name of the new (trained) bidsmap yaml-file that is save in bidsfolder/code
+    :param str bidsmapfile:   The name of the bidsmap YAML-file
+    :return:                  The name of the new (trained) bidsmap YAML-file that is save in bidsfolder/code
     :rtype: str
     """
 
@@ -245,11 +245,11 @@ def bidstrainer(bidsfolder, samplefolder='', bidsmapfile='bidsmap_template.yaml'
         if heuristics['PlugIn']:
             bidsmap = built_pluginmap(sample, bidsmap)
 
-    # Create the bidsmap_sample yaml-file in bidsfolder/code
+    # Create the bidsmap_sample YAML-file in bidsfolder/code
     os.makedirs(os.path.join(bidsfolder,'code'), exist_ok=True)
     bidsmapfile = os.path.join(bidsfolder,'code','bidsmap_sample.yaml')
 
-    # Save the bidsmap to the bidsmap yaml-file
+    # Save the bidsmap to the bidsmap YAML-file
     print('Writing bidsmap to: ' + bidsmapfile)
     with open(bidsmapfile, 'w') as stream:
         yaml.dump(bidsmap, stream)
@@ -267,7 +267,7 @@ if __name__ == "__main__":
                                      epilog='examples:\n  bidstrainer.py /project/foo/bids\n  bidstrainer.py /project/foo/bids /project/foo/samples bidsmap_custom\n ')
     parser.add_argument('bidsfolder',   help='The destination folder with the bids data structure')
     parser.add_argument('samplefolder', help='The root folder of the directory tree containing the sample files / training data. Optional argument, if left empty, bidsfolder/code/samples is used or such an empty directory tree is created', nargs='?', default='')
-    parser.add_argument('bidsmap',      help='The bidsmap yaml-file with the BIDS heuristics (optional argument, default: ./heuristics/bidsmap_template.yaml)', nargs='?', default='bidsmap_template.yaml')
+    parser.add_argument('bidsmap',      help='The bidsmap YAML-file with the BIDS heuristics (optional argument, default: ./heuristics/bidsmap_template.yaml)', nargs='?', default='bidsmap_template.yaml')
     args = parser.parse_args()
 
     bidsmapfile = bidstrainer(bidsfolder=args.bidsfolder, samplefolder=args.samplefolder, bidsmapfile=args.bidsmap)

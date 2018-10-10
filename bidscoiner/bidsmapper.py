@@ -170,8 +170,8 @@ def bidsmapper(rawfolder, bidsfolder, bidsmapfile='bidsmap_sample.yaml', automat
 
     :param str rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
     :param str bidsfolder:      The name of the BIDS root folder
-    :param str bidsmapfile:     The name of the bidsmap yaml-file
-    :return: str bidsmapfile:   The name of the mapped bidsmap yaml-file
+    :param str bidsmapfile:     The name of the bidsmap YAML-file
+    :return: str bidsmapfile:   The name of the mapped bidsmap YAML-file
     :rtype: str
     """
 
@@ -230,11 +230,11 @@ def bidsmapper(rawfolder, bidsfolder, bidsmapfile='bidsmap_sample.yaml', automat
                 if heuristics['PlugIn']:
                     bidsmap   = built_pluginmap(series, bidsmap)
 
-    # Create the bidsmap yaml-file in bidsfolder/code
+    # Create the bidsmap YAML-file in bidsfolder/code
     os.makedirs(os.path.join(bidsfolder,'code'), exist_ok=True)
     bidsmapfile = os.path.join(bidsfolder,'code','bidsmap.yaml')
 
-    # Save the bidsmap to the bidsmap yaml-file
+    # Save the bidsmap to the bidsmap YAML-file
     print('Writing bidsmap to: ' + bidsmapfile)
     with open(bidsmapfile, 'w') as stream:
         yaml.dump(bidsmap, stream)
@@ -252,7 +252,7 @@ if __name__ == "__main__":
                                      epilog='examples:\n  bidsmapper.py /project/foo/raw /project/foo/bids\n  bidsmapper.py /project/foo/raw /project/foo/bids bidsmap_dccn\n ')
     parser.add_argument('rawfolder',        help='The source folder containing the raw data in sub-#/ses-#/series format')
     parser.add_argument('bidsfolder',       help='The destination folder with the bids data structure')
-    parser.add_argument('bidsmap',          help='The bidsmap yaml-file with the BIDS heuristics (optional argument, default: bidsfolder/code/bidsmap_sample.yaml)', nargs='?', default='bidsmap_sample.yaml')
+    parser.add_argument('bidsmap',          help='The bidsmap YAML-file with the BIDS heuristics (optional argument, default: bidsfolder/code/bidsmap_sample.yaml)', nargs='?', default='bidsmap_sample.yaml')
     parser.add_argument('-a','--automatic', help='If this flag is given the user will not be asked for help if an unknown series is encountered', action='store_true')
     args = parser.parse_args()
 
