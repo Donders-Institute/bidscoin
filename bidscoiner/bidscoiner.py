@@ -36,7 +36,7 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
     elif bidsmap['DICOM']['participant_label']:
         subid = 'sub-' + bidsmap['DICOM']['participant_label']
     else:
-        subid = 'sub-' + session.rsplit('/sub-',1)[1].split('/ses-',1)[0]
+        subid = 'sub-' + session.rsplit(os.sep+'sub-',1)[1].split(os.sep+'ses-',1)[0]
     if subid == 'sub-':
         bids.printlog('Error: No valid subject identifier found for: ' + session, logfile)
         return
@@ -46,8 +46,8 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
         sesid = 'ses-' + bids.get_dicomfield(bidsmap['DICOM']['session_label'][2:-2], bids.get_dicomfile(bids.lsdirs(session)[0]))
     elif bidsmap['DICOM']['session_label']:
         sesid = 'ses-' + bidsmap['DICOM']['session_label']
-    elif '/ses-' in session:
-        sesid = 'ses-' + session.rsplit('/ses-')[1]
+    elif os.sep+'ses-' in session:
+        sesid = 'ses-' + session.rsplit(os.sep+'ses-')[1]
     else:
         sesid = ''
 
@@ -79,13 +79,14 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
             bidsname = bids.get_bidsname(subid, sesid, modality, series_, runindex)
 
         # Convert the dicom-files in the series folder to nifti's in the BIDS-folder
-        command = 'module add dcm2niix; dcm2niix {options} -f {filename} -o {outfolder} {infolder}'.format(
-            options   = bidsmap['Options']['dcm2niix'],
+        command = '{path}dcm2niix {args} -f {filename} -o {outfolder} {infolder}'.format(
+            path      = bidsmap['Options']['dcm2niix']['path'],
+            args      = bidsmap['Options']['dcm2niix']['args'],
             filename  = bidsname,
             outfolder = bidsmodality,
             infolder  = series)
         bids.printlog('$ ' + command, logfile)
-        process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)         # TODO: investigate shell=False and capture_output=True
         bids.printlog(process.stdout.decode('utf-8'), logfile)
         if process.returncode != 0:
             errormsg = 'Error: Failed to process {} (errorcode {})'.format(series, process.returncode)
@@ -186,7 +187,7 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
                 intendedfor = [intendedfor]
             with open(jsonfile, 'r') as json_fid:
                 data = json.load(json_fid)
-            niifiles = [niifile.split('/'+subid+'/', 1)[1] for niifile in sorted(glob.glob(os.path.join(bidsses, '**/*' + '*'.join(intendedfor) + '*.nii*')))]     # Use a relative path
+            niifiles = [niifile.split(os.sep+subid+os.sep, 1)[1] for niifile in sorted(glob.glob(os.path.join(bidsses, '**'+os.sep+'*' + '*'.join(intendedfor) + '*.nii*')))]     # Use a relative path
             data['IntendedFor'] = niifiles
             bids.printlog('Adding IntendedFor to: ' + jsonfile, logfile)
             with open(jsonfile, 'w') as json_fid:
@@ -296,7 +297,7 @@ def coin_plugin(session, bidsmap, bidsfolder, personals):
         plugin.bidscoiner(session, bidsmap, bidsfolder, personals)
 
 
-def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=False, bidsmapfile='code/bidsmap.yaml'):
+def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=False, bidsmapfile='code'+os.sep+'bidsmap.yaml'):
     """
     Main function that processes all the subjects and session in the rawfolder and uses the
     bidsmap.yaml file in bidsfolder/code to cast the data into the BIDS folder.
@@ -317,7 +318,7 @@ def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=Fal
     os.makedirs(os.path.join(bidsfolder,'code'), exist_ok=True)
     if not os.path.isfile(os.path.join(bidsfolder,'.bidsignore')):
         with open(os.path.join(bidsfolder,'.bidsignore'), 'w') as bidsignore:
-            bidsignore.write(bids.unknownmodality + '/')
+            bidsignore.write(bids.unknownmodality + os.sep)
 
     # Start logging
     global logfile
