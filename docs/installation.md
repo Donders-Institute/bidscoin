@@ -1,6 +1,6 @@
 # BIDScoiner installation
 
-BIDScoiner can be installed on linux, windows and, presumably, on OS-X computers (this latter option has not been tested)
+BIDScoiner can be installed and should work on linux, windows and, presumably, on OS-X computers (this latter option has not been tested)
 
 ## Requirements
 - python 3
@@ -17,12 +17,12 @@ To download the code:
 2. Select 'Download ZIP' from the green 'Clone or download' button
 3. Unzip the code in the bidscoiner directory
 
-To clone the code, run the following command in your command shell (requires Git to be installed):
+To clone the code, go into your python code directory in your command shell and run either of the following commands (requires Git to be installed):
 
     git clone https://github.com/Donders-Institute/bidscoiner.git
     git clone git@github.com:Donders-Institute/bidscoiner.git
 
-In your command shell, go to the bidscoiner code directory and run either of the following commands to install required python modules (optionally, first activate your [virtual](https://virtualenv.pypa.io/en/stable/)/[conda](https://conda.io/docs/user-guide/tasks/manage-environments.html#) environment):
+Next, go into the newly created bidscoiner directory in your command shell and run either of the following commands to install required python modules (optionally, first activate your [virtual](https://virtualenv.pypa.io/en/stable/)/[conda](https://conda.io/docs/user-guide/tasks/manage-environments.html#) environment):
 
     pip install -r requirements.txt
     conda install --yes --file requirements.txt
