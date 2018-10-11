@@ -22,9 +22,8 @@ To clone the code, go into your python code directory in your command shell and 
     git clone https://github.com/Donders-Institute/bidscoiner.git
     git clone git@github.com:Donders-Institute/bidscoiner.git
 
-Next, go into the newly created bidscoiner directory in your command shell and run either of the following commands to install required python modules (optionally, first activate your [virtual](https://virtualenv.pypa.io/en/stable/)/[conda](https://conda.io/docs/user-guide/tasks/manage-environments.html#) environment):
+Next, go into the newly created bidscoiner directory in your command shell and run the following command to install required python modules (optionally, first activate your [virtual](https://virtualenv.pypa.io/en/stable/)/[conda](https://conda.io/docs/user-guide/tasks/manage-environments.html#) environment):
 
     pip install -r requirements.txt
-    conda install --yes --file requirements.txt
 
 Finally, edit the `Options : dcm2niix : path` value in the [bidsmap_template.yaml](../heuristics/bidsmap_template.yaml) file according to your system installation.
