@@ -323,8 +323,8 @@ def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=Fal
     # Start logging
     global logfile
     logfile = os.path.join(bidsfolder, 'code', 'bidscoiner.log')
-    bids.printlog('------------ START ------------\n>>> bidscoiner rawfolder={arg1} bidsfolder={arg2} subjects={arg3} force={arg4} participants={arg5} bidsmap={arg6}'.format(
-        arg1=rawfolder, arg2=bidsfolder, arg3=subjects, arg4=force, arg5=participants, arg6=bidsmapfile), logfile)
+    bids.printlog('------------ START BIDScoiner {ver} ------------\n>>> bidscoiner rawfolder={arg1} bidsfolder={arg2} subjects={arg3} force={arg4} participants={arg5} bidsmap={arg6}'.format(
+        ver=bids.version, arg1=rawfolder, arg2=bidsfolder, arg3=subjects, arg4=force, arg5=participants, arg6=bidsmapfile), logfile)
 
     # Create a dataset description file if it does not exist
     dataset_file = os.path.join(bidsfolder, 'dataset_description.json')

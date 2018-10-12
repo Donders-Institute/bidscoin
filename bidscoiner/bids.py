@@ -21,6 +21,7 @@ yaml = YAML()
 
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh')
 unknownmodality = 'extra_data'
+version         = 1.4
 
 
 def format_warning(message, category, filename, lineno, line=''):
