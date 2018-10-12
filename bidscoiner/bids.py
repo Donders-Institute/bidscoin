@@ -35,7 +35,7 @@ def printlog(message, logfile=None):
     Print an annotated log-message to screen and optionally to a logfile
 
     :param str message: The output text
-    :param str logfile: The full pathname of the logile
+    :param str logfile: The full pathname of the logfile
     :return:            Nothing
     :rtype: NoneType
     """
@@ -247,12 +247,13 @@ def get_niftifile(folder):
     return None
 
 
-def get_heuristics(yamlfile, folder=None):
+def get_heuristics(yamlfile, folder=None, logfile=None):
     """
     Read the heuristics from the bidsmap yaml-file
 
     :param str yamlfile: The full pathname of the bidsmap yaml-file
     :param str folder:   Searches in the ./heuristics folder if folder=None
+    :param str logfile:  The full pathname of the logfile
     :return:             Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     :rtype: ruamel_yaml.comments.CommentedMap
     """
@@ -266,13 +267,19 @@ def get_heuristics(yamlfile, folder=None):
 
     if os.path.basename(yamlfile) == yamlfile:      # Get the full paths to the bidsmap yaml-file
         yamlfile = os.path.join(folder, yamlfile)
-        print('Using: ' + os.path.abspath(yamlfile))
+        printlog('Using: ' + os.path.abspath(yamlfile), logfile)
 
     yamlfile = os.path.abspath(os.path.expanduser(yamlfile))
 
     # Read the heuristics from the bidsmap file
     with open(yamlfile, 'r') as stream:
         heuristics = yaml.load(stream)
+
+    # Issue a warning if the version in the bidsmap YAML-file is not the same as the bidscoiner version
+    if 'version' not in heuristics:
+        heuristics['version'] = 'Unknown'
+    if heuristics['version'] != version:
+        printlog('Warning: BIDScoiner version conflict: {} was created using version {}, but this is version {}'.format(yamlfile, heuristics['version'], version), logfile)
 
     return heuristics
 
