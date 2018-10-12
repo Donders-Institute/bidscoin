@@ -18,7 +18,7 @@ Options:
 # --------------------------------------------------------------------------------
 # General options
 # --------------------------------------------------------------------------------
-  version: 1.4                    # BIDScoiner version
+  version: 1.4                    # BIDScoiner version (should correspond with the version in ../bidscoiner/bids.py)
   dcm2niix:
     path: module add dcm2niix;    # Command to set the path to dcm2niix, e.g. 'module add dcm2niix/1.0.20180622;', 'PATH=/opt/dcm2niix/bin:$PATH;', '/opt/dcm2niix/bin/' or '"C:\Program Files\mricrogl\"'
     args: -b y -z y               # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-b y -z n' (which produces unzipped nifti's, see dcm2niix -h for more information)

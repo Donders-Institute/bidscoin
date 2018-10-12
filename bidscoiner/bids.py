@@ -21,7 +21,7 @@ yaml = YAML()
 
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh')
 unknownmodality = 'extra_data'
-version         = 1.4
+version         = 1.4                                       # NB: Keep in sync with ../heuristics/bidsmap_template.yaml
 
 
 def format_warning(message, category, filename, lineno, line=''):
