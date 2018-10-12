@@ -49,8 +49,8 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=('PatientComme
         for session in sessions:
 
             # Get the subject and session identifiers from the raw folder
-            subid = 'sub-' + session.rsplit('/sub-', 1)[1].split('/ses-', 1)[0]
-            sesid = 'ses-' + session.rsplit('/ses-')[1]
+            subid = 'sub-' + session.rsplit(os.sep+'sub-', 1)[1].split(os.sep+'ses-', 1)[0]
+            sesid = 'ses-' + session.rsplit(os.sep+'ses-')[1]
 
             # Parse the new subject and session identifiers from the dicomfield
             series = bids.lsdirs(session, wildcard)
@@ -108,7 +108,7 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=('PatientComme
 
             # Print & save the dicom values
             else:
-                print('{}/{}/{}\t-> {}'.format(subid, sesid, os.path.basename(series), '\t'.join(dcmval.split('/'))))
+                print('{}{}{}\t-> {}'.format(subid+os.sep, sesid+os.sep, os.path.basename(series), '\t'.join(dcmval.split('/'))))
                 if not dryrun:
                     with open(os.path.join(outfolder, mapperfile), 'a') as fid:
                         fid.write('{}\t{}\t{}\t{}\n'.format(subid, sesid, os.path.basename(series), '\t'.join(dcmval.split('/'))))
