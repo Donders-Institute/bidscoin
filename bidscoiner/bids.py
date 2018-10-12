@@ -276,10 +276,10 @@ def get_heuristics(yamlfile, folder=None, logfile=None):
         heuristics = yaml.load(stream)
 
     # Issue a warning if the version in the bidsmap YAML-file is not the same as the bidscoiner version
-    if 'version' not in heuristics:
-        heuristics['version'] = 'Unknown'
-    if heuristics['version'] != version:
-        printlog('Warning: BIDScoiner version conflict: {} was created using version {}, but this is version {}'.format(yamlfile, heuristics['version'], version), logfile)
+    if 'version' not in heuristics['Options']:
+        heuristics['Options']['version'] = 'Unknown'
+    if heuristics['Options']['version'] != version:
+        printlog('Warning: BIDScoiner version conflict: {} was created using version {}, but this is version {}'.format(yamlfile, heuristics['Options']['version'], version), logfile)
 
     return heuristics
 
