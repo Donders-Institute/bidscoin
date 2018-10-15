@@ -171,6 +171,7 @@ def bidsmapper(rawfolder, bidsfolder, bidsmapfile='bidsmap_sample.yaml', automat
     :param str rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
     :param str bidsfolder:      The name of the BIDS root folder
     :param str bidsmapfile:     The name of the bidsmap YAML-file
+    :param bool automatic:      If True, the user will not be asked for help if an unknown series is encountered
     :return: str bidsmapfile:   The name of the mapped bidsmap YAML-file
     :rtype: str
     """

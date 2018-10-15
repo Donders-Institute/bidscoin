@@ -8,7 +8,6 @@ during subject registration (i.e. stored in the PatientComments dicom field)
 """
 
 import os
-import sys
 import warnings
 import bids
 

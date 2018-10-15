@@ -22,7 +22,7 @@ def sortsession(sessionfolder, pattern):
     # Input checking
     sessionfolder = os.path.abspath(os.path.expanduser(sessionfolder))
     seriesdirs    = []
-    print('> Sorting: ' + sessionfolder)
+    print('>> Sorting: ' + sessionfolder)
 
     # Map all dicomfiles and move them to series folders
     for dicomfile in [os.path.join(sessionfolder,dcmfile) for dcmfile in os.listdir(sessionfolder) if re.match(pattern, dcmfile)]:
@@ -40,7 +40,7 @@ def sortsession(sessionfolder, pattern):
         seriesdir = '{:03d}-{}'.format(seriesnr, seriesdescr)
         if seriesdir not in seriesdirs:                 # We have a new series
             if not os.path.isdir(os.path.join(sessionfolder, seriesdir)):
-                print('Creating:  ' + os.path.join(sessionfolder, seriesdir))
+                print('  Creating:  ' + os.path.join(sessionfolder, seriesdir))
                 os.makedirs(os.path.join(sessionfolder, seriesdir))
             seriesdirs.append(seriesdir)
 
