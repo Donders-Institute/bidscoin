@@ -488,7 +488,7 @@ def get_matching_dicomseries(dicomfile, heuristics):
 
     # Loop through all bidsmodalities and series; all info goes into series_
     for modality in bidsmodalities + (unknownmodality,):
-        if not heuristics['DICOM'][modality]: continue
+        if heuristics['DICOM'][modality] is None: continue
 
         for series in heuristics['DICOM'][modality]:
 
