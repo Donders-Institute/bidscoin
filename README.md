@@ -260,7 +260,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    - Rename the "task_label" of the functional scans into something more readable, e.g. "Reward" and "Stop"
    - Add a search pattern to the [IntendedFor](#field-maps-intendedfor) field such that it will select your fMRI runs
    
-4. Convert your raw data collection into BIDS by running the bidscoiner bash command (note that the input is the same as for the bidsmapper):  
+4. Convert your raw data collection into a non-zipped (i.e. *.nii instead of *.nii.gz) BIDS collection by running the bidscoiner bash command (note that the input is the same as for the bidsmapper):  
    ```
    bidscoiner.py /opt/bidscoiner/tutorial/raw ~/bids_tutorial
    ```
