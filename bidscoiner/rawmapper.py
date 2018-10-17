@@ -18,7 +18,7 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=('PatientComme
     :param str outfolder:   The name of the folder where the mapping-file is saved (default = rawfolder)
     :param bool rename:     Flag for renaming the sub-subid folders to sub-dicomfield
     :param list dicomfield: The names of the dicomfields that are mapped (/ renamed to sub-dcmval/ses-dcmval)
-    :param str wildcard:    The wildcard that is used to select the series from which the dicomfield is being mapped
+    :param str wildcard:    The Unix style pathname pattern expansion that is used by glob to select the series from which the dicomfield is being mapped
     :param bool dryrun:     Flag for dry-running renaming the sub-subid folders
     :return:                Nothing
     :rtype: NoneType
@@ -128,7 +128,7 @@ if __name__ == "__main__":
                                      epilog='examples:\n  rawmapper.py -r /project/3022026.01/raw\n  rawmapper.py /project/3022026.01/raw -d AcquisitionDate\n  rawmapper.py /project/3022026.01/raw -r -d ManufacturerModelName AcquisitionDate --dryrun\n  rawmapper.py -d EchoTime -w *fMRI* /project/3022026.01/raw\n ')
     parser.add_argument('rawfolder',         help='The source folder with the raw data in sub-#/ses-#/series organisation')
     parser.add_argument('-d','--dicomfield', help='The name of the dicomfield that is mapped / used to rename the subid/sesid foldernames', default=['PatientComments'], nargs='*')
-    parser.add_argument('-w','--wildcard',   help='The wildcard that is used to select the series from which the dicomfield is being mapped', default='*')
+    parser.add_argument('-w','--wildcard',   help='The Unix style pathname pattern expansion that is used to select the series from which the dicomfield is being mapped (can contain wildcards)', default='*')
     parser.add_argument('-o','--outfolder',  help='The mapper-file is normally saved in rawfolder or, when using this option, in outfolder')
     parser.add_argument('-r','--rename',     help='If this flag is given sub-subid/ses-sesid directories in the rawfolder will be renamed to sub-dcmval/ses-dcmval', action='store_true')
     parser.add_argument('--dryrun',          help='Add this flag to dryrun (test) the mapping or renaming of the sub-subid/ses-sesid directories (i.e. nothing is stored on disk and directory names are not actually changed))', action='store_true')
