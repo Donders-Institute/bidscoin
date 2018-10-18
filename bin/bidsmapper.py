@@ -2,14 +2,14 @@
 """
 Creates a bidsmap.yaml YAML file that maps the information from all raw data to the
 BIDS labels (see also [bidsmap_template.yaml] and [bidstrainer.py]). You can check
-and edit the bidsmap.yaml file before passing it to [bidscoiner.py]
+and edit the bidsmap.yaml file before passing it to [bin.py]
 """
 
 # Global imports (specific modules may be imported when needed)
-import bids
 import os.path
 import textwrap
 import copy
+from bin import bids
 from ruamel.yaml import YAML
 yaml = YAML()
 

@@ -5,12 +5,12 @@ mapping, i.e. a bidsmap_sample.yaml file, by associating the file attributes wit
 file's BIDS-semantic pathname
 """
 
-import bids
 import os.path
 import glob
 import shutil
 import copy
 import textwrap
+from bin import bids
 from ruamel.yaml import YAML
 yaml = YAML()
 

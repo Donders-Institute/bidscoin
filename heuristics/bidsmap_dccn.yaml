@@ -27,7 +27,7 @@
 # code/
 #     bidsmapper_sample.yaml
 #     bidsmap.yaml
-#     bidscoiner.py
+#     bin.py
 # derivatives/README
 # [stimuli/]
 # [sourcedata/]
