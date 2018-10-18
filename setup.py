@@ -18,13 +18,13 @@ with open(path.join(path.abspath(path.dirname(__file__)), 'requirements.txt')) a
 setup(name                           = 'bidscoiner',                        # Required
       version                        = version,                             # Required
       packages                       = find_packages(),                     # Required
+      install_requires               = requirements,
+      python_requires                = '>=3',
+      classifiers                    = ['Programming Language :: Python :: 3',
+                                        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+                                        'Operating System :: OS Independent'],
       keywords                       = 'bids mri neuroimaging dicom nifti',
       description                    = 'Converts and organises raw MRI data-sets according to the Brain Imaging Data Standard (BIDS)',
       long_description               = long_description,
       long_description_content_type  = 'text/markdown',
-      url                            = 'https://github.com/Donders-Institute/bidscoiner',
-      python_requires                = '>=3',
-      install_requires               = requirements,
-      classifiers                    = ['Programming Language :: Python :: 3',
-                                       'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-                                       'Operating System :: OS Independent'])
+      url                            = 'https://github.com/Donders-Institute/bidscoiner')
