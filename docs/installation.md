@@ -9,7 +9,7 @@ BIDScoiner can be installed and should work on linux, windows and, presumably, o
 
 ## Installation
 First create a bidscoiner directory where you want the python code to be saved.
-You can either download the code as a ZIP file or you can clone the code:
+You can either download the code as a ZIP file or you can clone the code (recommended):
 
 To download the code:
 
@@ -17,7 +17,7 @@ To download the code:
 2. Select 'Download ZIP' from the green 'Clone or download' button
 3. Unzip the code in the bidscoiner directory
 
-To clone the code, go into your python code directory in your command shell and run either of the following commands (requires Git to be installed):
+To clone the code, go into your python code directory in your command shell and run either of the following commands (requires [git](https://git-scm.com/) to be installed):
 
     git clone https://github.com/Donders-Institute/bidscoiner.git
     git clone git@github.com:Donders-Institute/bidscoiner.git
