@@ -9,7 +9,7 @@ and edit the bidsmap.yaml file before passing it to [bidscoiner.py]
 import os.path
 import textwrap
 import copy
-from bin import bids
+import bids
 from ruamel.yaml import YAML
 yaml = YAML()
 

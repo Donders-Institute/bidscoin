@@ -11,7 +11,7 @@ import glob
 import pandas as pd
 import subprocess
 import json
-from bin import bids
+import bids
 
 
 def coin_dicom(session, bidsmap, bidsfolder, personals):
