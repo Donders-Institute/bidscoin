@@ -31,7 +31,7 @@ def version():
     :rtype str
     """
 
-    with open(os.path.join(os.path.dirname(__file__),'version.txt')) as fid:
+    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),'version.txt')) as fid:
         version = fid.read().strip()
 
     return version
