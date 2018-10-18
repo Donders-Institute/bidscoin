@@ -2,11 +2,10 @@
 
 from setuptools import setup
 from os import path
-from importlib import import_module
 
 # Read the version from bids.py
-bids    = import_module(name='bids', package=path.join(__file__,'bidscoiner','bids.py'))
-version = str(bids.version)
+with open(path.join(__file__, 'version.txt')) as fid:
+    version = fid.read().strip()
 
 # Read the contents of the README file
 with open(path.join(path.abspath(path.dirname(__file__)), 'README.md'), encoding='utf-8') as fid:

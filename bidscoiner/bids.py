@@ -25,7 +25,7 @@ unknownmodality = 'extra_data'
 
 def version():
     """
-    Reads the version from the VERSION.txt file
+    Reads the version from the VERSION.TXT file
 
     :return:    The version string
     :rtype str
