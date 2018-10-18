@@ -4,7 +4,7 @@ from setuptools import setup
 from os import path
 
 # Read the version from bids.py
-with open(path.join(__file__, 'version.txt')) as fid:
+with open(path.join(path.dirname(__file__), 'version.txt')) as fid:
     version = fid.read().strip()
 
 # Read the contents of the README file
