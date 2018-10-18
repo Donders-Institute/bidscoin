@@ -15,7 +15,7 @@ with open(path.join(path.abspath(path.dirname(__file__)), 'README.md'), encoding
 with open(path.join(path.abspath(path.dirname(__file__)), 'requirements.txt')) as fid:
     requirements = fid.read().splitlines()
 
-setup(name                           = 'bidscoiner',                        # Required
+setup(name                           = 'BIDScoiner',                        # Required
       version                        = version,                             # Required
       packages                       = find_packages(),                     # Required
       install_requires               = requirements,

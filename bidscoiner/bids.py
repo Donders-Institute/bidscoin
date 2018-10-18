@@ -27,14 +27,14 @@ def version():
     """
     Reads the version from the VERSION.TXT file
 
-    :return:    The version string
-    :rtype str
+    :return:    The version number
+    :rtype float
     """
 
     with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),'version.txt')) as fid:
         version = fid.read().strip()
 
-    return version
+    return float(version)
 
 
 def format_warning(message, category, filename, lineno, line=''):
