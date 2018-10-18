@@ -15,7 +15,7 @@ with open(path.join(path.abspath(path.dirname(__file__)), 'README.md'), encoding
 with open(path.join(path.abspath(path.dirname(__file__)), 'requirements.txt')) as fid:
     requirements = fid.read().splitlines()
 
-setup(name                           = 'bin',                        # Required
+setup(name                           = 'BIDScoiner',                        # Required
       version                        = version,                             # Required
       packages                       = find_packages(),                     # Required
       install_requires               = requirements,
@@ -28,4 +28,4 @@ setup(name                           = 'bin',                        # Required
       description                    = 'Converts and organises raw MRI data-sets according to the Brain Imaging Data Standard (BIDS)',
       long_description               = long_description,
       long_description_content_type  = 'text/markdown',
-      url                            = 'https://github.com/Donders-Institute/bin')
+      url                            = 'https://github.com/Donders-Institute/bidscoiner')

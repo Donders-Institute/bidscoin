@@ -288,7 +288,7 @@ def get_heuristics(yamlfile, folder=None, logfile=None):
     with open(yamlfile, 'r') as stream:
         heuristics = yaml.load(stream)
 
-    # Issue a warning if the version in the bidsmap YAML-file is not the same as the bin version
+    # Issue a warning if the version in the bidsmap YAML-file is not the same as the bidscoiner version
     if 'version' not in heuristics['Options']:
         heuristics['Options']['version'] = 'Unknown'
     if heuristics['Options']['version'] != version():
@@ -539,7 +539,7 @@ def get_matching_dicomseries(dicomfile, heuristics):
                     if not bidsvalue:
                         series_[key] = bidsvalue
 
-                    # Intelligent filling of the value is done runtime by bin
+                    # Intelligent filling of the value is done runtime by bidscoiner
                     elif bidsvalue.startswith('<<') and bidsvalue.endswith('>>'):
                         series_[key] = bidsvalue
 

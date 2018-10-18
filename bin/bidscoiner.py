@@ -3,7 +3,7 @@
 Converts ("coins") datasets in the rawfolder to nifti / json / tsv datasets in the
 bidsfolder according to the BIDS standard. Check and edit the bidsmap.yaml file to
 your needs before running this function. Provenance, warnings and error messages are
-stored in the ../bidsfolder/code/bin.log file
+stored in the ../bidsfolder/code/bidscoiner.log file
 """
 
 import os
@@ -323,8 +323,8 @@ def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=Fal
 
     # Start logging
     global logfile
-    logfile = os.path.join(bidsfolder, 'code', 'bin.log')
-    bids.printlog('------------ START BIDScoiner {ver} ------------\n>>> bin rawfolder={arg1} bidsfolder={arg2} subjects={arg3} force={arg4} participants={arg5} bidsmap={arg6}'.format(
+    logfile = os.path.join(bidsfolder, 'code', 'bidscoiner.log')
+    bids.printlog('------------ START BIDScoiner {ver} ------------\n>>> bidscoiner rawfolder={arg1} bidsfolder={arg2} subjects={arg3} force={arg4} participants={arg5} bidsmap={arg6}'.format(
         ver=bids.version(), arg1=rawfolder, arg2=bidsfolder, arg3=subjects, arg4=force, arg5=participants, arg6=bidsmapfile), logfile)
 
     # Create a dataset description file if it does not exist
@@ -420,12 +420,12 @@ def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=Fal
 # Shell usage
 if __name__ == "__main__":
 
-    # Parse the input arguments and run bin(args)
+    # Parse the input arguments and run bidscoiner(args)
     import argparse
     import textwrap
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
-                                     epilog='examples:\n  bin.py /project/raw /project/bids\n  bin.py -f /project/raw /project/bids -s sub-009 sub-030\n ')
+                                     epilog='examples:\n  bidscoiner.py /project/raw /project/bids\n  bidscoiner.py -f /project/raw /project/bids -s sub-009 sub-030\n ')
     parser.add_argument('rawfolder',           help='The source folder containing the raw data in sub-#/ses-#/series format')
     parser.add_argument('bidsfolder',          help='The destination folder with the bids data structure')
     parser.add_argument('-s','--subjects',     help='Space seperated list of selected sub-# names / folders to be processed. Otherwise all subjects in the rawfolder will be selected', nargs='*')
