@@ -298,7 +298,7 @@ def coin_plugin(session, bidsmap, bidsfolder, personals):
         plugin.bidscoiner(session, bidsmap, bidsfolder, personals)
 
 
-def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=False, bidsmapfile='code'+os.sep+'bidsmap.yaml', version=False):
+def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=False, bidsmapfile='code'+os.sep+'bidsmap.yaml'):
     """
     Main function that processes all the subjects and session in the rawfolder and uses the
     bidsmap.yaml file in bidsfolder/code to cast the data into the BIDS folder.
@@ -309,14 +309,9 @@ def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=Fal
     :param bool force:        If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped
     :param bool participants: If True, subjects in particpants.tsv will not be processed (this could be used e.g. to protect these subjects from being reprocessed), also when force=True
     :param str bidsmapfile:   The name of the bidsmap YAML-file. If the bidsmap pathname is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/
-    :param bool version:      If True, the BIDScoiner version will be printed
     :return:                  Nothing
     :rtype: NoneType
     """
-
-    if version:
-        print('BIDScoiner version: ' + str(bids.version))
-        return
 
     # Input checking
     rawfolder  = os.path.abspath(os.path.expanduser(rawfolder))
@@ -330,7 +325,7 @@ def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=Fal
     global logfile
     logfile = os.path.join(bidsfolder, 'code', 'bidscoiner.log')
     bids.printlog('------------ START BIDScoiner {ver} ------------\n>>> bidscoiner rawfolder={arg1} bidsfolder={arg2} subjects={arg3} force={arg4} participants={arg5} bidsmap={arg6}'.format(
-        ver=bids.version, arg1=rawfolder, arg2=bidsfolder, arg3=subjects, arg4=force, arg5=participants, arg6=bidsmapfile), logfile)
+        ver=bids.version(), arg1=rawfolder, arg2=bidsfolder, arg3=subjects, arg4=force, arg5=participants, arg6=bidsmapfile), logfile)
 
     # Create a dataset description file if it does not exist
     dataset_file = os.path.join(bidsfolder, 'dataset_description.json')
@@ -437,7 +432,6 @@ if __name__ == "__main__":
     parser.add_argument('-f','--force',        help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')
     parser.add_argument('-p','--participants', help='If this flag is given those subjects that are in particpants.tsv will not be processed (also when the --force flag is given). Otherwise the participants.tsv table is ignored', action='store_true')
     parser.add_argument('-b','--bidsmap',      help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap.yaml', default='bidsmap.yaml')
-    parser.add_argument('-v','--version',      help='Outputs the BIDScoiner version', action='store_true')
     args = parser.parse_args()
 
-    bidscoiner(rawfolder=args.rawfolder, bidsfolder=args.bidsfolder, subjects=args.subjects, force=args.force, participants=args.participants, bidsmapfile=args.bidsmap, version=args.version)
+    bidscoiner(rawfolder=args.rawfolder, bidsfolder=args.bidsfolder, subjects=args.subjects, force=args.force, participants=args.participants, bidsmapfile=args.bidsmap)

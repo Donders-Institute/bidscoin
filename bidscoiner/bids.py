@@ -21,7 +21,20 @@ yaml = YAML()
 
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh')
 unknownmodality = 'extra_data'
-version         = 1.4                                       # NB: Keep in sync with ../heuristics/bidsmap_template.yaml
+
+
+def version():
+    """
+    Reads the version from the VERSION.txt file
+
+    :return:    The version string
+    :rtype str
+    """
+
+    with open(os.path.join(__file__,'version.txt')) as fid:
+        version = fid.read().strip()
+
+    return version
 
 
 def format_warning(message, category, filename, lineno, line=''):
@@ -278,8 +291,8 @@ def get_heuristics(yamlfile, folder=None, logfile=None):
     # Issue a warning if the version in the bidsmap YAML-file is not the same as the bidscoiner version
     if 'version' not in heuristics['Options']:
         heuristics['Options']['version'] = 'Unknown'
-    if heuristics['Options']['version'] != version:
-        printlog('Warning: BIDScoiner version conflict: {} was created using version {}, but this is version {}'.format(yamlfile, heuristics['Options']['version'], version), logfile)
+    if heuristics['Options']['version'] != version():
+        printlog('Warning: BIDScoiner version conflict: {} was created using version {}, but this is version {}'.format(yamlfile, heuristics['Options']['version'], version()), logfile)
 
     return heuristics
 
