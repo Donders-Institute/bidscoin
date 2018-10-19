@@ -2,6 +2,7 @@
 
 from setuptools import setup, find_packages
 from os import path
+from glob import glob
 
 # Read the version from bids.py
 with open(path.join(path.dirname(__file__), 'bidscoin', 'version.txt')) as fid:
@@ -15,11 +16,14 @@ with open(path.join(path.abspath(path.dirname(__file__)), 'README.md'), encoding
 with open(path.join(path.abspath(path.dirname(__file__)), 'requirements.txt')) as fid:
     requirements = fid.read().splitlines()
 
+# Map the heuristics/sample folders
+sample_files = glob('../**/.placeholder', recursive=True)
+
 setup(name                           = 'bidscoin',                          # Required
       version                        = version,                             # Required
       packages                       = find_packages(),                     # Required
       install_requires               = requirements,
-      package_data                   = {'bidscoin': ['version.txt'], 'heuristics': ['.placeholder']},
+      data_files                     = {'bidscoin': ['version.txt']},
       include_package_data           = True,
       scripts                        = ['bidscoin/bidstrainer.py', 'bidscoin/bidsmapper.py', 'bidscoin/bidscoiner.py', 'bidscoin/rawmapper.py', 'bidscoin/dicomsort.py'],
       python_requires                = '>=3',
