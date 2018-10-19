@@ -10,9 +10,12 @@ import glob
 import shutil
 import copy
 import textwrap
-from bidscoin import bids
 from ruamel.yaml import YAML
 yaml = YAML()
+try:
+    from bidscoin import bids
+except ImportError:
+    import bids         # This should work if bidscoin was not pip-installed
 
 
 def built_dicommap(dicomfile, bidsmap, heuristics):

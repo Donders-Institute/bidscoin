@@ -6,7 +6,10 @@ Sorts DICOM files into local subdirectories with a (3-digit) SeriesNumber-Series
 import os
 import re
 import warnings
-from bidscoin import bids
+try:
+    from bidscoin import bids
+except ImportError:
+    import bids         # This should work if bidscoin was not pip-installed
 
 
 def sortsession(sessionfolder, pattern):

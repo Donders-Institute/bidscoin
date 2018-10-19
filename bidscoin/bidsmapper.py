@@ -9,9 +9,12 @@ and edit the bidsmap.yaml file before passing it to [bidscoiner.py]
 import os.path
 import textwrap
 import copy
-from bidscoin import bids
 from ruamel.yaml import YAML
 yaml = YAML()
+try:
+    from bidscoin import bids
+except ImportError:
+    import bids         # This should work if bidscoin was not pip-installed
 
 
 def built_dicommap(dicomfile, bidsmap, heuristics, automatic):
