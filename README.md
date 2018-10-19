@@ -244,14 +244,16 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    ```
    The new `tutorial` folder contains a `raw` source-data folder and a `bids_ref` reference BIDS folder, i.e. the end product of this tutorial.
    
-2. Perform [training](#running-the-bidstrainer) on some raw data samples:
-   - First create a `bids\code\samples\..` foldertree in your `tutorial` folder with this bash command:  
+   Let's begin with inspecting this new raw data collection: 
+   - Use the `rawmapper.py` command to print out the DICOM values of the "EchoTime", "Sex" and "AcquisitionDate" of the fMRI series in the `raw` folder
+
+2. Now that we have some data and have inspected its properties, we are ready to start with the actual BIDS coining  process. The first step is to perform [training](#running-the-bidstrainer) on a few raw data samples:
+   - Put files (training data) in the right subfolders in this `samples` tree
+   - Create a `bids\code\samples` foldertree in your `tutorial` folder with this bash command:  
    ```
    cd ~/tutorial
    bidstrainer.py bids
    ```
-   - Use the `rawmapper.py` command to print out the DICOM values of the "EchoTime", "Sex" and "AcquisitionDate" of the fMRI series in the `raw` folder
-   - Now put files (training data) in the right subfolders in this `samples` tree
    - Create a `bids/code/bidsmap_sample.yaml` bidsmap file by re-running the above `bidstrainer.py bids` command
    - Inspect the newly created bidsmap file. Can you recognise the key-value mappings? Which fields are going to end up in the filenames of the final BIDS datasets?
    
