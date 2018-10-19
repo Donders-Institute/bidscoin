@@ -250,16 +250,17 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    cd ~/tutorial
    bidstrainer.py bids
    ```
-   - Then put files (training data) in the right subfolders in this `samples` tree
-   - Create a `bids/code/bidsmap_sample.yaml` bidsmap file by re-running the above `bidstrainer.py` command
-   - Inspect the newly created bidsmap file. Can you recognise the key-value mapping? Which fields are going to end up in the filenames of the final BIDS datasets?
+   - Use the `rawmapper.py` command to print out the DICOM values of the "EchoTime", "Sex" and "AcquisitionDate" of the fMRI series in the `raw` folder
+   - Now put files (training data) in the right subfolders in this `samples` tree
+   - Create a `bids/code/bidsmap_sample.yaml` bidsmap file by re-running the above `bidstrainer.py bids` command
+   - Inspect the newly created bidsmap file. Can you recognise the key-value mappings? Which fields are going to end up in the filenames of the final BIDS datasets?
    
-3. Scan all folders in the raw data collection by running the [bidsmapper](#running-the-bidsmapper) bash command:  
+3. Scan all folders in the raw data collection for unknown data by running the [bidsmapper](#running-the-bidsmapper) bash command:  
    ```
    bidsmapper.py raw bids
    ```
-   - Open the `bids/code/bidsmap_sample.yaml` file and check the "extra_data" section for images that should go in the BIDS sections (e.g. T1, fMRI or DWI data). If so, add the missing training samples and redo the training steps etc
-   - Rename the "task_label" of the functional scans into something more readable, e.g. "Reward" and "Stop"
+   - Open the `bids/code/bidsmap.yaml` file and check the "extra_data" section for images that should go in the BIDS sections (e.g. T1, fMRI or DWI data). If so, add the missing training samples (check the messages in the command shell) to the `samples` folder tree and rerun the `bidstrainer.py bids` command.
+   - In the `bids/code/bidsmap.yaml` file, rename the "task_label" of the functional scans into something more readable, e.g. "Reward" and "Stop"
    - Add a search pattern to the [IntendedFor](#field-maps-intendedfor) field such that it will select your fMRI runs
    - Change the options such that you will get non-zipped nifti data (i.e. `*.nii `instead of `*.nii.gz`) in your BIDS data collection
    
