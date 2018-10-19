@@ -238,9 +238,8 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
  
 1. Activate the bidscoin environment and create a BIDS output directory for this tutorial by using these bash commands:  
    ```
-   module add anaconda3  
+   module add bidscoin/1.4  
    source activate /opt/bidscoin  
-   PATH=/opt/bidscoin/1.4/bidscoin:$PATH  
    mkdir ~/bids_tutorial
    ```
    
