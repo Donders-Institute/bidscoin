@@ -236,38 +236,39 @@ WIP
 ## BIDScoin tutorial
 This tutorial is specific for researchers from the DCCN and makes use of data-sets stored on its central file-system. However, it should not be difficult to use (at least part of) this tutorial for other data-sets as well.
  
-1. Activate the bidscoin environment and create a BIDS output directory for this tutorial by using these bash commands:  
+1. Activate the bidscoin environment and create a tutorial playground folder in your home directory by executing these bash commands:  
    ```
    module add bidscoin/1.4  
    source activate /opt/bidscoin  
    cp /opt/bidscoin/tutorial ~
    ```
-   The latter command creates a playground folder for this tutorial with a reference BIDS folder `bids_ref` and the raw source-data `raw`.
+   The new `tutorial` folder contains a `raw` source-data folder and a `bids_ref` reference BIDS folder, i.e. the end product of this tutorial.
    
 2. Perform [training](#running-the-bidstrainer) on some raw data samples:
-   - First create a sample foldertree in your bids output folder with this bash command:  
+   - First create a `bids\code\samples\..` foldertree in your `tutorial` folder with this bash command:  
    ```
    cd ~/tutorial
    bidstrainer.py bids
    ```
-   - Then put files in the right folders in this tree
-   - Do the training by re-running the above `bidstrainer.py` command
-   - Inspect the newly created `bids/code/bidsmap_sample.yaml` file
+   - Then put files (training data) in the right subfolders in this `samples` tree
+   - Create a `bids/code/bidsmap_sample.yaml` bidsmap file by re-running the above `bidstrainer.py` command
+   - Inspect the newly created bidsmap file. Can you recognise the key-value mapping? Which fields are going to end up in the filenames of the final BIDS datasets?
    
-3. Scan all data in the raw data collection by running the [bidsmapper](#running-the-bidsmapper) bash command:  
+3. Scan all folders in the raw data collection by running the [bidsmapper](#running-the-bidsmapper) bash command:  
    ```
    bidsmapper.py raw bids
    ```
-   - Check the "extra_data" section in your `bids/code/bidsmap.yaml` file for images that should go in the BIDS sections (e.g. T1, fMRI or DWI data). If so, add training samples and redo the training steps etc
+   - Open the `bids/code/bidsmap_sample.yaml` file and check the "extra_data" section for images that should go in the BIDS sections (e.g. T1, fMRI or DWI data). If so, add the missing training samples and redo the training steps etc
    - Rename the "task_label" of the functional scans into something more readable, e.g. "Reward" and "Stop"
    - Add a search pattern to the [IntendedFor](#field-maps-intendedfor) field such that it will select your fMRI runs
+   - Change the options such that you will get non-zipped nifti data (i.e. `*.nii `instead of `*.nii.gz`) in your BIDS data collection
    
-4. Convert your raw data collection into a non-zipped (i.e. `*.nii `instead of `*.nii.gz`) BIDS collection by running the bidscoiner bash command (note that the input is the same as for the bidsmapper):  
+4. Convert your raw data collection into a BIDS collection by running the bidscoiner bash command (note that the input is the same as for the bidsmapper):  
    ```
    bidscoiner.py raw bids
    ```
    - Check your `bids/code/bidscoiner.log` file for any errors or warnings 
-   - Compare the results in your `bids/sub-#` subject folders with the  in `bids_ref` reference result. Do the results look the same? Also check the json sidecar files of the fieldmaps. Do they have the right "EchoTime" and "IntendedFor" fields?
-   - Check the `bids/participants.tsv` file
+   - Compare the results in your `bids/sub-#` subject folders with the  in `bids_ref` reference result. Are the file and foldernames the same? Also check the json sidecar files of the fieldmaps. Do they have the right "EchoTime" and "IntendedFor" fields?
+   - Inspect the `bids/participants.tsv` file and decide if it is ok.
    - Update the `dataset_description.json` and `README` files in your `bids` folder
-   - Run the [bids-validator](https://github.com/INCF/bids-validator) on your `~/bids_tutorial` folder 
+   - As a final step, run the [bids-validator](https://github.com/INCF/bids-validator) on your `~/bids_tutorial` folder. Are you completely ready now to share this dataset?
