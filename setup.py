@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 from os import path
 
 # Read the version from bids.py
-with open(path.join(path.dirname(__file__), 'version.txt')) as fid:
+with open(path.join(path.dirname(__file__), 'bidscoin', 'version.txt')) as fid:
     version = fid.read().strip()
 
 # Read the contents of the README file
@@ -19,6 +19,8 @@ setup(name                           = 'bidscoin',                          # Re
       version                        = version,                             # Required
       packages                       = find_packages(),                     # Required
       install_requires               = requirements,
+      package_data                   = {'bidscoin': ['version.txt']},
+      include_package_data           = True,
       scripts                        = ['bidscoin/bidstrainer.py', 'bidscoin/bidsmapper.py', 'bidscoin/bidscoiner.py', 'bidscoin/rawmapper.py', 'bidscoin/dicomsort.py'],
       python_requires                = '>=3',
       classifiers                    = ['Programming Language :: Python :: 3',

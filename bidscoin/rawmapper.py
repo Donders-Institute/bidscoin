@@ -9,7 +9,7 @@ during subject registration (i.e. stored in the PatientComments dicom field)
 
 import os
 import warnings
-import bids
+from bidscoin import bids
 
 
 def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=('PatientComments',), wildcard='*', dryrun=False):

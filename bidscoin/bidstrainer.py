@@ -10,7 +10,7 @@ import glob
 import shutil
 import copy
 import textwrap
-import bids
+from bidscoin import bids
 from ruamel.yaml import YAML
 yaml = YAML()
 
