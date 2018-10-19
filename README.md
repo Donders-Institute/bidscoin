@@ -272,6 +272,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    ```
    - Check your `bids/code/bidscoiner.log` file for any errors or warnings 
    - Compare the results in your `bids/sub-#` subject folders with the  in `bids_ref` reference result. Are the file and foldernames the same? Also check the json sidecar files of the fieldmaps. Do they have the right "EchoTime" and "IntendedFor" fields?
+   - What happens if you re-run the `bidscoiner.py` command? Are the same subjects processed again? Re-run "sub-001".
    - Inspect the `bids/participants.tsv` file and decide if it is ok.
    - Update the `dataset_description.json` and `README` files in your `bids` folder
    - As a final step, run the [bids-validator](https://github.com/INCF/bids-validator) on your `~/bids_tutorial` folder. Are you completely ready now to share this dataset?
