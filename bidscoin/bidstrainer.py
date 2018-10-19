@@ -173,7 +173,7 @@ def built_pluginmap(sample, bidsmap):
 
     # Import and run the plugins
     for pluginfunction in bidsmap['PlugIn']:
-        plugin  = import_module(os.path.join(__file__,'..','plugins', pluginfunction))
+        plugin  = import_module(os.path.join(os.path.dirname(__file__),'plugins', pluginfunction))
         # TODO: check first if the plug-in function exist
         bidsmap = plugin.bidstrainer(sample, bidsmap)
 
@@ -198,7 +198,7 @@ def bidstrainer(bidsfolder, samplefolder='', bidsmapfile='bidsmap_template.yaml'
         samplefolder = os.path.join(bidsfolder,'code','samples')
         if not os.path.isdir(samplefolder):
             print('Creating an empty samples directory tree: ' + samplefolder)
-            shutil.copytree(os.path.join(os.path.dirname(__file__),'..','heuristics','samples'), samplefolder)
+            shutil.copytree(os.path.join(os.path.dirname(bids.__file__),'..','heuristics','samples'), samplefolder)
             print('Fill the directory tree with example DICOM files and re-run bidstrainer.py')
             return
     samplefolder = os.path.abspath(os.path.expanduser(samplefolder))
