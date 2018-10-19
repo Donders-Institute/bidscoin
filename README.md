@@ -240,31 +240,34 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    ```
    module add bidscoin/1.4  
    source activate /opt/bidscoin  
-   mkdir ~/bids_tutorial
+   cp /opt/bidscoin/tutorial ~
    ```
+   The latter command creates a playground folder for this tutorial with a reference BIDS folder `bids_ref` and the raw source-data `raw`.
    
 2. Perform [training](#running-the-bidstrainer) on some raw data samples:
-   - Create a sample foldertree in your bids output folder with this bash command:  
+   - First create a sample foldertree in your bids output folder with this bash command:  
    ```
-   bidstrainer.py ~/bids_tutorial
+   cd ~/tutorial
+   bidstrainer.py bids
    ```
-   - Put files in the right folders in this tree
+   - Then put files in the right folders in this tree
    - Do the training by re-running the above `bidstrainer.py` command
+   - Inspect the newly created `bids/code/bidsmap_sample.yaml` file
    
-3. Scan your raw data collection by running the [bidsmapper](#running-the-bidsmapper) bash command:  
+3. Scan all data in the raw data collection by running the [bidsmapper](#running-the-bidsmapper) bash command:  
    ```
-   bidsmapper.py /opt/bidscoin/tutorial/raw ~/bids_tutorial
+   bidsmapper.py raw bids
    ```
-   - Check the "extra_data" section in your `~/bids_tutorial/code/bidsmap.yaml` file for images that should go in the BIDS sections (e.g. T1, fMRI or DWI data). If so, add training samples and redo the training steps etc
+   - Check the "extra_data" section in your `bids/code/bidsmap.yaml` file for images that should go in the BIDS sections (e.g. T1, fMRI or DWI data). If so, add training samples and redo the training steps etc
    - Rename the "task_label" of the functional scans into something more readable, e.g. "Reward" and "Stop"
    - Add a search pattern to the [IntendedFor](#field-maps-intendedfor) field such that it will select your fMRI runs
    
-4. Convert your raw data collection into a non-zipped (i.e. *.nii instead of *.nii.gz) BIDS collection by running the bidscoiner bash command (note that the input is the same as for the bidsmapper):  
+4. Convert your raw data collection into a non-zipped (i.e. `*.nii `instead of `*.nii.gz`) BIDS collection by running the bidscoiner bash command (note that the input is the same as for the bidsmapper):  
    ```
-   bidscoiner.py /opt/bidscoin/tutorial/raw ~/bids_tutorial
+   bidscoiner.py raw bids
    ```
-   - Check your `~/bids_tutorial/code/bidscoiner.log` file for any errors or warnings 
-   - Compare your result in your `~/bids_tutorial` subject folders with the reference result in `/opt/bidscoin/tutorial/bids`. Do the results look the same? Also check the json sidecar files of the fieldmaps. Do they have the right "EchoTime" and "IntendedFor" fields?
-   - Check the `~/bids_tutorial/participants.tsv` file
-   - Update the `dataset_description.json` and `README` files in your `~/bids_tutorial` folder
+   - Check your `bids/code/bidscoiner.log` file for any errors or warnings 
+   - Compare the results in your `bids/sub-#` subject folders with the  in `bids_ref` reference result. Do the results look the same? Also check the json sidecar files of the fieldmaps. Do they have the right "EchoTime" and "IntendedFor" fields?
+   - Check the `bids/participants.tsv` file
+   - Update the `dataset_description.json` and `README` files in your `bids` folder
    - Run the [bids-validator](https://github.com/INCF/bids-validator) on your `~/bids_tutorial` folder 
