@@ -23,7 +23,7 @@ setup(name                           = 'bidscoin',                          # Re
       version                        = version,                             # Required
       packages                       = find_packages(),                     # Required
       install_requires               = requirements,
-      data_files                     = {'bidscoin': ['version.txt']},
+      package_data                   = {'bidscoin': sample_files.append('version.txt')},
       include_package_data           = True,
       scripts                        = ['bidscoin/bidstrainer.py', 'bidscoin/bidsmapper.py', 'bidscoin/bidscoiner.py', 'bidscoin/rawmapper.py', 'bidscoin/dicomsort.py'],
       python_requires                = '>=3',
