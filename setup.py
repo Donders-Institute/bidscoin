@@ -15,11 +15,11 @@ with open(path.join(path.abspath(path.dirname(__file__)), 'README.md'), encoding
 with open(path.join(path.abspath(path.dirname(__file__)), 'requirements.txt')) as fid:
     requirements = fid.read().splitlines()
 
-setup(name                           = 'BIDScoiner',                        # Required
+setup(name                           = 'bidscoin',                          # Required
       version                        = version,                             # Required
       packages                       = find_packages(),                     # Required
       install_requires               = requirements,
-      scripts                        = ['bin/bidstrainer.py', 'bin/bidsmapper.py', 'bin/bidscoiner.py', 'bin/rawmapper.py', 'bin/dicomsort.py'],
+      scripts                        = ['bidscoin/bidstrainer.py', 'bidscoin/bidsmapper.py', 'bidscoin/bidscoiner.py', 'bidscoin/rawmapper.py', 'bidscoin/dicomsort.py'],
       python_requires                = '>=3',
       classifiers                    = ['Programming Language :: Python :: 3',
                                         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',

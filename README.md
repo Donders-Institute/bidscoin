@@ -1,7 +1,7 @@
-# BIDScoiner
+# BIDScoin
 
-- [The BIDScoiner workflow](#running-the-bidscoiner-workflow)
-- [The BIDScoiner tools](#running-the-bidscoiner-tools)
+- [The BIDScoin workflow](#the-bidscoin-workflow)
+- [The BIDScoin tools](#the-bidscoin-tools)
   * [Running the bidstrainer](#running-the-bidstrainer)
   * [Running the bidsmapper](#running-the-bidsmapper)
   * [Running the bidscoiner](#running-the-bidscoiner)
@@ -11,10 +11,10 @@
     + [Dynamic values](#dynamic-values)
     + [Field maps: IntendedFor](#field-maps-intendedfor)
     + [Plug-in functions](#plug-in-functions)
-- [BIDScoiner functionality / TODO](#bidscoiner-functionality--todo)
-- [BIDScoiner tutorial](#bidscoiner-tutorial)
+- [BIDScoin functionality / TODO](#bidscoin-functionality--todo)
+- [BIDScoin tutorial](#bidscoin-tutorial)
 
-BIDScoiner is a python commandline toolkit that converts ("coins") source-level (raw) MRI data-sets to [nifti](https://nifti.nimh.nih.gov/) / [json](https://www.json.org/) / [tsv](https://en.wikipedia.org/wiki/Tab-separated_values) data-sets that are organized according to the Brain Imaging Data Standard, a.k.a. [BIDS](http://bids.neuroimaging.io). Rather then depending on complex or ambiguous logic, BIDScoiner uses a simple (but powerful) key-value approach to convert the raw source data into BIDS data. The key values that can be used in BIDScoiner to map the data are:
+BIDScoin is a python commandline toolkit that converts ("coins") source-level (raw) MRI data-sets to [nifti](https://nifti.nimh.nih.gov/) / [json](https://www.json.org/) / [tsv](https://en.wikipedia.org/wiki/Tab-separated_values) data-sets that are organized according to the Brain Imaging Data Standard, a.k.a. [BIDS](http://bids.neuroimaging.io). Rather then depending on complex or ambiguous logic, BIDScoin uses a simple (but powerful) key-value approach to convert the raw source data into BIDS data. The key values that can be used in BIDScoin to map the data are:
 
  1. Information in the MRI header files (DICOM, PAR/REC or .7 format; e.g. SeriesDescription)
  2. Information from nifti headers (e.g. image dimensionality)
@@ -22,13 +22,13 @@ BIDScoiner is a python commandline toolkit that converts ("coins") source-level 
 
 The key-value heuristics are stored in flexible, human readable and broadly supported [YAML](http://yaml.org/) files. The nifti- and json-files are generated with [dcm2niix](https://github.com/rordenlab/dcm2niix). For more information on the installation and requirements, see the [installation guide](./docs/installation.md).
 
-Currently, BIDScoiner is quite [functional](#bidscoiner-functionality--todo), but note that only option (1) has been implemented for DICOM files. (Options (2) and (3) are planned for future versions, such that (3) takes precedence over (2), which in turn takes precedence over (1)).
+Currently, BIDScoin is quite [functional](#bidscoin-functionality--todo), but note that only option (1) has been implemented for DICOM files. (Options (2) and (3) are planned for future versions, such that (3) takes precedence over (2), which in turn takes precedence over (1)).
 
-BIDScoiner is a user friendly toolkit that requires no programming knowledge in order to use it, just some basic file handling and, possibly, minor (YAML) text editing skills.
+BIDScoin is a user friendly toolkit that requires no programming knowledge in order to use it, just some basic file handling and, possibly, minor (YAML) text editing skills.
 
-## The BIDScoiner workflow
+## The BIDScoin workflow
 
-BIDScoiner will take your raw data as well as a YAML file with the key-value mapping information as input, and returns a BIDS folder as output. Here is how to prepare the BIDScoiner inputs:
+BIDScoin will take your raw data as well as a YAML file with the key-value mapping information as input, and returns a BIDS folder as output. Here is how to prepare the BIDScoin inputs:
 
  1. **A minimally organised raw data folder**, following a
  `/raw/sub-[identifier]/ses-[identifier]/[seriesfolder]/[dicomfile]`
@@ -42,18 +42,18 @@ BIDScoiner will take your raw data as well as a YAML file with the key-value map
 
  2. **A YAML file with the key-value mapping information, i.e. a bidsmap**.  There are two ways to create such a [bidsmap](#the-bidsmap-files).
 
-    The first is if you are a new user and are working from scratch. In this case you would start with the `bidstrainer.py` command-line tool (see the [BIDScoiner workflow](#bidscoiner-workflow) diagram and [the bidstrainer](#running-the-bidstrainer) section).
+    The first is if you are a new user and are working from scratch. In this case you would start with the `bidstrainer.py` command-line tool (see the [BIDScoin workflow](#the-bidscoin-workflow) diagram and [the bidstrainer](#running-the-bidstrainer) section).
 
     If you have run the bidstrainer or, e.g. if you work in an institute where someone else (i.e. your MR physicist ;-)) has already performed the training procedure, you can use the training data to map all the files in your data-set with the `bidsmapper.py` command-line tool (see [the bidsmapper](#running-the-bidsmapper) section).
 
     The output of the bidsmapper is the complete bidsmap that you can inspect to see if your raw data will be correctly mapped onto BIDS. If this is not the case you can go back to the training procedure and change or add new samples, and rerun the bidstrainer and bidsmapper until you have a suitable bidsmap. Alternatively, or in addition to, you can directly edit the bidsmap yourself (this requires more expert knowledge but can also be more powerful). 
 
-    <a name="bidscoiner-workflow">![BIDScoiner workflow](./docs/workflow.png)</a>  
-    *BIDScoiner workflow. Left: New users would start with the bidstrainer, which output can be fed into the bidsmapper to produce the bidsmap.yaml file. This file can (and should) be inspected and, in case of incorrect mappings, inform the user to add raw training samples and re-run the training procedure (dashed arrowlines). Right: Institute users could start with an institute provided bidsmap file (e.g. bidsmap_dccn.yaml) and directly use the bidsmapper. In case of incorrect mappings they could ask the institute for an updated bidsmap (dashed arrowline).*
+    <a name="bidscoin-workflow">![BIDScoin workflow](./docs/workflow.png)</a>  
+    *BIDScoin workflow. Left: New users would start with the bidstrainer, which output can be fed into the bidsmapper to produce the bidsmap.yaml file. This file can (and should) be inspected and, in case of incorrect mappings, inform the user to add raw training samples and re-run the training procedure (dashed arrowlines). Right: Institute users could start with an institute provided bidsmap file (e.g. bidsmap_dccn.yaml) and directly use the bidsmapper. In case of incorrect mappings they could ask the institute for an updated bidsmap (dashed arrowline).*
 
-Having an organized raw data folder and a correct bidsmap, the actual data-set conversion to BIDS can now be performed fully automatically by simply running the `bidscoiner.py` command-line tool (see the [BIDScoiner workflow](#bidscoiner-workflow) diagram and [the bidscoiner](#running-the-bidscoiner) section).
+Having an organized raw data folder and a correct bidsmap, the actual data-set conversion to BIDS can now be performed fully automatically by simply running the `bidscoiner.py` command-line tool (see the [BIDScoin workflow](#the-bidscoin-workflow) diagram and [the bidscoiner](#running-the-bidscoiner) section).
 
-## The BIDScoiner tools
+## The BIDScoin tools
 
 ### Running the bidstrainer
 
@@ -153,7 +153,7 @@ The `bidsmapper.py` tool goes over all raw data folders of your dataset and save
 
 The `bidscoiner.py` tool is the workhorse of the toolkit that will fully automatically convert your source-level (raw) MRI data-sets to BIDS organized data-sets. In order to do so, it needs a [bidsmap file](#the-bidsmap-files), which is typically created by running the [bidsmapper](#running-the-bidsmapper) tool. You can run `bidscoiner.py` after all data is collected, or whenever new data has been added to the raw folder (presuming the scan protocol hasn't changed).
 
-After a successful run of `bidscoiner.py`, the work to convert your data in a fully compliant BIDS dataset is unfortunately not yet fully over and, depending on the complexity of your data-set, additional tools may need to be run and meta-data may need to be entered manually (not everything can be automated). For instance, you should update the content of the `dataset_description.json` and `README` files in your bids folder and you may need to provide e.g. additional `*_scans.tsv`,`*_sessions.tsv` or `participants.json` files (see the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf) for more information). Moreover, if you have behavioural log-files you will find that BIDScoiner does not (yet) [support](#bidscoiner-functionality--todo) converting these into BIDS compliant `*_events.tsv/json` files (advanced users are encouraged to use the `bidscoiner.py` [plug-in](#plug-in-functions) possibility and write their own log-file parser).  
+After a successful run of `bidscoiner.py`, the work to convert your data in a fully compliant BIDS dataset is unfortunately not yet fully over and, depending on the complexity of your data-set, additional tools may need to be run and meta-data may need to be entered manually (not everything can be automated). For instance, you should update the content of the `dataset_description.json` and `README` files in your bids folder and you may need to provide e.g. additional `*_scans.tsv`,`*_sessions.tsv` or `participants.json` files (see the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf) for more information). Moreover, if you have behavioural log-files you will find that BIDScoin does not (yet) [support](#bidscoin-functionality--todo) converting these into BIDS compliant `*_events.tsv/json` files (advanced users are encouraged to use the `bidscoiner.py` [plug-in](#plug-in-functions) possibility and write their own log-file parser).  
 
 If all of the above work is done, you can (and should) run the web-based [bidsvalidator](https://incf.github.io/bids-validator/) to check for inconsistencies or missing files in your bids data-set (NB: the bidsvalidator also exists as a [command-line tool](https://github.com/INCF/bids-validator)).
 
@@ -161,7 +161,7 @@ NB: The provenance of the produced BIDS data-sets is stored in the `bids/code/bi
 
 ## The bidsmap files
 
-A bidsmap file contains a collection of key-value dictionaries that define unique mappings between different types of raw data files (e.g. DICOM series) and their corresponding BIDS labels. As bidsmap files are both inputs as well as outputs for the different BIDScoiner tools (except for `bidscoiner.py`, which has BIDS data as output; see the [BIDScoiner workflow](#bidscoiner-workflow)), they are derivatives of eachother and, as such, share the same basic structure. The [bidsmap_template.yaml](./heuristics/bidsmap_template.yaml) file is relatively empty and defines only which attributes (but not their values) are mapped to which BIDS-labels. The [bidsmap_[sample/site].yaml](#bidsmap-sample) file contains actual attribute values (e.g. from training samples from a certain study or site) and their associated BIDS-values. The final [bidsmap.yaml](./heuristics) file contains the attribute and associated BIDS values for all types of data found in entire raw data collection.
+A bidsmap file contains a collection of key-value dictionaries that define unique mappings between different types of raw data files (e.g. DICOM series) and their corresponding BIDS labels. As bidsmap files are both inputs as well as outputs for the different BIDScoin tools (except for `bidscoiner.py`, which has BIDS data as output; see the [BIDScoin workflow](#the-bidscoin-workflow)), they are derivatives of eachother and, as such, share the same basic structure. The [bidsmap_template.yaml](./heuristics/bidsmap_template.yaml) file is relatively empty and defines only which attributes (but not their values) are mapped to which BIDS-labels. The [bidsmap_[sample/site].yaml](#bidsmap-sample) file contains actual attribute values (e.g. from training samples from a certain study or site) and their associated BIDS-values. The final [bidsmap.yaml](./heuristics) file contains the attribute and associated BIDS values for all types of data found in entire raw data collection.
 
 A bidsmap file consists of help-text, followed by several mapping sections, i.e. Options, DICOM, PAR, P7, Nifti, FileSystem and Plugin. Within each of these sections there different sub-sections for the different BIDS modalities, i.e. for anat, func, dwi, fmap and beh. There are a few additional sections, i.e. participant_label, session_label and extra_data. Schematically, a bidsmap file has the following structure:
 
@@ -223,7 +223,7 @@ You can use the "IntendedFor" field to indicate for which runs (DICOM series) a 
 
 WIP
 
-## BIDScoiner functionality / TODO
+## BIDScoin functionality / TODO
 - [x] DICOM source data
 - [ ] PAR / REC source data
 - [ ] P7 source data
@@ -233,14 +233,14 @@ WIP
 - [x] Multi-coil data
 - [ ] Stimulus / behavioural logfiles
 
-## BIDScoiner tutorial
+## BIDScoin tutorial
 This tutorial is specific for researchers from the DCCN and makes use of data-sets stored on its central file-system. However, it should not be difficult to use (at least part of) this tutorial for other data-sets as well.
  
-1. Activate the bidscoiner environment and create a BIDS output directory for this tutorial by using these bash commands:  
+1. Activate the bidscoin environment and create a BIDS output directory for this tutorial by using these bash commands:  
    ```
    module add anaconda3  
-   source activate /opt/bidscoiner  
-   PATH=/opt/bidscoiner/1.3/bidscoiner:$PATH  
+   source activate /opt/bidscoin  
+   PATH=/opt/bidscoin/1.4/bidscoin:$PATH  
    mkdir ~/bids_tutorial
    ```
    
@@ -254,7 +254,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    
 3. Scan your raw data collection by running the [bidsmapper](#running-the-bidsmapper) bash command:  
    ```
-   bidsmapper.py /opt/bidscoiner/tutorial/raw ~/bids_tutorial
+   bidsmapper.py /opt/bidscoin/tutorial/raw ~/bids_tutorial
    ```
    - Check the "extra_data" section in your `~/bids_tutorial/code/bidsmap.yaml` file for images that should go in the BIDS sections (e.g. T1, fMRI or DWI data). If so, add training samples and redo the training steps etc
    - Rename the "task_label" of the functional scans into something more readable, e.g. "Reward" and "Stop"
@@ -262,10 +262,10 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    
 4. Convert your raw data collection into a non-zipped (i.e. *.nii instead of *.nii.gz) BIDS collection by running the bidscoiner bash command (note that the input is the same as for the bidsmapper):  
    ```
-   bidscoiner.py /opt/bidscoiner/tutorial/raw ~/bids_tutorial
+   bidscoiner.py /opt/bidscoin/tutorial/raw ~/bids_tutorial
    ```
    - Check your `~/bids_tutorial/code/bidscoiner.log` file for any errors or warnings 
-   - Compare your result in your `~/bids_tutorial` subject folders with the reference result in `/opt/bidscoiner/tutorial/bids`. Do the results look the same? Also check the json sidecar files of the fieldmaps. Do they have the right "EchoTime" and "IntendedFor" fields?
+   - Compare your result in your `~/bids_tutorial` subject folders with the reference result in `/opt/bidscoin/tutorial/bids`. Do the results look the same? Also check the json sidecar files of the fieldmaps. Do they have the right "EchoTime" and "IntendedFor" fields?
    - Check the `~/bids_tutorial/participants.tsv` file
    - Update the `dataset_description.json` and `README` files in your `~/bids_tutorial` folder
    - Run the [bids-validator](https://github.com/INCF/bids-validator) on your `~/bids_tutorial` folder 
