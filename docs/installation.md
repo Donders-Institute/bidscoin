@@ -16,12 +16,9 @@ To download the code:
 2. Select 'Download ZIP' from the green 'Clone or download' button
 3. Unzip the code in a bidscoin directory (e.g. in your python code directory)
 
-To clone the code in a bidscoin direcory, go to your python code directory in your command shell and run the following command (requires [git](https://git-scm.com/) to be installed):
+To clone the code in a bidscoin direcory, go to your python code directory in your command shell and run the following commands (requires [git](https://git-scm.com/) to be installed):
 
     git clone https://github.com/Donders-Institute/bidscoin.git
-
-Next, go to the newly created bidscoin directory in your command shell and run the following command to install required python modules (optionally, first activate your [virtual](https://virtualenv.pypa.io/en/stable/)/[conda](https://conda.io/docs/user-guide/tasks/manage-environments.html#) environment):
-
-    pip install -r requirements.txt
+    pip install ./bidscoin
 
 Finally, edit the `Options : dcm2niix : path` value in the [bidsmap_template.yaml](../heuristics/bidsmap_template.yaml) file according to your system installation.
