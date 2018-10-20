@@ -15,7 +15,7 @@ If you are a developper who wants to edit the code or who wants to contribute ba
 
     pip install -e git+https://github.com/Donders-Institute/bidscoin#egg=bidscoin
     
-If you do not have git (or any other version control system) installed you can download the code and unzip the code yourself in a directory named e.g. `bidscoin` and run (again, with or without the `-e` option):
+If you do not have git (or any other version control system) installed you can [download](https://github.com/Donders-Institute/bidscoin) the code and unzip the code yourself in a directory named e.g. `bidscoin` and run (again, with or without the `-e` option):
 
     pip install -e bidscoin
 
