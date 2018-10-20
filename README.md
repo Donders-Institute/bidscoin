@@ -81,7 +81,7 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
 
 The core idea of the bidstrainer is that you know your own scan protocol and can therefore point out which files should go where in the BIDS. In order to do so, you have to place raw sample files for each of the BIDS data types / runs in your scan protocol (e.g. T1, fMRI, etc) in the appropriate folder of a semantic folder tree (named `samples`, see the [bidstrainer example](#bidstrainer-example)). If you run `bidstrainer.py` with just the name of your bidsfolder, bidstrainer will create this semantic folder tree for you in the `code` subfolder (if it is not already there). Generally, when placing your sample files, it will be fairly straightforward to find your way in this semantic folder tree, but in doubt you should have a look at the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf). Note that the deepest foldername in the tree denotes the BIDS suffix (e.g. "T1w"). You do not need to place samples from your non-BIDS data types / runs (such as localizer or spectroscopy scans) in the folder tree, these data types will automatically go into the "extra_data" folder.
 
-If all sample files have been put in the appropriate location, you can (re)run the bidstrainer to create a bidsmap file for your study. How this works is that, on one hand, the bidstrainer will read a predefined set of (e.g. key DICOM) attributes from each sample file and, on the other hand, take the path-names of the sample files to infer the associated BIDS modality. In this way, a list of unique key-value mappings between sets of (DICOM) attributes and sets of BIDS-labels is defined, the so-called [bidsmap](#the-bidsmap-files), that can be used as input for the [bidsmapper tool](#running-the-bidsmapper). If the predifend set of DICOM attributes does not uniquely identify your particular scan sequences (not likely but possible), or if you simnply prefer to use more or other attributes, you can (copy and) edit the [bidsmap_template.yaml](./heuristics/bidsmap_template.yaml) file in the heuristics folder and re-run the bidstrainer whith this customized template as an input argument.
+If all sample files have been put in the appropriate location, you can (re)run the bidstrainer to create a bidsmap file for your study. How this works is that, on one hand, the bidstrainer will read a predefined set of (e.g. key DICOM) attributes from each sample file and, on the other hand, take the path-names of the sample files to infer the associated BIDS modality. In this way, a list of unique key-value mappings between sets of (DICOM) attributes and sets of BIDS-labels is defined, the so-called [bidsmap](#the-bidsmap-files), that can be used as input for the [bidsmapper tool](#running-the-bidsmapper). If the predifend set of attributes does not uniquely identify your particular scan sequences (not likely but possible), or if you simnply prefer to use more or other attributes, you can (copy and) edit the [bidsmap_template.yaml](./heuristics/bidsmap_template.yaml) file in the heuristics folder and re-run the bidstrainer whith this customized template as an input argument.
 
 <a name="bidstrainer-example">![Bidstrainer example](./docs/sample_tree.png)</a>
 *Bidstrainer example. The red arrow depicts a raw data sample (left file browser) that is put (copied over) to the appropriate location in the semantic folder tree (right file browser)*
@@ -211,7 +211,7 @@ Inside each BIDS modality, there can be multiple key-value mappings that map (e.
 ### Tips and tricks
 
 #### Attribute list
-The attribute value can also be a list, in which case a DICOM series is positively identified if its attribute value is in this list.
+The attribute value can also be a list, in which case a (DICOM) series is positively identified if its attribute value is in this list. If the attribute value is empty it is not used to identify the series
 
 #### Dynamic values
 The BIDS labels can be static, in which case the value is just a normal string, or dynamic, when the string is enclosed with pointy brackets like \<attribute name> or \<\<argument1>\<argument2>> (see the [example](#bidsmap-sample) above). In case of single pointy brackets the value will be replaced during bidsmapper and bidscoiner runtime by the value of the attribute with that name. In case of double pointy brackets, the value will be updated for each subject/session during bidscoiner runtime (e.g. the \<\<runindex>> value will be increased if a file with the same runindex already exists in that directory).
@@ -233,10 +233,12 @@ WIP
 - [x] Multi-coil data
 - [ ] Stimulus / behavioural logfiles
 
+Are you a python programmer with an interest in BIDS who knows all about GE and / or Philips data? Are you experienced with parsing stimulus presentation log-files? Or do you have ideas to improve the this toolkit or its documentation? Have you come across bugs? Then you are highly encouraged to provide feedback or contribute to this project on (https://github.com/Donders-Institute/bidscoin)[https://github.com/Donders-Institute/bidscoin].
+
 ## BIDScoin tutorial
 This tutorial is specific for researchers from the DCCN and makes use of data-sets stored on its central file-system. However, it should not be difficult to use (at least part of) this tutorial for other data-sets as well.
  
-1. Activate the bidscoin environment and create a tutorial playground folder in your home directory by executing these bash commands:  
+1. **Preparation.** Activate the bidscoin environment and create a tutorial playground folder in your home directory by executing these bash commands:  
    ```
    module add bidscoin/1.4  
    source activate /opt/bidscoin  
@@ -245,9 +247,10 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    The new `tutorial` folder contains a `raw` source-data folder and a `bids_ref` reference BIDS folder, i.e. the end product of this tutorial.
    
    Let's begin with inspecting this new raw data collection: 
+   - Are the DICOM files for all the sub-*/ses-# folders organised in series-subfolders (e.g. sub-001/ses-01/003-T1MPRAGE/0001.dcm etc)? Use `dicomsort.py` if not
    - Use the `rawmapper.py` command to print out the DICOM values of the "EchoTime", "Sex" and "AcquisitionDate" of the fMRI series in the `raw` folder
 
-2. Now that we have some data and have inspected its properties, we are ready to start with the actual BIDS coining  process. The first step is to perform [training](#running-the-bidstrainer) on a few raw data samples:
+2. **BIDS training.** Now that we have some source data and have inspected its properties, we are ready to start with the actual BIDS coining  process. The first step is to perform [training](#running-the-bidstrainer) on a few raw data samples:
    - Put files (training data) in the right subfolders in this `samples` tree
    - Create a `bids\code\samples` foldertree in your `tutorial` folder with this bash command:  
    ```
@@ -257,7 +260,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    - Create a `bids/code/bidsmap_sample.yaml` bidsmap file by re-running the above `bidstrainer.py bids` command
    - Inspect the newly created bidsmap file. Can you recognise the key-value mappings? Which fields are going to end up in the filenames of the final BIDS datasets?
    
-3. Scan all folders in the raw data collection for unknown data by running the [bidsmapper](#running-the-bidsmapper) bash command:  
+3. **BIDS mapping.** Scan all folders in the raw data collection for unknown data by running the [bidsmapper](#running-the-bidsmapper) bash command:  
    ```
    bidsmapper.py raw bids
    ```
@@ -266,7 +269,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    - Add a search pattern to the [IntendedFor](#field-maps-intendedfor) field such that it will select your fMRI runs
    - Change the options such that you will get non-zipped nifti data (i.e. `*.nii `instead of `*.nii.gz`) in your BIDS data collection
    
-4. Convert your raw data collection into a BIDS collection by running the bidscoiner bash command (note that the input is the same as for the bidsmapper):  
+4. **BIDS coining.** Convert your raw data collection into a BIDS collection by running the bidscoiner bash command (note that the input is the same as for the bidsmapper):  
    ```
    bidscoiner.py raw bids
    ```
