@@ -23,5 +23,5 @@ If the installation somehow failed, you can have a look at the packages in [requ
 
 After a succesful installation, if needed, edit the `Options : dcm2niix : path` value in the [[bidscoin]/heuristics/bidsmap_template.yaml](../heuristics/bidsmap_template.yaml) file according to your system configuration (you may want to use the `-e` install option for this).
 
-## Update
-Run the pip command as before with the additional `--upgrade` option.
+## Updating
+Run the pip command as before with the additional `--upgrade` option and redo any edits you made to your `bidsmap_template.yaml` file.
