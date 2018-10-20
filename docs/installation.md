@@ -12,9 +12,12 @@ Run the following command in your command-shell (institute users may want to act
 
     pip install git+https://github.com/Donders-Institute/bidscoin
 
-If you are a developper who wants to edit the code or who wants to contribute back to the project, you can use the `-e` option of `pip` or clone the code and do a local install:
+If you are a developper who wants to edit the code or who wants to contribute back to the project, you can use the `-e` option:
 
-    git clone https://github.com/Donders-Institute/bidscoin
+    pip install -e git+https://github.com/Donders-Institute/bidscoin#egg=bidscoin
+    
+If you do not have git (or any other version control system) installed you can download the code and unzip the code yourself in a direcgtory named e.g. `bidscoin` and run (with or without the `-e` option):
+
     pip install -e bidscoin
 
 After a succesful installation, edit the `Options : dcm2niix : path` value in the [bidsmap_template.yaml](../heuristics/bidsmap_template.yaml) file according to your system configuration.
