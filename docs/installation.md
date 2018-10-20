@@ -20,4 +20,4 @@ If you do not have git (or any other version control system) installed you can d
 
     pip install -e bidscoin
 
-After a succesful installation, edit the `Options : dcm2niix : path` value in the [bidsmap_template.yaml](../heuristics/bidsmap_template.yaml) file according to your system configuration.
+After a succesful installation, if needed, edit the `Options : dcm2niix : path` value in the [bidsmap_template.yaml](../heuristics/bidsmap_template.yaml) file according to your system configuration (you may want to use the `-e` install option for this).
