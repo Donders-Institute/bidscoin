@@ -1,8 +1,8 @@
 # BIDScoin installation
 
-BIDScoin can be installed and should work on linux, windows and, presumably, on OS-X computers (this latter option has not been tested) that satisfy the [requirements](#requirements)
+BIDScoin can be installed and should work on linux, windows and, presumably, on OS-X computers (this latter option has not been tested) that satisfy the [requirements](#system-requirements)
 
-## Requirements
+## System requirements
 - python 3
 - [dcm2niix](https://github.com/rordenlab/dcm2niix)
 
