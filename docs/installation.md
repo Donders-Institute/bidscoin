@@ -22,3 +22,6 @@ If you do not have git (or any other version control system) installed you can [
 If the installation somehow failed, you can have a look at the packages in [requirements.txt](../requirements.txt) and try to find another way to install them beforehand
 
 After a succesful installation, if needed, edit the `Options : dcm2niix : path` value in the [[bidscoin]/heuristics/bidsmap_template.yaml](../heuristics/bidsmap_template.yaml) file according to your system configuration (you may want to use the `-e` install option for this).
+
+## Update
+Run the pip command as before using the `--upgrade` option.
