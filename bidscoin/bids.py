@@ -37,6 +37,20 @@ def version():
     return float(version)
 
 
+def bidsversion():
+    """
+    Reads the BIDS version from the BIDSVERSION.TXT file
+
+    :return:    The version number
+    :rtype str
+    """
+
+    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),'bidsversion.txt')) as fid:
+        version = fid.read().strip()
+
+    return str(version)
+
+
 def format_warning(message, category, filename, lineno, line=''):
     return category.__name__ + ': ' + str(filename) + ':' + str(lineno) + ':\n\t' + str(message) + '\n'
 

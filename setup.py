@@ -23,7 +23,7 @@ setup(name                           = 'bidscoin',                          # Re
       version                        = version,                             # Required
       packages                       = find_packages(),                     # Required
       install_requires               = requirements,
-      package_data                   = {'bidscoin': ['../version.txt'],
+      package_data                   = {'bidscoin': ['../*version.txt'],
                                         'heuristics': sample_files,
                                         '': ['*.yaml']},
       include_package_data           = True,

@@ -334,7 +334,7 @@ def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=Fal
     dataset_file = os.path.join(bidsfolder, 'dataset_description.json')
     if not os.path.isfile(dataset_file):
         dataset_description = {"Name":                  "REQUIRED. Name of the dataset",
-                               "BIDSVersion":           "1.1.1",
+                               "BIDSVersion":           bids.bidsversion(),
                                "License":               "RECOMMENDED. What license is this dataset distributed under?. The use of license name abbreviations is suggested for specifying a license",
                                "Authors":               ["OPTIONAL. List of individuals who contributed to the creation/curation of the dataset"],
                                "Acknowledgements":      "OPTIONAL. List of individuals who contributed to the creation/curation of the dataset",
