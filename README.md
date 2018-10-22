@@ -242,7 +242,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    ```
    module add bidscoin/1.4  
    source activate /opt/bidscoin  
-   cp /opt/bidscoin/tutorial ~
+   cp -r /opt/bidscoin/tutorial ~
    ```
    The new `tutorial` folder contains a `raw` source-data folder and a `bids_ref` reference BIDS folder, i.e. the end product of this tutorial.
    

@@ -15,7 +15,7 @@ yaml = YAML()
 try:
     from bidscoin import bids
 except ImportError:
-    import bids         # This should work if bidscoin was not pip-installed
+    from . import bids         # This should work if bidscoin was not pip-installed
 
 
 def built_dicommap(dicomfile, bidsmap, heuristics):
