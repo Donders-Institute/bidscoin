@@ -12,12 +12,13 @@ except ImportError:
     from . import bids         # This should work if bidscoin was not pip-installed
 
 
-def sortsession(sessionfolder, pattern):
+def sortsession(sessionfolder, pattern, rename):
     """
     Sorts dicomfiles into (3-digit) SeriesNumber-SeriesDescription subfolders (e.g. '003-T1MPRAGE')
 
     :param str sessionfolder:   The name of the folder that contains the dicom files
     :param str pattern:         The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files
+    :param bool rename:         Boolean to rename the DICOM files to a SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme
     :return:                    Nothing
     :rtype: NoneType
     """
@@ -38,6 +39,11 @@ def sortsession(sessionfolder, pattern):
             if not seriesdescr:
                 seriesdescr = 'unknown_protocol'
                 warnings.warn('No SeriesDecription or ProtocolName found for: ' + dicomfile)
+        if rename:
+            acquisitionnr = bids.get_dicomfield('AcquisitionNumber', dicomfile)
+            instancenr    = bids.get_dicomfield('InstanceNumber', dicomfile)
+            if not instancenr:
+                instancenr = bids.get_dicomfield('ImageNumber', dicomfile)          # This Attribute was named Image Number in earlier versions of this Standard
 
         # Create the series subfolder
         seriesdir = '{:03d}-{}'.format(seriesnr, seriesdescr)
@@ -48,16 +54,21 @@ def sortsession(sessionfolder, pattern):
             seriesdirs.append(seriesdir)
 
         # Move the dicomfile to the series subfolder
-        os.rename(dicomfile, os.path.join(sessionfolder, seriesdir, os.path.basename(dicomfile)))
+        if rename:
+            filename = '{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}'.format(seriesnr=seriesnr, seriesdescr=seriesdescr, acquisitionnr=acquisitionnr, instancenr=instancenr)
+        else:
+            filename = os.path.basename(dicomfile)
+        os.rename(dicomfile, os.path.join(sessionfolder, seriesdir, filename))
 
 
-def sortsessions(rawfolder, subjectid='', sessionid='', pattern='.*\.(IMA|dcm)$'):
+def sortsessions(rawfolder, subjectid='', sessionid='', pattern='.*\.(IMA|dcm)$', rename=False):
     """
 
     :param rawfolder:   The root folder containing the source [sub/][ses/]dicomfiles
     :param subjectid:   The prefix of the sub folders in rawfolder
     :param sessionid:   The prefix of the ses folders in sub folder
     :param pattern:     The regular expression pattern used in re.match() to select the dicom files
+    :param bool rename: Boolean to rename the DICOM files to a SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme
     :return:            Nothing
     :rtype: NoneType
     """
@@ -86,10 +97,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n  dicomsort.py /project/3022026.01/raw\n  dicomsort.py /project/3022026.01/raw --subjectid sub\n  dicomsort.py /project/3022026.01/raw --subjectid sub --sessionid ses\n ')
-    parser.add_argument('rawfolder',   help='The root folder containing the rawfolder/[sub/][ses/]dicomfiles')
-    parser.add_argument('--subjectid', help='The prefix of the subject folders in rawfolder to search in (e.g. "sub")')
-    parser.add_argument('--sessionid', help='The prefix of the session folders in the subject folder to search in (e.g. "ses")')
-    parser.add_argument('--pattern',   help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')
+    parser.add_argument('rawfolder',       help='The root folder containing the rawfolder/[sub/][ses/]dicomfiles')
+    parser.add_argument('--subjectid',     help='The prefix of the subject folders in rawfolder to search in (e.g. "sub")')
+    parser.add_argument('--sessionid',     help='The prefix of the session folders in the subject folder to search in (e.g. "ses")')
+    parser.add_argument('-p',' --pattern', help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')
+    parser.add_argument('-r','--rename',   help='Flag to rename the DICOM files to a SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme', action='store_true')
     args = parser.parse_args()
 
-    sortsessions(rawfolder=args.rawfolder, subjectid=args.subjectid, sessionid=args.sessionid, pattern=args.pattern)
+    sortsessions(rawfolder=args.rawfolder, subjectid=args.subjectid, sessionid=args.sessionid, pattern=args.pattern, rename=args.rename)
