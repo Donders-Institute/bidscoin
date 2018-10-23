@@ -11,7 +11,7 @@ Run the following command in your command-shell (institute users may want to act
 
     pip install git+https://github.com/Donders-Institute/bidscoin
 
-If you are a developper who wants to edit the code or who wants to contribute back to the project, you can use the `-e` option:
+If you want to edit the code or want to contribute back to the project, you can use the `-e` option:
 
     pip install -e git+https://github.com/Donders-Institute/bidscoin#egg=bidscoin
     
