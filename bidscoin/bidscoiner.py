@@ -308,7 +308,7 @@ def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=Fal
 
     :param str rawfolder:     The root folder-name of the sub/ses/data/file tree containing the source data files
     :param str bidsfolder:    The name of the BIDS root folder
-    :param list subjects:     List of selected sub-# names / folders to be processed. Otherwise all subjects in the rawfolder will be selected
+    :param list subjects:     List of selected subjects / participants (i.e. sub-# names / folders) to be processed (the sub- prefix can be removed). Otherwise all subjects in the rawfolder will be selected
     :param bool force:        If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped
     :param bool participants: If True, subjects in particpants.tsv will not be processed (this could be used e.g. to protect these subjects from being reprocessed), also when force=True
     :param str bidsmapfile:   The name of the bidsmap YAML-file. If the bidsmap pathname is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/
@@ -367,6 +367,7 @@ def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=Fal
     if not subjects:
         subjects = bids.lsdirs(rawfolder, 'sub-*')
     else:
+        subjects = ['sub-' + subject.lstrip('sub-') for subject in subjects]        # Make sure there is a "sub-" prefix
         subjects = [os.path.join(rawfolder,subject) for subject in subjects if os.path.isdir(os.path.join(rawfolder,subject))]
 
     # Loop over all subjects and sessions and convert them using the bidsmap entries
@@ -428,13 +429,15 @@ if __name__ == "__main__":
     import textwrap
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
-                                     epilog='examples:\n  bidscoiner.py /project/raw /project/bids\n  bidscoiner.py -f /project/raw /project/bids -s sub-009 sub-030\n ')
-    parser.add_argument('rawfolder',           help='The source folder containing the raw data in sub-#/ses-#/series format')
-    parser.add_argument('bidsfolder',          help='The destination folder with the bids data structure')
-    parser.add_argument('-s','--subjects',     help='Space seperated list of selected sub-# names / folders to be processed. Otherwise all subjects in the rawfolder will be selected', nargs='+')
-    parser.add_argument('-f','--force',        help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')
-    parser.add_argument('-p','--participants', help='If this flag is given those subjects that are in particpants.tsv will not be processed (also when the --force flag is given). Otherwise the participants.tsv table is ignored', action='store_true')
-    parser.add_argument('-b','--bidsmap',      help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap.yaml', default='bidsmap.yaml')
+                                     epilog='examples:\n'
+                                            '  bidscoiner.py /project/raw /project/bids\n'
+                                            '  bidscoiner.py -f /project/raw /project/bids -p sub-009 sub-030\n ')
+    parser.add_argument('sourcefolder',             help='The source folder containing the raw data in sub-#/ses-#/series format')
+    parser.add_argument('bidsfolder',               help='The destination folder with the bids data structure')
+    parser.add_argument('-p','--participant_label', help='Space seperated list of selected sub-# names / folders to be processed (the sub- prefix can be removed). Otherwise all subjects in the sourcefolder will be selected', nargs='+')
+    parser.add_argument('-f','--force',             help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')
+    parser.add_argument('-s','--skip_participants', help='If this flag is given those subjects that are in particpants.tsv will not be processed (also when the --force flag is given). Otherwise the participants.tsv table is ignored', action='store_true')
+    parser.add_argument('-b','--bidsmap',           help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap.yaml', default='bidsmap.yaml')
     args = parser.parse_args()
 
-    bidscoiner(rawfolder=args.rawfolder, bidsfolder=args.bidsfolder, subjects=args.subjects, force=args.force, participants=args.participants, bidsmapfile=args.bidsmap)
+    bidscoiner(rawfolder=args.sourcefolder, bidsfolder=args.bidsfolder, subjects=args.participant_label, force=args.force, participants=args.skip_participants, bidsmapfile=args.bidsmap)

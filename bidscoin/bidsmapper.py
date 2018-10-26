@@ -253,11 +253,13 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
-                                     epilog='examples:\n  bidsmapper.py /project/foo/raw /project/foo/bids\n  bidsmapper.py /project/foo/raw /project/foo/bids bidsmap_dccn\n ')
-    parser.add_argument('rawfolder',        help='The source folder containing the raw data in sub-#/ses-#/series format')
+                                     epilog='examples:\n'
+                                            '  bidsmapper.py /project/foo/raw /project/foo/bids\n'
+                                            '  bidsmapper.py /project/foo/raw /project/foo/bids bidsmap_dccn\n ')
+    parser.add_argument('sourcefolder',     help='The source folder containing the raw data in sub-#/ses-#/series format')
     parser.add_argument('bidsfolder',       help='The destination folder with the bids data structure')
     parser.add_argument('bidsmap',          help='The bidsmap YAML-file with the BIDS heuristics (optional argument, default: bidsfolder/code/bidsmap_sample.yaml)', nargs='?', default='bidsmap_sample.yaml')
     parser.add_argument('-a','--automatic', help='If this flag is given the user will not be asked for help if an unknown series is encountered', action='store_true')
     args = parser.parse_args()
 
-    bidsmapfile = bidsmapper(args.rawfolder, args.bidsfolder, args.bidsmap, args.automatic)
+    bidsmapfile = bidsmapper(args.sourcefolder, args.bidsfolder, args.bidsmap, args.automatic)

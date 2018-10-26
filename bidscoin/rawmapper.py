@@ -128,7 +128,11 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
                                      description=textwrap.dedent(__doc__),
-                                     epilog='examples:\n  rawmapper.py -r /project/3022026.01/raw\n  rawmapper.py /project/3022026.01/raw -d AcquisitionDate\n  rawmapper.py /project/3022026.01/raw -r -d ManufacturerModelName AcquisitionDate --dryrun\n  rawmapper.py -d EchoTime -w *fMRI* /project/3022026.01/raw\n ')
+                                     epilog='examples:\n' 
+                                            '  rawmapper.py -r /project/3022026.01/raw\n' 
+                                            '  rawmapper.py /project/3022026.01/raw -d AcquisitionDate\n' 
+                                            '  rawmapper.py /project/3022026.01/raw -r -d ManufacturerModelName AcquisitionDate --dryrun\n' 
+                                            '  rawmapper.py -d EchoTime -w *fMRI* /project/3022026.01/raw\n ')
     parser.add_argument('rawfolder',         help='The source folder with the raw data in sub-#/ses-#/series organisation')
     parser.add_argument('-d','--dicomfield', help='The name of the dicomfield that is mapped / used to rename the subid/sesid foldernames', default=['PatientComments'], nargs='+')
     parser.add_argument('-w','--wildcard',   help='The Unix style pathname pattern expansion that is used to select the series from which the dicomfield is being mapped (can contain wildcards)', default='*')
