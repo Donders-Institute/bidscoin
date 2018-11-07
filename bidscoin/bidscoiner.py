@@ -416,7 +416,7 @@ def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=Fal
                     participants_table[key] = None
             participants_table = participants_table.append(personals, ignore_index=True, verify_integrity=True)
             bids.printlog('Writing subject data to: ' + participants_file, logfile)
-            participants_table.to_csv(participants_file, sep='\t', encoding='utf-8', index=False)
+            participants_table.to_csv(participants_file, sep='\t', encoding='utf-8', na_rep='n/a', index=False)
 
     bids.printlog('------------ FINISHED! ------------', logfile)
 
