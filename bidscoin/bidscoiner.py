@@ -96,13 +96,15 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
             bids.printlog(errormsg, logfile)
             continue
 
-        # Replace original image with the cropped one
+        # Replace uncropped output image with the cropped one
         if '-x y' in bidsmap['Options']['dcm2niix']['args']:
             for filename in sorted(glob.glob(os.path.join(bidsmodality, bidsname + '_Crop_*'))):
                 basepath, ext1  = os.path.splitext(filename)
                 basepath, ext2  = os.path.splitext(basepath)                                                    # Account for .nii.gz files
                 basepath, index = basepath.rsplit('_Crop_',1)
-                os.replace(filename, basepath + ext2 + ext1)
+                newfilename     = basepath + ext2 + ext1
+                bids.printlog('Found dcm2niix _Crop_ suffix, replacing original file\n{} ->\n{}'.format(filename, newfilename), logfile)
+                os.replace(filename, newfilename)
 
         # Rename all files ending with _c%d, _e%d and _ph: These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
         jsonfiles = []                                                                                          # Collect the associated json-files (for updating them later)
