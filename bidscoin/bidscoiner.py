@@ -98,7 +98,7 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
 
         # Replace uncropped output image with the cropped one
         if '-x y' in bidsmap['Options']['dcm2niix']['args']:
-            for filename in sorted(glob.glob(os.path.join(bidsmodality, bidsname + '_Crop_*'))):
+            for filename in sorted(glob.glob(os.path.join(bidsmodality, bidsname + '*_Crop_*'))):
                 basepath, ext1  = os.path.splitext(filename)
                 basepath, ext2  = os.path.splitext(basepath)                                                    # Account for .nii.gz files
                 basepath, index = basepath.rsplit('_Crop_',1)
