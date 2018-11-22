@@ -115,6 +115,18 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
                 basepath, index = basepath.rsplit(suffix,1)
                 index           = index.zfill(2)                                                                # Zero padd as specified in the BIDS-standard (assuming two digits is sufficient)
 
+                # NB: This is a special hack: dcm2niix does not add a _c suffix for the first coil -> add it when we encounter a *_c2 file
+                if suffix=='_c' and int(index)==2:
+                    filename_c1    = basepath + ext2 + ext1
+                    newbasepath_c1 = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + '1'.zfill(len(index)))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
+                    newfilename_c1 = newbasepath_c1 + ext2 + ext1
+                    if os.path.isfile(filename_c1) and not os.path.isfile(newfilename_c1):
+                        bids.printlog('Found no dcm2niix {} suffix for coil #1, renaming\n{} ->\n{}'.format(suffix, filename_c1, newfilename_c1), logfile)
+                        os.rename(filename_c1, newfilename_c1)
+                        if ext1 == '.json':
+                            jsonfiles.append(newbasepath_c1 + '.json')
+
+                # Hack the basepath
                 if suffix=='_e' and bids.set_bidslabel(basepath, 'echo') and index:
                     basepath = bids.set_bidslabel(basepath, 'echo', index)
 
@@ -133,19 +145,10 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
                     basepath = basepath[0:-1] + index                                                           # basepath: *_phase1_e[index] -> *_phase[index]
                     bids.printlog('WARNING: Untested dcm2niix "_ph"-filetype: ' + basepath, logfile)
 
-                elif suffix=='_c' and int(index)==2:
-                    filename_c1    = basepath + ext2 + ext1                                                     # NB: This is a special hack: dcm2niix does not add a _c suffix for the first coil -> add it when we encounter a *_c2 file
-                    newbasepath_c1 = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + '1'.zfill(len(index)))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
-                    newfilename_c1 = newbasepath_c1 + ext2 + ext1
-                    if os.path.isfile(filename_c1) and not os.path.isfile(newfilename_c1):
-                        bids.printlog('Found no dcm2niix {} suffix for coil #1, renaming\n{} ->\n{}'.format(suffix, filename_c1, newfilename_c1), logfile)
-                        os.rename(filename_c1, newfilename_c1)
-                        if ext1 == '.json':
-                            jsonfiles.append(newbasepath_c1 + '.json')
-
                 else:
                     basepath = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + index)                    # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
 
+                # Save the file with a new name
                 if runindex.startswith('<<') and runindex.endswith('>>'):
                     newbidsname = bids.increment_runindex(bidsmodality, os.path.basename(basepath), ext2 + ext1)  # Update the runindex now that the acq-label has changed
                 else:
