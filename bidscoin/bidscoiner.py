@@ -99,10 +99,10 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
         # Replace uncropped output image with the cropped one
         if '-x y' in bidsmap['Options']['dcm2niix']['args']:
             for filename in sorted(glob.glob(os.path.join(bidsmodality, bidsname + '*_Crop_*'))):
-                basepath, ext1  = os.path.splitext(filename)
-                basepath, ext2  = os.path.splitext(basepath)                                                    # Account for .nii.gz files
-                basepath, index = basepath.rsplit('_Crop_',1)
-                newfilename     = basepath + ext2 + ext1
+                basepath, ext1 = os.path.splitext(filename)
+                basepath, ext2 = os.path.splitext(basepath)                                                    # Account for .nii.gz files
+                basepath       = basepath.rsplit('_Crop_',1)[0]
+                newfilename    = basepath + ext2 + ext1
                 bids.printlog('Found dcm2niix _Crop_ suffix, replacing original file\n{} ->\n{}'.format(filename, newfilename), logfile)
                 os.replace(filename, newfilename)
 
@@ -113,12 +113,13 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
                 basepath, ext1  = os.path.splitext(filename)
                 basepath, ext2  = os.path.splitext(basepath)                                                    # Account for .nii.gz files
                 basepath, index = basepath.rsplit(suffix,1)
+                index           = index.zfill(2)                                                                # Zero padd as specified in the BIDS-standard (assuming two digits is sufficient)
 
                 if suffix=='_e' and bids.set_bidslabel(basepath, 'echo') and index:
                     basepath = bids.set_bidslabel(basepath, 'echo', index)
 
                 elif suffix=='_e' and basepath.rsplit('_',1)[1] in ['magnitude1','magnitude2'] and index:       # i.e. modality == 'fmap'
-                    basepath = basepath[0:-1] + index
+                    basepath = basepath[0:-1] + index                                                           # basepath: *_magnitude1_e[index] -> *_magnitude[index]
                     # Read the echo times that need to be added to the json-file (see below)
                     if os.path.splitext(filename)[1] == '.json':
                         with open(filename, 'r') as json_fid:
@@ -129,17 +130,27 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
                     pass
 
                 elif suffix=='_ph' and basepath.rsplit('_',1)[1] in ['phase1','phase2'] and index:              # i.e. modality == 'fmap' (TODO: untested)
-                    basepath = basepath[0:-1] + index
+                    basepath = basepath[0:-1] + index                                                           # basepath: *_phase1_e[index] -> *_phase[index]
                     bids.printlog('WARNING: Untested dcm2niix "_ph"-filetype: ' + basepath, logfile)
+
+                elif suffix=='_c' and int(index)==2:
+                    filename_c1    = basepath + ext2 + ext1                                                     # NB: This is a special hack: dcm2niix does not add a _c suffix for the first coil -> add it when we encounter a *_c2 file
+                    newbasepath_c1 = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + '1'.zfill(len(index)))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
+                    newfilename_c1 = newbasepath_c1 + ext2 + ext1
+                    if os.path.isfile(filename_c1) and not os.path.isfile(newfilename_c1):
+                        bids.printlog('Found no dcm2niix {} suffix for coil #1, renaming\n{} ->\n{}'.format(suffix, filename_c1, newfilename_c1), logfile)
+                        os.rename(filename_c1, newfilename_c1)
+                        if ext1 == '.json':
+                            jsonfiles.append(newbasepath_c1 + '.json')
 
                 else:
                     basepath = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + index)                    # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
 
                 if runindex.startswith('<<') and runindex.endswith('>>'):
-                    newbidsname = bids.increment_runindex(bidsmodality, os.path.basename(basepath), ext2+ext1)  # Update the runindex now that the acq-label has changed
+                    newbidsname = bids.increment_runindex(bidsmodality, os.path.basename(basepath), ext2 + ext1)  # Update the runindex now that the acq-label has changed
                 else:
                     newbidsname = os.path.basename(basepath)
-                newfilename = os.path.join(bidsmodality, newbidsname + ext2+ext1)
+                newfilename = os.path.join(bidsmodality, newbidsname + ext2 + ext1)
                 bids.printlog('Found dcm2niix {} suffix, renaming\n{} ->\n{}'.format(suffix, filename, newfilename), logfile)
                 os.rename(filename, newfilename)
                 if ext1 == '.json':
