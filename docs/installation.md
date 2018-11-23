@@ -17,7 +17,7 @@ This will give you the latest stable release of the software. To get the very la
 If you want to edit the code or want to contribute back to the project, you can use the `-e` option:
 
     pip install -e git+https://github.com/Donders-Institute/bidscoin#egg=bidscoin
-    
+
 If you do not have git (or any other version control system) installed you can [download](https://github.com/Donders-Institute/bidscoin) the code and unzip the code yourself in a directory named e.g. `bidscoin` and run (again, with or without the `-e` option):
 
     pip install -e bidscoin
