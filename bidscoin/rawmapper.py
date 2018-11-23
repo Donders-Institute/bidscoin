@@ -33,7 +33,7 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=('PatientComme
     rawfolder = os.path.abspath(os.path.expanduser(rawfolder))
     outfolder = os.path.abspath(os.path.expanduser(outfolder))
 
-    # Create a output mapper-file
+    # Create or append the output to a mapper logfile
     if not dryrun:
         mapperfile = os.path.join(outfolder, 'rawmapper_{}.tsv'.format('_'.join(dicomfield)))
         if rename:

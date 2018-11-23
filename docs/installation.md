@@ -9,6 +9,9 @@ BIDScoin can be installed and should work on linux, windows and, presumably, on 
 ## Installation
 Run the following command in your command-shell (institute users may want to activate a [virtual](https://docs.python.org/3.6/tutorial/venv.html) / [conda](https://conda.io/docs/user-guide/tasks/manage-environments.html) environments first):
 
+    pip install bidscoin
+
+This will give you the latest stable release of the software. To get the very latest version of the software you can install the package directly from the github source code repository:
     pip install git+https://github.com/Donders-Institute/bidscoin
 
 If you want to edit the code or want to contribute back to the project, you can use the `-e` option:

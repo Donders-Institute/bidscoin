@@ -115,7 +115,7 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
                 basepath, index = basepath.rsplit(suffix,1)
                 index           = index.zfill(2)                                                                # Zero padd as specified in the BIDS-standard (assuming two digits is sufficient)
 
-                # NB: This is a special hack: dcm2niix does not add a _c suffix for the first coil -> add it when we encounter a *_c2 file
+                # This is a special hack: dcm2niix does not add a _c suffix for the first coil -> add it when we encounter a *_c2 file
                 if suffix=='_c' and int(index)==2:
                     filename_c1    = basepath + ext2 + ext1
                     newbasepath_c1 = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + '1'.zfill(len(index)))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
