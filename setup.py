@@ -40,4 +40,6 @@ setup(name                           = 'bidscoin',                          # Re
       description                    = 'Converts and organises raw MRI data-sets according to the Brain Imaging Data Standard (BIDS)',
       long_description               = long_description,
       long_description_content_type  = 'text/markdown',
+      author                         = 'Marcel Zwiers',
+      author_email                   = 'm.zwiers@donders.ru.nl',
       url                            = 'https://github.com/Donders-Institute/bidscoiner')
