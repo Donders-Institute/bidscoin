@@ -181,6 +181,27 @@ DICOM:
     task_name: <ProtocolName>
     suffix: ~
 
+  pet:        # ----------------------- All PET data -----------------------------
+  - &pet
+    attributes:
+      SeriesDescription: ~
+      SequenceVariant: ~
+      SequenceName: ~
+      ScanningSequence: ~
+      MRAcquisitionType: ~
+      FlipAngle: ~
+      EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
+      ImageType: ~
+      ProtocolName: ~
+      PhaseEncodingDirection: ~
+    task_label: <ProtocolName>
+    acq_label: ~
+    rec_label: ~
+    run_index: <<1>>
+    suffix: pet
+
   extra_data: # ----------------------- All extra data ---------------------------
   - attributes:
       SeriesDescription: ~
