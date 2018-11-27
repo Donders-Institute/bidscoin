@@ -365,6 +365,12 @@ def get_dicomfield(tagname, dicomfile):
 
         value = dicomdict.get(tagname)
 
+        # Try a recursive search
+        if not value:
+            for elem in dicomdict.iterall():
+                if elem.name==tagname:
+                    value = elem.value
+
     except IOError:
         warnings.warn('Cannot read' + dicomfile)
 
