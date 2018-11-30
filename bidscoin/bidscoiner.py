@@ -204,32 +204,19 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
     if bidsmap['DICOM']['fmap'] is not None:
         for fieldmap in bidsmap['DICOM']['fmap']:
             if 'IntendedFor' in fieldmap and fieldmap['IntendedFor']:
-                jsonfile = os.path.join(bidsses, 'fmap', bids.get_bidsname(subid, sesid, 'fmap', fieldmap, '1') + '.json')       # TODO: Assumes that there is only 1 fieldmap acquired for each bidsmap entry / series
-                if not os.path.isfile(jsonfile):
-                    continue
-                intendedfor = fieldmap['IntendedFor']
-                if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
-                    intendedfor = intendedfor[2:-2].split('><')
-                else:
-                    intendedfor = [intendedfor]
-                with open(jsonfile, 'r') as json_fid:
-                    data = json.load(json_fid)
-                niifiles = [niifile.split(os.sep+subid+os.sep, 1)[1] for niifile in sorted(glob.glob(os.path.join(bidsses, '**'+os.sep+'*' + '*'.join(intendedfor) + '*.nii*')))]     # Use a relative path
-                data['IntendedFor'] = niifiles
-                bids.printlog('Adding IntendedFor to: ' + jsonfile, LOG)
-                with open(jsonfile, 'w') as json_fid:
-                    json.dump(data, json_fid, indent=4)
-
-                # Catch magnitude2 files produced by dcm2niix
-                if jsonfile.endswith('magnitude1.json'):
-                    jsonfile2 = jsonfile.rsplit('1.json',1)[0] + '2.json'
-                    if os.path.isfile(jsonfile2):
-                        with open(jsonfile2, 'r') as json_fid:
-                            data = json.load(json_fid)
-                        data['IntendedFor'] = niifiles
-                        bids.printlog('Adding IntendedFor to: ' + jsonfile2, LOG)
-                        with open(jsonfile2, 'w') as json_fid:
-                            json.dump(data, json_fid, indent=4)
+                for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bids.get_bidsname(subid, sesid, 'fmap', fieldmap) + '*.json')):
+                    intendedfor = fieldmap['IntendedFor']
+                    if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
+                        intendedfor = intendedfor[2:-2].split('><')
+                    else:
+                        intendedfor = [intendedfor]
+                    with open(jsonfile, 'r') as json_fid:
+                        data = json.load(json_fid)
+                    niifiles = [niifile.split(os.sep+subid+os.sep, 1)[1] for niifile in sorted(glob.glob(os.path.join(bidsses, '**'+os.sep+'*' + '*'.join(intendedfor) + '*.nii*')))]     # Use a relative path
+                    data['IntendedFor'] = niifiles
+                    bids.printlog('Adding IntendedFor to: ' + jsonfile, LOG)
+                    with open(jsonfile, 'w') as json_fid:
+                        json.dump(data, json_fid, indent=4)
 
     # Collect personal data from the DICOM header
     dicomfile                   = bids.get_dicomfile(series)
