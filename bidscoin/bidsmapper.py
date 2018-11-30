@@ -140,32 +140,45 @@ def built_filesystemmap(seriesfolder, bidsmap, heuristics, automatic):
     return bidsmap
 
 
-def built_pluginmap(seriesfolder, bidsmap):
+def built_pluginmap(seriesfolder, bidsmap, heuristics):
     """
     Call the plugin to map info onto bids labels
 
     :param seriesfolder: The full-path name of the source folder
     :param dict bidsmap: The bidsmap as we had it
+    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     :return:             The bidsmap with new entries in it
     :rtype: dict
     """
-
-    from importlib import import_module
 
     # Input checks
     if not seriesfolder or not bidsmap['PlugIn']:
         return bidsmap
 
-    # Import and run the plugins
-    for pluginfunction in bidsmap['PlugIn']:
-        plugin  = import_module(os.path.join(__file__,'plugins', pluginfunction))
-        # TODO: check first if the plug-in function exist
-        bidsmap = plugin.bidsmapper(seriesfolder, bidsmap)
+    # Import and run the plugin modules
+    from importlib import util
+
+    for plugin in bidsmap['PlugIn']:
+
+        # Get the full path to the plugin-module
+        if os.path.basename(plugin)==plugin:
+            plugin = os.path.join(__file__,'plugins', plugin)
+        else:
+            plugin = plugin
+        plugin = os.path.abspath(os.path.expanduser(plugin))
+
+        # Load and run the plugin-module
+        spec   = util.spec_from_file_location('bidscoin_plugin', plugin)
+        module = util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        if 'bidsmapper_plugin' in dir(module):
+            print(f'Running: {plugin}.bidsmapper_plugin({seriesfolder}, {bidsmap}, {heuristics})')
+            bidsmap = module.bidsmapper_plugin(seriesfolder, bidsmap, heuristics)
 
     return bidsmap
 
 
-def bidsmapper(rawfolder, bidsfolder, bidsmapfile='bidsmap_sample.yaml', automatic=False):
+def bidsmapper(rawfolder, bidsfolder, bidsmapfile='bidsmap_sample.yaml', subprefix='sub-', sesprefix='ses-', automatic=False):
     """
     Main function that processes all the subjects and session in the rawfolder
     and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code.
@@ -174,6 +187,8 @@ def bidsmapper(rawfolder, bidsfolder, bidsmapfile='bidsmap_sample.yaml', automat
     :param str rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
     :param str bidsfolder:      The name of the BIDS root folder
     :param str bidsmapfile:     The name of the bidsmap YAML-file
+    :param str subprefix:       The prefix common for all source subject-folders
+    :param str sesprefix:       The prefix common for all source session-folders
     :param bool automatic:      If True, the user will not be asked for help if an unknown series is encountered
     :return: str bidsmapfile:   The name of the mapped bidsmap YAML-file
     :rtype: str
@@ -195,10 +210,10 @@ def bidsmapper(rawfolder, bidsfolder, bidsmapfile='bidsmap_sample.yaml', automat
                 bidsmap[logic][modality] = None
 
     # Loop over all subjects and sessions and built up the bidsmap entries
-    subjects = bids.lsdirs(rawfolder, 'sub-*')
+    subjects = bids.lsdirs(rawfolder, subprefix + '*')
     for subject in subjects:
 
-        sessions = bids.lsdirs(subject, 'ses-*')
+        sessions = bids.lsdirs(subject, sesprefix + '*')
         if not sessions: sessions = subject
         for session in sessions:
 
@@ -232,7 +247,7 @@ def bidsmapper(rawfolder, bidsfolder, bidsmapfile='bidsmap_sample.yaml', automat
 
                 # Update / append the plugin mapping
                 if heuristics['PlugIn']:
-                    bidsmap   = built_pluginmap(series, bidsmap)
+                    bidsmap   = built_pluginmap(series, bidsmap, heuristics)
 
     # Create the bidsmap YAML-file in bidsfolder/code
     os.makedirs(os.path.join(bidsfolder,'code'), exist_ok=True)
@@ -242,8 +257,6 @@ def bidsmapper(rawfolder, bidsfolder, bidsmapfile='bidsmap_sample.yaml', automat
     print('Writing bidsmap to: ' + bidsmapfile)
     with open(bidsmapfile, 'w') as stream:
         yaml.dump(bidsmap, stream)
-
-    return bidsmapfile
 
 
 # Shell usage
@@ -259,7 +272,9 @@ if __name__ == "__main__":
     parser.add_argument('sourcefolder',     help='The source folder containing the raw data in sub-#/ses-#/series format')
     parser.add_argument('bidsfolder',       help='The destination folder with the bids data structure')
     parser.add_argument('bidsmap',          help='The bidsmap YAML-file with the BIDS heuristics (optional argument, default: bidsfolder/code/bidsmap_sample.yaml)', nargs='?', default='bidsmap_sample.yaml')
+    parser.add_argument('-n','--subprefix', help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
+    parser.add_argument('-m','--sesprefix', help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     parser.add_argument('-a','--automatic', help='If this flag is given the user will not be asked for help if an unknown series is encountered', action='store_true')
     args = parser.parse_args()
 
-    bidsmapfile = bidsmapper(args.sourcefolder, args.bidsfolder, args.bidsmap, args.automatic)
+    bidsmapper(rawfolder=args.sourcefolder, bidsfolder=args.bidsfolder, bidsmapfile=args.bidsmap, automatic=args.automatic, subprefix=args.subprefix, sesprefix=args.sesprefix)

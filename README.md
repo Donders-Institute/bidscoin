@@ -88,23 +88,31 @@ If all sample files have been put in the appropriate location, you can (re)run t
 
 ### Running the bidsmapper
 
-    usage: bidsmapper.py [-h] [-a] rawfolder bidsfolder [bidsmap]
+    usage: bidsmapper.py [-h] [-n SUBPREFIX] [-m SESPREFIX] [-a]
+                     sourcefolder bidsfolder [bidsmap]
     
     Creates a bidsmap.yaml YAML file that maps the information from all raw data to the
     BIDS labels (see also [bidsmap_template.yaml] and [bidstrainer.py]). You can check
     and edit the bidsmap.yaml file before passing it to [bidscoiner.py]
     
     positional arguments:
-      rawfolder        The source folder containing the raw data in
-                       sub-#/ses-#/series format
-      bidsfolder       The destination folder with the bids data structure
-      bidsmap          The bidsmap YAML-file with the BIDS heuristics (optional
-                       argument, default: bidsfolder/code/bidsmap_sample.yaml)
+      sourcefolder          The source folder containing the raw data in
+                            sub-#/ses-#/series format
+      bidsfolder            The destination folder with the bids data structure
+      bidsmap               The bidsmap YAML-file with the BIDS heuristics
+                            (optional argument, default:
+                            bidsfolder/code/bidsmap_sample.yaml)
     
     optional arguments:
-      -h, --help       show this help message and exit
-      -a, --automatic  If this flag is given the user will not be asked for help
-                       if an unknown series is encountered
+      -h, --help            show this help message and exit
+      -n SUBPREFIX, --subprefix SUBPREFIX
+                            The prefix common for all the source subject-folders.
+                            Default: 'sub-'
+      -m SESPREFIX, --sesprefix SESPREFIX
+                            The prefix common for all the source session-folders.
+                            Default: 'ses-'
+      -a, --automatic       If this flag is given the user will not be asked for
+                            help if an unknown series is encountered
     
     examples:
       bidsmapper.py /project/foo/raw /project/foo/bids
@@ -114,9 +122,9 @@ The `bidsmapper.py` tool goes over all raw data folders of your dataset and save
 
 ### Running the bidscoiner
 
-    usage: bidscoiner.py [-h] [-s [SUBJECTS [SUBJECTS ...]]] [-f] [-p]
-                         [-b BIDSMAP]
-                         rawfolder bidsfolder
+    usage: bidscoiner.py [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-f]
+                         [-s] [-b BIDSMAP] [-n SUBPREFIX] [-m SESPREFIX]
+                         sourcefolder bidsfolder
     
     Converts ("coins") datasets in the rawfolder to nifti / json / tsv datasets in the
     bidsfolder according to the BIDS standard. Check and edit the bidsmap.yaml file to
@@ -124,32 +132,40 @@ The `bidsmapper.py` tool goes over all raw data folders of your dataset and save
     stored in the ../bidsfolder/code/bidscoiner.log file
     
     positional arguments:
-      rawfolder             The source folder containing the raw data in
+      sourcefolder          The source folder containing the raw data in
                             sub-#/ses-#/series format
       bidsfolder            The destination folder with the bids data structure
     
     optional arguments:
       -h, --help            show this help message and exit
-      -s [SUBJECTS [SUBJECTS ...]], --subjects [SUBJECTS [SUBJECTS ...]]
+      -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
                             Space seperated list of selected sub-# names / folders
-                            to be processed. Otherwise all subjects in the
-                            rawfolder will be selected
+                            to be processed (the sub- prefix can be removed).
+                            Otherwise all subjects in the sourcefolder will be
+                            selected
       -f, --force           If this flag is given subjects will be processed,
                             regardless of existing folders in the bidsfolder.
                             Otherwise existing folders will be skipped
-      -p, --participants    If this flag is given those subjects that are in
+      -s, --skip_participants
+                            If this flag is given those subjects that are in
                             particpants.tsv will not be processed (also when the
                             --force flag is given). Otherwise the participants.tsv
                             table is ignored
       -b BIDSMAP, --bidsmap BIDSMAP
                             The bidsmap YAML-file with the study heuristics. If
-                            the bidsmapfile is relative (i.e. no "/" in the name)
-                            then it is assumed to be located in bidsfolder/code/.
-                            Default: bidsmap.yaml
+                            the bidsmap filename is relative (i.e. no "/" in the
+                            name) then it is assumed to be located in
+                            bidsfolder/code/. Default: bidsmap.yaml
+      -n SUBPREFIX, --subprefix SUBPREFIX
+                            The prefix common for all the source subject-folders.
+                            Default: 'sub-'
+      -m SESPREFIX, --sesprefix SESPREFIX
+                            The prefix common for all the source session-folders.
+                            Default: 'ses-'
     
     examples:
       bidscoiner.py /project/raw /project/bids
-      bidscoiner.py -f /project/raw /project/bids -s sub-009 sub-030
+      bidscoiner.py -f /project/raw /project/bids -p sub-009 sub-030
 
 The `bidscoiner.py` tool is the workhorse of the toolkit that will fully automatically convert your source-level (raw) MRI data-sets to BIDS organized data-sets. In order to do so, it needs a [bidsmap file](#the-bidsmap-files), which is typically created by running the [bidsmapper](#running-the-bidsmapper) tool. You can run `bidscoiner.py` after all data is collected, or whenever new data has been added to the raw folder (presuming the scan protocol hasn't changed).
 
@@ -163,7 +179,7 @@ NB: The provenance of the produced BIDS data-sets is stored in the `bids/code/bi
 
 A bidsmap file contains a collection of key-value dictionaries that define unique mappings between different types of raw data files (e.g. DICOM series) and their corresponding BIDS labels. As bidsmap files are both inputs as well as outputs for the different BIDScoin tools (except for `bidscoiner.py`, which has BIDS data as output; see the [BIDScoin workflow](#bidscoin-workflow)), they are derivatives of eachother and, as such, share the same basic structure. The [bidsmap_template.yaml](./heuristics/bidsmap_template.yaml) file is relatively empty and defines only which attributes (but not their values) are mapped to which BIDS-labels. The [bidsmap_[sample/site].yaml](#bidsmap-sample) file contains actual attribute values (e.g. from training samples from a certain study or site) and their associated BIDS-values. The final [bidsmap.yaml](./heuristics) file contains the attribute and associated BIDS values for all types of data found in entire raw data collection.
 
-A bidsmap file consists of help-text, followed by several mapping sections, i.e. Options, DICOM, PAR, P7, Nifti, FileSystem and Plugin. Within each of these sections there different sub-sections for the different BIDS modalities, i.e. for anat, func, dwi, fmap and beh. There are a few additional sections, i.e. participant_label, session_label and extra_data. Schematically, a bidsmap file has the following structure:
+A bidsmap file consists of help-text, followed by several mapping sections, i.e. `Options`, `DICOM`, `PAR`, `P7`, `Nifti`, `FileSystem` and `Plugin`. Within each of these sections there different sub-sections for the different BIDS modalities, i.e. for `anat`, `func`, `dwi`, `fmap`, `pet` and `beh`. There are a few additional sub-sections, i.e. `participant_label`, `session_label` and `extra_data`. Schematically, a bidsmap file has the following structure:
 
  - **Options** *(A list of general options that can be passed to the bidscoiner and its plug-ins)*
  - **DICOM**
@@ -194,6 +210,8 @@ A bidsmap file consists of help-text, followed by several mapping sections, i.e.
      - [..]
    - beh
      - [..]
+   - pet
+     - [..]
    - extra_data *(all non-BIDS data)*
      - [..]
  - **PAR**.
@@ -202,11 +220,13 @@ A bidsmap file consists of help-text, followed by several mapping sections, i.e.
  - **FileSystem**.
  - **PlugIn**. Name of the python plug-in function. Supported but this is an experimental (untested) feature
 
-Inside each BIDS modality, there can be multiple key-value mappings that map (e.g. DICOM) modality [attributes] to the BIDS [labels] (e.g. "task_label"), as indicated below:
+Inside each BIDS modality, there can be multiple key-value mappings that map (e.g. DICOM) modality [attributes] to the BIDS [labels] (e.g. `task_label`), as indicated below:
 
 <img name="bidsmap-sample" src="./docs/bidsmap_sample.png" alt="bidsmap_sample example" width="700">
 
 *Bidsmap_sample example. As indicated by the solid arrowline, the set of DICOM values (suitable to uniquely identify the DICOM series) are used here a key-set that maps onto the set of BIDS labels. Note that certain BIDS labels are enclosed by pointy brackets, marking their [dynamic value](#dynamic-values). In this bidsmap, as indicated by the dashed arrowline, that means that \<ProtocolName> will be replaced in a later stage by "t1_mprage_sag_p2_iso_1.0". Also note that in this bidsmap there was only one T1-image, but there where two different fMRI runs (here because of multi-echo, but multiple tasks could also be listed)*
+
+The `participant_label` and `session_label` sub-sections can be used to set the subject/session-labels using DICOM values instead of the subject/session-labels from the sourcefolder (e.g. when the subject- and/or session-label was entered at the scanner console). The `extra_data` sub-section will contain all series that were not identified otherwise.
 
 ### Tips and tricks
 
@@ -220,7 +240,6 @@ The BIDS labels can be static, in which case the value is just a normal string, 
 You can use the "IntendedFor" field to indicate for which runs (DICOM series) a fieldmap was intended. The dynamic value of the "IntendedFor" field can be a list of string patterns that is used to include those runs that have that string pattern in their nifti pathname (e.g. \<\<task>> to include all functional runs or \<\<Stop\*Go>\<Reward>> to include "Stop1Go"-, "Stop2Go"- and "Reward"-runs).
 
 #### Plug-in functions
-
 WIP
 
 ## BIDScoin functionality / TODO
@@ -231,6 +250,7 @@ WIP
 - [x] Fieldmaps
 - [x] Multi-echo data
 - [x] Multi-coil data
+- [x] PET data
 - [ ] Stimulus / behavioural logfiles
 
 Are you a python programmer with an interest in BIDS who knows all about GE and / or Philips data? Are you experienced with parsing stimulus presentation log-files? Or do you have ideas to improve the this toolkit or its documentation? Have you come across bugs? Then you are highly encouraged to provide feedback or contribute to this project on [https://github.com/Donders-Institute/bidscoin](https://github.com/Donders-Institute/bidscoin).

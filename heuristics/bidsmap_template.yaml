@@ -18,7 +18,7 @@ Options:
 # --------------------------------------------------------------------------------
 # General options
 # --------------------------------------------------------------------------------
-  version: 1.4                    # BIDScoiner version (should correspond with the version in ../bidscoiner/bids.py)
+  version: 1.5                    # BIDScoiner version (should correspond with the version in ../bidscoiner/bids.py)
   dcm2niix:
     path: module add dcm2niix;    # Command to set the path to dcm2niix, e.g. 'module add dcm2niix/1.0.20180622;', 'PATH=/opt/dcm2niix/bin:$PATH;', '/opt/dcm2niix/bin/' or '"C:\Program Files\mricrogl\"'
     args: -b y -z y               # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-b y -z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
@@ -28,8 +28,8 @@ DICOM:
 # --------------------------------------------------------------------------------
 # DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  participant_label: ~
-  session_label: ~
+  participant_label: ~            # A <<DICOM attribute>> that is used as participant_label instead of the subject-label from the sourcefolder
+  session_label: ~                # A <<DICOM attribute>> that is used as session_label instead of the session-label from the sourcefolder
   anat:       # ----------------------- All anatomical data ----------------------
   - &anat
     attributes:
@@ -185,19 +185,14 @@ DICOM:
   - &pet
     attributes:
       SeriesDescription: ~
-      SequenceVariant: ~
-      SequenceName: ~
-      ScanningSequence: ~
-      MRAcquisitionType: ~
-      FlipAngle: ~
-      EchoNumbers: ~
-      EchoTime: ~
-      RepetitionTime: ~
+      Radiopharmaceutical: ~
+      SliceThickness: ~
+      PixelSpacing: ~
+      Rows: ~
+      Columns: ~
       ImageType: ~
-      ProtocolName: ~
-      PhaseEncodingDirection: ~
-    task_label: <ProtocolName>
-    acq_label: ~
+    task_label: <SeriesDescription>
+    acq_label: <Radiopharmaceutical>
     rec_label: ~
     run_index: <<1>>
     suffix: pet

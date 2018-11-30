@@ -19,7 +19,7 @@ import re
 from ruamel.yaml import YAML
 yaml = YAML()
 
-bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh')
+bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh', 'pet')
 unknownmodality = 'extra_data'
 
 
@@ -370,6 +370,7 @@ def get_dicomfield(tagname, dicomfile):
             for elem in dicomdict.iterall():
                 if elem.name==tagname:
                     value = elem.value
+                    continue
 
     except IOError:
         warnings.warn('Cannot read' + dicomfile)
@@ -662,6 +663,18 @@ def get_bidsname(subid, sesid, modality, series, run=''):
             sub     = subid,
             _ses    = add_prefix('_', sesid),
             task    = 'task-' + series['task_name'],
+            suffix  = series['suffix'])
+
+    elif modality=='pet':
+
+        # bidsname: sub-<participant_label>[_ses-<session_label>]_task-<task_label>[_acq-<label>][_rec-<label>][_run-<index>]_suffix
+        bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}_{suffix}'.format(
+            sub     = subid,
+            _ses    = add_prefix('_', sesid),
+            task    = 'task-' + series['task_label'],
+            _acq    = add_prefix('_acq-', series['acq_label']),
+            _rec    = add_prefix('_rec-', series['rec_label']),
+            _run    = add_prefix('_run-', run),
             suffix  = series['suffix'])
 
     elif modality == unknownmodality:

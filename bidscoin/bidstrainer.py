@@ -49,13 +49,13 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
         series_ = dict()    # Creating a new object is safe in that we don't change the original heuristics object. However, we lose all comments and formatting within the series (which is not such a disaster probably). It is also much faster and more robust with aliases compared with a deepcopy
 
         # Copy the bids labels for the different bidsmodality matches
-        if bidsmodality == 'beh':       # beh should not have subdirectories as it (in the cuurent BIDS version doesn't have a suffix)
+        if bidsmodality == 'beh':       # beh should not have subdirectories as it (in the current BIDS version doesn't have a suffix); however, it is kind of irrelevant as beh probably never has a dicomfile anyway?
             for key in series:
                 series_[key] = series[key]
             match = True
 
         else:
-            if ('modality_label' in series and dirname==series['modality_label']) or ('suffix' in series and dirname==series['suffix']):
+            if ('modality_label' in series and dirname==series['modality_label']) or ('suffix' in series and dirname==series['suffix']):    # NB: modality_label & suffix are more or less the same thing, but perhaps future versions will make a distinction
                 for key in series:
                     series_[key] = series[key]
                 match = True
@@ -257,8 +257,6 @@ def bidstrainer(bidsfolder, samplefolder='', bidsmapfile='bidsmap_template.yaml'
     with open(bidsmapfile, 'w') as stream:
         yaml.dump(bidsmap, stream)
 
-    return bidsmapfile
-
 
 # Shell usage
 if __name__ == "__main__":
@@ -275,4 +273,4 @@ if __name__ == "__main__":
     parser.add_argument('bidsmap',      help='The bidsmap YAML-file with the BIDS heuristics (optional argument, default: ./heuristics/bidsmap_template.yaml)', nargs='?', default='bidsmap_template.yaml')
     args = parser.parse_args()
 
-    bidsmapfile = bidstrainer(bidsfolder=args.bidsfolder, samplefolder=args.samplefolder, bidsmapfile=args.bidsmap)
+    bidstrainer(bidsfolder=args.bidsfolder, samplefolder=args.samplefolder, bidsmapfile=args.bidsmap)
