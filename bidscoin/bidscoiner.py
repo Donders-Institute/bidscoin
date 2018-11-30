@@ -127,10 +127,10 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
 
                 # Hack the basepath
                 if suffix=='_e' and bids.set_bidslabel(basepath, 'echo') and index:
-                    basepath = bids.set_bidslabel(basepath, 'echo', index)
+                    basepath = bids.set_bidslabel(basepath, 'echo', int(index))
 
                 elif suffix=='_e' and basepath.rsplit('_',1)[1] in ['magnitude1','magnitude2'] and index:       # i.e. modality == 'fmap'
-                    basepath = basepath[0:-1] + index                                                           # basepath: *_magnitude1_e[index] -> *_magnitude[index]
+                    basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_magnitude1_e[index] -> *_magnitude[index]
                     # Read the echo times that need to be added to the json-file (see below)
                     if os.path.splitext(filename)[1] == '.json':
                         with open(filename, 'r') as json_fid:
@@ -141,7 +141,7 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
                     pass
 
                 elif suffix=='_ph' and basepath.rsplit('_',1)[1] in ['phase1','phase2'] and index:              # i.e. modality == 'fmap' (TODO: untested)
-                    basepath = basepath[0:-1] + index                                                           # basepath: *_phase1_e[index] -> *_phase[index]
+                    basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_phase1_e[index] -> *_phase[index]
                     bids.printlog('WARNING: Untested dcm2niix "_ph"-filetype: ' + basepath, LOG)
 
                 else:
@@ -204,7 +204,7 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
     if bidsmap['DICOM']['fmap'] is not None:
         for fieldmap in bidsmap['DICOM']['fmap']:
             if 'IntendedFor' in fieldmap and fieldmap['IntendedFor']:
-                for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bids.get_bidsname(subid, sesid, 'fmap', fieldmap) + '*.json')):
+                for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bids.get_bidsname(subid, sesid, 'fmap', fieldmap, '1') + '.json').replace('_run-1_','_*')):
                     intendedfor = fieldmap['IntendedFor']
                     if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
                         intendedfor = intendedfor[2:-2].split('><')
@@ -217,6 +217,18 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
                     bids.printlog('Adding IntendedFor to: ' + jsonfile, LOG)
                     with open(jsonfile, 'w') as json_fid:
                         json.dump(data, json_fid, indent=4)
+
+                # Catch magnitude2 files produced by dcm2niix (i.e. magnitude1 & magnitude2 both in the same seriesfolder)
+                if jsonfile.endswith('magnitude1.json'):
+                    jsonfile2 = jsonfile.rsplit('1.json',1)[0] + '2.json'
+                    if os.path.isfile(jsonfile2):
+                        with open(jsonfile2, 'r') as json_fid:
+                            data = json.load(json_fid)
+                        if 'IntendedFor' not in data:
+                            data['IntendedFor'] = niifiles
+                            bids.printlog('Adding IntendedFor to: ' + jsonfile2, LOG)
+                            with open(jsonfile2, 'w') as json_fid:
+                                json.dump(data, json_fid, indent=4)
 
     # Collect personal data from the DICOM header
     dicomfile                   = bids.get_dicomfile(series)
