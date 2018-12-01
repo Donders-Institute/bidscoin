@@ -580,11 +580,11 @@ def get_matching_dicomseries(dicomfile, heuristics):
             # Stop searching the heuristics if we have a match
             if match:
                 # TODO: check if there are more matches (i.e. conflicts)
-                series_.yaml_add_eol_comment('From: ' + dicomfile, key='attributes', column=50)            # Add provenance data
+                series_.yaml_add_eol_comment('From: ' + dicomfile, key='attributes', column=50)             # Add provenance data
                 return {'series': series_, 'modality': modality}
 
     # We don't have a match (all tests failed, so modality should be the last one, i.e. unknownmodality)
-
+    series_.yaml_add_eol_comment('From: ' + dicomfile, key='attributes', column=50)                         # Add provenance data
     return {'series': series_, 'modality': modality}
 
 
