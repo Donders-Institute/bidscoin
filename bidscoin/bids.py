@@ -527,9 +527,9 @@ def get_matching_dicomseries(dicomfile, heuristics):
 
         for series in heuristics['DICOM'][modality]:
 
-            # series_ = dict(attributes={})                                                         # The CommentedMap API below is not guaranteed for the future so keep this line as an alternative
-            series_ = ruamel.yaml.comments.CommentedMap(ruamel.yaml.comments.CommentedMap(attributes={}))  # Creating a new object is safe in that we don't change the original heuristics object. However, we lose all comments and formatting within the series (which is not such a disaster probably). It is also much faster and more robust with aliases compared with a deepcopy
-            match   = any([series['attributes'][key] is not None for key in series['attributes']])  # Make match False if all attributes are empty
+            # series_ = dict(attributes={})                                                                 # The CommentedMap API below is not guaranteed for the future so keep this line as an alternative
+            series_ = ruamel.yaml.comments.CommentedMap(ruamel.yaml.comments.CommentedMap(attributes={}))   # Creating a new object is safe in that we don't change the original heuristics object. However, we lose all comments and formatting within the series (which is not such a disaster probably). It is also much faster and more robust with aliases compared with a deepcopy
+            match   = any([series['attributes'][key] is not None for key in series['attributes']])          # Make match False if all attributes are empty
 
             for key in series:
 
@@ -580,8 +580,7 @@ def get_matching_dicomseries(dicomfile, heuristics):
             # Stop searching the heuristics if we have a match
             if match:
                 # TODO: check if there are more matches (i.e. conflicts)
-                # Add provenance data
-                series_.yaml_add_eol_comment(dicomfile, key='attributes', column=50)
+                series_.yaml_add_eol_comment('From: ' + dicomfile, key='attributes', column=50)            # Add provenance data
                 return {'series': series_, 'modality': modality}
 
     # We don't have a match (all tests failed, so modality should be the last one, i.e. unknownmodality)
