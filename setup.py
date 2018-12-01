@@ -42,4 +42,4 @@ setup(name                           = 'bidscoin',                          # Re
       long_description_content_type  = 'text/markdown',
       author                         = 'Marcel Zwiers',
       author_email                   = 'm.zwiers@donders.ru.nl',
-      url                            = 'https://github.com/Donders-Institute/bidscoiner')
+      url                            = 'https://github.com/Donders-Institute/bidscoin')
