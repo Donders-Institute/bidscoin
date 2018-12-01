@@ -362,5 +362,5 @@ FileSystem:
 
 PlugIn: ~
 # --------------------------------------------------------------------------------
-# Plugin to edit the key-value heuristics (see [bidsmapper.py] for the API)
+# List of plugins to edit the key-value heuristics / perform additional operations
 # --------------------------------------------------------------------------------
