@@ -10,6 +10,7 @@ import glob
 import shutil
 import copy
 import textwrap
+import ruamel
 from ruamel.yaml import YAML
 yaml = YAML()
 try:
@@ -46,7 +47,8 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
     for series in heuristics['DICOM'][bidsmodality]:
 
         match   = False
-        series_ = dict()    # Creating a new object is safe in that we don't change the original heuristics object. However, we lose all comments and formatting within the series (which is not such a disaster probably). It is also much faster and more robust with aliases compared with a deepcopy
+        # series_ = dict()    # The CommentedMap API below is not guaranteed for the future so keep this line as an alternative
+        series_ = ruamel.yaml.comments.CommentedMap()  # Creating a new object is safe in that we don't change the original heuristics object. However, we lose all comments and formatting within the series (which is not such a disaster probably). It is also much faster and more robust with aliases compared with a deepcopy
 
         # Copy the bids labels for the different bidsmodality matches
         if bidsmodality == 'beh':       # beh should not have subdirectories as it (in the current BIDS version doesn't have a suffix); however, it is kind of irrelevant as beh probably never has a dicomfile anyway?
@@ -63,7 +65,9 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
         if match:
 
             # Fill the empty attribute with the info from the dicomfile
-            series_['attributes'] = dict()              # Clear the yaml objects that were copied over
+            # series_['attributes'] = dict()                                        # The CommentedMap API below is not guaranteed for the future so keep this line as an alternative
+            series_['attributes'] = ruamel.yaml.comments.CommentedMap()             # Clear the yaml objects that were copied over
+            series_.yaml_add_eol_comment(dicomfile, key='attributes', column=50)    # Add provenance data
             for attrkey in series['attributes']:
                 series_['attributes'][attrkey] = bids.get_dicomfield(attrkey, dicomfile)
 

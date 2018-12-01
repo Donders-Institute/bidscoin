@@ -17,7 +17,8 @@ import datetime
 import textwrap
 import re
 import ruamel
-yaml = ruamel.yaml.YAML()
+from ruamel.yaml import YAML
+yaml = YAML()
 
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh', 'pet')
 unknownmodality = 'extra_data'
