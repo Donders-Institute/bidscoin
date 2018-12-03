@@ -162,7 +162,7 @@ def built_pluginmap(seriesfolder, bidsmap, heuristics):
 
         # Get the full path to the plugin-module
         if os.path.basename(plugin)==plugin:
-            plugin = os.path.join(__file__,'plugins', plugin)
+            plugin = os.path.join(os.path.dirname(__file__),'plugins', plugin)
         else:
             plugin = plugin
         plugin = os.path.abspath(os.path.expanduser(plugin))

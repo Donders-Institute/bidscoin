@@ -545,7 +545,7 @@ def get_matching_dicomseries(dicomfile, heuristics):
                         if attrvalue:
                             if not dicomvalue:
                                 match = False
-                            elif isinstance(attrvalue, list):                     # The user-editted 'wildcard' option
+                            elif isinstance(attrvalue, list):                     # The user-edited 'wildcard' option
                                 match = match and any([attrvalue_ in dicomvalue for attrvalue_ in attrvalue])
                             else:
                                 match = match and attrvalue==dicomvalue

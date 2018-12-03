@@ -1,5 +1,6 @@
 # bidscoin plugin API:
 
+
 def bidsmapper_plugin(seriesfolder, bidsmap, heuristics):
     """
     The plugin to map info onto bids labels
@@ -11,7 +12,8 @@ def bidsmapper_plugin(seriesfolder, bidsmap, heuristics):
     :rtype: dict
     """
 
-    pass
+    print(f'This is a bidsmapper test-plugin working on: {seriesfolder}')
+    return bidsmap
 
 
 def bidscoiner_plugin(session, bidsmap, bidsfolder, personals, LOG):
@@ -27,4 +29,5 @@ def bidscoiner_plugin(session, bidsmap, bidsfolder, personals, LOG):
     :rtype: NoneType
     """
 
-    pass
+    from bidscoin import bids
+    bids.printlog(f'This is a bidscoiner test-plugin working on: {session} -> {bidsfolder}')
