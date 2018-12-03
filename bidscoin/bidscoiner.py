@@ -329,8 +329,8 @@ def coin_plugin(session, bidsmap, bidsfolder, personals):
         module = util.module_from_spec(spec)
         spec.loader.exec_module(module)
         if 'bidscoiner_plugin' in dir(module):
-            bids.printlog(f'Running: {plugin}.bidscoiner_plugin({session}, {bidsmap}, {bidsfolder}, {personals})', LOG)
-            module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals)
+            bids.printlog(f'Running: {plugin}.bidscoiner_plugin({session}, bidsmap, {bidsfolder}, personals)', LOG)
+            module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals, LOG)
 
 
 def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=False, bidsmapfile='code'+os.sep+'bidsmap.yaml', subprefix='sub-', sesprefix='ses-'):
