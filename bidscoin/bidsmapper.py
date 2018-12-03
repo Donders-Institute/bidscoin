@@ -166,6 +166,9 @@ def built_pluginmap(seriesfolder, bidsmap, heuristics):
         else:
             plugin = plugin
         plugin = os.path.abspath(os.path.expanduser(plugin))
+        if not os.path.isfile(plugin):
+            print('WARNING: Could not find: ' + plugin)
+            continue
 
         # Load and run the plugin-module
         spec   = util.spec_from_file_location('bidscoin_plugin', plugin)
