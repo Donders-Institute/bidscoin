@@ -71,7 +71,10 @@ def printlog(message, logfile=None):
     # Get the name of the calling function
     frame  = inspect.stack()[1]
     module = inspect.getmodule(frame[0])
-    caller = os.path.basename(module.__file__)
+    if module:
+        caller = os.path.basename(module.__file__)
+    else:
+        caller = 'plugin'
 
     # Print the logmessage
     logmessage = '\n{time} - {caller}:\n{message}\n'.format(

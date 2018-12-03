@@ -30,4 +30,4 @@ def bidscoiner_plugin(session, bidsmap, bidsfolder, personals, LOG):
     """
 
     from bidscoin import bids
-    bids.printlog(f'This is a bidscoiner test-plugin working on: {session} -> {bidsfolder}')
+    bids.printlog(f'This is a bidscoiner test-plugin working on: {session} -> {bidsfolder}', LOG)
