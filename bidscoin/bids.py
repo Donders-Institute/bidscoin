@@ -29,7 +29,7 @@ def version():
     Reads the version from the VERSION.TXT file
 
     :return:    The version number
-    :rtype float
+    :rtype: float
     """
 
     with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),'version.txt')) as fid:
@@ -43,7 +43,7 @@ def bidsversion():
     Reads the BIDS version from the BIDSVERSION.TXT file
 
     :return:    The version number
-    :rtype str
+    :rtype: str
     """
 
     with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),'bidsversion.txt')) as fid:
@@ -404,7 +404,7 @@ def add_prefix(prefix, tag):
 
     :param str prefix:  The prefix (e.g. '_sub-')
     :param str tag:     The tag (e.g. 'control01')
-    :return             The tag with the leading prefix (e.g. '_sub-control01') or just the empty tag ''
+    :return:            The tag with the leading prefix (e.g. '_sub-control01') or just the empty tag ''
     :rtype: str
     """
 
@@ -545,12 +545,10 @@ def get_matching_dicomseries(dicomfile, heuristics):
                         if attrvalue:
                             if not dicomvalue:
                                 match = False
-                            elif isinstance(attrvalue, int):
-                                match = match and attrvalue == dicomvalue
-                            elif isinstance(attrvalue, list):
+                            elif isinstance(attrvalue, list):                     # The user-editted 'wildcard' option
                                 match = match and any([attrvalue_ in dicomvalue for attrvalue_ in attrvalue])
                             else:
-                                match = match and (attrvalue in dicomvalue)
+                                match = match and attrvalue==dicomvalue
 
                         # Fill the empty attribute with the info from the dicomfile
                         series_['attributes'][attrkey] = dicomvalue
