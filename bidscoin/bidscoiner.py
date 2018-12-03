@@ -443,7 +443,7 @@ def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=Fal
 
             # Update / append the plugin mapping
             if bidsmap['PlugIn']:
-                coin_plugin(session, bidsmap, bidsfolder, personals, LOG)
+                coin_plugin(session, bidsmap, bidsfolder, personals)
 
         # Write the collected personals to the participants_file
         if personals:
