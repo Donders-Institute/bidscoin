@@ -630,7 +630,7 @@ def get_bidsname(subid, sesid, modality, series, run=''):
         bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}{_echo}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            task    = 'task-' + series['task_label'],
+            task    = f"task-{series['task_label']}",
             _acq    = add_prefix('_acq-', series['acq_label']),
             _rec    = add_prefix('_rec-', series['rec_label']),
             _run    = add_prefix('_run-', run),
@@ -666,7 +666,7 @@ def get_bidsname(subid, sesid, modality, series, run=''):
         bidsname = '{sub}{_ses}_{task}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            task    = 'task-' + series['task_name'],
+            task    = f"task-{series['task_name']}",
             suffix  = series['suffix'])
 
     elif modality=='pet':
@@ -675,7 +675,7 @@ def get_bidsname(subid, sesid, modality, series, run=''):
         bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            task    = 'task-' + series['task_label'],
+            task    = f"task-{series['task_label']}",
             _acq    = add_prefix('_acq-', series['acq_label']),
             _rec    = add_prefix('_rec-', series['rec_label']),
             _run    = add_prefix('_run-', run),
@@ -687,7 +687,7 @@ def get_bidsname(subid, sesid, modality, series, run=''):
         bidsname = '{sub}{_ses}_{acq}{_run}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            acq     = 'acq-' + series['acq_label'],
+            acq     = f"acq-{series['acq_label']}",
             _run    = add_prefix('_run-', run))
 
     else:
