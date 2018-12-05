@@ -430,9 +430,9 @@ def strip_suffix(series):
     """
 
     # See if we have a suffix for this modality
-    if 'suffix' in series:
+    if 'suffix' in series and series['suffix']:
         suffix = series['suffix'].lower()
-    elif 'modality_label' in series:
+    elif 'modality_label' in series and series['modality_label']:
         suffix = series['modality_label'].lower()
     else:
         return series
