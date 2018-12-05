@@ -160,7 +160,7 @@ DICOM:
   - <<: *fmap
     suffix: fieldmap
   - <<: *fmap
-    dir_label: <PhaseEncodingDirection>
+    dir_label: <InPlanePhaseEncodingDirection>
     suffix: epi
     # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
@@ -212,7 +212,13 @@ DICOM:
       ProtocolName: ~
       PhaseEncodingDirection: ~
     acq_label: <SeriesDescription>
+    rec_label: ~
+    ce_label: ~
+    task_label: ~
+    echo_index: ~
+    dir_label: ~
     run_index: <<1>>
+    suffix: ~
 
 
 PAR: ~

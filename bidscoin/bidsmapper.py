@@ -257,7 +257,7 @@ def bidsmapper(rawfolder, bidsfolder, bidsmapfile='bidsmap_sample.yaml', subpref
     bidsmapfile = os.path.join(bidsfolder,'code','bidsmap.yaml')
 
     # Save the bidsmap to the bidsmap YAML-file
-    print('Writing bidsmap to: ' + bidsmapfile)
+    print('-------------------\nWriting bidsmap to: ' + bidsmapfile)
     with open(bidsmapfile, 'w') as stream:
         yaml.dump(bidsmap, stream)
 

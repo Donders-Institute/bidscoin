@@ -669,7 +669,7 @@ def get_bidsname(subid, sesid, modality, series, run=''):
             task    = f"task-{series['task_name']}",
             suffix  = series['suffix'])
 
-    elif modality=='pet':
+    elif modality == 'pet':
 
         # bidsname: sub-<participant_label>[_ses-<session_label>]_task-<task_label>[_acq-<label>][_rec-<label>][_run-<index>]_suffix
         bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}_{suffix}'.format(
@@ -683,12 +683,18 @@ def get_bidsname(subid, sesid, modality, series, run=''):
 
     elif modality == unknownmodality:
 
-        # bidsname: sub-<participant_label>[_ses-<session_label>]_acq-<label>[_run-<index>]
-        bidsname = '{sub}{_ses}_{acq}{_run}'.format(
+        # bidsname: sub-<participant_label>[_ses-<session_label>]_acq-<label>[..][_suffix]
+        bidsname = '{sub}{_ses}_{acq}{_ce}{_rec}{_task}{_echo}{_dir}{_run}{_suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
             acq     = f"acq-{series['acq_label']}",
-            _run    = add_prefix('_run-', run))
+            _ce     = add_prefix('_ce-', series['ce_label']),
+            _rec    = add_prefix('_rec-', series['rec_label']),
+            _task   = add_prefix('_echo-',series['task_label']),
+            _echo   = add_prefix('_echo-', series['echo_index']),
+            _dir    = add_prefix('_dir-', series['dir_label']),
+            _run    = add_prefix('_run-', run),
+            _suffix = add_prefix('_', series['suffix']))
 
     else:
         raise ValueError('Critical error: Invalid modality "{}" found'.format(modality))
