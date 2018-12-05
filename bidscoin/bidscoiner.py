@@ -64,6 +64,8 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
 
         # Get the cleaned-up bids labels from a dicom-file and bidsmap
         dicomfile = bids.get_dicomfile(series)
+        if not dicomfile:
+            continue
         result    = bids.get_matching_dicomseries(dicomfile, bidsmap)
         series_   = result['series']
         modality  = result['modality']

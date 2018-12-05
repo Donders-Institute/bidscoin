@@ -74,7 +74,7 @@ def printlog(message, logfile=None):
     if module:
         caller = os.path.basename(module.__file__)
     else:
-        caller = 'plugin'
+        caller = 'plugin'       # TODO: Figure out why getmodule doesn't work for plugins
 
     # Print the logmessage
     logmessage = '\n{time} - {caller}:\n{message}\n'.format(

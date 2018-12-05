@@ -12,7 +12,7 @@ def bidsmapper_plugin(seriesfolder, bidsmap, heuristics):
     :rtype: dict
     """
 
-    print(f'This is a bidsmapper test-plugin working on: {seriesfolder}')
+    print(f'This is a bidsmapper demo-plugin working on: {seriesfolder}')
     return bidsmap
 
 
@@ -30,4 +30,4 @@ def bidscoiner_plugin(session, bidsmap, bidsfolder, personals, LOG):
     """
 
     from bidscoin import bids
-    bids.printlog(f'This is a bidscoiner test-plugin working on: {session} -> {bidsfolder}', LOG)
+    bids.printlog(f'This is a bidscoiner demo-plugin working on: {session} -> {bidsfolder}', LOG)
