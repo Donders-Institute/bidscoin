@@ -45,7 +45,7 @@ DICOM:
       ImageType: ~
       ProtocolName: ~
       PhaseEncodingDirection: ~
-    acq_label: <ProtocolName>
+    acq_label: <SeriesDescription>
     rec_label: ~
     run_index: <<1>>
     mod_label: ~
@@ -97,7 +97,7 @@ DICOM:
       ImageType: ~
       ProtocolName: ~
       PhaseEncodingDirection: ~
-    task_label: <ProtocolName>
+    task_label: <SeriesDescription>
     acq_label: ~
     rec_label: ~
     run_index: <<1>>
@@ -121,7 +121,7 @@ DICOM:
       ImageType: ~
       ProtocolName: ~
       PhaseEncodingDirection: ~
-    acq_label: <ProtocolName>
+    acq_label: <SeriesDescription>
     run_index: <<1>>
     suffix: dwi
   - <<: *dwi
@@ -142,7 +142,7 @@ DICOM:
       ImageType: ~
       ProtocolName: ~
       PhaseEncodingDirection: ~
-    acq_label: <ProtocolName>
+    acq_label: <SeriesDescription>
     run_index: <<1>>
     dir_label: ~
     suffix: magnitude
@@ -178,7 +178,7 @@ DICOM:
       RepetitionTime: ~
       ImageType: ~
       ProtocolName: ~
-    task_name: <ProtocolName>
+    task_name: <SeriesDescription>
     suffix: ~
 
   pet:        # ----------------------- All PET data -----------------------------
@@ -211,7 +211,7 @@ DICOM:
       ImageType: ~
       ProtocolName: ~
       PhaseEncodingDirection: ~
-    acq_label: <ProtocolName>
+    acq_label: <SeriesDescription>
     run_index: <<1>>
 
 
