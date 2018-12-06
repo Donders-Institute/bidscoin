@@ -15,7 +15,7 @@ except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
 
 
-def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=('PatientComments',), wildcard='*', dryrun=False):
+def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=('PatientComments',), wildcard='*', dryrun=False, subprefix='sub-', sesprefix='ses-'):
     """
     :param str rawfolder:   The root folder-name of the sub/ses/data/file tree containing the source data files
     :param str outfolder:   The name of the folder where the mapping-file is saved (default = rawfolder)
@@ -23,6 +23,8 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=('PatientComme
     :param list dicomfield: The names of the dicomfields that are mapped (/ renamed to sub-dcmval/ses-dcmval)
     :param str wildcard:    The Unix style pathname pattern expansion that is used by glob to select the series from which the dicomfield is being mapped
     :param bool dryrun:     Flag for dry-running renaming the sub-subid folders
+    :param str subprefix:   The prefix common for all source subject-folders
+    :param str sesprefix:   The prefix common for all source session-folders
     :return:                Nothing
     :rtype: NoneType
     """
@@ -44,15 +46,15 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=('PatientComme
                 fid.write('{}\t{}\t{}\t{}\n'.format('subid', 'sesid', 'seriesname', '\t'.join(dicomfield)))
 
     # Loop over all subjects and sessions in the rawfolder
-    for subject in bids.lsdirs(rawfolder, 'sub-*'):
+    for subject in bids.lsdirs(rawfolder, subprefix + '*'):
 
-        sessions = bids.lsdirs(subject, 'ses-*')
+        sessions = bids.lsdirs(subject, sesprefix + '*')
         if not sessions: sessions = subject
         for session in sessions:
 
             # Get the subject and session identifiers from the raw folder
-            subid = 'sub-' + session.rsplit(os.sep+'sub-', 1)[1].split(os.sep+'ses-', 1)[0]
-            sesid = 'ses-' + session.rsplit(os.sep+'ses-')[1]
+            subid = subprefix + session.rsplit(os.sep+subprefix, 1)[1].split(os.sep+sesprefix, 1)[0]
+            sesid = sesprefix + session.rsplit(os.sep+sesprefix)[1]
 
             # Parse the new subject and session identifiers from the dicomfield
             series = bids.lsdirs(session, wildcard)
@@ -81,18 +83,18 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=('PatientComme
                     else:
                         delim = '\n'
                     newsubsesid = dcmval.split(delim)
-                    newsubid    = 'sub-' + bids.cleanup_label(newsubsesid[0].replace('sub-', ''))
-                    if newsubid=='sub-' or newsubid=='sub-None':
+                    newsubid    = subprefix + bids.cleanup_label(newsubsesid[0].replace(subprefix, ''))
+                    if newsubid==subprefix or newsubid==subprefix+'None':
                         newsubid = subid
                         warnings.warn('Could not rename {} because the dicom-field was empty for: {}'.format(subid, session))
                     if len(newsubsesid)==1:
                         newsesid = sesid
                     elif len(newsubsesid)==2:
-                        newsesid = 'ses-' + bids.cleanup_label(newsubsesid[1].replace('ses-', ''))
+                        newsesid = sesprefix + bids.cleanup_label(newsubsesid[1].replace(sesprefix, ''))
                     else:
                         warnings.warn('Skipping renaming of {} because the dicom-field "{}" could not be parsed into [subid, sesid]'.format(session, dcmval))
                         continue
-                    if newsesid=='ses-' or newsesid=='ses-None':
+                    if newsesid==sesprefix or newsesid==subprefix+'None':
                         newsesid = sesid
                         warnings.warn('Could not rename {} because the dicom-field was empty for: {}'.format(sesid, session))
 
@@ -138,7 +140,9 @@ if __name__ == "__main__":
     parser.add_argument('-w','--wildcard',   help='The Unix style pathname pattern expansion that is used to select the series from which the dicomfield is being mapped (can contain wildcards)', default='*')
     parser.add_argument('-o','--outfolder',  help='The mapper-file is normally saved in rawfolder or, when using this option, in outfolder')
     parser.add_argument('-r','--rename',     help='If this flag is given sub-subid/ses-sesid directories in the rawfolder will be renamed to sub-dcmval/ses-dcmval', action='store_true')
+    parser.add_argument('-n','--subprefix',  help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
+    parser.add_argument('-m','--sesprefix',  help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     parser.add_argument('--dryrun',          help='Add this flag to dryrun (test) the mapping or renaming of the sub-subid/ses-sesid directories (i.e. nothing is stored on disk and directory names are not actually changed))', action='store_true')
     args = parser.parse_args()
 
-    rawmapper(rawfolder=args.rawfolder, outfolder=args.outfolder, rename=args.rename, dicomfield=args.dicomfield, wildcard=args.wildcard, dryrun=args.dryrun)
+    rawmapper(rawfolder=args.rawfolder, outfolder=args.outfolder, rename=args.rename, dicomfield=args.dicomfield, wildcard=args.wildcard, subprefix=args.subprefix, sesprefix=args.sesprefix, dryrun=args.dryrun)
