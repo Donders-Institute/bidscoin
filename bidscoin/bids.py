@@ -22,7 +22,7 @@ yaml = YAML()
 
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh', 'pet')
 unknownmodality = 'extra_data'
-bidskeys        = ('acq_label', 'modality_label', 'ce_label', 'rec_label', 'task_label', 'echo_index', 'dir_label', 'suffix')
+bidslabels        = ('acq_label', 'modality_label', 'ce_label', 'rec_label', 'task_label', 'echo_index', 'dir_label', 'suffix')
 
 
 def version():
@@ -604,8 +604,8 @@ def get_bidsname(subid, sesid, modality, series, run=''):
     """
 
     # Do some checks to allow for dragging the series entries between the different modality-sections
-    for bidskey in bidskeys:
-        if bidskey not in series: series[bidskey] = ''
+    for bidslabel in bidslabels:
+        if bidslabel not in series: series[bidslabel] = ''
 
     # Compose the BIDS filename (-> switch statement)
     if modality == 'anat':
