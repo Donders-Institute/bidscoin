@@ -34,24 +34,27 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
 
     # Get a valid BIDS subject identifier from the (first) dicom-header or from the session source folder
     if bidsmap['DICOM']['participant_label'] and bidsmap['DICOM']['participant_label'].startswith('<<') and bidsmap['DICOM']['participant_label'].endswith('>>'):
-        subid = 'sub-' + bids.get_dicomfield(bidsmap['DICOM']['participant_label'][2:-2], bids.get_dicomfile(bids.lsdirs(session)[0]))
+        subid = bids.get_dicomfield(bidsmap['DICOM']['participant_label'][2:-2], bids.get_dicomfile(bids.lsdirs(session)[0]))
     elif bidsmap['DICOM']['participant_label']:
-        subid = 'sub-' + bidsmap['DICOM']['participant_label']
+        subid = bidsmap['DICOM']['participant_label']
     else:
-        subid = 'sub-' + session.rsplit(os.sep+'sub-',1)[1].split(os.sep+'ses-',1)[0]
+        subid = session.rsplit(os.sep+'sub-',1)[1].split(os.sep+'ses-',1)[0]
+    subid = 'sub-' + bids.cleanup_label(subid.replace('sub-',''))
     if subid == 'sub-':
         bids.printlog('Error: No valid subject identifier found for: ' + session, LOG)
         return
 
     # Get a BIDS session identifier from the (first) dicom-header or from the session source folder
     if bidsmap['DICOM']['session_label'] and bidsmap['DICOM']['session_label'].startswith('<<') and bidsmap['DICOM']['session_label'].endswith('>>'):
-        sesid = 'ses-' + bids.get_dicomfield(bidsmap['DICOM']['session_label'][2:-2], bids.get_dicomfile(bids.lsdirs(session)[0]))
+        sesid = bids.get_dicomfield(bidsmap['DICOM']['session_label'][2:-2], bids.get_dicomfile(bids.lsdirs(session)[0]))
     elif bidsmap['DICOM']['session_label']:
-        sesid = 'ses-' + bidsmap['DICOM']['session_label']
+        sesid = bidsmap['DICOM']['session_label']
     elif os.sep+'ses-' in session:
-        sesid = 'ses-' + session.rsplit(os.sep+'ses-')[1]
+        sesid = session.rsplit(os.sep+'ses-')[1]
     else:
         sesid = ''
+    if sesid:
+        sesid = 'ses-' + bids.cleanup_label(sesid.replace('ses-',''))
 
     # Create the BIDS session-folder
     bidsses = os.path.join(bidsfolder, subid, sesid)         # NB: This gives a trailing '/' if ses=='', but that should be ok
@@ -171,12 +174,12 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
                 bvecfile = os.path.splitext(jsonfile)[0] + '.bvec'
                 bvalfile = os.path.splitext(jsonfile)[0] + '.bval'
                 if not os.path.isfile(bvecfile):
+                    bids.printlog('Adding dummy bvec file: ' + bvecfile, LOG)
                     with open(bvecfile, 'w') as bvec_fid:
-                        bids.printlog('Adding dummy bvec file: ' + bvecfile, LOG)
                         bvec_fid.write('0\n0\n0\n')
                 if not os.path.isfile(bvalfile):
+                    bids.printlog('Adding dummy bval file: ' + bvalfile, LOG)
                     with open(bvalfile, 'w') as bval_fid:
-                        bids.printlog('Adding dummy bval file: ' + bvalfile, LOG)
                         bval_fid.write('0\n')
 
             # Add the TaskName to the func json-file
@@ -185,8 +188,8 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
                     data = json.load(json_fid)
                 if not 'TaskName' in data:
                     bids.printlog('Adding TaskName to: ' + jsonfile, LOG)
+                    data['TaskName'] = series_['task_label']
                     with open(jsonfile, 'w') as json_fid:
-                        data['TaskName'] = series_['task_label']
                         json.dump(data, json_fid, indent=4)
 
             # Add the EchoTime(s) used to create the difference image to the fmap json-file. NB: This assumes the magnitude series have already been parsed (i.e. their nifti's had an _e suffix) -- This is normally the case for Siemens (phase-series being saved after the magnitude series

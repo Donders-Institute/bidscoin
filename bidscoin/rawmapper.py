@@ -140,8 +140,8 @@ if __name__ == "__main__":
     parser.add_argument('-w','--wildcard',   help='The Unix style pathname pattern expansion that is used to select the series from which the dicomfield is being mapped (can contain wildcards)', default='*')
     parser.add_argument('-o','--outfolder',  help='The mapper-file is normally saved in rawfolder or, when using this option, in outfolder')
     parser.add_argument('-r','--rename',     help='If this flag is given sub-subid/ses-sesid directories in the rawfolder will be renamed to sub-dcmval/ses-dcmval', action='store_true')
-    parser.add_argument('-n','--subprefix',  help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
-    parser.add_argument('-m','--sesprefix',  help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
+    parser.add_argument('-n','--subprefix',  help='The prefix common for all the source subject-folders', default='sub-')
+    parser.add_argument('-m','--sesprefix',  help='The prefix common for all the source session-folders', default='ses-')
     parser.add_argument('--dryrun',          help='Add this flag to dryrun (test) the mapping or renaming of the sub-subid/ses-sesid directories (i.e. nothing is stored on disk and directory names are not actually changed))', action='store_true')
     args = parser.parse_args()
 
