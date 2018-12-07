@@ -354,7 +354,7 @@ FileSystem:
       FolderName: ~
       FileName: ~
       FileExt: ~
-    task_name: <FileName>
+    task_label: <FileName>
     suffix: ~
 
   extra_data: # ----------------------- All extra data ---------------------------
