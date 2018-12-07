@@ -683,6 +683,15 @@ def get_bidsname(subid, sesid, modality, series, run=''):
 
     elif modality == unknownmodality:
 
+        # Do some checks to allow for dragging series to the 'extra_data' section
+        if 'acq_label'  not in series: series['acq_label']  = ''
+        if 'ce_label'   not in series: series['ce_label']   = ''
+        if 'rec_label'  not in series: series['rec_label']  = ''
+        if 'task_label' not in series: series['task_label'] = ''
+        if 'echo_index' not in series: series['echo_index'] = ''
+        if 'dir_label'  not in series: series['dir_label']  = ''
+        if 'suffix'     not in series: series['suffix']     = ''
+
         # bidsname: sub-<participant_label>[_ses-<session_label>]_acq-<label>[..][_suffix]
         bidsname = '{sub}{_ses}_{acq}{_ce}{_rec}{_task}{_echo}{_dir}{_run}{_suffix}'.format(
             sub     = subid,

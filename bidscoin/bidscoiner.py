@@ -44,7 +44,7 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
         bids.printlog('Error: No valid subject identifier found for: ' + session, LOG)
         return
 
-    # Get a BIDS session identifier from the (first) dicom-header or from the session source folder
+    # Get a valid or empty BIDS session identifier from the (first) dicom-header or from the session source folder
     if bidsmap['DICOM']['session_label'] and bidsmap['DICOM']['session_label'].startswith('<<') and bidsmap['DICOM']['session_label'].endswith('>>'):
         sesid = bids.get_dicomfield(bidsmap['DICOM']['session_label'][2:-2], bids.get_dicomfile(bids.lsdirs(session)[0]))
     elif bidsmap['DICOM']['session_label']:
