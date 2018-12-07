@@ -22,6 +22,7 @@ yaml = YAML()
 
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh', 'pet')
 unknownmodality = 'extra_data'
+bidskeys        = ('acq_label', 'modality_label', 'ce_label', 'rec_label', 'task_label', 'echo_index', 'dir_label', 'suffix')
 
 
 def version():
@@ -602,6 +603,10 @@ def get_bidsname(subid, sesid, modality, series, run=''):
     :rtype: str
     """
 
+    # Do some checks to allow for dragging the series entries between the different modality-sections
+    for bidskey in bidskeys:
+        if bidskey not in series: series[bidskey] = ''
+
     # Compose the BIDS filename (-> switch statement)
     if modality == 'anat':
 
@@ -666,7 +671,7 @@ def get_bidsname(subid, sesid, modality, series, run=''):
         bidsname = '{sub}{_ses}_{task}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            task    = f"task-{series['task_name']}",
+            task    = f"task-{series['task_label']}",
             suffix  = series['suffix'])
 
     elif modality == 'pet':
@@ -682,15 +687,6 @@ def get_bidsname(subid, sesid, modality, series, run=''):
             suffix  = series['suffix'])
 
     elif modality == unknownmodality:
-
-        # Do some checks to allow for dragging series to the 'extra_data' section
-        if 'acq_label'  not in series: series['acq_label']  = ''
-        if 'ce_label'   not in series: series['ce_label']   = ''
-        if 'rec_label'  not in series: series['rec_label']  = ''
-        if 'task_label' not in series: series['task_label'] = ''
-        if 'echo_index' not in series: series['echo_index'] = ''
-        if 'dir_label'  not in series: series['dir_label']  = ''
-        if 'suffix'     not in series: series['suffix']     = ''
 
         # bidsname: sub-<participant_label>[_ses-<session_label>]_acq-<label>[..][_suffix]
         bidsname = '{sub}{_ses}_{acq}{_ce}{_rec}{_task}{_echo}{_dir}{_run}{_suffix}'.format(
