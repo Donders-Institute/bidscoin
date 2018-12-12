@@ -22,7 +22,7 @@ yaml = YAML()
 
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh', 'pet')
 unknownmodality = 'extra_data'
-bidslabels        = ('acq_label', 'modality_label', 'ce_label', 'rec_label', 'task_label', 'echo_index', 'dir_label', 'suffix')
+bidslabels      = ('acq_label', 'modality_label', 'ce_label', 'rec_label', 'task_label', 'echo_index', 'dir_label', 'suffix')   # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
 
 
 def version():
