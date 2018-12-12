@@ -82,7 +82,7 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=('PatientComme
                         delim = '\\'
                     else:
                         delim = '\n'
-                    newsubsesid = dcmval.split(delim)
+                    newsubsesid = [val for val in dcmval.split(delim) if val]   # Skip empty lines / entries
                     newsubid    = subprefix + bids.cleanup_label(newsubsesid[0].replace(subprefix, ''))
                     if newsubid==subprefix or newsubid==subprefix+'None':
                         newsubid = subid
