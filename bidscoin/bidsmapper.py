@@ -17,16 +17,15 @@ except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
 
 
-def built_dicommap(dicomfile, bidsmap, heuristics, automatic):
+def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict, automatic: bool) -> dict:
     """
     All the logic to map dicom-attributes (fields/tags) onto bids-labels go into this function
 
-    :param str dicomfile:   The full-path name of the source dicom-file
-    :param dict bidsmap:    The bidsmap as we had it
-    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param bool automatic:  If True, the user will not be asked for help if an unknown series is encountered
-    :return:                The bidsmap with new entries in it
-    :rtype: dict
+    :param dicomfile:   The full-path name of the source dicom-file
+    :param bidsmap:     The bidsmap as we had it
+    :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param automatic:   If True, the user will not be asked for help if an unknown series is encountered
+    :return:            The bidsmap with new entries in it
     """
 
     # Input checks
@@ -56,16 +55,15 @@ def built_dicommap(dicomfile, bidsmap, heuristics, automatic):
     return bidsmap
 
 
-def built_parmap(parfile, bidsmap, heuristics, automatic):
+def built_parmap(parfile: str, bidsmap: dict, heuristics: dict, automatic: bool) -> dict:
     """
     All the logic to map PAR/REC fields onto bids labels go into this function
 
-    :param str parfile:     The full-path name of the source PAR-file
-    :param dict bidsmap:    The bidsmap as we had it
-    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param bool automatic:  If True, the user will not be asked for help if an unknown series is encountered
-    :return:                The bidsmap with new entries in it
-    :rtype: dict
+    :param parfile:     The full-path name of the source PAR-file
+    :param bidsmap:     The bidsmap as we had it
+    :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param automatic:   If True, the user will not be asked for help if an unknown series is encountered
+    :return:            The bidsmap with new entries in it
     """
 
     # Input checks
@@ -77,16 +75,15 @@ def built_parmap(parfile, bidsmap, heuristics, automatic):
     return bidsmap
 
 
-def built_p7map(p7file, bidsmap, heuristics, automatic):
+def built_p7map(p7file: str, bidsmap: dict, heuristics: dict, automatic: bool) -> dict:
     """
     All the logic to map P*.7-fields onto bids labels go into this function
 
-    :param str p7file:      The full-path name of the source P7-file
-    :param dict bidsmap:    The bidsmap as we had it
-    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param bool automatic:  If True, the user will not be asked for help if an unknown series is encountered
-    :return:                The bidsmap with new entries in it
-    :rtype: dict
+    :param p7file:      The full-path name of the source P7-file
+    :param bidsmap:     The bidsmap as we had it
+    :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param automatic:   If True, the user will not be asked for help if an unknown series is encountered
+    :return:            The bidsmap with new entries in it
     """
 
     # Input checks
@@ -98,16 +95,15 @@ def built_p7map(p7file, bidsmap, heuristics, automatic):
     return bidsmap
 
 
-def built_niftimap(niftifile, bidsmap, heuristics, automatic):
+def built_niftimap(niftifile: str, bidsmap: dict, heuristics: dict, automatic: bool) -> dict:
     """
     All the logic to map nifti-info onto bids labels go into this function
 
-    :param str niftifile:   The full-path name of the source nifti-file
-    :param dict bidsmap:    The bidsmap as we had it
-    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param bool automatic:  If True, the user will not be asked for help if an unknown series is encountered
-    :return:                The bidsmap with new entries in it
-    :rtype: dict
+    :param niftifile:   The full-path name of the source nifti-file
+    :param bidsmap:     The bidsmap as we had it
+    :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param automatic:   If True, the user will not be asked for help if an unknown series is encountered
+    :return:            The bidsmap with new entries in it
     """
 
     # Input checks
@@ -119,16 +115,15 @@ def built_niftimap(niftifile, bidsmap, heuristics, automatic):
     return bidsmap
 
 
-def built_filesystemmap(seriesfolder, bidsmap, heuristics, automatic):
+def built_filesystemmap(seriesfolder: str, bidsmap: dict, heuristics: dict, automatic: bool) -> dict:
     """
     All the logic to map filesystem-info onto bids labels go into this function
 
     :param seriesfolder:    The full-path name of the source folder
-    :param dict bidsmap:    The bidsmap as we had it
-    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param bool automatic:  If True, the user will not be asked for help if an unknown series is encountered
+    :param bidsmap:         The bidsmap as we had it
+    :param heuristics:      Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param automatic:       If True, the user will not be asked for help if an unknown series is encountered
     :return:                The bidsmap with new entries in it
-    :rtype: dict
     """
 
     # Input checks
@@ -140,15 +135,14 @@ def built_filesystemmap(seriesfolder, bidsmap, heuristics, automatic):
     return bidsmap
 
 
-def built_pluginmap(seriesfolder, bidsmap, heuristics):
+def built_pluginmap(seriesfolder: str, bidsmap: dict, heuristics: dict) -> dict:
     """
     Call the plugin to map info onto bids labels
 
-    :param seriesfolder: The full-path name of the source folder
-    :param dict bidsmap: The bidsmap as we had it
-    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:             The bidsmap with new entries in it
-    :rtype: dict
+    :param seriesfolder:    The full-path name of the source folder
+    :param bidsmap:         The bidsmap as we had it
+    :param heuristics:      Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :return:                The bidsmap with new entries in it
     """
 
     # Input checks
@@ -181,20 +175,19 @@ def built_pluginmap(seriesfolder, bidsmap, heuristics):
     return bidsmap
 
 
-def bidsmapper(rawfolder, bidsfolder, bidsmapfile='bidsmap_sample.yaml', subprefix='sub-', sesprefix='ses-', automatic=False):
+def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str='bidsmap_sample.yaml', subprefix: str='sub-', sesprefix: str='ses-', automatic: bool=False) -> None:
     """
     Main function that processes all the subjects and session in the rawfolder
     and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code.
     Folders in rawfolder are assumed to contain a single dataset.
 
-    :param str rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
-    :param str bidsfolder:      The name of the BIDS root folder
-    :param str bidsmapfile:     The name of the bidsmap YAML-file
-    :param str subprefix:       The prefix common for all source subject-folders
-    :param str sesprefix:       The prefix common for all source session-folders
-    :param bool automatic:      If True, the user will not be asked for help if an unknown series is encountered
-    :return: str bidsmapfile:   The name of the mapped bidsmap YAML-file
-    :rtype: str
+    :param rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
+    :param bidsfolder:      The name of the BIDS root folder
+    :param bidsmapfile:     The name of the bidsmap YAML-file
+    :param subprefix:       The prefix common for all source subject-folders
+    :param sesprefix:       The prefix common for all source session-folders
+    :param automatic:       If True, the user will not be asked for help if an unknown series is encountered
+    :return:bidsmapfile:    The name of the mapped bidsmap YAML-file
     """
 
     # Input checking

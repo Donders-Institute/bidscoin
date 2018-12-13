@@ -12,16 +12,15 @@ except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
 
 
-def sortsession(sessionfolder, pattern, rename, nosort):
+def sortsession(sessionfolder: str, pattern: str, rename: bool, nosort: bool) -> None:
     """
     Sorts dicomfiles into (3-digit) SeriesNumber-SeriesDescription subfolders (e.g. '003-T1MPRAGE')
 
-    :param str sessionfolder:   The name of the folder that contains the dicom files
-    :param str pattern:         The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files
-    :param bool rename:         Boolean to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme
-    :param bool nosort:         Boolean to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)
-    :return:                    Nothing
-    :rtype: NoneType
+    :param sessionfolder:   The name of the folder that contains the dicom files
+    :param pattern:         The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files
+    :param rename:          Boolean to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme
+    :param nosort:          Boolean to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)
+    :return:                Nothing
     """
 
     # Input checking
@@ -69,17 +68,16 @@ def sortsession(sessionfolder, pattern, rename, nosort):
         os.rename(dicomfile, os.path.join(pathname, filename))
 
 
-def sortsessions(rawfolder, subjectid='', sessionid='', pattern='.*\.(IMA|dcm)$', rename=False, nosort=False):
+def sortsessions(rawfolder: str, subjectid: str='', sessionid: str='', pattern: str='.*\.(IMA|dcm)$', rename: bool=False, nosort: bool=False) -> None:
     """
 
     :param rawfolder:   The root folder containing the source [sub/][ses/]dicomfiles
     :param subjectid:   The prefix of the sub folders in rawfolder
     :param sessionid:   The prefix of the ses folders in sub folder
     :param pattern:     The regular expression pattern used in re.match() to select the dicom files
-    :param bool rename: Boolean to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme
-    :param bool nosort: Boolean to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)
+    :param rename:      Boolean to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme
+    :param nosort:      Boolean to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)
     :return:            Nothing
-    :rtype: NoneType
     """
 
     if subjectid:

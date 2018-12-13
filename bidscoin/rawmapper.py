@@ -15,18 +15,17 @@ except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
 
 
-def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=('PatientComments',), wildcard='*', dryrun=False, subprefix='sub-', sesprefix='ses-'):
+def rawmapper(rawfolder: str, outfolder: str='', rename: bool=False, dicomfield: tuple=('PatientComments',), wildcard: str='*', dryrun: bool=False, subprefix: str='sub-', sesprefix: str='ses-') -> None:
     """
-    :param str rawfolder:   The root folder-name of the sub/ses/data/file tree containing the source data files
-    :param str outfolder:   The name of the folder where the mapping-file is saved (default = rawfolder)
-    :param bool rename:     Flag for renaming the sub-subid folders to sub-dicomfield
-    :param list dicomfield: The names of the dicomfields that are mapped (/ renamed to sub-dcmval/ses-dcmval)
-    :param str wildcard:    The Unix style pathname pattern expansion that is used by glob to select the series from which the dicomfield is being mapped
-    :param bool dryrun:     Flag for dry-running renaming the sub-subid folders
-    :param str subprefix:   The prefix common for all source subject-folders
-    :param str sesprefix:   The prefix common for all source session-folders
-    :return:                Nothing
-    :rtype: NoneType
+    :param rawfolder:   The root folder-name of the sub/ses/data/file tree containing the source data files
+    :param outfolder:   The name of the folder where the mapping-file is saved (default = rawfolder)
+    :param rename:      Flag for renaming the sub-subid folders to sub-dicomfield
+    :param dicomfield:  The names of the dicomfields that are mapped (/ renamed to sub-dcmval/ses-dcmval)
+    :param wildcard:    The Unix style pathname pattern expansion that is used by glob to select the series from which the dicomfield is being mapped
+    :param dryrun:      Flag for dry-running renaming the sub-subid folders
+    :param subprefix:   The prefix common for all source subject-folders
+    :param sesprefix:   The prefix common for all source session-folders
+    :return:            Nothing
     """
 
     # Input checking
@@ -65,7 +64,7 @@ def rawmapper(rawfolder, outfolder=None, rename=False, dicomfield=('PatientComme
                 series = series[0]                                                                          # TODO: loop over series?
                 dcmval = ''
                 for dcmfield in dicomfield:
-                    dcmval = dcmval + '/' + str(bids.get_dicomfield(dcmfield, bids.get_dicomfile(series)))  # TODO: test how newlines from the console work out
+                    dcmval = dcmval + '/' + str(bids.get_dicomfield(dcmfield, bids.get_dicomfile(series)))
                 dcmval = dcmval[1:]
 
             # Rename the session subfolder in the rawfolder and print & save this info

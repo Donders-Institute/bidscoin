@@ -17,17 +17,16 @@ except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
 
 
-def coin_dicom(session, bidsmap, bidsfolder, personals):
+def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
     """
     Converts the session dicom-files into BIDS-valid nifti-files in the corresponding bidsfolder and
     extracts personals (e.g. Age, Sex) from the dicom header
 
-    :param str session:    The full-path name of the subject/session source folder
-    :param dict bidsmap:   The full mapping heuristics from the bidsmap YAML-file
-    :param str bidsfolder: The full-path name of the BIDS root-folder
-    :param dict personals: The dictionary with the personal information
-    :return:               Nothing
-    :rtype: NoneType
+    :param session:     The full-path name of the subject/session source folder
+    :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
+    :param bidsfolder:  The full-path name of the BIDS root-folder
+    :param personals:   The dictionary with the personal information
+    :return:            Nothing
     """
 
     TE = [None, None]
@@ -130,7 +129,7 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
                         if ext1 == '.json':
                             jsonfiles.append(newbasepath_c1 + '.json')
 
-                # Hack the basepath
+                # Patch the basepath
                 if suffix=='_e' and bids.set_bidslabel(basepath, 'echo') and index:
                     basepath = bids.set_bidslabel(basepath, 'echo', int(index))
 
@@ -246,72 +245,67 @@ def coin_dicom(session, bidsmap, bidsfolder, personals):
     personals['weight']         = bids.get_dicomfield('PatientWeight', dicomfile)
 
 
-def coin_par(session, bidsmap, bidsfolder, personals):
+def coin_par(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
     """
 
-    :param str session:    The full-path name of the subject/session source folder
-    :param dict bidsmap:   The full mapping heuristics from the bidsmap YAML-file
-    :param str bidsfolder: The full-path name of the BIDS root-folder
-    :param dict personals: The dictionary with the personal information
-    :return:               Nothing
-    :rtype: NoneType
+    :param session:     The full-path name of the subject/session source folder
+    :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
+    :param bidsfolder:  The full-path name of the BIDS root-folder
+    :param personals:   The dictionary with the personal information
+    :return:            Nothing
     """
 
     bids.printlog('coin_par is WIP!!!', LOG)
 
 
-def coin_p7(session, bidsmap, bidsfolder, personals):
+def coin_p7(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
     """
 
-    :param str session:    The full-path name of the subject/session source folder
-    :param dict bidsmap:   The full mapping heuristics from the bidsmap YAML-file
-    :param str bidsfolder: The full-path name of the BIDS root-folder
-    :param dict personals: The dictionary with the personal information
-    :return:               Nothing
-    :rtype: NoneType
+    :param session:     The full-path name of the subject/session source folder
+    :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
+    :param bidsfolder:  The full-path name of the BIDS root-folder
+    :param personals:   The dictionary with the personal information
+    :return:            Nothing
     """
 
     bids.printlog('coin_p7 is WIP!!!', LOG)
 
 
-def coin_nifti(session, bidsmap, bidsfolder, personals):
+def coin_nifti(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
     """
 
-    :param str session:    The full-path name of the subject/session source folder
-    :param dict bidsmap:   The full mapping heuristics from the bidsmap YAML-file
-    :param str bidsfolder: The full-path name of the BIDS root-folder
-    :param dict personals: The dictionary with the personal information
-    :return:               Nothing
-    :rtype: NoneType
+    :param session:     The full-path name of the subject/session source folder
+    :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
+    :param bidsfolder:  The full-path name of the BIDS root-folder
+    :param personals:   The dictionary with the personal information
+    :return:            Nothing
     """
 
     bids.printlog('coin_nifti is WIP!!!', LOG)
 
 
-def coin_filesystem(session, bidsmap, bidsfolder, personals):
+def coin_filesystem(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
     """
 
-    :param str session:    The full-path name of the subject/session source folder
-    :param dict bidsmap:   The full mapping heuristics from the bidsmap YAML-file
-    :param str bidsfolder: The full-path name of the BIDS root-folder
-    :param dict personals: The dictionary with the personal information
-    :return:               Nothing
-    :rtype: NoneType
+    :param session:     The full-path name of the subject/session source folder
+    :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
+    :param bidsfolder:  The full-path name of the BIDS root-folder
+    :param personals:   The dictionary with the personal information
+    :return:            Nothing
     """
 
     bids.printlog('coin_filesystem is WIP!!!', LOG)
 
 
-def coin_plugin(session, bidsmap, bidsfolder, personals):
+def coin_plugin(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
     """
     Run the plugin coiner to cast the series into the bids folder
 
-    :param str session:    The full-path name of the subject/session source folder
-    :param dict bidsmap:   The full mapping heuristics from the bidsmap YAML-file
-    :param str bidsfolder: The full-path name of the BIDS root-folder
-    :param dict personals: The dictionary with the personal information
-    :return:               Nothing
-    :rtype: NoneType
+    :param session:     The full-path name of the subject/session source folder
+    :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
+    :param bidsfolder:  The full-path name of the BIDS root-folder
+    :param personals:   The dictionary with the personal information
+    :return:            Nothing
     """
 
     # Import and run the plugin modules
@@ -338,21 +332,20 @@ def coin_plugin(session, bidsmap, bidsfolder, personals):
             module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals, LOG)
 
 
-def bidscoiner(rawfolder, bidsfolder, subjects=(), force=False, participants=False, bidsmapfile='code'+os.sep+'bidsmap.yaml', subprefix='sub-', sesprefix='ses-'):
+def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=False, participants: bool=False, bidsmapfile: str='code'+os.sep+'bidsmap.yaml', subprefix: str='sub-', sesprefix: str='ses-') -> None:
     """
     Main function that processes all the subjects and session in the rawfolder and uses the
     bidsmap.yaml file in bidsfolder/code to cast the data into the BIDS folder.
 
-    :param str rawfolder:     The root folder-name of the sub/ses/data/file tree containing the source data files
-    :param str bidsfolder:    The name of the BIDS root folder
-    :param list subjects:     List of selected subjects / participants (i.e. sub-# names / folders) to be processed (the sub- prefix can be removed). Otherwise all subjects in the rawfolder will be selected
-    :param bool force:        If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped
-    :param bool participants: If True, subjects in particpants.tsv will not be processed (this could be used e.g. to protect these subjects from being reprocessed), also when force=True
-    :param str bidsmapfile:   The name of the bidsmap YAML-file. If the bidsmap pathname is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/
-    :param str subprefix:     The prefix common for all source subject-folders
-    :param str sesprefix:     The prefix common for all source session-folders
-    :return:                  Nothing
-    :rtype: NoneType
+    :param rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
+    :param bidsfolder:      The name of the BIDS root folder
+    :param subjects:        List of selected subjects / participants (i.e. sub-# names / folders) to be processed (the sub- prefix can be removed). Otherwise all subjects in the rawfolder will be selected
+    :param force:           If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped
+    :param participants:    If True, subjects in particpants.tsv will not be processed (this could be used e.g. to protect these subjects from being reprocessed), also when force=True
+    :param bidsmapfile:     The name of the bidsmap YAML-file. If the bidsmap pathname is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/
+    :param subprefix:       The prefix common for all source subject-folders
+    :param sesprefix:       The prefix common for all source session-folders
+    :return:                Nothing
     """
 
     # Input checking & defaults

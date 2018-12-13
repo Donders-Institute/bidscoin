@@ -25,12 +25,17 @@ unknownmodality = 'extra_data'
 bidslabels      = ('acq_label', 'modality_label', 'ce_label', 'rec_label', 'task_label', 'echo_index', 'dir_label', 'suffix')   # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
 
 
-def version():
-    """
-    Reads the version from the VERSION.TXT file
+def format_warning(message, category, filename, lineno, line=''):
+    return category.__name__ + ': ' + str(filename) + ':' + str(lineno) + ':\n\t' + str(message) + '\n'
 
-    :return:    The version number
-    :rtype: float
+warnings.formatwarning = format_warning
+
+
+def version() -> float:
+    """
+    Reads the BIDSCOIN version from the VERSION.TXT file
+
+    :return:    The BIDSCOIN version number
     """
 
     with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),'version.txt')) as fid:
@@ -39,12 +44,11 @@ def version():
     return float(version)
 
 
-def bidsversion():
+def bidsversion() -> str:
     """
     Reads the BIDS version from the BIDSVERSION.TXT file
 
-    :return:    The version number
-    :rtype: str
+    :return:    The BIDS version number
     """
 
     with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),'bidsversion.txt')) as fid:
@@ -53,20 +57,13 @@ def bidsversion():
     return str(version)
 
 
-def format_warning(message, category, filename, lineno, line=''):
-    return category.__name__ + ': ' + str(filename) + ':' + str(lineno) + ':\n\t' + str(message) + '\n'
-
-warnings.formatwarning = format_warning
-
-
-def printlog(message, logfile=None):
+def printlog(message: str, logfile: str='') -> None:
     """
     Print an annotated log-message to screen and optionally to a logfile
 
-    :param str message: The output text
-    :param str logfile: The full pathname of the logfile
-    :return:            Nothing
-    :rtype: NoneType
+    :param message: The output text
+    :param logfile: The full pathname of the logfile
+    :return:        Nothing
     """
 
     # Get the name of the calling function
@@ -90,14 +87,13 @@ def printlog(message, logfile=None):
             log_fid.write(logmessage)
 
 
-def lsdirs(folder, wildcard='*'):
+def lsdirs(folder: str, wildcard: str='*'):
     """
     Gets all directories in a folder, ignores files
 
-    :param str folder:   The full pathname of the folder
-    :param str wildcard: Simple (glob.glob) shell-style wildcards. Foldernames starting with a dot are special cases that are not matched by '*' and '?' patterns.") wildcard
-    :return: folders:    An iterable filter object with all directories in a folder
-    :rtype: iterable
+    :param folder:      The full pathname of the folder
+    :param wildcard:    Simple (glob.glob) shell-style wildcards. Foldernames starting with a dot are special cases that are not matched by '*' and '?' patterns.") wildcard
+    :return:            An iterable filter object with all directories in a folder
     """
 
     if wildcard:
@@ -105,13 +101,12 @@ def lsdirs(folder, wildcard='*'):
     return [fname for fname in sorted(glob.glob(folder)) if os.path.isdir(fname)]
 
 
-def is_dicomfile(file):
+def is_dicomfile(file: str) -> bool:
     """
     Checks whether a file is a DICOM-file. It uses the feature that Dicoms have the string DICM hardcoded at offset 0x80.
 
-    :param str file: The full pathname of the file
-    :return:         Returns true if a file is a DICOM-file
-    :rtype: bool
+    :param file:    The full pathname of the file
+    :return:        Returns true if a file is a DICOM-file
     """
 
     if os.path.isfile(file):
@@ -120,29 +115,27 @@ def is_dicomfile(file):
             return dcmfile.read(4) == b'DICM'
 
 
-def is_dicomfile_siemens(file):
+def is_dicomfile_siemens(file: str) -> bool:
     """
     Checks whether a file is a *SIEMENS* DICOM-file. All Siemens Dicoms contain a dump of the
     MrProt structure. The dump is marked with a header starting with 'ASCCONV BEGIN'. Though
     this check is not foolproof, it is very unlikely to fail.
 
-    :param str file: The full pathname of the file
-    :return:         Returns true if a file is a Siemens DICOM-file
-    :rtype: bool
+    :param file:    The full pathname of the file
+    :return:        Returns true if a file is a Siemens DICOM-file
     """
 
     return b'ASCCONV BEGIN' in open(file, 'rb').read()
 
 
-def is_parfile(file):
+def is_parfile(file: str) -> bool:
     """
     Checks whether a file is a Philips PAR file
 
     WIP!!!!!!
 
-    :param str file: The full pathname of the file
-    :return:         Returns true if a file is a Philips PAR-file
-    :rtype: bool
+    :param file:    The full pathname of the file
+    :return:        Returns true if a file is a Philips PAR-file
     """
 
     # TODO: Returns true if filetype is PAR.
@@ -152,15 +145,14 @@ def is_parfile(file):
         return False
 
 
-def is_p7file(file):
+def is_p7file(file: str) -> bool:
     """
     Checks whether a file is a GE P*.7 file
 
     WIP!!!!!!
 
-    :param str file: The full pathname of the file
-    :return:         Returns true if a file is a GE P7-file
-    :rtype: bool
+    :param file:    The full pathname of the file
+    :return:        Returns true if a file is a GE P7-file
     """
 
     # TODO: Returns true if filetype is P7.
@@ -170,15 +162,14 @@ def is_p7file(file):
         return False
 
 
-def is_niftifile(file):
+def is_niftifile(file: str) -> bool:
     """
     Checks whether a file is a nifti file
 
     WIP!!!!!!
 
-    :param str file: The full pathname of the file
-    :return:         Returns true if a file is a nifti-file
-    :rtype: bool
+    :param file:    The full pathname of the file
+    :return:        Returns true if a file is a nifti-file
     """
 
     # TODO: Returns true if filetype is nifti.
@@ -188,15 +179,14 @@ def is_niftifile(file):
         return False
 
 
-def is_incomplete_acquisition(folder):
+def is_incomplete_acquisition(folder: str) -> bool:
     """
     If a scan was aborted in the middle of the experiment, it is likely that images will be saved
     anyway. We want to avoid converting these incomplete directories. This function checks the number
     of measurements specified in the protocol against the number of imaging files in the folder.
 
-    :param str folder:  The full pathname of the folder
-    :return:            Returns true if the acquisition was incomplete
-    :rtype: bool
+    :param folder:  The full pathname of the folder
+    :return:        Returns true if the acquisition was incomplete
     """
 
     dicomfile = get_dicomfile(folder)
@@ -211,13 +201,12 @@ def is_incomplete_acquisition(folder):
         return False
 
 
-def get_dicomfile(folder):
+def get_dicomfile(folder: str) -> str:
     """
     Gets a dicom-file from the folder
 
-    :param str folder: The full pathname of the folder
-    :return:           The filename of the first dicom-file in the folder.
-    :rtype: str
+    :param folder:  The full pathname of the folder
+    :return:        The filename of the first dicom-file in the folder.
     """
 
     for file in sorted(os.listdir(folder)):
@@ -228,13 +217,12 @@ def get_dicomfile(folder):
     return None
 
 
-def get_parfile(folder):
+def get_parfile(folder: str) -> str:
     """
     Gets a Philips PAR-file from the folder
 
-    :param str folder: The full pathname of the folder
-    :return:           The filename of the first PAR-file in the folder.
-    :rtype: str
+    :param folder:  The full pathname of the folder
+    :return:        The filename of the first PAR-file in the folder.
     """
 
     for file in sorted(os.listdir(folder)):
@@ -245,13 +233,12 @@ def get_parfile(folder):
     return None
 
 
-def get_p7file(folder):
+def get_p7file(folder: str) -> str:
     """
     Gets a GE P*.7-file from the folder
 
-    :param str folder: The full pathname of the folder
-    :return:           The filename of the first P7-file in the folder.
-    :rtype: str
+    :param folder:  The full pathname of the folder
+    :return:        The filename of the first P7-file in the folder.
     """
 
     for file in sorted(os.listdir(folder)):
@@ -262,13 +249,12 @@ def get_p7file(folder):
     return None
 
 
-def get_niftifile(folder):
+def get_niftifile(folder: str) -> str:
     """
     Gets a nifti-file from the folder
 
-    :param str folder: The full pathname of the folder
-    :return:           The filename of the first nifti-file in the folder.
-    :rtype: str
+    :param folder:  The full pathname of the folder
+    :return:        The filename of the first nifti-file in the folder.
     """
 
     for file in sorted(os.listdir(folder)):
@@ -279,15 +265,14 @@ def get_niftifile(folder):
     return None
 
 
-def get_heuristics(yamlfile, folder=None, logfile=None):
+def get_heuristics(yamlfile: str, folder: str='', logfile: str='') -> dict:
     """
     Read the heuristics from the bidsmap yaml-file
 
-    :param str yamlfile: The full pathname of the bidsmap yaml-file
-    :param str folder:   Searches in the ./heuristics folder if folder=None
-    :param str logfile:  The full pathname of the logfile
-    :return:             Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :rtype: ruamel_yaml.comments.CommentedMap
+    :param yamlfile:    The full pathname of the bidsmap yaml-file
+    :param folder:      Searches in the ./heuristics folder if folder=None
+    :param logfile:     The full pathname of the logfile
+    :return:            Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     """
 
     # Input checking
@@ -316,16 +301,15 @@ def get_heuristics(yamlfile, folder=None, logfile=None):
     return heuristics
 
 
-def parse_x_protocol(pattern, dicomfile):
+def parse_x_protocol(pattern: str, dicomfile: str) -> str:
     """
     Siemens writes a protocol structure as text into each DICOM file.
     This structure is necessary to recreate a scanning protocol from a DICOM,
     since the DICOM information alone wouldn't be sufficient.
 
-    :param str pattern:    A regexp expression: '^' + pattern + '\t = \t(.*)\\n'
-    :param str dicomfile:  The full pathname of the dicom-file
-    :return:               The string extracted values from the dicom-file according to the given pattern
-    :rtype: str
+    :param pattern:     A regexp expression: '^' + pattern + '\t = \t(.*)\\n'
+    :param dicomfile:   The full pathname of the dicom-file
+    :return:            The string extracted values from the dicom-file according to the given pattern
     """
 
     if not is_dicomfile_siemens(dicomfile):
@@ -347,14 +331,13 @@ def parse_x_protocol(pattern, dicomfile):
 # Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) _DICOMDICT_CACHE optimization
 _DICOMDICT_CACHE = None
 _DICOMFILE_CACHE = None
-def get_dicomfield(tagname, dicomfile):
+def get_dicomfield(tagname: str, dicomfile: str):
     """
     Robustly extracts a DICOM field/tag from a dictionary or from vendor specific fields
 
-    :param str tagname:   Name of the DICOM field
-    :param str dicomfile: The full pathname of the dicom-file
-    :return:              Extracted tag-values from the dicom-file
-    :rtype: str or int
+    :param tagname:     Name of the DICOM field
+    :param dicomfile:   The full pathname of the dicom-file
+    :return:            Extracted tag-values from the dicom-file
     """
 
     import pydicom
@@ -402,14 +385,13 @@ def get_dicomfield(tagname, dicomfile):
         return str(value)
 
 
-def add_prefix(prefix, tag):
+def add_prefix(prefix: str, tag: str) -> str:
     """
     Simple function to account for optional BIDS tags in the bids file names, i.e. it prefixes 'prefix' only when tag is not empty
 
-    :param str prefix:  The prefix (e.g. '_sub-')
-    :param str tag:     The tag (e.g. 'control01')
-    :return:            The tag with the leading prefix (e.g. '_sub-control01') or just the empty tag ''
-    :rtype: str
+    :param prefix:  The prefix (e.g. '_sub-')
+    :param tag:     The tag (e.g. 'control01')
+    :return:        The tag with the leading prefix (e.g. '_sub-control01') or just the empty tag ''
     """
 
     if tag:
@@ -420,14 +402,13 @@ def add_prefix(prefix, tag):
     return tag
 
 
-def strip_suffix(series):
+def strip_suffix(series: dict) -> dict:
     """
     Certain attributes such as SeriesDescriptions (but not ProtocolName!?) may get a suffix like '_SBRef' from the vendor,
     try to strip it off from the BIDS labels
 
-    :param dict series: The series with potentially added suffixes that are the same as the BIDS suffixes
-    :return:            The series with these suffixes removed
-    :rtype: dict
+    :param series:  The series with potentially added suffixes that are the same as the BIDS suffixes
+    :return:        The series with these suffixes removed
     """
 
     # See if we have a suffix for this modality
@@ -448,15 +429,14 @@ def strip_suffix(series):
     return series
 
 
-def cleanup_label(label):
+def cleanup_label(label: str) -> str:
     """
     Converts a given label to a cleaned-up label that can be used as a BIDS label. Remove leading and trailing spaces;
     convert other spaces, special BIDS characters and anything that is not an alphanumeric to a ''. This will for
     example map "Joe's reward_task" to "Joesrewardtask"
 
-    :param str label: The given label that potentially contains undesired characters
-    :return:          The cleaned-up / BIDS-valid label
-    :rtype: str
+    :param label:   The given label that potentially contains undesired characters
+    :return:        The cleaned-up / BIDS-valid label
     """
 
     special_characters = (' ', '_', '-','.')
@@ -467,15 +447,14 @@ def cleanup_label(label):
     return re.sub(r'(?u)[^-\w.]', '', label)
 
 
-def exist_series(series, serieslist, matchbidslabels=True):
+def exist_series(series: dict, serieslist: list, matchbidslabels: bool=True) -> bool:
     """
     Checks if there is already an entry in serieslist with the same attributes and, optionally, labels as series
 
-    :param dict series:          The series labels and attributes that are to be searched for
-    :param list serieslist:      List of series that is being searched
-    :param bool matchbidslabels: If True, also matches the BIDS-labels, otherwise only series['attributes']
-    :return:                     True if the series exists in serieslist
-    :rtype: bool
+    :param series:          The series labels and attributes that are to be searched for
+    :param serieslist:      List of series that is being searched
+    :param matchbidslabels: If True, also matches the BIDS-labels, otherwise only series['attributes']
+    :return:                True if the series exists in serieslist
     """
 
     for item in serieslist:
@@ -513,14 +492,13 @@ def exist_series(series, serieslist, matchbidslabels=True):
     return False
 
 
-def get_matching_dicomseries(dicomfile, heuristics):
+def get_matching_dicomseries(dicomfile: str, heuristics: dict) -> dict:
     """
     Find the matching series in the bidsmap heuristics using the dicom attributes. Then fill-in the missing values (values are cleaned-up to be BIDS-valid)
 
-    :param str dicomfile:   The full pathname of the dicom-file
-    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:                The matching and filled-in series item and modality (NB: not run_index) from the heuristics {'series': series, 'modality': modality}
-    :rtype: dict
+    :param dicomfile:   The full pathname of the dicom-file
+    :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :return:            The matching and filled-in series item and modality (NB: not run_index) from the heuristics {'series': series, 'modality': modality}
     """
 
     # TODO: generalize for non-DICOM (dicomfile -> file)?
@@ -590,17 +568,16 @@ def get_matching_dicomseries(dicomfile, heuristics):
     return {'series': series_, 'modality': modality}
 
 
-def get_bidsname(subid, sesid, modality, series, run=''):
+def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='') -> str:
     """
     Composes a filename as it should be according to the BIDS standard using the BIDS labels in series
 
-    :param str subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-01')
-    :param str sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'sub-01'). Can be left ''
-    :param str modality:    The bidsmodality (choose from bids.bidsmodalities)
-    :param dict series:     The series mapping with the BIDS labels
-    :param str run:         The optional runindex label (e.g. 'run-01'). Can be left ''
-    :return:                The composed BIDS file-name (without file-extension)
-    :rtype: str
+    :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-01')
+    :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'sub-01'). Can be left ''
+    :param modality:    The bidsmodality (choose from bids.bidsmodalities)
+    :param series:      The series mapping with the BIDS labels
+    :param run:         The optional runindex label (e.g. 'run-01'). Can be left ''
+    :return:            The composed BIDS file-name (without file-extension)
     """
 
     # Do some checks to allow for dragging the series entries between the different modality-sections
@@ -707,17 +684,16 @@ def get_bidsname(subid, sesid, modality, series, run=''):
     return bidsname
 
 
-def set_bidslabel(bidsname, bidskey, newvalue=''):
+def set_bidslabel(bidsname: str, bidskey: str, newvalue: str='') -> str:
     """
     Sets the bidslabel, i.e. '*_bidskey-*_' is replaced with '*_bidskey-bidsvalue_'. If the key is not in the bidsname
     then the newvalue is appended to the acquisition label. If newvalue is empty (= default), then the parsed existing
     bidsvalue is returned and nothing is set
 
-    :param str bidsname:    The bidsname (e.g. as returned from get_bidsname or fullpath)
-    :param str bidskey:     The name of the bidskey, e.g. 'echo'
-    :param str newvalue:    The new bidsvalue
-    :return:                The bidsname with the new bidsvalue or, if newvalue is empty, the existing bidsvalue
-    :rtype: str
+    :param bidsname:    The bidsname (e.g. as returned from get_bidsname or fullpath)
+    :param bidskey:     The name of the bidskey, e.g. 'echo'
+    :param newvalue:    The new bidsvalue
+    :return:            The bidsname with the new bidsvalue or, if newvalue is empty, the existing bidsvalue
     """
 
     newvalue = cleanup_label(newvalue)
@@ -749,16 +725,15 @@ def set_bidslabel(bidsname, bidskey, newvalue=''):
         return oldvalue
 
 
-def increment_runindex(bidsfolder, bidsname, ext='.*'):
+def increment_runindex(bidsfolder: str, bidsname: str, ext: str='.*') -> str:
     """
     Checks if a file with the same the bidsname already exists in the folder and then increments the runindex (if any)
     until no such file is found
 
-    :param str bidsfolder:  The full pathname of the bidsfolder
-    :param str bidsname:    The bidsname with a provisional runindex
-    :param str ext:         The file extension for which the runindex is incremented (default = '.*')
-    :return:                The bidsname with the incremented runindex
-    :rtype: str
+    :param bidsfolder:  The full pathname of the bidsfolder
+    :param bidsname:    The bidsname with a provisional runindex
+    :param ext:         The file extension for which the runindex is incremented (default = '.*')
+    :return:            The bidsname with the incremented runindex
     """
 
     if not '_run-' in bidsname:
@@ -781,16 +756,15 @@ def increment_runindex(bidsfolder, bidsname, ext='.*'):
     return bidsname
 
 
-def askfor_mapping(heuristics, series, filename=''):
+def askfor_mapping(heuristics: dict, series: dict, filename: str='') -> dict:
     """
     Ask the user for help to resolve the mapping from the series attributes to the BIDS labels
     WIP!!!
 
-    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param dict series:     Dictionary with BIDS labels and attributes
-    :param str filename:    The full-path name of the sourcefile for which the attributes could not be 'bidsmapped'
-    :return:                Dictionary with return variables: {'modality':name of the modality, 'series': dictionary with the filled-in series labels and attributes}
-    :rtype: dict
+    :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param series:      Dictionary with BIDS labels and attributes
+    :param filename:    The full-path name of the sourcefile for which the attributes could not be 'bidsmapped'
+    :return:            Dictionary with return variables: {'modality':name of the modality, 'series': dictionary with the filled-in series labels and attributes}
     """
 
     # Go through the BIDS structure as a decision tree
@@ -803,16 +777,15 @@ def askfor_mapping(heuristics, series, filename=''):
     return None # {'modality': modality, 'series': series}
 
 
-def askfor_append(modality, series, bidsmapfile):
+def askfor_append(modality: str, series: dict, bidsmapfile: str) -> None:
     """
     Ask the user to add the labelled series to their bidsmap yaml-file or send it to a central database
     WIP!!!
 
-    :param str modality:    Name of the BIDS modality
-    :param dict series:     Dictionary with BIDS labels and attributes
-    :param str bidsmapfile: The full-path name of the bidsmap yaml-file to which the series should be saved
-    :return:                Nothing
-    :rtype: NoneType
+    :param modality:    Name of the BIDS modality
+    :param series:      Dictionary with BIDS labels and attributes
+    :param bidsmapfile: The full-path name of the bidsmap yaml-file to which the series should be saved
+    :return:            Nothing
     """
 
     # TODO: implement code

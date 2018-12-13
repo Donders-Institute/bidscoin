@@ -19,15 +19,14 @@ except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
 
 
-def built_dicommap(dicomfile, bidsmap, heuristics):
+def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict) -> dict:
     """
     All the logic to map dicomfields onto bids labels go into this function
 
-    :param str dicomfile:   The full-path name of the source dicom-file
-    :param dict bidsmap:    The bidsmap as we had it
-    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:                The bidsmap with new entries in it
-    :rtype: dict
+    :param dicomfile:   The full-path name of the source dicom-file
+    :param bidsmap:     The bidsmap as we had it
+    :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :return:            The bidsmap with new entries in it
     """
 
     # Get the bidsmodality and dirname (= bidslabel) from the pathname (samples/bidsmodality/[dirname/]dicomfile)
@@ -82,15 +81,14 @@ def built_dicommap(dicomfile, bidsmap, heuristics):
     raise ValueError("Oops, this should not happen! BIDS modality '{}' or one of the bidslabels is not accounted for in the code\n{}".format(bidsmodality, dicomfile))
 
 
-def built_parmap(parfile, bidsmap, heuristics):
+def built_parmap(parfile: str, bidsmap: dict, heuristics: dict) -> dict:
     """
     All the logic to map PAR/REC fields onto bids labels go into this function
 
-    :param str parfile:     The full-path name of the source PAR-file
-    :param dict bidsmap:    The bidsmap as we had it
-    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:                The bidsmap with new entries in it
-    :rtype: dict
+    :param parfile:     The full-path name of the source PAR-file
+    :param bidsmap:     The bidsmap as we had it
+    :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :return:            The bidsmap with new entries in it
     """
 
     # Input checks
@@ -102,15 +100,14 @@ def built_parmap(parfile, bidsmap, heuristics):
     return bidsmap
 
 
-def built_p7map(p7file, bidsmap, heuristics):
+def built_p7map(p7file: str, bidsmap: dict, heuristics: dict) -> dict:
     """
     All the logic to map P7-fields onto bids labels go into this function
 
-    :param str p7file:      The full-path name of the source P7-file
-    :param dict bidsmap:    The bidsmap as we had it
-    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:                The bidsmap with new entries in it
-    :rtype: dict
+    :param p7file:      The full-path name of the source P7-file
+    :param bidsmap:     The bidsmap as we had it
+    :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :return:            The bidsmap with new entries in it
     """
 
     # Input checks
@@ -122,15 +119,14 @@ def built_p7map(p7file, bidsmap, heuristics):
     return bidsmap
 
 
-def built_niftimap(niftifile, bidsmap, heuristics):
+def built_niftimap(niftifile: str, bidsmap: dict, heuristics: dict) -> dict:
     """
     All the logic to map nifti-info onto bids labels go into this function
 
-    :param str niftifile:   The full-path name of the source nifti-file
-    :param dict bidsmap:    The bidsmap as we had it
-    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:                The bidsmap with new entries in it
-    :rtype: dict
+    :param niftifile:   The full-path name of the source nifti-file
+    :param bidsmap:     The bidsmap as we had it
+    :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :return:            The bidsmap with new entries in it
     """
 
     # Input checks
@@ -142,15 +138,14 @@ def built_niftimap(niftifile, bidsmap, heuristics):
     return bidsmap
 
 
-def built_filesystemmap(seriesfolder, bidsmap, heuristics):
+def built_filesystemmap(seriesfolder: str, bidsmap: dict, heuristics: dict) -> dict:
     """
     All the logic to map filesystem-info onto bids labels go into this function
 
-    :param str seriesfolder: The full-path name of the source-folder
-    :param dict bidsmap:     The bidsmap as we had it
-    :param dict heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:                 The bidsmap with new entries in it
-    :rtype: dict
+    :param seriesfolder:    The full-path name of the source-folder
+    :param bidsmap:         The bidsmap as we had it
+    :param heuristics:      Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :return:                The bidsmap with new entries in it
     """
 
     # Input checks
@@ -162,14 +157,13 @@ def built_filesystemmap(seriesfolder, bidsmap, heuristics):
     return bidsmap
 
 
-def built_pluginmap(sample, bidsmap):
+def built_pluginmap(sample: str, bidsmap: dict) -> dict:
     """
     Call the plugin to map info onto bids labels
 
-    :param str sample:   The full-path name of the source-file
-    :param dict bidsmap: The bidsmap as we had it
-    :return:             The bidsmap with new entries in it
-    :rtype: dict
+    :param sample:  The full-path name of the source-file
+    :param bidsmap: The bidsmap as we had it
+    :return:        The bidsmap with new entries in it
     """
 
     from importlib import import_module
@@ -187,16 +181,15 @@ def built_pluginmap(sample, bidsmap):
     return bidsmap
 
 
-def bidstrainer(bidsfolder, samplefolder='', bidsmapfile='bidsmap_template.yaml'):
+def bidstrainer(bidsfolder: str, samplefolder: str='', bidsmapfile: str='bidsmap_template.yaml') -> str:
     """
     Main function uses all samples in the samplefolder as training / example  data to generate a
     maximally filled-in bidsmap_sample.yaml file.
 
-    :param str bidsfolder:    The name of the BIDS root folder
-    :param str samplefolder:  The name of the root directory of the tree containing the sample files / training data. If left empty, bidsfolder/code/samples is used or such an empty directory tree is created
-    :param str bidsmapfile:   The name of the bidsmap YAML-file
-    :return:                  The name of the new (trained) bidsmap YAML-file that is save in bidsfolder/code
-    :rtype: str
+    :param bidsfolder:      The name of the BIDS root folder
+    :param samplefolder:    The name of the root directory of the tree containing the sample files / training data. If left empty, bidsfolder/code/samples is used or such an empty directory tree is created
+    :param bidsmapfile:     The name of the bidsmap YAML-file
+    :return:                The name of the new (trained) bidsmap YAML-file that is save in bidsfolder/code
     """
 
     # Input checking
