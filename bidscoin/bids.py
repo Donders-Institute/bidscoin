@@ -718,7 +718,7 @@ def set_bidslabel(bidsname: str, bidskey: str, newvalue: str='') -> str:
             bidskey  = acqkey
             oldvalue = acqvalue
             newvalue = acqvalue + newvalue
-        return os.path.join(pathname, bidsname.replace(bidskey + '-' + oldvalue, bidskey + '-' + newvalue))
+        return os.path.join(pathname, bidsname.replace(f'{bidskey}-{oldvalue}', f'{bidskey}-{newvalue}'))
 
     # Or just return the parsed old bidsvalue
     else:

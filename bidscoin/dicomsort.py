@@ -51,7 +51,7 @@ def sortsession(sessionfolder: str, pattern: str, rename: bool, nosort: bool) ->
 
         # Move and/or rename the dicomfile in(to) the (series sub)folder
         if rename:
-            filename = '{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}'.format(patientname=patientname, seriesnr=seriesnr, seriesdescr=seriesdescr, acquisitionnr=acquisitionnr, instancenr=instancenr, ext=ext)
+            filename = f'{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}'
         else:
             filename = os.path.basename(dicomfile)
         if nosort:

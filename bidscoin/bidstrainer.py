@@ -200,7 +200,7 @@ def bidstrainer(bidsfolder: str, samplefolder: str='', bidsmapfile: str='bidsmap
             print('Creating an empty samples directory tree: ' + samplefolder)
             shutil.copytree(os.path.join(os.path.dirname(bids.__file__),'..','heuristics','samples'), samplefolder)
             print('Fill the directory tree with example DICOM files and re-run bidstrainer.py')
-            return
+            return ''
     samplefolder = os.path.abspath(os.path.expanduser(samplefolder))
 
     # Get the heuristics for creating the bidsmap
