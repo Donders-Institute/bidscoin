@@ -109,27 +109,30 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
                 bids.printlog('Found dcm2niix _Crop_ suffix, replacing original file\n{} ->\n{}'.format(filename, newfilename), LOG)
                 os.replace(filename, newfilename)
 
-        # Rename all files ending with _c%d, _e%d and _ph: These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
+        # Rename all files ending with _c%d, _e%d and _ph (and any combination of these): These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
         jsonfiles = []                                                                                          # Collect the associated json-files (for updating them later)
         for suffix in ('_c', '_e', '_ph'):
             for filename in sorted(glob.glob(os.path.join(bidsmodality, bidsname + suffix + '*'))):
                 basepath, ext1  = os.path.splitext(filename)
                 basepath, ext2  = os.path.splitext(basepath)                                                    # Account for .nii.gz files
                 basepath, index = basepath.rsplit(suffix,1)
-                index           = index.zfill(2)                                                                # Zero padd as specified in the BIDS-standard (assuming two digits is sufficient)
+                index           = index.split('_')[0].zfill(2)                                                  # Zero padd as specified in the BIDS-standard (assuming two digits is sufficient); strip following suffices (fieldmaps produce *_e2_ph files)
 
-                # This is a special hack: dcm2niix does not add a _c suffix for the first coil -> add it when we encounter a *_c2 file
-                if suffix=='_c' and int(index)==2:
-                    filename_c1    = basepath + ext2 + ext1
-                    newbasepath_c1 = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + '1'.zfill(len(index)))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
-                    newfilename_c1 = newbasepath_c1 + ext2 + ext1
-                    if os.path.isfile(filename_c1) and not os.path.isfile(newfilename_c1):
-                        bids.printlog('Found no dcm2niix {} suffix for coil #1, renaming\n{} ->\n{}'.format(suffix, filename_c1, newfilename_c1), LOG)
-                        os.rename(filename_c1, newfilename_c1)
+                # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first coil -> add it when we encounter a **_e2/_c2 file
+                if suffix in ('_c','_e') and int(index)==2:
+                    filename_ce = basepath + ext2 + ext1
+                    if suffix=='_e':
+                        newbasepath_ce = bids.set_bidslabel(basepath, 'echo', '1')
+                    else:
+                        newbasepath_ce = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + '1'.zfill(len(index)))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
+                    newfilename_ce = newbasepath_ce + ext2 + ext1
+                    if os.path.isfile(filename_ce) and not os.path.isfile(newfilename_ce):
+                        bids.printlog('Found no dcm2niix {} suffix for image instance 1, renaming\n{} ->\n{}'.format(suffix, filename_ce, newfilename_ce), LOG)
+                        os.rename(filename_ce, newfilename_ce)
                         if ext1 == '.json':
-                            jsonfiles.append(newbasepath_c1 + '.json')
+                            jsonfiles.append(newbasepath_ce + '.json')
 
-                # Patch the basepath
+                # Patch the basepath with the suffix info
                 if suffix=='_e' and bids.set_bidslabel(basepath, 'echo') and index:
                     basepath = bids.set_bidslabel(basepath, 'echo', str(int(index)))                            # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
 
