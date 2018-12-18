@@ -95,7 +95,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
         process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)         # TODO: investigate shell=False and capture_output=True
         bids.printlog(process.stdout.decode('utf-8'), LOG)
         if process.returncode != 0:
-            errormsg = 'Error: Failed to process {} (errorcode {})'.format(series, process.returncode)
+            errormsg = f'Error: Failed to process {series} (errorcode {process.returncode})'
             bids.printlog(errormsg, LOG)
             continue
 
@@ -106,7 +106,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
                 basepath, ext2 = os.path.splitext(basepath)                                                    # Account for .nii.gz files
                 basepath       = basepath.rsplit('_Crop_',1)[0]
                 newfilename    = basepath + ext2 + ext1
-                bids.printlog('Found dcm2niix _Crop_ suffix, replacing original file\n{} ->\n{}'.format(filename, newfilename), LOG)
+                bids.printlog(f'Found dcm2niix _Crop_ suffix, replacing original file\n{filename} ->\n{newfilename}', LOG)
                 os.replace(filename, newfilename)
 
         # Rename all files ending with _c%d, _e%d and _ph (and any combination of these): These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
@@ -127,7 +127,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
                         newbasepath_ce = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + '1'.zfill(len(index)))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
                     newfilename_ce = newbasepath_ce + ext2 + ext1
                     if os.path.isfile(filename_ce) and not os.path.isfile(newfilename_ce):
-                        bids.printlog('Found no dcm2niix {} suffix for image instance 1, renaming\n{} ->\n{}'.format(suffix, filename_ce, newfilename_ce), LOG)
+                        bids.printlog(f'Found no dcm2niix {suffix} suffix for image instance 1, renaming\n{filename_ce} ->\n{newfilename_ce}', LOG)
                         os.rename(filename_ce, newfilename_ce)
                         if ext1 == '.json':
                             jsonfiles.append(newbasepath_ce + '.json')
@@ -143,7 +143,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
                         with open(filename, 'r') as json_fid:
                             data = json.load(json_fid)
                         TE[int(index)-1] = data['EchoTime']
-                        bids.printlog('Reading EchoTime{} = {} from: {}'.format(index,data['EchoTime'],filename), LOG)
+                        bids.printlog(f"Reading EchoTime{index} = {data['EchoTime']} from: {filename}", LOG)
                 elif suffix=='_e' and basepath.rsplit('_',1)[1]=='phasediff' and index:                         # i.e. modality == 'fmap'
                     pass
 
@@ -160,7 +160,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
                 else:
                     newbidsname = os.path.basename(basepath)
                 newfilename = os.path.join(bidsmodality, newbidsname + ext2 + ext1)
-                bids.printlog('Found dcm2niix {} suffix, renaming\n{} ->\n{}'.format(suffix, filename, newfilename), LOG)
+                bids.printlog(f'Found dcm2niix {suffix} suffix, renaming\n{filename} ->\n{newfilename}', LOG)
                 os.rename(filename, newfilename)
                 if ext1 == '.json':
                     jsonfiles.append(os.path.join(bidsmodality, newbidsname + '.json'))
@@ -364,8 +364,9 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
             bidsignore.write(bids.unknownmodality + os.sep)
 
     # Start logging
-    bids.printlog('------------ START BIDScoiner {ver}: BIDS {bidsver} ------------\n>>> bidscoiner rawfolder={arg1} bidsfolder={arg2} subjects={arg3} force={arg4} participants={arg5} bidsmap={arg6}'.format(
-        ver=bids.version(), bidsver=bids.bidsversion(), arg1=rawfolder, arg2=bidsfolder, arg3=subjects, arg4=force, arg5=participants, arg6=bidsmapfile), LOG)
+    bids.printlog(f'------------ START BIDScoiner {bids.version()}: BIDS {bids.bidsversion()} ------------\n'
+                  f'>>> bidscoiner rawfolder={rawfolder} bidsfolder={bidsfolder} subjects={subjects} force={force}'
+                  f' participants={participants} bidsmap={bidsmapfile} subprefix={subprefix} sesprefix={sesprefix}', LOG)
 
     # Create a dataset description file if it does not exist
     dataset_file = os.path.join(bidsfolder, 'dataset_description.json')
