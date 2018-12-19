@@ -273,4 +273,9 @@ if __name__ == "__main__":
     parser.add_argument('-a','--automatic', help='If this flag is given the user will not be asked for help if an unknown series is encountered', action='store_true')
     args = parser.parse_args()
 
-    bidsmapper(rawfolder=args.sourcefolder, bidsfolder=args.bidsfolder, bidsmapfile=args.bidsmap, automatic=args.automatic, subprefix=args.subprefix, sesprefix=args.sesprefix)
+    bidsmapper(rawfolder   = args.sourcefolder,
+               bidsfolder  = args.bidsfolder,
+               bidsmapfile = args.bidsmap,
+               subprefix   = args.subprefix,
+               sesprefix   = args.sesprefix,
+               automatic   = args.automatic)

@@ -15,16 +15,16 @@ except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
 
 
-def rawmapper(rawfolder: str, outfolder: str='', rename: bool=False, dicomfield: tuple=('PatientComments',), wildcard: str='*', dryrun: bool=False, subprefix: str='sub-', sesprefix: str='ses-') -> None:
+def rawmapper(rawfolder: str, outfolder: str='', rename: bool=False, dicomfield: tuple=('PatientComments',), wildcard: str='*', subprefix: str='sub-', sesprefix: str='ses-', dryrun: bool=False) -> None:
     """
     :param rawfolder:   The root folder-name of the sub/ses/data/file tree containing the source data files
     :param outfolder:   The name of the folder where the mapping-file is saved (default = rawfolder)
     :param rename:      Flag for renaming the sub-subid folders to sub-dicomfield
     :param dicomfield:  The names of the dicomfields that are mapped (/ renamed to sub-dcmval/ses-dcmval)
     :param wildcard:    The Unix style pathname pattern expansion that is used by glob to select the series from which the dicomfield is being mapped
-    :param dryrun:      Flag for dry-running renaming the sub-subid folders
     :param subprefix:   The prefix common for all source subject-folders
     :param sesprefix:   The prefix common for all source session-folders
+    :param dryrun:      Flag for dry-running renaming the sub-subid folders
     :return:            Nothing
     """
 
@@ -144,4 +144,11 @@ if __name__ == "__main__":
     parser.add_argument('--dryrun',          help='Add this flag to dryrun (test) the mapping or renaming of the sub-subid/ses-sesid directories (i.e. nothing is stored on disk and directory names are not actually changed))', action='store_true')
     args = parser.parse_args()
 
-    rawmapper(rawfolder=args.rawfolder, outfolder=args.outfolder, rename=args.rename, dicomfield=args.dicomfield, wildcard=args.wildcard, subprefix=args.subprefix, sesprefix=args.sesprefix, dryrun=args.dryrun)
+    rawmapper(rawfolder  = args.rawfolder,
+              outfolder  = args.outfolder,
+              rename     = args.rename,
+              dicomfield = args.dicomfield,
+              wildcard   = args.wildcard,
+              subprefix  = args.subprefix,
+              sesprefix  = args.sesprefix,
+              dryrun     = args.dryrun)

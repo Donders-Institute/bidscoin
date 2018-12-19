@@ -68,15 +68,15 @@ def sortsession(sessionfolder: str, pattern: str, rename: bool, nosort: bool) ->
         os.rename(dicomfile, os.path.join(pathname, filename))
 
 
-def sortsessions(rawfolder: str, subjectid: str='', sessionid: str='', pattern: str='.*\.(IMA|dcm)$', rename: bool=False, nosort: bool=False) -> None:
+def sortsessions(rawfolder: str, subjectid: str='', sessionid: str='', rename: bool=False, nosort: bool=False, pattern: str='.*\.(IMA|dcm)$') -> None:
     """
 
     :param rawfolder:   The root folder containing the source [sub/][ses/]dicomfiles
     :param subjectid:   The prefix of the sub folders in rawfolder
     :param sessionid:   The prefix of the ses folders in sub folder
-    :param pattern:     The regular expression pattern used in re.match() to select the dicom files
     :param rename:      Boolean to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme
     :param nosort:      Boolean to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)
+    :param pattern:     The regular expression pattern used in re.match() to select the dicom files
     :return:            Nothing
     """
 
@@ -115,4 +115,9 @@ if __name__ == "__main__":
     parser.add_argument('-p','--pattern', help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')
     args = parser.parse_args()
 
-    sortsessions(rawfolder=args.rawfolder, subjectid=args.subjectid, sessionid=args.sessionid, pattern=args.pattern, rename=args.rename, nosort=args.nosort)
+    sortsessions(rawfolder  = args.rawfolder,
+                 subjectid  = args.subjectid,
+                 sessionid  = args.sessionid,
+                 rename     = args.rename,
+                 nosort     = args.nosort,
+                 pattern    = args.pattern)
