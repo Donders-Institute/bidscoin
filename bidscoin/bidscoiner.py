@@ -120,17 +120,17 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
 
                 # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first(?) coil/echo image -> add it when we encounter a **_e2/_c2 file
                 if suffix in ('_c','_e') and int(index)==2 and basepath.rsplit('_',1)[1] != 'magnitude1':       # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handles below)
-                    filename_ce = basepath + ext2 + ext1
+                    filename_ce = basepath + ext2 + ext1                                                        # The file without the _c1/_e1 suffix
                     if suffix=='_e':
                         newbasepath_ce = bids.set_bidslabel(basepath, 'echo', '1')
                     else:
                         newbasepath_ce = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + '1'.zfill(len(index)))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
-                    newfilename_ce = newbasepath_ce + ext2 + ext1
+                    newfilename_ce = newbasepath_ce + ext2 + ext1                                               # The file as it should have been
                     if os.path.isfile(filename_ce):
                         if filename_ce != newfilename_ce:
                             bids.printlog(f'Found no dcm2niix {suffix} suffix for image instance 1, renaming\n{filename_ce} ->\n{newfilename_ce}', LOG)
                             os.rename(filename_ce, newfilename_ce)
-                        if ext1 == '.json':
+                        if ext1 == '.json' and newbasepath_ce + '.json' not in jsonfiles:
                             jsonfiles.append(newbasepath_ce + '.json')
 
                 # Patch the basepath with the suffix info
