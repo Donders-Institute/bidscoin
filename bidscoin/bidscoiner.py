@@ -118,7 +118,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
                 basepath, index = basepath.rsplit(suffix,1)
                 index           = index.split('_')[0].zfill(2)                                                  # Zero padd as specified in the BIDS-standard (assuming two digits is sufficient); strip following suffices (fieldmaps produce *_e2_ph files)
 
-                # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first coil/echo image -> add it when we encounter a **_e2/_c2 file
+                # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first(?) coil/echo image -> add it when we encounter a **_e2/_c2 file
                 if suffix in ('_c','_e') and int(index)==2 and basepath.rsplit('_',1)[1] != 'magnitude1':       # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handles below)
                     filename_ce = basepath + ext2 + ext1
                     if suffix=='_e':
@@ -126,9 +126,10 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
                     else:
                         newbasepath_ce = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + '1'.zfill(len(index)))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
                     newfilename_ce = newbasepath_ce + ext2 + ext1
-                    if os.path.isfile(filename_ce) and not os.path.isfile(newfilename_ce):
-                        bids.printlog(f'Found no dcm2niix {suffix} suffix for image instance 1, renaming\n{filename_ce} ->\n{newfilename_ce}', LOG)
-                        os.rename(filename_ce, newfilename_ce)
+                    if os.path.isfile(filename_ce):
+                        if filename_ce != newfilename_ce:
+                            bids.printlog(f'Found no dcm2niix {suffix} suffix for image instance 1, renaming\n{filename_ce} ->\n{newfilename_ce}', LOG)
+                            os.rename(filename_ce, newfilename_ce)
                         if ext1 == '.json':
                             jsonfiles.append(newbasepath_ce + '.json')
 
