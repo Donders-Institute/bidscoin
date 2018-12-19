@@ -394,12 +394,18 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     # Get the bidsmap heuristics from the bidsmap YAML-file
     bidsmap = bids.get_heuristics(bidsmapfile, os.path.join(bidsfolder,'code'), LOG)
 
-    # Get the table with subjects that have been processed
-    participants_file = os.path.join(bidsfolder, 'participants.tsv')
-    if os.path.exists(participants_file):
-        participants_table = pd.read_table(participants_file)
+    # Get the table & dictionary of the subjects that have been processed
+    participants_tsv  = os.path.join(bidsfolder, 'participants.tsv')
+    participants_json = os.path.splitext(participants_tsv)[0] + '.json'
+    if os.path.exists(participants_tsv):
+        participants_table = pd.read_table(participants_tsv)
     else:
         participants_table = pd.DataFrame(columns = ['participant_id'])
+    if os.path.exists(participants_json):
+        with open(participants_json, 'r') as json_fid:
+            participants_dict = json.load(json_fid)
+    else:
+        participants_dict = dict()
 
     # Get the list of subjects
     if not subjects:
@@ -447,14 +453,18 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
             if bidsmap['PlugIn']:
                 coin_plugin(session, bidsmap, bidsfolder, personals)
 
-        # Write the collected personals to the participants_file
+        # Write the collected personals to the participant files
         if personals:
             for key in personals:
                 if key not in participants_table.columns:
                     participants_table[key] = None
+                    participants_dict[key]  = 'RECOMMENDED. Provide description of this variable here'
             participants_table = participants_table.append(personals, ignore_index=True, verify_integrity=True)
-            bids.printlog('Writing subject data to: ' + participants_file, LOG)
-            participants_table.to_csv(participants_file, sep='\t', encoding='utf-8', na_rep='n/a', index=False)
+            bids.printlog('Writing subject data to: ' + participants_tsv, LOG)
+            participants_table.to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a', index=False)
+            bids.printlog('Writing subject data dictionary to: ' + participants_json, LOG)
+            with open(participants_json, 'w') as json_fid:
+                json.dump(participants_dict, json_fid, indent=4)
 
     bids.printlog('------------ FINISHED! ------------', LOG)
 
