@@ -118,8 +118,8 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
                 basepath, index = basepath.rsplit(suffix,1)
                 index           = index.split('_')[0].zfill(2)                                                  # Zero padd as specified in the BIDS-standard (assuming two digits is sufficient); strip following suffices (fieldmaps produce *_e2_ph files)
 
-                # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first coil -> add it when we encounter a **_e2/_c2 file
-                if suffix in ('_c','_e') and int(index)==2:
+                # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first coil/echo image -> add it when we encounter a **_e2/_c2 file
+                if suffix in ('_c','_e') and int(index)==2 and basepath.rsplit('_',1)[1] != 'magnitude1':       # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handles below)
                     filename_ce = basepath + ext2 + ext1
                     if suffix=='_e':
                         newbasepath_ce = bids.set_bidslabel(basepath, 'echo', '1')
@@ -136,7 +136,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
                 if suffix=='_e' and bids.set_bidslabel(basepath, 'echo') and index:
                     basepath = bids.set_bidslabel(basepath, 'echo', str(int(index)))                            # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
 
-                elif suffix=='_e' and basepath.rsplit('_',1)[1] in ['magnitude1','magnitude2'] and index:       # i.e. modality == 'fmap'
+                elif suffix=='_e' and basepath.rsplit('_',1)[1] in ('magnitude1','magnitude2') and index:       # i.e. modality == 'fmap'
                     basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_magnitude1_e[index] -> *_magnitude[index]
                     # Read the echo times that need to be added to the json-file (see below)
                     if os.path.splitext(filename)[1] == '.json':
@@ -480,4 +480,11 @@ if __name__ == "__main__":
     parser.add_argument('-m','--sesprefix',         help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     args = parser.parse_args()
 
-    bidscoiner(rawfolder=args.sourcefolder, bidsfolder=args.bidsfolder, subjects=args.participant_label, force=args.force, participants=args.skip_participants, bidsmapfile=args.bidsmap, subprefix=args.subprefix, sesprefix=args.sesprefix)
+    bidscoiner(rawfolder    = args.sourcefolder,
+               bidsfolder   = args.bidsfolder,
+               subjects     = args.participant_label,
+               force        = args.force,
+               participants = args.skip_participants,
+               bidsmapfile  = args.bidsmap,
+               subprefix    = args.subprefix,
+               sesprefix    = args.sesprefix)
