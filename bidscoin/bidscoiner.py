@@ -130,7 +130,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
                         if filename_ce != newfilename_ce:
                             bids.printlog(f'Found no dcm2niix {suffix} suffix for image instance 1, renaming\n{filename_ce} ->\n{newfilename_ce}', LOG)
                             os.rename(filename_ce, newfilename_ce)
-                        if ext1 == '.json' and newbasepath_ce + '.json' not in jsonfiles:
+                        if ext1=='.json':
                             jsonfiles.append(newbasepath_ce + '.json')
 
                 # Patch the basepath with the suffix info
@@ -170,7 +170,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
         if not jsonfiles:
             jsonfiles = [os.path.join(bidsmodality, bidsname + '.json')]
 
-        for jsonfile in jsonfiles:
+        for jsonfile in set(jsonfiles):
 
             # Add a dummy b0 bval- and bvec-file for any file without a bval/bvec file (e.g. sbref, b0 scans)
             if modality == 'dwi':
