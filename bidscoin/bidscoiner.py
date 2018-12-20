@@ -110,7 +110,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
                 os.replace(filename, newfilename)
 
         # Rename all files ending with _c%d, _e%d and _ph (and any combination of these): These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
-        jsonfiles = []                                                                                          # Collect the associated json-files (for updating them later)
+        jsonfiles = []                                                                                          # Collect the associated json-files (for updating them later) -- possibly > 1
         for suffix in ('_c', '_e', '_ph'):
             for filename in sorted(glob.glob(os.path.join(bidsmodality, bidsname + suffix + '*'))):
                 basepath, ext1  = os.path.splitext(filename)
@@ -119,7 +119,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
                 index           = index.split('_')[0].zfill(2)                                                  # Zero padd as specified in the BIDS-standard (assuming two digits is sufficient); strip following suffices (fieldmaps produce *_e2_ph files)
 
                 # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first(?) coil/echo image -> add it when we encounter a **_e2/_c2 file
-                if suffix in ('_c','_e') and int(index)==2 and basepath.rsplit('_',1)[1] != 'magnitude1':       # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handles below)
+                if suffix in ('_c','_e') and int(index)==2 and basepath.rsplit('_',1)[1] != 'magnitude1':       # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handled below)
                     filename_ce = basepath + ext2 + ext1                                                        # The file without the _c1/_e1 suffix
                     if suffix=='_e':
                         newbasepath_ce = bids.set_bidslabel(basepath, 'echo', '1')
@@ -166,7 +166,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
                 if ext1 == '.json':
                     jsonfiles.append(os.path.join(bidsmodality, newbidsname + '.json'))
 
-        # Loop over and adapt all the newly produced json files (every nifti file comes with a json file)
+        # Loop over and adapt all the newly produced json files (every nifti-file comes with a json-file)
         if not jsonfiles:
             jsonfiles = [os.path.join(bidsmodality, bidsname + '.json')]
 
@@ -319,7 +319,7 @@ def coin_plugin(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -
 
         # Get the full path to the plugin-module
         if os.path.basename(plugin)==plugin:
-            plugin = os.path.join(os.path.dirname(__file__),'plugins', plugin)
+            plugin = os.path.join(os.path.dirname(__file__), 'plugins', plugin)
         else:
             plugin = plugin
         plugin = os.path.abspath(os.path.expanduser(plugin))

@@ -1,32 +1,36 @@
-# bidscoin plugin API:
+"""
+This function contains placeholder code demonstrating the bidscoin plugin API, both for bidsmapper.py and for
+bidscoiner.py. Enter the name of this module (default location is the plugins-folder; otherwise the full path
+must be provided) in the bidsmap dictionary file to import the plugin functions in this module, e.g. "README.py" or
+"myplugin.py". The functions in this module should be named "bidsmapper_plugin" for bidsmapper.py and
+"bidscoiner_plugin" for bidscoiner.py. See below for the input arguments that will be passed.
+"""
 
 
-def bidsmapper_plugin(seriesfolder, bidsmap, heuristics):
+def bidsmapper_plugin(seriesfolder: str, bidsmap: dict, heuristics: dict) -> dict:
     """
     The plugin to map info onto bids labels
 
     :param seriesfolder:    The full-path name of the source folder
-    :param dict bidsmap:    The bidsmap
-    :param dict heuristics: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap:         The bidsmap
+    :param heuristics:      Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     :return:                The bidsmap with new entries in it
-    :rtype: dict
     """
 
     print(f'This is a bidsmapper demo-plugin working on: {seriesfolder}')
     return bidsmap
 
 
-def bidscoiner_plugin(session, bidsmap, bidsfolder, personals, LOG):
+def bidscoiner_plugin(session: str, bidsmap: dict, bidsfolder: str, personals: dict, LOG: str) -> None:
     """
     The plugin to cast the series into the bids folder
 
-    :param str session:    The full-path name of the subject/session source folder
-    :param dict bidsmap:   The full mapping heuristics from the bidsmap YAML-file
-    :param str bidsfolder: The full-path name of the BIDS root-folder
-    :param dict personals: The dictionary with the personal information
-    :param str LOG:        The full-path name of the bidscoiner.log file
-    :return:               Nothing
-    :rtype: NoneType
+    :param session:     The full-path name of the subject/session source folder
+    :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
+    :param bidsfolder:  The full-path name of the BIDS root-folder
+    :param personals:   The dictionary with the personal information
+    :param LOG:         The full-path name of the bidscoiner.log file
+    :return:            Nothing
     """
 
     from bidscoin import bids

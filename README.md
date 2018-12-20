@@ -14,13 +14,13 @@
 - [BIDScoin functionality / TODO](#bidscoin-functionality--todo)
 - [BIDScoin tutorial](#bidscoin-tutorial)
 
-BIDScoin is an [open-source](https://github.com/Donders-Institute/bidscoin) python command-line toolkit that converts ("coins") source-level (raw) MRI data-sets to [nifti](https://nifti.nimh.nih.gov/) / [json](https://www.json.org/) / [tsv](https://en.wikipedia.org/wiki/Tab-separated_values) data-sets that are organized according to the Brain Imaging Data Standard, a.k.a. [BIDS](http://bids.neuroimaging.io). Rather then depending on complex or ambiguous logic, BIDScoin uses a simple (but powerful) key-value approach to convert the raw source data into BIDS data. The key values that can be used in BIDScoin to map the data are:
+BIDScoin is an [open-source](https://github.com/Donders-Institute/bidscoin) python command-line toolkit that converts ("coins") source-level (raw) neuroimaging data-sets to [nifti](https://nifti.nimh.nih.gov/) / [json](https://www.json.org/) / [tsv](https://en.wikipedia.org/wiki/Tab-separated_values) data-sets that are organized according to the Brain Imaging Data Standard, a.k.a. [BIDS](http://bids.neuroimaging.io). Rather then depending on complex or ambiguous programmatic logic, BIDScoin uses a simple (but powerful) key-value approach to convert the raw source data into BIDS data. The key values that can be used in BIDScoin to map the data are:
 
- 1. Information in the MRI header files (DICOM, PAR/REC or .7 format; e.g. SeriesDescription)
+ 1. Information in MRI header files (DICOM, PAR/REC or .7 format; e.g. SeriesDescription)
  2. Information from nifti headers (e.g. image dimensionality)
  3. Information in the file structure (file- and/or directory names, e.g. number of files)
 
-The key-value heuristics are stored in flexible, human readable and broadly supported [YAML](http://yaml.org/) files. The nifti- and json-files are generated with [dcm2niix](https://github.com/rordenlab/dcm2niix). For more information on the installation and requirements, see the [installation guide](./docs/installation.md).
+The key-value heuristics are stored in flexible, human readable and broadly supported [YAML](http://yaml.org/) files. The nifti- and json-files are generated with [dcm2niix](https://github.com/rordenlab/dcm2niix). Users can even get more flexibility by providing custom written [plug-in functions](#plug-in-functions) (e.g. for parsing of Presentation logfiles). For more information on the installation and requirements, see the [installation guide](./docs/installation.md).
 
 Currently, BIDScoin is quite [functional](#bidscoin-functionality--todo), but note that only option (1) has been implemented for DICOM files. (Options (2) and (3) are planned for future versions, such that (3) takes precedence over (2), which in turn takes precedence over (1)).
 
@@ -28,7 +28,7 @@ BIDScoin is a user friendly toolkit that requires no programming knowledge in or
 
 ## The BIDScoin workflow
 
-BIDScoin will take your raw data as well as a YAML file with the key-value mapping information as input, and returns a BIDS folder as output. Here is how to prepare the BIDScoin inputs:
+BIDScoin will take your raw data as well as a YAML file with the key-value mapping (dictionary) information as input, and returns a BIDS folder as output. Here is how to prepare the BIDScoin inputs:
 
  1. **A minimally organised raw data folder**, following a
  `/raw/sub-[identifier]/ses-[identifier]/[seriesfolder]/[dicomfile]`
@@ -81,7 +81,7 @@ Having an organized raw data folder and a correct bidsmap, the actual data-set c
 
 The core idea of the bidstrainer is that you know your own scan protocol and can therefore point out which files should go where in the BIDS. In order to do so, you have to place raw sample files for each of the BIDS data types / runs in your scan protocol (e.g. T1, fMRI, etc) in the appropriate folder of a semantic folder tree (named `samples`, see the [bidstrainer example](#bidstrainer-example)). If you run `bidstrainer.py` with just the name of your bidsfolder, bidstrainer will create this semantic folder tree for you in the `code` subfolder (if it is not already there). Generally, when placing your sample files, it will be fairly straightforward to find your way in this semantic folder tree, but in doubt you should have a look at the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf). Note that the deepest foldername in the tree denotes the BIDS suffix (e.g. "T1w"). You do not need to place samples from your non-BIDS data types / runs (such as localizer or spectroscopy scans) in the folder tree, these data types will automatically go into the "extra_data" folder.
 
-If all sample files have been put in the appropriate location, you can (re)run the bidstrainer to create a bidsmap file for your study. How this works is that, on one hand, the bidstrainer will read a predefined set of (e.g. key DICOM) attributes from each sample file and, on the other hand, take the path-names of the sample files to infer the associated BIDS modality. In this way, a list of unique key-value mappings between sets of (DICOM) attributes and sets of BIDS-labels is defined, the so-called [bidsmap](#the-bidsmap-files), that can be used as input for the [bidsmapper tool](#running-the-bidsmapper). If the predifend set of attributes does not uniquely identify your particular scan sequences (not likely but possible), or if you simnply prefer to use more or other attributes, you can (copy and) edit the [bidsmap_template.yaml](./heuristics/bidsmap_template.yaml) file in the heuristics folder and re-run the bidstrainer whith this customized template as an input argument.
+If all sample files have been put in the appropriate location, you can (re)run the bidstrainer to create a bidsmap file for your study. How this works is that, on one hand, the bidstrainer will read a predefined set of (e.g. key DICOM) attributes from each sample file and, on the other hand, take the path-names of the sample files to infer the associated BIDS modality. In this way, a list of unique key-value mappings between sets of (DICOM) attributes and sets of BIDS-labels is defined, the so-called [bidsmap](#the-bidsmap-files), that can be used as input for the [bidsmapper tool](#running-the-bidsmapper). If the predefined set of attributes does not uniquely identify your particular scan sequences (not likely but possible), or if you simply prefer to use more or other attributes, you can (copy and) edit the [bidsmap_template.yaml](./heuristics/bidsmap_template.yaml) file in the heuristics folder and re-run the bidstrainer with this customized template as an input argument.
 
 <a name="bidstrainer-example">![Bidstrainer example](./docs/sample_tree.png)</a>
 *Bidstrainer example. The red arrow depicts a raw data sample (left file browser) that is put (copied over) to the appropriate location in the semantic folder tree (right file browser)*
@@ -224,7 +224,7 @@ Inside each BIDS modality, there can be multiple key-value mappings that map (e.
 
 <img name="bidsmap-sample" src="./docs/bidsmap_sample.png" alt="bidsmap_sample example" width="700">
 
-*Bidsmap_sample example. As indicated by the solid arrowline, the set of DICOM values (suitable to uniquely identify the DICOM series) are used here a key-set that maps onto the set of BIDS labels. Note that certain BIDS labels are enclosed by pointy brackets, marking their [dynamic value](#dynamic-values). In this bidsmap, as indicated by the dashed arrowline, that means that \<ProtocolName> will be replaced in a later stage by "t1_mprage_sag_p2_iso_1.0". Also note that in this bidsmap there was only one T1-image, but there where two different fMRI runs (here because of multi-echo, but multiple tasks could also be listed)*
+*Bidsmap_sample example. As indicated by the solid arrowline, the set of DICOM values (suitable to uniquely identify the DICOM series) are used here a key-set that maps onto the set of BIDS labels. Note that certain BIDS labels are enclosed by pointy brackets, marking their [dynamic value](#dynamic-values). In this bidsmap, as indicated by the dashed arrowline, that means that \<ProtocolName> will be replaced in a later stage by "t1_mprage_sag_p2_iso_1.0". Also note that in this bidsmap there was only one T1-image, but there were two different fMRI runs (here because of multi-echo, but multiple tasks could also be listed)*
 
 The `participant_label` and `session_label` sub-sections can be used to set the subject/session-labels using DICOM values instead of the subject/session-labels from the sourcefolder (e.g. when the subject- and/or session-label was entered at the scanner console). The `extra_data` sub-section will contain all series that were not identified otherwise.
 
@@ -240,7 +240,7 @@ The BIDS labels can be static, in which case the value is just a normal string, 
 You can use the "IntendedFor" field to indicate for which runs (DICOM series) a fieldmap was intended. The dynamic value of the "IntendedFor" field can be a list of string patterns that is used to include those runs that have that string pattern in their nifti pathname (e.g. \<\<task>> to include all functional runs or \<\<Stop\*Go>\<Reward>> to include "Stop1Go"-, "Stop2Go"- and "Reward"-runs).
 
 #### Plug-in functions
-WIP
+BIDScoin provides the possibility for researchers to write custom python functions that will be executed at bidsmapper.py and bidscoiner.py runtime. To use this functionality, enter the name of the module (default location is the plugins-folder; otherwise the full path must be provided) in the bidsmap dictionary file to import the plugin functions. The functions in the module should be named "bidsmapper_plugin" for bidsmapper.py and "bidscoiner_plugin" for bidscoiner.py. See [README.py](./plugins/README.py) for more details and placeholder code.
 
 ## BIDScoin functionality / TODO
 - [x] DICOM source data
