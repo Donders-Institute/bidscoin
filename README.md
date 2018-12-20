@@ -240,7 +240,7 @@ The BIDS labels can be static, in which case the value is just a normal string, 
 You can use the "IntendedFor" field to indicate for which runs (DICOM series) a fieldmap was intended. The dynamic value of the "IntendedFor" field can be a list of string patterns that is used to include those runs that have that string pattern in their nifti pathname (e.g. \<\<task>> to include all functional runs or \<\<Stop\*Go>\<Reward>> to include "Stop1Go"-, "Stop2Go"- and "Reward"-runs).
 
 #### Plug-in functions
-BIDScoin provides the possibility for researchers to write custom python functions that will be executed at bidsmapper.py and bidscoiner.py runtime. To use this functionality, enter the name of the module (default location is the plugins-folder; otherwise the full path must be provided) in the bidsmap dictionary file to import the plugin functions. The functions in the module should be named "bidsmapper_plugin" for bidsmapper.py and "bidscoiner_plugin" for bidscoiner.py. See [README.py](./plugins/README.py) for more details and placeholder code.
+BIDScoin provides the possibility for researchers to write custom python functions that will be executed at bidsmapper.py and bidscoiner.py runtime. To use this functionality, enter the name of the module (default location is the plugins-folder; otherwise the full path must be provided) in the bidsmap dictionary file to import the plugin functions. The functions in the module should be named "bidsmapper_plugin" for bidsmapper.py and "bidscoiner_plugin" for bidscoiner.py. See [README.py](./bidscoin/plugins/README.py) for more details and placeholder code.
 
 ## BIDScoin functionality / TODO
 - [x] DICOM source data
