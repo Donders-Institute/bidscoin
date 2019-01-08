@@ -258,9 +258,9 @@ Are you a python programmer with an interest in BIDS who knows all about GE and 
 ## BIDScoin tutorial
 This tutorial is specific for researchers from the DCCN and makes use of data-sets stored on its central file-system. However, it should not be difficult to use (at least part of) this tutorial for other data-sets as well.
  
-1. **Preparation.** Activate the bidscoin environment and create a tutorial playground folder in your home directory by executing these bash commands:  
+1. **Preparation.** Activate the bidscoin environment and create a tutorial playground folder in your home directory by executing these bash commands (see also `module help bidscoin`):  
    ```
-   module add bidscoin/1.4  
+   module add bidscoin  
    source activate /opt/bidscoin  
    cp -r /opt/bidscoin/tutorial ~
    ```
