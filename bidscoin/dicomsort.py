@@ -34,11 +34,14 @@ def sortsession(sessionfolder: str, pattern: str, rename: bool, nosort: bool) ->
         # Extract the SeriesDescription and SeriesNumber from the dicomfield
         seriesnr    = bids.get_dicomfield('SeriesNumber', dicomfile)
         seriesdescr = bids.get_dicomfield('SeriesDescription', dicomfile)
+        if not seriesnr:
+            warnings.warn(f'No SeriesNumber found, skipping: {dicomfile}')
+            continue
         if not seriesdescr:
             seriesdescr = bids.get_dicomfield('ProtocolName', dicomfile)
             if not seriesdescr:
                 seriesdescr = 'unknown_protocol'
-                warnings.warn('No SeriesDecription or ProtocolName found for: ' + dicomfile)
+                warnings.warn(f'No SeriesDecription or ProtocolName found for: {dicomfile}')
         if rename:
             acquisitionnr = bids.get_dicomfield('AcquisitionNumber', dicomfile)
             instancenr    = bids.get_dicomfield('InstanceNumber', dicomfile)
@@ -51,7 +54,7 @@ def sortsession(sessionfolder: str, pattern: str, rename: bool, nosort: bool) ->
 
         # Move and/or rename the dicomfile in(to) the (series sub)folder
         if rename and not (patientname and seriesnr and seriesdescr and acquisitionnr and instancenr and ext):
-            print(f'Missing one or more DICOM-fields, cannot rename {dicomfile}')
+            warnings.warn(f'Missing one or more DICOM-fields, cannot rename {dicomfile}')
             filename = os.path.basename(dicomfile)
         elif rename:
             filename = f'{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}'

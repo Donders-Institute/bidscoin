@@ -361,7 +361,7 @@ def get_dicomfield(tagname: str, dicomfile: str):
                     continue
 
     except IOError:
-        warnings.warn('Cannot read' + dicomfile)
+        warnings.warn(f'Cannot read {tagname} from {dicomfile}')
         value = None
 
     except Exception:
@@ -369,8 +369,8 @@ def get_dicomfield(tagname: str, dicomfile: str):
             value = parse_x_protocol(tagname, dicomfile)
 
         except Exception:
+            warnings.warn(f'Could not parse {tagname} from {dicomfile}')
             value = None
-            warnings.warn('Could not extract {} tag from {}'.format(tagname, dicomfile))
 
     # Cast the dicom datatype to standard to int or str (i.e. to something that yaml.dump can handle)
     if not value:
