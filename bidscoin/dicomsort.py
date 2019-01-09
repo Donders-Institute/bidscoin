@@ -58,6 +58,7 @@ def sortsession(sessionfolder: str, pattern: str, rename: bool, nosort: bool) ->
             filename = os.path.basename(dicomfile)
         elif rename:
             filename = f'{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}'
+            print(filename)
         else:
             filename = os.path.basename(dicomfile)
         if nosort:
