@@ -57,8 +57,7 @@ def sortsession(sessionfolder: str, pattern: str, rename: bool, nosort: bool) ->
             warnings.warn(f'Missing one or more DICOM-fields, cannot rename {dicomfile}\npatientname = {patientname}\nacquisitionnr = {acquisitionnr}\ninstancenr = {instancenr}\next = {ext}')
             filename = os.path.basename(dicomfile)
         elif rename:
-            filename = f'{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}'
-            print(filename)
+            filename = f'{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}'.strip().replace(os.sep, '')
         else:
             filename = os.path.basename(dicomfile)
         if nosort:
