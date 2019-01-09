@@ -154,7 +154,7 @@ if __name__ == "__main__":
                                             '  dicomsort.py /project/3022026.01/raw --subjectid sub\n' 
                                             '  dicomsort.py /project/3022026.01/raw --subjectid sub-01 --sessionid ses\n'
                                             '  dicomsort.py /project/3022026.01/raw/sub-011/ses-mri01/DICOMDIR\n ')
-    parser.add_argument('rawfolder',      help='The name of the root folder containing the rawfolder/[sub/][ses/]dicomfiles or the name of the (single session/study) DICOMDIR file')
+    parser.add_argument('dicomsource',    help='The name of the root folder containing the dicomsource/[sub/][ses/]dicomfiles or the name of the (single session/study) DICOMDIR file')
     parser.add_argument('--subjectid',    help='The prefix string for recursive searching in subject subfolders (e.g. "sub")')
     parser.add_argument('--sessionid',    help='The prefix string for recursive searching in session subfolders (e.g. "ses")')
     parser.add_argument('-r','--rename',  help='Flag to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme', action='store_true')
@@ -162,7 +162,7 @@ if __name__ == "__main__":
     parser.add_argument('-p','--pattern', help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')
     args = parser.parse_args()
 
-    sortsessions(session    = args.rawfolder,
+    sortsessions(session    = args.dicomsource,
                  subjectid  = args.subjectid,
                  sessionid  = args.sessionid,
                  rename     = args.rename,
