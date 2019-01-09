@@ -50,7 +50,10 @@ def sortsession(sessionfolder: str, pattern: str, rename: bool, nosort: bool) ->
             ext = os.path.splitext(dicomfile)[1]
 
         # Move and/or rename the dicomfile in(to) the (series sub)folder
-        if rename:
+        if not (patientname and seriesnr and seriesdescr and acquisitionnr and instancenr and ext):
+            print(f'Cannot retrieved dicom-fields in {dicomfile}, skip renaming')
+            filename = os.path.basename(dicomfile)
+        elif rename:
             filename = f'{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}'
         else:
             filename = os.path.basename(dicomfile)
