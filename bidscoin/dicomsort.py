@@ -29,7 +29,7 @@ def sortsession(sessionfolder: str, pattern: str, rename: bool, nosort: bool) ->
     """
     Sorts dicomfiles into (3-digit) SeriesNumber-SeriesDescription subfolders (e.g. '003-T1MPRAGE')
 
-    :param sessionfolder:   The name of the folder that contains the dicom files
+    :param sessionfolder:   The name of the folder that contains the dicom files or the name of the DICOMDIR file
     :param pattern:         The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files
     :param rename:          Boolean to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme
     :param nosort:          Boolean to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)
@@ -38,11 +38,35 @@ def sortsession(sessionfolder: str, pattern: str, rename: bool, nosort: bool) ->
 
     # Input checking
     sessionfolder = os.path.abspath(os.path.expanduser(sessionfolder))
-    seriesdirs    = []
+
+    # Collect all DICOM files
     print('>> processing: ' + sessionfolder)
+    if os.path.basename(sessionfolder) == 'DICOMDIR':
+
+        from pydicom.filereader import read_dicomdir
+
+        dicomdir = read_dicomdir(sessionfolder)
+        if len(dicomdir.patient_records) > 1:
+            warnings.warn(f'Abort DICOM sorting because multiple subjects found in {sessionfolder}')    # TODO: Support this
+            return
+        if len(dicomdir.patient_records[0].children) > 1:
+            warnings.warn(f'Abort DICOM sorting because multiple studies found in {sessionfolder}')     # TODO: Support this
+            return
+
+        sessionfolder = os.path.dirname(sessionfolder)
+
+        dicomfiles = []
+        for patient in dicomdir.patient_records:
+            for study in patient.children:
+                for series in study.children:
+                    dicomfiles.extend([os.path.join(sessionfolder, *image.ReferencedFileID) for image in series.children])
+
+    else:
+        dicomfiles = [os.path.join(sessionfolder,dcmfile) for dcmfile in os.listdir(sessionfolder) if re.match(pattern, dcmfile)]
 
     # Map all dicomfiles and move them to series folders
-    for dicomfile in [os.path.join(sessionfolder,dcmfile) for dcmfile in os.listdir(sessionfolder) if re.match(pattern, dcmfile)]:
+    seriesdirs = []
+    for dicomfile in dicomfiles:
 
         # Extract the SeriesDescription and SeriesNumber from the dicomfield
         seriesnr    = bids.get_dicomfield('SeriesNumber', dicomfile)
@@ -128,7 +152,7 @@ if __name__ == "__main__":
                                             '  dicomsort.py /project/3022026.01/raw\n' 
                                             '  dicomsort.py /project/3022026.01/raw --subjectid sub\n' 
                                             '  dicomsort.py /project/3022026.01/raw --subjectid sub-01 --sessionid ses\n ')
-    parser.add_argument('rawfolder',      help='The root folder containing the rawfolder/[sub/][ses/]dicomfiles')
+    parser.add_argument('rawfolder',      help='The name of the root folder containing the rawfolder/[sub/][ses/]dicomfiles or the name of the DICOMDIR file')
     parser.add_argument('--subjectid',    help='The prefix search-string of the subject folders in rawfolder (e.g. "sub")')
     parser.add_argument('--sessionid',    help='The prefix search-string of the session folders in the subject folder (e.g. "ses")')
     parser.add_argument('-r','--rename',  help='Flag to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme', action='store_true')
