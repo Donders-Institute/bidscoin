@@ -64,7 +64,7 @@ def sortsession(sessionfolder: str, pattern: str, rename: bool, nosort: bool) ->
             pathname = sessionfolder
         else:
             # Create the series subfolder
-            seriesdir = f'{seriesnr:03d}-{seriesdescr}'
+            seriesdir = f'{seriesnr:03d}-{seriesdescr}'.strip().replace(os.sep, '')
             if seriesdir not in seriesdirs:  # We have a new series
                 if not os.path.isdir(os.path.join(sessionfolder, seriesdir)):
                     print('  Creating:  ' + os.path.join(sessionfolder, seriesdir))
