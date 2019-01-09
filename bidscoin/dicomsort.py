@@ -50,25 +50,28 @@ def sortsession(sessionfolder: str, pattern: str, rename: bool, nosort: bool) ->
             ext = os.path.splitext(dicomfile)[1]
 
         # Move and/or rename the dicomfile in(to) the (series sub)folder
-        if rename and (not seriesnr or not acquisitionnr or not instancenr or not ext):
+        try:
+            # if rename and (not seriesnr or not acquisitionnr or not instancenr or not ext):
+            #     print(f'Cannot retrieved dicom-fields in {dicomfile}, skip renaming')
+            #     filename = os.path.basename(dicomfile)
+            if rename:
+                filename = f'{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}'
+            else:
+                filename = os.path.basename(dicomfile)
+            if nosort:
+                pathname = sessionfolder
+            else:
+                # Create the series subfolder
+                seriesdir = '{:03d}-{}'.format(seriesnr, seriesdescr)
+                if seriesdir not in seriesdirs:  # We have a new series
+                    if not os.path.isdir(os.path.join(sessionfolder, seriesdir)):
+                        print('  Creating:  ' + os.path.join(sessionfolder, seriesdir))
+                        os.makedirs(os.path.join(sessionfolder, seriesdir))
+                    seriesdirs.append(seriesdir)
+                pathname = os.path.join(sessionfolder, seriesdir)
+            os.rename(dicomfile, os.path.join(pathname, filename))
+        except:
             print(f'Cannot retrieved dicom-fields in {dicomfile}, skip renaming')
-            filename = os.path.basename(dicomfile)
-        elif rename:
-            filename = f'{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}'
-        else:
-            filename = os.path.basename(dicomfile)
-        if nosort:
-            pathname = sessionfolder
-        else:
-            # Create the series subfolder
-            seriesdir = '{:03d}-{}'.format(seriesnr, seriesdescr)
-            if seriesdir not in seriesdirs:  # We have a new series
-                if not os.path.isdir(os.path.join(sessionfolder, seriesdir)):
-                    print('  Creating:  ' + os.path.join(sessionfolder, seriesdir))
-                    os.makedirs(os.path.join(sessionfolder, seriesdir))
-                seriesdirs.append(seriesdir)
-            pathname = os.path.join(sessionfolder, seriesdir)
-        os.rename(dicomfile, os.path.join(pathname, filename))
 
 
 def sortsessions(rawfolder: str, subjectid: str='', sessionid: str='', rename: bool=False, nosort: bool=False, pattern: str='.*\.(IMA|dcm)$') -> None:
