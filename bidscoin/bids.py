@@ -362,6 +362,7 @@ def get_dicomfield(tagname: str, dicomfile: str):
 
     except IOError:
         warnings.warn('Cannot read' + dicomfile)
+        value = None
 
     except Exception:
         try:
