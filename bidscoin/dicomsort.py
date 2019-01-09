@@ -155,8 +155,8 @@ if __name__ == "__main__":
                                             '  dicomsort.py /project/3022026.01/raw --subjectid sub-01 --sessionid ses\n'
                                             '  dicomsort.py /project/3022026.01/raw/sub-011/ses-mri01/DICOMDIR\n ')
     parser.add_argument('dicomsource',    help='The name of the root folder containing the dicomsource/[sub/][ses/]dicomfiles or the name of the (single session/study) DICOMDIR file')
-    parser.add_argument('--subjectid',    help='The prefix string for recursive searching in subject subfolders (e.g. "sub")')
-    parser.add_argument('--sessionid',    help='The prefix string for recursive searching in session subfolders (e.g. "ses")')
+    parser.add_argument('--subjectid',    help='The prefix string for recursive searching in dicomsource/subject subfolders (e.g. "sub")')
+    parser.add_argument('--sessionid',    help='The prefix string for recursive searching in dicomsource/subject/session subfolders (e.g. "ses")')
     parser.add_argument('-r','--rename',  help='Flag to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme', action='store_true')
     parser.add_argument('-n','--nosort',  help='Flag to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)', action='store_true')
     parser.add_argument('-p','--pattern', help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')
