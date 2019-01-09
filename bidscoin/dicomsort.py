@@ -12,6 +12,17 @@ except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
 
 
+def cleanup(name: str) -> str:
+    """
+    Removes illegal characters from file- or directory-name
+
+    :param name: The file- or directory-name
+    :return:     The cleaned file- or directory-name
+    """
+
+    return name.strip().replace(os.sep, '')
+
+
 def sortsession(sessionfolder: str, pattern: str, rename: bool, nosort: bool) -> None:
     """
     Sorts dicomfiles into (3-digit) SeriesNumber-SeriesDescription subfolders (e.g. '003-T1MPRAGE')
@@ -59,14 +70,14 @@ def sortsession(sessionfolder: str, pattern: str, rename: bool, nosort: bool) ->
             warnings.warn(f'Missing one or more DICOM-fields, cannot rename {dicomfile}\npatientname = {patientname}\nacquisitionnr = {acquisitionnr}\ninstancenr = {instancenr}\next = {ext}')
             filename = os.path.basename(dicomfile)
         elif rename:
-            filename = f'{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}'.strip().replace(os.sep, '')
+            filename = cleanup(f'{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}')
         else:
             filename = os.path.basename(dicomfile)
         if nosort:
             pathname = sessionfolder
         else:
             # Create the series subfolder
-            seriesdir = f'{seriesnr:03d}-{seriesdescr}'.strip().replace(os.sep, '')
+            seriesdir = cleanup(f'{seriesnr:03d}-{seriesdescr}')
             if seriesdir not in seriesdirs:  # We have a new series
                 if not os.path.isdir(os.path.join(sessionfolder, seriesdir)):
                     print('  Creating:  ' + os.path.join(sessionfolder, seriesdir))
