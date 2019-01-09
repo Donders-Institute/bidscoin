@@ -51,10 +51,12 @@ def sortsession(sessionfolder: str, pattern: str, rename: bool, nosort: bool) ->
             if not patientname:
                 patientname = bids.get_dicomfield('PatientsName', dicomfile)        # This Attribute was/is sometimes called PatientsName?
             ext = os.path.splitext(dicomfile)[1]
+            if not ext:
+                ext = '.dcm'
 
         # Move and/or rename the dicomfile in(to) the (series sub)folder
         if rename and not (patientname and seriesnr and seriesdescr and acquisitionnr and instancenr and ext):
-            warnings.warn(f'Missing one or more DICOM-fields, cannot rename {dicomfile}\npatientname={patientname}\nacquisitionnr={acquisitionnr}\ninstancenr={instancenr}\next={ext}')
+            warnings.warn(f'Missing one or more DICOM-fields, cannot rename {dicomfile}\npatientname = {patientname}\nacquisitionnr = {acquisitionnr}\ninstancenr = {instancenr}\next = {ext}')
             filename = os.path.basename(dicomfile)
         elif rename:
             filename = f'{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}'
