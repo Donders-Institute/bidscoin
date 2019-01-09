@@ -20,7 +20,9 @@ def cleanup(name: str) -> str:
     :return:     The cleaned file- or directory-name
     """
 
-    return name.strip().replace(os.sep, '')
+    special_characters = (os.sep, '*', '?', '"')        # These are the worst offenders, but there are many more
+
+    return name.strip().replace(special_characters, '')
 
 
 def sortsession(sessionfolder: str, pattern: str, rename: bool, nosort: bool) -> None:
@@ -66,8 +68,8 @@ def sortsession(sessionfolder: str, pattern: str, rename: bool, nosort: bool) ->
                 ext = '.dcm'
 
         # Move and/or rename the dicomfile in(to) the (series sub)folder
-        if rename and not (patientname and seriesnr and seriesdescr and acquisitionnr and instancenr and ext):
-            warnings.warn(f'Missing one or more DICOM-fields, cannot rename {dicomfile}\npatientname = {patientname}\nacquisitionnr = {acquisitionnr}\ninstancenr = {instancenr}\next = {ext}')
+        if rename and not (patientname and seriesnr and seriesdescr and acquisitionnr and instancenr):
+            warnings.warn(f'Missing one or more crucial DICOM-fields, cannot safely rename {dicomfile}\npatientname = {patientname}\nseriesnumber = {seriesnr}\nseriesdescription = {seriesdescr}\nacquisitionnr = {acquisitionnr}\ninstancenr = {instancenr}')
             filename = os.path.basename(dicomfile)
         elif rename:
             filename = cleanup(f'{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}')
