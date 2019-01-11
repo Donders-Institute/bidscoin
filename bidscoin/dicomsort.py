@@ -22,7 +22,10 @@ def cleanup(name: str) -> str:
 
     special_characters = (os.sep, '*', '?', '"')        # These are the worst offenders, but there are many more
 
-    return name.strip().replace(special_characters, '')
+    for special in special_characters:
+        name.strip().replace(special, '')
+
+    return name
 
 
 def sortsession(sessionfolder: str, dicomfiles: list, rename: bool, nosort: bool) -> None:
