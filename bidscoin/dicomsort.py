@@ -23,7 +23,7 @@ def cleanup(name: str) -> str:
     special_characters = (os.sep, '*', '?', '"')        # These are the worst offenders, but there are many more
 
     for special in special_characters:
-        str(name).strip().replace(special, '')
+        name = name.strip().replace(special, '')
 
     return name
 
@@ -131,11 +131,11 @@ def sortsessions(session: str, subjectid: str='', sessionid: str='', rename: boo
             sessionfolder = os.path.dirname(session)
             for patient in dicomdir.patient_records:
                 if len(dicomdir.patient_records) > 1:
-                    sessionfolder = os.path.join(sessionfolder, 'sub-' + cleanup(patient.PatientName))
+                    sessionfolder = os.path.join(sessionfolder, 'sub-' + cleanup(str(patient.PatientName)))
 
                 for study in patient.children:
                     if len(patient.children) > 1:
-                        sessionfolder = os.path.join(sessionfolder, 'ses-' + cleanup(study.StudyDescription))
+                        sessionfolder = os.path.join(sessionfolder, 'ses-' + cleanup(str(study.StudyDescription)))
 
                     dicomfiles = []
                     for series in study.children:
