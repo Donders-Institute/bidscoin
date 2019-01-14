@@ -220,7 +220,9 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
                         intendedfor = [intendedfor]
                     with open(jsonfile, 'r') as json_fid:
                         data = json.load(json_fid)
-                    niifiles = [niifile.split(os.sep+subid+os.sep, 1)[1] for niifile in sorted(glob.glob(os.path.join(bidsses, '**'+os.sep+'*' + '*'.join(intendedfor) + '*.nii*')))]     # Use a relative path
+                    niifiles = []
+                    for ifor in intendedfor:
+                        niifiles.extend([niifile.split(os.sep+subid+os.sep, 1)[1] for niifile in sorted(glob.glob(os.path.join(bidsses, '**'+os.sep+'*' + ifor + '*.nii*')))])     # Use a relative path
                     data['IntendedFor'] = niifiles
                     bids.printlog('Adding IntendedFor to: ' + jsonfile, LOG)
                     with open(jsonfile, 'w') as json_fid:
