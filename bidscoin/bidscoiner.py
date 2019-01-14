@@ -222,7 +222,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
 
                     niifiles = []
                     for selector in intendedfor:
-                        niifiles.extend([niifile.split(os.sep+subid+os.sep, 1)[1] for niifile in sorted(glob.glob(os.path.join(bidsses, f'**{os.sep}*{selector}*.nii*')))])     # Search in all series using a relative path
+                        niifiles.extend([niifile.split(os.sep+subid+os.sep, 1)[1].replace('\\','/') for niifile in sorted(glob.glob(os.path.join(bidsses, f'**{os.sep}*{selector}*.nii*')))])     # Search in all series using a relative path
 
                     with open(jsonfile, 'r') as json_fid:
                         data = json.load(json_fid)
