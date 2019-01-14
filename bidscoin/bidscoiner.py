@@ -213,11 +213,13 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
         for fieldmap in bidsmap['DICOM']['fmap']:
             if 'IntendedFor' in fieldmap and fieldmap['IntendedFor']:
                 for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bids.get_bidsname(subid, sesid, 'fmap', fieldmap, '1') + '.json').replace('_run-1_','_*')):
+
                     intendedfor = fieldmap['IntendedFor']
                     if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
                         intendedfor = intendedfor[2:-2].split('><')
                     else:
                         intendedfor = [intendedfor]
+
                     niifiles = []
                     for selector in intendedfor:
                         niifiles.extend([niifile.split(os.sep+subid+os.sep, 1)[1] for niifile in sorted(glob.glob(os.path.join(bidsses, f'**{os.sep}*{selector}*.nii*')))])     # Search in all series using a relative path
@@ -233,6 +235,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
                 if jsonfile.endswith('magnitude1.json'):
                     jsonfile2 = jsonfile.rsplit('1.json',1)[0] + '2.json'
                     if os.path.isfile(jsonfile2):
+
                         with open(jsonfile2, 'r') as json_fid:
                             data = json.load(json_fid)
                         if 'IntendedFor' not in data:
