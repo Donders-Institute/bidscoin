@@ -17,7 +17,7 @@ except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
 
 
-def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
+def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, subprefix: str, sesprefix: str) -> None:
     """
     Converts the session dicom-files into BIDS-valid nifti-files in the corresponding bidsfolder and
     extracts personals (e.g. Age, Sex) from the dicom header
@@ -26,8 +26,14 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
     :param bidsfolder:  The full-path name of the BIDS root-folder
     :param personals:   The dictionary with the personal information
+    :param subprefix:   The prefix common for all source subject-folders
+    :param sesprefix:   The prefix common for all source session-folders
     :return:            Nothing
     """
+
+    if not bids.lsdirs(session):
+        bids.printlog('WARNING: No series subfolder(s) found in: ' + session, LOG)
+        return
 
     TE = [None, None]
 
@@ -37,9 +43,9 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
     elif bidsmap['DICOM']['participant_label']:
         subid = bidsmap['DICOM']['participant_label']
     else:
-        subid = session.rsplit(os.sep+'sub-',1)[1].split(os.sep+'ses-',1)[0]
-    subid = 'sub-' + bids.cleanup_label(subid.replace('sub-',''))
-    if subid == 'sub-':
+        subid = session.rsplit(os.sep + subprefix, 1)[1].split(os.sep + sesprefix, 1)[0]
+    subid = subprefix + bids.cleanup_label(subid.replace(subprefix, ''))
+    if subid == subprefix:
         bids.printlog('Error: No valid subject identifier found for: ' + session, LOG)
         return
 
@@ -48,12 +54,12 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
         sesid = bids.get_dicomfield(bidsmap['DICOM']['session_label'][2:-2], bids.get_dicomfile(bids.lsdirs(session)[0]))
     elif bidsmap['DICOM']['session_label']:
         sesid = bidsmap['DICOM']['session_label']
-    elif os.sep+'ses-' in session:
-        sesid = session.rsplit(os.sep+'ses-')[1]
+    elif os.sep + sesprefix in session:
+        sesid = session.rsplit(os.sep + sesprefix)[1]
     else:
         sesid = ''
     if sesid:
-        sesid = 'ses-' + bids.cleanup_label(sesid.replace('ses-',''))
+        sesid = sesprefix + bids.cleanup_label(sesid.replace(sesprefix, ''))
 
     # Create the BIDS session-folder
     bidsses = os.path.join(bidsfolder, subid, sesid)         # NB: This gives a trailing '/' if ses=='', but that should be ok
@@ -66,8 +72,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
 
         # Get the cleaned-up bids labels from a dicom-file and bidsmap
         dicomfile = bids.get_dicomfile(series)
-        if not dicomfile:
-            continue
+        if not dicomfile: continue
         result    = bids.get_matching_dicomseries(dicomfile, bidsmap)
         series_   = result['series']
         modality  = result['modality']
@@ -438,7 +443,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
 
             # Update / append the dicom mapping
             if bidsmap['DICOM']:
-                coin_dicom(session, bidsmap, bidsfolder, personals)
+                coin_dicom(session, bidsmap, bidsfolder, personals, subprefix, sesprefix)
 
             # Update / append the PAR/REC mapping
             if bidsmap['PAR']:
