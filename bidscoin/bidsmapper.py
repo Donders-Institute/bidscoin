@@ -210,7 +210,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str='bidsmap_sample
     for subject in subjects:
 
         sessions = bids.lsdirs(subject, sesprefix + '*')
-        if not sessions: sessions = subject
+        if not sessions: sessions = [subject]
         for session in sessions:
 
             print('Parsing: ' + session)

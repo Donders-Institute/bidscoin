@@ -434,7 +434,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
         personals = dict()
         sessions  = bids.lsdirs(subject, sesprefix + '*')
         if not sessions:
-            sessions = subject
+            sessions = [subject]
         for session in sessions:
 
             # Check if we should skip the session-folder

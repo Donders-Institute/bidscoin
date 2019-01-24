@@ -296,7 +296,7 @@ def get_heuristics(yamlfile: str, folder: str='', logfile: str='') -> dict:
     if 'version' not in heuristics['Options']:
         heuristics['Options']['version'] = 'Unknown'
     if heuristics['Options']['version'] != version():
-        printlog('Warning: BIDScoiner version conflict: {} was created using version {}, but this is version {}'.format(yamlfile, heuristics['Options']['version'], version()), logfile)
+        printlog('WARNING: BIDScoiner version conflict: {} was created using version {}, but this is version {}'.format(yamlfile, heuristics['Options']['version'], version()), logfile)
 
     return heuristics
 
