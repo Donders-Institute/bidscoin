@@ -48,7 +48,7 @@ def rawmapper(rawfolder: str, outfolder: str='', rename: bool=False, dicomfield:
     for subject in bids.lsdirs(rawfolder, subprefix + '*'):
 
         sessions = bids.lsdirs(subject, sesprefix + '*')
-        if not sessions: sessions = subject
+        if not sessions: sessions = [subject]
         for session in sessions:
 
             # Get the subject and session identifiers from the raw folder
