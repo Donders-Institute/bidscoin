@@ -472,7 +472,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
                     participants_table[key] = None
                     participants_dict[key]  = dict(LongName     = 'Long (unabbreviated) name of the column',
                                                    Description  = 'Description of the the column',
-                                                   Levels       = 'For categorical variables: a dictionary of possible values (keys) and their descriptions (values)',
+                                                   Levels       = dict(Key='Value (This is for categorical variables: a dictionary of possible values (keys) and their descriptions (values))'),
                                                    Units        = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is',
                                                    TermURL      = 'URL pointing to a formal definition of this type of data in an ontology available on the web')
             participants_table = participants_table.append(personals, ignore_index=True, verify_integrity=True)
