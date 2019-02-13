@@ -44,7 +44,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         subid = bidsmap['DICOM']['participant_label']
     else:
         subid = session.rsplit(os.sep + subprefix, 1)[1].split(os.sep + sesprefix, 1)[0]
-    subid = subprefix + bids.cleanup_label(subid.replace(subprefix, ''))
+    subid = 'sub-' + bids.cleanup_label(subid.replace(subprefix, ''))
     if subid == subprefix:
         bids.printlog('Error: No valid subject identifier found for: ' + session, LOG)
         return
@@ -59,7 +59,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     else:
         sesid = ''
     if sesid:
-        sesid = sesprefix + bids.cleanup_label(sesid.replace(sesprefix, ''))
+        sesid = 'ses-' + bids.cleanup_label(sesid.replace(sesprefix, ''))
 
     # Create the BIDS session-folder
     bidsses = os.path.join(bidsfolder, subid, sesid)         # NB: This gives a trailing '/' if ses=='', but that should be ok
