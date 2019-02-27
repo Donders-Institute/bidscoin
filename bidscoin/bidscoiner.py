@@ -427,8 +427,9 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
         subjects = [os.path.join(rawfolder,subject) for subject in subjects if os.path.isdir(os.path.join(rawfolder,subject))]
 
     # Loop over all subjects and sessions and convert them using the bidsmap entries
-    for subject in subjects:
+    for n, subject in enumerate(subjects, 1):
 
+        print(f'------------------\nCoining: {subject} ({n}/{len(subjects)})')
         if participants and subject in list(participants_table.participant_id): continue
 
         personals = dict()

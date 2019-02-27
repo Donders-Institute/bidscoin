@@ -207,13 +207,13 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str='bidsmap_sample
 
     # Loop over all subjects and sessions and built up the bidsmap entries
     subjects = bids.lsdirs(rawfolder, subprefix + '*')
-    for subject in subjects:
+    for n, subject in enumerate(subjects,1):
 
         sessions = bids.lsdirs(subject, sesprefix + '*')
         if not sessions: sessions = [subject]
         for session in sessions:
 
-            print('Parsing: ' + session)
+            print(f'Parsing: {session} (subject {n}/{len(subjects)})')
 
             for series in bids.lsdirs(session):
 
