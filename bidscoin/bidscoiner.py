@@ -429,7 +429,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     # Loop over all subjects and sessions and convert them using the bidsmap entries
     for n, subject in enumerate(subjects, 1):
 
-        print(f'------------------\nCoining: {subject} ({n}/{len(subjects)})')
+        print(f'\n{"-"*30}\nCoining subject: {subject} ({n}/{len(subjects)})')
         if participants and subject in list(participants_table.participant_id): continue
 
         personals = dict()
