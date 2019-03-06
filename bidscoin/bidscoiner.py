@@ -223,7 +223,9 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
             with open(jsonfile, 'r') as json_fid:
                 data = json.load(json_fid)
             acq_time = dateutil.parser.parse(data['AcquisitionTime'])
-            scans_table.loc[jsonfile.replace(bidsses+os.sep,''), 'acq_time'] = '1900-01-01T' + acq_time.strftime('%H:%M:%S')       # Somehow .strip(bidsses) instead of replace(bidsses,'') does not work properly
+            niipath  = glob.glob(os.path.splitext(jsonfile)[0] + '.nii*')[0]    # Find the corresponding nifti file (there should be only one, let's not make assumptions about the .gz extension)
+            niipath  = niipath.replace(bidsses+os.sep,'')                       # Use a relative path. Somehow .strip(bidsses) instead of replace(bidsses,'') does not work properly
+            scans_table.loc[niipath, 'acq_time'] = '1900-01-01T' + acq_time.strftime('%H:%M:%S')
 
     # Write the scans_table to disk
     bids.printlog('Writing acquisition time data to: ' + scans_tsv, LOG)
