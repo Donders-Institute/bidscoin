@@ -11,6 +11,7 @@ import glob
 import pandas as pd
 import subprocess
 import json
+import dateutil
 try:
     from bidscoin import bids
 except ImportError:
@@ -44,7 +45,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         subid = bidsmap['DICOM']['participant_label']
     else:
         subid = session.rsplit(os.sep + subprefix, 1)[1].split(os.sep + sesprefix, 1)[0]
-    subid = 'sub-' + bids.cleanup_label(subid.replace(subprefix, ''))
+    subid = 'sub-' + bids.cleanup_label(subid.lstrip(subprefix))
     if subid == subprefix:
         bids.printlog('Error: No valid subject identifier found for: ' + session, LOG)
         return
@@ -59,11 +60,17 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     else:
         sesid = ''
     if sesid:
-        sesid = 'ses-' + bids.cleanup_label(sesid.replace(sesprefix, ''))
+        sesid = 'ses-' + bids.cleanup_label(sesid.lstrip(sesprefix))
 
-    # Create the BIDS session-folder
+    # Create the BIDS session-folder and a scans.tsv file
     bidsses = os.path.join(bidsfolder, subid, sesid)         # NB: This gives a trailing '/' if ses=='', but that should be ok
     os.makedirs(bidsses, exist_ok=True)
+    scans_tsv = os.path.join(bidsses, f'{subid}{bids.add_prefix("_",sesid)}_scans.tsv')
+    if os.path.exists(scans_tsv):
+        scans_table = pd.read_table(scans_tsv, index_col='filename')
+    else:
+        scans_table = pd.DataFrame(columns=['acq_time'], dtype='str')
+        scans_table.index.name = 'filename'
 
     # Process all the dicom series subfolders
     for series in bids.lsdirs(session):
@@ -171,10 +178,9 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 if ext1 == '.json':
                     jsonfiles.append(os.path.join(bidsmodality, newbidsname + '.json'))
 
-        # Loop over and adapt all the newly produced json files (every nifti-file comes with a json-file)
+        # Loop over and adapt all the newly produced json files and write to the scans.tsv file (every nifti-file comes with a json-file)
         if not jsonfiles:
             jsonfiles = [os.path.join(bidsmodality, bidsname + '.json')]
-
         for jsonfile in set(jsonfiles):
 
             # Add a dummy b0 bval- and bvec-file for any file without a bval/bvec file (e.g. sbref, b0 scans)
@@ -212,6 +218,16 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                         json.dump(data, json_fid, indent=4)
                     if TE[0]>TE[1]:
                         bids.printlog('WARNING: EchoTime1 > EchoTime2 in: ' + jsonfile, LOG)
+
+            # Parse the acquisition time from the json file
+            with open(jsonfile, 'r') as json_fid:
+                data = json.load(json_fid)
+            acq_time = dateutil.parser.parse(data['AcquisitionTime'])
+            scans_table.loc[jsonfile.replace(bidsses+os.sep,''), 'acq_time'] = '1900-01-01T' + acq_time.strftime('%H:%M:%S')       # Somehow .strip(bidsses) instead of replace(bidsses,'') does not work properly
+
+    # Write the scans_table to disk
+    bids.printlog('Writing acquisition time data to: ' + scans_tsv, LOG)
+    scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
     # Search for the IntendedFor images and add them to the json-files. This has been postponed untill all modalities have been processed (i.e. so that all target images are indeed on disk)
     if bidsmap['DICOM']['fmap'] is not None:
