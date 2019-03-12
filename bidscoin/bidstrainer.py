@@ -51,14 +51,12 @@ def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict) -> dict:
 
         # Copy the bids labels for the different bidsmodality matches
         if bidsmodality == 'beh':                       # beh should not have subdirectories as it (in the current BIDS version doesn't have a suffix); however, it is kind of irrelevant as beh probably never has a dicomfile anyway?
-            for key in series:
-                series_[key] = series[key]
+            series_['bids'] = series['bids']
             match = True
 
         else:
-            if ('modality_label' in series and dirname==series['modality_label']) or ('suffix' in series and dirname==series['suffix']):    # NB: modality_label & suffix are more or less the same thing, but perhaps future versions will make a distinction
-                for key in series:
-                    series_[key] = series[key]
+            if ('modality_label' in series['bids'] and dirname==series['bids']['modality_label']) or ('suffix' in series['bids'] and dirname==series['bids']['suffix']):    # NB: modality_label & suffix are more or less the same thing, but perhaps future versions will make a distinction
+                series_['bids'] = series['bids']
                 match = True
 
         if match:
@@ -78,7 +76,7 @@ def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict) -> dict:
 
             return bidsmap
 
-    raise ValueError("Oops, this should not happen! BIDS modality '{}' or one of the bidslabels is not accounted for in the code\n{}".format(bidsmodality, dicomfile))
+    raise ValueError(f"Oops, this should not happen! BIDS modality '{bidsmodality}' or one of the bidslabels is not accounted for in the code\n{dicomfile}")
 
 
 def built_parmap(parfile: str, bidsmap: dict, heuristics: dict) -> dict:

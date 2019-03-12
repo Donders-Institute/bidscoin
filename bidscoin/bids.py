@@ -413,19 +413,19 @@ def strip_suffix(series: dict) -> dict:
     """
 
     # See if we have a suffix for this modality
-    if 'suffix' in series and series['suffix']:
-        suffix = series['suffix'].lower()
-    elif 'modality_label' in series and series['modality_label']:
-        suffix = series['modality_label'].lower()
+    if 'suffix' in series['bids'] and series['bids']['suffix']:
+        suffix = series['bids']['suffix'].lower()
+    elif 'modality_label' in series['bids'] and series['bids']['modality_label']:
+        suffix = series['bids']['modality_label'].lower()
     else:
         return series
 
     # See if any of the BIDS labels ends with the same suffix. If so, then remove it
-    for key in series:
-        if key in ('attributes', 'modality_label', 'suffix'):
+    for key in series['bids']:
+        if key in ('modality_label', 'suffix'):
             continue
-        if series[key] and (series[key].lower().endswith('_' + suffix) or series[key].lower().endswith('.' + suffix)):
-            series[key] = series[key][0:-len(suffix)-1]
+        if series['bids'][key] and series['bids'][key].lower().endswith(suffix):
+            series['bids'][key] = series['bids'][key][0:-len(suffix)]       # NB: This will leave the added '_' and '.' characters, but they will be taken out later (as they are not BIDS-valid)
 
     return series
 
@@ -463,27 +463,24 @@ def exist_series(series: dict, serieslist: list, matchbidslabels: bool=True) -> 
         match = any([series['attributes'][key] is not None for key in series['attributes']])  # Make match False if all attributes are empty
 
         # Search for a case where all series items match with the series items
-        for key in series:
-
-            try:
-                if key == 'attributes':
-
-                    for attrkey in series['attributes']:
-                        seriesvalue = series['attributes'][attrkey]
-                        itemvalue   = item['attributes'][attrkey]
-                        match       = match and (seriesvalue == itemvalue)
-
-                elif matchbidslabels:
-
-                    seriesvalue = series[key]
-                    itemvalue   = item[key]
-                    match       = match and (seriesvalue == itemvalue)
-
-            except KeyError:    # Errors may be evoked when matching bids-labels which exist in one modality but not in the other
-                match = False
-
-            if not match:       # There is no point in searching further within the series now that we've found a mismatch
+        for attrkey in series['attributes']:
+            seriesvalue = series['attributes'][attrkey]
+            itemvalue = item['attributes'][attrkey]
+            match = match and (seriesvalue==itemvalue)
+            if not match:           # There is no point in searching further within the series now that we've found a mismatch
                 break
+
+        if matchbidslabels:
+            try:
+                for key in series['bids']:
+                    seriesvalue = series['bids'][key]
+                    itemvalue   = item['bids'][key]
+                    match       = match and (seriesvalue == itemvalue)
+                    if not match:   # There is no point in searching further within the series now that we've found a mismatch
+                        break
+
+            except KeyError:        # Errors may be evoked when matching bids-labels which exist in one modality but not in the other
+                match = False
 
         # Stop searching if we found a matching series (i.e. which is the case if match is still True after all item tests)
         # TODO: maybe count how many instances, could perhaps be useful info
@@ -514,46 +511,42 @@ def get_matching_dicomseries(dicomfile: str, heuristics: dict) -> dict:
             series_ = ruamel.yaml.comments.CommentedMap(ruamel.yaml.comments.CommentedMap(attributes={}))   # Creating a new object is safe in that we don't change the original heuristics object. However, we lose all comments and formatting within the series (which is not such a disaster probably). It is also much faster and more robust with aliases compared with a deepcopy
             match   = any([series['attributes'][key] is not None for key in series['attributes']])          # Make match False if all attributes are empty
 
-            for key in series:
+            # Try to see if the dicomfile matches all of the attributes and fill all of them
+            for attrkey in series['attributes']:
 
-                # Try to see if the dicomfile matches all of the attributes and fill all of them
-                if key == 'attributes':
+                attrvalue  = series['attributes'][attrkey]
+                dicomvalue = get_dicomfield(attrkey, dicomfile)
 
-                    for attrkey in series['attributes']:
-
-                        attrvalue  = series['attributes'][attrkey]
-                        dicomvalue = get_dicomfield(attrkey, dicomfile)
-
-                        # Check if the attribute value matches with the info from the dicomfile
-                        if attrvalue:
-                            if not dicomvalue:
-                                match = False
-                            elif isinstance(attrvalue, list):                     # The user-edited 'wildcard' option
-                                match = match and any([attrvalue_ in dicomvalue for attrvalue_ in attrvalue])
-                            else:
-                                match = match and attrvalue==dicomvalue
-
-                        # Fill the empty attribute with the info from the dicomfile
-                        series_['attributes'][attrkey] = dicomvalue
-
-                # Try to fill the bids-labels
-                else:
-
-                    bidsvalue = series[key]
-                    if not bidsvalue:
-                        series_[key] = bidsvalue
-
-                    # Intelligent filling of the value is done runtime by bidscoiner
-                    elif bidsvalue.startswith('<<') and bidsvalue.endswith('>>'):
-                        series_[key] = bidsvalue
-
-                    # Fill any bids-label with the <annotated> dicom attribute
-                    elif bidsvalue.startswith('<') and bidsvalue.endswith('>'):
-                        label        = get_dicomfield(bidsvalue[1:-1], dicomfile)
-                        series_[key] = cleanup_label(label)
-
+                # Check if the attribute value matches with the info from the dicomfile
+                if attrvalue:
+                    if not dicomvalue:
+                        match = False
+                    elif isinstance(attrvalue, list):                     # The user-edited 'wildcard' option
+                        match = match and any([attrvalue_ in dicomvalue for attrvalue_ in attrvalue])
                     else:
-                        series_[key] = cleanup_label(bidsvalue)
+                        match = match and attrvalue==dicomvalue
+
+                # Fill the empty attribute with the info from the dicomfile
+                series_['attributes'][attrkey] = dicomvalue
+
+            # Try to fill the bids-labels
+            series_['bids'] = {}
+            for key in series['bids']:
+                bidsvalue = series['bids'][key]
+                if not bidsvalue:
+                    series_['bids'][key] = bidsvalue
+
+                # Intelligent filling of the value is done runtime by bidscoiner
+                elif bidsvalue.startswith('<<') and bidsvalue.endswith('>>'):
+                    series_['bids'][key] = bidsvalue
+
+                # Fill any bids-label with the <annotated> dicom attribute
+                elif bidsvalue.startswith('<') and bidsvalue.endswith('>'):
+                    label        = get_dicomfield(bidsvalue[1:-1], dicomfile)
+                    series_['bids'][key] = cleanup_label(label)
+
+                else:
+                    series_['bids'][key] = cleanup_label(bidsvalue)
 
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 series_ = strip_suffix(series_)
@@ -561,11 +554,11 @@ def get_matching_dicomseries(dicomfile: str, heuristics: dict) -> dict:
             # Stop searching the heuristics if we have a match
             if match:
                 # TODO: check if there are more matches (i.e. conflicts)
-                series_.yaml_add_eol_comment('From: ' + dicomfile, key='attributes', column=50)             # Add provenance data
+                series_.yaml_add_eol_comment('From: ' + dicomfile, key='attributes', column=50)                     # Add provenance data
                 return {'series': series_, 'modality': modality}
 
     # We don't have a match (all tests failed, so modality should be the last one, i.e. unknownmodality)
-    series_.yaml_add_eol_comment('From: ' + dicomfile, key='attributes', column=50)                         # Add provenance data
+    series_.yaml_add_eol_comment('From: ' + dicomfile, key='attributes', column=50)                                 # Add provenance data
     return {'series': series_, 'modality': modality}
 
 
@@ -583,7 +576,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
 
     # Do some checks to allow for dragging the series entries between the different modality-sections
     for bidslabel in bidslabels:
-        if bidslabel not in series: series[bidslabel] = ''
+        if bidslabel not in series['bids']: series['bids'][bidslabel] = ''
 
     # Compose the BIDS filename (-> switch statement)
     if modality == 'anat':
@@ -591,18 +584,18 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         defacemask = False       # TODO: account for the 'defacemask' possibility
         if defacemask:
             suffix = 'defacemask'
-            mod    = series['modality_label']
+            mod    = series['bids']['modality_label']
         else:
-            suffix = series['modality_label']
+            suffix = series['bids']['modality_label']
             mod    = ''
 
         # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_ce-<label>][_rec-<label>][_run-<index>][_mod-<label>]_suffix
         bidsname = '{sub}{_ses}{_acq}{_ce}{_rec}{_run}{_mod}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            _acq    = add_prefix('_acq-', series['acq_label']),
-            _ce     = add_prefix('_ce-', series['ce_label']),
-            _rec    = add_prefix('_rec-', series['rec_label']),
+            _acq    = add_prefix('_acq-', series['bids']['acq_label']),
+            _ce     = add_prefix('_ce-', series['bids']['ce_label']),
+            _rec    = add_prefix('_rec-', series['bids']['rec_label']),
             _run    = add_prefix('_run-', run),
             _mod    = add_prefix('_mod-', mod),
             suffix  = suffix)
@@ -613,12 +606,12 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}{_echo}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            task    = f"task-{series['task_label']}",
-            _acq    = add_prefix('_acq-', series['acq_label']),
-            _rec    = add_prefix('_rec-', series['rec_label']),
+            task    = f"task-{series['bids']['task_label']}",
+            _acq    = add_prefix('_acq-', series['bids']['acq_label']),
+            _rec    = add_prefix('_rec-', series['bids']['rec_label']),
             _run    = add_prefix('_run-', run),
-            _echo   = add_prefix('_echo-', series['echo_index']),
-            suffix  = series['suffix'])
+            _echo   = add_prefix('_echo-', series['bids']['echo_index']),
+            suffix  = series['bids']['suffix'])
 
     elif modality == 'dwi':
 
@@ -626,9 +619,9 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}{_acq}{_run}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            _acq    = add_prefix('_acq-', series['acq_label']),
+            _acq    = add_prefix('_acq-', series['bids']['acq_label']),
             _run    = add_prefix('_run-', run),
-            suffix  = series['suffix'])
+            suffix  = series['bids']['suffix'])
 
     elif modality == 'fmap':
 
@@ -638,10 +631,10 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}{_acq}{_dir}{_run}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            _acq    = add_prefix('_acq-', series['acq_label']),
-            _dir    = add_prefix('_dir-', series['dir_label']),
+            _acq    = add_prefix('_acq-', series['bids']['acq_label']),
+            _dir    = add_prefix('_dir-', series['bids']['dir_label']),
             _run    = add_prefix('_run-', run),
-            suffix  = series['suffix'])
+            suffix  = series['bids']['suffix'])
 
     elif modality == 'beh':
 
@@ -649,8 +642,8 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}_{task}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            task    = f"task-{series['task_label']}",
-            suffix  = series['suffix'])
+            task    = f"task-{series['bids']['task_label']}",
+            suffix  = series['bids']['suffix'])
 
     elif modality == 'pet':
 
@@ -658,11 +651,11 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            task    = f"task-{series['task_label']}",
-            _acq    = add_prefix('_acq-', series['acq_label']),
-            _rec    = add_prefix('_rec-', series['rec_label']),
+            task    = f"task-{series['bids']['task_label']}",
+            _acq    = add_prefix('_acq-', series['bids']['acq_label']),
+            _rec    = add_prefix('_rec-', series['bids']['rec_label']),
             _run    = add_prefix('_run-', run),
-            suffix  = series['suffix'])
+            suffix  = series['bids']['suffix'])
 
     elif modality == unknownmodality:
 
@@ -670,14 +663,14 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}_{acq}{_ce}{_rec}{_task}{_echo}{_dir}{_run}{_suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            acq     = f"acq-{series['acq_label']}",
-            _ce     = add_prefix('_ce-', series['ce_label']),
-            _rec    = add_prefix('_rec-', series['rec_label']),
-            _task   = add_prefix('_echo-',series['task_label']),
-            _echo   = add_prefix('_echo-', series['echo_index']),
-            _dir    = add_prefix('_dir-', series['dir_label']),
+            acq     = f"acq-{series['bids']['acq_label']}",
+            _ce     = add_prefix('_ce-', series['bids']['ce_label']),
+            _rec    = add_prefix('_rec-', series['bids']['rec_label']),
+            _task   = add_prefix('_echo-',series['bids']['task_label']),
+            _echo   = add_prefix('_echo-', series['bids']['echo_index']),
+            _dir    = add_prefix('_dir-', series['bids']['dir_label']),
             _run    = add_prefix('_run-', run),
-            _suffix = add_prefix('_', series['suffix']))
+            _suffix = add_prefix('_', series['bids']['suffix']))
 
     else:
         raise ValueError('Critical error: Invalid modality "{}" found'.format(modality))

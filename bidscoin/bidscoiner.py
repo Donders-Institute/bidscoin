@@ -75,7 +75,11 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     # Process all the dicom series subfolders
     for series in bids.lsdirs(session):
 
-        bids.printlog('Processing dicom-folder: ' + series, LOG)
+        if series.startswith('.'):
+            bids.printlog('Ignoring hidden dicom-folder: ' + series, LOG)
+            continue
+        else:
+            bids.printlog('Processing dicom-folder: ' + series, LOG)
 
         # Get the cleaned-up bids labels from a dicom-file and bidsmap
         dicomfile = bids.get_dicomfile(series)
@@ -89,7 +93,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         os.makedirs(bidsmodality, exist_ok=True)
 
         # Compose the BIDS filename using the bids labels and run-index
-        runindex = series_['run_index']
+        runindex = series_['bids']['run_index']
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.get_bidsname(subid, sesid, modality, series_, runindex[2:-2])
             bidsname = bids.increment_runindex(bidsmodality, bidsname)
@@ -202,13 +206,13 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                     data = json.load(json_fid)
                 if not 'TaskName' in data:
                     bids.printlog('Adding TaskName to: ' + jsonfile, LOG)
-                    data['TaskName'] = series_['task_label']
+                    data['TaskName'] = series_['bids']['task_label']
                     with open(jsonfile, 'w') as json_fid:
                         json.dump(data, json_fid, indent=4)
 
             # Add the EchoTime(s) used to create the difference image to the fmap json-file. NB: This assumes the magnitude series have already been parsed (i.e. their nifti's had an _e suffix) -- This is normally the case for Siemens (phase-series being saved after the magnitude series
             elif modality == 'fmap':
-                if series_['suffix'] == 'phasediff':
+                if series_['bids']['suffix'] == 'phasediff':
                     bids.printlog('Adding EchoTime1 and EchoTime2 to: ' + jsonfile, LOG)
                     with open(jsonfile, 'r') as json_fid:
                         data = json.load(json_fid)
@@ -234,10 +238,10 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     # Search for the IntendedFor images and add them to the json-files. This has been postponed untill all modalities have been processed (i.e. so that all target images are indeed on disk)
     if bidsmap['DICOM']['fmap'] is not None:
         for fieldmap in bidsmap['DICOM']['fmap']:
-            if 'IntendedFor' in fieldmap and fieldmap['IntendedFor']:
+            if 'IntendedFor' in fieldmap['bids'] and fieldmap['bids']['IntendedFor']:
                 for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bids.get_bidsname(subid, sesid, 'fmap', fieldmap, '1') + '.json').replace('_run-1_','_*')):
 
-                    intendedfor = fieldmap['IntendedFor']
+                    intendedfor = fieldmap['bids']['IntendedFor']
                     if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
                         intendedfor = intendedfor[2:-2].split('><')
                     else:
