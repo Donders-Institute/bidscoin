@@ -275,7 +275,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     dicomfile                   = bids.get_dicomfile(series)
     personals['participant_id'] = subid
     if sesid:
-        personals['session_id'] = sesid                                                     # TODO: Check if this can be in the participants.tsv file according to BIDS
+        personals['session_id'] = sesid
     personals['age']            = bids.get_dicomfield('PatientAge',    dicomfile)
     personals['sex']            = bids.get_dicomfield('PatientSex',    dicomfile)
     personals['size']           = bids.get_dicomfield('PatientSize',   dicomfile)
@@ -433,8 +433,10 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     participants_json = os.path.splitext(participants_tsv)[0] + '.json'
     if os.path.exists(participants_tsv):
         participants_table = pd.read_table(participants_tsv)
+        participants_table.set_index(['participant_id'], verify_integrity=True, inplace=True)
     else:
-        participants_table = pd.DataFrame(columns = ['participant_id'])
+        participants_table = pd.DataFrame()
+        participants_table.index.name = 'participant_id'
     if os.path.exists(participants_json):
         with open(participants_json, 'r') as json_fid:
             participants_dict = json.load(json_fid)
@@ -451,8 +453,11 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     # Loop over all subjects and sessions and convert them using the bidsmap entries
     for n, subject in enumerate(subjects, 1):
 
+        if participants and subject in list(participants_table.index):
+            print(f'\n{"-" * 30}\nSkipping subject: {subject} ({n}/{len(subjects)})')
+            continue
+
         print(f'\n{"-"*30}\nCoining subject: {subject} ({n}/{len(subjects)})')
-        if participants and subject in list(participants_table.participant_id): continue
 
         personals = dict()
         sessions  = bids.lsdirs(subject, sesprefix + '*')
@@ -488,22 +493,31 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
             if bidsmap['PlugIn']:
                 coin_plugin(session, bidsmap, bidsfolder, personals)
 
-        # Write the collected personals to the participant files
-        if personals:
-            for key in personals:
-                if key not in participants_table.columns:
-                    participants_table[key] = None
-                    participants_dict[key]  = dict(LongName     = 'Long (unabbreviated) name of the column',
-                                                   Description  = 'Description of the the column',
-                                                   Levels       = dict(Key='Value (This is for categorical variables: a dictionary of possible values (keys) and their descriptions (values))'),
-                                                   Units        = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is',
-                                                   TermURL      = 'URL pointing to a formal definition of this type of data in an ontology available on the web')
-            participants_table = participants_table.append(personals, ignore_index=True, verify_integrity=True)
-            bids.printlog('Writing subject data to: ' + participants_tsv, LOG)
-            participants_table.to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a', index=False)
-            bids.printlog('Writing subject data dictionary to: ' + participants_json, LOG)
-            with open(participants_json, 'w') as json_fid:
-                json.dump(participants_dict, json_fid, indent=4)
+        # Store the collected personals in the participant_table
+        for key in personals:
+
+            # participant_id is the index of the participants_table
+            assert 'participant_id' in personals
+            if key == 'participant_id':
+                continue
+
+            # TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
+
+            if key not in participants_dict:
+                participants_dict[key]  = dict(LongName     = 'Long (unabbreviated) name of the column',
+                                               Description  = 'Description of the the column',
+                                               Levels       = dict(Key='Value (This is for categorical variables: a dictionary of possible values (keys) and their descriptions (values))'),
+                                               Units        = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is',
+                                               TermURL      = 'URL pointing to a formal definition of this type of data in an ontology available on the web')
+            participants_table.loc[personals['participant_id'], key] = personals[key]
+
+    # Write the collected data to the participant files
+    bids.printlog('Writing subject data to: ' + participants_tsv, LOG)
+    participants_table.to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
+
+    bids.printlog('Writing subject data dictionary to: ' + participants_json, LOG)
+    with open(participants_json, 'w') as json_fid:
+        json.dump(participants_dict, json_fid, indent=4)
 
     bids.printlog('------------ FINISHED! ------------', LOG)
 
