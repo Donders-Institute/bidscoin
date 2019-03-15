@@ -345,7 +345,9 @@ def get_dicomfield(tagname: str, dicomfile: str):
 
     try:
         if dicomfile != _DICOMFILE_CACHE:
-            dicomdict        = pydicom.dcmread(dicomfile)
+            dicomdict        = pydicom.dcmread(dicomfile, force=True)
+            if len(dicomdict.items()) <= 1:
+                raise ValueError(f'Cannot read {dicomfile}')
             _DICOMDICT_CACHE = dicomdict
             _DICOMFILE_CACHE = dicomfile
         else:
