@@ -112,7 +112,12 @@ def is_dicomfile(file: str) -> bool:
     if os.path.isfile(file):
         with open(file, 'rb') as dcmfile:
             dcmfile.seek(0x80, 1)
-            return dcmfile.read(4) == b'DICM'
+            if dcmfile.read(4) == b'DICM':
+                return True
+            else:
+                import pydicom
+                dicomdict = pydicom.dcmread(file, force=True)
+                return len(dicomdict.items()) > 1      # The DICM tag may be missing for anonymized DICOM files
 
 
 def is_dicomfile_siemens(file: str) -> bool:
