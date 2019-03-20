@@ -40,7 +40,7 @@ def sortsession(sessionfolder: str, dicomfiles: list, rename: bool, nosort: bool
     """
 
     # Map all dicomfiles and move them to series folders
-    print(f'>> processing: {sessionfolder} ({len(dicomfiles)} files)')
+    print(f'>> Processing: {sessionfolder} ({len(dicomfiles)} files)')
     if not os.path.isdir(sessionfolder):
         os.makedirs(sessionfolder)
 
@@ -85,7 +85,7 @@ def sortsession(sessionfolder: str, dicomfiles: list, rename: bool, nosort: bool
             seriesdir = cleanup(f'{seriesnr:03d}-{seriesdescr}')
             if seriesdir not in seriesdirs:  # We have a new series
                 if not os.path.isdir(os.path.join(sessionfolder, seriesdir)):
-                    print('  Creating:  ' + os.path.join(sessionfolder, seriesdir))
+                    print('   Creating:  ' + os.path.join(sessionfolder, seriesdir))
                     os.makedirs(os.path.join(sessionfolder, seriesdir))
                 seriesdirs.append(seriesdir)
             pathname = os.path.join(sessionfolder, seriesdir)
