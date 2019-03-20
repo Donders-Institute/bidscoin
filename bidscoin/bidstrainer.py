@@ -9,6 +9,7 @@ import os.path
 import glob
 import shutil
 import copy
+import re
 import textwrap
 import ruamel
 from ruamel.yaml import YAML
@@ -179,7 +180,7 @@ def built_pluginmap(sample: str, bidsmap: dict) -> dict:
     return bidsmap
 
 
-def bidstrainer(bidsfolder: str, samplefolder: str='', bidsmapfile: str='bidsmap_template.yaml') -> str:
+def bidstrainer(bidsfolder: str, samplefolder: str='', bidsmapfile: str='bidsmap_template.yaml', pattern: str='.*\.(IMA|dcm)$') -> str:
     """
     Main function uses all samples in the samplefolder as training / example  data to generate a
     maximally filled-in bidsmap_sample.yaml file.
@@ -213,7 +214,8 @@ def bidstrainer(bidsfolder: str, samplefolder: str='', bidsmapfile: str='bidsmap
                 bidsmap[logic][modality] = None
 
     # Loop over all bidsmodalities and instances and built up the bidsmap entries
-    samples = glob.glob(os.path.join(samplefolder,'**'), recursive=True)
+    files   = glob.glob(os.path.join(samplefolder,'**'), recursive=True)
+    samples = [dcmfile for dcmfile in files if re.match(pattern, dcmfile)]
     for sample in samples:
 
         if not os.path.isfile(sample): continue
