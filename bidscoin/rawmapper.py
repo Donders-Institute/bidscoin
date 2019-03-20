@@ -139,8 +139,8 @@ if __name__ == "__main__":
                                             '  rawmapper.py -r /project/3022026.01/raw\n' 
                                             '  rawmapper.py /project/3022026.01/raw -d AcquisitionDate\n' 
                                             '  rawmapper.py /project/3022026.01/raw -s sub-100/ses-mri01 sub-126/ses-mri01\n'
-                                            '  rawmapper.py /project/3022026.01/raw -s sub-1*/* sub-2*/ses-mri01\n'
                                             '  rawmapper.py /project/3022026.01/raw -r -d ManufacturerModelName AcquisitionDate --dryrun\n' 
+                                            '  rawmapper.py /project/3022026.01/raw -r -s sub-1*/* sub-2*/ses-mri01 --dryrun\n'
                                             '  rawmapper.py -d EchoTime -w *fMRI* /project/3022026.01/raw\n ')
     parser.add_argument('rawfolder',         help='The source folder with the raw data in sub-#/ses-#/series organisation')
     parser.add_argument('-s','--sessions',   help='Space separated list of selected sub-#/ses-# names / folders to be processed. Otherwise all sessions in the bidsfolder will be selected', nargs='+')
