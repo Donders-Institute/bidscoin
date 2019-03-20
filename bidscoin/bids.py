@@ -116,8 +116,8 @@ def is_dicomfile(file: str) -> bool:
                 return True
             else:
                 import pydicom
-                dicomdict = pydicom.dcmread(file, force=True)
-                return len(dicomdict.items()) > 1      # The DICM tag may be missing for anonymized DICOM files
+                dicomdict = pydicom.dcmread(file, force=True)       # The DICM tag may be missing for anonymized DICOM files
+                return 'Modality' in dicomdict
 
 
 def is_dicomfile_siemens(file: str) -> bool:
@@ -350,8 +350,8 @@ def get_dicomfield(tagname: str, dicomfile: str):
 
     try:
         if dicomfile != _DICOMFILE_CACHE:
-            dicomdict        = pydicom.dcmread(dicomfile, force=True)
-            if len(dicomdict.items()) <= 1:
+            dicomdict = pydicom.dcmread(dicomfile, force=True)      # The DICM tag may be missing for anonymized DICOM files
+            if 'Modality' not in dicomdict:
                 raise ValueError(f'Cannot read {dicomfile}')
             _DICOMDICT_CACHE = dicomdict
             _DICOMFILE_CACHE = dicomfile
