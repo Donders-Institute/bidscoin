@@ -52,7 +52,7 @@ def rawmapper(rawfolder: str, outfolder: str='', sessions: tuple=(), rename: boo
         if not sessions:
             sessions = glob.glob(os.path.join(rawfolder, f'{subprefix}*'))      # Try without session-subfolders
     else:
-        sessions = [os.path.join(rawfolder, session) for session in sessions]
+        sessions = [glob.glob(os.path.join(rawfolder, session)) for session in sessions]
 
     # Loop over the selected sessions in the rawfolder
     for session in sessions:
