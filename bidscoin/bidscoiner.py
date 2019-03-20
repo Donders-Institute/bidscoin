@@ -187,6 +187,11 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
             jsonfiles = [os.path.join(bidsmodality, bidsname + '.json')]
         for jsonfile in set(jsonfiles):
 
+            # Check if dcm2niix behaved as expected
+            if not os.path.isfile(jsonfile):
+                bids.printlog(f'WARNING: Unexpected file conversion result: {jsonfile} not found', LOG)
+                continue
+
             # Add a dummy b0 bval- and bvec-file for any file without a bval/bvec file (e.g. sbref, b0 scans)
             if modality == 'dwi':
                 bvecfile = os.path.splitext(jsonfile)[0] + '.bvec'
