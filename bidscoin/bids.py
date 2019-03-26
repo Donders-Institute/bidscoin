@@ -110,6 +110,8 @@ def is_dicomfile(file: str) -> bool:
     """
 
     if os.path.isfile(file):
+        if file.startswith('.'):
+            warnings.warn(f'DICOM file is hidden: {file}')
         with open(file, 'rb') as dcmfile:
             dcmfile.seek(0x80, 1)
             if dcmfile.read(4) == b'DICM':
@@ -215,6 +217,9 @@ def get_dicomfile(folder: str) -> str:
     """
 
     for file in sorted(os.listdir(folder)):
+        if file.startswith('.'):
+            warnings.warn(f'Ignoring hidden DICOM file: {file}')
+            continue
         if is_dicomfile(os.path.join(folder, file)):
             return os.path.join(folder, file)
 
