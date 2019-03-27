@@ -157,7 +157,7 @@ DICOM:
       acq_label: <SeriesDescription>
       run_index: <<1>>
       suffix: dwi
-  - attribute: *dwiattributes
+  - attributes: *dwiattributes
     bids:
       <<: *dwibids
       suffix: sbref
