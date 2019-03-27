@@ -91,7 +91,11 @@ def sortsession(sessionfolder: str, dicomfiles: list, rename: bool, ext: str, no
             ext_ = os.path.splitext(dicomfile)[1]
         else:
             ext_ = ext
-        os.rename(dicomfile, os.path.join(pathname, os.path.splitext(filename)[0] + ext_))
+        newfilename = os.path.join(pathname, os.path.splitext(filename)[0] + ext_)
+        if os.path.isfile(newfilename):
+            warnings.warn(f'File already exists, cannot safely rename {dicomfile} -> {newfilename}')
+        else:
+            os.rename(dicomfile, newfilename)
 
 
 def sortsessions(session: str, subjectid: str='', sessionid: str='', rename: bool=False, ext: str='', nosort: bool=False, pattern: str='.*\.(IMA|dcm)$') -> None:
