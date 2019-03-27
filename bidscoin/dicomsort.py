@@ -92,7 +92,7 @@ def sortsession(sessionfolder: str, dicomfiles: list, rename: bool, ext: str, no
         else:
             newfilename = os.path.join(pathname, filename)
         if os.path.isfile(newfilename):
-            warnings.warn(f'File already exists, cannot safely rename {dicomfile} -> {newfilename}\n{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}')
+            warnings.warn(f'File already exists, cannot safely rename {dicomfile} -> {newfilename}')
         else:
             os.rename(dicomfile, newfilename)
 
