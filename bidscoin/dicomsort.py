@@ -28,13 +28,14 @@ def cleanup(name: str) -> str:
     return name
 
 
-def sortsession(sessionfolder: str, dicomfiles: list, rename: bool, nosort: bool) -> None:
+def sortsession(sessionfolder: str, dicomfiles: list, rename: bool, ext: str, nosort: bool) -> None:
     """
     Sorts dicomfiles into (3-digit) SeriesNumber-SeriesDescription subfolders (e.g. '003-T1MPRAGE')
 
     :param sessionfolder:   The name of the destination folder of the dicom files
     :param dicomfiles:      The list of dicomfiles to be sorted and/or renamed
     :param rename:          Boolean to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme
+    :param ext:             The file extension after sorting (empty value keeps original file extension)
     :param nosort:          Boolean to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)
     :return:                Nothing
     """
@@ -66,16 +67,13 @@ def sortsession(sessionfolder: str, dicomfiles: list, rename: bool, nosort: bool
             patientname    = bids.get_dicomfield('PatientName', dicomfile)
             if not patientname:
                 patientname = bids.get_dicomfield('PatientsName', dicomfile)        # This Attribute was/is sometimes called PatientsName?
-            ext = os.path.splitext(dicomfile)[1]
-            if not ext:
-                ext = '.dcm'
 
         # Move and/or rename the dicomfile in(to) the (series sub)folder
         if rename and not (patientname and seriesnr and seriesdescr and acquisitionnr and instancenr):
             warnings.warn(f'Missing one or more crucial DICOM-fields, cannot safely rename {dicomfile}\npatientname = {patientname}\nseriesnumber = {seriesnr}\nseriesdescription = {seriesdescr}\nacquisitionnr = {acquisitionnr}\ninstancenr = {instancenr}')
             filename = os.path.basename(dicomfile)
         elif rename:
-            filename = cleanup(f'{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}')
+            filename = cleanup(f'{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}')
         else:
             filename = os.path.basename(dicomfile)
         if nosort:
@@ -89,16 +87,21 @@ def sortsession(sessionfolder: str, dicomfiles: list, rename: bool, nosort: bool
                     os.makedirs(os.path.join(sessionfolder, seriesdir))
                 seriesdirs.append(seriesdir)
             pathname = os.path.join(sessionfolder, seriesdir)
-        os.rename(dicomfile, os.path.join(pathname, filename))
+        if not ext:
+            ext_ = os.path.splitext(dicomfile)[1]
+        else:
+            ext_ = ext
+        os.rename(dicomfile, os.path.join(pathname, os.path.splitext(filename)[0] + ext_))
 
 
-def sortsessions(session: str, subjectid: str='', sessionid: str='', rename: bool=False, nosort: bool=False, pattern: str='.*\.(IMA|dcm)$') -> None:
+def sortsessions(session: str, subjectid: str='', sessionid: str='', rename: bool=False, ext: str='', nosort: bool=False, pattern: str='.*\.(IMA|dcm)$') -> None:
     """
 
     :param session:     The root folder containing the source [sub/][ses/]dicomfiles or the DICOMDIR file
     :param subjectid:   The prefix of the sub folders in session
     :param sessionid:   The prefix of the ses folders in sub folder
     :param rename:      Boolean to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme
+    :param ext:         The file extension after sorting (empty value keeps original file extension)
     :param nosort:      Boolean to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)
     :param pattern:     The regular expression pattern used in re.match() to select the dicom files
     :return:            Nothing
@@ -118,7 +121,7 @@ def sortsessions(session: str, subjectid: str='', sessionid: str='', rename: boo
 
             for sessionfolder in sessionfolders:
                 dicomfiles = [os.path.join(sessionfolder, dcmfile) for dcmfile in os.listdir(sessionfolder) if re.match(pattern, dcmfile)]
-                sortsession(sessionfolder, dicomfiles, rename, nosort)
+                sortsession(sessionfolder, dicomfiles, rename, ext, nosort)
 
     else:
 
@@ -140,13 +143,13 @@ def sortsessions(session: str, subjectid: str='', sessionid: str='', rename: boo
                     dicomfiles = []
                     for series in study.children:
                         dicomfiles.extend([os.path.join(sessionfolder, *image.ReferencedFileID) for image in series.children])
-                    sortsession(sessionfolder, dicomfiles, rename, nosort)
+                    sortsession(sessionfolder, dicomfiles, rename, ext, nosort)
 
         else:
 
             sessionfolder = session
             dicomfiles    = [os.path.join(sessionfolder,dcmfile) for dcmfile in os.listdir(sessionfolder) if re.match(pattern, dcmfile)]
-            sortsession(sessionfolder, dicomfiles, rename, nosort)
+            sortsession(sessionfolder, dicomfiles, rename, ext, nosort)
 
 
 # Shell usage
@@ -161,15 +164,16 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
                                      description=textwrap.dedent(__doc__),
-                                     epilog='examples:\n' 
-                                            '  dicomsort.py /project/3022026.01/raw\n' 
-                                            '  dicomsort.py /project/3022026.01/raw --subjectid sub\n' 
+                                     epilog='examples:\n'
+                                            '  dicomsort.py /project/3022026.01/raw\n'
+                                            '  dicomsort.py /project/3022026.01/raw --subjectid sub\n'
                                             '  dicomsort.py /project/3022026.01/raw --subjectid sub-01 --sessionid ses\n'
                                             '  dicomsort.py /project/3022026.01/raw/sub-011/ses-mri01/DICOMDIR\n ')
     parser.add_argument('dicomsource',    help='The name of the root folder containing the dicomsource/[sub/][ses/]dicomfiles or the name of the (single session/study) DICOMDIR file')
     parser.add_argument('--subjectid',    help='The prefix string for recursive searching in dicomsource/subject subfolders (e.g. "sub")')
     parser.add_argument('--sessionid',    help='The prefix string for recursive searching in dicomsource/subject/session subfolders (e.g. "ses")')
     parser.add_argument('-r','--rename',  help='Flag to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme', action='store_true')
+    parser.add_argument('-e','--ext',     help='The file extension after sorting (empty value keeps the original file extension)', default='')
     parser.add_argument('-n','--nosort',  help='Flag to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)', action='store_true')
     parser.add_argument('-p','--pattern', help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')
     args = parser.parse_args()
@@ -178,5 +182,6 @@ if __name__ == "__main__":
                  subjectid  = args.subjectid,
                  sessionid  = args.sessionid,
                  rename     = args.rename,
+                 ext        = args.ext,
                  nosort     = args.nosort,
                  pattern    = args.pattern)
