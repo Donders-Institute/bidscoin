@@ -73,7 +73,7 @@ def sortsession(sessionfolder: str, dicomfiles: list, rename: bool, ext: str, no
             warnings.warn(f'Missing one or more crucial DICOM-fields, cannot safely rename {dicomfile}\npatientname = {patientname}\nseriesnumber = {seriesnr}\nseriesdescription = {seriesdescr}\nacquisitionnr = {acquisitionnr}\ninstancenr = {instancenr}')
             filename = os.path.basename(dicomfile)
         elif rename:
-            filename = cleanup(f'{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}')
+            filename = cleanup(f'{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}')
         else:
             filename = os.path.basename(dicomfile)
         if nosort:
@@ -87,11 +87,10 @@ def sortsession(sessionfolder: str, dicomfiles: list, rename: bool, ext: str, no
                     os.makedirs(os.path.join(sessionfolder, seriesdir))
                 seriesdirs.append(seriesdir)
             pathname = os.path.join(sessionfolder, seriesdir)
-        if not ext:
-            ext_ = os.path.splitext(dicomfile)[1]
+        if ext:
+            newfilename = os.path.join(pathname, os.path.splitext(filename)[0] + ext)
         else:
-            ext_ = ext
-        newfilename = os.path.join(pathname, os.path.splitext(filename)[0] + ext_)
+            newfilename = os.path.join(pathname, filename)
         if os.path.isfile(newfilename):
             warnings.warn(f'File already exists, cannot safely rename {dicomfile} -> {newfilename}\n{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}')
         else:
