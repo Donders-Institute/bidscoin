@@ -127,7 +127,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
 
         # Rename all files ending with _c%d, _e%d and _ph (and any combination of these): These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
         jsonfiles = []                                                                                          # Collect the associated json-files (for updating them later) -- possibly > 1
-        for suffix in ('_c', '_e', '_ph'):
+        for suffix in ('_c', '_e', '_ph', '_i'):
             for filename in sorted(glob.glob(os.path.join(bidsmodality, bidsname + suffix + '*'))):
                 basepath, ext1  = os.path.splitext(filename)
                 basepath, ext2  = os.path.splitext(basepath)                                                    # Account for .nii.gz files
