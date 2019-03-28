@@ -67,7 +67,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     os.makedirs(bidsses, exist_ok=True)
     scans_tsv = os.path.join(bidsses, f'{subid}{bids.add_prefix("_",sesid)}_scans.tsv')
     if os.path.exists(scans_tsv):
-        scans_table = pd.read_table(scans_tsv, index_col='filename')
+        scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
     else:
         scans_table = pd.DataFrame(columns=['acq_time'], dtype='str')
         scans_table.index.name = 'filename'
@@ -437,7 +437,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     participants_tsv  = os.path.join(bidsfolder, 'participants.tsv')
     participants_json = os.path.splitext(participants_tsv)[0] + '.json'
     if os.path.exists(participants_tsv):
-        participants_table = pd.read_table(participants_tsv)
+        participants_table = pd.read_csv(participants_tsv, sep='\t')
         participants_table.set_index(['participant_id'], verify_integrity=True, inplace=True)
     else:
         participants_table = pd.DataFrame()
