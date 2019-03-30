@@ -137,7 +137,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first(?) coil/echo image -> add it when we encounter a **_e2/_c2 file
                 if suffix in ('_c','_e') and int(index)==2 and basepath.rsplit('_',1)[1] != 'magnitude1':       # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handled below)
                     filename_ce = basepath + ext2 + ext1                                                        # The file without the _c1/_e1 suffix
-                    if suffix=='_e':
+                    if suffix=='_e' and bids.set_bidslabel(basepath, 'echo'):
                         newbasepath_ce = bids.set_bidslabel(basepath, 'echo', '1')
                     else:
                         newbasepath_ce = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + '1'.zfill(len(index)))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
@@ -244,7 +244,9 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     if bidsmap['DICOM']['fmap'] is not None:
         for fieldmap in bidsmap['DICOM']['fmap']:
             if 'IntendedFor' in fieldmap['bids'] and fieldmap['bids']['IntendedFor']:
-                for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bids.get_bidsname(subid, sesid, 'fmap', fieldmap, '1') + '.json').replace('_run-1_','_*')):
+                bidsname = bids.get_bidsname(subid, sesid, 'fmap', fieldmap, '1')
+                acqlabel = bids.set_bidslabel(bidsname, 'acq')
+                for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_','_run-[0-9]*_').replace(acqlabel,acqlabel+'[CE][0-9]*') + '.json')):     # Account for multiple runs and dcm2niix suffixes inserted into the acquisition label
 
                     intendedfor = fieldmap['bids']['IntendedFor']
                     if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
