@@ -117,7 +117,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
 
         # Replace uncropped output image with the cropped one
         if '-x y' in bidsmap['Options']['dcm2niix']['args']:
-            for filename in sorted(glob.glob(os.path.join(bidsmodality, bidsname + '*_Crop_*'))):
+            for filename in sorted(glob.glob(os.path.join(bidsmodality, bidsname + '*_Crop_*'))):              # e.g. *_Crop_1.nii.gz
                 basepath, ext1 = os.path.splitext(filename)
                 basepath, ext2 = os.path.splitext(basepath)                                                    # Account for .nii.gz files
                 basepath       = basepath.rsplit('_Crop_',1)[0]
@@ -128,7 +128,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         # Rename all files ending with _c%d, _e%d and _ph (and any combination of these): These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
         jsonfiles = []                                                                                          # Collect the associated json-files (for updating them later) -- possibly > 1
         for suffix in ('_c', '_e', '_ph', '_i'):
-            for filename in sorted(glob.glob(os.path.join(bidsmodality, bidsname + suffix + '*'))):
+            for filename in sorted(glob.glob(os.path.join(bidsmodality, bidsname + suffix + '[0-9]*'))):
                 basepath, ext1  = os.path.splitext(filename)
                 basepath, ext2  = os.path.splitext(basepath)                                                    # Account for .nii.gz files
                 basepath, index = basepath.rsplit(suffix,1)
