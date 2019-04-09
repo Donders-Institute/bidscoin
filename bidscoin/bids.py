@@ -38,7 +38,7 @@ def version() -> float:
     :return:    The BIDSCOIN version number
     """
 
-    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),'version.txt')) as fid:
+    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'version.txt')) as fid:
         version = fid.read().strip()
 
     return float(version)
@@ -51,7 +51,7 @@ def bidsversion() -> str:
     :return:    The BIDS version number
     """
 
-    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),'bidsversion.txt')) as fid:
+    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'bidsversion.txt')) as fid:
         version = fid.read().strip()
 
     return str(version)

@@ -4,3 +4,8 @@
 dist
 build
 bidscoin.egg-info
+.coverage
+.vscode
+venv
+.eggs
+htmlcov
