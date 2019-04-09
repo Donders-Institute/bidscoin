@@ -1,5 +1,8 @@
 # BIDScoin
 
+[![PyPI version](https://badge.fury.io/py/bidscoin.svg)](https://badge.fury.io/py/bidscoin)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/bidscoin.svg)
+
 - [The BIDScoin workflow](#the-bidscoin-workflow)
 - [The BIDScoin tools](#the-bidscoin-tools)
   * [Running the bidstrainer](#running-the-bidstrainer)
