@@ -9,3 +9,4 @@ bidscoin.egg-info
 venv
 .eggs
 htmlcov
+__pycache__
