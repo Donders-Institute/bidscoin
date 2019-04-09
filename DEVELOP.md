@@ -1,4 +1,4 @@
-# BIDScoin installation instructions
+# BIDScoin developer instructions
 
 # Obtain the source code
 
