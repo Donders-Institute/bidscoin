@@ -16,13 +16,9 @@ import inspect
 import datetime
 import textwrap
 import re
-import logging
 import ruamel
 from ruamel.yaml import YAML
 yaml = YAML()
-
-
-module_logger = logging.getLogger('bids')
 
 
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh', 'pet')
@@ -256,6 +252,7 @@ def get_heuristics(yamlfile, folder, logger):
 
     :param yamlfile:    The full pathname of the bidsmap yaml-file
     :param folder:      Searches in the ./heuristics folder if folder=None
+    :logger:            Logger object
     :return:            Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     """
 
