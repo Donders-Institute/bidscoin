@@ -20,6 +20,7 @@ import ruamel
 from ruamel.yaml import YAML
 yaml = YAML()
 
+
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh', 'pet')
 unknownmodality = 'extra_data'
 bidslabels      = ('acq_label', 'modality_label', 'ce_label', 'rec_label', 'task_label', 'echo_index', 'dir_label', 'suffix')   # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
@@ -55,36 +56,6 @@ def bidsversion() -> str:
         version = fid.read().strip()
 
     return str(version)
-
-
-def printlog(message: str, logfile: str='') -> None:
-    """
-    Print an annotated log-message to screen and optionally to a logfile
-
-    :param message: The output text
-    :param logfile: The full pathname of the logfile
-    :return:        Nothing
-    """
-
-    # Get the name of the calling function
-    frame  = inspect.stack()[1]
-    module = inspect.getmodule(frame[0])
-    if module:
-        caller = os.path.basename(module.__file__)
-    else:
-        caller = 'plugin'       # TODO: Figure out why getmodule doesn't work for plugins
-
-    # Print the logmessage
-    logmessage = '\n{time} - {caller}:\n{message}\n'.format(
-        time    = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        caller  = caller,
-        message = textwrap.indent(message, '\t'))
-    print(logmessage)
-
-    # Open or create a log-file and write the message
-    if logfile:
-        with open(logfile, 'a') as log_fid:
-            log_fid.write(logmessage)
 
 
 def lsdirs(folder: str, wildcard: str='*'):
@@ -275,13 +246,13 @@ def get_niftifile(folder: str) -> str:
     return None
 
 
-def get_heuristics(yamlfile: str, folder: str='', logfile: str='') -> dict:
+def get_heuristics(yamlfile, folder, logger):
     """
     Read the heuristics from the bidsmap yaml-file
 
     :param yamlfile:    The full pathname of the bidsmap yaml-file
     :param folder:      Searches in the ./heuristics folder if folder=None
-    :param logfile:     The full pathname of the logfile
+    :logger:            Logger object
     :return:            Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     """
 
@@ -294,7 +265,7 @@ def get_heuristics(yamlfile: str, folder: str='', logfile: str='') -> dict:
 
     if os.path.basename(yamlfile) == yamlfile:      # Get the full paths to the bidsmap yaml-file
         yamlfile = os.path.join(folder, yamlfile)
-        printlog('Using: ' + os.path.abspath(yamlfile), logfile)
+        logger.info('Using: ' + os.path.abspath(yamlfile))
 
     yamlfile = os.path.abspath(os.path.expanduser(yamlfile))
 
@@ -306,7 +277,7 @@ def get_heuristics(yamlfile: str, folder: str='', logfile: str='') -> dict:
     if 'version' not in heuristics['Options']:
         heuristics['Options']['version'] = 'Unknown'
     if heuristics['Options']['version'] != version():
-        printlog('WARNING: BIDScoiner version conflict: {} was created using version {}, but this is version {}'.format(yamlfile, heuristics['Options']['version'], version()), logfile)
+        logger.warning('BIDScoiner version conflict: {} was created using version {}, but this is version {}'.format(yamlfile, heuristics['Options']['version'], version()))
 
     return heuristics
 
