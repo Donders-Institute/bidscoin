@@ -31,7 +31,10 @@ def derive_unknown(contents):
     for item in contents.get('extra_data', []):
         provenance = item.get('provenance', None)
         if provenance:
-            unknown.append(provenance)
+            unknown.append({
+                "provenance_path": os.path.dirname(provenance),
+                "provenance_file": os.path.basename(provenance) 
+            })
     return unknown
 
 
