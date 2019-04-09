@@ -2,7 +2,6 @@
 # python=3
 # dcm2niix. For more information, see ./docs/installation.md and ./heuristics/bidsmap_template.yaml
 astroid==2.2.5
-bidscoin==1.6
 Click==7.0
 colorama==0.4.1
 Flask==1.0.2
