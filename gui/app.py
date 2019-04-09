@@ -1,6 +1,5 @@
 import os
 from flask import Flask, render_template, jsonify
-from flask_cors import CORS
 
 # configuration
 DEBUG = True
@@ -9,8 +8,6 @@ DEBUG = True
 app = Flask(__name__)
 app.config.from_object(__name__)
 
-# enable CORS
-CORS(app)
 
 
 @app.route('/ping', methods=['GET'])
