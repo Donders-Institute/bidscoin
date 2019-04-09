@@ -11,6 +11,7 @@ import shutil
 import copy
 import re
 import textwrap
+import logging
 import ruamel
 from ruamel.yaml import YAML
 yaml = YAML()
@@ -18,6 +19,9 @@ try:
     from bidscoin import bids
 except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
+
+
+logger = logging.getLogger('bidscoin')
 
 
 def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict) -> dict:
@@ -204,7 +208,7 @@ def bidstrainer(bidsfolder: str, samplefolder: str='', bidsmapfile: str='bidsmap
     samplefolder = os.path.abspath(os.path.expanduser(samplefolder))
 
     # Get the heuristics for creating the bidsmap
-    heuristics = bids.get_heuristics(bidsmapfile)
+    heuristics = bids.get_heuristics(bidsmapfile, None, logger)
 
     # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     bidsmap = copy.deepcopy(heuristics)
