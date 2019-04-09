@@ -70,6 +70,7 @@ def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict) -> dict:
             # series_['attributes'] = dict()                                                # The CommentedMap API below is not guaranteed for the future so keep this line as an alternative
             series_['attributes'] = ruamel.yaml.comments.CommentedMap()                     # Clear the yaml objects that were copied over
             series_.yaml_add_eol_comment('From: ' + dicomfile, key='attributes', column=50) # Add provenance data
+            series_['provenance'] = dicomfile
             for attrkey in series['attributes']:
                 series_['attributes'][attrkey] = bids.get_dicomfield(attrkey, dicomfile)
 
