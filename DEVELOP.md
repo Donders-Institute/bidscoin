@@ -50,3 +50,12 @@ Next, install BIDScoin with:
 ```console
 $ python setup.py install
 ```
+or
+```
+$ pip install -e .
+```
+
+```
+$ cd gui
+$ python app.py
+```
