@@ -19,6 +19,11 @@ To run the tests and obtain the test coverage report:
 $ python setup.py test
 ```
 
+To check for errors:
+```console
+$ pylint -E bidscoin
+```
+
 # Install the package
 
 Create a virtual environment
