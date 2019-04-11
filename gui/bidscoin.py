@@ -5,7 +5,7 @@ import sys
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QTreeView, QVBoxLayout, QLabel
 from PyQt5.Qsci import QsciScintilla, QsciLexerYAML
 
 
@@ -29,15 +29,44 @@ class Ui_MainWindow(object):
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
         self.centralwidget.setObjectName("centralwidget")
+
         self.bidscoin = QtWidgets.QTabWidget(self.centralwidget)
         self.bidscoin.setGeometry(QtCore.QRect(0, 0, 1021, 541))
         self.bidscoin.setTabPosition(QtWidgets.QTabWidget.North)
         self.bidscoin.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.bidscoin.setObjectName("bidscoin")
-        self.bidsprepper = QtWidgets.QWidget()
-        self.bidsprepper.setObjectName("bidsprepper")
 
-        self.plainTextEdit = QsciScintilla(self.bidsprepper)
+        self.tab1 = QtWidgets.QWidget()
+        self.tab1.layout = QVBoxLayout(self.centralwidget)
+        self.label = QLabel()
+        self.label.setText("Raw folder: M:\\bidscoin\\raw")
+        self.model = QFileSystemModel()
+        self.model.setRootPath('')
+        self.tree = QTreeView()
+        self.tree.setModel(self.model)
+        self.tree.setAnimated(False)
+        self.tree.setIndentation(20)
+        self.tree.setSortingEnabled(True)
+        self.tree.setRootIndex(self.model.index("M:\\bidscoin\\raw"))
+        self.tab1.layout.addWidget(self.label)
+        self.tab1.layout.addWidget(self.tree)
+        self.filebrowser = QtWidgets.QWidget()
+        self.filebrowser.setLayout(self.tab1.layout)
+        self.filebrowser.setObjectName("filebrowser")
+        self.bidscoin.addTab(self.filebrowser, "")
+
+        self.bidstrainer = QtWidgets.QWidget()
+        self.bidstrainer.setObjectName("bidstrainer")
+        self.bidscoin.addTab(self.bidstrainer, "")
+
+        self.bidsmapper = QtWidgets.QWidget()
+        self.bidsmapper.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
+        self.bidsmapper.setObjectName("bidsmapper")
+        self.bidscoin.addTab(self.bidsmapper, "")
+
+        self.bidsmap = QtWidgets.QWidget()
+        self.bidsmap.setObjectName("bidsmap")
+        self.plainTextEdit = QsciScintilla(self.bidsmap)
         self.__lexer = QsciLexerYAML()
         self.plainTextEdit.setLexer(self.__lexer)
         self.plainTextEdit.setUtf8(True)  # Set encoding to UTF-8
@@ -47,50 +76,15 @@ class Ui_MainWindow(object):
         self.__lexer.setFont(self.__myFont)
         self.plainTextEdit.setGeometry(QtCore.QRect(20, 60, 831, 441))
         self.plainTextEdit.setObjectName("syntaxHighlighter")
-
-        self.pushButton = QtWidgets.QPushButton(self.bidsprepper)
+        self.pushButton = QtWidgets.QPushButton(self.bidsmap)
         self.pushButton.setGeometry(QtCore.QRect(20, 20, 93, 28))
         self.pushButton.setObjectName("pushButton")
-        self.bidscoin.addTab(self.bidsprepper, "")
-        self.bidstrainer = QtWidgets.QWidget()
-        self.bidstrainer.setObjectName("bidstrainer")
-        self.label = QtWidgets.QLabel(self.bidstrainer)
-        self.label.setGeometry(QtCore.QRect(200, 20, 55, 16))
-        self.label.setObjectName("label")
-        self.label_2 = QtWidgets.QLabel(self.bidstrainer)
-        self.label_2.setGeometry(QtCore.QRect(730, 30, 55, 16))
-        self.label_2.setObjectName("label_2")
-        self.widget = QtWidgets.QWidget(self.bidstrainer)
-        self.widget.setGeometry(QtCore.QRect(30, 60, 941, 451))
-        self.widget.setObjectName("widget")
-        self.horizontalLayout = QtWidgets.QHBoxLayout(self.widget)
-        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.treeWidget = QtWidgets.QTreeWidget(self.widget)
-        self.treeWidget.setObjectName("treeWidget")
-        self.treeWidget.headerItem().setText(0, "1")
-        self.horizontalLayout.addWidget(self.treeWidget)
-        self.pushButton_2 = QtWidgets.QPushButton(self.widget)
-        self.pushButton_2.setObjectName("pushButton_2")
-        self.horizontalLayout.addWidget(self.pushButton_2)
-        self.treeWidget_2 = QtWidgets.QTreeWidget(self.widget)
-        self.treeWidget_2.setObjectName("treeWidget_2")
-        self.treeWidget_2.headerItem().setText(0, "1")
-        self.horizontalLayout.addWidget(self.treeWidget_2)
-        self.bidscoin.addTab(self.bidstrainer, "")
-        self.bidsmapper = QtWidgets.QWidget()
-        self.bidsmapper.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
-        self.bidsmapper.setObjectName("bidsmapper")
-        self.pushButton_3 = QtWidgets.QPushButton(self.bidsmapper)
-        self.pushButton_3.setGeometry(QtCore.QRect(440, 220, 93, 28))
-        self.pushButton_3.setObjectName("pushButton_3")
-        self.bidscoin.addTab(self.bidsmapper, "")
+        self.bidscoin.addTab(self.bidsmap, "")
+
         self.bidscoiner = QtWidgets.QWidget()
         self.bidscoiner.setObjectName("bidscoiner")
-        self.pushButton_4 = QtWidgets.QPushButton(self.bidscoiner)
-        self.pushButton_4.setGeometry(QtCore.QRect(470, 230, 93, 28))
-        self.pushButton_4.setObjectName("pushButton_4")
         self.bidscoin.addTab(self.bidscoiner, "")
+
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 997, 26))
@@ -119,30 +113,26 @@ class Ui_MainWindow(object):
         self.bidscoin.setCurrentIndex(1)
         self.actionExit.triggered.connect(MainWindow.close)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-        MainWindow.setTabOrder(self.bidscoin, self.pushButton)
-        MainWindow.setTabOrder(self.pushButton, self.plainTextEdit)
-        MainWindow.setTabOrder(self.plainTextEdit, self.treeWidget_2)
-        MainWindow.setTabOrder(self.treeWidget_2, self.pushButton_2)
-        MainWindow.setTabOrder(self.pushButton_2, self.treeWidget)
-        MainWindow.setTabOrder(self.treeWidget, self.pushButton_3)
-        MainWindow.setTabOrder(self.pushButton_3, self.pushButton_4)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "BIDScoin"))
         self.bidscoin.setToolTip(_translate("MainWindow", "<html><head/><body><p>bidscoiner</p></body></html>"))
         self.plainTextEdit.setText(_translate("MainWindow", example_yaml))
-        self.pushButton.setText(_translate("MainWindow", "Save"))
-        self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidsprepper), _translate("MainWindow", "BIDSprepper"))
-        self.label.setText(_translate("MainWindow", "Source"))
-        self.label_2.setText(_translate("MainWindow", "Target"))
-        self.pushButton_2.setText(_translate("MainWindow", "=>"))
+
+
+        self.bidscoin.setTabText(self.bidscoin.indexOf(self.filebrowser), _translate("MainWindow", "Filebrowser"))
+
         self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidstrainer), _translate("MainWindow", "BIDStrainer"))
         self.bidsmapper.setToolTip(_translate("MainWindow", "bidsmapper"))
-        self.pushButton_3.setText(_translate("MainWindow", "Map"))
+
         self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidsmapper), _translate("MainWindow", "BIDSmapper"))
-        self.pushButton_4.setText(_translate("MainWindow", "Coin"))
+
+        self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidsmap), _translate("MainWindow", "BIDSmap"))
+        self.pushButton.setText(_translate("MainWindow", "Save"))
+
         self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidscoiner), _translate("MainWindow", "BIDScoiner"))
+
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
         self.statusbar.setStatusTip(_translate("MainWindow", "Text in statusbar"))
