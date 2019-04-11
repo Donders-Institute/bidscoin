@@ -2,10 +2,11 @@
 
 import os
 import sys
+import ruamel.yaml as yaml
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QTreeView, QVBoxLayout, QLabel, QPushButton, QDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QTreeView, QVBoxLayout, QLabel, QPushButton, QDialog, QPlainTextEdit
 from PyQt5.Qsci import QsciScintilla, QsciLexerYAML
 
 
@@ -18,9 +19,30 @@ def read_yaml():
     return contents
 
 
+def derive_list_unknowns(example_yaml):
+    """Derive the list of unknown files. """
+    list_unknown = []
+
+    contents = {}
+    try:
+        contents = yaml.safe_load(example_yaml)
+    except yaml.YAMLError as exc:
+        raise InvalidUsage('Error: %s' % exc, status_code=410)
+
+    contents = contents.get('DICOM', {})
+    for item in contents.get('extra_data', []):
+        provenance = item.get('provenance', None)
+        if provenance:
+            list_unknown.append({
+                "provenance_path": os.path.dirname(provenance),
+                "provenance_file": os.path.basename(provenance)
+            })
+    return list_unknown
+
+
 class Ui_MainWindow(object):
 
-    def setupUi(self, MainWindow, example_yaml):
+    def setupUi(self, MainWindow, example_yaml, list_unknowns):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1024, 580)
         icon = QtGui.QIcon()
@@ -55,14 +77,21 @@ class Ui_MainWindow(object):
         self.filebrowser.setObjectName("filebrowser")
         self.bidscoin.addTab(self.filebrowser, "")
 
+        self.tab2 = QtWidgets.QWidget()
+        self.tab2.layout = QVBoxLayout(self.centralwidget)
+        self.labelBidstrainer = QLabel()
+        self.labelBidstrainer.setText("Action needed:")
+        self.unknownsText = QPlainTextEdit()
+        self.mapButton = QtWidgets.QPushButton()
+        self.mapButton.setGeometry(QtCore.QRect(20, 20, 93, 28))
+        self.mapButton.setObjectName("mapButton")
+        self.tab2.layout.addWidget(self.mapButton)
+        self.tab2.layout.addWidget(self.labelBidstrainer)
+        self.tab2.layout.addWidget(self.unknownsText)
         self.bidstrainer = QtWidgets.QWidget()
         self.bidstrainer.setObjectName("bidstrainer")
+        self.bidstrainer.setLayout(self.tab2.layout)
         self.bidscoin.addTab(self.bidstrainer, "")
-
-        self.bidsmapper = QtWidgets.QWidget()
-        self.bidsmapper.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
-        self.bidsmapper.setObjectName("bidsmapper")
-        self.bidscoin.addTab(self.bidsmapper, "")
 
         self.bidsmap = QtWidgets.QWidget()
         self.bidsmap.setObjectName("bidsmap")
@@ -83,6 +112,9 @@ class Ui_MainWindow(object):
 
         self.bidscoiner = QtWidgets.QWidget()
         self.bidscoiner.setObjectName("bidscoiner")
+        self.convertButton = QtWidgets.QPushButton(self.bidscoiner)
+        self.convertButton.setGeometry(QtCore.QRect(20, 20, 93, 28))
+        self.convertButton.setObjectName("convertButton")
         self.bidscoin.addTab(self.bidscoiner, "")
 
         MainWindow.setCentralWidget(self.centralwidget)
@@ -110,37 +142,37 @@ class Ui_MainWindow(object):
         self.actionAbout.setObjectName("actionAbout")
         self.actionAbout.triggered.connect(self.showAbout)
 
-
-
         self.menuFile.addAction(self.actionExit)
         self.menuHelp.addAction(self.actionAbout)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
 
-        self.retranslateUi(MainWindow)
+        self.retranslateUi(MainWindow, example_yaml, list_unknowns)
         self.bidscoin.setCurrentIndex(1)
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
 
-    def retranslateUi(self, MainWindow):
+    def retranslateUi(self, MainWindow, example_yaml, list_unknowns):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "BIDScoin"))
         self.bidscoin.setToolTip(_translate("MainWindow", "<html><head/><body><p>bidscoiner</p></body></html>"))
+
         self.plainTextEdit.setText(_translate("MainWindow", example_yaml))
 
+        unknowns = "\n".join([x["provenance_file"] for x in list_unknowns])
+        self.unknownsText.setPlainText(_translate("MainWindow", unknowns))
 
         self.bidscoin.setTabText(self.bidscoin.indexOf(self.filebrowser), _translate("MainWindow", "Filebrowser"))
 
         self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidstrainer), _translate("MainWindow", "BIDStrainer"))
-        self.bidsmapper.setToolTip(_translate("MainWindow", "bidsmapper"))
-
-        self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidsmapper), _translate("MainWindow", "BIDSmapper"))
+        self.mapButton.setText(_translate("MainWindow", "Commit changes"))
 
         self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidsmap), _translate("MainWindow", "BIDSmap"))
         self.pushButton.setText(_translate("MainWindow", "Save"))
 
         self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidscoiner), _translate("MainWindow", "BIDScoiner"))
+        self.convertButton.setText(_translate("MainWindow", "Convert"))
 
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
@@ -171,11 +203,14 @@ class AboutDialog(QDialog):
         self.pushButton.clicked.connect(self.close)
 
 
+
 if __name__ == "__main__":
     example_yaml = read_yaml()
+    list_unknowns = derive_list_unknowns(example_yaml)
+
     app = QApplication(sys.argv)
     mainwin = QMainWindow()
     gui = Ui_MainWindow()
-    gui.setupUi(mainwin, example_yaml)
+    gui.setupUi(mainwin, example_yaml, list_unknowns)
     mainwin.show()
     sys.exit(app.exec_())
