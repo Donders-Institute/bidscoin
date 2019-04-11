@@ -1,0 +1,763 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>997</width>
+    <height>597</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>BIDScoin</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>brain.ico</normaloff>brain.ico</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="locale">
+    <locale language="English" country="UnitedStates"/>
+   </property>
+   <widget class="QTabWidget" name="bidscoin">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>1021</width>
+      <height>541</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;bidscoiner&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="tabPosition">
+     <enum>QTabWidget::North</enum>
+    </property>
+    <property name="tabShape">
+     <enum>QTabWidget::Rounded</enum>
+    </property>
+    <property name="currentIndex">
+     <number>1</number>
+    </property>
+    <widget class="QWidget" name="bidsprepper">
+     <attribute name="title">
+      <string>BIDSprepper</string>
+     </attribute>
+     <widget class="QPlainTextEdit" name="plainTextEdit">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>60</y>
+        <width>831</width>
+        <height>441</height>
+       </rect>
+      </property>
+      <property name="plainText">
+       <string># --------------------------------------------------------------------------------
+# This is a bidsmap YAML file with the key-value mappings for the different BIDS
+# modalities (anat, func, dwi, etc). The modality attributes are the keys that map
+# onto the BIDS labels. The bidsmap data-structure should be 5 levels deep:
+# dict &gt; dict &gt; list &gt; dict &gt; dict
+#
+# NB:
+# 1) Edit the bidsmap file to your needs before feeding it to bidscoiner.py
+# 2) (Institute) users may create their own bidsmap_[template].yaml or
+#    bidsmap_[sample].yaml file
+#
+# For more information, see:
+# https://github.com/Donders-Institute/bidscoin
+# https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html
+# --------------------------------------------------------------------------------
+
+
+Options:
+# --------------------------------------------------------------------------------
+# General options
+# --------------------------------------------------------------------------------
+  version: 1.6                    # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
+  dcm2niix:                       # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
+    path: module add dcm2niix;    # Command to set the path to dcm2niix (note the semi-colon), e.g. module add dcm2niix/1.0.20180622; or PATH=/opt/dcm2niix/bin:$PATH; or /opt/dcm2niix/bin/ or '&quot;C:\Program Files\dcm2niix\&quot;' (note the quotes to deal with the whitespace)
+    args: -b y -z y -i n          # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
+
+
+DICOM:
+# --------------------------------------------------------------------------------
+# DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
+  participant_label: ~            # A &lt;&lt;DICOM attribute&gt;&gt; that is used as participant_label instead of the subject-label from the sourcefolder
+  session_label: ~                # A &lt;&lt;DICOM attribute&gt;&gt; that is used as session_label instead of the session-label from the sourcefolder
+  anat:       # ----------------------- All anatomical series --------------------
+  - attributes: &amp;anatattributes
+      SeriesDescription: ~
+      SequenceVariant: ~
+      SequenceName: ~
+      ScanningSequence: ~
+      MRAcquisitionType: ~
+      FlipAngle: ~
+      EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
+      ImageType: ~
+      ProtocolName: ~
+      PhaseEncodingDirection: ~
+    bids: &amp;anatbids
+      acq_label: &lt;SeriesDescription&gt;
+      rec_label: ~
+      run_index: &lt;&lt;1&gt;&gt;
+      mod_label: ~
+      modality_label: T1w
+      ce_label: ~
+  - attributes: *anatattributes
+    bids:
+      &lt;&lt;: *anatbids
+      modality_label: T2w
+  - attributes: *anatattributes
+    bids:
+      &lt;&lt;: *anatbids
+      modality_label: T1rho
+  - attributes: *anatattributes
+    bids:
+      &lt;&lt;: *anatbids
+      modality_label: T1map
+  - attributes: *anatattributes
+    bids:
+      &lt;&lt;: *anatbids
+      modality_label: T2map
+  - attributes: *anatattributes
+    bids:
+      &lt;&lt;: *anatbids
+      modality_label: T2star
+  - attributes: *anatattributes
+    bids:
+      &lt;&lt;: *anatbids
+      modality_label: FLAIR
+  - attributes: *anatattributes
+    bids:
+      &lt;&lt;: *anatbids
+      modality_label: FLASH
+  - attributes: *anatattributes
+    bids:
+      &lt;&lt;: *anatbids
+      modality_label: PD
+  - attributes: *anatattributes
+    bids:
+      &lt;&lt;: *anatbids
+      modality_label: PDmap
+  - attributes: *anatattributes
+    bids:
+      &lt;&lt;: *anatbids
+      modality_label: PDT2
+  - attributes: *anatattributes
+    bids:
+      &lt;&lt;: *anatbids
+      modality_label: inplaneT1
+  - attributes: *anatattributes
+    bids:
+      &lt;&lt;: *anatbids
+      modality_label: inplaneT2
+  - attributes: *anatattributes
+    bids:
+      &lt;&lt;: *anatbids
+      modality_label: angio
+  - attributes: *anatattributes
+    bids:
+      &lt;&lt;: *anatbids
+      modality_label: defacemask
+  - attributes: *anatattributes
+    bids:
+      &lt;&lt;: *anatbids
+      modality_label: SWImagandphase
+
+  func:       # ----------------------- All functional series --------------------
+  - attributes: &amp;funcattributes
+      SeriesDescription: ~
+      SequenceVariant: ~
+      SequenceName: ~
+      ScanningSequence: ~
+      MRAcquisitionType: ~
+      FlipAngle: ~
+      EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
+      ImageType: ~
+      ProtocolName: ~
+      PhaseEncodingDirection: ~
+    bids: &amp;funcbids
+      task_label: &lt;SeriesDescription&gt;
+      acq_label: ~
+      rec_label: ~
+      run_index: &lt;&lt;1&gt;&gt;
+      echo_index: &lt;EchoNumbers&gt;
+      suffix: bold
+  - attributes: *funcattributes
+    bids:
+      &lt;&lt;: *funcbids
+      suffix: sbref
+
+  dwi:        # ----------------------- All diffusion series ---------------------
+  - attributes: &amp;dwiattributes
+      SeriesDescription: ~
+      SequenceVariant: ~
+      SequenceName: ~
+      ScanningSequence: ~
+      MRAcquisitionType: ~
+      FlipAngle: ~
+      EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
+      ImageType: ~
+      ProtocolName: ~
+      PhaseEncodingDirection: ~
+    bids: &amp;dwibids
+      acq_label: &lt;SeriesDescription&gt;
+      run_index: &lt;&lt;1&gt;&gt;
+      suffix: dwi
+  - attribute: *dwiattributes
+    bids:
+      &lt;&lt;: *dwibids
+      suffix: sbref
+
+  fmap:       # ----------------------- All fieldmap series ----------------------
+  - attributes: &amp;fmapattributes
+      SeriesDescription: ~
+      SequenceVariant: ~
+      SequenceName: ~
+      ScanningSequence: ~
+      MRAcquisitionType: ~
+      FlipAngle: ~
+      EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
+      ImageType: ~
+      ProtocolName: ~
+      PhaseEncodingDirection: ~
+    bids: &amp;fmapbids
+      acq_label: &lt;SeriesDescription&gt;
+      run_index: &lt;&lt;1&gt;&gt;
+      dir_label: ~
+      suffix: magnitude
+      IntendedFor: ~
+  - attributes: *fmapattributes
+    bids:
+      &lt;&lt;: *fmapbids
+      suffix: magnitude1
+  - attributes: *fmapattributes
+    bids:
+      &lt;&lt;: *fmapbids
+      suffix: magnitude2
+  - attributes: *fmapattributes
+    bids:
+      &lt;&lt;: *fmapbids
+      suffix: phasediff
+  - attributes: *fmapattributes
+    bids:
+      &lt;&lt;: *fmapbids
+      suffix: phase1
+  - attributes: *fmapattributes
+    bids:
+      &lt;&lt;: *fmapbids
+      suffix: phase2
+  - attributes: *fmapattributes
+    bids:
+      &lt;&lt;: *fmapbids
+      suffix: fieldmap
+  - attributes: *fmapattributes
+    bids:
+      &lt;&lt;: *fmapbids
+      dir_label: &lt;InPlanePhaseEncodingDirection&gt;
+  - attributes: *fmapattributes
+    bids:
+      &lt;&lt;: *fmapbids
+      suffix: epi
+    # TODO: sub-&lt;participant_label&gt;[_ses-&lt;session_label&gt;][_acq-&lt;label&gt;]_dir-&lt;dir_label&gt;[_run-&lt;run_index&gt;]_epi.nii[.gz]
+
+  beh:        # ----------------------- All behavioural data ---------------------
+  - attributes: &amp;behattributes
+      SeriesDescription: ~
+      SequenceVariant: ~
+      SequenceName: ~
+      ScanningSequence: ~
+      MRAcquisitionType: ~
+      FlipAngle: ~
+      EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
+      ImageType: ~
+      ProtocolName: ~
+    bids: &amp;behbids
+      task_name: &lt;SeriesDescription&gt;
+      suffix: ~
+
+  pet:        # ----------------------- All PET series ---------------------------
+  - attributes: &amp;petattributes
+      SeriesDescription: ~
+      Radiopharmaceutical: ~
+      SliceThickness: ~
+      PixelSpacing: ~
+      Rows: ~
+      Columns: ~
+      ImageType: ~
+    bids: &amp;petbids
+      task_label: &lt;SeriesDescription&gt;
+      acq_label: &lt;Radiopharmaceutical&gt;
+      rec_label: ~
+      run_index: &lt;&lt;1&gt;&gt;
+      suffix: pet
+
+  extra_data: # ----------------------- All extra data ---------------------------
+  - attributes:
+      SeriesDescription: ~
+      SequenceVariant: ~
+      SequenceName: ~
+      ScanningSequence: ~
+      MRAcquisitionType: ~
+      FlipAngle: ~
+      EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
+      ImageType: ~
+      ProtocolName: ~
+      PhaseEncodingDirection: ~
+    bids:
+      acq_label: &lt;SeriesDescription&gt;
+      rec_label: ~
+      ce_label: ~
+      task_label: ~
+      echo_index: ~
+      dir_label: ~
+      run_index: &lt;&lt;1&gt;&gt;
+      suffix: ~
+      mod_label: ~
+      modality_label: ~
+
+
+PAR: ~
+# --------------------------------------------------------------------------------
+# PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
+
+
+P7: ~
+# --------------------------------------------------------------------------------
+# P*.7 key-value heuristics (GE fields that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
+
+
+Nifti: ~
+# --------------------------------------------------------------------------------
+# Nifti key-value heuristics (Nifti fields that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
+
+
+FileSystem:
+# --------------------------------------------------------------------------------
+# File system key-value heuristics (these file- and foldernames will be mapped
+# to the BIDS labels; Special substitutions can be performed using python's
+# Format Specification Mini-Language)
+# --------------------------------------------------------------------------------
+  participant_label: ~
+  session_label: ~
+  anat:       # ----------------------- All anatomical series --------------------
+  - attributes: &amp;anatattributes_file
+      FolderName: ~
+      FileName: ~
+      FileExt: ~
+    bids: &amp;anatbids_file
+      acq_label: &lt;FileName&gt;
+      rec_label: ~
+      ce_label: ~
+      task_label: ~
+      echo_index: ~
+      dir_label: ~
+      run_index: &lt;&lt;1&gt;&gt;
+      suffix: ~
+      mod_label: ~
+      modality_label: T1w
+  - attributes: *anatattributes_file
+    bids:
+      &lt;&lt;: *anatbids_file
+      modality_label: T2w
+  - attributes: *anatattributes_file
+    bids:
+      &lt;&lt;: *anatbids_file
+      modality_label: T1rho
+  - attributes: *anatattributes_file
+    bids:
+      &lt;&lt;: *anatbids_file
+      modality_label: T1map
+  - attributes: *anatattributes_file
+    bids:
+      &lt;&lt;: *anatbids_file
+      modality_label: T2map
+  - attributes: *anatattributes_file
+    bids:
+      &lt;&lt;: *anatbids_file
+      modality_label: T2star
+  - attributes: *anatattributes_file
+    bids:
+      &lt;&lt;: *anatbids_file
+      modality_label: FLAIR
+  - attributes: *anatattributes_file
+    bids:
+      &lt;&lt;: *anatbids_file
+      modality_label: FLASH
+  - attributes: *anatattributes_file
+    bids:
+      &lt;&lt;: *anatbids_file
+      modality_label: PD
+  - attributes: *anatattributes_file
+    bids:
+      &lt;&lt;: *anatbids_file
+      modality_label: PDmap
+  - attributes: *anatattributes_file
+    bids:
+      &lt;&lt;: *anatbids_file
+      modality_label: PDT2
+  - attributes: *anatattributes_file
+    bids:
+      &lt;&lt;: *anatbids_file
+      modality_label: inplaneT1
+  - attributes: *anatattributes_file
+    bids:
+      &lt;&lt;: *anatbids_file
+      modality_label: inplaneT2
+  - attributes: *anatattributes_file
+    bids:
+      &lt;&lt;: *anatbids_file
+      modality_label: angio
+  - attributes: *anatattributes_file
+    bids:
+      &lt;&lt;: *anatbids_file
+      modality_label: defacemask
+  - attributes: *anatattributes_file
+    bids:
+      &lt;&lt;: *anatbids_file
+      modality_label: SWImagandphase
+
+  func:       # ----------------------- All functional series --------------------
+  - attributes: &amp;funcattributes_file
+      FolderName: ~
+      FileName: ~
+      FileExt: ~
+    bids: &amp;funcbids_file
+      task_label: &lt;FileName&gt;
+      acq_label: ~
+      rec_label: ~
+      run_index: &lt;&lt;1&gt;&gt;
+      echo_index: ~
+      suffix: bold
+  - attributes: *funcattributes_file
+    bids:
+      &lt;&lt;: *funcbids_file
+      suffix: sbref
+  - attributes: *funcattributes_file
+    bids:
+      &lt;&lt;: *funcbids_file
+      suffix: events
+  - attributes: *funcattributes_file
+    bids:
+      &lt;&lt;: *funcbids_file
+      recording_label: &lt;FileName&gt;
+      suffix: physio
+  - attributes: *funcattributes_file
+    bids:
+      &lt;&lt;: *funcbids_file
+      recording_label: &lt;FileName&gt;
+      suffix: stim
+
+  dwi:        # ----------------------- All diffusion series ---------------------
+  - attributes: &amp;dwiattributes_file
+      FolderName: ~
+      FileName: ~
+      FileExt: ~
+    bids: &amp;dwibids_file
+      acq_label: &lt;FileName&gt;
+      run_index: &lt;&lt;1&gt;&gt;
+      suffix: dwi
+
+  fmap:       # ----------------------- All fieldmap series ----------------------
+  - attributes: &amp;fmapattributes_file
+      FolderName: ~
+      FileName: ~
+      FileExt: ~
+    bids: &amp;fmapbids_file
+      acq_label: &lt;FileName&gt;
+      run_index: &lt;&lt;1&gt;&gt;
+      dir_label: ~
+      suffix: magnitude1
+      IntendedFor: ~
+  - attributes: *fmapattributes_file
+    bids:
+      &lt;&lt;: *fmapbids_file
+      suffix: magnitude2
+  - attributes: *fmapattributes_file
+    bids:
+      &lt;&lt;: *fmapbids_file
+      suffix: phasediff
+  - attributes: *fmapattributes_file
+    bids:
+      &lt;&lt;: *fmapbids_file
+      suffix: phase1
+  - attributes: *fmapattributes_file
+    bids:
+      &lt;&lt;: *fmapbids_file
+      suffix: phase2
+  - attributes: *fmapattributes_file
+    bids:
+      &lt;&lt;: *fmapbids_file
+      suffix: magnitude
+  - attributes: *fmapattributes_file
+    bids:
+      &lt;&lt;: *fmapbids_file
+      suffix: fieldmap
+      # TODO: sub-&lt;participant_label&gt;[_ses-&lt;session_label&gt;][_acq-&lt;label&gt;]_dir-&lt;dir_label&gt;[_run-&lt;run_index&gt;]_epi.nii[.gz]
+
+  beh:        # ----------------------- All behavioural data ---------------------
+  - attributes:
+      FolderName: ~
+      FileName: ~
+      FileExt: ~
+    bids:
+      task_label: &lt;FileName&gt;
+      suffix: ~
+
+  extra_data: # ----------------------- All extra data ---------------------------
+  - attributes:
+      FolderName: ~
+      FileName: ~
+      FileExt: ~
+    bids:
+      acq_label: &lt;SeriesDescription&gt;
+      rec_label: ~
+      ce_label: ~
+      task_label: ~
+      echo_index: ~
+      dir_label: ~
+      run_index: &lt;&lt;1&gt;&gt;
+      suffix: ~
+      mod_label: ~
+      modality_label: ~
+
+
+PlugIn: ~
+# --------------------------------------------------------------------------------
+# List of plugins to edit the key-value heuristics / perform additional operations
+# --------------------------------------------------------------------------------</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>20</y>
+        <width>93</width>
+        <height>28</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Save</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="bidstrainer">
+     <attribute name="title">
+      <string>BIDStrainer</string>
+     </attribute>
+     <widget class="QLabel" name="label">
+      <property name="geometry">
+       <rect>
+        <x>200</x>
+        <y>20</y>
+        <width>55</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Source</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_2">
+      <property name="geometry">
+       <rect>
+        <x>730</x>
+        <y>30</y>
+        <width>55</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Target</string>
+      </property>
+     </widget>
+     <widget class="QWidget" name="">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>60</y>
+        <width>941</width>
+        <height>451</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QTreeWidget" name="treeWidget">
+         <column>
+          <property name="text">
+           <string notr="true">1</string>
+          </property>
+         </column>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_2">
+         <property name="text">
+          <string>=&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTreeWidget" name="treeWidget_2">
+         <column>
+          <property name="text">
+           <string notr="true">1</string>
+          </property>
+         </column>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="bidsmapper">
+     <property name="contextMenuPolicy">
+      <enum>Qt::ActionsContextMenu</enum>
+     </property>
+     <property name="toolTip">
+      <string>bidsmapper</string>
+     </property>
+     <attribute name="title">
+      <string>BIDSmapper</string>
+     </attribute>
+     <widget class="QPushButton" name="pushButton_3">
+      <property name="geometry">
+       <rect>
+        <x>440</x>
+        <y>220</y>
+        <width>93</width>
+        <height>28</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Map</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="bidscoiner">
+     <attribute name="title">
+      <string>BIDScoiner</string>
+     </attribute>
+     <widget class="QPushButton" name="pushButton_4">
+      <property name="geometry">
+       <rect>
+        <x>470</x>
+        <y>230</y>
+        <width>93</width>
+        <height>28</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Coin</string>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>997</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionABout"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar">
+   <property name="toolTip">
+    <string/>
+   </property>
+   <property name="statusTip">
+    <string>Text in statusbar</string>
+   </property>
+  </widget>
+  <action name="actionNew">
+   <property name="text">
+    <string>New</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+   <property name="statusTip">
+    <string>Click to exit the application</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+X</string>
+   </property>
+  </action>
+  <action name="actionABout">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+ </widget>
+ <tabstops>
+  <tabstop>bidscoin</tabstop>
+  <tabstop>pushButton</tabstop>
+  <tabstop>plainTextEdit</tabstop>
+  <tabstop>treeWidget_2</tabstop>
+  <tabstop>pushButton_2</tabstop>
+  <tabstop>treeWidget</tabstop>
+  <tabstop>pushButton_3</tabstop>
+  <tabstop>pushButton_4</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>actionExit</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>507</x>
+     <y>298</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

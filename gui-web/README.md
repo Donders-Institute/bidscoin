@@ -4,21 +4,21 @@
 
 Start server
 ```console
-$ cd gui
+$ cd gui-web
 $ source venv/scripts/activate
 $ python app.py
 ```
 
 Start frontend
 ```console
-$ cd gui/frontend
+$ cd gui-web/frontend
 $ npm run dev
 ```
 
 # Deployment
 
 ```console
-$ cd gui/frontend
+$ cd gui-web/frontend
 $ npm run build
 ```
 

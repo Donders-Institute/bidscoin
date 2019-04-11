@@ -1,7 +1,7 @@
 # Steps
 
 ```console
-$ cd gui
+$ cd gui-web
 ```
 
 ```console
@@ -27,7 +27,7 @@ $ vue init webpack frontend
 ```
 
 ```
-$ cd gui/frontend
+$ cd gui-web/frontend
 $ npm install axios --save
 $ npm install vuetify --save
 $ npm install material-design-icons-iconfont --save
