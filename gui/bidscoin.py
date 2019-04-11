@@ -37,6 +37,7 @@ def derive_list_unknowns(example_yaml):
                 "provenance_path": os.path.dirname(provenance),
                 "provenance_file": os.path.basename(provenance)
             })
+
     return list_unknown
 
 
@@ -45,9 +46,12 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow, example_yaml, list_unknowns):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1024, 580)
+
+
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("brain.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
+
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
         self.centralwidget.setObjectName("centralwidget")
@@ -57,19 +61,22 @@ class Ui_MainWindow(object):
         self.bidscoin.setTabPosition(QtWidgets.QTabWidget.North)
         self.bidscoin.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.bidscoin.setObjectName("bidscoin")
+        self.bidscoin.setToolTip("<html><head/><body><p>bidscoiner</p></body></html>")
 
         self.tab1 = QtWidgets.QWidget()
         self.tab1.layout = QVBoxLayout(self.centralwidget)
         self.label = QLabel()
-        self.label.setText("Raw folder: M:\\bidscoin\\raw")
+        self.label.setText("Inspect raw data folder: M:\\bidscoin\\raw")
         self.model = QFileSystemModel()
         self.model.setRootPath('')
+        self.model.setFilter(QtCore.QDir.NoDotAndDotDot | QtCore.QDir.AllDirs | QtCore.QDir.Files)
         self.tree = QTreeView()
         self.tree.setModel(self.model)
         self.tree.setAnimated(False)
         self.tree.setIndentation(20)
         self.tree.setSortingEnabled(True)
         self.tree.setRootIndex(self.model.index("M:\\bidscoin\\raw"))
+        self.tree.clicked.connect(self.on_clicked)
         self.tab1.layout.addWidget(self.label)
         self.tab1.layout.addWidget(self.tree)
         self.filebrowser = QtWidgets.QWidget()
@@ -81,7 +88,10 @@ class Ui_MainWindow(object):
         self.tab2.layout = QVBoxLayout(self.centralwidget)
         self.labelBidstrainer = QLabel()
         self.labelBidstrainer.setText("Action needed:")
+
         self.unknownsText = QPlainTextEdit()
+        unknowns = "\n".join([x["provenance_file"] for x in list_unknowns])
+        self.unknownsText.setPlainText(unknowns)
         self.mapButton = QtWidgets.QPushButton()
         self.mapButton.setGeometry(QtCore.QRect(20, 20, 93, 28))
         self.mapButton.setObjectName("mapButton")
@@ -105,6 +115,7 @@ class Ui_MainWindow(object):
         self.__lexer.setFont(self.__myFont)
         self.plainTextEdit.setGeometry(QtCore.QRect(20, 60, 831, 441))
         self.plainTextEdit.setObjectName("syntaxHighlighter")
+        self.plainTextEdit.setText(example_yaml)
         self.pushButton = QtWidgets.QPushButton(self.bidsmap)
         self.pushButton.setGeometry(QtCore.QRect(20, 20, 93, 28))
         self.pushButton.setObjectName("pushButton")
@@ -116,6 +127,14 @@ class Ui_MainWindow(object):
         self.convertButton.setGeometry(QtCore.QRect(20, 20, 93, 28))
         self.convertButton.setObjectName("convertButton")
         self.bidscoin.addTab(self.bidscoiner, "")
+
+        self.bidscoin.setTabText(self.bidscoin.indexOf(self.filebrowser), "Filebrowser")
+        self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidstrainer), "BIDStrainer")
+        self.mapButton.setText("Commit changes")
+        self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidsmap), "BIDSmap")
+        self.pushButton.setText("Save bidsmap")
+        self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidscoiner), "BIDScoiner")
+        self.convertButton.setText("Convert")
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -129,6 +148,7 @@ class Ui_MainWindow(object):
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setToolTip("")
         self.statusbar.setObjectName("statusbar")
+
         MainWindow.setStatusBar(self.statusbar)
 
         self.actionNew = QtWidgets.QAction(MainWindow)
@@ -146,42 +166,20 @@ class Ui_MainWindow(object):
         self.menuHelp.addAction(self.actionAbout)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
+        self.menuFile.setTitle("File")
+        self.menuHelp.setTitle("Help")
+        self.statusbar.setStatusTip("Text in statusbar")
+        self.actionExit.setText("Exit")
+        self.actionExit.setStatusTip("Click to exit the application")
+        self.actionExit.setShortcut("Ctrl+X")
+        self.actionAbout.setText("About")
 
-        self.retranslateUi(MainWindow, example_yaml, list_unknowns)
         self.bidscoin.setCurrentIndex(1)
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-
-    def retranslateUi(self, MainWindow, example_yaml, list_unknowns):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "BIDScoin"))
-        self.bidscoin.setToolTip(_translate("MainWindow", "<html><head/><body><p>bidscoiner</p></body></html>"))
-
-        self.plainTextEdit.setText(_translate("MainWindow", example_yaml))
-
-        unknowns = "\n".join([x["provenance_file"] for x in list_unknowns])
-        self.unknownsText.setPlainText(_translate("MainWindow", unknowns))
-
-        self.bidscoin.setTabText(self.bidscoin.indexOf(self.filebrowser), _translate("MainWindow", "Filebrowser"))
-
-        self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidstrainer), _translate("MainWindow", "BIDStrainer"))
-        self.mapButton.setText(_translate("MainWindow", "Commit changes"))
-
-        self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidsmap), _translate("MainWindow", "BIDSmap"))
-        self.pushButton.setText(_translate("MainWindow", "Save"))
-
-        self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidscoiner), _translate("MainWindow", "BIDScoiner"))
-        self.convertButton.setText(_translate("MainWindow", "Convert"))
-
-        self.menuFile.setTitle(_translate("MainWindow", "File"))
-        self.menuHelp.setTitle(_translate("MainWindow", "Help"))
-        self.statusbar.setStatusTip(_translate("MainWindow", "Text in statusbar"))
-        self.actionExit.setText(_translate("MainWindow", "Exit"))
-        self.actionExit.setStatusTip(_translate("MainWindow", "Click to exit the application"))
-        self.actionExit.setShortcut(_translate("MainWindow", "Ctrl+X"))
-        self.actionAbout.setText(_translate("MainWindow", "About"))
-
+    def on_clicked(self, index):
+        print(self.model.fileInfo(index).absoluteFilePath())
 
     def showAbout(self):
         """ """
