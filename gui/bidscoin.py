@@ -5,7 +5,7 @@ import sys
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QTreeView, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QTreeView, QVBoxLayout, QLabel, QPushButton, QDialog
 from PyQt5.Qsci import QsciScintilla, QsciLexerYAML
 
 
@@ -98,21 +98,30 @@ class Ui_MainWindow(object):
         self.statusbar.setToolTip("")
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
+
         self.actionNew = QtWidgets.QAction(MainWindow)
         self.actionNew.setObjectName("actionNew")
+
         self.actionExit = QtWidgets.QAction(MainWindow)
         self.actionExit.setObjectName("actionExit")
-        self.actionABout = QtWidgets.QAction(MainWindow)
-        self.actionABout.setObjectName("actionABout")
+        self.actionExit.triggered.connect(MainWindow.close)
+
+        self.actionAbout = QtWidgets.QAction(MainWindow)
+        self.actionAbout.setObjectName("actionAbout")
+        self.actionAbout.triggered.connect(self.showAbout)
+
+
+
         self.menuFile.addAction(self.actionExit)
-        self.menuHelp.addAction(self.actionABout)
+        self.menuHelp.addAction(self.actionAbout)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
 
         self.retranslateUi(MainWindow)
         self.bidscoin.setCurrentIndex(1)
-        self.actionExit.triggered.connect(MainWindow.close)
+
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -136,12 +145,31 @@ class Ui_MainWindow(object):
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
         self.statusbar.setStatusTip(_translate("MainWindow", "Text in statusbar"))
-        self.actionNew.setText(_translate("MainWindow", "New"))
-        self.actionNew.setShortcut(_translate("MainWindow", "Ctrl+N"))
         self.actionExit.setText(_translate("MainWindow", "Exit"))
         self.actionExit.setStatusTip(_translate("MainWindow", "Click to exit the application"))
         self.actionExit.setShortcut(_translate("MainWindow", "Ctrl+X"))
-        self.actionABout.setText(_translate("MainWindow", "About"))
+        self.actionAbout.setText(_translate("MainWindow", "About"))
+
+
+    def showAbout(self):
+        """ """
+        self.dlg = AboutDialog()
+        self.dlg.show()
+
+
+class AboutDialog(QDialog):
+    def __init__(self):
+        QDialog.__init__(self)
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+        label = QLabel()
+        label.setText("BIDScoin GUI")
+        self.pushButton = QPushButton("OK")
+        self.pushButton.setToolTip("Close dialog")
+        layout = QVBoxLayout(self)
+        layout.addWidget(label)
+        layout.addWidget(self.pushButton)
+        self.pushButton.clicked.connect(self.close)
+
 
 if __name__ == "__main__":
     example_yaml = read_yaml()
