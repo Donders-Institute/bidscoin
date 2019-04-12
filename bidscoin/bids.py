@@ -17,6 +17,7 @@ import datetime
 import textwrap
 import re
 import ruamel
+from logging import Logger
 from ruamel.yaml import YAML
 yaml = YAML()
 
@@ -246,13 +247,13 @@ def get_niftifile(folder: str) -> str:
     return None
 
 
-def get_heuristics(yamlfile, folder, logger):
+def get_heuristics(yamlfile: str, folder: str, logger: Logger) -> dict:
     """
     Read the heuristics from the bidsmap yaml-file
 
     :param yamlfile:    The full pathname of the bidsmap yaml-file
     :param folder:      Searches in the ./heuristics folder if folder=None
-    :logger:            Logger object
+    :param logger:      Logger object
     :return:            Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     """
 

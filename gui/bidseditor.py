@@ -85,16 +85,51 @@ class Ui_MainWindow(object):
         self.filebrowser.setObjectName("filebrowser")
         self.bidscoin.addTab(self.filebrowser, "")
 
+        # self.tab3 = QtWidgets.QWidget()
+        # self.tab3.layout = QVBoxLayout(self.centralwidget)
+        # self.label3 = QLabel()
+        # self.label3.setText("Files")
+        # self.tab3.layout.addWidget(self.label3)
+        # self.bids = QtWidgets.QWidget()
+        # self.filelister.setLayout(self.tab1.layout)
+        # self.filelister.setObjectName("filelister")
+        # self.bidscoin.addTab(self.filelister, "")
+
         self.tab2 = QtWidgets.QWidget()
         self.tab2.layout = QVBoxLayout(self.centralwidget)
         self.labelBidstrainer = QLabel()
         self.labelBidstrainer.setText("Action needed:")
         self.model_unknowns = QtGui.QStandardItemModel()
 
-        [print(x) for x in list_unknowns]
-
         data = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA', 'long_name': '', 'order': 1, 'pos': 0} ,
-                {'level': 1, 'dbID': 88, 'parent_ID': 0, 'short_name': '1:1:1:Store13', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 1, 'dbID': 88, 'parent_ID': 0, 'short_name': 'Modality', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 1, 'dbID': 88, 'parent_ID': 0, 'short_name': 'DICOM', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 90, 'parent_ID': 88, 'short_name': 'SeriesDescription', 'long_name': 'localizer AANGEPAST 11 SLICES', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 91, 'parent_ID': 88, 'short_name': 'SequenceVariant', 'long_name': "['SP', 'OSP']", 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 92, 'parent_ID': 88, 'short_name': 'SequenceName', 'long_name': '*fl2d1', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 93, 'parent_ID': 88, 'short_name': 'ScanningSequence', 'long_name': 'GR', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 933, 'parent_ID': 88, 'short_name': 'MRAcquisitionType', 'long_name': '2D', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 934, 'parent_ID': 88, 'short_name': 'FlipAngle', 'long_name': '20', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 935, 'parent_ID': 88, 'short_name': 'EchoNumbers', 'long_name': '1', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 936, 'parent_ID': 88, 'short_name': 'EchoTime', 'long_name': '4', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 937, 'parent_ID': 88, 'short_name': 'RepetitionTime', 'long_name': '8.6', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 938, 'parent_ID': 88, 'short_name': 'ImageType', 'long_name': "['ORIGINAL', 'PRIMARY', 'M', 'NORM', 'DIS2D']", 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 939, 'parent_ID': 88, 'short_name': 'ProtocolName', 'long_name': 'localizer AANGEPAST 11 SLICES', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 940, 'parent_ID': 88, 'short_name': 'PhaseEncodingDirection', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 1, 'dbID': 94, 'parent_ID': 0, 'short_name': 'BIDS', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 95, 'parent_ID': 94, 'short_name': 'acq_label', 'long_name': 'localizerAANGEPAST11SLICES', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 96, 'parent_ID': 94, 'short_name': 'rec_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 97, 'parent_ID': 94, 'short_name': 'ce_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+
+                {'level': 2, 'dbID': 971, 'parent_ID': 94, 'short_name': 'task_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 972, 'parent_ID': 94, 'short_name': 'echo_index', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 973, 'parent_ID': 94, 'short_name': 'echo_index', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 974, 'parent_ID': 94, 'short_name': 'dir_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 975, 'parent_ID': 94, 'short_name': 'run_index', 'long_name': '<<1>>', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 976, 'parent_ID': 94, 'short_name': 'suffix', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 976, 'parent_ID': 94, 'short_name': 'mod_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 976, 'parent_ID': 94, 'short_name': 'modality_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+
                 {'level': 0, 'dbID': 442, 'parent_ID': 6, 'short_name': 'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA', 'long_name': '', 'order': 1, 'pos': 2} ,
                 {'level': 1, 'dbID': 522, 'parent_ID': 442, 'short_name': '3:<new>', 'long_name': '', 'order': 2, 'pos': 3} ,
                 {'level': 0, 'dbID': 456, 'parent_ID': 6, 'short_name': 'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA', 'long_name': '', 'order': 1, 'pos': 4} ,
@@ -104,11 +139,14 @@ class Ui_MainWindow(object):
               ]
 
         self.setupModelData(data)
-        self.model_unknowns.setHorizontalHeaderLabels(['File', 'Details'])
+        self.model_unknowns.setHorizontalHeaderLabels(['Item', 'Value'])
         self.view_unknowns = QTreeView()
         self.view_unknowns.setModel(self.model_unknowns)
         self.view_unknowns.setWindowTitle("Unknowns")
         self.view_unknowns.resizeColumnToContents(0)
+        self.view_unknowns.expandAll()
+        self.view_unknowns.clicked.connect(self.unknowns_on_clicked)
+
         self.mapButton = QtWidgets.QPushButton()
         self.mapButton.setGeometry(QtCore.QRect(20, 20, 93, 28))
         self.mapButton.setObjectName("mapButton")
@@ -138,20 +176,11 @@ class Ui_MainWindow(object):
         self.pushButton.setObjectName("pushButton")
         self.bidscoin.addTab(self.bidsmap, "")
 
-        self.bidscoiner = QtWidgets.QWidget()
-        self.bidscoiner.setObjectName("bidscoiner")
-        self.convertButton = QtWidgets.QPushButton(self.bidscoiner)
-        self.convertButton.setGeometry(QtCore.QRect(20, 20, 93, 28))
-        self.convertButton.setObjectName("convertButton")
-        self.bidscoin.addTab(self.bidscoiner, "")
-
         self.bidscoin.setTabText(self.bidscoin.indexOf(self.filebrowser), "Filebrowser")
         self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidstrainer), "BIDStrainer")
         self.mapButton.setText("Commit changes")
         self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidsmap), "BIDSmap")
         self.pushButton.setText("Save bidsmap")
-        self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidscoiner), "BIDScoiner")
-        self.convertButton.setText("Convert")
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -198,6 +227,10 @@ class Ui_MainWindow(object):
     def on_clicked(self, index):
         print(self.model.fileInfo(index).absoluteFilePath())
 
+    def unknowns_on_clicked(self, index):
+        item = self.view_unknowns.selectedIndexes()[0]
+        print(item.model().itemFromIndex(index).text())
+
     def showAbout(self):
         """ """
         self.dlg = AboutDialog()
@@ -222,10 +255,9 @@ class Ui_MainWindow(object):
             dbid = value['dbID']
             item = QtGui.QStandardItem(value['short_name'])
             item.setEditable(False)
-            parent.appendRow([
-                item,
-                QtGui.QStandardItem(''),
-                ])
+            item2 = QtGui.QStandardItem(value['long_name'])
+            item2.setEditable(True)
+            parent.appendRow([item, item2])
             seen[dbid] = parent.child(parent.rowCount() - 1)
 
 
