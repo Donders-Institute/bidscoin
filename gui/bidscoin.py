@@ -3,9 +3,10 @@
 import os
 import sys
 import ruamel.yaml as yaml
+from collections import deque
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QStandardItemModel
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QTreeView, QVBoxLayout, QLabel, QPushButton, QDialog, QPlainTextEdit
 from PyQt5.Qsci import QsciScintilla, QsciLexerYAML
 
@@ -88,16 +89,32 @@ class Ui_MainWindow(object):
         self.tab2.layout = QVBoxLayout(self.centralwidget)
         self.labelBidstrainer = QLabel()
         self.labelBidstrainer.setText("Action needed:")
+        self.model_unknowns = QtGui.QStandardItemModel()
 
-        self.unknownsText = QPlainTextEdit()
-        unknowns = "\n".join([x["provenance_file"] for x in list_unknowns])
-        self.unknownsText.setPlainText(unknowns)
+        [print(x) for x in list_unknowns]
+
+        data = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA', 'long_name': '', 'order': 1, 'pos': 0} ,
+                {'level': 1, 'dbID': 88, 'parent_ID': 0, 'short_name': '1:1:1:Store13', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 0, 'dbID': 442, 'parent_ID': 6, 'short_name': 'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA', 'long_name': '', 'order': 1, 'pos': 2} ,
+                {'level': 1, 'dbID': 522, 'parent_ID': 442, 'short_name': '3:<new>', 'long_name': '', 'order': 2, 'pos': 3} ,
+                {'level': 0, 'dbID': 456, 'parent_ID': 6, 'short_name': 'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA', 'long_name': '', 'order': 1, 'pos': 4} ,
+                {'level': 1, 'dbID': 523, 'parent_ID': 456, 'short_name': '5:<new>', 'long_name': '', 'order': 3, 'pos': 5},
+                {'level': 0, 'dbID': 524, 'parent_ID': 6, 'short_name': 'M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA', 'long_name': '', 'order': 3, 'pos': 5},
+                {'level': 1, 'dbID': 525, 'parent_ID': 524, 'short_name': '6:<new>', 'long_name': '', 'order': 3, 'pos': 5}
+              ]
+
+        self.setupModelData(data)
+        self.model_unknowns.setHorizontalHeaderLabels(['File', 'Details'])
+        self.view_unknowns = QTreeView()
+        self.view_unknowns.setModel(self.model_unknowns)
+        self.view_unknowns.setWindowTitle("Unknowns")
+        self.view_unknowns.resizeColumnToContents(0)
         self.mapButton = QtWidgets.QPushButton()
         self.mapButton.setGeometry(QtCore.QRect(20, 20, 93, 28))
         self.mapButton.setObjectName("mapButton")
         self.tab2.layout.addWidget(self.mapButton)
         self.tab2.layout.addWidget(self.labelBidstrainer)
-        self.tab2.layout.addWidget(self.unknownsText)
+        self.tab2.layout.addWidget(self.view_unknowns)
         self.bidstrainer = QtWidgets.QWidget()
         self.bidstrainer.setObjectName("bidstrainer")
         self.bidstrainer.setLayout(self.tab2.layout)
@@ -185,6 +202,31 @@ class Ui_MainWindow(object):
         """ """
         self.dlg = AboutDialog()
         self.dlg.show()
+
+    def setupModelData(self, lines, root=None):
+        self.model_unknowns.setRowCount(0)
+        if root is None:
+            root = self.model_unknowns.invisibleRootItem()
+        seen = {}
+        values = deque(lines)
+        while values:
+            value = values.popleft()
+            if value['level'] == 0:
+                parent = root
+            else:
+                pid = value['parent_ID']
+                if pid not in seen:
+                    values.append(value)
+                    continue
+                parent = seen[pid]
+            dbid = value['dbID']
+            item = QtGui.QStandardItem(value['short_name'])
+            item.setEditable(False)
+            parent.appendRow([
+                item,
+                QtGui.QStandardItem(''),
+                ])
+            seen[dbid] = parent.child(parent.rowCount() - 1)
 
 
 class AboutDialog(QDialog):
