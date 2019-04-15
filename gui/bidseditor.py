@@ -81,18 +81,36 @@ class Ui_MainWindow(object):
         self.tab1.layout.addWidget(self.tree)
         self.tree.header().resizeSection(0, 800)
 
-
         self.filebrowser = QtWidgets.QWidget()
         self.filebrowser.setLayout(self.tab1.layout)
         self.filebrowser.setObjectName("filebrowser")
         self.bidscoin.addTab(self.filebrowser, "")
 
-        list_ima_files = ['M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA',
-                          'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA',
-                          'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA',
-                          'M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA']
+        self.list_ima_files = ['M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA',
+                              'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA',
+                              'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA',
+                              'M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA',
+                              'M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA',
+                              'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA',
+                              'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA',
+                              'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA',
+                              'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA',
+                              'M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA',
+                              'M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA',
+                              'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA',
+                              'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA',
+                              'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA',
+                              'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA',
+                              'M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA',
+                              'M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA',
+                              'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA',
+                              'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA',
+                              'M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA']
 
-        list_bids_names = ['sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz', 'sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz', '', 'sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz']
+        self.list_bids_names = ['' for x in self.list_ima_files]
+        self.list_bids_names[0] = 'sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz'
+        self.list_bids_names[1] = 'sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz'
+        self.list_bids_names[5] = 'sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz'
 
         self.tab3 = QtWidgets.QWidget()
         self.tab3.layout = QVBoxLayout(self.centralwidget)
@@ -101,17 +119,18 @@ class Ui_MainWindow(object):
         self.tableButton.setObjectName("tableButton")
         self.table = QTableWidget()
         self.table.setColumnCount(3)
-        self.table.setRowCount(len(list_ima_files))
+        self.table.setRowCount(len(self.list_ima_files))
 
-        for index in range(len(list_ima_files)):
-            item1 = QTableWidgetItem(list_ima_files[index])
+        for index in range(len(self.list_ima_files)):
+            item1 = QTableWidgetItem(self.list_ima_files[index])
             self.table.setItem(index, 0, item1)
-            item2 = QTableWidgetItem(list_bids_names[index])
+            item2 = QTableWidgetItem(self.list_bids_names[index])
             self.table.setItem(index, 1, item2)
             text = 'Edit'
             self.btn_select = QPushButton(text)
-            if list_bids_names[index] == '':
+            if self.list_bids_names[index] == '':
                 self.btn_select.setStyleSheet('QPushButton {color: red;}')
+                self.table.item(index, 0).setForeground(QtGui.QColor(255,0,0))
             else:
                 self.btn_select.setStyleSheet('QPushButton {color: green;}')
             self.btn_select.clicked.connect(self.handleButtonClicked)
@@ -121,6 +140,8 @@ class Ui_MainWindow(object):
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
         self.tab3.layout.addWidget(self.tableButton)
         self.tab3.layout.addWidget(self.table)
         self.filelister = QtWidgets.QWidget()
@@ -131,12 +152,12 @@ class Ui_MainWindow(object):
 
         self.tab2 = QtWidgets.QWidget()
         self.tab2.layout = QVBoxLayout(self.centralwidget)
-        self.labelBidstrainer = QLabel()
-        self.labelBidstrainer.setText("Action needed:")
         self.model_unknowns = QtGui.QStandardItemModel()
 
-        data = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA', 'long_name': '', 'order': 1, 'pos': 0} ,
-                {'level': 1, 'dbID': 88, 'parent_ID': 0, 'short_name': 'Modality', 'long_name': '', 'order': 2, 'pos': 1} ,
+        data = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'File', 'long_name': '', 'order': 1, 'pos': 0} ,
+                {'level': 1, 'dbID': 70, 'parent_ID': 0, 'short_name': 'PROVENANCE', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 71, 'parent_ID': 70, 'short_name': 'Filename', 'long_name': 'M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 72, 'parent_ID': 70, 'short_name': 'Path', 'long_name': 'M:\\bidscoin\\raw\\sub-P002\\ses-mri01\\02_localizer AANGEPAST 11 SLICES\\', 'order': 2, 'pos': 1} ,
                 {'level': 1, 'dbID': 88, 'parent_ID': 0, 'short_name': 'DICOM', 'long_name': '', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 90, 'parent_ID': 88, 'short_name': 'SeriesDescription', 'long_name': 'localizer AANGEPAST 11 SLICES', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 91, 'parent_ID': 88, 'short_name': 'SequenceVariant', 'long_name': "['SP', 'OSP']", 'order': 2, 'pos': 1} ,
@@ -149,7 +170,8 @@ class Ui_MainWindow(object):
                 {'level': 2, 'dbID': 937, 'parent_ID': 88, 'short_name': 'RepetitionTime', 'long_name': '8.6', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 938, 'parent_ID': 88, 'short_name': 'ImageType', 'long_name': "['ORIGINAL', 'PRIMARY', 'M', 'NORM', 'DIS2D']", 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 939, 'parent_ID': 88, 'short_name': 'ProtocolName', 'long_name': 'localizer AANGEPAST 11 SLICES', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'dbID': 940, 'parent_ID': 88, 'short_name': 'PhaseEncodingDirection', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 940, 'parent_ID': 88, 'short_name': 'PhaseEncodingDirection', 'long_name': '', 'order': 2, 'pos': 1},
+                {'level': 1, 'dbID': 88, 'parent_ID': 0, 'short_name': 'MODALITY', 'long_name': '', 'order': 2, 'pos': 1} ,
                 {'level': 1, 'dbID': 94, 'parent_ID': 0, 'short_name': 'BIDS', 'long_name': '', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 95, 'parent_ID': 94, 'short_name': 'acq_label', 'long_name': 'localizerAANGEPAST11SLICES', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 96, 'parent_ID': 94, 'short_name': 'rec_label', 'long_name': '', 'order': 2, 'pos': 1} ,
@@ -162,28 +184,26 @@ class Ui_MainWindow(object):
                 {'level': 2, 'dbID': 976, 'parent_ID': 94, 'short_name': 'suffix', 'long_name': '', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 976, 'parent_ID': 94, 'short_name': 'mod_label', 'long_name': '', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 976, 'parent_ID': 94, 'short_name': 'modality_label', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 0, 'dbID': 442, 'parent_ID': 6, 'short_name': 'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA', 'long_name': '', 'order': 1, 'pos': 2} ,
-                {'level': 1, 'dbID': 522, 'parent_ID': 442, 'short_name': '3:<new>', 'long_name': '', 'order': 2, 'pos': 3} ,
-                {'level': 0, 'dbID': 456, 'parent_ID': 6, 'short_name': 'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA', 'long_name': '', 'order': 1, 'pos': 4} ,
-                {'level': 1, 'dbID': 523, 'parent_ID': 456, 'short_name': '5:<new>', 'long_name': '', 'order': 3, 'pos': 5},
-                {'level': 0, 'dbID': 524, 'parent_ID': 6, 'short_name': 'M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA', 'long_name': '', 'order': 3, 'pos': 5},
-                {'level': 1, 'dbID': 525, 'parent_ID': 524, 'short_name': '6:<new>', 'long_name': '', 'order': 3, 'pos': 5}
+                {'level': 1, 'dbID': 100, 'parent_ID': 0, 'short_name': 'BIDSNAME', 'long_name': 'sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz', 'order': 2, 'pos': 1}
               ]
+
+
 
         self.setupModelData(data)
         self.model_unknowns.setHorizontalHeaderLabels(['Item', 'Value'])
         self.view_unknowns = QTreeView()
         self.view_unknowns.setModel(self.model_unknowns)
         self.view_unknowns.setWindowTitle("Unknowns")
-        self.view_unknowns.resizeColumnToContents(0)
         self.view_unknowns.expandAll()
+        self.view_unknowns.resizeColumnToContents(0)
+        # self.view_unknowns.setIndentation(0)
+        self.view_unknowns.setAlternatingRowColors(True)
         self.view_unknowns.clicked.connect(self.unknowns_on_clicked)
 
         self.mapButton = QtWidgets.QPushButton()
         self.mapButton.setGeometry(QtCore.QRect(20, 20, 93, 28))
         self.mapButton.setObjectName("mapButton")
         self.tab2.layout.addWidget(self.mapButton)
-        self.tab2.layout.addWidget(self.labelBidstrainer)
         self.tab2.layout.addWidget(self.view_unknowns)
         self.bidstrainer = QtWidgets.QWidget()
         self.bidstrainer.setObjectName("bidstrainer")
@@ -200,7 +220,7 @@ class Ui_MainWindow(object):
         self.__myFont.setPointSize(10)
         self.plainTextEdit.setFont(self.__myFont)
         self.__lexer.setFont(self.__myFont)
-        self.plainTextEdit.setGeometry(QtCore.QRect(20, 60, 831, 441))
+        self.plainTextEdit.setGeometry(QtCore.QRect(20, 60, 1240, 650))
         self.plainTextEdit.setObjectName("syntaxHighlighter")
         self.plainTextEdit.setText(example_yaml)
         self.pushButton = QtWidgets.QPushButton(self.bidsmap)
@@ -241,6 +261,9 @@ class Ui_MainWindow(object):
         self.actionAbout.setObjectName("actionAbout")
         self.actionAbout.triggered.connect(self.showAbout)
 
+        self.actionEdit = QtWidgets.QAction(MainWindow)
+        self.actionEdit.setObjectName("actionEdit")
+
         self.menuFile.addAction(self.actionExit)
         self.menuHelp.addAction(self.actionAbout)
         self.menubar.addAction(self.menuFile.menuAction())
@@ -261,7 +284,9 @@ class Ui_MainWindow(object):
         button = QApplication.focusWidget()
         index = self.table.indexAt(button.pos())
         if index.isValid():
-            print(index.row(), index.column())
+            i = int(index.row())
+            print(self.list_ima_files[i])
+            self.showEdit(i)
 
     def on_clicked(self, index):
         print(self.model.fileInfo(index).absoluteFilePath())
@@ -274,6 +299,11 @@ class Ui_MainWindow(object):
         """ """
         self.dlg = AboutDialog()
         self.dlg.show()
+
+    def showEdit(self, i):
+        """ """
+        self.dlg2 = EditDialog(i)
+        self.dlg2.show()
 
     def setupModelData(self, lines, root=None):
         self.model_unknowns.setRowCount(0)
@@ -313,6 +343,19 @@ class AboutDialog(QDialog):
         layout.addWidget(self.pushButton)
         self.pushButton.clicked.connect(self.close)
 
+
+class EditDialog(QDialog):
+    def __init__(self, i):
+        QDialog.__init__(self)
+        label = QLabel()
+        label.setText("Edit values for %s" % str(i))
+        self.pushButton = QPushButton("OK")
+        self.pushButton.setToolTip("Close dialog")
+        layout = QVBoxLayout(self)
+        layout.addWidget(label)
+        layout.addWidget(self.pushButton)
+        print(i)
+        self.pushButton.clicked.connect(self.close)
 
 
 if __name__ == "__main__":
