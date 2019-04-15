@@ -135,6 +135,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
             basepath, ext1 = os.path.splitext(filename)                                                 # E.g. ext1 -> .nii
             basepath, ext2 = os.path.splitext(basepath)                                                 # Account for .nii.gz files
             suffices       = basepath.rsplit(bidsname + '_', 1)[1]                                      # E.g. fieldmaps produce *_e2_ph files
+            basepath       = basepath.split('_' + suffices)[0]
 
             # Patch the basepath with the suffix info
             for suffix in suffices.split('_'):
