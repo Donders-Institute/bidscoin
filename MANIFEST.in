@@ -1,3 +1,7 @@
-graft gui/static
-graft gui/templates
+include version.txt
+include bidsversion.txt
+include requirements.txt
+include LICENSE.txt
+graft gui-web/static
+graft gui-web/templates
 global-exclude *.pyc

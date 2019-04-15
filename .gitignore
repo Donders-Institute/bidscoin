@@ -10,3 +10,4 @@ venv
 .eggs
 htmlcov
 __pycache__
+.tox
