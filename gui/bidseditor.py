@@ -322,7 +322,8 @@ class Ui_MainWindow(object):
 
     def showEdit(self, i):
         """ """
-        self.dlg2 = EditDialog(i)
+        info = { "provenance_file": self.list_ima_files[i] }
+        self.dlg2 = EditDialog(i, info)
         self.dlg2.show()
 
     def setupModelData(self, lines, root=None):
@@ -365,17 +366,91 @@ class AboutDialog(QDialog):
 
 
 class EditDialog(QDialog):
-    def __init__(self, i):
+    def __init__(self, i, info):
         QDialog.__init__(self)
         label = QLabel()
-        label.setText("Edit values for %s" % str(i))
-        self.pushButton = QPushButton("OK")
-        self.pushButton.setToolTip("Close dialog")
+        label.setText("PROVENANCE: %s" % info['provenance_file'])
+
         layout = QVBoxLayout(self)
         layout.addWidget(label)
-        layout.addWidget(self.pushButton)
-        print(i)
-        self.pushButton.clicked.connect(self.close)
+
+        self.label_unknowns = QLabel()
+        self.label_unknowns .setText("DICOM attributes")
+        self.model_unknowns = QtGui.QStandardItemModel()
+
+        data = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'DICOM', 'long_name': '', 'order': 1, 'pos': 0} ,
+                {'level': 1, 'dbID': 70, 'parent_ID': 0, 'short_name': 'DICOM PROVENANCE', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 71, 'parent_ID': 70, 'short_name': 'Filename', 'long_name': 'M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 72, 'parent_ID': 70, 'short_name': 'Path', 'long_name': 'M:\\bidscoin\\raw\\sub-P002\\ses-mri01\\02_localizer AANGEPAST 11 SLICES\\', 'order': 2, 'pos': 1} ,
+                {'level': 1, 'dbID': 88, 'parent_ID': 0, 'short_name': 'DICOM attributes', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 90, 'parent_ID': 88, 'short_name': 'SeriesDescription', 'long_name': 'localizer AANGEPAST 11 SLICES', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 91, 'parent_ID': 88, 'short_name': 'SequenceVariant', 'long_name': "['SP', 'OSP']", 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 92, 'parent_ID': 88, 'short_name': 'SequenceName', 'long_name': '*fl2d1', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 93, 'parent_ID': 88, 'short_name': 'ScanningSequence', 'long_name': 'GR', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 933, 'parent_ID': 88, 'short_name': 'MRAcquisitionType', 'long_name': '2D', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 934, 'parent_ID': 88, 'short_name': 'FlipAngle', 'long_name': '20', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 935, 'parent_ID': 88, 'short_name': 'EchoNumbers', 'long_name': '1', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 936, 'parent_ID': 88, 'short_name': 'EchoTime', 'long_name': '4', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 937, 'parent_ID': 88, 'short_name': 'RepetitionTime', 'long_name': '8.6', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 938, 'parent_ID': 88, 'short_name': 'ImageType', 'long_name': "['ORIGINAL', 'PRIMARY', 'M', 'NORM', 'DIS2D']", 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 939, 'parent_ID': 88, 'short_name': 'ProtocolName', 'long_name': 'localizer AANGEPAST 11 SLICES', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 940, 'parent_ID': 88, 'short_name': 'PhaseEncodingDirection', 'long_name': '', 'order': 2, 'pos': 1},
+              ]
+
+        data2 = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'BIDS', 'long_name': '', 'order': 1, 'pos': 0} ,
+                {'level': 1, 'dbID': 94, 'parent_ID': 0, 'short_name': 'BIDS values', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 95, 'parent_ID': 94, 'short_name': 'acq_label', 'long_name': 'localizerAANGEPAST11SLICES', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 96, 'parent_ID': 94, 'short_name': 'rec_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 97, 'parent_ID': 94, 'short_name': 'ce_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 971, 'parent_ID': 94, 'short_name': 'task_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 972, 'parent_ID': 94, 'short_name': 'echo_index', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 973, 'parent_ID': 94, 'short_name': 'echo_index', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 974, 'parent_ID': 94, 'short_name': 'dir_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 975, 'parent_ID': 94, 'short_name': 'run_index', 'long_name': '<<1>>', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 976, 'parent_ID': 94, 'short_name': 'suffix', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 976, 'parent_ID': 94, 'short_name': 'mod_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'dbID': 976, 'parent_ID': 94, 'short_name': 'modality_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 1, 'dbID': 100, 'parent_ID': 0, 'short_name': 'BIDSNAME', 'long_name': 'sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz', 'order': 2, 'pos': 1}
+              ]
+
+        self.model_unknowns.setHorizontalHeaderLabels(['Item', 'Value'])
+        self.view_unknowns = QTreeView()
+        self.view_unknowns.setModel(self.model_unknowns)
+        self.view_unknowns.setWindowTitle("Unknowns")
+        self.view_unknowns.expandAll()
+        self.view_unknowns.resizeColumnToContents(0)
+        # self.view_unknowns.setIndentation(0)
+        self.view_unknowns.setAlternatingRowColors(True)
+        self.view_unknowns.clicked.connect(self.unknowns_on_clicked)
+
+        self.cblabel = QLabel()
+        self.cblabel.setText("MODALITY")
+        self.cb = QComboBox()
+        self.cb.addItems(["anat", "func"])
+        self.cb.currentIndexChanged.connect(self.selectionchange)
+
+        self.mapButton = QtWidgets.QPushButton()
+        self.mapButton.setObjectName("mapButton")
+        self.mapButton.setText("Save")
+
+        layout.addWidget(self.label_unknowns)
+        layout.addWidget(self.view_unknowns)
+        layout.addWidget(self.cblabel)
+        layout.addWidget(self.cb)
+
+        layout.addWidget(self.mapButton)
+
+        self.mapButton.clicked.connect(self.close)
+
+    def unknowns_on_clicked(self, index):
+        item = self.view_unknowns.selectedIndexes()[0]
+        print(item.model().itemFromIndex(index).text())
+
+    def selectionchange(self, i):
+        print("Items in the list are:")
+        for count in range(self.cb.count()):
+            print(self.cb.itemText(count))
+        print("Current index", i, "selection changed ", self.cb.currentText())
 
 
 if __name__ == "__main__":
