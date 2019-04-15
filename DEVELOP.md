@@ -54,8 +54,3 @@ or
 ```
 $ pip install -e .
 ```
-
-```
-$ cd gui
-$ python app.py
-```
