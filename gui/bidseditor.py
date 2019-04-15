@@ -7,7 +7,7 @@ from collections import deque
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QFont, QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QTreeView, QVBoxLayout, QLabel, QPushButton, QDialog, QPlainTextEdit, QTableWidget, QTableWidgetItem, QAbstractItemView, QTableView, QPushButton
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QTreeView, QVBoxLayout, QLabel, QPushButton, QDialog, QPlainTextEdit, QTableWidget, QTableWidgetItem, QAbstractItemView, QTableView, QPushButton, QComboBox
 from PyQt5.Qsci import QsciScintilla, QsciLexerYAML
 
 
@@ -120,6 +120,7 @@ class Ui_MainWindow(object):
         self.table = QTableWidget()
         self.table.setColumnCount(3)
         self.table.setRowCount(len(self.list_ima_files))
+        self.table.setAlternatingRowColors(True)
 
         for index in range(len(self.list_ima_files)):
             item1 = QTableWidgetItem(self.list_ima_files[index])
@@ -152,13 +153,16 @@ class Ui_MainWindow(object):
 
         self.tab2 = QtWidgets.QWidget()
         self.tab2.layout = QVBoxLayout(self.centralwidget)
+
+        self.label_unknowns = QLabel()
+        self.label_unknowns .setText("DICOM")
         self.model_unknowns = QtGui.QStandardItemModel()
 
-        data = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'File', 'long_name': '', 'order': 1, 'pos': 0} ,
-                {'level': 1, 'dbID': 70, 'parent_ID': 0, 'short_name': 'PROVENANCE', 'long_name': '', 'order': 2, 'pos': 1} ,
+        data = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'DICOM', 'long_name': '', 'order': 1, 'pos': 0} ,
+                {'level': 1, 'dbID': 70, 'parent_ID': 0, 'short_name': 'DICOM PROVENANCE', 'long_name': '', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 71, 'parent_ID': 70, 'short_name': 'Filename', 'long_name': 'M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 72, 'parent_ID': 70, 'short_name': 'Path', 'long_name': 'M:\\bidscoin\\raw\\sub-P002\\ses-mri01\\02_localizer AANGEPAST 11 SLICES\\', 'order': 2, 'pos': 1} ,
-                {'level': 1, 'dbID': 88, 'parent_ID': 0, 'short_name': 'DICOM', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 1, 'dbID': 88, 'parent_ID': 0, 'short_name': 'DICOM attributes', 'long_name': '', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 90, 'parent_ID': 88, 'short_name': 'SeriesDescription', 'long_name': 'localizer AANGEPAST 11 SLICES', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 91, 'parent_ID': 88, 'short_name': 'SequenceVariant', 'long_name': "['SP', 'OSP']", 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 92, 'parent_ID': 88, 'short_name': 'SequenceName', 'long_name': '*fl2d1', 'order': 2, 'pos': 1} ,
@@ -171,8 +175,10 @@ class Ui_MainWindow(object):
                 {'level': 2, 'dbID': 938, 'parent_ID': 88, 'short_name': 'ImageType', 'long_name': "['ORIGINAL', 'PRIMARY', 'M', 'NORM', 'DIS2D']", 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 939, 'parent_ID': 88, 'short_name': 'ProtocolName', 'long_name': 'localizer AANGEPAST 11 SLICES', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 940, 'parent_ID': 88, 'short_name': 'PhaseEncodingDirection', 'long_name': '', 'order': 2, 'pos': 1},
-                {'level': 1, 'dbID': 88, 'parent_ID': 0, 'short_name': 'MODALITY', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 1, 'dbID': 94, 'parent_ID': 0, 'short_name': 'BIDS', 'long_name': '', 'order': 2, 'pos': 1} ,
+              ]
+
+        data2 = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'BIDS', 'long_name': '', 'order': 1, 'pos': 0} ,
+                {'level': 1, 'dbID': 94, 'parent_ID': 0, 'short_name': 'BIDS values', 'long_name': '', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 95, 'parent_ID': 94, 'short_name': 'acq_label', 'long_name': 'localizerAANGEPAST11SLICES', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 96, 'parent_ID': 94, 'short_name': 'rec_label', 'long_name': '', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 97, 'parent_ID': 94, 'short_name': 'ce_label', 'long_name': '', 'order': 2, 'pos': 1} ,
@@ -187,8 +193,6 @@ class Ui_MainWindow(object):
                 {'level': 1, 'dbID': 100, 'parent_ID': 0, 'short_name': 'BIDSNAME', 'long_name': 'sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz', 'order': 2, 'pos': 1}
               ]
 
-
-
         self.setupModelData(data)
         self.model_unknowns.setHorizontalHeaderLabels(['Item', 'Value'])
         self.view_unknowns = QTreeView()
@@ -200,11 +204,20 @@ class Ui_MainWindow(object):
         self.view_unknowns.setAlternatingRowColors(True)
         self.view_unknowns.clicked.connect(self.unknowns_on_clicked)
 
+        self.cblabel = QLabel()
+        self.cblabel.setText("MODALITY")
+        self.cb = QComboBox()
+        self.cb.addItems(["anat", "func"])
+        self.cb.currentIndexChanged.connect(self.selectionchange)
+
         self.mapButton = QtWidgets.QPushButton()
         self.mapButton.setGeometry(QtCore.QRect(20, 20, 93, 28))
         self.mapButton.setObjectName("mapButton")
         self.tab2.layout.addWidget(self.mapButton)
+        self.tab2.layout.addWidget(self.label_unknowns)
         self.tab2.layout.addWidget(self.view_unknowns)
+        self.tab2.layout.addWidget(self.cblabel)
+        self.tab2.layout.addWidget(self.cb)
         self.bidstrainer = QtWidgets.QWidget()
         self.bidstrainer.setObjectName("bidstrainer")
         self.bidstrainer.setLayout(self.tab2.layout)
@@ -279,6 +292,13 @@ class Ui_MainWindow(object):
         self.bidscoin.setCurrentIndex(1)
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def selectionchange(self, i):
+        print("Items in the list are:")
+
+        for count in range(self.cb.count()):
+            print(self.cb.itemText(count))
+        print("Current index", i, "selection changed ", self.cb.currentText())
 
     def handleButtonClicked(self):
         button = QApplication.focusWidget()
