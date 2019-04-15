@@ -6,15 +6,15 @@ import ruamel.yaml as yaml
 from collections import deque
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QFont, QStandardItemModel
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QTreeView, QVBoxLayout, QLabel, QPushButton, QDialog, QPlainTextEdit
+from PyQt5.QtGui import QFont, QStandardItemModel, QStandardItem
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QTreeView, QVBoxLayout, QLabel, QPushButton, QDialog, QPlainTextEdit, QTableWidget, QTableWidgetItem, QAbstractItemView, QTableView, QPushButton
 from PyQt5.Qsci import QsciScintilla, QsciLexerYAML
 
 
 def read_yaml():
     """ """
     contents = ""
-    filename = os.path.join("..", "tests", "testdata", "bidsmap_example_new.yaml")
+    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_new.yaml")
     with open(filename) as fp:
         contents = fp.read()
     return contents
@@ -46,8 +46,7 @@ class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow, example_yaml, list_unknowns):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1024, 580)
-
+        MainWindow.resize(1280, 800)
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("brain.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -58,7 +57,7 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
 
         self.bidscoin = QtWidgets.QTabWidget(self.centralwidget)
-        self.bidscoin.setGeometry(QtCore.QRect(0, 0, 1021, 541))
+        self.bidscoin.setGeometry(QtCore.QRect(0, 0, 1280, 700))
         self.bidscoin.setTabPosition(QtWidgets.QTabWidget.North)
         self.bidscoin.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.bidscoin.setObjectName("bidscoin")
@@ -80,20 +79,74 @@ class Ui_MainWindow(object):
         self.tree.clicked.connect(self.on_clicked)
         self.tab1.layout.addWidget(self.label)
         self.tab1.layout.addWidget(self.tree)
+        self.tree.header().resizeSection(0, 800)
         self.filebrowser = QtWidgets.QWidget()
         self.filebrowser.setLayout(self.tab1.layout)
         self.filebrowser.setObjectName("filebrowser")
         self.bidscoin.addTab(self.filebrowser, "")
 
-        # self.tab3 = QtWidgets.QWidget()
-        # self.tab3.layout = QVBoxLayout(self.centralwidget)
-        # self.label3 = QLabel()
-        # self.label3.setText("Files")
-        # self.tab3.layout.addWidget(self.label3)
-        # self.bids = QtWidgets.QWidget()
-        # self.filelister.setLayout(self.tab1.layout)
-        # self.filelister.setObjectName("filelister")
-        # self.bidscoin.addTab(self.filelister, "")
+        list_ima_files = ['M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA',
+                          'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA',
+                          'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA',
+                          'M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA']
+
+        list_bids_names = ['sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz', 'sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz', '', 'sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz']
+
+        self.tab3 = QtWidgets.QWidget()
+        self.tab3.layout = QVBoxLayout(self.centralwidget)
+        self.label3 = QLabel()
+        self.label3.setText("Files")
+        # self.table = QTableView()
+        # table_model = QStandardItemModel()
+        # table_model.setHorizontalHeaderLabels(['IMA file', 'BIDS name', 'Action'])
+        # for f in table_data:
+        #     table_model.appendRow(QStandardItem(f))
+        # self.table.setModel(table_model)
+        # self.table.resizeColumnToContents(0)
+
+        self.table = QTableWidget()
+        self.table.setColumnCount(3)
+        self.table.setRowCount(len(list_ima_files))
+
+        for index in range(len(list_ima_files)):
+            item1 = QTableWidgetItem(list_ima_files[index])
+            self.table.setItem(index, 0, item1)
+            item2 = QTableWidgetItem(list_bids_names[index])
+            self.table.setItem(index, 1, item2)
+            text = 'Edit'
+            self.btn_select = QPushButton(text)
+            if list_bids_names[index] == '':
+                self.btn_select.setStyleSheet('QPushButton {color: red;}')
+            else:
+                self.btn_select.setStyleSheet('QPushButton {color: green;}')
+            self.btn_select.clicked.connect(self.handleButtonClicked)
+            self.table.setCellWidget(index, 2, self.btn_select)
+
+        self.table.resizeColumnToContents(0)
+        self.table.resizeColumnToContents(1)
+        self.table.resizeColumnToContents(2)
+        self.table.setHorizontalHeaderLabels(['IMA file', 'BIDS name', 'Action'])
+
+
+        # self.tableWidget.setModel(table_model)
+        #
+        # self.tableWidget.setRowCount(4)
+        # self.tableWidget.setColumnCount(2)
+        # self.tableWidget.setItem(0,0, QTableWidgetItem("Cell (1,1)"))
+        # self.tableWidget.setItem(0,1, QTableWidgetItem("Cell (1,2)"))
+        # self.tableWidget.setItem(1,0, QTableWidgetItem("Cell (2,1)"))
+        # self.tableWidget.setItem(1,1, QTableWidgetItem("Cell (2,2)"))
+        # self.tableWidget.setItem(2,0, QTableWidgetItem("Cell (3,1)"))
+        # self.tableWidget.setItem(2,1, QTableWidgetItem("Cell (3,2)"))
+        # self.tableWidget.setItem(3,0, QTableWidgetItem("Cell (4,1)"))
+        # self.tableWidget.setItem(3,1, QTableWidgetItem("Cell (4,2)"))
+        # self.tableWidget.move(0,0)
+        self.tab3.layout.addWidget(self.label3)
+        self.tab3.layout.addWidget(self.table)
+        self.filelister = QtWidgets.QWidget()
+        self.filelister.setLayout(self.tab3.layout)
+        self.filelister.setObjectName("filelister")
+        self.bidscoin.addTab(self.filelister, "")
 
         self.tab2 = QtWidgets.QWidget()
         self.tab2.layout = QVBoxLayout(self.centralwidget)
@@ -120,7 +173,6 @@ class Ui_MainWindow(object):
                 {'level': 2, 'dbID': 95, 'parent_ID': 94, 'short_name': 'acq_label', 'long_name': 'localizerAANGEPAST11SLICES', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 96, 'parent_ID': 94, 'short_name': 'rec_label', 'long_name': '', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 97, 'parent_ID': 94, 'short_name': 'ce_label', 'long_name': '', 'order': 2, 'pos': 1} ,
-
                 {'level': 2, 'dbID': 971, 'parent_ID': 94, 'short_name': 'task_label', 'long_name': '', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 972, 'parent_ID': 94, 'short_name': 'echo_index', 'long_name': '', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 973, 'parent_ID': 94, 'short_name': 'echo_index', 'long_name': '', 'order': 2, 'pos': 1} ,
@@ -129,7 +181,6 @@ class Ui_MainWindow(object):
                 {'level': 2, 'dbID': 976, 'parent_ID': 94, 'short_name': 'suffix', 'long_name': '', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 976, 'parent_ID': 94, 'short_name': 'mod_label', 'long_name': '', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 976, 'parent_ID': 94, 'short_name': 'modality_label', 'long_name': '', 'order': 2, 'pos': 1} ,
-
                 {'level': 0, 'dbID': 442, 'parent_ID': 6, 'short_name': 'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA', 'long_name': '', 'order': 1, 'pos': 2} ,
                 {'level': 1, 'dbID': 522, 'parent_ID': 442, 'short_name': '3:<new>', 'long_name': '', 'order': 2, 'pos': 3} ,
                 {'level': 0, 'dbID': 456, 'parent_ID': 6, 'short_name': 'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA', 'long_name': '', 'order': 1, 'pos': 4} ,
@@ -179,6 +230,7 @@ class Ui_MainWindow(object):
         self.bidscoin.setTabText(self.bidscoin.indexOf(self.filebrowser), "Filebrowser")
         self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidstrainer), "BIDStrainer")
         self.mapButton.setText("Commit changes")
+        self.bidscoin.setTabText(self.bidscoin.indexOf(self.filelister), "Filelister")
         self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidsmap), "BIDSmap")
         self.pushButton.setText("Save bidsmap")
 
@@ -223,6 +275,12 @@ class Ui_MainWindow(object):
         self.bidscoin.setCurrentIndex(1)
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def handleButtonClicked(self):
+        button = QApplication.focusWidget()
+        index = self.table.indexAt(button.pos())
+        if index.isValid():
+            print(index.row(), index.column())
 
     def on_clicked(self, index):
         print(self.model.fileInfo(index).absoluteFilePath())
