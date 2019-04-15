@@ -134,7 +134,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         for filename in sorted(glob.glob(os.path.join(bidsmodality, bidsname + '_*'))):
             basepath, ext1 = os.path.splitext(filename)                                                 # E.g. ext1 -> .nii
             basepath, ext2 = os.path.splitext(basepath)                                                 # Account for .nii.gz files
-            suffices       = basepath.rsplit(bidsname,1)[1]                                             # E.g. fieldmaps produce *_e2_ph files
+            suffices       = basepath.rsplit(bidsname + '_', 1)[1]                                      # E.g. fieldmaps produce *_e2_ph files
 
             # Patch the basepath with the suffix info
             for suffix in suffices.split('_'):
@@ -185,10 +185,10 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 bidsname1   = bids.set_bidslabel(bidsname, 'run', run)
                 val         = bids.set_bidslabel(bidsname1, 'acq')
                 c2e2val     = bids.set_bidslabel(newbidsname, 'acq')                                    # This contains c/e info that was added to the acquisition label
-                c1e1        = c2e2val.replacel(val, '').replace('2', '1')
-                newbidsname = bids.set_bidslabel(bidsname1, 'none', c1e1)
-                newfilename = os.path.join(bidsmodality, newbidsname + ext2 + ext1)                     # The expected filename for c1/e1
-                oldfilename = os.path.join(bidsmodality, bidsname1 + ext2 + ext1)                       # The current filename for c1/e1
+                c1e1        = c2e2val.replace(val, '').replace('2', '1')                                # Replace the e2/c2 labels with e1/c1 labels
+                newbidsname = bids.set_bidslabel(bidsname1, 'none', c1e1)                               # Append the c/e labels back into the acquisition field
+                newfilename = os.path.join(bidsmodality, newbidsname + ext2 + ext1)                     # The expected (appended) filename for c1/e1
+                oldfilename = os.path.join(bidsmodality, bidsname1 + ext2 + ext1)                       # The original (unappended) filename for c1/e1
                 if not os.path.isfile(newfilename):
                     if os.path.isfile(oldfilename):
                         bids.printlog(f'Found no dcm2niix {suffix} suffix for image instance 1, renaming\n{oldfilename} ->\n{newfilename}', LOG)
