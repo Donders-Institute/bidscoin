@@ -49,7 +49,7 @@ class Ui_MainWindow(object):
         MainWindow.resize(1280, 800)
 
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("brain.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(os.path.join(os.path.dirname(os.path.realpath(__file__)), "brain.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
 
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -57,7 +57,7 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
 
         self.bidscoin = QtWidgets.QTabWidget(self.centralwidget)
-        self.bidscoin.setGeometry(QtCore.QRect(0, 0, 1280, 700))
+        self.bidscoin.setGeometry(QtCore.QRect(0, 0, 1280, 760))
         self.bidscoin.setTabPosition(QtWidgets.QTabWidget.North)
         self.bidscoin.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.bidscoin.setObjectName("bidscoin")
