@@ -80,6 +80,8 @@ class Ui_MainWindow(object):
         self.tab1.layout.addWidget(self.label)
         self.tab1.layout.addWidget(self.tree)
         self.tree.header().resizeSection(0, 800)
+
+
         self.filebrowser = QtWidgets.QWidget()
         self.filebrowser.setLayout(self.tab1.layout)
         self.filebrowser.setObjectName("filebrowser")
@@ -94,16 +96,9 @@ class Ui_MainWindow(object):
 
         self.tab3 = QtWidgets.QWidget()
         self.tab3.layout = QVBoxLayout(self.centralwidget)
-        self.label3 = QLabel()
-        self.label3.setText("Files")
-        # self.table = QTableView()
-        # table_model = QStandardItemModel()
-        # table_model.setHorizontalHeaderLabels(['IMA file', 'BIDS name', 'Action'])
-        # for f in table_data:
-        #     table_model.appendRow(QStandardItem(f))
-        # self.table.setModel(table_model)
-        # self.table.resizeColumnToContents(0)
-
+        self.tableButton = QtWidgets.QPushButton()
+        self.tableButton.setGeometry(QtCore.QRect(20, 20, 93, 28))
+        self.tableButton.setObjectName("tableButton")
         self.table = QTableWidget()
         self.table.setColumnCount(3)
         self.table.setRowCount(len(list_ima_files))
@@ -121,31 +116,17 @@ class Ui_MainWindow(object):
                 self.btn_select.setStyleSheet('QPushButton {color: green;}')
             self.btn_select.clicked.connect(self.handleButtonClicked)
             self.table.setCellWidget(index, 2, self.btn_select)
-
-        self.table.resizeColumnToContents(0)
-        self.table.resizeColumnToContents(1)
-        self.table.resizeColumnToContents(2)
         self.table.setHorizontalHeaderLabels(['IMA file', 'BIDS name', 'Action'])
-
-
-        # self.tableWidget.setModel(table_model)
-        #
-        # self.tableWidget.setRowCount(4)
-        # self.tableWidget.setColumnCount(2)
-        # self.tableWidget.setItem(0,0, QTableWidgetItem("Cell (1,1)"))
-        # self.tableWidget.setItem(0,1, QTableWidgetItem("Cell (1,2)"))
-        # self.tableWidget.setItem(1,0, QTableWidgetItem("Cell (2,1)"))
-        # self.tableWidget.setItem(1,1, QTableWidgetItem("Cell (2,2)"))
-        # self.tableWidget.setItem(2,0, QTableWidgetItem("Cell (3,1)"))
-        # self.tableWidget.setItem(2,1, QTableWidgetItem("Cell (3,2)"))
-        # self.tableWidget.setItem(3,0, QTableWidgetItem("Cell (4,1)"))
-        # self.tableWidget.setItem(3,1, QTableWidgetItem("Cell (4,2)"))
-        # self.tableWidget.move(0,0)
-        self.tab3.layout.addWidget(self.label3)
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        self.tab3.layout.addWidget(self.tableButton)
         self.tab3.layout.addWidget(self.table)
         self.filelister = QtWidgets.QWidget()
         self.filelister.setLayout(self.tab3.layout)
         self.filelister.setObjectName("filelister")
+        self.tableButton.setText("Commit changes")
         self.bidscoin.addTab(self.filelister, "")
 
         self.tab2 = QtWidgets.QWidget()
