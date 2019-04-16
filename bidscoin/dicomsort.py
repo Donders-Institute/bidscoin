@@ -145,7 +145,7 @@ def sortsessions(session: str, subjectid: str='', sessionid: str='', rename: boo
 
                     dicomfiles = []
                     for series in study.children:
-                        dicomfiles.extend([os.path.join(sessionfolder, *image.ReferencedFileID) for image in series.children])
+                        dicomfiles.extend([os.path.join(sessionfolder, image.ReferencedFileID) for image in series.children])
                     sortsession(sessionfolder, dicomfiles, rename, ext, nosort)
 
         else:
