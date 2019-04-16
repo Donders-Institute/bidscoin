@@ -54,7 +54,7 @@ def obtain_initial_bidsmap_info(bidsmap_yaml):
 
 class Ui_MainWindow(object):
 
-    def setupUi(self, MainWindow, bidsmap_yaml, bidsmap_info):
+    def setupUi(self, MainWindow, rawfolder, inputbidsmap, bidsmap_yaml, bidsmap_info):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1280, 800)
 
@@ -76,7 +76,7 @@ class Ui_MainWindow(object):
         self.tab1 = QtWidgets.QWidget()
         self.tab1.layout = QVBoxLayout(self.centralwidget)
         self.label = QLabel()
-        self.label.setText("Inspect raw data folder: M:\\bidscoin\\raw")
+        self.label.setText("Inspect raw data folder: {}".format(rawfolder))
         self.model = QFileSystemModel()
         self.model.setRootPath('')
         self.model.setFilter(QtCore.QDir.NoDotAndDotDot | QtCore.QDir.AllDirs | QtCore.QDir.Files)
@@ -85,7 +85,7 @@ class Ui_MainWindow(object):
         self.tree.setAnimated(False)
         self.tree.setIndentation(20)
         self.tree.setSortingEnabled(True)
-        self.tree.setRootIndex(self.model.index("M:\\bidscoin\\raw"))
+        self.tree.setRootIndex(self.model.index(rawfolder))
         self.tree.clicked.connect(self.on_clicked)
         self.tab1.layout.addWidget(self.label)
         self.tab1.layout.addWidget(self.tree)
@@ -96,9 +96,11 @@ class Ui_MainWindow(object):
         self.filebrowser.setObjectName("filebrowser")
         self.bidscoin.addTab(self.filebrowser, "")
 
-        self.bidsmap = QtWidgets.QWidget()
-        self.bidsmap.setObjectName("bidsmap")
-        self.plainTextEdit = QsciScintilla(self.bidsmap)
+        self.tab2 = QtWidgets.QWidget()
+        self.tab2.layout = QVBoxLayout(self.centralwidget)
+        self.label_bidsmap = QLabel()
+        self.label_bidsmap.setText("Inspect input BIDS map file: {}".format(inputbidsmap))
+        self.plainTextEdit = QsciScintilla()
         self.__lexer = QsciLexerYAML()
         self.plainTextEdit.setLexer(self.__lexer)
         self.plainTextEdit.setUtf8(True)  # Set encoding to UTF-8
@@ -106,12 +108,15 @@ class Ui_MainWindow(object):
         self.__myFont.setPointSize(10)
         self.plainTextEdit.setFont(self.__myFont)
         self.__lexer.setFont(self.__myFont)
-        self.plainTextEdit.setGeometry(QtCore.QRect(20, 20, 1240, 670))
+        #self.plainTextEdit.setGeometry(QtCore.QRect(20, 20, 1240, 670))
         self.plainTextEdit.setObjectName("syntaxHighlighter")
         self.plainTextEdit.setText(bidsmap_yaml)
-        # self.pushButton = QtWidgets.QPushButton(self.bidsmap)
-        # self.pushButton.setGeometry(QtCore.QRect(20, 20, 93, 28))
-        # self.pushButton.setObjectName("pushButton")
+        self.tab2.layout.addWidget(self.label_bidsmap)
+        self.tab2.layout.addWidget(self.plainTextEdit)
+
+        self.bidsmap = QtWidgets.QWidget()
+        self.bidsmap.setLayout(self.tab2.layout)
+        self.bidsmap.setObjectName("bidsmap")
         self.bidscoin.addTab(self.bidsmap, "")
 
         self.list_ima_files = ['M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA',
@@ -453,19 +458,27 @@ class EditDialog(QDialog):
 
 
 if __name__ == "__main__":
+    default_raw_folder = "M:\\bidscoin\\raw"
+    default_input_bidsmap_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_new.yaml")
+    default_output_bidsmap_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_output.yaml")
+
     # Parse the input arguments and run bidseditor
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
                                             '  bidseditor.py /raw/data/folder /input/bidsmap.yaml /output/bidsmap.yaml\n')
-    parser.add_argument('rawfolder', help='The root folder of the directory tree containing the raw files', nargs='?', default='')
-    parser.add_argument('input-bidsmap', help='The input bidsmap YAML-file with the BIDS heuristics', nargs='?', default='')
-    parser.add_argument('output-bidsmap', help='The output bidsmap YAML-file with the BIDS heuristics', nargs='?', default='')
+    parser.add_argument('rawfolder', help='The root folder of the directory tree containing the raw files', nargs='?', default=default_raw_folder)
+    parser.add_argument('inputbidsmap', help='The input bidsmap YAML-file with the BIDS heuristics', nargs='?', default=default_input_bidsmap_filename)
+    parser.add_argument('outputbidsmap', help='The output bidsmap YAML-file with the BIDS heuristics', nargs='?', default=default_output_bidsmap_filename)
     args = parser.parse_args()
+
+    # Validate the arguments
+    if not os.path.exists(args.rawfolder):
+        raise Exception("Raw folder not found: {}".format(args.rawfolder))
 
     # Obtain the initial bidsmap info
     filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_new.yaml")
-    input_bidsmap_yaml = obtain_initial_bidsmap_yaml(filename)
+    input_bidsmap_yaml = obtain_initial_bidsmap_yaml(args.inputbidsmap)
     input_bidsmap_info = obtain_initial_bidsmap_info(input_bidsmap_yaml)
 
     # Start the application
@@ -473,6 +486,6 @@ if __name__ == "__main__":
     app.setApplicationName("BIDS editor")
     mainwin = QMainWindow()
     gui = Ui_MainWindow()
-    gui.setupUi(mainwin, input_bidsmap_yaml, input_bidsmap_info)
+    gui.setupUi(mainwin, args.rawfolder, args.inputbidsmap, input_bidsmap_yaml, input_bidsmap_info)
     mainwin.show()
     sys.exit(app.exec_())
