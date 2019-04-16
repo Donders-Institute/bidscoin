@@ -293,15 +293,15 @@ def get_bids_name(bids_name_array):
     return '_'.join(array)
 
 
-def obtain_initial_bidsmap_yaml(filename):
+def read_yaml_as_string(filename):
     """Obtain the initial BIDSmap as yaml string. """
     if not os.path.exists(filename):
         raise Exception("File not found: {}".format(filename))
 
-    bidsmap_yaml = ""
+    yaml_as_string = ""
     with open(filename) as fp:
-        bidsmap_yaml = fp.read()
-    return bidsmap_yaml
+        yaml_as_string = fp.read()
+    return yaml_as_string
 
 
 def obtain_initial_bidsmap_info(bidsmap_yaml):
@@ -359,6 +359,38 @@ def obtain_initial_bidsmap_info(bidsmap_yaml):
                     })
 
     return bidsmap_info
+
+
+def obtain_template_info(template_yaml):
+    """Obtain the template info. """
+    contents = {}
+    try:
+        contents = yaml.safe_load(template_yaml)
+    except yaml.YAMLError as exc:
+        raise Exception('Error: {}'.format(exc))
+
+    template_info = []
+    contents_dicom = contents.get('DICOM', {})
+
+    for modality in ["anat", "func", "dwi", "fmap", "beh", "pet"]:
+
+        contents_dicom_modality = contents_dicom.get(modality, None)
+        if contents_dicom_modality is not None:
+            for item in contents_dicom.get(modality, None):
+                if item is not None:
+
+                    bids_attributes = item.get('bids', None)
+                    if bids_attributes is not None:
+                        bids_values = bids_attributes
+                    else:
+                        bids_values = {}
+
+                    template_info.append({
+                        "modality": modality,
+                        "bids_values": bids_values
+                    })
+
+    return template_info
 
 
 def get_list_files(bidsmap_info):

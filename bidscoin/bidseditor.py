@@ -9,14 +9,14 @@ import sys
 from collections import deque
 import argparse
 import textwrap
-import json
 import logging
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel,
-    QTreeView, QVBoxLayout, QLabel, QDialog, QTableWidget, QTableWidgetItem,
-    QAbstractItemView, QPushButton, QComboBox, QTextEdit)
+                             QTreeView, QVBoxLayout, QLabel, QDialog,
+                             QTableWidget, QTableWidgetItem,
+                             QAbstractItemView, QPushButton, QComboBox, QTextEdit)
 from PyQt5.Qsci import QsciScintilla, QsciLexerYAML
 
 import bids
@@ -27,13 +27,19 @@ logger = logging.getLogger('bidscoin')
 
 
 ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "brain.ico")
+TEMPLATE_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics", "bidsmap_template.yaml")
+
+DEFAULT_RAW_FOLDER = "M:\\bidscoin\\raw"
+DEFAULT_INPUT_BIDSMAP_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_new.yaml")
+DEFAULT_OUTPUT_BIDSMAP_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_output.yaml")
 
 
 class Ui_MainWindow(object):
 
-    def setupUi(self, MainWindow, rawfolder, inputbidsmap, bidsmap_yaml, bidsmap_info):
+    def setupUi(self, MainWindow, rawfolder, inputbidsmap, bidsmap_yaml, bidsmap_info, template_info):
 
         self.bidsmap_info = bidsmap_info
+        self.template_info = template_info
 
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1280, 800)
@@ -187,7 +193,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuHelp.menuAction())
         self.menuFile.setTitle("File")
         self.menuHelp.setTitle("Help")
-        self.statusbar.setStatusTip("Text in statusbar")
+        self.statusbar.setStatusTip("Statusbar")
         self.actionExit.setText("Exit")
         self.actionExit.setStatusTip("Click to exit the application")
         self.actionExit.setShortcut("Ctrl+X")
@@ -216,7 +222,7 @@ class Ui_MainWindow(object):
     def showEdit(self, i):
         """ """
         info = self.bidsmap_info[i]
-        self.dlg2 = EditDialog(info)
+        self.dlg2 = EditDialog(info, self.template_info)
         self.dlg2.show()
 
 
@@ -245,8 +251,10 @@ class AboutDialog(QDialog):
 
 
 class EditDialog(QDialog):
-    def __init__(self, info):
+    def __init__(self, info, template_info):
         QDialog.__init__(self)
+
+        self.template_info = template_info
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -341,8 +349,6 @@ class EditDialog(QDialog):
 
     def selectionchange(self, i):
         """Update the BIDS values and BIDS name section when the dropdown selection has been taking place. """
-        selection_text = self.cb.currentText()
-
         if i == 0:
             # Handle case when "Select modality" is selected
             self.model_bids.clear()
@@ -350,23 +356,12 @@ class EditDialog(QDialog):
             self.view_bidsname.textCursor().insertHtml('<b>N/A</b>')
 
         else:
-            data = [
-                {'level': 0, 'db_id': 95, 'parent_id': 94, 'short_name': 'acq_label', 'long_name': 'localizerAANGEPAST11SLICES'} ,
-                {'level': 0, 'db_id': 96, 'parent_id': 94, 'short_name': 'rec_label', 'long_name': ''} ,
-                {'level': 0, 'db_id': 97, 'parent_id': 94, 'short_name': 'ce_label', 'long_name': ''} ,
-                {'level': 0, 'db_id': 971, 'parent_id': 94, 'short_name': 'task_label', 'long_name': ''} ,
-                {'level': 0, 'db_id': 972, 'parent_id': 94, 'short_name': 'echo_index', 'long_name': ''} ,
-                {'level': 0, 'db_id': 973, 'parent_id': 94, 'short_name': 'echo_index', 'long_name': ''} ,
-                {'level': 0, 'db_id': 974, 'parent_id': 94, 'short_name': 'dir_label', 'long_name': ''} ,
-                {'level': 0, 'db_id': 975, 'parent_id': 94, 'short_name': 'run_index', 'long_name': '<<1>>'} ,
-                {'level': 0, 'db_id': 976, 'parent_id': 94, 'short_name': 'suffix', 'long_name': ''} ,
-                {'level': 0, 'db_id': 976, 'parent_id': 94, 'short_name': 'mod_label', 'long_name': ''} ,
-                {'level': 0, 'db_id': 976, 'parent_id': 94, 'short_name': 'modality_label', 'long_name': ''}
-            ]
+            selected_modality = self.cb.currentText()
 
             # Update the BIDS values
+            data_bids = self.get_data_bids(selected_modality)
             self.model_bids.clear()
-            self.setupBidsModelData(data)
+            self.setupBidsModelData(data_bids)
 
             # Update the BIDS name
             self.view_bidsname.clear()
@@ -452,44 +447,80 @@ class EditDialog(QDialog):
         """Obtain the provenance data from the info. """
         provenance_file = info['provenance']['filename']
         provenance_path = info['provenance']['path']
+
         data_provenance = [
-            {'level': 0, 'db_id': 0, 'parent_id': 2, 'short_name': 'filename', 'long_name': provenance_file},
-            {'level': 0, 'db_id': 1, 'parent_id': 2, 'short_name': 'path', 'long_name': provenance_path}
+            {
+                'level': 0,
+                'db_id': 10,
+                'parent_id': 0,
+                'short_name':
+                'filename',
+                'long_name': provenance_file
+            },
+            {
+                'level': 0,
+                'db_id': 11,
+                'parent_id': 0,
+                'short_name': 'path',
+                'long_name': provenance_path
+            }
         ]
         return data_provenance
 
     def get_data_dicom(self, info):
         """Obtain the DICOM attributes from the info. """
-        data_dicom = [
-            {'level': 0, 'db_id': 90, 'parent_id': 88, 'short_name': 'SeriesDescription', 'long_name': 'localizer AANGEPAST 11 SLICES'},
-            {'level': 0, 'db_id': 91, 'parent_id': 88, 'short_name': 'SequenceVariant', 'long_name': "['SP', 'OSP']"},
-            {'level': 0, 'db_id': 92, 'parent_id': 88, 'short_name': 'SequenceName', 'long_name': '*fl2d1'},
-            {'level': 0, 'db_id': 93, 'parent_id': 88, 'short_name': 'ScanningSequence', 'long_name': 'GR'},
-            {'level': 0, 'db_id': 933, 'parent_id': 88, 'short_name': 'MRAcquisitionType', 'long_name': '2D'},
-            {'level': 0, 'db_id': 934, 'parent_id': 88, 'short_name': 'FlipAngle', 'long_name': '20'},
-            {'level': 0, 'db_id': 935, 'parent_id': 88, 'short_name': 'EchoNumbers', 'long_name': '1'},
-            {'level': 0, 'db_id': 936, 'parent_id': 88, 'short_name': 'EchoTime', 'long_name': '4'},
-            {'level': 0, 'db_id': 937, 'parent_id': 88, 'short_name': 'RepetitionTime', 'long_name': '8.6'},
-            {'level': 0, 'db_id': 938, 'parent_id': 88, 'short_name': 'ImageType', 'long_name': "['ORIGINAL', 'PRIMARY', 'M', 'NORM', 'DIS2D']"},
-            {'level': 0, 'db_id': 939, 'parent_id': 88, 'short_name': 'ProtocolName', 'long_name': 'localizer AANGEPAST 11 SLICES'},
-            {'level': 0, 'db_id': 940, 'parent_id': 88, 'short_name': 'PhaseEncodingDirection', 'long_name': ''}
-        ]
+        dicom_attributes = info['dicom_attributes']
+
+        data_dicom = []
+        counter = 10
+        for key, value in dicom_attributes.items():
+            data_dicom.append({
+                'level': 0,
+                'db_id': counter,
+                'parent_id': 0,
+                'short_name': key,
+                'long_name': value
+            })
+            counter += 1
         return data_dicom
+
+    def get_data_bids(self, selected_modality):
+        """Obtain the bids values from the template info. """
+        bids_values = {}
+        for item in self.template_info:
+            if item['modality'] == selected_modality:
+                bids_values = item['bids_values']
+                break
+
+        data_bids = []
+        counter = 10
+        for key, value in bids_values.items():
+            # Skip IntendedFor
+            if key != "IntendedFor":
+                if value != "None":
+                    modified_value = value
+                else:
+                    modified_value = ""
+                data_bids.append({
+                    'level': 0,
+                    'db_id': counter,
+                    'parent_id': 0,
+                    'short_name': key,
+                    'long_name': modified_value
+                })
+                counter += 1
+        return data_bids
 
 
 if __name__ == "__main__":
-    default_raw_folder = "M:\\bidscoin\\raw"
-    default_input_bidsmap_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_new.yaml")
-    default_output_bidsmap_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_output.yaml")
-
     # Parse the input arguments and run bidseditor
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
                                             '  bidseditor.py /raw/data/folder /input/bidsmap.yaml /output/bidsmap.yaml\n')
-    parser.add_argument('rawfolder', help='The root folder of the directory tree containing the raw files', nargs='?', default=default_raw_folder)
-    parser.add_argument('inputbidsmap', help='The input bidsmap YAML-file with the BIDS heuristics', nargs='?', default=default_input_bidsmap_filename)
-    parser.add_argument('outputbidsmap', help='The output bidsmap YAML-file with the BIDS heuristics', nargs='?', default=default_output_bidsmap_filename)
+    parser.add_argument('rawfolder', help='The root folder of the directory tree containing the raw files', nargs='?', default=DEFAULT_RAW_FOLDER)
+    parser.add_argument('inputbidsmap', help='The input bidsmap YAML-file with the BIDS heuristics', nargs='?', default=DEFAULT_INPUT_BIDSMAP_FILENAME)
+    parser.add_argument('outputbidsmap', help='The output bidsmap YAML-file with the BIDS heuristics', nargs='?', default=DEFAULT_OUTPUT_BIDSMAP_FILENAME)
     args = parser.parse_args()
 
     # Validate the arguments
@@ -497,15 +528,18 @@ if __name__ == "__main__":
         raise Exception("Raw folder not found: {}".format(args.rawfolder))
 
     # Obtain the initial bidsmap info
-    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_new.yaml")
-    input_bidsmap_yaml = bidsutils.obtain_initial_bidsmap_yaml(args.inputbidsmap)
+    input_bidsmap_yaml = bidsutils.read_yaml_as_string(args.inputbidsmap)
     input_bidsmap_info = bidsutils.obtain_initial_bidsmap_info(input_bidsmap_yaml)
+
+    # Obtain the template info
+    template_yaml = bidsutils.read_yaml_as_string(TEMPLATE_FILENAME)
+    template_info = bidsutils.obtain_template_info(template_yaml)
 
     # Start the application
     app = QApplication(sys.argv)
     app.setApplicationName("BIDS editor")
     mainwin = QMainWindow()
     gui = Ui_MainWindow()
-    gui.setupUi(mainwin, args.rawfolder, args.inputbidsmap, input_bidsmap_yaml, input_bidsmap_info)
+    gui.setupUi(mainwin, args.rawfolder, args.inputbidsmap, input_bidsmap_yaml, input_bidsmap_info, template_info)
     mainwin.show()
     sys.exit(app.exec_())
