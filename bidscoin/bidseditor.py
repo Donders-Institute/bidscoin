@@ -256,17 +256,10 @@ class EditDialog(QDialog):
         self.resize(1024, 800)
 
         # Non-editable provenance section
+        data_provenance = self.get_data_provenance(info)
         self.label_provenance = QLabel()
         self.label_provenance.setText("PROVENANCE")
         self.model_provenance = QtGui.QStandardItemModel()
-
-        provenance_file = info['provenance']['filename']
-        provenance_path = info['provenance']['path']
-        data_provenance = [
-            {'level': 0, 'db_id': 0, 'parent_id': 6, 'short_name': 'filename', 'long_name': provenance_file},
-            {'level': 0, 'db_id': 1, 'parent_id': 6, 'short_name': 'path', 'long_name': provenance_path}
-        ]
-
         self.setupProvenanceModelData(data_provenance)
         self.model_provenance.setHorizontalHeaderLabels(['Key', 'Value'])
         self.view_provenance = QTreeView()
@@ -281,23 +274,10 @@ class EditDialog(QDialog):
         self.view_provenance.setUniformRowHeights(True)
 
         # Non-editable DICOM attributes section
+        data_dicom = self.get_data_dicom(info)
         self.label_dicom = QLabel()
         self.label_dicom.setText("DICOM attributes")
         self.model_dicom = QtGui.QStandardItemModel()
-        data_dicom = [
-            {'level': 0, 'db_id': 90, 'parent_id': 88, 'short_name': 'SeriesDescription', 'long_name': 'localizer AANGEPAST 11 SLICES'},
-            {'level': 0, 'db_id': 91, 'parent_id': 88, 'short_name': 'SequenceVariant', 'long_name': "['SP', 'OSP']"},
-            {'level': 0, 'db_id': 92, 'parent_id': 88, 'short_name': 'SequenceName', 'long_name': '*fl2d1'},
-            {'level': 0, 'db_id': 93, 'parent_id': 88, 'short_name': 'ScanningSequence', 'long_name': 'GR'},
-            {'level': 0, 'db_id': 933, 'parent_id': 88, 'short_name': 'MRAcquisitionType', 'long_name': '2D'},
-            {'level': 0, 'db_id': 934, 'parent_id': 88, 'short_name': 'FlipAngle', 'long_name': '20'},
-            {'level': 0, 'db_id': 935, 'parent_id': 88, 'short_name': 'EchoNumbers', 'long_name': '1'},
-            {'level': 0, 'db_id': 936, 'parent_id': 88, 'short_name': 'EchoTime', 'long_name': '4'},
-            {'level': 0, 'db_id': 937, 'parent_id': 88, 'short_name': 'RepetitionTime', 'long_name': '8.6'},
-            {'level': 0, 'db_id': 938, 'parent_id': 88, 'short_name': 'ImageType', 'long_name': "['ORIGINAL', 'PRIMARY', 'M', 'NORM', 'DIS2D']"},
-            {'level': 0, 'db_id': 939, 'parent_id': 88, 'short_name': 'ProtocolName', 'long_name': 'localizer AANGEPAST 11 SLICES'},
-            {'level': 0, 'db_id': 940, 'parent_id': 88, 'short_name': 'PhaseEncodingDirection', 'long_name': ''}
-        ]
         self.setupDicomModelData(data_dicom)
         self.model_dicom.setHorizontalHeaderLabels(['Key', 'Value'])
         self.view_dicom = QTreeView()
@@ -310,15 +290,16 @@ class EditDialog(QDialog):
         self.view_dicom.setAlternatingRowColors(True)
         self.view_dicom.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
+        # Dropdown list section
         self.cblabel = QLabel()
         self.cblabel.setText("MODALITY")
         self.cb = QComboBox()
         self.cb.addItems(["Select modality", "anat", "func", "dwi", "fmap", "beh", "pet"])
         self.cb.currentIndexChanged.connect(self.selectionchange)
 
+        # Editable BIDS values section
         self.label_bids = QLabel()
         self.label_bids .setText("BIDS values")
-
         self.model_bids = QtGui.QStandardItemModel()
         self.model_bids.setHorizontalHeaderLabels(['Key', 'Value'])
         self.view_bids = QTreeView()
@@ -331,12 +312,14 @@ class EditDialog(QDialog):
         self.view_bids.setAlternatingRowColors(True)
         self.view_bids.clicked.connect(self.bids_on_clicked)
 
+        # Non-editable BIDS name section
         self.label_bidsname = QLabel()
         self.label_bidsname.setText("BIDSNAME")
         self.view_bidsname = QTextEdit()
         self.view_bidsname.setReadOnly(True)
         self.view_bidsname.textCursor().insertHtml('<b>N/A</b>')
 
+        # Save button
         self.mapButton = QtWidgets.QPushButton()
         self.mapButton.setObjectName("mapButton")
         self.mapButton.setText("Save")
@@ -357,28 +340,37 @@ class EditDialog(QDialog):
         self.mapButton.clicked.connect(self.close)
 
     def selectionchange(self, i):
-        print("Current index", i, "selection changed ", self.cb.currentText())
-        data = [
-            {'level': 0, 'db_id': 95, 'parent_id': 94, 'short_name': 'acq_label', 'long_name': 'localizerAANGEPAST11SLICES'} ,
-            {'level': 0, 'db_id': 96, 'parent_id': 94, 'short_name': 'rec_label', 'long_name': ''} ,
-            {'level': 0, 'db_id': 97, 'parent_id': 94, 'short_name': 'ce_label', 'long_name': ''} ,
-            {'level': 0, 'db_id': 971, 'parent_id': 94, 'short_name': 'task_label', 'long_name': ''} ,
-            {'level': 0, 'db_id': 972, 'parent_id': 94, 'short_name': 'echo_index', 'long_name': ''} ,
-            {'level': 0, 'db_id': 973, 'parent_id': 94, 'short_name': 'echo_index', 'long_name': ''} ,
-            {'level': 0, 'db_id': 974, 'parent_id': 94, 'short_name': 'dir_label', 'long_name': ''} ,
-            {'level': 0, 'db_id': 975, 'parent_id': 94, 'short_name': 'run_index', 'long_name': '<<1>>'} ,
-            {'level': 0, 'db_id': 976, 'parent_id': 94, 'short_name': 'suffix', 'long_name': ''} ,
-            {'level': 0, 'db_id': 976, 'parent_id': 94, 'short_name': 'mod_label', 'long_name': ''} ,
-            {'level': 0, 'db_id': 976, 'parent_id': 94, 'short_name': 'modality_label', 'long_name': ''}
-        ]
+        """Update the BIDS values and BIDS name section when the dropdown selection has been taking place. """
+        selection_text = self.cb.currentText()
 
-        # Update the BIDS values
-        self.model_bids.clear()
-        self.setupBidsModelData(data)
+        if i == 0:
+            # Handle case when "Select modality" is selected
+            self.model_bids.clear()
+            self.view_bidsname.clear()
+            self.view_bidsname.textCursor().insertHtml('<b>N/A</b>')
 
-        # Update the BIDS name
-        self.view_bidsname.clear()
-        self.view_bidsname.textCursor().insertHtml('<b>New name</b>')
+        else:
+            data = [
+                {'level': 0, 'db_id': 95, 'parent_id': 94, 'short_name': 'acq_label', 'long_name': 'localizerAANGEPAST11SLICES'} ,
+                {'level': 0, 'db_id': 96, 'parent_id': 94, 'short_name': 'rec_label', 'long_name': ''} ,
+                {'level': 0, 'db_id': 97, 'parent_id': 94, 'short_name': 'ce_label', 'long_name': ''} ,
+                {'level': 0, 'db_id': 971, 'parent_id': 94, 'short_name': 'task_label', 'long_name': ''} ,
+                {'level': 0, 'db_id': 972, 'parent_id': 94, 'short_name': 'echo_index', 'long_name': ''} ,
+                {'level': 0, 'db_id': 973, 'parent_id': 94, 'short_name': 'echo_index', 'long_name': ''} ,
+                {'level': 0, 'db_id': 974, 'parent_id': 94, 'short_name': 'dir_label', 'long_name': ''} ,
+                {'level': 0, 'db_id': 975, 'parent_id': 94, 'short_name': 'run_index', 'long_name': '<<1>>'} ,
+                {'level': 0, 'db_id': 976, 'parent_id': 94, 'short_name': 'suffix', 'long_name': ''} ,
+                {'level': 0, 'db_id': 976, 'parent_id': 94, 'short_name': 'mod_label', 'long_name': ''} ,
+                {'level': 0, 'db_id': 976, 'parent_id': 94, 'short_name': 'modality_label', 'long_name': ''}
+            ]
+
+            # Update the BIDS values
+            self.model_bids.clear()
+            self.setupBidsModelData(data)
+
+            # Update the BIDS name
+            self.view_bidsname.clear()
+            self.view_bidsname.textCursor().insertHtml('<b>New name</b>')
 
     def bids_on_clicked(self, index):
         item = self.view_bids.selectedIndexes()[0]
@@ -455,6 +447,34 @@ class EditDialog(QDialog):
             item2.setEditable(True)
             parent.appendRow([item, item2])
             seen[dbid] = parent.child(parent.rowCount() - 1)
+
+    def get_data_provenance(self, info):
+        """Obtain the provenance data from the info. """
+        provenance_file = info['provenance']['filename']
+        provenance_path = info['provenance']['path']
+        data_provenance = [
+            {'level': 0, 'db_id': 0, 'parent_id': 2, 'short_name': 'filename', 'long_name': provenance_file},
+            {'level': 0, 'db_id': 1, 'parent_id': 2, 'short_name': 'path', 'long_name': provenance_path}
+        ]
+        return data_provenance
+
+    def get_data_dicom(self, info):
+        """Obtain the DICOM attributes from the info. """
+        data_dicom = [
+            {'level': 0, 'db_id': 90, 'parent_id': 88, 'short_name': 'SeriesDescription', 'long_name': 'localizer AANGEPAST 11 SLICES'},
+            {'level': 0, 'db_id': 91, 'parent_id': 88, 'short_name': 'SequenceVariant', 'long_name': "['SP', 'OSP']"},
+            {'level': 0, 'db_id': 92, 'parent_id': 88, 'short_name': 'SequenceName', 'long_name': '*fl2d1'},
+            {'level': 0, 'db_id': 93, 'parent_id': 88, 'short_name': 'ScanningSequence', 'long_name': 'GR'},
+            {'level': 0, 'db_id': 933, 'parent_id': 88, 'short_name': 'MRAcquisitionType', 'long_name': '2D'},
+            {'level': 0, 'db_id': 934, 'parent_id': 88, 'short_name': 'FlipAngle', 'long_name': '20'},
+            {'level': 0, 'db_id': 935, 'parent_id': 88, 'short_name': 'EchoNumbers', 'long_name': '1'},
+            {'level': 0, 'db_id': 936, 'parent_id': 88, 'short_name': 'EchoTime', 'long_name': '4'},
+            {'level': 0, 'db_id': 937, 'parent_id': 88, 'short_name': 'RepetitionTime', 'long_name': '8.6'},
+            {'level': 0, 'db_id': 938, 'parent_id': 88, 'short_name': 'ImageType', 'long_name': "['ORIGINAL', 'PRIMARY', 'M', 'NORM', 'DIS2D']"},
+            {'level': 0, 'db_id': 939, 'parent_id': 88, 'short_name': 'ProtocolName', 'long_name': 'localizer AANGEPAST 11 SLICES'},
+            {'level': 0, 'db_id': 940, 'parent_id': 88, 'short_name': 'PhaseEncodingDirection', 'long_name': ''}
+        ]
+        return data_dicom
 
 
 if __name__ == "__main__":
