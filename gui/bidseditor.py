@@ -7,7 +7,7 @@ from collections import deque
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QFont, QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QTreeView, QVBoxLayout, QLabel, QPushButton, QDialog, QPlainTextEdit, QTableWidget, QTableWidgetItem, QAbstractItemView, QTableView, QPushButton, QComboBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QTreeView, QVBoxLayout, QLabel, QPushButton, QDialog, QPlainTextEdit, QTableWidget, QTableWidgetItem, QAbstractItemView, QTableView, QPushButton, QComboBox, QTextEdit
 from PyQt5.Qsci import QsciScintilla, QsciLexerYAML
 
 
@@ -367,17 +367,27 @@ class AboutDialog(QDialog):
 
 class EditDialog(QDialog):
     def __init__(self, i, info):
-        QDialog.__init__(self)
-        label = QLabel()
-        label.setText("PROVENANCE: %s" % info['provenance_file'])
+        QDialog.__init__(self, None, QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
 
-        layout = QVBoxLayout(self)
-        layout.addWidget(label)
+        self.setWindowTitle("Edit Dialog")
 
-        self.label_unknowns = QLabel()
-        self.label_unknowns .setText("DICOM attributes")
-        self.model_unknowns = QtGui.QStandardItemModel()
+        self.label_provenance = QLabel()
+        self.label_provenance.setText("PROVENANCE")
+        self.model_provenance = QtGui.QStandardItemModel()
+        data_provenance = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'filename', 'long_name': info['provenance_file'], 'order': 1, 'pos': 0},
+                           {'level': 0, 'dbID': 1, 'parent_ID': 6, 'short_name': 'path', 'long_name': os.path.dirname(info.get('provenance_path', '')), 'order': 1, 'pos': 0}]
+        self.model_provenance.setHorizontalHeaderLabels(['Item', 'Value'])
+        self.view_provenance = QTreeView()
+        self.view_provenance.setModel(self.model_provenance)
+        self.view_provenance.setWindowTitle("PROVENANCE")
+        self.view_provenance.expandAll()
+        self.view_provenance.resizeColumnToContents(0)
+        # self.view_provenance.setIndentation(0)
+        self.view_provenance.setAlternatingRowColors(True)
 
+        self.label_dicom = QLabel()
+        self.label_dicom.setText("DICOM attributes")
+        self.model_dicom = QtGui.QStandardItemModel()
         data = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'DICOM', 'long_name': '', 'order': 1, 'pos': 0} ,
                 {'level': 1, 'dbID': 70, 'parent_ID': 0, 'short_name': 'DICOM PROVENANCE', 'long_name': '', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 71, 'parent_ID': 70, 'short_name': 'Filename', 'long_name': 'M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA', 'order': 2, 'pos': 1} ,
@@ -396,6 +406,64 @@ class EditDialog(QDialog):
                 {'level': 2, 'dbID': 939, 'parent_ID': 88, 'short_name': 'ProtocolName', 'long_name': 'localizer AANGEPAST 11 SLICES', 'order': 2, 'pos': 1} ,
                 {'level': 2, 'dbID': 940, 'parent_ID': 88, 'short_name': 'PhaseEncodingDirection', 'long_name': '', 'order': 2, 'pos': 1},
               ]
+        self.model_dicom.setHorizontalHeaderLabels(['Item', 'Value'])
+        self.view_dicom = QTreeView()
+        self.view_dicom.setModel(self.model_dicom)
+        self.view_dicom.setWindowTitle("DICOM attributes")
+        self.view_dicom.expandAll()
+        self.view_dicom.resizeColumnToContents(0)
+        # self.view_dicom.setIndentation(0)
+        self.view_dicom.setAlternatingRowColors(True)
+
+        self.cblabel = QLabel()
+        self.cblabel.setText("MODALITY")
+        self.cb = QComboBox()
+        self.cb.addItems(["anat", "func", "dwi", "fmap", "beh", "pet"])
+        self.cb.currentIndexChanged.connect(self.selectionchange)
+
+        self.label_bids = QLabel()
+        self.label_bids .setText("BIDS values")
+
+        self.model_bids = QtGui.QStandardItemModel()
+        data = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'N/A', 'long_name': '', 'order': 1, 'pos': 0}]
+        self.model_bids.setHorizontalHeaderLabels(['Item', 'Value'])
+        self.view_bids = QTreeView()
+        self.view_bids.setModel(self.model_bids)
+        self.view_bids.setWindowTitle("BIDS values")
+        self.view_bids.expandAll()
+        self.view_bids.resizeColumnToContents(0)
+        # self.view_dicom.setIndentation(0)
+        self.view_bids.setAlternatingRowColors(True)
+        self.view_bids.clicked.connect(self.bids_on_clicked)
+
+        self.label_bidsname = QLabel()
+        self.label_bidsname.setText("BIDSNAME")
+
+        self.view_bidsname = QTextEdit()
+        self.view_bidsname.setReadOnly(True)
+        self.view_bidsname.textCursor().insertHtml('N/A')
+
+        self.mapButton = QtWidgets.QPushButton()
+        self.mapButton.setObjectName("mapButton")
+        self.mapButton.setText("Save")
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.label_provenance)
+        layout.addWidget(self.view_provenance)
+        layout.addWidget(self.label_dicom)
+        layout.addWidget(self.view_dicom)
+        layout.addWidget(self.cblabel)
+        layout.addWidget(self.cb)
+        layout.addWidget(self.label_bids)
+        layout.addWidget(self.view_bids)
+        layout.addWidget(self.label_bidsname)
+        layout.addWidget(self.view_bidsname)
+        layout.addWidget(self.mapButton)
+
+        self.mapButton.clicked.connect(self.close)
+
+    def selectionchange(self, i):
+        print("Current index", i, "selection changed ", self.cb.currentText())
 
         data2 = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'BIDS', 'long_name': '', 'order': 1, 'pos': 0} ,
                 {'level': 1, 'dbID': 94, 'parent_ID': 0, 'short_name': 'BIDS values', 'long_name': '', 'order': 2, 'pos': 1} ,
@@ -413,44 +481,9 @@ class EditDialog(QDialog):
                 {'level': 1, 'dbID': 100, 'parent_ID': 0, 'short_name': 'BIDSNAME', 'long_name': 'sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz', 'order': 2, 'pos': 1}
               ]
 
-        self.model_unknowns.setHorizontalHeaderLabels(['Item', 'Value'])
-        self.view_unknowns = QTreeView()
-        self.view_unknowns.setModel(self.model_unknowns)
-        self.view_unknowns.setWindowTitle("Unknowns")
-        self.view_unknowns.expandAll()
-        self.view_unknowns.resizeColumnToContents(0)
-        # self.view_unknowns.setIndentation(0)
-        self.view_unknowns.setAlternatingRowColors(True)
-        self.view_unknowns.clicked.connect(self.unknowns_on_clicked)
-
-        self.cblabel = QLabel()
-        self.cblabel.setText("MODALITY")
-        self.cb = QComboBox()
-        self.cb.addItems(["anat", "func"])
-        self.cb.currentIndexChanged.connect(self.selectionchange)
-
-        self.mapButton = QtWidgets.QPushButton()
-        self.mapButton.setObjectName("mapButton")
-        self.mapButton.setText("Save")
-
-        layout.addWidget(self.label_unknowns)
-        layout.addWidget(self.view_unknowns)
-        layout.addWidget(self.cblabel)
-        layout.addWidget(self.cb)
-
-        layout.addWidget(self.mapButton)
-
-        self.mapButton.clicked.connect(self.close)
-
-    def unknowns_on_clicked(self, index):
-        item = self.view_unknowns.selectedIndexes()[0]
+    def bids_on_clicked(self, index):
+        item = self.view_bids.selectedIndexes()[0]
         print(item.model().itemFromIndex(index).text())
-
-    def selectionchange(self, i):
-        print("Items in the list are:")
-        for count in range(self.cb.count()):
-            print(self.cb.itemText(count))
-        print("Current index", i, "selection changed ", self.cb.currentText())
 
 
 if __name__ == "__main__":
