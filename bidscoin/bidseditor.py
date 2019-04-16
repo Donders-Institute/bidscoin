@@ -29,6 +29,9 @@ logger = logging.getLogger('bidscoin')
 class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow, rawfolder, inputbidsmap, bidsmap_yaml, bidsmap_info):
+
+        self.bidsmap_info = bidsmap_info
+
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1280, 800)
 
@@ -47,6 +50,7 @@ class Ui_MainWindow(object):
         self.bidscoin.setObjectName("bidscoin")
         self.bidscoin.setToolTip("<html><head/><body><p>bidscoiner</p></body></html>")
 
+        # TAB 1 - Raw data folder inspector
         self.tab1 = QtWidgets.QWidget()
         self.tab1.layout = QVBoxLayout(self.centralwidget)
         self.label = QLabel()
@@ -70,6 +74,7 @@ class Ui_MainWindow(object):
         self.filebrowser.setObjectName("filebrowser")
         self.bidscoin.addTab(self.filebrowser, "")
 
+        # TAB 2 - Initial BIDSmap inspector
         self.tab2 = QtWidgets.QWidget()
         self.tab2.layout = QVBoxLayout(self.centralwidget)
         self.label_bidsmap = QLabel()
@@ -82,9 +87,9 @@ class Ui_MainWindow(object):
         self.__myFont.setPointSize(10)
         self.plainTextEdit.setFont(self.__myFont)
         self.__lexer.setFont(self.__myFont)
-        #self.plainTextEdit.setGeometry(QtCore.QRect(20, 20, 1240, 670))
         self.plainTextEdit.setObjectName("syntaxHighlighter")
         self.plainTextEdit.setText(bidsmap_yaml)
+        self.plainTextEdit.setReadOnly(True)
         self.tab2.layout.addWidget(self.label_bidsmap)
         self.tab2.layout.addWidget(self.plainTextEdit)
 
@@ -95,6 +100,7 @@ class Ui_MainWindow(object):
 
         self.list_dicom_files, self.list_bids_names = bidsutils.get_list_files(bidsmap_info)
 
+        # TAB 3 - BIDS editor
         self.tab3 = QtWidgets.QWidget()
         self.tab3.layout = QVBoxLayout(self.centralwidget)
         self.tableButton = QtWidgets.QPushButton()
@@ -134,11 +140,14 @@ class Ui_MainWindow(object):
         self.tableButton.setText("Commit changes")
         self.bidscoin.addTab(self.filelister, "")
 
-        self.bidscoin.setTabText(self.bidscoin.indexOf(self.filebrowser), "Inspect raw data folder")
-        self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidsmap), "Inspect initial BIDSmap")
+        self.bidscoin.setTabText(self.bidscoin.indexOf(self.filebrowser), "Raw data folder inspector")
+        self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidsmap), "Initial BIDSmap inspector")
         self.bidscoin.setTabText(self.bidscoin.indexOf(self.filelister), "BIDS editor")
+        self.bidscoin.setCurrentIndex(2)
 
+        # Set the menu
         MainWindow.setCentralWidget(self.centralwidget)
+
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 997, 26))
         self.menubar.setObjectName("menubar")
@@ -148,11 +157,13 @@ class Ui_MainWindow(object):
         self.menuHelp.setObjectName("menuHelp")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
+
+        # Set the statusbar
         self.statusbar.setToolTip("")
         self.statusbar.setObjectName("statusbar")
-
         MainWindow.setStatusBar(self.statusbar)
 
+        # Define the menu actions
         self.actionNew = QtWidgets.QAction(MainWindow)
         self.actionNew.setObjectName("actionNew")
 
@@ -179,31 +190,19 @@ class Ui_MainWindow(object):
         self.actionExit.setShortcut("Ctrl+X")
         self.actionAbout.setText("About")
 
-        self.bidscoin.setCurrentIndex(2)
-
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
-    def selectionchange(self, i):
-        print("Items in the list are:")
-
-        for count in range(self.cb.count()):
-            print(self.cb.itemText(count))
-        print("Current index", i, "selection changed ", self.cb.currentText())
 
     def handleButtonClicked(self):
         button = QApplication.focusWidget()
         index = self.table.indexAt(button.pos())
         if index.isValid():
             i = int(index.row())
-            print(self.list_dicom_files[i])
-            self.showEdit(i)
+            # print(self.list_dicom_files[i])
+            self.showEdit(i, )
 
     def on_clicked(self, index):
-        print(self.model.fileInfo(index).absoluteFilePath())
-
-    def unknowns_on_clicked(self, index):
-        item = self.view_unknowns.selectedIndexes()[0]
-        print(item.model().itemFromIndex(index).text())
+        # print(self.model.fileInfo(index).absoluteFilePath())
+        pass
 
     def showAbout(self):
         """ """
@@ -212,8 +211,8 @@ class Ui_MainWindow(object):
 
     def showEdit(self, i):
         """ """
-        info = { "provenance_file": self.list_dicom_files[i] }
-        self.dlg2 = EditDialog(i, info)
+        info = self.bidsmap_info[i]
+        self.dlg2 = EditDialog(info)
         self.dlg2.show()
 
 
@@ -239,17 +238,22 @@ class AboutDialog(QDialog):
 
 
 class EditDialog(QDialog):
-    def __init__(self, i, info):
+    def __init__(self, info):
         QDialog.__init__(self)
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
         self.setWindowTitle("Edit Dialog")
         self.resize(1024, 800)
 
+        # Non-editable provenance section
         self.label_provenance = QLabel()
         self.label_provenance.setText("PROVENANCE")
         self.model_provenance = QtGui.QStandardItemModel()
-        data_provenance = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'filename', 'long_name': info['provenance_file'], 'order': 1, 'pos': 0},
-                           {'level': 0, 'dbID': 1, 'parent_ID': 6, 'short_name': 'path', 'long_name': os.path.dirname(info.get('provenance_path', '')), 'order': 1, 'pos': 0}]
+
+        provenance_file = info['provenance']['filename']
+        provenance_path = info['provenance']['path']
+        data_provenance = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'filename', 'long_name': provenance_file},
+                           {'level': 0, 'dbID': 1, 'parent_ID': 6, 'short_name': 'path', 'long_name': provenance_path}]
+
         self.setupProvenanceModelData(data_provenance)
         self.model_provenance.setHorizontalHeaderLabels(['Item', 'Value'])
         self.view_provenance = QTreeView()
@@ -257,9 +261,12 @@ class EditDialog(QDialog):
         self.view_provenance.setWindowTitle("PROVENANCE")
         self.view_provenance.expandAll()
         self.view_provenance.resizeColumnToContents(0)
-        # self.view_provenance.setIndentation(0)
+        self.view_provenance.setIndentation(0)
         self.view_provenance.setAlternatingRowColors(True)
+        self.view_provenance.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.view_provenance.resize(1024, 100)
 
+        # Non-editable DICOM attributes section
         self.label_dicom = QLabel()
         self.label_dicom.setText("DICOM attributes")
         self.model_dicom = QtGui.QStandardItemModel()
@@ -285,7 +292,7 @@ class EditDialog(QDialog):
         self.view_dicom.setWindowTitle("DICOM attributes")
         self.view_dicom.expandAll()
         self.view_dicom.resizeColumnToContents(0)
-        # self.view_dicom.setIndentation(0)
+        self.view_dicom.setIndentation(0)
         self.view_dicom.setAlternatingRowColors(True)
 
         self.cblabel = QLabel()
@@ -356,7 +363,7 @@ class EditDialog(QDialog):
 
     def bids_on_clicked(self, index):
         item = self.view_bids.selectedIndexes()[0]
-        print(item.model().itemFromIndex(index).text())
+        # print(item.model().itemFromIndex(index).text())
 
     def setupProvenanceModelData(self, lines, root=None):
         self.model_provenance.setRowCount(0)
