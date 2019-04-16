@@ -22,6 +22,26 @@ BIDS_LABELS = [
 ]
 
 
+MODALITY_LABELS = [
+    'T1w',
+    'T2w',
+    'T1rho',
+    'T1map',
+    'T2map',
+    'T2star',
+    'FLAIR',
+    'FLASH',
+    'PD',
+    'PDmap',
+    'PDT2',
+    'inplaneT1',
+    'inplaneT2',
+    'angio',
+    'defacemask',
+    'SWImagandphase'
+]
+
+
 def show_label(label):
     """Determine if label needs to be shown in BIDS name. """
     if label is None or label == "":

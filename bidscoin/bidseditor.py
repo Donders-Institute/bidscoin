@@ -6,7 +6,6 @@ The user needs to fill in the BIDS values for files that are unidentified.
 
 import os
 import sys
-import ruamel.yaml as yaml
 from collections import deque
 import argparse
 import textwrap
