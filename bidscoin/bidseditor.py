@@ -317,7 +317,7 @@ class EditDialog(QDialog):
         self.view_bids.setWindowTitle("BIDS values")
         self.view_bids.expandAll()
         self.view_bids.resizeColumnToContents(0)
-        self.view_dicom.setIndentation(0)
+        self.view_bids.setIndentation(0)
         self.view_bids.setAlternatingRowColors(True)
         self.view_bids.clicked.connect(self.bids_on_clicked)
 
@@ -348,22 +348,27 @@ class EditDialog(QDialog):
 
     def selectionchange(self, i):
         print("Current index", i, "selection changed ", self.cb.currentText())
+        data = [
+            {'level': 0, 'db_id': 95, 'parent_id': 94, 'short_name': 'acq_label', 'long_name': 'localizerAANGEPAST11SLICES'} ,
+            {'level': 0, 'db_id': 96, 'parent_id': 94, 'short_name': 'rec_label', 'long_name': ''} ,
+            {'level': 0, 'db_id': 97, 'parent_id': 94, 'short_name': 'ce_label', 'long_name': ''} ,
+            {'level': 0, 'db_id': 971, 'parent_id': 94, 'short_name': 'task_label', 'long_name': ''} ,
+            {'level': 0, 'db_id': 972, 'parent_id': 94, 'short_name': 'echo_index', 'long_name': ''} ,
+            {'level': 0, 'db_id': 973, 'parent_id': 94, 'short_name': 'echo_index', 'long_name': ''} ,
+            {'level': 0, 'db_id': 974, 'parent_id': 94, 'short_name': 'dir_label', 'long_name': ''} ,
+            {'level': 0, 'db_id': 975, 'parent_id': 94, 'short_name': 'run_index', 'long_name': '<<1>>'} ,
+            {'level': 0, 'db_id': 976, 'parent_id': 94, 'short_name': 'suffix', 'long_name': ''} ,
+            {'level': 0, 'db_id': 976, 'parent_id': 94, 'short_name': 'mod_label', 'long_name': ''} ,
+            {'level': 0, 'db_id': 976, 'parent_id': 94, 'short_name': 'modality_label', 'long_name': ''}
+        ]
 
-        data2 = [{'level': 0, 'db_id': 0, 'parent_id': 6, 'short_name': 'BIDS', 'long_name': '', 'order': 1, 'pos': 0} ,
-                {'level': 1, 'db_id': 94, 'parent_id': 0, 'short_name': 'BIDS values', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'db_id': 95, 'parent_id': 94, 'short_name': 'acq_label', 'long_name': 'localizerAANGEPAST11SLICES', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'db_id': 96, 'parent_id': 94, 'short_name': 'rec_label', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'db_id': 97, 'parent_id': 94, 'short_name': 'ce_label', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'db_id': 971, 'parent_id': 94, 'short_name': 'task_label', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'db_id': 972, 'parent_id': 94, 'short_name': 'echo_index', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'db_id': 973, 'parent_id': 94, 'short_name': 'echo_index', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'db_id': 974, 'parent_id': 94, 'short_name': 'dir_label', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'db_id': 975, 'parent_id': 94, 'short_name': 'run_index', 'long_name': '<<1>>', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'db_id': 976, 'parent_id': 94, 'short_name': 'suffix', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'db_id': 976, 'parent_id': 94, 'short_name': 'mod_label', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'db_id': 976, 'parent_id': 94, 'short_name': 'modality_label', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 1, 'db_id': 100, 'parent_id': 0, 'short_name': 'BIDSNAME', 'long_name': 'sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz', 'order': 2, 'pos': 1}
-              ]
+        # Update the BIDS values
+        self.model_bids.clear()
+        self.setupBidsModelData(data)
+
+        # Update the BIDS name
+        self.view_bidsname.clear()
+        self.view_bidsname.textCursor().insertHtml('<b>New name</b>')
 
     def bids_on_clicked(self, index):
         item = self.view_bids.selectedIndexes()[0]
@@ -397,6 +402,30 @@ class EditDialog(QDialog):
         self.model_dicom.setRowCount(0)
         if root is None:
             root = self.model_dicom.invisibleRootItem()
+        seen = {}
+        values = deque(lines)
+        while values:
+            value = values.popleft()
+            if value['level'] == 0:
+                parent = root
+            else:
+                pid = value['parent_id']
+                if pid not in seen:
+                    values.append(value)
+                    continue
+                parent = seen[pid]
+            dbid = value['db_id']
+            item = QtGui.QStandardItem(value['short_name'])
+            item.setEditable(False)
+            item2 = QtGui.QStandardItem(value['long_name'])
+            item2.setEditable(True)
+            parent.appendRow([item, item2])
+            seen[dbid] = parent.child(parent.rowCount() - 1)
+
+    def setupBidsModelData(self, lines, root=None):
+        self.model_bids.setRowCount(0)
+        if root is None:
+            root = self.model_bids.invisibleRootItem()
         seen = {}
         values = deque(lines)
         while values:
