@@ -1,9 +1,14 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+"""
+Allows updating the BIDSmap via a GUI concerning BIDS values for yet unidentified files.
+"""
 
 import os
 import sys
 import ruamel.yaml as yaml
 from collections import deque
+import argparse
+import textwrap
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QFont
@@ -260,21 +265,28 @@ class Ui_MainWindow(object):
 class AboutDialog(QDialog):
     def __init__(self):
         QDialog.__init__(self)
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+        self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
+        self.resize(200, 100)
+
         label = QLabel()
-        label.setText("BIDSeditor")
+        label.setText("BIDS editor")
+
+        label_version = QLabel()
+        label_version.setText("v" + str(bids.version()))
+
         self.pushButton = QPushButton("OK")
         self.pushButton.setToolTip("Close dialog")
         layout = QVBoxLayout(self)
         layout.addWidget(label)
+        layout.addWidget(label_version)
         layout.addWidget(self.pushButton)
         self.pushButton.clicked.connect(self.close)
 
 
 class EditDialog(QDialog):
     def __init__(self, i, info):
-        QDialog.__init__(self, None, QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
-
+        QDialog.__init__(self)
+        self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
         self.setWindowTitle("Edit Dialog")
         self.resize(1024, 800)
 
@@ -441,16 +453,26 @@ class EditDialog(QDialog):
 
 
 if __name__ == "__main__":
+    # Parse the input arguments and run bidseditor
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description=textwrap.dedent(__doc__),
+                                     epilog='examples:\n'
+                                            '  bidseditor.py /raw/data/folder /input/bidsmap.yaml /output/bidsmap.yaml\n')
+    parser.add_argument('rawfolder', help='The root folder of the directory tree containing the raw files', nargs='?', default='')
+    parser.add_argument('input-bidsmap', help='The input bidsmap YAML-file with the BIDS heuristics', nargs='?', default='')
+    parser.add_argument('output-bidsmap', help='The output bidsmap YAML-file with the BIDS heuristics', nargs='?', default='')
+    args = parser.parse_args()
+
     # Obtain the initial bidsmap info
     filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_new.yaml")
-    bidsmap_yaml = obtain_initial_bidsmap_yaml(filename)
-    bidsmap_info = obtain_initial_bidsmap_info(bidsmap_yaml)
+    input_bidsmap_yaml = obtain_initial_bidsmap_yaml(filename)
+    input_bidsmap_info = obtain_initial_bidsmap_info(input_bidsmap_yaml)
 
     # Start the application
     app = QApplication(sys.argv)
     app.setApplicationName("BIDS editor")
     mainwin = QMainWindow()
     gui = Ui_MainWindow()
-    gui.setupUi(mainwin, bidsmap_yaml, bidsmap_info)
+    gui.setupUi(mainwin, input_bidsmap_yaml, input_bidsmap_info)
     mainwin.show()
     sys.exit(app.exec_())
