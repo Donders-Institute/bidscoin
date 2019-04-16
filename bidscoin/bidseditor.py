@@ -26,6 +26,9 @@ import bidsutils
 logger = logging.getLogger('bidscoin')
 
 
+ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "brain.ico")
+
+
 class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow, rawfolder, inputbidsmap, bidsmap_yaml, bidsmap_info):
@@ -36,7 +39,7 @@ class Ui_MainWindow(object):
         MainWindow.resize(1280, 800)
 
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "brain.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
 
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -220,6 +223,9 @@ class Ui_MainWindow(object):
 class AboutDialog(QDialog):
     def __init__(self):
         QDialog.__init__(self)
+
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
         self.resize(200, 100)
 
@@ -241,6 +247,10 @@ class AboutDialog(QDialog):
 class EditDialog(QDialog):
     def __init__(self, info):
         QDialog.__init__(self)
+
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.setWindowIcon(icon)
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
         self.setWindowTitle("Edit Dialog")
         self.resize(1024, 800)
@@ -258,7 +268,7 @@ class EditDialog(QDialog):
         ]
 
         self.setupProvenanceModelData(data_provenance)
-        self.model_provenance.setHorizontalHeaderLabels(['Item', 'Value'])
+        self.model_provenance.setHorizontalHeaderLabels(['Key', 'Value'])
         self.view_provenance = QTreeView()
         self.view_provenance.header().hide()
         self.view_provenance.setModel(self.model_provenance)
@@ -289,7 +299,7 @@ class EditDialog(QDialog):
             {'level': 0, 'db_id': 940, 'parent_id': 88, 'short_name': 'PhaseEncodingDirection', 'long_name': ''}
         ]
         self.setupDicomModelData(data_dicom)
-        self.model_dicom.setHorizontalHeaderLabels(['Item', 'Value'])
+        self.model_dicom.setHorizontalHeaderLabels(['Key', 'Value'])
         self.view_dicom = QTreeView()
         self.view_dicom.header().hide()
         self.view_dicom.setModel(self.model_dicom)
@@ -310,7 +320,7 @@ class EditDialog(QDialog):
         self.label_bids .setText("BIDS values")
 
         self.model_bids = QtGui.QStandardItemModel()
-        self.model_bids.setHorizontalHeaderLabels(['Item', 'Value'])
+        self.model_bids.setHorizontalHeaderLabels(['Key', 'Value'])
         self.view_bids = QTreeView()
         self.view_bids.header().hide()
         self.view_bids.setModel(self.model_bids)
