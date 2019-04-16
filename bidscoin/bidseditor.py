@@ -189,6 +189,7 @@ class Ui_MainWindow(object):
         self.actionExit.setStatusTip("Click to exit the application")
         self.actionExit.setShortcut("Ctrl+X")
         self.actionAbout.setText("About")
+        self.actionAbout.setStatusTip("Click to get more information about the application")
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -251,12 +252,15 @@ class EditDialog(QDialog):
 
         provenance_file = info['provenance']['filename']
         provenance_path = info['provenance']['path']
-        data_provenance = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'filename', 'long_name': provenance_file},
-                           {'level': 0, 'dbID': 1, 'parent_ID': 6, 'short_name': 'path', 'long_name': provenance_path}]
+        data_provenance = [
+            {'level': 0, 'db_id': 0, 'parent_id': 6, 'short_name': 'filename', 'long_name': provenance_file},
+            {'level': 0, 'db_id': 1, 'parent_id': 6, 'short_name': 'path', 'long_name': provenance_path}
+        ]
 
         self.setupProvenanceModelData(data_provenance)
         self.model_provenance.setHorizontalHeaderLabels(['Item', 'Value'])
         self.view_provenance = QTreeView()
+        self.view_provenance.header().hide()
         self.view_provenance.setModel(self.model_provenance)
         self.view_provenance.setWindowTitle("PROVENANCE")
         self.view_provenance.expandAll()
@@ -264,64 +268,64 @@ class EditDialog(QDialog):
         self.view_provenance.setIndentation(0)
         self.view_provenance.setAlternatingRowColors(True)
         self.view_provenance.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.view_provenance.resize(1024, 100)
+        self.view_provenance.setUniformRowHeights(True)
 
         # Non-editable DICOM attributes section
         self.label_dicom = QLabel()
         self.label_dicom.setText("DICOM attributes")
         self.model_dicom = QtGui.QStandardItemModel()
-        data_dicom = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'DICOM', 'long_name': '', 'order': 1, 'pos': 0} ,
-                {'level': 1, 'dbID': 88, 'parent_ID': 0, 'short_name': 'DICOM attributes', 'long_name': '', 'order': 2, 'pos': 1},
-                {'level': 2, 'dbID': 90, 'parent_ID': 88, 'short_name': 'SeriesDescription', 'long_name': 'localizer AANGEPAST 11 SLICES', 'order': 2, 'pos': 1},
-                {'level': 2, 'dbID': 91, 'parent_ID': 88, 'short_name': 'SequenceVariant', 'long_name': "['SP', 'OSP']", 'order': 2, 'pos': 1},
-                {'level': 2, 'dbID': 92, 'parent_ID': 88, 'short_name': 'SequenceName', 'long_name': '*fl2d1', 'order': 2, 'pos': 1},
-                {'level': 2, 'dbID': 93, 'parent_ID': 88, 'short_name': 'ScanningSequence', 'long_name': 'GR', 'order': 2, 'pos': 1},
-                {'level': 2, 'dbID': 933, 'parent_ID': 88, 'short_name': 'MRAcquisitionType', 'long_name': '2D', 'order': 2, 'pos': 1},
-                {'level': 2, 'dbID': 934, 'parent_ID': 88, 'short_name': 'FlipAngle', 'long_name': '20', 'order': 2, 'pos': 1},
-                {'level': 2, 'dbID': 935, 'parent_ID': 88, 'short_name': 'EchoNumbers', 'long_name': '1', 'order': 2, 'pos': 1},
-                {'level': 2, 'dbID': 936, 'parent_ID': 88, 'short_name': 'EchoTime', 'long_name': '4', 'order': 2, 'pos': 1},
-                {'level': 2, 'dbID': 937, 'parent_ID': 88, 'short_name': 'RepetitionTime', 'long_name': '8.6', 'order': 2, 'pos': 1},
-                {'level': 2, 'dbID': 938, 'parent_ID': 88, 'short_name': 'ImageType', 'long_name': "['ORIGINAL', 'PRIMARY', 'M', 'NORM', 'DIS2D']", 'order': 2, 'pos': 1},
-                {'level': 2, 'dbID': 939, 'parent_ID': 88, 'short_name': 'ProtocolName', 'long_name': 'localizer AANGEPAST 11 SLICES', 'order': 2, 'pos': 1},
-                {'level': 2, 'dbID': 940, 'parent_ID': 88, 'short_name': 'PhaseEncodingDirection', 'long_name': '', 'order': 2, 'pos': 1}
-              ]
+        data_dicom = [
+            {'level': 0, 'db_id': 90, 'parent_id': 88, 'short_name': 'SeriesDescription', 'long_name': 'localizer AANGEPAST 11 SLICES'},
+            {'level': 0, 'db_id': 91, 'parent_id': 88, 'short_name': 'SequenceVariant', 'long_name': "['SP', 'OSP']"},
+            {'level': 0, 'db_id': 92, 'parent_id': 88, 'short_name': 'SequenceName', 'long_name': '*fl2d1'},
+            {'level': 0, 'db_id': 93, 'parent_id': 88, 'short_name': 'ScanningSequence', 'long_name': 'GR'},
+            {'level': 0, 'db_id': 933, 'parent_id': 88, 'short_name': 'MRAcquisitionType', 'long_name': '2D'},
+            {'level': 0, 'db_id': 934, 'parent_id': 88, 'short_name': 'FlipAngle', 'long_name': '20'},
+            {'level': 0, 'db_id': 935, 'parent_id': 88, 'short_name': 'EchoNumbers', 'long_name': '1'},
+            {'level': 0, 'db_id': 936, 'parent_id': 88, 'short_name': 'EchoTime', 'long_name': '4'},
+            {'level': 0, 'db_id': 937, 'parent_id': 88, 'short_name': 'RepetitionTime', 'long_name': '8.6'},
+            {'level': 0, 'db_id': 938, 'parent_id': 88, 'short_name': 'ImageType', 'long_name': "['ORIGINAL', 'PRIMARY', 'M', 'NORM', 'DIS2D']"},
+            {'level': 0, 'db_id': 939, 'parent_id': 88, 'short_name': 'ProtocolName', 'long_name': 'localizer AANGEPAST 11 SLICES'},
+            {'level': 0, 'db_id': 940, 'parent_id': 88, 'short_name': 'PhaseEncodingDirection', 'long_name': ''}
+        ]
         self.setupDicomModelData(data_dicom)
         self.model_dicom.setHorizontalHeaderLabels(['Item', 'Value'])
         self.view_dicom = QTreeView()
+        self.view_dicom.header().hide()
         self.view_dicom.setModel(self.model_dicom)
         self.view_dicom.setWindowTitle("DICOM attributes")
         self.view_dicom.expandAll()
         self.view_dicom.resizeColumnToContents(0)
         self.view_dicom.setIndentation(0)
         self.view_dicom.setAlternatingRowColors(True)
+        self.view_dicom.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         self.cblabel = QLabel()
         self.cblabel.setText("MODALITY")
         self.cb = QComboBox()
-        self.cb.addItems(["anat", "func", "dwi", "fmap", "beh", "pet"])
+        self.cb.addItems(["Select modality", "anat", "func", "dwi", "fmap", "beh", "pet"])
         self.cb.currentIndexChanged.connect(self.selectionchange)
 
         self.label_bids = QLabel()
         self.label_bids .setText("BIDS values")
 
         self.model_bids = QtGui.QStandardItemModel()
-        data = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'N/A', 'long_name': '', 'order': 1, 'pos': 0}]
         self.model_bids.setHorizontalHeaderLabels(['Item', 'Value'])
         self.view_bids = QTreeView()
+        self.view_bids.header().hide()
         self.view_bids.setModel(self.model_bids)
         self.view_bids.setWindowTitle("BIDS values")
         self.view_bids.expandAll()
         self.view_bids.resizeColumnToContents(0)
-        # self.view_dicom.setIndentation(0)
+        self.view_dicom.setIndentation(0)
         self.view_bids.setAlternatingRowColors(True)
         self.view_bids.clicked.connect(self.bids_on_clicked)
 
         self.label_bidsname = QLabel()
         self.label_bidsname.setText("BIDSNAME")
-
         self.view_bidsname = QTextEdit()
         self.view_bidsname.setReadOnly(True)
-        self.view_bidsname.textCursor().insertHtml('N/A')
+        self.view_bidsname.textCursor().insertHtml('<b>N/A</b>')
 
         self.mapButton = QtWidgets.QPushButton()
         self.mapButton.setObjectName("mapButton")
@@ -345,20 +349,20 @@ class EditDialog(QDialog):
     def selectionchange(self, i):
         print("Current index", i, "selection changed ", self.cb.currentText())
 
-        data2 = [{'level': 0, 'dbID': 0, 'parent_ID': 6, 'short_name': 'BIDS', 'long_name': '', 'order': 1, 'pos': 0} ,
-                {'level': 1, 'dbID': 94, 'parent_ID': 0, 'short_name': 'BIDS values', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'dbID': 95, 'parent_ID': 94, 'short_name': 'acq_label', 'long_name': 'localizerAANGEPAST11SLICES', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'dbID': 96, 'parent_ID': 94, 'short_name': 'rec_label', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'dbID': 97, 'parent_ID': 94, 'short_name': 'ce_label', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'dbID': 971, 'parent_ID': 94, 'short_name': 'task_label', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'dbID': 972, 'parent_ID': 94, 'short_name': 'echo_index', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'dbID': 973, 'parent_ID': 94, 'short_name': 'echo_index', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'dbID': 974, 'parent_ID': 94, 'short_name': 'dir_label', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'dbID': 975, 'parent_ID': 94, 'short_name': 'run_index', 'long_name': '<<1>>', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'dbID': 976, 'parent_ID': 94, 'short_name': 'suffix', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'dbID': 976, 'parent_ID': 94, 'short_name': 'mod_label', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 2, 'dbID': 976, 'parent_ID': 94, 'short_name': 'modality_label', 'long_name': '', 'order': 2, 'pos': 1} ,
-                {'level': 1, 'dbID': 100, 'parent_ID': 0, 'short_name': 'BIDSNAME', 'long_name': 'sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz', 'order': 2, 'pos': 1}
+        data2 = [{'level': 0, 'db_id': 0, 'parent_id': 6, 'short_name': 'BIDS', 'long_name': '', 'order': 1, 'pos': 0} ,
+                {'level': 1, 'db_id': 94, 'parent_id': 0, 'short_name': 'BIDS values', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'db_id': 95, 'parent_id': 94, 'short_name': 'acq_label', 'long_name': 'localizerAANGEPAST11SLICES', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'db_id': 96, 'parent_id': 94, 'short_name': 'rec_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'db_id': 97, 'parent_id': 94, 'short_name': 'ce_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'db_id': 971, 'parent_id': 94, 'short_name': 'task_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'db_id': 972, 'parent_id': 94, 'short_name': 'echo_index', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'db_id': 973, 'parent_id': 94, 'short_name': 'echo_index', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'db_id': 974, 'parent_id': 94, 'short_name': 'dir_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'db_id': 975, 'parent_id': 94, 'short_name': 'run_index', 'long_name': '<<1>>', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'db_id': 976, 'parent_id': 94, 'short_name': 'suffix', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'db_id': 976, 'parent_id': 94, 'short_name': 'mod_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 2, 'db_id': 976, 'parent_id': 94, 'short_name': 'modality_label', 'long_name': '', 'order': 2, 'pos': 1} ,
+                {'level': 1, 'db_id': 100, 'parent_id': 0, 'short_name': 'BIDSNAME', 'long_name': 'sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz', 'order': 2, 'pos': 1}
               ]
 
     def bids_on_clicked(self, index):
@@ -376,12 +380,12 @@ class EditDialog(QDialog):
             if value['level'] == 0:
                 parent = root
             else:
-                pid = value['parent_ID']
+                pid = value['parent_id']
                 if pid not in seen:
                     values.append(value)
                     continue
                 parent = seen[pid]
-            dbid = value['dbID']
+            dbid = value['db_id']
             item = QtGui.QStandardItem(value['short_name'])
             item.setEditable(False)
             item2 = QtGui.QStandardItem(value['long_name'])
@@ -400,12 +404,12 @@ class EditDialog(QDialog):
             if value['level'] == 0:
                 parent = root
             else:
-                pid = value['parent_ID']
+                pid = value['parent_id']
                 if pid not in seen:
                     values.append(value)
                     continue
                 parent = seen[pid]
-            dbid = value['dbID']
+            dbid = value['db_id']
             item = QtGui.QStandardItem(value['short_name'])
             item.setEditable(False)
             item2 = QtGui.QStandardItem(value['long_name'])
