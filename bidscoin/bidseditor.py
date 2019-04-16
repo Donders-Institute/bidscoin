@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
-Allows updating the BIDSmap via a GUI concerning BIDS values for yet unidentified files.
+Allows updating the BIDSmap via a GUI.
+The user needs to fill in the BIDS values for files that are unidentified.
 """
 
 import os
@@ -9,6 +10,8 @@ import ruamel.yaml as yaml
 from collections import deque
 import argparse
 import textwrap
+import json
+import logging
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QFont
@@ -18,38 +21,10 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel,
 from PyQt5.Qsci import QsciScintilla, QsciLexerYAML
 
 import bids
+import bidsutils
 
 
-def obtain_initial_bidsmap_yaml(fileame):
-    """Obtain the initial BIDSmap as yaml string. """
-    if not os.path.exists(filename):
-        raise Exception("File not found: {}".format(filename))
-
-    bidsmap_yaml = ""
-    with open(filename) as fp:
-        bidsmap_yaml = fp.read()
-    return bidsmap_yaml
-
-
-def obtain_initial_bidsmap_info(bidsmap_yaml):
-    """Obtain the initial BIDSmap info. """
-    contents = {}
-    try:
-        contents = yaml.safe_load(bidsmap_yaml)
-    except yaml.YAMLError as exc:
-        raise Exception('Error: {}'.format(exc))
-
-    bidsmap_info = []
-    contents_dicom = contents.get('DICOM', {})
-    for item in contents_dicom.get('extra_data', []):
-        provenance = item.get('provenance', None)
-        if provenance:
-            bidsmap_info.append({
-                "provenance_path": os.path.dirname(provenance),
-                "provenance_file": os.path.basename(provenance)
-            })
-
-    return bidsmap_info
+logger = logging.getLogger('bidscoin')
 
 
 class Ui_MainWindow(object):
@@ -119,31 +94,7 @@ class Ui_MainWindow(object):
         self.bidsmap.setObjectName("bidsmap")
         self.bidscoin.addTab(self.bidsmap, "")
 
-        self.list_ima_files = ['M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA',
-                              'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA',
-                              'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA',
-                              'M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA',
-                              'M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA',
-                              'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA',
-                              'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA',
-                              'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA',
-                              'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA',
-                              'M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA',
-                              'M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA',
-                              'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA',
-                              'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA',
-                              'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA',
-                              'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA',
-                              'M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA',
-                              'M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA',
-                              'M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA',
-                              'M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA',
-                              'M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA']
-
-        self.list_bids_names = ['' for x in self.list_ima_files]
-        self.list_bids_names[0] = 'sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz'
-        self.list_bids_names[1] = 'sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz'
-        self.list_bids_names[5] = 'sub-003_ses-mri01_task-Choice_run-1_echo-1_bold.nii.gz'
+        self.list_dicom_files, self.list_bids_names = bidsutils.get_list_files(bidsmap_info)
 
         self.tab3 = QtWidgets.QWidget()
         self.tab3.layout = QVBoxLayout(self.centralwidget)
@@ -152,11 +103,11 @@ class Ui_MainWindow(object):
         self.tableButton.setObjectName("tableButton")
         self.table = QTableWidget()
         self.table.setColumnCount(3)
-        self.table.setRowCount(len(self.list_ima_files))
+        self.table.setRowCount(len(self.list_dicom_files))
         self.table.setAlternatingRowColors(True)
 
-        for index in range(len(self.list_ima_files)):
-            item1 = QTableWidgetItem(self.list_ima_files[index])
+        for index in range(len(self.list_dicom_files)):
+            item1 = QTableWidgetItem(self.list_dicom_files[index])
             self.table.setItem(index, 0, item1)
             item2 = QTableWidgetItem(self.list_bids_names[index])
             self.table.setItem(index, 1, item2)
@@ -169,7 +120,7 @@ class Ui_MainWindow(object):
                 self.btn_select.setStyleSheet('QPushButton {color: green;}')
             self.btn_select.clicked.connect(self.handleButtonClicked)
             self.table.setCellWidget(index, 2, self.btn_select)
-        self.table.setHorizontalHeaderLabels(['IMA file', 'BIDS name', 'Action'])
+        self.table.setHorizontalHeaderLabels(['DICOM file', 'BIDS name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
@@ -245,7 +196,7 @@ class Ui_MainWindow(object):
         index = self.table.indexAt(button.pos())
         if index.isValid():
             i = int(index.row())
-            print(self.list_ima_files[i])
+            print(self.list_dicom_files[i])
             self.showEdit(i)
 
     def on_clicked(self, index):
@@ -262,7 +213,7 @@ class Ui_MainWindow(object):
 
     def showEdit(self, i):
         """ """
-        info = { "provenance_file": self.list_ima_files[i] }
+        info = { "provenance_file": self.list_dicom_files[i] }
         self.dlg2 = EditDialog(i, info)
         self.dlg2.show()
 
@@ -478,8 +429,8 @@ if __name__ == "__main__":
 
     # Obtain the initial bidsmap info
     filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_new.yaml")
-    input_bidsmap_yaml = obtain_initial_bidsmap_yaml(args.inputbidsmap)
-    input_bidsmap_info = obtain_initial_bidsmap_info(input_bidsmap_yaml)
+    input_bidsmap_yaml = bidsutils.obtain_initial_bidsmap_yaml(args.inputbidsmap)
+    input_bidsmap_info = bidsutils.obtain_initial_bidsmap_info(input_bidsmap_yaml)
 
     # Start the application
     app = QApplication(sys.argv)
