@@ -134,14 +134,15 @@ def sortsessions(session: str, subjectid: str='', sessionid: str='', rename: boo
 
             dicomdir = read_dicomdir(session)
 
-            sessionfolder_ = os.path.dirname(session)
+            sessionfolder  = os.path.dirname(session)
+            sessionfolder_ = sessionfolder
             for patient in dicomdir.patient_records:
                 if len(dicomdir.patient_records) > 1:
                     sessionfolder = os.path.join(sessionfolder_, f'sub-{cleanup(str(patient.PatientName))}')
 
-                for n, study in enumerate(patient.children, 1):
+                for n, study in enumerate(patient.children, 1):                                                             # TODO: Check order
                     if len(patient.children) > 1:
-                        sessionfolder = os.path.join(sessionfolder_, f'ses-{n:02}{cleanup(str(study.StudyDescription))}')    # TODO: Remove StudyDescrtiption?
+                        sessionfolder = os.path.join(sessionfolder_, f'ses-{n:02}{cleanup(str(study.StudyDescription))}')   # TODO: Remove StudyDescrtiption?
 
                     dicomfiles = []
                     for series in study.children:
