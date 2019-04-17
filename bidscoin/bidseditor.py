@@ -15,7 +15,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel,
                              QTreeView, QVBoxLayout, QLabel, QDialog,
-                             QTableWidget, QTableWidgetItem,
+                             QTableWidget, QTableWidgetItem, QGroupBox,
                              QAbstractItemView, QPushButton, QComboBox, QTextEdit)
 from PyQt5.Qsci import QsciScintilla, QsciLexerYAML
 
@@ -29,7 +29,7 @@ logger = logging.getLogger('bidscoin')
 ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "brain.ico")
 TEMPLATE_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics", "bidsmap_template.yaml")
 
-DEFAULT_RAW_FOLDER = "M:\\bidscoin\\raw"
+DEFAULT_RAW_FOLDER = "D:"
 DEFAULT_INPUT_BIDSMAP_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_new.yaml")
 DEFAULT_OUTPUT_BIDSMAP_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_output.yaml")
 
@@ -263,17 +263,19 @@ class EditDialog(QDialog):
         self.setWindowTitle("Edit Dialog")
         self.resize(1024, 800)
 
+        groupbox = QGroupBox("DICOM")
+
         # Non-editable provenance section
         data_provenance = self.get_data_provenance(info)
         self.label_provenance = QLabel()
-        self.label_provenance.setText("PROVENANCE")
+        self.label_provenance.setText("Provenace")
         self.model_provenance = QtGui.QStandardItemModel()
         self.setupProvenanceModelData(data_provenance)
         self.model_provenance.setHorizontalHeaderLabels(['Key', 'Value'])
         self.view_provenance = QTreeView()
         self.view_provenance.header().hide()
         self.view_provenance.setModel(self.model_provenance)
-        self.view_provenance.setWindowTitle("PROVENANCE")
+        self.view_provenance.setWindowTitle("Provenance")
         self.view_provenance.expandAll()
         self.view_provenance.resizeColumnToContents(0)
         self.view_provenance.setIndentation(0)
@@ -300,7 +302,7 @@ class EditDialog(QDialog):
 
         # Dropdown list section
         self.cblabel = QLabel()
-        self.cblabel.setText("MODALITY")
+        self.cblabel.setText("Modality")
         self.cb = QComboBox()
         self.cb.addItems(["Select modality", "anat", "func", "dwi", "fmap", "beh", "pet"])
         self.cb.currentIndexChanged.connect(self.selectionchange)
@@ -322,7 +324,7 @@ class EditDialog(QDialog):
 
         # Non-editable BIDS name section
         self.label_bidsname = QLabel()
-        self.label_bidsname.setText("BIDSNAME")
+        self.label_bidsname.setText("BIDS name")
         self.view_bidsname = QTextEdit()
         self.view_bidsname.setReadOnly(True)
         self.view_bidsname.textCursor().insertHtml('<b>N/A</b>')
@@ -332,18 +334,31 @@ class EditDialog(QDialog):
         self.mapButton.setObjectName("mapButton")
         self.mapButton.setText("Save")
 
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.label_provenance)
-        layout.addWidget(self.view_provenance)
-        layout.addWidget(self.label_dicom)
-        layout.addWidget(self.view_dicom)
-        layout.addWidget(self.cblabel)
-        layout.addWidget(self.cb)
-        layout.addWidget(self.label_bids)
-        layout.addWidget(self.view_bids)
-        layout.addWidget(self.label_bidsname)
-        layout.addWidget(self.view_bidsname)
-        layout.addWidget(self.mapButton)
+        groupbox1 = QGroupBox("DICOM")
+        layout1 = QVBoxLayout()
+        layout1.addWidget(self.label_provenance)
+        layout1.addWidget(self.view_provenance)
+        layout1.addWidget(self.label_dicom)
+        layout1.addWidget(self.view_dicom)
+        layout1.addStretch(1)
+        groupbox1.setLayout(layout1)
+        
+        groupbox2 = QGroupBox("BIDS")
+        layout2 = QVBoxLayout()
+        layout2.addWidget(self.cblabel)
+        layout2.addWidget(self.cb)
+        layout2.addWidget(self.label_bids)
+        layout2.addWidget(self.view_bids)
+        layout2.addWidget(self.label_bidsname)
+        layout2.addWidget(self.view_bidsname)
+        layout2.addWidget(self.mapButton)
+        layout2.addStretch(1)
+        groupbox2.setLayout(layout2)
+
+        layout = QVBoxLayout()
+        layout.addWidget(groupbox1)
+        layout.addWidget(groupbox2)
+        self.setLayout(layout)
 
         self.mapButton.clicked.connect(self.close)
 
