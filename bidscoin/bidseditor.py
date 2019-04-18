@@ -17,7 +17,6 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel,
                              QTreeView, QVBoxLayout, QLabel, QDialog,
                              QTableWidget, QTableWidgetItem, QGroupBox,
                              QAbstractItemView, QPushButton, QComboBox, QTextEdit)
-from PyQt5.Qsci import QsciScintilla, QsciLexerYAML
 
 import bids
 import bidsutils
@@ -58,19 +57,15 @@ class Ui_MainWindow(object):
         self.tabwidget.setTabPosition(QtWidgets.QTabWidget.North)
         self.tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.tabwidget.setObjectName("tabwidget")
-
-        self.set_tab_raw_data_folder_inspector(rawfolder)
-        self.set_tab_initial_bidsmap_inspector(inputbidsmap, bidsmap_yaml)
-        self.set_tab_dicom_file_sample_listing()
-
-        self.tabwidget.setTabText(self.tabwidget.indexOf(self.filebrowser), "Raw data folder inspector")
-        self.tabwidget.setTabText(self.tabwidget.indexOf(self.initial_bidsmap_inspector), "Initial BIDSmap inspector")
-        self.tabwidget.setTabText(self.tabwidget.indexOf(self.file_listing), "File sample listing")
-        self.tabwidget.setCurrentIndex(2)
+        self.set_tab_file_browser(rawfolder)
+        self.set_tab_file_sample_listing()
+        self.tabwidget.setTabText(0, "File browser")
+        self.tabwidget.setTabText(1, "File sample listing")
+        self.tabwidget.setCurrentIndex(1)
 
         self.set_menu_and_status_bar(MainWindow)
 
-    def set_tab_raw_data_folder_inspector(self, rawfolder):
+    def set_tab_file_browser(self, rawfolder):
         """Set the raw data folder inspector tab. """
         self.tab1 = QtWidgets.QWidget()
         self.tab1.layout = QVBoxLayout(self.centralwidget)
@@ -90,38 +85,15 @@ class Ui_MainWindow(object):
         self.tab1.layout.addWidget(self.tree)
         self.tree.header().resizeSection(0, 800)
 
-        self.filebrowser = QtWidgets.QWidget()
-        self.filebrowser.setLayout(self.tab1.layout)
-        self.filebrowser.setObjectName("filebrowser")
-        self.tabwidget.addTab(self.filebrowser, "")
+        self.file_browser = QtWidgets.QWidget()
+        self.file_browser.setLayout(self.tab1.layout)
+        self.file_browser.setObjectName("filebrowser")
+        self.tabwidget.addTab(self.file_browser, "")
 
-    def set_tab_initial_bidsmap_inspector(self, inputbidsmap, bidsmap_yaml):
-        """Set the initial BIDS map inspector tab. """
+    def set_tab_file_sample_listing(self):
+        """Set the DICOM file sample listing tab.  """
         self.tab2 = QtWidgets.QWidget()
         self.tab2.layout = QVBoxLayout(self.centralwidget)
-        self.label_bidsmap = QLabel()
-        self.label_bidsmap.setText("Inspect input BIDS map file: {}".format(inputbidsmap))
-        self.plainTextEdit = QsciScintilla()
-        self.__lexer = QsciLexerYAML()
-        self.plainTextEdit.setLexer(self.__lexer)
-        self.plainTextEdit.setUtf8(True)  # Set encoding to UTF-8
-        self.__myFont = QFont("Courier")
-        self.__myFont.setPointSize(10)
-        self.plainTextEdit.setFont(self.__myFont)
-        self.__lexer.setFont(self.__myFont)
-        self.plainTextEdit.setText(bidsmap_yaml)
-        self.plainTextEdit.setReadOnly(True)
-        self.tab2.layout.addWidget(self.label_bidsmap)
-        self.tab2.layout.addWidget(self.plainTextEdit)
-
-        self.initial_bidsmap_inspector = QtWidgets.QWidget()
-        self.initial_bidsmap_inspector.setLayout(self.tab2.layout)
-        self.tabwidget.addTab(self.initial_bidsmap_inspector, "")
-
-    def set_tab_dicom_file_sample_listing(self):
-        """Set the DICOM file sample listing tab.  """
-        self.tab3 = QtWidgets.QWidget()
-        self.tab3.layout = QVBoxLayout(self.centralwidget)
         self.tableButton = QtWidgets.QPushButton()
         self.tableButton.setGeometry(QtCore.QRect(20, 20, 93, 28))
         self.tableButton.setObjectName("tableButton")
@@ -151,13 +123,13 @@ class Ui_MainWindow(object):
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        self.tab3.layout.addWidget(self.tableButton)
-        self.tab3.layout.addWidget(self.table)
-        self.file_listing = QtWidgets.QWidget()
-        self.file_listing.setLayout(self.tab3.layout)
-        self.file_listing.setObjectName("filelister")
+        self.tab2.layout.addWidget(self.tableButton)
+        self.tab2.layout.addWidget(self.table)
+        self.file_sample_listing = QtWidgets.QWidget()
+        self.file_sample_listing.setLayout(self.tab2.layout)
+        self.file_sample_listing.setObjectName("filelister")
         self.tableButton.setText("Save")
-        self.tabwidget.addTab(self.file_listing, "")
+        self.tabwidget.addTab(self.file_sample_listing, "")
 
     def set_menu_and_status_bar(self, MainWindow):
         """Set the menu. """
