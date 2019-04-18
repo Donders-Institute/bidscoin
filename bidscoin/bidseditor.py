@@ -98,29 +98,34 @@ class Ui_MainWindow(object):
         self.tableButton.setGeometry(QtCore.QRect(20, 20, 93, 28))
         self.tableButton.setObjectName("tableButton")
         self.table = QTableWidget()
-        self.table.setColumnCount(3)
+        self.table.setColumnCount(4)
         self.table.setRowCount(len(self.list_dicom_files))
         self.table.setAlternatingRowColors(True)
 
         for index in range(len(self.list_dicom_files)):
             item1 = QTableWidgetItem(self.list_dicom_files[index])
             self.table.setItem(index, 0, item1)
-            item2 = QTableWidgetItem(self.list_bids_names[index])
-            self.table.setItem(index, 1, item2)
+            item3 = QTableWidgetItem(self.list_bids_names[index])
+            self.table.setItem(index, 2, item3)
             text = 'Edit'
-            self.btn_select = QPushButton(text)
+            self.button_select = QPushButton(text)
             if self.list_bids_names[index] == '':
-                self.btn_select.setStyleSheet('QPushButton {color: red;}')
+                item2 = QTableWidgetItem("extra_data")
+                self.table.setItem(index, 1, item2)
+                self.button_select.setStyleSheet('QPushButton {color: red;}')
                 self.table.item(index, 0).setForeground(QtGui.QColor(255,0,0))
             else:
-                self.btn_select.setStyleSheet('QPushButton {color: green;}')
-            self.btn_select.clicked.connect(self.handleButtonClicked)
-            self.table.setCellWidget(index, 2, self.btn_select)
-        self.table.setHorizontalHeaderLabels(['DICOM file sample', 'BIDS name', 'Action'])
+                item2 = QTableWidgetItem("anat") # TODO derive modality
+                self.table.setItem(index, 1, item2)
+                self.button_select.setStyleSheet('QPushButton {color: green;}')
+            self.button_select.clicked.connect(self.handle_button_clicked)
+            self.table.setCellWidget(index, 3, self.button_select)
+        self.table.setHorizontalHeaderLabels(['DICOM file sample', 'Modality', 'BIDS name', 'Action'])
         header = self.table.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         self.tab2.layout.addWidget(self.tableButton)
@@ -137,11 +142,9 @@ class Ui_MainWindow(object):
 
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 997, 26))
-        self.menubar.setObjectName("menubar")
         self.menuFile = QtWidgets.QMenu(self.menubar)
-        self.menuFile.setObjectName("menuFile")
         self.menuHelp = QtWidgets.QMenu(self.menubar)
-        self.menuHelp.setObjectName("menuHelp")
+
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
 
@@ -152,18 +155,14 @@ class Ui_MainWindow(object):
 
         # Define the menu actions
         self.actionNew = QtWidgets.QAction(MainWindow)
-        self.actionNew.setObjectName("actionNew")
 
         self.actionExit = QtWidgets.QAction(MainWindow)
-        self.actionExit.setObjectName("actionExit")
         self.actionExit.triggered.connect(MainWindow.close)
 
         self.actionAbout = QtWidgets.QAction(MainWindow)
-        self.actionAbout.setObjectName("actionAbout")
-        self.actionAbout.triggered.connect(self.showAbout)
+        self.actionAbout.triggered.connect(self.show_about)
 
         self.actionEdit = QtWidgets.QAction(MainWindow)
-        self.actionEdit.setObjectName("actionEdit")
 
         self.menuFile.addAction(self.actionExit)
         self.menuHelp.addAction(self.actionAbout)
@@ -178,24 +177,23 @@ class Ui_MainWindow(object):
         self.actionAbout.setText("About")
         self.actionAbout.setStatusTip("Click to get more information about the application")
 
-    def handleButtonClicked(self):
+    def handle_button_clicked(self):
         button = QApplication.focusWidget()
         index = self.table.indexAt(button.pos())
         if index.isValid():
             i = int(index.row())
-            # print(self.list_dicom_files[i])
-            self.showEdit(i, )
+            self.show_edit(i)
 
     def on_clicked(self, index):
         # print(self.model.fileInfo(index).absoluteFilePath())
         pass
 
-    def showAbout(self):
+    def show_about(self):
         """ """
         self.dlg = AboutDialog()
         self.dlg.show()
 
-    def showEdit(self, i):
+    def show_edit(self, i):
         """ """
         info = self.bidsmap_info[i]
         self.dlg2 = EditDialog(info, self.template_info)
@@ -385,13 +383,13 @@ class EditDialog(QDialog):
         self.label_dropdown.setText("Modality")
 
         self.view_dropdown = QComboBox()
-        self.view_dropdown.addItems(["Select modality", "anat", "func", "dwi", "fmap", "beh", "pet"])
+        self.view_dropdown.addItems(["Select modality", "anat", "func", "dwi", "fmap", "beh", "pet", "extra_data"])
         self.view_dropdown.currentIndexChanged.connect(self.selection_dropdown_change)
 
     def set_bids_values_section(self):
         """Set editable BIDS values section. """
         self.label_bids = QLabel()
-        self.label_bids .setText("BIDS values")
+        self.label_bids.setText("BIDS values")
 
         self.model_bids = QtGui.QStandardItemModel()
         self.model_bids.setHorizontalHeaderLabels(['Key', 'Value'])
