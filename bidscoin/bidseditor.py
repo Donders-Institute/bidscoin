@@ -49,14 +49,14 @@ class Ui_MainWindow(object):
         self.output_bidsmap = output_bidsmap
         self.list_dicom_files, self.list_bids_names = bidsutils.get_list_files(bidsmap_info)
 
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
+        self.MainWindow.setObjectName("MainWindow")
+        self.MainWindow.resize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        MainWindow.setWindowIcon(icon)
+        self.MainWindow.setWindowIcon(icon)
 
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget = QtWidgets.QWidget(self.MainWindow)
         self.centralwidget.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
         self.centralwidget.setObjectName("centralwidget")
 
@@ -71,7 +71,7 @@ class Ui_MainWindow(object):
         self.tabwidget.setTabText(1, "File sample listing")
         self.tabwidget.setCurrentIndex(1)
 
-        self.set_menu_and_status_bar(MainWindow)
+        self.set_menu_and_status_bar()
 
     def set_tab_file_browser(self, rawfolder):
         """Set the raw data folder inspector tab. """
@@ -102,74 +102,87 @@ class Ui_MainWindow(object):
         """Set the DICOM file sample listing tab.  """
         self.tab2 = QtWidgets.QWidget()
         self.tab2.layout = QVBoxLayout(self.centralwidget)
-        self.save_button = QtWidgets.QPushButton()
-        self.save_button.setGeometry(QtCore.QRect(20, 20, 93, 28))
+
         self.table = QTableWidget()
-        self.table.setColumnCount(4)
-        self.table.setRowCount(len(self.list_dicom_files))
-        self.table.setAlternatingRowColors(True)
+        self.table.setColumnCount(5)
+        self.table.setRowCount(len(self.list_dicom_files) + 1)
+
+        self.table.setAlternatingRowColors(False)
+        self.table.setShowGrid(True)
 
         for index in range(len(self.list_dicom_files)):
+            item0 = QTableWidgetItem(str(index + 1))
+            self.table.setItem(index, 0, item0)
             item1 = QTableWidgetItem(self.list_dicom_files[index])
-            self.table.setItem(index, 0, item1)
+            self.table.setItem(index, 1, item1)
             item3 = QTableWidgetItem(self.list_bids_names[index])
-            self.table.setItem(index, 2, item3)
+            self.table.setItem(index, 3, item3)
             text = 'Edit'
             self.button_select = QPushButton(text)
             if self.list_bids_names[index] == '':
                 item2 = QTableWidgetItem("extra_data")
-                self.table.setItem(index, 1, item2)
+                self.table.setItem(index, 2, item2)
                 self.button_select.setStyleSheet('QPushButton {color: red;}')
-                self.table.item(index, 0).setForeground(QtGui.QColor(255,0,0))
+                self.table.item(index, 1).setForeground(QtGui.QColor(255, 0, 0))
             else:
                 item2 = QTableWidgetItem("anat") # TODO derive modality
-                self.table.setItem(index, 1, item2)
+                self.table.setItem(index, 2, item2)
                 self.button_select.setStyleSheet('QPushButton {color: green;}')
             self.button_select.clicked.connect(self.handle_button_clicked)
-            self.table.setCellWidget(index, 3, self.button_select)
-        self.table.setHorizontalHeaderLabels(['DICOM file sample', 'Modality', 'BIDS name', 'Action'])
+            self.table.setCellWidget(index, 4, self.button_select)
+
+        self.save_button = QtWidgets.QPushButton()
+        self.save_button.setText("Save")
+        self.save_button.setStyleSheet('QPushButton {color: blue;}')
+        self.table.setCellWidget(len(self.list_dicom_files), 4, self.save_button)
+
+        self.table.setHorizontalHeaderLabels(['', 'DICOM file sample', 'Modality', 'BIDS name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+
+        vertical_header = self.table.verticalHeader()
+        vertical_header.setVisible(False)
+
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        self.tab2.layout.addWidget(self.save_button)
         self.tab2.layout.addWidget(self.table)
         self.file_sample_listing = QtWidgets.QWidget()
         self.file_sample_listing.setLayout(self.tab2.layout)
         self.file_sample_listing.setObjectName("filelister")
-        self.save_button.setText("Save")
+
         self.tabwidget.addTab(self.file_sample_listing, "")
 
         self.save_button.clicked.connect(self.save_bidsmap_to_file)
 
-    def set_menu_and_status_bar(self, MainWindow):
+    def set_menu_and_status_bar(self):
         """Set the menu. """
-        MainWindow.setCentralWidget(self.centralwidget)
+        self.MainWindow.setCentralWidget(self.centralwidget)
 
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar = QtWidgets.QMenuBar(self.MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 997, 26))
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuHelp = QtWidgets.QMenu(self.menubar)
 
-        MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(self.MainWindow)
 
         # Set the statusbar
         self.statusbar.setToolTip("")
         self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
+        self.MainWindow.setStatusBar(self.statusbar)
 
         # Define the menu actions
-        self.actionExit = QtWidgets.QAction(MainWindow)
+        self.actionExit = QtWidgets.QAction(self.MainWindow)
         self.actionExit.triggered.connect(self.exit_application)
 
-        self.actionAbout = QtWidgets.QAction(MainWindow)
+        self.actionAbout = QtWidgets.QAction(self.MainWindow)
         self.actionAbout.triggered.connect(self.show_about)
 
-        self.actionEdit = QtWidgets.QAction(MainWindow)
+        self.actionEdit = QtWidgets.QAction(self.MainWindow)
 
         self.menuFile.addAction(self.actionExit)
         self.menuHelp.addAction(self.actionAbout)
