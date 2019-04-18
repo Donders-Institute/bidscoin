@@ -227,6 +227,7 @@ class Ui_MainWindow(object):
 
 
 class AboutDialog(QDialog):
+
     def __init__(self):
         QDialog.__init__(self)
 
@@ -252,6 +253,7 @@ class AboutDialog(QDialog):
 
 
 class EditDialog(QDialog):
+
     def __init__(self, info, template_info):
         QDialog.__init__(self)
 
@@ -260,50 +262,18 @@ class EditDialog(QDialog):
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
+
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
         self.setWindowTitle("Edit Dialog")
         self.resize(1024, 800)
 
-        groupbox = QGroupBox("DICOM")
-
-        # Non-editable provenance section
         self.set_provenance_section(info)
-
-        # Non-editable DICOM attributes section
         self.set_dicom_attributes_section(info)
+        self.set_dropdown_section()
+        self.set_bids_values_section()
+        self.set_bids_name_section()
 
-        # Dropdown list section
-        self.cblabel = QLabel()
-        self.cblabel.setText("Modality")
-        self.cb = QComboBox()
-        self.cb.addItems(["Select modality", "anat", "func", "dwi", "fmap", "beh", "pet"])
-        self.cb.currentIndexChanged.connect(self.selectionchange)
-
-        # Editable BIDS values section
-        self.label_bids = QLabel()
-        self.label_bids .setText("BIDS values")
-        self.model_bids = QtGui.QStandardItemModel()
-        self.model_bids.setHorizontalHeaderLabels(['Key', 'Value'])
-        self.view_bids = QTreeView()
-        self.view_bids.header().hide()
-        self.view_bids.setModel(self.model_bids)
-        self.view_bids.setWindowTitle("BIDS values")
-        self.view_bids.expandAll()
-        self.view_bids.resizeColumnToContents(0)
-        self.view_bids.setIndentation(0)
-        self.view_bids.setAlternatingRowColors(True)
-        self.view_bids.clicked.connect(self.bids_on_clicked)
-
-        # Non-editable BIDS name section
-        self.label_bidsname = QLabel()
-        self.label_bidsname.setText("BIDS name")
-        self.view_bidsname = QTextEdit()
-        self.view_bidsname.setReadOnly(True)
-        self.view_bidsname.textCursor().insertHtml('<b>N/A</b>')
-
-        # Save button
         self.save_button = QtWidgets.QPushButton()
-        self.save_button.setObjectName("mapButton")
         self.save_button.setText("Save")
 
         groupbox1 = QGroupBox("DICOM")
@@ -317,8 +287,8 @@ class EditDialog(QDialog):
 
         groupbox2 = QGroupBox("BIDS")
         layout2 = QVBoxLayout()
-        layout2.addWidget(self.cblabel)
-        layout2.addWidget(self.cb)
+        layout2.addWidget(self.label_dropdown)
+        layout2.addWidget(self.view_dropdown)
         layout2.addWidget(self.label_bids)
         layout2.addWidget(self.view_bids)
         layout2.addWidget(self.label_bidsname)
@@ -408,10 +378,11 @@ class EditDialog(QDialog):
 
         self.label_provenance = QLabel()
         self.label_provenance.setText("Provenance")
+
         self.view_provenance = self.get_table(data)
 
     def set_dicom_attributes_section(self, info):
-        """Set DICOM attributes section. """
+        """Set non-editable DICOM attributes section. """
         dicom_attributes = info['dicom_attributes']
 
         data = []
@@ -429,9 +400,48 @@ class EditDialog(QDialog):
 
         self.label_dicom = QLabel()
         self.label_dicom.setText("DICOM attributes")
+
         self.view_dicom = self.get_table(data)
 
-    def selectionchange(self, i):
+    def set_dropdown_section(self):
+        """Dropdown select modality list section. """
+        self.label_dropdown = QLabel()
+        self.label_dropdown.setText("Modality")
+
+        self.view_dropdown = QComboBox()
+        self.view_dropdown.addItems(["Select modality", "anat", "func", "dwi", "fmap", "beh", "pet"])
+        self.view_dropdown.currentIndexChanged.connect(self.selection_dropdown_change)
+
+    def set_bids_values_section(self):
+        """Set editable BIDS values section. """
+        self.label_bids = QLabel()
+        self.label_bids .setText("BIDS values")
+
+        self.model_bids = QtGui.QStandardItemModel()
+        self.model_bids.setHorizontalHeaderLabels(['Key', 'Value'])
+        self.view_bids = QTreeView()
+        self.view_bids.header().hide()
+        self.view_bids.setModel(self.model_bids)
+        self.view_bids.setWindowTitle("BIDS values")
+        self.view_bids.expandAll()
+        self.view_bids.resizeColumnToContents(0)
+        self.view_bids.setIndentation(0)
+        self.view_bids.setAlternatingRowColors(True)
+        self.view_bids.clicked.connect(self.bids_changed)
+
+    def set_bids_name_section(self):
+        """Set non-editable BIDS name section. """
+        self.label_bidsname = QLabel()
+        self.label_bidsname.setText("BIDS name")
+
+        self.view_bidsname = QTextEdit()
+        self.view_bidsname.setReadOnly(True)
+        self.view_bidsname.textCursor().insertHtml('<b>N/A</b>')
+        height = 24
+        extra_space = 6
+        self.view_bidsname.setFixedHeight(height + extra_space)
+
+    def selection_dropdown_change(self, i):
         """Update the BIDS values and BIDS name section when the dropdown selection has been taking place. """
         if i == 0:
             # Handle case when "Select modality" is selected
@@ -440,7 +450,7 @@ class EditDialog(QDialog):
             self.view_bidsname.textCursor().insertHtml('<b>N/A</b>')
 
         else:
-            selected_modality = self.cb.currentText()
+            selected_modality = self.view_dropdown.currentText()
 
             # Update the BIDS values
             data_bids = self.get_data_bids(selected_modality)
@@ -451,57 +461,9 @@ class EditDialog(QDialog):
             self.view_bidsname.clear()
             self.view_bidsname.textCursor().insertHtml('<b>New name</b>')
 
-    def bids_on_clicked(self, index):
+    def bids_changed(self, index):
         item = self.view_bids.selectedIndexes()[0]
         # print(item.model().itemFromIndex(index).text())
-
-    def setupProvenanceModelData(self, lines, root=None):
-        self.model_provenance.setRowCount(0)
-        if root is None:
-            root = self.model_provenance.invisibleRootItem()
-        seen = {}
-        values = deque(lines)
-        while values:
-            value = values.popleft()
-            if value['level'] == 0:
-                parent = root
-            else:
-                pid = value['parent_id']
-                if pid not in seen:
-                    values.append(value)
-                    continue
-                parent = seen[pid]
-            dbid = value['db_id']
-            item = QtGui.QStandardItem(value['short_name'])
-            item.setEditable(False)
-            item2 = QtGui.QStandardItem(value['long_name'])
-            item2.setEditable(True)
-            parent.appendRow([item, item2])
-            seen[dbid] = parent.child(parent.rowCount() - 1)
-
-    def setupDicomModelData(self, lines, root=None):
-        self.model_dicom.setRowCount(0)
-        if root is None:
-            root = self.model_dicom.invisibleRootItem()
-        seen = {}
-        values = deque(lines)
-        while values:
-            value = values.popleft()
-            if value['level'] == 0:
-                parent = root
-            else:
-                pid = value['parent_id']
-                if pid not in seen:
-                    values.append(value)
-                    continue
-                parent = seen[pid]
-            dbid = value['db_id']
-            item = QtGui.QStandardItem(value['short_name'])
-            item.setEditable(False)
-            item2 = QtGui.QStandardItem(value['long_name'])
-            item2.setEditable(True)
-            parent.appendRow([item, item2])
-            seen[dbid] = parent.child(parent.rowCount() - 1)
 
     def setupBidsModelData(self, lines, root=None):
         self.model_bids.setRowCount(0)
@@ -526,23 +488,6 @@ class EditDialog(QDialog):
             item2.setEditable(True)
             parent.appendRow([item, item2])
             seen[dbid] = parent.child(parent.rowCount() - 1)
-
-    def get_data_dicom(self, info):
-        """Obtain the DICOM attributes from the info. """
-        dicom_attributes = info['dicom_attributes']
-
-        data_dicom = []
-        counter = 10
-        for key, value in dicom_attributes.items():
-            data_dicom.append({
-                'level': 0,
-                'db_id': counter,
-                'parent_id': 0,
-                'short_name': key,
-                'long_name': value
-            })
-            counter += 1
-        return data_dicom
 
     def get_data_bids(self, selected_modality):
         """Obtain the bids values from the template info. """
