@@ -134,7 +134,7 @@ class Ui_MainWindow(object):
                 self.btn_select.setStyleSheet('QPushButton {color: green;}')
             self.btn_select.clicked.connect(self.handleButtonClicked)
             self.table.setCellWidget(index, 2, self.btn_select)
-        self.table.setHorizontalHeaderLabels(['DICOM file', 'BIDS name', 'Action'])
+        self.table.setHorizontalHeaderLabels(['DICOM file sample', 'BIDS name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
@@ -146,7 +146,7 @@ class Ui_MainWindow(object):
         self.filelister = QtWidgets.QWidget()
         self.filelister.setLayout(self.tab3.layout)
         self.filelister.setObjectName("filelister")
-        self.tableButton.setText("Commit changes")
+        self.tableButton.setText("Save")
         self.bidscoin.addTab(self.filelister, "")
 
         self.bidscoin.setTabText(self.bidscoin.indexOf(self.filebrowser), "Raw data folder inspector")
@@ -274,7 +274,7 @@ class EditDialog(QDialog):
         self.set_bids_name_section()
 
         self.save_button = QtWidgets.QPushButton()
-        self.save_button.setText("Save")
+        self.save_button.setText("OK")
 
         groupbox1 = QGroupBox("DICOM")
         layout1 = QVBoxLayout()
