@@ -247,6 +247,7 @@ class AboutDialog(QDialog):
         layout.addWidget(label)
         layout.addWidget(label_version)
         layout.addWidget(self.pushButton)
+
         self.pushButton.clicked.connect(self.close)
 
 
@@ -266,39 +267,10 @@ class EditDialog(QDialog):
         groupbox = QGroupBox("DICOM")
 
         # Non-editable provenance section
-        data_provenance = self.get_data_provenance(info)
-        self.label_provenance = QLabel()
-        self.label_provenance.setText("Provenace")
-        self.model_provenance = QtGui.QStandardItemModel()
-        self.setupProvenanceModelData(data_provenance)
-        self.model_provenance.setHorizontalHeaderLabels(['Key', 'Value'])
-        self.view_provenance = QTreeView()
-        self.view_provenance.header().hide()
-        self.view_provenance.setModel(self.model_provenance)
-        self.view_provenance.setWindowTitle("Provenance")
-        self.view_provenance.expandAll()
-        self.view_provenance.resizeColumnToContents(0)
-        self.view_provenance.setIndentation(0)
-        self.view_provenance.setAlternatingRowColors(True)
-        self.view_provenance.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.view_provenance.setUniformRowHeights(True)
+        self.set_provenance_section(info)
 
         # Non-editable DICOM attributes section
-        data_dicom = self.get_data_dicom(info)
-        self.label_dicom = QLabel()
-        self.label_dicom.setText("DICOM attributes")
-        self.model_dicom = QtGui.QStandardItemModel()
-        self.setupDicomModelData(data_dicom)
-        self.model_dicom.setHorizontalHeaderLabels(['Key', 'Value'])
-        self.view_dicom = QTreeView()
-        self.view_dicom.header().hide()
-        self.view_dicom.setModel(self.model_dicom)
-        self.view_dicom.setWindowTitle("DICOM attributes")
-        self.view_dicom.expandAll()
-        self.view_dicom.resizeColumnToContents(0)
-        self.view_dicom.setIndentation(0)
-        self.view_dicom.setAlternatingRowColors(True)
-        self.view_dicom.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.set_dicom_attributes_section(info)
 
         # Dropdown list section
         self.cblabel = QLabel()
@@ -330,9 +302,9 @@ class EditDialog(QDialog):
         self.view_bidsname.textCursor().insertHtml('<b>N/A</b>')
 
         # Save button
-        self.mapButton = QtWidgets.QPushButton()
-        self.mapButton.setObjectName("mapButton")
-        self.mapButton.setText("Save")
+        self.save_button = QtWidgets.QPushButton()
+        self.save_button.setObjectName("mapButton")
+        self.save_button.setText("Save")
 
         groupbox1 = QGroupBox("DICOM")
         layout1 = QVBoxLayout()
@@ -342,7 +314,7 @@ class EditDialog(QDialog):
         layout1.addWidget(self.view_dicom)
         layout1.addStretch(1)
         groupbox1.setLayout(layout1)
-        
+
         groupbox2 = QGroupBox("BIDS")
         layout2 = QVBoxLayout()
         layout2.addWidget(self.cblabel)
@@ -351,8 +323,8 @@ class EditDialog(QDialog):
         layout2.addWidget(self.view_bids)
         layout2.addWidget(self.label_bidsname)
         layout2.addWidget(self.view_bidsname)
-        layout2.addWidget(self.mapButton)
         layout2.addStretch(1)
+        layout2.addWidget(self.save_button)
         groupbox2.setLayout(layout2)
 
         layout = QVBoxLayout()
@@ -360,7 +332,104 @@ class EditDialog(QDialog):
         layout.addWidget(groupbox2)
         self.setLayout(layout)
 
-        self.mapButton.clicked.connect(self.close)
+        self.save_button.clicked.connect(self.close)
+
+    def set_cell(self, value, is_editable=False):
+        item = QTableWidgetItem()
+        item.setText(value)
+        if is_editable:
+            item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
+        else:
+            item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        return item
+
+    def get_table(self, data):
+        """Return a table widgte from the data. """
+        table = QTableWidget()
+
+        num_rows = len(data)
+        table.setRowCount(num_rows)
+        table.setColumnCount(2) # Always two columns (i.e. key, value)
+        row_height = 24
+
+        for i, row in enumerate(data):
+            table.setRowHeight(i, row_height)
+            for j, element in enumerate(row):
+                value = element.get("value", "")
+                is_editable = element.get("is_editable", False)
+                item = self.set_cell(value, is_editable=is_editable)
+                table.setItem(i, j, QTableWidgetItem(item))
+
+        horizontal_header = table.horizontalHeader()
+        horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        horizontal_header.setVisible(False)
+
+        vertical_header = table.verticalHeader()
+        vertical_header.setVisible(False)
+
+        table.setAlternatingRowColors(False)
+        table.setShowGrid(False)
+
+        extra_space = 6
+        table_height = num_rows * (row_height + extra_space) + 2 * table.frameWidth()
+        table.setMinimumHeight(table_height)
+        table.setMaximumHeight(table_height)
+
+        return table
+
+    def set_provenance_section(self, info):
+        """Set provenance section. """
+        provenance_file = info['provenance']['filename']
+        provenance_path = info['provenance']['path']
+
+        data = [
+            [
+                {
+                    "value": "filename",
+                    "is_editable": False
+                },
+                {
+                    "value": provenance_file,
+                    "is_editable": False
+                },
+            ],
+            [
+                {
+                    "value": "path",
+                    "is_editable": False
+                },
+                {
+                    "value": provenance_path,
+                    "is_editable": False
+                },
+            ]
+        ]
+
+        self.label_provenance = QLabel()
+        self.label_provenance.setText("Provenance")
+        self.view_provenance = self.get_table(data)
+
+    def set_dicom_attributes_section(self, info):
+        """Set DICOM attributes section. """
+        dicom_attributes = info['dicom_attributes']
+
+        data = []
+        for key, value in dicom_attributes.items():
+            data.append([
+                {
+                    "value": str(key),
+                    "is_editable": False
+                },
+                {
+                    "value": str(value),
+                    "is_editable": False
+                }
+            ])
+
+        self.label_dicom = QLabel()
+        self.label_dicom.setText("DICOM attributes")
+        self.view_dicom = self.get_table(data)
 
     def selectionchange(self, i):
         """Update the BIDS values and BIDS name section when the dropdown selection has been taking place. """
@@ -457,30 +526,6 @@ class EditDialog(QDialog):
             item2.setEditable(True)
             parent.appendRow([item, item2])
             seen[dbid] = parent.child(parent.rowCount() - 1)
-
-    def get_data_provenance(self, info):
-        """Obtain the provenance data from the info. """
-        provenance_file = info['provenance']['filename']
-        provenance_path = info['provenance']['path']
-
-        data_provenance = [
-            {
-                'level': 0,
-                'db_id': 10,
-                'parent_id': 0,
-                'short_name':
-                'filename',
-                'long_name': provenance_file
-            },
-            {
-                'level': 0,
-                'db_id': 11,
-                'parent_id': 0,
-                'short_name': 'path',
-                'long_name': provenance_path
-            }
-        ]
-        return data_provenance
 
     def get_data_dicom(self, info):
         """Obtain the DICOM attributes from the info. """
