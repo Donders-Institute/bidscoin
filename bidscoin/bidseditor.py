@@ -25,6 +25,8 @@ import bidsutils
 
 logger = logging.getLogger('bidscoin')
 
+MAIN_WINDOW_WIDTH = 1280
+MAIN_WINDOW_HEIGHT = 800
 
 LOG_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidseditor.log")
 
@@ -48,7 +50,7 @@ class Ui_MainWindow(object):
         self.list_dicom_files, self.list_bids_names = bidsutils.get_list_files(bidsmap_info)
 
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1280, 800)
+        MainWindow.resize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -161,8 +163,6 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         # Define the menu actions
-        self.actionNew = QtWidgets.QAction(MainWindow)
-
         self.actionExit = QtWidgets.QAction(MainWindow)
         self.actionExit.triggered.connect(self.exit_application)
 
@@ -202,19 +202,20 @@ class Ui_MainWindow(object):
 
     def show_about(self):
         """ """
-        self.dlg = AboutDialog()
-        self.dlg.show()
+        self.dialog_about = AboutDialog()
+        self.dialog_about.show()
 
     def show_edit(self, i):
         """ """
         info = self.bidsmap_info[i]
-        self.dlg2 = EditDialog(info, self.template_info)
-        self.dlg2.show()
+        self.dialog_edit = EditDialog(info, self.template_info)
+        self.dialog_edit.show()
 
     def exit_application(self):
         """ """
         logger.info('Exit application')
         self.MainWindow.close()
+
 
 class AboutDialog(QDialog):
 
@@ -254,7 +255,7 @@ class EditDialog(QDialog):
         self.setWindowIcon(icon)
 
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
-        self.setWindowTitle("Edit Dialog")
+        self.setWindowTitle("Edit")
         self.resize(1024, 800)
 
         self.set_provenance_section(info)
