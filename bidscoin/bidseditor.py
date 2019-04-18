@@ -29,7 +29,7 @@ logger = logging.getLogger('bidscoin')
 ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "brain.ico")
 TEMPLATE_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics", "bidsmap_template.yaml")
 
-DEFAULT_RAW_FOLDER = "D:"
+DEFAULT_RAW_FOLDER = "C:"
 DEFAULT_INPUT_BIDSMAP_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_new.yaml")
 DEFAULT_OUTPUT_BIDSMAP_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_output.yaml")
 
@@ -40,6 +40,7 @@ class Ui_MainWindow(object):
 
         self.bidsmap_info = bidsmap_info
         self.template_info = template_info
+        self.list_dicom_files, self.list_bids_names = bidsutils.get_list_files(bidsmap_info)
 
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1280, 800)
@@ -52,14 +53,25 @@ class Ui_MainWindow(object):
         self.centralwidget.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
         self.centralwidget.setObjectName("centralwidget")
 
-        self.bidscoin = QtWidgets.QTabWidget(self.centralwidget)
-        self.bidscoin.setGeometry(QtCore.QRect(0, 0, 1280, 760))
-        self.bidscoin.setTabPosition(QtWidgets.QTabWidget.North)
-        self.bidscoin.setTabShape(QtWidgets.QTabWidget.Rounded)
-        self.bidscoin.setObjectName("bidscoin")
-        self.bidscoin.setToolTip("<html><head/><body><p>bidscoiner</p></body></html>")
+        self.tabwidget = QtWidgets.QTabWidget(self.centralwidget)
+        self.tabwidget.setGeometry(QtCore.QRect(0, 0, 1280, 760))
+        self.tabwidget.setTabPosition(QtWidgets.QTabWidget.North)
+        self.tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
+        self.tabwidget.setObjectName("tabwidget")
 
-        # TAB 1 - Raw data folder inspector
+        self.set_tab_raw_data_folder_inspector(rawfolder)
+        self.set_tab_initial_bidsmap_inspector(inputbidsmap, bidsmap_yaml)
+        self.set_tab_dicom_file_sample_listing()
+
+        self.tabwidget.setTabText(self.tabwidget.indexOf(self.filebrowser), "Raw data folder inspector")
+        self.tabwidget.setTabText(self.tabwidget.indexOf(self.initial_bidsmap_inspector), "Initial BIDSmap inspector")
+        self.tabwidget.setTabText(self.tabwidget.indexOf(self.file_listing), "File sample listing")
+        self.tabwidget.setCurrentIndex(2)
+
+        self.set_menu_and_status_bar(MainWindow)
+
+    def set_tab_raw_data_folder_inspector(self, rawfolder):
+        """Set the raw data folder inspector tab. """
         self.tab1 = QtWidgets.QWidget()
         self.tab1.layout = QVBoxLayout(self.centralwidget)
         self.label = QLabel()
@@ -81,9 +93,10 @@ class Ui_MainWindow(object):
         self.filebrowser = QtWidgets.QWidget()
         self.filebrowser.setLayout(self.tab1.layout)
         self.filebrowser.setObjectName("filebrowser")
-        self.bidscoin.addTab(self.filebrowser, "")
+        self.tabwidget.addTab(self.filebrowser, "")
 
-        # TAB 2 - Initial BIDSmap inspector
+    def set_tab_initial_bidsmap_inspector(self, inputbidsmap, bidsmap_yaml):
+        """Set the initial BIDS map inspector tab. """
         self.tab2 = QtWidgets.QWidget()
         self.tab2.layout = QVBoxLayout(self.centralwidget)
         self.label_bidsmap = QLabel()
@@ -96,20 +109,17 @@ class Ui_MainWindow(object):
         self.__myFont.setPointSize(10)
         self.plainTextEdit.setFont(self.__myFont)
         self.__lexer.setFont(self.__myFont)
-        self.plainTextEdit.setObjectName("syntaxHighlighter")
         self.plainTextEdit.setText(bidsmap_yaml)
         self.plainTextEdit.setReadOnly(True)
         self.tab2.layout.addWidget(self.label_bidsmap)
         self.tab2.layout.addWidget(self.plainTextEdit)
 
-        self.bidsmap = QtWidgets.QWidget()
-        self.bidsmap.setLayout(self.tab2.layout)
-        self.bidsmap.setObjectName("bidsmap")
-        self.bidscoin.addTab(self.bidsmap, "")
+        self.initial_bidsmap_inspector = QtWidgets.QWidget()
+        self.initial_bidsmap_inspector.setLayout(self.tab2.layout)
+        self.tabwidget.addTab(self.initial_bidsmap_inspector, "")
 
-        self.list_dicom_files, self.list_bids_names = bidsutils.get_list_files(bidsmap_info)
-
-        # TAB 3 - BIDS editor
+    def set_tab_dicom_file_sample_listing(self):
+        """Set the DICOM file sample listing tab.  """
         self.tab3 = QtWidgets.QWidget()
         self.tab3.layout = QVBoxLayout(self.centralwidget)
         self.tableButton = QtWidgets.QPushButton()
@@ -143,18 +153,14 @@ class Ui_MainWindow(object):
 
         self.tab3.layout.addWidget(self.tableButton)
         self.tab3.layout.addWidget(self.table)
-        self.filelister = QtWidgets.QWidget()
-        self.filelister.setLayout(self.tab3.layout)
-        self.filelister.setObjectName("filelister")
+        self.file_listing = QtWidgets.QWidget()
+        self.file_listing.setLayout(self.tab3.layout)
+        self.file_listing.setObjectName("filelister")
         self.tableButton.setText("Save")
-        self.bidscoin.addTab(self.filelister, "")
+        self.tabwidget.addTab(self.file_listing, "")
 
-        self.bidscoin.setTabText(self.bidscoin.indexOf(self.filebrowser), "Raw data folder inspector")
-        self.bidscoin.setTabText(self.bidscoin.indexOf(self.bidsmap), "Initial BIDSmap inspector")
-        self.bidscoin.setTabText(self.bidscoin.indexOf(self.filelister), "BIDS editor")
-        self.bidscoin.setCurrentIndex(2)
-
-        # Set the menu
+    def set_menu_and_status_bar(self, MainWindow):
+        """Set the menu. """
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -199,8 +205,6 @@ class Ui_MainWindow(object):
         self.actionExit.setShortcut("Ctrl+X")
         self.actionAbout.setText("About")
         self.actionAbout.setStatusTip("Click to get more information about the application")
-
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def handleButtonClicked(self):
         button = QApplication.focusWidget()
