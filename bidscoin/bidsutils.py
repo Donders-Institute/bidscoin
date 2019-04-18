@@ -304,6 +304,22 @@ def read_yaml_as_string(filename):
     return yaml_as_string
 
 
+def read_bidsmap(bidsmap_yaml):
+    """Read the input BIDSmap YAML string into a dictionary. """
+    contents = {}
+    try:
+        contents = yaml.safe_load(bidsmap_yaml)
+    except yaml.YAMLError as exc:
+        raise Exception('Error: {}'.format(exc))
+    return contents
+
+
+def save_bidsmap(filename, bidsmap_yaml):
+    """Save the BIDSmap as a YAML text file. """
+    with open(filename, 'w') as stream:
+        yaml.dump(bidsmap_yaml, stream)
+
+
 def obtain_initial_bidsmap_info(bidsmap_yaml):
     """Obtain the initial BIDSmap info. """
     contents = {}

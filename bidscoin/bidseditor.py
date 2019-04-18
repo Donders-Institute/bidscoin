@@ -10,6 +10,7 @@ from collections import deque
 import argparse
 import textwrap
 import logging
+import copy
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QFont
@@ -25,6 +26,8 @@ import bidsutils
 logger = logging.getLogger('bidscoin')
 
 
+LOG_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidseditor.log")
+
 ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "brain.ico")
 TEMPLATE_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics", "bidsmap_template.yaml")
 
@@ -35,10 +38,13 @@ DEFAULT_OUTPUT_BIDSMAP_FILENAME = os.path.join(os.path.dirname(os.path.realpath(
 
 class Ui_MainWindow(object):
 
-    def setupUi(self, MainWindow, rawfolder, inputbidsmap, bidsmap_yaml, bidsmap_info, template_info):
+    def setupUi(self, MainWindow, rawfolder, inputbidsmap, outputbidsmap, bidsmap_yaml, bidsmap_info, template_info, output_bidsmap):
 
+        self.MainWindow = MainWindow
         self.bidsmap_info = bidsmap_info
         self.template_info = template_info
+        self.outputbidsmap = outputbidsmap
+        self.output_bidsmap = output_bidsmap
         self.list_dicom_files, self.list_bids_names = bidsutils.get_list_files(bidsmap_info)
 
         MainWindow.setObjectName("MainWindow")
@@ -94,9 +100,8 @@ class Ui_MainWindow(object):
         """Set the DICOM file sample listing tab.  """
         self.tab2 = QtWidgets.QWidget()
         self.tab2.layout = QVBoxLayout(self.centralwidget)
-        self.tableButton = QtWidgets.QPushButton()
-        self.tableButton.setGeometry(QtCore.QRect(20, 20, 93, 28))
-        self.tableButton.setObjectName("tableButton")
+        self.save_button = QtWidgets.QPushButton()
+        self.save_button.setGeometry(QtCore.QRect(20, 20, 93, 28))
         self.table = QTableWidget()
         self.table.setColumnCount(4)
         self.table.setRowCount(len(self.list_dicom_files))
@@ -128,13 +133,15 @@ class Ui_MainWindow(object):
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        self.tab2.layout.addWidget(self.tableButton)
+        self.tab2.layout.addWidget(self.save_button)
         self.tab2.layout.addWidget(self.table)
         self.file_sample_listing = QtWidgets.QWidget()
         self.file_sample_listing.setLayout(self.tab2.layout)
         self.file_sample_listing.setObjectName("filelister")
-        self.tableButton.setText("Save")
+        self.save_button.setText("Save")
         self.tabwidget.addTab(self.file_sample_listing, "")
+
+        self.save_button.clicked.connect(self.save_bidsmap_to_file)
 
     def set_menu_and_status_bar(self, MainWindow):
         """Set the menu. """
@@ -157,7 +164,7 @@ class Ui_MainWindow(object):
         self.actionNew = QtWidgets.QAction(MainWindow)
 
         self.actionExit = QtWidgets.QAction(MainWindow)
-        self.actionExit.triggered.connect(MainWindow.close)
+        self.actionExit.triggered.connect(self.exit_application)
 
         self.actionAbout = QtWidgets.QAction(MainWindow)
         self.actionAbout.triggered.connect(self.show_about)
@@ -176,6 +183,11 @@ class Ui_MainWindow(object):
         self.actionExit.setShortcut("Ctrl+X")
         self.actionAbout.setText("About")
         self.actionAbout.setStatusTip("Click to get more information about the application")
+
+    def save_bidsmap_to_file(self):
+        """Save the BIDSmap to file. """
+        bidsutils.save_bidsmap(self.outputbidsmap, self.output_bidsmap)
+        logger.info('Saved BIDS map to file {}'.format(self.outputbidsmap))
 
     def handle_button_clicked(self):
         button = QApplication.focusWidget()
@@ -199,6 +211,10 @@ class Ui_MainWindow(object):
         self.dlg2 = EditDialog(info, self.template_info)
         self.dlg2.show()
 
+    def exit_application(self):
+        """ """
+        logger.info('Exit application')
+        self.MainWindow.close()
 
 class AboutDialog(QDialog):
 
@@ -247,8 +263,8 @@ class EditDialog(QDialog):
         self.set_bids_values_section()
         self.set_bids_name_section()
 
-        self.save_button = QtWidgets.QPushButton()
-        self.save_button.setText("OK")
+        self.ok_button = QtWidgets.QPushButton()
+        self.ok_button.setText("OK")
 
         groupbox1 = QGroupBox("DICOM")
         layout1 = QVBoxLayout()
@@ -268,7 +284,7 @@ class EditDialog(QDialog):
         layout2.addWidget(self.label_bidsname)
         layout2.addWidget(self.view_bidsname)
         layout2.addStretch(1)
-        layout2.addWidget(self.save_button)
+        layout2.addWidget(self.ok_button)
         groupbox2.setLayout(layout2)
 
         layout = QVBoxLayout()
@@ -276,7 +292,7 @@ class EditDialog(QDialog):
         layout.addWidget(groupbox2)
         self.setLayout(layout)
 
-        self.save_button.clicked.connect(self.close)
+        self.ok_button.clicked.connect(self.close)
 
     def set_cell(self, value, is_editable=False):
         item = QTableWidgetItem()
@@ -491,15 +507,41 @@ class EditDialog(QDialog):
         return data_bids
 
 
+def setup_logging(log_filename):
+    """Setup the logging """
+    # Set the format
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s %(message)s',
+                                  '%Y-%m-%d %H:%M:%S')
+
+    # Set the streamhandler
+    streamhandler = logging.StreamHandler()
+    streamhandler.setLevel(logging.INFO)
+    streamhandler.setFormatter(formatter)
+
+    # Set the filehandler
+    filehandler = logging.FileHandler(log_filename)
+    filehandler.setLevel(logging.INFO)
+    filehandler.setFormatter(formatter)
+
+    # Add the streamhandler and filehandler to the logger
+    logger.addHandler(streamhandler)
+    logger.addHandler(filehandler)
+
+
 if __name__ == "__main__":
+
+    setup_logging(LOG_FILE)
+    logger.info('Started BIDS editor')
+
     # Parse the input arguments and run bidseditor
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
                                             '  bidseditor.py /raw/data/folder /input/bidsmap.yaml /output/bidsmap.yaml\n')
     parser.add_argument('rawfolder', help='The root folder of the directory tree containing the raw files', nargs='?', default=DEFAULT_RAW_FOLDER)
-    parser.add_argument('inputbidsmap', help='The input bidsmap YAML-file with the BIDS heuristics', nargs='?', default=DEFAULT_INPUT_BIDSMAP_FILENAME)
-    parser.add_argument('outputbidsmap', help='The output bidsmap YAML-file with the BIDS heuristics', nargs='?', default=DEFAULT_OUTPUT_BIDSMAP_FILENAME)
+    parser.add_argument('inputbidsmap', help='The input BIDS map YAML-file', nargs='?', default=DEFAULT_INPUT_BIDSMAP_FILENAME)
+    parser.add_argument('outputbidsmap', help='The output BIDS map YAML-file', nargs='?', default=DEFAULT_OUTPUT_BIDSMAP_FILENAME)
     args = parser.parse_args()
 
     # Validate the arguments
@@ -508,17 +550,24 @@ if __name__ == "__main__":
 
     # Obtain the initial bidsmap info
     input_bidsmap_yaml = bidsutils.read_yaml_as_string(args.inputbidsmap)
+    input_bidsmap = bidsutils.read_bidsmap(input_bidsmap_yaml)
     input_bidsmap_info = bidsutils.obtain_initial_bidsmap_info(input_bidsmap_yaml)
 
     # Obtain the template info
     template_yaml = bidsutils.read_yaml_as_string(TEMPLATE_FILENAME)
     template_info = bidsutils.obtain_template_info(template_yaml)
 
+    output_bidsmap = copy.deepcopy(input_bidsmap)
+
+    logger.info('Input raw data folder: {}'.format(args.rawfolder))
+    logger.info('Input BIDS map {}'.format(args.inputbidsmap))
+    logger.info('Output BIDS map {}'.format(args.outputbidsmap))
+
     # Start the application
     app = QApplication(sys.argv)
     app.setApplicationName("BIDS editor")
     mainwin = QMainWindow()
     gui = Ui_MainWindow()
-    gui.setupUi(mainwin, args.rawfolder, args.inputbidsmap, input_bidsmap_yaml, input_bidsmap_info, template_info)
+    gui.setupUi(mainwin, args.rawfolder, args.inputbidsmap, args.outputbidsmap, input_bidsmap_yaml, input_bidsmap_info, template_info, output_bidsmap)
     mainwin.show()
     sys.exit(app.exec_())
