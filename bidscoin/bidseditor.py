@@ -33,7 +33,7 @@ LOG_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "test
 ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "brain.ico")
 TEMPLATE_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics", "bidsmap_template.yaml")
 
-DEFAULT_RAW_FOLDER = "C:"
+DEFAULT_RAW_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)))
 DEFAULT_INPUT_BIDSMAP_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_new.yaml")
 DEFAULT_OUTPUT_BIDSMAP_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_output.yaml")
 

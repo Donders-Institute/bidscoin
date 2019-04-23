@@ -5,9 +5,21 @@ Module with helper functions
 import os
 import logging
 import ruamel.yaml as yaml
+import json
 
 
 logger = logging.getLogger('bidscoin')
+
+
+MODALITIES = [
+    "anat",
+    "func",
+    "dwi",
+    "fmap",
+    "beh",
+    "pet",
+    "extra_data"
+]
 
 
 BIDS_LABELS = [
@@ -306,7 +318,7 @@ def read_yaml_as_string(filename):
 
 def read_bidsmap(bidsmap_yaml):
     """Read the input BIDSmap YAML string into a dictionary. """
-    contents = {}
+    contents = yaml.comments.CommentedMap()
     try:
         contents = yaml.safe_load(bidsmap_yaml)
     except yaml.YAMLError as exc:
@@ -322,7 +334,7 @@ def save_bidsmap(filename, bidsmap_yaml):
 
 def obtain_initial_bidsmap_info(bidsmap_yaml):
     """Obtain the initial BIDSmap info. """
-    contents = {}
+    contents = yaml.comments.CommentedMap()
     try:
         contents = yaml.safe_load(bidsmap_yaml)
     except yaml.YAMLError as exc:
@@ -331,7 +343,7 @@ def obtain_initial_bidsmap_info(bidsmap_yaml):
     bidsmap_info = []
     contents_dicom = contents.get('DICOM', {})
 
-    for modality in ["anat", "func", "dwi", "fmap", "beh", "pet", "extra_data"]:
+    for modality in MODALITIES:
 
         if modality == "extra_data":
             identified = False
@@ -379,7 +391,7 @@ def obtain_initial_bidsmap_info(bidsmap_yaml):
 
 def obtain_template_info(template_yaml):
     """Obtain the template info. """
-    contents = {}
+    contents = yaml.comments.CommentedMap()
     try:
         contents = yaml.safe_load(template_yaml)
     except yaml.YAMLError as exc:
@@ -388,7 +400,7 @@ def obtain_template_info(template_yaml):
     template_info = []
     contents_dicom = contents.get('DICOM', {})
 
-    for modality in ["anat", "func", "dwi", "fmap", "beh", "pet"]:
+    for modality in MODALITIES:
 
         contents_dicom_modality = contents_dicom.get(modality, None)
         if contents_dicom_modality is not None:
@@ -428,3 +440,36 @@ def get_list_files(bidsmap_info):
         list_dicom_files.append(dicom_file)
         list_bids_names.append(bids_name)
     return list_dicom_files, list_bids_names
+
+
+def get_num_samples(bidsmap, modality):
+    """Obtain the number of samples for a give modality. """
+    if not modality in MODALITIES:
+        raise ValueError("invalid modality '{}'".format(modality))
+
+    bidsmap_dicom = bidsmap.get('DICOM', {})
+    bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
+    if bidsmap_dicom_modality is not None:
+        num_samples = len(bidsmap_dicom_modality)
+    else:
+        num_samples = 0
+
+    return num_samples
+
+
+def read_sample(bidsmap, modality, index):
+    """Obtain sample from BIDS map. """
+    if not modality in MODALITIES:
+        raise ValueError("invalid modality '{}'".format(modality))
+
+    num_samples = get_num_samples(bidsmap, modality)
+    if index > num_samples:
+        raise IndexError("invalid index {} ({} items found)".format(index, num_samples+1))
+
+    bidsmap_sample = yaml.comments.CommentedMap()
+    bidsmap_dicom = bidsmap.get('DICOM', {})
+    bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
+    if bidsmap_dicom_modality is not None:
+        bidsmap_sample = bidsmap_dicom_modality[index]
+
+    return bidsmap_sample
