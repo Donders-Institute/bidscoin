@@ -1,0 +1,154 @@
+DICOM:
+  anat:
+  - attributes:
+      EchoNumbers: 1
+      EchoTime: '2.26'
+      FlipAngle: '9'
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM']"
+      MRAcquisitionType: 3D
+      PhaseEncodingDirection: null
+      ProtocolName: t1_mpr_sag_p2_iso_1
+      RepetitionTime: '1900'
+      ScanningSequence: "['GR', 'IR']"
+      SequenceName: '*tfl3d1_ns'
+      SequenceVariant: "['SP', 'MP']"
+      SeriesDescription: t1_mpr_sag_p2_iso_1
+      test: test
+    bids:
+      acq_label: t1mprsagp2iso1
+      ce_label: null
+      dir_label: null
+      echo_index: null
+      mod_label: null
+      modality_label: null
+      rec_label: null
+      run_index: <<1>>
+      suffix: null
+      task_label: null
+    provenance: M:\bidscoin\raw\sub-P002\ses-mri01\04_t1_mpr_sag_p2_iso_1\M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA
+  beh: null
+  dwi: null
+  extra_data:
+  - attributes:
+      EchoNumbers: 1
+      EchoTime: '4'
+      FlipAngle: '20'
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'NORM', 'DIS2D']"
+      MRAcquisitionType: 2D
+      PhaseEncodingDirection: null
+      ProtocolName: localizer AANGEPAST 11 SLICES
+      RepetitionTime: '8.6'
+      ScanningSequence: GR
+      SequenceName: '*fl2d1'
+      SequenceVariant: "['SP', 'OSP']"
+      SeriesDescription: localizer AANGEPAST 11 SLICES
+    bids:
+      acq_label: localizerAANGEPAST11SLICES
+      ce_label: null
+      dir_label: null
+      echo_index: null
+      mod_label: null
+      modality_label: null
+      rec_label: null
+      run_index: <<1>>
+      suffix: null
+      task_label: null
+    provenance: M:\bidscoin\raw\sub-P002\ses-mri01\02_localizer AANGEPAST 11 SLICES\M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA
+  - attributes:
+      EchoNumbers: 1
+      EchoTime: '30'
+      FlipAngle: '75'
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM', 'MOSAIC']"
+      MRAcquisitionType: 2D
+      PhaseEncodingDirection: null
+      ProtocolName: Stoptaak_ep2d_bold_nomoco
+      RepetitionTime: '2030'
+      ScanningSequence: EP
+      SequenceName: '*epfid2d1_64'
+      SequenceVariant: SK
+      SeriesDescription: Stoptaak_ep2d_bold_nomoco
+    bids:
+      acq_label: Stoptaakep2dboldnomoco
+      ce_label: null
+      dir_label: null
+      echo_index: null
+      mod_label: null
+      modality_label: null
+      rec_label: null
+      run_index: <<1>>
+      suffix: null
+      task_label: null
+    provenance: M:\bidscoin\raw\sub-P002\ses-mri01\03_Stoptaak_ep2d_bold_nomoco\M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA
+  - attributes:
+      EchoNumbers: 1
+      EchoTime: '30'
+      FlipAngle: '75'
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM', 'MOSAIC']"
+      MRAcquisitionType: 2D
+      PhaseEncodingDirection: null
+      ProtocolName: Flanker_ep2d_bold_nomoco
+      RepetitionTime: '2030'
+      ScanningSequence: EP
+      SequenceName: '*epfid2d1_64'
+      SequenceVariant: SK
+      SeriesDescription: Flanker_ep2d_bold_nomoco
+    bids:
+      acq_label: Flankerep2dboldnomoco
+      ce_label: null
+      dir_label: null
+      echo_index: null
+      mod_label: null
+      modality_label: null
+      rec_label: null
+      run_index: <<1>>
+      suffix: null
+      task_label: null
+    provenance: M:\bidscoin\raw\sub-P002\ses-mri01\05_Flanker_ep2d_bold_nomoco\M109.MR.WUR_BRAIN_ADHD.0005.0001.2018.03.01.13.05.10.140625.104368237.IMA
+  - attributes:
+      EchoNumbers: 1
+      EchoTime: '2.06'
+      FlipAngle: '11'
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM']"
+      MRAcquisitionType: 3D
+      PhaseEncodingDirection: null
+      ProtocolName: t1_fl3d_sag_p3_iso_1
+      RepetitionTime: '5.8'
+      ScanningSequence: GR
+      SequenceName: '*fl3d1_ns'
+      SequenceVariant: SP
+      SeriesDescription: t1_fl3d_sag_p3_iso_1
+    bids:
+      acq_label: t1fl3dsagp3iso1
+      ce_label: null
+      dir_label: null
+      echo_index: null
+      mod_label: null
+      modality_label: null
+      rec_label: null
+      run_index: <<1>>
+      suffix: null
+      task_label: null
+    provenance: M:\bidscoin\raw\sub-P002\ses-mri02\07_t1_fl3d_sag_p3_iso_1\M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA
+  fmap: null
+  func: null
+  participant_label: null
+  pet: null
+  session_label: null
+FileSystem:
+  anat: null
+  beh: null
+  dwi: null
+  extra_data: null
+  fmap: null
+  func: null
+  participant_label: null
+  session_label: null
+Nifti: null
+Options:
+  dcm2niix:
+    args: -b y -z y -i n
+    path: module add dcm2niix;
+  version: 1.6
+P7: null
+PAR: null
+PlugIn: null

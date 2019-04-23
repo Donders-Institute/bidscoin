@@ -3,9 +3,10 @@ Module with helper functions
 """
 
 import os
+import sys
 import logging
+import copy
 import ruamel.yaml as yaml
-import json
 
 
 logger = logging.getLogger('bidscoin')
@@ -326,10 +327,10 @@ def read_bidsmap(bidsmap_yaml):
     return contents
 
 
-def save_bidsmap(filename, bidsmap_yaml):
+def save_bidsmap(filename, bidsmap):
     """Save the BIDSmap as a YAML text file. """
     with open(filename, 'w') as stream:
-        yaml.dump(bidsmap_yaml, stream)
+        yaml.dump(bidsmap, stream, default_flow_style=False)
 
 
 def obtain_initial_bidsmap_info(bidsmap_yaml):
@@ -341,7 +342,7 @@ def obtain_initial_bidsmap_info(bidsmap_yaml):
         raise Exception('Error: {}'.format(exc))
 
     bidsmap_info = []
-    contents_dicom = contents.get('DICOM', {})
+    contents_dicom = contents.get('DICOM', yaml.comments.CommentedMap())
 
     for modality in MODALITIES:
 
@@ -367,13 +368,13 @@ def obtain_initial_bidsmap_info(bidsmap_yaml):
                     if attributes is not None:
                         dicom_attributes = attributes
                     else:
-                        dicom_attributes = {}
+                        dicom_attributes = yaml.comments.CommentedMap()
 
                     bids_attributes = item.get('bids', None)
                     if bids_attributes is not None:
                         bids_values = bids_attributes
                     else:
-                        bids_values = {}
+                        bids_values = yaml.comments.CommentedMap()
 
                     bidsmap_info.append({
                         "modality": modality,
@@ -398,7 +399,7 @@ def obtain_template_info(template_yaml):
         raise Exception('Error: {}'.format(exc))
 
     template_info = []
-    contents_dicom = contents.get('DICOM', {})
+    contents_dicom = contents.get('DICOM', yaml.comments.CommentedMap())
 
     for modality in MODALITIES:
 
@@ -411,7 +412,7 @@ def obtain_template_info(template_yaml):
                     if bids_attributes is not None:
                         bids_values = bids_attributes
                     else:
-                        bids_values = {}
+                        bids_values = yaml.comments.CommentedMap()
 
                     template_info.append({
                         "modality": modality,
@@ -447,7 +448,7 @@ def get_num_samples(bidsmap, modality):
     if not modality in MODALITIES:
         raise ValueError("invalid modality '{}'".format(modality))
 
-    bidsmap_dicom = bidsmap.get('DICOM', {})
+    bidsmap_dicom = bidsmap.get('DICOM', yaml.comments.CommentedMap())
     bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
     if bidsmap_dicom_modality is not None:
         num_samples = len(bidsmap_dicom_modality)
@@ -467,9 +468,67 @@ def read_sample(bidsmap, modality, index):
         raise IndexError("invalid index {} ({} items found)".format(index, num_samples+1))
 
     bidsmap_sample = yaml.comments.CommentedMap()
-    bidsmap_dicom = bidsmap.get('DICOM', {})
+    bidsmap_dicom = bidsmap.get('DICOM', yaml.comments.CommentedMap())
     bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
     if bidsmap_dicom_modality is not None:
         bidsmap_sample = bidsmap_dicom_modality[index]
+    else:
+        logger.warning('modality not found {}'.format(modality))
 
     return bidsmap_sample
+
+
+def delete_sample(bidsmap, modality, index):
+    """Delete a sample from the BIDS map. """
+    if not modality in MODALITIES:
+        raise ValueError("invalid modality '{}'".format(modality))
+
+    num_samples = get_num_samples(bidsmap, modality)
+    if index > num_samples:
+        raise IndexError("invalid index {} ({} items found)".format(index, num_samples+1))
+
+    bidsmap_dicom = bidsmap.get('DICOM', yaml.comments.CommentedMap())
+    bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
+    if bidsmap_dicom_modality is not None:
+        del bidsmap['DICOM'][modality][index]
+    else:
+        logger.warning('modality not found {}'.format(modality))
+
+    return bidsmap
+
+
+def append_sample(bidsmap, modality, sample):
+    """Append a sample to the BIDS map. """
+    if not modality in MODALITIES:
+        raise ValueError("invalid modality '{}'".format(modality))
+
+    bidsmap_dicom = bidsmap.get('DICOM', yaml.comments.CommentedMap())
+    bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
+    if bidsmap_dicom_modality is not None:
+        bidsmap['DICOM'][modality].append(sample)
+    else:
+        bidsmap['DICOM'][modality] = [sample]
+
+    return bidsmap
+
+
+def update_bidsmap(source_bidsmap, source_modality, source_index, target_modality, target_sample):
+    """Update the BIDS map:
+    1. Remove the source sample from the source modality section
+    2. Add the target sample to the target modality section
+    """
+    if not source_modality in MODALITIES:
+        raise ValueError("invalid modality '{}'".format(source_modality))
+
+    if not target_modality in MODALITIES:
+        raise ValueError("invalid modality '{}'".format(target_modality))
+
+    target_bidsmap = copy.deepcopy(source_bidsmap)
+
+    # Delete the source sample
+    target_bidsmap = delete_sample(target_bidsmap, source_modality, source_index)
+
+    # Append the target sample
+    target_bidsmap = append_sample(target_bidsmap, target_modality, target_sample)
+
+    return target_bidsmap
