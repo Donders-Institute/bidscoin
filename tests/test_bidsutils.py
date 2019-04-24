@@ -7,7 +7,9 @@ import logging
 import copy
 import difflib
 
-from bidscoin.bidsutils import (read_bidsmap, read_yaml_as_string, get_num_samples, read_sample, update_bidsmap, save_bidsmap)
+from bidscoin.bidsutils import (read_bidsmap, read_yaml_as_string, get_num_samples,
+                                read_sample, update_bidsmap, save_bidsmap, get_bids_name,
+                                get_bids_name_array, show_label, get_list_summary, MODALITIES)
 
 
 logger = logging.getLogger()
@@ -15,19 +17,121 @@ logger.level = logging.DEBUG
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
-class TestBidseditor(unittest.TestCase):
+class TestBidsUtils(unittest.TestCase):
 
-    def read_bidsmap(self):
+    def test_read_bidsmap(self):
         filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_new.yaml")
         bidsmap_yaml = read_yaml_as_string(filename)
         bidsmap = read_bidsmap(bidsmap_yaml)
 
         with open(filename) as fp:
-            test_bidsmap = fp.read()
-            test_bidsmap_yaml = yaml.safe_load(test_bidsmap)
+            test_bidsmap_yaml = fp.read()
+            test_bidsmap = yaml.safe_load(test_bidsmap_yaml)
 
         self.assertEqual(bidsmap_yaml, test_bidsmap_yaml)
         self.assertEqual(bidsmap, test_bidsmap)
+
+    def test_show_label(self):
+        self.assertEqual(show_label(None), False)
+        self.assertEqual(show_label(""), False)
+        self.assertEqual(show_label("test"), True)
+
+    def test_get_bids_name(self):
+        bids_name = get_bids_name([])
+        self.assertEqual(bids_name, "")
+
+        bids_name_array = get_bids_name_array("", "", "extra_data", {}, "")
+        bids_name = get_bids_name(bids_name_array)
+        self.assertEqual(bids_name, "sub-_acq-")
+
+    def test_get_bids_name_array(self):
+        test_bids_name_array_anat = [
+            {
+                "prefix": "sub-",
+                "label": "",
+                "show": True
+            },
+            {
+                "prefix": "ses-",
+                "label": "",
+                "show": False
+            },
+            {
+                "prefix": "acq-",
+                "label": "",
+                "show": False
+            },
+            {
+                "prefix": "ce-",
+                "label": "",
+                "show": False
+            },
+            {
+                "prefix": "rec-",
+                "label": "",
+                "show": False
+            },
+            {
+                "prefix": "run-",
+                "label": "",
+                "show": False
+            },
+            {
+                "prefix": "mod-",
+                "label": "",
+                "show": False
+            },
+            {
+                "prefix": "",
+                "label": "",
+                "show": True
+            }
+        ]
+        for modality in MODALITIES:
+            bids_name_array = get_bids_name_array("", "", modality, {}, "")
+            if modality == 'anat':
+                self.assertEqual(bids_name_array, test_bids_name_array_anat)
+
+    def test_get_list_summary(self):
+        test_list_summary = [
+            {
+                "modality": "extra_data",
+                "provenance_file": "M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA",
+                "provenance_path": "M:\\bidscoin\\raw\\sub-P002\\ses-mri01\\02_localizer AANGEPAST 11 SLICES",
+                "bids_name": "sub-*_ses-*_acq-localizerAANGEPAST11SLICES_run-<<1>>"
+            },
+            {
+                "modality": "extra_data",
+                "provenance_file": "M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA",
+                "provenance_path": "M:\\bidscoin\\raw\\sub-P002\\ses-mri01\\03_Stoptaak_ep2d_bold_nomoco",
+                "bids_name": "sub-*_ses-*_acq-Stoptaakep2dboldnomoco_run-<<1>>"
+            },
+            {
+                "modality": "extra_data",
+                "provenance_file": "M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA",
+                "provenance_path": "M:\\bidscoin\\raw\\sub-P002\\ses-mri01\\04_t1_mpr_sag_p2_iso_1",
+                "bids_name": "sub-*_ses-*_acq-t1mprsagp2iso1_run-<<1>>"
+            },
+            {
+                "modality": "extra_data",
+                "provenance_file": "M109.MR.WUR_BRAIN_ADHD.0005.0001.2018.03.01.13.05.10.140625.104368237.IMA",
+                "provenance_path": "M:\\bidscoin\\raw\\sub-P002\\ses-mri01\\05_Flanker_ep2d_bold_nomoco",
+                "bids_name": "sub-*_ses-*_acq-Flankerep2dboldnomoco_run-<<1>>"
+            },
+            {
+                "modality": "extra_data",
+                "provenance_file": "M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA",
+                "provenance_path": "M:\\bidscoin\\raw\\sub-P002\\ses-mri02\\07_t1_fl3d_sag_p3_iso_1",
+                "bids_name": "sub-*_ses-*_acq-t1fl3dsagp3iso1_run-<<1>>"
+            }
+        ]
+
+        filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_new.yaml")
+        bidsmap_yaml = read_yaml_as_string(filename)
+        bidsmap = read_bidsmap(bidsmap_yaml)
+        list_summary = get_list_summary(bidsmap)
+
+        self.assertEqual(list_summary, test_list_summary)
 
     def test_get_num_samples(self):
         """Determine the number of extra_data samples."""
