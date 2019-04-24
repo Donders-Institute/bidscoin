@@ -490,8 +490,6 @@ class EditDialog(QDialog):
         else:
             bids_values = yaml.comments.CommentedMap()
 
-        print(bids_values)
-
         subid = '*'
         sesid = '*'
         run = bids_values.get('run_index', '*')
@@ -534,7 +532,6 @@ class EditDialog(QDialog):
                 }
             ])
 
-        self.view_bids.clear()
         self.view_bids = self.get_table(data)
 
         # Update the BIDS name

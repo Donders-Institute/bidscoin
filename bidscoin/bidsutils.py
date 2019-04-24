@@ -65,6 +65,14 @@ def show_label(label):
 
 def get_bids_name_array(subid, sesid, modality, bids_values, run):
     """Return the components of the BIDS name as an array. """
+    acq_label = bids_values.get('acq_label', '')
+    ce_label = bids_values.get('ce_label', '')
+    rec_label = bids_values.get('rec_label', '')
+    task_label = bids_values.get('task_label', '')
+    echo_index = bids_values.get('echo_index', '')
+    dir_label = bids_values.get('dir_label', '')
+    suffix = bids_values.get('suffix', '')
+
     bids_name_array = []
 
     if modality == 'anat':
@@ -86,18 +94,18 @@ def get_bids_name_array(subid, sesid, modality, bids_values, run):
             },
             {
                 'prefix': 'acq-',
-                'label': bids_values['acq_label'],
-                'show': show_label(bids_values['acq_label'])
+                'label': acq_label,
+                'show': show_label(acq_label)
             },
             {
                 'prefix': 'ce-',
-                'label': bids_values['ce_label'],
-                'show': show_label(bids_values['ce_label'])
+                'label': ce_label,
+                'show': show_label(ce_label)
             },
             {
                 'prefix': 'rec-',
-                'label': bids_values['rec_label'],
-                'show': show_label(bids_values['rec_label'])
+                'label': rec_label,
+                'show': show_label(rec_label)
             },
             {
                 'prefix': 'run-',
@@ -131,18 +139,18 @@ def get_bids_name_array(subid, sesid, modality, bids_values, run):
             },
             {
                 'prefix': 'task-',
-                'label': bids_values['task_label'],
+                'label': task_label,
                 'show': True # mandatory
             },
             {
                 'prefix': 'acq-',
-                'label': bids_values['acq_label'],
-                'show': show_label(bids_values['acq_label'])
+                'label': acq_label,
+                'show': show_label(acq_label)
             },
             {
                 'prefix': 'rec-',
-                'label': bids_values['rec_label'],
-                'show': show_label(bids_values['rec_label'])
+                'label': rec_label,
+                'show': show_label(rec_label)
             },
             {
                 'prefix': 'run-',
@@ -151,8 +159,8 @@ def get_bids_name_array(subid, sesid, modality, bids_values, run):
             },
             {
                 'prefix': 'echo-',
-                'label': bids_values['echo_index'],
-                'show': show_label(bids_values['echo_index'])
+                'label': echo_index,
+                'show': show_label(echo_index)
             },
             {
                 'prefix': '',
@@ -176,8 +184,8 @@ def get_bids_name_array(subid, sesid, modality, bids_values, run):
             },
             {
                 'prefix': 'acq-',
-                'label': bids_values['acq_label'],
-                'show': show_label(bids_values['acq_label'])
+                'label': acq_label,
+                'show': show_label(acq_label)
             },
             {
                 'prefix': 'run-',
@@ -207,13 +215,13 @@ def get_bids_name_array(subid, sesid, modality, bids_values, run):
             },
             {
                 'prefix': 'acq-',
-                'label': bids_values['acq_label'],
-                'show': show_label(bids_values['acq_label'])
+                'label': acq_label,
+                'show': show_label(acq_label)
             },
             {
                 'prefix': 'dir-',
-                'label': bids_values['dir_label'],
-                'show': show_label(bids_values['dir_label'])
+                'label': dir_label,
+                'show': show_label(dir_label)
             },
             {
                 'prefix': 'run-',
@@ -242,7 +250,7 @@ def get_bids_name_array(subid, sesid, modality, bids_values, run):
             },
             {
                 'prefix': 'task-',
-                'label': bids_values['task_label'],
+                'label': task_label,
                 'show': True # mandatory
             },
             {
@@ -267,18 +275,18 @@ def get_bids_name_array(subid, sesid, modality, bids_values, run):
             },
             {
                 'prefix': 'task-',
-                'label': bids_values['task_label'],
+                'label': task_label,
                 'show': True # mandatory
             },
             {
                 'prefix': 'acq-',
-                'label': bids_values['acq_label'],
-                'show': show_label(bids_values['acq_label'])
+                'label': acq_label,
+                'show': show_label(acq_label)
             },
             {
                 'prefix': 'rec-',
-                'label': bids_values['rec_label'],
-                'show': show_label(bids_values['rec_label'])
+                'label': rec_label,
+                'show': show_label(rec_label)
             },
             {
                 'prefix': 'run-',
@@ -307,33 +315,33 @@ def get_bids_name_array(subid, sesid, modality, bids_values, run):
             },
             {
                 'prefix': 'acq-',
-                'label': bids_values.get('acq_label', ''),
+                'label': acq_label,
                 'show': True
             },
             {
                 'prefix': 'ce-',
-                'label': bids_values.get('ce_label', ''),
-                'show': show_label(bids_values.get('ce_label', ''))
+                'label': ce_label,
+                'show': show_label(ce_label)
             },
             {
                 'prefix': 'rec-',
-                'label': bids_values.get('rec_label', ''),
-                'show': show_label(bids_values.get('rec_label', ''))
+                'label': rec_label,
+                'show': show_label(rec_label)
             },
              {
                 'prefix': 'task-',
-                'label': bids_values.get('task_label', ''),
-                'show': show_label(bids_values.get('task_label', ''))
+                'label': task_label,
+                'show': show_label(task_label)
             },
             {
                 'prefix': 'echo-',
-                'label': bids_values.get('echo_index', ''),
-                'show': show_label(bids_values.get('echo_index', ''))
+                'label': echo_index,
+                'show': show_label(echo_index)
             },
             {
                 'prefix': 'dir-',
-                'label': bids_values.get('dir_label', ''),
-                'show': show_label(bids_values.get('dir_label', ''))
+                'label': dir_label,
+                'show': show_label(dir_label)
             },
             {
                 'prefix': 'run-',
@@ -342,8 +350,8 @@ def get_bids_name_array(subid, sesid, modality, bids_values, run):
             },
             {
                 'prefix': '',
-                'label': bids_values.get('suffix', ''),
-                'show': show_label(bids_values.get('suffix', ''))
+                'label': suffix,
+                'show': show_label(suffix)
             }
         ]
 
