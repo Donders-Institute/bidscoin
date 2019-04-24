@@ -333,23 +333,102 @@ def save_bidsmap(filename, bidsmap):
         yaml.dump(bidsmap, stream, default_flow_style=False)
 
 
-def obtain_initial_bidsmap_info(bidsmap_yaml):
-    """Obtain the initial BIDSmap info. """
-    contents = yaml.comments.CommentedMap()
-    try:
-        contents = yaml.safe_load(bidsmap_yaml)
-    except yaml.YAMLError as exc:
-        raise Exception('Error: {}'.format(exc))
+# def obtain_initial_bidsmap_info(bidsmap_yaml):
+#     """Obtain the initial BIDSmap info. """
+#     contents = yaml.comments.CommentedMap()
+#     try:
+#         contents = yaml.safe_load(bidsmap_yaml)
+#     except yaml.YAMLError as exc:
+#         raise Exception('Error: {}'.format(exc))
 
-    bidsmap_info = []
-    contents_dicom = contents.get('DICOM', yaml.comments.CommentedMap())
+#     bidsmap_info = []
+#     contents_dicom = contents.get('DICOM', yaml.comments.CommentedMap())
+
+#     for modality in MODALITIES:
+
+#         if modality == "extra_data":
+#             identified = False
+#         else:
+#             identified = True
+
+#         contents_dicom_modality = contents_dicom.get(modality, None)
+#         if contents_dicom_modality is not None:
+#             for item in contents_dicom.get(modality, None):
+#                 if item is not None:
+
+#                     provenance = item.get('provenance', None)
+#                     if provenance is not None:
+#                         provenance_file = os.path.basename(provenance)
+#                         provenance_path = os.path.dirname(provenance)
+#                     else:
+#                         provenance_file = ""
+#                         provenance_path = ""
+
+#                     attributes = item.get('attributes', None)
+#                     if attributes is not None:
+#                         dicom_attributes = attributes
+#                     else:
+#                         dicom_attributes = yaml.comments.CommentedMap()
+
+#                     bids_attributes = item.get('bids', None)
+#                     if bids_attributes is not None:
+#                         bids_values = bids_attributes
+#                     else:
+#                         bids_values = yaml.comments.CommentedMap()
+
+#                     bidsmap_info.append({
+#                         "modality": modality,
+#                         "identified": identified,
+#                         "provenance": {
+#                             "path": provenance_path,
+#                             "filename": provenance_file
+#                         },
+#                         "dicom_attributes": dicom_attributes,
+#                         "bids_values": bids_values
+#                     })
+
+#     return bidsmap_info
+
+
+# def obtain_template_info(template_yaml):
+#     """Obtain the template info. """
+#     contents = yaml.comments.CommentedMap()
+#     try:
+#         contents = yaml.safe_load(template_yaml)
+#     except yaml.YAMLError as exc:
+#         raise Exception('Error: {}'.format(exc))
+
+#     template_info = []
+#     contents_dicom = contents.get('DICOM', yaml.comments.CommentedMap())
+
+#     for modality in MODALITIES:
+
+#         contents_dicom_modality = contents_dicom.get(modality, None)
+#         if contents_dicom_modality is not None:
+#             for item in contents_dicom.get(modality, None):
+#                 if item is not None:
+
+#                     bids_attributes = item.get('bids', None)
+#                     if bids_attributes is not None:
+#                         bids_values = bids_attributes
+#                     else:
+#                         bids_values = yaml.comments.CommentedMap()
+
+#                     template_info.append({
+#                         "modality": modality,
+#                         "bids_values": bids_values
+#                     })
+
+#     return template_info
+
+
+def get_list_summary(bidsmap):
+    """Get the list of files from the BIDS map. """
+    list_summary = []
+
+    contents_dicom = bidsmap.get('DICOM', yaml.comments.CommentedMap())
 
     for modality in MODALITIES:
-
-        if modality == "extra_data":
-            identified = False
-        else:
-            identified = True
 
         contents_dicom_modality = contents_dicom.get(modality, None)
         if contents_dicom_modality is not None:
@@ -364,83 +443,47 @@ def obtain_initial_bidsmap_info(bidsmap_yaml):
                         provenance_file = ""
                         provenance_path = ""
 
-                    attributes = item.get('attributes', None)
-                    if attributes is not None:
-                        dicom_attributes = attributes
-                    else:
-                        dicom_attributes = yaml.comments.CommentedMap()
-
                     bids_attributes = item.get('bids', None)
                     if bids_attributes is not None:
                         bids_values = bids_attributes
                     else:
                         bids_values = yaml.comments.CommentedMap()
 
-                    bidsmap_info.append({
+                    subid = '*'
+                    sesid = '*'
+                    run = '*'
+                    bids_name_array = get_bids_name_array(subid, sesid, modality, bids_values, run)
+                    bids_name = get_bids_name(bids_name_array)
+
+                    list_summary.append({
                         "modality": modality,
-                        "identified": identified,
-                        "provenance": {
-                            "path": provenance_path,
-                            "filename": provenance_file
-                        },
-                        "dicom_attributes": dicom_attributes,
-                        "bids_values": bids_values
+                        "provenance_file": provenance_file,
+                        "provenance_path": provenance_path,
+                        "bids_name": bids_name
                     })
 
-    return bidsmap_info
+    return list_summary
 
 
-def obtain_template_info(template_yaml):
-    """Obtain the template info. """
-    contents = yaml.comments.CommentedMap()
-    try:
-        contents = yaml.safe_load(template_yaml)
-    except yaml.YAMLError as exc:
-        raise Exception('Error: {}'.format(exc))
-
-    template_info = []
-    contents_dicom = contents.get('DICOM', yaml.comments.CommentedMap())
-
-    for modality in MODALITIES:
-
-        contents_dicom_modality = contents_dicom.get(modality, None)
-        if contents_dicom_modality is not None:
-            for item in contents_dicom.get(modality, None):
-                if item is not None:
-
-                    bids_attributes = item.get('bids', None)
-                    if bids_attributes is not None:
-                        bids_values = bids_attributes
-                    else:
-                        bids_values = yaml.comments.CommentedMap()
-
-                    template_info.append({
-                        "modality": modality,
-                        "bids_values": bids_values
-                    })
-
-    return template_info
-
-
-def get_list_files(bidsmap_info):
-    """Get the list of files from the BIDS info data structure. """
-    list_dicom_files = []
-    list_bids_names = []
-    for item in bidsmap_info:
-        dicom_file = item["provenance"]["filename"]
-        if item['identified']:
-            subid = '*'
-            sesid = '*'
-            modality = item["modality"]
-            bids_values = item["bids_values"]
-            run = '*'
-            bids_name_array = bidsutils.get_bids_name_array(subid, sesid, modality, bids_values, run)
-            bids_name = bidsutils.get_bids_name(bids_name_array)
-        else:
-            bids_name = ""
-        list_dicom_files.append(dicom_file)
-        list_bids_names.append(bids_name)
-    return list_dicom_files, list_bids_names
+# def get_list_files(bidsmap_info):
+#     """Get the list of files from the BIDS info data structure. """
+#     list_dicom_files = []
+#     list_bids_names = []
+#     for item in bidsmap_info:
+#         dicom_file = item["provenance"]["filename"]
+#         if item['identified']:
+#             subid = '*'
+#             sesid = '*'
+#             modality = item["modality"]
+#             bids_values = item["bids_values"]
+#             run = '*'
+#             bids_name_array = bidsutils.get_bids_name_array(subid, sesid, modality, bids_values, run)
+#             bids_name = bidsutils.get_bids_name(bids_name_array)
+#         else:
+#             bids_name = ""
+#         list_dicom_files.append(dicom_file)
+#         list_bids_names.append(bids_name)
+#     return list_dicom_files, list_bids_names
 
 
 def get_num_samples(bidsmap, modality):
