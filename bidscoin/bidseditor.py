@@ -282,8 +282,8 @@ class EditDialog(QDialog):
         self.set_provenance_section()
         self.set_dicom_attributes_section()
         self.set_dropdown_section()
-        # self.set_bids_values_section()
-        # self.set_bids_name_section()
+        self.set_bids_values_section()
+        self.set_bids_name_section()
 
         self.ok_button = QtWidgets.QPushButton()
         self.ok_button.setText("OK")
@@ -301,12 +301,12 @@ class EditDialog(QDialog):
         layout2 = QVBoxLayout()
         layout2.addWidget(self.label_dropdown)
         layout2.addWidget(self.view_dropdown)
-        # layout2.addWidget(self.label_bids)
-        # layout2.addWidget(self.view_bids)
-        # layout2.addWidget(self.label_bidsname)
-        # layout2.addWidget(self.view_bidsname)
-        # layout2.addStretch(1)
-        # layout2.addWidget(self.ok_button)
+        layout2.addWidget(self.label_bids)
+        layout2.addWidget(self.view_bids)
+        layout2.addWidget(self.label_bidsname)
+        layout2.addWidget(self.view_bidsname)
+        layout2.addStretch(1)
+        layout2.addWidget(self.ok_button)
         groupbox2.setLayout(layout2)
 
         layout = QVBoxLayout()
@@ -437,29 +437,50 @@ class EditDialog(QDialog):
 
     def set_bids_values_section(self):
         """Set editable BIDS values section. """
+        bids_attributes = self.target_sample.get('bids', None)
+        if bids_attributes is not None:
+            bids_values = bids_attributes
+        else:
+            bids_values = yaml.comments.CommentedMap()
+
+        data = []
+        for key, value in bids_values.items():
+            data.append([
+                {
+                    "value": str(key),
+                    "is_editable": False
+                },
+                {
+                    "value": str(value),
+                    "is_editable": True
+                }
+            ])
+
         self.label_bids = QLabel()
         self.label_bids.setText("BIDS values")
 
-        self.model_bids = QtGui.QStandardItemModel()
-        self.model_bids.setHorizontalHeaderLabels(['Key', 'Value'])
-        self.view_bids = QTreeView()
-        self.view_bids.header().hide()
-        self.view_bids.setModel(self.model_bids)
-        self.view_bids.setWindowTitle("BIDS values")
-        self.view_bids.expandAll()
-        self.view_bids.resizeColumnToContents(0)
-        self.view_bids.setIndentation(0)
-        self.view_bids.setAlternatingRowColors(True)
-        self.view_bids.clicked.connect(self.bids_changed)
+        self.view_bids = self.get_table(data)
 
     def set_bids_name_section(self):
         """Set non-editable BIDS name section. """
+        bids_attributes = self.target_sample.get('bids', None)
+        if bids_attributes is not None:
+            bids_values = bids_attributes
+        else:
+            bids_values = yaml.comments.CommentedMap()
+
+        subid = '*'
+        sesid = '*'
+        run = bids_values.get('run_index', '*')
+        bids_name_array = bidsutils.get_bids_name_array(subid, sesid, self.target_modality, bids_values, run)
+        bids_name = bidsutils.get_bids_name(bids_name_array)
+
         self.label_bidsname = QLabel()
         self.label_bidsname.setText("BIDS name")
 
         self.view_bidsname = QTextEdit()
         self.view_bidsname.setReadOnly(True)
-        self.view_bidsname.textCursor().insertHtml('<b>N/A</b>')
+        self.view_bidsname.textCursor().insertText(bids_name)
         height = 24
         extra_space = 6
         self.view_bidsname.setFixedHeight(height + extra_space)
@@ -468,69 +489,38 @@ class EditDialog(QDialog):
         """Update the BIDS values and BIDS name section when the dropdown selection has been taking place. """
         self.target_modality = self.view_dropdown.currentText()
 
-        # # Update the BIDS values
-        # data_bids = self.get_data_bids(selected_modality)
-        # self.model_bids.clear()
-        # self.setupBidsModelData(data_bids)
+        bids_attributes = self.target_sample.get('bids', None)
+        if bids_attributes is not None:
+            bids_values = bids_attributes
+        else:
+            bids_values = yaml.comments.CommentedMap()
 
-        # # Update the BIDS name
-        # self.view_bidsname.clear()
-        # self.view_bidsname.textCursor().insertHtml('<b>New name</b>')
-
-    def bids_changed(self, index):
-        item = self.view_bids.selectedIndexes()[0]
-        # print(item.model().itemFromIndex(index).text())
-
-    def setupBidsModelData(self, lines, root=None):
-        self.model_bids.setRowCount(0)
-        if root is None:
-            root = self.model_bids.invisibleRootItem()
-        seen = {}
-        values = deque(lines)
-        while values:
-            value = values.popleft()
-            if value['level'] == 0:
-                parent = root
-            else:
-                pid = value['parent_id']
-                if pid not in seen:
-                    values.append(value)
-                    continue
-                parent = seen[pid]
-            dbid = value['db_id']
-            item = QtGui.QStandardItem(value['short_name'])
-            item.setEditable(False)
-            item2 = QtGui.QStandardItem(value['long_name'])
-            item2.setEditable(True)
-            parent.appendRow([item, item2])
-            seen[dbid] = parent.child(parent.rowCount() - 1)
-
-    def get_data_bids(self, selected_modality):
-        """Obtain the bids values from the template info. """
-        bids_values = {}
-        for item in self.template_info:
-            if item['modality'] == selected_modality:
-                bids_values = item['bids_values']
-                break
-
-        data_bids = []
-        counter = 10
+        # Update the BIDS values
+        data = []
         for key, value in bids_values.items():
-            # Skip IntendedFor
-            if key != "IntendedFor":
-                if value != "None":
-                    modified_value = value
-                else:
-                    modified_value = ""
-                data_bids.append({
-                    'level': 0,
-                    'db_id': counter,
-                    'parent_id': 0,
-                    'short_name': key,
-                    'long_name': modified_value
-                })
-                counter += 1
-        return data_bids
+            data.append([
+                {
+                    "value": str(key),
+                    "is_editable": False
+                },
+                {
+                    "value": str(value),
+                    "is_editable": True
+                }
+            ])
+
+        self.view_bids.clear()
+        self.view_bids = self.get_table(data)
+
+        # Update the BIDS name
+        subid = '*'
+        sesid = '*'
+        run = bids_values.get('run_index', '*')
+        bids_name_array = bidsutils.get_bids_name_array(subid, sesid, self.target_modality, bids_values, run)
+        bids_name = bidsutils.get_bids_name(bids_name_array)
+
+        self.view_bidsname.clear()
+        self.view_bidsname.textCursor().insertText(bids_name)
 
 
 def setup_logging(log_filename):
