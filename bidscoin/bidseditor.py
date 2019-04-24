@@ -11,6 +11,8 @@ import argparse
 import textwrap
 import logging
 import copy
+import ruamel.yaml as yaml
+import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QFont
@@ -71,6 +73,64 @@ class Ui_MainWindow(object):
         self.tabwidget.setCurrentIndex(1)
 
         self.set_menu_and_status_bar()
+
+    def update_list(self, the_sample):
+        """ """
+        self.output_bidsmap = the_sample
+
+        list_summary = bidsutils.get_list_summary(self.output_bidsmap)
+
+        self.table.setColumnCount(5)
+        self.table.setRowCount(len(list_summary) + 1)
+
+        self.table.setAlternatingRowColors(False)
+        self.table.setShowGrid(True)
+
+        for i, element in enumerate(list_summary):
+            provenance_file = element['provenance_file']
+            modality = element['modality']
+            bids_name = element['bids_name']
+
+            item_id = QTableWidgetItem(str(i + 1))
+            item_provenance_file = QTableWidgetItem(provenance_file)
+            item_modality = QTableWidgetItem(modality)
+            item_bids_name = QTableWidgetItem(bids_name)
+
+            self.table.setItem(i, 0, item_id)
+            self.table.setItem(i, 1, item_provenance_file)
+            self.table.setItem(i, 2, item_modality)
+            self.table.setItem(i, 3, item_bids_name)
+
+            text = 'Edit'
+            self.button_select = QPushButton(text)
+            if modality == 'extra_data':
+                self.button_select.setStyleSheet('QPushButton {color: red;}')
+                self.table.item(i, 1).setForeground(QtGui.QColor(255, 0, 0))
+            else:
+                self.button_select.setStyleSheet('QPushButton {color: green;}')
+                self.table.item(i, 1).setForeground(QtGui.QColor(0, 128, 0))
+            self.button_select.clicked.connect(self.handle_button_clicked)
+            self.table.setCellWidget(i, 4, self.button_select)
+
+        self.save_button = QtWidgets.QPushButton()
+        self.save_button.setText("Save")
+        self.save_button.setStyleSheet('QPushButton {color: blue;}')
+        self.table.setCellWidget(len(list_summary), 4, self.save_button)
+
+        self.table.setHorizontalHeaderLabels(['', 'DICOM file sample', 'Modality', 'BIDS name', 'Action'])
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+
+        vertical_header = self.table.verticalHeader()
+        vertical_header.setVisible(False)
+
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+        self.save_button.clicked.connect(self.save_bidsmap_to_file)
 
     def set_tab_file_browser(self, rawfolder):
         """Set the raw data folder inspector tab. """
@@ -228,6 +288,7 @@ class Ui_MainWindow(object):
         """ """
         self.dialog_edit = EditDialog(i, modality, self.output_bidsmap)
         self.dialog_edit.show()
+        self.dialog_edit.got_sample.connect(self.update_list)
 
     def exit_application(self):
         """ """
@@ -262,6 +323,8 @@ class AboutDialog(QDialog):
 
 
 class EditDialog(QDialog):
+
+    got_sample = QtCore.pyqtSignal(dict)
 
     def __init__(self, i, modality, output_bidsmap):
         QDialog.__init__(self)
@@ -328,6 +391,9 @@ class EditDialog(QDialog):
                                                        self.source_index,
                                                        self.target_modality,
                                                        self.target_sample)
+
+
+        self.got_sample.emit(self.target_bidsmap)
         self.close()
 
     def cell_was_clicked(self, row, column):
