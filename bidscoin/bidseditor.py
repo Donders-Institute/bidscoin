@@ -266,9 +266,13 @@ class EditDialog(QDialog):
     def __init__(self, i, modality, output_bidsmap):
         QDialog.__init__(self)
 
+        self.source_bidsmap = copy.deepcopy(output_bidsmap)
+        self.source_index = i
         self.source_modality = modality
-        self.target_modality = modality
         self.source_sample = bidsutils.read_sample(output_bidsmap, modality, i)
+
+        self.target_bidsmap = copy.deepcopy(output_bidsmap)
+        self.target_modality = modality
         self.target_sample = copy.deepcopy(self.source_sample)
 
         icon = QtGui.QIcon()
@@ -315,9 +319,19 @@ class EditDialog(QDialog):
         self.setLayout(layout)
 
         self.view_bids.cellChanged.connect(self.cell_was_clicked)
-        self.ok_button.clicked.connect(self.close)
+        self.ok_button.clicked.connect(self.update_sample)
+
+    def update_sample(self):
+        """Save the changes. """
+        self.target_bidsmap = bidsutils.update_bidsmap(self.source_bidsmap,
+                                                       self.source_modality,
+                                                       self.source_index,
+                                                       self.target_modality,
+                                                       self.target_sample)
+        self.close()
 
     def cell_was_clicked(self, row, column):
+        """BIDS attribute value has been changed. """
         if column == 1:
             item_key = self.view_bids.item(row, 0)
             item_value = self.view_bids.item(row, 1)
