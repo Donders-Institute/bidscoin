@@ -303,8 +303,8 @@ class EditDialog(QDialog):
         layout2.addWidget(self.view_dropdown)
         layout2.addWidget(self.label_bids)
         layout2.addWidget(self.view_bids)
-        layout2.addWidget(self.label_bidsname)
-        layout2.addWidget(self.view_bidsname)
+        layout2.addWidget(self.label_bids_name)
+        layout2.addWidget(self.view_bids_name)
         layout2.addStretch(1)
         layout2.addWidget(self.ok_button)
         groupbox2.setLayout(layout2)
@@ -314,7 +314,28 @@ class EditDialog(QDialog):
         layout.addWidget(groupbox2)
         self.setLayout(layout)
 
+        self.view_bids.cellChanged.connect(self.cell_was_clicked)
         self.ok_button.clicked.connect(self.close)
+
+    def cell_was_clicked(self, row, column):
+        if column == 1:
+            item_key = self.view_bids.item(row, 0)
+            item_value = self.view_bids.item(row, 1)
+            key = item_key.text()
+            value = item_value.text()
+
+            self.target_sample['bids'][key] = value
+
+            bids_values = self.target_sample['bids']
+            subid = '*'
+            sesid = '*'
+            run = bids_values.get('run_index', '*')
+            bids_name_array = bidsutils.get_bids_name_array(subid, sesid, self.target_modality, bids_values, run)
+            bids_name = bidsutils.get_bids_name(bids_name_array)
+            self.bids_name = bids_name
+
+            self.view_bids_name.clear()
+            self.view_bids_name.textCursor().insertText(self.bids_name)
 
     def set_cell(self, value, is_editable=False):
         item = QTableWidgetItem()
@@ -469,21 +490,25 @@ class EditDialog(QDialog):
         else:
             bids_values = yaml.comments.CommentedMap()
 
+        print(bids_values)
+
         subid = '*'
         sesid = '*'
         run = bids_values.get('run_index', '*')
         bids_name_array = bidsutils.get_bids_name_array(subid, sesid, self.target_modality, bids_values, run)
         bids_name = bidsutils.get_bids_name(bids_name_array)
 
-        self.label_bidsname = QLabel()
-        self.label_bidsname.setText("BIDS name")
+        self.bids_name = bids_name
 
-        self.view_bidsname = QTextEdit()
-        self.view_bidsname.setReadOnly(True)
-        self.view_bidsname.textCursor().insertText(bids_name)
+        self.label_bids_name = QLabel()
+        self.label_bids_name.setText("BIDS name")
+
+        self.view_bids_name = QTextEdit()
+        self.view_bids_name.setReadOnly(True)
+        self.view_bids_name.textCursor().insertText(self.bids_name)
         height = 24
         extra_space = 6
-        self.view_bidsname.setFixedHeight(height + extra_space)
+        self.view_bids_name.setFixedHeight(height + extra_space)
 
     def selection_dropdown_change(self, i):
         """Update the BIDS values and BIDS name section when the dropdown selection has been taking place. """
@@ -519,8 +544,8 @@ class EditDialog(QDialog):
         bids_name_array = bidsutils.get_bids_name_array(subid, sesid, self.target_modality, bids_values, run)
         bids_name = bidsutils.get_bids_name(bids_name_array)
 
-        self.view_bidsname.clear()
-        self.view_bidsname.textCursor().insertText(bids_name)
+        self.view_bids_name.clear()
+        self.view_bids_name.textCursor().insertText(bids_name)
 
 
 def setup_logging(log_filename):
