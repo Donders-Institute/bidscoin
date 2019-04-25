@@ -142,13 +142,14 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
 
                 if not suffix.startswith(('c', 'e', 'p', 'i')):
                     bids.printlog(f'WARNING: Unexpected file after conversion to nifti: {filename}', LOG)
+
                 index = suffix[1:]
 
                 if suffix[0]=='e' and bids.set_bidslabel(bidsname, 'echo'):
                     basepath = bids.set_bidslabel(basepath, 'echo', index)                              # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
 
-                elif suffix[0]=='e' and bidsname.rsplit('_',1)[1] in ('magnitude1','magnitude2'):       # i.e. modality == 'fmap'
-                    basepath = basepath[0:-1] + index                                                   # basepath: *_magnitude1_e[index] -> *_magnitude[index]
+                elif suffix[0]=='e' and bidsname.rsplit('_',1)[1] in ('magnitude1','magnitude2'):       # filename == *_magnitude1_e[index], i.e. modality == 'fmap'
+                    basepath = basepath[0:-1] + index                                                   # *_magnitude1 -> *_magnitude[index]
 
                     # Read the echo times that need to be added to the json-file (see below)
                     if os.path.splitext(filename)[1] == '.json':
@@ -157,11 +158,11 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                         TE[int(index)-1] = data['EchoTime']
                         bids.printlog(f"Reading EchoTime{index} = {data['EchoTime']} from: {filename}", LOG)
 
-                elif suffix[0]=='e' and bidsname.rsplit('_',1)[1]=='phasediff':                         # i.e. modality == 'fmap'
-                    pass                                                                                # Discard the _e# suffix (i.e. leave the basepath as it is) because this is coded with the bids phasediff suffix
+                elif suffix[0]=='e' and bidsname.rsplit('_',1)[1]=='phasediff':                         # filename == *_phasediff_e[index], i.e. modality == 'fmap'
+                    pass                                                                                # *_phasediff (N.B. the _e# suffix is discarded because this is coded with the bids phasediff suffix)
 
-                elif suffix=='ph' and bidsname.rsplit('_',1)[1] in ['phase1','phase2']:                 # i.e. modality == 'fmap' (TODO: untested)
-                    basepath = basepath[0:-1] + index                                                   # basepath: *_phase1_e[index] -> *_phase[index]
+                elif suffix=='ph' and bidsname.rsplit('_',1)[1] in ['phase1','phase2']:                 # filename == *_phase1_e[index], i.e. modality == 'fmap' (TODO: untested)
+                    basepath = basepath[0:-1] + index                                                   # *_phase1 -> *_phase[index]
                     bids.printlog('WARNING: Untested dcm2niix "_ph"-filetype: ' + basepath, LOG)
 
                 else:
@@ -181,12 +182,12 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 jsonfiles.append(os.path.join(bidsmodality, newbidsname + '.json'))
 
             # This is a special (ugly) hack: dcm2niix does not always add a _c/_e suffix for the first(?) coil/echo image -> add it when we have a **_e2/_c2 file
-            if ('_c2' in suffices or '_e2' in suffices) and bidsname.rsplit('_', 1)[1] != 'magnitude1': # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handled above)
+            if ('c2' in suffices or 'e2' in suffices) and bidsname.rsplit('_', 1)[1] not in ['magnitude1','phase1']:   # i.e. fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handled above)
                 run         = bids.set_bidslabel(newbidsname, 'run')
                 bidsname1   = bids.set_bidslabel(bidsname, 'run', run)
-                val         = bids.set_bidslabel(bidsname1, 'acq')
-                c2e2val     = bids.set_bidslabel(newbidsname, 'acq')                                    # This contains c/e info that was added to the acquisition label
-                c1e1        = c2e2val.replace(val, '').replace('2', '1')                                # Replace the e2/c2 labels with e1/c1 labels
+                acq         = bids.set_bidslabel(bidsname1, 'acq')
+                acqc2e2     = bids.set_bidslabel(newbidsname, 'acq')                                    # This contains c/e info that was added to the acquisition label
+                c1e1        = acqc2e2.replace(acq, '').replace('2', '1')                                # Replace the e2/c2 labels with e1/c1 labels
                 newbidsname = bids.set_bidslabel(bidsname1, 'none', c1e1)                               # Append the c/e labels back into the acquisition field
                 newfilename = os.path.join(bidsmodality, newbidsname + ext2 + ext1)                     # The expected (appended) filename for c1/e1
                 oldfilename = os.path.join(bidsmodality, bidsname1 + ext2 + ext1)                       # The original (unappended) filename for c1/e1
@@ -250,7 +251,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 data = json.load(json_fid)
             acq_time = dateutil.parser.parse(data['AcquisitionTime'])
             niipath  = glob.glob(os.path.splitext(jsonfile)[0] + '.nii*')[0]    # Find the corresponding nifti file (there should be only one, let's not make assumptions about the .gz extension)
-            niipath  = niipath.replace(bidsses+os.sep,'')                       # Use a relative path. Somehow .strip(bidsses) instead of replace(bidsses,'') does not work properly
+            niipath  = niipath.replace(bidsses+os.sep,'')                       # Use a relative path
             scans_table.loc[niipath, 'acq_time'] = '1900-01-01T' + acq_time.strftime('%H:%M:%S')
 
     # Write the scans_table to disk
@@ -565,7 +566,7 @@ if __name__ == "__main__":
     parser.add_argument('-b','--bidsmap',           help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap.yaml', default='bidsmap.yaml')
     parser.add_argument('-n','--subprefix',         help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',         help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
-    parser.add_argument('-v','--version',           help="Show the BIDS and BIDScoin version", action='version', version=f'BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version()}')
+    parser.add_argument('-v','--version',           help="Shows the BIDS and BIDScoin version", action='version', version=f'BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version()}')
     args = parser.parse_args()
 
     bidscoiner(rawfolder    = args.sourcefolder,
