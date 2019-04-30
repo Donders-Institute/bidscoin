@@ -7,6 +7,7 @@ import sys
 import logging
 import copy
 import ruamel.yaml as yaml
+import ntpath
 
 
 logger = logging.getLogger('bidscoin')
@@ -411,8 +412,8 @@ def get_list_summary(bidsmap):
 
                     provenance = item.get('provenance', None)
                     if provenance is not None:
-                        provenance_file = os.path.basename(provenance)
-                        provenance_path = os.path.dirname(provenance)
+                        provenance_file = ntpath.basename(provenance)
+                        provenance_path = ntpath.dirname(provenance)
                     else:
                         provenance_file = ""
                         provenance_path = ""
