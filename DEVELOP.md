@@ -24,7 +24,35 @@ To check for errors:
 $ pylint -E bidscoin
 ```
 
-# Install the package
+# Install the package in an Anaconda environment on Linux
+
+To setup the virtual environment
+
+```console
+$ conda create -n venv
+$ source activate venv
+$ conda install pip
+$ ~/.conda/envs/venv/bin/pip install -r requirements.txt
+$ source deactivate
+```
+
+To start a session
+```console
+$ source activate venv
+```
+
+To close this session
+```console
+$ source deactivate
+```
+
+If you want to remove the virtual environment at a later stage:
+
+```console
+$ conda remove -n venv -all
+```
+
+# Install the package on Windows
 
 Create a virtual environment
 
