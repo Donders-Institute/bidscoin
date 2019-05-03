@@ -304,7 +304,13 @@ class AboutDialog(QDialog):
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
-        self.resize(200, 100)
+
+        layout = QtWidgets.QVBoxLayout(self)
+        scrollArea = QtWidgets.QScrollArea()
+        layout.addWidget(scrollArea)
+
+        top_widget = QtWidgets.QWidget()
+        top_layout = QtWidgets.QVBoxLayout()
 
         label = QLabel()
         label.setText("BIDS editor")
@@ -312,14 +318,22 @@ class AboutDialog(QDialog):
         label_version = QLabel()
         label_version.setText("v" + str(bids.version()))
 
-        self.pushButton = QPushButton("OK")
-        self.pushButton.setToolTip("Close dialog")
-        layout = QVBoxLayout(self)
-        layout.addWidget(label)
-        layout.addWidget(label_version)
-        layout.addWidget(self.pushButton)
+        pushButton = QPushButton("OK")
+        pushButton.setToolTip("Close dialog")
+        hbox = QHBoxLayout()
+        hbox.addStretch(1)
+        hbox.addWidget(pushButton)
 
-        self.pushButton.clicked.connect(self.close)
+        top_layout.addWidget(label)
+        top_layout.addWidget(label_version)
+        top_layout.addStretch(1)
+        top_layout.addLayout(hbox)
+
+        pushButton.clicked.connect(self.close)
+
+        top_widget.setLayout(top_layout)
+        scrollArea.setWidget(top_widget)
+        self.resize(200, 140)
 
 
 class EditDialog(QDialog):
