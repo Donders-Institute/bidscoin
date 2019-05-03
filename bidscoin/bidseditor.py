@@ -17,7 +17,7 @@ import json
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel,
-                             QTreeView, QVBoxLayout, QLabel, QDialog,
+                             QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog,
                              QTableWidget, QTableWidgetItem, QGroupBox,
                              QAbstractItemView, QPushButton, QComboBox, QTextEdit)
 
@@ -354,6 +354,9 @@ class EditDialog(QDialog):
 
         self.ok_button = QtWidgets.QPushButton()
         self.ok_button.setText("OK")
+        hbox = QHBoxLayout()
+        hbox.addStretch(1)
+        hbox.addWidget(self.ok_button)
 
         groupbox1 = QGroupBox("DICOM")
         layout1 = QVBoxLayout()
@@ -373,7 +376,7 @@ class EditDialog(QDialog):
         layout2.addWidget(self.label_bids_name)
         layout2.addWidget(self.view_bids_name)
         layout2.addStretch(1)
-        layout2.addWidget(self.ok_button)
+        layout2.addLayout(hbox)
         groupbox2.setLayout(layout2)
 
         layout = QVBoxLayout()
