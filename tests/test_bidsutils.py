@@ -9,7 +9,8 @@ import difflib
 
 from bidscoin.bidsutils import (read_bidsmap, read_yaml_as_string, get_num_samples,
                                 read_sample, update_bidsmap, save_bidsmap, get_bids_name,
-                                get_bids_name_array, show_label, get_list_summary, MODALITIES)
+                                get_bids_name_array, get_bids_attributes, show_label,
+                                get_list_summary, MODALITIES)
 
 
 logger = logging.getLogger()
@@ -92,6 +93,13 @@ class TestBidsUtils(unittest.TestCase):
             bids_name_array = get_bids_name_array("", "", modality, {}, "")
             if modality == 'anat':
                 self.assertEqual(bids_name_array, test_bids_name_array_anat)
+
+
+    def test_get_bids_attributes(self):
+        source_bids_attributes = {}
+        for modality in MODALITIES:
+            bids_attributes = get_bids_attributes(modality, source_bids_attributes)
+
 
     def test_get_list_summary(self):
         test_list_summary = [

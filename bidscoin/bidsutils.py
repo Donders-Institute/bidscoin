@@ -8,9 +8,14 @@ import logging
 import copy
 import ruamel
 import ntpath
+from collections import OrderedDict
 
 
 logger = logging.getLogger('bidscoin')
+
+MAX_NUM_PROVENANCE_ATTRIBUTES = 2
+MAX_NUM_BIDS_ATTRIBUTES = 10
+MAX_NUM_BIDS_NAME_ATTRIBUTES = 1
 
 
 MODALITIES = [
@@ -62,6 +67,99 @@ def show_label(label):
         return False
     else:
         return True
+
+
+def get_bids_attributes(modality, source_bids_attributes):
+    """Return the BIDS attributes (i.e. the key,value pairs). """
+    bids_attributes = OrderedDict()
+
+    if modality == 'anat':
+        # acq_label: <SeriesDescription>
+        # rec_label: ~
+        # run_index: <<1>>
+        # mod_label: ~
+        # modality_label: MODALITY_LABELS
+        # ce_label: ~
+        bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
+        bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
+        bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
+        bids_attributes['mod_label'] = source_bids_attributes.get('mod_label', '')
+        bids_attributes['modality_label'] = source_bids_attributes.get('modality_label', MODALITY_LABELS[0])
+        bids_attributes['ce_label'] = source_bids_attributes.get('ce_label', '')
+
+    elif modality == 'func':
+        # task_label: <SeriesDescription>
+        # acq_label: ~
+        # rec_label: ~
+        # run_index: <<1>>
+        # echo_index: <EchoNumbers>
+        # suffix: bold
+        bids_attributes['task_label'] = source_bids_attributes.get('task_label', '<SeriesDescription>')
+        bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '')
+        bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
+        bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
+        bids_attributes['echo_index'] = source_bids_attributes.get('echo_index', '<EchoNumber>')
+        bids_attributes['suffix'] = source_bids_attributes.get('suffix', 'bold')
+
+    elif modality == 'dwi':
+        # acq_label: <SeriesDescription>
+        # run_index: <<1>>
+        # suffix: [dwi, sbref]
+        bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
+        bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
+        bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
+
+    elif modality == 'fmap':
+        # acq_label: <SeriesDescription>
+        # run_index: <<1>>
+        # dir_label: None, <InPlanePhaseEncodingDirection>
+        # suffix: [magnitude, magnitude1, magnitude2, phasediff, phase1, phase2, fieldmap, epi]
+        bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
+        bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
+        bids_attributes['dir_label'] = source_bids_attributes.get('dir_label', '')
+        bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
+
+    elif modality == 'beh':
+        # task_name: <SeriesDescription>
+        # suffix: ~
+        bids_attributes['task_label'] = source_bids_attributes.get('task_label', '<SeriesDescription>')
+        bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
+
+    elif modality == 'pet':
+        # task_label: <SeriesDescription>
+        # acq_label: <Radiopharmaceutical>
+        # rec_label: ~
+        # run_index: <<1>>
+        # suffix: pet
+        bids_attributes['task_label'] = source_bids_attributes.get('task_label', '<SeriesDescription>')
+        bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<Radiopharmaceutical>')
+        bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
+        bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
+        bids_attributes['suffix'] = source_bids_attributes.get('suffix', 'pet')
+
+    elif modality == 'extra_data':
+        # acq_label: <SeriesDescription>
+        # rec_label: ~
+        # ce_label: ~
+        # task_label: ~
+        # echo_index: ~
+        # dir_label: ~
+        # run_index: <<1>>
+        # suffix: ~
+        # mod_label: ~
+        # modality_label: ~
+        bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
+        bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
+        bids_attributes['ce_label'] = source_bids_attributes.get('ce_label', '')
+        bids_attributes['task_label'] = source_bids_attributes.get('task_label', '')
+        bids_attributes['echo_index'] = source_bids_attributes.get('echo_index', '')
+        bids_attributes['dir_label'] = source_bids_attributes.get('dir_label', '')
+        bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
+        bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
+        bids_attributes['mod_label'] = source_bids_attributes.get('mod_label', '')
+        bids_attributes['modality_label'] = source_bids_attributes.get('modality_label', '')
+
+    return bids_attributes
 
 
 def get_bids_name_array(subid, sesid, modality, bids_values, run):
