@@ -16,7 +16,7 @@ import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel,
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog,
                              QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog,
                              QTableWidget, QTableWidgetItem, QGroupBox,
                              QAbstractItemView, QPushButton, QComboBox, QTextEdit)
@@ -55,6 +55,7 @@ class Ui_MainWindow(object):
         self.bidsmap = bidsmap
         self.output_bidsmap_filename = output_bidsmap_filename
         self.output_bidsmap = output_bidsmap
+        self.rawfolder = rawfolder
 
         self.MainWindow.setObjectName("MainWindow")
         self.MainWindow.resize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
@@ -270,8 +271,16 @@ class Ui_MainWindow(object):
 
     def save_bidsmap_to_file(self):
         """Save the BIDSmap to file. """
-        bidsutils.save_bidsmap(self.output_bidsmap_filename, self.output_bidsmap)
-        logger.info('Saved BIDS map to file {}'.format(self.output_bidsmap_filename))
+        options = QFileDialog.Options()
+        filename, _ = QFileDialog.getSaveFileName(
+            self.tab2,
+            "QFileDialog.getSaveFileName()",
+            self.rawfolder,
+            "YAML Files (*.yaml);;YAML Files (*.yml);;All Files (*)",
+            options=options)
+        if filename:
+            bidsutils.save_bidsmap(filename, self.output_bidsmap)
+            logger.info('Saved BIDS map to file {}'.format(filename))
 
     def handle_button_clicked(self):
         button = QApplication.focusWidget()
