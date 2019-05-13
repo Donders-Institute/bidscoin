@@ -11,7 +11,7 @@ import argparse
 import textwrap
 import logging
 import copy
-import ruamel.yaml as yaml
+import ruamel
 import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -29,6 +29,12 @@ logger = logging.getLogger('bidscoin')
 
 MAIN_WINDOW_WIDTH = 1280
 MAIN_WINDOW_HEIGHT = 800
+
+EDIT_WINDOW_WIDTH = 1024
+EDIT_WINDOW_HEIGHT = 800
+
+ABOUT_WINDOW_WIDTH = 200
+ABOUT_WINDOW_HEIGHT = 140
 
 LOG_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidseditor.log")
 
@@ -333,7 +339,7 @@ class AboutDialog(QDialog):
 
         top_widget.setLayout(top_layout)
         scrollArea.setWidget(top_widget)
-        self.resize(200, 140)
+        self.resize(ABOUT_WINDOW_WIDTH, ABOUT_WINDOW_HEIGHT)
 
 
 class EditDialog(QDialog):
@@ -358,7 +364,14 @@ class EditDialog(QDialog):
 
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
         self.setWindowTitle("Edit")
-        self.resize(1024, 800)
+
+        layout = QtWidgets.QVBoxLayout(self)
+        scrollArea = QtWidgets.QScrollArea()
+        layout.addWidget(scrollArea)
+
+        top_widget = QtWidgets.QWidget()
+        top_layout = QtWidgets.QVBoxLayout()
+        top_widget.setFixedWidth(EDIT_WINDOW_WIDTH-50)
 
         self.set_provenance_section()
         self.set_dicom_attributes_section()
@@ -389,17 +402,19 @@ class EditDialog(QDialog):
         layout2.addWidget(self.view_bids)
         layout2.addWidget(self.label_bids_name)
         layout2.addWidget(self.view_bids_name)
-        layout2.addStretch(1)
-        layout2.addLayout(hbox)
         groupbox2.setLayout(layout2)
 
-        layout = QVBoxLayout()
-        layout.addWidget(groupbox1)
-        layout.addWidget(groupbox2)
-        self.setLayout(layout)
+        top_layout.addWidget(groupbox1)
+        top_layout.addWidget(groupbox2)
+        top_layout.addStretch(1)
+        top_layout.addLayout(hbox)
 
         self.view_bids.cellChanged.connect(self.cell_was_clicked)
         self.ok_button.clicked.connect(self.update_sample)
+
+        top_widget.setLayout(top_layout)
+        scrollArea.setWidget(top_widget)
+        self.resize(EDIT_WINDOW_WIDTH, EDIT_WINDOW_HEIGHT)
 
     def update_sample(self):
         """Save the changes. """
@@ -522,7 +537,7 @@ class EditDialog(QDialog):
         if dicom_attributes is not None:
             dicom_values = dicom_attributes
         else:
-            dicom_values = yaml.comments.CommentedMap()
+            dicom_values = ruamel.yaml.comments.CommentedMap()
 
         data = []
         for key, value in dicom_values.items():
@@ -559,7 +574,7 @@ class EditDialog(QDialog):
         if bids_attributes is not None:
             bids_values = bids_attributes
         else:
-            bids_values = yaml.comments.CommentedMap()
+            bids_values = ruamel.yaml.comments.CommentedMap()
 
         data = []
         for key, value in bids_values.items():
@@ -585,7 +600,7 @@ class EditDialog(QDialog):
         if bids_attributes is not None:
             bids_values = bids_attributes
         else:
-            bids_values = yaml.comments.CommentedMap()
+            bids_values = ruamel.yaml.comments.CommentedMap()
 
         subid = '*'
         sesid = '*'
@@ -613,7 +628,7 @@ class EditDialog(QDialog):
         if bids_attributes is not None:
             bids_values = bids_attributes
         else:
-            bids_values = yaml.comments.CommentedMap()
+            bids_values = ruamel.yaml.comments.CommentedMap()
 
         # Update the BIDS values
         data = []
