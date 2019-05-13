@@ -6,7 +6,7 @@ import os
 import sys
 import logging
 import copy
-import ruamel.yaml as yaml
+import ruamel
 import ntpath
 
 
@@ -383,9 +383,10 @@ def read_yaml_as_string(filename):
 
 def read_bidsmap(bidsmap_yaml):
     """Read the input BIDSmap YAML string into a dictionary. """
-    contents = yaml.comments.CommentedMap()
+    contents = ruamel.yaml.comments.CommentedMap()
+    yaml = ruamel.yaml.YAML()
     try:
-        contents = yaml.safe_load(bidsmap_yaml)
+        contents = yaml.load(bidsmap_yaml)
     except yaml.YAMLError as exc:
         raise Exception('Error: {}'.format(exc))
     return contents
@@ -393,15 +394,16 @@ def read_bidsmap(bidsmap_yaml):
 
 def save_bidsmap(filename, bidsmap):
     """Save the BIDSmap as a YAML text file. """
+    yaml = ruamel.yaml.YAML()
     with open(filename, 'w') as stream:
-        yaml.dump(bidsmap, stream, default_flow_style=False)
+        yaml.dump(bidsmap, stream)
 
 
 def get_list_summary(bidsmap):
     """Get the list of files from the BIDS map. """
     list_summary = []
 
-    contents_dicom = bidsmap.get('DICOM', yaml.comments.CommentedMap())
+    contents_dicom = bidsmap.get('DICOM', ruamel.yaml.comments.CommentedMap())
 
     for modality in MODALITIES:
 
@@ -422,7 +424,7 @@ def get_list_summary(bidsmap):
                     if bids_attributes is not None:
                         bids_values = bids_attributes
                     else:
-                        bids_values = yaml.comments.CommentedMap()
+                        bids_values = ruamel.yaml.comments.CommentedMap()
 
                     subid = '*'
                     sesid = '*'
@@ -445,7 +447,7 @@ def get_num_samples(bidsmap, modality):
     if not modality in MODALITIES:
         raise ValueError("invalid modality '{}'".format(modality))
 
-    bidsmap_dicom = bidsmap.get('DICOM', yaml.comments.CommentedMap())
+    bidsmap_dicom = bidsmap.get('DICOM', ruamel.yaml.comments.CommentedMap())
     bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
     if bidsmap_dicom_modality is not None:
         num_samples = len(bidsmap_dicom_modality)
@@ -464,8 +466,8 @@ def read_sample(bidsmap, modality, index):
     if index > num_samples:
         raise IndexError("invalid index {} ({} items found)".format(index, num_samples+1))
 
-    bidsmap_sample = yaml.comments.CommentedMap()
-    bidsmap_dicom = bidsmap.get('DICOM', yaml.comments.CommentedMap())
+    bidsmap_sample = ruamel.yaml.comments.CommentedMap()
+    bidsmap_dicom = bidsmap.get('DICOM', ruamel.yaml.comments.CommentedMap())
     bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
     if bidsmap_dicom_modality is not None:
         bidsmap_sample = bidsmap_dicom_modality[index]
@@ -484,7 +486,7 @@ def delete_sample(bidsmap, modality, index):
     if index > num_samples:
         raise IndexError("invalid index {} ({} items found)".format(index, num_samples+1))
 
-    bidsmap_dicom = bidsmap.get('DICOM', yaml.comments.CommentedMap())
+    bidsmap_dicom = bidsmap.get('DICOM', ruamel.yaml.comments.CommentedMap())
     bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
     if bidsmap_dicom_modality is not None:
         del bidsmap['DICOM'][modality][index]
@@ -499,7 +501,7 @@ def append_sample(bidsmap, modality, sample):
     if not modality in MODALITIES:
         raise ValueError("invalid modality '{}'".format(modality))
 
-    bidsmap_dicom = bidsmap.get('DICOM', yaml.comments.CommentedMap())
+    bidsmap_dicom = bidsmap.get('DICOM', ruamel.yaml.comments.CommentedMap())
     bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
     if bidsmap_dicom_modality is not None:
         bidsmap['DICOM'][modality].append(sample)

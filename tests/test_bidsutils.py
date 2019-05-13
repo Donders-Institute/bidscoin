@@ -2,7 +2,7 @@ import sys
 import os
 import unittest
 import json
-import ruamel.yaml as yaml
+import ruamel
 import logging
 import copy
 import difflib
@@ -24,9 +24,10 @@ class TestBidsUtils(unittest.TestCase):
         bidsmap_yaml = read_yaml_as_string(filename)
         bidsmap = read_bidsmap(bidsmap_yaml)
 
+        yaml = ruamel.yaml.YAML()
         with open(filename) as fp:
             test_bidsmap_yaml = fp.read()
-            test_bidsmap = yaml.safe_load(test_bidsmap_yaml)
+            test_bidsmap = yaml.load(test_bidsmap_yaml)
 
         self.assertEqual(bidsmap_yaml, test_bidsmap_yaml)
         self.assertEqual(bidsmap, test_bidsmap)
@@ -165,14 +166,16 @@ class TestBidsUtils(unittest.TestCase):
         index = 2
         modality = 'extra_data'
 
+        yaml = ruamel.yaml.YAML()
         sample = read_sample(bidsmap, modality, index)
-        sample_yaml = yaml.dump(sample, sys.stdout, default_flow_style=False)
+        sample_yaml = yaml.dump(sample, sys.stdout)
 
+        yaml = ruamel.yaml.YAML()
         filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_new_sample2.yaml")
         with open(filename) as fp:
             test_sample_yaml = fp.read()
-            test_sample = yaml.safe_load(test_sample_yaml)
-        test_sample_yaml = yaml.dump(test_sample, sys.stdout, default_flow_style=False)
+            test_sample = yaml.load(test_sample_yaml)
+        test_sample_yaml = yaml.dump(test_sample, sys.stdout)
 
         self.assertEqual(test_sample_yaml, sample_yaml)
 
@@ -183,14 +186,14 @@ class TestBidsUtils(unittest.TestCase):
 
         source_modality = 'extra_data'
         source_index = 2
+        yaml = ruamel.yaml.YAML()
         filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_new_sample2.yaml")
         with open(filename) as fp:
             test_sample_yaml = fp.read()
-            test_sample = yaml.safe_load(test_sample_yaml)
+            test_sample = yaml.load(test_sample_yaml)
 
         target_modality = 'anat'
         target_sample = copy.deepcopy(test_sample)
-        target_sample['attributes']['test'] = 'test'
 
         target_bidsmap = update_bidsmap(source_bidsmap, source_modality, source_index, target_modality, target_sample)
 
