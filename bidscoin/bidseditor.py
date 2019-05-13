@@ -595,8 +595,9 @@ class EditDialog(QDialog):
         self.label_bids = QLabel()
         self.label_bids.setText("BIDS values")
 
-        print(data)
         self.view_bids = self.get_table(data, bidsutils.MAX_NUM_BIDS_ATTRIBUTES)
+
+        return bids_values, data
 
     def set_bids_name_section(self):
         """Set non-editable BIDS name section. """
@@ -632,46 +633,53 @@ class EditDialog(QDialog):
         """Update the BIDS values and BIDS name section when the dropdown selection has been taking place. """
         self.target_modality = self.view_dropdown.currentText()
 
-        self.view_bids.clear()
-        self.set_bids_values_section()
+        # Given the input BIDS attributes, derive the target BIDS attributes (i.e map them to the target attributes)
+        source_bids_attributes = self.target_sample.get('bids', None)
+        target_bids_attributes = bidsutils.get_bids_attributes(self.target_modality, source_bids_attributes)
+        if target_bids_attributes is not None:
+            bids_values = target_bids_attributes
+        else:
+            bids_values = ruamel.yaml.comments.CommentedMap()
+
+        data = []
+        for key, value in bids_values.items():
+            data.append([
+                {
+                    "value": str(key),
+                    "is_editable": False
+                },
+                {
+                    "value": str(value),
+                    "is_editable": True
+                }
+            ])
+
+        # Update the BIDS name
+        subid = '*'
+        sesid = '*'
+        run = bids_values.get('run_index', '*')
+        bids_name_array = bidsutils.get_bids_name_array(subid, sesid, self.target_modality, bids_values, run)
+        bids_name = bidsutils.get_bids_name(bids_name_array)
 
         self.view_bids_name.clear()
-        self.set_bids_name_section()
+        self.view_bids_name.textCursor().insertText(bids_name)
 
-        # # Given the input BIDS attributes, derive the target BIDS attributes (i.e map them to the target attributes)
-        # source_bids_attributes = self.target_sample.get('bids', None)
-        # target_bids_attributes = bidsutils.get_bids_attributes(self.target_modality, source_bids_attributes)
-        # if target_bids_attributes is not None:
-        #     bids_values = target_bids_attributes
-        # else:
-        #     bids_values = ruamel.yaml.comments.CommentedMap()
-
-        # # Update the BIDS values
-        # data = []
-        # for key, value in bids_values.items():
-        #     data.append([
-        #         {
-        #             "value": str(key),
-        #             "is_editable": False
-        #         },
-        #         {
-        #             "value": str(value),
-        #             "is_editable": True
-        #         }
-        #     ])
-
-        # self.view_bids.clear()
-        # self.view_bids = self.get_table(data, bidsutils.MAX_NUM_BIDS_ATTRIBUTES)
-
-        # # Update the BIDS name
-        # subid = '*'
-        # sesid = '*'
-        # run = bids_values.get('run_index', '*')
-        # bids_name_array = bidsutils.get_bids_name_array(subid, sesid, self.target_modality, bids_values, run)
-        # bids_name = bidsutils.get_bids_name(bids_name_array)
-
-        # self.view_bids_name.clear()
-        # self.view_bids_name.textCursor().insertText(bids_name)
+        # Update the BIDS values
+        table = self.view_bids
+        num_rows = bidsutils.MAX_NUM_BIDS_ATTRIBUTES
+        for i, row in enumerate(data):
+            for j, element in enumerate(row):
+                value = element.get("value", "")
+                is_editable = element.get("is_editable", False)
+                item = self.set_cell(value, is_editable=is_editable)
+                table.setItem(i, j, QTableWidgetItem(item))
+        for i in range(len(data), num_rows):
+            is_editable = element.get("is_editable", False)
+            item = self.set_cell("", is_editable=False)
+            table.setItem(i, 0, QTableWidgetItem(item))
+            item = self.set_cell("", is_editable=False)
+            table.setItem(i, 1, QTableWidgetItem(item))
+        self.view_bids = table
 
 
 def setup_logging(log_filename):
