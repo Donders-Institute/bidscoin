@@ -572,7 +572,7 @@ class EditDialog(QDialog):
         """Set editable BIDS values section. """
 
         # Given the input BIDS attributes, derive the target BIDS attributes (i.e map them to the target attributes)
-        source_bids_attributes = self.target_sample.get('bids', None)
+        source_bids_attributes = self.target_sample.get('bids', {})
         target_bids_attributes = bidsutils.get_bids_attributes(self.target_modality, source_bids_attributes)
         if target_bids_attributes is not None:
             bids_values = target_bids_attributes
@@ -603,7 +603,7 @@ class EditDialog(QDialog):
         """Set non-editable BIDS name section. """
 
         # Given the input BIDS attributes, derive the target BIDS attributes (i.e map them to the target attributes)
-        source_bids_attributes = self.target_sample.get('bids', None)
+        source_bids_attributes = self.target_sample.get('bids', {})
         target_bids_attributes = bidsutils.get_bids_attributes(self.target_modality, source_bids_attributes)
         if target_bids_attributes is not None:
             bids_values = target_bids_attributes
@@ -616,7 +616,6 @@ class EditDialog(QDialog):
         bids_name_array = bidsutils.get_bids_name_array(subid, sesid, self.target_modality, bids_values, run)
         bids_name = bidsutils.get_bids_name(bids_name_array)
 
-        print(bids_name)
         self.bids_name = bids_name
 
         self.label_bids_name = QLabel()
@@ -634,7 +633,7 @@ class EditDialog(QDialog):
         self.target_modality = self.view_dropdown.currentText()
 
         # Given the input BIDS attributes, derive the target BIDS attributes (i.e map them to the target attributes)
-        source_bids_attributes = self.target_sample.get('bids', None)
+        source_bids_attributes = self.target_sample.get('bids', {})
         target_bids_attributes = bidsutils.get_bids_attributes(self.target_modality, source_bids_attributes)
         if target_bids_attributes is not None:
             bids_values = target_bids_attributes

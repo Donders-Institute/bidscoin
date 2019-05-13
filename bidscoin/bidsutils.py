@@ -71,7 +71,7 @@ def show_label(label):
 
 def get_bids_attributes(modality, source_bids_attributes):
     """Return the BIDS attributes (i.e. the key,value pairs). """
-    bids_attributes = OrderedDict()
+    bids_attributes = None
 
     if modality == 'anat':
         # acq_label: <SeriesDescription>
@@ -80,6 +80,7 @@ def get_bids_attributes(modality, source_bids_attributes):
         # mod_label: ~
         # modality_label: MODALITY_LABELS
         # ce_label: ~
+        bids_attributes = OrderedDict()
         bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
         bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
         bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
@@ -94,6 +95,7 @@ def get_bids_attributes(modality, source_bids_attributes):
         # run_index: <<1>>
         # echo_index: <EchoNumbers>
         # suffix: bold
+        bids_attributes = OrderedDict()
         bids_attributes['task_label'] = source_bids_attributes.get('task_label', '<SeriesDescription>')
         bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '')
         bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
@@ -105,6 +107,7 @@ def get_bids_attributes(modality, source_bids_attributes):
         # acq_label: <SeriesDescription>
         # run_index: <<1>>
         # suffix: [dwi, sbref]
+        bids_attributes = OrderedDict()
         bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
         bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
         bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
@@ -122,6 +125,7 @@ def get_bids_attributes(modality, source_bids_attributes):
     elif modality == 'beh':
         # task_name: <SeriesDescription>
         # suffix: ~
+        bids_attributes = OrderedDict()
         bids_attributes['task_label'] = source_bids_attributes.get('task_label', '<SeriesDescription>')
         bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
 
@@ -131,6 +135,7 @@ def get_bids_attributes(modality, source_bids_attributes):
         # rec_label: ~
         # run_index: <<1>>
         # suffix: pet
+        bids_attributes = OrderedDict()
         bids_attributes['task_label'] = source_bids_attributes.get('task_label', '<SeriesDescription>')
         bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<Radiopharmaceutical>')
         bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
@@ -148,6 +153,7 @@ def get_bids_attributes(modality, source_bids_attributes):
         # suffix: ~
         # mod_label: ~
         # modality_label: ~
+        bids_attributes = OrderedDict()
         bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
         bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
         bids_attributes['ce_label'] = source_bids_attributes.get('ce_label', '')
