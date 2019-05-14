@@ -575,10 +575,8 @@ class EditDialog(QDialog):
 
         self.view_dropdown.currentIndexChanged.connect(self.selection_dropdown_change)
 
-    def set_bids_values_section(self):
-        """Set editable BIDS values section. """
-
-        # Given the input BIDS attributes, derive the target BIDS attributes (i.e map them to the target attributes)
+    def get_bids_values_data(self):
+        """# Given the input BIDS attributes, derive the target BIDS attributes. """
         source_bids_attributes = self.target_sample.get('bids', {})
         target_bids_attributes = bidsutils.get_bids_attributes(self.target_modality, source_bids_attributes)
         if target_bids_attributes is not None:
@@ -599,23 +597,20 @@ class EditDialog(QDialog):
                 }
             ])
 
+        return bids_values, data
+
+    def set_bids_values_section(self):
+        """Set editable BIDS values section. """
+        _, data = self.get_bids_values_data()
+
         self.label_bids = QLabel()
         self.label_bids.setText("BIDS values")
 
         self.view_bids = self.get_table(data, bidsutils.MAX_NUM_BIDS_ATTRIBUTES)
 
-        return bids_values, data
-
     def set_bids_name_section(self):
         """Set non-editable BIDS name section. """
-
-        # Given the input BIDS attributes, derive the target BIDS attributes (i.e map them to the target attributes)
-        source_bids_attributes = self.target_sample.get('bids', {})
-        target_bids_attributes = bidsutils.get_bids_attributes(self.target_modality, source_bids_attributes)
-        if target_bids_attributes is not None:
-            bids_values = target_bids_attributes
-        else:
-            bids_values = ruamel.yaml.comments.CommentedMap()
+        bids_values, _ = self.get_bids_values_data()
 
         subid = '*'
         sesid = '*'
@@ -640,25 +635,7 @@ class EditDialog(QDialog):
         self.target_modality = self.view_dropdown.currentText()
 
         # Given the input BIDS attributes, derive the target BIDS attributes (i.e map them to the target attributes)
-        source_bids_attributes = self.target_sample.get('bids', {})
-        target_bids_attributes = bidsutils.get_bids_attributes(self.target_modality, source_bids_attributes)
-        if target_bids_attributes is not None:
-            bids_values = target_bids_attributes
-        else:
-            bids_values = ruamel.yaml.comments.CommentedMap()
-
-        data = []
-        for key, value in bids_values.items():
-            data.append([
-                {
-                    "value": str(key),
-                    "is_editable": False
-                },
-                {
-                    "value": str(value),
-                    "is_editable": True
-                }
-            ])
+        bids_values, data = self.get_bids_values_data()
 
         # Update the BIDS name
         subid = '*'
