@@ -43,17 +43,15 @@ TEMPLATE_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".
 
 DEFAULT_RAW_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)))
 DEFAULT_INPUT_BIDSMAP_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_new.yaml")
-DEFAULT_OUTPUT_BIDSMAP_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_output.yaml")
 
 
 class Ui_MainWindow(object):
 
-    def setupUi(self, MainWindow, rawfolder, bidsmap_filename, output_bidsmap_filename, bidsmap, output_bidsmap):
+    def setupUi(self, MainWindow, rawfolder, bidsmap_filename, bidsmap, output_bidsmap):
 
         self.MainWindow = MainWindow
         self.bidsmap_filename = bidsmap_filename
         self.bidsmap = bidsmap
-        self.output_bidsmap_filename = output_bidsmap_filename
         self.output_bidsmap = output_bidsmap
         self.rawfolder = rawfolder
 
@@ -721,10 +719,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
-                                            '  bidseditor.py /raw/data/folder /input/bidsmap.yaml /output/bidsmap.yaml\n')
+                                            '  bidseditor.py /raw/data/folder /input/bidsmap.yaml\n')
     parser.add_argument('rawfolder', help='The root folder of the directory tree containing the raw files', nargs='?', default=DEFAULT_RAW_FOLDER)
     parser.add_argument('inputbidsmap', help='The input BIDS map YAML-file', nargs='?', default=DEFAULT_INPUT_BIDSMAP_FILENAME)
-    parser.add_argument('outputbidsmap', help='The output BIDS map YAML-file', nargs='?', default=DEFAULT_OUTPUT_BIDSMAP_FILENAME)
     args = parser.parse_args()
 
     # Validate the arguments
@@ -739,13 +736,12 @@ if __name__ == "__main__":
 
     logger.info('Input raw data folder: {}'.format(args.rawfolder))
     logger.info('Input BIDS map {}'.format(args.inputbidsmap))
-    logger.info('Output BIDS map {}'.format(args.outputbidsmap))
 
     # Start the application
     app = QApplication(sys.argv)
     app.setApplicationName("BIDS editor")
     mainwin = QMainWindow()
     gui = Ui_MainWindow()
-    gui.setupUi(mainwin, args.rawfolder, args.inputbidsmap, args.outputbidsmap, input_bidsmap, output_bidsmap)
+    gui.setupUi(mainwin, args.rawfolder, args.inputbidsmap, input_bidsmap, output_bidsmap)
     mainwin.show()
     sys.exit(app.exec_())
