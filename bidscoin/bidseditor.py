@@ -274,7 +274,7 @@ class Ui_MainWindow(object):
             self.tab2,
             "Save File",
             self.rawfolder,
-            "YAML Files (*.yaml);;YAML Files (*.yml);;All Files (*)",
+            "YAML Files (*.yaml,*.yml);;All Files (*)",
             options=options)
         if filename:
             bidsutils.save_bidsmap(filename, self.output_bidsmap)
