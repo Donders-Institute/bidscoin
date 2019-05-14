@@ -272,7 +272,7 @@ class Ui_MainWindow(object):
         options = QFileDialog.Options()
         filename, _ = QFileDialog.getSaveFileName(
             self.tab2,
-            "QFileDialog.getSaveFileName()",
+            "Save File",
             self.rawfolder,
             "YAML Files (*.yaml);;YAML Files (*.yml);;All Files (*)",
             options=options)
