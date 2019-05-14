@@ -657,11 +657,11 @@ class EditDialog(QDialog):
                 item = self.set_cell(value, is_editable=is_editable)
                 table.setItem(i, j, QTableWidgetItem(item))
         for i in range(len(data), num_rows):
-            is_editable = element.get("is_editable", False)
             item = self.set_cell("", is_editable=False)
             table.setItem(i, 0, QTableWidgetItem(item))
             item = self.set_cell("", is_editable=False)
             table.setItem(i, 1, QTableWidgetItem(item))
+
         self.view_bids = table
 
 
