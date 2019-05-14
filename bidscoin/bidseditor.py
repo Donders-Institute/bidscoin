@@ -692,10 +692,12 @@ class EditDialog(QDialog):
                 if value == "None":
                     value = ""
                 is_editable = element.get("is_editable", False)
+                table.removeCellWidget(i, j)
                 item = self.set_cell(value, is_editable=is_editable)
                 table.setItem(i, j, QTableWidgetItem(item))
         for i in range(len(data), num_rows):
             for j, element in enumerate(row):
+                table.removeCellWidget(i, j)
                 item = self.set_cell('', is_editable=False)
                 table.setItem(i, j, QTableWidgetItem(item))
 
