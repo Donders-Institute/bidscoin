@@ -117,6 +117,7 @@ def get_bids_attributes(modality, source_bids_attributes):
         # run_index: <<1>>
         # dir_label: None, <InPlanePhaseEncodingDirection>
         # suffix: [magnitude, magnitude1, magnitude2, phasediff, phase1, phase2, fieldmap, epi]
+        bids_attributes = OrderedDict()
         bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
         bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
         bids_attributes['dir_label'] = source_bids_attributes.get('dir_label', '')

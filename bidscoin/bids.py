@@ -474,6 +474,15 @@ def exist_series(series: dict, serieslist: list, matchbidslabels: bool=True) -> 
     return False
 
 
+def get_clean_dicomfile(dicomfile: str) -> str:
+    """Obtain the dicom filename meant to write to the YAML file. """
+    # Escape backslashes
+    dicomfile = dicomfile.replace('\\', '\\\\')
+    # Escape whitespace
+    dicomfile = dicomfile.replace(' ', '\\ ')
+    return dicomfile
+
+
 def get_matching_dicomseries(dicomfile: str, heuristics: dict) -> dict:
     """
     Find the matching series in the bidsmap heuristics using the dicom attributes. Then fill-in the missing values (values are cleaned-up to be BIDS-valid)
@@ -484,6 +493,9 @@ def get_matching_dicomseries(dicomfile: str, heuristics: dict) -> dict:
     """
 
     # TODO: generalize for non-DICOM (dicomfile -> file)?
+
+    # Obtain the dicom filename meant to write to the YAML file.
+    clean_dicomfile = get_clean_dicomfile(dicomfile)
 
     # Loop through all bidsmodalities and series; all info goes into series_
     for modality in bidsmodalities + (unknownmodality,):
@@ -538,13 +550,13 @@ def get_matching_dicomseries(dicomfile: str, heuristics: dict) -> dict:
             # Stop searching the heuristics if we have a match
             if match:
                 # TODO: check if there are more matches (i.e. conflicts)
-                series_.yaml_add_eol_comment('From: ' + dicomfile, key='attributes', column=50)                     # Add provenance data
-                series_['provenance'] = dicomfile
+                series_.yaml_add_eol_comment("From: " + clean_dicomfile, key='attributes', column=50)    # Add provenance data
+                series_['provenance'] = clean_dicomfile
                 return {'series': series_, 'modality': modality}
 
     # We don't have a match (all tests failed, so modality should be the last one, i.e. unknownmodality)
-    series_.yaml_add_eol_comment('From: ' + dicomfile, key='attributes', column=50)                                 # Add provenance data
-    series_['provenance'] = dicomfile
+    series_.yaml_add_eol_comment("From: " + clean_dicomfile, key='attributes', column=50)                # Add provenance data
+    series_['provenance'] = clean_dicomfile
     return {'series': series_, 'modality': modality}
 
 

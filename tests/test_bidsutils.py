@@ -98,6 +98,7 @@ class TestBidsUtils(unittest.TestCase):
     def test_get_bids_attributes(self):
         source_bids_attributes = {}
         for modality in MODALITIES:
+            print(modality)
             bids_attributes = get_bids_attributes(modality, source_bids_attributes)
 
 
