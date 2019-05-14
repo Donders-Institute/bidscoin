@@ -601,6 +601,9 @@ class EditDialog(QDialog):
 
     def set_bids_values_section(self):
         """Set editable BIDS values section. """
+        # For anat set the default target modaility label (i.e T1w)
+        self.target_modality_label = bidsutils.MODALITY_LABELS[0]
+
         _, data = self.get_bids_values_data()
 
         self.label_bids = QLabel()
@@ -648,9 +651,14 @@ class EditDialog(QDialog):
         self.view_bids_name.textCursor().insertText(bids_name)
 
         # Update the BIDS values
+        modality_label_row_index = -1
         table = self.view_bids
         num_rows = bidsutils.MAX_NUM_BIDS_ATTRIBUTES
         for i, row in enumerate(data):
+            key = row[0]["value"]
+            if self.target_modality == 'anat' and key == 'modality_label':
+                modality_label_row_index = i
+                continue
             for j, element in enumerate(row):
                 value = element.get("value", "")
                 is_editable = element.get("is_editable", False)
@@ -662,7 +670,21 @@ class EditDialog(QDialog):
             item = self.set_cell("", is_editable=False)
             table.setItem(i, 1, QTableWidgetItem(item))
 
+        if self.target_modality == 'anat' and modality_label_row_index != -1:
+            self.modality_label_dropdown = QComboBox()
+            self.modality_label_dropdown.addItems(bidsutils.MODALITY_LABELS)
+            self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
+            self.modality_label_dropdown.currentIndexChanged.connect(self.selection_modality_label_dropdown_change)
+            item = self.set_cell("modality_label", is_editable=False)
+            table.setItem(modality_label_row_index, 0, QTableWidgetItem(item))
+            item = self.set_cell("", is_editable=False)
+            table.setCellWidget(modality_label_row_index, 1, self.modality_label_dropdown)
+
         self.view_bids = table
+
+    def selection_modality_label_dropdown_change(self, i):
+        """Update the BIDS values and BIDS name section when the dropdown selection has been taking place. """
+        self.target_modality_label = self.modality_label_dropdown.currentText()
 
 
 def setup_logging(log_filename):
