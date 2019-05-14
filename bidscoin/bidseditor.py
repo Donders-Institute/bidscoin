@@ -482,6 +482,14 @@ class EditDialog(QDialog):
             value = row[1]["value"]
             if self.target_modality in ['anat', 'extra_data'] and key == 'modality_label':
                 modality_label_row_index = i
+                self.modality_label_dropdown = QComboBox()
+                self.modality_label_dropdown.addItems(bidsutils.MODALITY_LABELS)
+                self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
+                self.modality_label_dropdown.currentIndexChanged.connect(self.selection_modality_label_dropdown_change)
+                item = self.set_cell("modality_label", is_editable=False)
+                table.setItem(modality_label_row_index, 0, QTableWidgetItem(item))
+                item = self.set_cell("", is_editable=True)
+                table.setCellWidget(modality_label_row_index, 1, self.modality_label_dropdown)
                 continue
             for j, element in enumerate(row):
                 value = element.get("value", "")
@@ -490,15 +498,6 @@ class EditDialog(QDialog):
                 is_editable = element.get("is_editable", False)
                 item = self.set_cell(value, is_editable=is_editable)
                 table.setItem(i, j, QTableWidgetItem(item))
-        if self.target_modality in ['anat', 'extra_data'] and modality_label_row_index != -1:
-            self.modality_label_dropdown = QComboBox()
-            self.modality_label_dropdown.addItems(bidsutils.MODALITY_LABELS)
-            self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
-            self.modality_label_dropdown.currentIndexChanged.connect(self.selection_modality_label_dropdown_change)
-            item = self.set_cell("modality_label", is_editable=False)
-            table.setItem(modality_label_row_index, 0, QTableWidgetItem(item))
-            item = self.set_cell("", is_editable=True)
-            table.setCellWidget(modality_label_row_index, 1, self.modality_label_dropdown)
 
         horizontal_header = table.horizontalHeader()
         horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
@@ -679,6 +678,7 @@ class EditDialog(QDialog):
             key = row[0]["value"]
             value = row[1]["value"]
             if self.target_modality in ['anat', 'extra_data'] and key == 'modality_label':
+                modality_label_row_index = i
                 self.modality_label_dropdown = QComboBox()
                 self.modality_label_dropdown.addItems(bidsutils.MODALITY_LABELS)
                 self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
@@ -693,6 +693,10 @@ class EditDialog(QDialog):
                     value = ""
                 is_editable = element.get("is_editable", False)
                 item = self.set_cell(value, is_editable=is_editable)
+                table.setItem(i, j, QTableWidgetItem(item))
+        for i in range(len(data), num_rows):
+            for j, element in enumerate(row):
+                item = self.set_cell('', is_editable=False)
                 table.setItem(i, j, QTableWidgetItem(item))
 
         self.view_bids = table
