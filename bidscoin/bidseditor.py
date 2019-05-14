@@ -17,6 +17,7 @@ import json
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog,
+                             QTextEdit,
                              QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog,
                              QTableWidget, QTableWidgetItem, QGroupBox,
                              QAbstractItemView, QPushButton, QComboBox, QTextEdit)
@@ -474,13 +475,30 @@ class EditDialog(QDialog):
         table.setColumnCount(2) # Always two columns (i.e. key, value)
         row_height = 24
 
+        modality_label_row_index = -1
         for i, row in enumerate(data):
             table.setRowHeight(i, row_height)
+            key = row[0]["value"]
+            value = row[1]["value"]
+            if self.target_modality in ['anat', 'extra_data'] and key == 'modality_label':
+                modality_label_row_index = i
+                continue
             for j, element in enumerate(row):
                 value = element.get("value", "")
+                if value == "None":
+                    value = ""
                 is_editable = element.get("is_editable", False)
                 item = self.set_cell(value, is_editable=is_editable)
                 table.setItem(i, j, QTableWidgetItem(item))
+        if self.target_modality in ['anat', 'extra_data'] and modality_label_row_index != -1:
+            self.modality_label_dropdown = QComboBox()
+            self.modality_label_dropdown.addItems(bidsutils.MODALITY_LABELS)
+            self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
+            self.modality_label_dropdown.currentIndexChanged.connect(self.selection_modality_label_dropdown_change)
+            item = self.set_cell("modality_label", is_editable=False)
+            table.setItem(modality_label_row_index, 0, QTableWidgetItem(item))
+            item = self.set_cell("", is_editable=True)
+            table.setCellWidget(modality_label_row_index, 1, self.modality_label_dropdown)
 
         horizontal_header = table.horizontalHeader()
         horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
@@ -653,6 +671,34 @@ class EditDialog(QDialog):
         # Given the input BIDS attributes, derive the target BIDS attributes (i.e map them to the target attributes)
         bids_values, data = self.get_bids_values_data()
 
+        # Update the BIDS values
+        modality_label_row_index = -1
+        table = self.view_bids
+        num_rows = bidsutils.MAX_NUM_BIDS_ATTRIBUTES
+        for i, row in enumerate(data):
+            key = row[0]["value"]
+            value = row[1]["value"]
+            if self.target_modality in ['anat', 'extra_data'] and key == 'modality_label':
+                self.modality_label_dropdown = QComboBox()
+                self.modality_label_dropdown.addItems(bidsutils.MODALITY_LABELS)
+                self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
+                self.modality_label_dropdown.currentIndexChanged.connect(self.selection_modality_label_dropdown_change)
+                item = self.set_cell("modality_label", is_editable=False)
+                table.setItem(modality_label_row_index, 0, QTableWidgetItem(item))
+                table.setCellWidget(modality_label_row_index, 1, self.modality_label_dropdown)
+                continue
+            for j, element in enumerate(row):
+                value = element.get("value", "")
+                if value == "None":
+                    value = ""
+                is_editable = element.get("is_editable", False)
+                item = self.set_cell(value, is_editable=is_editable)
+                table.setItem(i, j, QTableWidgetItem(item))
+
+        self.view_bids = table
+
+        bids_values['modality_label'] = self.target_modality_label
+
         # Update the BIDS name
         subid = '*'
         sesid = '*'
@@ -663,41 +709,22 @@ class EditDialog(QDialog):
         self.view_bids_name.clear()
         self.view_bids_name.textCursor().insertText(bids_name)
 
-        # Update the BIDS values
-        modality_label_row_index = -1
-        table = self.view_bids
-        num_rows = bidsutils.MAX_NUM_BIDS_ATTRIBUTES
-        for i, row in enumerate(data):
-            key = row[0]["value"]
-            if self.target_modality in ['anat', 'extra_data'] and key == 'modality_label':
-                modality_label_row_index = i
-                continue
-            for j, element in enumerate(row):
-                value = element.get("value", "")
-                is_editable = element.get("is_editable", False)
-                item = self.set_cell(value, is_editable=is_editable)
-                table.setItem(i, j, QTableWidgetItem(item))
-        for i in range(len(data), num_rows):
-            item = self.set_cell("", is_editable=False)
-            table.setItem(i, 0, QTableWidgetItem(item))
-            item = self.set_cell("", is_editable=False)
-            table.setItem(i, 1, QTableWidgetItem(item))
-
-        if self.target_modality in ['anat', 'extra_data'] and modality_label_row_index != -1:
-            self.modality_label_dropdown = QComboBox()
-            self.modality_label_dropdown.addItems(bidsutils.MODALITY_LABELS)
-            self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
-            self.modality_label_dropdown.currentIndexChanged.connect(self.selection_modality_label_dropdown_change)
-            item = self.set_cell("modality_label", is_editable=False)
-            table.setItem(modality_label_row_index, 0, QTableWidgetItem(item))
-            item = self.set_cell("", is_editable=False)
-            table.setCellWidget(modality_label_row_index, 1, self.modality_label_dropdown)
-
-        self.view_bids = table
-
     def selection_modality_label_dropdown_change(self, i):
         """Update the BIDS values and BIDS name section when the dropdown selection has been taking place. """
         self.target_modality_label = self.modality_label_dropdown.currentText()
+
+        bids_values, data = self.get_bids_values_data()
+        bids_values['modality_label'] = self.target_modality_label
+
+        # Update the BIDS name
+        subid = '*'
+        sesid = '*'
+        run = bids_values.get('run_index', '*')
+        bids_name_array = bidsutils.get_bids_name_array(subid, sesid, self.target_modality, bids_values, run)
+        bids_name = bidsutils.get_bids_name(bids_name_array)
+
+        self.view_bids_name.clear()
+        self.view_bids_name.textCursor().insertText(bids_name)
 
 
 def setup_logging(log_filename):
