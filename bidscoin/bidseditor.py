@@ -586,22 +586,35 @@ class EditDialog(QDialog):
 
         data = []
         for key, value in bids_values.items():
-            data.append([
-                {
-                    "value": str(key),
-                    "is_editable": False
-                },
-                {
-                    "value": str(value),
-                    "is_editable": True
-                }
-            ])
+            if self.target_modality in ['anat', 'extra_data'] and key == 'modality_label':
+                value = self.target_modality_label
+                data.append([
+                    {
+                        "value": str(key),
+                        "is_editable": False
+                    },
+                    {
+                        "value": str(value),
+                        "is_editable": False
+                    }
+                ])
+            else:
+                data.append([
+                    {
+                        "value": str(key),
+                        "is_editable": False
+                    },
+                    {
+                        "value": str(value),
+                        "is_editable": True
+                    }
+                ])
 
         return bids_values, data
 
     def set_bids_values_section(self):
         """Set editable BIDS values section. """
-        # For anat set the default target modaility label (i.e T1w)
+        # For anat and extra_data, set the default target modaility label (i.e T1w)
         self.target_modality_label = bidsutils.MODALITY_LABELS[0]
 
         _, data = self.get_bids_values_data()
@@ -656,7 +669,7 @@ class EditDialog(QDialog):
         num_rows = bidsutils.MAX_NUM_BIDS_ATTRIBUTES
         for i, row in enumerate(data):
             key = row[0]["value"]
-            if self.target_modality == 'anat' and key == 'modality_label':
+            if self.target_modality in ['anat', 'extra_data'] and key == 'modality_label':
                 modality_label_row_index = i
                 continue
             for j, element in enumerate(row):
@@ -670,7 +683,7 @@ class EditDialog(QDialog):
             item = self.set_cell("", is_editable=False)
             table.setItem(i, 1, QTableWidgetItem(item))
 
-        if self.target_modality == 'anat' and modality_label_row_index != -1:
+        if self.target_modality in ['anat', 'extra_data'] and modality_label_row_index != -1:
             self.modality_label_dropdown = QComboBox()
             self.modality_label_dropdown.addItems(bidsutils.MODALITY_LABELS)
             self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
