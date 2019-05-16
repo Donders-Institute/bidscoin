@@ -134,18 +134,20 @@ def sortsessions(session: str, subjectid: str='', sessionid: str='', rename: boo
 
             dicomdir = read_dicomdir(session)
 
-            sessionfolder = os.path.dirname(session)
+            sessionfolder  = os.path.dirname(session)
+            sessionfolder_ = sessionfolder
             for patient in dicomdir.patient_records:
                 if len(dicomdir.patient_records) > 1:
-                    sessionfolder = os.path.join(sessionfolder, 'sub-' + cleanup(str(patient.PatientName)))
+                    sessionfolder = os.path.join(sessionfolder_, f'sub-{cleanup(str(patient.PatientName))}')
 
-                for study in patient.children:
+                for n, study in enumerate(patient.children, 1):                                                             # TODO: Check order
                     if len(patient.children) > 1:
-                        sessionfolder = os.path.join(sessionfolder, 'ses-' + cleanup(str(study.StudyDescription)))
+                        sessionfolder = os.path.join(sessionfolder_, f'ses-{n:02}{cleanup(str(study.StudyDescription))}')   # TODO: Leave out StudyDescrtiption?
+                        print(f'WARNING: the session index-number "{n:02}" is not necessarily meaningful: {sessionfolder}')
 
                     dicomfiles = []
                     for series in study.children:
-                        dicomfiles.extend([os.path.join(sessionfolder, *image.ReferencedFileID) for image in series.children])
+                        dicomfiles.extend([os.path.join(sessionfolder_, *image.ReferencedFileID) for image in series.children])
                     sortsession(sessionfolder, dicomfiles, rename, ext, nosort)
 
         else:
@@ -175,7 +177,7 @@ if __name__ == "__main__":
     parser.add_argument('dicomsource',    help='The name of the root folder containing the dicomsource/[sub/][ses/]dicomfiles or the name of the (single session/study) DICOMDIR file')
     parser.add_argument('--subjectid',    help='The prefix string for recursive searching in dicomsource/subject subfolders (e.g. "sub")')
     parser.add_argument('--sessionid',    help='The prefix string for recursive searching in dicomsource/subject/session subfolders (e.g. "ses")')
-    parser.add_argument('-r','--rename',  help='Flag to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme', action='store_true')
+    parser.add_argument('-r','--rename',  help='Flag to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme (recommended for DICOMDIR data)', action='store_true')
     parser.add_argument('-e','--ext',     help='The file extension after sorting (empty value keeps the original file extension)', default='')
     parser.add_argument('-n','--nosort',  help='Flag to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)', action='store_true')
     parser.add_argument('-p','--pattern', help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')

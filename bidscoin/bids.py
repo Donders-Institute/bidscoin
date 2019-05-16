@@ -693,21 +693,20 @@ def set_bidslabel(bidsname: str, bidskey: str, newvalue: str='') -> str:
     bidsname = os.path.basename(bidsname)
 
     # Get the existing bidsvalue
-    acqkey   = 'acq'
-    acqvalue = ''
     oldvalue = ''
+    acqvalue = ''
     for label in bidsname.split('_'):
         if '-' in str(label):
             key, value = str(label).split('-', 1)
             if key == bidskey:
                 oldvalue = value
-            if key == acqkey:
+            if key == 'acq':
                 acqvalue = value
 
     # Replace the existing bidsvalue with the new value or append the newvalue to the acquisition value
     if newvalue:
-        if not oldvalue and acqvalue:
-            bidskey  = acqkey
+        if f'_{bidskey}-' not in bidsname:
+            bidskey  = 'acq'
             oldvalue = acqvalue
             newvalue = acqvalue + newvalue
         return os.path.join(pathname, bidsname.replace(f'{bidskey}-{oldvalue}', f'{bidskey}-{newvalue}'))
