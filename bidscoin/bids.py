@@ -17,8 +17,10 @@ import datetime
 import textwrap
 import re
 import ruamel
+from logging import Logger
 from ruamel.yaml import YAML
 yaml = YAML()
+
 
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh', 'pet')
 unknownmodality = 'extra_data'
@@ -38,7 +40,7 @@ def version() -> float:
     :return:    The BIDSCOIN version number
     """
 
-    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),'version.txt')) as fid:
+    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'version.txt')) as fid:
         version = fid.read().strip()
 
     return float(version)
@@ -51,40 +53,10 @@ def bidsversion() -> str:
     :return:    The BIDS version number
     """
 
-    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),'bidsversion.txt')) as fid:
+    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'bidsversion.txt')) as fid:
         version = fid.read().strip()
 
     return str(version)
-
-
-def printlog(message: str, logfile: str='') -> None:
-    """
-    Print an annotated log-message to screen and optionally to a logfile
-
-    :param message: The output text
-    :param logfile: The full pathname of the logfile
-    :return:        Nothing
-    """
-
-    # Get the name of the calling function
-    frame  = inspect.stack()[1]
-    module = inspect.getmodule(frame[0])
-    if module:
-        caller = os.path.basename(module.__file__)
-    else:
-        caller = 'plugin'       # TODO: Figure out why getmodule doesn't work for plugins
-
-    # Print the logmessage
-    logmessage = '\n{time} - {caller}:\n{message}\n'.format(
-        time    = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        caller  = caller,
-        message = textwrap.indent(message, '\t'))
-    print(logmessage)
-
-    # Open or create a log-file and write the message
-    if logfile:
-        with open(logfile, 'a') as log_fid:
-            log_fid.write(logmessage)
 
 
 def lsdirs(folder: str, wildcard: str='*'):
@@ -275,13 +247,13 @@ def get_niftifile(folder: str) -> str:
     return None
 
 
-def get_heuristics(yamlfile: str, folder: str='', logfile: str='') -> dict:
+def get_heuristics(yamlfile: str, folder: str, logger: Logger) -> dict:
     """
     Read the heuristics from the bidsmap yaml-file
 
     :param yamlfile:    The full pathname of the bidsmap yaml-file
     :param folder:      Searches in the ./heuristics folder if folder=None
-    :param logfile:     The full pathname of the logfile
+    :param logger:      Logger object
     :return:            Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     """
 
@@ -294,7 +266,7 @@ def get_heuristics(yamlfile: str, folder: str='', logfile: str='') -> dict:
 
     if os.path.basename(yamlfile) == yamlfile:      # Get the full paths to the bidsmap yaml-file
         yamlfile = os.path.join(folder, yamlfile)
-        printlog('Using: ' + os.path.abspath(yamlfile), logfile)
+        logger.info('Using: ' + os.path.abspath(yamlfile))
 
     yamlfile = os.path.abspath(os.path.expanduser(yamlfile))
 
@@ -306,7 +278,7 @@ def get_heuristics(yamlfile: str, folder: str='', logfile: str='') -> dict:
     if 'version' not in heuristics['Options']:
         heuristics['Options']['version'] = 'Unknown'
     if heuristics['Options']['version'] != version():
-        printlog('WARNING: BIDScoiner version conflict: {} was created using version {}, but this is version {}'.format(yamlfile, heuristics['Options']['version'], version()), logfile)
+        logger.warning('BIDScoiner version conflict: {} was created using version {}, but this is version {}'.format(yamlfile, heuristics['Options']['version'], version()))
 
     return heuristics
 
@@ -502,6 +474,15 @@ def exist_series(series: dict, serieslist: list, matchbidslabels: bool=True) -> 
     return False
 
 
+def get_clean_dicomfile(dicomfile: str) -> str:
+    """Obtain the dicom filename meant to write to the YAML file. """
+    # Escape backslashes
+    dicomfile = dicomfile.replace('\\', '\\\\')
+    # Escape whitespace
+    dicomfile = dicomfile.replace(' ', '\\ ')
+    return dicomfile
+
+
 def get_matching_dicomseries(dicomfile: str, heuristics: dict) -> dict:
     """
     Find the matching series in the bidsmap heuristics using the dicom attributes. Then fill-in the missing values (values are cleaned-up to be BIDS-valid)
@@ -512,6 +493,9 @@ def get_matching_dicomseries(dicomfile: str, heuristics: dict) -> dict:
     """
 
     # TODO: generalize for non-DICOM (dicomfile -> file)?
+
+    # Obtain the dicom filename meant to write to the YAML file.
+    clean_dicomfile = get_clean_dicomfile(dicomfile)
 
     # Loop through all bidsmodalities and series; all info goes into series_
     for modality in bidsmodalities + (unknownmodality,):
@@ -566,11 +550,13 @@ def get_matching_dicomseries(dicomfile: str, heuristics: dict) -> dict:
             # Stop searching the heuristics if we have a match
             if match:
                 # TODO: check if there are more matches (i.e. conflicts)
-                series_.yaml_add_eol_comment('From: ' + dicomfile, key='attributes', column=50)                     # Add provenance data
+                series_.yaml_add_eol_comment("From: " + clean_dicomfile, key='attributes', column=50)    # Add provenance data
+                series_['provenance'] = clean_dicomfile
                 return {'series': series_, 'modality': modality}
 
     # We don't have a match (all tests failed, so modality should be the last one, i.e. unknownmodality)
-    series_.yaml_add_eol_comment('From: ' + dicomfile, key='attributes', column=50)                                 # Add provenance data
+    series_.yaml_add_eol_comment("From: " + clean_dicomfile, key='attributes', column=50)                # Add provenance data
+    series_['provenance'] = clean_dicomfile
     return {'series': series_, 'modality': modality}
 
 

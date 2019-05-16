@@ -12,10 +12,36 @@ import pandas as pd
 import subprocess
 import json
 import dateutil
+import logging
 try:
-    from bidscoin import bids
+    from bidscoin import bids as bids
 except ImportError:
-    import bids         # This should work if bidscoin was not pip-installed
+    import bids as bids        # This should work if bidscoin was not pip-installed
+
+
+logger = logging.getLogger('bidscoin')
+
+
+def setup_logging(log_filename):
+    """Setup the logging """
+    # Set the format
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s %(message)s',
+                                  '%Y-%m-%d %H:%M:%S')
+
+    # Set the streamhandler
+    streamhandler = logging.StreamHandler()
+    streamhandler.setLevel(logging.INFO)
+    streamhandler.setFormatter(formatter)
+
+    # Set the filehandler
+    filehandler = logging.FileHandler(log_filename)
+    filehandler.setLevel(logging.INFO)
+    filehandler.setFormatter(formatter)
+
+    # Add the streamhandler and filehandler to the logger
+    logger.addHandler(streamhandler)
+    logger.addHandler(filehandler)
 
 
 def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, subprefix: str, sesprefix: str) -> None:
@@ -33,7 +59,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     """
 
     if not bids.lsdirs(session):
-        bids.printlog('WARNING: No series subfolder(s) found in: ' + session, LOG)
+        logger.warning('No series subfolder(s) found in: ' + session)
         return
 
     TE = [None, None]
@@ -47,7 +73,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         subid = session.rsplit(os.sep + subprefix, 1)[1].split(os.sep + sesprefix, 1)[0]
     subid = 'sub-' + bids.cleanup_label(subid.lstrip(subprefix))
     if subid == subprefix:
-        bids.printlog('Error: No valid subject identifier found for: ' + session, LOG)
+        logger.error('Error: No valid subject identifier found for: ' + session)
         return
 
     # Get a valid or empty BIDS session identifier from the (first) dicom-header or from the session source folder
@@ -76,10 +102,10 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     for series in bids.lsdirs(session):
 
         if series.startswith('.'):
-            bids.printlog('Ignoring hidden dicom-folder: ' + series, LOG)
+            logger.info('Ignoring hidden dicom-folder: ' + series)
             continue
         else:
-            bids.printlog('Processing dicom-folder: ' + series, LOG)
+            logger.info('Processing dicom-folder: ' + series)
 
         # Get the cleaned-up bids labels from a dicom-file and bidsmap
         dicomfile = bids.get_dicomfile(series)
@@ -107,12 +133,12 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
             filename  = bidsname,
             outfolder = bidsmodality,
             infolder  = series)
-        bids.printlog('$ ' + command, LOG)
-        process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)         # TODO: investigate shell=False and capture_output=True
-        bids.printlog(process.stdout.decode('utf-8'), LOG)
+        logger.info('$ ' + command)
+        process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # TODO: investigate shell=False and capture_output=True
+        logger.info(process.stdout.decode('utf-8'))
         if process.returncode != 0:
             errormsg = f'Error: Failed to process {series} (errorcode {process.returncode})'
-            bids.printlog(errormsg, LOG)
+            logger.error(errormsg)
             continue
 
         # Replace uncropped output image with the cropped one
@@ -122,7 +148,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 basepath, ext2 = os.path.splitext(basepath)                                                    # Account for .nii.gz files
                 basepath       = basepath.rsplit('_Crop_',1)[0]
                 newfilename    = basepath + ext2 + ext1
-                bids.printlog(f'Found dcm2niix _Crop_ suffix, replacing original file\n{filename} ->\n{newfilename}', LOG)
+                logger.info(f'Found dcm2niix _Crop_ suffix, replacing original file\n{filename} ->\n{newfilename}')
                 os.replace(filename, newfilename)
 
         # Rename all files ending with _c%d, _e%d and _ph (and any combination of these): These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
@@ -144,7 +170,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                     newfilename_ce = newbasepath_ce + ext2 + ext1                                               # The file as it should have been
                     if os.path.isfile(filename_ce):
                         if filename_ce != newfilename_ce:
-                            bids.printlog(f'Found no dcm2niix {suffix} suffix for image instance 1, renaming\n{filename_ce} ->\n{newfilename_ce}', LOG)
+                            logger.info(f'Found no dcm2niix {suffix} suffix for image instance 1, renaming\n{filename_ce} ->\n{newfilename_ce}')
                             os.rename(filename_ce, newfilename_ce)
                         if ext1=='.json':
                             jsonfiles.append(newbasepath_ce + '.json')
@@ -160,13 +186,13 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                         with open(filename, 'r') as json_fid:
                             data = json.load(json_fid)
                         TE[int(index)-1] = data['EchoTime']
-                        bids.printlog(f"Reading EchoTime{index} = {data['EchoTime']} from: {filename}", LOG)
+                        logger.info(f"Reading EchoTime{index} = {data['EchoTime']} from: {filename}")
                 elif suffix=='_e' and basepath.rsplit('_',1)[1]=='phasediff' and index:                         # i.e. modality == 'fmap'
                     pass
 
                 elif suffix=='_ph' and basepath.rsplit('_',1)[1] in ['phase1','phase2'] and index:              # i.e. modality == 'fmap' (TODO: untested)
                     basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_phase1_e[index] -> *_phase[index]
-                    bids.printlog('WARNING: Untested dcm2niix "_ph"-filetype: ' + basepath, LOG)
+                    logger.warning('Untested dcm2niix "_ph"-filetype: ' + basepath)
 
                 else:
                     basepath = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + index)                    # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
@@ -177,7 +203,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 else:
                     newbidsname = os.path.basename(basepath)
                 newfilename = os.path.join(bidsmodality, newbidsname + ext2 + ext1)
-                bids.printlog(f'Found dcm2niix {suffix} suffix, renaming\n{filename} ->\n{newfilename}', LOG)
+                logger.info(f'Found dcm2niix {suffix} suffix, renaming\n{filename} ->\n{newfilename}')
                 os.rename(filename, newfilename)
                 if ext1 == '.json':
                     jsonfiles.append(os.path.join(bidsmodality, newbidsname + '.json'))
@@ -189,7 +215,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
 
             # Check if dcm2niix behaved as expected
             if not os.path.isfile(jsonfile):
-                bids.printlog(f'WARNING: Unexpected file conversion result: {jsonfile} not found', LOG)
+                logger.warning(f'Unexpected file conbids.version result: {jsonfile} not found')
                 continue
 
             # Add a dummy b0 bval- and bvec-file for any file without a bval/bvec file (e.g. sbref, b0 scans)
@@ -197,11 +223,11 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 bvecfile = os.path.splitext(jsonfile)[0] + '.bvec'
                 bvalfile = os.path.splitext(jsonfile)[0] + '.bval'
                 if not os.path.isfile(bvecfile):
-                    bids.printlog('Adding dummy bvec file: ' + bvecfile, LOG)
+                    logger.info('Adding dummy bvec file: ' + bvecfile)
                     with open(bvecfile, 'w') as bvec_fid:
                         bvec_fid.write('0\n0\n0\n')
                 if not os.path.isfile(bvalfile):
-                    bids.printlog('Adding dummy bval file: ' + bvalfile, LOG)
+                    logger.info('Adding dummy bval file: ' + bvalfile)
                     with open(bvalfile, 'w') as bval_fid:
                         bval_fid.write('0\n')
 
@@ -210,7 +236,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 with open(jsonfile, 'r') as json_fid:
                     data = json.load(json_fid)
                 if not 'TaskName' in data:
-                    bids.printlog('Adding TaskName to: ' + jsonfile, LOG)
+                    logger.info('Adding TaskName to: ' + jsonfile)
                     data['TaskName'] = series_['bids']['task_label']
                     with open(jsonfile, 'w') as json_fid:
                         json.dump(data, json_fid, indent=4)
@@ -218,7 +244,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
             # Add the EchoTime(s) used to create the difference image to the fmap json-file. NB: This assumes the magnitude series have already been parsed (i.e. their nifti's had an _e suffix) -- This is normally the case for Siemens (phase-series being saved after the magnitude series
             elif modality == 'fmap':
                 if series_['bids']['suffix'] == 'phasediff':
-                    bids.printlog('Adding EchoTime1 and EchoTime2 to: ' + jsonfile, LOG)
+                    logger.info('Adding EchoTime1 and EchoTime2 to: ' + jsonfile)
                     with open(jsonfile, 'r') as json_fid:
                         data = json.load(json_fid)
                     data['EchoTime1'] = TE[0]
@@ -226,7 +252,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                     with open(jsonfile, 'w') as json_fid:
                         json.dump(data, json_fid, indent=4)
                     if TE[0]>TE[1]:
-                        bids.printlog('WARNING: EchoTime1 > EchoTime2 in: ' + jsonfile, LOG)
+                        logger.warning('EchoTime1 > EchoTime2 in: ' + jsonfile)
 
             # Parse the acquisition time from the json file
             with open(jsonfile, 'r') as json_fid:
@@ -237,7 +263,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
             scans_table.loc[niipath, 'acq_time'] = '1900-01-01T' + acq_time.strftime('%H:%M:%S')
 
     # Write the scans_table to disk
-    bids.printlog('Writing acquisition time data to: ' + scans_tsv, LOG)
+    logger.info('Writing acquisition time data to: ' + scans_tsv)
     scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
     # Search for the IntendedFor images and add them to the json-files. This has been postponed untill all modalities have been processed (i.e. so that all target images are indeed on disk)
@@ -261,7 +287,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                     with open(jsonfile, 'r') as json_fid:
                         data = json.load(json_fid)
                     data['IntendedFor'] = niifiles
-                    bids.printlog('Adding IntendedFor to: ' + jsonfile, LOG)
+                    logger.info('Adding IntendedFor to: ' + jsonfile)
                     with open(jsonfile, 'w') as json_fid:
                         json.dump(data, json_fid, indent=4)
 
@@ -274,19 +300,19 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                             data = json.load(json_fid)
                         if 'IntendedFor' not in data:
                             data['IntendedFor'] = niifiles
-                            bids.printlog('Adding IntendedFor to: ' + jsonfile2, LOG)
+                            logger.info('Adding IntendedFor to: ' + jsonfile2)
                             with open(jsonfile2, 'w') as json_fid:
                                 json.dump(data, json_fid, indent=4)
 
     # Collect personal data from the DICOM header
-    dicomfile                   = bids.get_dicomfile(series)
+    dicomfile = bids.get_dicomfile(series)
     personals['participant_id'] = subid
     if sesid:
         personals['session_id'] = sesid
-    personals['age']            = bids.get_dicomfield('PatientAge',    dicomfile)
-    personals['sex']            = bids.get_dicomfield('PatientSex',    dicomfile)
-    personals['size']           = bids.get_dicomfield('PatientSize',   dicomfile)
-    personals['weight']         = bids.get_dicomfield('PatientWeight', dicomfile)
+    personals['age'] = bids.get_dicomfield('PatientAge',    dicomfile)
+    personals['sex'] = bids.get_dicomfield('PatientSex',    dicomfile)
+    personals['size'] = bids.get_dicomfield('PatientSize',   dicomfile)
+    personals['weight'] = bids.get_dicomfield('PatientWeight', dicomfile)
 
 
 def coin_par(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
@@ -299,7 +325,7 @@ def coin_par(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> N
     :return:            Nothing
     """
 
-    bids.printlog('coin_par is WIP!!!', LOG)
+    logger.warning('coin_par is WIP!!!')
 
 
 def coin_p7(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
@@ -312,7 +338,7 @@ def coin_p7(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> No
     :return:            Nothing
     """
 
-    bids.printlog('coin_p7 is WIP!!!', LOG)
+    logger.warning('coin_p7 is WIP!!!')
 
 
 def coin_nifti(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
@@ -325,7 +351,7 @@ def coin_nifti(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
     :return:            Nothing
     """
 
-    bids.printlog('coin_nifti is WIP!!!', LOG)
+    logger.warning('coin_nifti is WIP!!!')
 
 
 def coin_filesystem(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
@@ -338,7 +364,7 @@ def coin_filesystem(session: str, bidsmap: dict, bidsfolder: str, personals: dic
     :return:            Nothing
     """
 
-    bids.printlog('coin_filesystem is WIP!!!', LOG)
+    logger.warning('coin_filesystem is WIP!!!')
 
 
 def coin_plugin(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
@@ -364,7 +390,7 @@ def coin_plugin(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -
             plugin = plugin
         plugin = os.path.abspath(os.path.expanduser(plugin))
         if not os.path.isfile(plugin):
-            bids.printlog('WARNING: Could not find: ' + plugin, LOG)
+            logger.warning('Could not find: ' + plugin)
             continue
 
         # Load and run the plugin-module
@@ -372,7 +398,7 @@ def coin_plugin(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -
         module = util.module_from_spec(spec)
         spec.loader.exec_module(module)
         if 'bidscoiner_plugin' in dir(module):
-            bids.printlog(f'Running: {plugin}.bidscoiner_plugin({session}, bidsmap, {bidsfolder}, personals)', LOG)
+            logger.info(f'Running: {plugin}.bidscoiner_plugin({session}, bidsmap, {bidsfolder}, personals)')
             module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals, LOG)
 
 
@@ -391,12 +417,14 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     :param sesprefix:       The prefix common for all source session-folders
     :return:                Nothing
     """
-
     # Input checking & defaults
     global LOG
-    rawfolder  = os.path.abspath(os.path.expanduser(rawfolder))
+    rawfolder = os.path.abspath(os.path.expanduser(rawfolder))
     bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
-    LOG        = os.path.join(bidsfolder, 'code', 'bidscoiner.log')
+    logfile = os.path.join(bidsfolder, 'code', 'bidscoiner.log')
+    LOG = logfile
+
+    setup_logging(logfile)
 
     # Create a code subfolder
     os.makedirs(os.path.join(bidsfolder,'code'), exist_ok=True)
@@ -405,9 +433,9 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
             bidsignore.write(bids.unknownmodality + os.sep)
 
     # Start logging
-    bids.printlog(f'------------ START BIDScoiner {bids.version()}: BIDS {bids.bidsversion()} ------------\n'
-                  f'>>> bidscoiner rawfolder={rawfolder} bidsfolder={bidsfolder} subjects={subjects} force={force}'
-                  f' participants={participants} bidsmap={bidsmapfile} subprefix={subprefix} sesprefix={sesprefix}', LOG)
+    logger.info(f'------------ START BIDScoiner {bids.version()}: BIDS {bids.bidsversion()} ------------')
+    logger.info(f'>>> bidscoiner rawfolder={rawfolder} bidsfolder={bidsfolder} subjects={subjects} force={force}'
+                f' participants={participants} bidsmap={bidsmapfile} subprefix={subprefix} sesprefix={sesprefix}')
 
     # Create a dataset description file if it does not exist
     dataset_file = os.path.join(bidsfolder, 'dataset_description.json')
@@ -421,19 +449,19 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
                                "Funding":               ["OPTIONAL. List of sources of funding (grant numbers)"],
                                "ReferencesAndLinks":    ["OPTIONAL. List of references to publication that contain information on the dataset, or links"],
                                "DatasetDOI":            "OPTIONAL. The Document Object Identifier of the dataset (not the corresponding paper)"}
-        bids.printlog('Creating dataset description file: ' + dataset_file, LOG)
+        logger.info('Creating dataset description file: ' + dataset_file)
         with open(dataset_file, 'w') as fid:
             json.dump(dataset_description, fid, indent=4)
 
     # Create a README file if it does not exist
     readme_file = os.path.join(bidsfolder, 'README')
     if not os.path.isfile(readme_file):
-        bids.printlog('Creating README file: ' + readme_file, LOG)
+        logger.info('Creating README file: ' + readme_file)
         with open(readme_file, 'w') as fid:
             fid.write('A free form text ( README ) describing the dataset in more details that SHOULD be provided')
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
-    bidsmap = bids.get_heuristics(bidsmapfile, os.path.join(bidsfolder,'code'), LOG)
+    bidsmap = bids.get_heuristics(bidsmapfile, os.path.join(bidsfolder,'code'), logger)
 
     # Get the table & dictionary of the subjects that have been processed
     participants_tsv  = os.path.join(bidsfolder, 'participants.tsv')
@@ -461,10 +489,12 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     for n, subject in enumerate(subjects, 1):
 
         if participants and subject in list(participants_table.index):
-            print(f'\n{"-" * 30}\nSkipping subject: {subject} ({n}/{len(subjects)})')
+            logger.info(f'{"-" * 30}')
+            logger.info(f'Skipping subject: {subject} ({n}/{len(subjects)})')
             continue
 
-        print(f'\n{"-"*30}\nCoining subject: {subject} ({n}/{len(subjects)})')
+        logger.info(f'{"-"*30}')
+        logger.info(f'Coining subject: {subject} ({n}/{len(subjects)})')
 
         personals = dict()
         sessions  = bids.lsdirs(subject, sesprefix + '*')
@@ -519,14 +549,15 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
             participants_table.loc[personals['participant_id'], key] = personals[key]
 
     # Write the collected data to the participant files
-    bids.printlog('Writing subject data to: ' + participants_tsv, LOG)
+    logger.info('Writing subject data to: ' + participants_tsv)
     participants_table.to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
-    bids.printlog('Writing subject data dictionary to: ' + participants_json, LOG)
+    logger.info('Writing subject data dictionary to: ' + participants_json)
     with open(participants_json, 'w') as json_fid:
         json.dump(participants_dict, json_fid, indent=4)
 
-    bids.printlog('------------ FINISHED! ------------', LOG)
+    logger.info('log file: ' + logfile)
+    logger.info('------------ FINISHED! ------------')
 
 
 # Shell usage

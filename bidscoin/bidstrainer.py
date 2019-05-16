@@ -11,6 +11,7 @@ import shutil
 import copy
 import re
 import textwrap
+import logging
 import ruamel
 from ruamel.yaml import YAML
 yaml = YAML()
@@ -18,6 +19,9 @@ try:
     from bidscoin import bids
 except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
+
+
+logger = logging.getLogger('bidscoin')
 
 
 def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict) -> dict:
@@ -66,6 +70,7 @@ def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict) -> dict:
             # series_['attributes'] = dict()                                                # The CommentedMap API below is not guaranteed for the future so keep this line as an alternative
             series_['attributes'] = ruamel.yaml.comments.CommentedMap()                     # Clear the yaml objects that were copied over
             series_.yaml_add_eol_comment('From: ' + dicomfile, key='attributes', column=50) # Add provenance data
+            series_['provenance'] = dicomfile
             for attrkey in series['attributes']:
                 series_['attributes'][attrkey] = bids.get_dicomfield(attrkey, dicomfile)
 
@@ -180,7 +185,7 @@ def built_pluginmap(sample: str, bidsmap: dict) -> dict:
     return bidsmap
 
 
-def bidstrainer(bidsfolder: str, samplefolder: str='', bidsmapfile: str='bidsmap_template.yaml', pattern: str='.*\.(IMA|dcm)$') -> str:
+def bidstrainer(bidsfolder: str, samplefolder: str='', bidsmapfile: str='bidsmap_template.yaml', pattern: str=r'.*\.(IMA|dcm)$') -> str:
     """
     Main function uses all samples in the samplefolder as training / example  data to generate a
     maximally filled-in bidsmap_sample.yaml file.
@@ -188,7 +193,7 @@ def bidstrainer(bidsfolder: str, samplefolder: str='', bidsmapfile: str='bidsmap
     :param bidsfolder:      The name of the BIDS root folder
     :param samplefolder:    The name of the root directory of the tree containing the sample files / training data. If left empty, bidsfolder/code/samples is used or such an empty directory tree is created
     :param bidsmapfile:     The name of the bidsmap YAML-file
-    :param pattern:         The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')
+    :param pattern:         The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\\.(IMA|dcm)$')
     :return:                The name of the new (trained) bidsmap YAML-file that is save in bidsfolder/code
     """
 
@@ -204,7 +209,7 @@ def bidstrainer(bidsfolder: str, samplefolder: str='', bidsmapfile: str='bidsmap
     samplefolder = os.path.abspath(os.path.expanduser(samplefolder))
 
     # Get the heuristics for creating the bidsmap
-    heuristics = bids.get_heuristics(bidsmapfile)
+    heuristics = bids.get_heuristics(bidsmapfile, None, logger)
 
     # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     bidsmap = copy.deepcopy(heuristics)
@@ -269,7 +274,7 @@ if __name__ == "__main__":
     parser.add_argument('bidsfolder',     help='The destination folder with the bids data structure')
     parser.add_argument('samplefolder',   help='The root folder of the directory tree containing the sample files / training data. Optional argument, if left empty, bidsfolder/code/samples is used or such an empty directory tree is created', nargs='?', default='')
     parser.add_argument('bidsmap',        help='The bidsmap YAML-file with the BIDS heuristics (optional argument, default: ./heuristics/bidsmap_template.yaml)', nargs='?', default='bidsmap_template.yaml')
-    parser.add_argument('-p','--pattern', help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')
+    parser.add_argument('-p','--pattern', help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default=r'.*\.(IMA|dcm)$')
     args = parser.parse_args()
 
     bidstrainer(bidsfolder=args.bidsfolder, samplefolder=args.samplefolder, bidsmapfile=args.bidsmap, pattern=args.pattern)
