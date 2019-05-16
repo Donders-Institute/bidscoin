@@ -1,0 +1,196 @@
+# --------------------------------------------------------------------------------
+# This is a bidsmap YAML file with the key-value mappings for the different BIDS
+# modalities (anat, func, dwi, etc). The modality attributes are the keys that map
+# onto the BIDS labels. The bidsmap data-structure should be 5 levels deep:
+# dict > dict > list > dict > dict
+#
+# NB:
+# 1) Edit the bidsmap file to your needs before feeding it to bidscoiner.py
+# 2) (Institute) users may create their own bidsmap_[template].yaml or
+#    bidsmap_[sample].yaml file
+#
+# For more information, see:
+# https://github.com/Donders-Institute/bidscoin
+# https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html
+# --------------------------------------------------------------------------------
+
+
+Options:
+# --------------------------------------------------------------------------------
+# General options
+# --------------------------------------------------------------------------------
+  version: 1.6                                    # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
+  dcm2niix:                                       # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
+    path: module add dcm2niix;                    # Command to set the path to dcm2niix (note the semi-colon), e.g. module add dcm2niix/1.0.20180622; or PATH=/opt/dcm2niix/bin:$PATH; or /opt/dcm2niix/bin/ or '"C:\Program Files\dcm2niix\"' (note the quotes to deal with the whitespace)
+    args: -b y -z y -i n                          # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
+
+
+DICOM:
+# --------------------------------------------------------------------------------
+# DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
+  participant_label:                              # A <<DICOM attribute>> that is used as participant_label instead of the subject-label from the sourcefolder
+  session_label:                                  # A <<DICOM attribute>> that is used as session_label instead of the session-label from the sourcefolder
+  anat:       # ----------------------- All anatomical series --------------------
+  func:       # ----------------------- All functional series --------------------
+  dwi:        # ----------------------- All diffusion series ---------------------
+  fmap:       # ----------------------- All fieldmap series ----------------------
+  beh:        # ----------------------- All behavioural data ---------------------
+  pet:        # ----------------------- All PET series ---------------------------
+  extra_data: # ----------------------- All extra data ---------------------------
+  - attributes:                                   # From: M:\bidscoin\raw\sub-P002\ses-mri01\02_localizer AANGEPAST 11 SLICES\M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA
+      SeriesDescription: localizer AANGEPAST 11 SLICES
+      SequenceVariant: "['SP', 'OSP']"
+      SequenceName: '*fl2d1'
+      ScanningSequence: GR
+      MRAcquisitionType: 2D
+      FlipAngle: '20'
+      EchoNumbers: 1
+      EchoTime: '4'
+      RepetitionTime: '8.6'
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'NORM', 'DIS2D']"
+      ProtocolName: localizer AANGEPAST 11 SLICES
+      PhaseEncodingDirection:
+    bids:
+      acq_label: localizerAANGEPAST11SLICES
+      rec_label:
+      ce_label:
+      task_label:
+      echo_index:
+      dir_label:
+      run_index: <<1>>
+      suffix:
+      mod_label:
+      modality_label:
+  - attributes:                                   # From: M:\bidscoin\raw\sub-P002\ses-mri01\03_Stoptaak_ep2d_bold_nomoco\M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA
+      SeriesDescription: Stoptaak_ep2d_bold_nomoco
+      SequenceVariant: SK
+      SequenceName: '*epfid2d1_64'
+      ScanningSequence: EP
+      MRAcquisitionType: 2D
+      FlipAngle: '75'
+      EchoNumbers: 1
+      EchoTime: '30'
+      RepetitionTime: '2030'
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM', 'MOSAIC']"
+      ProtocolName: Stoptaak_ep2d_bold_nomoco
+      PhaseEncodingDirection:
+    bids:
+      acq_label: Stoptaakep2dboldnomoco
+      rec_label:
+      ce_label:
+      task_label:
+      echo_index:
+      dir_label:
+      run_index: <<1>>
+      suffix:
+      mod_label:
+      modality_label:
+  - attributes:                                   # From: M:\bidscoin\raw\sub-P002\ses-mri01\04_t1_mpr_sag_p2_iso_1\M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA
+      SeriesDescription: t1_mpr_sag_p2_iso_1
+      SequenceVariant: "['SP', 'MP']"
+      SequenceName: '*tfl3d1_ns'
+      ScanningSequence: "['GR', 'IR']"
+      MRAcquisitionType: 3D
+      FlipAngle: '9'
+      EchoNumbers: 1
+      EchoTime: '2.26'
+      RepetitionTime: '1900'
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM']"
+      ProtocolName: t1_mpr_sag_p2_iso_1
+      PhaseEncodingDirection:
+    bids:
+      acq_label: t1mprsagp2iso1
+      rec_label:
+      ce_label:
+      task_label:
+      echo_index:
+      dir_label:
+      run_index: <<1>>
+      suffix:
+      mod_label:
+      modality_label:
+  - attributes:                                   # From: M:\bidscoin\raw\sub-P002\ses-mri01\05_Flanker_ep2d_bold_nomoco\M109.MR.WUR_BRAIN_ADHD.0005.0001.2018.03.01.13.05.10.140625.104368237.IMA
+      SeriesDescription: Flanker_ep2d_bold_nomoco
+      SequenceVariant: SK
+      SequenceName: '*epfid2d1_64'
+      ScanningSequence: EP
+      MRAcquisitionType: 2D
+      FlipAngle: '75'
+      EchoNumbers: 1
+      EchoTime: '30'
+      RepetitionTime: '2030'
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM', 'MOSAIC']"
+      ProtocolName: Flanker_ep2d_bold_nomoco
+      PhaseEncodingDirection:
+    bids:
+      acq_label: Flankerep2dboldnomoco
+      rec_label:
+      ce_label:
+      task_label:
+      echo_index:
+      dir_label:
+      run_index: <<1>>
+      suffix:
+      mod_label:
+      modality_label:
+  - attributes:                                   # From: M:\bidscoin\raw\sub-P002\ses-mri02\07_t1_fl3d_sag_p3_iso_1\M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA
+      SeriesDescription: t1_fl3d_sag_p3_iso_1
+      SequenceVariant: SP
+      SequenceName: '*fl3d1_ns'
+      ScanningSequence: GR
+      MRAcquisitionType: 3D
+      FlipAngle: '11'
+      EchoNumbers: 1
+      EchoTime: '2.06'
+      RepetitionTime: '5.8'
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM']"
+      ProtocolName: t1_fl3d_sag_p3_iso_1
+      PhaseEncodingDirection:
+    bids:
+      acq_label: t1fl3dsagp3iso1
+      rec_label:
+      ce_label:
+      task_label:
+      echo_index:
+      dir_label:
+      run_index: <<1>>
+      suffix:
+      mod_label:
+      modality_label:
+PAR:
+# --------------------------------------------------------------------------------
+# PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
+
+
+P7:
+# --------------------------------------------------------------------------------
+# P*.7 key-value heuristics (GE fields that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
+
+
+Nifti:
+# --------------------------------------------------------------------------------
+# Nifti key-value heuristics (Nifti fields that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
+
+
+FileSystem:
+# --------------------------------------------------------------------------------
+# File system key-value heuristics (these file- and foldernames will be mapped
+# to the BIDS labels; Special substitutions can be performed using python's
+# Format Specification Mini-Language)
+# --------------------------------------------------------------------------------
+  participant_label:
+  session_label:
+  anat:       # ----------------------- All anatomical series --------------------
+  func:       # ----------------------- All functional series --------------------
+  dwi:        # ----------------------- All diffusion series ---------------------
+  fmap:       # ----------------------- All fieldmap series ----------------------
+  beh:        # ----------------------- All behavioural data ---------------------
+  extra_data: # ----------------------- All extra data ---------------------------
+PlugIn:
+# --------------------------------------------------------------------------------
+# List of plugins to edit the key-value heuristics / perform additional operations
+# --------------------------------------------------------------------------------

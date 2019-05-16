@@ -1,6 +1,9 @@
-# setuptools
-# python=3
-pandas
-pydicom>=1.0.2
-ruamel.yaml>=0.15.35
-# dcm2niix. For more information, see ./docs/installation.md and ./heuristics/bidsmap_template.yaml
+numpy==1.16.2
+pandas==0.24.2
+pydicom==1.2.2
+PyQt5==5.12.1
+PyQt5-sip==4.19.15
+python-dateutil==2.8.0
+pytz==2019.1
+ruamel.yaml==0.15.92
+six==1.12.0

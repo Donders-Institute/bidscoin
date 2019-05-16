@@ -4,3 +4,12 @@
 dist
 build
 bidscoin.egg-info
+.coverage
+.vscode
+venv
+.eggs
+htmlcov
+__pycache__
+.tox
+tests/testdata/*.log
+tests/testdata/bidsmap_output.yaml

@@ -1,0 +1,25 @@
+attributes:                                       # From: M:\bidscoin\raw\sub-P002\ses-mri01\04_t1_mpr_sag_p2_iso_1\M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA
+  SeriesDescription: t1_mpr_sag_p2_iso_1
+  SequenceVariant: "['SP', 'MP']"
+  SequenceName: '*tfl3d1_ns'
+  ScanningSequence: "['GR', 'IR']"
+  MRAcquisitionType: 3D
+  FlipAngle: '9'
+  EchoNumbers: 1
+  EchoTime: '2.26'
+  RepetitionTime: '1900'
+  ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM']"
+  ProtocolName: t1_mpr_sag_p2_iso_1
+  PhaseEncodingDirection:
+bids:
+  acq_label: t1mprsagp2iso1
+  rec_label:
+  ce_label:
+  task_label:
+  echo_index:
+  dir_label:
+  run_index: <<1>>
+  suffix:
+  mod_label:
+  modality_label:
+provenance: M:\bidscoin\raw\sub-P002\ses-mri01\04_t1_mpr_sag_p2_iso_1\M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA

@@ -9,12 +9,16 @@ and edit the bidsmap.yaml file before passing it to [bidscoiner.py]
 import os.path
 import textwrap
 import copy
+import logging
 from ruamel.yaml import YAML
 yaml = YAML()
 try:
     from bidscoin import bids
 except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
+
+
+logger = logging.getLogger('bidscoin')
 
 
 def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict, automatic: bool) -> dict:
@@ -195,7 +199,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str='bidsmap_sample
     bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
 
     # Get the heuristics for creating the bidsmap
-    heuristics = bids.get_heuristics(bidsmapfile, os.path.join(bidsfolder,'code'))
+    heuristics = bids.get_heuristics(bidsmapfile, os.path.join(bidsfolder,'code'), logger)
 
     # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     bidsmap = copy.deepcopy(heuristics)

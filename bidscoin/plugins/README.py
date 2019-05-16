@@ -6,6 +6,8 @@ or "myplugin.py". The functions in this module should be named "bidsmapper_plugi
 "bidscoiner_plugin" for bidscoiner.py. See below for the (positional) input arguments of the plugin-functions.
 """
 
+from logging import Logger
+
 
 def bidsmapper_plugin(seriesfolder: str, bidsmap: dict, heuristics: dict) -> dict:
     """
@@ -21,7 +23,7 @@ def bidsmapper_plugin(seriesfolder: str, bidsmap: dict, heuristics: dict) -> dic
     return bidsmap
 
 
-def bidscoiner_plugin(session: str, bidsmap: dict, bidsfolder: str, personals: dict, LOG: str) -> None:
+def bidscoiner_plugin(session: str, bidsmap: dict, bidsfolder: str, personals: dict, logger: Logger) -> None:
     """
     The plugin to cast the series into the bids folder
 
@@ -29,9 +31,9 @@ def bidscoiner_plugin(session: str, bidsmap: dict, bidsfolder: str, personals: d
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
     :param bidsfolder:  The full-path name of the BIDS root-folder
     :param personals:   The dictionary with the personal information
-    :param LOG:         The full-path name of the bidscoiner.log file
+    :param logger:      The logger object
     :return:            Nothing
     """
 
     from bidscoin import bids
-    bids.printlog(f'This is a bidscoiner demo-plugin working on: {session} -> {bidsfolder}', LOG)
+    logger.info(f'This is a bidscoiner demo-plugin working on: {session} -> {bidsfolder}')
