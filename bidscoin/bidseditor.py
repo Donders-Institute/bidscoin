@@ -766,6 +766,8 @@ if __name__ == "__main__":
     # Validate the arguments
     if not os.path.exists(args.rawfolder):
         raise Exception("Raw folder not found: {}".format(args.rawfolder))
+    if not os.path.exists(args.inputbidsmap):
+        raise Exception("Input BIDS map not found: {}".format(args.inputbidsmap))
 
     # Obtain the initial bidsmap info
     input_bidsmap_yaml = bidsutils.read_yaml_as_string(args.inputbidsmap)
