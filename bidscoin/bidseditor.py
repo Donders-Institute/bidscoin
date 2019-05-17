@@ -749,10 +749,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
-                                            '  bidseditor.py -f /raw/data/folder -i /input/bidsmap.yaml -l /output/bidseditor.log\n')
-    parser.add_argument('-f', '--rawfolder', help='The root folder of the directory tree containing the raw files', required=True)
-    parser.add_argument('-i', '--inputbidsmap', help='The input BIDS map YAML-file', required=True)
-    parser.add_argument('-l', '--logfile', help='The output log file', required=True)
+                                            '  bidseditor.py /raw/data/folder /input/bidsmap.yaml /output/bidseditor.log\n')
+    parser.add_argument('rawfolder', help='The root folder of the directory tree containing the raw files')
+    parser.add_argument('inputbidsmap', help='The input BIDS map YAML-file')
+    parser.add_argument('logfile', help='The output log file')
     args = parser.parse_args()
 
     # Create the log dir if it does not exist
