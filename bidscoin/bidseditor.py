@@ -12,7 +12,6 @@ import textwrap
 import logging
 import copy
 import ruamel
-import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QFont
@@ -279,7 +278,7 @@ class Ui_MainWindow(object):
             options=options)
         if filename:
             bidsutils.save_bidsmap(filename, self.output_bidsmap)
-            logger.info('Saved BIDS map to file {}'.format(filename))
+            logger.info(f'Saved BIDS map to file {filename}')
 
     def handle_button_clicked(self):
         button = QApplication.focusWidget()
@@ -357,7 +356,7 @@ class EditDialog(QDialog):
     def __init__(self, i, modality, output_bidsmap):
         QDialog.__init__(self)
 
-        self.source_bidsmap = copy.deepcopy(output_bidsmap)
+        self.source_bidsmap = copy.deepcopy(output_bidsmap)         # TODO: Check if deepcopy is needed
         self.source_index = i
         self.source_modality = modality
         self.source_sample = bidsutils.read_sample(output_bidsmap, modality, i)
@@ -432,7 +431,6 @@ class EditDialog(QDialog):
                                                        self.target_modality,
                                                        self.target_sample)
 
-
         self.got_sample.emit(self.target_bidsmap)
         self.close()
 
@@ -475,21 +473,18 @@ class EditDialog(QDialog):
         table.setColumnCount(2) # Always two columns (i.e. key, value)
         row_height = 24
 
-        modality_label_row_index = -1
         for i, row in enumerate(data):
             table.setRowHeight(i, row_height)
             key = row[0]["value"]
-            value = row[1]["value"]
             if self.target_modality in ['anat', 'extra_data'] and key == 'modality_label':
-                modality_label_row_index = i
                 self.modality_label_dropdown = QComboBox()
                 self.modality_label_dropdown.addItems(bidsutils.MODALITY_LABELS)
                 self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
                 self.modality_label_dropdown.currentIndexChanged.connect(self.selection_modality_label_dropdown_change)
                 item = self.set_cell("modality_label", is_editable=False)
-                table.setItem(modality_label_row_index, 0, QTableWidgetItem(item))
+                table.setItem(i, 0, QTableWidgetItem(item))
                 item = self.set_cell("", is_editable=True)
-                table.setCellWidget(modality_label_row_index, 1, self.modality_label_dropdown)
+                table.setCellWidget(i, 1, self.modality_label_dropdown)
                 continue
             for j, element in enumerate(row):
                 value = element.get("value", "")
@@ -671,21 +666,18 @@ class EditDialog(QDialog):
         bids_values, data = self.get_bids_values_data()
 
         # Update the BIDS values
-        modality_label_row_index = -1
         table = self.view_bids
         num_rows = bidsutils.MAX_NUM_BIDS_ATTRIBUTES
         for i, row in enumerate(data):
             key = row[0]["value"]
-            value = row[1]["value"]
             if self.target_modality in ['anat', 'extra_data'] and key == 'modality_label':
-                modality_label_row_index = i
                 self.modality_label_dropdown = QComboBox()
                 self.modality_label_dropdown.addItems(bidsutils.MODALITY_LABELS)
                 self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
                 self.modality_label_dropdown.currentIndexChanged.connect(self.selection_modality_label_dropdown_change)
                 item = self.set_cell("modality_label", is_editable=False)
-                table.setItem(modality_label_row_index, 0, QTableWidgetItem(item))
-                table.setCellWidget(modality_label_row_index, 1, self.modality_label_dropdown)
+                table.setItem(i, 0, QTableWidgetItem(item))
+                table.setCellWidget(i, 1, self.modality_label_dropdown)
                 continue
             for j, element in enumerate(row):
                 value = element.get("value", "")
