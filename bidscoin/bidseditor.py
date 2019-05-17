@@ -38,13 +38,7 @@ EDIT_WINDOW_HEIGHT = 800
 ABOUT_WINDOW_WIDTH = 200
 ABOUT_WINDOW_HEIGHT = 140
 
-LOG_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidseditor.log")
-
 ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "brain.ico")
-TEMPLATE_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics", "bidsmap_template.yaml")
-
-DEFAULT_RAW_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)))
-DEFAULT_INPUT_BIDSMAP_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_new.yaml")
 
 
 class Ui_MainWindow(object):
@@ -751,17 +745,23 @@ def setup_logging(log_filename):
 
 if __name__ == "__main__":
 
-    setup_logging(LOG_FILE)
-    logger.info('Started BIDS editor')
-
     # Parse the input arguments and run bidseditor
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
-                                            '  bidseditor.py /raw/data/folder /input/bidsmap.yaml\n')
-    parser.add_argument('rawfolder', help='The root folder of the directory tree containing the raw files', nargs='?', default=DEFAULT_RAW_FOLDER)
-    parser.add_argument('inputbidsmap', help='The input BIDS map YAML-file', nargs='?', default=DEFAULT_INPUT_BIDSMAP_FILENAME)
+                                            '  bidseditor.py -f /raw/data/folder -i /input/bidsmap.yaml -l /output/bidseditor.log\n')
+    parser.add_argument('-f', '--rawfolder', help='The root folder of the directory tree containing the raw files', required=True)
+    parser.add_argument('-i', '--inputbidsmap', help='The input BIDS map YAML-file', required=True)
+    parser.add_argument('-l', '--logfile', help='The output log file', required=True)
     args = parser.parse_args()
+
+    # Create the log dir if it does not exist
+    logdir = os.path.dirname(os.path.abspath(args.logfile))
+    if not os.path.exists(logdir):
+        os.makedirs(logdir)
+
+    setup_logging(args.logfile)
+    logger.info('Started BIDS editor')
 
     # Validate the arguments
     if not os.path.exists(args.rawfolder):
@@ -774,7 +774,8 @@ if __name__ == "__main__":
     output_bidsmap = copy.deepcopy(input_bidsmap)
 
     logger.info('Input raw data folder: {}'.format(args.rawfolder))
-    logger.info('Input BIDS map {}'.format(args.inputbidsmap))
+    logger.info('Input BIDS map: {}'.format(args.inputbidsmap))
+    logger.info('Output log file: {}'.format(args.logfile))
 
     # Start the application
     app = QApplication(sys.argv)
