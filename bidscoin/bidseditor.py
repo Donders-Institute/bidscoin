@@ -21,8 +21,10 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileD
                              QTableWidget, QTableWidgetItem, QGroupBox,
                              QAbstractItemView, QPushButton, QComboBox, QTextEdit)
 
-import bids
-import bidsutils
+try:
+    from bidscoin import bids, bidsutils
+except ImportError:
+    import bids, bidsutils          # This should work if bidscoin was not pip-installed
 
 
 logger = logging.getLogger('bidscoin')
