@@ -17,7 +17,7 @@
 - [BIDScoin functionality / TODO](#bidscoin-functionality--todo)
 - [BIDScoin tutorial](#bidscoin-tutorial)
 
-BIDScoin is an [open-source](https://github.com/Donders-Institute/bidscoin) python command-line toolkit that converts ("coins") source-level (raw) neuroimaging data-sets to [nifti](https://nifti.nimh.nih.gov/) / [json](https://www.json.org/) / [tsv](https://en.wikipedia.org/wiki/Tab-separated_values) data-sets that are organized according to the Brain Imaging Data Standard, a.k.a. [BIDS](http://bids.neuroimaging.io). Rather then depending on complex or ambiguous programmatic logic, BIDScoin uses a simple (but powerful) key-value approach to convert the raw source data into BIDS data. The key values that can be used in BIDScoin to map the data are:
+BIDScoin is an [open-source](https://github.com/Donders-Institute/bidscoin) python command-line toolkit that converts ("coins") source-level (raw) neuroimaging data-sets to [nifti](https://nifti.nimh.nih.gov/) / [json](https://www.json.org/) / [tsv](https://en.wikipedia.org/wiki/Tab-separated_values) data-sets that are organized following the Brain Imaging Data Structure, a.k.a. [BIDS](http://bids.neuroimaging.io). Rather then depending on complex or ambiguous programmatic logic, BIDScoin uses a simple (but powerful) key-value approach to convert the raw source data into BIDS data. The key values that can be used in BIDScoin to map the data are:
 
  1. Information in MRI header files (DICOM, PAR/REC or .7 format; e.g. SeriesDescription)
  2. Information from nifti headers (e.g. image dimensionality)
