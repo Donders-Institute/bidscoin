@@ -33,7 +33,7 @@ setup(name                           = 'bidscoin',                          # Re
                                         'bidscoin'+path.sep+'bidscoiner.py',
                                         'bidscoin'+path.sep+'rawmapper.py',
                                         'bidscoin'+path.sep+'dicomsort.py'],
-      python_requires                = '>=3',
+      python_requires                = '>=3.6',
       setup_requires                 = ["pytest-runner"],
       tests_require                  = ["pytest", "pytest-cov", "coverage"],
       classifiers                    = ['Programming Language :: Python :: 3',
