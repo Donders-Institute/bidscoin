@@ -6,7 +6,6 @@ The user needs to fill in the BIDS values for files that are unidentified.
 
 import os
 import sys
-from collections import deque
 import argparse
 import textwrap
 import logging
@@ -14,7 +13,6 @@ import copy
 import ruamel
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog,
                              QTextEdit,
                              QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog,
