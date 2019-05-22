@@ -179,7 +179,7 @@ def built_pluginmap(seriesfolder: str, bidsmap: dict, heuristics: dict) -> dict:
     return bidsmap
 
 
-def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str='bidsmap_sample.yaml', subprefix: str='sub-', sesprefix: str='ses-', automatic: bool=False) -> None:
+def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str='bidsmap_template.yaml', subprefix: str='sub-', sesprefix: str='ses-', automatic: bool=False) -> None:
     """
     Main function that processes all the subjects and session in the rawfolder
     and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code.
@@ -199,7 +199,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str='bidsmap_sample
     bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
 
     # Get the heuristics for creating the bidsmap
-    heuristics = bids.get_heuristics(bidsmapfile, os.path.join(bidsfolder,'code'), logger)
+    heuristics = bids.get_heuristics(bidsmapfile, None, logger)
 
     # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     bidsmap = copy.deepcopy(heuristics)
@@ -269,9 +269,9 @@ if __name__ == "__main__":
                                      epilog='examples:\n'
                                             '  bidsmapper.py /project/foo/raw /project/foo/bids\n'
                                             '  bidsmapper.py /project/foo/raw /project/foo/bids bidsmap_dccn\n ')
-    parser.add_argument('sourcefolder',     help='The source folder containing the raw data in sub-#/ses-#/series format')
-    parser.add_argument('bidsfolder',       help='The destination folder with the bids data structure')
-    parser.add_argument('bidsmap',          help='The bidsmap YAML-file with the BIDS heuristics (optional argument, default: bidsfolder/code/bidsmap_sample.yaml)', nargs='?', default='bidsmap_sample.yaml')
+    parser.add_argument('sourcefolder',     help='The source folder containing the raw data in sub-#/ses-#/series format (or see below for different prefixes)')
+    parser.add_argument('bidsfolder',       help='The destination folder with the bids data structure and the bidsfolder/code/bidsmap.yaml output file')
+    parser.add_argument('-b','--bidsmap',   help='The bidsmap YAML-file with the BIDS heuristics (default: ./heuristics/bidsmap_template.yaml)', default='bidsmap_template.yaml')
     parser.add_argument('-n','--subprefix', help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix', help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     parser.add_argument('-a','--automatic', help='If this flag is given the user will not be asked for help if an unknown series is encountered', action='store_true')
