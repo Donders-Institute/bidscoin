@@ -252,7 +252,7 @@ def get_heuristics(yamlfile: str, folder: str, logger: Logger) -> dict:
     Read the heuristics from the bidsmap yaml-file
 
     :param yamlfile:    The full pathname of the bidsmap yaml-file
-    :param folder:      Searches in the ./heuristics folder if folder=None
+    :param folder:      Searches in the ./heuristics folder if folder=None (useful for centrally managed template yaml-files)
     :param logger:      Logger object
     :return:            Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     """
