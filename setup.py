@@ -40,7 +40,7 @@ setup(name                           = 'bidscoin',                          # Re
                                         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
                                         'Operating System :: OS Independent'],
       keywords                       = 'bids mri imaging neuroimaging dicom nifti pet',
-      description                    = 'Converts and organises raw MRI data-sets according to the Brain Imaging Data Standard (BIDS)',
+      description                    = 'Converts and organises raw MRI data-sets according to the Brain Imaging Data Structure (BIDS)',
       long_description               = long_description,
       long_description_content_type  = 'text/markdown',
       author                         = 'Marcel Zwiers',
