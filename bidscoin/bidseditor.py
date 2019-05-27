@@ -10,7 +10,6 @@ import argparse
 import textwrap
 import logging
 import copy
-import ruamel
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog,
@@ -24,7 +23,7 @@ except ImportError:
     import bids, bidsutils          # This should work if bidscoin was not pip-installed
 
 
-logger = logging.getLogger('bidscoin')
+LOGGER = logging.getLogger('bidscoin')
 
 MAIN_WINDOW_WIDTH   = 1280
 MAIN_WINDOW_HEIGHT  = 800
@@ -76,15 +75,13 @@ class Ui_MainWindow(object):
         """ """
         self.output_bidsmap = the_sample
 
-        list_summary = bidsutils.get_list_summary(self.output_bidsmap)
-
         self.table.setColumnCount(5)
-        self.table.setRowCount(len(list_summary) + 1)
+        self.table.setRowCount(len(the_sample) + 1)
 
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
 
-        for i, series in enumerate(list_summary):
+        for i, series in enumerate(the_sample):
             provenance_file = series['provenance_file']
             modality = series['modality']
             bids_name = series['bids_name']
@@ -112,7 +109,7 @@ class Ui_MainWindow(object):
         self.save_button = QtWidgets.QPushButton()
         self.save_button.setText("Save")
         self.save_button.setStyleSheet('QPushButton {color: blue;}')
-        self.table.setCellWidget(len(list_summary), 4, self.save_button)
+        self.table.setCellWidget(len(the_sample), 4, self.save_button)
 
         self.table.setHorizontalHeaderLabels(['', 'DICOM file sample', 'Modality', 'BIDS name', 'Action'])
         header = self.table.horizontalHeader()
@@ -156,19 +153,18 @@ class Ui_MainWindow(object):
 
     def set_tab_file_sample_listing(self):
         """Set the DICOM file sample listing tab.  """
-        list_summary = bidsutils.get_list_summary(self.output_bidsmap)
 
         self.tab2 = QtWidgets.QWidget()
         self.tab2.layout = QVBoxLayout(self.centralwidget)
 
         self.table = QTableWidget()
         self.table.setColumnCount(5)
-        self.table.setRowCount(len(list_summary) + 1)
+        self.table.setRowCount(len(self.output_bidsmap) + 1)
 
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
 
-        for i, series in enumerate(list_summary):
+        for i, series in enumerate(self.output_bidsmap):
             provenance_file = series['provenance_file']
             modality = series['modality']
             bids_name = series['bids_name']
@@ -195,7 +191,7 @@ class Ui_MainWindow(object):
         self.save_button = QtWidgets.QPushButton()
         self.save_button.setText("Save")
         self.save_button.setStyleSheet('QPushButton {color: blue;}')
-        self.table.setCellWidget(len(list_summary), 4, self.save_button)
+        self.table.setCellWidget(len(self.output_bidsmap), 4, self.save_button)
 
         self.table.setHorizontalHeaderLabels(['', 'DICOM file sample', 'Modality', 'BIDS name', 'Action'])
         header = self.table.horizontalHeader()
@@ -295,7 +291,7 @@ class Ui_MainWindow(object):
 
     def exit_application(self):
         """ """
-        logger.info('Exit application')
+        LOGGER.info('Exit application')
         self.MainWindow.close()
 
 
@@ -710,7 +706,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str=''):
     # Start logging
     logfile = os.path.join(bidsfolder, 'code', 'bidseditor.log')
     bids.setup_logging(logfile)
-    logger.info('------------ START BIDSeditor ------------')
+    LOGGER.info('------------ START BIDSeditor ------------')
 
     # Obtain the initial bidsmap info
     input_bidsmap  = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder,'code'))
@@ -726,7 +722,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str=''):
             for series in input_bidsmap['DICOM'][modality]:
                 if series['provenance']:
                     sourcefolder = os.path.dirname(os.path.dirname(series['provenance']))
-                    logger.info(f'Source: {sourcefolder}')
+                    LOGGER.info(f'Source: {sourcefolder}')
                     break
             if sourcefolder: break
 
@@ -739,7 +735,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str=''):
     mainwin.show()
     sys.exit(app.exec_())
 
-    logger.info('------------ FINISHED! ------------')
+    LOGGER.info('------------ FINISHED! ------------')
 
 
 if __name__ == "__main__":
