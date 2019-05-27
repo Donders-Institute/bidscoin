@@ -710,8 +710,9 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     LOGGER.info('------------ START BIDSeditor ------------')
 
     # Obtain the initial bidsmap info
-    input_bidsmap  = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder,'code'))
-    output_bidsmap = copy.deepcopy(input_bidsmap)
+    template_bidsmap = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code'))
+    input_bidsmap    = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder,'code'))
+    output_bidsmap   = copy.deepcopy(input_bidsmap)
 
     # Parse the sourcefolder from the bidsmap provenance info
     if not sourcefolder:
@@ -732,7 +733,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     app.setApplicationName("BIDS editor")
     mainwin = QMainWindow()
     gui = Ui_MainWindow()
-    gui.setupUi(mainwin, sourcefolder, bidsmapfile, input_bidsmap, output_bidsmap)
+    gui.setupUi(mainwin, sourcefolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap)
     mainwin.show()
     sys.exit(app.exec_())
 
