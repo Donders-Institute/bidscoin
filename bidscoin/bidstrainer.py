@@ -20,8 +20,7 @@ try:
 except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
 
-
-logger = logging.getLogger('bidscoin')
+LOGGER = logging.getLogger('bidscoin')
 
 
 def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict) -> dict:
@@ -185,7 +184,7 @@ def built_pluginmap(sample: str, bidsmap: dict) -> dict:
     return bidsmap
 
 
-def bidstrainer(bidsfolder: str, samplefolder: str='', bidsmapfile: str='bidsmap_template.yaml', pattern: str=r'.*\.(IMA|dcm)$') -> str:
+def bidstrainer(bidsfolder: str, samplefolder: str, bidsmapfile: str, pattern: str) -> str:
     """
     Main function uses all samples in the samplefolder as training / example  data to generate a
     maximally filled-in bidsmap_sample.yaml file.
@@ -208,8 +207,12 @@ def bidstrainer(bidsfolder: str, samplefolder: str='', bidsmapfile: str='bidsmap
             return ''
     samplefolder = os.path.abspath(os.path.expanduser(samplefolder))
 
+    # Start logging
+    bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidstrainer.log'))
+    LOGGER.info('------------ START BIDStrainer ------------')
+
     # Get the heuristics for creating the bidsmap
-    heuristics = bids.get_heuristics(bidsmapfile, None, logger)
+    heuristics = bids.load_bidsmap(bidsmapfile, None)
 
     # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     bidsmap = copy.deepcopy(heuristics)
@@ -256,9 +259,9 @@ def bidstrainer(bidsfolder: str, samplefolder: str='', bidsmapfile: str='bidsmap
     bidsmapfile = os.path.join(bidsfolder,'code','bidsmap_sample.yaml')
 
     # Save the bidsmap to the bidsmap YAML-file
-    print('Writing bidsmap to: ' + bidsmapfile)
-    with open(bidsmapfile, 'w') as stream:
-        yaml.dump(bidsmap, stream)
+    bids.save_bidsmap(bidsmapfile, bidsmap)
+
+    LOGGER.info('------------ FINISHED! ------------')
 
 
 # Shell usage
