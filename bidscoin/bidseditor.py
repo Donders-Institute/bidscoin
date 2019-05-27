@@ -164,8 +164,9 @@ class Ui_MainWindow(object):
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
 
-        for i, series in enumerate(self.output_bidsmap):
-            provenance_file = series['provenance_file']
+        for i, series in enumerate(self.bidsmap['DICOM']):
+            print(series)
+            provenance_file = series['provenance']
             modality = series['modality']
             bids_name = series['bids_name']
 
@@ -695,17 +696,17 @@ class EditDialog(QDialog):
         self.view_bids_name.textCursor().insertText(bids_name)
 
 
-def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str=''):
+def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templatefile: str=''):
     """
 
     :param bidsfolder:
     :param bidsmapfile:
+    :param templatefile:
     :return:
     """
 
     # Start logging
-    logfile = os.path.join(bidsfolder, 'code', 'bidseditor.log')
-    bids.setup_logging(logfile)
+    bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidseditor.log'))
     LOGGER.info('------------ START BIDSeditor ------------')
 
     # Obtain the initial bidsmap info
@@ -749,8 +750,10 @@ if __name__ == "__main__":
     parser.add_argument('bidsfolder',           help='The destination folder with the (future) bids data')
     parser.add_argument('-s','--sourcefolder',  help='The source folder containing the raw data. If empty, it is derived from the bidsmap provenance information')
     parser.add_argument('-b','--bidsmap',       help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap.yaml', default='bidsmap.yaml')
+    parser.add_argument('-t','--template',      help='The bidsmap template with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap_template.yaml')
     args = parser.parse_args()
 
     bidseditor(bidsfolder   = args.bidsfolder,
                sourcefolder = args.sourcefolder,
-               bidsmapfile  = args.bidsmap)
+               bidsmapfile  = args.bidsmap,
+               templatefile = args.template)
