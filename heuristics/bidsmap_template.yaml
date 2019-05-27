@@ -54,66 +54,82 @@ DICOM:
       mod_label: ~
       modality_label: T1w
       ce_label: ~
+    provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
       modality_label: T2w
+    provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
       modality_label: T1rho
+    provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
       modality_label: T1map
+    provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
       modality_label: T2map
+    provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
       modality_label: T2star
+    provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
       modality_label: FLAIR
+    provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
       modality_label: FLASH
+    provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
       modality_label: PD
+    provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
       modality_label: PDmap
+    provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
       modality_label: PDT2
+    provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
       modality_label: inplaneT1
+    provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
       modality_label: inplaneT2
+    provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
       modality_label: angio
+    provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
       modality_label: defacemask
+    provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
       modality_label: SWImagandphase
+    provenance: ~
 
   func:       # ----------------------- All functional series --------------------
   - attributes: &funcattributes
@@ -138,10 +154,12 @@ DICOM:
       run_index: <<1>>
       echo_index: <EchoNumbers>
       suffix: bold
+    provenance: ~
   - attributes: *funcattributes
     bids:
       <<: *funcbids
       suffix: sbref
+    provenance: ~
 
   dwi:        # ----------------------- All diffusion series ---------------------
   - attributes: &dwiattributes
@@ -163,10 +181,12 @@ DICOM:
       acq_label: <SeriesDescription>
       run_index: <<1>>
       suffix: dwi
+    provenance: ~
   - attributes: *dwiattributes
     bids:
       <<: *dwibids
       suffix: sbref
+    provenance: ~
 
   fmap:       # ----------------------- All fieldmap series ----------------------
   - attributes: &fmapattributes
@@ -190,38 +210,47 @@ DICOM:
       dir_label: ~
       suffix: magnitude
       IntendedFor: ~
+    provenance: ~
   - attributes: *fmapattributes
     bids:
       <<: *fmapbids
       suffix: magnitude1
+    provenance: ~
   - attributes: *fmapattributes
     bids:
       <<: *fmapbids
       suffix: magnitude2
+    provenance: ~
   - attributes: *fmapattributes
     bids:
       <<: *fmapbids
       suffix: phasediff
+    provenance: ~
   - attributes: *fmapattributes
     bids:
       <<: *fmapbids
       suffix: phase1
+    provenance: ~
   - attributes: *fmapattributes
     bids:
       <<: *fmapbids
       suffix: phase2
+    provenance: ~
   - attributes: *fmapattributes
     bids:
       <<: *fmapbids
       suffix: fieldmap
+    provenance: ~
   - attributes: *fmapattributes
     bids:
       <<: *fmapbids
       dir_label: <InPlanePhaseEncodingDirection>
+    provenance: ~
   - attributes: *fmapattributes
     bids:
       <<: *fmapbids
       suffix: epi
+    provenance: ~
     # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
   beh:        # ----------------------- All behavioural data ---------------------
@@ -240,6 +269,7 @@ DICOM:
     bids: &behbids
       task_name: <SeriesDescription>
       suffix: ~
+    provenance: ~
 
   pet:        # ----------------------- All PET series ---------------------------
   - attributes: &petattributes
@@ -256,6 +286,7 @@ DICOM:
       rec_label: ~
       run_index: <<1>>
       suffix: pet
+    provenance: ~
 
   extra_data: # ----------------------- All extra data ---------------------------
   - attributes:
@@ -282,6 +313,7 @@ DICOM:
       suffix: ~
       mod_label: ~
       modality_label: ~
+    provenance: ~
 
 
 PAR: ~
