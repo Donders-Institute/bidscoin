@@ -10,6 +10,7 @@ import argparse
 import textwrap
 import logging
 import copy
+import json
 from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -58,6 +59,7 @@ MODALITY_LABELS = [
 
 
 # TODO: Replace this function
+# Make use of template instead
 def get_bids_attributes(modality, source_bids_attributes):
     """Return the BIDS attributes (i.e. the key,value pairs). """
     bids_attributes = None
@@ -183,6 +185,9 @@ def delete_sample(bidsmap, modality, index):
 
 def append_sample(bidsmap, modality, sample):
     """Append a sample to the BIDS map. """
+
+    print(json.dumps(sample, indent=4))
+
     if not modality in bids.bidsmodalities + (bids.unknownmodality,):
         raise ValueError("invalid modality '{}'".format(modality))
 
@@ -355,7 +360,7 @@ class Ui_MainWindow(object):
 
         idx = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
-            files = self.bidsmap['DICOM'][modality]
+            files = self.output_bidsmap['DICOM'][modality]
             if not files:
                 continue
             for series in files:
@@ -535,13 +540,13 @@ class EditDialog(QDialog):
 
     got_sample = QtCore.pyqtSignal(dict)
 
-    def __init__(self, i, modality, output_bidsmap):
+    def __init__(self, idx, modality, output_bidsmap):
         QDialog.__init__(self)
 
         self.source_bidsmap = copy.deepcopy(output_bidsmap)         # TODO: Check if deepcopy is needed
-        self.source_index = i
+        self.source_index = idx
         self.source_modality = modality
-        self.source_sample = output_bidsmap['DICOM'][modality][i]
+        self.source_sample = output_bidsmap['DICOM'][modality][idx]
 
         self.target_bidsmap = copy.deepcopy(output_bidsmap)
         self.target_modality = modality
@@ -607,6 +612,11 @@ class EditDialog(QDialog):
 
     def update_sample(self):
         """Save the changes. """
+        # from ruamel.yaml import YAML
+        # import sys
+        # yaml = YAML()
+        # yaml.dump(self.target_sample, sys.stdout)
+
         self.target_bidsmap = update_bidsmap(self.source_bidsmap,
                                              self.source_modality,
                                              self.source_index,
