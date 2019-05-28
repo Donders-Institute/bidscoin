@@ -807,13 +807,7 @@ class EditDialog(QDialog):
 
     def set_bids_name_section(self):
         """Set non-editable BIDS name section. """
-        bids_values, _ = self.get_bids_values_data()
-
-        subid = '*'
-        sesid = '*'
-        bids_name = bids.get_bidsname(subid, sesid, self.target_modality, self.target_sample)
-
-        self.bids_name = bids_name
+        self.bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_sample)
 
         self.label_bids_name = QLabel()
         self.label_bids_name.setText("BIDS name")
@@ -864,9 +858,7 @@ class EditDialog(QDialog):
         bids_values['modality_label'] = self.target_modality_label
 
         # Update the BIDS name
-        subid = '*'
-        sesid = '*'
-        bids_name = bids.get_bidsname(subid, sesid, self.target_modality, self.target_sample)
+        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_sample)
 
         self.view_bids_name.clear()
         self.view_bids_name.textCursor().insertText(bids_name)
@@ -879,9 +871,7 @@ class EditDialog(QDialog):
         bids_values['modality_label'] = self.target_modality_label
 
         # Update the BIDS name
-        subid = '*'
-        sesid = '*'
-        bids_name = bids.get_bidsname(subid, sesid, self.target_modality, self.source_sample)
+        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.source_sample)
 
         self.view_bids_name.clear()
         self.view_bids_name.textCursor().insertText(bids_name)
