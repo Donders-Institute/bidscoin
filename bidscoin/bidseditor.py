@@ -10,7 +10,6 @@ import argparse
 import textwrap
 import logging
 import copy
-import json
 from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -185,9 +184,6 @@ def delete_sample(bidsmap, modality, index):
 
 def append_sample(bidsmap, modality, sample):
     """Append a sample to the BIDS map. """
-
-    print(json.dumps(sample, indent=4))
-
     if not modality in bids.bidsmodalities + (bids.unknownmodality,):
         raise ValueError("invalid modality '{}'".format(modality))
 
