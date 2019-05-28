@@ -160,8 +160,7 @@ def get_bids_attributes(modality, source_bids_attributes):
 
 def get_num_samples(bidsmap, modality):
     """Obtain the number of samples for a give modality. """
-    modalities = [x for x in bids.bidsmodalities] + [bids.unknownmodality]
-    if not modality in modalities:
+    if not modality in bids.bidsmodalities + (bids.unknownmodality,):
         raise ValueError("invalid modality '{}'".format(modality))
 
     bidsmap_dicom = bidsmap.get('DICOM', {})
@@ -184,8 +183,7 @@ def get_list_summary(bidsmap) -> dict:
 
     list_summary = []
 
-    modalities = [x for x in bids.bidsmodalities] + [bids.unknownmodality]
-    for modality in modalities:
+    for modality in bids.bidsmodalities + (bids.unknownmodality,):
 
         for series in bidsmap['DICOM'][modality]:
 
@@ -206,8 +204,7 @@ def get_list_summary(bidsmap) -> dict:
 
 def delete_sample(bidsmap, modality, index):
     """Delete a sample from the BIDS map. """
-    modalities = [x for x in bids.bidsmodalities] + [bids.unknownmodality]
-    if not modality in modalities:
+    if not modality in bids.bidsmodalities + (bids.unknownmodality,):
         raise ValueError("invalid modality '{}'".format(modality))
 
     num_samples = get_num_samples(bidsmap, modality)
@@ -226,7 +223,7 @@ def delete_sample(bidsmap, modality, index):
 
 def append_sample(bidsmap, modality, sample):
     """Append a sample to the BIDS map. """
-    if not modality in bids.bidsmodalities:
+    if not modality in bids.bidsmodalities + (bids.unknownmodality,):
         raise ValueError("invalid modality '{}'".format(modality))
 
     bidsmap_dicom = bidsmap.get('DICOM', {})
@@ -244,11 +241,10 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
     1. Remove the source sample from the source modality section
     2. Add the target sample to the target modality section
     """
-    modalities = [x for x in bids.bidsmodalities] + [bids.unknownmodality]
-    if not source_modality in modalities:
+    if not source_modality in bids.bidsmodalities + (bids.unknownmodality,):
         raise ValueError("invalid modality '{}'".format(source_modality))
 
-    if not target_modality in modalities:
+    if not target_modality in bids.bidsmodalities + (bids.unknownmodality,):
         raise ValueError("invalid modality '{}'".format(target_modality))
 
     target_bidsmap = copy.deepcopy(source_bidsmap)
@@ -264,13 +260,14 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
 
 class Ui_MainWindow(object):
 
-    def setupUi(self, MainWindow, sourcefolder, bidsmap_filename, bidsmap, output_bidsmap, template_bidsmap):
+    def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, bidsmap, output_bidsmap, template_bidsmap):
 
         self.MainWindow = MainWindow
         self.bidsmap_filename = bidsmap_filename
         self.bidsmap = bidsmap
         self.output_bidsmap = output_bidsmap
         self.sourcefolder = sourcefolder
+        self.bidsfolder = bidsfolder
 
         self.MainWindow.setObjectName("MainWindow")
         self.MainWindow.resize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
@@ -306,31 +303,34 @@ class Ui_MainWindow(object):
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
 
-        for i, series in enumerate(the_sample):
-            provenance = series['provenance']
-            provenance_file = os.path.basename(provenance)
-            modality = series['modality']
-            bids_name = series['bids_name']
+        for modality in bids.bidsmodalities + (bids.unknownmodality,):
+            files = self.output_bidsmap['DICOM'][modality]
+            if not files:
+                continue
+            for i, series in enumerate(files):
+                provenance = series['provenance']
+                provenance_file = os.path.basename(provenance)
+                bids_name = bids.get_bidsname('001', '01', modality, series)
 
-            item_id = QTableWidgetItem(str(i + 1))
-            item_provenance_file = QTableWidgetItem(provenance_file)
-            item_modality = QTableWidgetItem(modality)
-            item_bids_name = QTableWidgetItem(bids_name)
+                item_id = QTableWidgetItem(str(i + 1))
+                item_provenance_file = QTableWidgetItem(provenance_file)
+                item_modality = QTableWidgetItem(modality)
+                item_bids_name = QTableWidgetItem(bids_name)
 
-            self.table.setItem(i, 0, item_id)
-            self.table.setItem(i, 1, item_provenance_file)
-            self.table.setItem(i, 2, item_modality)
-            self.table.setItem(i, 3, item_bids_name)
+                self.table.setItem(i, 0, item_id)
+                self.table.setItem(i, 1, item_provenance_file)
+                self.table.setItem(i, 2, item_modality)
+                self.table.setItem(i, 3, item_bids_name)
 
-            self.button_select = QPushButton('Edit')
-            if modality == bids.unknownmodality:
-                self.button_select.setStyleSheet('QPushButton {color: red;}')
-                self.table.item(i, 1).setForeground(QtGui.QColor(255, 0, 0))
-            else:
-                self.button_select.setStyleSheet('QPushButton {color: green;}')
-                self.table.item(i, 1).setForeground(QtGui.QColor(0, 128, 0))
-            self.button_select.clicked.connect(self.handle_button_clicked)
-            self.table.setCellWidget(i, 4, self.button_select)
+                self.button_select = QPushButton('Edit')
+                if modality == bids.unknownmodality:
+                    self.button_select.setStyleSheet('QPushButton {color: red;}')
+                    self.table.item(i, 1).setForeground(QtGui.QColor(255, 0, 0))
+                else:
+                    self.button_select.setStyleSheet('QPushButton {color: green;}')
+                    self.table.item(i, 1).setForeground(QtGui.QColor(0, 128, 0))
+                self.button_select.clicked.connect(self.handle_button_clicked)
+                self.table.setCellWidget(i, 4, self.button_select)
 
         self.save_button = QtWidgets.QPushButton()
         self.save_button.setText("Save")
@@ -390,34 +390,33 @@ class Ui_MainWindow(object):
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
 
-        modalities = [x for x in bids.bidsmodalities] + [bids.unknownmodality]
-        for k, modality in enumerate(self.bidsmap['DICOM']):
-            if modality in modalities:
-                files = self.bidsmap['DICOM'][modality]
-                if files:
-                    for i, series in enumerate(files):
-                        provenance = series['provenance']
-                        provenance_file = os.path.basename(provenance)
-                        bids_name = bids.get_bidsname('001', '01', modality, series)
+        for modality in bids.bidsmodalities + (bids.unknownmodality,):
+            files = self.bidsmap['DICOM'][modality]
+            if not files:
+                continue
+            for i, series in enumerate(files):
+                provenance = series['provenance']
+                provenance_file = os.path.basename(provenance)
+                bids_name = bids.get_bidsname('001', '01', modality, series)
 
-                        item_id = QTableWidgetItem(str(i + 1))
-                        item_provenance_file = QTableWidgetItem(provenance_file)
-                        item_modality = QTableWidgetItem(modality)
-                        item_bids_name = QTableWidgetItem(bids_name)
+                item_id = QTableWidgetItem(str(i + 1))
+                item_provenance_file = QTableWidgetItem(provenance_file)
+                item_modality = QTableWidgetItem(modality)
+                item_bids_name = QTableWidgetItem(bids_name)
 
-                        self.table.setItem(i, 0, item_id)
-                        self.table.setItem(i, 1, item_provenance_file)
-                        self.table.setItem(i, 2, item_modality)
-                        self.table.setItem(i, 3, item_bids_name)
+                self.table.setItem(i, 0, item_id)
+                self.table.setItem(i, 1, item_provenance_file)
+                self.table.setItem(i, 2, item_modality)
+                self.table.setItem(i, 3, item_bids_name)
 
-                        self.button_select = QPushButton('Edit')
-                        if modality == bids.unknownmodality:
-                            self.button_select.setStyleSheet('QPushButton {color: red;}')
-                            self.table.item(i, 1).setForeground(QtGui.QColor(255, 0, 0))
-                        else:
-                            self.button_select.setStyleSheet('QPushButton {color: green;}')
-                        self.button_select.clicked.connect(self.handle_button_clicked)
-                        self.table.setCellWidget(i, 4, self.button_select)
+                self.button_select = QPushButton('Edit')
+                if modality == bids.unknownmodality:
+                    self.button_select.setStyleSheet('QPushButton {color: red;}')
+                    self.table.item(i, 1).setForeground(QtGui.QColor(255, 0, 0))
+                else:
+                    self.button_select.setStyleSheet('QPushButton {color: green;}')
+                self.button_select.clicked.connect(self.handle_button_clicked)
+                self.table.setCellWidget(i, 4, self.button_select)
 
         self.save_button = QtWidgets.QPushButton()
         self.save_button.setText("Save")
@@ -491,7 +490,7 @@ class Ui_MainWindow(object):
         filename, _ = QFileDialog.getSaveFileName(
             self.tab2,
             "Save File",
-            self.sourcefolder,
+            os.path.join(self.bidsfolder, 'code', 'bidsmap.yaml'),
             "YAML Files (*.yaml *.yml);;All Files (*)",
             options=options)
         if filename:
@@ -785,9 +784,8 @@ class EditDialog(QDialog):
         self.label_dropdown = QLabel()
         self.label_dropdown.setText("Modality")
 
-        modalities = [x for x in bids.bidsmodalities] + [bids.unknownmodality]
         self.view_dropdown = QComboBox()
-        self.view_dropdown.addItems(modalities)
+        self.view_dropdown.addItems(bids.bidsmodalities + (bids.unknownmodality,))
         self.view_dropdown.setCurrentIndex(self.view_dropdown.findText(self.target_modality))
 
         self.view_dropdown.currentIndexChanged.connect(self.selection_dropdown_change)
@@ -960,7 +958,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     app.setApplicationName("BIDS editor")
     mainwin = QMainWindow()
     gui = Ui_MainWindow()
-    gui.setupUi(mainwin, sourcefolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap)
+    gui.setupUi(mainwin, bidsfolder, sourcefolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap)
     mainwin.show()
     sys.exit(app.exec_())
 

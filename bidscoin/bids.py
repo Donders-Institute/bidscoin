@@ -601,8 +601,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
     :param run:         The optional runindex label (e.g. 'run-01'). Can be left ''
     :return:            The composed BIDS file-name (without file-extension)
     """
-    modalities = [x for x in bidsmodalities] + [unknownmodality]
-    assert modality in modalities
+    assert modality in bidsmodalities + (unknownmodality,)
 
     # Do some checks to allow for dragging the series entries between the different modality-sections
     for bidslabel in bidslabels:

@@ -20,14 +20,13 @@ except ImportError:
 LOGGER = logging.getLogger('bidscoin')
 
 
-def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict, automatic: bool) -> dict:
+def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict) -> dict:
     """
     All the logic to map dicom-attributes (fields/tags) onto bids-labels go into this function
 
     :param dicomfile:   The full-path name of the source dicom-file
     :param bidsmap:     The bidsmap as we had it
     :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param automatic:   If True, the user will not be asked for help if an unknown series is encountered
     :return:            The bidsmap with new entries in it
     """
 
@@ -49,14 +48,13 @@ def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict, automatic: b
     return bidsmap
 
 
-def built_parmap(parfile: str, bidsmap: dict, heuristics: dict, automatic: bool) -> dict:
+def built_parmap(parfile: str, bidsmap: dict, heuristics: dict) -> dict:
     """
     All the logic to map PAR/REC fields onto bids labels go into this function
 
     :param parfile:     The full-path name of the source PAR-file
     :param bidsmap:     The bidsmap as we had it
     :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param automatic:   If True, the user will not be asked for help if an unknown series is encountered
     :return:            The bidsmap with new entries in it
     """
 
@@ -69,14 +67,13 @@ def built_parmap(parfile: str, bidsmap: dict, heuristics: dict, automatic: bool)
     return bidsmap
 
 
-def built_p7map(p7file: str, bidsmap: dict, heuristics: dict, automatic: bool) -> dict:
+def built_p7map(p7file: str, bidsmap: dict, heuristics: dict) -> dict:
     """
     All the logic to map P*.7-fields onto bids labels go into this function
 
     :param p7file:      The full-path name of the source P7-file
     :param bidsmap:     The bidsmap as we had it
     :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param automatic:   If True, the user will not be asked for help if an unknown series is encountered
     :return:            The bidsmap with new entries in it
     """
 
@@ -89,7 +86,7 @@ def built_p7map(p7file: str, bidsmap: dict, heuristics: dict, automatic: bool) -
     return bidsmap
 
 
-def built_niftimap(niftifile: str, bidsmap: dict, heuristics: dict, automatic: bool) -> dict:
+def built_niftimap(niftifile: str, bidsmap: dict, heuristics: dict) -> dict:
     """
     All the logic to map nifti-info onto bids labels go into this function
 
@@ -109,7 +106,7 @@ def built_niftimap(niftifile: str, bidsmap: dict, heuristics: dict, automatic: b
     return bidsmap
 
 
-def built_filesystemmap(seriesfolder: str, bidsmap: dict, heuristics: dict, automatic: bool) -> dict:
+def built_filesystemmap(seriesfolder: str, bidsmap: dict, heuristics: dict) -> dict:
     """
     All the logic to map filesystem-info onto bids labels go into this function
 
