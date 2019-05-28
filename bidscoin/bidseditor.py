@@ -158,6 +158,22 @@ def get_bids_attributes(modality, source_bids_attributes):
     return bids_attributes
 
 
+def get_num_samples(bidsmap, modality):
+    """Obtain the number of samples for a give modality. """
+    modalities = [x for x in bids.bidsmodalities] + [bids.unknownmodality]
+    if not modality in modalities:
+        raise ValueError("invalid modality '{}'".format(modality))
+
+    bidsmap_dicom = bidsmap.get('DICOM', {})
+    bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
+    if bidsmap_dicom_modality is not None:
+        num_samples = len(bidsmap_dicom_modality)
+    else:
+        num_samples = 0
+
+    return num_samples
+
+
 def get_list_summary(bidsmap) -> dict:
     """
     Get the list of files from the BIDS map.
@@ -190,14 +206,15 @@ def get_list_summary(bidsmap) -> dict:
 
 def delete_sample(bidsmap, modality, index):
     """Delete a sample from the BIDS map. """
-    if not modality in bids.bidsmodalities:
+    modalities = [x for x in bids.bidsmodalities] + [bids.unknownmodality]
+    if not modality in modalities:
         raise ValueError("invalid modality '{}'".format(modality))
 
     num_samples = get_num_samples(bidsmap, modality)
     if index > num_samples:
         raise IndexError("invalid index {} ({} items found)".format(index, num_samples+1))
 
-    bidsmap_dicom = bidsmap.get('DICOM', ruamel.yaml.comments.CommentedMap())
+    bidsmap_dicom = bidsmap.get('DICOM', {})
     bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
     if bidsmap_dicom_modality is not None:
         del bidsmap['DICOM'][modality][index]
@@ -212,7 +229,7 @@ def append_sample(bidsmap, modality, sample):
     if not modality in bids.bidsmodalities:
         raise ValueError("invalid modality '{}'".format(modality))
 
-    bidsmap_dicom = bidsmap.get('DICOM', ruamel.yaml.comments.CommentedMap())
+    bidsmap_dicom = bidsmap.get('DICOM', {})
     bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
     if bidsmap_dicom_modality is not None:
         bidsmap['DICOM'][modality].append(sample)
@@ -227,10 +244,11 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
     1. Remove the source sample from the source modality section
     2. Add the target sample to the target modality section
     """
-    if not source_modality in bids.bidsmodalities:
+    modalities = [x for x in bids.bidsmodalities] + [bids.unknownmodality]
+    if not source_modality in modalities:
         raise ValueError("invalid modality '{}'".format(source_modality))
 
-    if not target_modality in bids.bidsmodalities:
+    if not target_modality in modalities:
         raise ValueError("invalid modality '{}'".format(target_modality))
 
     target_bidsmap = copy.deepcopy(source_bidsmap)
@@ -289,7 +307,8 @@ class Ui_MainWindow(object):
         self.table.setShowGrid(True)
 
         for i, series in enumerate(the_sample):
-            provenance_file = series['provenance_file']
+            provenance = series['provenance']
+            provenance_file = os.path.basename(provenance)
             modality = series['modality']
             bids_name = series['bids_name']
 
@@ -642,11 +661,9 @@ class EditDialog(QDialog):
 
             self.target_sample['bids'][key] = value
 
-            bids_values = self.target_sample['bids']
-            subid = '*'
-            sesid = '*'
-            run = bids_values.get('run_index', '*')
-            self.bids_name = bids.get_bidsname(subid, sesid, self.target_modality, bids_values, run)
+            series = self.target_sample
+            run = series['bids'].get('run_index', '*')
+            self.bids_name = bids.get_bidsname('001', '01', self.target_modality, series, run)
 
             self.view_bids_name.clear()
             self.view_bids_name.textCursor().insertText(self.bids_name)
