@@ -57,7 +57,7 @@ MODALITY_LABELS = [
 ]
 
 
-# TODO: Remove this function
+# TODO: Replace this function
 def get_bids_attributes(modality, source_bids_attributes):
     """Return the BIDS attributes (i.e. the key,value pairs). """
     bids_attributes = None
@@ -268,7 +268,7 @@ class Ui_MainWindow(object):
             files = self.output_bidsmap['DICOM'][modality]
             if not files:
                 continue
-            for i, series in enumerate(files):
+            for series in files:
                 provenance = series['provenance']
                 provenance_file = os.path.basename(provenance)
                 bids_name = bids.get_bidsname('001', '01', modality, series)
@@ -466,9 +466,9 @@ class Ui_MainWindow(object):
         button = QApplication.focusWidget()
         index = self.table.indexAt(button.pos())
         if index.isValid():
-            i = int(index.row())
-            modality = self.table.item(i, 2).text()
-            self.show_edit(i, modality)
+            idx = int(index.row())
+            modality = self.table.item(idx, 2).text()
+            self.show_edit(idx, modality)
 
     def on_clicked(self, index):
         # print(self.model.fileInfo(index).absoluteFilePath())
@@ -479,9 +479,9 @@ class Ui_MainWindow(object):
         self.dialog_about = AboutDialog()
         self.dialog_about.show()
 
-    def show_edit(self, i, modality):
+    def show_edit(self, idx, modality):
         """ """
-        self.dialog_edit = EditDialog(i, modality, self.output_bidsmap)
+        self.dialog_edit = EditDialog(idx, modality, self.output_bidsmap)
         self.dialog_edit.show()
         self.dialog_edit.got_sample.connect(self.update_list)
 
