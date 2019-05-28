@@ -35,6 +35,9 @@ EDIT_WINDOW_HEIGHT  = 800
 ABOUT_WINDOW_WIDTH  = 200
 ABOUT_WINDOW_HEIGHT = 140
 
+MAX_NUM_PROVENANCE_ATTRIBUTES = 2
+MAX_NUM_BIDS_ATTRIBUTES = 10
+
 ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "brain.ico")
 
 # TODO: Replace this list. Make use of template instead.
@@ -345,13 +348,20 @@ class Ui_MainWindow(object):
 
     def set_tab_file_sample_listing(self):
         """Set the DICOM file sample listing tab.  """
+        num_files = 0
+        for modality in bids.bidsmodalities + (bids.unknownmodality,):
+            files = self.bidsmap['DICOM'][modality]
+            if not files:
+                continue
+            for _ in files:
+                num_files += 1
 
         self.tab2 = QtWidgets.QWidget()
         self.tab2.layout = QVBoxLayout(self.centralwidget)
 
         self.table = QTableWidget()
         self.table.setColumnCount(5)
-        self.table.setRowCount(len(self.output_bidsmap) + 1)
+        self.table.setRowCount(num_files + 1) # one for each file and the save button
 
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
@@ -645,7 +655,7 @@ class EditDialog(QDialog):
             item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
         return item
 
-    def get_table(self, data, num_rows=2):
+    def get_table(self, data, num_rows=1):
         """Return a table widget from the data. """
         table = QTableWidget()
 
@@ -724,7 +734,7 @@ class EditDialog(QDialog):
         self.label_provenance = QLabel()
         self.label_provenance.setText("Provenance")
 
-        self.view_provenance = self.get_table(data)
+        self.view_provenance = self.get_table(data, num_rows=MAX_NUM_PROVENANCE_ATTRIBUTES)
 
     def set_dicom_attributes_section(self):
         """Set DICOM attributes section. """
@@ -746,7 +756,7 @@ class EditDialog(QDialog):
         self.label_dicom = QLabel()
         self.label_dicom.setText("DICOM attributes")
 
-        self.view_dicom = self.get_table(data, len(data))
+        self.view_dicom = self.get_table(data, num_rows=len(data))
 
     def set_dropdown_section(self):
         """Dropdown select modality list section. """
@@ -806,7 +816,7 @@ class EditDialog(QDialog):
         self.label_bids = QLabel()
         self.label_bids.setText("BIDS values")
 
-        self.view_bids = self.get_table(data)
+        self.view_bids = self.get_table(data, num_rows=MAX_NUM_BIDS_ATTRIBUTES)
 
     def set_bids_name_section(self):
         """Set non-editable BIDS name section. """
@@ -874,7 +884,7 @@ class EditDialog(QDialog):
         bids_values['modality_label'] = self.target_modality_label
 
         # Update the BIDS name
-        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.source_sample)
+        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_sample)
 
         self.view_bids_name.clear()
         self.view_bids_name.textCursor().insertText(bids_name)
