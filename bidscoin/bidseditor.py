@@ -37,6 +37,7 @@ ABOUT_WINDOW_HEIGHT = 140
 
 ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "brain.ico")
 
+# TODO: Replace this list. Make use of template instead.
 MODALITY_LABELS = [
     'T1w',
     'T2w',
@@ -57,8 +58,7 @@ MODALITY_LABELS = [
 ]
 
 
-# TODO: Replace this function
-# Make use of template instead
+# TODO: Replace this function. Make use of template instead
 def get_bids_attributes(modality, source_bids_attributes):
     """Return the BIDS attributes (i.e. the key,value pairs). """
     bids_attributes = None
@@ -224,11 +224,13 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, bidsmap, output_bidsmap, template_bidsmap):
 
         self.MainWindow = MainWindow
+
+        self.bidsfolder = bidsfolder
+        self.sourcefolder = sourcefolder
         self.bidsmap_filename = bidsmap_filename
         self.bidsmap = bidsmap
         self.output_bidsmap = output_bidsmap
-        self.sourcefolder = sourcefolder
-        self.bidsfolder = bidsfolder
+        self.template_bidsmap = template_bidsmap
 
         self.MainWindow.setObjectName("MainWindow")
         self.MainWindow.resize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
@@ -264,7 +266,7 @@ class Ui_MainWindow(object):
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
 
-        idx = 1
+        idx = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
             files = self.output_bidsmap['DICOM'][modality]
             if not files:
@@ -542,7 +544,7 @@ class EditDialog(QDialog):
         self.source_bidsmap = copy.deepcopy(output_bidsmap)         # TODO: Check if deepcopy is needed
         self.source_index = idx
         self.source_modality = modality
-        self.source_sample = output_bidsmap['DICOM'][modality][idx]
+        self.source_sample = self.source_bidsmap['DICOM'][modality][idx]
 
         self.target_bidsmap = copy.deepcopy(output_bidsmap)
         self.target_modality = modality
@@ -914,7 +916,9 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
                     sourcefolder = os.path.dirname(os.path.dirname(series['provenance']))
                     LOGGER.info(f'Source: {sourcefolder}')
                     break
-            if sourcefolder: break
+
+            if sourcefolder:
+                break
 
     # Start the Qt-application
     app = QApplication(sys.argv)
