@@ -610,11 +610,6 @@ class EditDialog(QDialog):
 
     def update_sample(self):
         """Save the changes. """
-        # from ruamel.yaml import YAML
-        # import sys
-        # yaml = YAML()
-        # yaml.dump(self.target_sample, sys.stdout)
-
         self.target_bidsmap = update_bidsmap(self.source_bidsmap,
                                              self.source_modality,
                                              self.source_index,
