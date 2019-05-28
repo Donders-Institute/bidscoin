@@ -158,65 +158,25 @@ def get_bids_attributes(modality, source_bids_attributes):
     return bids_attributes
 
 
-def get_num_samples(bidsmap, modality):
-    """Obtain the number of samples for a give modality. """
-    if not modality in bids.bidsmodalities + (bids.unknownmodality,):
-        raise ValueError("invalid modality '{}'".format(modality))
-
-    bidsmap_dicom = bidsmap.get('DICOM', {})
-    bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
-    if bidsmap_dicom_modality is not None:
-        num_samples = len(bidsmap_dicom_modality)
-    else:
-        num_samples = 0
-
-    return num_samples
-
-
-def get_list_summary(bidsmap) -> dict:
-    """
-    Get the list of files from the BIDS map.
-
-    :param bidsmap:     Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
-    :return:            A summary of the DICOM series
-    """
-
-    list_summary = []
-
-    for modality in bids.bidsmodalities + (bids.unknownmodality,):
-
-        for series in bidsmap['DICOM'][modality]:
-
-            provenance_file = os.path.basename(bidsmap['DICOM'][modality]['provenance'])
-            provenance_path = os.path.dirname( bidsmap['DICOM'][modality]['provenance'])
-
-            bids_name = bids.get_bidsname('001', '01', modality, series)
-
-            list_summary.append({
-                "modality": modality,
-                "provenance_file": provenance_file,
-                "provenance_path": provenance_path,
-                "bids_name": bids_name
-            })
-
-    return list_summary
-
-
 def delete_sample(bidsmap, modality, index):
     """Delete a sample from the BIDS map. """
     if not modality in bids.bidsmodalities + (bids.unknownmodality,):
         raise ValueError("invalid modality '{}'".format(modality))
 
-    num_samples = get_num_samples(bidsmap, modality)
+    bidsmap_dicom = bidsmap.get('DICOM', {})
+    bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
+
+    if bidsmap_dicom_modality is not None:
+        num_samples = len(bidsmap_dicom_modality)
+    else:
+        num_samples = 0
     if index > num_samples:
         raise IndexError("invalid index {} ({} items found)".format(index, num_samples+1))
 
-    bidsmap_dicom = bidsmap.get('DICOM', {})
-    bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
     if bidsmap_dicom_modality is not None:
         del bidsmap['DICOM'][modality][index]
     else:
-        logger.warning('modality not found {}'.format(modality))
+        LOGGER.warning('modality not found {}'.format(modality))
 
     return bidsmap
 
@@ -303,6 +263,7 @@ class Ui_MainWindow(object):
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
 
+        idx = 1
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
             files = self.output_bidsmap['DICOM'][modality]
             if not files:
@@ -312,30 +273,32 @@ class Ui_MainWindow(object):
                 provenance_file = os.path.basename(provenance)
                 bids_name = bids.get_bidsname('001', '01', modality, series)
 
-                item_id = QTableWidgetItem(str(i + 1))
+                item_id = QTableWidgetItem(str(idx + 1))
                 item_provenance_file = QTableWidgetItem(provenance_file)
                 item_modality = QTableWidgetItem(modality)
                 item_bids_name = QTableWidgetItem(bids_name)
 
-                self.table.setItem(i, 0, item_id)
-                self.table.setItem(i, 1, item_provenance_file)
-                self.table.setItem(i, 2, item_modality)
-                self.table.setItem(i, 3, item_bids_name)
+                self.table.setItem(idx, 0, item_id)
+                self.table.setItem(idx, 1, item_provenance_file)
+                self.table.setItem(idx, 2, item_modality)
+                self.table.setItem(idx, 3, item_bids_name)
 
                 self.button_select = QPushButton('Edit')
                 if modality == bids.unknownmodality:
                     self.button_select.setStyleSheet('QPushButton {color: red;}')
-                    self.table.item(i, 1).setForeground(QtGui.QColor(255, 0, 0))
+                    self.table.item(idx, 1).setForeground(QtGui.QColor(255, 0, 0))
                 else:
                     self.button_select.setStyleSheet('QPushButton {color: green;}')
-                    self.table.item(i, 1).setForeground(QtGui.QColor(0, 128, 0))
+                    self.table.item(idx, 1).setForeground(QtGui.QColor(0, 128, 0))
                 self.button_select.clicked.connect(self.handle_button_clicked)
-                self.table.setCellWidget(i, 4, self.button_select)
+                self.table.setCellWidget(idx, 4, self.button_select)
+
+                idx += 1
 
         self.save_button = QtWidgets.QPushButton()
         self.save_button.setText("Save")
         self.save_button.setStyleSheet('QPushButton {color: blue;}')
-        self.table.setCellWidget(len(the_sample), 4, self.save_button)
+        self.table.setCellWidget(idx, 4, self.save_button)
 
         self.table.setHorizontalHeaderLabels(['', 'DICOM file sample', 'Modality', 'BIDS name', 'Action'])
         header = self.table.horizontalHeader()
@@ -390,38 +353,41 @@ class Ui_MainWindow(object):
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
 
+        idx = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
             files = self.bidsmap['DICOM'][modality]
             if not files:
                 continue
-            for i, series in enumerate(files):
+            for series in files:
                 provenance = series['provenance']
                 provenance_file = os.path.basename(provenance)
                 bids_name = bids.get_bidsname('001', '01', modality, series)
 
-                item_id = QTableWidgetItem(str(i + 1))
+                item_id = QTableWidgetItem(str(idx + 1))
                 item_provenance_file = QTableWidgetItem(provenance_file)
                 item_modality = QTableWidgetItem(modality)
                 item_bids_name = QTableWidgetItem(bids_name)
 
-                self.table.setItem(i, 0, item_id)
-                self.table.setItem(i, 1, item_provenance_file)
-                self.table.setItem(i, 2, item_modality)
-                self.table.setItem(i, 3, item_bids_name)
+                self.table.setItem(idx, 0, item_id)
+                self.table.setItem(idx, 1, item_provenance_file)
+                self.table.setItem(idx, 2, item_modality)
+                self.table.setItem(idx, 3, item_bids_name)
 
                 self.button_select = QPushButton('Edit')
                 if modality == bids.unknownmodality:
                     self.button_select.setStyleSheet('QPushButton {color: red;}')
-                    self.table.item(i, 1).setForeground(QtGui.QColor(255, 0, 0))
+                    self.table.item(idx, 1).setForeground(QtGui.QColor(255, 0, 0))
                 else:
                     self.button_select.setStyleSheet('QPushButton {color: green;}')
                 self.button_select.clicked.connect(self.handle_button_clicked)
-                self.table.setCellWidget(i, 4, self.button_select)
+                self.table.setCellWidget(idx, 4, self.button_select)
+
+                idx += 1
 
         self.save_button = QtWidgets.QPushButton()
         self.save_button.setText("Save")
         self.save_button.setStyleSheet('QPushButton {color: blue;}')
-        self.table.setCellWidget(len(self.output_bidsmap), 4, self.save_button)
+        self.table.setCellWidget(idx, 4, self.save_button)
 
         self.table.setHorizontalHeaderLabels(['', 'DICOM file sample', 'Modality', 'BIDS name', 'Action'])
         header = self.table.horizontalHeader()
@@ -944,7 +910,8 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
 
         # Loop through all bidsmodalities and series until we find provenance info
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
-            if input_bidsmap['DICOM'][modality] is None: continue
+            if input_bidsmap['DICOM'][modality] is None:
+                continue
 
             for series in input_bidsmap['DICOM'][modality]:
                 if series['provenance']:
