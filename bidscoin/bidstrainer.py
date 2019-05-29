@@ -71,10 +71,7 @@ def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict) -> dict:
                 series_['attributes'][attrkey] = bids.get_dicomfield(attrkey, dicomfile)
 
             # Copy the filled-in series over to the bidsmap
-            if bidsmap['DICOM'][bidsmodality] is None:
-                bidsmap['DICOM'][bidsmodality] = [series_]
-            elif not bids.exist_series(series_, bidsmap['DICOM'][bidsmodality]):
-                bidsmap['DICOM'][bidsmodality].append(series_)
+            bidsmap = bids.append_dicomseries(bidsmap, bidsmodality, series_)
 
             return bidsmap
 
