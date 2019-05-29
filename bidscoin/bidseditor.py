@@ -162,8 +162,8 @@ def get_bids_attributes(modality, source_bids_attributes):
     return bids_attributes
 
 
-def delete_sample(bidsmap, modality, index):
-    """Delete a sample from the BIDS map. """
+def delete_series(bidsmap, modality, index):
+    """Delete a series from the BIDS map. """
     if not modality in bids.bidsmodalities + (bids.unknownmodality,):
         raise ValueError("invalid modality '{}'".format(modality))
 
@@ -171,11 +171,11 @@ def delete_sample(bidsmap, modality, index):
     bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
 
     if bidsmap_dicom_modality is not None:
-        num_samples = len(bidsmap_dicom_modality)
+        num_series = len(bidsmap_dicom_modality)
     else:
-        num_samples = 0
-    if index > num_samples:
-        raise IndexError("invalid index {} ({} items found)".format(index, num_samples+1))
+        num_series = 0
+    if index > num_series:
+        raise IndexError("invalid index {} ({} items found)".format(index, num_series+1))
 
     if bidsmap_dicom_modality is not None:
         del bidsmap['DICOM'][modality][index]
@@ -185,25 +185,25 @@ def delete_sample(bidsmap, modality, index):
     return bidsmap
 
 
-def append_sample(bidsmap, modality, sample):
-    """Append a sample to the BIDS map. """
+def append_series(bidsmap, modality, series):
+    """Append a series to the BIDS map. """
     if not modality in bids.bidsmodalities + (bids.unknownmodality,):
         raise ValueError("invalid modality '{}'".format(modality))
 
     bidsmap_dicom = bidsmap.get('DICOM', {})
     bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
     if bidsmap_dicom_modality is not None:
-        bidsmap['DICOM'][modality].append(sample)
+        bidsmap['DICOM'][modality].append(series)
     else:
-        bidsmap['DICOM'][modality] = [sample]
+        bidsmap['DICOM'][modality] = [series]
 
     return bidsmap
 
 
-def update_bidsmap(source_bidsmap, source_modality, source_index, target_modality, target_sample):
+def update_bidsmap(source_bidsmap, source_modality, source_index, target_modality, target_series):
     """Update the BIDS map:
-    1. Remove the source sample from the source modality section
-    2. Add the target sample to the target modality section
+    1. Remove the source series from the source modality section
+    2. Add the target series to the target modality section
     """
     if not source_modality in bids.bidsmodalities + (bids.unknownmodality,):
         raise ValueError("invalid modality '{}'".format(source_modality))
@@ -213,11 +213,11 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
 
     target_bidsmap = copy.deepcopy(source_bidsmap)
 
-    # Delete the source sample
-    target_bidsmap = delete_sample(target_bidsmap, source_modality, source_index)
+    # Delete the source series
+    target_bidsmap = delete_series(target_bidsmap, source_modality, source_index)
 
-    # Append the target sample
-    target_bidsmap = append_sample(target_bidsmap, target_modality, target_sample)
+    # Append the target series
+    target_bidsmap = append_series(target_bidsmap, target_modality, target_series)
 
     return target_bidsmap
 
@@ -259,22 +259,22 @@ class Ui_MainWindow(object):
 
         self.set_menu_and_status_bar()
 
-    def update_list(self, the_sample):
+    def update_list(self, the_series):
         """ """
-        self.output_bidsmap = the_sample
+        self.output_bidsmap = the_series
 
         self.table.setColumnCount(5)
-        self.table.setRowCount(len(the_sample) + 1)
+        self.table.setRowCount(len(the_series) + 1)
 
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
 
         idx = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
-            files = self.output_bidsmap['DICOM'][modality]
-            if not files:
+            series_list = self.output_bidsmap['DICOM'][modality]
+            if not series_list:
                 continue
-            for series in files:
+            for series in series_list:
                 provenance = series['provenance']
                 provenance_file = os.path.basename(provenance)
                 bids_name = bids.get_bidsname('001', '01', modality, series)
@@ -321,12 +321,12 @@ class Ui_MainWindow(object):
 
         self.save_button.clicked.connect(self.save_bidsmap_to_file)
 
-    def set_tab_file_browser(self, rawfolder):
+    def set_tab_file_browser(self, sourcefolder):
         """Set the raw data folder inspector tab. """
         self.tab1 = QtWidgets.QWidget()
         self.tab1.layout = QVBoxLayout(self.centralwidget)
         self.label = QLabel()
-        self.label.setText("Inspect raw data folder: {}".format(rawfolder))
+        self.label.setText("Inspect raw data folder: {}".format(sourcefolder))
         self.model = QFileSystemModel()
         self.model.setRootPath('')
         self.model.setFilter(QtCore.QDir.NoDotAndDotDot | QtCore.QDir.AllDirs | QtCore.QDir.Files)
@@ -335,7 +335,7 @@ class Ui_MainWindow(object):
         self.tree.setAnimated(False)
         self.tree.setIndentation(20)
         self.tree.setSortingEnabled(True)
-        self.tree.setRootIndex(self.model.index(rawfolder))
+        self.tree.setRootIndex(self.model.index(sourcefolder))
         self.tree.clicked.connect(self.on_clicked)
         self.tab1.layout.addWidget(self.label)
         self.tab1.layout.addWidget(self.tree)
@@ -350,10 +350,10 @@ class Ui_MainWindow(object):
         """Set the DICOM file sample listing tab.  """
         num_files = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
-            files = self.bidsmap['DICOM'][modality]
-            if not files:
+            series_list = self.bidsmap['DICOM'][modality]
+            if not series_list:
                 continue
-            for _ in files:
+            for _ in series_list:
                 num_files += 1
 
         self.tab2 = QtWidgets.QWidget()
@@ -368,10 +368,10 @@ class Ui_MainWindow(object):
 
         idx = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
-            files = self.output_bidsmap['DICOM'][modality]
-            if not files:
+            series_list = self.output_bidsmap['DICOM'][modality]
+            if not series_list:
                 continue
-            for series in files:
+            for series in series_list:
                 provenance = series['provenance']
                 provenance_file = os.path.basename(provenance)
                 bids_name = bids.get_bidsname('001', '01', modality, series)
@@ -554,11 +554,11 @@ class EditDialog(QDialog):
         self.source_bidsmap = copy.deepcopy(output_bidsmap)         # TODO: Check if deepcopy is needed
         self.source_index = idx
         self.source_modality = modality
-        self.source_sample = self.source_bidsmap['DICOM'][modality][idx]
+        self.source_series = self.source_bidsmap['DICOM'][modality][idx]
 
         self.target_bidsmap = copy.deepcopy(output_bidsmap)
         self.target_modality = modality
-        self.target_sample = copy.deepcopy(self.source_sample)
+        self.target_series = copy.deepcopy(self.source_series)
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -612,19 +612,19 @@ class EditDialog(QDialog):
         top_layout.addLayout(hbox)
 
         self.view_bids.cellChanged.connect(self.cell_was_clicked)
-        self.ok_button.clicked.connect(self.update_sample)
+        self.ok_button.clicked.connect(self.update_series)
 
         top_widget.setLayout(top_layout)
         scrollArea.setWidget(top_widget)
         self.resize(EDIT_WINDOW_WIDTH, EDIT_WINDOW_HEIGHT)
 
-    def update_sample(self):
+    def update_series(self):
         """Save the changes. """
         self.target_bidsmap = update_bidsmap(self.source_bidsmap,
                                              self.source_modality,
                                              self.source_index,
                                              self.target_modality,
-                                             self.target_sample)
+                                             self.target_series)
 
         self.got_sample.emit(self.target_bidsmap)
         self.close()
@@ -637,9 +637,9 @@ class EditDialog(QDialog):
             key = item_key.text()
             value = item_value.text()
 
-            self.target_sample['bids'][key] = value
+            self.target_series['bids'][key] = value
 
-            series = self.target_sample
+            series = self.target_series
             run = series['bids'].get('run_index', '*')
             self.bids_name = bids.get_bidsname('001', '01', self.target_modality, series, run)
 
@@ -704,7 +704,7 @@ class EditDialog(QDialog):
 
     def set_provenance_section(self):
         """Set provenance section. """
-        provenance = self.source_sample['provenance']
+        provenance = self.source_series['provenance']
         provenance_file = os.path.basename(provenance)
         provenance_path = os.path.dirname(provenance)
 
@@ -738,7 +738,7 @@ class EditDialog(QDialog):
 
     def set_dicom_attributes_section(self):
         """Set DICOM attributes section. """
-        dicom_attributes = self.source_sample['attributes']
+        dicom_attributes = self.source_series['attributes']
 
         data = []
         for key in dicom_attributes:
@@ -771,7 +771,7 @@ class EditDialog(QDialog):
 
     def get_bids_values_data(self):
         """# Given the input BIDS attributes, derive the target BIDS attributes. """
-        source_bids_attributes = self.target_sample.get('bids', {})
+        source_bids_attributes = self.target_series.get('bids', {})
         target_bids_attributes = get_bids_attributes(self.target_modality, source_bids_attributes)
         if target_bids_attributes is not None:
             bids_values = target_bids_attributes
@@ -820,7 +820,7 @@ class EditDialog(QDialog):
 
     def set_bids_name_section(self):
         """Set non-editable BIDS name section. """
-        self.bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_sample)
+        self.bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series)
 
         self.label_bids_name = QLabel()
         self.label_bids_name.setText("BIDS name")
@@ -871,7 +871,7 @@ class EditDialog(QDialog):
         bids_values['modality_label'] = self.target_modality_label
 
         # Update the BIDS name
-        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_sample)
+        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series)
 
         self.view_bids_name.clear()
         self.view_bids_name.textCursor().insertText(bids_name)
@@ -884,7 +884,7 @@ class EditDialog(QDialog):
         bids_values['modality_label'] = self.target_modality_label
 
         # Update the BIDS name
-        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_sample)
+        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series)
 
         self.view_bids_name.clear()
         self.view_bids_name.textCursor().insertText(bids_name)
@@ -913,8 +913,6 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
 
         # Loop through all bidsmodalities and series until we find provenance info
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
-            if input_bidsmap['DICOM'][modality] is None:
-                continue
 
             for series in input_bidsmap['DICOM'][modality]:
                 if series['provenance']:
