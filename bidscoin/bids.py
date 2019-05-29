@@ -520,6 +520,44 @@ def exist_series(series: dict, serieslist: list, matchbidslabels: bool=True) -> 
     return False
 
 
+def delete_series(bidsmap, modality, index):
+    """Delete a series from the BIDS map. """
+    if not modality in bidsmodalities + (unknownmodality,):
+        raise ValueError("invalid modality '{}'".format(modality))
+
+    bidsmap_dicom = bidsmap.get('DICOM', {})
+    bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
+
+    if bidsmap_dicom_modality is not None:
+        num_series = len(bidsmap_dicom_modality)
+    else:
+        num_series = 0
+    if index > num_series:
+        raise IndexError("invalid index {} ({} items found)".format(index, num_series+1))
+
+    if bidsmap_dicom_modality is not None:
+        del bidsmap['DICOM'][modality][index]
+    else:
+        logger.warning('modality not found {}'.format(modality))
+
+    return bidsmap
+
+
+def append_series(bidsmap, modality, series):
+    """Append a series to the BIDS map. """
+    if not modality in bidsmodalities + (unknownmodality,):
+        raise ValueError("invalid modality '{}'".format(modality))
+
+    bidsmap_dicom = bidsmap.get('DICOM', {})
+    bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
+    if bidsmap_dicom_modality is not None:
+        bidsmap['DICOM'][modality].append(series)
+    else:
+        bidsmap['DICOM'][modality] = [series]
+
+    return bidsmap
+
+
 def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> dict:
     """
     Find the matching series in the bidsmap heuristics using the dicom attributes. Then fill-in the missing values (values are cleaned-up to be BIDS-valid)

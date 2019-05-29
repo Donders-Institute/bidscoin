@@ -162,44 +162,6 @@ def get_bids_attributes(modality, source_bids_attributes):
     return bids_attributes
 
 
-def delete_series(bidsmap, modality, index):
-    """Delete a series from the BIDS map. """
-    if not modality in bids.bidsmodalities + (bids.unknownmodality,):
-        raise ValueError("invalid modality '{}'".format(modality))
-
-    bidsmap_dicom = bidsmap.get('DICOM', {})
-    bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
-
-    if bidsmap_dicom_modality is not None:
-        num_series = len(bidsmap_dicom_modality)
-    else:
-        num_series = 0
-    if index > num_series:
-        raise IndexError("invalid index {} ({} items found)".format(index, num_series+1))
-
-    if bidsmap_dicom_modality is not None:
-        del bidsmap['DICOM'][modality][index]
-    else:
-        LOGGER.warning('modality not found {}'.format(modality))
-
-    return bidsmap
-
-
-def append_series(bidsmap, modality, series):
-    """Append a series to the BIDS map. """
-    if not modality in bids.bidsmodalities + (bids.unknownmodality,):
-        raise ValueError("invalid modality '{}'".format(modality))
-
-    bidsmap_dicom = bidsmap.get('DICOM', {})
-    bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
-    if bidsmap_dicom_modality is not None:
-        bidsmap['DICOM'][modality].append(series)
-    else:
-        bidsmap['DICOM'][modality] = [series]
-
-    return bidsmap
-
-
 def update_bidsmap(source_bidsmap, source_modality, source_index, target_modality, target_series):
     """Update the BIDS map:
     1. Remove the source series from the source modality section
@@ -211,13 +173,17 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
     if not target_modality in bids.bidsmodalities + (bids.unknownmodality,):
         raise ValueError("invalid modality '{}'".format(target_modality))
 
-    target_bidsmap = copy.deepcopy(source_bidsmap)
+    target_bidsmap = copy.deepcopy(source_bidsmap)      # TODO: check if deepcopy is needed
+
+    # First check if the target series already exists
+    if bids.exist_series(target_series, target_bidsmap['DICOM'][target_modality]):
+        LOGGER.warning('That entry already exists...')
 
     # Delete the source series
-    target_bidsmap = delete_series(target_bidsmap, source_modality, source_index)
+    target_bidsmap = bids.delete_series(target_bidsmap, source_modality, source_index)
 
     # Append the target series
-    target_bidsmap = append_series(target_bidsmap, target_modality, target_series)
+    target_bidsmap = bids.append_series(target_bidsmap, target_modality, target_series)
 
     return target_bidsmap
 
@@ -326,7 +292,7 @@ class Ui_MainWindow(object):
         self.tab1 = QtWidgets.QWidget()
         self.tab1.layout = QVBoxLayout(self.centralwidget)
         self.label = QLabel()
-        self.label.setText("Inspect raw data folder: {}".format(sourcefolder))
+        self.label.setText("Inspect source data folder: {}".format(sourcefolder))
         self.model = QFileSystemModel()
         self.model.setRootPath('')
         self.model.setFilter(QtCore.QDir.NoDotAndDotDot | QtCore.QDir.AllDirs | QtCore.QDir.Files)
