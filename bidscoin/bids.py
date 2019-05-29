@@ -520,7 +520,7 @@ def exist_series(series: dict, serieslist: list, matchbidslabels: bool=True) -> 
     return False
 
 
-def delete_series(bidsmap, modality, index):
+def delete_dicomseries(bidsmap, modality, index):
     """Delete a series from the BIDS map. """
     if not modality in bidsmodalities + (unknownmodality,):
         raise ValueError(f"invalid modality '{modality}'")
@@ -543,7 +543,7 @@ def delete_series(bidsmap, modality, index):
     return bidsmap
 
 
-def append_series(bidsmap, modality, series):
+def append_dicomseries(bidsmap, modality, series):
     """Append a series to the BIDS map. """
     if not modality in bidsmodalities + (unknownmodality,):
         raise ValueError(f"invalid modality '{modality}'")
