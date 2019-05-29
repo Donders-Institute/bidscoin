@@ -546,14 +546,12 @@ def delete_series(bidsmap, modality, index):
 def append_series(bidsmap, modality, series):
     """Append a series to the BIDS map. """
     if not modality in bidsmodalities + (unknownmodality,):
-        raise ValueError("invalid modality '{}'".format(modality))
+        raise ValueError(f"invalid modality '{modality}'")
 
-    bidsmap_dicom = bidsmap.get('DICOM', {})
-    bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
-    if bidsmap_dicom_modality is not None:
-        bidsmap['DICOM'][modality].append(series)
-    else:
+    if bidsmap['DICOM'][modality] is None:
         bidsmap['DICOM'][modality] = [series]
+    else:
+        bidsmap['DICOM'][modality].append(series)
 
     return bidsmap
 
