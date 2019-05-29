@@ -913,6 +913,8 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
 
         # Loop through all bidsmodalities and series until we find provenance info
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
+            if input_bidsmap['DICOM'][modality] is None:
+                continue
 
             for series in input_bidsmap['DICOM'][modality]:
                 if series['provenance']:
