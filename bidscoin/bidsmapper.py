@@ -40,7 +40,7 @@ def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict) -> dict:
     modality = result['modality']
 
     # Copy the filled-in attributes series over to the output bidsmap
-    bidsmap = bids.append_series(bidsmap, modality, series)
+    bidsmap = bids.append_dicomseries(bidsmap, modality, series)
 
     return bidsmap
 
