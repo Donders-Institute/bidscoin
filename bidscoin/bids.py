@@ -523,7 +523,7 @@ def exist_series(series: dict, serieslist: list, matchbidslabels: bool=True) -> 
 def delete_series(bidsmap, modality, index):
     """Delete a series from the BIDS map. """
     if not modality in bidsmodalities + (unknownmodality,):
-        raise ValueError("invalid modality '{}'".format(modality))
+        raise ValueError(f"invalid modality '{modality}'")
 
     bidsmap_dicom = bidsmap.get('DICOM', {})
     bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
@@ -533,12 +533,12 @@ def delete_series(bidsmap, modality, index):
     else:
         num_series = 0
     if index > num_series:
-        raise IndexError("invalid index {} ({} items found)".format(index, num_series+1))
+        raise IndexError(f"invalid index {index} ({num_series+1} items found)")
 
     if bidsmap_dicom_modality is not None:
         del bidsmap['DICOM'][modality][index]
     else:
-        logger.warning('modality not found {}'.format(modality))
+        logger.warning(f'modality not found {modality}')
 
     return bidsmap
 
