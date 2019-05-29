@@ -168,10 +168,10 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
     2. Add the target series to the target modality section
     """
     if not source_modality in bids.bidsmodalities + (bids.unknownmodality,):
-        raise ValueError("invalid modality '{}'".format(source_modality))
+        raise ValueError(f"invalid modality '{source_modality}'")
 
     if not target_modality in bids.bidsmodalities + (bids.unknownmodality,):
-        raise ValueError("invalid modality '{}'".format(target_modality))
+        raise ValueError(f"invalid modality '{target_modality}'")
 
     target_bidsmap = copy.deepcopy(source_bidsmap)      # TODO: check if deepcopy is needed
 
