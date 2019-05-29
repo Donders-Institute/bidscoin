@@ -478,7 +478,7 @@ def cleanup_label(label: str) -> str:
     return re.sub(r'(?u)[^-\w.]', '', label)
 
 
-def exist_series(series: dict, serieslist: list, matchbidslabels: bool=True) -> bool:
+def exist_series(series: dict, serieslist: list, matchbidslabels: bool=False) -> bool:
     """
     Checks if there is already an entry in serieslist with the same attributes and, optionally, labels as series
 
@@ -503,7 +503,7 @@ def exist_series(series: dict, serieslist: list, matchbidslabels: bool=True) -> 
             if not match:           # There is no point in searching further within the series now that we've found a mismatch
                 break
 
-        if matchbidslabels:
+        if matchbidslabels:         # This is probably not very useful, but maybe one day...
             try:
                 for key in series['bids']:
                     seriesvalue = series['bids'][key]
