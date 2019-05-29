@@ -559,7 +559,7 @@ def append_series(bidsmap, source, modality, series):
     return bidsmap
 
 
-def get_matching_dicomseries(dicomfile: str, bidsmap: dict, source='DICOM') -> dict:
+def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> dict:
     """
     Find the matching series in the bidsmap heuristics using the dicom attributes. Then fill-in the missing values (values are cleaned-up to be BIDS-valid)
 
@@ -569,6 +569,7 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict, source='DICOM') -> d
     """
 
     # TODO: generalize for non-DICOM (dicomfile -> file)?
+    source = 'DICOM'
 
     # Loop through all bidsmodalities and series; all info goes into series_
     for modality in bidsmodalities + (unknownmodality,):
