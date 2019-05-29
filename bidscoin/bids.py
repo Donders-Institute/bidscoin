@@ -806,9 +806,6 @@ def increment_runindex(bidsfolder: str, bidsname: str, ext: str='.*') -> str:
         else:
             suffix = ''
 
-        bidsname = '{basename}_run-{runindex}{suffix}'.format(
-            basename = basename,
-            runindex = int(runindex) + 1,
-            suffix = suffix)
+        bidsname = f'{basename}_run-{int(runindex) + 1}{suffix}'
 
     return bidsname
