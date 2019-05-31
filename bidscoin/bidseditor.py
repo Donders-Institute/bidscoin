@@ -23,6 +23,7 @@ try:
 except ImportError:
     import bids          # This should work if bidscoin was not pip-installed
 
+SOURCE = 'DICOM'
 
 LOGGER = logging.getLogger('bidscoin')
 
@@ -176,14 +177,14 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
     target_bidsmap = copy.deepcopy(source_bidsmap)      # TODO: check if deepcopy is needed
 
     # First check if the target series already exists.    TODO: figure out what to do with this situation
-    if bids.exist_series(target_bidsmap, 'DICOM', target_modality, target_series):
+    if bids.exist_series(target_bidsmap, SOURCE, target_modality, target_series):
         LOGGER.warning('That entry already exists...')
 
     # Delete the source series
-    target_bidsmap = bids.delete_series(target_bidsmap, 'DICOM', source_modality, source_index)
+    target_bidsmap = bids.delete_series(target_bidsmap, SOURCE, source_modality, source_index)
 
     # Append the target series
-    target_bidsmap = bids.append_series(target_bidsmap, 'DICOM', target_modality, target_series)
+    target_bidsmap = bids.append_series(target_bidsmap, SOURCE, target_modality, target_series)
 
     return target_bidsmap
 
@@ -220,7 +221,7 @@ class Ui_MainWindow(object):
         self.set_tab_file_browser(sourcefolder)
         self.set_tab_file_sample_listing()
         self.tabwidget.setTabText(0, "File browser")
-        self.tabwidget.setTabText(1, "DICOM samples")
+        self.tabwidget.setTabText(1, f"{SOURCE} samples")
         self.tabwidget.setCurrentIndex(1)
 
         self.set_menu_and_status_bar()
@@ -237,7 +238,7 @@ class Ui_MainWindow(object):
 
         idx = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
-            series_list = self.output_bidsmap['DICOM'][modality]
+            series_list = self.output_bidsmap[SOURCE][modality]
             if not series_list:
                 continue
             for series in series_list:
@@ -272,7 +273,7 @@ class Ui_MainWindow(object):
         self.save_button.setStyleSheet('QPushButton {color: blue;}')
         self.table.setCellWidget(idx, 4, self.save_button)
 
-        self.table.setHorizontalHeaderLabels(['', 'DICOM file sample', 'Modality', 'BIDS name', 'Action'])
+        self.table.setHorizontalHeaderLabels(['', f'{SOURCE} file sample', 'Modality', 'BIDS name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
@@ -313,10 +314,10 @@ class Ui_MainWindow(object):
         self.tabwidget.addTab(self.file_browser, "")
 
     def set_tab_file_sample_listing(self):
-        """Set the DICOM file sample listing tab.  """
+        """Set the SOURCE file sample listing tab.  """
         num_files = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
-            series_list = self.bidsmap['DICOM'][modality]
+            series_list = self.bidsmap[SOURCE][modality]
             if not series_list:
                 continue
             for _ in series_list:
@@ -334,7 +335,7 @@ class Ui_MainWindow(object):
 
         idx = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
-            series_list = self.output_bidsmap['DICOM'][modality]
+            series_list = self.output_bidsmap[SOURCE][modality]
             if not series_list:
                 continue
             for series in series_list:
@@ -368,7 +369,7 @@ class Ui_MainWindow(object):
         self.save_button.setStyleSheet('QPushButton {color: blue;}')
         self.table.setCellWidget(idx, 4, self.save_button)
 
-        self.table.setHorizontalHeaderLabels(['', 'DICOM file sample', 'Modality', 'BIDS name', 'Action'])
+        self.table.setHorizontalHeaderLabels(['', f'{SOURCE} file sample', 'Modality', 'BIDS name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
@@ -520,7 +521,7 @@ class EditDialog(QDialog):
         self.source_bidsmap = copy.deepcopy(output_bidsmap)         # TODO: Check if deepcopy is needed
         self.source_index = idx
         self.source_modality = modality
-        self.source_series = self.source_bidsmap['DICOM'][modality][idx]
+        self.source_series = self.source_bidsmap[SOURCE][modality][idx]
 
         self.target_bidsmap = copy.deepcopy(output_bidsmap)
         self.target_modality = modality
@@ -553,7 +554,7 @@ class EditDialog(QDialog):
         hbox.addStretch(1)
         hbox.addWidget(self.ok_button)
 
-        groupbox1 = QGroupBox("DICOM")
+        groupbox1 = QGroupBox(SOURCE)
         layout1 = QVBoxLayout()
         layout1.addWidget(self.label_provenance)
         layout1.addWidget(self.view_provenance)
@@ -703,7 +704,7 @@ class EditDialog(QDialog):
         self.view_provenance = self.get_table(data, num_rows=MAX_NUM_PROVENANCE_ATTRIBUTES)
 
     def set_dicom_attributes_section(self):
-        """Set DICOM attributes section. """
+        """Set SOURCE attributes section. """
         dicom_attributes = self.source_series['attributes']
 
         data = []
@@ -720,7 +721,7 @@ class EditDialog(QDialog):
             ])
 
         self.label_dicom = QLabel()
-        self.label_dicom.setText("DICOM attributes")
+        self.label_dicom.setText(f"{SOURCE} attributes")
 
         self.view_dicom = self.get_table(data, num_rows=len(data))
 
@@ -879,10 +880,10 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
 
         # Loop through all bidsmodalities and series until we find provenance info
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
-            if input_bidsmap['DICOM'][modality] is None:
+            if input_bidsmap[SOURCE][modality] is None:
                 continue
 
-            for series in input_bidsmap['DICOM'][modality]:
+            for series in input_bidsmap[SOURCE][modality]:
                 if series['provenance']:
                     sourcefolder = os.path.dirname(os.path.dirname(series['provenance']))
                     LOGGER.info(f'Source: {sourcefolder}')
