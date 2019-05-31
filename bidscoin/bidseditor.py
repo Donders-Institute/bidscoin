@@ -176,7 +176,7 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
     target_bidsmap = copy.deepcopy(source_bidsmap)      # TODO: check if deepcopy is needed
 
     # First check if the target series already exists.    TODO: figure out what to do with this situation
-    if bids.exist_series(target_series, target_bidsmap['DICOM'][target_modality]):
+    if bids.exist_series(target_bidsmap, 'DICOM', target_modality, target_series):
         LOGGER.warning('That entry already exists...')
 
     # Delete the source series

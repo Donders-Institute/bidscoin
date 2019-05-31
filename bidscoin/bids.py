@@ -478,20 +478,22 @@ def cleanup_label(label: str) -> str:
     return re.sub(r'(?u)[^-\w.]', '', label)
 
 
-def exist_series(series: dict, serieslist: list, matchbidslabels: bool=False) -> bool:
+def exist_series(bidsmap: dict, source: str, modality: str, series: dict, matchbidslabels: bool=False) -> bool:
     """
     Checks if there is already an entry in serieslist with the same attributes and, optionally, labels as series
 
-    :param series:          The series labels and attributes that are to be searched for
-    :param serieslist:      List of series that is being searched
+    :param bidsmap:         Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param source:          The information source in the bidsmap that is used, e.g. 'DICOM'
+    :param modality:        The modality in the source that is used, e.g. 'anat'
+    :param series:          The series (listitem) that is searched for in the modality
     :param matchbidslabels: If True, also matches the BIDS-labels, otherwise only series['attributes']
     :return:                True if the series exists in serieslist
     """
 
-    if not serieslist:
+    if not bidsmap[source][modality]:
         return False
 
-    for item in serieslist:
+    for item in bidsmap[source][modality]:
 
         match = any([series['attributes'][key] is not None for key in series['attributes']])  # Make match False if all attributes are empty
 
@@ -523,8 +525,17 @@ def exist_series(series: dict, serieslist: list, matchbidslabels: bool=False) ->
     return False
 
 
-def delete_series(bidsmap, source, modality, index):
-    """Delete a series from the BIDS map. """
+def delete_series(bidsmap: dict, source: str, modality: str, index: int) -> dict:
+    """
+    Delete a series from the BIDS map
+
+    :param bidsmap:     Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param source:      The information source in the bidsmap that is used, e.g. 'DICOM'
+    :param modality:    The modality in the source that is used, e.g. 'anat'
+    :param index:       The index number of the series (listitem) that is deleted from the modality
+    :return:            The new bidsmap
+    """
+
     if not modality in bidsmodalities + (unknownmodality,):
         raise ValueError(f"invalid modality '{modality}'")
 
@@ -546,8 +557,17 @@ def delete_series(bidsmap, source, modality, index):
     return bidsmap
 
 
-def append_series(bidsmap, source, modality, series):
-    """Append a series to the BIDS map. """
+def append_series(bidsmap: dict, source: str, modality: str, series: dict) -> dict:
+    """
+    Append a series to the BIDS map
+
+    :param bidsmap:     Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param source:      The information source in the bidsmap that is used, e.g. 'DICOM'
+    :param modality:    The modality in the source that is used, e.g. 'anat'
+    :param series:      The series (listitem) that is appenden to the modality
+    :return:            The new bidsmap
+    """
+
     if not modality in bidsmodalities + (unknownmodality,):
         raise ValueError(f"invalid modality '{modality}'")
 
