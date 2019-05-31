@@ -21,9 +21,9 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileD
 try:
     from bidscoin import bids
 except ImportError:
-    import bids          # This should work if bidscoin was not pip-installed
+    import bids             # This should work if bidscoin was not pip-installed
 
-SOURCE = 'DICOM'
+SOURCE = 'DICOM'            # TODO: allow for non-DICOM (e.g. PAR/REC) edits
 
 LOGGER = logging.getLogger('bidscoin')
 
