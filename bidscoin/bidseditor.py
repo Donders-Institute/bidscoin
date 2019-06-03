@@ -139,7 +139,7 @@ def get_bids_attributes(modality, source_bids_attributes):
         bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
         bids_attributes['suffix'] = source_bids_attributes.get('suffix', 'pet')
 
-    elif modality == 'extra_data':
+    elif modality == bids.unknownmodality:
         # acq_label: <SeriesDescription>
         # rec_label: ~
         # ce_label: ~
@@ -194,6 +194,8 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
 class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, bidsmap, output_bidsmap, template_bidsmap):
+
+        self.has_edit_dialog_open = False
 
         self.MainWindow = MainWindow
 
@@ -289,6 +291,7 @@ class Ui_MainWindow(object):
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         self.save_button.clicked.connect(self.save_bidsmap_to_file)
+        self.has_edit_dialog_open = False
 
     def set_tab_file_browser(self, sourcefolder):
         """Set the raw data folder inspector tab. """
@@ -462,10 +465,12 @@ class Ui_MainWindow(object):
         self.dialog_about.show()
 
     def show_edit(self, idx, modality):
-        """ """
-        self.dialog_edit = EditDialog(idx, modality, self.output_bidsmap)
-        self.dialog_edit.show()
-        self.dialog_edit.got_sample.connect(self.update_list)
+        """Allow only one edit window to be open."""
+        if not self.has_edit_dialog_open:
+            self.dialog_edit = EditDialog(idx, modality, self.output_bidsmap)
+            self.dialog_edit.show()
+            self.has_edit_dialog_open = True
+            self.dialog_edit.got_sample.connect(self.update_list)
 
     def exit_application(self):
         """ """
