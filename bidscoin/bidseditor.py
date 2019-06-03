@@ -70,15 +70,44 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
     return target_bidsmap
 
 
-def get_anat_bids_modality_labels(template_bidsmap):
-    """Derive the possible BIDS modality labels for the anat modality from the template. """
-    modality_labels = []
-    series_list = template_bidsmap[SOURCE]['anat']
-    for series in series_list:
-        modality_label = series['bids'].get('modality_label', None)
-        if modality_label and modality_label not in modality_labels:
-            modality_labels.append(modality_label)
-    return modality_labels
+def get_allowed_suffices(template_bidsmap):
+    """Derive the possible suffices for each modality from the template. """
+
+    # Scan the template
+    allowed_suffices = {}
+    for modality in bids.bidsmodalities + (bids.unknownmodality,):
+        allowed_suffices[modality] = []
+        series_list = template_bidsmap[SOURCE][modality]
+        if not series_list:
+            continue
+        for series in series_list:
+            if modality == 'anat':
+                # TODO: No special case for anat
+                suffix = series['bids'].get('modality_label', None)
+            else:
+                suffix = series['bids'].get('suffix', None)
+            if suffix and suffix not in allowed_suffices[modality]:
+                allowed_suffices[modality].append(suffix)
+
+    # Scan the heuristics/samples folder
+    folder = os.path.join(os.path.dirname(__file__), '..', 'heuristics', 'samples')
+    for x in os.walk(folder):
+        # Check the last two directories
+        path = x[0]
+        head, dirname2 = os.path.split(path)
+        dirname1 = os.path.split(head)[1]
+        if dirname1 in bids.bidsmodalities + (bids.unknownmodality,):
+            modality = dirname1
+            suffix = dirname2
+            if suffix not in allowed_suffices[modality]:
+                LOGGER.warning(f'Suffix {suffix} found in samples but not in template for modality {modality}')
+                allowed_suffices[modality].append(suffix)
+
+    # Sort the allowed suffices alphabetically
+    for modality in bids.bidsmodalities + (bids.unknownmodality,):
+        allowed_suffices[modality] = sorted(allowed_suffices[modality])
+
+    return allowed_suffices
 
 
 class Ui_MainWindow(object):
@@ -425,7 +454,8 @@ class EditDialog(QDialog):
         self.target_series = copy.deepcopy(self.source_series)
 
         self.template_bidsmap = template_bidsmap
-        self.ANAT_BIDS_MODALITY_LABELS = get_anat_bids_modality_labels(template_bidsmap)
+        self.allowed_suffices = get_allowed_suffices(template_bidsmap)
+        self.ANAT_BIDS_MODALITY_LABELS = self.allowed_suffices['anat']
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)

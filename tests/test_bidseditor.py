@@ -7,7 +7,7 @@ import copy
 import difflib
 
 from bidscoin.bids import load_bidsmap, save_bidsmap
-from bidscoin.bidseditor import get_anat_bids_modality_labels, update_bidsmap
+from bidscoin.bidseditor import get_allowed_suffices, update_bidsmap
 
 
 LOGGER = logging.getLogger()
@@ -17,33 +17,60 @@ LOGGER.addHandler(logging.StreamHandler(sys.stdout))
 
 class TestBidseditor(unittest.TestCase):
 
-    def test_get_bidsmap_modalities(self):
+    def test_get_allowed_suffices(self):
         pathname = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics")
         filename = os.path.join(pathname, "bidsmap_template.yaml")
         template_bidsmap = load_bidsmap(filename, pathname)
+        allowed_suffices = get_allowed_suffices(template_bidsmap)
 
-        reference_labels = [
-            'T1w',
-            'T2w',
-            'T1rho',
-            'T1map',
-            'T2map',
-            'T2star',
-            'FLAIR',
-            'FLASH',
-            'PD',
-            'PDmap',
-            'PDT2',
-            'inplaneT1',
-            'inplaneT2',
-            'angio',
-            'defacemask',
-            'SWImagandphase'
-        ]
+        reference_allowed_suffices = {
+            "anat": [
+                "FLAIR",
+                "FLASH",
+                "PD",
+                "PDT2",
+                "PDmap",
+                "SWImagandphase",
+                "T1map",
+                "T1rho",
+                "T1w",
+                "T2map",
+                "T2star",
+                "T2w",
+                "angio",
+                "defacemask",
+                "inplaneT1",
+                "inplaneT2"
+            ],
+            "func": [
+                "bold",
+                "events",
+                "physio",
+                "sbref",
+                "stim"
+            ],
+            "dwi": [
+                "dwi",
+                "sbref"
+            ],
+            "fmap": [
+                "epi",
+                "fieldmap",
+                "magnitude",
+                "magnitude1",
+                "magnitude2",
+                "phase1",
+                "phase2",
+                "phasediff"
+            ],
+            "beh": [],
+            "pet": [
+                "pet"
+            ],
+            "extra_data": []
+        }
 
-        bids_modality_labels = get_anat_bids_modality_labels(template_bidsmap)
-
-        self.assertEqual(bids_modality_labels, reference_labels)
+        self.assertEqual(allowed_suffices, reference_allowed_suffices)
 
     def test_update_bidsmap(self):
         pathname = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata")
