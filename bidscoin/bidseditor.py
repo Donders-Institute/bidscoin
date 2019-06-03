@@ -544,6 +544,14 @@ class EditDialog(QDialog):
         scrollArea.setWidget(top_widget)
         self.resize(EDIT_WINDOW_WIDTH, EDIT_WINDOW_HEIGHT)
 
+        finish = QtWidgets.QAction(self)
+        finish.triggered.connect(self.closeEvent)
+
+    def closeEvent(self, event):
+        """Make sure we set has_edit_dialog_open to false in m ain window. """
+        self.got_sample.emit(self.target_bidsmap)
+        self.close()
+
     def update_series(self):
         """Save the changes. """
         self.target_bidsmap = update_bidsmap(self.source_bidsmap,
