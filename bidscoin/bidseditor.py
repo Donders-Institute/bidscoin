@@ -43,127 +43,6 @@ MAX_NUM_BIDS_ATTRIBUTES = 10
 
 ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "brain.ico")
 
-# TODO: Replace this list. Make use of template instead.
-MODALITY_LABELS = [
-    'T1w',
-    'T2w',
-    'T1rho',
-    'T1map',
-    'T2map',
-    'T2star',
-    'FLAIR',
-    'FLASH',
-    'PD',
-    'PDmap',
-    'PDT2',
-    'inplaneT1',
-    'inplaneT2',
-    'angio',
-    'defacemask',
-    'SWImagandphase'
-]
-
-
-# TODO: Replace this function. Make use of template instead
-def get_bids_attributes(modality, source_bids_attributes):
-    """Return the BIDS attributes (i.e. the key,value pairs). """
-    bids_attributes = None
-
-    if modality == 'anat':
-        # acq_label: <SeriesDescription>
-        # rec_label: ~
-        # run_index: <<1>>
-        # mod_label: ~
-        # modality_label: MODALITY_LABELS
-        # ce_label: ~
-        bids_attributes = OrderedDict()
-        bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
-        bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
-        bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
-        bids_attributes['mod_label'] = source_bids_attributes.get('mod_label', '')
-        bids_attributes['modality_label'] = source_bids_attributes.get('modality_label', MODALITY_LABELS[0])
-        bids_attributes['ce_label'] = source_bids_attributes.get('ce_label', '')
-
-    elif modality == 'func':
-        # task_label: <SeriesDescription>
-        # acq_label: ~
-        # rec_label: ~
-        # run_index: <<1>>
-        # echo_index: <EchoNumbers>
-        # suffix: bold
-        bids_attributes = OrderedDict()
-        bids_attributes['task_label'] = source_bids_attributes.get('task_label', '<SeriesDescription>')
-        bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '')
-        bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
-        bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
-        bids_attributes['echo_index'] = source_bids_attributes.get('echo_index', '<EchoNumber>')
-        bids_attributes['suffix'] = source_bids_attributes.get('suffix', 'bold')
-
-    elif modality == 'dwi':
-        # acq_label: <SeriesDescription>
-        # run_index: <<1>>
-        # suffix: [dwi, sbref]
-        bids_attributes = OrderedDict()
-        bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
-        bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
-        bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
-
-    elif modality == 'fmap':
-        # acq_label: <SeriesDescription>
-        # run_index: <<1>>
-        # dir_label: None, <InPlanePhaseEncodingDirection>
-        # suffix: [magnitude, magnitude1, magnitude2, phasediff, phase1, phase2, fieldmap, epi]
-        bids_attributes = OrderedDict()
-        bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
-        bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
-        bids_attributes['dir_label'] = source_bids_attributes.get('dir_label', '')
-        bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
-
-    elif modality == 'beh':
-        # task_name: <SeriesDescription>
-        # suffix: ~
-        bids_attributes = OrderedDict()
-        bids_attributes['task_label'] = source_bids_attributes.get('task_label', '<SeriesDescription>')
-        bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
-
-    elif modality == 'pet':
-        # task_label: <SeriesDescription>
-        # acq_label: <Radiopharmaceutical>
-        # rec_label: ~
-        # run_index: <<1>>
-        # suffix: pet
-        bids_attributes = OrderedDict()
-        bids_attributes['task_label'] = source_bids_attributes.get('task_label', '<SeriesDescription>')
-        bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<Radiopharmaceutical>')
-        bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
-        bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
-        bids_attributes['suffix'] = source_bids_attributes.get('suffix', 'pet')
-
-    elif modality == bids.unknownmodality:
-        # acq_label: <SeriesDescription>
-        # rec_label: ~
-        # ce_label: ~
-        # task_label: ~
-        # echo_index: ~
-        # dir_label: ~
-        # run_index: <<1>>
-        # suffix: ~
-        # mod_label: ~
-        # modality_label: ~
-        bids_attributes = OrderedDict()
-        bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
-        bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
-        bids_attributes['ce_label'] = source_bids_attributes.get('ce_label', '')
-        bids_attributes['task_label'] = source_bids_attributes.get('task_label', '')
-        bids_attributes['echo_index'] = source_bids_attributes.get('echo_index', '')
-        bids_attributes['dir_label'] = source_bids_attributes.get('dir_label', '')
-        bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
-        bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
-        bids_attributes['mod_label'] = source_bids_attributes.get('mod_label', '')
-        bids_attributes['modality_label'] = source_bids_attributes.get('modality_label', '')
-
-    return bids_attributes
-
 
 def update_bidsmap(source_bidsmap, source_modality, source_index, target_modality, target_series):
     """Update the BIDS map:
@@ -176,7 +55,7 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
     if not target_modality in bids.bidsmodalities + (bids.unknownmodality,):
         raise ValueError(f"invalid modality '{target_modality}'")
 
-    target_bidsmap = copy.deepcopy(source_bidsmap)      # TODO: check if deepcopy is needed
+    target_bidsmap = copy.deepcopy(source_bidsmap)  # TODO: check if deepcopy is needed
 
     # First check if the target series already exists.    TODO: figure out what to do with this situation
     if bids.exist_series(target_bidsmap, SOURCE, target_modality, target_series):
@@ -467,7 +346,7 @@ class Ui_MainWindow(object):
     def show_edit(self, idx, modality):
         """Allow only one edit window to be open."""
         if not self.has_edit_dialog_open:
-            self.dialog_edit = EditDialog(idx, modality, self.output_bidsmap)
+            self.dialog_edit = EditDialog(idx, modality, self.output_bidsmap, self.template_bidsmap)
             self.dialog_edit.show()
             self.has_edit_dialog_open = True
             self.dialog_edit.got_sample.connect(self.update_list)
@@ -520,9 +399,28 @@ class AboutDialog(QDialog):
 
 class EditDialog(QDialog):
 
+    MODALITY_LABELS = [
+        'T1w',
+        'T2w',
+        'T1rho',
+        'T1map',
+        'T2map',
+        'T2star',
+        'FLAIR',
+        'FLASH',
+        'PD',
+        'PDmap',
+        'PDT2',
+        'inplaneT1',
+        'inplaneT2',
+        'angio',
+        'defacemask',
+        'SWImagandphase'
+    ]
+
     got_sample = QtCore.pyqtSignal(dict)
 
-    def __init__(self, idx, modality, output_bidsmap):
+    def __init__(self, idx, modality, output_bidsmap, template_bidsmap):
         QDialog.__init__(self)
 
         self.source_bidsmap = copy.deepcopy(output_bidsmap)         # TODO: Check if deepcopy is needed
@@ -533,6 +431,8 @@ class EditDialog(QDialog):
         self.target_bidsmap = copy.deepcopy(output_bidsmap)
         self.target_modality = modality
         self.target_series = copy.deepcopy(self.source_series)
+
+        self.template_bidsmap = template_bidsmap
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -611,6 +511,10 @@ class EditDialog(QDialog):
             key = item_key.text()
             value = item_value.text()
 
+            if key == 'modality_label':
+                # TODO: Deal with drop down selection
+                pass
+
             self.target_series['bids'][key] = value
 
             series = self.target_series
@@ -640,9 +544,9 @@ class EditDialog(QDialog):
         for i, row in enumerate(data):
             table.setRowHeight(i, row_height)
             key = row[0]["value"]
-            if self.target_modality in ['anat', bids.unknownmodality] and key == 'modality_label':
+            if self.target_modality == 'anat' and key == 'modality_label':
                 self.modality_label_dropdown = QComboBox()
-                self.modality_label_dropdown.addItems(MODALITY_LABELS)
+                self.modality_label_dropdown.addItems(self.MODALITY_LABELS)
                 self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
                 self.modality_label_dropdown.currentIndexChanged.connect(self.selection_modality_label_dropdown_change)
                 item = self.set_cell("modality_label", is_editable=False)
@@ -743,10 +647,110 @@ class EditDialog(QDialog):
 
         self.view_dropdown.currentIndexChanged.connect(self.selection_dropdown_change)
 
+    # TODO: Replace this function. Make use of template instead
+    def get_bids_attributes(self, modality, source_bids_attributes):
+        """Return the BIDS attributes (i.e. the key,value pairs). """
+        bids_attributes = None
+
+        if modality == 'anat':
+            # acq_label: <SeriesDescription>
+            # rec_label: ~
+            # run_index: <<1>>
+            # mod_label: ~
+            # modality_label: MODALITY_LABELS
+            # ce_label: ~
+            bids_attributes = OrderedDict()
+            bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
+            bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
+            bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
+            bids_attributes['mod_label'] = source_bids_attributes.get('mod_label', '')
+            bids_attributes['modality_label'] = source_bids_attributes.get('modality_label', self.MODALITY_LABELS[0])
+            bids_attributes['ce_label'] = source_bids_attributes.get('ce_label', '')
+
+        elif modality == 'func':
+            # task_label: <SeriesDescription>
+            # acq_label: ~
+            # rec_label: ~
+            # run_index: <<1>>
+            # echo_index: <EchoNumbers>
+            # suffix: bold
+            bids_attributes = OrderedDict()
+            bids_attributes['task_label'] = source_bids_attributes.get('task_label', '<SeriesDescription>')
+            bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '')
+            bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
+            bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
+            bids_attributes['echo_index'] = source_bids_attributes.get('echo_index', '<EchoNumber>')
+            bids_attributes['suffix'] = source_bids_attributes.get('suffix', 'bold')
+
+        elif modality == 'dwi':
+            # acq_label: <SeriesDescription>
+            # run_index: <<1>>
+            # suffix: [dwi, sbref]
+            bids_attributes = OrderedDict()
+            bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
+            bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
+            bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
+
+        elif modality == 'fmap':
+            # acq_label: <SeriesDescription>
+            # run_index: <<1>>
+            # dir_label: None, <InPlanePhaseEncodingDirection>
+            # suffix: [magnitude, magnitude1, magnitude2, phasediff, phase1, phase2, fieldmap, epi]
+            bids_attributes = OrderedDict()
+            bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
+            bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
+            bids_attributes['dir_label'] = source_bids_attributes.get('dir_label', '')
+            bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
+
+        elif modality == 'beh':
+            # task_name: <SeriesDescription>
+            # suffix: ~
+            bids_attributes = OrderedDict()
+            bids_attributes['task_label'] = source_bids_attributes.get('task_label', '<SeriesDescription>')
+            bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
+
+        elif modality == 'pet':
+            # task_label: <SeriesDescription>
+            # acq_label: <Radiopharmaceutical>
+            # rec_label: ~
+            # run_index: <<1>>
+            # suffix: pet
+            bids_attributes = OrderedDict()
+            bids_attributes['task_label'] = source_bids_attributes.get('task_label', '<SeriesDescription>')
+            bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<Radiopharmaceutical>')
+            bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
+            bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
+            bids_attributes['suffix'] = source_bids_attributes.get('suffix', 'pet')
+
+        elif modality == bids.unknownmodality:
+            # acq_label: <SeriesDescription>
+            # rec_label: ~
+            # ce_label: ~
+            # task_label: ~
+            # echo_index: ~
+            # dir_label: ~
+            # run_index: <<1>>
+            # suffix: ~
+            # mod_label: ~
+            # modality_label: ~
+            bids_attributes = OrderedDict()
+            bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
+            bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
+            bids_attributes['ce_label'] = source_bids_attributes.get('ce_label', '')
+            bids_attributes['task_label'] = source_bids_attributes.get('task_label', '')
+            bids_attributes['echo_index'] = source_bids_attributes.get('echo_index', '')
+            bids_attributes['dir_label'] = source_bids_attributes.get('dir_label', '')
+            bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
+            bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
+            bids_attributes['mod_label'] = source_bids_attributes.get('mod_label', '')
+            bids_attributes['modality_label'] = source_bids_attributes.get('modality_label', '')
+
+        return bids_attributes
+
     def get_bids_values_data(self):
         """# Given the input BIDS attributes, derive the target BIDS attributes. """
         source_bids_attributes = self.target_series.get('bids', {})
-        target_bids_attributes = get_bids_attributes(self.target_modality, source_bids_attributes)
+        target_bids_attributes = self.get_bids_attributes(self.target_modality, source_bids_attributes)
         if target_bids_attributes is not None:
             bids_values = target_bids_attributes
         else:
@@ -754,7 +758,7 @@ class EditDialog(QDialog):
 
         data = []
         for key, value in bids_values.items():
-            if self.target_modality in ['anat', bids.unknownmodality] and key == 'modality_label':
+            if self.target_modality == 'anat' and key == 'modality_label':
                 value = self.target_modality_label
                 data.append([
                     {
@@ -783,7 +787,7 @@ class EditDialog(QDialog):
     def set_bids_values_section(self):
         """Set editable BIDS values section. """
         # For anat and extra_data, set the default target modality label (i.e T1w)
-        self.target_modality_label = MODALITY_LABELS[0]
+        self.target_modality_label = self.MODALITY_LABELS[0]
 
         _, data = self.get_bids_values_data()
 
@@ -815,11 +819,12 @@ class EditDialog(QDialog):
 
         # Update the BIDS values
         table = self.view_bids
+
         for i, row in enumerate(data):
             key = row[0]["value"]
-            if self.target_modality in ['anat', bids.unknownmodality] and key == 'modality_label':
+            if self.target_modality == 'anat' and key == 'modality_label':
                 self.modality_label_dropdown = QComboBox()
-                self.modality_label_dropdown.addItems(MODALITY_LABELS)
+                self.modality_label_dropdown.addItems(self.MODALITY_LABELS)
                 self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
                 self.modality_label_dropdown.currentIndexChanged.connect(self.selection_modality_label_dropdown_change)
                 item = self.set_cell("modality_label", is_editable=False)
@@ -834,7 +839,7 @@ class EditDialog(QDialog):
                 table.removeCellWidget(i, j)
                 item = self.set_cell(value, is_editable=is_editable)
                 table.setItem(i, j, QTableWidgetItem(item))
-        for i in range(len(data)):
+        for i in range(len(data), MAX_NUM_BIDS_ATTRIBUTES):
             for j, element in enumerate(row):
                 table.removeCellWidget(i, j)
                 item = self.set_cell('', is_editable=False)
