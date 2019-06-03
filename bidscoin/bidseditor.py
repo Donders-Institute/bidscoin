@@ -100,7 +100,7 @@ def get_allowed_suffices(template_bidsmap):
             modality = dirname1
             suffix = dirname2
             if suffix not in allowed_suffices[modality]:
-                LOGGER.warning(f'Suffix {suffix} found in samples but not in template for modality {modality}')
+                LOGGER.warning(f'Suffix {suffix} found in samples folder but not in the template file for modality {modality}')
                 allowed_suffices[modality].append(suffix)
 
     # Sort the allowed suffices alphabetically
@@ -108,6 +108,35 @@ def get_allowed_suffices(template_bidsmap):
         allowed_suffices[modality] = sorted(allowed_suffices[modality])
 
     return allowed_suffices
+
+
+def get_bids_attributes(template_bidsmap, allowed_suffices, modality, source_bids_attributes):
+    """Return the target BIDS attributes (i.e. the key, value pairs)
+    given the keys from the template
+    given the values from the source BIDS attributes. """
+    first_series = template_bidsmap[SOURCE][modality][0]
+    template_bids_attributes = first_series['bids']
+
+    bids_attributes = OrderedDict()
+    for key, template_value in template_bids_attributes.items():
+        if not template_value:
+            template_value = ''
+            if modality == 'anat' and key == 'modality_label':
+                template_value = allowed_suffices[modality][0]
+            if key == 'suffix':
+                # If not free choice, select the first possible one from the list of allowed suffices
+                if not modality in ('beh', bids.unknownmodality):
+                    template_value = allowed_suffices[modality][0]
+
+        source_value = source_bids_attributes.get(key, None)
+        if source_value:
+           # Set the value from the source attributes
+            bids_attributes[key] = source_bids_attributes[key]
+        else:
+            # Set the default value from the template
+            bids_attributes[key] = template_value
+
+    return bids_attributes
 
 
 class Ui_MainWindow(object):
@@ -670,110 +699,13 @@ class EditDialog(QDialog):
 
         self.view_dropdown.currentIndexChanged.connect(self.selection_dropdown_change)
 
-    # TODO: Replace this function. Make use of template instead
-    def get_bids_attributes(self, modality, source_bids_attributes):
-        """Return the BIDS attributes (i.e. the key,value pairs). """
-        bids_attributes = None
-
-        if modality == 'anat':
-            # acq_label: <SeriesDescription>
-            # rec_label: ~
-            # run_index: <<1>>
-            # mod_label: ~
-            # modality_label: ANAT_BIDS_MODALITY_LABELS
-            # ce_label: ~
-            bids_attributes = OrderedDict()
-            bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
-            bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
-            bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
-            bids_attributes['mod_label'] = source_bids_attributes.get('mod_label', '')
-            bids_attributes['modality_label'] = source_bids_attributes.get('modality_label', self.ANAT_BIDS_MODALITY_LABELS[0])
-            bids_attributes['ce_label'] = source_bids_attributes.get('ce_label', '')
-
-        elif modality == 'func':
-            # task_label: <SeriesDescription>
-            # acq_label: ~
-            # rec_label: ~
-            # run_index: <<1>>
-            # echo_index: <EchoNumbers>
-            # suffix: bold
-            bids_attributes = OrderedDict()
-            bids_attributes['task_label'] = source_bids_attributes.get('task_label', '<SeriesDescription>')
-            bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '')
-            bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
-            bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
-            bids_attributes['echo_index'] = source_bids_attributes.get('echo_index', '<EchoNumber>')
-            bids_attributes['suffix'] = source_bids_attributes.get('suffix', 'bold')
-
-        elif modality == 'dwi':
-            # acq_label: <SeriesDescription>
-            # run_index: <<1>>
-            # suffix: [dwi, sbref]
-            bids_attributes = OrderedDict()
-            bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
-            bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
-            bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
-
-        elif modality == 'fmap':
-            # acq_label: <SeriesDescription>
-            # run_index: <<1>>
-            # dir_label: None, <InPlanePhaseEncodingDirection>
-            # suffix: [magnitude, magnitude1, magnitude2, phasediff, phase1, phase2, fieldmap, epi]
-            bids_attributes = OrderedDict()
-            bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
-            bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
-            bids_attributes['dir_label'] = source_bids_attributes.get('dir_label', '')
-            bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
-
-        elif modality == 'beh':
-            # task_name: <SeriesDescription>
-            # suffix: ~
-            bids_attributes = OrderedDict()
-            bids_attributes['task_label'] = source_bids_attributes.get('task_label', '<SeriesDescription>')
-            bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
-
-        elif modality == 'pet':
-            # task_label: <SeriesDescription>
-            # acq_label: <Radiopharmaceutical>
-            # rec_label: ~
-            # run_index: <<1>>
-            # suffix: pet
-            bids_attributes = OrderedDict()
-            bids_attributes['task_label'] = source_bids_attributes.get('task_label', '<SeriesDescription>')
-            bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<Radiopharmaceutical>')
-            bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
-            bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
-            bids_attributes['suffix'] = source_bids_attributes.get('suffix', 'pet')
-
-        elif modality == bids.unknownmodality:
-            # acq_label: <SeriesDescription>
-            # rec_label: ~
-            # ce_label: ~
-            # task_label: ~
-            # echo_index: ~
-            # dir_label: ~
-            # run_index: <<1>>
-            # suffix: ~
-            # mod_label: ~
-            # modality_label: ~
-            bids_attributes = OrderedDict()
-            bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
-            bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
-            bids_attributes['ce_label'] = source_bids_attributes.get('ce_label', '')
-            bids_attributes['task_label'] = source_bids_attributes.get('task_label', '')
-            bids_attributes['echo_index'] = source_bids_attributes.get('echo_index', '')
-            bids_attributes['dir_label'] = source_bids_attributes.get('dir_label', '')
-            bids_attributes['suffix'] = source_bids_attributes.get('suffix', '')
-            bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
-            bids_attributes['mod_label'] = source_bids_attributes.get('mod_label', '')
-            bids_attributes['modality_label'] = source_bids_attributes.get('modality_label', '')
-
-        return bids_attributes
-
     def get_bids_values_data(self):
         """# Given the input BIDS attributes, derive the target BIDS attributes. """
         source_bids_attributes = self.target_series.get('bids', {})
-        target_bids_attributes = self.get_bids_attributes(self.target_modality, source_bids_attributes)
+        target_bids_attributes = get_bids_attributes(self.template_bidsmap,
+                                                     self.allowed_suffices,
+                                                     self.target_modality,
+                                                     source_bids_attributes)
         if target_bids_attributes is not None:
             bids_values = target_bids_attributes
         else:

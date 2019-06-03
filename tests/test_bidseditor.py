@@ -6,8 +6,8 @@ import logging
 import copy
 import difflib
 
-from bidscoin.bids import load_bidsmap, save_bidsmap
-from bidscoin.bidseditor import get_allowed_suffices, update_bidsmap
+from bidscoin.bids import load_bidsmap, save_bidsmap, unknownmodality
+from bidscoin.bidseditor import get_allowed_suffices, get_bids_attributes, update_bidsmap
 
 
 LOGGER = logging.getLogger()
@@ -71,6 +71,63 @@ class TestBidseditor(unittest.TestCase):
         }
 
         self.assertEqual(allowed_suffices, reference_allowed_suffices)
+
+    def test_get_allowed_suffices(self):
+        pathname = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics")
+        filename = os.path.join(pathname, "bidsmap_template.yaml")
+        template_bidsmap = load_bidsmap(filename, pathname)
+        allowed_suffices = get_allowed_suffices(template_bidsmap)
+
+        source_bids_attributes = {
+            "acq_label": "localizerAANGEPAST11SLICES",
+            "rec_label": None,
+            "ce_label": None,
+            "task_label": None,
+            "echo_index": None,
+            "dir_label": None,
+            "run_index": "<<1>>",
+            "suffix": None,
+            "mod_label": None,
+            "modality_label": None
+        }
+
+        # test anat
+        bids_attributes = get_bids_attributes(template_bidsmap,
+                                              allowed_suffices,
+                                              'anat',
+                                              source_bids_attributes)
+
+        reference_bids_attributes = {
+            "acq_label": "localizerAANGEPAST11SLICES",
+            "rec_label": "",
+            "run_index": "<<1>>",
+            "mod_label": "",
+            "modality_label": "T1w",
+            "ce_label": ""
+        }
+
+        self.assertEqual(bids_attributes, reference_bids_attributes)
+
+        # test extra_data
+        bids_attributes = get_bids_attributes(template_bidsmap,
+                                              allowed_suffices,
+                                              unknownmodality,
+                                              source_bids_attributes)
+
+        reference_bids_attributes = {
+            "acq_label": "localizerAANGEPAST11SLICES",
+            "rec_label": "",
+            "ce_label": "",
+            "task_label": "",
+            "echo_index": "",
+            "dir_label": "",
+            "run_index": "<<1>>",
+            "suffix": "",
+            "mod_label": "",
+            "modality_label": ""
+        }
+
+        self.assertEqual(bids_attributes, reference_bids_attributes)
 
     def test_update_bidsmap(self):
         pathname = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata")
