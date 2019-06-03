@@ -563,9 +563,12 @@ class EditDialog(QDialog):
             key = item_key.text()
             value = item_value.text()
 
-            if key == 'modality_label':
-                # TODO: Deal with drop down selection
-                pass
+            if self.target_modality == 'anat' and key == 'modality_label':
+                print(row)
+                self.selection_modality_label_dropdown_change(row)
+            if not self.target_modality in ('beh', bids.unknownmodality) and key == 'suffix':
+                print(row)
+                self.selection_suffix_dropdown_change(row)
 
             self.target_series['bids'][key] = value
 
@@ -741,8 +744,15 @@ class EditDialog(QDialog):
 
     def set_bids_values_section(self):
         """Set editable BIDS values section. """
+
         # For anat and extra_data, set the default target modality label (i.e T1w)
         self.target_modality_label = self.ANAT_BIDS_MODALITY_LABELS[0]
+
+        allowed_suffixes = self.allowed_suffixes[self.target_modality]
+        if len(allowed_suffixes) > 0:
+            self.target_suffix = allowed_suffixes[0]
+        else:
+            self.target_suffix = ''
 
         _, data = self.get_bids_values_data()
 
@@ -778,13 +788,25 @@ class EditDialog(QDialog):
         for i, row in enumerate(data):
             key = row[0]["value"]
             if self.target_modality == 'anat' and key == 'modality_label':
+                labels = self.ANAT_BIDS_MODALITY_LABELS
                 self.modality_label_dropdown = QComboBox()
-                self.modality_label_dropdown.addItems(self.ANAT_BIDS_MODALITY_LABELS)
+                self.modality_label_dropdown.addItems(labels)
                 self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
                 self.modality_label_dropdown.currentIndexChanged.connect(self.selection_modality_label_dropdown_change)
                 item = self.set_cell("modality_label", is_editable=False)
                 table.setItem(i, 0, QTableWidgetItem(item))
                 table.setCellWidget(i, 1, self.modality_label_dropdown)
+                continue
+            if not self.target_modality in ('beh', bids.unknownmodality) and key == 'suffix':
+                labels = self.allowed_suffixes[self.target_modality]
+                self.suffix_dropdown = QComboBox()
+                self.suffix_dropdown.addItems(labels)
+                self.suffix_dropdown.setCurrentIndex(
+                self.suffix_dropdown.findText(self.target_suffix))
+                self.suffix_dropdown.currentIndexChanged.connect(self.selection_suffix_dropdown_change)
+                item = self.set_cell("suffix", is_editable=False)
+                table.setItem(i, 0, QTableWidgetItem(item))
+                table.setCellWidget(i, 1, self.suffix_dropdown)
                 continue
             for j, element in enumerate(row):
                 value = element.get("value", "")
@@ -802,7 +824,10 @@ class EditDialog(QDialog):
 
         self.view_bids = table
 
-        bids_values['modality_label'] = self.target_modality_label
+        if self.target_modality == 'anat':
+            bids_values['modality_label'] = self.target_modality_label
+        if not self.target_modality in ('beh', bids.unknownmodality):
+            bids_values['suffix'] = self.target_suffix
 
         # Update the BIDS name
         bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series)
@@ -816,6 +841,19 @@ class EditDialog(QDialog):
 
         bids_values, data = self.get_bids_values_data()
         bids_values['modality_label'] = self.target_modality_label
+
+        # Update the BIDS name
+        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series)
+
+        self.view_bids_name.clear()
+        self.view_bids_name.textCursor().insertText(bids_name)
+
+    def selection_suffix_dropdown_change(self, i):
+        """Update the BIDS values and BIDS name section when the dropdown selection has been taking place. """
+        self.suffix_label = self.suffix_dropdown.currentText()
+
+        bids_values, data = self.get_bids_values_data()
+        bids_values['suffix'] = self.target_suffix
 
         # Update the BIDS name
         bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series)
