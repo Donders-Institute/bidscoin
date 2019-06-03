@@ -7,7 +7,7 @@ import copy
 import difflib
 
 from bidscoin.bids import load_bidsmap, save_bidsmap, unknownmodality
-from bidscoin.bidseditor import get_allowed_suffices, get_bids_attributes, update_bidsmap
+from bidscoin.bidseditor import get_allowed_suffixes, get_bids_attributes, update_bidsmap
 
 
 LOGGER = logging.getLogger()
@@ -21,7 +21,7 @@ class TestBidseditor(unittest.TestCase):
         pathname = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics")
         filename = os.path.join(pathname, "bidsmap_template.yaml")
         template_bidsmap = load_bidsmap(filename, pathname)
-        allowed_suffices = get_allowed_suffices(template_bidsmap)
+        allowed_suffices = get_allowed_suffixes(template_bidsmap)
 
         reference_allowed_suffices = {
             "anat": [
@@ -72,11 +72,11 @@ class TestBidseditor(unittest.TestCase):
 
         self.assertEqual(allowed_suffices, reference_allowed_suffices)
 
-    def test_get_allowed_suffices(self):
+    def test_get_allowed_suffixes(self):
         pathname = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics")
         filename = os.path.join(pathname, "bidsmap_template.yaml")
         template_bidsmap = load_bidsmap(filename, pathname)
-        allowed_suffices = get_allowed_suffices(template_bidsmap)
+        allowed_suffices = get_allowed_suffixes(template_bidsmap)
 
         source_bids_attributes = {
             "acq_label": "localizerAANGEPAST11SLICES",

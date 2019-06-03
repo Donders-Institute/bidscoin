@@ -70,13 +70,13 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
     return target_bidsmap
 
 
-def get_allowed_suffices(template_bidsmap):
-    """Derive the possible suffices for each modality from the template. """
+def get_allowed_suffixes(template_bidsmap):
+    """Derive the possible suffixes for each modality from the template. """
 
     # Scan the template
-    allowed_suffices = {}
+    allowed_suffixes = {}
     for modality in bids.bidsmodalities + (bids.unknownmodality,):
-        allowed_suffices[modality] = []
+        allowed_suffixes[modality] = []
         series_list = template_bidsmap[SOURCE][modality]
         if not series_list:
             continue
@@ -86,8 +86,8 @@ def get_allowed_suffices(template_bidsmap):
                 suffix = series['bids'].get('modality_label', None)
             else:
                 suffix = series['bids'].get('suffix', None)
-            if suffix and suffix not in allowed_suffices[modality]:
-                allowed_suffices[modality].append(suffix)
+            if suffix and suffix not in allowed_suffixes[modality]:
+                allowed_suffixes[modality].append(suffix)
 
     # Scan the heuristics/samples folder
     folder = os.path.join(os.path.dirname(__file__), '..', 'heuristics', 'samples')
@@ -99,18 +99,18 @@ def get_allowed_suffices(template_bidsmap):
         if dirname1 in bids.bidsmodalities + (bids.unknownmodality,):
             modality = dirname1
             suffix = dirname2
-            if suffix not in allowed_suffices[modality]:
+            if suffix not in allowed_suffixes[modality]:
                 LOGGER.warning(f'Suffix {suffix} found in samples folder but not in the template file for modality {modality}')
-                allowed_suffices[modality].append(suffix)
+                allowed_suffixes[modality].append(suffix)
 
-    # Sort the allowed suffices alphabetically
+    # Sort the allowed suffixes alphabetically
     for modality in bids.bidsmodalities + (bids.unknownmodality,):
-        allowed_suffices[modality] = sorted(allowed_suffices[modality])
+        allowed_suffixes[modality] = sorted(allowed_suffixes[modality])
 
-    return allowed_suffices
+    return allowed_suffixes
 
 
-def get_bids_attributes(template_bidsmap, allowed_suffices, modality, source_bids_attributes):
+def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, source_bids_attributes):
     """Return the target BIDS attributes (i.e. the key, value pairs)
     given the keys from the template
     given the values from the source BIDS attributes. """
@@ -122,11 +122,11 @@ def get_bids_attributes(template_bidsmap, allowed_suffices, modality, source_bid
         if not template_value:
             template_value = ''
             if modality == 'anat' and key == 'modality_label':
-                template_value = allowed_suffices[modality][0]
+                template_value = allowed_suffixes[modality][0]
             if key == 'suffix':
-                # If not free choice, select the first possible one from the list of allowed suffices
+                # If not free choice, select the first possible option from the list of allowed suffixes
                 if not modality in ('beh', bids.unknownmodality):
-                    template_value = allowed_suffices[modality][0]
+                    template_value = allowed_suffixes[modality][0]
 
         source_value = source_bids_attributes.get(key, None)
         if source_value:
@@ -483,8 +483,8 @@ class EditDialog(QDialog):
         self.target_series = copy.deepcopy(self.source_series)
 
         self.template_bidsmap = template_bidsmap
-        self.allowed_suffices = get_allowed_suffices(template_bidsmap)
-        self.ANAT_BIDS_MODALITY_LABELS = self.allowed_suffices['anat']
+        self.allowed_suffixes = get_allowed_suffixes(template_bidsmap)
+        self.ANAT_BIDS_MODALITY_LABELS = self.allowed_suffixes['anat']
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -703,7 +703,7 @@ class EditDialog(QDialog):
         """# Given the input BIDS attributes, derive the target BIDS attributes. """
         source_bids_attributes = self.target_series.get('bids', {})
         target_bids_attributes = get_bids_attributes(self.template_bidsmap,
-                                                     self.allowed_suffices,
+                                                     self.allowed_suffixes,
                                                      self.target_modality,
                                                      source_bids_attributes)
         if target_bids_attributes is not None:
