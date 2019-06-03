@@ -7,7 +7,7 @@ import copy
 import difflib
 
 from bidscoin.bids import load_bidsmap, save_bidsmap
-from bidscoin.bidseditor import update_bidsmap
+from bidscoin.bidseditor import get_anat_bids_modality_labels, update_bidsmap
 
 
 LOGGER = logging.getLogger()
@@ -16,6 +16,34 @@ LOGGER.addHandler(logging.StreamHandler(sys.stdout))
 
 
 class TestBidseditor(unittest.TestCase):
+
+    def test_get_bidsmap_modalities(self):
+        pathname = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics")
+        filename = os.path.join(pathname, "bidsmap_template.yaml")
+        template_bidsmap = load_bidsmap(filename, pathname)
+
+        reference_labels = [
+            'T1w',
+            'T2w',
+            'T1rho',
+            'T1map',
+            'T2map',
+            'T2star',
+            'FLAIR',
+            'FLASH',
+            'PD',
+            'PDmap',
+            'PDT2',
+            'inplaneT1',
+            'inplaneT2',
+            'angio',
+            'defacemask',
+            'SWImagandphase'
+        ]
+
+        bids_modality_labels = get_anat_bids_modality_labels(template_bidsmap)
+
+        self.assertEqual(bids_modality_labels, reference_labels)
 
     def test_update_bidsmap(self):
         pathname = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata")

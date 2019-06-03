@@ -70,6 +70,17 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
     return target_bidsmap
 
 
+def get_anat_bids_modality_labels(template_bidsmap):
+    """Derive the possible BIDS modality labels for the anat modality from the template. """
+    modality_labels = []
+    series_list = template_bidsmap[SOURCE]['anat']
+    for series in series_list:
+        modality_label = series['bids'].get('modality_label', None)
+        if modality_label and modality_label not in modality_labels:
+            modality_labels.append(modality_label)
+    return modality_labels
+
+
 class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, bidsmap, output_bidsmap, template_bidsmap):
@@ -399,25 +410,6 @@ class AboutDialog(QDialog):
 
 class EditDialog(QDialog):
 
-    MODALITY_LABELS = [
-        'T1w',
-        'T2w',
-        'T1rho',
-        'T1map',
-        'T2map',
-        'T2star',
-        'FLAIR',
-        'FLASH',
-        'PD',
-        'PDmap',
-        'PDT2',
-        'inplaneT1',
-        'inplaneT2',
-        'angio',
-        'defacemask',
-        'SWImagandphase'
-    ]
-
     got_sample = QtCore.pyqtSignal(dict)
 
     def __init__(self, idx, modality, output_bidsmap, template_bidsmap):
@@ -433,6 +425,7 @@ class EditDialog(QDialog):
         self.target_series = copy.deepcopy(self.source_series)
 
         self.template_bidsmap = template_bidsmap
+        self.ANAT_BIDS_MODALITY_LABELS = get_anat_bids_modality_labels(template_bidsmap)
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -546,7 +539,7 @@ class EditDialog(QDialog):
             key = row[0]["value"]
             if self.target_modality == 'anat' and key == 'modality_label':
                 self.modality_label_dropdown = QComboBox()
-                self.modality_label_dropdown.addItems(self.MODALITY_LABELS)
+                self.modality_label_dropdown.addItems(self.ANAT_BIDS_MODALITY_LABELS)
                 self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
                 self.modality_label_dropdown.currentIndexChanged.connect(self.selection_modality_label_dropdown_change)
                 item = self.set_cell("modality_label", is_editable=False)
@@ -657,14 +650,14 @@ class EditDialog(QDialog):
             # rec_label: ~
             # run_index: <<1>>
             # mod_label: ~
-            # modality_label: MODALITY_LABELS
+            # modality_label: ANAT_BIDS_MODALITY_LABELS
             # ce_label: ~
             bids_attributes = OrderedDict()
             bids_attributes['acq_label'] = source_bids_attributes.get('acq_label', '<SeriesDescription>')
             bids_attributes['rec_label'] = source_bids_attributes.get('rec_label', '')
             bids_attributes['run_index'] = source_bids_attributes.get('run_index', '<<1>>')
             bids_attributes['mod_label'] = source_bids_attributes.get('mod_label', '')
-            bids_attributes['modality_label'] = source_bids_attributes.get('modality_label', self.MODALITY_LABELS[0])
+            bids_attributes['modality_label'] = source_bids_attributes.get('modality_label', self.ANAT_BIDS_MODALITY_LABELS[0])
             bids_attributes['ce_label'] = source_bids_attributes.get('ce_label', '')
 
         elif modality == 'func':
@@ -787,7 +780,7 @@ class EditDialog(QDialog):
     def set_bids_values_section(self):
         """Set editable BIDS values section. """
         # For anat and extra_data, set the default target modality label (i.e T1w)
-        self.target_modality_label = self.MODALITY_LABELS[0]
+        self.target_modality_label = self.ANAT_BIDS_MODALITY_LABELS[0]
 
         _, data = self.get_bids_values_data()
 
@@ -824,7 +817,7 @@ class EditDialog(QDialog):
             key = row[0]["value"]
             if self.target_modality == 'anat' and key == 'modality_label':
                 self.modality_label_dropdown = QComboBox()
-                self.modality_label_dropdown.addItems(self.MODALITY_LABELS)
+                self.modality_label_dropdown.addItems(self.ANAT_BIDS_MODALITY_LABELS)
                 self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
                 self.modality_label_dropdown.currentIndexChanged.connect(self.selection_modality_label_dropdown_change)
                 item = self.set_cell("modality_label", is_editable=False)
