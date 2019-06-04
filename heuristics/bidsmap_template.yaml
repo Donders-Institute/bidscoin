@@ -52,83 +52,83 @@ DICOM:
       rec_label: ~
       run_index: <<1>>
       mod_label: ~
-      modality_label: T1w
+      suffix: T1w
       ce_label: ~
     provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
-      modality_label: T2w
+      suffix: T2w
     provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
-      modality_label: T1rho
+      suffix: T1rho
     provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
-      modality_label: T1map
+      suffix: T1map
     provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
-      modality_label: T2map
+      suffix: T2map
     provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
-      modality_label: T2star
+      suffix: T2star
     provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
-      modality_label: FLAIR
+      suffix: FLAIR
     provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
-      modality_label: FLASH
+      suffix: FLASH
     provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
-      modality_label: PD
+      suffix: PD
     provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
-      modality_label: PDmap
+      suffix: PDmap
     provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
-      modality_label: PDT2
+      suffix: PDT2
     provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
-      modality_label: inplaneT1
+      suffix: inplaneT1
     provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
-      modality_label: inplaneT2
+      suffix: inplaneT2
     provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
-      modality_label: angio
+      suffix: angio
     provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
-      modality_label: defacemask
+      suffix: defacemask
     provenance: ~
   - attributes: *anatattributes
     bids:
       <<: *anatbids
-      modality_label: SWImagandphase
+      suffix: SWImagandphase
     provenance: ~
 
   func:       # ----------------------- All functional series --------------------
@@ -368,69 +368,68 @@ FileSystem:
       echo_index: ~
       dir_label: ~
       run_index: <<1>>
-      suffix: ~
       mod_label: ~
-      modality_label: T1w
+      suffix: T1w
   - attributes: *anatattributes_file
     bids:
       <<: *anatbids_file
-      modality_label: T2w
+      suffix: T2w
   - attributes: *anatattributes_file
     bids:
       <<: *anatbids_file
-      modality_label: T1rho
+      suffix: T1rho
   - attributes: *anatattributes_file
     bids:
       <<: *anatbids_file
-      modality_label: T1map
+      suffix: T1map
   - attributes: *anatattributes_file
     bids:
       <<: *anatbids_file
-      modality_label: T2map
+      suffix: T2map
   - attributes: *anatattributes_file
     bids:
       <<: *anatbids_file
-      modality_label: T2star
+      suffix: T2star
   - attributes: *anatattributes_file
     bids:
       <<: *anatbids_file
-      modality_label: FLAIR
+      suffix: FLAIR
   - attributes: *anatattributes_file
     bids:
       <<: *anatbids_file
-      modality_label: FLASH
+      suffix: FLASH
   - attributes: *anatattributes_file
     bids:
       <<: *anatbids_file
-      modality_label: PD
+      suffix: PD
   - attributes: *anatattributes_file
     bids:
       <<: *anatbids_file
-      modality_label: PDmap
+      suffix: PDmap
   - attributes: *anatattributes_file
     bids:
       <<: *anatbids_file
-      modality_label: PDT2
+      suffix: PDT2
   - attributes: *anatattributes_file
     bids:
       <<: *anatbids_file
-      modality_label: inplaneT1
+      suffix: inplaneT1
   - attributes: *anatattributes_file
     bids:
       <<: *anatbids_file
-      modality_label: inplaneT2
+      suffix: inplaneT2
   - attributes: *anatattributes_file
     bids:
       <<: *anatbids_file
-      modality_label: angio
+      suffix: angio
   - attributes: *anatattributes_file
     bids:
       <<: *anatbids_file
-      modality_label: defacemask
+      suffix: defacemask
   - attributes: *anatattributes_file
     bids:
       <<: *anatbids_file
-      modality_label: SWImagandphase
+      suffix: SWImagandphase
 
   func:       # ----------------------- All functional series --------------------
   - attributes: &funcattributes_file

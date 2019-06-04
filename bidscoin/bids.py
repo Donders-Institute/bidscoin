@@ -22,7 +22,7 @@ logger = logging.getLogger('bidscoin')
 
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh', 'pet')
 unknownmodality = 'extra_data'
-bidslabels      = ('acq_label', 'modality_label', 'ce_label', 'rec_label', 'task_label', 'echo_index', 'dir_label', 'suffix')   # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
+bidslabels      = ('acq_label', 'ce_label', 'rec_label', 'task_label', 'echo_index', 'dir_label', 'suffix')   # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
 
 
 def setup_logging(log_filename: str) -> logging.Logger:
@@ -445,14 +445,12 @@ def strip_suffix(series: dict) -> dict:
     # See if we have a suffix for this modality
     if 'suffix' in series['bids'] and series['bids']['suffix']:
         suffix = series['bids']['suffix'].lower()
-    elif 'modality_label' in series['bids'] and series['bids']['modality_label']:
-        suffix = series['bids']['modality_label'].lower()
     else:
         return series
 
     # See if any of the BIDS labels ends with the same suffix. If so, then remove it
     for key in series['bids']:
-        if key in ('modality_label', 'suffix'):
+        if key == 'suffix':
             continue
         if series['bids'][key] and series['bids'][key].lower().endswith(suffix):
             series['bids'][key] = series['bids'][key][0:-len(suffix)]       # NB: This will leave the added '_' and '.' characters, but they will be taken out later (as they are not BIDS-valid)
@@ -673,9 +671,9 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         defacemask = False       # TODO: account for the 'defacemask' possibility
         if defacemask:
             suffix = 'defacemask'
-            mod    = series['bids']['modality_label']
+            mod    = series['bids']['suffix']
         else:
-            suffix = series['bids']['modality_label']
+            suffix = series['bids']['suffix']
             mod    = ''
 
         # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_ce-<label>][_rec-<label>][_run-<index>][_mod-<label>]_suffix

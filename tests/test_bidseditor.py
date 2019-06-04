@@ -23,6 +23,10 @@ class TestBidseditor(unittest.TestCase):
         template_bidsmap = load_bidsmap(filename, pathname)
         allowed_suffixes = get_allowed_suffixes(template_bidsmap)
 
+        import json
+        print("===IN==")
+        print(json.dumps(allowed_suffixes, indent=4))
+
         reference_allowed_suffixes = {
             "anat": [
                 "FLAIR",
@@ -72,6 +76,9 @@ class TestBidseditor(unittest.TestCase):
             "extra_data": []
         }
 
+        print("===REF==")
+        print(json.dumps(reference_allowed_suffixes, indent=4))
+
         self.assertEqual(allowed_suffixes, reference_allowed_suffixes)
 
     def test_get_allowed_suffixes(self):
@@ -89,8 +96,7 @@ class TestBidseditor(unittest.TestCase):
             "dir_label": None,
             "run_index": "<<1>>",
             "suffix": None,
-            "mod_label": None,
-            "modality_label": None
+            "mod_label": None
         }
 
         # test anat
@@ -104,7 +110,7 @@ class TestBidseditor(unittest.TestCase):
             "rec_label": "",
             "run_index": "<<1>>",
             "mod_label": "",
-            "modality_label": "T1w",
+            "suffix": "T1w",
             "ce_label": ""
         }
 
@@ -125,8 +131,7 @@ class TestBidseditor(unittest.TestCase):
             "dir_label": "",
             "run_index": "<<1>>",
             "suffix": "",
-            "mod_label": "",
-            "modality_label": ""
+            "mod_label": ""
         }
 
         self.assertEqual(bids_attributes, reference_bids_attributes)
