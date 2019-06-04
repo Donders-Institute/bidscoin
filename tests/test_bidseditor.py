@@ -21,9 +21,9 @@ class TestBidseditor(unittest.TestCase):
         pathname = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics")
         filename = os.path.join(pathname, "bidsmap_template.yaml")
         template_bidsmap = load_bidsmap(filename, pathname)
-        allowed_suffices = get_allowed_suffixes(template_bidsmap)
+        allowed_suffixes = get_allowed_suffixes(template_bidsmap)
 
-        reference_allowed_suffices = {
+        reference_allowed_suffixes = {
             "anat": [
                 "FLAIR",
                 "FLASH",
@@ -44,10 +44,7 @@ class TestBidseditor(unittest.TestCase):
             ],
             "func": [
                 "bold",
-                "events",
-                "physio",
-                "sbref",
-                "stim"
+                "sbref"
             ],
             "dwi": [
                 "dwi",
@@ -63,20 +60,25 @@ class TestBidseditor(unittest.TestCase):
                 "phase2",
                 "phasediff"
             ],
-            "beh": [],
+            "beh": [
+                "beh",
+                "events",
+                "physio",
+                "stim"
+            ],
             "pet": [
                 "pet"
             ],
             "extra_data": []
         }
 
-        self.assertEqual(allowed_suffices, reference_allowed_suffices)
+        self.assertEqual(allowed_suffixes, reference_allowed_suffixes)
 
     def test_get_allowed_suffixes(self):
         pathname = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics")
         filename = os.path.join(pathname, "bidsmap_template.yaml")
         template_bidsmap = load_bidsmap(filename, pathname)
-        allowed_suffices = get_allowed_suffixes(template_bidsmap)
+        allowed_suffixes = get_allowed_suffixes(template_bidsmap)
 
         source_bids_attributes = {
             "acq_label": "localizerAANGEPAST11SLICES",
@@ -93,7 +95,7 @@ class TestBidseditor(unittest.TestCase):
 
         # test anat
         bids_attributes = get_bids_attributes(template_bidsmap,
-                                              allowed_suffices,
+                                              allowed_suffixes,
                                               'anat',
                                               source_bids_attributes)
 
@@ -110,7 +112,7 @@ class TestBidseditor(unittest.TestCase):
 
         # test extra_data
         bids_attributes = get_bids_attributes(template_bidsmap,
-                                              allowed_suffices,
+                                              allowed_suffixes,
                                               unknownmodality,
                                               source_bids_attributes)
 

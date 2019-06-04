@@ -78,6 +78,7 @@ def get_allowed_suffixes(template_bidsmap):
     for modality in bids.bidsmodalities + (bids.unknownmodality,):
         allowed_suffixes[modality] = []
         series_list = template_bidsmap[SOURCE][modality]
+        print(modality, series_list)
         if not series_list:
             continue
         for series in series_list:
@@ -111,7 +112,7 @@ def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, source_bid
                 template_value = allowed_suffixes[modality][0]
             if key == 'suffix':
                 # If not free choice, select the first possible option from the list of allowed suffixes
-                if not modality in ('beh', bids.unknownmodality):
+                if modality != bids.unknownmodality:
                     template_value = allowed_suffixes[modality][0]
 
         source_value = source_bids_attributes.get(key, None)
@@ -903,6 +904,10 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     template_bidsmap = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code'))
     input_bidsmap    = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder,'code'))
     output_bidsmap   = copy.deepcopy(input_bidsmap)
+
+    import json
+    print(json.dumps(template_bidsmap, indent=4))
+    raise Exception('test')
 
     # Parse the sourcefolder from the bidsmap provenance info
     if not sourcefolder:

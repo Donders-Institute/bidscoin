@@ -268,8 +268,22 @@ DICOM:
       ProtocolName: ~
     bids: &behbids
       task_name: <SeriesDescription>
-      suffix: ~
+      suffix: events
     provenance: ~
+  - attributes: *behattributes
+    bids:
+      <<: *behbids
+      suffix: beh
+    provenance: ~
+  - attributes: *behattributes
+    bids:
+      <<: *behbids
+      suffix: physio
+    provenance: ~
+  - attributes: *behattributes
+    bids:
+      <<: *behbids
+      suffix: stim
 
   pet:        # ----------------------- All PET series ---------------------------
   - attributes: &petattributes
