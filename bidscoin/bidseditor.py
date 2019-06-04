@@ -186,6 +186,11 @@ class Ui_MainWindow(object):
                 self.table.setItem(idx, 2, item_modality)
                 self.table.setItem(idx, 3, item_bids_name)
 
+                self.table.item(idx, 0).setForeground(QtGui.QColor(128, 128, 128))
+                self.table.item(idx, 1).setForeground(QtGui.QColor(128, 128, 128))
+                self.table.item(idx, 2).setForeground(QtGui.QColor(128, 128, 128))
+                self.table.item(idx, 3).setForeground(QtGui.QColor(128, 128, 128))
+
                 self.button_select = QPushButton('Edit')
                 if modality == bids.unknownmodality:
                     self.button_select.setStyleSheet('QPushButton {color: red;}')
@@ -283,6 +288,11 @@ class Ui_MainWindow(object):
                 self.table.setItem(idx, 1, item_provenance_file)
                 self.table.setItem(idx, 2, item_modality)
                 self.table.setItem(idx, 3, item_bids_name)
+
+                self.table.item(idx, 0).setForeground(QtGui.QColor(128, 128, 128))
+                self.table.item(idx, 1).setForeground(QtGui.QColor(128, 128, 128))
+                self.table.item(idx, 2).setForeground(QtGui.QColor(128, 128, 128))
+                self.table.item(idx, 3).setForeground(QtGui.QColor(128, 128, 128))
 
                 self.button_select = QPushButton('Edit')
                 if modality == bids.unknownmodality:
@@ -559,7 +569,8 @@ class EditDialog(QDialog):
             self.bids_name = bids.get_bidsname('001', '01', self.target_modality, series, run)
 
             self.view_bids_name.clear()
-            self.view_bids_name.textCursor().insertText(self.bids_name)
+            # self.view_bids_name.textCursor().insertText(self.bids_name)
+            self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % self.bids_name)
 
     def set_cell(self, value, is_editable=False):
         item = QTableWidgetItem()
@@ -568,6 +579,7 @@ class EditDialog(QDialog):
             item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
         else:
             item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            item.setForeground(QtGui.QColor(128, 128, 128))
         return item
 
     def get_table(self, data, num_rows=1):
@@ -751,7 +763,9 @@ class EditDialog(QDialog):
 
         self.view_bids_name = QTextEdit()
         self.view_bids_name.setReadOnly(True)
-        self.view_bids_name.textCursor().insertText(self.bids_name)
+        # self.view_bids_name.textCursor().insertText(self.bids_name)
+        self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % self.bids_name)
+
         height = 24
         extra_space = 6
         self.view_bids_name.setFixedHeight(height + extra_space)
