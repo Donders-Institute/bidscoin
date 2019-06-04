@@ -12,6 +12,7 @@ import argparse
 import textwrap
 import logging
 import copy
+import webbrowser
 from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -42,6 +43,13 @@ MAX_NUM_PROVENANCE_ATTRIBUTES = 2
 MAX_NUM_BIDS_ATTRIBUTES = 10
 
 ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "brain.ico")
+
+HELP_URLS = {
+    "anat": "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#anatomy-imaging-data",
+    "dwi": "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#diffusion-imaging-data",
+    "beh": "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/07-behavioral-experiments.html",
+    bids.unknownmodality: "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html"
+}
 
 
 def update_bidsmap(source_bidsmap, source_modality, source_index, target_modality, target_series):
@@ -502,10 +510,16 @@ class EditDialog(QDialog):
         self.set_bids_values_section()
         self.set_bids_name_section()
 
+        self.help_button = QtWidgets.QPushButton()
+        self.help_button.setText("Help")
+        self.cancel_button = QtWidgets.QPushButton()
+        self.cancel_button.setText("Cancel")
         self.ok_button = QtWidgets.QPushButton()
         self.ok_button.setText("OK")
         hbox = QHBoxLayout()
         hbox.addStretch(1)
+        hbox.addWidget(self.help_button)
+        hbox.addWidget(self.cancel_button)
         hbox.addWidget(self.ok_button)
 
         groupbox1 = QGroupBox(SOURCE)
@@ -533,6 +547,8 @@ class EditDialog(QDialog):
         top_layout.addLayout(hbox)
 
         self.view_bids.cellChanged.connect(self.cell_was_clicked)
+        self.help_button.clicked.connect(self.get_help)
+        self.cancel_button.clicked.connect(self.closeEvent)
         self.ok_button.clicked.connect(self.update_series)
 
         top_widget.setLayout(top_layout)
@@ -541,6 +557,12 @@ class EditDialog(QDialog):
 
         finish = QtWidgets.QAction(self)
         finish.triggered.connect(self.closeEvent)
+
+    def get_help(self, event):
+        """Open web page for help. """
+        help_url = HELP_URLS.get(self.target_modality, None)
+        if help_url:
+            webbrowser.open(help_url)
 
     def closeEvent(self, event):
         """Make sure we set has_edit_dialog_open to false in m ain window. """
