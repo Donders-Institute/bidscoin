@@ -158,6 +158,21 @@ DICOM:
   - attributes: *funcattributes
     bids:
       <<: *funcbids
+      suffix: events
+    provenance: ~
+  - attributes: *funcattributes
+    bids:
+      <<: *funcbids
+      suffix: physio
+    provenance: ~
+  - attributes: *funcattributes
+    bids:
+      <<: *funcbids
+      suffix: stim
+    provenance: ~
+  - attributes: *funcattributes
+    bids:
+      <<: *funcbids
       suffix: sbref
     provenance: ~
 
