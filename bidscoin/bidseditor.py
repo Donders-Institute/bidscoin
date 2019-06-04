@@ -89,20 +89,6 @@ def get_allowed_suffixes(template_bidsmap):
             if suffix and suffix not in allowed_suffixes[modality]:
                 allowed_suffixes[modality].append(suffix)
 
-    # Scan the heuristics/samples folder
-    folder = os.path.join(os.path.dirname(__file__), '..', 'heuristics', 'samples')
-    for x in os.walk(folder):
-        # Check the last two directories
-        path = x[0]
-        head, dirname2 = os.path.split(path)
-        dirname1 = os.path.split(head)[1]
-        if dirname1 in bids.bidsmodalities + (bids.unknownmodality,):
-            modality = dirname1
-            suffix = dirname2
-            if suffix not in allowed_suffixes[modality]:
-                LOGGER.warning(f'Suffix {suffix} found in samples folder but not in the template file for modality {modality}')
-                allowed_suffixes[modality].append(suffix)
-
     # Sort the allowed suffixes alphabetically
     for modality in bids.bidsmodalities + (bids.unknownmodality,):
         allowed_suffixes[modality] = sorted(allowed_suffixes[modality])
@@ -586,13 +572,6 @@ class EditDialog(QDialog):
             key = item_key.text()
             value = item_value.text()
 
-            if self.target_modality == 'anat' and key == 'modality_label':
-                print(row)
-                self.selection_modality_label_dropdown_change(row)
-            if not self.target_modality in ('beh', bids.unknownmodality) and key == 'suffix':
-                print(row)
-                self.selection_suffix_dropdown_change(row)
-
             self.target_series['bids'][key] = value
 
             series = self.target_series
@@ -886,7 +865,7 @@ class EditDialog(QDialog):
         bids_values['modality_label'] = self.target_modality_label
 
         # Update the BIDS name
-        un = self.target_series['bids'].get('run_index', '')
+        run = self.target_series['bids'].get('run_index', '')
         bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
 
         self.view_bids_name.clear()
