@@ -78,7 +78,6 @@ def get_allowed_suffixes(template_bidsmap):
     for modality in bids.bidsmodalities + (bids.unknownmodality,):
         allowed_suffixes[modality] = []
         series_list = template_bidsmap[SOURCE][modality]
-        print(modality, series_list)
         if not series_list:
             continue
         for series in series_list:
@@ -612,7 +611,7 @@ class EditDialog(QDialog):
                 item = self.set_cell("", is_editable=True)
                 table.setCellWidget(i, 1, self.modality_label_dropdown)
                 continue
-            if not self.target_modality in ('beh', bids.unknownmodality) and key == 'suffix':
+            if self.target_modality != bids.unknownmodality and key == 'suffix':
                 labels = self.allowed_suffixes[self.target_modality]
                 self.suffix_dropdown = QComboBox(table)
                 self.suffix_dropdown.addItems(labels)
@@ -758,7 +757,7 @@ class EditDialog(QDialog):
 
     def set_bids_values_section(self):
         """Set editable BIDS values section. """
-        if self.target_modality in ('beh', bids.unknownmodality):
+        if self.target_modality == bids.unknownmodality:
             # Free field
             self.target_suffix = ''
         else:
@@ -796,7 +795,7 @@ class EditDialog(QDialog):
         # Given the input BIDS attributes, derive the target BIDS attributes (i.e map them to the target attributes)
         bids_values, data = self.get_bids_values_data()
 
-        if self.target_modality in ('beh', bids.unknownmodality):
+        if self.target_modality == bids.unknownmodality:
             # Free field
             self.target_suffix = ''
         else:
@@ -819,7 +818,7 @@ class EditDialog(QDialog):
                 table.setItem(i, 0, QTableWidgetItem(item))
                 table.setCellWidget(i, 1, self.modality_label_dropdown)
                 continue
-            if not self.target_modality in ('beh', bids.unknownmodality) and key == 'suffix':
+            if self.target_modality != bids.unknownmodality and key == 'suffix':
                 labels = self.allowed_suffixes[self.target_modality]
                 self.suffix_dropdown = QComboBox(table)
                 self.suffix_dropdown.addItems(labels)
@@ -848,7 +847,7 @@ class EditDialog(QDialog):
 
         if self.target_modality == 'anat':
             bids_values['modality_label'] = self.target_modality_label
-        if not self.target_modality in ('beh', bids.unknownmodality):
+        if self.target_modality != bids.unknownmodality:
             bids_values['suffix'] = self.target_suffix
 
         # Update the BIDS name
@@ -904,10 +903,6 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     template_bidsmap = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code'))
     input_bidsmap    = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder,'code'))
     output_bidsmap   = copy.deepcopy(input_bidsmap)
-
-    import json
-    print(json.dumps(template_bidsmap, indent=4))
-    raise Exception('test')
 
     # Parse the sourcefolder from the bidsmap provenance info
     if not sourcefolder:
