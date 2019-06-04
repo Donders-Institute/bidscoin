@@ -535,10 +535,6 @@ class EditDialog(QDialog):
         finish = QtWidgets.QAction(self)
         finish.triggered.connect(self.closeEvent)
 
-    def populateConbo(self):
-        if not self.combo.count():
-            self.combo.addItems('One Two Three Four'.split())
-
     def closeEvent(self, event):
         """Make sure we set has_edit_dialog_open to false in m ain window. """
         self.got_sample.emit(self.target_bidsmap)
@@ -822,7 +818,7 @@ class EditDialog(QDialog):
         # Update the BIDS name
         self.target_series['bids'] = bids_values
         run = self.target_series['bids'].get('run_index', '')
-        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
+        self.bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
 
         self.view_bids_name.clear()
         self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % self.bids_name)
@@ -837,7 +833,7 @@ class EditDialog(QDialog):
         # Update the BIDS name
         self.target_series['bids'] = bids_values
         run = self.target_series['bids'].get('run_index', '')
-        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
+        self.bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
 
         self.view_bids_name.clear()
         self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % self.bids_name)
