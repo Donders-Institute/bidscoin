@@ -378,7 +378,13 @@ class Ui_MainWindow(object):
     def reload(self):
         """Reset button: reload the original input BIDS map. """
         # TODO: Implement reset
-        pass
+        self.setupUi(self.MainWindow,
+                     self.bidsfolder,
+                     self.sourcefolder,
+                     self.bidsmap_filename,
+                     self.bidsmap,
+                     self.output_bidsmap,
+                     self.template_bidsmap)
 
     def set_menu_and_status_bar(self):
         """Set the menu. """
