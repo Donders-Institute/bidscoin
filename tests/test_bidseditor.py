@@ -23,10 +23,6 @@ class TestBidseditor(unittest.TestCase):
         template_bidsmap = load_bidsmap(filename, pathname)
         allowed_suffixes = get_allowed_suffixes(template_bidsmap)
 
-        import json
-        print("===IN==")
-        print(json.dumps(allowed_suffixes, indent=4))
-
         reference_allowed_suffixes = {
             "anat": [
                 "FLAIR",
@@ -48,7 +44,10 @@ class TestBidseditor(unittest.TestCase):
             ],
             "func": [
                 "bold",
-                "sbref"
+                "events",
+                "physio",
+                "sbref",
+                "stim"
             ],
             "dwi": [
                 "dwi",
@@ -75,9 +74,6 @@ class TestBidseditor(unittest.TestCase):
             ],
             "extra_data": []
         }
-
-        print("===REF==")
-        print(json.dumps(reference_allowed_suffixes, indent=4))
 
         self.assertEqual(allowed_suffixes, reference_allowed_suffixes)
 
