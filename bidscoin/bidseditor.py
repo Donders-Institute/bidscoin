@@ -125,14 +125,6 @@ def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, source_bid
     return bids_attributes
 
 
-class CellComboBox(QtWidgets.QComboBox):
-    popupAboutToBeShown = QtCore.pyqtSignal()
-
-    def showPopup(self):
-        self.popupAboutToBeShown.emit()
-        super(CellComboBox, self).showPopup()
-
-
 class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, bidsmap, output_bidsmap, template_bidsmap):
@@ -467,9 +459,6 @@ class EditDialog(QDialog):
     def __init__(self, idx, modality, output_bidsmap, template_bidsmap):
         QDialog.__init__(self)
 
-        self.combo = CellComboBox(self)
-        self.combo.popupAboutToBeShown.connect(self.populateConbo)
-
         self.source_bidsmap = copy.deepcopy(output_bidsmap)         # TODO: Check if deepcopy is needed
         self.source_index = idx
         self.source_modality = modality
@@ -602,7 +591,7 @@ class EditDialog(QDialog):
             table.setRowHeight(i, row_height)
             key = row[0]["value"]
             if self.target_modality == 'anat' and key == 'modality_label':
-                self.modality_label_dropdown = QComboBox(table)
+                self.modality_label_dropdown = QComboBox(self)
                 self.modality_label_dropdown.addItems(self.ANAT_BIDS_MODALITY_LABELS)
                 self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
                 self.modality_label_dropdown.currentIndexChanged.connect(self.selection_modality_label_dropdown_change)
@@ -613,7 +602,7 @@ class EditDialog(QDialog):
                 continue
             if self.target_modality != bids.unknownmodality and key == 'suffix':
                 labels = self.allowed_suffixes[self.target_modality]
-                self.suffix_dropdown = QComboBox(table)
+                self.suffix_dropdown = QComboBox(self)
                 self.suffix_dropdown.addItems(labels)
                 self.suffix_dropdown.setCurrentIndex(self.suffix_dropdown.findText(self.target_suffix))
                 self.suffix_dropdown.currentIndexChanged.connect(self.selection_suffix_dropdown_change)
