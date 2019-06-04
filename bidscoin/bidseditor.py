@@ -139,6 +139,14 @@ def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, source_bid
     return bids_attributes
 
 
+class CellComboBox(QtWidgets.QComboBox):
+    popupAboutToBeShown = QtCore.pyqtSignal()
+
+    def showPopup(self):
+        self.popupAboutToBeShown.emit()
+        super(CellComboBox, self).showPopup()
+
+
 class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, bidsmap, output_bidsmap, template_bidsmap):
@@ -473,6 +481,9 @@ class EditDialog(QDialog):
     def __init__(self, idx, modality, output_bidsmap, template_bidsmap):
         QDialog.__init__(self)
 
+        self.combo = CellComboBox(self)
+        self.combo.popupAboutToBeShown.connect(self.populateConbo)
+
         self.source_bidsmap = copy.deepcopy(output_bidsmap)         # TODO: Check if deepcopy is needed
         self.source_index = idx
         self.source_modality = modality
@@ -547,6 +558,10 @@ class EditDialog(QDialog):
         finish = QtWidgets.QAction(self)
         finish.triggered.connect(self.closeEvent)
 
+    def populateConbo(self):
+        if not self.combo.count():
+            self.combo.addItems('One Two Three Four'.split())
+
     def closeEvent(self, event):
         """Make sure we set has_edit_dialog_open to false in m ain window. """
         self.got_sample.emit(self.target_bidsmap)
@@ -581,7 +596,7 @@ class EditDialog(QDialog):
             self.target_series['bids'][key] = value
 
             series = self.target_series
-            run = series['bids'].get('run_index', '*')
+            run = series['bids'].get('run_index', '')
             self.bids_name = bids.get_bidsname('001', '01', self.target_modality, series, run)
 
             self.view_bids_name.clear()
@@ -608,7 +623,7 @@ class EditDialog(QDialog):
             table.setRowHeight(i, row_height)
             key = row[0]["value"]
             if self.target_modality == 'anat' and key == 'modality_label':
-                self.modality_label_dropdown = QComboBox()
+                self.modality_label_dropdown = QComboBox(table)
                 self.modality_label_dropdown.addItems(self.ANAT_BIDS_MODALITY_LABELS)
                 self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
                 self.modality_label_dropdown.currentIndexChanged.connect(self.selection_modality_label_dropdown_change)
@@ -616,6 +631,17 @@ class EditDialog(QDialog):
                 table.setItem(i, 0, QTableWidgetItem(item))
                 item = self.set_cell("", is_editable=True)
                 table.setCellWidget(i, 1, self.modality_label_dropdown)
+                continue
+            if not self.target_modality in ('beh', bids.unknownmodality) and key == 'suffix':
+                labels = self.allowed_suffixes[self.target_modality]
+                self.suffix_dropdown = QComboBox(table)
+                self.suffix_dropdown.addItems(labels)
+                print(self.target_suffix)
+                self.suffix_dropdown.setCurrentIndex(self.suffix_dropdown.findText(self.target_suffix))
+                self.suffix_dropdown.currentIndexChanged.connect(self.selection_suffix_dropdown_change)
+                item = self.set_cell("suffix", is_editable=False)
+                table.setItem(i, 0, QTableWidgetItem(item))
+                table.setCellWidget(i, 1, self.suffix_dropdown)
                 continue
             for j, element in enumerate(row):
                 value = element.get("value", "")
@@ -712,7 +738,7 @@ class EditDialog(QDialog):
 
     def get_bids_values_data(self):
         """# Given the input BIDS attributes, derive the target BIDS attributes. """
-        source_bids_attributes = self.target_series.get('bids', {})
+        source_bids_attributes = self.source_series.get('bids', {})
         target_bids_attributes = get_bids_attributes(self.template_bidsmap,
                                                      self.allowed_suffixes,
                                                      self.target_modality,
@@ -752,17 +778,16 @@ class EditDialog(QDialog):
 
     def set_bids_values_section(self):
         """Set editable BIDS values section. """
-
-        # For anat and extra_data, set the default target modality label (i.e T1w)
-        self.target_modality_label = self.ANAT_BIDS_MODALITY_LABELS[0]
-
-        allowed_suffixes = self.allowed_suffixes[self.target_modality]
-        if len(allowed_suffixes) > 0:
-            self.target_suffix = allowed_suffixes[0]
-        else:
+        if self.target_modality in ('beh', bids.unknownmodality):
+            # Free field
             self.target_suffix = ''
+        else:
+            # Fixed list of options
+            self.target_suffix = self.allowed_suffixes[self.target_modality][0]
+        self.target_modality_label = self.allowed_suffixes['anat'][0]
 
-        _, data = self.get_bids_values_data()
+        bids_values, data = self.get_bids_values_data()
+        self.target_series['bids'] = bids_values
 
         self.label_bids = QLabel()
         self.label_bids.setText("BIDS values")
@@ -771,7 +796,8 @@ class EditDialog(QDialog):
 
     def set_bids_name_section(self):
         """Set non-editable BIDS name section. """
-        self.bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series)
+        run = self.target_series['bids'].get('run_index', '')
+        self.bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
 
         self.label_bids_name = QLabel()
         self.label_bids_name.setText("BIDS name")
@@ -790,14 +816,22 @@ class EditDialog(QDialog):
         # Given the input BIDS attributes, derive the target BIDS attributes (i.e map them to the target attributes)
         bids_values, data = self.get_bids_values_data()
 
+        if self.target_modality in ('beh', bids.unknownmodality):
+            # Free field
+            self.target_suffix = ''
+        else:
+            # Fixed list of options
+            self.target_suffix = self.allowed_suffixes[self.target_modality][0]
+        self.target_modality_label = self.allowed_suffixes['anat'][0]
+
         # Update the BIDS values
         table = self.view_bids
 
         for i, row in enumerate(data):
             key = row[0]["value"]
             if self.target_modality == 'anat' and key == 'modality_label':
-                labels = self.ANAT_BIDS_MODALITY_LABELS
-                self.modality_label_dropdown = QComboBox()
+                labels = self.allowed_suffixes[self.target_modality]
+                self.modality_label_dropdown = QComboBox(table)
                 self.modality_label_dropdown.addItems(labels)
                 self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
                 self.modality_label_dropdown.currentIndexChanged.connect(self.selection_modality_label_dropdown_change)
@@ -807,10 +841,10 @@ class EditDialog(QDialog):
                 continue
             if not self.target_modality in ('beh', bids.unknownmodality) and key == 'suffix':
                 labels = self.allowed_suffixes[self.target_modality]
-                self.suffix_dropdown = QComboBox()
+                self.suffix_dropdown = QComboBox(table)
                 self.suffix_dropdown.addItems(labels)
-                self.suffix_dropdown.setCurrentIndex(
-                self.suffix_dropdown.findText(self.target_suffix))
+                print(self.target_suffix)
+                self.suffix_dropdown.setCurrentIndex(self.suffix_dropdown.findText(self.target_suffix))
                 self.suffix_dropdown.currentIndexChanged.connect(self.selection_suffix_dropdown_change)
                 item = self.set_cell("suffix", is_editable=False)
                 table.setItem(i, 0, QTableWidgetItem(item))
@@ -838,7 +872,8 @@ class EditDialog(QDialog):
             bids_values['suffix'] = self.target_suffix
 
         # Update the BIDS name
-        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series)
+        run = self.target_series['bids'].get('run_index', '')
+        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
 
         self.view_bids_name.clear()
         self.view_bids_name.textCursor().insertText(bids_name)
@@ -851,7 +886,8 @@ class EditDialog(QDialog):
         bids_values['modality_label'] = self.target_modality_label
 
         # Update the BIDS name
-        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series)
+        un = self.target_series['bids'].get('run_index', '')
+        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
 
         self.view_bids_name.clear()
         self.view_bids_name.textCursor().insertText(bids_name)
@@ -864,7 +900,8 @@ class EditDialog(QDialog):
         bids_values['suffix'] = self.target_suffix
 
         # Update the BIDS name
-        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series)
+        run = self.target_series['bids'].get('run_index', '')
+        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
 
         self.view_bids_name.clear()
         self.view_bids_name.textCursor().insertText(bids_name)
