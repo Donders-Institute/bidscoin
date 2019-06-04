@@ -44,11 +44,15 @@ MAX_NUM_BIDS_ATTRIBUTES = 10
 
 ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "brain.ico")
 
-HELP_URLS = {
+MAIN_HELP_URL = "https://github.com/Donders-Institute/bidscoin/blob/master/README.md"
+
+EDIT_HELP_URL_DEFAULT = "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html"
+
+EDIT_HELP_URLS = {
     "anat": "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#anatomy-imaging-data",
     "dwi": "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#diffusion-imaging-data",
     "beh": "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/07-behavioral-experiments.html",
-    bids.unknownmodality: "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html"
+    bids.unknownmodality: EDIT_HELP_URL_DEFAULT
 }
 
 
@@ -278,7 +282,7 @@ class Ui_MainWindow(object):
 
         self.table = QTableWidget()
         self.table.setColumnCount(5)
-        self.table.setRowCount(num_files + 1) # one for each file and the save button
+        self.table.setRowCount(num_files) # one for each file
 
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
@@ -290,6 +294,7 @@ class Ui_MainWindow(object):
                 continue
             for series in series_list:
                 provenance = series['provenance']
+                provenance_file = os.path.basename(provenance)
                 provenance_file = os.path.basename(provenance)
                 run = series['bids'].get('run_index', '')
                 bids_name = bids.get_bidsname('001', '01', modality, series, run)
@@ -320,10 +325,10 @@ class Ui_MainWindow(object):
 
                 idx += 1
 
-        self.save_button = QtWidgets.QPushButton()
-        self.save_button.setText("Save")
-        self.save_button.setStyleSheet('QPushButton {color: blue;}')
-        self.table.setCellWidget(idx, 4, self.save_button)
+        # self.save_button = QtWidgets.QPushButton()
+        # self.save_button.setText("Save")
+        # self.save_button.setStyleSheet('QPushButton {color: blue;}')
+        # self.table.setCellWidget(idx, 4, self.save_button)
 
         self.table.setHorizontalHeaderLabels(['', f'{SOURCE} file sample', 'Modality', 'BIDS name', 'Action'])
         header = self.table.horizontalHeader()
@@ -338,14 +343,39 @@ class Ui_MainWindow(object):
 
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
+        self.help_button = QtWidgets.QPushButton()
+        self.help_button.setText("Help")
+        self.reload_button = QtWidgets.QPushButton()
+        self.reload_button.setText("Reload")
+        self.save_button = QtWidgets.QPushButton()
+        self.save_button.setText("Save")
+        hbox = QHBoxLayout()
+        hbox.addStretch(1)
+        hbox.addWidget(self.help_button)
+        hbox.addWidget(self.reload_button)
+        hbox.addWidget(self.save_button)
+
         self.tab2.layout.addWidget(self.table)
+        self.tab2.layout.addLayout(hbox)
+
         self.file_sample_listing = QtWidgets.QWidget()
         self.file_sample_listing.setLayout(self.tab2.layout)
         self.file_sample_listing.setObjectName("filelister")
 
         self.tabwidget.addTab(self.file_sample_listing, "")
 
+        self.help_button.clicked.connect(self.get_help)
+        self.reload_button.clicked.connect(self.reload)
         self.save_button.clicked.connect(self.save_bidsmap_to_file)
+
+    def get_help(self):
+        """Get online help. """
+        webbrowser.open(MAIN_HELP_URL)
+
+    def reload(self):
+        """Reset button: reload the original input BIDS map. """
+        # TODO: Implement reset
+        pass
 
     def set_menu_and_status_bar(self):
         """Set the menu. """
@@ -560,9 +590,8 @@ class EditDialog(QDialog):
 
     def get_help(self, event):
         """Open web page for help. """
-        help_url = HELP_URLS.get(self.target_modality, None)
-        if help_url:
-            webbrowser.open(help_url)
+        help_url = EDIT_HELP_URLS.get(self.target_modality, EDIT_HELP_URL_DEFAULT)
+        webbrowser.open(help_url)
 
     def closeEvent(self, event):
         """Make sure we set has_edit_dialog_open to false in m ain window. """
