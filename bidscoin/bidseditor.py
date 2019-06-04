@@ -569,7 +569,6 @@ class EditDialog(QDialog):
             self.bids_name = bids.get_bidsname('001', '01', self.target_modality, series, run)
 
             self.view_bids_name.clear()
-            # self.view_bids_name.textCursor().insertText(self.bids_name)
             self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % self.bids_name)
 
     def set_cell(self, value, is_editable=False):
@@ -763,7 +762,6 @@ class EditDialog(QDialog):
 
         self.view_bids_name = QTextEdit()
         self.view_bids_name.setReadOnly(True)
-        # self.view_bids_name.textCursor().insertText(self.bids_name)
         self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % self.bids_name)
 
         height = 24
@@ -824,7 +822,7 @@ class EditDialog(QDialog):
         bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
 
         self.view_bids_name.clear()
-        self.view_bids_name.textCursor().insertText(bids_name)
+        self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % self.bids_name)
 
     def selection_suffix_dropdown_change(self, i):
         """Update the BIDS values and BIDS name section when the dropdown selection has been taking place. """
@@ -839,7 +837,7 @@ class EditDialog(QDialog):
         bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
 
         self.view_bids_name.clear()
-        self.view_bids_name.textCursor().insertText(bids_name)
+        self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % self.bids_name)
 
 
 def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templatefile: str=''):
