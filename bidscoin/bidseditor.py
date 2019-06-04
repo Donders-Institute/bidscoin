@@ -615,7 +615,6 @@ class EditDialog(QDialog):
                 labels = self.allowed_suffixes[self.target_modality]
                 self.suffix_dropdown = QComboBox(table)
                 self.suffix_dropdown.addItems(labels)
-                print(self.target_suffix)
                 self.suffix_dropdown.setCurrentIndex(self.suffix_dropdown.findText(self.target_suffix))
                 self.suffix_dropdown.currentIndexChanged.connect(self.selection_suffix_dropdown_change)
                 item = self.set_cell("suffix", is_editable=False)
@@ -822,7 +821,6 @@ class EditDialog(QDialog):
                 labels = self.allowed_suffixes[self.target_modality]
                 self.suffix_dropdown = QComboBox(table)
                 self.suffix_dropdown.addItems(labels)
-                print(self.target_suffix)
                 self.suffix_dropdown.setCurrentIndex(self.suffix_dropdown.findText(self.target_suffix))
                 self.suffix_dropdown.currentIndexChanged.connect(self.selection_suffix_dropdown_change)
                 item = self.set_cell("suffix", is_editable=False)
@@ -851,6 +849,7 @@ class EditDialog(QDialog):
             bids_values['suffix'] = self.target_suffix
 
         # Update the BIDS name
+        self.target_series['bids'] = bids_values
         run = self.target_series['bids'].get('run_index', '')
         bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
 
@@ -865,6 +864,7 @@ class EditDialog(QDialog):
         bids_values['modality_label'] = self.target_modality_label
 
         # Update the BIDS name
+        self.target_series['bids'] = bids_values
         run = self.target_series['bids'].get('run_index', '')
         bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
 
@@ -879,6 +879,7 @@ class EditDialog(QDialog):
         bids_values['suffix'] = self.target_suffix
 
         # Update the BIDS name
+        self.target_series['bids'] = bids_values
         run = self.target_series['bids'].get('run_index', '')
         bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
 
