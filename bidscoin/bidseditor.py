@@ -469,6 +469,7 @@ class EditDialog(QDialog):
         self.target_bidsmap = copy.deepcopy(output_bidsmap)
         self.target_modality = modality
         self.target_series = copy.deepcopy(self.source_series)
+        self.target_suffix = ''
 
         self.template_bidsmap = template_bidsmap
         self.allowed_suffixes = get_allowed_suffixes(template_bidsmap)
@@ -722,9 +723,11 @@ class EditDialog(QDialog):
                     }
                 ])
             else:
+                key_show = str(key)
+                key_show = key_show.split('_')[0]
                 data.append([
                     {
-                        "value": str(key),
+                        "value": key_show,
                         "is_editable": False
                     },
                     {
@@ -772,15 +775,15 @@ class EditDialog(QDialog):
         """Update the BIDS values and BIDS name section when the dropdown selection has been taking place. """
         self.target_modality = self.view_dropdown.currentText()
 
-        # Given the input BIDS attributes, derive the target BIDS attributes (i.e map them to the target attributes)
-        bids_values, data = self.get_bids_values_data()
-
         if self.target_modality == bids.unknownmodality:
             # Free field
             self.target_suffix = ''
         else:
             # Fixed list of options
             self.target_suffix = self.allowed_suffixes[self.target_modality][0]
+
+        # Given the input BIDS attributes, derive the target BIDS attributes (i.e map them to the target attributes)
+        bids_values, data = self.get_bids_values_data()
 
         # Update the BIDS values
         table = self.view_bids
