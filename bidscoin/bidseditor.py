@@ -46,12 +46,15 @@ ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons
 
 MAIN_HELP_URL = "https://github.com/Donders-Institute/bidscoin/blob/master/README.md"
 
-EDIT_HELP_URL_DEFAULT = "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html"
+EDIT_HELP_URL_DEFAULT = "https://bids-specification.readthedocs.io/en/latest/"
 
 EDIT_HELP_URLS = {
     "anat": "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#anatomy-imaging-data",
-    "dwi": "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#diffusion-imaging-data",
     "beh": "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/07-behavioral-experiments.html",
+    "dwi": "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#diffusion-imaging-data",
+    "fmap": "https://bids-specification.readthedocs.io/en/latest/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#fieldmap-data",
+    "func": "https://bids-specification.readthedocs.io/en/latest/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#task-including-resting-state-imaging-data",
+    "pet": "https://docs.google.com/document/d/1mqMLnxVdLwZjDd4ZiWFqjEAmOmfcModA_R535v3eQs0/edit",
     bids.unknownmodality: EDIT_HELP_URL_DEFAULT
 }
 
