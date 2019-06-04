@@ -798,7 +798,7 @@ class EditDialog(QDialog):
             key = row[0]["value"]
             if self.target_modality == 'anat' and key == 'modality_label':
                 labels = self.allowed_suffixes[self.target_modality]
-                self.modality_label_dropdown = QComboBox(table)
+                self.modality_label_dropdown = QComboBox()
                 self.modality_label_dropdown.addItems(labels)
                 self.modality_label_dropdown.setCurrentIndex(self.modality_label_dropdown.findText(self.target_modality_label))
                 self.modality_label_dropdown.currentIndexChanged.connect(self.selection_modality_label_dropdown_change)
@@ -808,7 +808,7 @@ class EditDialog(QDialog):
                 continue
             if self.target_modality != bids.unknownmodality and key == 'suffix':
                 labels = self.allowed_suffixes[self.target_modality]
-                self.suffix_dropdown = QComboBox(table)
+                self.suffix_dropdown = QComboBox()
                 self.suffix_dropdown.addItems(labels)
                 self.suffix_dropdown.setCurrentIndex(self.suffix_dropdown.findText(self.target_suffix))
                 self.suffix_dropdown.currentIndexChanged.connect(self.selection_suffix_dropdown_change)
@@ -862,7 +862,7 @@ class EditDialog(QDialog):
 
     def selection_suffix_dropdown_change(self, i):
         """Update the BIDS values and BIDS name section when the dropdown selection has been taking place. """
-        self.suffix_label = self.suffix_dropdown.currentText()
+        self.target_suffix = self.suffix_dropdown.currentText()
 
         bids_values, data = self.get_bids_values_data()
         bids_values['suffix'] = self.target_suffix
