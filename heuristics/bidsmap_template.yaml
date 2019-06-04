@@ -498,13 +498,25 @@ FileSystem:
       # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
   beh:        # ----------------------- All behavioural data ---------------------
-  - attributes:
+  - attributes: &behattributes_file
       FolderName: ~
       FileName: ~
       FileExt: ~
-    bids:
+    bids: &behbids_file
       task_label: <FileName>
-      suffix: ~
+      suffix: events
+  - attributes: *behattributes_file
+    bids:
+      <<: *behbids_file
+      suffix: beh
+  - attributes: *behattributes_file
+    bids:
+      <<: *behbids_file
+      suffix: physio
+  - attributes: *behattributes_file
+    bids:
+      <<: *behbids_file
+      suffix: stim
 
   extra_data: # ----------------------- All extra data ---------------------------
   - attributes:
