@@ -20,8 +20,7 @@ try:
 except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
 
-
-logger = logging.getLogger('bidscoin')
+LOGGER = logging.getLogger('bidscoin')
 
 
 def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict) -> dict:
@@ -51,8 +50,7 @@ def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict) -> dict:
     for series in heuristics['DICOM'][bidsmodality]:
 
         match   = False
-        # series_ = dict()                              # The CommentedMap API below is not guaranteed for the future so keep this line as an alternative
-        series_ = ruamel.yaml.comments.CommentedMap()   # Creating a new object is safe in that we don't change the original heuristics object. However, we lose all comments and formatting within the series (which is not such a disaster probably). It is also much faster and more robust with aliases compared with a deepcopy
+        series_ = dict()                                # The CommentedMap API is not guaranteed for the future
 
         # Copy the bids labels for the different bidsmodality matches
         if bidsmodality == 'beh':                       # beh should not have subdirectories as it (in the current BIDS version doesn't have a suffix); however, it is kind of irrelevant as beh probably never has a dicomfile anyway?
@@ -67,18 +65,14 @@ def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict) -> dict:
         if match:
 
             # Fill the empty attribute with the info from the dicomfile
-            # series_['attributes'] = dict()                                                # The CommentedMap API below is not guaranteed for the future so keep this line as an alternative
-            series_['attributes'] = ruamel.yaml.comments.CommentedMap()                     # Clear the yaml objects that were copied over
-            series_.yaml_add_eol_comment('From: ' + dicomfile, key='attributes', column=50) # Add provenance data
+            series_['attributes'] = dict()                                                  # The CommentedMap API is not guaranteed for the future
             series_['provenance'] = dicomfile
             for attrkey in series['attributes']:
                 series_['attributes'][attrkey] = bids.get_dicomfield(attrkey, dicomfile)
 
             # Copy the filled-in series over to the bidsmap
-            if bidsmap['DICOM'][bidsmodality] is None:
-                bidsmap['DICOM'][bidsmodality] = [series_]
-            elif not bids.exist_series(series_, bidsmap['DICOM'][bidsmodality]):
-                bidsmap['DICOM'][bidsmodality].append(series_)
+            if not bids.exist_series(bidsmap, 'DICOM', bidsmodality, series_):
+                bidsmap = bids.append_series(bidsmap, 'DICOM', bidsmodality, series_)
 
             return bidsmap
 
@@ -185,7 +179,7 @@ def built_pluginmap(sample: str, bidsmap: dict) -> dict:
     return bidsmap
 
 
-def bidstrainer(bidsfolder: str, samplefolder: str='', bidsmapfile: str='bidsmap_template.yaml', pattern: str=r'.*\.(IMA|dcm)$') -> str:
+def bidstrainer(bidsfolder: str, samplefolder: str, bidsmapfile: str, pattern: str) -> str:
     """
     Main function uses all samples in the samplefolder as training / example  data to generate a
     maximally filled-in bidsmap_sample.yaml file.
@@ -208,8 +202,12 @@ def bidstrainer(bidsfolder: str, samplefolder: str='', bidsmapfile: str='bidsmap
             return ''
     samplefolder = os.path.abspath(os.path.expanduser(samplefolder))
 
+    # Start logging
+    bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidstrainer.log'))
+    LOGGER.info('------------ START BIDStrainer ------------')
+
     # Get the heuristics for creating the bidsmap
-    heuristics = bids.get_heuristics(bidsmapfile, None, logger)
+    heuristics = bids.load_bidsmap(bidsmapfile, None)
 
     # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     bidsmap = copy.deepcopy(heuristics)
@@ -256,9 +254,9 @@ def bidstrainer(bidsfolder: str, samplefolder: str='', bidsmapfile: str='bidsmap
     bidsmapfile = os.path.join(bidsfolder,'code','bidsmap_sample.yaml')
 
     # Save the bidsmap to the bidsmap YAML-file
-    print('Writing bidsmap to: ' + bidsmapfile)
-    with open(bidsmapfile, 'w') as stream:
-        yaml.dump(bidsmap, stream)
+    bids.save_bidsmap(bidsmapfile, bidsmap)
+
+    LOGGER.info('------------ FINISHED! ------------')
 
 
 # Shell usage

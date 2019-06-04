@@ -107,16 +107,16 @@ DICOM:
     rec_label: ~
     run_index: <automatic>
     mod_label: ~
-    modality_label: T1w
+    suffix: T1w
     ce_label: ~
   - <<: *anat
-    modality_label: T2w
+    suffix: T2w
   - <<: *anat
-    modality_label: T1rho
+    suffix: T1rho
   - <<: *anat
-    modality_label: T1map
+    suffix: T1map
   - <<: *anat
-    modality_label: T2map
+    suffix: T2map
   - <<: *anat
     attributes:
       SeriesDescription: ~
@@ -128,7 +128,7 @@ DICOM:
       RepetitionTime:
       ImageType: ~
       ProtocolName: ~
-    modality_label: T2star
+    suffix: T2star
   - <<: *anat
     attributes:
       SeriesDescription: ~
@@ -142,25 +142,25 @@ DICOM:
       RepetitionTime: ~
       ImageType: ~
       ProtocolName: ~
-    modality_label: FLAIR
+    suffix: FLAIR
   - <<: *anat
-    modality_label: FLASH
+    suffix: FLASH
   - <<: *anat
-    modality_label: PD
+    suffix: PD
   - <<: *anat
-    modality_label: PDmap
+    suffix: PDmap
   - <<: *anat
-    modality_label: PDT2
+    suffix: PDT2
   - <<: *anat
-    modality_label: inplaneT1
+    suffix: inplaneT1
   - <<: *anat
-    modality_label: inplaneT2
+    suffix: inplaneT2
   - <<: *anat
-    modality_label: angio
+    suffix: angio
   - <<: *anat
-    modality_label: defacemask
+    suffix: defacemask
   - <<: *anat
-    modality_label: SWImagandphase
+    suffix: SWImagandphase
 
   func:     # ----------------------- All functional data -----------------------
   - &func
@@ -311,38 +311,38 @@ FileSystem:
     rec_label: ~
     run_index: <automatic>
     mod_label: ~
-    modality_label: T1w
+    suffix: T1w
     ce_label: ~
   - <<: *anat_filesystem
-    modality_label: T2w
+    suffix: T2w
   - <<: *anat_filesystem
-    modality_label: T1rho
+    suffix: T1rho
   - <<: *anat_filesystem
-    modality_label: T1map
+    suffix: T1map
   - <<: *anat_filesystem
-    modality_label: T2map
+    suffix: T2map
   - <<: *anat_filesystem
-    modality_label: T2star
+    suffix: T2star
   - <<: *anat_filesystem
-    modality_label: FLAIR
+    suffix: FLAIR
   - <<: *anat_filesystem
-    modality_label: FLASH
+    suffix: FLASH
   - <<: *anat_filesystem
-    modality_label: PD
+    suffix: PD
   - <<: *anat_filesystem
-    modality_label: PDmap
+    suffix: PDmap
   - <<: *anat_filesystem
-    modality_label: PDT2
+    suffix: PDT2
   - <<: *anat_filesystem
-    modality_label: inplaneT1
+    suffix: inplaneT1
   - <<: *anat_filesystem
-    modality_label: inplaneT2
+    suffix: inplaneT2
   - <<: *anat_filesystem
-    modality_label: angio
+    suffix: angio
   - <<: *anat_filesystem
-    modality_label: defacemask
+    suffix: defacemask
   - <<: *anat_filesystem
-    modality_label: SWImagandphase
+    suffix: SWImagandphase
 
   func:     # ----------------------- All functional data -----------------------
   - &func_filesystem

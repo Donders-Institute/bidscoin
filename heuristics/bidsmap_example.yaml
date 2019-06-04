@@ -41,7 +41,7 @@ DICOM:
       rec_label: ~
       run_index: ~
       mod_label: ~
-      modality_label: T1w
+      suffix: T1w
       ce_label: ~
     - identifier:
         - SeriesDescription: MP2RAGE optimal contrast
@@ -50,7 +50,7 @@ DICOM:
       rec_label: ~
       run_index: ~
       mod_label: ~
-      modality_label: T1w
+      suffix: T1w
       ce_label: ~
 
   func:

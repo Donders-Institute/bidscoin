@@ -12,19 +12,50 @@ https://github.com/dangom/dac2bids/blob/master/dac2bids.py
 import os.path
 import glob
 import warnings
-import inspect
-import datetime
-import textwrap
 import re
 import ruamel
-from logging import Logger
+import logging
 from ruamel.yaml import YAML
 yaml = YAML()
 
+logger = logging.getLogger('bidscoin')
 
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh', 'pet')
 unknownmodality = 'extra_data'
-bidslabels      = ('acq_label', 'modality_label', 'ce_label', 'rec_label', 'task_label', 'echo_index', 'dir_label', 'suffix')   # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
+bidslabels      = ('acq_label', 'ce_label', 'rec_label', 'task_label', 'echo_index', 'dir_label', 'suffix')   # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
+
+
+def setup_logging(log_filename: str) -> logging.Logger:
+    """
+    Setup the logging
+
+    :param log_filename:    Name of the logile
+    :return:                Logger object
+     """
+
+    # Create the log dir if it does not exist
+    os.makedirs(os.path.dirname(log_filename), exist_ok=True)
+
+    # Set the format
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s %(message)s',
+                                  '%Y-%m-%d %H:%M:%S')
+
+    # Set the streamhandler
+    streamhandler = logging.StreamHandler()
+    streamhandler.setLevel(logging.INFO)
+    streamhandler.setFormatter(formatter)
+
+    # Set the filehandler
+    filehandler = logging.FileHandler(log_filename)
+    filehandler.setLevel(logging.INFO)
+    filehandler.setFormatter(formatter)
+
+    # Add the streamhandler and filehandler to the logger
+    logger.addHandler(streamhandler)
+    logger.addHandler(filehandler)
+
+    return logger
 
 
 def format_warning(message, category, filename, lineno, line=''):
@@ -247,40 +278,55 @@ def get_niftifile(folder: str) -> str:
     return None
 
 
-def get_heuristics(yamlfile: str, folder: str, logger: Logger) -> dict:
+def load_bidsmap(yamlfile: str, folder: str) -> ruamel.yaml:
     """
-    Read the heuristics from the bidsmap yaml-file
+    Read the mapping heuristics from the bidsmap yaml-file
 
-    :param yamlfile:    The full pathname of the bidsmap yaml-file
-    :param folder:      Searches in the ./heuristics folder if folder=None (useful for centrally managed template yaml-files)
-    :param logger:      Logger object
-    :return:            Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param yamlfile:    The full pathname or basename of the bidsmap yaml-file. If None, the default bidsmap_template.yaml file in the heuristics folder is used
+    :param folder:      Searches in the ./heuristics folder if folder=None and yamlfile=basename (useful for centrally managed template yaml-files)
+    :return:            ruamel.yaml dict structure, with all options, BIDS mapping heuristics, labels and attributes, etc
     """
 
     # Input checking
     if not folder:
         folder = os.path.join(os.path.dirname(__file__),'..','heuristics')
+    if not yamlfile:
+        yamlfile = os.path.join(os.path.dirname(__file__),'..','heuristics','bidsmap_template.yaml')
 
     if not os.path.splitext(yamlfile)[1]:           # Add a standard file-extension if needed
         yamlfile = yamlfile + '.yaml'
 
     if os.path.basename(yamlfile) == yamlfile:      # Get the full paths to the bidsmap yaml-file
         yamlfile = os.path.join(folder, yamlfile)
-        logger.info('Using: ' + os.path.abspath(yamlfile))
 
     yamlfile = os.path.abspath(os.path.expanduser(yamlfile))
+    logger.info('Using: ' + os.path.abspath(yamlfile))
 
     # Read the heuristics from the bidsmap file
     with open(yamlfile, 'r') as stream:
-        heuristics = yaml.load(stream)
+        bidsmap = yaml.load(stream)
 
     # Issue a warning if the version in the bidsmap YAML-file is not the same as the bidscoin version
-    if 'version' not in heuristics['Options']:
-        heuristics['Options']['version'] = 'Unknown'
-    if heuristics['Options']['version'] != version():
-        logger.warning('BIDScoiner version conflict: {} was created using version {}, but this is version {}'.format(yamlfile, heuristics['Options']['version'], version()))
+    if 'version' not in bidsmap['Options']:
+        bidsmap['Options']['version'] = 'Unknown'
+    if bidsmap['Options']['version'] != version():
+        logger.warning('BIDScoiner version conflict: {} was created using version {}, but this is version {}'.format(yamlfile, bidsmap['Options']['version'], version()))
 
-    return heuristics
+    return bidsmap
+
+
+def save_bidsmap(filename: str, bidsmap: dict):
+    """
+    Save the BIDSmap as a YAML text file
+
+    :param filename:
+    :param bidsmap:
+    :return:
+    """
+
+    logger.info('Writing bidsmap to: ' + filename)
+    with open(filename, 'w') as stream:
+        yaml.dump(bidsmap, stream)
 
 
 def parse_x_protocol(pattern: str, dicomfile: str) -> str:
@@ -399,14 +445,12 @@ def strip_suffix(series: dict) -> dict:
     # See if we have a suffix for this modality
     if 'suffix' in series['bids'] and series['bids']['suffix']:
         suffix = series['bids']['suffix'].lower()
-    elif 'modality_label' in series['bids'] and series['bids']['modality_label']:
-        suffix = series['bids']['modality_label'].lower()
     else:
         return series
 
     # See if any of the BIDS labels ends with the same suffix. If so, then remove it
     for key in series['bids']:
-        if key in ('modality_label', 'suffix'):
+        if key == 'suffix':
             continue
         if series['bids'][key] and series['bids'][key].lower().endswith(suffix):
             series['bids'][key] = series['bids'][key][0:-len(suffix)]       # NB: This will leave the added '_' and '.' characters, but they will be taken out later (as they are not BIDS-valid)
@@ -432,29 +476,34 @@ def cleanup_label(label: str) -> str:
     return re.sub(r'(?u)[^-\w.]', '', label)
 
 
-def exist_series(series: dict, serieslist: list, matchbidslabels: bool=True) -> bool:
+def exist_series(bidsmap: dict, source: str, modality: str, series: dict, matchbidslabels: bool=False) -> bool:
     """
     Checks if there is already an entry in serieslist with the same attributes and, optionally, labels as series
 
-    :param series:          The series labels and attributes that are to be searched for
-    :param serieslist:      List of series that is being searched
+    :param bidsmap:         Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param source:          The information source in the bidsmap that is used, e.g. 'DICOM'
+    :param modality:        The modality in the source that is used, e.g. 'anat'
+    :param series:          The series (listitem) that is searched for in the modality
     :param matchbidslabels: If True, also matches the BIDS-labels, otherwise only series['attributes']
     :return:                True if the series exists in serieslist
     """
 
-    for item in serieslist:
+    if not bidsmap[source][modality]:
+        return False
+
+    for item in bidsmap[source][modality]:
 
         match = any([series['attributes'][key] is not None for key in series['attributes']])  # Make match False if all attributes are empty
 
         # Search for a case where all series items match with the series items
         for attrkey in series['attributes']:
             seriesvalue = series['attributes'][attrkey]
-            itemvalue = item['attributes'][attrkey]
+            itemvalue   = item['attributes'][attrkey]
             match = match and (seriesvalue==itemvalue)
             if not match:           # There is no point in searching further within the series now that we've found a mismatch
                 break
 
-        if matchbidslabels:
+        if matchbidslabels:         # This is probably not very useful, but maybe one day...
             try:
                 for key in series['bids']:
                     seriesvalue = series['bids'][key]
@@ -474,37 +523,79 @@ def exist_series(series: dict, serieslist: list, matchbidslabels: bool=True) -> 
     return False
 
 
-def get_clean_dicomfile(dicomfile: str) -> str:
-    """Obtain the dicom filename meant to write to the YAML file. """
-    # Escape backslashes
-    dicomfile = dicomfile.replace('\\', '\\\\')
-    # Escape whitespace
-    dicomfile = dicomfile.replace(' ', '\\ ')
-    return dicomfile
+def delete_series(bidsmap: dict, source: str, modality: str, index: int) -> dict:
+    """
+    Delete a series from the BIDS map
+
+    :param bidsmap:     Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param source:      The information source in the bidsmap that is used, e.g. 'DICOM'
+    :param modality:    The modality in the source that is used, e.g. 'anat'
+    :param index:       The index number of the series (listitem) that is deleted from the modality
+    :return:            The new bidsmap
+    """
+
+    if not modality in bidsmodalities + (unknownmodality,):
+        raise ValueError(f"invalid modality '{modality}'")
+
+    bidsmap_dicom = bidsmap.get(source, {})
+    bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
+
+    if bidsmap_dicom_modality is not None:
+        num_series = len(bidsmap_dicom_modality)
+    else:
+        num_series = 0
+    if index > num_series:
+        raise IndexError(f"invalid index {index} ({num_series+1} items found)")
+
+    if bidsmap_dicom_modality is not None:
+        del bidsmap[source][modality][index]
+    else:
+        logger.warning(f'modality not found {modality}')
+
+    return bidsmap
 
 
-def get_matching_dicomseries(dicomfile: str, heuristics: dict) -> dict:
+def append_series(bidsmap: dict, source: str, modality: str, series: dict) -> dict:
+    """
+    Append a series to the BIDS map
+
+    :param bidsmap:     Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param source:      The information source in the bidsmap that is used, e.g. 'DICOM'
+    :param modality:    The modality in the source that is used, e.g. 'anat'
+    :param series:      The series (listitem) that is appenden to the modality
+    :return:            The new bidsmap
+    """
+
+    if not modality in bidsmodalities + (unknownmodality,):
+        raise ValueError(f"invalid modality '{modality}'")
+
+    if bidsmap[source][modality] is None:
+        bidsmap[source][modality] = [series]
+    else:
+        bidsmap[source][modality].append(series)
+
+    return bidsmap
+
+
+def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> dict:
     """
     Find the matching series in the bidsmap heuristics using the dicom attributes. Then fill-in the missing values (values are cleaned-up to be BIDS-valid)
 
     :param dicomfile:   The full pathname of the dicom-file
-    :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:            The matching and filled-in series item and modality (NB: not run_index) from the heuristics {'series': series, 'modality': modality}
+    :param bidsmap:     Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :return:            The matching and filled-in series item and modality (NB: not run_index) from the bidsmap {'series': series, 'modality': modality}
     """
 
     # TODO: generalize for non-DICOM (dicomfile -> file)?
-
-    # Obtain the dicom filename meant to write to the YAML file.
-    clean_dicomfile = get_clean_dicomfile(dicomfile)
+    source = 'DICOM'
 
     # Loop through all bidsmodalities and series; all info goes into series_
     for modality in bidsmodalities + (unknownmodality,):
-        if heuristics['DICOM'][modality] is None: continue
+        if bidsmap[source][modality] is None: continue
 
-        for series in heuristics['DICOM'][modality]:
+        for series in bidsmap[source][modality]:
 
-            # series_ = dict(attributes={})                                                                 # The CommentedMap API below is not guaranteed for the future so keep this line as an alternative
-            series_ = ruamel.yaml.comments.CommentedMap(ruamel.yaml.comments.CommentedMap(attributes={}))   # Creating a new object is safe in that we don't change the original heuristics object. However, we lose all comments and formatting within the series (which is not such a disaster probably). It is also much faster and more robust with aliases compared with a deepcopy
+            series_ = dict(attributes={}, bids={})                                                          # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
             match   = any([series['attributes'][key] is not None for key in series['attributes']])          # Make match False if all attributes are empty
 
             # Try to see if the dicomfile matches all of the attributes and fill all of them
@@ -526,7 +617,6 @@ def get_matching_dicomseries(dicomfile: str, heuristics: dict) -> dict:
                 series_['attributes'][attrkey] = dicomvalue
 
             # Try to fill the bids-labels
-            series_['bids'] = {}
             for key in series['bids']:
                 bidsvalue = series['bids'][key]
                 if not bidsvalue:
@@ -547,16 +637,14 @@ def get_matching_dicomseries(dicomfile: str, heuristics: dict) -> dict:
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 series_ = strip_suffix(series_)
 
-            # Stop searching the heuristics if we have a match
+            # Stop searching the bidsmap if we have a match
             if match:
                 # TODO: check if there are more matches (i.e. conflicts)
-                series_.yaml_add_eol_comment("From: " + clean_dicomfile, key='attributes', column=50)    # Add provenance data
-                series_['provenance'] = clean_dicomfile
+                series_['provenance'] = dicomfile
                 return {'series': series_, 'modality': modality}
 
     # We don't have a match (all tests failed, so modality should be the last one, i.e. unknownmodality)
-    series_.yaml_add_eol_comment("From: " + clean_dicomfile, key='attributes', column=50)                # Add provenance data
-    series_['provenance'] = clean_dicomfile
+    series_['provenance'] = dicomfile
     return {'series': series_, 'modality': modality}
 
 
@@ -571,6 +659,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
     :param run:         The optional runindex label (e.g. 'run-01'). Can be left ''
     :return:            The composed BIDS file-name (without file-extension)
     """
+    assert modality in bidsmodalities + (unknownmodality,)
 
     # Do some checks to allow for dragging the series entries between the different modality-sections
     for bidslabel in bidslabels:
@@ -582,9 +671,9 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         defacemask = False       # TODO: account for the 'defacemask' possibility
         if defacemask:
             suffix = 'defacemask'
-            mod    = series['bids']['modality_label']
+            mod    = series['bids']['suffix']
         else:
-            suffix = series['bids']['modality_label']
+            suffix = series['bids']['suffix']
             mod    = ''
 
         # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_ce-<label>][_rec-<label>][_run-<index>][_mod-<label>]_suffix
@@ -664,14 +753,14 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
             acq     = f"acq-{series['bids']['acq_label']}",
             _ce     = add_prefix('_ce-', series['bids']['ce_label']),
             _rec    = add_prefix('_rec-', series['bids']['rec_label']),
-            _task   = add_prefix('_echo-',series['bids']['task_label']),
+            _task   = add_prefix('_task-',series['bids']['task_label']),
             _echo   = add_prefix('_echo-', series['bids']['echo_index']),
             _dir    = add_prefix('_dir-', series['bids']['dir_label']),
             _run    = add_prefix('_run-', run),
             _suffix = add_prefix('_', series['bids']['suffix']))
 
     else:
-        raise ValueError('Critical error: Invalid modality "{}" found'.format(modality))
+        raise ValueError(f'Critical error: modality "{modality}" not implemented, please inform the developers about this error')
 
     return bidsname
 
@@ -739,46 +828,6 @@ def increment_runindex(bidsfolder: str, bidsname: str, ext: str='.*') -> str:
         else:
             suffix = ''
 
-        bidsname = '{basename}_run-{runindex}{suffix}'.format(
-            basename = basename,
-            runindex = int(runindex) + 1,
-            suffix = suffix)
+        bidsname = f'{basename}_run-{int(runindex) + 1}{suffix}'
 
     return bidsname
-
-
-def askfor_mapping(heuristics: dict, series: dict, filename: str='') -> dict:
-    """
-    Ask the user for help to resolve the mapping from the series attributes to the BIDS labels
-    WIP!!!
-
-    :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param series:      Dictionary with BIDS labels and attributes
-    :param filename:    The full-path name of the sourcefile for which the attributes could not be 'bidsmapped'
-    :return:            Dictionary with return variables: {'modality':name of the modality, 'series': dictionary with the filled-in series labels and attributes}
-    """
-
-    # Go through the BIDS structure as a decision tree
-    # 1: Show all the series-info
-    # 2: Ask: Which of the heuristics modalities is it?
-    # 3: Ask: Which func suffix, anat modality, etc
-
-    #  TODO: implement code
-
-    return None # {'modality': modality, 'series': series}
-
-
-def askfor_append(modality: str, series: dict, bidsmapfile: str) -> None:
-    """
-    Ask the user to add the labelled series to their bidsmap yaml-file or send it to a central database
-    WIP!!!
-
-    :param modality:    Name of the BIDS modality
-    :param series:      Dictionary with BIDS labels and attributes
-    :param bidsmapfile: The full-path name of the bidsmap yaml-file to which the series should be saved
-    :return:            Nothing
-    """
-
-    # TODO: implement code
-
-    return None
