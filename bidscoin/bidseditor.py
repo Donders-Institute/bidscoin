@@ -117,6 +117,11 @@ def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, source_bid
     return bids_attributes
 
 
+def get_html_bidsname(bidsname):
+    """Clean bidsname . """
+    return bidsname.replace('<', '&lt;').replace('>', '&gt;')
+
+
 class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, bidsmap, output_bidsmap, template_bidsmap):
@@ -174,7 +179,8 @@ class Ui_MainWindow(object):
             for series in series_list:
                 provenance = series['provenance']
                 provenance_file = os.path.basename(provenance)
-                bids_name = bids.get_bidsname('001', '01', modality, series)
+                run = series['bids'].get('run_index', '')
+                bids_name = bids.get_bidsname('001', '01', modality, series, run)
 
                 item_id = QTableWidgetItem(str(idx + 1))
                 item_provenance_file = QTableWidgetItem(provenance_file)
@@ -277,7 +283,8 @@ class Ui_MainWindow(object):
             for series in series_list:
                 provenance = series['provenance']
                 provenance_file = os.path.basename(provenance)
-                bids_name = bids.get_bidsname('001', '01', modality, series)
+                run = series['bids'].get('run_index', '')
+                bids_name = bids.get_bidsname('001', '01', modality, series, run)
 
                 item_id = QTableWidgetItem(str(idx + 1))
                 item_provenance_file = QTableWidgetItem(provenance_file)
@@ -563,10 +570,11 @@ class EditDialog(QDialog):
 
             series = self.target_series
             run = series['bids'].get('run_index', '')
-            self.bids_name = bids.get_bidsname('001', '01', self.target_modality, series, run)
+            bids_name = bids.get_bidsname('001', '01', self.target_modality, series, run)
+            html_bids_name = get_html_bidsname(bids_name)
 
             self.view_bids_name.clear()
-            self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % self.bids_name)
+            self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % html_bids_name)
 
     def set_cell(self, value, is_editable=False):
         item = QTableWidgetItem()
@@ -754,14 +762,15 @@ class EditDialog(QDialog):
     def set_bids_name_section(self):
         """Set non-editable BIDS name section. """
         run = self.target_series['bids'].get('run_index', '')
-        self.bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
+        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
+        html_bids_name = get_html_bidsname(bids_name)
 
         self.label_bids_name = QLabel()
         self.label_bids_name.setText("BIDS name")
 
         self.view_bids_name = QTextEdit()
         self.view_bids_name.setReadOnly(True)
-        self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % self.bids_name)
+        self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % html_bids_name)
 
         height = 24
         extra_space = 6
@@ -818,10 +827,11 @@ class EditDialog(QDialog):
         # Update the BIDS name
         self.target_series['bids'] = bids_values
         run = self.target_series['bids'].get('run_index', '')
-        self.bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
+        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
+        html_bids_name = get_html_bidsname(bids_name)
 
         self.view_bids_name.clear()
-        self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % self.bids_name)
+        self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % html_bids_name)
 
     def selection_suffix_dropdown_change(self, i):
         """Update the BIDS values and BIDS name section when the dropdown selection has been taking place. """
@@ -833,10 +843,11 @@ class EditDialog(QDialog):
         # Update the BIDS name
         self.target_series['bids'] = bids_values
         run = self.target_series['bids'].get('run_index', '')
-        self.bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
+        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
+        html_bids_name = get_html_bidsname(bids_name)
 
         self.view_bids_name.clear()
-        self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % self.bids_name)
+        self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % html_bids_name)
 
 
 def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templatefile: str=''):
