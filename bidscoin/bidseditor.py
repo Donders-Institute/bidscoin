@@ -815,7 +815,7 @@ class EditDialog(QDialog):
         self.target_series['bids'] = bids_values
 
         self.label_bids = QLabel()
-        self.label_bids.setText("Key-value pairs")
+        self.label_bids.setText("Values")
 
         self.view_bids = self.get_table(data, num_rows=MAX_NUM_BIDS_ATTRIBUTES)
 
