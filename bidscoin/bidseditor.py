@@ -109,17 +109,15 @@ def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, source_bid
     """Return the target BIDS attributes (i.e. the key, value pairs)
     given the keys from the template
     given the values from the source BIDS attributes. """
-    first_series = template_bidsmap[SOURCE][modality][0]
-    template_bids_attributes = first_series['bids']
+    template_bids_attributes = template_bidsmap[SOURCE][modality][0]['bids']
 
     bids_attributes = OrderedDict()
     for key, template_value in template_bids_attributes.items():
         if not template_value:
             template_value = ''
-            if key == 'suffix':
-                # If not free choice, select the first possible option from the list of allowed suffixes
-                if modality != bids.unknownmodality:
-                    template_value = allowed_suffixes[modality][0]
+            # If not free choice, select the first possible option from the list of allowed suffixes
+            if key == 'suffix' and modality in bids.bidsmodalities:
+                template_value = allowed_suffixes[modality][0]
 
         source_value = source_bids_attributes.get(key, None)
         if source_value:
@@ -192,8 +190,7 @@ class Ui_MainWindow(object):
             if not series_list:
                 continue
             for series in series_list:
-                provenance = series['provenance']
-                provenance_file = os.path.basename(provenance)
+                provenance_file = os.path.basename(series['provenance'])
                 run = series['bids'].get('run_index', '')
                 bids_name = bids.get_bidsname('', '', modality, series, run)
 
@@ -296,9 +293,7 @@ class Ui_MainWindow(object):
             if not series_list:
                 continue
             for series in series_list:
-                provenance = series['provenance']
-                provenance_file = os.path.basename(provenance)
-                provenance_file = os.path.basename(provenance)
+                provenance_file = os.path.basename(series['provenance'])
                 run = series['bids'].get('run_index', '')
                 bids_name = bids.get_bidsname('', '', modality, series, run)
 
@@ -774,7 +769,7 @@ class EditDialog(QDialog):
 
         data = []
         for key, value in bids_values.items():
-            if self.target_modality != bids.unknownmodality and key == 'suffix':
+            if self.target_modality in bids.bidsmodalities and key == 'suffix':
                 value = self.target_suffix
                 data.append([
                     {
