@@ -18,9 +18,7 @@ LOGGER.addHandler(logging.StreamHandler(sys.stdout))
 class TestBidseditor(unittest.TestCase):
 
     def test_get_allowed_suffices(self):
-        pathname = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics")
-        filename = os.path.join(pathname, "bidsmap_template.yaml")
-        template_bidsmap = load_bidsmap(filename, pathname)
+        template_bidsmap = load_bidsmap()
         allowed_suffixes = get_allowed_suffixes(template_bidsmap)
 
         reference_allowed_suffixes = {
@@ -78,9 +76,7 @@ class TestBidseditor(unittest.TestCase):
         self.assertEqual(allowed_suffixes, reference_allowed_suffixes)
 
     def test_get_allowed_suffixes(self):
-        pathname = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics")
-        filename = os.path.join(pathname, "bidsmap_template.yaml")
-        template_bidsmap = load_bidsmap(filename, pathname)
+        template_bidsmap = load_bidsmap()
         allowed_suffixes = get_allowed_suffixes(template_bidsmap)
 
         source_bids_attributes = {
@@ -133,9 +129,7 @@ class TestBidseditor(unittest.TestCase):
         self.assertEqual(bids_attributes, reference_bids_attributes)
 
     def test_update_bidsmap(self):
-        pathname = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata")
-        filename = os.path.join(pathname, "bidsmap_example.yaml")
-        source_bidsmap = load_bidsmap(filename, pathname)
+        source_bidsmap = load_bidsmap()
 
         source_modality = 'extra_data'
         source_index = 2
