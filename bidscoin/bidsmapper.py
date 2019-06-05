@@ -258,8 +258,8 @@ if __name__ == "__main__":
                                             '  bidsmapper.py /project/foo/raw /project/foo/bids\n'
                                             '  bidsmapper.py /project/foo/raw /project/foo/bids -b bidsmap_dccn\n ')
     parser.add_argument('sourcefolder',     help='The source folder containing the raw data in sub-#/ses-#/series format (or see below for different prefixes)')
-    parser.add_argument('bidsfolder',       help='The destination folder with the (future) bids data and the bidsfolder/code/bidsmap.yaml output file')
-    parser.add_argument('-b','--bidsmap',   help='The (non-default) bidsmap YAML-file with the BIDS heuristics')
+    parser.add_argument('bidsfolder',       help='The destination folder with the (future) bids data and the default bidsfolder/code/bidsmap.yaml file')
+    parser.add_argument('-b','--bidsmap',   help='The non-default / site-specific bidsmap YAML-file with the BIDS heuristics')
     parser.add_argument('-n','--subprefix', help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix', help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     args = parser.parse_args()

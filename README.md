@@ -23,11 +23,11 @@ BIDScoin is a user friendly [open-source](https://github.com/Donders-Institute/b
  2. Information from nifti headers (e.g. image dimensionality)
  3. Information in the file structure (file- and/or directory names, e.g. number of files)
 
-  NB: Currently, BIDScoin is very [functional](#bidscoin-functionality--todo), but thus far only the DICOM support (option 1) has been fully implemented.
+> NB: Currently, the DICOM support (option 1) has been fully implemented, but the support for option 2 and 3 is planned for [future](#bidscoin-functionality--todo) releases.
 
 The mapping information is stored as key-value pairs in the human readable and widely supported [YAML](http://yaml.org/) files. The nifti- and json-files are generated with [dcm2niix](https://github.com/rordenlab/dcm2niix). In addition, users can provide custom written [plug-in functions](#plug-in-functions), e.g. for using additional sources of information or e.g. for parsing of Presentation logfiles.
 
-Because all the mapping information is stored in the yaml-file, BIDScoin requires no programming knowledge in order to use it, just some basic file handling and, possibly, minor (YAML) text editing skills.
+Because all the mapping information can be edited with a graphical user interface, BIDScoin requires no programming knowledge in order to use it.
 
 For information on the BIDScoin installation and requirements, see the [installation guide](./docs/installation.md).
  
@@ -36,12 +36,11 @@ For information on the BIDScoin installation and requirements, see the [installa
 ### Source data structure
 BIDScoin will take your raw data as well as a YAML file with the key-value mapping (dictionary) information as input, and returns a BIDS folder as output. The raw data input folder should be organised according to a `/sub-identifier/[ses-identifier]/seriesfolder/dicomfile` structure. This data organization is how users receive their data from the (Siemens) scanners at the [DCCN](https://www.ru.nl/donders/) (NB: the `ses-identifier` sub-folder is optional and can be left out).
 
-    If your data is not already organized in this way, you can use the [dicomsort.py](./bidscoin/dicomsort.py) command-line utility to move your unordered or DICOMDIR ordered DICOM-files into a `seriesfolder` organization with the DICOM series-folders being named [SeriesNumber]-[SeriesDescription]. Series folders contain a single data type and are typically acquired in a single run.
+If your data is not already organized in this way, you can use the [dicomsort.py](./bidscoin/dicomsort.py) command-line utility to move your unordered or DICOMDIR ordered DICOM-files into a `seriesfolder` organization with the DICOM series-folders being named [SeriesNumber]-[SeriesDescription]. Series folders contain a single data type and are typically acquired in a single run.
  
-    Another command-line utility that can be helpful in organizing your raw data is [rawmapper.py](.bidscoin/rawmapper.py). This utility can show you the overview (map) of all the values of DICOM-fields of interest in your data-set and, optionally, use these fields to rename your raw data sub-folders (this can be handy e.g. if you manually entered subject-identifiers as [Additional info] at the scanner console and you want to use these to rename your subject folders).
+Another command-line utility that can be helpful in organizing your raw data is [rawmapper.py](.bidscoin/rawmapper.py). This utility can show you the overview (map) of all the values of DICOM-fields of interest in your data-set and, optionally, use these fields to rename your raw data sub-folders (this can be handy e.g. if you manually entered subject-identifiers as [Additional info] at the scanner console and you want to use these to rename your subject folders).
  
-    If these utilities do not satisfy your needs, then have a look at this [reorganize_dicom_files](https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md) tool.
-
+If these utilities do not satisfy your needs, then have a look at this [reorganize_dicom_files](https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md) tool.
 
 Having an organized raw data folder and a correct bidsmap, the actual data-set conversion to BIDS can now be performed fully automatically by simply running the `bidscoiner.py` command-line tool (see the [BIDScoin workflow](#bidscoin-workflow) diagram and [the bidscoiner](#running-the-bidscoiner) section).
 
