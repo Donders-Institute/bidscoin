@@ -302,7 +302,7 @@ def coin_par(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> N
     :return:            Nothing
     """
 
-    LOGGER.warning('coin_par is WIP!!!')
+    pass
 
 
 def coin_p7(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
@@ -315,7 +315,7 @@ def coin_p7(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> No
     :return:            Nothing
     """
 
-    LOGGER.warning('coin_p7 is WIP!!!')
+    pass
 
 
 def coin_nifti(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
@@ -328,7 +328,7 @@ def coin_nifti(session: str, bidsmap: dict, bidsfolder: str, personals: dict) ->
     :return:            Nothing
     """
 
-    LOGGER.warning('coin_nifti is WIP!!!')
+    pass
 
 
 def coin_filesystem(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
@@ -341,7 +341,7 @@ def coin_filesystem(session: str, bidsmap: dict, bidsfolder: str, personals: dic
     :return:            Nothing
     """
 
-    LOGGER.warning('coin_filesystem is WIP!!!')
+    pass
 
 
 def coin_plugin(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
