@@ -84,10 +84,11 @@ The `bidsmapper.py` tool scans all source data folders of your dataset and saves
     usage: bidseditor.py [-h] [-s SOURCEFOLDER] [-b BIDSMAP] [-t TEMPLATE]
                          bidsfolder
     
-    This function launches a graphical interface for editing the bidsmap.yaml file that is e.g. produced by bidsmapper.py.
-    The user can fill in or change the BIDS values for entries that are unidentified or sub-optimal, such that meaningful
-    BIDS filenames will be generated. The resulting bidsmap.yaml file can be used for converting the data to BIDS using
-    bidscoiner.py
+    This function launches a graphical interface for editing the bidsmap.yaml file
+    that is e.g. produced by bidsmapper.py. The user can fill in or change the BIDS
+    values for entries that are unidentified or sub-optimal, such that meaningful
+    BIDS filenames will be generated. The resulting bidsmap.yaml file can be used
+    for converting the data to BIDS using bidscoiner.py
     
     positional arguments:
       bidsfolder            The destination folder with the (future) bids data

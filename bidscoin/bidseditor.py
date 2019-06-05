@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 """
-This function launches a graphical interface for editing the bidsmap.yaml file that is e.g. produced by bidsmapper.py.
-The user can fill in or change the BIDS values for entries that are unidentified or sub-optimal, such that meaningful
-BIDS filenames will be generated. The resulting bidsmap.yaml file can be used for converting the data to BIDS using
-bidscoiner.py
+This function launches a graphical interface for editing the bidsmap.yaml file
+that is e.g. produced by bidsmapper.py. The user can fill in or change the BIDS
+values for entries that are unidentified or sub-optimal, such that meaningful
+BIDS filenames will be generated. The resulting bidsmap.yaml file can be used
+for converting the data to BIDS using bidscoiner.py
 """
 
 import os
