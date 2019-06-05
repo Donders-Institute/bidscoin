@@ -278,7 +278,7 @@ def get_niftifile(folder: str) -> str:
     return None
 
 
-def load_bidsmap(yamlfile: str, folder: str) -> ruamel.yaml:
+def load_bidsmap(yamlfile: str='', folder: str='') -> ruamel.yaml:
     """
     Read the mapping heuristics from the bidsmap yaml-file
 
