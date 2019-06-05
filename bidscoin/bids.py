@@ -657,7 +657,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
     :param modality:    The bidsmodality (choose from bids.bidsmodalities)
     :param series:      The series mapping with the BIDS labels
     :param run:         The optional runindex label (e.g. 'run-01'). Can be left ''
-    :param subprefix:   The optional subprefix (e.g. 'ses-'). If it is found in the provenance then a default subid will be set
+    :param subprefix:   The optional subprefix (e.g. 'sub-'). Used to parse the sub-value from the provenance as default subid
     :param sesprefix:   The optional sesprefix (e.g. 'ses-'). If it is found in the provenance then a default sesid will be set
     :return:            The composed BIDS file-name (without file-extension)
     """
@@ -672,7 +672,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
     # Add sub- and ses- prefixes if they are not there
     subid = 'sub-' + subid.lstrip('sub-')
     if sesid:
-        sesid = 'ses-' + subid.lstrip('ses-')
+        sesid = 'ses-' + sesid.lstrip('ses-')
 
     # Do some checks to allow for dragging the series entries between the different modality-sections
     for bidslabel in bidslabels:
