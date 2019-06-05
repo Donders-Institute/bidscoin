@@ -229,7 +229,7 @@ class Ui_MainWindow(object):
         self.save_button.setStyleSheet('QPushButton {color: blue;}')
         self.table.setCellWidget(idx, 4, self.save_button)
 
-        self.table.setHorizontalHeaderLabels(['', f'{SOURCE} file sample', 'Modality', 'BIDS name', 'Action'])
+        self.table.setHorizontalHeaderLabels(['', 'File sample', 'Modality', 'BIDS output name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
@@ -333,7 +333,7 @@ class Ui_MainWindow(object):
         # self.save_button.setStyleSheet('QPushButton {color: blue;}')
         # self.table.setCellWidget(idx, 4, self.save_button)
 
-        self.table.setHorizontalHeaderLabels(['', f'{SOURCE} file sample', 'Modality', 'BIDS name', 'Action'])
+        self.table.setHorizontalHeaderLabels(['', 'File sample', 'Modality', 'BIDS output name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
@@ -745,7 +745,7 @@ class EditDialog(QDialog):
             ])
 
         self.label_dicom = QLabel()
-        self.label_dicom.setText(f"{SOURCE} attributes")
+        self.label_dicom.setText("Attributes")
 
         self.view_dicom = self.get_table(data, num_rows=len(data))
 
@@ -815,18 +815,18 @@ class EditDialog(QDialog):
         self.target_series['bids'] = bids_values
 
         self.label_bids = QLabel()
-        self.label_bids.setText("BIDS values")
+        self.label_bids.setText("Key-value pairs")
 
         self.view_bids = self.get_table(data, num_rows=MAX_NUM_BIDS_ATTRIBUTES)
 
     def set_bids_name_section(self):
-        """Set non-editable BIDS name section. """
+        """Set non-editable BIDS output name section. """
         run = self.target_series['bids'].get('run_index', '')
         bids_name = bids.get_bidsname('', '', self.target_modality, self.target_series, run)
         html_bids_name = get_html_bidsname(bids_name)
 
         self.label_bids_name = QLabel()
-        self.label_bids_name.setText("BIDS name")
+        self.label_bids_name.setText("Output name")
 
         self.view_bids_name = QTextEdit()
         self.view_bids_name.setReadOnly(True)
@@ -837,7 +837,7 @@ class EditDialog(QDialog):
         self.view_bids_name.setFixedHeight(height + extra_space)
 
     def selection_dropdown_change(self, i):
-        """Update the BIDS values and BIDS name section when the dropdown selection has been taking place. """
+        """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
         self.target_modality = self.view_dropdown.currentText()
 
         if self.target_modality == bids.unknownmodality:
@@ -884,7 +884,7 @@ class EditDialog(QDialog):
         if self.target_modality != bids.unknownmodality:
             bids_values['suffix'] = self.target_suffix
 
-        # Update the BIDS name
+        # Update the BIDS output name
         self.target_series['bids'] = bids_values
         run = self.target_series['bids'].get('run_index', '')
         bids_name = bids.get_bidsname('', '', self.target_modality, self.target_series, run)
@@ -894,13 +894,13 @@ class EditDialog(QDialog):
         self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % html_bids_name)
 
     def selection_suffix_dropdown_change(self, i):
-        """Update the BIDS values and BIDS name section when the dropdown selection has been taking place. """
+        """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
         self.target_suffix = self.suffix_dropdown.currentText()
 
         bids_values, data = self.get_bids_values_data()
         bids_values['suffix'] = self.target_suffix
 
-        # Update the BIDS name
+        # Update the BIDS output name
         self.target_series['bids'] = bids_values
         run = self.target_series['bids'].get('run_index', '')
         bids_name = bids.get_bidsname('', '', self.target_modality, self.target_series, run)
