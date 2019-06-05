@@ -29,8 +29,8 @@ DICOM:
 # --------------------------------------------------------------------------------
 # DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  participant_label: ~                            # A <<DICOM attribute>> that is used as participant_label instead of the subject-label from the sourcefolder
-  session_label: ~                                # A <<DICOM attribute>> that is used as session_label instead of the session-label from the sourcefolder
+  participant_label: ~                            # A DICOM attribute that is used as participant_label instead of the subject-label from the sourcefolder, e.g. <<PatientID>>
+  session_label: ~                                # A DICOM attribute that is used as session_label instead of the session-label from the sourcefolder, e.g. <<StudyID>>
   anat:       # ----------------------- All anatomical series --------------------
   - attributes: &anatattributes
       SeriesDescription: ~
