@@ -114,7 +114,7 @@ def is_dicomfile(file: str) -> bool:
 
     if os.path.isfile(file):
         if os.path.basename(file).startswith('.'):
-            warnings.warn(f'DICOM file is hidden: {file}')
+            logger.warning(f'DICOM file is hidden: {file}')
         with open(file, 'rb') as dcmfile:
             dcmfile.seek(0x80, 1)
             if dcmfile.read(4) == b'DICM':
@@ -204,8 +204,8 @@ def is_incomplete_acquisition(folder: str) -> bool:
     nfiles    = len(os.listdir(folder))     # TODO: filter out non-imaging files
 
     if nrep and nrep > nfiles:
-        warnings.warn('Incomplete acquisition found in: {}'\
-                      '\nExpected {}, found {} dicomfiles'.format(folder, nrep, nfiles))
+        logger.warning('Incomplete acquisition found in: {}'\
+                       '\nExpected {}, found {} dicomfiles'.format(folder, nrep, nfiles))
         return True
     else:
         return False
@@ -221,12 +221,12 @@ def get_dicomfile(folder: str) -> str:
 
     for file in sorted(os.listdir(folder)):
         if os.path.basename(file).startswith('.'):
-            warnings.warn(f'Ignoring hidden DICOM file: {file}')
+            logger.warning(f'Ignoring hidden DICOM file: {file}')
             continue
         if is_dicomfile(os.path.join(folder, file)):
             return os.path.join(folder, file)
 
-    warnings.warn('Cannot find dicom files in:' + folder)
+    logger.warning('Cannot find dicom files in:' + folder)
     return None
 
 
@@ -242,7 +242,7 @@ def get_parfile(folder: str) -> str:
         if is_parfile(file):
             return os.path.join(folder, file)
 
-    warnings.warn('Cannot find PAR files in:' + folder)
+    logger.warning('Cannot find PAR files in:' + folder)
     return None
 
 
@@ -258,7 +258,7 @@ def get_p7file(folder: str) -> str:
         if is_p7file(file):
             return os.path.join(folder, file)
 
-    warnings.warn('Cannot find P7 files in:' + folder)
+    logger.warning('Cannot find P7 files in:' + folder)
     return None
 
 
@@ -274,7 +274,7 @@ def get_niftifile(folder: str) -> str:
         if is_niftifile(file):
             return os.path.join(folder, file)
 
-    warnings.warn('Cannot find nifti files in:' + folder)
+    logger.warning('Cannot find nifti files in:' + folder)
     return None
 
 
@@ -314,9 +314,11 @@ def load_bidsmap(yamlfile: str='', folder: str='') -> ruamel.yaml:
 
     # Issue a warning if the version in the bidsmap YAML-file is not the same as the bidscoin version
     if 'version' not in bidsmap['Options']:
-        bidsmap['Options']['version'] = 'Unknown'
-    if bidsmap['Options']['version'] != version():
-        logger.warning('BIDScoiner version conflict: {} was created using version {}, but this is version {}'.format(yamlfile, bidsmap['Options']['version'], version()))
+        bidsmapversion = 'Unknown'
+    else:
+        bidsmapversion = bidsmap['Options']['version']
+    if bidsmapversion != version():
+        logger.warning(f'BIDScoiner version conflict: {yamlfile} was created using version {bidsmapversion}, but this is version {version()}')
 
     return bidsmap
 
@@ -347,7 +349,7 @@ def parse_x_protocol(pattern: str, dicomfile: str) -> str:
     """
 
     if not is_dicomfile_siemens(dicomfile):
-        warnings.warn('Parsing {} may fail because {} does not seem to be a Siemens DICOM file'.format(pattern, dicomfile))
+        logger.warning('Parsing {} may fail because {} does not seem to be a Siemens DICOM file'.format(pattern, dicomfile))
 
     regexp = '^' + pattern + '\t = \t(.*)\n'
     regex  = re.compile(regexp.encode('utf-8'))
@@ -358,7 +360,7 @@ def parse_x_protocol(pattern: str, dicomfile: str) -> str:
             if match:
                 return match.group(1).decode('utf-8')
 
-    warnings.warn('Pattern: "' + regexp.encode('unicode_escape').decode() + '" not found in: ' + dicomfile)
+    logger.warning('Pattern: "' + regexp.encode('unicode_escape').decode() + '" not found in: ' + dicomfile)
     return None
 
 
@@ -397,7 +399,7 @@ def get_dicomfield(tagname: str, dicomfile: str):
                     continue
 
     except IOError:
-        warnings.warn(f'Cannot read {tagname} from {dicomfile}')
+        logger.warning(f'Cannot read {tagname} from {dicomfile}')
         value = None
 
     except Exception:
@@ -405,7 +407,7 @@ def get_dicomfield(tagname: str, dicomfile: str):
             value = parse_x_protocol(tagname, dicomfile)
 
         except Exception:
-            warnings.warn(f'Could not parse {tagname} from {dicomfile}')
+            logger.warning(f'Could not parse {tagname} from {dicomfile}')
             value = None
 
     # Cast the dicom datatype to standard to int or str (i.e. to something that yaml.dump can handle)
