@@ -597,7 +597,7 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> dict:
 
         for series in bidsmap[source][modality]:
 
-            series_ = dict(attributes={}, bids={})                                                          # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
+            series_ = dict(provenance={}, attributes={}, bids={})                                           # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
             match   = any([series['attributes'][key] is not None for key in series['attributes']])          # Make match False if all attributes are empty
 
             # Try to see if the dicomfile matches all of the attributes and fill all of them
