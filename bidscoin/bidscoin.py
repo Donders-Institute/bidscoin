@@ -26,11 +26,11 @@ except ImportError:
     import bidscoiner         # This should work if bidscoin was not pip-installed
 
 
-def bidscoin(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, subprefix: str='sub-', sesprefix: str='ses-') -> None:
+def bidscoin(sourcefolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, subprefix: str= 'sub-', sesprefix: str= 'ses-') -> None:
     """
     Top level function that sequentially runs the bidsmapper, the bidseditor and the bidscoiner.
 
-    :param rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
+    :param sourcefolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
     :param bidsfolder:      The name of the BIDS root folder
     :param bidsmapfile:     The name of the bidsmap YAML-file
     :param templatefile:
@@ -39,9 +39,9 @@ def bidscoin(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: st
     :return:bidsmapfile:    The name of the mapped bidsmap YAML-file
     """
 
-    bidsmapper.bidsmapper(rawfolder, bidsfolder, bidsmapfile, subprefix, sesprefix)
-    bidseditor.bidseditor(bidsfolder, rawfolder, bidsmapfile, templatefile)
-    bidscoiner.bidscoiner(rawfolder, bidsfolder, None, False, False, bidsmapfile, subprefix, sesprefix)
+    bidsmapper.bidsmapper(sourcefolder, bidsfolder, bidsmapfile, subprefix, sesprefix)
+    bidseditor.bidseditor(bidsfolder, sourcefolder, templatefile=templatefile)
+    bidscoiner.bidscoiner(sourcefolder, bidsfolder, subprefix=subprefix, sesprefix=sesprefix)
 
 
 # Shell usage
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     parser.add_argument('-v','--version',   help="Show the BIDS and BIDScoin version", action='version', version=f'BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version()}')
     args = parser.parse_args()
 
-    bidscoin(rawfolder    = args.sourcefolder,
+    bidscoin(sourcefolder = args.sourcefolder,
              bidsfolder   = args.bidsfolder,
              bidsmapfile  = args.bidsmap,
              templatefile = args.template,
