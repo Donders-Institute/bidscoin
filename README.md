@@ -43,9 +43,9 @@ BIDScoin will take your (raw) source data as well as a YAML file with the key-va
 > If these utilities do not satisfy your needs, then have a look at this [reorganize_dicom_files](https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md) tool.
 
 ### Coining your source data to BIDS
-Having an organized source data folder, the actual data-set conversion to BIDS can be performed fully automatically by simply running the `bidsmapper.py`, the `bidseditor.py` and the `bidscoiner.py` command-line tools after another (see the [BIDScoin workflow](#bidscoin-workflow) diagram.
+Having an organized source data folder, the actual data-set conversion to BIDS can be performed fully automatically by simply running the `bidsmapper.py`, the `bidseditor.py` and the `bidscoiner.py` command-line tools after another:
 
-#### Running the bidsmapper
+1. Running the bidsmapper
 
     usage: bidsmapper.py [-h] [-b BIDSMAP] [-n SUBPREFIX] [-m SESPREFIX]
                          sourcefolder bidsfolder
@@ -79,7 +79,7 @@ Having an organized source data folder, the actual data-set conversion to BIDS c
 
 The `bidsmapper.py` tool scans all source data folders of your dataset and saves the known and unknown key-value mappings in a [bidsmap file](#the-bidsmap-files). You can consider it as a dry-run for how exactly the [bidscoiner](#running-the-bidscoiner) will convert the source data into BIDS folders. It gives you the opportunity to inspect the resulting `bidsmap.yaml` file to see if all data types / runs were recognized correctly with proper BIDS labels before doing the actual conversion to BIDS. Unexpected mappings or poor BIDS labels can be found if your bidstraining or the bidsmap file that was provided to you was incomplete. In that case you should either get an updated bidsmap file or redo the bidstraining with new sample files, rerun the bidstrainer and bidsmapper until you have a suitable `bidsmap.yaml` file. You can of course also directly edit the `bidsmap.yaml` file yourself, for instance by changing some of the automatically generated BIDS labels to your needs (e.g. "task_label").
 
-#### Running the bidseditor
+2. Running the bidseditor
 
     usage: bidstrainer.py [-h] bidsfolder [samplefolder] [bidsmap]
     
@@ -110,7 +110,7 @@ If all sample files have been put in the appropriate location, you can (re)run t
 <a name="bidstrainer-example">![Bidstrainer example](./docs/sample_tree.png)</a>
 *Bidstrainer example. The red arrow depicts a raw data sample (left file browser) that is put (copied over) to the appropriate location in the semantic folder tree (right file browser)*
 
-#### Running the bidscoiner
+3. Running the bidscoiner
 
     usage: bidscoiner.py [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-f]
                          [-s] [-b BIDSMAP] [-n SUBPREFIX] [-m SESPREFIX] [-v]
