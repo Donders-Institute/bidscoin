@@ -32,7 +32,8 @@ DICOM:
   participant_label: ~                            # A DICOM attribute that is used as participant_label instead of the subject-label from the sourcefolder, e.g. <<PatientID>>
   session_label: ~                                # A DICOM attribute that is used as session_label instead of the session-label from the sourcefolder, e.g. <<StudyID>>
   anat:       # ----------------------- All anatomical series --------------------
-  - attributes: &anatattributes
+  - provenance: ~
+    attributes: &anatattributes
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -54,85 +55,85 @@ DICOM:
       mod_label: ~
       suffix: T1w
       ce_label: ~
-    provenance: ~
-  - attributes: *anatattributes
+  - provenance: ~
+    attributes: *anatattributes
     bids:
       <<: *anatbids
       suffix: T2w
-    provenance: ~
-  - attributes: *anatattributes
+  - provenance: ~
+    attributes: *anatattributes
     bids:
       <<: *anatbids
       suffix: T1rho
-    provenance: ~
-  - attributes: *anatattributes
+  - provenance: ~
+    attributes: *anatattributes
     bids:
       <<: *anatbids
       suffix: T1map
-    provenance: ~
-  - attributes: *anatattributes
+  - provenance: ~
+    attributes: *anatattributes
     bids:
       <<: *anatbids
       suffix: T2map
-    provenance: ~
-  - attributes: *anatattributes
+  - provenance: ~
+    attributes: *anatattributes
     bids:
       <<: *anatbids
       suffix: T2star
-    provenance: ~
-  - attributes: *anatattributes
+  - provenance: ~
+    attributes: *anatattributes
     bids:
       <<: *anatbids
       suffix: FLAIR
-    provenance: ~
-  - attributes: *anatattributes
+  - provenance: ~
+    attributes: *anatattributes
     bids:
       <<: *anatbids
       suffix: FLASH
-    provenance: ~
-  - attributes: *anatattributes
+  - provenance: ~
+    attributes: *anatattributes
     bids:
       <<: *anatbids
       suffix: PD
-    provenance: ~
-  - attributes: *anatattributes
+  - provenance: ~
+    attributes: *anatattributes
     bids:
       <<: *anatbids
       suffix: PDmap
-    provenance: ~
-  - attributes: *anatattributes
+  - provenance: ~
+    attributes: *anatattributes
     bids:
       <<: *anatbids
       suffix: PDT2
-    provenance: ~
-  - attributes: *anatattributes
+  - provenance: ~
+    attributes: *anatattributes
     bids:
       <<: *anatbids
       suffix: inplaneT1
-    provenance: ~
-  - attributes: *anatattributes
+  - provenance: ~
+    attributes: *anatattributes
     bids:
       <<: *anatbids
       suffix: inplaneT2
-    provenance: ~
-  - attributes: *anatattributes
+  - provenance: ~
+    attributes: *anatattributes
     bids:
       <<: *anatbids
       suffix: angio
-    provenance: ~
-  - attributes: *anatattributes
+  - provenance: ~
+    attributes: *anatattributes
     bids:
       <<: *anatbids
       suffix: defacemask
-    provenance: ~
-  - attributes: *anatattributes
+  - provenance: ~
+    attributes: *anatattributes
     bids:
       <<: *anatbids
       suffix: SWImagandphase
-    provenance: ~
 
   func:       # ----------------------- All functional series --------------------
-  - attributes: &funcattributes
+  - provenance: ~
+    attributes: &funcattributes
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -154,30 +155,30 @@ DICOM:
       run_index: <<1>>
       echo_index: <EchoNumbers>
       suffix: bold
-    provenance: ~
-  - attributes: *funcattributes
+  - provenance: ~
+    attributes: *funcattributes
     bids:
       <<: *funcbids
       suffix: events
-    provenance: ~
-  - attributes: *funcattributes
+  - provenance: ~
+    attributes: *funcattributes
     bids:
       <<: *funcbids
       suffix: physio
-    provenance: ~
-  - attributes: *funcattributes
+  - provenance: ~
+    attributes: *funcattributes
     bids:
       <<: *funcbids
       suffix: stim
-    provenance: ~
-  - attributes: *funcattributes
+  - provenance: ~
+    attributes: *funcattributes
     bids:
       <<: *funcbids
       suffix: sbref
-    provenance: ~
 
   dwi:        # ----------------------- All diffusion series ---------------------
-  - attributes: &dwiattributes
+  - provenance: ~
+    attributes: &dwiattributes
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -196,15 +197,15 @@ DICOM:
       acq_label: <SeriesDescription>
       run_index: <<1>>
       suffix: dwi
-    provenance: ~
-  - attributes: *dwiattributes
+  - provenance: ~
+    attributes: *dwiattributes
     bids:
       <<: *dwibids
       suffix: sbref
-    provenance: ~
 
   fmap:       # ----------------------- All fieldmap series ----------------------
-  - attributes: &fmapattributes
+  - provenance: ~
+    attributes: &fmapattributes
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -225,51 +226,50 @@ DICOM:
       dir_label: ~
       suffix: magnitude
       IntendedFor: ~
-    provenance: ~
-  - attributes: *fmapattributes
+  - provenance: ~
+    attributes: *fmapattributes
     bids:
       <<: *fmapbids
       suffix: magnitude1
-    provenance: ~
-  - attributes: *fmapattributes
+  - provenance: ~
+    attributes: *fmapattributes
     bids:
       <<: *fmapbids
       suffix: magnitude2
-    provenance: ~
-  - attributes: *fmapattributes
+  - provenance: ~
+    attributes: *fmapattributes
     bids:
       <<: *fmapbids
       suffix: phasediff
-    provenance: ~
-  - attributes: *fmapattributes
+  - provenance: ~
+    attributes: *fmapattributes
     bids:
       <<: *fmapbids
       suffix: phase1
-    provenance: ~
-  - attributes: *fmapattributes
+  - provenance: ~
+    attributes: *fmapattributes
     bids:
       <<: *fmapbids
       suffix: phase2
-    provenance: ~
-  - attributes: *fmapattributes
+  - provenance: ~
+    attributes: *fmapattributes
     bids:
       <<: *fmapbids
       suffix: fieldmap
-    provenance: ~
-  - attributes: *fmapattributes
+  - provenance: ~
+    attributes: *fmapattributes
     bids:
       <<: *fmapbids
       dir_label: <InPlanePhaseEncodingDirection>
-    provenance: ~
-  - attributes: *fmapattributes
+  - provenance: ~
+    attributes: *fmapattributes
     bids:
       <<: *fmapbids
       suffix: epi
-    provenance: ~
-    # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
   beh:        # ----------------------- All behavioural data ---------------------
-  - attributes: &behattributes
+  - provenance: ~
+    attributes: &behattributes
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -284,24 +284,25 @@ DICOM:
     bids: &behbids
       task_name: <SeriesDescription>
       suffix: events
-    provenance: ~
-  - attributes: *behattributes
+  - provenance: ~
+    attributes: *behattributes
     bids:
       <<: *behbids
       suffix: beh
-    provenance: ~
-  - attributes: *behattributes
+  - provenance: ~
+    attributes: *behattributes
     bids:
       <<: *behbids
       suffix: physio
-    provenance: ~
-  - attributes: *behattributes
+  - provenance: ~
+    attributes: *behattributes
     bids:
       <<: *behbids
       suffix: stim
 
   pet:        # ----------------------- All PET series ---------------------------
-  - attributes: &petattributes
+  - provenance: ~
+    attributes: &petattributes
       SeriesDescription: ~
       Radiopharmaceutical: ~
       SliceThickness: ~
@@ -315,10 +316,10 @@ DICOM:
       rec_label: ~
       run_index: <<1>>
       suffix: pet
-    provenance: ~
 
   extra_data: # ----------------------- All extra data ---------------------------
-  - attributes:
+  - provenance: ~
+    attributes:
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -341,7 +342,6 @@ DICOM:
       run_index: <<1>>
       suffix: ~
       mod_label: ~
-    provenance: ~
 
 
 PAR: ~
