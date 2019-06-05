@@ -300,7 +300,7 @@ def load_bidsmap(yamlfile: str, folder: str) -> ruamel.yaml:
         yamlfile = yamlfile + '.yaml'
 
     if os.path.basename(yamlfile) == yamlfile:      # Get the full paths to the bidsmap yaml-file
-        if os.path.join(folder, yamlfile):
+        if os.path.isfile(os.path.join(folder, yamlfile)):
             yamlfile = os.path.join(folder, yamlfile)
         else:
             yamlfile = os.path.join(heuristics_folder, yamlfile)
