@@ -288,16 +288,22 @@ def load_bidsmap(yamlfile: str, folder: str) -> ruamel.yaml:
     """
 
     # Input checking
+    heuristics_folder = os.path.join(os.path.dirname(__file__),'..','heuristics')
     if not folder:
-        folder = os.path.join(os.path.dirname(__file__),'..','heuristics')
+        folder = heuristics_folder
     if not yamlfile:
-        yamlfile = os.path.join(os.path.dirname(__file__),'..','heuristics','bidsmap_template.yaml')
+        yamlfile = os.path.join(folder,'bidsmap.yaml')
+        if not os.path.isfile(yamlfile):
+            yamlfile = os.path.join(heuristics_folder,'bidsmap_template.yaml')
 
     if not os.path.splitext(yamlfile)[1]:           # Add a standard file-extension if needed
         yamlfile = yamlfile + '.yaml'
 
     if os.path.basename(yamlfile) == yamlfile:      # Get the full paths to the bidsmap yaml-file
-        yamlfile = os.path.join(folder, yamlfile)
+        if os.path.join(folder, yamlfile):
+            yamlfile = os.path.join(folder, yamlfile)
+        else:
+            yamlfile = os.path.join(heuristics_folder, yamlfile)
 
     yamlfile = os.path.abspath(os.path.expanduser(yamlfile))
     logger.info('Using: ' + os.path.abspath(yamlfile))
