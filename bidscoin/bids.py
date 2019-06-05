@@ -648,7 +648,7 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> dict:
     return {'series': series_, 'modality': modality}
 
 
-def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='') -> str:
+def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='', subprefix: str='sub-', sesprefix: str='ses-') -> str:
     """
     Composes a filename as it should be according to the BIDS standard using the BIDS labels in series
 
@@ -657,15 +657,17 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
     :param modality:    The bidsmodality (choose from bids.bidsmodalities)
     :param series:      The series mapping with the BIDS labels
     :param run:         The optional runindex label (e.g. 'run-01'). Can be left ''
+    :param subprefix:   The optional subprefix (e.g. 'ses-'). If it is found in the provenance then a default subid will be set
+    :param sesprefix:   The optional sesprefix (e.g. 'ses-'). If it is found in the provenance then a default sesid will be set
     :return:            The composed BIDS file-name (without file-extension)
     """
     assert modality in bidsmodalities + (unknownmodality,)
 
     # Add default value for subid and sesid (e.g. for the bidseditor)
     if not subid:
-        subid = '001'
-    if not sesid and os.sep + 'ses-' in series['provenance']:
-        sesid = '01'
+        subid = os.path.dirname(series['provenance']).rsplit(os.sep + subprefix)[1].split(os.sep)[0]
+    if not sesid and os.sep + sesprefix in series['provenance']:
+        sesid = os.path.dirname(series['provenance']).rsplit(os.sep + sesprefix)[1].split(os.sep)[0]
 
     # Add sub- and ses- prefixes if they are not there
     subid = 'sub-' + subid.lstrip('sub-')
