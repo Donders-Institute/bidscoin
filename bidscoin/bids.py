@@ -58,12 +58,6 @@ def setup_logging(log_filename: str) -> logging.Logger:
     return logger
 
 
-def format_warning(message, category, filename, lineno, line=''):
-    return category.__name__ + ': ' + str(filename) + ':' + str(lineno) + ':\n\t' + str(message) + '\n'
-
-warnings.formatwarning = format_warning
-
-
 def version() -> float:
     """
     Reads the BIDSCOIN version from the VERSION.TXT file

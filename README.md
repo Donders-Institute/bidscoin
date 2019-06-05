@@ -5,8 +5,8 @@
 
 - [The BIDScoin workflow](#the-bidscoin-workflow)
 - [The BIDScoin tools](#the-bidscoin-tools)
-  * [Running the bidstrainer](#running-the-bidstrainer)
   * [Running the bidsmapper](#running-the-bidsmapper)
+  * [Running the bidseditor](#running-the-bidseditor)
   * [Running the bidscoiner](#running-the-bidscoiner)
 - [The bidsmap files](#the-bidsmap-files)
   * [Tips and tricks](#tips-and-tricks)
@@ -17,77 +17,35 @@
 - [BIDScoin functionality / TODO](#bidscoin-functionality--todo)
 - [BIDScoin tutorial](#bidscoin-tutorial)
 
-BIDScoin is an [open-source](https://github.com/Donders-Institute/bidscoin) python command-line toolkit that converts ("coins") source-level (raw) neuroimaging data-sets to [nifti](https://nifti.nimh.nih.gov/) / [json](https://www.json.org/) / [tsv](https://en.wikipedia.org/wiki/Tab-separated_values) data-sets that are organized following the Brain Imaging Data Structure, a.k.a. [BIDS](http://bids.neuroimaging.io). Rather then depending on complex or ambiguous programmatic logic, BIDScoin uses a simple (but powerful) key-value approach to convert the raw source data into BIDS data. The key values that can be used in BIDScoin to map the data are:
+BIDScoin is a user friendly [open-source](https://github.com/Donders-Institute/bidscoin) python toolkit that converts ("coins") source-level (raw) neuroimaging data-sets to [nifti](https://nifti.nimh.nih.gov/) / [json](https://www.json.org/) / [tsv](https://en.wikipedia.org/wiki/Tab-separated_values) data-sets that are organized following the Brain Imaging Data Structure, a.k.a. [BIDS](http://bids.neuroimaging.io) standard. Rather then depending on complex or ambiguous programmatic logic for the identification of imaging modalities, BIDScoin uses a direct mapping approach to identify and convert the raw source data into BIDS data. To information sources that can be used to map the source data to BIDS are:
 
  1. Information in MRI header files (DICOM, PAR/REC or .7 format; e.g. SeriesDescription)
  2. Information from nifti headers (e.g. image dimensionality)
  3. Information in the file structure (file- and/or directory names, e.g. number of files)
 
-The key-value heuristics are stored in flexible, human readable and broadly supported [YAML](http://yaml.org/) files. The nifti- and json-files are generated with [dcm2niix](https://github.com/rordenlab/dcm2niix). Users can even get more flexibility by providing custom written [plug-in functions](#plug-in-functions) (e.g. for parsing of Presentation logfiles). For more information on the installation and requirements, see the [installation guide](./docs/installation.md).
+  NB: Currently, BIDScoin is very [functional](#bidscoin-functionality--todo), but thus far only the DICOM support (option 1) has been fully implemented.
 
-Currently, BIDScoin is quite [functional](#bidscoin-functionality--todo), but note that only option (1) has been implemented for DICOM files. (Options (2) and (3) are planned for future versions, such that (3) takes precedence over (2), which in turn takes precedence over (1)).
+The mapping information is stored as key-value pairs in the human readable and widely supported [YAML](http://yaml.org/) files. The nifti- and json-files are generated with [dcm2niix](https://github.com/rordenlab/dcm2niix). In addition, users can provide custom written [plug-in functions](#plug-in-functions), e.g. for using additional sources of information or e.g. for parsing of Presentation logfiles.
 
-BIDScoin is a user friendly toolkit that requires no programming knowledge in order to use it, just some basic file handling and, possibly, minor (YAML) text editing skills.
+Because all the mapping information is stored in the yaml-file, BIDScoin requires no programming knowledge in order to use it, just some basic file handling and, possibly, minor (YAML) text editing skills.
 
+For information on the BIDScoin installation and requirements, see the [installation guide](./docs/installation.md).
+ 
 ## The BIDScoin workflow
 
-BIDScoin will take your raw data as well as a YAML file with the key-value mapping (dictionary) information as input, and returns a BIDS folder as output. Here is how to prepare the BIDScoin inputs:
+### Source data structure
+BIDScoin will take your raw data as well as a YAML file with the key-value mapping (dictionary) information as input, and returns a BIDS folder as output. The raw data input folder should be organised according to a `/sub-identifier/[ses-identifier]/seriesfolder/dicomfile` structure. This data organization is how users receive their data from the (Siemens) scanners at the [DCCN](https://www.ru.nl/donders/) (NB: the `ses-identifier` sub-folder is optional and can be left out).
 
- 1. **A minimally organised raw data folder**, following a
- `/raw/sub-[identifier]/ses-[identifier]/[seriesfolder]/[dicomfile]`
- structure. This data organization is how users receive their data from the (Siemens) scanners at the [DCCN](https://www.ru.nl/donders/) (NB: the `ses-[identifier]` sub-folder is optional and can be left out).
-
-    If your data is not already organized in this way, you can use the `dicomsort.py` command-line utility to move your unordered DICOM-files into a `seriesfolder` organization with the DICOM series-folders being named [SeriesNumber]-[SeriesDescription]. Series folders contain a single data type and are typically acquired in a single run.
+    If your data is not already organized in this way, you can use the [dicomsort.py](./bidscoin/dicomsort.py) command-line utility to move your unordered or DICOMDIR ordered DICOM-files into a `seriesfolder` organization with the DICOM series-folders being named [SeriesNumber]-[SeriesDescription]. Series folders contain a single data type and are typically acquired in a single run.
  
-    Another command-line utility that can be helpful in organizing your raw data is `rawmapper.py`. This utility can show you the overview (map) of all the values of DICOM-fields of interest in your data-set and, optionally, use these fields to rename your raw data sub-folders (this can be handy e.g. if you manually entered subject-identifiers as [Additional info] at the scanner console and you want to use these to rename your subject folders).
+    Another command-line utility that can be helpful in organizing your raw data is [rawmapper.py](.bidscoin/rawmapper.py). This utility can show you the overview (map) of all the values of DICOM-fields of interest in your data-set and, optionally, use these fields to rename your raw data sub-folders (this can be handy e.g. if you manually entered subject-identifiers as [Additional info] at the scanner console and you want to use these to rename your subject folders).
  
     If these utilities do not satisfy your needs, then have a look at this [reorganize_dicom_files](https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md) tool.
 
- 2. **A YAML file with the key-value mapping information, i.e. a bidsmap**.  There are two ways to create such a [bidsmap](#the-bidsmap-files).
-
-    The first is if you are a new user and are working from scratch. In this case you would start with the `bidstrainer.py` command-line tool (see the [BIDScoin workflow](#bidscoin-workflow) diagram and [the bidstrainer](#running-the-bidstrainer) section).
-
-    If you have run the bidstrainer or, e.g. if you work in an institute where someone else (i.e. your MR physicist ;-)) has already performed the training procedure, you can use the training data to map all the files in your data-set with the `bidsmapper.py` command-line tool (see [the bidsmapper](#running-the-bidsmapper) section).
-
-    The output of the bidsmapper is the complete bidsmap that you can inspect to see if your raw data will be correctly mapped onto BIDS. If this is not the case you can go back to the training procedure and change or add new samples, and rerun the bidstrainer and bidsmapper until you have a suitable bidsmap. Alternatively, or in addition to, you can directly edit the bidsmap yourself (this requires more expert knowledge but can also be more powerful). 
-
-    <a name="bidscoin-workflow">![BIDScoin workflow](./docs/workflow.png)</a>  
-    *BIDScoin workflow. Left: New users would start with the bidstrainer, which output can be fed into the bidsmapper to produce the bidsmap.yaml file. This file can (and should) be inspected and, in case of incorrect mappings, inform the user to add raw training samples and re-run the training procedure (dashed arrowlines). Right: Institute users could start with an institute provided bidsmap file (e.g. bidsmap_dccn.yaml) and directly use the bidsmapper. In case of incorrect mappings they could ask the institute for an updated bidsmap (dashed arrowline).*
 
 Having an organized raw data folder and a correct bidsmap, the actual data-set conversion to BIDS can now be performed fully automatically by simply running the `bidscoiner.py` command-line tool (see the [BIDScoin workflow](#bidscoin-workflow) diagram and [the bidscoiner](#running-the-bidscoiner) section).
 
 ## The BIDScoin tools
-
-### Running the bidstrainer
-
-    usage: bidstrainer.py [-h] bidsfolder [samplefolder] [bidsmap]
-    
-    Takes example files from the samples folder as training data and creates a key-value
-    mapping, i.e. a bidsmap_sample.yaml file, by associating the file attributes with the
-    file's BIDS-semantic pathname
-    
-    positional arguments:
-      bidsfolder    The destination folder with the bids data structure
-      samplefolder  The root folder of the directory tree containing the sample
-                    files / training data. Optional argument, if left empty,
-                    bidsfolder/code/samples is used or such an empty directory
-                    tree is created
-      bidsmap       The bidsmap YAML-file with the BIDS heuristics (optional
-                    argument, default: ./heuristics/bidsmap_template.yaml)
-    
-    optional arguments:
-      -h, --help    show this help message and exit
-    
-    examples:
-      bidstrainer.py /project/foo/bids
-      bidstrainer.py /project/foo/bids /project/foo/samples bidsmap_custom
-
-The core idea of the bidstrainer is that you know your own scan protocol and can therefore point out which files should go where in the BIDS. In order to do so, you have to place raw sample files for each of the BIDS data types / runs in your scan protocol (e.g. T1, fMRI, etc) in the appropriate folder of a semantic folder tree (named `samples`, see the [bidstrainer example](#bidstrainer-example)). If you run `bidstrainer.py` with just the name of your bidsfolder, bidstrainer will create this semantic folder tree for you in the `code` subfolder (if it is not already there). Generally, when placing your sample files, it will be fairly straightforward to find your way in this semantic folder tree, but in doubt you should have a look at the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf). Note that the deepest foldername in the tree denotes the BIDS suffix (e.g. "T1w"). You do not need to place samples from your non-BIDS data types / runs (such as localizer or spectroscopy scans) in the folder tree, these data types will automatically go into the "extra_data" folder.
-
-If all sample files have been put in the appropriate location, you can (re)run the bidstrainer to create a bidsmap file for your study. How this works is that, on one hand, the bidstrainer will read a predefined set of (e.g. key DICOM) attributes from each sample file and, on the other hand, take the path-names of the sample files to infer the associated BIDS modality. In this way, a list of unique key-value mappings between sets of (DICOM) attributes and sets of BIDS-labels is defined, the so-called [bidsmap](#the-bidsmap-files), that can be used as input for the [bidsmapper tool](#running-the-bidsmapper). If the predefined set of attributes does not uniquely identify your particular scan sequences (not likely but possible), or if you simply prefer to use more or other attributes, you can (copy and) edit the [bidsmap_template.yaml](./heuristics/bidsmap_template.yaml) file in the heuristics folder and re-run the bidstrainer with this customized template as an input argument.
-
-<a name="bidstrainer-example">![Bidstrainer example](./docs/sample_tree.png)</a>
-*Bidstrainer example. The red arrow depicts a raw data sample (left file browser) that is put (copied over) to the appropriate location in the semantic folder tree (right file browser)*
 
 ### Running the bidsmapper
 
@@ -122,6 +80,37 @@ If all sample files have been put in the appropriate location, you can (re)run t
       bidsmapper.py /project/foo/raw /project/foo/bids bidsmap_dccn
 
 The `bidsmapper.py` tool goes over all raw data folders of your dataset and saves the known and unknown key-value mappings in a (study specific) [bidsmap file](#the-bidsmap-files). You can consider it as a dry-run for how exactly the [bidscoiner](#running-the-bidscoiner) will convert the raw data into BIDS folders. It gives you the opportunity to inspect the resulting `bidsmap.yaml` file to see if all data types / runs were recognized correctly with proper BIDS labels before doing the actual conversion to BIDS. Unexpected mappings or poor BIDS labels can be found if your bidstraining or the bidsmap file that was provided to you was incomplete. In that case you should either get an updated bidsmap file or redo the bidstraining with new sample files, rerun the bidstrainer and bidsmapper until you have a suitable `bidsmap.yaml` file. You can of course also directly edit the `bidsmap.yaml` file yourself, for instance by changing some of the automatically generated BIDS labels to your needs (e.g. "task_label").
+
+### Running the bidseditor
+
+    usage: bidstrainer.py [-h] bidsfolder [samplefolder] [bidsmap]
+    
+    Takes example files from the samples folder as training data and creates a key-value
+    mapping, i.e. a bidsmap_sample.yaml file, by associating the file attributes with the
+    file's BIDS-semantic pathname
+    
+    positional arguments:
+      bidsfolder    The destination folder with the bids data structure
+      samplefolder  The root folder of the directory tree containing the sample
+                    files / training data. Optional argument, if left empty,
+                    bidsfolder/code/samples is used or such an empty directory
+                    tree is created
+      bidsmap       The bidsmap YAML-file with the BIDS heuristics (optional
+                    argument, default: ./heuristics/bidsmap_template.yaml)
+    
+    optional arguments:
+      -h, --help    show this help message and exit
+    
+    examples:
+      bidstrainer.py /project/foo/bids
+      bidstrainer.py /project/foo/bids /project/foo/samples bidsmap_custom
+
+The core idea of the bidstrainer is that you know your own scan protocol and can therefore point out which files should go where in the BIDS. In order to do so, you have to place raw sample files for each of the BIDS data types / runs in your scan protocol (e.g. T1, fMRI, etc) in the appropriate folder of a semantic folder tree (named `samples`, see the [bidstrainer example](#bidstrainer-example)). If you run `bidstrainer.py` with just the name of your bidsfolder, bidstrainer will create this semantic folder tree for you in the `code` subfolder (if it is not already there). Generally, when placing your sample files, it will be fairly straightforward to find your way in this semantic folder tree, but in doubt you should have a look at the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf). Note that the deepest foldername in the tree denotes the BIDS suffix (e.g. "T1w"). You do not need to place samples from your non-BIDS data types / runs (such as localizer or spectroscopy scans) in the folder tree, these data types will automatically go into the "extra_data" folder.
+
+If all sample files have been put in the appropriate location, you can (re)run the bidstrainer to create a bidsmap file for your study. How this works is that, on one hand, the bidstrainer will read a predefined set of (e.g. key DICOM) attributes from each sample file and, on the other hand, take the path-names of the sample files to infer the associated BIDS modality. In this way, a list of unique key-value mappings between sets of (DICOM) attributes and sets of BIDS-labels is defined, the so-called [bidsmap](#the-bidsmap-files), that can be used as input for the [bidsmapper tool](#running-the-bidsmapper). If the predefined set of attributes does not uniquely identify your particular scan sequences (not likely but possible), or if you simply prefer to use more or other attributes, you can (copy and) edit the [bidsmap_template.yaml](./heuristics/bidsmap_template.yaml) file in the heuristics folder and re-run the bidstrainer with this customized template as an input argument.
+
+<a name="bidstrainer-example">![Bidstrainer example](./docs/sample_tree.png)</a>
+*Bidstrainer example. The red arrow depicts a raw data sample (left file browser) that is put (copied over) to the appropriate location in the semantic folder tree (right file browser)*
 
 ### Running the bidscoiner
 
