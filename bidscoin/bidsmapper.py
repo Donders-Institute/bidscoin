@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
-Creates a bidsmap.yaml YAML file that maps the information from all raw data to the
-BIDS labels (see also [bidsmap_template.yaml] and [bidstrainer.py]). You can check
+Creates a bidsmap.yaml YAML file that maps the information from all raw source data to
+the BIDS labels (see also [bidsmap_template.yaml] and [bidstrainer.py]). You can check
 and edit the bidsmap.yaml file before passing it to [bidscoiner.py]
 """
 
