@@ -55,10 +55,11 @@ DICOM:
       suffix: T2w
       ce_label: ~
     provenance: ~
-  - attributes: *anatattributes
+  - attributes:
+      <<: *anatattributes
+      SequenceName: '*tfl3d1'
     bids:
       <<: *anatbids
-      SequenceName: '*tfl3d1'
       suffix: T1w
     provenance: ~
   - attributes: *anatattributes
@@ -76,17 +77,19 @@ DICOM:
       <<: *anatbids
       suffix: T2map
     provenance: ~
-  - attributes: *anatattributes
+  - attributes:
+      <<: *anatattributes
+      SequenceName: '*fl3d11r'
     bids:
       <<: *anatbids
-      SequenceName: '*fl3d11r'
       suffix: T2star
     provenance: ~
-  - attributes: *anatattributes
-    bids:
-      <<: *anatbids
+  - attributes:
+      <<: *anatattributes
       SequenceName: ['*fm2d2r', '*spc']
       ScanningSequence: "['SE', 'IR']"
+    bids:
+      <<: *anatbids
       suffix: FLAIR
     provenance: ~
   - attributes: *anatattributes
