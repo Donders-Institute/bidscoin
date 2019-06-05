@@ -67,6 +67,6 @@ if __name__ == "__main__":
     bidscoin(rawfolder    = args.sourcefolder,
              bidsfolder   = args.bidsfolder,
              bidsmapfile  = args.bidsmap,
-             templatefile = args.templatefile,
+             templatefile = args.template,
              subprefix    = args.subprefix,
              sesprefix    = args.sesprefix)
