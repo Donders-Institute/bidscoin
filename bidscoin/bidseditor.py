@@ -702,21 +702,21 @@ class EditDialog(QDialog):
         data = [
             [
                 {
-                    "value": "filename",
-                    "is_editable": False
-                },
-                {
-                    "value": provenance_file,
-                    "is_editable": False
-                },
-            ],
-            [
-                {
                     "value": "path",
                     "is_editable": False
                 },
                 {
                     "value": provenance_path,
+                    "is_editable": False
+                },
+            ],
+            [
+                {
+                    "value": "filename",
+                    "is_editable": False
+                },
+                {
+                    "value": provenance_file,
                     "is_editable": False
                 },
             ]
