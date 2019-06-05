@@ -115,7 +115,7 @@ The `bidsmapper.py` tool scans all source data folders of your dataset and saves
       bidseditor.py /project/bids -t bidsmap_dccn.yaml
       bidseditor.py /project/bids -b my/custom/bidsmap.yaml
 
-The bidseditor will launch a graphical user interface that will allow you to edit [..]. It gives you the opportunity to inspect the resulting `bidsmap.yaml` file to see if all data types / runs were recognized correctly with proper BIDS labels before doing the actual conversion to BIDS. Unexpected mappings or poor BIDS labels can be found if your bidstraining or the bidsmap file that was provided to you was incomplete. You can of course also directly edit the `bidsmap.yaml` file yourself, for instance by changing some of the automatically generated BIDS labels to your needs (e.g. "task_label").
+The bidseditor will launch a graphical user interface that will allow you to edit the `bidsmap.yaml` file that was produced by the `bidsmapper.py`. to see if all data types / runs were recognized correctly with proper BIDS labels before doing the actual conversion to BIDS. Unexpected mappings or poor BIDS labels can be found if your custom / site-specific bidsmap template file was incomplete. You can of course also directly edit the `bidsmap.yaml` file yourself, for instance by changing some of the automatically generated BIDS labels to your needs (e.g. "task_label").
 
 <a name="bidseditor-example">![Bidseditor example](./docs/bidseditor_main.png)</a>
 *Bidseditor example. The left panel shows [..]*
@@ -179,13 +179,13 @@ You can use the "IntendedFor" field to indicate for which runs (DICOM series) a 
       bidscoiner.py /project/raw /project/bids
       bidscoiner.py -f /project/raw /project/bids -p sub-009 sub-030
 
-The `bidscoiner.py` tool is the workhorse of the toolkit that will fully automatically convert your source-level (raw) MRI data-sets to BIDS organized data-sets. In order to do so, it needs a [bidsmap file](#the-bidsmap-files), which is typically created by running the [bidsmapper](#running-the-bidsmapper) tool. You can run `bidscoiner.py` after all data is collected, or whenever new data has been added to the raw folder (presuming the scan protocol hasn't changed).
+The `bidscoiner.py` tool is the workhorse of the toolkit that will fully automatically convert your source-level (raw) MRI data-sets to BIDS organized data-sets. In order to do so, it needs a [bidsmap file](#the-bidsmap-files), typically the one created by the [bidseditor](#step-2-running-the-bidseditor) tool. You can run `bidscoiner.py` after all data is collected, or whenever new data has been added to the raw folder (presuming the scan protocol hasn't changed).
 
 After a successful run of `bidscoiner.py`, the work to convert your data in a fully compliant BIDS dataset is unfortunately not yet fully over and, depending on the complexity of your data-set, additional tools may need to be run and meta-data may need to be entered manually (not everything can be automated). For instance, you should update the content of the `dataset_description.json` and `README` files in your bids folder and you may need to provide e.g. additional `*_scans.tsv`,`*_sessions.tsv` or `participants.json` files (see the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf) for more information). Moreover, if you have behavioural log-files you will find that BIDScoin does not (yet) [support](#bidscoin-functionality--todo) converting these into BIDS compliant `*_events.tsv/json` files (advanced users are encouraged to use the `bidscoiner.py` [plug-in](#plug-in-functions) possibility and write their own log-file parser).  
 
 If all of the above work is done, you can (and should) run the web-based [bidsvalidator](https://bids-standard.github.io/bids-validator/) to check for inconsistencies or missing files in your bids data-set (NB: the bidsvalidator also exists as a [command-line tool](https://github.com/bids-standard/bids-validator)).
 
-NB: The provenance of the produced BIDS data-sets is stored in the `bids/code/bidscoiner.log` file. This file is also very useful for debugging / tracking down bidsmapping issues.
+> NB: The provenance of the produced BIDS data-sets is stored in the `bids/code/bidscoiner.log` file. This file is also very useful for debugging / tracking down bidsmapping issues.
 
 ## The bidsmap files
 
