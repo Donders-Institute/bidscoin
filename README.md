@@ -43,7 +43,7 @@ BIDScoin will take your (raw) source data as well as a YAML file with the key-va
 > If these utilities do not satisfy your needs, then have a look at this [reorganize_dicom_files](https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md) tool.
 
 ### Coining your source data to BIDS
-Having an organized source data folder, the actual data-set conversion to BIDS can be performed fully automatically by simply running the `bidsmapper.py`, the `bidseditor.py` and the `bidscoiner.py` command-line tools after another:
+Having an organized source data folder, the actual data-set conversion to BIDS can be performed fully automatically by simply running 1) the `bidsmapper.py`, 2) the `bidseditor.py` and 3) the `bidscoiner.py` command-line tools after another:
 
 #### Step 1: Running the bidsmapper
 
@@ -81,34 +81,43 @@ The `bidsmapper.py` tool scans all source data folders of your dataset and saves
 
 #### Step 2: Running the bidseditor
 
-    usage: bidstrainer.py [-h] bidsfolder [samplefolder] [bidsmap]
+    usage: bidseditor.py [-h] [-s SOURCEFOLDER] [-b BIDSMAP] [-t TEMPLATE]
+                         bidsfolder
     
-    Takes example files from the samples folder as training data and creates a key-value
-    mapping, i.e. a bidsmap_sample.yaml file, by associating the file attributes with the
-    file's BIDS-semantic pathname
+    This function launches a graphical interface for editing the bidsmap.yaml file that is e.g. produced by bidsmapper.py.
+    The user can fill in or change the BIDS values for entries that are unidentified or sub-optimal, such that meaningful
+    BIDS filenames will be generated. The resulting bidsmap.yaml file can be used for converting the data to BIDS using
+    bidscoiner.py
     
     positional arguments:
-      bidsfolder    The destination folder with the bids data structure
-      samplefolder  The root folder of the directory tree containing the sample
-                    files / training data. Optional argument, if left empty,
-                    bidsfolder/code/samples is used or such an empty directory
-                    tree is created
-      bidsmap       The bidsmap YAML-file with the BIDS heuristics (optional
-                    argument, default: ./heuristics/bidsmap_template.yaml)
+      bidsfolder            The destination folder with the (future) bids data
     
     optional arguments:
-      -h, --help    show this help message and exit
+      -h, --help            show this help message and exit
+      -s SOURCEFOLDER, --sourcefolder SOURCEFOLDER
+                            The source folder containing the raw data. If empty,
+                            it is derived from the bidsmap provenance information
+      -b BIDSMAP, --bidsmap BIDSMAP
+                            The bidsmap YAML-file with the study heuristics. If
+                            the bidsmap filename is relative (i.e. no "/" in the
+                            name) then it is assumed to be located in
+                            bidsfolder/code/. Default: bidsmap.yaml
+      -t TEMPLATE, --template TEMPLATE
+                            The bidsmap template with the default heuristics (this
+                            could be provided by your institute). If the bidsmap
+                            filename is relative (i.e. no "/" in the name) then it
+                            is assumed to be located in bidsfolder/code/. Default:
+                            bidsmap_template.yaml
     
     examples:
-      bidstrainer.py /project/foo/bids
-      bidstrainer.py /project/foo/bids /project/foo/samples bidsmap_custom
+      bidseditor.py /project/bids
+      bidseditor.py /project/bids -t bidsmap_dccn.yaml
+      bidseditor.py /project/bids -b my/custom/bidsmap.yaml
 
-The core idea of the bidstrainer is that you know your own scan protocol and can therefore point out which files should go where in the BIDS. In order to do so, you have to place raw sample files for each of the BIDS data types / runs in your scan protocol (e.g. T1, fMRI, etc) in the appropriate folder of a semantic folder tree (named `samples`, see the [bidstrainer example](#bidstrainer-example)). If you run `bidstrainer.py` with just the name of your bidsfolder, bidstrainer will create this semantic folder tree for you in the `code` subfolder (if it is not already there). Generally, when placing your sample files, it will be fairly straightforward to find your way in this semantic folder tree, but in doubt you should have a look at the [BIDS specification](http://bids.neuroimaging.io/bids_spec.pdf). Note that the deepest foldername in the tree denotes the BIDS suffix (e.g. "T1w"). You do not need to place samples from your non-BIDS data types / runs (such as localizer or spectroscopy scans) in the folder tree, these data types will automatically go into the "extra_data" folder.
+The bidseditor will launch a graphical user interface that will allow you to edit [..].
 
-If all sample files have been put in the appropriate location, you can (re)run the bidstrainer to create a bidsmap file for your study. How this works is that, on one hand, the bidstrainer will read a predefined set of (e.g. key DICOM) attributes from each sample file and, on the other hand, take the path-names of the sample files to infer the associated BIDS modality. In this way, a list of unique key-value mappings between sets of (DICOM) attributes and sets of BIDS-labels is defined, the so-called [bidsmap](#the-bidsmap-files), that can be used as input for the [bidsmapper tool](#running-the-bidsmapper). If the predefined set of attributes does not uniquely identify your particular scan sequences (not likely but possible), or if you simply prefer to use more or other attributes, you can (copy and) edit the [bidsmap_template.yaml](./heuristics/bidsmap_template.yaml) file in the heuristics folder and re-run the bidstrainer with this customized template as an input argument.
-
-<a name="bidstrainer-example">![Bidstrainer example](./docs/sample_tree.png)</a>
-*Bidstrainer example. The red arrow depicts a raw data sample (left file browser) that is put (copied over) to the appropriate location in the semantic folder tree (right file browser)*
+<a name="bidseditor-example">![Bidseditor example](./docs/bidseditor_main.png)</a>
+*Bidseditor example. The left panel shows [..]*
 
 #### Step 3: Running the bidscoiner
 
