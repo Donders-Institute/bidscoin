@@ -195,7 +195,7 @@ class Ui_MainWindow(object):
                 provenance = series['provenance']
                 provenance_file = os.path.basename(provenance)
                 run = series['bids'].get('run_index', '')
-                bids_name = bids.get_bidsname('001', '01', modality, series, run)
+                bids_name = bids.get_bidsname('', '', modality, series, run)
 
                 item_id = QTableWidgetItem(str(idx + 1))
                 item_provenance_file = QTableWidgetItem(provenance_file)
@@ -300,7 +300,7 @@ class Ui_MainWindow(object):
                 provenance_file = os.path.basename(provenance)
                 provenance_file = os.path.basename(provenance)
                 run = series['bids'].get('run_index', '')
-                bids_name = bids.get_bidsname('001', '01', modality, series, run)
+                bids_name = bids.get_bidsname('', '', modality, series, run)
 
                 item_id = QTableWidgetItem(str(idx + 1))
                 item_provenance_file = QTableWidgetItem(provenance_file)
@@ -630,7 +630,7 @@ class EditDialog(QDialog):
 
             series = self.target_series
             run = series['bids'].get('run_index', '')
-            bids_name = bids.get_bidsname('001', '01', self.target_modality, series, run)
+            bids_name = bids.get_bidsname('', '', self.target_modality, series, run)
             html_bids_name = get_html_bidsname(bids_name)
 
             self.view_bids_name.clear()
@@ -822,7 +822,7 @@ class EditDialog(QDialog):
     def set_bids_name_section(self):
         """Set non-editable BIDS name section. """
         run = self.target_series['bids'].get('run_index', '')
-        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
+        bids_name = bids.get_bidsname('', '', self.target_modality, self.target_series, run)
         html_bids_name = get_html_bidsname(bids_name)
 
         self.label_bids_name = QLabel()
@@ -887,7 +887,7 @@ class EditDialog(QDialog):
         # Update the BIDS name
         self.target_series['bids'] = bids_values
         run = self.target_series['bids'].get('run_index', '')
-        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
+        bids_name = bids.get_bidsname('', '', self.target_modality, self.target_series, run)
         html_bids_name = get_html_bidsname(bids_name)
 
         self.view_bids_name.clear()
@@ -903,7 +903,7 @@ class EditDialog(QDialog):
         # Update the BIDS name
         self.target_series['bids'] = bids_values
         run = self.target_series['bids'].get('run_index', '')
-        bids_name = bids.get_bidsname('001', '01', self.target_modality, self.target_series, run)
+        bids_name = bids.get_bidsname('', '', self.target_modality, self.target_series, run)
         html_bids_name = get_html_bidsname(bids_name)
 
         self.view_bids_name.clear()

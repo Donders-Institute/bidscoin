@@ -652,14 +652,25 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
     """
     Composes a filename as it should be according to the BIDS standard using the BIDS labels in series
 
-    :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-01')
-    :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'sub-01'). Can be left ''
+    :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001'). Can be left empty
+    :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01'). Can be left empty
     :param modality:    The bidsmodality (choose from bids.bidsmodalities)
     :param series:      The series mapping with the BIDS labels
     :param run:         The optional runindex label (e.g. 'run-01'). Can be left ''
     :return:            The composed BIDS file-name (without file-extension)
     """
     assert modality in bidsmodalities + (unknownmodality,)
+
+    # Add default value for subid and sesid (e.g. for the bidseditor)
+    if not subid:
+        subid = '001'
+    if not sesid and os.sep + 'ses-' in series['provenance']:
+        sesid = '01'
+
+    # Add sub- and ses- prefixes if they are not there
+    subid = 'sub-' + subid.lstrip('sub-')
+    if sesid:
+        sesid = 'ses-' + subid.lstrip('ses-')
 
     # Do some checks to allow for dragging the series entries between the different modality-sections
     for bidslabel in bidslabels:
