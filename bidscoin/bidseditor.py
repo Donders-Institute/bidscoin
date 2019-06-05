@@ -229,7 +229,7 @@ class Ui_MainWindow(object):
         self.save_button.setStyleSheet('QPushButton {color: blue;}')
         self.table.setCellWidget(idx, 4, self.save_button)
 
-        self.table.setHorizontalHeaderLabels(['', 'File sample', 'Modality', 'BIDS output name', 'Action'])
+        self.table.setHorizontalHeaderLabels(['', 'Filename', 'Modality', 'BIDS output name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
@@ -333,7 +333,7 @@ class Ui_MainWindow(object):
         # self.save_button.setStyleSheet('QPushButton {color: blue;}')
         # self.table.setCellWidget(idx, 4, self.save_button)
 
-        self.table.setHorizontalHeaderLabels(['', 'File sample', 'Modality', 'BIDS output name', 'Action'])
+        self.table.setHorizontalHeaderLabels(['', 'Filename', 'Modality', 'BIDS output name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
