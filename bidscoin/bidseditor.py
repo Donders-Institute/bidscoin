@@ -106,7 +106,7 @@ def get_allowed_suffixes(template_bidsmap):
     return allowed_suffixes
 
 
-def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, source_bids_attributes):
+def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, source_series):
     """Return the target BIDS attributes (i.e. the key, value pairs)
     given the keys from the template
     given the values from the source BIDS attributes. """
@@ -120,13 +120,15 @@ def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, source_bid
             if key == 'suffix' and modality in bids.bidsmodalities:
                 template_value = allowed_suffixes[modality][0]
 
-        source_value = source_bids_attributes.get(key, None)
+        source_value = source_series['bids'].get(key, None)
         if source_value:
-           # Set the value from the source attributes
-            bids_attributes[key] = source_bids_attributes[key]
+            # Set the value from the source attributes
+            bids_attributes[key] = source_value
         else:
             # Set the default value from the template
-            bids_attributes[key] = template_value
+            if template_value.startswith('<') and template_value.endswith('>') and not template_value.startswith('<<') and not template_value.endswith('>>'):
+                template_value = bids.get_dicomfield(template_value[1:-1], source_series['provenance'])
+            bids_attributes[key] = bids.cleanup_label(template_value)
 
     return bids_attributes
 
@@ -785,11 +787,10 @@ class EditDialog(QDialog):
 
     def get_bids_values_data(self):
         """# Given the input BIDS attributes, derive the target BIDS attributes. """
-        source_bids_attributes = self.source_series.get('bids', {})
         target_bids_attributes = get_bids_attributes(self.template_bidsmap,
                                                      self.allowed_suffixes,
                                                      self.target_modality,
-                                                     source_bids_attributes)
+                                                     self.source_series)
         if target_bids_attributes is not None:
             bids_values = target_bids_attributes
         else:
