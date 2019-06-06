@@ -205,10 +205,14 @@ class Ui_MainWindow(object):
                 self.table.setItem(idx, 2, item_modality)
                 self.table.setItem(idx, 3, item_bids_name)
 
-                self.table.item(idx, 0).setForeground(QtGui.QColor(128, 128, 128))
-                self.table.item(idx, 1).setForeground(QtGui.QColor(128, 128, 128))
-                self.table.item(idx, 2).setForeground(QtGui.QColor(128, 128, 128))
-                self.table.item(idx, 3).setForeground(QtGui.QColor(128, 128, 128))
+                if self.table.item(idx, 0):
+                    self.table.item(idx, 0).setForeground(QtGui.QColor(128, 128, 128))
+                if self.table.item(idx, 1):
+                    self.table.item(idx, 1).setForeground(QtGui.QColor(128, 128, 128))
+                if self.table.item(idx, 2):
+                    self.table.item(idx, 2).setForeground(QtGui.QColor(128, 128, 128))
+                if self.table.item(idx, 3):
+                    self.table.item(idx, 3).setForeground(QtGui.QColor(128, 128, 128))
 
                 self.button_select = QPushButton('Edit')
                 if modality == bids.unknownmodality:
@@ -308,10 +312,14 @@ class Ui_MainWindow(object):
                 self.table.setItem(idx, 2, item_modality)
                 self.table.setItem(idx, 3, item_bids_name)
 
-                self.table.item(idx, 0).setForeground(QtGui.QColor(128, 128, 128))
-                self.table.item(idx, 1).setForeground(QtGui.QColor(128, 128, 128))
-                self.table.item(idx, 2).setForeground(QtGui.QColor(128, 128, 128))
-                self.table.item(idx, 3).setForeground(QtGui.QColor(128, 128, 128))
+                if self.table.item(idx, 0):
+                    self.table.item(idx, 0).setForeground(QtGui.QColor(128, 128, 128))
+                if self.table.item(idx, 1):
+                    self.table.item(idx, 1).setForeground(QtGui.QColor(128, 128, 128))
+                if self.table.item(idx, 2):
+                    self.table.item(idx, 2).setForeground(QtGui.QColor(128, 128, 128))
+                if self.table.item(idx, 3):
+                    self.table.item(idx, 3).setForeground(QtGui.QColor(128, 128, 128))
 
                 self.button_select = QPushButton('Edit')
                 if modality == bids.unknownmodality:
@@ -805,6 +813,8 @@ class EditDialog(QDialog):
             self.target_suffix = ''
         else:
             # Fixed list of options
+            if not self.allowed_suffixes[self.target_modality]:
+                raise Exception(f'allowed suffixes empty for modality {self.target_modality}')
             self.target_suffix = self.allowed_suffixes[self.target_modality][0]
 
         bids_values, data = self.get_bids_values_data()
@@ -841,6 +851,8 @@ class EditDialog(QDialog):
             self.target_suffix = ''
         else:
             # Fixed list of options
+            if not self.allowed_suffixes[self.target_modality]:
+                raise Exception(f'allowed suffixes empty for modality {self.target_modality}')
             self.target_suffix = self.allowed_suffixes[self.target_modality][0]
 
         # Given the input BIDS attributes, derive the target BIDS attributes (i.e map them to the target attributes)
@@ -920,7 +932,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     LOGGER.info('------------ START BIDSeditor ------------')
 
     # Obtain the initial bidsmap info
-    template_bidsmap = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code'))
+    template_bidsmap = bids.load_bidsmap(templatefile, None) # os.path.join(bidsfolder,'code'))
     input_bidsmap    = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder,'code'))
     output_bidsmap   = copy.deepcopy(input_bidsmap)
 
