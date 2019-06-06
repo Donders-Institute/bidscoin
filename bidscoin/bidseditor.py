@@ -59,6 +59,17 @@ EDIT_HELP_URLS = {
     bids.unknownmodality: EDIT_HELP_URL_DEFAULT
 }
 
+DISPLAY_KEY_MAPPING = {
+    "acq": "acq_label",
+    "ce": "ce_label",
+    "dir": "dir_label",
+    "echo": "echo_index",
+    "rec": "rec_label",
+    "run": "run_index",
+    "suffix": "suffix",
+    "task": "task_label"
+}
+
 
 def update_bidsmap(source_bidsmap, source_modality, source_index, target_modality, target_series):
     """Update the BIDS map:
@@ -642,10 +653,13 @@ class EditDialog(QDialog):
     def cell_was_clicked(self, row, column):
         """BIDS attribute value has been changed. """
         if column == 1:
-            item_key = self.view_bids.item(row, 0)
+            item_display_key = self.view_bids.item(row, 0)
             item_value = self.view_bids.item(row, 1)
-            key = item_key.text()
+            display_key = item_display_key.text()
             value = item_value.text()
+
+            # Obtain the orginal bidsmap key name from the short display name
+            key = DISPLAY_KEY_MAPPING.get(display_key, '')
 
             # Validate user input against BIDS
             value = bids.cleanup_label(value)
