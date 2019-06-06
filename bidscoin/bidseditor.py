@@ -136,6 +136,21 @@ def get_html_bidsname(bidsname):
     return bidsname.replace('<', '&lt;').replace('>', '&gt;')
 
 
+def get_index_mapping(bidsmap):
+    """Obtain the mapping between file_index and the series ndex for each modality. """
+    index_mapping = {}
+    file_index = 0
+    for modality in bids.bidsmodalities + (bids.unknownmodality,):
+        series_list = bidsmap[SOURCE][modality]
+        index_mapping[modality] = {}
+        if not series_list:
+            continue
+        for series_index, _ in enumerate(series_list):
+            index_mapping[modality][file_index] = series_index
+            file_index += 1
+    return index_mapping
+
+
 class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, bidsmap, output_bidsmap, template_bidsmap):
@@ -150,6 +165,9 @@ class Ui_MainWindow(object):
         self.bidsmap = bidsmap
         self.output_bidsmap = output_bidsmap
         self.template_bidsmap = template_bidsmap
+
+        # Make sure we have the correct index mapping for the first edit
+        self.index_mapping = get_index_mapping(bidsmap)
 
         self.MainWindow.setObjectName("MainWindow")
         self.MainWindow.resize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
@@ -241,7 +259,12 @@ class Ui_MainWindow(object):
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         self.save_button.clicked.connect(self.save_bidsmap_to_file)
+
+        # Done editing
         self.has_edit_dialog_open = False
+
+        # Make sure we have the correct index mapping for the next edit
+        self.index_mapping = get_index_mapping(self.output_bidsmap)
 
     def set_tab_file_browser(self, sourcefolder):
         """Set the raw data folder inspector tab. """
@@ -431,8 +454,12 @@ class Ui_MainWindow(object):
         index = self.table.indexAt(button.pos())
         if index.isValid():
             idx = int(index.row())
+            filename = self.table.item(idx, 1).text()
             modality = self.table.item(idx, 2).text()
-            self.show_edit(idx, modality)
+            file_index = idx # i.e. the item in the file list
+            # Obtain the source index of the series in the list of series in the bidsmap for this modality
+            source_index = self.index_mapping[modality][file_index]
+            self.show_edit(file_index, source_index, modality)
 
     def on_clicked(self, index):
         # print(self.model.fileInfo(index).absoluteFilePath())
@@ -443,10 +470,10 @@ class Ui_MainWindow(object):
         self.dialog_about = AboutDialog()
         self.dialog_about.show()
 
-    def show_edit(self, idx, modality):
+    def show_edit(self, file_index, source_index, modality):
         """Allow only one edit window to be open."""
         if not self.has_edit_dialog_open:
-            self.dialog_edit = EditDialog(idx, modality, self.output_bidsmap, self.template_bidsmap)
+            self.dialog_edit = EditDialog(file_index, source_index, modality, self.output_bidsmap, self.template_bidsmap)
             self.dialog_edit.show()
             self.has_edit_dialog_open = True
             self.dialog_edit.got_sample.connect(self.update_list)
@@ -501,15 +528,18 @@ class EditDialog(QDialog):
 
     got_sample = QtCore.pyqtSignal(dict)
 
-    def __init__(self, idx, modality, output_bidsmap, template_bidsmap):
+    def __init__(self, file_index, index, modality, output_bidsmap, template_bidsmap):
         QDialog.__init__(self)
 
         self.source_bidsmap = copy.deepcopy(output_bidsmap)         # TODO: Check if deepcopy is needed
-        self.source_index = idx
+        self.source_file_index = file_index
+        self.source_index = index
         self.source_modality = modality
-        self.source_series = self.source_bidsmap[SOURCE][modality][idx]
+        self.source_series = self.source_bidsmap[SOURCE][modality][index]
 
         self.target_bidsmap = copy.deepcopy(output_bidsmap)
+        self.target_file_index = file_index # Stays the same
+        self.target_index = index # To be updated, depends on target modality
         self.target_modality = modality
         self.target_series = copy.deepcopy(self.source_series)
         self.target_suffix = ''
