@@ -50,7 +50,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         subid = session.rsplit(os.sep + subprefix, 1)[1].split(os.sep + sesprefix, 1)[0]
     subid = 'sub-' + bids.cleanup_label(subid.lstrip(subprefix))
     if subid == subprefix:
-        LOGGER.error('Error: No valid subject identifier found for: ' + session)
+        LOGGER.error('No valid subject identifier found for: ' + session)
         return
 
     # Get a valid or empty BIDS session identifier from the (first) dicom-header or from the session source folder
@@ -114,8 +114,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # TODO: investigate shell=False and capture_output=True
         LOGGER.info(process.stdout.decode('utf-8'))
         if process.returncode != 0:
-            errormsg = f'Error: Failed to process {seriesfolder} (errorcode {process.returncode})'
-            LOGGER.error(errormsg)
+            LOGGER.error(f'Failed to process {seriesfolder} (errorcode {process.returncode})')
             continue
 
         # Replace uncropped output image with the cropped one
