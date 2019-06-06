@@ -661,6 +661,10 @@ class EditDialog(QDialog):
             # Obtain the orginal bidsmap key name from the short display name
             key = DISPLAY_KEY_MAPPING.get(display_key, '')
 
+            # Replace the (dynamic) bids-value if it is an attribute
+            if value.startswith('<') and value.endswith('>') and not value.startswith('<<') and not value.endswith('>>'):
+                value = bids.get_dicomfield(value[1:-1], self.target_series['provenance'])
+
             # Validate user input against BIDS
             value = bids.cleanup_label(value)
             self.view_bids.item(row, 1).setText(value)
