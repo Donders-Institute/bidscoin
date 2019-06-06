@@ -163,7 +163,7 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
 
         self.tabwidget = QtWidgets.QTabWidget(self.centralwidget)
-        self.tabwidget.setGeometry(QtCore.QRect(0, 0, 1280, 760))
+        self.tabwidget.setGeometry(QtCore.QRect(0, 0, 1280, 700))
         self.tabwidget.setTabPosition(QtWidgets.QTabWidget.North)
         self.tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.tabwidget.setObjectName("tabwidget")
@@ -205,31 +205,24 @@ class Ui_MainWindow(object):
                 self.table.setItem(idx, 2, item_modality)
                 self.table.setItem(idx, 3, item_bids_name)
 
-                if self.table.item(idx, 0):
-                    self.table.item(idx, 0).setForeground(QtGui.QColor(128, 128, 128))
-                if self.table.item(idx, 1):
-                    self.table.item(idx, 1).setForeground(QtGui.QColor(128, 128, 128))
-                if self.table.item(idx, 2):
-                    self.table.item(idx, 2).setForeground(QtGui.QColor(128, 128, 128))
-                if self.table.item(idx, 3):
-                    self.table.item(idx, 3).setForeground(QtGui.QColor(128, 128, 128))
-
                 self.button_select = QPushButton('Edit')
                 if modality == bids.unknownmodality:
                     self.button_select.setStyleSheet('QPushButton {color: red;}')
-                    self.table.item(idx, 1).setForeground(QtGui.QColor(255, 0, 0))
+                    if self.table.item(idx, 2):
+                        self.table.item(idx, 2).setForeground(QtGui.QColor(255, 0, 0))
                 else:
-                    self.button_select.setStyleSheet('QPushButton {color: green;}')
-                    self.table.item(idx, 1).setForeground(QtGui.QColor(0, 128, 0))
+                    self.button_select.setStyleSheet('QPushButton {color: black;}')
+                    if self.table.item(idx, 2):
+                        self.table.item(idx, 2).setForeground(QtGui.QColor(0, 128, 0))
                 self.button_select.clicked.connect(self.handle_button_clicked)
                 self.table.setCellWidget(idx, 4, self.button_select)
 
                 idx += 1
 
-        self.save_button = QtWidgets.QPushButton()
-        self.save_button.setText("Save")
-        self.save_button.setStyleSheet('QPushButton {color: blue;}')
-        self.table.setCellWidget(idx, 4, self.save_button)
+        # self.save_button = QtWidgets.QPushButton()
+        # self.save_button.setText("Save")
+        # self.save_button.setStyleSheet('QPushButton {color: blue;}')
+        # self.table.setCellWidget(idx, 4, self.save_button)
 
         self.table.setHorizontalHeaderLabels(['', 'Filename', 'Modality', 'BIDS output name', 'Action'])
         header = self.table.horizontalHeader()
@@ -312,21 +305,15 @@ class Ui_MainWindow(object):
                 self.table.setItem(idx, 2, item_modality)
                 self.table.setItem(idx, 3, item_bids_name)
 
-                if self.table.item(idx, 0):
-                    self.table.item(idx, 0).setForeground(QtGui.QColor(128, 128, 128))
-                if self.table.item(idx, 1):
-                    self.table.item(idx, 1).setForeground(QtGui.QColor(128, 128, 128))
-                if self.table.item(idx, 2):
-                    self.table.item(idx, 2).setForeground(QtGui.QColor(128, 128, 128))
-                if self.table.item(idx, 3):
-                    self.table.item(idx, 3).setForeground(QtGui.QColor(128, 128, 128))
-
                 self.button_select = QPushButton('Edit')
                 if modality == bids.unknownmodality:
                     self.button_select.setStyleSheet('QPushButton {color: red;}')
-                    self.table.item(idx, 1).setForeground(QtGui.QColor(255, 0, 0))
+                    if self.table.item(idx, 2):
+                        self.table.item(idx, 2).setForeground(QtGui.QColor(255, 0, 0))
                 else:
-                    self.button_select.setStyleSheet('QPushButton {color: green;}')
+                    self.button_select.setStyleSheet('QPushButton {color: black;}')
+                    if self.table.item(idx, 2):
+                        self.table.item(idx, 2).setForeground(QtGui.QColor(0, 128, 0))
                 self.button_select.clicked.connect(self.handle_button_clicked)
                 self.table.setCellWidget(idx, 4, self.button_select)
 
