@@ -480,7 +480,7 @@ def cleanup_value(label: str) -> str:
 
 def exist_series(bidsmap: dict, source: str, modality: str, series: dict, matchbidslabels: bool=False) -> bool:
     """
-    Checks if there is already an entry in serieslist with the same attributes and, optionally, labels as series
+    Checks if there is already an entry in serieslist with the same attributes and, optionally, bids values as in the input series
 
     :param bidsmap:         Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param source:          The information source in the bidsmap that is used, e.g. 'DICOM'
@@ -581,7 +581,7 @@ def append_series(bidsmap: dict, source: str, modality: str, series: dict) -> di
 
 def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> dict:
     """
-    Find the matching series in the bidsmap heuristics using the dicom attributes. Then fill-in the missing values (values are cleaned-up to be BIDS-valid)
+    Find the series in the bidsmap with dicom attributes that match with the dicom file. Then update the (dynamic) bids values (values are cleaned-up to be BIDS-valid)
 
     :param dicomfile:   The full pathname of the dicom-file
     :param bidsmap:     Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc

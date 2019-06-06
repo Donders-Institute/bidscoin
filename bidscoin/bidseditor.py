@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 """
-This function launches a graphical interface for editing the bidsmap.yaml file
-that is e.g. produced by bidsmapper.py. The user can fill in or change the BIDS
-values for entries that are unidentified or sub-optimal, such that meaningful
-BIDS filenames will be generated. The resulting bidsmap.yaml file can be used
-for converting the data to BIDS using bidscoiner.py
+This tool launches a graphical user interface for editing the bidsmap.yaml file
+that is e.g. produced by the bidsmapper or by this bidseditor itself. The user can
+fill in or change the BIDS labels for entries that are unidentified or sub-optimal,
+such that meaningful BIDS output names will be generated from these labels. The saved
+bidsmap.yaml output file can be used for converting the source data to BIDS using
+the bidscoiner.
 """
 
 import os
@@ -256,7 +257,7 @@ class Ui_MainWindow(object):
 
                 idx += 1
 
-        self.table.setHorizontalHeaderLabels(['', 'Filename', 'Modality', 'BIDS output name', 'Action'])
+        self.table.setHorizontalHeaderLabels(['', 'Filename', 'BIDS modality', 'BIDS output name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
@@ -356,7 +357,7 @@ class Ui_MainWindow(object):
 
                 idx += 1
 
-        self.table.setHorizontalHeaderLabels(['', 'Filename', 'Modality', 'BIDS output name', 'Action'])
+        self.table.setHorizontalHeaderLabels(['', 'Filename', 'BIDS modality', 'BIDS output name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
@@ -853,7 +854,7 @@ class EditDialog(QDialog):
         self.target_series['bids'] = bids_values
 
         self.label_bids = QLabel()
-        self.label_bids.setText("Values")
+        self.label_bids.setText("Labels")
 
         self.view_bids = self.get_table(data, num_rows=MAX_NUM_BIDS_ATTRIBUTES)
 
@@ -1003,9 +1004,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
-                                            '  bidseditor.py /project/bids\n'
-                                            '  bidseditor.py /project/bids -t bidsmap_dccn.yaml\n'
-                                            '  bidseditor.py /project/bids -b my/custom/bidsmap.yaml\n')
+                                            '  bidseditor.py /project/foo/bids\n'
+                                            '  bidseditor.py /project/foo/bids -t bidsmap_dccn.yaml\n'
+                                            '  bidseditor.py /project/foo/bids -b my/custom/bidsmap.yaml\n')
     parser.add_argument('bidsfolder',           help='The destination folder with the (future) bids data')
     parser.add_argument('-s','--sourcefolder',  help='The source folder containing the raw data. If empty, it is derived from the bidsmap provenance information')
     parser.add_argument('-b','--bidsmap',       help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap.yaml', default='bidsmap.yaml')

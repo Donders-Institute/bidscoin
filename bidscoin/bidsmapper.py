@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 """
-Creates a bidsmap.yaml YAML file that maps the information from all raw source data to
-the BIDS labels (see also [bidsmap_template.yaml] and [bidstrainer.py]). You can check
-and edit the bidsmap.yaml file before passing it to [bidscoiner.py]
+Creates a bidsmap.yaml YAML file in the bidsfolde/code that maps the information from
+all raw source data to the BIDS labels. You can check and edit the bidsmap file with
+the bidseditor (but also with any text-editor) before passing it to the bidscoiner
+N.B.: Institute users may want to use a site-customized template bidsmap (see the
+--bidsmap option).
 """
 
 # Global imports (specific modules may be imported when needed)
@@ -257,7 +259,7 @@ if __name__ == "__main__":
                                      epilog='examples:\n'
                                             '  bidsmapper.py /project/foo/raw /project/foo/bids\n'
                                             '  bidsmapper.py /project/foo/raw /project/foo/bids -b bidsmap_dccn\n ')
-    parser.add_argument('sourcefolder',     help='The source folder containing the raw data in sub-#/ses-#/series format (or see below for different prefixes)')
+    parser.add_argument('sourcefolder',     help='The source folder containing the raw data in sub-#/ses-#/series format (or specify --subprefix and --sesprefix for different prefixes)')
     parser.add_argument('bidsfolder',       help='The destination folder with the (future) bids data and the default bidsfolder/code/bidsmap.yaml file')
     parser.add_argument('-b','--bidsmap',   help='The non-default / site-specific bidsmap YAML-file with the BIDS heuristics')
     parser.add_argument('-n','--subprefix', help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')

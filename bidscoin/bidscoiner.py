@@ -542,9 +542,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
-                                            '  bidscoiner.py /project/raw /project/bids\n'
-                                            '  bidscoiner.py -f /project/raw /project/bids -p sub-009 sub-030\n ')
-    parser.add_argument('sourcefolder',             help='The source folder containing the raw data in sub-#/ses-#/series format')
+                                            '  bidscoiner.py /project/foo/raw /project/foo/bids\n'
+                                            '  bidscoiner.py -f /project/foo/raw /project/foo/bids -p sub-009 sub-030\n ')
+    parser.add_argument('sourcefolder',             help='The source folder containing the raw data in sub-#/[ses-#]/series format (or specify --subprefix and --sesprefix for different prefixes)')
     parser.add_argument('bidsfolder',               help='The destination / output folder with the bids data')
     parser.add_argument('-p','--participant_label', help='Space seperated list of selected sub-# names / folders to be processed (the sub- prefix can be removed). Otherwise all subjects in the sourcefolder will be selected', nargs='+')
     parser.add_argument('-f','--force',             help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')
