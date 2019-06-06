@@ -115,51 +115,6 @@ Having an organized source data folder, the actual data-set conversion to BIDS c
       bidseditor.py /project/foo/bids
       bidseditor.py /project/foo/bids -t bidsmap_dccn.yaml
       bidseditor.py /project/foo/bids -b my/custom/bidsmap.yaml
-
-As shown below, the main window of the bidseditor opens with a list that uniquely represents all the difference files that are present in the source folder, together with the associated BIDS output name. The name of the BIDS modality folder is shown in red if the modality is not part of the BIDS standard, otherwise it is colored green.
-
-<a name="bidseditor-main">![Bidseditor main window](./docs/bidseditor_main.png)</a>
- 
- The user can click the `edit` button for each list item to open a new edit window (shown below) in which the user can choose the right BIDS modality and change the associated BIDS labels or (for expert usage) the DICOM attributes. The new BIDS output name is then shown on the bottom and, if it is all fine, the user can copy it over to the main window by clicking the `OK` button. If all BIDS output names in the main window are fine, the user can click on the `Save` button and proceed with running the bidscoiner tool.
-
-<a name="bidseditor-edit">![Bidseditor edit window](./docs/bidseditor_edit.png)</a>
-
-#### Step 3: Running the bidscoiner
-
-    usage: bidseditor.py [-h] [-s SOURCEFOLDER] [-b BIDSMAP] [-t TEMPLATE]
-                         bidsfolder
-    
-    This tool launches a graphical user interface for editing the bidsmap.yaml file
-    that is e.g. produced by the bidsmapper or by this bidseditor itself. The user can
-    fill in or change the BIDS labels for entries that are unidentified or sub-optimal,
-    such that meaningful BIDS output names will be generated from these labels. The saved
-    bidsmap.yaml output file can be used for converting the source data to BIDS using
-    the bidscoiner.
-    
-    positional arguments:
-      bidsfolder            The destination folder with the (future) bids data
-    
-    optional arguments:
-      -h, --help            show this help message and exit
-      -s SOURCEFOLDER, --sourcefolder SOURCEFOLDER
-                            The source folder containing the raw data. If empty,
-                            it is derived from the bidsmap provenance information
-      -b BIDSMAP, --bidsmap BIDSMAP
-                            The bidsmap YAML-file with the study heuristics. If
-                            the bidsmap filename is relative (i.e. no "/" in the
-                            name) then it is assumed to be located in
-                            bidsfolder/code/. Default: bidsmap.yaml
-      -t TEMPLATE, --template TEMPLATE
-                            The bidsmap template with the default heuristics (this
-                            could be provided by your institute). If the bidsmap
-                            filename is relative (i.e. no "/" in the name) then it
-                            is assumed to be located in bidsfolder/code/. Default:
-                            bidsmap_template.yaml
-    
-    examples:
-      bidseditor.py /project/foo/bids
-      bidseditor.py /project/foo/bids -t bidsmap_dccn.yaml
-      bidseditor.py /project/foo/bids -b my/custom/bidsmap.yaml
     
     Here are a few tips & tricks:
     -----------------------------
@@ -190,6 +145,65 @@ As shown below, the main window of the bidseditor opens with a list that uniquel
       You can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
       text editor. For instance to change the `Options` to your needs or to add a dynamic
       `participant_label` value like `<<PatientID>>`. See ./docs/bidsmap.md for more information.
+
+As shown below, the main window of the bidseditor opens with a list that uniquely represents all the difference files that are present in the source folder, together with the associated BIDS output name. The name of the BIDS modality folder is shown in red if the modality is not part of the BIDS standard, otherwise it is colored green.
+
+<a name="bidseditor-main">![Bidseditor main window](./docs/bidseditor_main.png)</a>
+ 
+ The user can click the `edit` button for each list item to open a new edit window (shown below) in which the user can choose the right BIDS modality and change the associated BIDS labels or (for expert usage) the DICOM attributes. The new BIDS output name is then shown on the bottom and, if it is all fine, the user can copy it over to the main window by clicking the `OK` button. If all BIDS output names in the main window are fine, the user can click on the `Save` button and proceed with running the bidscoiner tool.
+
+<a name="bidseditor-edit">![Bidseditor edit window](./docs/bidseditor_edit.png)</a>
+
+#### Step 3: Running the bidscoiner
+
+    usage: bidscoiner.py [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-f]
+                         [-s] [-b BIDSMAP] [-n SUBPREFIX] [-m SESPREFIX] [-v]
+                         sourcefolder bidsfolder
+    
+    Converts ("coins") datasets in the sourcefolder to nifti / json / tsv datasets in the
+    bidsfolder according to the BIDS standard. Check and edit the bidsmap.yaml file to
+    your needs using the bidseditor.py tool before running this function. You can run
+    bidscoiner.py after all data is collected, or whenever new data has been added to the
+    source folder (presuming the scan protocol hasn't changed). Provenance, warnings and
+    error messages are stored in the ../bidsfolder/code/bidscoiner.log file.
+    
+    positional arguments:
+      sourcefolder          The source folder containing the raw data in
+                            sub-#/[ses-#]/series format (or specify --subprefix
+                            and --sesprefix for different prefixes)
+      bidsfolder            The destination / output folder with the bids data
+    
+    optional arguments:
+      -h, --help            show this help message and exit
+      -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
+                            Space seperated list of selected sub-# names / folders
+                            to be processed (the sub- prefix can be removed).
+                            Otherwise all subjects in the sourcefolder will be
+                            selected
+      -f, --force           If this flag is given subjects will be processed,
+                            regardless of existing folders in the bidsfolder.
+                            Otherwise existing folders will be skipped
+      -s, --skip_participants
+                            If this flag is given those subjects that are in
+                            particpants.tsv will not be processed (also when the
+                            --force flag is given). Otherwise the participants.tsv
+                            table is ignored
+      -b BIDSMAP, --bidsmap BIDSMAP
+                            The bidsmap YAML-file with the study heuristics. If
+                            the bidsmap filename is relative (i.e. no "/" in the
+                            name) then it is assumed to be located in
+                            bidsfolder/code/. Default: bidsmap.yaml
+      -n SUBPREFIX, --subprefix SUBPREFIX
+                            The prefix common for all the source subject-folders.
+                            Default: 'sub-'
+      -m SESPREFIX, --sesprefix SESPREFIX
+                            The prefix common for all the source session-folders.
+                            Default: 'ses-'
+      -v, --version         Show the BIDS and BIDScoin version
+    
+    examples:
+      bidscoiner.py /project/foo/raw /project/foo/bids
+      bidscoiner.py -f /project/foo/raw /project/foo/bids -p sub-009 sub-030
 
 ### Finishing up
 
