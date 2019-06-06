@@ -177,10 +177,18 @@ class Ui_MainWindow(object):
 
     def update_list(self, the_series):
         """ """
+        num_files = 0
+        for modality in bids.bidsmodalities + (bids.unknownmodality,):
+            series_list = self.bidsmap[SOURCE][modality]
+            if not series_list:
+                continue
+            for _ in series_list:
+                num_files += 1
+
         self.output_bidsmap = the_series
 
         self.table.setColumnCount(5)
-        self.table.setRowCount(len(the_series) + 1)
+        self.table.setRowCount(num_files)
 
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
@@ -218,11 +226,6 @@ class Ui_MainWindow(object):
                 self.table.setCellWidget(idx, 4, self.button_select)
 
                 idx += 1
-
-        # self.save_button = QtWidgets.QPushButton()
-        # self.save_button.setText("Save")
-        # self.save_button.setStyleSheet('QPushButton {color: blue;}')
-        # self.table.setCellWidget(idx, 4, self.save_button)
 
         self.table.setHorizontalHeaderLabels(['', 'Filename', 'Modality', 'BIDS output name', 'Action'])
         header = self.table.horizontalHeader()
@@ -319,11 +322,6 @@ class Ui_MainWindow(object):
 
                 idx += 1
 
-        # self.save_button = QtWidgets.QPushButton()
-        # self.save_button.setText("Save")
-        # self.save_button.setStyleSheet('QPushButton {color: blue;}')
-        # self.table.setCellWidget(idx, 4, self.save_button)
-
         self.table.setHorizontalHeaderLabels(['', 'Filename', 'Modality', 'BIDS output name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
@@ -368,7 +366,7 @@ class Ui_MainWindow(object):
 
     def reload(self):
         """Reset button: reload the original input BIDS map. """
-        # TODO: Implement reset
+        self.output_bidsmap = copy.deepcopy(self.bidsmap)
         self.setupUi(self.MainWindow,
                      self.bidsfolder,
                      self.sourcefolder,
