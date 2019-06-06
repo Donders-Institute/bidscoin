@@ -971,7 +971,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     LOGGER.info('------------ START BIDSeditor ------------')
 
     # Obtain the initial bidsmap info
-    template_bidsmap = bids.load_bidsmap(templatefile, None) # os.path.join(bidsfolder,'code'))
+    template_bidsmap = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code'))
     input_bidsmap    = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder,'code'))
     output_bidsmap   = copy.deepcopy(input_bidsmap)
 
