@@ -779,7 +779,7 @@ def replace_bidsvalue(bidsvalue: str, sourcefile: str) -> str:
     """
 
     # Intelligent filling of the value is done runtime by bidscoiner
-    if bidsvalue.startswith('<<') and bidsvalue.endswith('>>'):
+    if not bidsvalue or bidsvalue.startswith('<<') and bidsvalue.endswith('>>'):
         return bidsvalue
 
     # Fill any bids-label with the <annotated> dicom attribute
