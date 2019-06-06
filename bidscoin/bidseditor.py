@@ -617,6 +617,10 @@ class EditDialog(QDialog):
             key = item_key.text()
             value = item_value.text()
 
+            # Validate user input against BIDS
+            value = bids.cleanup_label(value)
+            self.view_bids.item(row, 1).setText(value)
+
             self.target_series['bids'][key] = value
 
             series = self.target_series
