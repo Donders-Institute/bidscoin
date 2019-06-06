@@ -277,7 +277,7 @@ def load_bidsmap(yamlfile: str='', folder: str='') -> ruamel.yaml:
     Read the mapping heuristics from the bidsmap yaml-file
 
     :param yamlfile:    The full pathname or basename of the bidsmap yaml-file. If None, the default bidsmap_template.yaml file in the heuristics folder is used
-    :param folder:      Searches in the ./heuristics folder if folder=None and yamlfile=basename (useful for centrally managed template yaml-files)
+    :param folder:      Only used when yamlfile=basename or None: yamlfile is then first searched for in folder and then falls back to the ./heuristics folder (useful for centrally managed template yaml-files)
     :return:            ruamel.yaml dict structure, with all options, BIDS mapping heuristics, labels and attributes, etc
     """
 
@@ -293,7 +293,7 @@ def load_bidsmap(yamlfile: str='', folder: str='') -> ruamel.yaml:
     if not os.path.splitext(yamlfile)[1]:           # Add a standard file-extension if needed
         yamlfile = yamlfile + '.yaml'
 
-    if os.path.basename(yamlfile) == yamlfile:      # Get the full paths to the bidsmap yaml-file
+    if os.path.basename(yamlfile) == yamlfile:      # Get the full path to the bidsmap yaml-file
         if os.path.isfile(os.path.join(folder, yamlfile)):
             yamlfile = os.path.join(folder, yamlfile)
         else:
