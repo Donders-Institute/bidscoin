@@ -137,9 +137,7 @@ def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, source_ser
             bids_attributes[key] = source_value
         else:
             # Set the default value from the template
-            if template_value.startswith('<') and template_value.endswith('>') and not template_value.startswith('<<') and not template_value.endswith('>>'):
-                template_value = bids.get_dicomfield(template_value[1:-1], source_series['provenance'])
-            bids_attributes[key] = bids.cleanup_label(template_value)
+            bids_attributes[key] = bids.replace_bidsvalue(template_value, source_series['provenance'])
 
     return bids_attributes
 
@@ -662,12 +660,7 @@ class EditDialog(QDialog):
             key = DISPLAY_KEY_MAPPING.get(display_key, '')
 
             # Validate user input against BIDS or replace the (dynamic) bids-value if it is a series attribute
-            if value.startswith('<<') and value.endswith('>>'):
-                pass
-            else:
-                if value.startswith('<') and value.endswith('>'):
-                    value = bids.get_dicomfield(value[1:-1], self.target_series['provenance'])
-                value = bids.cleanup_label(value)
+            value = bids.replace_bidsvalue(value, self.target_series['provenance'])
 
             self.view_bids.item(row, 1).setText(value)
             self.target_series['bids'][key] = value

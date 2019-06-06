@@ -48,7 +48,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         subid = bidsmap['DICOM']['participant_label']
     else:
         subid = session.rsplit(os.sep + subprefix, 1)[1].split(os.sep + sesprefix, 1)[0]
-    subid = 'sub-' + bids.cleanup_label(subid.lstrip(subprefix))
+    subid = 'sub-' + bids.cleanup_value(subid.lstrip(subprefix))
     if subid == subprefix:
         LOGGER.error('No valid subject identifier found for: ' + session)
         return
@@ -63,7 +63,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     else:
         sesid = ''
     if sesid:
-        sesid = 'ses-' + bids.cleanup_label(sesid.lstrip(sesprefix))
+        sesid = 'ses-' + bids.cleanup_value(sesid.lstrip(sesprefix))
 
     # Create the BIDS session-folder and a scans.tsv file
     bidsses = os.path.join(bidsfolder, subid, sesid)         # NB: This gives a trailing '/' if ses=='', but that should be ok
@@ -139,10 +139,10 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first(?) coil/echo image -> add it when we encounter a **_e2/_c2 file
                 if suffix in ('_c','_e') and int(index)==2 and basepath.rsplit('_',1)[1] != 'magnitude1':       # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handled below)
                     filename_ce = basepath + ext2 + ext1                                                        # The file without the _c1/_e1 suffix
-                    if suffix=='_e' and bids.set_bidslabel(basepath, 'echo'):
-                        newbasepath_ce = bids.set_bidslabel(basepath, 'echo', '1')
+                    if suffix=='_e' and bids.set_bidsvalue(basepath, 'echo'):
+                        newbasepath_ce = bids.set_bidsvalue(basepath, 'echo', '1')
                     else:
-                        newbasepath_ce = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + '1'.zfill(len(index)))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
+                        newbasepath_ce = bids.set_bidsvalue(basepath, 'dummy', suffix.upper() + '1'.zfill(len(index)))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
                     newfilename_ce = newbasepath_ce + ext2 + ext1                                               # The file as it should have been
                     if os.path.isfile(filename_ce):
                         if filename_ce != newfilename_ce:
@@ -152,8 +152,8 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                             jsonfiles.append(newbasepath_ce + '.json')
 
                 # Patch the basepath with the suffix info
-                if suffix=='_e' and bids.set_bidslabel(basepath, 'echo') and index:
-                    basepath = bids.set_bidslabel(basepath, 'echo', str(int(index)))                            # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
+                if suffix=='_e' and bids.set_bidsvalue(basepath, 'echo') and index:
+                    basepath = bids.set_bidsvalue(basepath, 'echo', str(int(index)))                            # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
 
                 elif suffix=='_e' and basepath.rsplit('_',1)[1] in ('magnitude1','magnitude2') and index:       # i.e. modality == 'fmap'
                     basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_magnitude1_e[index] -> *_magnitude[index]
@@ -171,7 +171,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                     LOGGER.warning('Untested dcm2niix "_ph"-filetype: ' + basepath)
 
                 else:
-                    basepath = bids.set_bidslabel(basepath, 'dummy', suffix.upper() + index)                    # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
+                    basepath = bids.set_bidsvalue(basepath, 'dummy', suffix.upper() + index)                    # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
 
                 # Save the file with a new name
                 if runindex.startswith('<<') and runindex.endswith('>>'):
@@ -247,7 +247,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         for fieldmap in bidsmap['DICOM']['fmap']:
             if 'IntendedFor' in fieldmap['bids'] and fieldmap['bids']['IntendedFor']:
                 bidsname = bids.get_bidsname(subid, sesid, 'fmap', fieldmap, '1')
-                acqlabel = bids.set_bidslabel(bidsname, 'acq')
+                acqlabel = bids.set_bidsvalue(bidsname, 'acq')
                 for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_','_run-[0-9]*_').replace(acqlabel,acqlabel+'[CE][0-9]*') + '.json')):     # Account for multiple runs and dcm2niix suffixes inserted into the acquisition label
 
                     intendedfor = fieldmap['bids']['IntendedFor']

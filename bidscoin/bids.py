@@ -460,7 +460,7 @@ def strip_suffix(series: dict) -> dict:
     return series
 
 
-def cleanup_label(label: str) -> str:
+def cleanup_value(label: str) -> str:
     """
     Converts a given label to a cleaned-up label that can be used as a BIDS label. Remove leading and trailing spaces;
     convert other spaces, special BIDS characters and anything that is not an alphanumeric to a ''. This will for
@@ -620,21 +620,9 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> dict:
 
             # Try to fill the bids-labels
             for key in series['bids']:
-                bidsvalue = series['bids'][key]
-                if not bidsvalue:
-                    series_['bids'][key] = bidsvalue
 
-                # Intelligent filling of the value is done runtime by bidscoiner
-                elif bidsvalue.startswith('<<') and bidsvalue.endswith('>>'):
-                    series_['bids'][key] = bidsvalue
-
-                # Fill any bids-label with the <annotated> dicom attribute
-                elif bidsvalue.startswith('<') and bidsvalue.endswith('>'):
-                    label        = get_dicomfield(bidsvalue[1:-1], dicomfile)
-                    series_['bids'][key] = cleanup_label(label)
-
-                else:
-                    series_['bids'][key] = cleanup_label(bidsvalue)
+                # Replace the dynamic bids values
+                series_['bids'][key] = replace_bidsvalue(series['bids'][key], dicomfile)
 
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 series_ = strip_suffix(series_)
@@ -780,7 +768,28 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
     return bidsname
 
 
-def set_bidslabel(bidsname: str, bidskey: str, newvalue: str='') -> str:
+def replace_bidsvalue(bidsvalue: str, sourcefile: str) -> str:
+    """
+    Replaces (dynamic) bidsvalues with (DICOM) series attributes when they start with '<' and end with '>',
+    but not with '<<' and '>>'
+
+    :param bidsvalue:   The value from the BIDS key-value pair
+    :param sourcefile:  The source (DICOM) file from which the attribute is read
+    :return:            Cleaned-up bidsvalue
+    """
+
+    # Intelligent filling of the value is done runtime by bidscoiner
+    if bidsvalue.startswith('<<') and bidsvalue.endswith('>>'):
+        return bidsvalue
+
+    # Fill any bids-label with the <annotated> dicom attribute
+    if bidsvalue.startswith('<') and bidsvalue.endswith('>'):
+        bidsvalue = get_dicomfield(bidsvalue[1:-1], sourcefile)
+
+    return cleanup_value(bidsvalue)
+
+
+def set_bidsvalue(bidsname: str, bidskey: str, newvalue: str= '') -> str:
     """
     Sets the bidslabel, i.e. '*_bidskey-*_' is replaced with '*_bidskey-bidsvalue_'. If the key is not in the bidsname
     then the newvalue is appended to the acquisition label. If newvalue is empty (= default), then the parsed existing
@@ -792,7 +801,7 @@ def set_bidslabel(bidsname: str, bidskey: str, newvalue: str='') -> str:
     :return:            The bidsname with the new bidsvalue or, if newvalue is empty, the existing bidsvalue
     """
 
-    newvalue = cleanup_label(newvalue)
+    newvalue = cleanup_value(newvalue)
     pathname = os.path.dirname(bidsname)
     bidsname = os.path.basename(bidsname)
 
