@@ -76,32 +76,32 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         scans_table.index.name = 'filename'
 
     # Process all the dicom series subfolders
-    for series in bids.lsdirs(session):
+    for seriesfolder in bids.lsdirs(session):
 
-        if series.startswith('.'):
-            LOGGER.info('Ignoring hidden dicom-folder: ' + series)
+        if seriesfolder.startswith('.'):
+            LOGGER.info('Ignoring hidden dicom-folder: ' + seriesfolder)
             continue
         else:
-            LOGGER.info('Processing dicom-folder: ' + series)
+            LOGGER.info('Processing dicom-folder: ' + seriesfolder)
 
         # Get the cleaned-up bids labels from a dicom-file and bidsmap
-        dicomfile = bids.get_dicomfile(series)
+        dicomfile = bids.get_dicomfile(seriesfolder)
         if not dicomfile: continue
-        result    = bids.get_matching_dicomseries(dicomfile, bidsmap)
-        series_   = result['series']
-        modality  = result['modality']
+        result   = bids.get_matching_dicomseries(dicomfile, bidsmap)
+        series   = result['series']
+        modality = result['modality']
 
         # Create the BIDS session/modality folder
         bidsmodality = os.path.join(bidsses, modality)
         os.makedirs(bidsmodality, exist_ok=True)
 
         # Compose the BIDS filename using the bids labels and run-index
-        runindex = series_['bids']['run_index']
+        runindex = series['bids']['run_index']
         if runindex.startswith('<<') and runindex.endswith('>>'):
-            bidsname = bids.get_bidsname(subid, sesid, modality, series_, runindex[2:-2])
+            bidsname = bids.get_bidsname(subid, sesid, modality, series, runindex[2:-2])
             bidsname = bids.increment_runindex(bidsmodality, bidsname)
         else:
-            bidsname = bids.get_bidsname(subid, sesid, modality, series_, runindex)
+            bidsname = bids.get_bidsname(subid, sesid, modality, series, runindex)
 
         # Convert the dicom-files in the series folder to nifti's in the BIDS-folder
         command = '{path}dcm2niix {args} -f "{filename}" -o "{outfolder}" "{infolder}"'.format(
@@ -109,12 +109,12 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
             args      = bidsmap['Options']['dcm2niix']['args'],
             filename  = bidsname,
             outfolder = bidsmodality,
-            infolder  = series)
+            infolder  = seriesfolder)
         LOGGER.info('$ ' + command)
         process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # TODO: investigate shell=False and capture_output=True
         LOGGER.info(process.stdout.decode('utf-8'))
         if process.returncode != 0:
-            errormsg = f'Error: Failed to process {series} (errorcode {process.returncode})'
+            errormsg = f'Error: Failed to process {seriesfolder} (errorcode {process.returncode})'
             LOGGER.error(errormsg)
             continue
 
@@ -214,13 +214,13 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                     data = json.load(json_fid)
                 if not 'TaskName' in data:
                     LOGGER.info('Adding TaskName to: ' + jsonfile)
-                    data['TaskName'] = series_['bids']['task_label']
+                    data['TaskName'] = series['bids']['task_label']
                     with open(jsonfile, 'w') as json_fid:
                         json.dump(data, json_fid, indent=4)
 
             # Add the EchoTime(s) used to create the difference image to the fmap json-file. NB: This assumes the magnitude series have already been parsed (i.e. their nifti's had an _e suffix) -- This is normally the case for Siemens (phase-series being saved after the magnitude series
             elif modality == 'fmap':
-                if series_['bids']['suffix'] == 'phasediff':
+                if series['bids']['suffix'] == 'phasediff':
                     LOGGER.info('Adding EchoTime1 and EchoTime2 to: ' + jsonfile)
                     with open(jsonfile, 'r') as json_fid:
                         data = json.load(json_fid)
@@ -282,7 +282,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                                 json.dump(data, json_fid, indent=4)
 
     # Collect personal data from the DICOM header
-    dicomfile = bids.get_dicomfile(series)
+    dicomfile = bids.get_dicomfile(seriesfolder)
     personals['participant_id'] = subid
     if sesid:
         personals['session_id'] = sesid
