@@ -57,6 +57,7 @@ $ conda remove -n venv -all
 Prerequisites:
 * Python for windows
 * Git for windows
+* Install `dcm2nixx`
 
 Create a virtual environment
 
