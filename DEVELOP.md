@@ -12,16 +12,35 @@ Go into the directory:
 $ cd bidscoin
 ```
 
-# Run the tests
+# Install the package on Windows
 
-To run the tests and obtain the test coverage report:
+Prerequisites:
+* Python for windows
+* Git for windows
+* Install `dcm2nixx`
+
+Create a virtual environment
+
 ```console
-$ python setup.py test
+$ pip install virtualenv
 ```
 
-To check for errors:
 ```console
-$ pylint -E bidscoin
+$ virtualenv venv
+```
+
+```console
+$ venv\Scripts\activate
+```
+
+Next, install BIDScoin with:
+```console
+$ pip install git+https://github.com/Donders-Institute/bidscoin
+```
+
+For example, then run 
+```console
+$ venv\Scripts\bidsmapper.py -h
 ```
 
 # Install the package in an Anaconda environment on Linux
@@ -50,35 +69,4 @@ If you want to remove the virtual environment at a later stage:
 
 ```console
 $ conda remove -n venv -all
-```
-
-# Install the package on Windows
-
-Create a virtual environment
-
-```console
-$ pip install virtualenv
-```
-
-```console
-$ virtualenv venv
-```
-
-In Linux:
-```console
-$ source venv/scripts/activate
-```
-
-In MS Windows:
-```console
-$ venv\\Scripts\\activate
-```
-
-Next, install BIDScoin with:
-```console
-$ python setup.py install
-```
-or
-```
-$ pip install -e .
 ```

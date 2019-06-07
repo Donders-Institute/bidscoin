@@ -197,6 +197,8 @@ FileSystem:
   fmap:       # ----------------------- All fieldmap series ----------------------
   beh:        # ----------------------- All behavioural data ---------------------
   extra_data: # ----------------------- All extra data ---------------------------
+
+
 PlugIn:
 # --------------------------------------------------------------------------------
 # List of plugins to edit the key-value heuristics / perform additional operations
