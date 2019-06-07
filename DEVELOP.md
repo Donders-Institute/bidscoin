@@ -12,18 +12,6 @@ Go into the directory:
 $ cd bidscoin
 ```
 
-# Run the tests
-
-To run the tests and obtain the test coverage report:
-```console
-$ python setup.py test
-```
-
-To check for errors:
-```console
-$ pylint -E bidscoin
-```
-
 # Install the package in an Anaconda environment on Linux
 
 To setup the virtual environment
