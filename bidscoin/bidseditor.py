@@ -257,7 +257,7 @@ class Ui_MainWindow(object):
 
                 idx += 1
 
-        self.table.setHorizontalHeaderLabels(['', 'Input file', 'BIDS modality', 'BIDS output name', 'Action'])
+        self.table.setHorizontalHeaderLabels(['', 'Input sample', 'BIDS modality', 'BIDS output name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
@@ -357,7 +357,7 @@ class Ui_MainWindow(object):
 
                 idx += 1
 
-        self.table.setHorizontalHeaderLabels(['', 'Input file', 'BIDS modality', 'BIDS output name', 'Action'])
+        self.table.setHorizontalHeaderLabels(['', 'Input sample', 'BIDS modality', 'BIDS output name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
