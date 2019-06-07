@@ -200,7 +200,7 @@ class Ui_MainWindow(object):
         self.set_tab_file_browser(sourcefolder)
         self.set_tab_file_sample_listing()
         self.tabwidget.setTabText(0, "File browser")
-        self.tabwidget.setTabText(1, f"{SOURCE} samples")
+        self.tabwidget.setTabText(1, "BIDS map")
         self.tabwidget.setCurrentIndex(1)
 
         self.set_menu_and_status_bar()
@@ -257,7 +257,7 @@ class Ui_MainWindow(object):
 
                 idx += 1
 
-        self.table.setHorizontalHeaderLabels(['', 'Filename', 'BIDS modality', 'BIDS output name', 'Action'])
+        self.table.setHorizontalHeaderLabels(['', 'Input file', 'BIDS modality', 'BIDS output name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
@@ -357,7 +357,7 @@ class Ui_MainWindow(object):
 
                 idx += 1
 
-        self.table.setHorizontalHeaderLabels(['', 'Filename', 'BIDS modality', 'BIDS output name', 'Action'])
+        self.table.setHorizontalHeaderLabels(['', 'Input file', 'BIDS modality', 'BIDS output name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
@@ -1004,41 +1004,41 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog=textwrap.dedent("""
-                                     examples:
-                                       bidseditor.py /project/foo/bids
-                                       bidseditor.py /project/foo/bids -t bidsmap_dccn.yaml
-                                       bidseditor.py /project/foo/bids -b my/custom/bidsmap.yaml
-                                     
-                                     Here are a few tips & tricks:
-                                     -----------------------------
-                                     
-                                     DICOM Attributes
-                                       An (DICOM) attribute label can also be a list, in which case the BIDS labels / mapping
-                                       are applies if a (DICOM) attribute value is in this list. If the attribute value is
-                                       empty it is not used to identify the series. Example: SequenceName: [epfid2d1rs, '*fm2d2r']
-                                    
-                                     Dynamic BIDS labels
-                                       The BIDS labels can be static, in which case the label is just a normal string, or dynamic,
-                                       when the string is enclosed with pointy brackets like `<attribute name>` or
-                                       `<<argument1><argument2>>`. In case of single pointy brackets the label will be replaced
-                                       during bidsmapper, bidseditor and bidscoiner runtime by the value of the (DICOM) attribute
-                                       with that name. In case of double pointy brackets, the label will be updated for each
-                                       subject/session during bidscoiner runtime. For instance, then the `run` label `<<1>>` in
-                                       the bids name will be replaced with `1` or increased to `2` if a file with runindex `1`
-                                       already exists in that directory.
-                                     
-                                     Field maps: IntendedFor
-                                       You can use the `IntendedFor` field to indicate for which runs (DICOM series) a fieldmap
-                                       was intended. The dynamic label of the `IntendedFor` field can be a list of string patterns
-                                       that is used to include all runs in a session that have that string pattern in their BIDS
-                                       file name. Example: use `<<task>>` to include all functional runs or `<<Stop*Go><Reward>>`
-                                       to include "Stop1Go"-, "Stop2Go"- and "Reward"-runs.
-                                     
-                                     Manual editing / inspection of the bidsmap
-                                       You can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
-                                       text editor. For instance to change the `Options` to your needs or to add a dynamic
-                                       `participant_label` value like `<<PatientID>>`. See ./docs/bidsmap.md for more information.
-                                     """))
+                                         examples:
+                                           bidseditor.py /project/foo/bids
+                                           bidseditor.py /project/foo/bids -t bidsmap_dccn.yaml
+                                           bidseditor.py /project/foo/bids -b my/custom/bidsmap.yaml
+                                         
+                                         Here are a few tips & tricks:
+                                         -----------------------------
+                                         
+                                         DICOM Attributes
+                                           An (DICOM) attribute label can also be a list, in which case the BIDS labels / mapping
+                                           are applies if a (DICOM) attribute value is in this list. If the attribute value is
+                                           empty it is not used to identify the series. Example: SequenceName: [epfid2d1rs, '*fm2d2r']
+                                        
+                                         Dynamic BIDS labels
+                                           The BIDS labels can be static, in which case the label is just a normal string, or dynamic,
+                                           when the string is enclosed with pointy brackets like `<attribute name>` or
+                                           `<<argument1><argument2>>`. In case of single pointy brackets the label will be replaced
+                                           during bidsmapper, bidseditor and bidscoiner runtime by the value of the (DICOM) attribute
+                                           with that name. In case of double pointy brackets, the label will be updated for each
+                                           subject/session during bidscoiner runtime. For instance, then the `run` label `<<1>>` in
+                                           the bids name will be replaced with `1` or increased to `2` if a file with runindex `1`
+                                           already exists in that directory.
+                                         
+                                         Field maps: IntendedFor
+                                           You can use the `IntendedFor` field to indicate for which runs (DICOM series) a fieldmap
+                                           was intended. The dynamic label of the `IntendedFor` field can be a list of string patterns
+                                           that is used to include all runs in a session that have that string pattern in their BIDS
+                                           file name. Example: use `<<task>>` to include all functional runs or `<<Stop*Go><Reward>>`
+                                           to include "Stop1Go"-, "Stop2Go"- and "Reward"-runs.
+                                         
+                                         Manual editing / inspection of the bidsmap
+                                           You can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
+                                           text editor. For instance to change the `Options` to your needs or to add a dynamic
+                                           `participant_label` value like `<<PatientID>>`. See ./docs/bidsmap.md for more information."""))
+
     parser.add_argument('bidsfolder',           help='The destination folder with the (future) bids data')
     parser.add_argument('-s','--sourcefolder',  help='The source folder containing the raw data. If empty, it is derived from the bidsmap provenance information')
     parser.add_argument('-b','--bidsmap',       help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap.yaml', default='bidsmap.yaml')
