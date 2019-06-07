@@ -163,6 +163,19 @@ def get_index_mapping(bidsmap):
     return index_mapping
 
 
+class MainWindow(QMainWindow):
+
+    def __init__(self):
+        super().__init__()
+        actionQuit = QtWidgets.QAction("Quit", self)
+        actionQuit.triggered.connect(self.closeEvent)
+
+    def closeEvent(self, event):
+        """Handle exit. """
+        LOGGER.info('Exit application')
+        QApplication.quit()
+
+
 class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, bidsmap, output_bidsmap, template_bidsmap):
@@ -489,8 +502,7 @@ class Ui_MainWindow(object):
             self.dialog_edit.got_sample.connect(self.update_list)
 
     def exit_application(self):
-        """ """
-        LOGGER.info('Exit application')
+        """Handle exit. """
         self.MainWindow.close()
 
 
@@ -987,7 +999,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     # Start the Qt-application
     app = QApplication(sys.argv)
     app.setApplicationName("BIDS editor")
-    mainwin = QMainWindow()
+    mainwin = MainWindow()
     gui = Ui_MainWindow()
     gui.setupUi(mainwin, bidsfolder, sourcefolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap)
     mainwin.show()
