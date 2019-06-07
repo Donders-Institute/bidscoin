@@ -84,43 +84,17 @@ class TestBidseditor(unittest.TestCase):
         template_bidsmap = load_bidsmap(filename, path)
         allowed_suffixes = get_allowed_suffixes(template_bidsmap)
 
-        source_bids_attributes = {
-            "acq_label": "localizerAANGEPAST11SLICES",
-            "rec_label": None,
-            "ce_label": None,
-            "task_label": None,
-            "echo_index": None,
-            "dir_label": None,
-            "run_index": "<<1>>",
-            "suffix": None,
-            "mod_label": None
-        }
-
-        # test anat
-        bids_attributes = get_bids_attributes(template_bidsmap,
-                                              allowed_suffixes,
-                                              'anat',
-                                              source_bids_attributes)
-
-        reference_bids_attributes = {
-            "acq_label": "localizerAANGEPAST11SLICES",
-            "rec_label": "",
-            "run_index": "<<1>>",
-            "mod_label": "",
-            "suffix": "T1w",
-            "ce_label": ""
-        }
-
-        self.assertEqual(bids_attributes, reference_bids_attributes)
+        SOURCE = 'DICOM'
+        source_series = template_bidsmap[SOURCE][unknownmodality][0]
 
         # test extra_data
         bids_attributes = get_bids_attributes(template_bidsmap,
                                               allowed_suffixes,
                                               unknownmodality,
-                                              source_bids_attributes)
+                                              source_series)
 
         reference_bids_attributes = {
-            "acq_label": "localizerAANGEPAST11SLICES",
+            "acq_label": "<SeriesDescription>",
             "rec_label": "",
             "ce_label": "",
             "task_label": "",
