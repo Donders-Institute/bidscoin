@@ -47,7 +47,7 @@ Having an organized source data folder, the actual data-set conversion to BIDS c
 
 #### Step 1: Running the bidsmapper
 
-    usage: bidsmapper.py [-h] [-b BIDSMAP] [-n SUBPREFIX] [-m SESPREFIX]
+    usage: bidsmapper.py [-h] [-t TEMPLATE] [-n SUBPREFIX] [-m SESPREFIX]
                          sourcefolder bidsfolder
     
     Creates a bidsmap.yaml YAML file in the bidsfolde/code that maps the information from
@@ -65,9 +65,9 @@ Having an organized source data folder, the actual data-set conversion to BIDS c
     
     optional arguments:
       -h, --help            show this help message and exit
-      -b BIDSMAP, --bidsmap BIDSMAP
-                            The non-default / site-specific bidsmap YAML-file with
-                            the BIDS heuristics
+      -t TEMPLATE, --template TEMPLATE
+                            The non-default / site-specific template file with the
+                            BIDS heuristics
       -n SUBPREFIX, --subprefix SUBPREFIX
                             The prefix common for all the source subject-folders.
                             Default: 'sub-'
@@ -77,7 +77,7 @@ Having an organized source data folder, the actual data-set conversion to BIDS c
     
     examples:
       bidsmapper.py /project/foo/raw /project/foo/bids
-      bidsmapper.py /project/foo/raw /project/foo/bids -b bidsmap_dccn
+      bidsmapper.py /project/foo/raw /project/foo/bids -t bidsmap_dccn
 
 #### Step 2: Running the bidseditor
 

@@ -258,7 +258,7 @@ if __name__ == "__main__":
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
                                             '  bidsmapper.py /project/foo/raw /project/foo/bids\n'
-                                            '  bidsmapper.py /project/foo/raw /project/foo/bids -b bidsmap_dccn\n ')
+                                            '  bidsmapper.py /project/foo/raw /project/foo/bids -t bidsmap_dccn\n ')
     parser.add_argument('sourcefolder',     help='The source folder containing the raw data in sub-#/ses-#/series format (or specify --subprefix and --sesprefix for different prefixes)')
     parser.add_argument('bidsfolder',       help='The destination folder with the (future) bids data and the default bidsfolder/code/bidsmap.yaml file')
     parser.add_argument('-t','--template',  help='The non-default / site-specific bidsmap template file with the BIDS heuristics')

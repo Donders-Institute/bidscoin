@@ -268,7 +268,7 @@ if __name__ == "__main__":
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n' 
                                             '  bidstrainer.py /project/foo/bids\n' 
-                                            '  bidstrainer.py /project/foo/bids /project/foo/samples bidsmap_custom\n ')
+                                            '  bidstrainer.py /project/foo/bids -s /project/foo/samples -t bidsmap_custom\n ')
     parser.add_argument('bidsfolder',           help='The destination folder with the bids data structure')
     parser.add_argument('-s','--samplefolder',  help='The root folder of the directory tree containing the sample files / training data. By default the bidsfolder/code/samples folder is used or such an empty directory tree is created', default='')
     parser.add_argument('-t','--template',      help='The bidsmap template file with the BIDS heuristics (default: ./heuristics/bidsmap_template.yaml)', default='bidsmap_template.yaml')
