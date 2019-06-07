@@ -54,6 +54,10 @@ $ conda remove -n venv -all
 
 # Install the package on Windows
 
+Prerequisites:
+* Python for windows
+* Git for windows
+
 Create a virtual environment
 
 ```console
@@ -64,21 +68,16 @@ $ pip install virtualenv
 $ virtualenv venv
 ```
 
-In Linux:
 ```console
-$ source venv/scripts/activate
-```
-
-In MS Windows:
-```console
-$ venv\\Scripts\\activate
+$ venv\Scripts\activate
 ```
 
 Next, install BIDScoin with:
 ```console
-$ python setup.py install
+$ pip install git+https://github.com/Donders-Institute/bidscoin
 ```
-or
-```
-$ pip install -e .
+
+For example, then run 
+```console
+$ venv\Scripts\bidsmapper.py -h
 ```
