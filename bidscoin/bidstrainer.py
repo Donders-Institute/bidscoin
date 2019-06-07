@@ -271,11 +271,11 @@ if __name__ == "__main__":
                                             '  bidstrainer.py /project/foo/bids /project/foo/samples bidsmap_custom\n ')
     parser.add_argument('bidsfolder',           help='The destination folder with the bids data structure')
     parser.add_argument('-s','--samplefolder',  help='The root folder of the directory tree containing the sample files / training data. By default the bidsfolder/code/samples folder is used or such an empty directory tree is created', default='')
-    parser.add_argument('-b','--bidsmap',       help='The bidsmap YAML-file with the BIDS heuristics (default: ./heuristics/bidsmap_template.yaml)', default='bidsmap_template.yaml')
+    parser.add_argument('-t','--template',      help='The bidsmap template file with the BIDS heuristics (default: ./heuristics/bidsmap_template.yaml)', default='bidsmap_template.yaml')
     parser.add_argument('-p','--pattern',       help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default=r'.*\.(IMA|dcm)$')
     args = parser.parse_args()
 
     bidstrainer(bidsfolder   = args.bidsfolder,
                 samplefolder = args.samplefolder,
-                bidsmapfile  = args.bidsmap,
+                bidsmapfile  = args.template,
                 pattern      = args.pattern)
