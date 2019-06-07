@@ -4,8 +4,10 @@ Converts ("coins") datasets in the sourcefolder to nifti / json / tsv datasets i
 bidsfolder according to the BIDS standard. Check and edit the bidsmap.yaml file to
 your needs using the bidseditor.py tool before running this function. You can run
 bidscoiner.py after all data is collected, or whenever new data has been added to the
-source folder (presuming the scan protocol hasn't changed). Provenance, warnings and
-error messages are stored in the ../bidsfolder/code/bidscoiner.log file.
+source folder (presuming the scan protocol hasn't changed).
+
+Provenance information, warnings and error messages are stored in the
+bidsfolder/code/bidscoiner.log file.
 """
 
 import os

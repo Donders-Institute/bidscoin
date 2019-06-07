@@ -164,8 +164,10 @@ As shown below, the main window of the bidseditor opens with a list that uniquel
     bidsfolder according to the BIDS standard. Check and edit the bidsmap.yaml file to
     your needs using the bidseditor.py tool before running this function. You can run
     bidscoiner.py after all data is collected, or whenever new data has been added to the
-    source folder (presuming the scan protocol hasn't changed). Provenance, warnings and
-    error messages are stored in the ../bidsfolder/code/bidscoiner.log file.
+    source folder (presuming the scan protocol hasn't changed).
+    
+    Provenance information, warnings and error messages are stored in the 
+    bidsfolder/code/bidscoiner.log file.
     
     positional arguments:
       sourcefolder          The source folder containing the raw data in
