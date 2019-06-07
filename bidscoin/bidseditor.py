@@ -270,8 +270,6 @@ class Ui_MainWindow(object):
 
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        self.save_button.clicked.connect(self.save_bidsmap_to_file)
-
         # Done editing
         self.has_edit_dialog_open = False
 
