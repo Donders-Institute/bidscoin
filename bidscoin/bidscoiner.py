@@ -482,6 +482,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
 
             # Check if we should skip the session-folder
             if not force and os.path.isdir(session.replace(rawfolder, bidsfolder)):
+                LOGGER.info(f'Skipping processed session: {session}')
                 continue
 
             # Update / append the dicom mapping
