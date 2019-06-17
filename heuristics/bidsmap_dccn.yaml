@@ -273,7 +273,6 @@ DICOM:
       <<: *fmapbids
       suffix: epi
     provenance: ~
-    # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
   beh:        # ----------------------- All behavioural data ---------------------
   - attributes: &behattributes
@@ -552,7 +551,8 @@ FileSystem:
       <<: *behbids_file
       suffix: stim
 
-  extra_data: # ----------------------- All extra data ---------------------------
+  extra_data:
+  # ----------------------- All extra data ---------------------------
   - attributes:
       FolderName: ~
       FileName: ~
