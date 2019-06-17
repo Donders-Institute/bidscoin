@@ -79,7 +79,8 @@ DISPLAY_KEY_MAPPING = {
 def update_bidsmap(source_bidsmap, source_modality, source_index, target_modality, target_series):
     """Update the BIDS map:
     1. Remove the source series from the source modality section
-    2. Add the target series to the target modality section
+    2. Start new series dictionary and store key values without comments and references
+    3. Add the target series to the target modality section
     """
     if not source_modality in bids.bidsmodalities + (bids.unknownmodality,):
         raise ValueError(f"invalid modality '{source_modality}'")
@@ -96,8 +97,20 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
     # Delete the source series
     target_bidsmap = bids.delete_series(target_bidsmap, SOURCE, source_modality, source_index)
 
-    # Append the target series
-    target_bidsmap = bids.append_series(target_bidsmap, SOURCE, target_modality, target_series)
+    # Append the cleaned-up target series
+    series = dict(provenance={}, attributes={}, bids={})  # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
+
+    # Fill the empty attribute with the info from the target series
+    for attrkey in target_series['attributes']:
+        series['attributes'][attrkey] = target_series['attributes'][attrkey]
+
+    # Try to fill the bids-labels
+    for key in target_series['bids']:
+        series['bids'][key] = target_series['bids'][key]
+
+    series['provenance'] = target_series['provenance']
+
+    target_bidsmap = bids.append_series(target_bidsmap, SOURCE, target_modality, series)
 
     return target_bidsmap
 
@@ -718,23 +731,11 @@ class EditDialog(QDialog):
 
     def update_series(self):
         """Save the changes. """
-
-        import json
-        print("==IN==")
-        print(json.dumps(self.source_bidsmap, indent=4))
-
         self.target_bidsmap = update_bidsmap(self.source_bidsmap,
                                              self.source_modality,
                                              self.source_index,
                                              self.target_modality,
                                              self.target_series)
-
-
-        print("==INafter==")
-        print(json.dumps(self.source_bidsmap, indent=4))
-
-        print("==OUT==")
-        print(json.dumps(self.target_bidsmap, indent=4))
 
         self.got_sample.emit(self.target_bidsmap)
         self.close()
