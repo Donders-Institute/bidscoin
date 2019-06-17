@@ -15,12 +15,13 @@ import textwrap
 import logging
 import copy
 import webbrowser
+import pydicom
 from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog,
                              QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog,
-                             QTableWidget, QTableWidgetItem, QGroupBox,
+                             QTableWidget, QTableWidgetItem, QGroupBox, QPlainTextEdit,
                              QAbstractItemView, QPushButton, QComboBox, QTextEdit)
 
 try:
@@ -40,6 +41,9 @@ EDIT_WINDOW_HEIGHT  = 800
 
 ABOUT_WINDOW_WIDTH  = 200
 ABOUT_WINDOW_HEIGHT = 140
+
+INSPECT_WINDOW_WIDTH = 720
+INSPECT_WINDOW_HEIGHT = 340
 
 MAX_NUM_PROVENANCE_ATTRIBUTES = 2
 MAX_NUM_BIDS_ATTRIBUTES = 10
@@ -75,7 +79,8 @@ DISPLAY_KEY_MAPPING = {
 def update_bidsmap(source_bidsmap, source_modality, source_index, target_modality, target_series):
     """Update the BIDS map:
     1. Remove the source series from the source modality section
-    2. Add the target series to the target modality section
+    2. Start new series dictionary and store key values without comments and references
+    3. Add the target series to the target modality section
     """
     if not source_modality in bids.bidsmodalities + (bids.unknownmodality,):
         raise ValueError(f"invalid modality '{source_modality}'")
@@ -83,7 +88,7 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
     if not target_modality in bids.bidsmodalities + (bids.unknownmodality,):
         raise ValueError(f"invalid modality '{target_modality}'")
 
-    target_bidsmap = copy.deepcopy(source_bidsmap)  # TODO: check if deepcopy is needed
+    target_bidsmap = copy.deepcopy(source_bidsmap)
 
     # First check if the target series already exists.    TODO: figure out what to do with this situation
     if source_modality != target_modality and bids.exist_series(target_bidsmap, SOURCE, target_modality, target_series):
@@ -92,8 +97,20 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
     # Delete the source series
     target_bidsmap = bids.delete_series(target_bidsmap, SOURCE, source_modality, source_index)
 
-    # Append the target series
-    target_bidsmap = bids.append_series(target_bidsmap, SOURCE, target_modality, target_series)
+    # Append the cleaned-up target series
+    series = dict(provenance={}, attributes={}, bids={})  # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
+
+    # Fill the empty attribute with the info from the target series
+    for attrkey in target_series['attributes']:
+        series['attributes'][attrkey] = target_series['attributes'][attrkey]
+
+    # Try to fill the bids-labels
+    for key in target_series['bids']:
+        series['bids'][key] = target_series['bids'][key]
+
+    series['provenance'] = target_series['provenance']
+
+    target_bidsmap = bids.append_series(target_bidsmap, SOURCE, target_modality, series)
 
     return target_bidsmap
 
@@ -161,6 +178,51 @@ def get_index_mapping(bidsmap):
             index_mapping[modality][file_index] = series_index
             file_index += 1
     return index_mapping
+
+
+class InspectWindow(QDialog):
+
+    def __init__(self, filename, dicomdict):
+        QDialog.__init__(self)
+
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.setWindowIcon(icon)
+        self.setWindowTitle("Inspect DICOM file")
+
+        layout = QtWidgets.QVBoxLayout(self)
+        scrollArea = QtWidgets.QScrollArea()
+        layout.addWidget(scrollArea)
+
+        top_widget = QtWidgets.QWidget()
+        top_layout = QtWidgets.QVBoxLayout()
+
+        label = QLabel()
+        label.setText("Filename: " + os.path.basename(filename))
+
+        label_path = QLabel()
+        label_path.setText("Path: " + os.path.dirname(filename))
+
+        text_area = QPlainTextEdit(self)
+        text_area.insertPlainText(str(dicomdict))
+
+        pushButton = QPushButton("OK")
+        pushButton.setToolTip("Close dialog")
+        hbox = QHBoxLayout()
+        hbox.addStretch(1)
+        hbox.addWidget(pushButton)
+
+        top_layout.addWidget(label)
+        top_layout.addWidget(label_path)
+        top_layout.addWidget(text_area)
+        top_layout.addStretch(1)
+        top_layout.addLayout(hbox)
+
+        pushButton.clicked.connect(self.close)
+
+        top_widget.setLayout(top_layout)
+        scrollArea.setWidget(top_widget)
+        self.resize(INSPECT_WINDOW_WIDTH, INSPECT_WINDOW_HEIGHT)
 
 
 class MainWindow(QMainWindow):
@@ -304,7 +366,7 @@ class Ui_MainWindow(object):
         self.tree.setIndentation(20)
         self.tree.setSortingEnabled(True)
         self.tree.setRootIndex(self.model.index(sourcefolder))
-        self.tree.clicked.connect(self.on_clicked)
+        self.tree.doubleClicked.connect(self.on_double_clicked)
         self.tab1.layout.addWidget(self.label)
         self.tab1.layout.addWidget(self.tree)
         self.tree.header().resizeSection(0, 800)
@@ -328,8 +390,9 @@ class Ui_MainWindow(object):
         self.tab2.layout = QVBoxLayout(self.centralwidget)
 
         self.table = QTableWidget()
-        self.table.setColumnCount(5)
+        self.table.setColumnCount(6)
         self.table.setRowCount(num_files) # one for each file
+        self.table.itemDoubleClicked.connect(self.inspect_dicomfile)
 
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
@@ -341,6 +404,7 @@ class Ui_MainWindow(object):
                 continue
             for series in series_list:
                 provenance_file = os.path.basename(series['provenance'])
+                provenance = series['provenance']
                 run = series['bids'].get('run_index', '')
                 bids_name = bids.get_bidsname('', '', modality, series, run)
 
@@ -348,11 +412,13 @@ class Ui_MainWindow(object):
                 item_provenance_file = QTableWidgetItem(provenance_file)
                 item_modality = QTableWidgetItem(modality)
                 item_bids_name = QTableWidgetItem(bids_name)
+                item_provenance = QTableWidgetItem(provenance)
 
                 self.table.setItem(idx, 0, item_id)
                 self.table.setItem(idx, 1, item_provenance_file)
                 self.table.setItem(idx, 2, item_modality)
                 self.table.setItem(idx, 3, item_bids_name)
+                self.table.setItem(idx, 5, item_provenance) # Hidden column
 
                 self.button_select = QPushButton('Edit')
                 if modality == bids.unknownmodality:
@@ -375,6 +441,7 @@ class Ui_MainWindow(object):
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+        self.table.setColumnHidden(5, True)
 
         vertical_header = self.table.verticalHeader()
         vertical_header.setVisible(False)
@@ -405,6 +472,17 @@ class Ui_MainWindow(object):
         self.help_button.clicked.connect(self.get_help)
         self.reload_button.clicked.connect(self.reload)
         self.save_button.clicked.connect(self.save_bidsmap_to_file)
+
+    def inspect_dicomfile(self, item):
+        """When double clicked, show popu window. """
+        if item.column() == 1:
+            row = item.row()
+            provenance = self.table.item(row, 5)
+            filename = provenance.text()
+            if filename.endswith('.IMA') or filename.endswith('.DCM'):
+                dicomdict = pydicom.dcmread(filename, force=True)
+                self.popup = InspectWindow(filename, dicomdict)
+                self.popup.show()
 
     def get_help(self):
         """Get online help. """
@@ -484,9 +562,12 @@ class Ui_MainWindow(object):
             source_index = self.index_mapping[modality][file_index]
             self.show_edit(file_index, source_index, modality)
 
-    def on_clicked(self, index):
-        # print(self.model.fileInfo(index).absoluteFilePath())
-        pass
+    def on_double_clicked(self, index):
+        filename = self.model.fileInfo(index).absoluteFilePath()
+        if os.path.isfile(filename) and (filename.endswith('.IMA') or filename.endswith('.DCM')):
+            dicomdict = pydicom.dcmread(filename, force=True)
+            self.popup = InspectWindow(filename, dicomdict)
+            self.popup.show()
 
     def show_about(self):
         """ """
