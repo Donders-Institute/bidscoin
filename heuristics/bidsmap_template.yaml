@@ -31,7 +31,8 @@ DICOM:
 # --------------------------------------------------------------------------------
   participant_label: ~                            # A DICOM attribute that is used as participant_label instead of the subject-label from the sourcefolder, e.g. <<PatientID>>
   session_label: ~                                # A DICOM attribute that is used as session_label instead of the session-label from the sourcefolder, e.g. <<StudyID>>
-  anat:       # ----------------------- All anatomical series --------------------
+  anat:
+  # ----------------------- All anatomical series -----------------------
   - provenance: ~
     attributes: &anatattributes
       SeriesDescription: ~
@@ -131,7 +132,8 @@ DICOM:
       <<: *anatbids
       suffix: SWImagandphase
 
-  func:       # ----------------------- All functional series --------------------
+  func:
+  # ----------------------- All functional series -----------------------
   - provenance: ~
     attributes: &funcattributes
       SeriesDescription: ~
@@ -176,7 +178,8 @@ DICOM:
       <<: *funcbids
       suffix: sbref
 
-  dwi:        # ----------------------- All diffusion series ---------------------
+  dwi:
+  # ----------------------- All diffusion series ------------------------
   - provenance: ~
     attributes: &dwiattributes
       SeriesDescription: ~
@@ -203,7 +206,8 @@ DICOM:
       <<: *dwibids
       suffix: sbref
 
-  fmap:       # ----------------------- All fieldmap series ----------------------
+  fmap:
+  # ----------------------- All fieldmap series -------------------------
   - provenance: ~
     attributes: &fmapattributes
       SeriesDescription: ~
@@ -267,7 +271,8 @@ DICOM:
       <<: *fmapbids
       suffix: epi
 
-  beh:        # ----------------------- All behavioural data ---------------------
+  beh:
+  # ----------------------- All behavioural data ------------------------
   - provenance: ~
     attributes: &behattributes
       SeriesDescription: ~
@@ -300,7 +305,8 @@ DICOM:
       <<: *behbids
       suffix: stim
 
-  pet:        # ----------------------- All PET series ---------------------------
+  pet:
+  # ----------------------- All PET series ------------------------------
   - provenance: ~
     attributes: &petattributes
       SeriesDescription: ~
@@ -317,7 +323,8 @@ DICOM:
       run_index: <<1>>
       suffix: pet
 
-  extra_data: # ----------------------- All extra data ---------------------------
+  extra_data:
+  # ----------------------- All extra data ------------------------------
   - provenance: ~
     attributes:
       SeriesDescription: ~
@@ -370,7 +377,8 @@ FileSystem:
 # --------------------------------------------------------------------------------
   participant_label: ~
   session_label: ~
-  anat:       # ----------------------- All anatomical series --------------------
+  anat:
+  # ----------------------- All anatomical series -----------------------
   - attributes: &anatattributes_file
       FolderName: ~
       FileName: ~
@@ -446,7 +454,8 @@ FileSystem:
       <<: *anatbids_file
       suffix: SWImagandphase
 
-  func:       # ----------------------- All functional series --------------------
+  func:
+  # ----------------------- All functional series -----------------------
   - attributes: &funcattributes_file
       FolderName: ~
       FileName: ~
@@ -477,7 +486,8 @@ FileSystem:
       recording_label: <FileName>
       suffix: stim
 
-  dwi:        # ----------------------- All diffusion series ---------------------
+  dwi:
+  # ----------------------- All diffusion series ------------------------
   - attributes: &dwiattributes_file
       FolderName: ~
       FileName: ~
@@ -487,7 +497,8 @@ FileSystem:
       run_index: <<1>>
       suffix: dwi
 
-  fmap:       # ----------------------- All fieldmap series ----------------------
+  fmap:
+  # ----------------------- All fieldmap series -------------------------
   - attributes: &fmapattributes_file
       FolderName: ~
       FileName: ~
@@ -524,7 +535,8 @@ FileSystem:
       suffix: fieldmap
       # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
 
-  beh:        # ----------------------- All behavioural data ---------------------
+  beh:
+  # ----------------------- All behavioural data ------------------------
   - attributes: &behattributes_file
       FolderName: ~
       FileName: ~
@@ -545,7 +557,8 @@ FileSystem:
       <<: *behbids_file
       suffix: stim
 
-  extra_data: # ----------------------- All extra data ---------------------------
+  extra_data:
+  # ----------------------- All extra data ------------------------------
   - attributes:
       FolderName: ~
       FileName: ~
