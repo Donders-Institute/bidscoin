@@ -11,7 +11,6 @@ https://github.com/dangom/dac2bids/blob/master/dac2bids.py
 # Global imports (specific modules may be imported when needed)
 import os.path
 import glob
-import warnings
 import re
 import ruamel
 import logging
