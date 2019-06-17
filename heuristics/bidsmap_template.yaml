@@ -522,7 +522,10 @@ FileSystem:
     bids:
       <<: *fmapbids_file
       suffix: fieldmap
-      # TODO: sub-<participant_label>[_ses-<session_label>][_acq-<label>]_dir-<dir_label>[_run-<run_index>]_epi.nii[.gz]
+  - attributes: *fmapattributes_file
+    bids:
+      <<: *fmapbids_file
+      suffix: epi
 
   beh:        # ----------------------- All behavioural data ---------------------
   - attributes: &behattributes_file
@@ -545,7 +548,8 @@ FileSystem:
       <<: *behbids_file
       suffix: stim
 
-  extra_data: # ----------------------- All extra data ---------------------------
+  extra_data:
+  # ----------------------- All extra data ---------------------------
   - attributes:
       FolderName: ~
       FileName: ~
