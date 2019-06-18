@@ -212,8 +212,8 @@ class InspectWindow(QDialog):
         hbox.addStretch(1)
         hbox.addWidget(pushButton)
 
-        top_layout.addWidget(label)
         top_layout.addWidget(label_path)
+        top_layout.addWidget(label)
         top_layout.addWidget(text_area)
         top_layout.addStretch(1)
         top_layout.addLayout(hbox)
@@ -490,7 +490,7 @@ class Ui_MainWindow(object):
 
     def reload(self):
         """Reset button: reload the original input BIDS map. """
-        self.output_bidsmap = copy.deepcopy(self.bidsmap)
+        self.output_bidsmap, _ = bids.load_bidsmap(self.bidsmap_filename)
         self.setupUi(self.MainWindow,
                      self.bidsfolder,
                      self.sourcefolder,
@@ -1056,9 +1056,9 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     LOGGER.info('------------ START BIDSeditor ------------')
 
     # Obtain the initial bidsmap info
-    template_bidsmap = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code'))
-    input_bidsmap    = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder,'code'))
-    output_bidsmap   = copy.deepcopy(input_bidsmap)
+    template_bidsmap, _        = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code'))
+    input_bidsmap, bidsmapfile = bids.load_bidsmap(bidsmapfile,  os.path.join(bidsfolder,'code'))
+    output_bidsmap             = copy.deepcopy(input_bidsmap)
 
     # Parse the sourcefolder from the bidsmap provenance info
     if not sourcefolder:
@@ -1070,7 +1070,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
 
             for series in input_bidsmap[SOURCE][modality]:
                 if series['provenance']:
-                    sourcefolder = os.path.dirname(os.path.dirname(series['provenance']))
+                    sourcefolder = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(series['provenance']))))
                     LOGGER.info(f'Source: {sourcefolder}')
                     break
 

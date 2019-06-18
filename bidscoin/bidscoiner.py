@@ -439,7 +439,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
             fid.write('A free form text ( README ) describing the dataset in more details that SHOULD be provided')
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
-    bidsmap = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder, 'code'))
+    bidsmap, _ = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder, 'code'))
 
     # Get the table & dictionary of the subjects that have been processed
     participants_tsv  = os.path.join(bidsfolder, 'participants.tsv')

@@ -20,7 +20,7 @@ class TestBidseditor(unittest.TestCase):
     def test_get_allowed_suffices(self):
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics")
         filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics", "bidsmap_template.yaml")
-        template_bidsmap = load_bidsmap(filename, path)
+        template_bidsmap, _ = load_bidsmap(filename, path)
         allowed_suffixes = get_allowed_suffixes(template_bidsmap)
 
         reference_allowed_suffixes = {
@@ -81,7 +81,7 @@ class TestBidseditor(unittest.TestCase):
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics")
         filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "heuristics",
                                 "bidsmap_template.yaml")
-        template_bidsmap = load_bidsmap(filename, path)
+        template_bidsmap, _ = load_bidsmap(filename, path)
         allowed_suffixes = get_allowed_suffixes(template_bidsmap)
 
         SOURCE = 'DICOM'
@@ -111,7 +111,7 @@ class TestBidseditor(unittest.TestCase):
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata")
         filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata",
                                 "bidsmap_example.yaml")
-        source_bidsmap = load_bidsmap(filename, path)
+        source_bidsmap, _ = load_bidsmap(filename, path)
 
         source_modality = 'extra_data'
         source_index = 2

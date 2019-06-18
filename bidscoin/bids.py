@@ -271,13 +271,13 @@ def get_niftifile(folder: str) -> str:
     return None
 
 
-def load_bidsmap(yamlfile: str='', folder: str='') -> ruamel.yaml:
+def load_bidsmap(yamlfile: str='', folder: str='') -> (ruamel.yaml, str):
     """
     Read the mapping heuristics from the bidsmap yaml-file
 
     :param yamlfile:    The full pathname or basename of the bidsmap yaml-file. If None, the default bidsmap_template.yaml file in the heuristics folder is used
     :param folder:      Only used when yamlfile=basename or None: yamlfile is then first searched for in folder and then falls back to the ./heuristics folder (useful for centrally managed template yaml-files)
-    :return:            ruamel.yaml dict structure, with all options, BIDS mapping heuristics, labels and attributes, etc
+    :return:            Tuple with (1) ruamel.yaml dict structure, with all options, BIDS mapping heuristics, labels and attributes, etc and (2) the fullpath yaml-file
     """
 
     # Input checking
@@ -313,7 +313,7 @@ def load_bidsmap(yamlfile: str='', folder: str='') -> ruamel.yaml:
     if bidsmapversion != version():
         logger.warning(f'BIDScoiner version conflict: {yamlfile} was created using version {bidsmapversion}, but this is version {version()}')
 
-    return bidsmap
+    return bidsmap, yamlfile
 
 
 def save_bidsmap(filename: str, bidsmap: dict):

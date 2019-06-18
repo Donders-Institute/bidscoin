@@ -207,7 +207,7 @@ def bidstrainer(bidsfolder: str, samplefolder: str, bidsmapfile: str, pattern: s
     LOGGER.info('------------ START BIDStrainer ------------')
 
     # Get the heuristics for creating the bidsmap
-    heuristics = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder, 'code'))
+    heuristics, _ = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder, 'code'))
 
     # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     bidsmap = copy.deepcopy(heuristics)
