@@ -1,14 +1,14 @@
 [metadata]
 name = 'bidscoin'
-version = '1.6'
+version = '2.0'
 description = 'Map source-level neuroimaging data onto a BIDS data structure'
 author = 'Marcel Zwiers'
-author_email = 'marcel.zwiers@donders.ru.nl'
+author_email = 'm.zwiers@donders.ru.nl'
 license = 'GPL3'
 url = 'https://github.com/Donders-Institute/bidscoin'
 
 [requires]
-python_version = ['3.7']
+python_version = ['3.6', '3.7']
 
 [build-system]
 requires = ['setuptools', 'wheel']
