@@ -750,7 +750,7 @@ class EditDialog(QDialog):
 
         self.view_bids.cellChanged.connect(self.cell_was_clicked)
         self.help_button.clicked.connect(self.get_help)
-        self.cancel_button.clicked.connect(self.closeEvent)
+        self.cancel_button.clicked.connect(self.reject)
         self.ok_button.clicked.connect(self.update_series)
 
         top_widget.setLayout(top_layout)
@@ -766,8 +766,13 @@ class EditDialog(QDialog):
         webbrowser.open(help_url)
 
     def closeEvent(self, event):
-        """Make sure we set has_edit_dialog_open to false in m ain window. """
+        """Make sure we set has_edit_dialog_open to false in main window. """
         self.got_sample.emit(self.target_bidsmap)
+        self.close()
+
+    def reject(self):
+        """Make sure we set has_edit_dialog_open to false in main window. """
+        self.got_sample.emit(self.source_bidsmap)
         self.close()
 
     def update_series(self):
