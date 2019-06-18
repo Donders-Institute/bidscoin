@@ -33,12 +33,9 @@ DICOM:
   session_label:                                  # A <<DICOM attribute>> that is used as session_label instead of the session-label from the sourcefolder
   anat:       # ----------------------- All anatomical series --------------------
   func:       # ----------------------- All functional series --------------------
-  dwi:        # ----------------------- All diffusion series ---------------------
-  fmap:       # ----------------------- All fieldmap series ----------------------
-  beh:        # ----------------------- All behavioural data ---------------------
-  pet:        # ----------------------- All PET series ---------------------------
-  extra_data: # ----------------------- All extra data ---------------------------
-  - attributes:
+  - provenance: /home/tg/rutvdee/bidscoin/raw/sub-P002/ses-mri01/02_localizer AANGEPAST
+      11 SLICES/M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA
+    attributes:
       SeriesDescription: localizer AANGEPAST 11 SLICES
       SequenceVariant: "['SP', 'OSP']"
       SequenceName: '*fl2d1'
@@ -52,19 +49,22 @@ DICOM:
       ProtocolName: localizer AANGEPAST 11 SLICES
       PhaseEncodingDirection:
     bids:
+      task_label: localizerAANGEPAST11SLICES
       acq_label: localizerAANGEPAST11SLICES
-      rec_label:
-      ce_label:
-      task_label:
-      echo_index:
-      dir_label:
+      rec_label: ''
       run_index: <<1>>
-      suffix:
-      mod_label:
-      modality_label:
-    provenance: /home/tg/rutvdee/bidscoin/raw/sub-P002/ses-mri01/02_localizer AANGEPAST
-      11 SLICES/M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA
-  - attributes:
+      echo_index: '1'
+      suffix: bold
+      modality_label: ''
+      ce_label: ''
+      dir_label: ''
+  dwi:        # ----------------------- All diffusion series ---------------------
+  fmap:       # ----------------------- All fieldmap series ----------------------
+  beh:        # ----------------------- All behavioural data ---------------------
+  pet:        # ----------------------- All PET series ---------------------------
+  extra_data: # ----------------------- All extra data ---------------------------
+  - provenance: /home/tg/rutvdee/bidscoin/raw/sub-P002/ses-mri01/03_Stoptaak_ep2d_bold_nomoco/M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA
+    attributes:
       SeriesDescription: Stoptaak_ep2d_bold_nomoco
       SequenceVariant: SK
       SequenceName: '*epfid2d1_64'
@@ -88,8 +88,8 @@ DICOM:
       suffix:
       mod_label:
       modality_label:
-    provenance: /home/tg/rutvdee/bidscoin/raw/sub-P002/ses-mri01/03_Stoptaak_ep2d_bold_nomoco/M109.MR.WUR_BRAIN_ADHD.0003.0001.2018.03.01.13.05.10.140625.104359017.IMA
-  - attributes:
+  - provenance: /home/tg/rutvdee/bidscoin/raw/sub-P002/ses-mri01/04_t1_mpr_sag_p2_iso_1/M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA
+    attributes:
       SeriesDescription: t1_mpr_sag_p2_iso_1
       SequenceVariant: "['SP', 'MP']"
       SequenceName: '*tfl3d1_ns'
@@ -113,8 +113,8 @@ DICOM:
       suffix:
       mod_label:
       modality_label:
-    provenance: /home/tg/rutvdee/bidscoin/raw/sub-P002/ses-mri01/04_t1_mpr_sag_p2_iso_1/M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA
-  - attributes:
+  - provenance: /home/tg/rutvdee/bidscoin/raw/sub-P002/ses-mri01/05_Flanker_ep2d_bold_nomoco/M109.MR.WUR_BRAIN_ADHD.0005.0001.2018.03.01.13.05.10.140625.104368237.IMA
+    attributes:
       SeriesDescription: Flanker_ep2d_bold_nomoco
       SequenceVariant: SK
       SequenceName: '*epfid2d1_64'
@@ -138,8 +138,8 @@ DICOM:
       suffix:
       mod_label:
       modality_label:
-    provenance: /home/tg/rutvdee/bidscoin/raw/sub-P002/ses-mri01/05_Flanker_ep2d_bold_nomoco/M109.MR.WUR_BRAIN_ADHD.0005.0001.2018.03.01.13.05.10.140625.104368237.IMA
-  - attributes:
+  - provenance: /home/tg/rutvdee/bidscoin/raw/sub-P002/ses-mri02/07_t1_fl3d_sag_p3_iso_1/M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA
+    attributes:
       SeriesDescription: t1_fl3d_sag_p3_iso_1
       SequenceVariant: SP
       SequenceName: '*fl3d1_ns'
@@ -163,7 +163,6 @@ DICOM:
       suffix:
       mod_label:
       modality_label:
-    provenance: /home/tg/rutvdee/bidscoin/raw/sub-P002/ses-mri02/07_t1_fl3d_sag_p3_iso_1/M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA
 PAR:
 # --------------------------------------------------------------------------------
 # PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
@@ -196,8 +195,6 @@ FileSystem:
   fmap:       # ----------------------- All fieldmap series ----------------------
   beh:        # ----------------------- All behavioural data ---------------------
   extra_data: # ----------------------- All extra data ---------------------------
-
-
 PlugIn:
 # --------------------------------------------------------------------------------
 # List of plugins to edit the key-value heuristics / perform additional operations

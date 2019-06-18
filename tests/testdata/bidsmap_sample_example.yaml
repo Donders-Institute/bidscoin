@@ -1,25 +1,23 @@
+provenance: /home/tg/rutvdee/bidscoin/raw/sub-P002/ses-mri01/04_t1_mpr_sag_p2_iso_1/M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA
 attributes:
-  SeriesDescription: localizer AANGEPAST 11 SLICES
-  SequenceVariant: "['SP', 'OSP']"
-  SequenceName: '*fl2d1'
-  ScanningSequence: GR
-  MRAcquisitionType: 2D
-  FlipAngle: '20'
+  SeriesDescription: t1_mpr_sag_p2_iso_1
+  SequenceVariant: "['SP', 'MP']"
+  SequenceName: '*tfl3d1_ns'
+  ScanningSequence: "['GR', 'IR']"
+  MRAcquisitionType: 3D
+  FlipAngle: '9'
   EchoNumbers: 1
-  EchoTime: '4'
-  RepetitionTime: '8.6'
-  ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'NORM', 'DIS2D']"
-  ProtocolName: localizer AANGEPAST 11 SLICES
+  EchoTime: '2.26'
+  RepetitionTime: '1900'
+  ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM']"
+  ProtocolName: t1_mpr_sag_p2_iso_1
   PhaseEncodingDirection:
 bids:
-  acq_label: localizerAANGEPAST11SLICES
-  rec_label:
-  ce_label:
-  task_label:
-  echo_index:
-  dir_label:
+  task_label: t1mprsagp2iso1
+  acq_label: t1mprsagp2iso1
+  rec_label: ''
   run_index: <<1>>
-  suffix:
-  mod_label:
-  modality_label:
-provenance: /home/tg/rutvdee/bidscoin/raw/sub-P002/ses-mri01/02_localizer AANGEPAST 11 SLICES/M109.MR.WUR_BRAIN_ADHD.0002.0001.2018.03.01.13.05.10.140625.104357083.IMA
+  suffix: pet
+  ce_label: ''
+  echo_index: ''
+  dir_label: ''

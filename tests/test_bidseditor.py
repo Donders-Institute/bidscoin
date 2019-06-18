@@ -121,7 +121,7 @@ class TestBidseditor(unittest.TestCase):
             test_sample_yaml = fp.read()
             test_sample = yaml.load(test_sample_yaml)
 
-        target_modality = 'anat'
+        target_modality = 'pet'
         target_sample = copy.deepcopy(test_sample)
 
         target_bidsmap = update_bidsmap(source_bidsmap, source_modality, source_index, target_modality, target_sample)
@@ -130,7 +130,7 @@ class TestBidseditor(unittest.TestCase):
         self.assertNotEqual(target_bidsmap['DICOM'][target_modality], source_bidsmap['DICOM'][target_modality])
         self.assertNotEqual(target_bidsmap['DICOM'][source_modality], source_bidsmap['DICOM'][source_modality])
         self.assertEqual(len(target_bidsmap['DICOM'][target_modality]), 1)
-        self.assertEqual(len(target_bidsmap['DICOM'][source_modality]), 4)
+        self.assertEqual(len(target_bidsmap['DICOM'][source_modality]), 3)
 
         target_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_out_temp.yaml")
         reference_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_example_out.yaml")
