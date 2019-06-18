@@ -115,8 +115,11 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
             outfolder = bidsmodality,
             infolder  = seriesfolder)
         LOGGER.info('$ ' + command)
-        process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # TODO: investigate shell=False and capture_output=True
-        LOGGER.info(process.stdout.decode('utf-8'))
+        process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)          # TODO: investigate shell=False and capture_output=True for python 3.7
+        if process.stdout.decode('utf-8'):
+            LOGGER.info(process.stdout.decode('utf-8'))
+        if process.stderr.decode('utf-8'):
+           LOGGER.error(process.stderr.decode('utf-8'))
         if process.returncode != 0:
             LOGGER.error(f'Failed to process {seriesfolder} (errorcode {process.returncode})')
             continue
