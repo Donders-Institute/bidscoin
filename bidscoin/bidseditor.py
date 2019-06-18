@@ -52,16 +52,16 @@ ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons
 
 MAIN_HELP_URL = "https://github.com/Donders-Institute/bidscoin/blob/master/README.md"
 
-EDIT_HELP_URL_DEFAULT = "https://bids-specification.readthedocs.io/en/latest/"
+HELP_URL_DEFAULT = "https://bids-specification.readthedocs.io/en/latest/"
 
-EDIT_HELP_URLS = {
+HELP_URLS = {
     "anat": "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#anatomy-imaging-data",
     "beh": "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/07-behavioral-experiments.html",
     "dwi": "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#diffusion-imaging-data",
     "fmap": "https://bids-specification.readthedocs.io/en/latest/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#fieldmap-data",
     "func": "https://bids-specification.readthedocs.io/en/latest/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#task-including-resting-state-imaging-data",
     "pet": "https://docs.google.com/document/d/1mqMLnxVdLwZjDd4ZiWFqjEAmOmfcModA_R535v3eQs0/edit",
-    bids.unknownmodality: EDIT_HELP_URL_DEFAULT
+    bids.unknownmodality: HELP_URL_DEFAULT
 }
 
 DISPLAY_KEY_MAPPING = {
@@ -488,6 +488,10 @@ class Ui_MainWindow(object):
         """Get online help. """
         webbrowser.open(MAIN_HELP_URL)
 
+    def get_bids_help(self):
+        """Get online help. """
+        webbrowser.open(HELP_URL_DEFAULT)
+
     def reload(self):
         """Reset button: reload the original input BIDS map. """
         self.output_bidsmap, _ = bids.load_bidsmap(self.bidsmap_filename)
@@ -520,23 +524,52 @@ class Ui_MainWindow(object):
         self.actionExit = QtWidgets.QAction(self.MainWindow)
         self.actionExit.triggered.connect(self.exit_application)
 
+        self.actionReload = QtWidgets.QAction(self.MainWindow)
+        self.actionReload.triggered.connect(self.reload)
+
         self.actionAbout = QtWidgets.QAction(self.MainWindow)
         self.actionAbout.triggered.connect(self.show_about)
 
         self.actionEdit = QtWidgets.QAction(self.MainWindow)
 
+        self.actionHelp = QtWidgets.QAction(self.MainWindow)
+        self.actionHelp.triggered.connect(self.get_help)
+
+        self.actionBidsHelp = QtWidgets.QAction(self.MainWindow)
+        self.actionBidsHelp.triggered.connect(self.get_bids_help)
+
+        self.menuFile.addAction(self.actionReload)
         self.menuFile.addAction(self.actionExit)
+
         self.menuHelp.addAction(self.actionAbout)
+        self.menuHelp.addAction(self.actionHelp)
+        self.menuHelp.addAction(self.actionBidsHelp)
+
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
+
         self.menuFile.setTitle("File")
         self.menuHelp.setTitle("Help")
         self.statusbar.setStatusTip("Statusbar")
+
+        self.actionReload.setText("Reload")
+        self.actionReload.setStatusTip("Reload BIDSmap from disk")
+        self.actionReload.setShortcut("Ctrl+R")
+
         self.actionExit.setText("Exit")
         self.actionExit.setStatusTip("Click to exit the application")
         self.actionExit.setShortcut("Ctrl+X")
+
         self.actionAbout.setText("About")
         self.actionAbout.setStatusTip("Click to get more information about the application")
+
+        self.actionHelp.setText("Documentation")
+        self.actionHelp.setStatusTip("Click to go to BIDScoin documentation")
+        self.actionHelp.setShortcut("F1")
+
+        self.actionBidsHelp.setText("BIDS specification")
+        self.actionBidsHelp.setStatusTip("Click to go to BIDS specification documentation")
+        self.actionBidsHelp.setShortcut("F2")
 
     def save_bidsmap_to_file(self):
         """Save the BIDSmap to file. """
@@ -721,7 +754,7 @@ class EditDialog(QDialog):
 
     def get_help(self, event):
         """Open web page for help. """
-        help_url = EDIT_HELP_URLS.get(self.target_modality, EDIT_HELP_URL_DEFAULT)
+        help_url = HELP_URLS.get(self.target_modality, HELP_URL_DEFAULT)
         webbrowser.open(help_url)
 
     def closeEvent(self, event):
