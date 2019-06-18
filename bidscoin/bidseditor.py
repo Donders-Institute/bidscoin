@@ -292,7 +292,7 @@ class Ui_MainWindow(object):
 
         self.output_bidsmap = the_series
 
-        self.table.setColumnCount(5)
+        self.table.setColumnCount(6)
         self.table.setRowCount(num_files)
 
         self.table.setAlternatingRowColors(False)
@@ -304,7 +304,8 @@ class Ui_MainWindow(object):
             if not series_list:
                 continue
             for series in series_list:
-                provenance_file = os.path.basename(series['provenance'])
+                provenance = series['provenance']
+                provenance_file = os.path.basename(provenance)
                 run = series['bids'].get('run_index', '')
                 bids_name = bids.get_bidsname('', '', modality, series, run)
 
@@ -312,11 +313,15 @@ class Ui_MainWindow(object):
                 item_provenance_file = QTableWidgetItem(provenance_file)
                 item_modality = QTableWidgetItem(modality)
                 item_bids_name = QTableWidgetItem(bids_name)
+                item_provenance = QTableWidgetItem(provenance)
 
                 self.table.setItem(idx, 0, item_id)
                 self.table.setItem(idx, 1, item_provenance_file)
                 self.table.setItem(idx, 2, item_modality)
                 self.table.setItem(idx, 3, item_bids_name)
+                self.table.setItem(idx, 5, item_provenance)
+
+                self.table.item(idx, 1).setToolTip(os.path.dirname(provenance))
 
                 self.button_select = QPushButton('Edit')
                 if modality == bids.unknownmodality:
@@ -403,8 +408,8 @@ class Ui_MainWindow(object):
             if not series_list:
                 continue
             for series in series_list:
-                provenance_file = os.path.basename(series['provenance'])
                 provenance = series['provenance']
+                provenance_file = os.path.basename(provenance)
                 run = series['bids'].get('run_index', '')
                 bids_name = bids.get_bidsname('', '', modality, series, run)
 
@@ -419,6 +424,8 @@ class Ui_MainWindow(object):
                 self.table.setItem(idx, 2, item_modality)
                 self.table.setItem(idx, 3, item_bids_name)
                 self.table.setItem(idx, 5, item_provenance) # Hidden column
+
+                self.table.item(idx, 1).setToolTip(os.path.dirname(provenance))
 
                 self.button_select = QPushButton('Edit')
                 if modality == bids.unknownmodality:
@@ -748,6 +755,7 @@ class EditDialog(QDialog):
         top_layout.addStretch(1)
         top_layout.addLayout(hbox)
 
+        self.view_provenance.cellDoubleClicked.connect(self.inspect_dicomfile)
         self.view_bids.cellChanged.connect(self.cell_was_clicked)
         self.help_button.clicked.connect(self.get_help)
         self.cancel_button.clicked.connect(self.reject)
@@ -786,6 +794,15 @@ class EditDialog(QDialog):
         self.got_sample.emit(self.target_bidsmap)
         self.close()
 
+    def inspect_dicomfile(self, row=None, column=None):
+        """When double clicked, show popup window. """
+        if row == 1 and column == 1:
+            filename = self.source_series['provenance']
+            if filename.endswith('.IMA') or filename.endswith('.DCM'):
+                dicomdict = pydicom.dcmread(filename, force=True)
+                self.popup = InspectWindow(filename, dicomdict)
+                self.popup.show()
+
     def cell_was_clicked(self, row, column):
         """BIDS attribute value has been changed. """
         if column == 1:
@@ -817,7 +834,7 @@ class EditDialog(QDialog):
         if is_editable:
             item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
         else:
-            item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            item.setFlags(QtCore.Qt.ItemIsEnabled)
             item.setForeground(QtGui.QColor(128, 128, 128))
         return item
 
@@ -892,7 +909,7 @@ class EditDialog(QDialog):
                 },
                 {
                     "value": provenance_file,
-                    "is_editable": False
+                    "is_editable": True
                 },
             ]
         ]
@@ -901,6 +918,8 @@ class EditDialog(QDialog):
         self.label_provenance.setText("Provenance")
 
         self.view_provenance = self.get_table(data, num_rows=MAX_NUM_PROVENANCE_ATTRIBUTES)
+
+        self.view_provenance.doubleClicked.connect(self.inspect_dicomfile)
 
     def set_dicom_attributes_section(self):
         """Set SOURCE attributes section. """
