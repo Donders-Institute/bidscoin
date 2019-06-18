@@ -527,6 +527,9 @@ class Ui_MainWindow(object):
         self.actionReload = QtWidgets.QAction(self.MainWindow)
         self.actionReload.triggered.connect(self.reload)
 
+        self.actionSave = QtWidgets.QAction(self.MainWindow)
+        self.actionSave.triggered.connect(self.save_bidsmap_to_file)
+
         self.actionAbout = QtWidgets.QAction(self.MainWindow)
         self.actionAbout.triggered.connect(self.show_about)
 
@@ -539,6 +542,7 @@ class Ui_MainWindow(object):
         self.actionBidsHelp.triggered.connect(self.get_bids_help)
 
         self.menuFile.addAction(self.actionReload)
+        self.menuFile.addAction(self.actionSave)
         self.menuFile.addAction(self.actionExit)
 
         self.menuHelp.addAction(self.actionAbout)
@@ -555,6 +559,10 @@ class Ui_MainWindow(object):
         self.actionReload.setText("Reload")
         self.actionReload.setStatusTip("Reload BIDSmap from disk")
         self.actionReload.setShortcut("Ctrl+R")
+
+        self.actionSave.setText("Save")
+        self.actionSave.setStatusTip("Save BIDSmap to disk")
+        self.actionSave.setShortcut("Ctrl+S")
 
         self.actionExit.setText("Exit")
         self.actionExit.setStatusTip("Click to exit the application")
