@@ -322,6 +322,7 @@ class Ui_MainWindow(object):
                 self.table.setItem(idx, 5, item_provenance)
 
                 self.table.item(idx, 1).setToolTip(os.path.dirname(provenance))
+                self.table.item(idx, 1).setStatusTip('Double-click to inspect the header information')
 
                 self.button_select = QPushButton('Edit')
                 if modality == bids.unknownmodality:
@@ -398,6 +399,7 @@ class Ui_MainWindow(object):
         self.table.setColumnCount(6)
         self.table.setRowCount(num_files) # one for each file
         self.table.itemDoubleClicked.connect(self.inspect_dicomfile)
+        self.table.setMouseTracking(True)
 
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
@@ -426,6 +428,7 @@ class Ui_MainWindow(object):
                 self.table.setItem(idx, 5, item_provenance) # Hidden column
 
                 self.table.item(idx, 1).setToolTip(os.path.dirname(provenance))
+                self.table.item(idx, 1).setStatusTip('Double-click to inspect the header information')
 
                 self.button_select = QPushButton('Edit')
                 if modality == bids.unknownmodality:
