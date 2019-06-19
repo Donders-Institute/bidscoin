@@ -146,11 +146,11 @@ Having an organized source data folder, the actual data-set conversion to BIDS c
       text editor. For instance to change the `Options` to your needs or to add a dynamic
       `participant_label` value like `<<PatientID>>`. See ./docs/bidsmap.md for more information.
 
-As shown below, the main window of the bidseditor opens with the `BIDS map` tab that contains a list of `input samples` that uniquely represents all the different files that are present in the source folder, together with the associated `BIDS output name`. The name of the `BIDS modality` folder is shown in red if the modality is not part of the BIDS standard, otherwise it is colored green. Double clicking the sample (DICOM) filename opens an inspection window with the full header information (double clicking sample filenames works throughout the GUI).
+As shown below, the main window of the bidseditor opens with the `BIDS map` tab that contains a list of `input samples` that uniquely represents all the different files that are present in the source folder, together with the associated `BIDS output name`. The name of the `BIDS modality` folder is shown in red if the modality is not part of the BIDS standard, otherwise it is colored green. Double clicking the sample (DICOM) filename opens an inspection window with the full header information (double clicking sample filenames works throughout the GUI). The user can click the `Edit` button for each list item to open a new edit window.
 
 <a name="bidseditor-main">![Bidseditor main window](./docs/bidseditor_main.png)</a>
  
- The user can click the `Edit` button for each list item to open a new edit window (shown below) in which the user can choose the right BIDS `Modality` (drop down menu) and edit the associated BIDS `Labels` (double click), or (for expert usage) adapt the DICOM `Attributes` (double click). The new BIDS `Output name` is then shown on the bottom and, if it is all fine, the user can copy it over to the main window by clicking the `OK` button.
+Shown below, in the edit window the user can choose the right BIDS `Modality` (drop down menu) and edit the associated BIDS `Labels` (double click black items), or (for expert usage) adapt the DICOM `Attributes` (double click black items). The new BIDS `Output name` is then shown on the bottom and, if it is all fine, the user can copy it over to the main window by clicking the `OK` button.
 
 <a name="bidseditor-edit">![Bidseditor edit window](./docs/bidseditor_edit.png)</a>
 
