@@ -150,10 +150,12 @@ As shown below, the main window of the bidseditor opens with the `BIDS map` tab 
 
 <a name="bidseditor-main">![Bidseditor main window](./docs/bidseditor_main.png)</a>
  
- The user can click the `edit` button for each list item to open a new edit window (shown below) in which the user can choose the right BIDS `Modality` (drop down menu) and edit the associated BIDS `Labels` (double click), or (for expert usage) adapt the DICOM `Attributes` (double click). The new BIDS `Output name` is then shown on the bottom and, if it is all fine, the user can copy it over to the main window by clicking the `OK` button. If all BIDS output names in the main window are fine, the user can click on the `Save` button and proceed with running the bidscoiner tool.
+ The user can click the `Edit` button for each list item to open a new edit window (shown below) in which the user can choose the right BIDS `Modality` (drop down menu) and edit the associated BIDS `Labels` (double click), or (for expert usage) adapt the DICOM `Attributes` (double click). The new BIDS `Output name` is then shown on the bottom and, if it is all fine, the user can copy it over to the main window by clicking the `OK` button.
 
 <a name="bidseditor-edit">![Bidseditor edit window](./docs/bidseditor_edit.png)</a>
 
+If all BIDS output names in the main window are fine, the user can click on the `Save` button and proceed with running the bidscoiner tool.
+ 
 #### Step 3: Running the bidscoiner
 
     usage: bidscoiner.py [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-f]
