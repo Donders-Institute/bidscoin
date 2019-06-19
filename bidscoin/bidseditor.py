@@ -334,6 +334,7 @@ class Ui_MainWindow(object):
                     if self.table.item(idx, 2):
                         self.table.item(idx, 2).setForeground(QtGui.QColor(0, 128, 0))
                 self.button_select.clicked.connect(self.handle_button_clicked)
+                self.button_select.setStatusTip('Click to edit the BIDS output name')
                 self.table.setCellWidget(idx, 4, self.button_select)
 
                 idx += 1
@@ -440,6 +441,7 @@ class Ui_MainWindow(object):
                     if self.table.item(idx, 2):
                         self.table.item(idx, 2).setForeground(QtGui.QColor(0, 128, 0))
                 self.button_select.clicked.connect(self.handle_button_clicked)
+                self.button_select.setStatusTip('Click to edit the BIDS output name')
                 self.table.setCellWidget(idx, 4, self.button_select)
 
                 idx += 1
@@ -460,10 +462,13 @@ class Ui_MainWindow(object):
 
         self.help_button = QtWidgets.QPushButton()
         self.help_button.setText("Help")
+        self.help_button.setStatusTip("Go to the online BIDScoin documentation")
         self.reload_button = QtWidgets.QPushButton()
         self.reload_button.setText("Reload")
+        self.reload_button.setStatusTip("Reload BIDSmap from disk")
         self.save_button = QtWidgets.QPushButton()
         self.save_button.setText("Save")
+        self.save_button.setStatusTip("Save BIDSmap to disk")
         hbox = QHBoxLayout()
         hbox.addStretch(1)
         hbox.addWidget(self.help_button)
@@ -575,18 +580,18 @@ class Ui_MainWindow(object):
         self.actionSave.setShortcut("Ctrl+S")
 
         self.actionExit.setText("Exit")
-        self.actionExit.setStatusTip("Click to exit the application")
+        self.actionExit.setStatusTip("Exit the application")
         self.actionExit.setShortcut("Ctrl+X")
 
         self.actionAbout.setText("About")
-        self.actionAbout.setStatusTip("Click to get more information about the application")
+        self.actionAbout.setStatusTip("Show information about the application")
 
         self.actionHelp.setText("Documentation")
-        self.actionHelp.setStatusTip("Click to go to BIDScoin documentation")
+        self.actionHelp.setStatusTip("Go to the online BIDScoin documentation")
         self.actionHelp.setShortcut("F1")
 
         self.actionBidsHelp.setText("BIDS specification")
-        self.actionBidsHelp.setStatusTip("Click to go to BIDS specification documentation")
+        self.actionBidsHelp.setStatusTip("Go to the online BIDS specification documentation")
         self.actionBidsHelp.setShortcut("F2")
 
     def save_bidsmap_to_file(self):
