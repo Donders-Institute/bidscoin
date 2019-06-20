@@ -819,22 +819,25 @@ class EditDialog(QDialog):
             display_key = item_display_key.text()
             value = item_value.text()
 
-            # Obtain the orginal bidsmap key name from the short display name
-            key = DISPLAY_KEY_MAPPING.get(display_key, '')
+            # Obtain the original bidsmap key name from the short display name
+            # If no mapping is available use the display key name itself
+            key = DISPLAY_KEY_MAPPING.get(display_key, display_key)
 
-            # Validate user input against BIDS or replace the (dynamic) bids-value if it is a series attribute
-            value = bids.replace_bidsvalue(value, self.target_series['provenance'])
+            # Only if cell was actually clicked, update (i.e. not when BIDS modality changes)
+            if display_key != '':
+                # Validate user input against BIDS or replace the (dynamic) bids-value if it is a series attribute
+                value = bids.replace_bidsvalue(value, self.target_series['provenance'])
 
-            self.view_bids.item(row, 1).setText(value)
-            self.target_series['bids'][key] = value
+                self.view_bids.item(row, 1).setText(value)
+                self.target_series['bids'][key] = value
 
-            series = self.target_series
-            run = series['bids'].get('run_index', '')
-            bids_name = bids.get_bidsname('', '', self.target_modality, series, run)
-            html_bids_name = get_html_bidsname(bids_name)
+                series = self.target_series
+                run = series['bids'].get('run_index', '')
+                bids_name = bids.get_bidsname('', '', self.target_modality, series, run)
+                html_bids_name = get_html_bidsname(bids_name)
 
-            self.view_bids_name.clear()
-            self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % html_bids_name)
+                self.view_bids_name.clear()
+                self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % html_bids_name)
 
     def set_cell(self, value, is_editable=False):
         item = QTableWidgetItem()
