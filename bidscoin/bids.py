@@ -116,6 +116,8 @@ def is_dicomfile(file: str) -> bool:
                 import pydicom
                 dicomdict = pydicom.dcmread(file, force=True)       # The DICM tag may be missing for anonymized DICOM files
                 return 'Modality' in dicomdict
+    else:
+        return False
 
 
 def is_dicomfile_siemens(file: str) -> bool:
