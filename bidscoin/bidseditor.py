@@ -97,19 +97,15 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
     # Delete the source series
     target_bidsmap = bids.delete_series(target_bidsmap, SOURCE, source_modality, source_index)
 
-    # Append the cleaned-up target series
+    # Copy the values from the target_series to the empty dict
     series = dict(provenance={}, attributes={}, bids={})  # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
-
-    # Fill the empty attribute with the info from the target series
     for attrkey in target_series['attributes']:
         series['attributes'][attrkey] = target_series['attributes'][attrkey]
-
-    # Try to fill the bids-labels
     for key in target_series['bids']:
         series['bids'][key] = target_series['bids'][key]
-
     series['provenance'] = target_series['provenance']
 
+    # Append the cleaned-up target series
     target_bidsmap = bids.append_series(target_bidsmap, SOURCE, target_modality, series)
 
     return target_bidsmap
@@ -234,7 +230,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Handle exit. """
-        LOGGER.info('Exit application')
+        LOGGER.info('------------ FINISHED! ------------')
         QApplication.quit()
 
 
@@ -465,10 +461,10 @@ class Ui_MainWindow(object):
         self.help_button.setStatusTip("Go to the online BIDScoin documentation")
         self.reload_button = QtWidgets.QPushButton()
         self.reload_button.setText("Reload")
-        self.reload_button.setStatusTip("Reload BIDSmap from disk")
+        self.reload_button.setStatusTip("Reload the BIDSmap from disk")
         self.save_button = QtWidgets.QPushButton()
         self.save_button.setText("Save")
-        self.save_button.setStatusTip("Save BIDSmap to disk")
+        self.save_button.setStatusTip("Save the BIDSmap to disk")
         hbox = QHBoxLayout()
         hbox.addStretch(1)
         hbox.addWidget(self.help_button)
@@ -494,7 +490,7 @@ class Ui_MainWindow(object):
             row = item.row()
             provenance = self.table.item(row, 5)
             filename = provenance.text()
-            if filename.endswith('.IMA') or filename.endswith('.DCM'):
+            if bids.is_dicomfile(filename):
                 dicomdict = pydicom.dcmread(filename, force=True)
                 self.popup = InspectWindow(filename, dicomdict)
                 self.popup.show()
@@ -572,11 +568,11 @@ class Ui_MainWindow(object):
         self.statusbar.setStatusTip("Statusbar")
 
         self.actionReload.setText("Reload")
-        self.actionReload.setStatusTip("Reload BIDSmap from disk")
+        self.actionReload.setStatusTip("Reload the BIDSmap from disk")
         self.actionReload.setShortcut("Ctrl+R")
 
         self.actionSave.setText("Save")
-        self.actionSave.setStatusTip("Save BIDSmap to disk")
+        self.actionSave.setStatusTip("Save the BIDSmap to disk")
         self.actionSave.setShortcut("Ctrl+S")
 
         self.actionExit.setText("Exit")
@@ -620,7 +616,7 @@ class Ui_MainWindow(object):
 
     def on_double_clicked(self, index):
         filename = self.model.fileInfo(index).absoluteFilePath()
-        if os.path.isfile(filename) and (filename.endswith('.IMA') or filename.endswith('.DCM')):
+        if bids.is_dicomfile(filename):
             dicomdict = pydicom.dcmread(filename, force=True)
             self.popup = InspectWindow(filename, dicomdict)
             self.popup.show()
@@ -806,7 +802,7 @@ class EditDialog(QDialog):
         """When double clicked, show popup window. """
         if row == 1 and column == 1:
             filename = self.source_series['provenance']
-            if filename.endswith('.IMA') or filename.endswith('.DCM'):
+            if bids.is_dicomfile(filename):
                 dicomdict = pydicom.dcmread(filename, force=True)
                 self.popup = InspectWindow(filename, dicomdict)
                 self.popup.show()
@@ -846,7 +842,7 @@ class EditDialog(QDialog):
             item.setForeground(QtGui.QColor(128, 128, 128))
         return item
 
-    def get_table(self, data, num_rows=1):
+    def get_table(self, data, num_rows=1, strip_bidslabel=False):
         """Return a table widget from the data. """
         table = QTableWidget()
 
@@ -871,6 +867,8 @@ class EditDialog(QDialog):
                 value = element.get("value", "")
                 if value == "None":
                     value = ""
+                if j==0 and strip_bidslabel:        # strip the 'label' from the 'bids_label'
+                    value = value.rsplit('_')[0]
                 is_editable = element.get("is_editable", False)
                 item = self.set_cell(value, is_editable=is_editable)
                 table.setItem(i, j, QTableWidgetItem(item))
@@ -1020,7 +1018,7 @@ class EditDialog(QDialog):
         self.label_bids = QLabel()
         self.label_bids.setText("Labels")
 
-        self.view_bids = self.get_table(data, num_rows=MAX_NUM_BIDS_ATTRIBUTES)
+        self.view_bids = self.get_table(data, num_rows=MAX_NUM_BIDS_ATTRIBUTES, strip_bidslabel=True)
 
     def set_bids_name_section(self):
         """Set non-editable BIDS output name section. """
@@ -1158,8 +1156,6 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     gui.setupUi(mainwin, bidsfolder, sourcefolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap)
     mainwin.show()
     sys.exit(app.exec_())
-
-    LOGGER.info('------------ FINISHED! ------------')
 
 
 if __name__ == "__main__":
