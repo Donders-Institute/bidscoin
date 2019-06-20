@@ -273,10 +273,12 @@ class Ui_MainWindow(object):
         self.tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.tabwidget.setObjectName("tabwidget")
         self.set_tab_file_browser(sourcefolder)
+        self.set_tab_participant_session()
         self.set_tab_file_sample_listing()
         self.tabwidget.setTabText(0, "File browser")
-        self.tabwidget.setTabText(1, "BIDS map")
-        self.tabwidget.setCurrentIndex(1)
+        self.tabwidget.setTabText(1, "Participant session")
+        self.tabwidget.setTabText(2, "BIDS map")
+        self.tabwidget.setCurrentIndex(2)
 
         self.set_menu_and_status_bar()
 
@@ -383,6 +385,31 @@ class Ui_MainWindow(object):
         self.file_browser.setObjectName("filebrowser")
         self.tabwidget.addTab(self.file_browser, "")
 
+    def set_tab_participant_session(self):
+        """Set the SOURCE participant session tab.  """
+
+        self.tab2 = QtWidgets.QWidget()
+        self.tab2.layout = QVBoxLayout(self.centralwidget)
+
+        self.reload_button = QtWidgets.QPushButton()
+        self.reload_button.setText("Reload")
+        self.reload_button.setStatusTip("Reload BIDSmap from disk")
+        self.save_button = QtWidgets.QPushButton()
+        self.save_button.setText("Save")
+        self.save_button.setStatusTip("Save BIDSmap to disk")
+        hbox = QHBoxLayout()
+        hbox.addStretch(1)
+        hbox.addWidget(self.reload_button)
+        hbox.addWidget(self.save_button)
+
+        self.tab2.layout.addLayout(hbox)
+
+        self.participant_session = QtWidgets.QWidget()
+        self.participant_session.setLayout(self.tab2.layout)
+        self.participant_session.setObjectName("participantSession")
+
+        self.tabwidget.addTab(self.participant_session, "")
+
     def set_tab_file_sample_listing(self):
         """Set the SOURCE file sample listing tab.  """
         num_files = 0
@@ -393,8 +420,8 @@ class Ui_MainWindow(object):
             for _ in series_list:
                 num_files += 1
 
-        self.tab2 = QtWidgets.QWidget()
-        self.tab2.layout = QVBoxLayout(self.centralwidget)
+        self.tab3 = QtWidgets.QWidget()
+        self.tab3.layout = QVBoxLayout(self.centralwidget)
 
         self.table = QTableWidget()
         self.table.setColumnCount(6)
@@ -475,11 +502,11 @@ class Ui_MainWindow(object):
         hbox.addWidget(self.reload_button)
         hbox.addWidget(self.save_button)
 
-        self.tab2.layout.addWidget(self.table)
-        self.tab2.layout.addLayout(hbox)
+        self.tab3.layout.addWidget(self.table)
+        self.tab3.layout.addLayout(hbox)
 
         self.file_sample_listing = QtWidgets.QWidget()
-        self.file_sample_listing.setLayout(self.tab2.layout)
+        self.file_sample_listing.setLayout(self.tab3.layout)
         self.file_sample_listing.setObjectName("filelister")
 
         self.tabwidget.addTab(self.file_sample_listing, "")
@@ -598,7 +625,7 @@ class Ui_MainWindow(object):
         """Save the BIDSmap to file. """
         options = QFileDialog.Options()
         filename, _ = QFileDialog.getSaveFileName(
-            self.tab2,
+            self.tab3,
             "Save File",
             os.path.join(self.bidsfolder, 'code', 'bidsmap.yaml'),
             "YAML Files (*.yaml *.yml);;All Files (*)",
