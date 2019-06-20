@@ -764,7 +764,7 @@ class EditDialog(QDialog):
         top_layout.addLayout(hbox)
 
         self.view_provenance.cellDoubleClicked.connect(self.inspect_dicomfile)
-        self.view_bids.cellChanged.connect(self.cell_was_clicked)
+        self.view_bids.cellChanged.connect(self.cell_was_changed)
         self.help_button.clicked.connect(self.get_help)
         self.cancel_button.clicked.connect(self.reject)
         self.ok_button.clicked.connect(self.update_series)
@@ -811,7 +811,7 @@ class EditDialog(QDialog):
                 self.popup = InspectWindow(filename, dicomdict)
                 self.popup.show()
 
-    def cell_was_clicked(self, row, column):
+    def cell_was_changed(self, row, column):
         """BIDS attribute value has been changed. """
         if column == 1:
             item_display_key = self.view_bids.item(row, 0)
