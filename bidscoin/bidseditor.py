@@ -64,17 +64,6 @@ HELP_URLS = {
     bids.unknownmodality: HELP_URL_DEFAULT
 }
 
-DISPLAY_KEY_MAPPING = {
-    "acq": "acq_label",
-    "ce": "ce_label",
-    "dir": "dir_label",
-    "echo": "echo_index",
-    "rec": "rec_label",
-    "run": "run_index",
-    "suffix": "suffix",
-    "task": "task_label"
-}
-
 
 def update_bidsmap(source_bidsmap, source_modality, source_index, target_modality, target_series):
     """Update the BIDS map:
@@ -302,7 +291,7 @@ class Ui_MainWindow(object):
             for series in series_list:
                 provenance = series['provenance']
                 provenance_file = os.path.basename(provenance)
-                run = series['bids'].get('run_index', '')
+                run = series['bids'].get('run', '')
                 bids_name = bids.get_bidsname('', '', modality, series, run)
 
                 item_id = QTableWidgetItem(str(idx + 1))
@@ -409,7 +398,7 @@ class Ui_MainWindow(object):
             for series in series_list:
                 provenance = series['provenance']
                 provenance_file = os.path.basename(provenance)
-                run = series['bids'].get('run_index', '')
+                run = series['bids'].get('run', '')
                 bids_name = bids.get_bidsname('', '', modality, series, run)
 
                 item_id = QTableWidgetItem(str(idx + 1))
@@ -810,17 +799,11 @@ class EditDialog(QDialog):
     def cell_was_changed(self, row, column):
         """BIDS attribute value has been changed. """
         if column == 1:
-            item_display_key = self.view_bids.item(row, 0)
-            item_value = self.view_bids.item(row, 1)
-            display_key = item_display_key.text()
-            value = item_value.text()
-
-            # Obtain the original bidsmap key name from the short display name
-            # If no mapping is available use the display key name itself
-            key = DISPLAY_KEY_MAPPING.get(display_key, display_key)
+            key = self.view_bids.item(row, 0).text()
+            value = self.view_bids.item(row, 1).text()
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes)
-            if display_key != '':
+            if key != '':
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a series attribute
                 value = bids.replace_bidsvalue(value, self.target_series['provenance'])
 
@@ -828,7 +811,7 @@ class EditDialog(QDialog):
                 self.target_series['bids'][key] = value
 
                 series = self.target_series
-                run = series['bids'].get('run_index', '')
+                run = series['bids'].get('run', '')
                 bids_name = bids.get_bidsname('', '', self.target_modality, series, run)
                 html_bids_name = get_html_bidsname(bids_name)
 
@@ -845,7 +828,7 @@ class EditDialog(QDialog):
             item.setForeground(QtGui.QColor(128, 128, 128))
         return item
 
-    def get_table(self, data, num_rows=1, strip_bidslabel=False):
+    def get_table(self, data, num_rows=1):
         """Return a table widget from the data. """
         table = QTableWidget()
 
@@ -870,8 +853,6 @@ class EditDialog(QDialog):
                 value = element.get("value", "")
                 if value == "None":
                     value = ""
-                if j==0 and strip_bidslabel:        # strip the 'label' from the 'bids_label'
-                    value = value.rsplit('_')[0]
                 is_editable = element.get("is_editable", False)
                 item = self.set_cell(value, is_editable=is_editable)
                 table.setItem(i, j, QTableWidgetItem(item))
@@ -1021,11 +1002,11 @@ class EditDialog(QDialog):
         self.label_bids = QLabel()
         self.label_bids.setText("Labels")
 
-        self.view_bids = self.get_table(data, num_rows=MAX_NUM_BIDS_ATTRIBUTES, strip_bidslabel=True)
+        self.view_bids = self.get_table(data, num_rows=MAX_NUM_BIDS_ATTRIBUTES)
 
     def set_bids_name_section(self):
         """Set non-editable BIDS output name section. """
-        run = self.target_series['bids'].get('run_index', '')
+        run = self.target_series['bids'].get('run', '')
         bids_name = bids.get_bidsname('', '', self.target_modality, self.target_series, run)
         html_bids_name = get_html_bidsname(bids_name)
 
@@ -1092,7 +1073,7 @@ class EditDialog(QDialog):
 
         # Update the BIDS output name
         self.target_series['bids'] = bids_values
-        run = self.target_series['bids'].get('run_index', '')
+        run = self.target_series['bids'].get('run', '')
         bids_name = bids.get_bidsname('', '', self.target_modality, self.target_series, run)
         html_bids_name = get_html_bidsname(bids_name)
 
@@ -1108,7 +1089,7 @@ class EditDialog(QDialog):
 
         # Update the BIDS output name
         self.target_series['bids'] = bids_values
-        run = self.target_series['bids'].get('run_index', '')
+        run = self.target_series['bids'].get('run', '')
         bids_name = bids.get_bidsname('', '', self.target_modality, self.target_series, run)
         html_bids_name = get_html_bidsname(bids_name)
 
@@ -1200,7 +1181,7 @@ if __name__ == "__main__":
                                          Manual editing / inspection of the bidsmap
                                            You can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
                                            text editor. For instance to change the `Options` to your needs or to add a dynamic
-                                           `participant_label` value like `<<PatientID>>`. See ./docs/bidsmap.md for more information."""))
+                                           `participant` value like `<<PatientID>>`. See ./docs/bidsmap.md for more information."""))
 
     parser.add_argument('bidsfolder',           help='The destination folder with the (future) bids data')
     parser.add_argument('-s','--sourcefolder',  help='The source folder containing the raw data. If empty, it is derived from the bidsmap provenance information')

@@ -21,7 +21,7 @@ logger = logging.getLogger('bidscoin')
 
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh', 'pet')
 unknownmodality = 'extra_data'
-bidslabels      = ('acq_label', 'ce_label', 'rec_label', 'task_label', 'echo_index', 'dir_label', 'suffix')   # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
+bidslabels      = ('acq', 'ce', 'rec', 'task', 'echo', 'dir', 'suffix')   # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
 
 
 def setup_logging(log_filename: str) -> logging.Logger:
@@ -684,9 +684,9 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}{_acq}{_ce}{_rec}{_run}{_mod}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            _acq    = add_prefix('_acq-', series['bids']['acq_label']),
-            _ce     = add_prefix('_ce-', series['bids']['ce_label']),
-            _rec    = add_prefix('_rec-', series['bids']['rec_label']),
+            _acq    = add_prefix('_acq-', series['bids']['acq']),
+            _ce     = add_prefix('_ce-', series['bids']['ce']),
+            _rec    = add_prefix('_rec-', series['bids']['rec']),
             _run    = add_prefix('_run-', run),
             _mod    = add_prefix('_mod-', mod),
             suffix  = suffix)
@@ -697,11 +697,11 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}{_echo}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            task    = f"task-{series['bids']['task_label']}",
-            _acq    = add_prefix('_acq-', series['bids']['acq_label']),
-            _rec    = add_prefix('_rec-', series['bids']['rec_label']),
+            task    = f"task-{series['bids']['task']}",
+            _acq    = add_prefix('_acq-', series['bids']['acq']),
+            _rec    = add_prefix('_rec-', series['bids']['rec']),
             _run    = add_prefix('_run-', run),
-            _echo   = add_prefix('_echo-', series['bids']['echo_index']),
+            _echo   = add_prefix('_echo-', series['bids']['echo']),
             suffix  = series['bids']['suffix'])
 
     elif modality == 'dwi':
@@ -710,7 +710,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}{_acq}{_run}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            _acq    = add_prefix('_acq-', series['bids']['acq_label']),
+            _acq    = add_prefix('_acq-', series['bids']['acq']),
             _run    = add_prefix('_run-', run),
             suffix  = series['bids']['suffix'])
 
@@ -722,8 +722,8 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}{_acq}{_dir}{_run}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            _acq    = add_prefix('_acq-', series['bids']['acq_label']),
-            _dir    = add_prefix('_dir-', series['bids']['dir_label']),
+            _acq    = add_prefix('_acq-', series['bids']['acq']),
+            _dir    = add_prefix('_dir-', series['bids']['dir']),
             _run    = add_prefix('_run-', run),
             suffix  = series['bids']['suffix'])
 
@@ -733,7 +733,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}_{task}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            task    = f"task-{series['bids']['task_label']}",
+            task    = f"task-{series['bids']['task']}",
             suffix  = series['bids']['suffix'])
 
     elif modality == 'pet':
@@ -742,9 +742,9 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            task    = f"task-{series['bids']['task_label']}",
-            _acq    = add_prefix('_acq-', series['bids']['acq_label']),
-            _rec    = add_prefix('_rec-', series['bids']['rec_label']),
+            task    = f"task-{series['bids']['task']}",
+            _acq    = add_prefix('_acq-', series['bids']['acq']),
+            _rec    = add_prefix('_rec-', series['bids']['rec']),
             _run    = add_prefix('_run-', run),
             suffix  = series['bids']['suffix'])
 
@@ -754,12 +754,12 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}_{acq}{_ce}{_rec}{_task}{_echo}{_dir}{_run}{_suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            acq     = f"acq-{series['bids']['acq_label']}",
-            _ce     = add_prefix('_ce-', series['bids']['ce_label']),
-            _rec    = add_prefix('_rec-', series['bids']['rec_label']),
-            _task   = add_prefix('_task-',series['bids']['task_label']),
-            _echo   = add_prefix('_echo-', series['bids']['echo_index']),
-            _dir    = add_prefix('_dir-', series['bids']['dir_label']),
+            acq     = f"acq-{series['bids']['acq']}",
+            _ce     = add_prefix('_ce-', series['bids']['ce']),
+            _rec    = add_prefix('_rec-', series['bids']['rec']),
+            _task   = add_prefix('_task-',series['bids']['task']),
+            _echo   = add_prefix('_echo-', series['bids']['echo']),
+            _dir    = add_prefix('_dir-', series['bids']['dir']),
             _run    = add_prefix('_run-', run),
             _suffix = add_prefix('_', series['bids']['suffix']))
 
