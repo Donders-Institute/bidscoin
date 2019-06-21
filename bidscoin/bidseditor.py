@@ -45,8 +45,15 @@ ABOUT_WINDOW_HEIGHT = 140
 INSPECT_WINDOW_WIDTH = 720
 INSPECT_WINDOW_HEIGHT = 340
 
+MAX_NUM_OPTIONS = 3
 MAX_NUM_PROVENANCE_ATTRIBUTES = 2
 MAX_NUM_BIDS_ATTRIBUTES = 10
+
+OPTION_BIDSCOIN_VERSION_DISPLAY = "BIDScoin version"
+OPTION_DCM2NIIX_PATH_DISPLAY = "dcm2niix path"
+OPTION_DCM2NIIX_ARGS_DISPLAY = "dcm2niix args"
+
+DEFAULT_TAB_INDEX = 2
 
 ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "brain.ico")
 
@@ -223,7 +230,8 @@ class MainWindow(QMainWindow):
 
 class Ui_MainWindow(object):
 
-    def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, input_bidsmap, output_bidsmap, template_bidsmap):
+    def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename,
+                input_bidsmap, output_bidsmap, template_bidsmap, selected_tab_index=DEFAULT_TAB_INDEX):
 
         self.has_edit_dialog_open = False
 
@@ -261,7 +269,7 @@ class Ui_MainWindow(object):
         self.tabwidget.setTabText(0, "File browser")
         self.tabwidget.setTabText(1, "Options")
         self.tabwidget.setTabText(2, "BIDS map")
-        self.tabwidget.setCurrentIndex(2)
+        self.tabwidget.setCurrentIndex(selected_tab_index)
 
         self.set_menu_and_status_bar()
 
@@ -342,7 +350,7 @@ class Ui_MainWindow(object):
         self.actionBidsHelp.setShortcut("F2")
 
     def inspect_dicomfile(self, item):
-        """When double clicked, show popu window. """
+        """When double clicked, show popup window. """
         if item.column() == 1:
             row = item.row()
             provenance = self.table.item(row, 5)
@@ -377,9 +385,40 @@ class Ui_MainWindow(object):
         self.file_browser.setObjectName("filebrowser")
         self.tabwidget.addTab(self.file_browser, "")
 
+    def set_cell(self, value, is_editable=False):
+        item = QTableWidgetItem()
+        item.setText(value)
+        if is_editable:
+            item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
+        else:
+            item.setFlags(QtCore.Qt.ItemIsEnabled)
+            item.setForeground(QtGui.QColor(128, 128, 128))
+        return item
+
+    def cell_was_changed(self, row, column):
+        """Option value has been changed. """
+        if column == 1:
+            key = self.table_options.item(row, 0).text()
+            value = self.table_options.item(row, 1).text()
+
+            # Only if cell was actually clicked, update
+            if key != '':
+                # Todo: Validate the user input
+                # value = replace_option_value(value)
+                self.table_options.item(row, 1).setText(value)
+
+                if key == OPTION_BIDSCOIN_VERSION_DISPLAY:
+                    # Convert the string back to a floating point number with 1 decimal
+                    self.output_bidsmap['Options']['version'] = float("{0:.1f}".format(float(value)))
+                elif key == OPTION_DCM2NIIX_PATH_DISPLAY:
+                    self.output_bidsmap['Options']['dcm2niix']['path'] = value
+                elif key == OPTION_DCM2NIIX_ARGS_DISPLAY:
+                    self.output_bidsmap['Options']['dcm2niix']['args'] = value
+                else:
+                    LOGGER.error(f"Invalid option {key}")
+
     def set_tab_options(self):
         """Set the options tab.  """
-
         self.tab2 = QtWidgets.QWidget()
         self.tab2.layout = QVBoxLayout(self.centralwidget)
 
@@ -395,22 +434,110 @@ class Ui_MainWindow(object):
         save_button.setText("Save")
         save_button.setStatusTip("Save Options to disk")
 
+        bidsmap_options = self.output_bidsmap['Options']
+        bidsmap_options_version = str(bidsmap_options['version'])
+        bidsmap_options_dcm2niix_path = bidsmap_options['dcm2niix']['path']
+        bidsmap_options_dcm2niix_args = bidsmap_options['dcm2niix']['args']
+
+        data = [
+            [
+                {
+                    "value": OPTION_BIDSCOIN_VERSION_DISPLAY,
+                    "is_editable": False,
+                    "tooltip_text": None
+                },
+                {
+                    "value": bidsmap_options_version,
+                    "is_editable": True,
+                    "tooltip_text": "BIDScoin version (should correspond with the version in ../bidscoin/version.txt)"
+                },
+            ],
+            [
+                {
+                    "value": OPTION_DCM2NIIX_PATH_DISPLAY,
+                    "is_editable": False,
+                    "tooltip_text": None
+                },
+                {
+                    "value": bidsmap_options_dcm2niix_path,
+                    "is_editable": True,
+                    "tooltip_text": "See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info.\n\nCommand to set the path to dcm2niix (note the semi-colon),\ne.g. module add dcm2niix/1.0.20180622;\nor PATH=/opt/dcm2niix/bin:$PATH;\nor /opt/dcm2niix/bin/\nor '\"C:\\Program Files\\dcm2niix\"' (note the quotes to deal with the whitespace)"
+                },
+            ],
+            [
+                {
+                    "value": OPTION_DCM2NIIX_ARGS_DISPLAY,
+                    "is_editable": False,
+                    "tooltip_text": None
+                },
+                {
+                    "value": bidsmap_options_dcm2niix_args,
+                    "is_editable": True,
+                    "tooltip_text": "See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info.\n\nArgument string that is passed to dcm2niix.\nTip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)"
+                },
+            ]
+        ]
+
+        table = QTableWidget()
+
+        num_rows = MAX_NUM_OPTIONS
+        table.setRowCount(num_rows )
+        table.setColumnCount(2)  # Always two columns (i.e. key, value)
+        table.setMouseTracking(True)
+        row_height = 24
+
+        for i, row in enumerate(data):
+            table.setRowHeight(i, row_height)
+            key = row[0]["value"]
+            for j, element in enumerate(row):
+                value = element.get("value", "")
+                if value == "None":
+                    value = ""
+                is_editable = element.get("is_editable", False)
+                tooltip_text = element.get("tooltip_text", None)
+                item = self.set_cell(value, is_editable=is_editable)
+                table.setItem(i, j, QTableWidgetItem(item))
+                if tooltip_text:
+                    table.item(i, j).setToolTip(tooltip_text)
+                if is_editable:
+                    table.item(i, j).setStatusTip("Click to edit the option")
+
+        horizontal_header = table.horizontalHeader()
+        horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        horizontal_header.setVisible(False)
+
+        vertical_header = table.verticalHeader()
+        vertical_header.setVisible(False)
+
+        table.setAlternatingRowColors(False)
+        table.setShowGrid(False)
+
+        extra_space = 6
+        table_height = num_rows * (row_height + extra_space) + 2 * table.frameWidth()
+        table.setMinimumHeight(table_height)
+        table.setMaximumHeight(table_height)
+
+        self.table_options = table
+        self.table_options.cellChanged.connect(self.cell_was_changed)
+
         hbox = QHBoxLayout()
         hbox.addStretch(1)
         hbox.addWidget(help_button)
         hbox.addWidget(reload_button)
         hbox.addWidget(save_button)
 
+        self.tab2.layout.addWidget(self.table_options)
         self.tab2.layout.addLayout(hbox)
 
-        options = QtWidgets.QWidget()
-        options.setLayout(self.tab2.layout)
-        options.setObjectName("Options")
+        self.options = QtWidgets.QWidget()
+        self.options.setLayout(self.tab2.layout)
+        self.options.setObjectName("Options")
 
-        self.tabwidget.addTab(options, "")
+        self.tabwidget.addTab(self.options, "")
 
         help_button.clicked.connect(self.get_help)
-        reload_button.clicked.connect(self.reload)
+        reload_button.clicked.connect(self.reload_via_options)
         save_button.clicked.connect(self.save_bidsmap_to_file)
 
     def update_list(self, output_bidsmap):
@@ -543,6 +670,18 @@ class Ui_MainWindow(object):
     def get_bids_help(self):
         """Get online help. """
         webbrowser.open(HELP_URL_DEFAULT)
+
+    def reload_via_options(self):
+        """Reset button: reload the original input BIDS map. From the options tab. """
+        self.output_bidsmap, _ = bids.load_bidsmap(self.bidsmap_filename)
+        self.setupUi(self.MainWindow,
+                     self.bidsfolder,
+                     self.sourcefolder,
+                     self.bidsmap_filename,
+                     self.input_bidsmap,
+                     self.output_bidsmap,
+                     self.template_bidsmap,
+                     selected_tab_index=1)
 
     def reload(self):
         """Reset button: reload the original input BIDS map. """
