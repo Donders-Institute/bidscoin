@@ -67,7 +67,7 @@ def version() -> str:
     with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'version.txt')) as fid:
         version = fid.read().strip()
 
-    return version
+    return str(version)
 
 
 def bidsversion() -> str:
@@ -308,7 +308,7 @@ def load_bidsmap(yamlfile: str='', folder: str='') -> (ruamel.yaml, str):
         bidsmap = yaml.load(stream)
 
     # Issue a warning if the version in the bidsmap YAML-file is not the same as the bidscoin version
-    if 'bidscoin' in bidsmap['Options'] and 'version' in bidsmap['Options']['bidscoin']['version']:
+    if 'bidscoin' in bidsmap['Options'] and 'version' in bidsmap['Options']['bidscoin']:
         bidsmapversion = bidsmap['Options']['bidscoin']['version']
     elif 'version' in bidsmap['Options']:
         bidsmapversion = bidsmap['Options']['version']

@@ -435,7 +435,7 @@ class Ui_MainWindow(object):
         save_button.setStatusTip("Save Options to disk")
 
         bidsmap_options = self.output_bidsmap['Options']
-        bidsmap_options_version = str(bidsmap_options['version'])
+        bidsmap_options_bidscoin_version = bidsmap_options['bidscoin']['version']
         bidsmap_options_dcm2niix_path = bidsmap_options['dcm2niix']['path']
         bidsmap_options_dcm2niix_args = bidsmap_options['dcm2niix']['args']
 
@@ -447,7 +447,7 @@ class Ui_MainWindow(object):
                     "tooltip_text": None
                 },
                 {
-                    "value": bidsmap_options_version,
+                    "value": bidsmap_options_bidscoin_version,
                     "is_editable": True,
                     "tooltip_text": "BIDScoin version (should correspond with the version in ../bidscoin/version.txt)"
                 },
