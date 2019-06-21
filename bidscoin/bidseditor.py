@@ -763,7 +763,7 @@ class AboutDialog(QDialog):
         label.setText("BIDS editor")
 
         label_version = QLabel()
-        label_version.setText("v" + str(bids.version()))
+        label_version.setText("version: " + bids.version())
 
         pushButton = QPushButton("OK")
         pushButton.setToolTip("Close dialog")

@@ -57,7 +57,7 @@ def setup_logging(log_filename: str) -> logging.Logger:
     return logger
 
 
-def version() -> float:
+def version() -> str:
     """
     Reads the BIDSCOIN version from the VERSION.TXT file
 
@@ -67,7 +67,7 @@ def version() -> float:
     with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'version.txt')) as fid:
         version = fid.read().strip()
 
-    return float(version)
+    return version
 
 
 def bidsversion() -> str:
@@ -308,10 +308,13 @@ def load_bidsmap(yamlfile: str='', folder: str='') -> (ruamel.yaml, str):
         bidsmap = yaml.load(stream)
 
     # Issue a warning if the version in the bidsmap YAML-file is not the same as the bidscoin version
-    if 'version' not in bidsmap['Options']:
-        bidsmapversion = 'Unknown'
-    else:
+    if 'bidscoin' in bidsmap['Options'] and 'version' in bidsmap['Options']['bidscoin']['version']:
+        bidsmapversion = bidsmap['Options']['bidscoin']['version']
+    elif 'version' in bidsmap['Options']:
         bidsmapversion = bidsmap['Options']['version']
+    else:
+        bidsmapversion = 'Unknown'
+
     if bidsmapversion != version():
         logger.warning(f'BIDScoiner version conflict: {yamlfile} was created using version {bidsmapversion}, but this is version {version()}')
 
