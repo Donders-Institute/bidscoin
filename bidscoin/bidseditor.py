@@ -256,10 +256,10 @@ class Ui_MainWindow(object):
         self.tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.tabwidget.setObjectName("tabwidget")
         self.set_tab_file_browser(sourcefolder)
-        self.set_tab_participant_session()
+        self.set_tab_options()
         self.set_tab_bidsmap()
         self.tabwidget.setTabText(0, "File browser")
-        self.tabwidget.setTabText(1, "Participant session")
+        self.tabwidget.setTabText(1, "Options")
         self.tabwidget.setTabText(2, "BIDS map")
         self.tabwidget.setCurrentIndex(2)
 
@@ -377,30 +377,41 @@ class Ui_MainWindow(object):
         self.file_browser.setObjectName("filebrowser")
         self.tabwidget.addTab(self.file_browser, "")
 
-    def set_tab_participant_session(self):
-        """Set the SOURCE participant session tab.  """
+    def set_tab_options(self):
+        """Set the options tab.  """
 
         self.tab2 = QtWidgets.QWidget()
         self.tab2.layout = QVBoxLayout(self.centralwidget)
 
-        self.reload_button = QtWidgets.QPushButton()
-        self.reload_button.setText("Reload")
-        self.reload_button.setStatusTip("Reload BIDSmap from disk")
-        self.save_button = QtWidgets.QPushButton()
-        self.save_button.setText("Save")
-        self.save_button.setStatusTip("Save BIDSmap to disk")
+        help_button = QtWidgets.QPushButton()
+        help_button.setText("Help")
+        help_button.setStatusTip("Go to the online BIDScoin documentation")
+
+        reload_button = QtWidgets.QPushButton()
+        reload_button.setText("Reload")
+        reload_button.setStatusTip("Reload Options from disk")
+
+        save_button = QtWidgets.QPushButton()
+        save_button.setText("Save")
+        save_button.setStatusTip("Save Options to disk")
+
         hbox = QHBoxLayout()
         hbox.addStretch(1)
-        hbox.addWidget(self.reload_button)
-        hbox.addWidget(self.save_button)
+        hbox.addWidget(help_button)
+        hbox.addWidget(reload_button)
+        hbox.addWidget(save_button)
 
         self.tab2.layout.addLayout(hbox)
 
-        self.participant_session = QtWidgets.QWidget()
-        self.participant_session.setLayout(self.tab2.layout)
-        self.participant_session.setObjectName("participantSession")
+        options = QtWidgets.QWidget()
+        options.setLayout(self.tab2.layout)
+        options.setObjectName("Options")
 
-        self.tabwidget.addTab(self.participant_session, "")
+        self.tabwidget.addTab(options, "")
+
+        help_button.clicked.connect(self.get_help)
+        reload_button.clicked.connect(self.reload)
+        save_button.clicked.connect(self.save_bidsmap_to_file)
 
     def update_list(self, output_bidsmap):
         """ """
@@ -494,20 +505,23 @@ class Ui_MainWindow(object):
 
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        self.help_button = QtWidgets.QPushButton()
-        self.help_button.setText("Help")
-        self.help_button.setStatusTip("Go to the online BIDScoin documentation")
-        self.reload_button = QtWidgets.QPushButton()
-        self.reload_button.setText("Reload")
-        self.reload_button.setStatusTip("Reload the BIDSmap from disk")
-        self.save_button = QtWidgets.QPushButton()
-        self.save_button.setText("Save")
-        self.save_button.setStatusTip("Save the BIDSmap to disk")
+        help_button = QtWidgets.QPushButton()
+        help_button.setText("Help")
+        help_button.setStatusTip("Go to the online BIDScoin documentation")
+
+        reload_button = QtWidgets.QPushButton()
+        reload_button.setText("Reload")
+        reload_button.setStatusTip("Reload the BIDSmap from disk")
+
+        save_button = QtWidgets.QPushButton()
+        save_button.setText("Save")
+        save_button.setStatusTip("Save the BIDSmap to disk")
+
         hbox = QHBoxLayout()
         hbox.addStretch(1)
-        hbox.addWidget(self.help_button)
-        hbox.addWidget(self.reload_button)
-        hbox.addWidget(self.save_button)
+        hbox.addWidget(help_button)
+        hbox.addWidget(reload_button)
+        hbox.addWidget(save_button)
 
         self.tab3.layout.addWidget(self.table)
         self.tab3.layout.addLayout(hbox)
@@ -518,9 +532,9 @@ class Ui_MainWindow(object):
 
         self.tabwidget.addTab(self.file_sample_listing, "")
 
-        self.help_button.clicked.connect(self.get_help)
-        self.reload_button.clicked.connect(self.reload)
-        self.save_button.clicked.connect(self.save_bidsmap_to_file)
+        help_button.clicked.connect(self.get_help)
+        reload_button.clicked.connect(self.reload)
+        save_button.clicked.connect(self.save_bidsmap_to_file)
 
     def get_help(self):
         """Get online help. """
@@ -674,17 +688,18 @@ class EditDialog(QDialog):
         self.set_bids_values_section()
         self.set_bids_name_section()
 
-        self.help_button = QtWidgets.QPushButton()
-        self.help_button.setText("Help")
-        self.cancel_button = QtWidgets.QPushButton()
-        self.cancel_button.setText("Cancel")
-        self.ok_button = QtWidgets.QPushButton()
-        self.ok_button.setText("OK")
+        help_button = QtWidgets.QPushButton()
+        help_button.setText("Help")
+        cancel_button = QtWidgets.QPushButton()
+        cancel_button.setText("Cancel")
+        ok_button = QtWidgets.QPushButton()
+        ok_button.setText("OK")
+
         hbox = QHBoxLayout()
         hbox.addStretch(1)
-        hbox.addWidget(self.help_button)
-        hbox.addWidget(self.cancel_button)
-        hbox.addWidget(self.ok_button)
+        hbox.addWidget(help_button)
+        hbox.addWidget(cancel_button)
+        hbox.addWidget(ok_button)
 
         groupbox1 = QGroupBox(SOURCE)
         layout1 = QVBoxLayout()
@@ -712,9 +727,10 @@ class EditDialog(QDialog):
 
         self.view_provenance.cellDoubleClicked.connect(self.inspect_dicomfile)
         self.view_bids.cellChanged.connect(self.cell_was_changed)
-        self.help_button.clicked.connect(self.get_help)
-        self.cancel_button.clicked.connect(self.reject)
-        self.ok_button.clicked.connect(self.update_series)
+
+        help_button.clicked.connect(self.get_help)
+        cancel_button.clicked.connect(self.reject)
+        ok_button.clicked.connect(self.update_series)
 
         top_widget.setLayout(top_layout)
         scrollArea.setWidget(top_widget)
