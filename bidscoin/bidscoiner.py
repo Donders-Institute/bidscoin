@@ -46,10 +46,10 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     TE = [None, None]
 
     # Get a valid BIDS subject identifier from the (first) dicom-header or from the session source folder
-    if bidsmap['DICOM']['participant_label'] and bidsmap['DICOM']['participant_label'].startswith('<<') and bidsmap['DICOM']['participant_label'].endswith('>>'):
-        subid = bids.get_dicomfield(bidsmap['DICOM']['participant_label'][2:-2], bids.get_dicomfile(bids.lsdirs(session)[0]))
-    elif bidsmap['DICOM']['participant_label']:
-        subid = bidsmap['DICOM']['participant_label']
+    if bidsmap['DICOM']['participant'] and bidsmap['DICOM']['participant'].startswith('<<') and bidsmap['DICOM']['participant'].endswith('>>'):
+        subid = bids.get_dicomfield(bidsmap['DICOM']['participant'][2:-2], bids.get_dicomfile(bids.lsdirs(session)[0]))
+    elif bidsmap['DICOM']['participant']:
+        subid = bidsmap['DICOM']['participant']
     else:
         subid = session.rsplit(os.sep + subprefix, 1)[1].split(os.sep + sesprefix, 1)[0]
     subid = 'sub-' + bids.cleanup_value(subid.lstrip(subprefix))
@@ -58,10 +58,10 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         return
 
     # Get a valid or empty BIDS session identifier from the (first) dicom-header or from the session source folder
-    if bidsmap['DICOM']['session_label'] and bidsmap['DICOM']['session_label'].startswith('<<') and bidsmap['DICOM']['session_label'].endswith('>>'):
-        sesid = bids.get_dicomfield(bidsmap['DICOM']['session_label'][2:-2], bids.get_dicomfile(bids.lsdirs(session)[0]))
-    elif bidsmap['DICOM']['session_label']:
-        sesid = bidsmap['DICOM']['session_label']
+    if bidsmap['DICOM']['session'] and bidsmap['DICOM']['session'].startswith('<<') and bidsmap['DICOM']['session'].endswith('>>'):
+        sesid = bids.get_dicomfield(bidsmap['DICOM']['session'][2:-2], bids.get_dicomfile(bids.lsdirs(session)[0]))
+    elif bidsmap['DICOM']['session']:
+        sesid = bidsmap['DICOM']['session']
     elif os.sep + sesprefix in session:
         sesid = session.rsplit(os.sep + sesprefix)[1]
     else:
@@ -91,16 +91,14 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         # Get the cleaned-up bids labels from a dicom-file and bidsmap
         dicomfile = bids.get_dicomfile(seriesfolder)
         if not dicomfile: continue
-        result   = bids.get_matching_dicomseries(dicomfile, bidsmap)
-        series   = result['series']
-        modality = result['modality']
+        series, modality = bids.get_matching_dicomseries(dicomfile, bidsmap)
 
         # Create the BIDS session/modality folder
         bidsmodality = os.path.join(bidsses, modality)
         os.makedirs(bidsmodality, exist_ok=True)
 
         # Compose the BIDS filename using the bids labels and run-index
-        runindex = series['bids']['run_index']
+        runindex = series['bids']['run']
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.get_bidsname(subid, sesid, modality, series, runindex[2:-2])
             bidsname = bids.increment_runindex(bidsmodality, bidsname)
@@ -220,7 +218,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                     data = json.load(json_fid)
                 if not 'TaskName' in data:
                     LOGGER.info('Adding TaskName to: ' + jsonfile)
-                    data['TaskName'] = series['bids']['task_label']
+                    data['TaskName'] = series['bids']['task']
                     with open(jsonfile, 'w') as json_fid:
                         json.dump(data, json_fid, indent=4)
 

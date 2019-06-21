@@ -19,18 +19,18 @@ Options:
 # --------------------------------------------------------------------------------
 # General options
 # --------------------------------------------------------------------------------
-  version: 2.0                                    # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
-  dcm2niix:                                       # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
-    path: module add dcm2niix;                    # Command to set the path to dcm2niix (note the semi-colon), e.g. module add dcm2niix/1.0.20180622; or PATH=/opt/dcm2niix/bin:$PATH; or /opt/dcm2niix/bin/ or '"C:\Program Files\dcm2niix\"' (note the quotes to deal with the whitespace)
-    args: -b y -z y -i n                          # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
+  version: 2.0                                  # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
+  dcm2niix:                                     # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
+    path: module add dcm2niix;                  # Command to set the path to dcm2niix (note the semi-colon), e.g. module add dcm2niix/1.0.20180622; or PATH=/opt/dcm2niix/bin:$PATH; or /opt/dcm2niix/bin/ or '"C:\Program Files\dcm2niix\"' (note the quotes to deal with the whitespace)
+    args: -b y -z y -i n                        # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
 
 
 DICOM:
 # --------------------------------------------------------------------------------
 # DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  participant_label: ~                            # A DICOM attribute that is used as participant_label instead of the subject-label from the sourcefolder, e.g. <<PatientID>>
-  session_label: ~                                # A DICOM attribute that is used as session_label instead of the session-label from the sourcefolder, e.g. <<StudyID>>
+  participant: ~                                # A DICOM attribute that is used as participant-label instead of the subject-label from the sourcefolder, e.g. <<PatientID>>
+  session: ~                                    # A DICOM attribute that is used as session-label instead of the session-label from the sourcefolder, e.g. <<StudyID>>
   anat:       # ----------------------- All anatomical series --------------------
   - provenance: ~
     attributes: &anatattributes
@@ -49,12 +49,12 @@ DICOM:
       ProtocolName: ~
       PhaseEncodingDirection: ~
     bids: &anatbids
-      acq_label: <SeriesDescription>
-      rec_label: ~
-      run_index: <<1>>
-      mod_label: ~
+      acq: <SeriesDescription>
+      rec: ~
+      run: <<1>>
+      mod: ~
       suffix: T1w
-      ce_label: ~
+      ce: ~
   - provenance: ~
     attributes: *anatattributes
     bids:
@@ -149,11 +149,11 @@ DICOM:
       ProtocolName: ~
       PhaseEncodingDirection: ~
     bids: &funcbids
-      task_label: <SeriesDescription>
-      acq_label: ~
-      rec_label: ~
-      run_index: <<1>>
-      echo_index: <EchoNumbers>
+      task: <SeriesDescription>
+      acq: ~
+      rec: ~
+      run: <<1>>
+      echo: <EchoNumbers>
       suffix: bold
   - provenance: ~
     attributes: *funcattributes
@@ -194,8 +194,8 @@ DICOM:
       ProtocolName: ~
       PhaseEncodingDirection: ~
     bids: &dwibids
-      acq_label: <SeriesDescription>
-      run_index: <<1>>
+      acq: <SeriesDescription>
+      run: <<1>>
       suffix: dwi
   - provenance: ~
     attributes: *dwiattributes
@@ -221,9 +221,9 @@ DICOM:
       ProtocolName: ~
       PhaseEncodingDirection: ~
     bids: &fmapbids
-      acq_label: <SeriesDescription>
-      run_index: <<1>>
-      dir_label: ~
+      acq: <SeriesDescription>
+      run: <<1>>
+      dir: ~
       suffix: magnitude
       IntendedFor: ~
   - provenance: ~
@@ -260,7 +260,7 @@ DICOM:
     attributes: *fmapattributes
     bids:
       <<: *fmapbids
-      dir_label: <InPlanePhaseEncodingDirection>
+      dir: <InPlanePhaseEncodingDirection>
   - provenance: ~
     attributes: *fmapattributes
     bids:
@@ -311,10 +311,10 @@ DICOM:
       Columns: ~
       ImageType: ~
     bids: &petbids
-      task_label: <SeriesDescription>
-      acq_label: <Radiopharmaceutical>
-      rec_label: ~
-      run_index: <<1>>
+      task: <SeriesDescription>
+      acq: <Radiopharmaceutical>
+      rec: ~
+      run: <<1>>
       suffix: pet
 
   extra_data: # ----------------------- All extra data ---------------------------
@@ -333,15 +333,15 @@ DICOM:
       ProtocolName: ~
       PhaseEncodingDirection: ~
     bids:
-      acq_label: <SeriesDescription>
-      rec_label: ~
-      ce_label: ~
-      task_label: ~
-      echo_index: ~
-      dir_label: ~
-      run_index: <<1>>
+      acq: <SeriesDescription>
+      rec: ~
+      ce: ~
+      task: ~
+      echo: ~
+      dir: ~
+      run: <<1>>
       suffix: ~
-      mod_label: ~
+      mod: ~
 
 
 PAR: ~
@@ -368,22 +368,22 @@ FileSystem:
 # to the BIDS labels; Special substitutions can be performed using python's
 # Format Specification Mini-Language)
 # --------------------------------------------------------------------------------
-  participant_label: ~
-  session_label: ~
+  participant: ~
+  session: ~
   anat:       # ----------------------- All anatomical series --------------------
   - attributes: &anatattributes_file
       FolderName: ~
       FileName: ~
       FileExt: ~
     bids: &anatbids_file
-      acq_label: <FileName>
-      rec_label: ~
-      ce_label: ~
-      task_label: ~
-      echo_index: ~
-      dir_label: ~
-      run_index: <<1>>
-      mod_label: ~
+      acq: <FileName>
+      rec: ~
+      ce: ~
+      task: ~
+      echo: ~
+      dir: ~
+      run: <<1>>
+      mod: ~
       suffix: T1w
   - attributes: *anatattributes_file
     bids:
@@ -452,11 +452,11 @@ FileSystem:
       FileName: ~
       FileExt: ~
     bids: &funcbids_file
-      task_label: <FileName>
-      acq_label: ~
-      rec_label: ~
-      run_index: <<1>>
-      echo_index: ~
+      task: <FileName>
+      acq: ~
+      rec: ~
+      run: <<1>>
+      echo: ~
       suffix: bold
   - attributes: *funcattributes_file
     bids:
@@ -469,12 +469,12 @@ FileSystem:
   - attributes: *funcattributes_file
     bids:
       <<: *funcbids_file
-      recording_label: <FileName>
+      recording: <FileName>
       suffix: physio
   - attributes: *funcattributes_file
     bids:
       <<: *funcbids_file
-      recording_label: <FileName>
+      recording: <FileName>
       suffix: stim
 
   dwi:        # ----------------------- All diffusion series ---------------------
@@ -483,8 +483,8 @@ FileSystem:
       FileName: ~
       FileExt: ~
     bids: &dwibids_file
-      acq_label: <FileName>
-      run_index: <<1>>
+      acq: <FileName>
+      run: <<1>>
       suffix: dwi
 
   fmap:       # ----------------------- All fieldmap series ----------------------
@@ -493,9 +493,9 @@ FileSystem:
       FileName: ~
       FileExt: ~
     bids: &fmapbids_file
-      acq_label: <FileName>
-      run_index: <<1>>
-      dir_label: ~
+      acq: <FileName>
+      run: <<1>>
+      dir: ~
       suffix: magnitude1
       IntendedFor: ~
   - attributes: *fmapattributes_file
@@ -533,7 +533,7 @@ FileSystem:
       FileName: ~
       FileExt: ~
     bids: &behbids_file
-      task_label: <FileName>
+      task: <FileName>
       suffix: events
   - attributes: *behattributes_file
     bids:
@@ -555,15 +555,15 @@ FileSystem:
       FileName: ~
       FileExt: ~
     bids:
-      acq_label: <SeriesDescription>
-      rec_label: ~
-      ce_label: ~
-      task_label: ~
-      echo_index: ~
-      dir_label: ~
-      run_index: <<1>>
+      acq: <SeriesDescription>
+      rec: ~
+      ce: ~
+      task: ~
+      echo: ~
+      dir: ~
+      run: <<1>>
       suffix: ~
-      mod_label: ~
+      mod: ~
 
 
 PlugIn: ~
