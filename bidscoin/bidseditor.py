@@ -283,6 +283,9 @@ class Ui_MainWindow(object):
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
 
+        subid = ''
+        sesid = ''
+
         idx = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
             series_list = self.output_bidsmap[SOURCE][modality]
@@ -292,7 +295,7 @@ class Ui_MainWindow(object):
                 provenance = series['provenance']
                 provenance_file = os.path.basename(provenance)
                 run = series['bids'].get('run', '')
-                bids_name = bids.get_bidsname('', '', modality, series, run)
+                bids_name = bids.get_bidsname(subid, sesid, modality, series, run)
 
                 item_id = QTableWidgetItem(str(idx + 1))
                 item_provenance_file = QTableWidgetItem(provenance_file)
@@ -390,6 +393,9 @@ class Ui_MainWindow(object):
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
 
+        subid = ''
+        sesid = ''
+
         idx = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
             series_list = self.output_bidsmap[SOURCE][modality]
@@ -399,7 +405,7 @@ class Ui_MainWindow(object):
                 provenance = series['provenance']
                 provenance_file = os.path.basename(provenance)
                 run = series['bids'].get('run', '')
-                bids_name = bids.get_bidsname('', '', modality, series, run)
+                bids_name = bids.get_bidsname(subid, sesid, modality, series, run)
 
                 item_id = QTableWidgetItem(str(idx + 1))
                 item_provenance_file = QTableWidgetItem(provenance_file)
@@ -810,9 +816,11 @@ class EditDialog(QDialog):
                 self.view_bids.item(row, 1).setText(value)
                 self.target_series['bids'][key] = value
 
+                subid = ''
+                sesid = ''
                 series = self.target_series
                 run = series['bids'].get('run', '')
-                bids_name = bids.get_bidsname('', '', self.target_modality, series, run)
+                bids_name = bids.get_bidsname(subid, sesid, self.target_modality, series, run)
                 html_bids_name = get_html_bidsname(bids_name)
 
                 self.view_bids_name.clear()
@@ -1006,8 +1014,10 @@ class EditDialog(QDialog):
 
     def set_bids_name_section(self):
         """Set non-editable BIDS output name section. """
+        subid = ''
+        sesid = ''
         run = self.target_series['bids'].get('run', '')
-        bids_name = bids.get_bidsname('', '', self.target_modality, self.target_series, run)
+        bids_name = bids.get_bidsname(subid, sesid, self.target_modality, self.target_series, run)
         html_bids_name = get_html_bidsname(bids_name)
 
         self.label_bids_name = QLabel()
@@ -1073,8 +1083,10 @@ class EditDialog(QDialog):
 
         # Update the BIDS output name
         self.target_series['bids'] = bids_values
+        subid = ''
+        sesid = ''
         run = self.target_series['bids'].get('run', '')
-        bids_name = bids.get_bidsname('', '', self.target_modality, self.target_series, run)
+        bids_name = bids.get_bidsname(subid, sesid, self.target_modality, self.target_series, run)
         html_bids_name = get_html_bidsname(bids_name)
 
         self.view_bids_name.clear()
@@ -1089,8 +1101,10 @@ class EditDialog(QDialog):
 
         # Update the BIDS output name
         self.target_series['bids'] = bids_values
+        subid = ''
+        sesid = ''
         run = self.target_series['bids'].get('run', '')
-        bids_name = bids.get_bidsname('', '', self.target_modality, self.target_series, run)
+        bids_name = bids.get_bidsname(subid, sesid, self.target_modality, self.target_series, run)
         html_bids_name = get_html_bidsname(bids_name)
 
         self.view_bids_name.clear()

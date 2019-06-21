@@ -580,17 +580,19 @@ def append_series(bidsmap: dict, source: str, modality: str, series: dict) -> di
     return bidsmap
 
 
-def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> dict:
+def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
     """
     Find the series in the bidsmap with dicom attributes that match with the dicom file. Then update the (dynamic) bids values (values are cleaned-up to be BIDS-valid)
 
     :param dicomfile:   The full pathname of the dicom-file
     :param bidsmap:     Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
-    :return:            The matching and filled-in series item and modality (NB: not run_index) from the bidsmap {'series': series, 'modality': modality}
+    :return:            The matching and filled-in series item and modality (NB: not run_index) from the bidsmap (series, modality)
     """
 
     # TODO: generalize for non-DICOM (dicomfile -> file)?
-    source = 'DICOM'
+    source   = 'DICOM'
+    series_  = None
+    modality = None
 
     # Loop through all bidsmodalities and series; all info goes into series_
     for modality in bidsmodalities + (unknownmodality,):
@@ -632,11 +634,12 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> dict:
             if match:
                 # TODO: check if there are more matches (i.e. conflicts)
                 series_['provenance'] = dicomfile
-                return {'series': series_, 'modality': modality}
+                return series_, modality
 
     # We don't have a match (all tests failed, so modality should be the last one, i.e. unknownmodality)
     series_['provenance'] = dicomfile
-    return {'series': series_, 'modality': modality}
+
+    return series_, modality
 
 
 def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='', subprefix: str='sub-', sesprefix: str='ses-') -> str:

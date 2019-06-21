@@ -37,9 +37,7 @@ def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict) -> dict:
         return bidsmap
 
     # Get the matching series
-    result   = bids.get_matching_dicomseries(dicomfile, heuristics)
-    series   = result['series']
-    modality = result['modality']
+    series, modality = bids.get_matching_dicomseries(dicomfile, heuristics)
 
     # Copy the filled-in attributes series over to the output bidsmap
     if not bids.exist_series(bidsmap, 'DICOM', modality, series):

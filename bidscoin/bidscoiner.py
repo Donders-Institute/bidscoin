@@ -91,9 +91,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         # Get the cleaned-up bids labels from a dicom-file and bidsmap
         dicomfile = bids.get_dicomfile(seriesfolder)
         if not dicomfile: continue
-        result   = bids.get_matching_dicomseries(dicomfile, bidsmap)
-        series   = result['series']
-        modality = result['modality']
+        series, modality = bids.get_matching_dicomseries(dicomfile, bidsmap)
 
         # Create the BIDS session/modality folder
         bidsmodality = os.path.join(bidsses, modality)
