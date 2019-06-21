@@ -456,6 +456,8 @@ class Ui_MainWindow(object):
 
                 self.table.item(idx, 1).setToolTip(os.path.dirname(provenance))
                 self.table.item(idx, 1).setStatusTip('Double-click to inspect the header information')
+                self.table.item(idx, 2).setFlags(QtCore.Qt.ItemIsEnabled)
+                self.table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
 
                 self.button_select = QPushButton('Edit')
                 if modality == bids.unknownmodality:
