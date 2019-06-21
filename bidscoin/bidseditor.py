@@ -65,7 +65,7 @@ HELP_URLS = {
 }
 
 
-def update_bidsmap(source_bidsmap, source_modality, source_index, target_modality, target_series):
+def update_bidsmap(source_bidsmap, target_bidsmap, source_modality, source_index, target_modality, target_series):
     """Update the BIDS map:
     1. Remove the source series from the source modality section
     2. Start new series dictionary and store key values without comments and references
@@ -76,8 +76,6 @@ def update_bidsmap(source_bidsmap, source_modality, source_index, target_modalit
 
     if not target_modality in bids.bidsmodalities + (bids.unknownmodality,):
         raise ValueError(f"invalid modality '{target_modality}'")
-
-    target_bidsmap = copy.deepcopy(source_bidsmap)
 
     # First check if the target series already exists.    TODO: figure out what to do with this situation
     if source_modality != target_modality and bids.exist_series(target_bidsmap, SOURCE, target_modality, target_series):
@@ -225,7 +223,7 @@ class MainWindow(QMainWindow):
 
 class Ui_MainWindow(object):
 
-    def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, bidsmap, output_bidsmap, template_bidsmap):
+    def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, input_bidsmap, output_bidsmap, template_bidsmap):
 
         self.has_edit_dialog_open = False
 
@@ -234,12 +232,12 @@ class Ui_MainWindow(object):
         self.bidsfolder = bidsfolder
         self.sourcefolder = sourcefolder
         self.bidsmap_filename = bidsmap_filename
-        self.bidsmap = bidsmap
+        self.input_bidsmap = input_bidsmap
         self.output_bidsmap = output_bidsmap
         self.template_bidsmap = template_bidsmap
 
         # Make sure we have the correct index mapping for the first edit
-        self.index_mapping = get_index_mapping(bidsmap)
+        self.index_mapping = get_index_mapping(input_bidsmap)
 
         self.MainWindow.setObjectName("MainWindow")
         self.MainWindow.resize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
@@ -271,7 +269,7 @@ class Ui_MainWindow(object):
         """ """
         num_files = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
-            series_list = self.bidsmap[SOURCE][modality]
+            series_list = self.input_bidsmap[SOURCE][modality]
             if not series_list:
                 continue
             for _ in series_list:
@@ -285,9 +283,6 @@ class Ui_MainWindow(object):
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
 
-        subid = ''
-        sesid = ''
-
         idx = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
             series_list = self.output_bidsmap[SOURCE][modality]
@@ -297,6 +292,9 @@ class Ui_MainWindow(object):
                 provenance = series['provenance']
                 provenance_file = os.path.basename(provenance)
                 run = series['bids'].get('run', '')
+
+                subid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['participant'], series['provenance'])
+                sesid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['session'], series['provenance'])
                 bids_name = bids.get_bidsname(subid, sesid, modality, series, run)
 
                 item_id = QTableWidgetItem(str(idx + 1))
@@ -332,9 +330,9 @@ class Ui_MainWindow(object):
         self.table.setHorizontalHeaderLabels(['', 'DICOM input sample', 'BIDS modality', 'BIDS output name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
 
         vertical_header = self.table.verticalHeader()
@@ -402,7 +400,7 @@ class Ui_MainWindow(object):
         """Set the SOURCE file sample listing tab.  """
         num_files = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
-            series_list = self.bidsmap[SOURCE][modality]
+            series_list = self.input_bidsmap[SOURCE][modality]
             if not series_list:
                 continue
             for _ in series_list:
@@ -420,9 +418,6 @@ class Ui_MainWindow(object):
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
 
-        subid = ''
-        sesid = ''
-
         idx = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
             series_list = self.output_bidsmap[SOURCE][modality]
@@ -432,6 +427,8 @@ class Ui_MainWindow(object):
                 provenance = series['provenance']
                 provenance_file = os.path.basename(provenance)
                 run = series['bids'].get('run', '')
+                subid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['participant'], series['provenance'])
+                sesid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['session'], series['provenance'])
                 bids_name = bids.get_bidsname(subid, sesid, modality, series, run)
 
                 item_id = QTableWidgetItem(str(idx + 1))
@@ -467,9 +464,9 @@ class Ui_MainWindow(object):
         self.table.setHorizontalHeaderLabels(['', 'DICOM input sample', 'BIDS modality', 'BIDS output name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
         self.table.setColumnHidden(5, True)
 
@@ -532,7 +529,7 @@ class Ui_MainWindow(object):
                      self.bidsfolder,
                      self.sourcefolder,
                      self.bidsmap_filename,
-                     self.bidsmap,
+                     self.input_bidsmap,
                      self.output_bidsmap,
                      self.template_bidsmap)
 
@@ -705,16 +702,16 @@ class EditDialog(QDialog):
 
     got_sample = QtCore.pyqtSignal(dict)
 
-    def __init__(self, file_index, index, modality, output_bidsmap, template_bidsmap):
+    def __init__(self, file_index, index, modality, source_bidsmap, template_bidsmap):
         QDialog.__init__(self)
 
-        self.source_bidsmap = copy.deepcopy(output_bidsmap)         # TODO: Check if deepcopy is needed
+        self.source_bidsmap = source_bidsmap
         self.source_file_index = file_index
         self.source_index = index
         self.source_modality = modality
         self.source_series = self.source_bidsmap[SOURCE][modality][index]
 
-        self.target_bidsmap = copy.deepcopy(output_bidsmap)
+        self.target_bidsmap = copy.deepcopy(source_bidsmap)
         self.target_file_index = file_index # Stays the same
         self.target_index = index # To be updated, depends on target modality
         self.target_modality = modality
@@ -794,7 +791,7 @@ class EditDialog(QDialog):
         finish = QtWidgets.QAction(self)
         finish.triggered.connect(self.closeEvent)
 
-    def get_help(self, event):
+    def get_help(self):
         """Open web page for help. """
         help_url = HELP_URLS.get(self.target_modality, HELP_URL_DEFAULT)
         webbrowser.open(help_url)
@@ -812,6 +809,7 @@ class EditDialog(QDialog):
     def update_series(self):
         """Save the changes. """
         self.target_bidsmap = update_bidsmap(self.source_bidsmap,
+                                             self.target_bidsmap,
                                              self.source_modality,
                                              self.source_index,
                                              self.target_modality,
@@ -843,8 +841,8 @@ class EditDialog(QDialog):
                 self.view_bids.item(row, 1).setText(value)
                 self.target_series['bids'][key] = value
 
-                subid = ''
-                sesid = ''
+                subid = bids.replace_bidsvalue(self.target_bidsmap[SOURCE]['participant'], self.target_series['provenance'])
+                sesid = bids.replace_bidsvalue(self.target_bidsmap[SOURCE]['session'], self.target_series['provenance'])
                 series = self.target_series
                 run = series['bids'].get('run', '')
                 bids_name = bids.get_bidsname(subid, sesid, self.target_modality, series, run)
@@ -1041,8 +1039,8 @@ class EditDialog(QDialog):
 
     def set_bids_name_section(self):
         """Set non-editable BIDS output name section. """
-        subid = ''
-        sesid = ''
+        subid = bids.replace_bidsvalue(self.target_bidsmap[SOURCE]['participant'], self.target_series['provenance'])
+        sesid = bids.replace_bidsvalue(self.target_bidsmap[SOURCE]['session'], self.target_series['provenance'])
         run = self.target_series['bids'].get('run', '')
         bids_name = bids.get_bidsname(subid, sesid, self.target_modality, self.target_series, run)
         html_bids_name = get_html_bidsname(bids_name)
@@ -1110,8 +1108,8 @@ class EditDialog(QDialog):
 
         # Update the BIDS output name
         self.target_series['bids'] = bids_values
-        subid = ''
-        sesid = ''
+        subid = bids.replace_bidsvalue(self.target_bidsmap[SOURCE]['participant'], self.target_series['provenance'])
+        sesid = bids.replace_bidsvalue(self.target_bidsmap[SOURCE]['session'], self.target_series['provenance'])
         run = self.target_series['bids'].get('run', '')
         bids_name = bids.get_bidsname(subid, sesid, self.target_modality, self.target_series, run)
         html_bids_name = get_html_bidsname(bids_name)
@@ -1128,8 +1126,8 @@ class EditDialog(QDialog):
 
         # Update the BIDS output name
         self.target_series['bids'] = bids_values
-        subid = ''
-        sesid = ''
+        subid = bids.replace_bidsvalue(self.target_bidsmap[SOURCE]['participant'], self.target_series['provenance'])
+        sesid = bids.replace_bidsvalue(self.target_bidsmap[SOURCE]['session'], self.target_series['provenance'])
         run = self.target_series['bids'].get('run', '')
         bids_name = bids.get_bidsname(subid, sesid, self.target_modality, self.target_series, run)
         html_bids_name = get_html_bidsname(bids_name)
