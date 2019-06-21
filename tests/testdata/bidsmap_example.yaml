@@ -19,7 +19,8 @@ Options:
 # --------------------------------------------------------------------------------
 # General options
 # --------------------------------------------------------------------------------
-  version: 2.0                                    # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
+  bidscoin:
+    version: '2.0'                                # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
   dcm2niix:                                       # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
     path: module add dcm2niix;                    # Command to set the path to dcm2niix (note the semi-colon), e.g. module add dcm2niix/1.0.20180622; or PATH=/opt/dcm2niix/bin:$PATH; or /opt/dcm2niix/bin/ or '"C:\Program Files\dcm2niix\"' (note the quotes to deal with the whitespace)
     args: -b y -z y -i n                          # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
@@ -29,8 +30,8 @@ DICOM:
 # --------------------------------------------------------------------------------
 # DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  participant_label:                              # A <<DICOM attribute>> that is used as participant_label instead of the subject-label from the sourcefolder
-  session_label:                                  # A <<DICOM attribute>> that is used as session_label instead of the session-label from the sourcefolder
+  participant:                              # A <<DICOM attribute>> that is used as participant instead of the subject-label from the sourcefolder
+  session:                                  # A <<DICOM attribute>> that is used as session instead of the session-label from the sourcefolder
   anat:       # ----------------------- All anatomical series --------------------
   func:       # ----------------------- All functional series --------------------
   - provenance: /home/tg/rutvdee/bidscoin/raw/sub-P002/ses-mri01/02_localizer AANGEPAST
@@ -49,15 +50,15 @@ DICOM:
       ProtocolName: localizer AANGEPAST 11 SLICES
       PhaseEncodingDirection:
     bids:
-      task_label: localizerAANGEPAST11SLICES
-      acq_label: localizerAANGEPAST11SLICES
-      rec_label: ''
-      run_index: <<1>>
-      echo_index: '1'
+      task: localizerAANGEPAST11SLICES
+      acq: localizerAANGEPAST11SLICES
+      rec: ''
+      run: <<1>>
+      echo: '1'
       suffix: bold
-      modality_label: ''
-      ce_label: ''
-      dir_label: ''
+      modality: ''
+      ce: ''
+      dir: ''
   dwi:        # ----------------------- All diffusion series ---------------------
   fmap:       # ----------------------- All fieldmap series ----------------------
   beh:        # ----------------------- All behavioural data ---------------------
@@ -78,16 +79,16 @@ DICOM:
       ProtocolName: Stoptaak_ep2d_bold_nomoco
       PhaseEncodingDirection:
     bids:
-      acq_label: Stoptaakep2dboldnomoco
-      rec_label:
-      ce_label:
-      task_label:
-      echo_index:
-      dir_label:
-      run_index: <<1>>
+      acq: Stoptaakep2dboldnomoco
+      rec:
+      ce:
+      task:
+      echo:
+      dir:
+      run: <<1>>
       suffix:
-      mod_label:
-      modality_label:
+      mod:
+      modality:
   - provenance: /home/tg/rutvdee/bidscoin/raw/sub-P002/ses-mri01/04_t1_mpr_sag_p2_iso_1/M109.MR.WUR_BRAIN_ADHD.0004.0001.2018.03.01.13.05.10.140625.104364139.IMA
     attributes:
       SeriesDescription: t1_mpr_sag_p2_iso_1
@@ -103,16 +104,16 @@ DICOM:
       ProtocolName: t1_mpr_sag_p2_iso_1
       PhaseEncodingDirection:
     bids:
-      acq_label: t1mprsagp2iso1
-      rec_label:
-      ce_label:
-      task_label:
-      echo_index:
-      dir_label:
-      run_index: <<1>>
+      acq: t1mprsagp2iso1
+      rec:
+      ce:
+      task:
+      echo:
+      dir:
+      run: <<1>>
       suffix:
-      mod_label:
-      modality_label:
+      mod:
+      modality:
   - provenance: /home/tg/rutvdee/bidscoin/raw/sub-P002/ses-mri01/05_Flanker_ep2d_bold_nomoco/M109.MR.WUR_BRAIN_ADHD.0005.0001.2018.03.01.13.05.10.140625.104368237.IMA
     attributes:
       SeriesDescription: Flanker_ep2d_bold_nomoco
@@ -128,16 +129,16 @@ DICOM:
       ProtocolName: Flanker_ep2d_bold_nomoco
       PhaseEncodingDirection:
     bids:
-      acq_label: Flankerep2dboldnomoco
-      rec_label:
-      ce_label:
-      task_label:
-      echo_index:
-      dir_label:
-      run_index: <<1>>
+      acq: Flankerep2dboldnomoco
+      rec:
+      ce:
+      task:
+      echo:
+      dir:
+      run: <<1>>
       suffix:
-      mod_label:
-      modality_label:
+      mod:
+      modality:
   - provenance: /home/tg/rutvdee/bidscoin/raw/sub-P002/ses-mri02/07_t1_fl3d_sag_p3_iso_1/M005.MR.WUR_BRAIN_ADHD.0007.0001.2018.04.12.13.00.48.734375.108749947.IMA
     attributes:
       SeriesDescription: t1_fl3d_sag_p3_iso_1
@@ -153,16 +154,16 @@ DICOM:
       ProtocolName: t1_fl3d_sag_p3_iso_1
       PhaseEncodingDirection:
     bids:
-      acq_label: t1fl3dsagp3iso1
-      rec_label:
-      ce_label:
-      task_label:
-      echo_index:
-      dir_label:
-      run_index: <<1>>
+      acq: t1fl3dsagp3iso1
+      rec:
+      ce:
+      task:
+      echo:
+      dir:
+      run: <<1>>
       suffix:
-      mod_label:
-      modality_label:
+      mod:
+      modality:
 PAR:
 # --------------------------------------------------------------------------------
 # PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
@@ -187,8 +188,8 @@ FileSystem:
 # to the BIDS labels; Special substitutions can be performed using python's
 # Format Specification Mini-Language)
 # --------------------------------------------------------------------------------
-  participant_label:
-  session_label:
+  participant:
+  session:
   anat:       # ----------------------- All anatomical series --------------------
   func:       # ----------------------- All functional series --------------------
   dwi:        # ----------------------- All diffusion series ---------------------

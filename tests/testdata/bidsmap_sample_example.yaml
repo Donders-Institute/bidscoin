@@ -13,11 +13,11 @@ attributes:
   ProtocolName: t1_mpr_sag_p2_iso_1
   PhaseEncodingDirection:
 bids:
-  task_label: t1mprsagp2iso1
-  acq_label: t1mprsagp2iso1
-  rec_label: ''
-  run_index: <<1>>
+  task: t1mprsagp2iso1
+  acq: t1mprsagp2iso1
+  rec: ''
+  run: <<1>>
   suffix: pet
-  ce_label: ''
-  echo_index: ''
-  dir_label: ''
+  ce: ''
+  echo: ''
+  dir: ''

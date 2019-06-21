@@ -94,15 +94,15 @@ class TestBidseditor(unittest.TestCase):
                                               source_series)
 
         reference_bids_attributes = {
-            "acq_label": "<SeriesDescription>",
-            "rec_label": "",
-            "ce_label": "",
-            "task_label": "",
-            "echo_index": "",
-            "dir_label": "",
-            "run_index": "<<1>>",
+            "acq": "<SeriesDescription>",
+            "rec": "",
+            "ce": "",
+            "task": "",
+            "echo": "",
+            "dir": "",
+            "run": "<<1>>",
             "suffix": "",
-            "mod_label": ""
+            "mod": ""
         }
 
         self.assertEqual(bids_attributes, reference_bids_attributes)
@@ -116,15 +116,18 @@ class TestBidseditor(unittest.TestCase):
         source_modality = 'extra_data'
         source_index = 2
         yaml = ruamel.yaml.YAML()
-        filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata", "bidsmap_sample_example.yaml")
+        filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests", "testdata",
+                                "bidsmap_sample_example.yaml")
         with open(filename) as fp:
             test_sample_yaml = fp.read()
             test_sample = yaml.load(test_sample_yaml)
 
+        target_bidsmap = copy.deepcopy(source_bidsmap)
         target_modality = 'pet'
         target_sample = copy.deepcopy(test_sample)
 
-        target_bidsmap = update_bidsmap(source_bidsmap, source_modality, source_index, target_modality, target_sample)
+        target_bidsmap = update_bidsmap(source_bidsmap, target_bidsmap, source_modality, source_index,
+                                        target_modality, target_sample)
 
         self.assertNotEqual(target_bidsmap, source_bidsmap)
         self.assertNotEqual(target_bidsmap['DICOM'][target_modality], source_bidsmap['DICOM'][target_modality])

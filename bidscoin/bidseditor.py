@@ -45,7 +45,6 @@ ABOUT_WINDOW_HEIGHT = 140
 INSPECT_WINDOW_WIDTH = 720
 INSPECT_WINDOW_HEIGHT = 340
 
-MAX_NUM_OPTIONS = 3
 MAX_NUM_PROVENANCE_ATTRIBUTES = 2
 MAX_NUM_BIDS_ATTRIBUTES = 10
 
@@ -70,6 +69,16 @@ HELP_URLS = {
     "pet": "https://docs.google.com/document/d/1mqMLnxVdLwZjDd4ZiWFqjEAmOmfcModA_R535v3eQs0/edit",
     bids.unknownmodality: HELP_URL_DEFAULT
 }
+
+OPTIONS_TOOLTIP_BIDSCOIN = """bidscoin\n
+version (should correspond with the version in ../bidscoin/version.txt)"""
+
+OPTIONS_TOOLTIP_DCM2NIXX = """dcm2nixx\n
+See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info.
+Command to set the path to dcm2niix (note the semi-colon),\ne.g. module add dcm2niix/1.0.20180622;
+or PATH=/opt/dcm2niix/bin:$PATH;
+or /opt/dcm2niix/bin/
+or '\"C:\\Program Files\\dcm2niix\"' (note the quotes to deal with the whitespace)"""
 
 
 def update_bidsmap(source_bidsmap, target_bidsmap, source_modality, source_index, target_modality, target_series):
@@ -395,27 +404,29 @@ class Ui_MainWindow(object):
             item.setForeground(QtGui.QColor(128, 128, 128))
         return item
 
-    def cell_was_changed(self, row, column):
-        """Option value has been changed. """
-        if column == 1:
-            key = self.table_options.item(row, 0).text()
-            value = self.table_options.item(row, 1).text()
+    def cell_was_changed_bidscoin(self, row, column):
+        """Option value has been changed in BIDScoin tool options table. """
+        if column == 2:
+            table = self.tables_options[0]  # Select the first table
+            tool = table.item(row, 0).text()
+            key = table.item(row, 1).text()
+            value = table.item(row, 2).text()
 
             # Only if cell was actually clicked, update
             if key != '':
-                # Todo: Validate the user input
-                # value = replace_option_value(value)
-                self.table_options.item(row, 1).setText(value)
+                self.output_bidsmap["Options"][tool][key] = value
 
-                if key == OPTION_BIDSCOIN_VERSION_DISPLAY:
-                    # Convert the string back to a floating point number with 1 decimal
-                    self.output_bidsmap['Options']['version'] = float("{0:.1f}".format(float(value)))
-                elif key == OPTION_DCM2NIIX_PATH_DISPLAY:
-                    self.output_bidsmap['Options']['dcm2niix']['path'] = value
-                elif key == OPTION_DCM2NIIX_ARGS_DISPLAY:
-                    self.output_bidsmap['Options']['dcm2niix']['args'] = value
-                else:
-                    LOGGER.error(f"Invalid option {key}")
+    def cell_was_changed_dcm2niix(self, row, column):
+        """Option value has been changed in dcm2niix tool options table. """
+        if column == 2:
+            table = self.tables_options[1] # Select the second table
+            tool = table.item(row, 0).text()
+            key = table.item(row, 1).text()
+            value = table.item(row, 2).text()
+
+            # Only if cell was actually clicked, update
+            if key != '':
+                self.output_bidsmap["Options"][tool][key] = value
 
     def set_tab_options(self):
         """Set the options tab.  """
@@ -435,91 +446,105 @@ class Ui_MainWindow(object):
         save_button.setStatusTip("Save Options to disk")
 
         bidsmap_options = self.output_bidsmap['Options']
-        bidsmap_options_bidscoin_version = bidsmap_options['bidscoin']['version']
-        bidsmap_options_dcm2niix_path = bidsmap_options['dcm2niix']['path']
-        bidsmap_options_dcm2niix_args = bidsmap_options['dcm2niix']['args']
 
-        data = [
-            [
-                {
-                    "value": OPTION_BIDSCOIN_VERSION_DISPLAY,
-                    "is_editable": False,
-                    "tooltip_text": None
-                },
-                {
-                    "value": bidsmap_options_bidscoin_version,
-                    "is_editable": True,
-                    "tooltip_text": "BIDScoin version (should correspond with the version in ../bidscoin/version.txt)"
-                },
-            ],
-            [
-                {
-                    "value": OPTION_DCM2NIIX_PATH_DISPLAY,
-                    "is_editable": False,
-                    "tooltip_text": None
-                },
-                {
-                    "value": bidsmap_options_dcm2niix_path,
-                    "is_editable": True,
-                    "tooltip_text": "See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info.\n\nCommand to set the path to dcm2niix (note the semi-colon),\ne.g. module add dcm2niix/1.0.20180622;\nor PATH=/opt/dcm2niix/bin:$PATH;\nor /opt/dcm2niix/bin/\nor '\"C:\\Program Files\\dcm2niix\"' (note the quotes to deal with the whitespace)"
-                },
-            ],
-            [
-                {
-                    "value": OPTION_DCM2NIIX_ARGS_DISPLAY,
-                    "is_editable": False,
-                    "tooltip_text": None
-                },
-                {
-                    "value": bidsmap_options_dcm2niix_args,
-                    "is_editable": True,
-                    "tooltip_text": "See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info.\n\nArgument string that is passed to dcm2niix.\nTip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)"
-                },
-            ]
-        ]
+        tool_list = []
+        tool_options = {}
+        for tool, parameters in bidsmap_options.items():
+            # Set the tools
+            if tool == "bidscoin":
+                tooltip_text = OPTIONS_TOOLTIP_BIDSCOIN
+            elif tool == "dcm2niix":
+                tooltip_text = OPTIONS_TOOLTIP_DCM2NIXX
+            else:
+                tooltip_text = tool
+            tool_list.append({
+                "tool": tool,
+                "tooltip_text": tooltip_text
+            })
+            # Store the options for each tool
+            tool_options[tool] = []
+            for key, value in parameters.items():
+                tool_options[tool].append([
+                    {
+                        "value": tool,
+                        "is_editable": False,
+                        "tooltip_text": None
+                    },
+                    {
+                        "value": key,
+                        "is_editable": False,
+                        "tooltip_text": None
+                    },
+                    {
+                        "value": value,
+                        "is_editable": True,
+                        "tooltip_text": tooltip_text
+                    }
+                ])
 
-        table = QTableWidget()
+        labels = []
+        self.tables_options = []
+        for tool_item in tool_list:
+            tool = tool_item['tool']
+            tooltip_text = tool_item['tooltip_text']
+            data = tool_options[tool]
 
-        num_rows = MAX_NUM_OPTIONS
-        table.setRowCount(num_rows )
-        table.setColumnCount(2)  # Always two columns (i.e. key, value)
-        table.setMouseTracking(True)
-        row_height = 24
+            label = QLabel()
+            label.setText(tool)
+            label.setToolTip(tooltip_text)
 
-        for i, row in enumerate(data):
-            table.setRowHeight(i, row_height)
-            key = row[0]["value"]
-            for j, element in enumerate(row):
-                value = element.get("value", "")
-                if value == "None":
-                    value = ""
-                is_editable = element.get("is_editable", False)
-                tooltip_text = element.get("tooltip_text", None)
-                item = self.set_cell(value, is_editable=is_editable)
-                table.setItem(i, j, QTableWidgetItem(item))
-                if tooltip_text:
-                    table.item(i, j).setToolTip(tooltip_text)
-                if is_editable:
-                    table.item(i, j).setStatusTip("Click to edit the option")
+            table = QTableWidget()
 
-        horizontal_header = table.horizontalHeader()
-        horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        horizontal_header.setVisible(False)
+            num_rows = len(data)
+            table.setRowCount(num_rows)
+            table.setColumnCount(3)  # Always two columns (i.e. key, value)
+            table.setColumnHidden(0, True) # Hide tool column
+            table.setMouseTracking(True)
+            row_height = 24
 
-        vertical_header = table.verticalHeader()
-        vertical_header.setVisible(False)
+            for i, row in enumerate(data):
 
-        table.setAlternatingRowColors(False)
-        table.setShowGrid(False)
+                table.setRowHeight(i, row_height)
+                key = row[0]["value"]
+                for j, element in enumerate(row):
+                    value = element.get("value", "")
+                    if value == "None":
+                        value = ""
+                    is_editable = element.get("is_editable", False)
+                    tooltip_text = element.get("tooltip_text", None)
+                    item = self.set_cell(value, is_editable=is_editable)
+                    table.setItem(i, j, QTableWidgetItem(item))
+                    if tooltip_text:
+                        table.item(i, j).setToolTip(tooltip_text)
+                    if is_editable:
+                        table.item(i, j).setStatusTip("Click to edit the option")
 
-        extra_space = 6
-        table_height = num_rows * (row_height + extra_space) + 2 * table.frameWidth()
-        table.setMinimumHeight(table_height)
-        table.setMaximumHeight(table_height)
+            horizontal_header = table.horizontalHeader()
+            horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+            horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+            horizontal_header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+            horizontal_header.setVisible(False)
 
-        self.table_options = table
-        self.table_options.cellChanged.connect(self.cell_was_changed)
+            vertical_header = table.verticalHeader()
+            vertical_header.setVisible(False)
+
+            table.setAlternatingRowColors(False)
+            table.setShowGrid(False)
+
+            extra_space = 6
+            table_height = num_rows * (row_height + extra_space) + 2 * table.frameWidth()
+            table.setMinimumHeight(table_height)
+            table.setMaximumHeight(table_height)
+
+            if tool == "bidscoin":
+                table.cellChanged.connect(self.cell_was_changed_bidscoin)
+            elif tool == "dcm2niix":
+                table.cellChanged.connect(self.cell_was_changed_dcm2niix)
+            else:
+                LOGGER.warning(f"Unsupported tool{tool}")
+
+            labels.append(label)
+            self.tables_options.append(table)
 
         hbox = QHBoxLayout()
         hbox.addStretch(1)
@@ -527,8 +552,14 @@ class Ui_MainWindow(object):
         hbox.addWidget(reload_button)
         hbox.addWidget(save_button)
 
-        self.tab2.layout.addWidget(self.table_options)
-        self.tab2.layout.addLayout(hbox)
+        vbox = QVBoxLayout()
+        for label, table in zip(labels, self.tables_options):
+            vbox.addWidget(label)
+            vbox.addWidget(table)
+        vbox.addStretch(1)
+        vbox.addLayout(hbox)
+
+        self.tab2.layout.addLayout(vbox)
 
         self.options = QtWidgets.QWidget()
         self.options.setLayout(self.tab2.layout)
@@ -583,6 +614,7 @@ class Ui_MainWindow(object):
 
                 self.table.item(idx, 1).setToolTip(os.path.dirname(provenance))
                 self.table.item(idx, 1).setStatusTip('Double-click to inspect the header information')
+                self.table.item(idx, 0).setFlags(QtCore.Qt.ItemIsEnabled)
                 self.table.item(idx, 2).setFlags(QtCore.Qt.ItemIsEnabled)
                 self.table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
 
