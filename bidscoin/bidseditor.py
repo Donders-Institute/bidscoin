@@ -517,7 +517,7 @@ class Ui_MainWindow(object):
                     if tooltip_text:
                         table.item(i, j).setToolTip(tooltip_text)
                     if is_editable:
-                        table.item(i, j).setStatusTip("Click to edit the option")
+                        table.item(i, j).setStatusTip("Double-click to edit the option")
 
             horizontal_header = table.horizontalHeader()
             horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
@@ -614,7 +614,7 @@ class Ui_MainWindow(object):
 
                 self.table.item(idx, 1).setToolTip(os.path.dirname(provenance))
                 self.table.item(idx, 1).setStatusTip('Double-click to inspect the header information')
-                self.table.item(idx, 0).setFlags(QtCore.Qt.ItemIsEnabled)
+                self.table.item(idx, 0).setFlags(QtCore.Qt.NoItemFlags)
                 self.table.item(idx, 2).setFlags(QtCore.Qt.ItemIsEnabled)
                 self.table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
 
