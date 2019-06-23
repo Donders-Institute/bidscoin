@@ -105,6 +105,10 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         else:
             bidsname = bids.get_bidsname(subid, sesid, modality, series, runindex)
 
+        # Check if file already exists
+        if os.path.isfile(os.path.join(bidsmodality, bidsname + '.json')):
+            LOGGER.warning(os.path.join(bidsmodality, bidsname) + '.* already exists -- check your results carefully!')
+
         # Convert the dicom-files in the series folder to nifti's in the BIDS-folder
         command = '{path}dcm2niix {args} -f "{filename}" -o "{outfolder}" "{infolder}"'.format(
             path      = bidsmap['Options']['dcm2niix']['path'],
@@ -250,7 +254,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     # Search for the IntendedFor images and add them to the json-files. This has been postponed untill all modalities have been processed (i.e. so that all target images are indeed on disk)
     if bidsmap['DICOM']['fmap'] is not None:
         for fieldmap in bidsmap['DICOM']['fmap']:
-            if 'IntendedFor' in fieldmap['bids'] and fieldmap['bids']['IntendedFor']:
+            if fieldmap['bids']['IntendedFor']:
                 bidsname    = bids.get_bidsname(subid, sesid, 'fmap', fieldmap, '1')
                 acqlabel    = bids.set_bidsvalue(bidsname, 'acq')
                 intendedfor = fieldmap['bids']['IntendedFor']
