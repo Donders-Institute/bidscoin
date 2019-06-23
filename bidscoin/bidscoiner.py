@@ -251,20 +251,19 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     if bidsmap['DICOM']['fmap'] is not None:
         for fieldmap in bidsmap['DICOM']['fmap']:
             if 'IntendedFor' in fieldmap['bids'] and fieldmap['bids']['IntendedFor']:
-                bidsname = bids.get_bidsname(subid, sesid, 'fmap', fieldmap, '1')
-                acqlabel = bids.set_bidsvalue(bidsname, 'acq')
-                for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_','_run-[0-9]*_').replace(acqlabel,acqlabel+'[CE][0-9]*') + '.json')):     # Account for multiple runs and dcm2niix suffixes inserted into the acquisition label
+                bidsname    = bids.get_bidsname(subid, sesid, 'fmap', fieldmap, '1')
+                acqlabel    = bids.set_bidsvalue(bidsname, 'acq')
+                intendedfor = fieldmap['bids']['IntendedFor']
+                if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
+                    intendedfor = intendedfor[2:-2].split('><')
+                else:
+                    intendedfor = [intendedfor]
+                niifiles = []
+                for selector in intendedfor:
+                    niifiles.extend([niifile.split(os.sep+subid+os.sep, 1)[1].replace('\\','/') for niifile in sorted(glob.glob(os.path.join(bidsses, f'**{os.sep}*{selector}*.nii*')))])     # Search in all series using a relative path
 
-                    intendedfor = fieldmap['bids']['IntendedFor']
-                    if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
-                        intendedfor = intendedfor[2:-2].split('><')
-                    else:
-                        intendedfor = [intendedfor]
-
-                    niifiles = []
-                    for selector in intendedfor:
-                        niifiles.extend([niifile.split(os.sep+subid+os.sep, 1)[1].replace('\\','/') for niifile in sorted(glob.glob(os.path.join(bidsses, f'**{os.sep}*{selector}*.nii*')))])     # Search in all series using a relative path
-
+                for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_', '_run-[0-9]*_') + '.json')) + \
+                                glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_', '_run-[0-9]*_').replace(acqlabel, acqlabel+'[CE][0-9]*') + '.json')):  # Account for multiple runs and dcm2niix suffixes inserted into the acquisition label
                     with open(jsonfile, 'r') as json_fid:
                         data = json.load(json_fid)
                     data['IntendedFor'] = niifiles
