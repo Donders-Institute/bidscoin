@@ -857,7 +857,7 @@ class EditDialog(QDialog):
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
 
-        self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
+        self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMaximizeButtonHint)
         self.setWindowTitle("Edit")
 
         layout_all = QVBoxLayout(self)
@@ -1043,8 +1043,8 @@ class EditDialog(QDialog):
         table.setAlternatingRowColors(False)
         table.setShowGrid(False)
 
-        extra_space = 0
-        table_height = num_rows * (row_height + extra_space) + 6
+        extra_space = 6
+        table_height = num_rows * (row_height + extra_space) + extra_space
         table.setMinimumHeight(table_height)
         table.setMaximumHeight(table_height)
 
@@ -1324,15 +1324,15 @@ if __name__ == "__main__":
                                            bidseditor.py /project/foo/bids
                                            bidseditor.py /project/foo/bids -t bidsmap_dccn.yaml
                                            bidseditor.py /project/foo/bids -b my/custom/bidsmap.yaml
-                                         
+
                                          Here are a few tips & tricks:
                                          -----------------------------
-                                         
+
                                          DICOM Attributes
                                            An (DICOM) attribute label can also be a list, in which case the BIDS labels / mapping
                                            are applies if a (DICOM) attribute value is in this list. If the attribute value is
                                            empty it is not used to identify the series. Example: SequenceName: [epfid2d1rs, '*fm2d2r']
-                                        
+
                                          Dynamic BIDS labels
                                            The BIDS labels can be static, in which case the label is just a normal string, or dynamic,
                                            when the string is enclosed with pointy brackets like `<attribute name>` or
@@ -1342,14 +1342,14 @@ if __name__ == "__main__":
                                            subject/session during bidscoiner runtime. For instance, then the `run` label `<<1>>` in
                                            the bids name will be replaced with `1` or increased to `2` if a file with runindex `1`
                                            already exists in that directory.
-                                         
+
                                          Field maps: IntendedFor
                                            You can use the `IntendedFor` field to indicate for which runs (DICOM series) a fieldmap
                                            was intended. The dynamic label of the `IntendedFor` field can be a list of string patterns
                                            that is used to include all runs in a session that have that string pattern in their BIDS
                                            file name. Example: use `<<task>>` to include all functional runs or `<<Stop*Go><Reward>>`
                                            to include "Stop1Go"-, "Stop2Go"- and "Reward"-runs.
-                                         
+
                                          Manual editing / inspection of the bidsmap
                                            You can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
                                            text editor. For instance to change the `Options` to your needs or to add a dynamic
