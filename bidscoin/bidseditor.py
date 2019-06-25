@@ -46,6 +46,9 @@ ABOUT_WINDOW_HEIGHT = 90
 INSPECT_WINDOW_WIDTH = 650
 INSPECT_WINDOW_HEIGHT = 290
 
+TEST_WINDOW_WIDTH  = 200
+TEST_WINDOW_HEIGHT = 90
+
 MAX_NUM_PROVENANCE_ATTRIBUTES = 2
 MAX_NUM_BIDS_ATTRIBUTES = 9
 
@@ -193,8 +196,8 @@ def test_tooloptions(tool: str, opts: dict) -> bool:
     succes = None
     if tool == 'dcm2niix':
         command = f"{opts['path']}dcm2niix -h"
-    elif tool=='bidscoin':
-        command = os.path.join(os.path.realpath(__file__), 'bidscoin.py -v')
+    elif tool == 'bidscoin':
+        command = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bidscoin.py -v')
     else:
         LOGGER.info(f'Testing of {tool} not supported')
         return succes
@@ -479,6 +482,17 @@ class Ui_MainWindow(object):
             if key != '':
                 self.output_bidsmap["Options"][tool][key] = value
 
+    def handle_click_test(self, tool, opts):
+        """ """
+        button = QApplication.focusWidget()
+        if tool is not None:
+            if test_tooloptions(tool, opts):
+                result = 'Succes'
+            else:
+                result = 'Failed'
+            self.dialog_test = TestDialog(tool, result)
+            self.dialog_test.show()
+
     def set_tab_options(self):
         """Set the options tab.  """
         self.tab2 = QtWidgets.QWidget()
@@ -548,15 +562,14 @@ class Ui_MainWindow(object):
 
             num_rows = len(data)
             table.setRowCount(num_rows)
-            table.setColumnCount(3)  # Always two columns (i.e. key, value)
-            table.setColumnHidden(0, True) # Hide tool column
+            table.setColumnCount(4)         # Always two columns (i.e. key, value) + test-button
+            table.setColumnHidden(0, True)  # Hide tool column
             table.setMouseTracking(True)
             row_height = 24
 
             for i, row in enumerate(data):
 
                 table.setRowHeight(i, row_height)
-                key = row[0]["value"]
                 for j, element in enumerate(row):
                     value = element.get("value", "")
                     if value == "None":
@@ -570,10 +583,17 @@ class Ui_MainWindow(object):
                     if is_editable:
                         table.item(i, j).setStatusTip("Double-click to edit the option")
 
+                button_test = QPushButton('Test')
+                button_test.clicked.connect(self.handle_click_test(tool, bidsmap_options[tool]))
+                button_test.setStatusTip('Click to edit the BIDS output name')
+                table.setCellWidget(i, 3, button_test)
+                table.item(i, 3).setStatusTip(f"Click to test the {tool} options")
+
             horizontal_header = table.horizontalHeader()
             horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
             horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
             horizontal_header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+            horizontal_header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
             horizontal_header.setVisible(False)
 
             vertical_header = table.verticalHeader()
@@ -864,6 +884,45 @@ class AboutDialog(QDialog):
 
         self.setMinimumSize(ABOUT_WINDOW_WIDTH, ABOUT_WINDOW_HEIGHT)
         self.setMaximumSize(ABOUT_WINDOW_WIDTH, ABOUT_WINDOW_HEIGHT)
+
+
+class TestDialog(QDialog):
+
+    def __init__(self, tool: str, result: str):
+        QDialog.__init__(self)
+
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
+
+        top_widget = QtWidgets.QWidget(self)
+        top_layout = QtWidgets.QVBoxLayout(self)
+
+        label_result = QLabel(top_widget)
+        label_result.setText(f"Test {tool}: {result}")
+
+        label_info = QLabel(top_widget)
+        label_info.setText('See terminal output for more info')
+
+        pushButton = QPushButton("OK")
+        pushButton.setToolTip("Close dialog")
+        hbox = QHBoxLayout()
+        hbox.addStretch(1)
+        hbox.addWidget(pushButton)
+
+        top_layout.addWidget(label_result)
+        top_layout.addWidget(label_info)
+        top_layout.addStretch(1)
+        top_layout.addLayout(hbox)
+
+        pushButton.clicked.connect(self.close)
+
+        top_widget.setLayout(top_layout)
+        top_widget.resize(top_widget.sizeHint())
+
+        self.setMinimumSize(TEST_WINDOW_WIDTH, TEST_WINDOW_HEIGHT)
+        self.setMaximumSize(TEST_WINDOW_WIDTH, TEST_WINDOW_HEIGHT)
+
 
 class EditDialog(QDialog):
 
