@@ -33,8 +33,8 @@ SOURCE = 'DICOM'            # TODO: allow for non-DICOM (e.g. PAR/REC) edits
 
 LOGGER = logging.getLogger('bidscoin')
 
-MAIN_WINDOW_WIDTH   = 1280
-MAIN_WINDOW_HEIGHT  = 750
+MAIN_WINDOW_WIDTH   = 1024
+MAIN_WINDOW_HEIGHT  = 500
 
 EDIT_WINDOW_WIDTH   = 1024
 EDIT_WINDOW_HEIGHT  = 800
@@ -255,7 +255,7 @@ class Ui_MainWindow(object):
         self.index_mapping = get_index_mapping(input_bidsmap)
 
         self.MainWindow.setObjectName("MainWindow")
-        self.MainWindow.resize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
+        self.MainWindow.setMinimumSize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -265,8 +265,10 @@ class Ui_MainWindow(object):
         self.centralwidget.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
         self.centralwidget.setObjectName("centralwidget")
 
-        self.tabwidget = QtWidgets.QTabWidget(self.centralwidget)
-        self.tabwidget.setGeometry(QtCore.QRect(0, 0, 1280, 700))
+        top_widget = QtWidgets.QWidget(self.centralwidget)
+        top_layout = QtWidgets.QVBoxLayout(self.centralwidget)
+
+        self.tabwidget = QtWidgets.QTabWidget(top_widget)
         self.tabwidget.setTabPosition(QtWidgets.QTabWidget.North)
         self.tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.tabwidget.setObjectName("tabwidget")
@@ -278,12 +280,13 @@ class Ui_MainWindow(object):
         self.tabwidget.setTabText(2, "BIDS map")
         self.tabwidget.setCurrentIndex(selected_tab_index)
 
+        top_layout.addWidget(self.tabwidget)
+
+        self.MainWindow.setCentralWidget(self.centralwidget)
         self.set_menu_and_status_bar()
 
     def set_menu_and_status_bar(self):
         """Set the menu. """
-        self.MainWindow.setCentralWidget(self.centralwidget)
-
         self.menubar = QtWidgets.QMenuBar(self.MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 997, 26))
         self.menuFile = QtWidgets.QMenu(self.menubar)
