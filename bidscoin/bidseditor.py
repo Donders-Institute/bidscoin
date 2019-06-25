@@ -22,7 +22,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog,
                              QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog,
                              QTableWidget, QTableWidgetItem, QGroupBox, QPlainTextEdit,
-                             QAbstractItemView, QPushButton, QComboBox, QTextEdit)
+                             QAbstractItemView, QPushButton, QComboBox, QTextEdit, QDesktopWidget)
 
 try:
     from bidscoin import bids
@@ -36,8 +36,8 @@ LOGGER = logging.getLogger('bidscoin')
 MAIN_WINDOW_WIDTH   = 1024
 MAIN_WINDOW_HEIGHT  = 500
 
-EDIT_WINDOW_WIDTH   = 1024
-EDIT_WINDOW_HEIGHT  = 800
+EDIT_WINDOW_WIDTH   = 900
+EDIT_WINDOW_HEIGHT  = 600
 
 ABOUT_WINDOW_WIDTH  = 100
 ABOUT_WINDOW_HEIGHT = 90
@@ -46,7 +46,7 @@ INSPECT_WINDOW_WIDTH = 650
 INSPECT_WINDOW_HEIGHT = 290
 
 MAX_NUM_PROVENANCE_ATTRIBUTES = 2
-MAX_NUM_BIDS_ATTRIBUTES = 10
+MAX_NUM_BIDS_ATTRIBUTES = 9
 
 OPTION_BIDSCOIN_VERSION_DISPLAY = "BIDScoin version"
 OPTION_DCM2NIIX_PATH_DISPLAY = "dcm2niix path"
@@ -255,7 +255,6 @@ class Ui_MainWindow(object):
         self.index_mapping = get_index_mapping(input_bidsmap)
 
         self.MainWindow.setObjectName("MainWindow")
-        self.MainWindow.setMinimumSize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -284,6 +283,9 @@ class Ui_MainWindow(object):
 
         self.MainWindow.setCentralWidget(self.centralwidget)
         self.set_menu_and_status_bar()
+
+        self.MainWindow.setMinimumSize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
+        self.center()
 
     def set_menu_and_status_bar(self):
         """Set the menu. """
@@ -359,6 +361,19 @@ class Ui_MainWindow(object):
         self.actionBidsHelp.setStatusTip("Go to the online BIDS specification documentation")
         self.actionBidsHelp.setShortcut("F2")
 
+    def center(self):
+        """Center the main window. """
+        qr = self.MainWindow.frameGeometry()
+
+        # Center point of screen
+        cp = QDesktopWidget().availableGeometry().center()
+
+        # Move rectangle's center point to screen's center point
+        qr.moveCenter(cp)
+
+        # Top left of rectangle becomes top left of window centering it
+        self.MainWindow.move(qr.topLeft())
+
     def inspect_dicomfile(self, item):
         """When double clicked, show popup window. """
         if item.column() == 1:
@@ -373,7 +388,7 @@ class Ui_MainWindow(object):
     def set_tab_file_browser(self, sourcefolder):
         """Set the raw data folder inspector tab. """
         self.tab1 = QtWidgets.QWidget()
-        self.tab1.layout = QVBoxLayout(self.centralwidget)
+        self.tab1.layout = QVBoxLayout()
         self.label = QLabel()
         self.label.setText("Inspect source data folder: {}".format(sourcefolder))
         self.model = QFileSystemModel()
@@ -432,7 +447,7 @@ class Ui_MainWindow(object):
     def set_tab_options(self):
         """Set the options tab.  """
         self.tab2 = QtWidgets.QWidget()
-        self.tab2.layout = QVBoxLayout(self.centralwidget)
+        self.tab2.layout = QVBoxLayout()
 
         help_button = QtWidgets.QPushButton()
         help_button.setText("Help")
@@ -643,7 +658,7 @@ class Ui_MainWindow(object):
     def set_tab_bidsmap(self):
         """Set the SOURCE file sample listing tab.  """
         self.tab3 = QtWidgets.QWidget()
-        self.tab3.layout = QVBoxLayout(self.centralwidget)
+        self.tab3.layout = QVBoxLayout()
 
         self.table = QTableWidget()
         self.table.itemDoubleClicked.connect(self.inspect_dicomfile)
@@ -845,13 +860,8 @@ class EditDialog(QDialog):
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
         self.setWindowTitle("Edit")
 
-        layout = QtWidgets.QVBoxLayout(self)
-        scrollArea = QtWidgets.QScrollArea()
-        layout.addWidget(scrollArea)
-
-        top_widget = QtWidgets.QWidget()
-        top_layout = QtWidgets.QVBoxLayout()
-        top_widget.setFixedWidth(EDIT_WINDOW_WIDTH-50)
+        top_widget = QtWidgets.QWidget(self)
+        top_layout = QtWidgets.QVBoxLayout(self)
 
         self.set_provenance_section()
         self.set_dicom_attributes_section()
@@ -873,7 +883,7 @@ class EditDialog(QDialog):
         hbox.addWidget(ok_button)
 
         groupbox1 = QGroupBox(SOURCE)
-        layout1 = QVBoxLayout()
+        layout1 = QVBoxLayout(top_widget)
         layout1.addWidget(self.label_provenance)
         layout1.addWidget(self.view_provenance)
         layout1.addWidget(self.label_dicom)
@@ -882,11 +892,12 @@ class EditDialog(QDialog):
         groupbox1.setLayout(layout1)
 
         groupbox2 = QGroupBox("BIDS")
-        layout2 = QVBoxLayout()
+        layout2 = QVBoxLayout(top_widget)
         layout2.addWidget(self.label_dropdown)
         layout2.addWidget(self.view_dropdown)
         layout2.addWidget(self.label_bids)
         layout2.addWidget(self.view_bids)
+        layout2.addStretch(1)
         layout2.addWidget(self.label_bids_name)
         layout2.addWidget(self.view_bids_name)
         groupbox2.setLayout(layout2)
@@ -903,12 +914,24 @@ class EditDialog(QDialog):
         cancel_button.clicked.connect(self.reject)
         ok_button.clicked.connect(self.update_series)
 
-        top_widget.setLayout(top_layout)
-        scrollArea.setWidget(top_widget)
-        self.resize(EDIT_WINDOW_WIDTH, EDIT_WINDOW_HEIGHT)
+        self.setMinimumWidth(EDIT_WINDOW_WIDTH)
+        self.center()
 
         finish = QtWidgets.QAction(self)
         finish.triggered.connect(self.closeEvent)
+
+    def center(self):
+        """Center the edit window. """
+        qr = self.frameGeometry()
+
+        # Center point of screen
+        cp = QDesktopWidget().availableGeometry().center()
+
+        # Move rectangle's center point to screen's center point
+        qr.moveCenter(cp)
+
+        # Top left of rectangle becomes top left of window centering it
+        self.move(qr.topLeft())
 
     def get_help(self):
         """Open web page for help. """
@@ -1012,8 +1035,8 @@ class EditDialog(QDialog):
         table.setAlternatingRowColors(False)
         table.setShowGrid(False)
 
-        extra_space = 6
-        table_height = num_rows * (row_height + extra_space) + 2 * table.frameWidth()
+        extra_space = 0
+        table_height = num_rows * (row_height + extra_space) + 6
         table.setMinimumHeight(table_height)
         table.setMaximumHeight(table_height)
 
