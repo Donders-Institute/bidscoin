@@ -22,7 +22,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog,
                              QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog,
                              QTableWidget, QTableWidgetItem, QGroupBox, QPlainTextEdit,
-                             QAbstractItemView, QPushButton, QComboBox, QTextEdit)
+                             QAbstractItemView, QPushButton, QComboBox, QTextEdit, QDesktopWidget)
 
 try:
     from bidscoin import bids
@@ -33,20 +33,20 @@ SOURCE = 'DICOM'            # TODO: allow for non-DICOM (e.g. PAR/REC) edits
 
 LOGGER = logging.getLogger('bidscoin')
 
-MAIN_WINDOW_WIDTH   = 1280
-MAIN_WINDOW_HEIGHT  = 800
+MAIN_WINDOW_WIDTH   = 1024
+MAIN_WINDOW_HEIGHT  = 500
 
-EDIT_WINDOW_WIDTH   = 1024
-EDIT_WINDOW_HEIGHT  = 800
+EDIT_WINDOW_WIDTH   = 900
+EDIT_WINDOW_HEIGHT  = 600
 
-ABOUT_WINDOW_WIDTH  = 200
-ABOUT_WINDOW_HEIGHT = 140
+ABOUT_WINDOW_WIDTH  = 100
+ABOUT_WINDOW_HEIGHT = 90
 
-INSPECT_WINDOW_WIDTH = 720
-INSPECT_WINDOW_HEIGHT = 340
+INSPECT_WINDOW_WIDTH = 650
+INSPECT_WINDOW_HEIGHT = 290
 
 MAX_NUM_PROVENANCE_ATTRIBUTES = 2
-MAX_NUM_BIDS_ATTRIBUTES = 10
+MAX_NUM_BIDS_ATTRIBUTES = 9
 
 OPTION_BIDSCOIN_VERSION_DISPLAY = "BIDScoin version"
 OPTION_DCM2NIIX_PATH_DISPLAY = "dcm2niix path"
@@ -189,20 +189,16 @@ class InspectWindow(QDialog):
         self.setWindowIcon(icon)
         self.setWindowTitle("Inspect DICOM file")
 
-        layout = QtWidgets.QVBoxLayout(self)
-        scrollArea = QtWidgets.QScrollArea()
-        layout.addWidget(scrollArea)
+        top_widget = QtWidgets.QWidget(self)
+        top_layout = QtWidgets.QVBoxLayout(self)
 
-        top_widget = QtWidgets.QWidget()
-        top_layout = QtWidgets.QVBoxLayout()
-
-        label = QLabel()
+        label = QLabel(top_widget)
         label.setText("Filename: " + os.path.basename(filename))
 
-        label_path = QLabel()
+        label_path = QLabel(top_widget)
         label_path.setText("Path: " + os.path.dirname(filename))
 
-        text_area = QPlainTextEdit(self)
+        text_area = QPlainTextEdit(top_widget)
         text_area.insertPlainText(str(dicomdict))
 
         pushButton = QPushButton("OK")
@@ -220,8 +216,10 @@ class InspectWindow(QDialog):
         pushButton.clicked.connect(self.close)
 
         top_widget.setLayout(top_layout)
-        scrollArea.setWidget(top_widget)
-        self.resize(INSPECT_WINDOW_WIDTH, INSPECT_WINDOW_HEIGHT)
+        top_widget.resize(top_widget.sizeHint())
+
+        self.setMinimumSize(INSPECT_WINDOW_WIDTH, INSPECT_WINDOW_HEIGHT)
+        self.setMaximumSize(INSPECT_WINDOW_WIDTH, INSPECT_WINDOW_HEIGHT)
 
 
 class MainWindow(QMainWindow):
@@ -257,7 +255,6 @@ class Ui_MainWindow(object):
         self.index_mapping = get_index_mapping(input_bidsmap)
 
         self.MainWindow.setObjectName("MainWindow")
-        self.MainWindow.resize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -267,8 +264,10 @@ class Ui_MainWindow(object):
         self.centralwidget.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
         self.centralwidget.setObjectName("centralwidget")
 
-        self.tabwidget = QtWidgets.QTabWidget(self.centralwidget)
-        self.tabwidget.setGeometry(QtCore.QRect(0, 0, 1280, 700))
+        top_widget = QtWidgets.QWidget(self.centralwidget)
+        top_layout = QtWidgets.QVBoxLayout(self.centralwidget)
+
+        self.tabwidget = QtWidgets.QTabWidget(top_widget)
         self.tabwidget.setTabPosition(QtWidgets.QTabWidget.North)
         self.tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.tabwidget.setObjectName("tabwidget")
@@ -280,12 +279,16 @@ class Ui_MainWindow(object):
         self.tabwidget.setTabText(2, "BIDS map")
         self.tabwidget.setCurrentIndex(selected_tab_index)
 
+        top_layout.addWidget(self.tabwidget)
+
+        self.MainWindow.setCentralWidget(self.centralwidget)
         self.set_menu_and_status_bar()
+
+        self.MainWindow.setMinimumSize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
+        self.center()
 
     def set_menu_and_status_bar(self):
         """Set the menu. """
-        self.MainWindow.setCentralWidget(self.centralwidget)
-
         self.menubar = QtWidgets.QMenuBar(self.MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 997, 26))
         self.menuFile = QtWidgets.QMenu(self.menubar)
@@ -358,6 +361,19 @@ class Ui_MainWindow(object):
         self.actionBidsHelp.setStatusTip("Go to the online BIDS specification documentation")
         self.actionBidsHelp.setShortcut("F2")
 
+    def center(self):
+        """Center the main window. """
+        qr = self.MainWindow.frameGeometry()
+
+        # Center point of screen
+        cp = QDesktopWidget().availableGeometry().center()
+
+        # Move rectangle's center point to screen's center point
+        qr.moveCenter(cp)
+
+        # Top left of rectangle becomes top left of window centering it
+        self.MainWindow.move(qr.topLeft())
+
     def inspect_dicomfile(self, item):
         """When double clicked, show popup window. """
         if item.column() == 1:
@@ -372,7 +388,7 @@ class Ui_MainWindow(object):
     def set_tab_file_browser(self, sourcefolder):
         """Set the raw data folder inspector tab. """
         self.tab1 = QtWidgets.QWidget()
-        self.tab1.layout = QVBoxLayout(self.centralwidget)
+        self.tab1.layout = QVBoxLayout()
         self.label = QLabel()
         self.label.setText("Inspect source data folder: {}".format(sourcefolder))
         self.model = QFileSystemModel()
@@ -431,7 +447,7 @@ class Ui_MainWindow(object):
     def set_tab_options(self):
         """Set the options tab.  """
         self.tab2 = QtWidgets.QWidget()
-        self.tab2.layout = QVBoxLayout(self.centralwidget)
+        self.tab2.layout = QVBoxLayout()
 
         help_button = QtWidgets.QPushButton()
         help_button.setText("Help")
@@ -642,7 +658,7 @@ class Ui_MainWindow(object):
     def set_tab_bidsmap(self):
         """Set the SOURCE file sample listing tab.  """
         self.tab3 = QtWidgets.QWidget()
-        self.tab3.layout = QVBoxLayout(self.centralwidget)
+        self.tab3.layout = QVBoxLayout()
 
         self.table = QTableWidget()
         self.table.itemDoubleClicked.connect(self.inspect_dicomfile)
@@ -786,17 +802,13 @@ class AboutDialog(QDialog):
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
 
-        layout = QtWidgets.QVBoxLayout(self)
-        scrollArea = QtWidgets.QScrollArea()
-        layout.addWidget(scrollArea)
+        top_widget = QtWidgets.QWidget(self)
+        top_layout = QtWidgets.QVBoxLayout(self)
 
-        top_widget = QtWidgets.QWidget()
-        top_layout = QtWidgets.QVBoxLayout()
-
-        label = QLabel()
+        label = QLabel(top_widget)
         label.setText("BIDS editor")
 
-        label_version = QLabel()
+        label_version = QLabel(top_widget)
         label_version.setText("version: " + bids.version())
 
         pushButton = QPushButton("OK")
@@ -813,9 +825,10 @@ class AboutDialog(QDialog):
         pushButton.clicked.connect(self.close)
 
         top_widget.setLayout(top_layout)
-        scrollArea.setWidget(top_widget)
-        self.resize(ABOUT_WINDOW_WIDTH, ABOUT_WINDOW_HEIGHT)
+        top_widget.resize(top_widget.sizeHint())
 
+        self.setMinimumSize(ABOUT_WINDOW_WIDTH, ABOUT_WINDOW_HEIGHT)
+        self.setMaximumSize(ABOUT_WINDOW_WIDTH, ABOUT_WINDOW_HEIGHT)
 
 class EditDialog(QDialog):
 
@@ -844,16 +857,17 @@ class EditDialog(QDialog):
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
 
-        self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
+        self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMaximizeButtonHint)
         self.setWindowTitle("Edit")
 
-        layout = QtWidgets.QVBoxLayout(self)
-        scrollArea = QtWidgets.QScrollArea()
-        layout.addWidget(scrollArea)
+        layout_all = QVBoxLayout(self)
+
+        scrollarea = QtWidgets.QScrollArea(self)
+        scrollarea.setWidgetResizable(True)
 
         top_widget = QtWidgets.QWidget()
-        top_layout = QtWidgets.QVBoxLayout()
-        top_widget.setFixedWidth(EDIT_WINDOW_WIDTH-50)
+        scrollarea.setWidget(top_widget)
+        layout_scrollarea = QVBoxLayout(top_widget)
 
         self.set_provenance_section()
         self.set_dicom_attributes_section()
@@ -875,7 +889,7 @@ class EditDialog(QDialog):
         hbox.addWidget(ok_button)
 
         groupbox1 = QGroupBox(SOURCE)
-        layout1 = QVBoxLayout()
+        layout1 = QVBoxLayout(top_widget)
         layout1.addWidget(self.label_provenance)
         layout1.addWidget(self.view_provenance)
         layout1.addWidget(self.label_dicom)
@@ -884,19 +898,20 @@ class EditDialog(QDialog):
         groupbox1.setLayout(layout1)
 
         groupbox2 = QGroupBox("BIDS")
-        layout2 = QVBoxLayout()
+        layout2 = QVBoxLayout(top_widget)
         layout2.addWidget(self.label_dropdown)
         layout2.addWidget(self.view_dropdown)
         layout2.addWidget(self.label_bids)
         layout2.addWidget(self.view_bids)
+        layout2.addStretch(1)
         layout2.addWidget(self.label_bids_name)
         layout2.addWidget(self.view_bids_name)
         groupbox2.setLayout(layout2)
 
-        top_layout.addWidget(groupbox1)
-        top_layout.addWidget(groupbox2)
-        top_layout.addStretch(1)
-        top_layout.addLayout(hbox)
+        layout_scrollarea.addWidget(groupbox1)
+        layout_scrollarea.addWidget(groupbox2)
+        layout_scrollarea.addStretch(1)
+        layout_scrollarea.addLayout(hbox)
 
         self.view_provenance.cellDoubleClicked.connect(self.inspect_dicomfile)
         self.view_bids.cellChanged.connect(self.cell_was_changed)
@@ -905,12 +920,26 @@ class EditDialog(QDialog):
         cancel_button.clicked.connect(self.reject)
         ok_button.clicked.connect(self.update_series)
 
-        top_widget.setLayout(top_layout)
-        scrollArea.setWidget(top_widget)
-        self.resize(EDIT_WINDOW_WIDTH, EDIT_WINDOW_HEIGHT)
+        layout_all.addWidget(scrollarea)
+
+        self.setMinimumWidth(EDIT_WINDOW_WIDTH)
+        self.center()
 
         finish = QtWidgets.QAction(self)
         finish.triggered.connect(self.closeEvent)
+
+    def center(self):
+        """Center the edit window. """
+        qr = self.frameGeometry()
+
+        # Center point of screen
+        cp = QDesktopWidget().availableGeometry().center()
+
+        # Move rectangle's center point to screen's center point
+        qr.moveCenter(cp)
+
+        # Top left of rectangle becomes top left of window centering it
+        self.move(qr.topLeft())
 
     def get_help(self):
         """Open web page for help. """
@@ -1015,7 +1044,7 @@ class EditDialog(QDialog):
         table.setShowGrid(False)
 
         extra_space = 6
-        table_height = num_rows * (row_height + extra_space) + 2 * table.frameWidth()
+        table_height = num_rows * (row_height + extra_space) + extra_space
         table.setMinimumHeight(table_height)
         table.setMaximumHeight(table_height)
 
@@ -1295,15 +1324,15 @@ if __name__ == "__main__":
                                            bidseditor.py /project/foo/bids
                                            bidseditor.py /project/foo/bids -t bidsmap_dccn.yaml
                                            bidseditor.py /project/foo/bids -b my/custom/bidsmap.yaml
-                                         
+
                                          Here are a few tips & tricks:
                                          -----------------------------
-                                         
+
                                          DICOM Attributes
                                            An (DICOM) attribute label can also be a list, in which case the BIDS labels / mapping
                                            are applies if a (DICOM) attribute value is in this list. If the attribute value is
                                            empty it is not used to identify the series. Example: SequenceName: [epfid2d1rs, '*fm2d2r']
-                                        
+
                                          Dynamic BIDS labels
                                            The BIDS labels can be static, in which case the label is just a normal string, or dynamic,
                                            when the string is enclosed with pointy brackets like `<attribute name>` or
@@ -1313,14 +1342,14 @@ if __name__ == "__main__":
                                            subject/session during bidscoiner runtime. For instance, then the `run` label `<<1>>` in
                                            the bids name will be replaced with `1` or increased to `2` if a file with runindex `1`
                                            already exists in that directory.
-                                         
+
                                          Field maps: IntendedFor
                                            You can use the `IntendedFor` field to indicate for which runs (DICOM series) a fieldmap
                                            was intended. The dynamic label of the `IntendedFor` field can be a list of string patterns
                                            that is used to include all runs in a session that have that string pattern in their BIDS
                                            file name. Example: use `<<task>>` to include all functional runs or `<<Stop*Go><Reward>>`
                                            to include "Stop1Go"-, "Stop2Go"- and "Reward"-runs.
-                                         
+
                                          Manual editing / inspection of the bidsmap
                                            You can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
                                            text editor. For instance to change the `Options` to your needs or to add a dynamic
