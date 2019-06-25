@@ -860,8 +860,14 @@ class EditDialog(QDialog):
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
         self.setWindowTitle("Edit")
 
-        top_widget = QtWidgets.QWidget(self)
-        top_layout = QtWidgets.QVBoxLayout(self)
+        layout_all = QVBoxLayout(self)
+
+        scrollarea = QtWidgets.QScrollArea(self)
+        scrollarea.setWidgetResizable(True)
+
+        top_widget = QtWidgets.QWidget()
+        scrollarea.setWidget(top_widget)
+        layout_scrollarea = QVBoxLayout(top_widget)
 
         self.set_provenance_section()
         self.set_dicom_attributes_section()
@@ -902,10 +908,10 @@ class EditDialog(QDialog):
         layout2.addWidget(self.view_bids_name)
         groupbox2.setLayout(layout2)
 
-        top_layout.addWidget(groupbox1)
-        top_layout.addWidget(groupbox2)
-        top_layout.addStretch(1)
-        top_layout.addLayout(hbox)
+        layout_scrollarea.addWidget(groupbox1)
+        layout_scrollarea.addWidget(groupbox2)
+        layout_scrollarea.addStretch(1)
+        layout_scrollarea.addLayout(hbox)
 
         self.view_provenance.cellDoubleClicked.connect(self.inspect_dicomfile)
         self.view_bids.cellChanged.connect(self.cell_was_changed)
@@ -913,6 +919,8 @@ class EditDialog(QDialog):
         help_button.clicked.connect(self.get_help)
         cancel_button.clicked.connect(self.reject)
         ok_button.clicked.connect(self.update_series)
+
+        layout_all.addWidget(scrollarea)
 
         self.setMinimumWidth(EDIT_WINDOW_WIDTH)
         self.center()
