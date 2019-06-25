@@ -808,7 +808,6 @@ class AboutDialog(QDialog):
 
         top_widget.setLayout(top_layout)
         top_widget.resize(top_widget.sizeHint())
-        print(top_widget.sizeHint())
 
         self.setMinimumSize(ABOUT_WINDOW_WIDTH, ABOUT_WINDOW_HEIGHT)
         self.setMaximumSize(ABOUT_WINDOW_WIDTH, ABOUT_WINDOW_HEIGHT)
