@@ -42,8 +42,8 @@ EDIT_WINDOW_HEIGHT  = 800
 ABOUT_WINDOW_WIDTH  = 200
 ABOUT_WINDOW_HEIGHT = 140
 
-INSPECT_WINDOW_WIDTH = 720
-INSPECT_WINDOW_HEIGHT = 340
+INSPECT_WINDOW_WIDTH = 650
+INSPECT_WINDOW_HEIGHT = 290
 
 MAX_NUM_PROVENANCE_ATTRIBUTES = 2
 MAX_NUM_BIDS_ATTRIBUTES = 10
@@ -189,20 +189,16 @@ class InspectWindow(QDialog):
         self.setWindowIcon(icon)
         self.setWindowTitle("Inspect DICOM file")
 
-        layout = QtWidgets.QVBoxLayout(self)
-        scrollArea = QtWidgets.QScrollArea()
-        layout.addWidget(scrollArea)
+        top_widget = QtWidgets.QWidget(self)
+        top_layout = QtWidgets.QVBoxLayout(self)
 
-        top_widget = QtWidgets.QWidget()
-        top_layout = QtWidgets.QVBoxLayout()
-
-        label = QLabel()
+        label = QLabel(top_widget)
         label.setText("Filename: " + os.path.basename(filename))
 
-        label_path = QLabel()
+        label_path = QLabel(top_widget)
         label_path.setText("Path: " + os.path.dirname(filename))
 
-        text_area = QPlainTextEdit(self)
+        text_area = QPlainTextEdit(top_widget)
         text_area.insertPlainText(str(dicomdict))
 
         pushButton = QPushButton("OK")
@@ -220,8 +216,10 @@ class InspectWindow(QDialog):
         pushButton.clicked.connect(self.close)
 
         top_widget.setLayout(top_layout)
-        scrollArea.setWidget(top_widget)
-        self.resize(INSPECT_WINDOW_WIDTH, INSPECT_WINDOW_HEIGHT)
+        top_widget.resize(top_widget.sizeHint())
+
+        self.setMinimumSize(INSPECT_WINDOW_WIDTH, INSPECT_WINDOW_HEIGHT)
+        self.setMaximumSize(INSPECT_WINDOW_WIDTH, INSPECT_WINDOW_HEIGHT)
 
 
 class MainWindow(QMainWindow):
