@@ -34,7 +34,7 @@ SOURCE = 'DICOM'            # TODO: allow for non-DICOM (e.g. PAR/REC) edits
 LOGGER = logging.getLogger('bidscoin')
 
 MAIN_WINDOW_WIDTH   = 1280
-MAIN_WINDOW_HEIGHT  = 800
+MAIN_WINDOW_HEIGHT  = 750
 
 EDIT_WINDOW_WIDTH   = 1024
 EDIT_WINDOW_HEIGHT  = 800
