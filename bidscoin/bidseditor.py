@@ -194,7 +194,7 @@ def test_tooloptions(tool: str, opts: dict) -> bool:
     if tool == 'dcm2niix':
         command = f"{opts['path']}dcm2niix -h"
     elif tool=='bidscoin':
-        command = f"bidscoin.py -v"
+        command = os.path.join(os.path.realpath(__file__), 'bidscoin.py -v')
     else:
         LOGGER.info(f'Testing of {tool} not supported')
         return succes
