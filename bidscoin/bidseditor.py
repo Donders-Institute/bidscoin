@@ -39,8 +39,8 @@ MAIN_WINDOW_HEIGHT  = 800
 EDIT_WINDOW_WIDTH   = 1024
 EDIT_WINDOW_HEIGHT  = 800
 
-ABOUT_WINDOW_WIDTH  = 200
-ABOUT_WINDOW_HEIGHT = 140
+ABOUT_WINDOW_WIDTH  = 100
+ABOUT_WINDOW_HEIGHT = 90
 
 INSPECT_WINDOW_WIDTH = 650
 INSPECT_WINDOW_HEIGHT = 290
@@ -784,17 +784,13 @@ class AboutDialog(QDialog):
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
 
-        layout = QtWidgets.QVBoxLayout(self)
-        scrollArea = QtWidgets.QScrollArea()
-        layout.addWidget(scrollArea)
+        top_widget = QtWidgets.QWidget(self)
+        top_layout = QtWidgets.QVBoxLayout(self)
 
-        top_widget = QtWidgets.QWidget()
-        top_layout = QtWidgets.QVBoxLayout()
-
-        label = QLabel()
+        label = QLabel(top_widget)
         label.setText("BIDS editor")
 
-        label_version = QLabel()
+        label_version = QLabel(top_widget)
         label_version.setText("version: " + bids.version())
 
         pushButton = QPushButton("OK")
@@ -811,9 +807,11 @@ class AboutDialog(QDialog):
         pushButton.clicked.connect(self.close)
 
         top_widget.setLayout(top_layout)
-        scrollArea.setWidget(top_widget)
-        self.resize(ABOUT_WINDOW_WIDTH, ABOUT_WINDOW_HEIGHT)
+        top_widget.resize(top_widget.sizeHint())
+        print(top_widget.sizeHint())
 
+        self.setMinimumSize(ABOUT_WINDOW_WIDTH, ABOUT_WINDOW_HEIGHT)
+        self.setMaximumSize(ABOUT_WINDOW_WIDTH, ABOUT_WINDOW_HEIGHT)
 
 class EditDialog(QDialog):
 
