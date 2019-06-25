@@ -16,6 +16,7 @@ import logging
 import copy
 import webbrowser
 import pydicom
+import subprocess
 from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -177,6 +178,40 @@ def get_index_mapping(bidsmap):
             index_mapping[modality][file_index] = series_index
             file_index += 1
     return index_mapping
+
+
+def test_tooloptions(tool: str, opts: dict) -> bool:
+    """
+    Performs tests of the user tool parameters set in the bidsmap Options-tab
+
+    :param tool:    Name of the tool that is being tested in bidsmap['Options']
+    :param opts:    The key-value dictionary from bidsmap['Options'][tool]
+    :return:        True if the tool generated the expected result, False if there
+                    was a tool error, None if this function has an implementation error
+    """
+
+    succes = None
+    if tool == 'dcm2niix':
+        command = f"{opts['path']}dcm2niix -h"
+    elif tool=='bidscoin':
+        command = f"bidscoin.py -v"
+    else:
+        LOGGER.info(f'Testing of {tool} not supported')
+        return succes
+
+    LOGGER.info('Testing: $ ' + command)
+    process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if process.stdout.decode('utf-8'):
+        LOGGER.info(process.stdout.decode('utf-8'))
+        succes = True
+    if process.stderr.decode('utf-8'):
+        LOGGER.error(process.stderr.decode('utf-8'))
+        succes = False
+    if process.returncode!=0:
+        LOGGER.error(f'Failed to run {command} (errorcode {process.returncode})')
+        succes = False
+
+    return succes
 
 
 class InspectWindow(QDialog):
