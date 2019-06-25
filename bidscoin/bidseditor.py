@@ -1140,7 +1140,7 @@ class EditDialog(QDialog):
             # Fixed list of options
             if not self.allowed_suffixes[self.target_modality]:
                 raise Exception(f'allowed suffixes empty for modality {self.target_modality}')
-            self.target_suffix = self.allowed_suffixes[self.target_modality][0]
+            self.target_suffix = self.source_series['bids']['suffix']
 
         bids_values, data = self.get_bids_values_data()
         self.target_series['bids'] = bids_values
