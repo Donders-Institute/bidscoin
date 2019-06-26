@@ -483,12 +483,12 @@ class Ui_MainWindow(object):
             if key != '':
                 self.output_bidsmap["Options"][tool][key] = value
 
-    def handle_click_test(self, tool: str, opts: dict):
+    def handle_click_test(self, tool: str):
         """Test the bidsmap tool and show the result in a pop-up window
 
         :param tool:    Name of the tool that is being tested in bidsmap['Options']
-        :param opts:    The key-value dictionary from bidsmap['Options'][tool]
          """
+        opts = self.output_bidsmap['Options'][tool]
         if test_tooloptions(tool, opts):
             result = 'Passed'
         else:
@@ -587,7 +587,7 @@ class Ui_MainWindow(object):
                         table.item(i, j).setStatusTip("Double-click to edit the option")
 
             button_test = QPushButton('Test')
-            button_test.clicked.connect(partial(self.handle_click_test, tool, bidsmap_options[tool]))
+            button_test.clicked.connect(partial(self.handle_click_test, tool))
             button_test.setStatusTip(f'Click to test the {tool} options')
             table.setCellWidget(0, 3, button_test)
 
