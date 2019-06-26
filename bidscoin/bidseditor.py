@@ -17,6 +17,7 @@ import copy
 import webbrowser
 import pydicom
 import subprocess
+from functools import partial
 from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -482,11 +483,8 @@ class Ui_MainWindow(object):
             if key != '':
                 self.output_bidsmap["Options"][tool][key] = value
 
-    def handle_click_test(self, tool, opts='test'):
+    def handle_click_test(self, tool, opts):
         """ """
-        tabl = 1    # TODO: figure out which table was clicked
-        tool = self.tables_options[tabl].item(0,0).text()
-        opts = self.output_bidsmap['Options'][tool]
         if test_tooloptions(tool, opts):
             result = 'Succes'
         else:
@@ -585,7 +583,7 @@ class Ui_MainWindow(object):
                         table.item(i, j).setStatusTip("Double-click to edit the option")
 
             button_test = QPushButton('Test')
-            button_test.clicked.connect(self.handle_click_test) #(tool, bidsmap_options[tool]))    # TODO: handle_click_test cannot be given arguments here, I don't know how to do this
+            button_test.clicked.connect(partial(self.handle_click_test, tool, bidsmap_options[tool]))
             button_test.setStatusTip('Click to edit the BIDS output name')
             table.setCellWidget(0, 3, button_test)
 
