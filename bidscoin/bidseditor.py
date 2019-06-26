@@ -483,8 +483,12 @@ class Ui_MainWindow(object):
             if key != '':
                 self.output_bidsmap["Options"][tool][key] = value
 
-    def handle_click_test(self, tool, opts):
-        """ """
+    def handle_click_test(self, tool: str, opts: dict):
+        """Test the bidsmap tool and show the result in a pop-up window
+
+        :param tool:    Name of the tool that is being tested in bidsmap['Options']
+        :param opts:    The key-value dictionary from bidsmap['Options'][tool]
+         """
         if test_tooloptions(tool, opts):
             result = 'Passed'
         else:
