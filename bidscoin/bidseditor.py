@@ -46,7 +46,7 @@ ABOUT_WINDOW_HEIGHT = 90
 INSPECT_WINDOW_WIDTH = 650
 INSPECT_WINDOW_HEIGHT = 290
 
-TEST_WINDOW_WIDTH  = 200
+TEST_WINDOW_WIDTH  = 250
 TEST_WINDOW_HEIGHT = 90
 
 MAX_NUM_PROVENANCE_ATTRIBUTES = 2
@@ -482,9 +482,11 @@ class Ui_MainWindow(object):
             if key != '':
                 self.output_bidsmap["Options"][tool][key] = value
 
-    def handle_click_test(self, tool, opts):
+    def handle_click_test(self, tool, opts='test'):
         """ """
-        button = QApplication.focusWidget()
+        tabl = 1    # TODO: figure out which table was clicked
+        tool = self.tables_options[tabl].item(0,0).text()
+        opts = self.output_bidsmap['Options'][tool]
         if test_tooloptions(tool, opts):
             result = 'Succes'
         else:
@@ -582,17 +584,16 @@ class Ui_MainWindow(object):
                     if is_editable:
                         table.item(i, j).setStatusTip("Double-click to edit the option")
 
-                button_test = QPushButton('Test')
-                button_test.clicked.connect(self.handle_click_test(tool, bidsmap_options[tool]))    # TODO: handle_click_test cannot be given arguments here, I don't know how to do this
-                button_test.setStatusTip('Click to edit the BIDS output name')
-                table.setCellWidget(i, 3, button_test)
-                table.item(i, 3).setStatusTip(f"Click to test the {tool} options")
+            button_test = QPushButton('Test')
+            button_test.clicked.connect(self.handle_click_test) #(tool, bidsmap_options[tool]))    # TODO: handle_click_test cannot be given arguments here, I don't know how to do this
+            button_test.setStatusTip('Click to edit the BIDS output name')
+            table.setCellWidget(0, 3, button_test)
 
             horizontal_header = table.horizontalHeader()
             horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
             horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-            horizontal_header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-            horizontal_header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
+            horizontal_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+            horizontal_header.setSectionResizeMode(3, QtWidgets.QHeaderView.Fixed)
             horizontal_header.setVisible(False)
 
             vertical_header = table.verticalHeader()
@@ -918,6 +919,8 @@ class TestDialog(QDialog):
 
         top_widget.setLayout(top_layout)
         top_widget.resize(top_widget.sizeHint())
+
+        self.setWindowTitle("Test Options")
 
         self.setMinimumSize(TEST_WINDOW_WIDTH, TEST_WINDOW_HEIGHT)
         self.setMaximumSize(TEST_WINDOW_WIDTH, TEST_WINDOW_HEIGHT)
