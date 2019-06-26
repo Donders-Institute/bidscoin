@@ -586,6 +586,9 @@ class Ui_MainWindow(object):
                     if is_editable:
                         table.item(i, j).setStatusTip("Double-click to edit the option")
 
+                table.setItem(i, 3, QTableWidgetItem())
+                table.item(i, 3).setFlags(QtCore.Qt.NoItemFlags)
+
             button_test = QPushButton('Test')
             button_test.clicked.connect(partial(self.handle_click_test, tool))
             button_test.setStatusTip(f'Click to test the {tool} options')
