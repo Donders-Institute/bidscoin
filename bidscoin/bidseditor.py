@@ -486,7 +486,7 @@ class Ui_MainWindow(object):
     def handle_click_test(self, tool, opts):
         """ """
         if test_tooloptions(tool, opts):
-            result = 'Succes'
+            result = 'Passed'
         else:
             result = 'Failed'
         self.dialog_test = TestDialog(tool, result)
