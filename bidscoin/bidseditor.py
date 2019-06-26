@@ -564,8 +564,9 @@ class Ui_MainWindow(object):
             table = QTableWidget()
 
             num_rows = len(data)
+            num_cols = len(data[0]) + 1     # Always three columns (i.e. tool, key, value) + test-button
             table.setRowCount(num_rows)
-            table.setColumnCount(4)         # Always two columns (i.e. key, value) + test-button
+            table.setColumnCount(num_cols)
             table.setColumnHidden(0, True)  # Hide tool column
             table.setMouseTracking(True)
             row_height = 24
@@ -586,13 +587,13 @@ class Ui_MainWindow(object):
                     if is_editable:
                         table.item(i, j).setStatusTip("Double-click to edit the option")
 
-                table.setItem(i, 3, QTableWidgetItem())
-                table.item(i, 3).setFlags(QtCore.Qt.NoItemFlags)
+                table.setItem(i, num_cols-1, QTableWidgetItem())
+                table.item(i, num_cols-1).setFlags(QtCore.Qt.NoItemFlags)
 
             button_test = QPushButton('Test')
             button_test.clicked.connect(partial(self.handle_click_test, tool))
             button_test.setStatusTip(f'Click to test the {tool} options')
-            table.setCellWidget(0, 3, button_test)
+            table.setCellWidget(0, num_cols-1, button_test)
 
             horizontal_header = table.horizontalHeader()
             horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
