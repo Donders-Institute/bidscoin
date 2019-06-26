@@ -203,16 +203,16 @@ def test_tooloptions(tool: str, opts: dict) -> bool:
         LOGGER.info(f'Testing of {tool} not supported')
         return succes
 
-    LOGGER.info('Testing: $ ' + command)
+    LOGGER.info('Testing: ' + command)
     process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if process.stdout.decode('utf-8'):
-        LOGGER.info(process.stdout.decode('utf-8'))
+        LOGGER.info('Test result:\n' + process.stdout.decode('utf-8'))
         succes = True
     if process.stderr.decode('utf-8'):
-        LOGGER.error(process.stderr.decode('utf-8'))
+        LOGGER.error('Test result:\n' + process.stderr.decode('utf-8'))
         succes = False
     if process.returncode!=0:
-        LOGGER.error(f'Failed to run {command} (errorcode {process.returncode})')
+        LOGGER.error(f'Test result:\nFailed to run {command} (errorcode {process.returncode})')
         succes = False
 
     return succes
