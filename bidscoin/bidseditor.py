@@ -47,15 +47,11 @@ ABOUT_WINDOW_HEIGHT = 90
 INSPECT_WINDOW_WIDTH = 650
 INSPECT_WINDOW_HEIGHT = 290
 
-TEST_WINDOW_WIDTH  = 250
-TEST_WINDOW_HEIGHT = 90
+TEST_WINDOW_WIDTH  = 220
+TEST_WINDOW_HEIGHT = 85
 
 MAX_NUM_PROVENANCE_ATTRIBUTES = 2
 MAX_NUM_BIDS_ATTRIBUTES = 9
-
-OPTION_BIDSCOIN_VERSION_DISPLAY = "BIDScoin version"
-OPTION_DCM2NIIX_PATH_DISPLAY = "dcm2niix path"
-OPTION_DCM2NIIX_ARGS_DISPLAY = "dcm2niix args"
 
 DEFAULT_TAB_INDEX = 2
 
@@ -587,7 +583,7 @@ class Ui_MainWindow(object):
                     if is_editable:
                         table.item(i, j).setStatusTip("Double-click to edit the option")
 
-                table.setItem(i, num_cols-1, QTableWidgetItem())
+                table.setItem(i, num_cols-1, QTableWidgetItem())            # Add the test-button cell
                 table.item(i, num_cols-1).setFlags(QtCore.Qt.NoItemFlags)
 
             button_test = QPushButton('Test')
