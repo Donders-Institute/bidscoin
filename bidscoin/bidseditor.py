@@ -584,7 +584,7 @@ class Ui_MainWindow(object):
 
             button_test = QPushButton('Test')
             button_test.clicked.connect(partial(self.handle_click_test, tool, bidsmap_options[tool]))
-            button_test.setStatusTip('Click to edit the BIDS output name')
+            button_test.setStatusTip(f'Click to test the {tool} options')
             table.setCellWidget(0, 3, button_test)
 
             horizontal_header = table.horizontalHeader()
@@ -918,7 +918,7 @@ class TestDialog(QDialog):
         top_widget.setLayout(top_layout)
         top_widget.resize(top_widget.sizeHint())
 
-        self.setWindowTitle("Test Options")
+        self.setWindowTitle("Options")
 
         self.setMinimumSize(TEST_WINDOW_WIDTH, TEST_WINDOW_HEIGHT)
         self.setMaximumSize(TEST_WINDOW_WIDTH, TEST_WINDOW_HEIGHT)
