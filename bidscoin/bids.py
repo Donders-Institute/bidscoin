@@ -22,6 +22,7 @@ logger = logging.getLogger('bidscoin')
 
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh', 'pet')
 unknownmodality = 'extra_data'
+ignoremodality  = 'ignore'
 bidslabels      = ('acq', 'ce', 'rec', 'task', 'echo', 'dir', 'suffix')   # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
 
 
@@ -577,7 +578,7 @@ def delete_series(bidsmap: dict, source: str, modality: str, index: int) -> dict
     :return:            The new bidsmap
     """
 
-    if not modality in bidsmodalities + (unknownmodality,):
+    if not modality in bidsmodalities + (unknownmodality, ignoremodality):
         raise ValueError(f"invalid modality '{modality}'")
 
     del bidsmap[source][modality][index]
@@ -596,7 +597,7 @@ def append_series(bidsmap: dict, source: str, modality: str, series: dict) -> di
     :return:            The new bidsmap
     """
 
-    if not modality in bidsmodalities + (unknownmodality,):
+    if not modality in bidsmodalities + (unknownmodality, ignoremodality):
         raise ValueError(f"invalid modality '{modality}'")
 
     if bidsmap[source][modality] is None:
@@ -622,7 +623,7 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
     modality = None
 
     # Loop through all bidsmodalities and series; all info goes into series_
-    for modality in bidsmodalities + (unknownmodality,):
+    for modality in bidsmodalities + (unknownmodality, ignoremodality):
         if bidsmap[source][modality] is None: continue
 
         for series in bidsmap[source][modality]:
@@ -682,7 +683,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
     :param sesprefix:   The optional sesprefix (e.g. 'ses-'). If it is found in the provenance then a default sesid will be set
     :return:            The composed BIDS file-name (without file-extension)
     """
-    assert modality in bidsmodalities + (unknownmodality,)
+    assert modality in bidsmodalities + (unknownmodality, ignoremodality)
 
     # Add default value for subid and sesid (e.g. for the bidseditor)
     if not subid:
@@ -778,7 +779,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
             _run    = add_prefix('_run-', run),
             suffix  = series['bids']['suffix'])
 
-    elif modality == unknownmodality:
+    elif modality == unknownmodality or modality == ignoremodality:
 
         # bidsname: sub-<participant_label>[_ses-<session_label>]_acq-<label>[..][_suffix]
         bidsname = '{sub}{_ses}_{acq}{_ce}{_rec}{_task}{_echo}{_dir}{_run}{_suffix}'.format(
