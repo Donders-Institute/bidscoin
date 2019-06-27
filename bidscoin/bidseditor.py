@@ -34,11 +34,11 @@ SOURCE = 'DICOM'            # TODO: allow for non-DICOM (e.g. PAR/REC) edits
 
 LOGGER = logging.getLogger('bidscoin')
 
-MAIN_WINDOW_WIDTH   = 1024
-MAIN_WINDOW_HEIGHT  = 500
+MAIN_WINDOW_WIDTH   = 1400
+MAIN_WINDOW_HEIGHT  = 600
 
-EDIT_WINDOW_WIDTH   = 900
-EDIT_WINDOW_HEIGHT  = 600
+EDIT_WINDOW_WIDTH   = 800
+EDIT_WINDOW_HEIGHT  = 1000
 
 INSPECT_WINDOW_WIDTH = 650
 INSPECT_WINDOW_HEIGHT = 290
@@ -46,7 +46,8 @@ INSPECT_WINDOW_HEIGHT = 290
 MAX_NUM_PROVENANCE_ATTRIBUTES = 2
 MAX_NUM_BIDS_ATTRIBUTES = 9
 
-DEFAULT_TAB_INDEX = 2
+OPTIONS_TAB_INDEX = 1
+BIDSMAP_TAB_INDEX = 2
 
 ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "brain.ico")
 
@@ -232,7 +233,7 @@ class MainWindow(QMainWindow):
 class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename,
-                input_bidsmap, output_bidsmap, template_bidsmap, selected_tab_index=DEFAULT_TAB_INDEX):
+                input_bidsmap, output_bidsmap, template_bidsmap, selected_tab_index=BIDSMAP_TAB_INDEX):
 
         self.has_edit_dialog_open = False
 
@@ -586,7 +587,7 @@ class Ui_MainWindow(object):
         self.tabwidget.addTab(self.options, "")
 
         help_button.clicked.connect(self.get_help)
-        reload_button.clicked.connect(self.reload_via_options)
+        reload_button.clicked.connect(partial(self.reload, OPTIONS_TAB_INDEX))
         save_button.clicked.connect(self.save_bidsmap_to_file)
 
     def update_list(self, output_bidsmap):
@@ -712,7 +713,7 @@ class Ui_MainWindow(object):
         self.tabwidget.addTab(self.file_sample_listing, "")
 
         help_button.clicked.connect(self.get_help)
-        reload_button.clicked.connect(self.reload)
+        reload_button.clicked.connect(partial(self.reload, BIDSMAP_TAB_INDEX))
         save_button.clicked.connect(self.save_bidsmap_to_file)
 
     def get_help(self):
@@ -723,19 +724,7 @@ class Ui_MainWindow(object):
         """Get online help. """
         webbrowser.open(HELP_URL_DEFAULT)
 
-    def reload_via_options(self):
-        """Reset button: reload the original input BIDS map. From the options tab. """
-        self.output_bidsmap, _ = bids.load_bidsmap(self.bidsmap_filename)
-        self.setupUi(self.MainWindow,
-                     self.bidsfolder,
-                     self.sourcefolder,
-                     self.bidsmap_filename,
-                     self.input_bidsmap,
-                     self.output_bidsmap,
-                     self.template_bidsmap,
-                     selected_tab_index=1)
-
-    def reload(self):
+    def reload(self, selected_tab_index):
         """Reset button: reload the original input BIDS map. """
         self.output_bidsmap, _ = bids.load_bidsmap(self.bidsmap_filename)
         self.setupUi(self.MainWindow,
@@ -744,7 +733,8 @@ class Ui_MainWindow(object):
                      self.bidsmap_filename,
                      self.input_bidsmap,
                      self.output_bidsmap,
-                     self.template_bidsmap)
+                     self.template_bidsmap,
+                     selected_tab_index=selected_tab_index)
 
     def save_bidsmap_to_file(self):
         """Save the BIDSmap to file. """
@@ -887,7 +877,7 @@ class EditDialog(QDialog):
 
         layout_all.addWidget(scrollarea)
 
-        self.setMinimumWidth(EDIT_WINDOW_WIDTH)
+        self.setMinimumSize(EDIT_WINDOW_WIDTH, EDIT_WINDOW_HEIGHT)
         self.center()
 
         finish = QtWidgets.QAction(self)

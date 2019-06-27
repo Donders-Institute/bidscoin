@@ -580,20 +580,7 @@ def delete_series(bidsmap: dict, source: str, modality: str, index: int) -> dict
     if not modality in bidsmodalities + (unknownmodality,):
         raise ValueError(f"invalid modality '{modality}'")
 
-    bidsmap_dicom = bidsmap.get(source, {})
-    bidsmap_dicom_modality = bidsmap_dicom.get(modality, None)
-
-    if bidsmap_dicom_modality is not None:
-        num_series = len(bidsmap_dicom_modality)
-    else:
-        num_series = 0
-    if index > num_series:
-        raise IndexError(f"invalid index {index} ({num_series+1} items found)")
-
-    if bidsmap_dicom_modality is not None:
-        del bidsmap[source][modality][index]
-    else:
-        logger.warning(f'modality not found {modality}')
+    del bidsmap[source][modality][index]
 
     return bidsmap
 
