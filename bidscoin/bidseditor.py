@@ -417,23 +417,10 @@ class Ui_MainWindow(object):
             item.setForeground(QtGui.QColor(128, 128, 128))
         return item
 
-    def cell_was_changed_bidscoin(self, row, column):
-        """Option value has been changed in BIDScoin tool options table. """
+    def cell_was_changed(self, tool, idx, row, column):
+        """Option value has been changed tool options table. """
         if column == 2:
-            table = self.tables_options[0]  # Select the first table
-            tool = table.item(row, 0).text()
-            key = table.item(row, 1).text()
-            value = table.item(row, 2).text()
-
-            # Only if cell was actually clicked, update
-            if key != '':
-                self.output_bidsmap["Options"][tool][key] = value
-
-    def cell_was_changed_dcm2niix(self, row, column):
-        """Option value has been changed in dcm2niix tool options table. """
-        if column == 2:
-            table = self.tables_options[1] # Select the second table
-            tool = table.item(row, 0).text()
+            table = self.tables_options[idx]  # Select the selected table
             key = table.item(row, 1).text()
             value = table.item(row, 2).text()
 
@@ -514,7 +501,7 @@ class Ui_MainWindow(object):
 
         labels = []
         self.tables_options = []
-        for tool_item in tool_list:
+        for n, tool_item in enumerate(tool_list):
             tool = tool_item['tool']
             tooltip_text = tool_item['tooltip_text']
             data = tool_options[tool]
@@ -575,12 +562,7 @@ class Ui_MainWindow(object):
             table.setMinimumHeight(table_height)
             table.setMaximumHeight(table_height)
 
-            if tool == "bidscoin":
-                table.cellChanged.connect(self.cell_was_changed_bidscoin)
-            elif tool == "dcm2niix":
-                table.cellChanged.connect(self.cell_was_changed_dcm2niix)
-            else:
-                LOGGER.warning(f"Unsupported tool{tool}")
+            table.cellChanged.connect(partial(self.cell_was_changed, tool, n))
 
             labels.append(label)
             self.tables_options.append(table)
@@ -800,8 +782,8 @@ class Ui_MainWindow(object):
 
     def show_about(self):
         """ """
-        self.dialog_about = AboutDialog()
-        self.dialog_about.show()
+        about = f"BIDS editor\n{bids.version()}"
+        QMessageBox.about(self.MainWindow, 'About', about)
 
     def show_edit(self, file_index, source_index, modality):
         """Allow only one edit window to be open."""
@@ -814,44 +796,6 @@ class Ui_MainWindow(object):
     def exit_application(self):
         """Handle exit. """
         self.MainWindow.close()
-
-
-class AboutDialog(QDialog):
-
-    def __init__(self):
-        QDialog.__init__(self)
-
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
-
-        top_widget = QtWidgets.QWidget(self)
-        top_layout = QtWidgets.QVBoxLayout(self)
-
-        label = QLabel(top_widget)
-        label.setText("BIDS editor")
-
-        label_version = QLabel(top_widget)
-        label_version.setText("version: " + bids.version())
-
-        pushButton = QPushButton("OK")
-        pushButton.setToolTip("Close dialog")
-        hbox = QHBoxLayout()
-        hbox.addStretch(1)
-        hbox.addWidget(pushButton)
-
-        top_layout.addWidget(label)
-        top_layout.addWidget(label_version)
-        top_layout.addStretch(1)
-        top_layout.addLayout(hbox)
-
-        pushButton.clicked.connect(self.close)
-
-        top_widget.setLayout(top_layout)
-        top_widget.resize(top_widget.sizeHint())
-
-        self.setMinimumSize(ABOUT_WINDOW_WIDTH, ABOUT_WINDOW_HEIGHT)
-        self.setMaximumSize(ABOUT_WINDOW_WIDTH, ABOUT_WINDOW_HEIGHT)
 
 
 class EditDialog(QDialog):
