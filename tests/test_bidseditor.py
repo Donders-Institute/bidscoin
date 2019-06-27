@@ -6,8 +6,8 @@ import logging
 import copy
 import difflib
 
-from bidscoin.bids import load_bidsmap, save_bidsmap, unknownmodality
-from bidscoin.bidseditor import get_allowed_suffixes, get_bids_attributes, update_bidsmap
+from bidscoin.bids import load_bidsmap, save_bidsmap, bidsmodalities, unknownmodality
+from bidscoin.bidseditor import SOURCE, get_allowed_suffixes, get_bids_attributes, update_bidsmap, get_index_mapping
 
 
 LOGGER = logging.getLogger()
@@ -144,6 +144,51 @@ class TestBidseditor(unittest.TestCase):
         lines = list(difflib.unified_diff(text1, text2))
         LOGGER.info(''.join(lines))
         self.assertEqual(len(lines), 0) # Difference must be zero
+
+
+    def test_index_mapping(self):
+        bidsmap = {}
+        bidsmap[SOURCE] = {}
+        for modality in bidsmodalities + (unknownmodality,):
+            bidsmap[SOURCE][modality] = []
+
+        series1 = {'test': '1'}
+        series2 = {'test': '2'}
+        series3 = {'test': '3'}
+        series4 = {'test': '4'}
+
+        bidsmap[SOURCE]['func'].append(series1)
+        bidsmap[SOURCE]['func'].append(series2)
+        bidsmap[SOURCE]['extra_data'].append(series3)
+        bidsmap[SOURCE]['extra_data'].append(series4)
+
+        index_mapping = get_index_mapping(bidsmap)
+        index_mapping_ref = {
+            'anat': {},
+            'func': {0: 0, 1: 1},
+            'dwi': {},
+            'fmap': {},
+            'beh': {},
+            'pet': {},
+            'extra_data': {2: 0, 3: 1}
+        }
+        self.assertEqual(index_mapping, index_mapping_ref)
+
+        bidsmap[SOURCE]['func'].append(series3)
+        del bidsmap[SOURCE]['extra_data'][0]
+
+        index_mapping = get_index_mapping(bidsmap)
+
+        index_mapping_ref = {
+            'anat': {},
+            'func': {0: 0, 1: 1, 2: 2},
+            'dwi': {},
+            'fmap': {},
+            'beh': {},
+            'pet': {},
+            'extra_data': {3: 0}
+        }
+        self.assertEqual(index_mapping, index_mapping_ref)
 
 
 if __name__ == '__main__':

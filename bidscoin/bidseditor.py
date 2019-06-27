@@ -159,7 +159,7 @@ def get_html_bidsname(bidsname):
 
 
 def get_index_mapping(bidsmap):
-    """Obtain the mapping between file_index and the series ndex for each modality. """
+    """Obtain the mapping between file_index and the series index for each modality. """
     index_mapping = {}
     file_index = 0
     for modality in bids.bidsmodalities + (bids.unknownmodality,):
@@ -593,6 +593,12 @@ class Ui_MainWindow(object):
         """ """
         self.output_bidsmap = output_bidsmap  # output main window / output from edit window -> output main window
 
+        # Done editing
+        self.has_edit_dialog_open = False
+
+        # Make sure we have the correct index mapping for the next edit
+        self.index_mapping = get_index_mapping(self.output_bidsmap)
+
         num_files = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality,):
             series_list = self.input_bidsmap[SOURCE][modality]
@@ -650,12 +656,6 @@ class Ui_MainWindow(object):
                 self.table.setCellWidget(idx, 4, self.button_select)
 
                 idx += 1
-
-        # Done editing
-        self.has_edit_dialog_open = False
-
-        # Make sure we have the correct index mapping for the next edit
-        self.index_mapping = get_index_mapping(self.output_bidsmap)
 
     def set_tab_bidsmap(self):
         """Set the SOURCE file sample listing tab.  """
@@ -759,11 +759,11 @@ class Ui_MainWindow(object):
             bids.save_bidsmap(filename, self.output_bidsmap)
 
     def handle_button_clicked(self):
+        """Make sure that index map has been updated. """
         button = QApplication.focusWidget()
         index = self.table.indexAt(button.pos())
         if index.isValid():
             idx = int(index.row())
-            filename = self.table.item(idx, 1).text()
             modality = self.table.item(idx, 2).text()
             file_index = idx # i.e. the item in the file list
             # Obtain the source index of the series in the list of series in the bidsmap for this modality
