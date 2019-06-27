@@ -76,7 +76,7 @@ or /opt/dcm2niix/bin/
 or '\"C:\\Program Files\\dcm2niix\"' (note the quotes to deal with the whitespace)"""
 
 
-def update_bidsmap(source_bidsmap, target_bidsmap, source_modality, source_index, target_modality, target_series):
+def update_bidsmap(target_bidsmap, source_modality, source_index, target_modality, target_series):
     """Update the BIDS map:
     1. Remove the source series from the source modality section
     2. Start new series dictionary and store key values without comments and references
@@ -635,7 +635,7 @@ class Ui_MainWindow(object):
                 self.table.setItem(idx, 1, item_provenance_file)
                 self.table.setItem(idx, 2, item_modality)
                 self.table.setItem(idx, 3, item_bids_name)
-                self.table.setItem(idx, 5, item_provenance)
+                self.table.setItem(idx, 5, item_provenance) # Hidden column
 
                 self.table.item(idx, 1).setToolTip(os.path.dirname(provenance))
                 self.table.item(idx, 1).setStatusTip('Double-click to inspect the header information')
@@ -657,6 +657,8 @@ class Ui_MainWindow(object):
                 self.table.setCellWidget(idx, 4, self.button_select)
 
                 idx += 1
+
+        assert num_files == idx
 
     def set_tab_bidsmap(self):
         """Set the SOURCE file sample listing tab.  """
@@ -758,7 +760,7 @@ class Ui_MainWindow(object):
             file_index = idx # i.e. the item in the file list
             # Obtain the source index of the series in the list of series in the bidsmap for this modality
             source_index = self.index_mapping[modality][file_index]
-            self.show_edit(file_index, source_index, modality)
+            self.show_edit(source_index, modality)
 
     def on_double_clicked(self, index):
         filename = self.model.fileInfo(index).absoluteFilePath()
@@ -772,10 +774,10 @@ class Ui_MainWindow(object):
         about = f"BIDS editor\n{bids.version()}"
         QMessageBox.about(self.MainWindow, 'About', about)
 
-    def show_edit(self, file_index, source_index, modality):
+    def show_edit(self, source_index, modality):
         """Allow only one edit window to be open."""
         if not self.has_edit_dialog_open:
-            self.dialog_edit = EditDialog(file_index, source_index, modality, self.output_bidsmap, self.template_bidsmap)
+            self.dialog_edit = EditDialog(source_index, modality, self.output_bidsmap, self.template_bidsmap)
             self.dialog_edit.show()
             self.has_edit_dialog_open = True
             self.dialog_edit.got_sample.connect(self.update_list)
@@ -789,18 +791,15 @@ class EditDialog(QDialog):
 
     got_sample = QtCore.pyqtSignal(dict)
 
-    def __init__(self, file_index, index, modality, output_bidsmap, template_bidsmap):
+    def __init__(self, modality_index, modality, output_bidsmap, template_bidsmap):
         QDialog.__init__(self)
 
         self.source_bidsmap = output_bidsmap    # output from main window -> input edit window
-        self.source_file_index = file_index
-        self.source_index = index
+        self.source_modality_index = modality_index
         self.source_modality = modality
-        self.source_series = self.source_bidsmap[SOURCE][modality][index]
+        self.source_series = self.source_bidsmap[SOURCE][modality][modality_index]
 
         self.target_bidsmap = copy.deepcopy(output_bidsmap)
-        self.target_file_index = file_index # Stays the same
-        self.target_index = index # To be updated, depends on target modality
         self.target_modality = modality
         self.target_series = copy.deepcopy(self.source_series)
         self.target_suffix = ''
@@ -869,7 +868,8 @@ class EditDialog(QDialog):
         layout_scrollarea.addLayout(hbox)
 
         self.view_provenance.cellDoubleClicked.connect(self.inspect_dicomfile)
-        self.view_bids.cellChanged.connect(self.cell_was_changed)
+        self.view_dicom.cellChanged.connect(self.dicom_cell_was_changed)
+        self.view_bids.cellChanged.connect(self.bids_cell_was_changed)
 
         help_button.clicked.connect(self.get_help)
         cancel_button.clicked.connect(self.reject)
@@ -913,10 +913,9 @@ class EditDialog(QDialog):
 
     def update_series(self):
         """Save the changes. """
-        self.target_bidsmap = update_bidsmap(self.source_bidsmap,
-                                             self.target_bidsmap,
+        self.target_bidsmap = update_bidsmap(self.target_bidsmap,
                                              self.source_modality,
-                                             self.source_index,
+                                             self.source_modality_index,
                                              self.target_modality,
                                              self.target_series)
 
@@ -932,7 +931,18 @@ class EditDialog(QDialog):
                 self.popup = InspectWindow(filename, dicomdict)
                 self.popup.show()
 
-    def cell_was_changed(self, row, column):
+    def dicom_cell_was_changed(self, row, column):
+        """DICOM attribute value has been changed. """
+        if column == 1:
+            key = self.view_dicom.item(row, 0).text()
+            value = self.view_dicom.item(row, 1).text()
+
+            # Only if cell was actually clicked, update (i.e. not when BIDS modality changes)
+            if key != '':
+                self.view_dicom.item(row, 1).setText(value)
+                self.target_series['attributes'][key] = value
+
+    def bids_cell_was_changed(self, row, column):
         """BIDS attribute value has been changed. """
         if column == 1:
             key = self.view_bids.item(row, 0).text()
