@@ -14,6 +14,7 @@ import glob
 import re
 import ruamel
 import logging
+import subprocess
 from ruamel.yaml import YAML
 yaml = YAML()
 
@@ -68,6 +69,42 @@ def version() -> str:
         version = fid.read().strip()
 
     return str(version)
+
+
+def test_tooloptions(bidsmap: dict(), tool: str) -> bool:
+    """
+    Performs tests of the user tool parameters set in the bidsmap Options-tab
+
+    :param bidsmap: Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param tool:    Name of the tool that is being tested in bidsmap['Options']
+    :return:        True if the tool generated the expected result, False if there
+                    was a tool error, None if this function has an implementation error
+    """
+
+    opts = bidsmap['Options'][tool]
+
+    succes = None
+    if tool == 'dcm2niix':
+        command = f"{opts['path']}dcm2niix -h"
+    elif tool == 'bidscoin':
+        command = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bidscoin.py -v')
+    else:
+        logger.info(f'Testing of {tool} not supported')
+        return succes
+
+    logger.info('Testing: ' + command)
+    process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if process.stdout.decode('utf-8'):
+        logger.info('Test result:\n' + process.stdout.decode('utf-8'))
+        succes = True
+    if process.stderr.decode('utf-8'):
+        logger.error('Test result:\n' + process.stderr.decode('utf-8'))
+        succes = False
+    if process.returncode!=0:
+        logger.error(f'Test result:\nFailed to run {command} (errorcode {process.returncode})')
+        succes = False
+
+    return succes
 
 
 def bidsversion() -> str:
@@ -326,7 +363,7 @@ def save_bidsmap(filename: str, bidsmap: dict):
     Save the BIDSmap as a YAML text file
 
     :param filename:
-    :param bidsmap:
+    :param bidsmap:         Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
     :return:
     """
 

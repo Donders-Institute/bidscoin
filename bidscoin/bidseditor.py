@@ -16,13 +16,12 @@ import logging
 import copy
 import webbrowser
 import pydicom
-import subprocess
 from functools import partial
 from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog,
-                             QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog,
+                             QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog, QMessageBox,
                              QTableWidget, QTableWidgetItem, QGroupBox, QPlainTextEdit,
                              QAbstractItemView, QPushButton, QComboBox, QTextEdit, QDesktopWidget)
 
@@ -46,9 +45,6 @@ ABOUT_WINDOW_HEIGHT = 90
 
 INSPECT_WINDOW_WIDTH = 650
 INSPECT_WINDOW_HEIGHT = 290
-
-TEST_WINDOW_WIDTH  = 220
-TEST_WINDOW_HEIGHT = 85
 
 MAX_NUM_PROVENANCE_ATTRIBUTES = 2
 MAX_NUM_BIDS_ATTRIBUTES = 9
@@ -178,40 +174,6 @@ def get_index_mapping(bidsmap):
             index_mapping[modality][file_index] = series_index
             file_index += 1
     return index_mapping
-
-
-def test_tooloptions(tool: str, opts: dict) -> bool:
-    """
-    Performs tests of the user tool parameters set in the bidsmap Options-tab
-
-    :param tool:    Name of the tool that is being tested in bidsmap['Options']
-    :param opts:    The key-value dictionary from bidsmap['Options'][tool]
-    :return:        True if the tool generated the expected result, False if there
-                    was a tool error, None if this function has an implementation error
-    """
-
-    succes = None
-    if tool == 'dcm2niix':
-        command = f"{opts['path']}dcm2niix -h"
-    elif tool == 'bidscoin':
-        command = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bidscoin.py -v')
-    else:
-        LOGGER.info(f'Testing of {tool} not supported')
-        return succes
-
-    LOGGER.info('Testing: ' + command)
-    process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if process.stdout.decode('utf-8'):
-        LOGGER.info('Test result:\n' + process.stdout.decode('utf-8'))
-        succes = True
-    if process.stderr.decode('utf-8'):
-        LOGGER.error('Test result:\n' + process.stderr.decode('utf-8'))
-        succes = False
-    if process.returncode!=0:
-        LOGGER.error(f'Test result:\nFailed to run {command} (errorcode {process.returncode})')
-        succes = False
-
-    return succes
 
 
 class InspectWindow(QDialog):
@@ -484,13 +446,17 @@ class Ui_MainWindow(object):
 
         :param tool:    Name of the tool that is being tested in bidsmap['Options']
          """
-        opts = self.output_bidsmap['Options'][tool]
-        if test_tooloptions(tool, opts):
+        if bids.test_tooloptions(self.output_bidsmap, tool):
             result = 'Passed'
         else:
             result = 'Failed'
-        self.dialog_test = TestDialog(tool, result)
-        self.dialog_test.show()
+        msg = QMessageBox()
+        msg.setText(f"Test {tool}: {result}")
+        msg.setInformativeText('See terminal output for more info')
+        msg.setWindowTitle("Test")
+        msg.setIcon(QMessageBox.Information)
+        msg.setWindowIcon(QtGui.QIcon(ICON_FILENAME))
+        msg.exec()
 
     def set_tab_options(self):
         """Set the options tab.  """
@@ -886,46 +852,6 @@ class AboutDialog(QDialog):
 
         self.setMinimumSize(ABOUT_WINDOW_WIDTH, ABOUT_WINDOW_HEIGHT)
         self.setMaximumSize(ABOUT_WINDOW_WIDTH, ABOUT_WINDOW_HEIGHT)
-
-
-class TestDialog(QDialog):
-
-    def __init__(self, tool: str, result: str):
-        QDialog.__init__(self)
-
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
-
-        top_widget = QtWidgets.QWidget(self)
-        top_layout = QtWidgets.QVBoxLayout(self)
-
-        label_result = QLabel(top_widget)
-        label_result.setText(f"Test {tool}: {result}")
-
-        label_info = QLabel(top_widget)
-        label_info.setText('See terminal output for more info')
-
-        pushButton = QPushButton("OK")
-        pushButton.setToolTip("Close dialog")
-        hbox = QHBoxLayout()
-        hbox.addStretch(1)
-        hbox.addWidget(pushButton)
-
-        top_layout.addWidget(label_result)
-        top_layout.addWidget(label_info)
-        top_layout.addStretch(1)
-        top_layout.addLayout(hbox)
-
-        pushButton.clicked.connect(self.close)
-
-        top_widget.setLayout(top_layout)
-        top_widget.resize(top_widget.sizeHint())
-
-        self.setWindowTitle("Options")
-
-        self.setMinimumSize(TEST_WINDOW_WIDTH, TEST_WINDOW_HEIGHT)
-        self.setMaximumSize(TEST_WINDOW_WIDTH, TEST_WINDOW_HEIGHT)
 
 
 class EditDialog(QDialog):
