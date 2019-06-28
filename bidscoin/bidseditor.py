@@ -628,12 +628,12 @@ class Ui_MainWindow(object):
                 item_id = QTableWidgetItem(str(idx + 1))
                 item_provenance_file = QTableWidgetItem(provenance_file)
                 item_modality = QTableWidgetItem(modality)
-                item_bids_name = QTableWidgetItem(bids_name)
+                item_bids_name = QTableWidgetItem(os.path.join(modality, bids_name + '.*'))
                 item_provenance = QTableWidgetItem(provenance)
 
                 self.table.setItem(idx, 0, item_id)
                 self.table.setItem(idx, 1, item_provenance_file)
-                self.table.setItem(idx, 2, item_modality)
+                self.table.setItem(idx, 2, item_modality)   # Hidden column
                 self.table.setItem(idx, 3, item_bids_name)
                 self.table.setItem(idx, 5, item_provenance) # Hidden column
 
@@ -644,14 +644,13 @@ class Ui_MainWindow(object):
                 self.table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
 
                 self.button_select = QPushButton('Edit')
-                if modality in (bids.unknownmodality, bids.ignoremodality):
-                    self.button_select.setStyleSheet('QPushButton {color: red;}')
-                    if self.table.item(idx, 2):
-                        self.table.item(idx, 2).setForeground(QtGui.QColor(255, 0, 0))
-                else:
-                    self.button_select.setStyleSheet('QPushButton {color: black;}')
-                    if self.table.item(idx, 2):
-                        self.table.item(idx, 2).setForeground(QtGui.QColor(0, 128, 0))
+                if self.table.item(idx, 3):
+                    if modality == bids.unknownmodality:
+                        self.table.item(idx, 3).setForeground(QtGui.QColor(255, 0, 0))
+                    elif modality == bids.ignoremodality:
+                        self.table.item(idx, 3).setForeground(QtGui.QColor(128, 128, 128))
+                    else:
+                        self.table.item(idx, 3).setForeground(QtGui.QColor(0, 128, 0))
                 self.button_select.clicked.connect(self.handle_button_clicked)
                 self.button_select.setStatusTip('Click to edit the BIDS output name')
                 self.table.setCellWidget(idx, 4, self.button_select)
@@ -680,6 +679,7 @@ class Ui_MainWindow(object):
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+        self.table.setColumnHidden(2, True)
         self.table.setColumnHidden(5, True)
 
         vertical_header = self.table.verticalHeader()
@@ -1227,7 +1227,7 @@ class EditDialog(QDialog):
         subid = bids.replace_bidsvalue(self.target_bidsmap[SOURCE]['participant'], self.target_series['provenance'])
         sesid = bids.replace_bidsvalue(self.target_bidsmap[SOURCE]['session'], self.target_series['provenance'])
         run = self.target_series['bids'].get('run', '')
-        bids_name = bids.get_bidsname(subid, sesid, self.target_modality, self.target_series, run)
+        bids_name = os.path.join(self.target_modality, bids.get_bidsname(subid, sesid, self.target_modality, self.target_series, run)) + '.*'
         html_bids_name = get_html_bidsname(bids_name)
 
         self.view_bids_name.clear()
