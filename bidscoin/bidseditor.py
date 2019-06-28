@@ -540,10 +540,10 @@ class Ui_MainWindow(object):
                 table.setItem(i, num_cols-1, QTableWidgetItem())            # Add the test-button cell
                 table.item(i, num_cols-1).setFlags(QtCore.Qt.NoItemFlags)
 
-            button_test = QPushButton('Test')
-            button_test.clicked.connect(partial(self.handle_click_test, tool))
-            button_test.setStatusTip(f'Click to test the {tool} options')
-            table.setCellWidget(0, num_cols-1, button_test)
+            test_button = QPushButton('Test')
+            test_button.clicked.connect(partial(self.handle_click_test, tool))
+            test_button.setStatusTip(f'Click to test the {tool} options')
+            table.setCellWidget(0, num_cols-1, test_button)
 
             horizontal_header = table.horizontalHeader()
             horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
@@ -594,11 +594,8 @@ class Ui_MainWindow(object):
         save_button.clicked.connect(self.save_bidsmap_to_file)
 
     def update_list(self, output_bidsmap):
-        """ """
+        """(Re)populates the sample list with bidsnames according to the bidsmap"""
         self.output_bidsmap = output_bidsmap  # output main window / output from edit window -> output main window
-
-        # Done editing
-        self.has_edit_dialog_open = False
 
         # Make sure we have the correct index mapping for the next edit
         self.index_mapping = get_index_mapping(self.output_bidsmap)
@@ -646,7 +643,7 @@ class Ui_MainWindow(object):
                 self.table.item(idx, 2).setFlags(QtCore.Qt.ItemIsEnabled)
                 self.table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
 
-                self.button_select = QPushButton('Edit')
+                self.edit_button = QPushButton('Edit')
                 if self.table.item(idx, 3):
                     if modality == bids.unknownmodality:
                         self.table.item(idx, 3).setForeground(QtGui.QColor(255, 0, 0))
@@ -658,9 +655,9 @@ class Ui_MainWindow(object):
                         self.table.item(idx, 3).setFont(f)
                     else:
                         self.table.item(idx, 3).setForeground(QtGui.QColor(0, 128, 0))
-                self.button_select.clicked.connect(self.handle_button_clicked)
-                self.button_select.setStatusTip('Click to edit the BIDS output name')
-                self.table.setCellWidget(idx, 4, self.button_select)
+                self.edit_button.clicked.connect(self.handle_button_clicked)
+                self.edit_button.setStatusTip('Click to edit the BIDS output name')
+                self.table.setCellWidget(idx, 4, self.edit_button)
 
                 idx += 1
 
@@ -694,16 +691,13 @@ class Ui_MainWindow(object):
 
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        help_button = QtWidgets.QPushButton()
-        help_button.setText("Help")
+        help_button = QtWidgets.QPushButton("Help")
         help_button.setStatusTip("Go to the online BIDScoin documentation")
 
-        reload_button = QtWidgets.QPushButton()
-        reload_button.setText("Reload")
+        reload_button = QtWidgets.QPushButton("Reload")
         reload_button.setStatusTip("Reload the BIDSmap from disk")
 
-        save_button = QtWidgets.QPushButton()
-        save_button.setText("Save")
+        save_button = QtWidgets.QPushButton("Save")
         save_button.setStatusTip("Save the BIDSmap to disk")
 
         hbox = QHBoxLayout()
@@ -782,12 +776,17 @@ class Ui_MainWindow(object):
         QMessageBox.about(self.MainWindow, 'About', about)
 
     def show_edit(self, source_index, modality):
-        """Allow only one edit window to be open."""
+        """Allow only one edit window to be open"""
         if not self.has_edit_dialog_open:
             self.dialog_edit = EditDialog(source_index, modality, self.output_bidsmap, self.template_bidsmap)
             self.dialog_edit.show()
             self.has_edit_dialog_open = True
             self.dialog_edit.got_sample.connect(self.update_list)
+            self.dialog_edit.close_edit.connect(self.close_edit)
+
+    def close_edit(self):
+        """Allow a new edit window to be opened"""
+        self.has_edit_dialog_open = False
 
     def exit_application(self):
         """Handle exit. """
@@ -797,6 +796,7 @@ class Ui_MainWindow(object):
 class EditDialog(QDialog):
 
     got_sample = QtCore.pyqtSignal(dict)
+    close_edit = QtCore.pyqtSignal()
 
     def __init__(self, modality_index, modality, output_bidsmap, template_bidsmap):
         QDialog.__init__(self)
@@ -835,12 +835,9 @@ class EditDialog(QDialog):
         self.set_bids_values_section()
         self.set_bids_name_section()
 
-        help_button = QtWidgets.QPushButton()
-        help_button.setText("Help")
-        cancel_button = QtWidgets.QPushButton()
-        cancel_button.setText("Cancel")
-        ok_button = QtWidgets.QPushButton()
-        ok_button.setText("OK")
+        help_button = QtWidgets.QPushButton("Help")
+        cancel_button = QtWidgets.QPushButton("Cancel")
+        ok_button = QtWidgets.QPushButton("OK")
 
         hbox = QHBoxLayout()
         hbox.addStretch(1)
@@ -909,16 +906,15 @@ class EditDialog(QDialog):
 
     def closeEvent(self, event):
         """Make sure we set has_edit_dialog_open to false in main window. """
-        self.got_sample.emit(self.source_bidsmap)
-        self.close()
+        self.close_edit.emit()
 
     def reject(self):
         """Make sure we set has_edit_dialog_open to false in main window. """
-        self.got_sample.emit(self.source_bidsmap)
+        self.close_edit.emit()
         self.close()
 
     def update_series(self):
-        """Save the changes. """
+        """Save the changes to the bidsmap and send it back to the main window: Finished! """
         target_bidsmap = update_bidsmap(self.source_bidsmap,
                                         self.source_modality,
                                         self.source_modality_index,
@@ -926,6 +922,7 @@ class EditDialog(QDialog):
                                         self.target_series)
 
         self.got_sample.emit(target_bidsmap)
+        self.close_edit.emit()
         self.close()
 
     def inspect_dicomfile(self, row=None, column=None):
