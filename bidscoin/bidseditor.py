@@ -1235,7 +1235,7 @@ class EditDialog(QDialog):
         html_bids_name = get_html_bidsname(bids_name)
 
         self.view_bids_name.clear()
-        if self.target_modality == bids.ignoremodality
+        if self.target_modality == bids.ignoremodality:
             self.view_bids_name.textCursor().insertHtml('<font color="#808080"><s>%s</s></font>' % html_bids_name)
         else:
             self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % html_bids_name)
