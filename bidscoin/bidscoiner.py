@@ -451,10 +451,10 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     bidsmap, _ = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder, 'code'))
 
     # Save options to the .bidsignore file
-    ignore_items = [item.strip() for item in bidsmap['Options']['bidscoin']['ignore'].split(';')]
-    LOGGER.info(f"Writing {ignore_items} entries to {bidsfolder}.bidsignore")
+    bidsignore_items = [item.strip() for item in bidsmap['Options']['bidscoin']['bidsignore'].split(';')]
+    LOGGER.info(f"Writing {bidsignore_items} entries to {bidsfolder}.bidsignore")
     with open(os.path.join(bidsfolder,'.bidsignore'), 'w') as bidsignore:
-        for item in ignore_items:
+        for item in bidsignore_items:
             bidsignore.write(item + '\n')
 
     # Get the table & dictionary of the subjects that have been processed
