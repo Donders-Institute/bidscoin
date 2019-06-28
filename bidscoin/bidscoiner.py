@@ -95,7 +95,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
 
         # Check if we should ignore this series
         if modality == bids.ignoremodality:
-            LOGGER.info(f'Ignoring: {seriesfolder}')
+            LOGGER.info(f'Leaving out: {seriesfolder}')
             continue
 
         # Create the BIDS session/modality folder
@@ -423,10 +423,6 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
 
     # Create a code subfolder
     os.makedirs(os.path.join(bidsfolder,'code'), exist_ok=True)
-    if not os.path.isfile(os.path.join(bidsfolder,'.bidsignore')):
-        LOGGER.info(f'Adding {bids.unknownmodality} to {bidsfolder}.bidsignore')
-        with open(os.path.join(bidsfolder,'.bidsignore'), 'w') as bidsignore:
-            bidsignore.write(bids.unknownmodality + os.sep)
 
     # Create a dataset description file if it does not exist
     dataset_file = os.path.join(bidsfolder, 'dataset_description.json')
@@ -453,6 +449,13 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
     bidsmap, _ = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder, 'code'))
+
+    # Save options to the .bidsignore file
+    ignore_items = [item.strip() for item in bidsmap['Options']['bidscoin']['ignore'].split(';')]
+    LOGGER.info(f"Writing {ignore_items} entries to {bidsfolder}.bidsignore")
+    with open(os.path.join(bidsfolder,'.bidsignore'), 'w') as bidsignore:
+        for item in ignore_items:
+            bidsignore.write(item + '\n')
 
     # Get the table & dictionary of the subjects that have been processed
     participants_tsv  = os.path.join(bidsfolder, 'participants.tsv')
