@@ -66,11 +66,14 @@ HELP_URLS = {
 }
 
 OPTIONS_TOOLTIP_BIDSCOIN = """bidscoin\n
-version (should correspond with the version in ../bidscoin/version.txt)"""
+version: should correspond with the version in ../bidscoin/version.txt
+bidsifnore: Semicolon-separated list of entries that are added to the .bidsignore file
+(for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv"""
 
 OPTIONS_TOOLTIP_DCM2NIXX = """dcm2nixx\n
 See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info.
-Command to set the path to dcm2niix (note the semi-colon),\ne.g. module add dcm2niix/1.0.20180622;
+Command to set the path to dcm2niix (note the semi-colon),
+e.g. module add dcm2niix/1.0.20180622;
 or PATH=/opt/dcm2niix/bin:$PATH;
 or /opt/dcm2niix/bin/
 or '\"C:\\Program Files\\dcm2niix\"' (note the quotes to deal with the whitespace)"""
