@@ -150,7 +150,7 @@ def built_pluginmap(seriesfolder: str, bidsmap: dict, heuristics: dict) -> dict:
             plugin = plugin
         plugin = os.path.abspath(os.path.expanduser(plugin))
         if not os.path.isfile(plugin):
-            print('WARNING: Could not find: ' + plugin)
+            LOGGER.warning('Could not find: ' + plugin)
             continue
 
         # Load and run the plugin-module
@@ -158,7 +158,7 @@ def built_pluginmap(seriesfolder: str, bidsmap: dict, heuristics: dict) -> dict:
         module = util.module_from_spec(spec)
         spec.loader.exec_module(module)
         if 'bidsmapper_plugin' in dir(module):
-            print(f'Running: {plugin}.bidsmapper_plugin({seriesfolder}, {bidsmap}, {heuristics})')
+            LOGGER.info(f'Running: {plugin}.bidsmapper_plugin({seriesfolder}, {bidsmap}, {heuristics})')
             bidsmap = module.bidsmapper_plugin(seriesfolder, bidsmap, heuristics)
 
     return bidsmap
@@ -205,7 +205,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, subprefix: str
         if not sessions: sessions = [subject]
         for session in sessions:
 
-            print(f'Parsing: {session} (subject {n}/{len(subjects)})')
+            LOGGER.info(f'Parsing: {session} (subject {n}/{len(subjects)})')
 
             for series in bids.lsdirs(session):
 
