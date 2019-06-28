@@ -806,7 +806,6 @@ class EditDialog(QDialog):
         self.source_modality = modality
         self.source_series = self.source_bidsmap[SOURCE][modality][modality_index]
 
-        self.target_bidsmap = copy.deepcopy(output_bidsmap)
         self.target_modality = modality
         self.target_series = copy.deepcopy(self.source_series)
         self.target_suffix = ''
@@ -910,7 +909,7 @@ class EditDialog(QDialog):
 
     def closeEvent(self, event):
         """Make sure we set has_edit_dialog_open to false in main window. """
-        self.got_sample.emit(self.target_bidsmap)
+        self.got_sample.emit(self.source_bidsmap)
         self.close()
 
     def reject(self):
@@ -920,13 +919,13 @@ class EditDialog(QDialog):
 
     def update_series(self):
         """Save the changes. """
-        self.target_bidsmap = update_bidsmap(self.target_bidsmap,
-                                             self.source_modality,
-                                             self.source_modality_index,
-                                             self.target_modality,
-                                             self.target_series)
+        target_bidsmap = update_bidsmap(self.source_bidsmap,
+                                        self.source_modality,
+                                        self.source_modality_index,
+                                        self.target_modality,
+                                        self.target_series)
 
-        self.got_sample.emit(self.target_bidsmap)
+        self.got_sample.emit(target_bidsmap)
         self.close()
 
     def inspect_dicomfile(self, row=None, column=None):
@@ -1231,8 +1230,8 @@ class EditDialog(QDialog):
         self.update_bidsname()
 
     def update_bidsname(self):
-        subid = bids.replace_bidsvalue(self.target_bidsmap[SOURCE]['participant'], self.target_series['provenance'])
-        sesid = bids.replace_bidsvalue(self.target_bidsmap[SOURCE]['session'], self.target_series['provenance'])
+        subid = bids.replace_bidsvalue(self.source_bidsmap[SOURCE]['participant'], self.target_series['provenance'])
+        sesid = bids.replace_bidsvalue(self.source_bidsmap[SOURCE]['session'], self.target_series['provenance'])
         run = self.target_series['bids'].get('run', '')
         bids_name = os.path.join(self.target_modality, bids.get_bidsname(subid, sesid, self.target_modality, self.target_series, run)) + '.*'
         html_bids_name = get_html_bidsname(bids_name)
