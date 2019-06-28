@@ -21,8 +21,8 @@ yaml = YAML()
 logger = logging.getLogger('bidscoin')
 
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh', 'pet')
-unknownmodality = 'extra_data'
 ignoremodality  = 'ignore'
+unknownmodality = 'extra_data'
 bidslabels      = ('acq', 'ce', 'rec', 'task', 'echo', 'dir', 'suffix')   # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
 
 
@@ -623,7 +623,7 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
     modality = None
 
     # Loop through all bidsmodalities and series; all info goes into series_
-    for modality in bidsmodalities + (unknownmodality, ignoremodality):
+    for modality in bidsmodalities + (ignoremodality, unknownmodality):
         if bidsmap[source][modality] is None: continue
 
         for series in bidsmap[source][modality]:
@@ -664,7 +664,7 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
                 series_['provenance'] = dicomfile
                 return series_, modality
 
-    # We don't have a match (all tests failed, so modality should be the last one, i.e. unknownmodality)
+    # We don't have a match (all tests failed, so modality should be the *last* one, i.e. unknownmodality)
     series_['provenance'] = dicomfile
 
     return series_, modality

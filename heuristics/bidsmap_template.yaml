@@ -344,6 +344,33 @@ DICOM:
       suffix: ~
       mod: ~
 
+  ignore:
+  # ----------------------- Data that will be ignored ----------------
+  - provenance: ~
+    attributes:
+      SeriesDescription: ~
+      SequenceVariant: ~
+      SequenceName: ~
+      ScanningSequence: ~
+      MRAcquisitionType: ~
+      FlipAngle: ~
+      EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
+      ImageType: ~
+      ProtocolName: ~
+      PhaseEncodingDirection: ~
+    bids:
+      acq: <SeriesDescription>
+      rec: ~
+      ce: ~
+      task: ~
+      echo: ~
+      dir: ~
+      run: <<1>>
+      suffix: ~
+      mod: ~
+
 
 PAR: ~
 # --------------------------------------------------------------------------------
@@ -549,8 +576,24 @@ FileSystem:
       <<: *behbids_file
       suffix: stim
 
-  extra_data:
-  # ----------------------- All extra data ---------------------------
+  extra_data: # ----------------------- All extra data ---------------------------
+  - attributes:
+      FolderName: ~
+      FileName: ~
+      FileExt: ~
+    bids:
+      acq: <SeriesDescription>
+      rec: ~
+      ce: ~
+      task: ~
+      echo: ~
+      dir: ~
+      run: <<1>>
+      suffix: ~
+      mod: ~
+
+  ignore:
+  # ----------------------- Data that will be ignored ----------------
   - attributes:
       FolderName: ~
       FileName: ~

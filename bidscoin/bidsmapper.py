@@ -192,7 +192,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, subprefix: str
     # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     bidsmap = copy.deepcopy(heuristics)
     for logic in ('DICOM', 'PAR', 'P7', 'Nifti', 'FileSystem'):
-        for modality in bids.bidsmodalities + (bids.unknownmodality,):
+        for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
 
             if bidsmap[logic] and modality in bidsmap[logic]:
                 bidsmap[logic][modality] = None

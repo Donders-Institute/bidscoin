@@ -82,10 +82,10 @@ def update_bidsmap(target_bidsmap, source_modality, source_index, target_modalit
     2. Start new series dictionary and store key values without comments and references
     3. Add the target series to the target modality section
     """
-    if not source_modality in bids.bidsmodalities + (bids.unknownmodality,):
+    if not source_modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
         raise ValueError(f"invalid modality '{source_modality}'")
 
-    if not target_modality in bids.bidsmodalities + (bids.unknownmodality,):
+    if not target_modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
         raise ValueError(f"invalid modality '{target_modality}'")
 
     # First check if the target series already exists.    TODO: figure out what to do with this situation
@@ -112,7 +112,7 @@ def update_bidsmap(target_bidsmap, source_modality, source_index, target_modalit
 def get_allowed_suffixes(template_bidsmap):
     """Derive the possible suffixes for each modality from the template. """
     allowed_suffixes = {}
-    for modality in bids.bidsmodalities + (bids.unknownmodality,):
+    for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
         allowed_suffixes[modality] = []
         series_list = template_bidsmap[SOURCE][modality]
         if not series_list:
@@ -123,7 +123,7 @@ def get_allowed_suffixes(template_bidsmap):
                 allowed_suffixes[modality].append(suffix)
 
     # Sort the allowed suffixes alphabetically
-    for modality in bids.bidsmodalities + (bids.unknownmodality,):
+    for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
         allowed_suffixes[modality] = sorted(allowed_suffixes[modality])
 
     return allowed_suffixes
@@ -163,7 +163,7 @@ def get_index_mapping(bidsmap):
     """Obtain the mapping between file_index and the series index for each modality. """
     index_mapping = {}
     file_index = 0
-    for modality in bids.bidsmodalities + (bids.unknownmodality,):
+    for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
         series_list = bidsmap[SOURCE][modality]
         index_mapping[modality] = {}
         if not series_list:
@@ -601,7 +601,7 @@ class Ui_MainWindow(object):
         self.index_mapping = get_index_mapping(self.output_bidsmap)
 
         num_files = 0
-        for modality in bids.bidsmodalities + (bids.unknownmodality,):
+        for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
             series_list = self.input_bidsmap[SOURCE][modality]
             if not series_list:
                 continue
@@ -612,7 +612,7 @@ class Ui_MainWindow(object):
         self.table.setRowCount(num_files)
 
         idx = 0
-        for modality in bids.bidsmodalities + (bids.unknownmodality,):
+        for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
             series_list = self.output_bidsmap[SOURCE][modality]
             if not series_list:
                 continue
@@ -644,7 +644,7 @@ class Ui_MainWindow(object):
                 self.table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
 
                 self.button_select = QPushButton('Edit')
-                if modality == bids.unknownmodality:
+                if modality in (bids.unknownmodality, bids.ignoremodality):
                     self.button_select.setStyleSheet('QPushButton {color: red;}')
                     if self.table.item(idx, 2):
                         self.table.item(idx, 2).setForeground(QtGui.QColor(255, 0, 0))
@@ -979,7 +979,7 @@ class EditDialog(QDialog):
         for i, row in enumerate(data):
             table.setRowHeight(i, row_height)
             key = row[0]["value"]
-            if self.target_modality != bids.unknownmodality and key == 'suffix':
+            if self.target_modality in bids.bidsmodalities and key == 'suffix':
                 labels = self.allowed_suffixes[self.target_modality]
                 self.suffix_dropdown = QComboBox(self)
                 self.suffix_dropdown.addItems(labels)
@@ -1079,7 +1079,7 @@ class EditDialog(QDialog):
         self.label_dropdown.setText("Modality")
 
         self.view_dropdown = QComboBox()
-        self.view_dropdown.addItems(bids.bidsmodalities + (bids.unknownmodality,))
+        self.view_dropdown.addItems(bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality))
         self.view_dropdown.setCurrentIndex(self.view_dropdown.findText(self.target_modality))
 
         self.view_dropdown.currentIndexChanged.connect(self.selection_dropdown_change)
@@ -1127,7 +1127,7 @@ class EditDialog(QDialog):
 
     def set_bids_values_section(self):
         """Set editable BIDS values section. """
-        if self.target_modality == bids.unknownmodality:
+        if self.target_modality in (bids.unknownmodality, bids.ignoremodality):
             # Free field
             self.target_suffix = ''
         else:
@@ -1162,7 +1162,7 @@ class EditDialog(QDialog):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
         self.target_modality = self.view_dropdown.currentText()
 
-        if self.target_modality == bids.unknownmodality:
+        if self.target_modality in (bids.unknownmodality, bids.ignoremodality):
             # Free field
             self.target_suffix = ''
         else:
@@ -1179,7 +1179,7 @@ class EditDialog(QDialog):
 
         for i, row in enumerate(data):
             key = row[0]["value"]
-            if self.target_modality != bids.unknownmodality and key == 'suffix':
+            if self.target_modality in bids.bidsmodalities and key == 'suffix':
                 labels = self.allowed_suffixes[self.target_modality]
                 self.suffix_dropdown = QComboBox()
                 self.suffix_dropdown.addItems(labels)
@@ -1205,7 +1205,7 @@ class EditDialog(QDialog):
 
         self.view_bids = table
 
-        if self.target_modality != bids.unknownmodality:
+        if self.target_modality in bids.bidsmodalities:
             bids_values['suffix'] = self.target_suffix
 
         # Update the BIDS output name
@@ -1256,7 +1256,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     if not sourcefolder:
 
         # Loop through all bidsmodalities and series until we find provenance info
-        for modality in bids.bidsmodalities + (bids.unknownmodality,):
+        for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
             if input_bidsmap[SOURCE][modality] is None:
                 continue
 

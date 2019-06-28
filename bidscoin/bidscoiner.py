@@ -93,6 +93,11 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         if not dicomfile: continue
         series, modality = bids.get_matching_dicomseries(dicomfile, bidsmap)
 
+        # Check if we should ignore this series
+        if modality == bids.ignoremodality:
+            LOGGER.info(f'Ignoring: {seriesfolder}')
+            continue
+
         # Create the BIDS session/modality folder
         bidsmodality = os.path.join(bidsses, modality)
         os.makedirs(bidsmodality, exist_ok=True)
