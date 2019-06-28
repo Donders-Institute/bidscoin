@@ -20,18 +20,19 @@ Options:
 # General options
 # --------------------------------------------------------------------------------
   bidscoin:
-    version: '2.1'                                # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
-  dcm2niix:                                       # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
-    path: module add dcm2niix;                    # Command to set the path to dcm2niix (note the semi-colon), e.g. module add dcm2niix/1.0.20180622; or PATH=/opt/dcm2niix/bin:$PATH; or /opt/dcm2niix/bin/ or '"C:\Program Files\dcm2niix\"' (note the quotes to deal with the whitespace)
-    args: -b y -z y -i n                          # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
+    version: '2.2'                # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
+    ignore: extra_data/           # Semicolon-sparated list of entries that are added to the .ignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
+  dcm2niix:                       # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
+    path: module add dcm2niix;    # Command to set the path to dcm2niix (note the semi-colon), e.g. module add dcm2niix/1.0.20180622; or PATH=/opt/dcm2niix/bin:$PATH; or /opt/dcm2niix/bin/ or '"C:\Program Files\dcm2niix\"' (note the quotes to deal with the whitespace)
+    args: -b y -z y -i n          # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
 
 
 DICOM:
 # --------------------------------------------------------------------------------
 # DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  participant: ~                            # A DICOM attribute that is used as participant-label instead of the subject-label from the sourcefolder, e.g. <<PatientID>>
-  session: ~                                # A DICOM attribute that is used as session-label instead of the session-label from the sourcefolder, e.g. <<StudyID>>
+  participant: ~                  # A DICOM attribute that is used as participant-label instead of the subject-label from the sourcefolder, e.g. <<PatientID>>
+  session: ~                      # A DICOM attribute that is used as session-label instead of the session-label from the sourcefolder, e.g. <<StudyID>>
   anat:       # ----------------------- All anatomical series --------------------
   - attributes: &anatattributes
       SeriesDescription: ~
@@ -51,7 +52,7 @@ DICOM:
     bids: &anatbids
       acq: <SeriesDescription>
       rec: ~
-      run_index: <<1>>
+      run: <<1>>
       mod: ~
       suffix: T2w
       ce: ~
@@ -289,7 +290,7 @@ DICOM:
       ImageType: ~
       ProtocolName: ~
     bids: &behbids
-      task_name: <SeriesDescription>
+      task: <SeriesDescription>
       suffix: events
     provenance: ~
   - attributes: *behattributes
@@ -350,8 +351,8 @@ DICOM:
       mod: ~
     provenance: ~
 
-  ignore:
-  # ----------------------- Data that will be ignored ----------------
+  leave_out:
+  # ----------------------- Data that will be left out ---------------
   - provenance: ~
     attributes:
       SeriesDescription: ~
@@ -599,8 +600,8 @@ FileSystem:
       suffix: ~
       mod: ~
 
-  ignore:
-  # ----------------------- Data that will be ignored ----------------
+  leave_out:
+  # ----------------------- Data that will be left out ---------------
   - attributes:
       FolderName: ~
       FileName: ~
