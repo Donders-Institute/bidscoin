@@ -648,7 +648,11 @@ class Ui_MainWindow(object):
                     if modality == bids.unknownmodality:
                         self.table.item(idx, 3).setForeground(QtGui.QColor(255, 0, 0))
                     elif modality == bids.ignoremodality:
+                        self.table.item(idx, 1).setForeground(QtGui.QColor(128, 128, 128))
                         self.table.item(idx, 3).setForeground(QtGui.QColor(128, 128, 128))
+                        f = self.table.item(idx, 3).font()
+                        f.setStrikeOut(True)
+                        self.table.item(idx, 3).setFont(f)
                     else:
                         self.table.item(idx, 3).setForeground(QtGui.QColor(0, 128, 0))
                 self.button_select.clicked.connect(self.handle_button_clicked)
@@ -1231,7 +1235,7 @@ class EditDialog(QDialog):
         html_bids_name = get_html_bidsname(bids_name)
 
         self.view_bids_name.clear()
-        self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % html_bids_name)
+        self.view_bids_name.textCursor().insertHtml('<font color="#808080"><s>%s</s></font>' % html_bids_name)
 
 
 def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templatefile: str=''):
