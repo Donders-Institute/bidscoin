@@ -37,8 +37,8 @@ LOGGER = logging.getLogger('bidscoin')
 MAIN_WINDOW_WIDTH   = 1400
 MAIN_WINDOW_HEIGHT  = 600
 
-EDIT_WINDOW_WIDTH   = 800
-EDIT_WINDOW_HEIGHT  = 1000
+EDIT_WINDOW_WIDTH   = 1400
+EDIT_WINDOW_HEIGHT  = 650
 
 INSPECT_WINDOW_WIDTH = 650
 INSPECT_WINDOW_HEIGHT = 290
@@ -830,7 +830,7 @@ class EditDialog(QDialog):
 
         top_widget = QtWidgets.QWidget()
         scrollarea.setWidget(top_widget)
-        layout_scrollarea = QVBoxLayout(top_widget)
+        layout_scrollarea = QHBoxLayout(top_widget)
 
         self.set_provenance_section()
         self.set_dicom_attributes_section()
@@ -863,15 +863,14 @@ class EditDialog(QDialog):
         layout2.addWidget(self.view_dropdown)
         layout2.addWidget(self.label_bids)
         layout2.addWidget(self.view_bids)
-        layout2.addStretch(1)
         layout2.addWidget(self.label_bids_name)
         layout2.addWidget(self.view_bids_name)
+        layout2.addStretch(1)
+        layout2.addLayout(hbox)
         groupbox2.setLayout(layout2)
 
         layout_scrollarea.addWidget(groupbox1)
         layout_scrollarea.addWidget(groupbox2)
-        layout_scrollarea.addStretch(1)
-        layout_scrollarea.addLayout(hbox)
 
         self.view_provenance.cellDoubleClicked.connect(self.inspect_dicomfile)
         self.view_dicom.cellChanged.connect(self.dicom_cell_was_changed)
