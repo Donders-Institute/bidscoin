@@ -38,7 +38,7 @@ MAIN_WINDOW_WIDTH   = 1400
 MAIN_WINDOW_HEIGHT  = 600
 
 EDIT_WINDOW_WIDTH   = 1400
-EDIT_WINDOW_HEIGHT  = 650
+EDIT_WINDOW_HEIGHT  = 630
 
 INSPECT_WINDOW_WIDTH = 650
 INSPECT_WINDOW_HEIGHT = 290
@@ -821,7 +821,7 @@ class EditDialog(QDialog):
         self.setWindowIcon(icon)
 
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMaximizeButtonHint)
-        self.setWindowTitle("Edit")
+        self.setWindowTitle("Edit BIDS mapping")
 
         layout_all = QVBoxLayout(self)
 
