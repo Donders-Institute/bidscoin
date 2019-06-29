@@ -72,10 +72,10 @@ bidsifnore: Semicolon-separated list of entries that are added to the .bidsignor
 
 OPTIONS_TOOLTIP_DCM2NIXX = """dcm2nixx\n
 See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info.
-Command to set the path to dcm2niix (note the semi-colon),
-e.g. module add dcm2niix/1.0.20180622;
-or PATH=/opt/dcm2niix/bin:$PATH;
-or /opt/dcm2niix/bin/
+Command to set the path to dcm2niix:
+e.g. module add dcm2niix/1.0.20180622; (note the semi-colon at the end)
+or PATH=/opt/dcm2niix/bin:$PATH; (note the semi-colon at the end)
+or /opt/dcm2niix/bin/  (note the slash at the end)
 or '\"C:\\Program Files\\dcm2niix\"' (note the quotes to deal with the whitespace)"""
 
 
@@ -453,15 +453,15 @@ class Ui_MainWindow(object):
 
         help_button = QtWidgets.QPushButton()
         help_button.setText("Help")
-        help_button.setStatusTip("Go to the online BIDScoin documentation")
+        help_button.setToolTip("Go to the online BIDScoin documentation")
 
         reload_button = QtWidgets.QPushButton()
         reload_button.setText("Reload")
-        reload_button.setStatusTip("Reload Options from disk")
+        reload_button.setToolTip("Reload Options from disk")
 
         save_button = QtWidgets.QPushButton()
         save_button.setText("Save")
-        save_button.setStatusTip("Save Options to disk")
+        save_button.setToolTip("Save Options to disk")
 
         bidsmap_options = self.output_bidsmap['Options']
 
@@ -491,12 +491,12 @@ class Ui_MainWindow(object):
                     {
                         "value": key,
                         "is_editable": False,
-                        "tooltip_text": None
+                        "tooltip_text": tooltip_text
                     },
                     {
                         "value": value,
                         "is_editable": True,
-                        "tooltip_text": tooltip_text
+                        "tooltip_text": "Double-click to edit the option"
                     }
                 ])
 
@@ -534,15 +534,13 @@ class Ui_MainWindow(object):
                     table.setItem(i, j, QTableWidgetItem(item))
                     if tooltip_text:
                         table.item(i, j).setToolTip(tooltip_text)
-                    if is_editable:
-                        table.item(i, j).setStatusTip("Double-click to edit the option")
 
                 table.setItem(i, num_cols-1, QTableWidgetItem())            # Add the test-button cell
                 table.item(i, num_cols-1).setFlags(QtCore.Qt.NoItemFlags)
 
             test_button = QPushButton('Test')
             test_button.clicked.connect(partial(self.handle_click_test, tool))
-            test_button.setStatusTip(f'Click to test the {tool} options')
+            test_button.setToolTip(f'Click to test the {tool} options')
             table.setCellWidget(0, num_cols-1, test_button)
 
             horizontal_header = table.horizontalHeader()
@@ -640,12 +638,12 @@ class Ui_MainWindow(object):
                 self.table.setItem(idx, 3, item_bids_name)
                 self.table.setItem(idx, 5, item_provenance) # Hidden column
 
-                self.table.item(idx, 1).setToolTip(os.path.dirname(provenance))
-                self.table.item(idx, 1).setStatusTip('Double-click to inspect the header information')
+                self.table.item(idx, 1).setToolTip('Double-click to inspect the header information')
+                self.table.item(idx, 1).setStatusTip(os.path.dirname(provenance) + os.sep)
                 self.table.item(idx, 0).setFlags(QtCore.Qt.NoItemFlags)
                 self.table.item(idx, 2).setFlags(QtCore.Qt.ItemIsEnabled)
                 self.table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
-                self.table.item(idx, 3).setToolTip(session)
+                self.table.item(idx, 3).setStatusTip(session + os.sep)
 
                 self.edit_button = QPushButton('Edit')
                 if self.table.item(idx, 3):
@@ -660,7 +658,7 @@ class Ui_MainWindow(object):
                     else:
                         self.table.item(idx, 3).setForeground(QtGui.QColor(0, 128, 0))
                 self.edit_button.clicked.connect(self.handle_button_clicked)
-                self.edit_button.setStatusTip('Click to edit the BIDS output name')
+                self.edit_button.setToolTip('Click to edit the BIDS output name')
                 self.table.setCellWidget(idx, 4, self.edit_button)
 
                 idx += 1
@@ -696,13 +694,13 @@ class Ui_MainWindow(object):
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         help_button = QtWidgets.QPushButton("Help")
-        help_button.setStatusTip("Go to the online BIDScoin documentation")
+        help_button.setToolTip("Go to the online BIDScoin documentation")
 
         reload_button = QtWidgets.QPushButton("Reload")
-        reload_button.setStatusTip("Reload the BIDSmap from disk")
+        reload_button.setToolTip("Reload the BIDSmap from disk")
 
         save_button = QtWidgets.QPushButton("Save")
-        save_button.setStatusTip("Save the BIDSmap to disk")
+        save_button.setToolTip("Save the BIDSmap to disk")
 
         hbox = QHBoxLayout()
         hbox.addStretch(1)
