@@ -624,6 +624,9 @@ class Ui_MainWindow(object):
                 subid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['participant'], series['provenance'])
                 sesid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['session'], series['provenance'])
                 bids_name = bids.get_bidsname(subid, sesid, modality, series, run)
+                subid = bids.set_bidsvalue(bids_name, 'sub')
+                sesid = bids.set_bidsvalue(bids_name, 'ses')
+                session = os.path.join(self.bidsfolder, f'sub-{subid}', f'ses-{sesid}')
 
                 item_id = QTableWidgetItem(str(idx + 1))
                 item_provenance_file = QTableWidgetItem(provenance_file)
@@ -642,6 +645,7 @@ class Ui_MainWindow(object):
                 self.table.item(idx, 0).setFlags(QtCore.Qt.NoItemFlags)
                 self.table.item(idx, 2).setFlags(QtCore.Qt.ItemIsEnabled)
                 self.table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
+                self.table.item(idx, 3).setToolTip(session)
 
                 self.edit_button = QPushButton('Edit')
                 if self.table.item(idx, 3):
