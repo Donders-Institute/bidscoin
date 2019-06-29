@@ -782,10 +782,10 @@ class Ui_MainWindow(object):
             self.dialog_edit = EditDialog(source_index, modality, self.output_bidsmap, self.template_bidsmap)
             self.dialog_edit.show()
             self.has_edit_dialog_open = True
-            self.dialog_edit.got_sample.connect(self.update_list)
-            self.dialog_edit.close_edit.connect(self.close_edit)
+            self.dialog_edit.done_edit.connect(self.update_list)
+            self.dialog_edit.close_edit.connect(self.release_edit_dialog)
 
-    def close_edit(self):
+    def release_edit_dialog(self):
         """Allow a new edit window to be opened"""
         self.has_edit_dialog_open = False
 
@@ -796,7 +796,7 @@ class Ui_MainWindow(object):
 
 class EditDialog(QDialog):
 
-    got_sample = QtCore.pyqtSignal(dict)
+    done_edit = QtCore.pyqtSignal(dict)
     close_edit = QtCore.pyqtSignal()
 
     def __init__(self, modality_index, modality, output_bidsmap, template_bidsmap):
@@ -922,7 +922,7 @@ class EditDialog(QDialog):
                                         self.target_modality,
                                         self.target_series)
 
-        self.got_sample.emit(target_bidsmap)
+        self.done_edit.emit(target_bidsmap)
         self.close_edit.emit()
         self.close()
 
