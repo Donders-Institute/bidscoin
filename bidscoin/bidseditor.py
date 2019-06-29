@@ -876,7 +876,7 @@ class EditDialog(QDialog):
         self.view_bids.cellChanged.connect(self.bids_cell_was_changed)
 
         help_button.clicked.connect(self.get_help)
-        cancel_button.clicked.connect(self.reject)
+        cancel_button.clicked.connect(self.cancel)
         ok_button.clicked.connect(self.update_series)
 
         layout_all.addWidget(scrollarea)
@@ -909,7 +909,7 @@ class EditDialog(QDialog):
         """Make sure we set has_edit_dialog_open to false in main window. """
         self.close_edit.emit()
 
-    def reject(self):
+    def cancel(self):
         """Make sure we set has_edit_dialog_open to false in main window. """
         self.close_edit.emit()
         self.close()
