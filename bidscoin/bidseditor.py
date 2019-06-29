@@ -590,12 +590,12 @@ class Ui_MainWindow(object):
         self.tabwidget.addTab(self.options, "")
 
         help_button.clicked.connect(self.get_help)
-        reload_button.clicked.connect(partial(self.reload, OPTIONS_TAB_INDEX))
+        reload_button.clicked.connect(self.reload)
         save_button.clicked.connect(self.save_bidsmap_to_file)
 
     def update_list(self, output_bidsmap):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
-        self.output_bidsmap = output_bidsmap  # output main window / output from edit window -> output main window
+        self.output_bidsmap = output_bidsmap  # input main window / output from edit window -> output main window
 
         # Make sure we have the correct index mapping for the next edit
         self.index_mapping = get_index_mapping(self.output_bidsmap)
@@ -716,7 +716,7 @@ class Ui_MainWindow(object):
         self.tabwidget.addTab(self.file_sample_listing, "")
 
         help_button.clicked.connect(self.get_help)
-        reload_button.clicked.connect(partial(self.reload, BIDSMAP_TAB_INDEX))
+        reload_button.clicked.connect(self.reload)
         save_button.clicked.connect(self.save_bidsmap_to_file)
 
     def get_help(self):
@@ -727,7 +727,8 @@ class Ui_MainWindow(object):
         """Get online help. """
         webbrowser.open(HELP_URL_DEFAULT)
 
-    def reload(self, selected_tab_index):
+    def reload(self):
+        selected_tab_index = self.tabwidget.currentIndex()
         """Reset button: reload the original input BIDS map. """
         self.output_bidsmap, _ = bids.load_bidsmap(self.bidsmap_filename)
         self.setupUi(self.MainWindow,
