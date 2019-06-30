@@ -778,14 +778,18 @@ class Ui_MainWindow(object):
         about = f"BIDS editor\n{bids.version()}"
         QMessageBox.about(self.MainWindow, 'About', about)
 
-    def show_edit(self, source_index, modality):
+    def show_edit(self, source_index, modality, exec=False):
         """Allow only one edit window to be open"""
         if not self.has_edit_dialog_open:
             self.dialog_edit = EditDialog(source_index, modality, self.output_bidsmap, self.template_bidsmap)
-            self.dialog_edit.show()
             self.has_edit_dialog_open = True
             self.dialog_edit.done_edit.connect(self.update_list)
-            self.dialog_edit.close_edit.connect(self.release_edit_dialog)
+            self.dialog_edit.finished.connect(self.release_edit_dialog)
+            if exec:
+                self.dialog_edit.exec()
+            else:
+                self.dialog_edit.show()
+
 
     def release_edit_dialog(self):
         """Allow a new edit window to be opened"""
@@ -799,7 +803,6 @@ class Ui_MainWindow(object):
 class EditDialog(QDialog):
 
     done_edit = QtCore.pyqtSignal(dict)
-    close_edit = QtCore.pyqtSignal()
 
     def __init__(self, modality_index, modality, output_bidsmap, template_bidsmap):
         QDialog.__init__(self)
@@ -877,7 +880,7 @@ class EditDialog(QDialog):
         self.view_bids.cellChanged.connect(self.bids_cell_was_changed)
 
         help_button.clicked.connect(self.get_help)
-        cancel_button.clicked.connect(self.cancel)
+        cancel_button.clicked.connect(self.reject)
         ok_button.clicked.connect(self.update_series)
 
         layout_all.addWidget(scrollarea)
@@ -906,15 +909,6 @@ class EditDialog(QDialog):
         help_url = HELP_URLS.get(self.target_modality, HELP_URL_DEFAULT)
         webbrowser.open(help_url)
 
-    def closeEvent(self, event):
-        """Make sure we set has_edit_dialog_open to false in main window. """
-        self.close_edit.emit()
-
-    def cancel(self):
-        """Make sure we set has_edit_dialog_open to false in main window. """
-        self.close_edit.emit()
-        self.close()
-
     def update_series(self):
         """Save the changes to the bidsmap and send it back to the main window: Finished! """
         target_bidsmap = update_bidsmap(self.source_bidsmap,
@@ -924,8 +918,7 @@ class EditDialog(QDialog):
                                         self.target_series)
 
         self.done_edit.emit(target_bidsmap)
-        self.close_edit.emit()
-        self.close()
+        self.done(1)
 
     def inspect_dicomfile(self, row=None, column=None):
         """When double clicked, show popup window. """
