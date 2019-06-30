@@ -790,6 +790,17 @@ class Ui_MainWindow(object):
             else:
                 self.dialog_edit.show()
 
+        else:
+            self.dialog_edit.raise_()
+            answer = QMessageBox.question(self.dialog_edit, 'Edit BIDS mapping', "Do you want to save your edits?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
+            if answer == QMessageBox.Yes:
+                self.dialog_edit.update_series()
+            if answer == QMessageBox.No:
+                self.dialog_edit.reject()
+            if answer == QMessageBox.Cancel:
+                return
+
+            self.show_edit(source_index, modality, exec)
 
     def release_edit_dialog(self):
         """Allow a new edit window to be opened"""
