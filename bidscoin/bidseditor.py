@@ -1157,7 +1157,7 @@ class EditDialog(QDialog):
         self.view_bids_name = QTextEdit()
         self.view_bids_name.setReadOnly(True)
 
-        height = 24
+        height = 34
         extra_space = 6
         self.view_bids_name.setFixedHeight(height + extra_space)
 
