@@ -911,13 +911,13 @@ class EditDialog(QDialog):
 
     def update_series(self):
         """Save the changes to the bidsmap and send it back to the main window: Finished! """
-        target_bidsmap = update_bidsmap(self.source_bidsmap,
-                                        self.source_modality,
-                                        self.source_modality_index,
-                                        self.target_modality,
-                                        self.target_series)
+        self.source_bidsmap = update_bidsmap(self.source_bidsmap,
+                                             self.source_modality,
+                                             self.source_modality_index,
+                                             self.target_modality,
+                                             self.target_series)
 
-        self.done_edit.emit(target_bidsmap)
+        self.done_edit.emit(self.source_bidsmap)
         self.done(1)
 
     def inspect_dicomfile(self, row=None, column=None):
