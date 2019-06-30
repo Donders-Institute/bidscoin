@@ -614,7 +614,7 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
 
     :param dicomfile:   The full pathname of the dicom-file
     :param bidsmap:     Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
-    :return:            The matching and filled-in series item and modality (NB: not run_index) from the bidsmap (series, modality)
+    :return:            (series, modality, index) The matching and filled-in series item, modality and list index as in series = bidsmap[DICOM][modality][index]
     """
 
     # TODO: generalize for non-DICOM (dicomfile -> file)?
@@ -626,7 +626,7 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
     for modality in bidsmodalities + (ignoremodality, unknownmodality):
         if bidsmap[source][modality] is None: continue
 
-        for series in bidsmap[source][modality]:
+        for index, series in enumerate(bidsmap[source][modality]):
 
             series_ = dict(provenance={}, attributes={}, bids={})                                           # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
             match   = any([series['attributes'][key] is not None for key in series['attributes']])          # Make match False if all attributes are empty
@@ -662,12 +662,12 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
             if match:
                 # TODO: check if there are more matches (i.e. conflicts)
                 series_['provenance'] = dicomfile
-                return series_, modality
+                return series_, modality, index
 
     # We don't have a match (all tests failed, so modality should be the *last* one, i.e. unknownmodality)
     series_['provenance'] = dicomfile
 
-    return series_, modality
+    return series_, modality, None
 
 
 def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='', subprefix: str='sub-', sesprefix: str='ses-') -> str:

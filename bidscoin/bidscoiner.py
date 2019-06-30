@@ -91,7 +91,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         # Get the cleaned-up bids labels from a dicom-file and bidsmap
         dicomfile = bids.get_dicomfile(seriesfolder)
         if not dicomfile: continue
-        series, modality = bids.get_matching_dicomseries(dicomfile, bidsmap)
+        series, modality, _ = bids.get_matching_dicomseries(dicomfile, bidsmap)
 
         # Check if we should ignore this series
         if modality == bids.ignoremodality:
