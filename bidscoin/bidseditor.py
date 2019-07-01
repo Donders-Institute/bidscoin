@@ -438,13 +438,7 @@ class Ui_MainWindow(object):
             result = 'Passed'
         else:
             result = 'Failed'
-        msg = QMessageBox()
-        msg.setText(f"Test {tool}: {result}")
-        msg.setInformativeText('See terminal output for more info')
-        msg.setWindowTitle("Test")
-        msg.setIcon(QMessageBox.Information)
-        msg.setWindowIcon(QtGui.QIcon(ICON_FILENAME))
-        msg.exec()
+        QMessageBox.information(self.MainWindow, 'Test', f"Test {tool}: {result}\nSee terminal output for more info")
 
     def set_tab_options(self):
         """Set the options tab.  """
