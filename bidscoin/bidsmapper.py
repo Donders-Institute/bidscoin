@@ -257,7 +257,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, subprefix: str
 
     # Get the heuristics for creating the bidsmap
     heuristics, bidsmapfile = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder,'code'))
-    template, _             = bids.load_bidsmap()  # TODO: make this a user input
+    template, templatefile  = bids.load_bidsmap()  # TODO: make this a user input
 
     # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     bidsmap = copy.deepcopy(heuristics)
@@ -281,7 +281,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, subprefix: str
                                 f"The bidsmapper will now scan {bidsfolder} and whenever it detects a new type of scan it will "
                                 f"ask you to identify it.\n\nIt is important that you choose the correct BIDS modality (e.g. "
                                 f"'anat', 'dwi' or 'func').\n\nAt the end you will be shown an overview of all identified scan "
-                                f"types and BIDScoin options that you can then (re)edit to your needs")
+                                f"types and BIDScoin options (i.e. the bidseditor) that you can then (re)edit to your needs")
 
     # Loop over all subjects and sessions and built up the bidsmap entries
     subjects = bids.lsdirs(rawfolder, subprefix + '*')
@@ -334,6 +334,9 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, subprefix: str
 
     if gui:
         sys.exit(app.exec_())
+
+    # Launch the bidseditor
+    bidseditor.bidseditor(bidsfolder, rawfolder, bidsmapfile=bidsmapfile, templatefile=templatefile)
 
 
 # Shell usage
