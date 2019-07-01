@@ -801,6 +801,8 @@ class Ui_MainWindow(object):
 
 class EditDialog(QDialog):
 
+    # EditDialog().result() == 1: done with result / new bidsmap
+    # EditDialog().result() == 2: done without result / new bidsmap
     done_edit = QtCore.pyqtSignal(dict)
 
     def __init__(self, modality_index, modality, output_bidsmap, template_bidsmap):
@@ -916,6 +918,9 @@ class EditDialog(QDialog):
                                           QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
             if answer == QMessageBox.Yes:
                 self.update_series()
+                return
+            if answer == QMessageBox.No:
+                self.done(2)
                 return
             if answer == QMessageBox.Cancel:
                 return

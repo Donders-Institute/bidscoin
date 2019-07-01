@@ -104,13 +104,14 @@ def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict, gui: object)
             dialog_edit = bidseditor.EditDialog(index, modality, bidsmap, gui.template_bidsmap)
             dialog_edit.exec()
 
-            if dialog_edit.result():
-                LOGGER.info(f'The user has finished the edit')
-                bidsmap = dialog_edit.source_bidsmap
-            else:
-                """The editor window has been closed without clicking OK"""
+            if dialog_edit.result() == 0:
                 LOGGER.info(f'The user has canceled the edit')
                 exit()
+            elif dialog_edit.result() == 1:
+                LOGGER.info(f'The user has finished the edit')
+                bidsmap = dialog_edit.source_bidsmap
+            elif dialog_edit.result() == 2:
+                LOGGER.info(f'The user has aborted the edit')
 
     return bidsmap
 
