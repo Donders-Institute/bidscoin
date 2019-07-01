@@ -23,7 +23,7 @@ except ImportError:
     import bidseditor
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
 
 LOGGER = logging.getLogger('bidscoin')
 
@@ -59,7 +59,7 @@ class View_Ui_MainWindow(bidseditor.Ui_MainWindow):
         """User has finished editting (clicked OK)"""
         super().update_list(*args, **kwargs)
 
-        LOGGER.info(f'User has finished editting')
+        LOGGER.info(f'User has finished editing')
 
 
 def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict, gui: object) -> dict:
@@ -95,14 +95,14 @@ def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict, gui: object)
             series, modality, index = bids.get_matching_dicomseries(dicomfile, bidsmap)
 
             # Open a view-only version of the main window
-            gui.MainWindow.show()
-            gui.setupUi(gui.MainWindow, gui.bidsfolder, gui.sourcefolder, gui.bidsmap_filename, bidsmap, bidsmap, gui.template_bidsmap)
+            if gui.interactive == 2:
+                gui.MainWindow.show()
+                gui.setupUi(gui.MainWindow, gui.bidsfolder, gui.sourcefolder, gui.bidsmap_filename, bidsmap, bidsmap, gui.template_bidsmap)
 
             # Open the edit window to get the mapping
             gui.has_edit_dialog_open = True
             dialog_edit = bidseditor.EditDialog(index, modality, bidsmap, gui.template_bidsmap)
             dialog_edit.exec()
-            gui.MainWindow.hide()
 
             if dialog_edit.result():
                 LOGGER.info(f'The user has finished the edit')
@@ -110,6 +110,7 @@ def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict, gui: object)
             else:
                 """The editor window has been closed without clicking OK"""
                 LOGGER.info(f'The user has canceled the edit')
+                exit()
 
     return bidsmap
 
@@ -232,7 +233,7 @@ def built_pluginmap(seriesfolder: str, bidsmap: dict, heuristics: dict) -> dict:
     return bidsmap
 
 
-def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, subprefix: str='sub-', sesprefix: str='ses-', automatic: bool=False) -> None:
+def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, subprefix: str='sub-', sesprefix: str='ses-', interactive: bool=True) -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder
     and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code.
@@ -243,7 +244,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, subprefix: str
     :param bidsmapfile:     The name of the bidsmap YAML-file
     :param subprefix:       The prefix common for all source subject-folders
     :param sesprefix:       The prefix common for all source session-folders
-    :param automatic:       If True, the user will not be asked for help if an unknown series is encountered
+    :param interactive:     If True, the user will be asked for help if an unknown series is encountered
     :return:bidsmapfile:    The name of the mapped bidsmap YAML-file
     """
 
@@ -268,14 +269,20 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, subprefix: str
                 bidsmap[logic][modality] = None
 
     # Start the Qt-application
-    gui = not automatic
+    gui = interactive
     if gui:
         app = QApplication(sys.argv)
         app.setApplicationName("BIDS editor")
         mainwin = MainWindow()
         gui = View_Ui_MainWindow()
+        gui.interactive = interactive
         gui.MainWindow = mainwin
         gui.setupUi(mainwin, bidsfolder, rawfolder, bidsmapfile, bidsmap, bidsmap, template)
+        QMessageBox.information(mainwin, 'bidsmapper workflow',
+                                f"The bidsmapper will now scan {bidsfolder} and whenever it detects a new type of scan it will "
+                                f"ask you to identify it.\n\nIt is important that you choose the correct BIDS modality (e.g. "
+                                f"'anat', 'dwi' or 'func').\n\nAt the end you will be shown an overview of all identified scan "
+                                f"types and BIDScoin options that you can then (re)edit to your needs")
 
     # Loop over all subjects and sessions and built up the bidsmap entries
     subjects = bids.lsdirs(rawfolder, subprefix + '*')
@@ -340,12 +347,12 @@ if __name__ == "__main__":
                                      epilog='examples:\n'
                                             '  bidsmapper.py /project/foo/raw /project/foo/bids\n'
                                             '  bidsmapper.py /project/foo/raw /project/foo/bids -t bidsmap_dccn\n ')
-    parser.add_argument('sourcefolder',     help='The source folder containing the raw data in sub-#/ses-#/series format (or specify --subprefix and --sesprefix for different prefixes)')
-    parser.add_argument('bidsfolder',       help='The destination folder with the (future) bids data and the default bidsfolder/code/bidsmap.yaml file')
-    parser.add_argument('-t','--template',  help='The non-default / site-specific bidsmap template file with the BIDS heuristics')
-    parser.add_argument('-n','--subprefix', help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
-    parser.add_argument('-m','--sesprefix', help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
-    parser.add_argument('-a','--automatic', help='If this flag is given the user will not be asked for help if an unknown series is encountered', action='store_true')
+    parser.add_argument('sourcefolder',       help='The source folder containing the raw data in sub-#/ses-#/series format (or specify --subprefix and --sesprefix for different prefixes)')
+    parser.add_argument('bidsfolder',         help='The destination folder with the (future) bids data and the default bidsfolder/code/bidsmap.yaml file')
+    parser.add_argument('-t','--template',    help='The non-default / site-specific bidsmap template file with the BIDS heuristics')
+    parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
+    parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
+    parser.add_argument('-i','--interactive', help='If not zero, then the user will be asked for help if an unknown series is encountered. Default: 1', type=int, choices=[0,1,2], default=1)
     args = parser.parse_args()
 
     bidsmapper(rawfolder   = args.sourcefolder,
@@ -353,5 +360,4 @@ if __name__ == "__main__":
                bidsmapfile = args.template,
                subprefix   = args.subprefix,
                sesprefix   = args.sesprefix,
-               automatic   = args.automatic)
-
+               interactive = args.interactive)
