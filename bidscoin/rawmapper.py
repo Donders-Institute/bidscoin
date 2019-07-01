@@ -153,7 +153,7 @@ if __name__ == "__main__":
     parser.add_argument('--dryrun',          help='Add this flag to dryrun (test) the mapping or renaming of the sub-subid/ses-sesid directories (i.e. nothing is stored on disk and directory names are not actually changed))', action='store_true')
     args = parser.parse_args()
 
-    rawmapper(rawfolder  = args.rawfolder,
+    rawmapper(rawfolder  = args.sourcefolder,
               outfolder  = args.outfolder,
               sessions   = args.sessions,
               rename     = args.rename,
