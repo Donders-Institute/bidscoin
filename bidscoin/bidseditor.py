@@ -785,15 +785,9 @@ class Ui_MainWindow(object):
                 self.dialog_edit.show()
 
         else:
-            self.dialog_edit.raise_()
-            answer = QMessageBox.question(self.dialog_edit, 'Edit BIDS mapping', "Do you want to save your edits?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
-            if answer == QMessageBox.Yes:
-                self.dialog_edit.update_series()
-            if answer == QMessageBox.No:
-                self.dialog_edit.reject()
-            if answer == QMessageBox.Cancel:
+            self.dialog_edit.reject()
+            if self.has_edit_dialog_open:
                 return
-
             self.show_edit(source_index, modality, exec)
 
     def release_edit_dialog(self):
@@ -913,6 +907,20 @@ class EditDialog(QDialog):
         """Open web page for help. """
         help_url = HELP_URLS.get(self.target_modality, HELP_URL_DEFAULT)
         webbrowser.open(help_url)
+
+    def reject(self, confirm=True):
+
+        if confirm:
+            self.raise_()
+            answer = QMessageBox.question(self, 'Edit BIDS mapping', "Closing window, do you want to save the changes you made?",
+                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
+            if answer == QMessageBox.Yes:
+                self.update_series()
+                return
+            if answer == QMessageBox.Cancel:
+                return
+
+        super(EditDialog, self).reject()
 
     def update_series(self):
         """Save the changes to the bidsmap and send it back to the main window: Finished! """
