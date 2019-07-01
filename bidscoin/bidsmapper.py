@@ -59,8 +59,6 @@ class View_Ui_MainWindow(bidseditor.Ui_MainWindow):
         """User has finished editting (clicked OK)"""
         super().update_list(*args, **kwargs)
 
-        LOGGER.info(f'User has finished editing')
-
 
 def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict, gui: object) -> dict:
     """
