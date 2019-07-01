@@ -333,10 +333,10 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, subprefix: str
     LOGGER.info('------------ FINISHED! ------------')
 
     if gui:
-        sys.exit(app.exec_())
+        # Launch the bidseditor
+        bidseditor.bidseditor(bidsfolder, rawfolder, bidsmapfile=bidsmapfile, templatefile=templatefile)
 
-    # Launch the bidseditor
-    bidseditor.bidseditor(bidsfolder, rawfolder, bidsmapfile=bidsmapfile, templatefile=templatefile)
+        sys.exit(app.exec_())
 
 
 # Shell usage

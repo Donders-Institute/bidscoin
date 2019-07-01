@@ -912,7 +912,7 @@ class EditDialog(QDialog):
         webbrowser.open(help_url)
 
     def reject(self, confirm=True):
-
+        """Ask if the user really wants to close the window"""
         if confirm:
             self.raise_()
             answer = QMessageBox.question(self, 'Edit BIDS mapping', "Closing window, do you want to save the changes you made?",
