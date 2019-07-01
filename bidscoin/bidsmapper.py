@@ -107,7 +107,7 @@ def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict, gui: object)
                 exit()
             elif dialog_edit.result() == 1:
                 LOGGER.info(f'The user has finished the edit')
-                bidsmap = dialog_edit.source_bidsmap
+                bidsmap = dialog_edit.bidsmap
             elif dialog_edit.result() == 2:
                 LOGGER.info(f'The user has aborted the edit')
 

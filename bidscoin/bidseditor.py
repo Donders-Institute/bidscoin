@@ -801,17 +801,18 @@ class Ui_MainWindow(object):
 
 class EditDialog(QDialog):
 
-    # EditDialog().result() == 1: done with result / new bidsmap
-    # EditDialog().result() == 2: done without result / new bidsmap
+    # EditDialog().result() == 1: done with result, i.e. done_edit -> new bidsmap
+    # EditDialog().result() == 2: done without result
     done_edit = QtCore.pyqtSignal(dict)
 
-    def __init__(self, modality_index, modality, output_bidsmap, template_bidsmap):
+    def __init__(self, modality_index, modality, bidsmap, template_bidsmap):
         QDialog.__init__(self)
 
-        self.source_bidsmap = output_bidsmap    # output from main window -> input edit window
+        self.bidsmap = bidsmap
+
         self.source_modality_index = modality_index
         self.source_modality = modality
-        self.source_series = self.source_bidsmap[SOURCE][modality][modality_index]
+        self.source_series = self.bidsmap[SOURCE][modality][modality_index]
 
         self.target_modality = modality
         self.target_series = copy.deepcopy(self.source_series)
@@ -929,13 +930,13 @@ class EditDialog(QDialog):
 
     def update_series(self):
         """Save the changes to the bidsmap and send it back to the main window: Finished! """
-        self.source_bidsmap = update_bidsmap(self.source_bidsmap,
-                                             self.source_modality,
-                                             self.source_modality_index,
-                                             self.target_modality,
-                                             self.target_series)
+        self.bidsmap = update_bidsmap(self.bidsmap,
+                                      self.source_modality,
+                                      self.source_modality_index,
+                                      self.target_modality,
+                                      self.target_series)
 
-        self.done_edit.emit(self.source_bidsmap)
+        self.done_edit.emit(self.bidsmap)
         self.done(1)
 
     def inspect_dicomfile(self, row=None, column=None):
@@ -1240,8 +1241,8 @@ class EditDialog(QDialog):
         self.update_bidsname()
 
     def update_bidsname(self):
-        subid = bids.replace_bidsvalue(self.source_bidsmap[SOURCE]['participant'], self.target_series['provenance'])
-        sesid = bids.replace_bidsvalue(self.source_bidsmap[SOURCE]['session'], self.target_series['provenance'])
+        subid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['participant'], self.target_series['provenance'])
+        sesid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['session'], self.target_series['provenance'])
         run = self.target_series['bids'].get('run', '')
         bids_name = os.path.join(self.target_modality, bids.get_bidsname(subid, sesid, self.target_modality, self.target_series, run)) + '.*'
         html_bids_name = get_html_bidsname(bids_name)
