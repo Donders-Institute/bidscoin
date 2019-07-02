@@ -94,9 +94,9 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
             if gui.interactive == 2:
                 gui.MainWindow.show()
                 gui.setupUi(gui.MainWindow, gui.bidsfolder, gui.sourcefolder, gui.bidsmap_filename, bidsmap_new, bidsmap_new, gui.template_bidsmap)
+                gui.has_edit_dialog_open = True
 
             # Open the edit window to get the mapping
-            gui.has_edit_dialog_open = True
             dialog_edit = bidseditor.EditDialog(index, modality, bidsmap_new, gui.template_bidsmap, gui.subprefix, gui.sesprefix)
             dialog_edit.exec()
 
@@ -334,7 +334,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     LOGGER.info('------------ FINISHED! ------------')
 
     if gui:
-        # Launch the bidseditor
+        # Close the GUI and launch the bidseditor
         sys.exit(app.exec_())
         bidseditor.bidseditor(bidsfolder, rawfolder, bidsmapfile=bidsmapfile, templatefile=templatefile, subprefix=subprefix, sesprefix=sesprefix)
 
