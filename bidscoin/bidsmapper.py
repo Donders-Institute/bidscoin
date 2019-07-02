@@ -267,11 +267,10 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     gui = interactive
     if gui:
         app = QApplication(sys.argv)
-        app.setApplicationName("BIDS editor")
+        app.setApplicationName("BIDS mapper")
         mainwin = MainWindow()
         gui = View_Ui_MainWindow()
         gui.interactive = interactive
-        gui.MainWindow = mainwin
         gui.setupUi(mainwin, bidsfolder, rawfolder, bidsmapfile, bidsmap_new, bidsmap_new, template, subprefix=subprefix, sesprefix=sesprefix)
 
         QMessageBox.information(mainwin, 'bidsmapper workflow',
