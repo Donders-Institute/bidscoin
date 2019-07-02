@@ -28,33 +28,6 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
 LOGGER = logging.getLogger('bidscoin')
 
 
-class MainWindow(bidseditor.MainWindow):
-
-    def closeEvent(self, event):
-        """Handle exit. """
-        LOGGER.info('User-editing done')
-        QApplication.quit()
-
-
-class View_Ui_MainWindow(bidseditor.Ui_MainWindow):
-
-    def setupUi(self, *args, **kwargs):
-        """Make sure the user cannot edit a list item"""
-        super().setupUi(*args, **kwargs)
-
-    def set_tab_options(self):
-        """Sets a view-only version of the Options tab"""
-        super().set_tab_options()
-
-    def set_tab_bidsmap(self):
-        """Sets a view-only version of the BIDS-map tab"""
-        super().set_tab_bidsmap()
-
-    def update_list(self, *args, **kwargs):
-        """User has finished editting (clicked OK)"""
-        super().update_list(*args, **kwargs)
-
-
 def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, template: dict, gui: object) -> dict:
     """
     All the logic to map dicom-attributes (fields/tags) onto bids-labels go into this function
@@ -79,7 +52,7 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
         series, modality, index = bids.get_matching_dicomseries(dicomfile, template)
 
     # If not, copy the filled-in series over to the output bidsmap
-    if not bids.exist_series(bidsmap_new, 'DICOM', modality, series):
+    if not bids.exist_series(bidsmap_new, 'DICOM', '', series):
         LOGGER.info('Unknown modality found: ' + dicomfile)
         bidsmap_new = bids.append_series(bidsmap_new, 'DICOM', modality, series)
 
@@ -267,9 +240,9 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     gui = interactive
     if gui:
         app = QApplication(sys.argv)
-        app.setApplicationName("BIDS mapper")
-        mainwin = MainWindow()
-        gui = View_Ui_MainWindow()
+        app.setApplicationName('BIDS mapper')
+        mainwin = bidseditor.MainWindow()
+        gui = bidseditor.Ui_MainWindow()
         gui.interactive = interactive
         gui.setupUi(mainwin, bidsfolder, rawfolder, bidsmapfile, bidsmap_new, bidsmap_new, template, subprefix=subprefix, sesprefix=sesprefix)
 
@@ -329,8 +302,10 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     # (Re)launch the bidseditor UI_MainWindow
     if gui:
         LOGGER.info('Opening the bidseditor')
-        gui.update_list(bidsmap_new)
-        gui.MainWindow.show()
+        app.setApplicationName('BIDS editor')
+        gui.setupUi(mainwin, bidsfolder, rawfolder, bidsmapfile, bidsmap_new, copy.deepcopy(bidsmap_new), template, subprefix=subprefix, sesprefix=sesprefix)
+        mainwin.show()
+        app.exec()
 
     LOGGER.info('------------ FINISHED! ------------')
 
