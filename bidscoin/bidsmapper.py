@@ -22,8 +22,7 @@ except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
     import bidseditor
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
+from PyQt5.QtWidgets import QApplication, QMessageBox
 
 LOGGER = logging.getLogger('bidscoin')
 
