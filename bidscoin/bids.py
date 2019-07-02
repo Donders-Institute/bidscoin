@@ -618,9 +618,8 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
     """
 
     # TODO: generalize for non-DICOM (dicomfile -> file)?
-    source   = 'DICOM'
-    series_  = None
-    modality = None
+    source  = 'DICOM'
+    series_ = dict(provenance={}, attributes={}, bids={})
 
     # Loop through all bidsmodalities and series; all info goes into series_
     for modality in bidsmodalities + (ignoremodality, unknownmodality):
@@ -629,7 +628,7 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
         for index, series in enumerate(bidsmap[source][modality]):
 
             series_ = dict(provenance={}, attributes={}, bids={})                                           # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
-            match   = any([series['attributes'][key] is not None for key in series['attributes']])          # Make match False if all attributes are empty
+            match   = any([series['attributes'][attrkey] is not None for attrkey in series['attributes']])  # Make match False if all attributes are empty
 
             # Try to see if the dicomfile matches all of the attributes and fill all of them
             for attrkey in series['attributes']:
