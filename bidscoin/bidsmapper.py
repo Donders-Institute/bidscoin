@@ -75,6 +75,8 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
             elif dialog_edit.result() == 1:
                 LOGGER.info(f'The user has finished the edit')
                 bidsmap_new = dialog_edit.bidsmap
+                if gui.interactive==2:
+                    gui.update_list(bidsmap_new)
             elif dialog_edit.result() == 2:
                 LOGGER.info(f'The user has aborted the edit')
 
