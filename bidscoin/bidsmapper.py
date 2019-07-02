@@ -75,11 +75,11 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
     series, modality, index = bids.get_matching_dicomseries(dicomfile, bidsmap_old)
 
     # If not, see if we can find a matching series in the template
-    if modality == bids.unknownmodality or not index:
+    if not index:
         series, modality, index = bids.get_matching_dicomseries(dicomfile, template)
 
     # If not, copy the filled-in series over to the output bidsmap
-    if not not index:
+    if not index:
         LOGGER.info('Unknown modality found: ' + dicomfile)
         bidsmap_new = bids.append_series(bidsmap_new, 'DICOM', modality, series)
 
