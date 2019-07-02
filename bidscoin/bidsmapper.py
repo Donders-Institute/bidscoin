@@ -75,17 +75,15 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
     series, modality, index = bids.get_matching_dicomseries(dicomfile, bidsmap_old)
 
     # If not, see if we can find a matching series in the template
-    if modality == bids.unknownmodality:
+    if modality == bids.unknownmodality or not index:
         series, modality, index = bids.get_matching_dicomseries(dicomfile, template)
 
-    # Copy the filled-in attributes series over to the output bidsmap
-    if not bids.exist_series(bidsmap_new, 'DICOM', modality, series):
+    # If not, copy the filled-in series over to the output bidsmap
+    if not not index:
+        LOGGER.info('Unknown modality found: ' + dicomfile)
         bidsmap_new = bids.append_series(bidsmap_new, 'DICOM', modality, series)
 
-    # If we haven't found a matching series, launch a GUI to ask the user for help
-    if modality == bids.unknownmodality:
-        LOGGER.info('Unknown modality found: ' + dicomfile)
-
+        # Launch a GUI to ask the user for help
         if gui:
             # Update the index after the bids.append_series()
             series, modality, index = bids.get_matching_dicomseries(dicomfile, bidsmap_new)
@@ -93,11 +91,10 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
             # Open a view-only version of the main window
             if gui.interactive == 2:
                 gui.MainWindow.show()
-                gui.setupUi(gui.MainWindow, gui.bidsfolder, gui.sourcefolder, gui.bidsmap_filename, bidsmap_new, bidsmap_new, gui.template_bidsmap)
-                gui.has_edit_dialog_open = True
+                gui.update_list(bidsmap_new)
 
             # Open the edit window to get the mapping
-            dialog_edit = bidseditor.EditDialog(index, modality, bidsmap_new, gui.template_bidsmap, gui.subprefix, gui.sesprefix)
+            dialog_edit = bidseditor.EditDialog(index, modality, bidsmap_new, template, gui.subprefix, gui.sesprefix)
             dialog_edit.exec()
 
             if dialog_edit.result() == 0:
@@ -276,11 +273,12 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         gui.interactive = interactive
         gui.MainWindow = mainwin
         gui.setupUi(mainwin, bidsfolder, rawfolder, bidsmapfile, bidsmap_new, bidsmap_new, template, subprefix=subprefix, sesprefix=sesprefix)
+
         QMessageBox.information(mainwin, 'bidsmapper workflow',
                                 f"The bidsmapper will now scan {bidsfolder} and whenever it detects a new type of scan it will "
                                 f"ask you to identify it.\n\nIt is important that you choose the correct BIDS modality (e.g. "
                                 f"'anat', 'dwi' or 'func').\n\nAt the end you will be shown an overview of all the different scan "
-                                f"types and BIDScoin options (i.e. the bidseditor) that you can then (re)edit to your needs")
+                                f"types and BIDScoin options (as in the bidseditor) that you can then (re)edit to your needs")
 
     # Loop over all subjects and sessions and built up the bidsmap entries
     subjects = bids.lsdirs(rawfolder, subprefix + '*')
@@ -329,12 +327,13 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     # Save the bidsmap to the bidsmap YAML-file
     bids.save_bidsmap(bidsmapfile, bidsmap_new)
 
-    LOGGER.info('------------ FINISHED! ------------')
-
+    # (Re)launch the bidseditor UI_MainWindow
     if gui:
-        # Close the GUI and launch the bidseditor
-        sys.exit(app.exec_())
-        bidseditor.bidseditor(bidsfolder, rawfolder, bidsmapfile=bidsmapfile, templatefile=templatefile, subprefix=subprefix, sesprefix=sesprefix)
+        LOGGER.info('Opening the bidseditor')
+        gui.update_list(bidsmap_new)
+        gui.MainWindow.show()
+
+    LOGGER.info('------------ FINISHED! ------------')
 
 
 # Shell usage
