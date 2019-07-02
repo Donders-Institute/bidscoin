@@ -93,7 +93,7 @@ def update_bidsmap(target_bidsmap, source_modality, source_index, target_modalit
 
     # First check if the target series already exists.    TODO: figure out what to do with this situation
     if source_modality != target_modality and bids.exist_series(target_bidsmap, SOURCE, target_modality, target_series):
-        LOGGER.warning('That entry already exists...')
+        LOGGER.warning(f'That series from {source_modality} already exists in {target_modality}...')
 
     # Delete the source series
     target_bidsmap = bids.delete_series(target_bidsmap, SOURCE, source_modality, source_index)
