@@ -274,10 +274,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         mainwin = MainWindow()
         gui = View_Ui_MainWindow()
         gui.interactive = interactive
-        gui.subprefix = subprefix
-        gui.sesprefix = sesprefix
         gui.MainWindow = mainwin
-        gui.setupUi(mainwin, bidsfolder, rawfolder, bidsmapfile, bidsmap_new, bidsmap_new, template)
+        gui.setupUi(mainwin, bidsfolder, rawfolder, bidsmapfile, bidsmap_new, bidsmap_new, template, subprefix=subprefix, sesprefix=sesprefix)
         QMessageBox.information(mainwin, 'bidsmapper workflow',
                                 f"The bidsmapper will now scan {bidsfolder} and whenever it detects a new type of scan it will "
                                 f"ask you to identify it.\n\nIt is important that you choose the correct BIDS modality (e.g. "

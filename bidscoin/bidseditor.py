@@ -236,9 +236,12 @@ class MainWindow(QMainWindow):
 class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename,
-                input_bidsmap, output_bidsmap, template_bidsmap, selected_tab_index=BIDSMAP_TAB_INDEX):
+                input_bidsmap, output_bidsmap, template_bidsmap, selected_tab_index=BIDSMAP_TAB_INDEX, subprefix='sub-', sesprefix='ses-'):
 
         self.has_edit_dialog_open = False
+
+        self.subprefix = subprefix
+        self.sesprefix = sesprefix
 
         self.MainWindow = MainWindow
 
