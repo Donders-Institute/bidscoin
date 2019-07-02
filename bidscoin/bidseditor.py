@@ -1302,9 +1302,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     app.setApplicationName("BIDS editor")
     mainwin = MainWindow()
     gui = Ui_MainWindow()
-    gui.subprefix = subprefix
-    gui.sesprefix = sesprefix
-    gui.setupUi(mainwin, bidsfolder, sourcefolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap)
+    gui.setupUi(mainwin, bidsfolder, sourcefolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap, subprefix=subprefix, sesprefix=sesprefix)
     mainwin.show()
     sys.exit(app.exec_())
 
