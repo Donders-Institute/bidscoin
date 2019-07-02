@@ -526,11 +526,16 @@ def exist_series(bidsmap: dict, source: str, modality: str, series: dict, matchb
 
     :param bidsmap:         Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param source:          The information source in the bidsmap that is used, e.g. 'DICOM'
-    :param modality:        The modality in the source that is used, e.g. 'anat'
+    :param modality:        The modality in the source that is used, e.g. 'anat'. Empty values will search through all modalities
     :param series:          The series (listitem) that is searched for in the modality
     :param matchbidslabels: If True, also matches the BIDS-labels, otherwise only series['attributes']
     :return:                True if the series exists in serieslist
     """
+
+    if not modality:
+        for modality in bidsmodalities + (unknownmodality, ignoremodality):
+            if exist_series(bidsmap, source, modality, series, matchbidslabels):
+                return True
 
     if not bidsmap[source][modality]:
         return False
