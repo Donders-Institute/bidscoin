@@ -60,46 +60,49 @@ class View_Ui_MainWindow(bidseditor.Ui_MainWindow):
         super().update_list(*args, **kwargs)
 
 
-def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict, gui: object) -> dict:
+def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, template: dict, gui: object) -> dict:
     """
     All the logic to map dicom-attributes (fields/tags) onto bids-labels go into this function
 
     :param dicomfile:   The full-path name of the source dicom-file
-    :param bidsmap:     The bidsmap as we had it
-    :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap_new: The bidsmap that we are building
+    :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param template:    The bidsmap template with the default heuristics
     :param gui:         If not None, the user will not be asked for help if an unknown series is encountered
     :return:            The bidsmap with new entries in it
     """
 
     # Input checks
-    if not dicomfile or not heuristics['DICOM']:
-        return bidsmap
+    if not dicomfile or not template['DICOM'] or not bidsmap_old['DICOM']:
+        return bidsmap_new
 
-    # Get the matching series
-    series, modality, index = bids.get_matching_dicomseries(dicomfile, heuristics)
+    # See if we can find a matching series in the old bidsmap
+    series, modality, index = bids.get_matching_dicomseries(dicomfile, bidsmap_old)
+
+    # If not, see if we can find a matching series in the template
+    if modality == bids.unknownmodality:
+        series, modality, index = bids.get_matching_dicomseries(dicomfile, template)
 
     # Copy the filled-in attributes series over to the output bidsmap
-    if not bids.exist_series(bidsmap, 'DICOM', modality, series):
-        bidsmap = bids.append_series(bidsmap, 'DICOM', modality, series)
+    if not bids.exist_series(bidsmap_new, 'DICOM', modality, series):
+        bidsmap_new = bids.append_series(bidsmap_new, 'DICOM', modality, series)
 
-    # Check if we know this series
+    # If we haven't found a matching series, launch a GUI to ask the user for help
     if modality == bids.unknownmodality:
         LOGGER.info('Unknown modality found: ' + dicomfile)
 
-        # If not, launch a GUI to ask the user for help
         if gui:
-
             # Update the index after the bids.append_series()
-            series, modality, index = bids.get_matching_dicomseries(dicomfile, bidsmap)
+            series, modality, index = bids.get_matching_dicomseries(dicomfile, bidsmap_new)
 
             # Open a view-only version of the main window
             if gui.interactive == 2:
                 gui.MainWindow.show()
-                gui.setupUi(gui.MainWindow, gui.bidsfolder, gui.sourcefolder, gui.bidsmap_filename, bidsmap, bidsmap, gui.template_bidsmap)
+                gui.setupUi(gui.MainWindow, gui.bidsfolder, gui.sourcefolder, gui.bidsmap_filename, bidsmap_new, bidsmap_new, gui.template_bidsmap)
 
             # Open the edit window to get the mapping
             gui.has_edit_dialog_open = True
-            dialog_edit = bidseditor.EditDialog(index, modality, bidsmap, gui.template_bidsmap)
+            dialog_edit = bidseditor.EditDialog(index, modality, bidsmap_new, gui.template_bidsmap, gui.subprefix, gui.sesprefix)
             dialog_edit.exec()
 
             if dialog_edit.result() == 0:
@@ -107,109 +110,109 @@ def built_dicommap(dicomfile: str, bidsmap: dict, heuristics: dict, gui: object)
                 exit()
             elif dialog_edit.result() == 1:
                 LOGGER.info(f'The user has finished the edit')
-                bidsmap = dialog_edit.bidsmap
+                bidsmap_new = dialog_edit.bidsmap
             elif dialog_edit.result() == 2:
                 LOGGER.info(f'The user has aborted the edit')
 
-    return bidsmap
+    return bidsmap_new
 
 
-def built_parmap(parfile: str, bidsmap: dict, heuristics: dict) -> dict:
+def build_parmap(parfile: str, bidsmap_new: dict, bidsmap_old: dict) -> dict:
     """
     All the logic to map PAR/REC fields onto bids labels go into this function
 
     :param parfile:     The full-path name of the source PAR-file
-    :param bidsmap:     The bidsmap as we had it
-    :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap_new: The bidsmap that we are building
+    :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     :return:            The bidsmap with new entries in it
     """
 
     # Input checks
-    if not parfile or not heuristics['PAR']:
-        return bidsmap
+    if not parfile or not bidsmap_old['PAR']:
+        return bidsmap_new
 
     # TODO: Loop through all bidsmodalities and series
 
-    return bidsmap
+    return bidsmap_new
 
 
-def built_p7map(p7file: str, bidsmap: dict, heuristics: dict) -> dict:
+def build_p7map(p7file: str, bidsmap_new: dict, bidsmap_old: dict) -> dict:
     """
     All the logic to map P*.7-fields onto bids labels go into this function
 
     :param p7file:      The full-path name of the source P7-file
-    :param bidsmap:     The bidsmap as we had it
-    :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap_new: The bidsmap that we are building
+    :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     :return:            The bidsmap with new entries in it
     """
 
     # Input checks
-    if not p7file or not heuristics['P7']:
-        return bidsmap
+    if not p7file or not bidsmap_old['P7']:
+        return bidsmap_new
 
     # TODO: Loop through all bidsmodalities and series
 
-    return bidsmap
+    return bidsmap_new
 
 
-def built_niftimap(niftifile: str, bidsmap: dict, heuristics: dict) -> dict:
+def build_niftimap(niftifile: str, bidsmap_new: dict, bidsmap_old: dict) -> dict:
     """
     All the logic to map nifti-info onto bids labels go into this function
 
     :param niftifile:   The full-path name of the source nifti-file
-    :param bidsmap:     The bidsmap as we had it
-    :param heuristics:  Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap_new: The bidsmap that we are building
+    :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     :param automatic:   If True, the user will not be asked for help if an unknown series is encountered
     :return:            The bidsmap with new entries in it
     """
 
     # Input checks
-    if not niftifile or not heuristics['Nifti']:
-        return bidsmap
+    if not niftifile or not bidsmap_old['Nifti']:
+        return bidsmap_new
 
     # TODO: Loop through all bidsmodalities and series
 
-    return bidsmap
+    return bidsmap_new
 
 
-def built_filesystemmap(seriesfolder: str, bidsmap: dict, heuristics: dict) -> dict:
+def build_filesystemmap(seriesfolder: str, bidsmap_new: dict, bidsmap_old: dict) -> dict:
     """
     All the logic to map filesystem-info onto bids labels go into this function
 
     :param seriesfolder:    The full-path name of the source folder
-    :param bidsmap:         The bidsmap as we had it
-    :param heuristics:      Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap_new:     The bidsmap that we are building
+    :param bidsmap_old:     Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     :param automatic:       If True, the user will not be asked for help if an unknown series is encountered
     :return:                The bidsmap with new entries in it
     """
 
     # Input checks
-    if not seriesfolder or not heuristics['FileSystem']:
-        return bidsmap
+    if not seriesfolder or not bidsmap_old['FileSystem']:
+        return bidsmap_new
 
     # TODO: Loop through all bidsmodalities and series
 
-    return bidsmap
+    return bidsmap_new
 
 
-def built_pluginmap(seriesfolder: str, bidsmap: dict, heuristics: dict) -> dict:
+def build_pluginmap(seriesfolder: str, bidsmap_new: dict, bidsmap_old: dict) -> dict:
     """
     Call the plugin to map info onto bids labels
 
     :param seriesfolder:    The full-path name of the source folder
-    :param bidsmap:         The bidsmap as we had it
-    :param heuristics:      Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap_new:     The bidsmap that we are building
+    :param bidsmap_old:     Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     :return:                The bidsmap with new entries in it
     """
 
     # Input checks
-    if not seriesfolder or not bidsmap['PlugIn']:
-        return bidsmap
+    if not seriesfolder or not bidsmap_new['PlugIn']:
+        return bidsmap_new
 
     # Import and run the plugin modules
     from importlib import util
 
-    for plugin in bidsmap['PlugIn']:
+    for plugin in bidsmap_new['PlugIn']:
 
         # Get the full path to the plugin-module
         if os.path.basename(plugin)==plugin:
@@ -226,13 +229,13 @@ def built_pluginmap(seriesfolder: str, bidsmap: dict, heuristics: dict) -> dict:
         module = util.module_from_spec(spec)
         spec.loader.exec_module(module)
         if 'bidsmapper_plugin' in dir(module):
-            LOGGER.info(f'Running: {plugin}.bidsmapper_plugin({seriesfolder}, {bidsmap}, {heuristics})')
-            bidsmap = module.bidsmapper_plugin(seriesfolder, bidsmap, heuristics)
+            LOGGER.info(f'Running: {plugin}.bidsmapper_plugin({seriesfolder}, {bidsmap_new}, {bidsmap_old})')
+            bidsmap_new = module.bidsmapper_plugin(seriesfolder, bidsmap_new, bidsmap_old)
 
-    return bidsmap
+    return bidsmap_new
 
 
-def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, subprefix: str='sub-', sesprefix: str='ses-', interactive: bool=True) -> None:
+def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, subprefix: str='sub-', sesprefix: str='ses-', interactive: bool=True) -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder
     and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code.
@@ -241,6 +244,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, subprefix: str
     :param rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
     :param bidsfolder:      The name of the BIDS root folder
     :param bidsmapfile:     The name of the bidsmap YAML-file
+    :param templatefile:    The name of the bidsmap template YAML-file
     :param subprefix:       The prefix common for all source subject-folders
     :param sesprefix:       The prefix common for all source session-folders
     :param interactive:     If True, the user will be asked for help if an unknown series is encountered
@@ -256,16 +260,16 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, subprefix: str
     LOGGER.info('------------ START BIDSmapper ------------')
 
     # Get the heuristics for creating the bidsmap
-    heuristics, bidsmapfile = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder,'code'))
-    template, templatefile  = bids.load_bidsmap()  # TODO: make this a user input
+    bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder,'code'))
+    template, templatefile   = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code'))
 
     # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
-    bidsmap = copy.deepcopy(heuristics)
+    bidsmap_new = copy.deepcopy(bidsmap_old)
     for logic in ('DICOM', 'PAR', 'P7', 'Nifti', 'FileSystem'):
         for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
 
-            if bidsmap[logic] and modality in bidsmap[logic]:
-                bidsmap[logic][modality] = None
+            if bidsmap_new[logic] and modality in bidsmap_new[logic]:
+                bidsmap_new[logic][modality] = None
 
     # Start the Qt-application
     gui = interactive
@@ -275,8 +279,10 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, subprefix: str
         mainwin = MainWindow()
         gui = View_Ui_MainWindow()
         gui.interactive = interactive
+        gui.subprefix = subprefix
+        gui.sesprefix = sesprefix
         gui.MainWindow = mainwin
-        gui.setupUi(mainwin, bidsfolder, rawfolder, bidsmapfile, bidsmap, bidsmap, template)
+        gui.setupUi(mainwin, bidsfolder, rawfolder, bidsmapfile, bidsmap_new, bidsmap_new, template)
         QMessageBox.information(mainwin, 'bidsmapper workflow',
                                 f"The bidsmapper will now scan {bidsfolder} and whenever it detects a new type of scan it will "
                                 f"ask you to identify it.\n\nIt is important that you choose the correct BIDS modality (e.g. "
@@ -296,45 +302,45 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, subprefix: str
             for series in bids.lsdirs(session):
 
                 # Update / append the dicom mapping
-                if heuristics['DICOM']:
-                    dicomfile = bids.get_dicomfile(series)
-                    bidsmap   = built_dicommap(dicomfile, bidsmap, heuristics, gui)
+                if bidsmap_old['DICOM']:
+                    dicomfile   = bids.get_dicomfile(series)
+                    bidsmap_new = build_dicommap(dicomfile, bidsmap_new, bidsmap_old, template, gui)
 
                 # Update / append the PAR/REC mapping
-                if heuristics['PAR']:
-                    parfile   = bids.get_parfile(series)
-                    bidsmap   = built_parmap(parfile, bidsmap, heuristics)
+                if bidsmap_old['PAR']:
+                    parfile     = bids.get_parfile(series)
+                    bidsmap_new = build_parmap(parfile, bidsmap_new, bidsmap_old)
 
                 # Update / append the P7 mapping
-                if heuristics['P7']:
-                    p7file    = bids.get_p7file(series)
-                    bidsmap   = built_p7map(p7file, bidsmap, heuristics)
+                if bidsmap_old['P7']:
+                    p7file      = bids.get_p7file(series)
+                    bidsmap_new = build_p7map(p7file, bidsmap_new, bidsmap_old)
 
                 # Update / append the nifti mapping
-                if heuristics['Nifti']:
-                    niftifile = bids.get_niftifile(series)
-                    bidsmap   = built_niftimap(niftifile, bidsmap, heuristics)
+                if bidsmap_old['Nifti']:
+                    niftifile   = bids.get_niftifile(series)
+                    bidsmap_new = build_niftimap(niftifile, bidsmap_new, bidsmap_old)
 
                 # Update / append the file-system mapping
-                if heuristics['FileSystem']:
-                    bidsmap   = built_filesystemmap(series, bidsmap, heuristics)
+                if bidsmap_old['FileSystem']:
+                    bidsmap_new = build_filesystemmap(series, bidsmap_new, bidsmap_old)
 
                 # Update / append the plugin mapping
-                if heuristics['PlugIn']:
-                    bidsmap   = built_pluginmap(series, bidsmap, heuristics)
+                if bidsmap_old['PlugIn']:
+                    bidsmap_new = build_pluginmap(series, bidsmap_new, bidsmap_old)
 
     # Create the bidsmap YAML-file in bidsfolder/code
     os.makedirs(os.path.join(bidsfolder,'code'), exist_ok=True)
     bidsmapfile = os.path.join(bidsfolder,'code','bidsmap.yaml')
 
     # Save the bidsmap to the bidsmap YAML-file
-    bids.save_bidsmap(bidsmapfile, bidsmap)
+    bids.save_bidsmap(bidsmapfile, bidsmap_new)
 
     LOGGER.info('------------ FINISHED! ------------')
 
     if gui:
         # Launch the bidseditor
-        bidseditor.bidseditor(bidsfolder, rawfolder, bidsmapfile=bidsmapfile, templatefile=templatefile)
+        bidseditor.bidseditor(bidsfolder, rawfolder, bidsmapfile=bidsmapfile, templatefile=templatefile, subprefix=subprefix, sesprefix=sesprefix)
 
         sys.exit(app.exec_())
 
@@ -350,16 +356,19 @@ if __name__ == "__main__":
                                             '  bidsmapper.py /project/foo/raw /project/foo/bids\n'
                                             '  bidsmapper.py /project/foo/raw /project/foo/bids -t bidsmap_dccn\n ')
     parser.add_argument('sourcefolder',       help='The source folder containing the raw data in sub-#/ses-#/series format (or specify --subprefix and --sesprefix for different prefixes)')
-    parser.add_argument('bidsfolder',         help='The destination folder with the (future) bids data and the default bidsfolder/code/bidsmap.yaml file')
-    parser.add_argument('-t','--template',    help='The non-default / site-specific bidsmap template file with the BIDS heuristics')
+    parser.add_argument('bidsfolder',         help='The destination folder with the (future) bids data and the default bidsfolder/code/bidsmap.yaml file. Default: bidsmap.yaml', default='bidsmap.yaml')
+    parser.add_argument('-b','--bidsmap',     help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/')
+    parser.add_argument('-t','--template',    help='The bidsmap template with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap_template.yaml', default='bidsmap_template.yaml')
     parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     parser.add_argument('-i','--interactive', help='If not zero, then the user will be asked for help if an unknown series is encountered. Default: 1', type=int, choices=[0,1,2], default=1)
+    parser.add_argument('-v','--version',     help='Show the BIDS and BIDScoin version', action='version', version=f'BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version()}')
     args = parser.parse_args()
 
-    bidsmapper(rawfolder   = args.sourcefolder,
-               bidsfolder  = args.bidsfolder,
-               bidsmapfile = args.template,
-               subprefix   = args.subprefix,
-               sesprefix   = args.sesprefix,
-               interactive = args.interactive)
+    bidsmapper(rawfolder    = args.sourcefolder,
+               bidsfolder   = args.bidsfolder,
+               bidsmapfile  = args.bidsmap,
+               templatefile = args.template,
+               subprefix    = args.subprefix,
+               sesprefix    = args.sesprefix,
+               interactive  = args.interactive)
