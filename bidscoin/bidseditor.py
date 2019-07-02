@@ -615,7 +615,7 @@ class Ui_MainWindow(object):
 
                 subid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['participant'], series['provenance'])
                 sesid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['session'], series['provenance'])
-                bids_name = bids.get_bidsname(subid, sesid, modality, series, run)
+                bids_name = bids.get_bidsname(subid, sesid, modality, series, run, self.subprefix, self.sesprefix)
                 subid = bids.set_bidsvalue(bids_name, 'sub')
                 sesid = bids.set_bidsvalue(bids_name, 'ses')
                 session = os.path.join(self.bidsfolder, f'sub-{subid}', f'ses-{sesid}')
@@ -775,7 +775,7 @@ class Ui_MainWindow(object):
     def show_edit(self, source_index, modality, exec=False):
         """Allow only one edit window to be open"""
         if not self.has_edit_dialog_open:
-            self.dialog_edit = EditDialog(source_index, modality, self.output_bidsmap, self.template_bidsmap)
+            self.dialog_edit = EditDialog(source_index, modality, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
             self.has_edit_dialog_open = True
             self.dialog_edit.done_edit.connect(self.update_list)
             self.dialog_edit.finished.connect(self.release_edit_dialog)
@@ -800,12 +800,14 @@ class Ui_MainWindow(object):
 
 
 class EditDialog(QDialog):
+    """
+    EditDialog().result() == 1: done with result, i.e. done_edit -> new bidsmap
+    EditDialog().result() == 2: done without result
+    """
 
-    # EditDialog().result() == 1: done with result, i.e. done_edit -> new bidsmap
-    # EditDialog().result() == 2: done without result
     done_edit = QtCore.pyqtSignal(dict)
 
-    def __init__(self, modality_index, modality, bidsmap, template_bidsmap):
+    def __init__(self, modality_index, modality, bidsmap, template_bidsmap, subprefix='sub-', sesprefix='ses-'):
         QDialog.__init__(self)
 
         self.bidsmap = bidsmap
@@ -817,6 +819,9 @@ class EditDialog(QDialog):
         self.target_modality = modality
         self.target_series = copy.deepcopy(self.source_series)
         self.target_suffix = ''
+
+        self.subprefix = subprefix
+        self.sesprefix = sesprefix
 
         self.template_bidsmap = template_bidsmap
         self.allowed_suffixes = get_allowed_suffixes(template_bidsmap)
@@ -854,7 +859,7 @@ class EditDialog(QDialog):
         hbox.addWidget(ok_button)
 
         groupbox1 = QGroupBox(SOURCE)
-        layout1 = QVBoxLayout(top_widget)
+        layout1 = QVBoxLayout()
         layout1.addWidget(self.label_provenance)
         layout1.addWidget(self.view_provenance)
         layout1.addWidget(self.label_dicom)
@@ -863,7 +868,7 @@ class EditDialog(QDialog):
         groupbox1.setLayout(layout1)
 
         groupbox2 = QGroupBox("BIDS")
-        layout2 = QVBoxLayout(top_widget)
+        layout2 = QVBoxLayout()
         layout2.addWidget(self.label_dropdown)
         layout2.addWidget(self.view_dropdown)
         layout2.addWidget(self.label_bids)
@@ -1244,7 +1249,7 @@ class EditDialog(QDialog):
         subid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['participant'], self.target_series['provenance'])
         sesid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['session'], self.target_series['provenance'])
         run = self.target_series['bids'].get('run', '')
-        bids_name = os.path.join(self.target_modality, bids.get_bidsname(subid, sesid, self.target_modality, self.target_series, run)) + '.*'
+        bids_name = os.path.join(self.target_modality, bids.get_bidsname(subid, sesid, self.target_modality, self.target_series, run, self.subprefix, self.sesprefix)) + '.*'
         html_bids_name = get_html_bidsname(bids_name)
 
         self.view_bids_name.clear()
@@ -1254,7 +1259,7 @@ class EditDialog(QDialog):
             self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % html_bids_name)
 
 
-def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templatefile: str=''):
+def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templatefile: str='', subprefix='sub-', sesprefix='ses-'):
     """
 
     :param bidsfolder:
@@ -1294,6 +1299,8 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     app.setApplicationName("BIDS editor")
     mainwin = MainWindow()
     gui = Ui_MainWindow()
+    gui.subprefix = subprefix
+    gui.sesprefix = sesprefix
     gui.setupUi(mainwin, bidsfolder, sourcefolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap)
     mainwin.show()
     sys.exit(app.exec_())
@@ -1344,9 +1351,13 @@ if __name__ == "__main__":
     parser.add_argument('-s','--sourcefolder',  help='The source folder containing the raw data. If empty, it is derived from the bidsmap provenance information')
     parser.add_argument('-b','--bidsmap',       help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap.yaml', default='bidsmap.yaml')
     parser.add_argument('-t','--template',      help='The bidsmap template with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap_template.yaml', default='bidsmap_template.yaml')
+    parser.add_argument('-n','--subprefix',     help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
+    parser.add_argument('-m','--sesprefix',     help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     args = parser.parse_args()
 
     bidseditor(bidsfolder   = args.bidsfolder,
                sourcefolder = args.sourcefolder,
                bidsmapfile  = args.bidsmap,
-               templatefile = args.template)
+               templatefile = args.template,
+               subprefix    = args.subprefix,
+               sesprefix    = args.sesprefix)
