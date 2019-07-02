@@ -230,7 +230,7 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         """Handle exit. """
         LOGGER.info('------------ FINISHED! ------------')
-        QApplication.quit()
+        QApplication.quit()     # TODO: Do not use class method but self.something
 
 
 class Ui_MainWindow(object):
@@ -750,7 +750,7 @@ class Ui_MainWindow(object):
 
     def handle_button_clicked(self):
         """Make sure that index map has been updated. """
-        button = QApplication.focusWidget()
+        button = self.MainWindow.focusWidget()
         index = self.table.indexAt(button.pos())
         if index.isValid():
             idx = int(index.row())
