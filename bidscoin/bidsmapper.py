@@ -28,12 +28,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
 LOGGER = logging.getLogger('bidscoin')
 
 
-class MainWindow(QMainWindow):
-
-    def __init__(self):
-        super().__init__()
-        actionQuit = QtWidgets.QAction("Quit", self)
-        actionQuit.triggered.connect(self.closeEvent)
+class MainWindow(bidseditor.MainWindow):
 
     def closeEvent(self, event):
         """Handle exit. """
@@ -286,7 +281,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         QMessageBox.information(mainwin, 'bidsmapper workflow',
                                 f"The bidsmapper will now scan {bidsfolder} and whenever it detects a new type of scan it will "
                                 f"ask you to identify it.\n\nIt is important that you choose the correct BIDS modality (e.g. "
-                                f"'anat', 'dwi' or 'func').\n\nAt the end you will be shown an overview of all identified scan "
+                                f"'anat', 'dwi' or 'func').\n\nAt the end you will be shown an overview of all the different scan "
                                 f"types and BIDScoin options (i.e. the bidseditor) that you can then (re)edit to your needs")
 
     # Loop over all subjects and sessions and built up the bidsmap entries
@@ -340,9 +335,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
     if gui:
         # Launch the bidseditor
-        bidseditor.bidseditor(bidsfolder, rawfolder, bidsmapfile=bidsmapfile, templatefile=templatefile, subprefix=subprefix, sesprefix=sesprefix)
-
         sys.exit(app.exec_())
+        bidseditor.bidseditor(bidsfolder, rawfolder, bidsmapfile=bidsmapfile, templatefile=templatefile, subprefix=subprefix, sesprefix=sesprefix)
 
 
 # Shell usage
