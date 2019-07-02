@@ -229,7 +229,6 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Handle exit. """
-        LOGGER.info('------------ FINISHED! ------------')
         QApplication.quit()     # TODO: Do not use class method but self.something
 
 
@@ -1299,12 +1298,14 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
 
     # Start the Qt-application
     app = QApplication(sys.argv)
-    app.setApplicationName("BIDS editor")
+    app.setApplicationName('BIDS editor')
     mainwin = MainWindow()
     gui = Ui_MainWindow()
     gui.setupUi(mainwin, bidsfolder, sourcefolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap, subprefix=subprefix, sesprefix=sesprefix)
     mainwin.show()
-    sys.exit(app.exec_())
+    app.exec()
+
+    LOGGER.info('------------ FINISHED! -------------------')
 
 
 if __name__ == "__main__":
