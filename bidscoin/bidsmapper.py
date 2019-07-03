@@ -7,12 +7,13 @@ N.B.: Institute users may want to use a site-customized template bidsmap (see th
 --template option).
 """
 
-# Global imports (specific modules may be imported when needed)
+# Global imports (plugin modules may be imported when needed)
 import os.path
 import textwrap
 import copy
 import logging
 import sys
+from PyQt5.QtWidgets import QApplication, QMessageBox
 from ruamel.yaml import YAML
 yaml = YAML()
 try:
@@ -22,7 +23,6 @@ except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
     import bidseditor
 
-from PyQt5.QtWidgets import QApplication, QMessageBox
 
 LOGGER = logging.getLogger('bidscoin')
 
