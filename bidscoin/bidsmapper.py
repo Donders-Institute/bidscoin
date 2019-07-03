@@ -68,7 +68,7 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
                     gui.update_list(bidsmap_new)
 
                 # Open the edit window to get the mapping
-                index = len(bidsmap_new['DICOM'][modality])     # Dependent on bids.append_series() above. Alternative would be to call: series, modality, index = bids.get_matching_dicomseries(dicomfile, bidsmap_new)
+                index = len(bidsmap_new['DICOM'][modality]) - 1    # Dependent on bids.append_series() above. Alternative would be to call: series, modality, index = bids.get_matching_dicomseries(dicomfile, bidsmap_new)
                 dialog_edit = bidseditor.EditDialog(index, modality, bidsmap_new, template, gui.subprefix, gui.sesprefix)
                 dialog_edit.exec()
 
