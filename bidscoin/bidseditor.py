@@ -70,7 +70,7 @@ version: should correspond with the version in ../bidscoin/version.txt
 bidsifnore: Semicolon-separated list of entries that are added to the .bidsignore file
 (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv"""
 
-OPTIONS_TOOLTIP_DCM2NIXX = """dcm2nixx\n
+OPTIONS_TOOLTIP_DCM2NIIX = """dcm2niix\n
 See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info.
 Command to set the path to dcm2niix:
 e.g. module add dcm2niix/1.0.20180622; (note the semi-colon at the end)
@@ -436,7 +436,7 @@ class Ui_MainWindow(object):
             if tool == "bidscoin":
                 tooltip_text = OPTIONS_TOOLTIP_BIDSCOIN
             elif tool == "dcm2niix":
-                tooltip_text = OPTIONS_TOOLTIP_DCM2NIXX
+                tooltip_text = OPTIONS_TOOLTIP_DCM2NIIX
             else:
                 tooltip_text = tool
             tool_list.append({
