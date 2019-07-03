@@ -2,19 +2,20 @@
 """
 Module with helper functions
 
-Derived from dac2bids.py from Daniel Gomez 29.08.2016
+Some functions are derived from dac2bids.py from Daniel Gomez 29.08.2016
 https://github.com/dangom/dac2bids/blob/master/dac2bids.py
 
 @author: Marcel Zwiers
 """
 
-# Global imports (specific modules may be imported when needed)
+# Global imports
 import os.path
 import glob
 import re
 import ruamel
 import logging
 import subprocess
+import pydicom
 from ruamel.yaml import YAML
 yaml = YAML()
 
@@ -151,7 +152,6 @@ def is_dicomfile(file: str) -> bool:
             if dcmfile.read(4) == b'DICM':
                 return True
             else:
-                import pydicom
                 dicomdict = pydicom.dcmread(file, force=True)       # The DICM tag may be missing for anonymized DICOM files
                 return 'Modality' in dicomdict
     else:
@@ -412,7 +412,6 @@ def get_dicomfield(tagname: str, dicomfile: str):
     :return:            Extracted tag-values from the dicom-file
     """
 
-    import pydicom
     global _DICOMDICT_CACHE, _DICOMFILE_CACHE
 
     try:
