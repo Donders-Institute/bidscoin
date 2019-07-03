@@ -332,6 +332,8 @@ DICOM:
       SequenceName: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
+      SliceThickness: ~
+      SpacingBetweenSlices: ~
       FlipAngle: ~
       EchoNumbers: ~
       EchoTime: ~
@@ -360,6 +362,8 @@ DICOM:
       SequenceName: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
+      SliceThickness: ~
+      SpacingBetweenSlices: ~
       FlipAngle: ~
       EchoNumbers: ~
       EchoTime: ~
