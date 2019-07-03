@@ -40,7 +40,8 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
     """
 
     # Input checks
-    if not dicomfile or not template['DICOM'] or not bidsmap_old['DICOM']:
+    if not dicomfile or (not template['DICOM'] and not bidsmap_old['DICOM']):
+        LOGGER.info('No DICOM information found in the bidsmap and template')
         return bidsmap_new
 
     # See if we can find a matching series in the old bidsmap
