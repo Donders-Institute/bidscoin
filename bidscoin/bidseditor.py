@@ -133,7 +133,7 @@ def get_index_mapping(bidsmap):
     """Obtain the mapping between file_index and the series index for each modality. """
     index_mapping = {}
     file_index = 0
-    for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
+    for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):  # NB: This order needs to be the same as in update_list()
         series_list = bidsmap[SOURCE][modality]
         index_mapping[modality] = {}
         if not series_list:
@@ -141,6 +141,7 @@ def get_index_mapping(bidsmap):
         for series_index, _ in enumerate(series_list):
             index_mapping[modality][file_index] = series_index
             file_index += 1
+
     return index_mapping
 
 
