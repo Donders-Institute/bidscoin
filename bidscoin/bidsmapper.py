@@ -50,34 +50,36 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
     if not index:
         series, modality, index = bids.get_matching_dicomseries(dicomfile, template)
 
-    # If not, copy the filled-in series over to the output bidsmap
+    # See if we have collected the series in our new bidsmap
     if not bids.exist_series(bidsmap_new, 'DICOM', '', series):
-        LOGGER.info('Unknown modality found: ' + dicomfile)
+
+        # Copy the filled-in series over to the new bidsmap
         bidsmap_new = bids.append_series(bidsmap_new, 'DICOM', modality, series)
+
+        # Communicate with the user if the series was not present in bidsmap_old or in template
         if not index:
-            index = 0
-        else:
-            index += 1
+            LOGGER.info('Unknown modality found: ' + dicomfile)
 
-        # Launch a GUI to ask the user for help
-        if gui:
-            # Open a view-only version of the main window
-            if gui.interactive == 2:
-                gui.MainWindow.show()
-                gui.update_list(bidsmap_new)
+            # Launch a GUI to ask the user for help
+            if gui:
+                # Open a view-only version of the main window
+                if gui.interactive == 2:
+                    gui.MainWindow.show()
+                    gui.update_list(bidsmap_new)
 
-            # Open the edit window to get the mapping
-            dialog_edit = bidseditor.EditDialog(index, modality, bidsmap_new, template, gui.subprefix, gui.sesprefix)
-            dialog_edit.exec()
+                # Open the edit window to get the mapping
+                index = len(bidsmap_new['DICOM'][modality])     # Dependent on bids.append_series() above. Alternative would be to call: series, modality, index = bids.get_matching_dicomseries(dicomfile, bidsmap_new)
+                dialog_edit = bidseditor.EditDialog(index, modality, bidsmap_new, template, gui.subprefix, gui.sesprefix)
+                dialog_edit.exec()
 
-            if dialog_edit.result() == 0:
-                LOGGER.info(f'The user has canceled the edit')
-                exit()
-            elif dialog_edit.result() == 1:
-                LOGGER.info(f'The user has finished the edit')
-                bidsmap_new = dialog_edit.bidsmap
-            elif dialog_edit.result() == 2:
-                LOGGER.info(f'The user has aborted the edit')
+                if dialog_edit.result() == 0:
+                    LOGGER.info(f'The user has canceled the edit')
+                    exit()
+                elif dialog_edit.result() == 1:
+                    LOGGER.info(f'The user has finished the edit')
+                    bidsmap_new = dialog_edit.bidsmap
+                elif dialog_edit.result() == 2:
+                    LOGGER.info(f'The user has aborted the edit')
 
     return bidsmap_new
 
