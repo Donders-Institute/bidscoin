@@ -590,7 +590,7 @@ def delete_series(bidsmap: dict, source: str, modality: str, index: int) -> dict
     return bidsmap
 
 
-def append_series(bidsmap: dict, source: str, modality: str, series: dict) -> dict:
+def append_series(bidsmap: dict, source: str, modality: str, series: dict, clean: bool=False) -> dict:
     """
     Append a series to the BIDS map
 
@@ -601,8 +601,15 @@ def append_series(bidsmap: dict, source: str, modality: str, series: dict) -> di
     :return:            The new bidsmap
     """
 
-    if not modality in bidsmodalities + (unknownmodality, ignoremodality):
-        raise ValueError(f"invalid modality '{modality}'")
+    # Copy the values from the series to an empty dict
+    if clean:
+        series_ = dict(provenance={}, attributes={}, bids={})
+        series_['provenance'] = series['provenance']
+        for key in series['attributes']:
+            series_['attributes'][key] = series['attributes'][key]
+        for key in series['bids']:
+            series_['bids'][key] = series['bids'][key]
+        series = series_
 
     if bidsmap[source][modality] is None:
         bidsmap[source][modality] = [series]
@@ -612,11 +619,11 @@ def append_series(bidsmap: dict, source: str, modality: str, series: dict) -> di
     return bidsmap
 
 
-def update_bidsmap(bidsmap: dict, source_modality: str, source_index: int, target_modality: str, series: dict, source: str= 'DICOM') -> dict:
+def update_bidsmap(bidsmap: dict, source_modality: str, source_index: int, target_modality: str, series: dict, source: str= 'DICOM', clean: bool=False) -> dict:
     """
     Update the BIDS map:
     1. Remove the source series from the source modality section
-    2. Start new series dictionary and store key values without comments and references
+    2. If clean, start new series dictionary and store key values without comments and references
     3. Append the target series to the target modality section
 
     :param bidsmap:
@@ -628,12 +635,6 @@ def update_bidsmap(bidsmap: dict, source_modality: str, source_index: int, targe
     :return:
     """
 
-    if not source_modality in bidsmodalities + (unknownmodality, ignoremodality):
-        raise ValueError(f"invalid modality '{source_modality}'")
-
-    if not target_modality in bidsmodalities + (unknownmodality, ignoremodality):
-        raise ValueError(f"invalid modality '{target_modality}'")
-
     # Warn the user if the target series already exists
     if source_modality != target_modality and exist_series(bidsmap, source, target_modality, series):
         logger.warning(f'That series from {source_modality} already exists in {target_modality}...')
@@ -641,16 +642,8 @@ def update_bidsmap(bidsmap: dict, source_modality: str, source_index: int, targe
     # Delete the source series
     bidsmap = delete_series(bidsmap, source, source_modality, source_index)
 
-    # Copy the values from the series to the empty dict
-    series = dict(provenance={}, attributes={}, bids={})
-    for attrkey in series['attributes']:
-        series['attributes'][attrkey] = series['attributes'][attrkey]
-    for key in series['bids']:
-        series['bids'][key] = series['bids'][key]
-    series['provenance'] = series['provenance']
-
-    # Append the cleaned-up target series
-    bidsmap = append_series(bidsmap, source, target_modality, series)
+    # Append the (cleaned-up) target series
+    bidsmap = append_series(bidsmap, source, target_modality, series, clean)
 
     return bidsmap
 
