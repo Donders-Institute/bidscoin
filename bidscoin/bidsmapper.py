@@ -306,7 +306,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         QMessageBox.information(mainwin, 'bidseditor',
                                 f"The bidsmapper has finished scanning {rawfolder}. Please carefully check all the different "
                                 f"BIDS output names and BIDScoin options and (re)edit them to your needs.\n\n"
-                                f"You can always redo this step later using the bidseditor tool")
+                                f"You can always redo this step later by re-running the bidsmapper or by just running the bidseditor tool")
 
         LOGGER.info('Opening the bidseditor')
         app.setApplicationName('BIDS editor')
