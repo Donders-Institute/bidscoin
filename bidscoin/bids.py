@@ -582,15 +582,16 @@ def delete_series(bidsmap: dict, source: str, modality: str, index: int) -> dict
     :return:            The new bidsmap
     """
 
-    if not modality in bidsmodalities + (unknownmodality, ignoremodality):
-        raise ValueError(f"invalid modality '{modality}'")
+    nritems = len(bidsmap[source][modality])
+    if index > nritems:
+        raise ValueError(f"index {index} out of bound for bidsmap[{source}][{modality}][index] of length {nritems}")
 
     del bidsmap[source][modality][index]
 
     return bidsmap
 
 
-def append_series(bidsmap: dict, source: str, modality: str, series: dict, clean: bool=False) -> dict:
+def append_series(bidsmap: dict, source: str, modality: str, series: dict, clean: bool=True) -> dict:
     """
     Append a series to the BIDS map
 
@@ -619,7 +620,7 @@ def append_series(bidsmap: dict, source: str, modality: str, series: dict, clean
     return bidsmap
 
 
-def update_bidsmap(bidsmap: dict, source_modality: str, source_index: int, target_modality: str, series: dict, source: str= 'DICOM', clean: bool=False) -> dict:
+def update_bidsmap(bidsmap: dict, source_modality: str, source_index: int, target_modality: str, series: dict, source: str= 'DICOM', clean: bool=True) -> dict:
     """
     Update the BIDS map:
     1. Remove the source series from the source modality section
