@@ -63,12 +63,7 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
 
             # Launch a GUI to ask the user for help
             if gui:
-                # Open a view-only version of the main window
-                if gui.interactive == 2:
-                    gui.MainWindow.show()
-                    gui.update_list(bidsmap_new)
-
-                # Open the edit window to get the mapping
+                # Open the interactive edit window to get the new mapping
                 index = len(bidsmap_new['DICOM'][modality]) - 1    # Dependent on bids.append_series() above. Alternative would be to call: series, modality, index = bids.get_matching_dicomseries(dicomfile, bidsmap_new)
                 dialog_edit = bidseditor.EditDialog(index, modality, bidsmap_new, template, gui.subprefix, gui.sesprefix)
                 dialog_edit.exec()
@@ -81,6 +76,11 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
                     bidsmap_new = dialog_edit.bidsmap
                 elif dialog_edit.result() == 2:
                     LOGGER.info(f'The user has aborted the edit')
+
+                # Open a view-only version of the main window
+                if gui.interactive==2:
+                    gui.MainWindow.show()
+                    gui.update_list(bidsmap_new)
 
     return bidsmap_new
 
