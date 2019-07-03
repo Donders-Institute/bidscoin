@@ -283,12 +283,15 @@ DICOM:
       SequenceName: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
+      SliceThickness: ~
+      SpacingBetweenSlices: ~
       FlipAngle: ~
       EchoNumbers: ~
       EchoTime: ~
       RepetitionTime: ~
       ImageType: ~
       ProtocolName: ~
+      PhaseEncodingDirection: ~
     bids: &behbids
       task: <SeriesDescription>
       suffix: events
