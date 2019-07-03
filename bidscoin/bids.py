@@ -539,31 +539,31 @@ def exist_series(bidsmap: dict, source: str, modality: str, series: dict, matchb
     if not bidsmap[source][modality]:
         return False
 
-    for item in bidsmap[source][modality]:
+    for series_item in bidsmap[source][modality]:
 
-        match = any([series['attributes'][key] is not None for key in series['attributes']])  # Make match False if all attributes are empty
+        # Begin with match = False if all attributes are empty
+        match = any([series['attributes'][key] is not None for key in series['attributes']])
 
         # Search for a case where all series items match with the series items
-        for attrkey in series['attributes']:
-            seriesvalue = series['attributes'][attrkey]
-            itemvalue   = item['attributes'][attrkey]
-            match = match and (seriesvalue==itemvalue)
-            if not match:           # There is no point in searching further within the series now that we've found a mismatch
-                break
+        for serieskey, seriesvalue in series['attributes'].items():
+            itemvalue = series_item['attributes'][serieskey]
+            match     = match and (seriesvalue==itemvalue)
+            if not match:
+                break               # There is no point in searching further within the series now that we've found a mismatch
 
-        if matchbidslabels:         # This is probably not very useful, but maybe one day...
+        # This is probably not very useful, but maybe one day...
+        if matchbidslabels:
             try:
-                for key in series['bids']:
-                    seriesvalue = series['bids'][key]
-                    itemvalue   = item['bids'][key]
-                    match       = match and (seriesvalue == itemvalue)
-                    if not match:   # There is no point in searching further within the series now that we've found a mismatch
-                        break
+                for serieskey, seriesvalue in series['bids'].items():
+                    itemvalue = series_item['bids'][serieskey]
+                    match     = match and (seriesvalue == itemvalue)
+                    if not match:
+                        break       # There is no point in searching further within the series now that we've found a mismatch
 
             except KeyError:        # Errors may be evoked when matching bids-labels which exist in one modality but not in the other
                 match = False
 
-        # Stop searching if we found a matching series (i.e. which is the case if match is still True after all item tests)
+        # Stop searching if we found a matching series (i.e. which is the case if match is still True after all series_item tests)
         # TODO: maybe count how many instances, could perhaps be useful info
         if match:
             return True
@@ -606,10 +606,10 @@ def append_series(bidsmap: dict, source: str, modality: str, series: dict, clean
     if clean:
         series_ = dict(provenance={}, attributes={}, bids={})
         series_['provenance'] = series['provenance']
-        for key in series['attributes']:
-            series_['attributes'][key] = series['attributes'][key]
-        for key in series['bids']:
-            series_['bids'][key] = series['bids'][key]
+        for key, value in series['attributes'].items():
+            series_['attributes'][key] = value
+        for key, value in series['bids'].items():
+            series_['bids'][key] = value
         series = series_
 
     if bidsmap[source][modality] is None:
@@ -672,12 +672,10 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
             match   = any([series['attributes'][attrkey] is not None for attrkey in series['attributes']])  # Make match False if all attributes are empty
 
             # Try to see if the dicomfile matches all of the attributes and fill all of them
-            for attrkey in series['attributes']:
-
-                attrvalue  = series['attributes'][attrkey]
-                dicomvalue = get_dicomfield(attrkey, dicomfile)
+            for attrkey, attrvalue in series['attributes'].items():
 
                 # Check if the attribute value matches with the info from the dicomfile
+                dicomvalue = get_dicomfield(attrkey, dicomfile)
                 if attrvalue:
                     if not dicomvalue:
                         match = False
@@ -690,10 +688,10 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
                 series_['attributes'][attrkey] = dicomvalue
 
             # Try to fill the bids-labels
-            for key in series['bids']:
+            for key, value in series['bids'].items():
 
                 # Replace the dynamic bids values
-                series_['bids'][key] = replace_bidsvalue(series['bids'][key], dicomfile)
+                series_['bids'][key] = replace_bidsvalue(value, dicomfile)
 
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 series_ = strip_suffix(series_)
@@ -738,7 +736,8 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
 
     # Do some checks to allow for dragging the series entries between the different modality-sections
     for bidslabel in bidslabels:
-        if bidslabel not in series['bids']: series['bids'][bidslabel] = ''
+        if bidslabel not in series['bids']:
+            series['bids'][bidslabel] = ''
 
     # Compose the BIDS filename (-> switch statement)
     if modality == 'anat':
