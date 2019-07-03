@@ -582,10 +582,6 @@ def delete_series(bidsmap: dict, source: str, modality: str, index: int) -> dict
     :return:            The new bidsmap
     """
 
-    nritems = len(bidsmap[source][modality])
-    if not (0 <= index < nritems):
-        raise ValueError(f"index {index} out of bound for bidsmap[{source}][{modality}][index] of length {nritems}")
-
     del bidsmap[source][modality][index]
 
     return bidsmap
