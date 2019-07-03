@@ -54,12 +54,13 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
     if not bids.exist_series(bidsmap_new, 'DICOM', '', series):
         LOGGER.info('Unknown modality found: ' + dicomfile)
         bidsmap_new = bids.append_series(bidsmap_new, 'DICOM', modality, series)
+        if not index:
+            index = 0
+        else:
+            index += 1
 
         # Launch a GUI to ask the user for help
         if gui:
-            # Update the index after the bids.append_series()
-            series, modality, index = bids.get_matching_dicomseries(dicomfile, bidsmap_new)
-
             # Open a view-only version of the main window
             if gui.interactive == 2:
                 gui.MainWindow.show()
