@@ -300,6 +300,11 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
     # (Re)launch the bidseditor UI_MainWindow
     if gui:
+        QMessageBox.information(mainwin, 'bidseditor',
+                                f"The bidsmapper has finished scanning {rawfolder}. Please carefully check all the different "
+                                f"scan types and BIDScoin options in the following overview and (re)edit them to your needs.\n\n"
+                                f"You can always redo this step later using the bidseditor")
+
         LOGGER.info('Opening the bidseditor')
         app.setApplicationName('BIDS editor')
         gui.setupUi(mainwin, bidsfolder, rawfolder, bidsmapfile, bidsmap_new, copy.deepcopy(bidsmap_new), template, subprefix=subprefix, sesprefix=sesprefix)
