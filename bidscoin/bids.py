@@ -688,10 +688,10 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
                 series_['attributes'][attrkey] = dicomvalue
 
             # Try to fill the bids-labels
-            for key, value in series['bids'].items():
+            for bidskey, bidsvalue in series['bids'].items():
 
                 # Replace the dynamic bids values
-                series_['bids'][key] = replace_bidsvalue(value, dicomfile)
+                series_['bids'][bidskey] = replace_bidsvalue(bidsvalue, dicomfile)
 
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 series_ = strip_suffix(series_)
