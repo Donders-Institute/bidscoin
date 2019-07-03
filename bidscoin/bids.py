@@ -612,12 +612,20 @@ def append_series(bidsmap: dict, source: str, modality: str, series: dict) -> di
     return bidsmap
 
 
-def update_bidsmap(target_bidsmap, source_modality, source_index, target_modality, target_series, source='DICOM'):
+def update_bidsmap(bidsmap: dict, source_modality: str, source_index: int, target_modality: str, series: dict, source: str= 'DICOM') -> dict:
     """
     Update the BIDS map:
     1. Remove the source series from the source modality section
     2. Start new series dictionary and store key values without comments and references
-    3. Add the target series to the target modality section
+    3. Append the target series to the target modality section
+
+    :param bidsmap:
+    :param source_modality:
+    :param source_index:
+    :param target_modality:
+    :param series:
+    :param source:
+    :return:
     """
 
     if not source_modality in bidsmodalities + (unknownmodality, ignoremodality):
@@ -626,25 +634,25 @@ def update_bidsmap(target_bidsmap, source_modality, source_index, target_modalit
     if not target_modality in bidsmodalities + (unknownmodality, ignoremodality):
         raise ValueError(f"invalid modality '{target_modality}'")
 
-    # First check if the target series already exists
-    if source_modality != target_modality and exist_series(target_bidsmap, source, target_modality, target_series):
+    # Warn the user if the target series already exists
+    if source_modality != target_modality and exist_series(bidsmap, source, target_modality, series):
         logger.warning(f'That series from {source_modality} already exists in {target_modality}...')
 
     # Delete the source series
-    target_bidsmap = delete_series(target_bidsmap, source, source_modality, source_index)
+    bidsmap = delete_series(bidsmap, source, source_modality, source_index)
 
-    # Copy the values from the target_series to the empty dict
+    # Copy the values from the series to the empty dict
     series = dict(provenance={}, attributes={}, bids={})
-    for attrkey in target_series['attributes']:
-        series['attributes'][attrkey] = target_series['attributes'][attrkey]
-    for key in target_series['bids']:
-        series['bids'][key] = target_series['bids'][key]
-    series['provenance'] = target_series['provenance']
+    for attrkey in series['attributes']:
+        series['attributes'][attrkey] = series['attributes'][attrkey]
+    for key in series['bids']:
+        series['bids'][key] = series['bids'][key]
+    series['provenance'] = series['provenance']
 
     # Append the cleaned-up target series
-    target_bidsmap = append_series(target_bidsmap, source, target_modality, series)
+    bidsmap = append_series(bidsmap, source, target_modality, series)
 
-    return target_bidsmap
+    return bidsmap
 
 
 def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
