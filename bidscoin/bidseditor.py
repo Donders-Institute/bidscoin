@@ -65,18 +65,19 @@ HELP_URLS = {
     bids.unknownmodality: HELP_URL_DEFAULT
 }
 
-OPTIONS_TOOLTIP_BIDSCOIN = """bidscoin\n
-version: should correspond with the version in ../bidscoin/version.txt
-bidsifnore: Semicolon-separated list of entries that are added to the .bidsignore file
-(for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv"""
+OPTIONS_TOOLTIP_BIDSCOIN = """bidscoin
+version:    should correspond with the version in ../bidscoin/version.txt
+bidsignore: Semicolon-separated list of entries that are added to the .bidsignore file
+            (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv"""
 
-OPTIONS_TOOLTIP_DCM2NIIX = """dcm2niix\n
-See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info.
-Command to set the path to dcm2niix:
-e.g. module add dcm2niix/1.0.20180622; (note the semi-colon at the end)
-or PATH=/opt/dcm2niix/bin:$PATH; (note the semi-colon at the end)
-or /opt/dcm2niix/bin/  (note the slash at the end)
-or '\"C:\\Program Files\\dcm2niix\"' (note the quotes to deal with the whitespace)"""
+OPTIONS_TOOLTIP_DCM2NIIX = """dcm2niix
+path: Command to set the path to dcm2niix, e.g.:
+      module add dcm2niix/1.0.20180622; (note the semi-colon at the end)
+      PATH=/opt/dcm2niix/bin:$PATH; (note the semi-colon at the end)
+      /opt/dcm2niix/bin/  (note the slash at the end)
+      '\"C:\\Program Files\\dcm2niix\"' (note the quotes to deal with the whitespace)
+args: Argument string that is passed to dcm2niix. Click [Test] and see the terminal output for usage
+      Tip: SPM users may want to use '-z n', which produces unzipped nifti's"""
 
 
 def get_allowed_suffixes(template_bidsmap):
