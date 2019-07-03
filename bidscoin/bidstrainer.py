@@ -12,9 +12,6 @@ import copy
 import re
 import textwrap
 import logging
-import ruamel
-from ruamel.yaml import YAML
-yaml = YAML()
 try:
     from bidscoin import bids
 except ImportError:
