@@ -656,10 +656,10 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
     :param dicomfile:   The full pathname of the dicom-file
     :param bidsmap:     Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
     :return:            (series, modality, index) The matching and filled-in series item, modality and list index as in series = bidsmap[DICOM][modality][index]
+                        modality = bids.unknownmodality and index = None if there is no match, the series is still populated with info from the dicom-file
     """
 
-    # TODO: generalize for non-DICOM (dicomfile -> file)?
-    source  = 'DICOM'
+    source  = 'DICOM'                                                                                       # TODO: generalize for non-DICOM (dicomfile -> file)?
     series_ = dict(provenance={}, attributes={}, bids={})
 
     # Loop through all bidsmodalities and series; all info goes into series_
@@ -679,7 +679,7 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
                 if attrvalue:
                     if not dicomvalue:
                         match = False
-                    elif isinstance(attrvalue, list):                     # The user-edited 'wildcard' option
+                    elif isinstance(attrvalue, list):                                                       # The user-edited 'wildcard' option
                         match = match and any([attrvalue_ in dicomvalue for attrvalue_ in attrvalue])
                     else:
                         match = match and attrvalue==dicomvalue
