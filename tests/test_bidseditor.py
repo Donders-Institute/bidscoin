@@ -6,8 +6,8 @@ import logging
 import copy
 import difflib
 
-from bidscoin.bids import load_bidsmap, save_bidsmap, bidsmodalities, unknownmodality
-from bidscoin.bidseditor import SOURCE, get_allowed_suffixes, get_bids_attributes, update_bidsmap, get_index_mapping
+from bidscoin.bids import load_bidsmap, save_bidsmap, bidsmodalities, unknownmodality, update_bidsmap
+from bidscoin.bidseditor import SOURCE, get_allowed_suffixes, get_bids_attributes, get_index_mapping
 
 
 LOGGER = logging.getLogger()

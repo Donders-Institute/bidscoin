@@ -612,6 +612,41 @@ def append_series(bidsmap: dict, source: str, modality: str, series: dict) -> di
     return bidsmap
 
 
+def update_bidsmap(target_bidsmap, source_modality, source_index, target_modality, target_series, source='DICOM'):
+    """
+    Update the BIDS map:
+    1. Remove the source series from the source modality section
+    2. Start new series dictionary and store key values without comments and references
+    3. Add the target series to the target modality section
+    """
+
+    if not source_modality in bidsmodalities + (unknownmodality, ignoremodality):
+        raise ValueError(f"invalid modality '{source_modality}'")
+
+    if not target_modality in bidsmodalities + (unknownmodality, ignoremodality):
+        raise ValueError(f"invalid modality '{target_modality}'")
+
+    # First check if the target series already exists
+    if source_modality != target_modality and exist_series(target_bidsmap, source, target_modality, target_series):
+        logger.warning(f'That series from {source_modality} already exists in {target_modality}...')
+
+    # Delete the source series
+    target_bidsmap = delete_series(target_bidsmap, source, source_modality, source_index)
+
+    # Copy the values from the target_series to the empty dict
+    series = dict(provenance={}, attributes={}, bids={})
+    for attrkey in target_series['attributes']:
+        series['attributes'][attrkey] = target_series['attributes'][attrkey]
+    for key in target_series['bids']:
+        series['bids'][key] = target_series['bids'][key]
+    series['provenance'] = target_series['provenance']
+
+    # Append the cleaned-up target series
+    target_bidsmap = append_series(target_bidsmap, source, target_modality, series)
+
+    return target_bidsmap
+
+
 def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
     """
     Find the series in the bidsmap with dicom attributes that match with the dicom file. Then update the (dynamic) bids values (values are cleaned-up to be BIDS-valid)

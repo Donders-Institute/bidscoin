@@ -79,39 +79,6 @@ or /opt/dcm2niix/bin/  (note the slash at the end)
 or '\"C:\\Program Files\\dcm2niix\"' (note the quotes to deal with the whitespace)"""
 
 
-def update_bidsmap(target_bidsmap, source_modality, source_index, target_modality, target_series):
-    """Update the BIDS map:
-    1. Remove the source series from the source modality section
-    2. Start new series dictionary and store key values without comments and references
-    3. Add the target series to the target modality section
-    """
-    if not source_modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-        raise ValueError(f"invalid modality '{source_modality}'")
-
-    if not target_modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-        raise ValueError(f"invalid modality '{target_modality}'")
-
-    # First check if the target series already exists.    TODO: figure out what to do with this situation
-    if source_modality != target_modality and bids.exist_series(target_bidsmap, SOURCE, target_modality, target_series):
-        LOGGER.warning(f'That series from {source_modality} already exists in {target_modality}...')
-
-    # Delete the source series
-    target_bidsmap = bids.delete_series(target_bidsmap, SOURCE, source_modality, source_index)
-
-    # Copy the values from the target_series to the empty dict
-    series = dict(provenance={}, attributes={}, bids={})  # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
-    for attrkey in target_series['attributes']:
-        series['attributes'][attrkey] = target_series['attributes'][attrkey]
-    for key in target_series['bids']:
-        series['bids'][key] = target_series['bids'][key]
-    series['provenance'] = target_series['provenance']
-
-    # Append the cleaned-up target series
-    target_bidsmap = bids.append_series(target_bidsmap, SOURCE, target_modality, series)
-
-    return target_bidsmap
-
-
 def get_allowed_suffixes(template_bidsmap):
     """Derive the possible suffixes for each modality from the template. """
     allowed_suffixes = {}
@@ -937,11 +904,11 @@ class EditDialog(QDialog):
 
     def update_series(self):
         """Save the changes to the bidsmap and send it back to the main window: Finished! """
-        self.bidsmap = update_bidsmap(self.bidsmap,
-                                      self.source_modality,
-                                      self.source_modality_index,
-                                      self.target_modality,
-                                      self.target_series)
+        self.bidsmap = bids.update_bidsmap(self.bidsmap,
+                                           self.source_modality,
+                                           self.source_modality_index,
+                                           self.target_modality,
+                                           self.target_series)
 
         self.done_edit.emit(self.bidsmap)
         self.done(1)
