@@ -47,7 +47,7 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
     series, modality, index = bids.get_matching_dicomseries(dicomfile, bidsmap_old)
 
     # If not, see if we can find a matching series in the template
-    if not index:
+    if index is None:
         series, modality, index = bids.get_matching_dicomseries(dicomfile, template)
 
     # See if we have collected the series in our new bidsmap
@@ -57,7 +57,7 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
         bidsmap_new = bids.append_series(bidsmap_new, 'DICOM', modality, series)
 
         # Communicate with the user if the series was not present in bidsmap_old or in template
-        if not index:
+        if index is None:
             LOGGER.info('Unknown modality found: ' + dicomfile)
 
             # Launch a GUI to ask the user for help
@@ -305,8 +305,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     if gui:
         QMessageBox.information(mainwin, 'bidseditor',
                                 f"The bidsmapper has finished scanning {rawfolder}. Please carefully check all the different "
-                                f"scan types and BIDScoin options in the following overview and (re)edit them to your needs.\n\n"
-                                f"You can always redo this step later using the bidseditor")
+                                f"BIDS output names and BIDScoin options and (re)edit them to your needs.\n\n"
+                                f"You can always redo this step later using the bidseditor tool")
 
         LOGGER.info('Opening the bidseditor')
         app.setApplicationName('BIDS editor')
