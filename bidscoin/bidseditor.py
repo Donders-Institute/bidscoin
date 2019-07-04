@@ -521,7 +521,7 @@ class Ui_MainWindow(object):
             table.setAlternatingRowColors(False)
             table.setShowGrid(False)
 
-            extra_space = 6
+            extra_space = 3
             table_height = num_rows * (row_height + extra_space) + 2 * table.frameWidth()
             table.setMinimumHeight(table_height)
             table.setMaximumHeight(table_height)
@@ -1001,7 +1001,7 @@ class EditDialog(QDialog):
         table.setAlternatingRowColors(False)
         table.setShowGrid(False)
 
-        extra_space = 6
+        extra_space = 3
         table_height = num_rows * (row_height + extra_space) + extra_space
         table.setMinimumHeight(table_height)
         table.setMaximumHeight(table_height)
@@ -1145,8 +1145,8 @@ class EditDialog(QDialog):
         self.view_bids_name = QTextEdit()
         self.view_bids_name.setReadOnly(True)
 
-        height = 34
-        extra_space = 6
+        height = 40
+        extra_space = 3
         self.view_bids_name.setFixedHeight(height + extra_space)
 
         self.update_bidsname()
