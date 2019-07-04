@@ -451,18 +451,6 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     # Get the bidsmap heuristics from the bidsmap YAML-file
     bidsmap, _ = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder, 'code'))
 
-    # Log the dcm2niix version
-    command = f"{bidsmap['Options']['dcm2niix']['path']}dcm2niix"
-    process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    output  = process.stdout.decode('utf-8')
-    if output:
-        for line in output.splitlines():
-            if 'version' in line:
-                LOGGER.info('dcm2niix version: ' + line)
-    else:
-        LOGGER.error(output)
-        LOGGER.error('failed to run dcm2niix on your system: Edit the dcm2nixx path value in the Bidsmap Options section')
-
     # Save options to the .bidsignore file
     bidsignore_items = [item.strip() for item in bidsmap['Options']['bidscoin']['bidsignore'].split(';')]
     LOGGER.info(f"Writing {bidsignore_items} entries to {bidsfolder}.bidsignore")
