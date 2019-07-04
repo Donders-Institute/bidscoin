@@ -31,8 +31,8 @@ PlugIns:
 # --------------------------------------------------------------------------------
 # List of plugins to edit the key-value heuristics / perform additional operations
 # --------------------------------------------------------------------------------
-- README.py
-
+- README.py                       # Located in bidscoin/plugins/
+- /opt/bidscoin/plugins_dccn/presentation2events.py
 
 DICOM:
 # --------------------------------------------------------------------------------
