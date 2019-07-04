@@ -7,10 +7,11 @@ or "myplugin.py". The functions in this module should be named "bidsmapper_plugi
 """
 
 
+import os
 import logging
 
 
-LOGGER = logging.getLogger(f'bidscoin.{__name__}')
+LOGGER = logging.getLogger(f'bidscoin.{os.path.splitext(os.path.basename(__file__))[0]}')
 
 
 def bidsmapper_plugin(seriesfolder: str, bidsmap: dict, heuristics: dict) -> dict:
@@ -35,7 +36,6 @@ def bidscoiner_plugin(session: str, bidsmap: dict, bidsfolder: str, personals: d
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
     :param bidsfolder:  The full-path name of the BIDS root-folder
     :param personals:   The dictionary with the personal information
-    :param logger:      The logger object
     :return:            Nothing
     """
 
