@@ -14,6 +14,7 @@ import glob
 import re
 import ruamel
 import logging
+import coloredlogs
 import subprocess
 import pydicom
 from ruamel.yaml import YAML
@@ -38,23 +39,19 @@ def setup_logging(log_filename: str) -> logging.Logger:
     # Create the log dir if it does not exist
     os.makedirs(os.path.dirname(log_filename), exist_ok=True)
 
-    # Set the format
+    # Set the format and logging level
+    fmt       = '%(asctime)s - %(name)s - %(levelname)s %(message)s'
+    datefmt   = '%Y-%m-%d %H:%M:%S'
+    formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
     logger.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s %(message)s',
-                                  '%Y-%m-%d %H:%M:%S')
 
-    # Set the streamhandler
-    streamhandler = logging.StreamHandler()
-    streamhandler.setLevel(logging.INFO)
-    streamhandler.setFormatter(formatter)
+    # Set & add the streamhandler and add some color to those boring terminal logs! :-)
+    coloredlogs.install(level='INFO', fmt=fmt, datefmt=datefmt)
 
-    # Set the filehandler
+    # Set & add the filehandler
     filehandler = logging.FileHandler(log_filename)
     filehandler.setLevel(logging.INFO)
     filehandler.setFormatter(formatter)
-
-    # Add the streamhandler and filehandler to the logger
-    logger.addHandler(streamhandler)
     logger.addHandler(filehandler)
 
     return logger
