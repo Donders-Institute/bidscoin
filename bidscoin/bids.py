@@ -543,22 +543,22 @@ def exist_series(bidsmap: dict, source: str, modality: str, series: dict, matchb
 
         # Search for a case where all series items match with the series items
         for serieskey, seriesvalue in series['attributes'].items():
+            if serieskey not in series_item['attributes']:  # Matching bids-labels which exist in one modality but not in the other
+                break                                       # There is no point in searching further within the series now that we've found a mismatch
             itemvalue = series_item['attributes'][serieskey]
             match     = match and (seriesvalue==itemvalue)
             if not match:
-                break               # There is no point in searching further within the series now that we've found a mismatch
+                break
 
         # This is probably not very useful, but maybe one day...
         if matchbidslabels:
-            try:
-                for serieskey, seriesvalue in series['bids'].items():
-                    itemvalue = series_item['bids'][serieskey]
-                    match     = match and (seriesvalue == itemvalue)
-                    if not match:
-                        break       # There is no point in searching further within the series now that we've found a mismatch
-
-            except KeyError:        # Errors may be evoked when matching bids-labels which exist in one modality but not in the other
-                match = False
+            for serieskey, seriesvalue in series['bids'].items():
+                if serieskey not in series_item['bids']:    # matching bids-labels which exist in one modality but not in the other
+                    break
+                itemvalue = series_item['bids'][serieskey]
+                match     = match and (seriesvalue == itemvalue)
+                if not match:
+                    break
 
         # Stop searching if we found a matching series (i.e. which is the case if match is still True after all series_item tests)
         # TODO: maybe count how many instances, could perhaps be useful info
