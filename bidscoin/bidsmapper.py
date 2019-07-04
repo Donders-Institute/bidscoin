@@ -226,6 +226,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
     # Start logging
     bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidsmapper.log'))
+    LOGGER.info('')
     LOGGER.info('------------ START BIDSmapper ------------')
 
     # Get the heuristics for creating the bidsmap
@@ -324,7 +325,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         mainwin.show()
         app.exec()
 
-    LOGGER.info('------------ FINISHED! ------------')
+    LOGGER.info('------------ FINISHED! -------------------')
+    LOGGER.info('')
 
 
 # Shell usage

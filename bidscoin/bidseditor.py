@@ -1241,6 +1241,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
 
     # Start logging
     bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidseditor.log'))
+    LOGGER.info('')
     LOGGER.info('------------ START BIDSeditor ------------')
 
     # Obtain the initial bidsmap info
@@ -1275,6 +1276,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     app.exec()
 
     LOGGER.info('------------ FINISHED! -------------------')
+    LOGGER.info('')
 
 
 if __name__ == "__main__":
