@@ -27,6 +27,12 @@ Options:
     args: -b y -z y -i n          # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
 
 
+PlugIn: ~
+# --------------------------------------------------------------------------------
+# List of plugins to edit the key-value heuristics / perform additional operations
+# --------------------------------------------------------------------------------
+
+
 DICOM:
 # --------------------------------------------------------------------------------
 # DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
@@ -363,8 +369,7 @@ DICOM:
       mod: ~
     provenance: ~
 
-  leave_out:
-  # ----------------------- Data that will be left out ---------------
+  leave_out:  # ----------------------- Data that will be left out ---------------
   - provenance: ~
     attributes:
       Modality: ~
@@ -615,8 +620,7 @@ FileSystem:
       suffix: ~
       mod: ~
 
-  leave_out:
-  # ----------------------- Data that will be left out ---------------
+  leave_out:  # ----------------------- Data that will be left out ---------------
   - attributes:
       FolderName: ~
       FileName: ~
@@ -631,9 +635,3 @@ FileSystem:
       run: <<1>>
       suffix: ~
       mod: ~
-
-
-PlugIn: ~
-# --------------------------------------------------------------------------------
-# List of plugins to edit the key-value heuristics / perform additional operations
-# --------------------------------------------------------------------------------
