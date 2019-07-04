@@ -35,6 +35,7 @@ DICOM:
   session: ~                      # A DICOM attribute that is used as session-label instead of the session-label from the sourcefolder, e.g. <<StudyID>>
   anat:       # ----------------------- All anatomical series --------------------
   - attributes: &anatattributes
+      Modality: MR
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -142,6 +143,7 @@ DICOM:
 
   func:       # ----------------------- All functional series --------------------
   - attributes: &funcattributes
+      Modality: MR
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: [epfid2d1rs, '*fm2d2r']
@@ -187,6 +189,7 @@ DICOM:
 
   dwi:        # ----------------------- All diffusion series ---------------------
   - attributes: &dwiattributes
+      Modality: MR
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: [epse2d1_, ep_]
@@ -214,6 +217,7 @@ DICOM:
 
   fmap:       # ----------------------- All fieldmap series ----------------------
   - attributes: &fmapattributes
+      Modality: MR
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: "*fm2d2r"
@@ -278,6 +282,7 @@ DICOM:
 
   beh:        # ----------------------- All behavioural data ---------------------
   - attributes: &behattributes
+      Modality: MR
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -313,6 +318,7 @@ DICOM:
 
   pet:        # ----------------------- All PET series ---------------------------
   - attributes: &petattributes
+      Modality: PT
       SeriesDescription: ~
       Radiopharmaceutical: ~
       SliceThickness: ~
@@ -330,6 +336,7 @@ DICOM:
 
   extra_data: # ----------------------- All extra data ---------------------------
   - attributes:
+      Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -360,7 +367,8 @@ DICOM:
   # ----------------------- Data that will be left out ---------------
   - provenance: ~
     attributes:
-      SeriesDescription: ~
+      Modality: ~
+      SeriesDescription: [Scout, localizer]
       SequenceVariant: ~
       SequenceName: ~
       ScanningSequence: ~

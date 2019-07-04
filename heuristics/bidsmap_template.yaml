@@ -36,6 +36,7 @@ DICOM:
   anat:       # ----------------------- All anatomical series --------------------
   - provenance: ~
     attributes: &anatattributes
+      Modality: MR
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -136,6 +137,7 @@ DICOM:
   func:       # ----------------------- All functional series --------------------
   - provenance: ~
     attributes: &funcattributes
+      Modality: MR
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -181,6 +183,7 @@ DICOM:
   dwi:        # ----------------------- All diffusion series ---------------------
   - provenance: ~
     attributes: &dwiattributes
+      Modality: MR
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -208,6 +211,7 @@ DICOM:
   fmap:       # ----------------------- All fieldmap series ----------------------
   - provenance: ~
     attributes: &fmapattributes
+      Modality: MR
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -272,6 +276,7 @@ DICOM:
   beh:        # ----------------------- All behavioural data ---------------------
   - provenance: ~
     attributes: &behattributes
+      Modality: MR
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -308,6 +313,7 @@ DICOM:
   pet:        # ----------------------- All PET series ---------------------------
   - provenance: ~
     attributes: &petattributes
+      Modality: PT
       SeriesDescription: ~
       Radiopharmaceutical: ~
       SliceThickness: ~
@@ -325,6 +331,7 @@ DICOM:
   extra_data: # ----------------------- All extra data ---------------------------
   - provenance: ~
     attributes:
+      Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -354,6 +361,7 @@ DICOM:
   # ----------------------- Data that will be left out ---------------
   - provenance: ~
     attributes:
+      Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
