@@ -371,10 +371,14 @@ def coin_plugin(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -
     :return:            Nothing
     """
 
+    # Input checks
+    if not bidsmap['PlugIns']:
+        return
+
     # Import and run the plugin modules
     from importlib import util
 
-    for plugin in bidsmap['PlugIn']:
+    for plugin in bidsmap['PlugIns']:
 
         # Get the full path to the plugin-module
         if os.path.basename(plugin)==plugin:
@@ -391,7 +395,7 @@ def coin_plugin(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -
         module = util.module_from_spec(spec)
         spec.loader.exec_module(module)
         if 'bidscoiner_plugin' in dir(module):
-            LOGGER.info(f'Running: {plugin}.bidscoiner_plugin({session}, bidsmap, {bidsfolder}, personals)')
+            LOGGER.debug(f'Running: {plugin}.bidscoiner_plugin({session}, bidsmap, {bidsfolder}, personals)')
             module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals)
 
 
@@ -521,7 +525,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
                 coin_filesystem(session, bidsmap, bidsfolder, personals)
 
             # Update / append the plugin mapping
-            if bidsmap['PlugIn']:
+            if bidsmap['PlugIns']:
                 coin_plugin(session, bidsmap, bidsfolder, personals)
 
         # Store the collected personals in the participant_table

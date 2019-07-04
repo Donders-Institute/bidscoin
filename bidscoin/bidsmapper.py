@@ -175,13 +175,13 @@ def build_pluginmap(seriesfolder: str, bidsmap_new: dict, bidsmap_old: dict) -> 
     """
 
     # Input checks
-    if not seriesfolder or not bidsmap_new['PlugIn']:
+    if not seriesfolder or not bidsmap_new['PlugIns']:
         return bidsmap_new
 
     # Import and run the plugin modules
     from importlib import util
 
-    for plugin in bidsmap_new['PlugIn']:
+    for plugin in bidsmap_new['PlugIns']:
 
         # Get the full path to the plugin-module
         if os.path.basename(plugin)==plugin:
@@ -300,7 +300,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                     bidsmap_new = build_filesystemmap(series, bidsmap_new, bidsmap_old)
 
                 # Update / append the plugin mapping
-                if bidsmap_old['PlugIn']:
+                if bidsmap_old['PlugIns']:
                     bidsmap_new = build_pluginmap(series, bidsmap_new, bidsmap_old)
 
     # Create the bidsmap YAML-file in bidsfolder/code

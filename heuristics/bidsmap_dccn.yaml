@@ -27,7 +27,7 @@ Options:
     args: -b y -z y -i n          # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
 
 
-PlugIn:
+PlugIns:
 # --------------------------------------------------------------------------------
 # List of plugins to edit the key-value heuristics / perform additional operations
 # --------------------------------------------------------------------------------
