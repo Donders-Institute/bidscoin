@@ -35,7 +35,7 @@ DICOM:
   session: ~                      # A DICOM attribute that is used as session-label instead of the session-label from the sourcefolder, e.g. <<StudyID>>
   anat:       # ----------------------- All anatomical series --------------------
   - attributes: &anatattributes
-      Modality: MR
+      Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -143,7 +143,7 @@ DICOM:
 
   func:       # ----------------------- All functional series --------------------
   - attributes: &funcattributes
-      Modality: MR
+      Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: [epfid2d1rs, '*fm2d2r']
@@ -189,7 +189,7 @@ DICOM:
 
   dwi:        # ----------------------- All diffusion series ---------------------
   - attributes: &dwiattributes
-      Modality: MR
+      Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: [epse2d1_, ep_]
@@ -217,7 +217,7 @@ DICOM:
 
   fmap:       # ----------------------- All fieldmap series ----------------------
   - attributes: &fmapattributes
-      Modality: MR
+      Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: "*fm2d2r"
@@ -282,7 +282,7 @@ DICOM:
 
   beh:        # ----------------------- All behavioural data ---------------------
   - attributes: &behattributes
-      Modality: MR
+      Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~

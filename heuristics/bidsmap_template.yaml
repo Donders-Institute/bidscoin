@@ -36,7 +36,7 @@ DICOM:
   anat:       # ----------------------- All anatomical series --------------------
   - provenance: ~
     attributes: &anatattributes
-      Modality: MR
+      Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -137,7 +137,7 @@ DICOM:
   func:       # ----------------------- All functional series --------------------
   - provenance: ~
     attributes: &funcattributes
-      Modality: MR
+      Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -183,7 +183,7 @@ DICOM:
   dwi:        # ----------------------- All diffusion series ---------------------
   - provenance: ~
     attributes: &dwiattributes
-      Modality: MR
+      Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -211,7 +211,7 @@ DICOM:
   fmap:       # ----------------------- All fieldmap series ----------------------
   - provenance: ~
     attributes: &fmapattributes
-      Modality: MR
+      Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
@@ -276,7 +276,7 @@ DICOM:
   beh:        # ----------------------- All behavioural data ---------------------
   - provenance: ~
     attributes: &behattributes
-      Modality: MR
+      Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
       SequenceName: ~
