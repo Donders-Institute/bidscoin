@@ -68,6 +68,7 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
                 dialog_edit = bidseditor.EditDialog(index, modality, bidsmap_new, template, gui.subprefix, gui.sesprefix)
                 dialog_edit.exec()
 
+                # Get the result
                 if dialog_edit.result() == 0:
                     LOGGER.info(f'The user has canceled the edit')
                     exit()
@@ -250,10 +251,13 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         gui.setupUi(mainwin, bidsfolder, rawfolder, bidsmapfile, bidsmap_new, bidsmap_new, template, subprefix=subprefix, sesprefix=sesprefix)
 
         QMessageBox.information(mainwin, 'bidsmapper workflow',
-                                f"The bidsmapper will now scan {bidsfolder} and whenever it detects a new type of scan it will "
-                                f"ask you to identify it.\n\nIt is important that you choose the correct BIDS modality (e.g. "
-                                f"'anat', 'dwi' or 'func').\n\nAt the end you will be shown an overview of all the different scan "
-                                f"types and BIDScoin options (as in the bidseditor) that you can then (re)edit to your needs")
+                                f"The bidsmapper will now scan {bidsfolder} and whenever "
+                                f"it detects a new type of scan it will ask you to identify it.\n\n"
+                                f"It is important that you choose the correct BIDS modality "
+                                f"(e.g. 'anat', 'dwi' or 'func').\n\n"
+                                f"At the end you will be shown an overview of all the "
+                                f"different scan types and BIDScoin options (as in the "
+                                f"bidseditor) that you can then (re)edit to your needs")
 
     # Loop over all subjects and sessions and built up the bidsmap entries
     subjects = bids.lsdirs(rawfolder, subprefix + '*')
@@ -305,9 +309,11 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     # (Re)launch the bidseditor UI_MainWindow
     if gui:
         QMessageBox.information(mainwin, 'bidseditor',
-                                f"The bidsmapper has finished scanning {rawfolder}. Please carefully check all the different "
-                                f"BIDS output names and BIDScoin options and (re)edit them to your needs.\n\n"
-                                f"You can always redo this step later by re-running the bidsmapper or by just running the bidseditor tool")
+                                f"The bidsmapper has finished scanning {rawfolder}\n\n"
+                                f"Please carefully check all the different BIDS output names "
+                                f"and BIDScoin options and (re)edit them to your needs.\n\n"
+                                f"You can always redo this step later by re-running the "
+                                f"bidsmapper or by just running the bidseditor tool")
 
         LOGGER.info('Opening the bidseditor')
         app.setApplicationName('BIDS editor')

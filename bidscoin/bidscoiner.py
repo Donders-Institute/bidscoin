@@ -417,6 +417,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
 
     # Start logging
     bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidscoiner.log'))
+    LOGGER.info(' ')
     LOGGER.info(f'------------ START BIDScoiner {bids.version()}: BIDS {bids.bidsversion()} ------------')
     LOGGER.info(f'>>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} subjects={subjects} force={force}'
                 f' participants={participants} bidsmap={bidsmapfile} subprefix={subprefix} sesprefix={sesprefix}')
@@ -449,6 +450,18 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
     bidsmap, _ = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder, 'code'))
+
+    # Log the dcm2niix version
+    command = f"{bidsmap['Options']['dcm2niix']['path']}dcm2niix"
+    process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output  = process.stdout.decode('utf-8')
+    if output:
+        for line in output.splitlines():
+            if 'version' in line:
+                LOGGER.info('dcm2niix version: ' + line)
+    else:
+        LOGGER.error(output)
+        LOGGER.error('failed to run dcm2niix on your system: Edit the dcm2nixx path value in the Bidsmap Options section')
 
     # Save options to the .bidsignore file
     bidsignore_items = [item.strip() for item in bidsmap['Options']['bidscoin']['bidsignore'].split(';')]
@@ -483,11 +496,9 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     for n, subject in enumerate(subjects, 1):
 
         if participants and subject in list(participants_table.index):
-            LOGGER.info(f'{"-" * 30}')
             LOGGER.info(f'Skipping subject: {subject} ({n}/{len(subjects)})')
             continue
 
-        LOGGER.info(f'{"-"*30}')
         LOGGER.info(f'Coining subject ({n}/{len(subjects)}): {subject}')
 
         personals = dict()
@@ -552,6 +563,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
         json.dump(participants_dict, json_fid, indent=4)
 
     LOGGER.info('------------ FINISHED! ------------')
+    LOGGER.info(' ')
 
 
 # Shell usage
