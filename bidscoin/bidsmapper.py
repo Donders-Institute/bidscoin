@@ -198,7 +198,7 @@ def build_pluginmap(seriesfolder: str, bidsmap_new: dict, bidsmap_old: dict) -> 
         module = util.module_from_spec(spec)
         spec.loader.exec_module(module)
         if 'bidsmapper_plugin' in dir(module):
-            LOGGER.info(f'Running: {plugin}.bidsmapper_plugin({seriesfolder}, {bidsmap_new}, {bidsmap_old})')
+            LOGGER.debug(f"Running plug-in: {plugin}.bidsmapper_plugin('{seriesfolder}', bidsmap_new, bidsmap_old)")
             bidsmap_new = module.bidsmapper_plugin(seriesfolder, bidsmap_new, bidsmap_old)
 
     return bidsmap_new
@@ -231,6 +231,9 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     # Get the heuristics for creating the bidsmap
     bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder,'code'))
     template, templatefile   = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code'))
+    if not bidsmap_old:
+        bidsmap_old = template
+        bidsmapfile = templatefile
 
     # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     bidsmap_new = copy.deepcopy(bidsmap_old)
@@ -335,8 +338,8 @@ if __name__ == "__main__":
                                             '  bidsmapper.py /project/foo/raw /project/foo/bids\n'
                                             '  bidsmapper.py /project/foo/raw /project/foo/bids -t bidsmap_dccn\n ')
     parser.add_argument('sourcefolder',       help='The source folder containing the raw data in sub-#/ses-#/series format (or specify --subprefix and --sesprefix for different prefixes)')
-    parser.add_argument('bidsfolder',         help='The destination folder with the (future) bids data and the default bidsfolder/code/bidsmap.yaml file. Default: bidsmap.yaml', default='bidsmap.yaml')
-    parser.add_argument('-b','--bidsmap',     help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/')
+    parser.add_argument('bidsfolder',         help='The destination folder with the (future) bids data and the bidsfolder/code/bidsmap.yaml output file')
+    parser.add_argument('-b','--bidsmap',     help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap.yaml', default='bidsmap.yaml')
     parser.add_argument('-t','--template',    help='The bidsmap template with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap_template.yaml', default='bidsmap_template.yaml')
     parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')

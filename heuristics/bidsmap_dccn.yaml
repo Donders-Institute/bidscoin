@@ -31,7 +31,7 @@ PlugIn:
 # --------------------------------------------------------------------------------
 # List of plugins to edit the key-value heuristics / perform additional operations
 # --------------------------------------------------------------------------------
-- README.py
+  - README.py
 
 
 DICOM:

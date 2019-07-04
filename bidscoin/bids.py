@@ -46,11 +46,11 @@ def setup_logging(log_filename: str) -> logging.Logger:
     logger.setLevel(logging.INFO)
 
     # Set & add the streamhandler and add some color to those boring terminal logs! :-)
-    coloredlogs.install(level='INFO', fmt=fmt, datefmt=datefmt)
+    coloredlogs.install(level='DEBUG', fmt=fmt, datefmt=datefmt)
 
     # Set & add the filehandler
     filehandler = logging.FileHandler(log_filename)
-    filehandler.setLevel(logging.INFO)
+    filehandler.setLevel(logging.DEBUG)
     filehandler.setFormatter(formatter)
     logger.addHandler(filehandler)
 
@@ -308,7 +308,7 @@ def get_niftifile(folder: str) -> str:
     return None
 
 
-def load_bidsmap(yamlfile: str='', folder: str='') -> (ruamel.yaml, str):
+def load_bidsmap(yamlfile: str='', folder: str='') -> (dict, str):
     """
     Read the mapping heuristics from the bidsmap yaml-file
 
@@ -326,17 +326,23 @@ def load_bidsmap(yamlfile: str='', folder: str='') -> (ruamel.yaml, str):
         if not os.path.isfile(yamlfile):
             yamlfile = os.path.join(heuristics_folder,'bidsmap_template.yaml')
 
-    if not os.path.splitext(yamlfile)[1]:           # Add a standard file-extension if needed
+    # Add a standard file-extension if needed
+    if not os.path.splitext(yamlfile)[1]:
         yamlfile = yamlfile + '.yaml'
 
-    if os.path.basename(yamlfile) == yamlfile:      # Get the full path to the bidsmap yaml-file
+    # Get the full path to the bidsmap yaml-file
+    if os.path.basename(yamlfile) == yamlfile:
         if os.path.isfile(os.path.join(folder, yamlfile)):
             yamlfile = os.path.join(folder, yamlfile)
         else:
             yamlfile = os.path.join(heuristics_folder, yamlfile)
 
     yamlfile = os.path.abspath(os.path.expanduser(yamlfile))
-    logger.info('Using: ' + os.path.abspath(yamlfile))
+    if not os.path.isfile(yamlfile):
+        logger.info('No bidsmap file found: ' + os.path.abspath(yamlfile))
+        return dict(), yamlfile
+    else:
+        logger.info('Using: ' + os.path.abspath(yamlfile))
 
     # Read the heuristics from the bidsmap file
     with open(yamlfile, 'r') as stream:
