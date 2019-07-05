@@ -154,7 +154,7 @@ class InspectWindow(QDialog):
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
-        self.setWindowTitle("Inspect DICOM file")
+        self.setWindowTitle(f"Inspect {SOURCE} file")
 
         top_widget = QtWidgets.QWidget(self)
         top_layout = QtWidgets.QVBoxLayout(self)
@@ -643,7 +643,7 @@ class Ui_MainWindow(object):
 
         self.update_list(self.output_bidsmap)
 
-        self.table.setHorizontalHeaderLabels(['', 'DICOM input sample', 'BIDS modality', 'BIDS output name', 'Action'])
+        self.table.setHorizontalHeaderLabels(['', f'{SOURCE} input sample', 'BIDS modality', 'BIDS output name', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
@@ -938,14 +938,14 @@ class EditDialog(QDialog):
         if column == 1:
             key = self.view_dicom.item(row, 0).text()
             value = self.view_dicom.item(row, 1).text()
-            if key in self.target_series['DICOM']:
-                oldvalue = self.target_series['DICOM'][key]
+            if key in self.target_series['attributes']:
+                oldvalue = self.target_series['attributes'][key]
             else:
                 oldvalue = None
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
             if key != '':
-                LOGGER.info(f"User has set DICOM['{key}'] from {oldvalue} to '{value}' for {self.source_series['provenance']}")
+                LOGGER.info(f"User has set {SOURCE}['{key}'] from {oldvalue} to '{value}' for {self.source_series['provenance']}")
 
                 self.view_dicom.item(row, 1).setText(value)
                 self.target_series['attributes'][key] = value
