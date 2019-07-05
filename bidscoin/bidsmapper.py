@@ -69,14 +69,14 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
                 dialog_edit.exec()
 
                 # Get the result
-                if dialog_edit.result() == 0:
-                    LOGGER.info(f'The user has canceled the edit')
+                if dialog_edit.result() == 0:           # The user has canceled the edit
                     exit()
-                elif dialog_edit.result() == 1:
-                    LOGGER.info(f'The user has finished the edit')
+                elif dialog_edit.result() == 1:         # The user has finished the edit
                     bidsmap_new = dialog_edit.bidsmap
-                elif dialog_edit.result() == 2:
-                    LOGGER.info(f'The user has aborted the edit')
+                elif dialog_edit.result() == 2:         # The user has aborted the edit
+                    pass
+                else:
+                    LOGGER.debug(f'Unexpected result {dialog_edit.result()} from the edit dialog')
 
                 # Open a view-only version of the main window
                 if gui.interactive==2:
