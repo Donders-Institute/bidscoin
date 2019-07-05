@@ -939,7 +939,7 @@ class EditDialog(QDialog):
             key = self.view_dicom.item(row, 0).text()
             value = self.view_dicom.item(row, 1).text()
 
-            # Only if cell was actually clicked, update (i.e. not when BIDS modality changes)
+            # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
             if key != '':
                 LOGGER.info(f"User has set DICOM['{key}'] to '{value}' for {self.source_series['provenance']}")
 
@@ -952,7 +952,7 @@ class EditDialog(QDialog):
             key = self.view_bids.item(row, 0).text()
             value = self.view_bids.item(row, 1).text()
 
-            # Only if cell was actually clicked, update (i.e. not when BIDS modality changes)
+            # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
             if key != '':
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a series attribute
                 value = bids.replace_bidsvalue(value, self.target_series['provenance'])
@@ -1166,6 +1166,8 @@ class EditDialog(QDialog):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
         self.target_modality = self.view_dropdown.currentText()
 
+        LOGGER.info(f"User has changed the BIDS modality from '{self.source_modality}' to '{self.target_modality}' for {self.source_series['provenance']}")
+
         if self.target_modality in (bids.unknownmodality, bids.ignoremodality):
             # Free field
             self.target_suffix = ''
@@ -1219,6 +1221,8 @@ class EditDialog(QDialog):
     def selection_suffix_dropdown_change(self, i):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
         self.target_suffix = self.suffix_dropdown.currentText()
+
+        LOGGER.info(f"User has changed the BIDS suffix from '{self.target_series['bids']['suffix']}' to '{self.target_suffix}' for {self.source_series['provenance']}")
 
         bids_values, data = self.get_bids_values_data()
         bids_values['suffix'] = self.target_suffix
