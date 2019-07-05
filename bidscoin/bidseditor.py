@@ -149,7 +149,7 @@ def get_index_mapping(bidsmap):
 class InspectWindow(QDialog):
 
     def __init__(self, filename, dicomdict):
-        QDialog.__init__(self)
+        super().__init__()
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -352,7 +352,7 @@ class Ui_MainWindow(object):
             if bids.is_dicomfile(filename):
                 dicomdict = pydicom.dcmread(filename, force=True)
                 self.popup = InspectWindow(filename, dicomdict)
-                self.popup.show()
+                self.popup.exec()
 
     def set_tab_file_browser(self, sourcefolder):
         """Set the raw data folder inspector tab. """
@@ -623,7 +623,7 @@ class Ui_MainWindow(object):
                     else:
                         self.table.item(idx, 3).setForeground(QtGui.QColor(0, 128, 0))
                 self.edit_button.clicked.connect(self.handle_button_clicked)
-                self.edit_button.setToolTip('Click to edit the BIDS output name')
+                self.edit_button.setToolTip('Click to see more details and edit the BIDS output name')
                 self.table.setCellWidget(idx, 4, self.edit_button)
 
                 idx += 1
@@ -736,7 +736,7 @@ class Ui_MainWindow(object):
         if bids.is_dicomfile(filename):
             dicomdict = pydicom.dcmread(filename, force=True)
             self.popup = InspectWindow(filename, dicomdict)
-            self.popup.show()
+            self.popup.exec()
 
     def show_about(self):
         """ """
@@ -779,7 +779,7 @@ class EditDialog(QDialog):
     done_edit = QtCore.pyqtSignal(dict)
 
     def __init__(self, modality_index, modality, bidsmap, template_bidsmap, subprefix='sub-', sesprefix='ses-'):
-        QDialog.__init__(self)
+        super().__init__()
 
         self.bidsmap = bidsmap
 
@@ -922,7 +922,7 @@ class EditDialog(QDialog):
             if bids.is_dicomfile(filename):
                 dicomdict = pydicom.dcmread(filename, force=True)
                 self.popup = InspectWindow(filename, dicomdict)
-                self.popup.show()
+                self.popup.exec()
 
     def dicom_cell_was_changed(self, row, column):
         """DICOM attribute value has been changed. """
@@ -1041,8 +1041,6 @@ class EditDialog(QDialog):
         self.label_provenance.setText("Provenance")
 
         self.view_provenance = self.get_table(data, num_rows=MAX_NUM_PROVENANCE_ATTRIBUTES)
-
-        self.view_provenance.doubleClicked.connect(self.inspect_dicomfile)
 
     def set_dicom_attributes_section(self):
         """Set SOURCE attributes section. """
