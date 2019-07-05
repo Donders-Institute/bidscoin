@@ -695,6 +695,8 @@ class Ui_MainWindow(object):
         webbrowser.open(HELP_URL_DEFAULT)
 
     def reload(self):
+        LOGGER.info('User has reloaded the bidsmap')
+
         selected_tab_index = self.tabwidget.currentIndex()
         """Reset button: reload the original input BIDS map. """
         self.output_bidsmap, _ = bids.load_bidsmap(self.bidsmap_filename)
@@ -899,13 +901,19 @@ class EditDialog(QDialog):
                 return
             if answer == QMessageBox.No:
                 self.done(2)
+                LOGGER.info(f'User has discarded the edit')
                 return
             if answer == QMessageBox.Cancel:
+                LOGGER.info(f'User has canceled the edit')
                 return
+
+        LOGGER.info(f'User has canceled the edit')
 
         super(EditDialog, self).reject()
 
     def update_series(self):
+        LOGGER.info(f'User has approved the edit')
+
         """Save the changes to the bidsmap and send it back to the main window: Finished! """
         self.bidsmap = bids.update_bidsmap(self.bidsmap,
                                            self.source_modality,
@@ -933,6 +941,8 @@ class EditDialog(QDialog):
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes)
             if key != '':
+                LOGGER.info(f"User has set DICOM['{key}'] to '{value}' for {self.view_provenance.item(0,1).text()}")
+
                 self.view_dicom.item(row, 1).setText(value)
                 self.target_series['attributes'][key] = value
 
@@ -946,6 +956,8 @@ class EditDialog(QDialog):
             if key != '':
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a series attribute
                 value = bids.replace_bidsvalue(value, self.target_series['provenance'])
+
+                LOGGER.info(f"User has set bids['{key}'] to '{value}' for {self.view_provenance.item(0,1).text()}")
 
                 self.view_bids.item(row, 1).setText(value)
                 self.target_series['bids'][key] = value
