@@ -103,44 +103,6 @@ def run_command(command: str) -> bool:
     return True
 
 
-def test_tooloptions(tool: str, opts: dict) -> bool:
-    """
-    Performs tests of the user tool parameters set in bidsmap['Options']
-
-    :param tool:    Name of the tool that is being tested in bidsmap['Options']
-    :param opts:    The editable options belonging to the tool
-    :return:        True if the tool generated the expected result, False if there
-                    was a tool error, None if this function has an implementation error
-    """
-
-    success = None
-    if tool == 'dcm2niix':
-        command = f"{opts['path']}dcm2niix -h"
-    elif tool == 'bidscoin':
-        command = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bidscoin.py -v')
-    else:
-        logger.warning(f'Testing of {tool} not supported')
-        return success
-
-    logger.info('Testing: ' + tool)
-
-    return run_command(command)
-
-
-def test_plugins(plugin: str='') -> bool:
-    """
-    Performs tests of the plug-ins in bidsmap['PlugIns']
-
-    :param plugin:  The name of the plugin that is being tested (-> bidsmap['Plugins'])
-    :return:        True if the plugin generated the expected result, False if there
-                    was a plug-in error, None if this function has an implementation error
-    """
-
-    logger.info('Testing: ' + plugin)
-
-    return inspect.ismodule(import_plugin(plugin))
-
-
 def import_plugin(plugin: str):
     """
 
@@ -183,6 +145,44 @@ def import_plugin(plugin: str):
         logger.exception(f"Could not import {plugin}")
 
         return None
+
+
+def test_tooloptions(tool: str, opts: dict) -> bool:
+    """
+    Performs tests of the user tool parameters set in bidsmap['Options']
+
+    :param tool:    Name of the tool that is being tested in bidsmap['Options']
+    :param opts:    The editable options belonging to the tool
+    :return:        True if the tool generated the expected result, False if there was a tool error
+    """
+
+    if tool == 'dcm2niix':
+        command = f"{opts['path']}dcm2niix -h"
+    elif tool == 'bidscoin':
+        command = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bidscoin.py -v')
+    else:
+        logger.warning(f'Testing of {tool} not supported')
+        return None
+
+    logger.info('Testing: ' + tool)
+
+    return run_command(command)
+
+
+def test_plugins(plugin: str='') -> bool:
+    """
+    Performs tests of the plug-ins in bidsmap['PlugIns']
+
+    :param plugin:  The name of the plugin that is being tested (-> bidsmap['Plugins'])
+    :return:        True if the plugin generated the expected result, False if there
+                    was a plug-in error, None if this function has an implementation error
+    """
+
+    logger.info('Testing: ' + plugin)
+
+    module = import_plugin(plugin)
+
+    return inspect.ismodule(module)
 
 
 def lsdirs(folder: str, wildcard: str='*'):
