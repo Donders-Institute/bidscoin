@@ -941,7 +941,7 @@ class EditDialog(QDialog):
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes)
             if key != '':
-                LOGGER.info(f"User has set DICOM['{key}'] to '{value}' for {self.view_provenance.item(0,1).text()}")
+                LOGGER.info(f"User has set DICOM['{key}'] to '{value}' for {self.source_series['provenance']}")
 
                 self.view_dicom.item(row, 1).setText(value)
                 self.target_series['attributes'][key] = value
