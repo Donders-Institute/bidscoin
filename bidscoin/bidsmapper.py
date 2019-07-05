@@ -258,7 +258,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                                 f"The bidsmapper will now scan {bidsfolder} and whenever "
                                 f"it detects a new type of scan it will ask you to identify it.\n\n"
                                 f"It is important that you choose the correct BIDS modality "
-                                f"(e.g. 'anat', 'dwi' or 'func').\n\n"
+                                f"(e.g. 'anat', 'dwi' or 'func') and suffix (e.g. 'bold' or 'sbref').\n\n"
                                 f"At the end you will be shown an overview of all the "
                                 f"different scan types and BIDScoin options (as in the "
                                 f"bidseditor) that you can then (re)edit to your needs")
