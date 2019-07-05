@@ -853,6 +853,7 @@ class EditDialog(QDialog):
         layout_scrollarea.addWidget(groupbox1)
         layout_scrollarea.addWidget(groupbox2)
 
+        self.view_provenance.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.view_provenance.cellDoubleClicked.connect(self.inspect_dicomfile)
         self.view_dicom.cellChanged.connect(self.dicom_cell_was_changed)
         self.view_bids.cellChanged.connect(self.bids_cell_was_changed)
