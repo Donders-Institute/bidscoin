@@ -957,7 +957,7 @@ class EditDialog(QDialog):
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a series attribute
                 value = bids.replace_bidsvalue(value, self.target_series['provenance'])
 
-                LOGGER.info(f"User has set bids['{key}'] to '{value}' for {self.view_provenance.item(0,1).text()}")
+                LOGGER.info(f"User has set bids['{key}'] to '{value}' for {self.source_series['provenance']}")
 
                 self.view_bids.item(row, 1).setText(value)
                 self.target_series['bids'][key] = value
