@@ -938,10 +938,7 @@ class EditDialog(QDialog):
         if column == 1:
             key = self.view_dicom.item(row, 0).text()
             value = self.view_dicom.item(row, 1).text()
-            if key in self.target_series['attributes']:
-                oldvalue = self.target_series['attributes'][key]
-            else:
-                oldvalue = None
+            oldvalue = self.target_series['attributes'].get(key, None)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
             if key != '':
@@ -955,10 +952,7 @@ class EditDialog(QDialog):
         if column == 1:
             key = self.view_bids.item(row, 0).text()
             value = self.view_bids.item(row, 1).text()
-            if key in self.target_series['bids']:
-                oldvalue = self.target_series['bids'][key]
-            else:
-                oldvalue = None
+            oldvalue = self.target_series['bids'].get(key, None)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
             if key != '':
