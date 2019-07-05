@@ -11,12 +11,13 @@ https://github.com/dangom/dac2bids/blob/master/dac2bids.py
 # Global imports
 import os.path
 import glob
+import inspect
 import re
-import ruamel
 import logging
 import coloredlogs
 import subprocess
 import pydicom
+from importlib import util
 from ruamel.yaml import YAML
 yaml = YAML()
 
@@ -26,6 +27,32 @@ bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh', 'pet')
 ignoremodality  = 'leave_out'
 unknownmodality = 'extra_data'
 bidslabels      = ('acq', 'ce', 'rec', 'task', 'echo', 'dir', 'suffix')   # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
+
+
+def bidsversion() -> str:
+    """
+    Reads the BIDS version from the BIDSVERSION.TXT file
+
+    :return:    The BIDS version number
+    """
+
+    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'bidsversion.txt')) as fid:
+        version = fid.read().strip()
+
+    return str(version)
+
+
+def version() -> str:
+    """
+    Reads the BIDSCOIN version from the VERSION.TXT file
+
+    :return:    The BIDSCOIN version number
+    """
+
+    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'version.txt')) as fid:
+        version = fid.read().strip()
+
+    return str(version)
 
 
 def setup_logging(log_filename: str) -> logging.Logger:
@@ -57,17 +84,23 @@ def setup_logging(log_filename: str) -> logging.Logger:
     return logger
 
 
-def version() -> str:
+def run_command(command: str) -> bool:
     """
-    Reads the BIDSCOIN version from the VERSION.TXT file
+    Runs a command in a shell using subprocess.run(command, ..)
 
-    :return:    The BIDSCOIN version number
+    :param command: the command that is executed
+    :return:        True if the were no errors, False otherwise
     """
 
-    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'version.txt')) as fid:
-        version = fid.read().strip()
+    logger.info(f"Running: {command}")
+    process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)          # TODO: investigate shell=False and capture_output=True for python 3.7
+    logger.info(f"Output:\n{process.stdout.decode('utf-8')}")
 
-    return str(version)
+    if process.stderr.decode('utf-8') or process.returncode!=0:
+        logger.error(f"Failed to run {command} (errorcode {process.returncode})")
+        return False
+
+    return True
 
 
 def test_tooloptions(tool: str, opts: dict) -> bool:
@@ -86,22 +119,12 @@ def test_tooloptions(tool: str, opts: dict) -> bool:
     elif tool == 'bidscoin':
         command = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bidscoin.py -v')
     else:
-        logger.info(f'Testing of {tool} not supported')
+        logger.warning(f'Testing of {tool} not supported')
         return success
 
-    logger.info('Testing: ' + command)
-    process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if process.stdout.decode('utf-8'):
-        logger.info('Test result:\n' + process.stdout.decode('utf-8'))
-        success = True
-    if process.stderr.decode('utf-8'):
-        logger.error('Test result:\n' + process.stderr.decode('utf-8'))
-        success = False
-    if process.returncode!=0:
-        logger.error(f'Test result:\nFailed to run {command} (errorcode {process.returncode})')
-        success = False
+    logger.info('Testing: ' + tool)
 
-    return success
+    return run_command(command)
 
 
 def test_plugins(plugin: str='') -> bool:
@@ -113,10 +136,17 @@ def test_plugins(plugin: str='') -> bool:
                     was a plug-in error, None if this function has an implementation error
     """
 
-    # Import and run the plugin modules
-    from importlib import util
-
     logger.info('Testing: ' + plugin)
+
+    return inspect.ismodule(import_plugin(plugin))
+
+
+def import_plugin(plugin: str):
+    """
+
+    :param plugin:  Name of the plugin
+    :return:        plugin-module
+    """
 
     # Get the full path to the plugin-module
     if os.path.basename(plugin)==plugin:
@@ -127,8 +157,8 @@ def test_plugins(plugin: str='') -> bool:
 
     # See if we can find the plug-in
     if not os.path.isfile(plugin):
-        logger.error('Test result: Could not find ' + plugin)
-        return False
+        logger.error('Could not find ' + plugin)
+        return None
 
     # Load the plugin-module
     try:
@@ -138,33 +168,21 @@ def test_plugins(plugin: str='') -> bool:
 
         # bidsmapper -> module.bidsmapper_plugin(seriesfolder, bidsmap_new, bidsmap_old)
         if 'bidsmapper_plugin' not in dir(module):
-            logger.info('Test result: Could not find bidscoiner_plugin() in ' + plugin)
+            logger.info('Could not find bidscoiner_plugin() in ' + plugin)
 
         # bidscoiner -> module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals)
         if 'bidscoiner_plugin' not in dir(module):
-            logger.info('Test result: Could not find bidscoiner_plugin() in ' + plugin)
+            logger.info('Could not find bidscoiner_plugin() in ' + plugin)
 
         if 'bidsmapper_plugin' not in dir(module) and 'bidscoiner_plugin' not in dir(module):
-            logger.warning(f"Test result: {plugin} can (and will) not perform any operation")
+            logger.warning(f"{plugin} can (and will) not perform any operation")
 
-        return True
+        return module
 
     except Exception:
-        logger.exception(f"Test result: Could not import {plugin}")
-        return False
+        logger.exception(f"Could not import {plugin}")
 
-
-def bidsversion() -> str:
-    """
-    Reads the BIDS version from the BIDSVERSION.TXT file
-
-    :return:    The BIDS version number
-    """
-
-    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'bidsversion.txt')) as fid:
-        version = fid.read().strip()
-
-    return str(version)
+        return None
 
 
 def lsdirs(folder: str, wildcard: str='*'):

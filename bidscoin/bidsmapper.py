@@ -178,25 +178,10 @@ def build_pluginmap(seriesfolder: str, bidsmap_new: dict, bidsmap_old: dict) -> 
     if not seriesfolder or not bidsmap_new['PlugIns']:
         return bidsmap_new
 
-    # Import and run the plugin modules
-    from importlib import util
-
     for plugin in bidsmap_new['PlugIns']:
 
-        # Get the full path to the plugin-module
-        if os.path.basename(plugin)==plugin:
-            plugin = os.path.join(os.path.dirname(__file__), 'plugins', plugin)
-        else:
-            plugin = plugin
-        plugin = os.path.abspath(os.path.expanduser(plugin))
-        if not os.path.isfile(plugin):
-            LOGGER.warning('Could not find: ' + plugin)
-            continue
-
         # Load and run the plugin-module
-        spec   = util.spec_from_file_location('bidscoin_plugin', plugin)
-        module = util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        module = bids.import_plugin(plugin)
         if 'bidsmapper_plugin' in dir(module):
             LOGGER.debug(f"Running plug-in: {plugin}.bidsmapper_plugin('{seriesfolder}', bidsmap_new, bidsmap_old)")
             bidsmap_new = module.bidsmapper_plugin(seriesfolder, bidsmap_new, bidsmap_old)

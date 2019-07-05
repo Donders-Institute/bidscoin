@@ -13,7 +13,6 @@ bidsfolder/code/bidscoiner.log file.
 import os
 import glob
 import pandas as pd
-import subprocess
 import json
 import dateutil
 import logging
@@ -121,14 +120,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
             filename  = bidsname,
             outfolder = bidsmodality,
             infolder  = seriesfolder)
-        LOGGER.info('$ ' + command)
-        process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)          # TODO: investigate shell=False and capture_output=True for python 3.7
-        if process.stdout.decode('utf-8'):
-            LOGGER.info(process.stdout.decode('utf-8'))
-        if process.stderr.decode('utf-8'):
-           LOGGER.error(process.stderr.decode('utf-8'))
-        if process.returncode != 0:
-            LOGGER.error(f'Failed to process {seriesfolder} (errorcode {process.returncode})')
+        if not bids.run_command(command):
             continue
 
         # Replace uncropped output image with the cropped one
@@ -375,25 +367,10 @@ def coin_plugin(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -
     if not bidsmap['PlugIns']:
         return
 
-    # Import and run the plugin modules
-    from importlib import util
-
     for plugin in bidsmap['PlugIns']:
 
-        # Get the full path to the plugin-module
-        if os.path.basename(plugin)==plugin:
-            plugin = os.path.join(os.path.dirname(__file__), 'plugins', plugin)
-        else:
-            plugin = plugin
-        plugin = os.path.abspath(os.path.expanduser(plugin))
-        if not os.path.isfile(plugin):
-            LOGGER.warning('Could not find: ' + plugin)
-            continue
-
         # Load and run the plugin-module
-        spec   = util.spec_from_file_location('bidscoin_plugin', plugin)
-        module = util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        module = bids.import_plugin(plugin)
         if 'bidscoiner_plugin' in dir(module):
             LOGGER.debug(f'Running: {plugin}.bidscoiner_plugin({session}, bidsmap, {bidsfolder}, personals)')
             module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals)
