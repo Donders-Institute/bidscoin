@@ -70,40 +70,88 @@ def version() -> str:
     return str(version)
 
 
-def test_tooloptions(bidsmap: dict(), tool: str) -> bool:
+def test_tooloptions(tool: str, opts: dict) -> bool:
     """
-    Performs tests of the user tool parameters set in the bidsmap Options-tab
+    Performs tests of the user tool parameters set in bidsmap['Options']
 
-    :param bidsmap: Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param tool:    Name of the tool that is being tested in bidsmap['Options']
+    :param opts:    The editable options belonging to the tool
     :return:        True if the tool generated the expected result, False if there
                     was a tool error, None if this function has an implementation error
     """
 
-    opts = bidsmap['Options'][tool]
-
-    succes = None
+    success = None
     if tool == 'dcm2niix':
         command = f"{opts['path']}dcm2niix -h"
     elif tool == 'bidscoin':
         command = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bidscoin.py -v')
     else:
         logger.info(f'Testing of {tool} not supported')
-        return succes
+        return success
 
     logger.info('Testing: ' + command)
     process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if process.stdout.decode('utf-8'):
         logger.info('Test result:\n' + process.stdout.decode('utf-8'))
-        succes = True
+        success = True
     if process.stderr.decode('utf-8'):
         logger.error('Test result:\n' + process.stderr.decode('utf-8'))
-        succes = False
+        success = False
     if process.returncode!=0:
         logger.error(f'Test result:\nFailed to run {command} (errorcode {process.returncode})')
-        succes = False
+        success = False
 
-    return succes
+    return success
+
+
+def test_plugins(plugin: str='') -> bool:
+    """
+    Performs tests of the plug-ins in bidsmap['PlugIns']
+
+    :param plugin:  The name of the plugin that is being tested (-> bidsmap['Plugins'])
+    :return:        True if the plugin generated the expected result, False if there
+                    was a plug-in error, None if this function has an implementation error
+    """
+
+    # Import and run the plugin modules
+    from importlib import util
+
+    logger.info('Testing: ' + plugin)
+
+    # Get the full path to the plugin-module
+    if os.path.basename(plugin)==plugin:
+        plugin = os.path.join(os.path.dirname(__file__), 'plugins', plugin)
+    else:
+        plugin = plugin
+    plugin = os.path.abspath(os.path.expanduser(plugin))
+
+    # See if we can find the plug-in
+    if not os.path.isfile(plugin):
+        logger.error('Test result: Could not find ' + plugin)
+        return False
+
+    # Load the plugin-module
+    try:
+        spec   = util.spec_from_file_location('bidscoin_plugin', plugin)
+        module = util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        # bidsmapper -> module.bidsmapper_plugin(seriesfolder, bidsmap_new, bidsmap_old)
+        if 'bidsmapper_plugin' not in dir(module):
+            logger.info('Test result: Could not find bidscoiner_plugin() in ' + plugin)
+
+        # bidscoiner -> module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals)
+        if 'bidscoiner_plugin' not in dir(module):
+            logger.info('Test result: Could not find bidscoiner_plugin() in ' + plugin)
+
+        if 'bidsmapper_plugin' not in dir(module) and 'bidscoiner_plugin' not in dir(module):
+            logger.warning(f"Test result: {plugin} can (and will) not perform any operation")
+
+        return True
+
+    except Exception:
+        logger.exception(f"Test result: Could not import {plugin}")
+        return False
 
 
 def bidsversion() -> str:

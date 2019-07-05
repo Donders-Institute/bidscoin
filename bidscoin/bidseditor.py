@@ -400,16 +400,31 @@ class Ui_MainWindow(object):
             if key != '':
                 self.output_bidsmap["Options"][tool][key] = value
 
-    def handle_click_test(self, tool: str):
+    def handle_click_test_tool(self, tool: str):
         """Test the bidsmap tool and show the result in a pop-up window
 
         :param tool:    Name of the tool that is being tested in bidsmap['Options']
          """
-        if bids.test_tooloptions(self.output_bidsmap, tool):
+        if bids.test_tooloptions(tool, self.output_bidsmap['Options'][tool]):
             result = 'Passed'
         else:
             result = 'Failed'
-        QMessageBox.information(self.MainWindow, 'Test', f"Test {tool}: {result}\nSee terminal output for more info")
+        QMessageBox.information(self.MainWindow, 'Test', f"Test {tool}: {result}\n"
+                                                         f"See terminal output for more info")
+
+    def handle_click_test_plugin(self, index: int):
+        """Test the bidsmap plug-in and show the result in a pop-up window
+
+        :param index:   Name of the plug-in that is being tested in bidsmap['Plugins']
+         """
+        plugin = self.output_bidsmap['PlugIns'][index]
+
+        if bids.test_plugins(plugin):
+            result = 'Passed'
+        else:
+            result = 'Failed'
+        QMessageBox.information(self.MainWindow, 'Test', f"Test {plugin}: {result}\n"
+                                                         f"See terminal output for more info")
 
     def set_tab_options(self):
         """Set the options tab.  """
@@ -504,7 +519,7 @@ class Ui_MainWindow(object):
                 table.item(i, num_cols-1).setFlags(QtCore.Qt.NoItemFlags)
 
             test_button = QPushButton('Test')
-            test_button.clicked.connect(partial(self.handle_click_test, tool))
+            test_button.clicked.connect(partial(self.handle_click_test_tool, tool))
             test_button.setToolTip(f'Click to test the {tool} options')
             table.setCellWidget(0, num_cols-1, test_button)
 
