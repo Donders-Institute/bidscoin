@@ -938,10 +938,14 @@ class EditDialog(QDialog):
         if column == 1:
             key = self.view_dicom.item(row, 0).text()
             value = self.view_dicom.item(row, 1).text()
+            if key in self.target_series['DICOM']:
+                oldvalue = self.target_series['DICOM'][key]
+            else:
+                oldvalue = None
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
             if key != '':
-                LOGGER.info(f"User has set DICOM['{key}'] to '{value}' for {self.source_series['provenance']}")
+                LOGGER.info(f"User has set DICOM['{key}'] from {oldvalue} to '{value}' for {self.source_series['provenance']}")
 
                 self.view_dicom.item(row, 1).setText(value)
                 self.target_series['attributes'][key] = value
@@ -951,13 +955,17 @@ class EditDialog(QDialog):
         if column == 1:
             key = self.view_bids.item(row, 0).text()
             value = self.view_bids.item(row, 1).text()
+            if key in self.target_series['bids']:
+                oldvalue = self.target_series['bids'][key]
+            else:
+                oldvalue = None
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
             if key != '':
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a series attribute
                 value = bids.replace_bidsvalue(value, self.target_series['provenance'])
 
-                LOGGER.info(f"User has set bids['{key}'] to '{value}' for {self.source_series['provenance']}")
+                LOGGER.info(f"User has set bids['{key}'] from {oldvalue} to '{value}' for {self.source_series['provenance']}")
 
                 self.view_bids.item(row, 1).setText(value)
                 self.target_series['bids'][key] = value
