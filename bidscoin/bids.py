@@ -417,36 +417,41 @@ def get_dicomfield(tagname: str, dicomfile: str):
 
     global _DICOMDICT_CACHE, _DICOMFILE_CACHE
 
-    try:
-        if dicomfile != _DICOMFILE_CACHE:
-            dicomdict = pydicom.dcmread(dicomfile, force=True)      # The DICM tag may be missing for anonymized DICOM files
-            if 'Modality' not in dicomdict:
-                raise ValueError(f'Cannot read {dicomfile}')
-            _DICOMDICT_CACHE = dicomdict
-            _DICOMFILE_CACHE = dicomfile
-        else:
-            dicomdict = _DICOMDICT_CACHE
-
-        value = dicomdict.get(tagname)
-
-        # Try a recursive search
-        if not value:
-            for elem in dicomdict.iterall():
-                if elem.name==tagname:
-                    value = elem.value
-                    continue
-
-    except IOError:
-        logger.warning(f'Cannot read {tagname} from {dicomfile}')
+    if not os.path.isfile(dicomfile):
+        logger.warning(f"{dicomfile} not found")
         value = None
 
-    except Exception:
+    else:
         try:
-            value = parse_x_protocol(tagname, dicomfile)
+            if dicomfile != _DICOMFILE_CACHE:
+                dicomdict = pydicom.dcmread(dicomfile, force=True)      # The DICM tag may be missing for anonymized DICOM files
+                if 'Modality' not in dicomdict:
+                    raise ValueError(f'Cannot read {dicomfile}')
+                _DICOMDICT_CACHE = dicomdict
+                _DICOMFILE_CACHE = dicomfile
+            else:
+                dicomdict = _DICOMDICT_CACHE
+
+            value = dicomdict.get(tagname)
+
+            # Try a recursive search
+            if not value:
+                for elem in dicomdict.iterall():
+                    if elem.name==tagname:
+                        value = elem.value
+                        continue
+
+        except IOError:
+            logger.warning(f'Cannot read {tagname} from {dicomfile}')
+            value = None
 
         except Exception:
-            logger.warning(f'Could not parse {tagname} from {dicomfile}')
-            value = None
+            try:
+                value = parse_x_protocol(tagname, dicomfile)
+
+            except Exception:
+                logger.warning(f'Could not parse {tagname} from {dicomfile}')
+                value = None
 
     # Cast the dicom datatype to standard to int or str (i.e. to something that yaml.dump can handle)
     if not value:
@@ -854,7 +859,9 @@ def replace_bidsvalue(bidsvalue: str, sourcefile: str) -> str:
 
     # Fill any bids-label with the <annotated> dicom attribute
     if bidsvalue.startswith('<') and bidsvalue.endswith('>'):
-        bidsvalue = get_dicomfield(bidsvalue[1:-1], sourcefile)
+        dicomvalue = get_dicomfield(bidsvalue[1:-1], sourcefile)
+        if not dicomvalue:
+            return bidsvalue
 
     return cleanup_value(bidsvalue)
 

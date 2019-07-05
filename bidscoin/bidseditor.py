@@ -942,7 +942,7 @@ class EditDialog(QDialog):
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
             if key != '':
-                LOGGER.info(f"User has set {SOURCE}['{key}'] from {oldvalue} to '{value}' for {self.source_series['provenance']}")
+                LOGGER.info(f"User has set {SOURCE}['{key}'] from '{oldvalue}' to '{value}' for {self.source_series['provenance']}")
 
                 self.view_dicom.item(row, 1).setText(value)
                 self.target_series['attributes'][key] = value
@@ -959,7 +959,7 @@ class EditDialog(QDialog):
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a series attribute
                 value = bids.replace_bidsvalue(value, self.target_series['provenance'])
 
-                LOGGER.info(f"User has set bids['{key}'] from {oldvalue} to '{value}' for {self.source_series['provenance']}")
+                LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.source_series['provenance']}")
 
                 self.view_bids.item(row, 1).setText(value)
                 self.target_series['bids'][key] = value
