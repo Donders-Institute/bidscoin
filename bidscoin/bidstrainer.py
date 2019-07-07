@@ -60,7 +60,6 @@ def built_dicommap(dicomfile: str, bidsmap: dict, template: dict) -> dict:
     return bidsmap
 
 
-
 def built_parmap(parfile: str, bidsmap: dict, heuristics: dict) -> dict:
     """
     All the logic to map PAR/REC fields onto bids labels go into this function
