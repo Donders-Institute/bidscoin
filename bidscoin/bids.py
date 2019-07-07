@@ -645,7 +645,7 @@ def exist_series(bidsmap: dict, source: str, modality: str, series: dict, matchb
     return False
 
 
-def get_series(bidsmap: dict, source: str, modality, suffix) -> dict:
+def get_series(bidsmap: dict, source: str, modality, suffix: str) -> dict:
     """
     Find the (first) series in bidsmap[source][bidsmodality] with series['bids']['suffix'] == suffix
 
@@ -713,15 +713,15 @@ def update_bidsmap(bidsmap: dict, source_modality: str, source_index: int, targe
     """
     Update the BIDS map:
     1. Remove the source series from the source modality section
-    2. If clean, start new series dictionary and store key values without comments and references
-    3. Append the target series to the target modality section
+    2. Append the (cleaned) target series to the target modality section
 
-    :param bidsmap:
-    :param source_modality:
-    :param source_index:
-    :param target_modality:
-    :param series:
-    :param source:
+    :param bidsmap:             Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param source_modality:     The current modality name, e.g. 'anat'
+    :param source_index:        The current index number of the series
+    :param target_modality:     The modality name what is should be, e.g. 'dwi'
+    :param series:              The series items that is being moved
+    :param source:              The name of the information source, e.g. 'DICOM'
+    :param clean:               A boolean that is passed to bids.append_series (telling it to clean-up commentedMap fields)
     :return:
     """
 
