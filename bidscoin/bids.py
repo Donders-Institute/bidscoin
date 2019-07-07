@@ -569,7 +569,7 @@ def strip_suffix(series: dict) -> dict:
     for key in series['bids']:
         if key == 'suffix':
             continue
-        if series['bids'][key] and series['bids'][key].lower().endswith(suffix):
+        if isinstance(series['bids'][key], str) and series['bids'][key].lower().endswith(suffix):
             series['bids'][key] = series['bids'][key][0:-len(suffix)]       # NB: This will leave the added '_' and '.' characters, but they will be taken out later (as they are not BIDS-valid)
 
     return series
