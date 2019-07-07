@@ -957,6 +957,8 @@ def replace_bidsvalue(bidsvalue: str, sourcefile: str) -> str:
         dicomvalue = get_dicomfield(bidsvalue[1:-1], sourcefile)
         if not dicomvalue:
             return bidsvalue
+        else:
+            return dicomvalue
 
     return cleanup_value(bidsvalue)
 
