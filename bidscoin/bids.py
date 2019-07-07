@@ -593,58 +593,6 @@ def cleanup_value(label: str) -> str:
     return re.sub(r'(?u)[^-\w.]', '', label)
 
 
-def exist_run(bidsmap: dict, source: str, modality: str, run_item: dict, matchbidslabels: bool=False) -> bool:
-    """
-    Checks if there is already an entry in runlist with the same attributes and, optionally, bids values as in the input run
-
-    :param bidsmap:         Full bidsmap data structure, with all options, BIDS labels and attributes, etc
-    :param source:          The information source in the bidsmap that is used, e.g. 'DICOM'
-    :param modality:        The modality in the source that is used, e.g. 'anat'. Empty values will search through all modalities
-    :param run_item:        The run (listitem) that is searched for in the modality
-    :param matchbidslabels: If True, also matches the BIDS-labels, otherwise only run['attributes']
-    :return:                True if the run exists in runlist
-    """
-
-    if not modality:
-        for modality in bidsmodalities + (unknownmodality, ignoremodality):
-            if exist_run(bidsmap, source, modality, run_item, matchbidslabels):
-                return True
-
-    if not bidsmap[source][modality]:
-        return False
-
-    for run in bidsmap[source][modality]:
-
-        # Begin with match = False if all attributes are empty
-        match = any([run_item['attributes'][key] is not None for key in run_item['attributes']])
-
-        # Search for a case where all run_item items match with the run_item items
-        for itemkey, itemvalue in run_item['attributes'].items():
-            if itemkey not in run['attributes']:  # Matching bids-labels which exist in one modality but not in the other
-                break                             # There is no point in searching further within the run_item now that we've found a mismatch
-            value = run['attributes'][itemkey]
-            match = match and (value == itemvalue)
-            if not match:
-                break
-
-        # This is probably not very useful, but maybe one day...
-        if matchbidslabels:
-            for itemkey, itemvalue in run_item['bids'].items():
-                if itemkey not in run['bids']:    # matching bids-labels which exist in one modality but not in the other
-                    break
-                value = run['bids'][itemkey]
-                match = match and (value == itemvalue)
-                if not match:
-                    break
-
-        # Stop searching if we found a matching run_item (i.e. which is the case if match is still True after all run tests)
-        # TODO: maybe count how many instances, could perhaps be useful info
-        if match:
-            return True
-
-    return False
-
-
 def get_run(bidsmap: dict, source: str, modality, suffix: str) -> dict:
     """
     Find the (first) run in bidsmap[source][bidsmodality] with run['bids']['suffix'] == suffix
@@ -747,6 +695,58 @@ def update_bidsmap(bidsmap: dict, source_modality: str, source_index: int, targe
     bidsmap = append_run(bidsmap, source, target_modality, run, clean)
 
     return bidsmap
+
+
+def exist_run(bidsmap: dict, source: str, modality: str, run_item: dict, matchbidslabels: bool=False) -> bool:
+    """
+    Checks if there is already an entry in runlist with the same attributes and, optionally, bids values as in the input run
+
+    :param bidsmap:         Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param source:          The information source in the bidsmap that is used, e.g. 'DICOM'
+    :param modality:        The modality in the source that is used, e.g. 'anat'. Empty values will search through all modalities
+    :param run_item:        The run (listitem) that is searched for in the modality
+    :param matchbidslabels: If True, also matches the BIDS-labels, otherwise only run['attributes']
+    :return:                True if the run exists in runlist
+    """
+
+    if not modality:
+        for modality in bidsmodalities + (unknownmodality, ignoremodality):
+            if exist_run(bidsmap, source, modality, run_item, matchbidslabels):
+                return True
+
+    if not bidsmap[source][modality]:
+        return False
+
+    for run in bidsmap[source][modality]:
+
+        # Begin with match = False if all attributes are empty
+        match = any([run_item['attributes'][key] is not None for key in run_item['attributes']])
+
+        # Search for a case where all run_item items match with the run_item items
+        for itemkey, itemvalue in run_item['attributes'].items():
+            if itemkey not in run['attributes']:  # Matching bids-labels which exist in one modality but not in the other
+                break                             # There is no point in searching further within the run_item now that we've found a mismatch
+            value = run['attributes'][itemkey]
+            match = match and (value == itemvalue)
+            if not match:
+                break
+
+        # This is probably not very useful, but maybe one day...
+        if matchbidslabels:
+            for itemkey, itemvalue in run_item['bids'].items():
+                if itemkey not in run['bids']:    # matching bids-labels which exist in one modality but not in the other
+                    break
+                value = run['bids'][itemkey]
+                match = match and (value == itemvalue)
+                if not match:
+                    break
+
+        # Stop searching if we found a matching run_item (i.e. which is the case if match is still True after all run tests)
+        # TODO: maybe count how many instances, could perhaps be useful info
+        if match:
+            return True
+
+    return False
 
 
 def get_matching_dicomrun(dicomfile: str, bidsmap: dict, modalities: tuple= bidsmodalities + (ignoremodality, unknownmodality)) -> tuple:
