@@ -543,7 +543,7 @@ def add_prefix(prefix: str, tag: str) -> str:
     """
 
     if tag:
-        tag = prefix + tag
+        tag = prefix + str(tag)
     else:
         tag = ''
 
@@ -949,7 +949,7 @@ def replace_bidsvalue(bidsvalue: str, sourcefile: str) -> str:
     """
 
     # Intelligent filling of the value is done runtime by bidscoiner
-    if not bidsvalue or bidsvalue.startswith('<<') and bidsvalue.endswith('>>'):
+    if not bidsvalue or not isinstance(bidsvalue, str) or bidsvalue.startswith('<<') and bidsvalue.endswith('>>'):
         return bidsvalue
 
     # Fill any bids-label with the <annotated> dicom attribute
