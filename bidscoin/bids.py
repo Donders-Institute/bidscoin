@@ -658,7 +658,16 @@ def get_series(bidsmap: dict, source: str, modality, suffix: str) -> dict:
 
     for series in bidsmap[source][modality]:
         if series['bids']['suffix'] == suffix:
-            return series
+
+            series_ = dict(provenance={}, attributes={}, bids={})
+
+            for attrkey, attrvalue in series['attributes'].items():
+                series_['attributes'][attrkey] = attrvalue
+
+            for bidskey, bidsvalue in series['bids'].items():
+                series_['bids'][bidskey] = bidsvalue
+
+            return series_
 
     logger.warning(f"'{modality}' series with suffix '{suffix}' not found in bidsmap['{source}']")
     return None
