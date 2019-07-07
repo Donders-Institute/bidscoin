@@ -43,23 +43,22 @@ def built_dicommap(dicomfile: str, bidsmap: dict, template: dict) -> dict:
     if modality not in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
         raise ValueError("Don't know what to do with this bidsmodality directory name: {}\n{}".format(modality, dicomfile))
 
-    # Copy the bids-labels over from the matching series in heuristics to series_, Then fill the attributes and append it to bidsmap
+    # Get bids-labels from the matching series in the template
     series = bids.get_series(template, 'DICOM', modality, suffix)
+    if not series:
+        raise ValueError(f"Oops, this should not happen! BIDS modality '{modality}' or one of the bidslabels is not accounted for in the code\n{dicomfile}")
 
-    if series:
+    # Fill the empty attribute with the info from the dicomfile
+    series['provenance'] = dicomfile
+    for attrkey in series['attributes']:
+        series['attributes'][attrkey] = bids.get_dicomfield(attrkey, dicomfile)
 
-        # Fill the empty attribute with the info from the dicomfile
-        series['provenance'] = dicomfile
-        for attrkey in series['attributes']:
-            series['attributes'][attrkey] = bids.get_dicomfield(attrkey, dicomfile)
+    # Copy the filled-in series over to the bidsmap
+    if not bids.exist_series(bidsmap, 'DICOM', modality, series):
+        bidsmap = bids.append_series(bidsmap, 'DICOM', modality, series)
 
-        # Copy the filled-in series over to the bidsmap
-        if not bids.exist_series(bidsmap, 'DICOM', modality, series):
-            bidsmap = bids.append_series(bidsmap, 'DICOM', modality, series)
+    return bidsmap
 
-        return bidsmap
-
-    raise ValueError(f"Oops, this should not happen! BIDS modality '{modality}' or one of the bidslabels is not accounted for in the code\n{dicomfile}")
 
 
 def built_parmap(parfile: str, bidsmap: dict, heuristics: dict) -> dict:
