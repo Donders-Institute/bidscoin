@@ -85,11 +85,11 @@ def get_allowed_suffixes(template_bidsmap):
     allowed_suffixes = {}
     for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
         allowed_suffixes[modality] = []
-        series_list = template_bidsmap[SOURCE][modality]
-        if not series_list:
+        runs = template_bidsmap[SOURCE][modality]
+        if not runs:
             continue
-        for series in series_list:
-            suffix = series['bids'].get('suffix', None)
+        for run in runs:
+            suffix = run['bids'].get('suffix', None)
             if suffix and suffix not in allowed_suffixes[modality]:
                 allowed_suffixes[modality].append(suffix)
 
@@ -100,7 +100,7 @@ def get_allowed_suffixes(template_bidsmap):
     return allowed_suffixes
 
 
-def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, source_series):
+def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, source_run):
     """Return the target BIDS attributes (i.e. the key, value pairs)
     given the keys from the template
     given the values from the source BIDS attributes. """
@@ -114,13 +114,13 @@ def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, source_ser
             if key == 'suffix' and modality in bids.bidsmodalities:
                 template_value = allowed_suffixes[modality][0]
 
-        source_value = source_series['bids'].get(key, None)
+        source_value = source_run['bids'].get(key, None)
         if source_value:
             # Set the value from the source attributes
             bids_attributes[key] = source_value
         else:
             # Set the default value from the template
-            bids_attributes[key] = bids.replace_bidsvalue(template_value, source_series['provenance'])
+            bids_attributes[key] = bids.replace_bidsvalue(template_value, source_run['provenance'])
 
     return bids_attributes
 
@@ -131,16 +131,16 @@ def get_html_bidsname(bidsname):
 
 
 def get_index_mapping(bidsmap):
-    """Obtain the mapping between file_index and the series index for each modality. """
+    """Obtain the mapping between file_index and the index for each modality. """
     index_mapping = {}
     file_index = 0
     for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):  # NB: This order needs to be the same as in update_list()
-        series_list = bidsmap[SOURCE][modality]
+        runs = bidsmap[SOURCE][modality]
         index_mapping[modality] = {}
-        if not series_list:
+        if not runs:
             continue
-        for series_index, _ in enumerate(series_list):
-            index_mapping[modality][file_index] = series_index
+        for modality_index, _ in enumerate(runs):
+            index_mapping[modality][file_index] = modality_index
             file_index += 1
 
     return index_mapping
@@ -580,10 +580,10 @@ class Ui_MainWindow(object):
 
         num_files = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-            series_list = self.input_bidsmap[SOURCE][modality]
-            if not series_list:
+            runs = self.input_bidsmap[SOURCE][modality]
+            if not runs:
                 continue
-            for _ in series_list:
+            for _ in runs:
                 num_files += 1
 
         self.table.setColumnCount(6)
@@ -591,17 +591,17 @@ class Ui_MainWindow(object):
 
         idx = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-            series_list = self.output_bidsmap[SOURCE][modality]
-            if not series_list:
+            runs = self.output_bidsmap[SOURCE][modality]
+            if not runs:
                 continue
-            for series in series_list:
-                provenance = series['provenance']
+            for run in runs:
+                provenance = run['provenance']
                 provenance_file = os.path.basename(provenance)
-                run = series['bids'].get('run', '')
+                runindex = run['bids'].get('run', '')
 
-                subid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['participant'], series['provenance'])
-                sesid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['session'], series['provenance'])
-                bids_name = bids.get_bidsname(subid, sesid, modality, series, run, self.subprefix, self.sesprefix)
+                subid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['participant'], run['provenance'])
+                sesid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['session'], run['provenance'])
+                bids_name = bids.get_bidsname(subid, sesid, modality, run, runindex, self.subprefix, self.sesprefix)
                 subid = bids.set_bidsvalue(bids_name, 'sub')
                 sesid = bids.set_bidsvalue(bids_name, 'ses')
                 session = os.path.join(self.bidsfolder, f'sub-{subid}', f'ses-{sesid}')
@@ -744,7 +744,7 @@ class Ui_MainWindow(object):
             idx = int(index.row())
             modality = self.table.item(idx, 2).text()
             file_index = idx # i.e. the item in the file list
-            # Obtain the source index of the series in the list of series in the bidsmap for this modality
+            # Obtain the source index of the run in the list of runs in the bidsmap for this modality
             source_index = self.index_mapping[modality][file_index]
             self.show_edit(source_index, modality)
 
@@ -971,7 +971,7 @@ class EditDialog(QDialog):
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
             if key != '':
-                # Validate user input against BIDS or replace the (dynamic) bids-value if it is a series attribute
+                # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
                 value = bids.replace_bidsvalue(value, self.target_series['provenance'])
 
                 LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.source_series['provenance']}")
@@ -1251,8 +1251,8 @@ class EditDialog(QDialog):
     def update_bidsname(self):
         subid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['participant'], self.target_series['provenance'])
         sesid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['session'], self.target_series['provenance'])
-        run = self.target_series['bids'].get('run', '')
-        bids_name = os.path.join(self.target_modality, bids.get_bidsname(subid, sesid, self.target_modality, self.target_series, run, self.subprefix, self.sesprefix)) + '.*'
+        runindex = self.target_series['bids'].get('run', '')
+        bids_name = os.path.join(self.target_modality, bids.get_bidsname(subid, sesid, self.target_modality, self.target_series, runindex, self.subprefix, self.sesprefix)) + '.*'
         html_bids_name = get_html_bidsname(bids_name)
 
         self.view_bids_name.clear()
@@ -1284,14 +1284,14 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     # Parse the sourcefolder from the bidsmap provenance info
     if not sourcefolder:
 
-        # Loop through all bidsmodalities and series until we find provenance info
+        # Loop through all bidsmodalities and runs until we find provenance info
         for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
             if input_bidsmap[SOURCE][modality] is None:
                 continue
 
-            for series in input_bidsmap[SOURCE][modality]:
-                if series['provenance']:
-                    sourcefolder = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(series['provenance']))))
+            for run in input_bidsmap[SOURCE][modality]:
+                if run['provenance']:
+                    sourcefolder = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(run['provenance']))))
                     LOGGER.info(f'Source: {sourcefolder}')
                     break
 
@@ -1328,7 +1328,7 @@ if __name__ == "__main__":
                                          DICOM Attributes
                                            An (DICOM) attribute label can also be a list, in which case the BIDS labels / mapping
                                            are applies if a (DICOM) attribute value is in this list. If the attribute value is
-                                           empty it is not used to identify the series. Example: SequenceName: [epfid2d1rs, '*fm2d2r']
+                                           empty it is not used to identify the run. Example: SequenceName: [epfid2d1rs, '*fm2d2r']
 
                                          Dynamic BIDS labels
                                            The BIDS labels can be static, in which case the label is just a normal string, or dynamic,

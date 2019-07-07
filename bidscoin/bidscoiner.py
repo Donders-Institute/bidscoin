@@ -39,7 +39,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     """
 
     if not bids.lsdirs(session):
-        LOGGER.warning('No series subfolder(s) found in: ' + session)
+        LOGGER.warning('No run subfolder(s) found in: ' + session)
         return
 
     TE = [None, None]
@@ -78,23 +78,23 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         scans_table = pd.DataFrame(columns=['acq_time'], dtype='str')
         scans_table.index.name = 'filename'
 
-    # Process all the dicom series subfolders
-    for seriesfolder in bids.lsdirs(session):
+    # Process all the dicom run subfolders
+    for runfolder in bids.lsdirs(session):
 
-        if seriesfolder.startswith('.'):
-            LOGGER.info('Ignoring hidden dicom-folder: ' + seriesfolder)
+        if runfolder.startswith('.'):
+            LOGGER.info('Ignoring hidden dicom-folder: ' + runfolder)
             continue
         else:
-            LOGGER.info('Processing dicom-folder: ' + seriesfolder)
+            LOGGER.info('Processing dicom-folder: ' + runfolder)
 
         # Get the cleaned-up bids labels from a dicom-file and bidsmap
-        dicomfile = bids.get_dicomfile(seriesfolder)
+        dicomfile = bids.get_dicomfile(runfolder)
         if not dicomfile: continue
-        series, modality, _ = bids.get_matching_dicomseries(dicomfile, bidsmap)
+        run, modality, _ = bids.get_matching_dicomrun(dicomfile, bidsmap)
 
-        # Check if we should ignore this series
+        # Check if we should ignore this run
         if modality == bids.ignoremodality:
-            LOGGER.info(f'Leaving out: {seriesfolder}')
+            LOGGER.info(f'Leaving out: {runfolder}')
             continue
 
         # Create the BIDS session/modality folder
@@ -102,24 +102,24 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         os.makedirs(bidsmodality, exist_ok=True)
 
         # Compose the BIDS filename using the bids labels and run-index
-        runindex = series['bids']['run']
+        runindex = run['bids']['run']
         if runindex.startswith('<<') and runindex.endswith('>>'):
-            bidsname = bids.get_bidsname(subid, sesid, modality, series, runindex[2:-2])
+            bidsname = bids.get_bidsname(subid, sesid, modality, run, runindex[2:-2])
             bidsname = bids.increment_runindex(bidsmodality, bidsname)
         else:
-            bidsname = bids.get_bidsname(subid, sesid, modality, series, runindex)
+            bidsname = bids.get_bidsname(subid, sesid, modality, run, runindex)
 
         # Check if file already exists
         if os.path.isfile(os.path.join(bidsmodality, bidsname + '.json')):
             LOGGER.warning(os.path.join(bidsmodality, bidsname) + '.* already exists -- check your results carefully!')
 
-        # Convert the dicom-files in the series folder to nifti's in the BIDS-folder
+        # Convert the dicom-files in the run folder to nifti's in the BIDS-folder
         command = '{path}dcm2niix {args} -f "{filename}" -o "{outfolder}" "{infolder}"'.format(
             path      = bidsmap['Options']['dcm2niix']['path'],
             args      = bidsmap['Options']['dcm2niix']['args'],
             filename  = bidsname,
             outfolder = bidsmodality,
-            infolder  = seriesfolder)
+            infolder  = runfolder)
         if not bids.run_command(command):
             continue
 
@@ -219,13 +219,13 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                     data = json.load(json_fid)
                 if not 'TaskName' in data:
                     LOGGER.info('Adding TaskName to: ' + jsonfile)
-                    data['TaskName'] = series['bids']['task']
+                    data['TaskName'] = run['bids']['task']
                     with open(jsonfile, 'w') as json_fid:
                         json.dump(data, json_fid, indent=4)
 
-            # Add the EchoTime(s) used to create the difference image to the fmap json-file. NB: This assumes the magnitude series have already been parsed (i.e. their nifti's had an _e suffix) -- This is normally the case for Siemens (phase-series being saved after the magnitude series
+            # Add the EchoTime(s) used to create the difference image to the fmap json-file. NB: This assumes the magnitude runs have already been parsed (i.e. their nifti's had an _e suffix) -- This is normally the case for Siemens (phase-runs being saved after the magnitude runs
             elif modality == 'fmap':
-                if series['bids']['suffix'] == 'phasediff':
+                if run['bids']['suffix'] == 'phasediff':
                     LOGGER.info('Adding EchoTime1 and EchoTime2 to: ' + jsonfile)
                     with open(jsonfile, 'r') as json_fid:
                         data = json.load(json_fid)
@@ -264,7 +264,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 niifiles = []
                 for selector in intendedfor:
                     niifiles.extend([niifile.split(os.sep+subid+os.sep, 1)[1].replace('\\','/')
-                                     for niifile in sorted(glob.glob(os.path.join(bidsses, f'**{os.sep}*{selector}*.nii*')))])     # Search in all series using a relative path
+                                     for niifile in sorted(glob.glob(os.path.join(bidsses, f'**{os.sep}*{selector}*.nii*')))])     # Search in all runs using a relative path
 
                 # Save the dat in the json-files (account for multiple runs and dcm2niix suffixes inserted into the acquisition label)
                 for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_', '_run-[0-9]*_') + '.json')) + \
@@ -276,7 +276,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                     with open(jsonfile, 'w') as json_fid:
                         json.dump(data, json_fid, indent=4)
 
-                # Catch magnitude2 files produced by dcm2niix (i.e. magnitude1 & magnitude2 both in the same seriesfolder)
+                # Catch magnitude2 files produced by dcm2niix (i.e. magnitude1 & magnitude2 both in the same runfolder)
                 if jsonfile.endswith('magnitude1.json'):
                     jsonfile2 = jsonfile.rsplit('1.json',1)[0] + '2.json'
                     if os.path.isfile(jsonfile2):
@@ -290,7 +290,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                                 json.dump(data, json_fid, indent=4)
 
     # Collect personal data from the DICOM header
-    dicomfile = bids.get_dicomfile(seriesfolder)
+    dicomfile = bids.get_dicomfile(runfolder)
     personals['participant_id'] = subid
     if sesid:
         personals['session_id'] = sesid
@@ -354,7 +354,7 @@ def coin_filesystem(session: str, bidsmap: dict, bidsfolder: str, personals: dic
 
 def coin_plugin(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
     """
-    Run the plugin coiner to cast the series into the bids folder
+    Run the plugin coiner to cast the run into the bids folder
 
     :param session:     The full-path name of the subject/session source folder
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
@@ -546,7 +546,7 @@ if __name__ == "__main__":
                                      epilog='examples:\n'
                                             '  bidscoiner.py /project/foo/raw /project/foo/bids\n'
                                             '  bidscoiner.py -f /project/foo/raw /project/foo/bids -p sub-009 sub-030\n ')
-    parser.add_argument('sourcefolder',             help='The source folder containing the raw data in sub-#/[ses-#]/series format (or specify --subprefix and --sesprefix for different prefixes)')
+    parser.add_argument('sourcefolder',             help='The source folder containing the raw data in sub-#/[ses-#]/run format (or specify --subprefix and --sesprefix for different prefixes)')
     parser.add_argument('bidsfolder',               help='The destination / output folder with the bids data')
     parser.add_argument('-p','--participant_label', help='Space seperated list of selected sub-# names / folders to be processed (the sub- prefix can be removed). Otherwise all subjects in the sourcefolder will be selected', nargs='+')
     parser.add_argument('-f','--force',             help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')

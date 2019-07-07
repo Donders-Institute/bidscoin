@@ -44,7 +44,7 @@ def built_dicommap(dicomfile: str, bidsmap: dict, template: dict) -> dict:
         raise ValueError("Don't know what to do with this bidsmodality directory name: {}\n{}".format(modality, dicomfile))
 
     # Get bids-labels from the matching series in the template
-    series = bids.get_series(template, 'DICOM', modality, suffix)
+    series = bids.get_run(template, 'DICOM', modality, suffix)
     if not series:
         raise ValueError(f"Oops, this should not happen! BIDS modality '{modality}' or one of the bidslabels is not accounted for in the code\n{dicomfile}")
 
@@ -54,8 +54,8 @@ def built_dicommap(dicomfile: str, bidsmap: dict, template: dict) -> dict:
         series['attributes'][attrkey] = bids.get_dicomfield(attrkey, dicomfile)
 
     # Copy the filled-in series over to the bidsmap
-    if not bids.exist_series(bidsmap, 'DICOM', modality, series):
-        bidsmap = bids.append_series(bidsmap, 'DICOM', modality, series)
+    if not bids.exist_run(bidsmap, 'DICOM', modality, series):
+        bidsmap = bids.append_run(bidsmap, 'DICOM', modality, series)
 
     return bidsmap
 

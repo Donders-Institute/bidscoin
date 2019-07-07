@@ -128,7 +128,7 @@ def import_plugin(plugin: str):
         module = util.module_from_spec(spec)
         spec.loader.exec_module(module)
 
-        # bidsmapper -> module.bidsmapper_plugin(seriesfolder, bidsmap_new, bidsmap_old)
+        # bidsmapper -> module.bidsmapper_plugin(runfolder, bidsmap_new, bidsmap_old)
         if 'bidsmapper_plugin' not in dir(module):
             logger.info('Could not find bidscoiner_plugin() in ' + plugin)
 
@@ -550,29 +550,29 @@ def add_prefix(prefix: str, tag: str) -> str:
     return tag
 
 
-def strip_suffix(series: dict) -> dict:
+def strip_suffix(run: dict) -> dict:
     """
     Certain attributes such as SeriesDescriptions (but not ProtocolName!?) may get a suffix like '_SBRef' from the vendor,
     try to strip it off from the BIDS labels
 
-    :param series:  The series with potentially added suffixes that are the same as the BIDS suffixes
-    :return:        The series with these suffixes removed
+    :param run: The run with potentially added suffixes that are the same as the BIDS suffixes
+    :return:    The run with these suffixes removed
     """
 
     # See if we have a suffix for this modality
-    if 'suffix' in series['bids'] and series['bids']['suffix']:
-        suffix = series['bids']['suffix'].lower()
+    if 'suffix' in run['bids'] and run['bids']['suffix']:
+        suffix = run['bids']['suffix'].lower()
     else:
-        return series
+        return run
 
     # See if any of the BIDS labels ends with the same suffix. If so, then remove it
-    for key in series['bids']:
+    for key in run['bids']:
         if key == 'suffix':
             continue
-        if isinstance(series['bids'][key], str) and series['bids'][key].lower().endswith(suffix):
-            series['bids'][key] = series['bids'][key][0:-len(suffix)]       # NB: This will leave the added '_' and '.' characters, but they will be taken out later (as they are not BIDS-valid)
+        if isinstance(run['bids'][key], str) and run['bids'][key].lower().endswith(suffix):
+            run['bids'][key] = run['bids'][key][0:-len(suffix)]       # NB: This will leave the added '_' and '.' characters, but they will be taken out later (as they are not BIDS-valid)
 
-    return series
+    return run
 
 
 def cleanup_value(label: str) -> str:
@@ -593,51 +593,51 @@ def cleanup_value(label: str) -> str:
     return re.sub(r'(?u)[^-\w.]', '', label)
 
 
-def exist_series(bidsmap: dict, source: str, modality: str, series: dict, matchbidslabels: bool=False) -> bool:
+def exist_run(bidsmap: dict, source: str, modality: str, run_item: dict, matchbidslabels: bool=False) -> bool:
     """
-    Checks if there is already an entry in serieslist with the same attributes and, optionally, bids values as in the input series
+    Checks if there is already an entry in runlist with the same attributes and, optionally, bids values as in the input run
 
     :param bidsmap:         Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param source:          The information source in the bidsmap that is used, e.g. 'DICOM'
     :param modality:        The modality in the source that is used, e.g. 'anat'. Empty values will search through all modalities
-    :param series:          The series (listitem) that is searched for in the modality
-    :param matchbidslabels: If True, also matches the BIDS-labels, otherwise only series['attributes']
-    :return:                True if the series exists in serieslist
+    :param run_item:        The run (listitem) that is searched for in the modality
+    :param matchbidslabels: If True, also matches the BIDS-labels, otherwise only run['attributes']
+    :return:                True if the run exists in runlist
     """
 
     if not modality:
         for modality in bidsmodalities + (unknownmodality, ignoremodality):
-            if exist_series(bidsmap, source, modality, series, matchbidslabels):
+            if exist_run(bidsmap, source, modality, run_item, matchbidslabels):
                 return True
 
     if not bidsmap[source][modality]:
         return False
 
-    for series_item in bidsmap[source][modality]:
+    for run in bidsmap[source][modality]:
 
         # Begin with match = False if all attributes are empty
-        match = any([series['attributes'][key] is not None for key in series['attributes']])
+        match = any([run_item['attributes'][key] is not None for key in run_item['attributes']])
 
-        # Search for a case where all series items match with the series items
-        for serieskey, seriesvalue in series['attributes'].items():
-            if serieskey not in series_item['attributes']:  # Matching bids-labels which exist in one modality but not in the other
-                break                                       # There is no point in searching further within the series now that we've found a mismatch
-            itemvalue = series_item['attributes'][serieskey]
-            match     = match and (seriesvalue==itemvalue)
+        # Search for a case where all run_item items match with the run_item items
+        for itemkey, itemvalue in run_item['attributes'].items():
+            if itemkey not in run['attributes']:  # Matching bids-labels which exist in one modality but not in the other
+                break                             # There is no point in searching further within the run_item now that we've found a mismatch
+            value = run['attributes'][itemkey]
+            match = match and (value == itemvalue)
             if not match:
                 break
 
         # This is probably not very useful, but maybe one day...
         if matchbidslabels:
-            for serieskey, seriesvalue in series['bids'].items():
-                if serieskey not in series_item['bids']:    # matching bids-labels which exist in one modality but not in the other
+            for itemkey, itemvalue in run_item['bids'].items():
+                if itemkey not in run['bids']:    # matching bids-labels which exist in one modality but not in the other
                     break
-                itemvalue = series_item['bids'][serieskey]
-                match     = match and (seriesvalue == itemvalue)
+                value = run['bids'][itemkey]
+                match = match and (value == itemvalue)
                 if not match:
                     break
 
-        # Stop searching if we found a matching series (i.e. which is the case if match is still True after all series_item tests)
+        # Stop searching if we found a matching run_item (i.e. which is the case if match is still True after all run tests)
         # TODO: maybe count how many instances, could perhaps be useful info
         if match:
             return True
@@ -645,42 +645,41 @@ def exist_series(bidsmap: dict, source: str, modality: str, series: dict, matchb
     return False
 
 
-def get_series(bidsmap: dict, source: str, modality, suffix: str) -> dict:
+def get_run(bidsmap: dict, source: str, modality, suffix: str) -> dict:
     """
-    Find the (first) series in bidsmap[source][bidsmodality] with series['bids']['suffix'] == suffix
+    Find the (first) run in bidsmap[source][bidsmodality] with run['bids']['suffix'] == suffix
 
     :param bidsmap:     This could be a template bidsmap, with all options, BIDS labels and attributes, etc
     :param source:      The information source in the bidsmap that is used, e.g. 'DICOM'
-    :param modality:    The modality in which a matching series is searched for (e.g. 'anat')
+    :param modality:    The modality in which a matching run is searched for (e.g. 'anat')
     :param suffix:      The name of the suffix that is searched for (e.g. 'bold')
-    :return:            The (cleaned) series item in the bidsmap[source][bidsmodality] with the matching suffix, otherwise None
+    :return:            The (cleaned) run item in the bidsmap[source][bidsmodality] with the matching suffix, otherwise None
     """
 
-    for series in bidsmap[source][modality]:
-        if series['bids']['suffix'] == suffix:
+    for run in bidsmap[source][modality]:
+        if run['bids']['suffix'] == suffix:
 
-            series_ = dict(provenance={}, attributes={}, bids={})
+            run_ = dict(provenance={}, attributes={}, bids={})
 
-            for attrkey, attrvalue in series['attributes'].items():
-                series_['attributes'][attrkey] = attrvalue
+            for attrkey, attrvalue in run['attributes'].items():
+                run_['attributes'][attrkey] = attrvalue
 
-            for bidskey, bidsvalue in series['bids'].items():
-                series_['bids'][bidskey] = bidsvalue
+            for bidskey, bidsvalue in run['bids'].items():
+                run_['bids'][bidskey] = bidsvalue
 
-            return series_
+            return run_
 
-    logger.warning(f"'{modality}' series with suffix '{suffix}' not found in bidsmap['{source}']")
-    return None
+    logger.warning(f"'{modality}' run with suffix '{suffix}' not found in bidsmap['{source}']")
 
 
-def delete_series(bidsmap: dict, source: str, modality: str, index: int) -> dict:
+def delete_run(bidsmap: dict, source: str, modality: str, index: int) -> dict:
     """
-    Delete a series from the BIDS map
+    Delete a run from the BIDS map
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param source:      The information source in the bidsmap that is used, e.g. 'DICOM'
     :param modality:    The modality in the source that is used, e.g. 'anat'
-    :param index:       The index number of the series (listitem) that is deleted from the modality
+    :param index:       The index number of the run (listitem) that is deleted from the modality
     :return:            The new bidsmap
     """
 
@@ -689,89 +688,92 @@ def delete_series(bidsmap: dict, source: str, modality: str, index: int) -> dict
     return bidsmap
 
 
-def append_series(bidsmap: dict, source: str, modality: str, series: dict, clean: bool=True) -> dict:
+def append_run(bidsmap: dict, source: str, modality: str, run: dict, clean: bool=True) -> dict:
     """
-    Append a series to the BIDS map
+    Append a run to the BIDS map
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param source:      The information source in the bidsmap that is used, e.g. 'DICOM'
     :param modality:    The modality in the source that is used, e.g. 'anat'
-    :param series:      The series (listitem) that is appenden to the modality
+    :param run:         The run (listitem) that is appenden to the modality
     :return:            The new bidsmap
     """
 
-    # Copy the values from the series to an empty dict
+    # Copy the values from the run to an empty dict
     if clean:
-        series_ = dict(provenance={}, attributes={}, bids={})
-        series_['provenance'] = series['provenance']
-        for key, value in series['attributes'].items():
-            series_['attributes'][key] = value
-        for key, value in series['bids'].items():
-            series_['bids'][key] = value
-        series = series_
+        run_ = dict(provenance={}, attributes={}, bids={})
+
+        run_['provenance'] = run['provenance']
+
+        for key, value in run['attributes'].items():
+            run_['attributes'][key] = value
+        for key, value in run['bids'].items():
+            run_['bids'][key] = value
+
+        run = run_
 
     if bidsmap[source][modality] is None:
-        bidsmap[source][modality] = [series]
+        bidsmap[source][modality] = [run]
     else:
-        bidsmap[source][modality].append(series)
+        bidsmap[source][modality].append(run)
 
     return bidsmap
 
 
-def update_bidsmap(bidsmap: dict, source_modality: str, source_index: int, target_modality: str, series: dict, source: str= 'DICOM', clean: bool=True) -> dict:
+def update_bidsmap(bidsmap: dict, source_modality: str, source_index: int, target_modality: str, run: dict, source: str= 'DICOM', clean: bool=True) -> dict:
     """
     Update the BIDS map:
-    1. Remove the source series from the source modality section
-    2. Append the (cleaned) target series to the target modality section
+    1. Remove the source run from the source modality section
+    2. Append the (cleaned) target run to the target modality section
 
     :param bidsmap:             Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param source_modality:     The current modality name, e.g. 'anat'
-    :param source_index:        The current index number of the series
+    :param source_index:        The current index number of the run
     :param target_modality:     The modality name what is should be, e.g. 'dwi'
-    :param series:              The series items that is being moved
+    :param run:                 The run item that is being moved
     :param source:              The name of the information source, e.g. 'DICOM'
-    :param clean:               A boolean that is passed to bids.append_series (telling it to clean-up commentedMap fields)
+    :param clean:               A boolean that is passed to bids.append_run (telling it to clean-up commentedMap fields)
     :return:
     """
 
-    # Warn the user if the target series already exists
-    if source_modality != target_modality and exist_series(bidsmap, source, target_modality, series):
-        logger.warning(f'That series from {source_modality} already exists in {target_modality}...')
+    # Warn the user if the target run already exists
+    if source_modality != target_modality and exist_run(bidsmap, source, target_modality, run):
+        logger.warning(f'That run from {source_modality} already exists in {target_modality}...')
 
-    # Delete the source series
-    bidsmap = delete_series(bidsmap, source, source_modality, source_index)
+    # Delete the source run
+    bidsmap = delete_run(bidsmap, source, source_modality, source_index)
 
-    # Append the (cleaned-up) target series
-    bidsmap = append_series(bidsmap, source, target_modality, series, clean)
+    # Append the (cleaned-up) target run
+    bidsmap = append_run(bidsmap, source, target_modality, run, clean)
 
     return bidsmap
 
 
-def get_matching_dicomseries(dicomfile: str, bidsmap: dict, modalities: tuple= bidsmodalities + (ignoremodality, unknownmodality)) -> tuple:
+def get_matching_dicomrun(dicomfile: str, bidsmap: dict, modalities: tuple= bidsmodalities + (ignoremodality, unknownmodality)) -> tuple:
     """
-    Find the series in the bidsmap with dicom attributes that match with the dicom file. Then update the (dynamic) bids values (values are cleaned-up to be BIDS-valid)
+    Find the run in the bidsmap with dicom attributes that match with the dicom file. Then update the (dynamic) bids values (values are cleaned-up to be BIDS-valid)
 
     :param dicomfile:   The full pathname of the dicom-file
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
-    :param modalities:  The modality in which a matching series is searched for. Default = bidsmodalities + (ignoremodality, unknownmodality)
-    :return:            (series, modality, index) The matching and filled-in / cleaned series item, modality and list index as in series = bidsmap[DICOM][modality][index]
-                        modality = bids.unknownmodality and index = None if there is no match, the series is still populated with info from the dicom-file
+    :param modalities:  The modality in which a matching run is searched for. Default = bidsmodalities + (ignoremodality, unknownmodality)
+    :return:            (run, modality, index) The matching and filled-in / cleaned run item, modality and list index as in run = bidsmap[DICOM][modality][index]
+                        modality = bids.unknownmodality and index = None if there is no match, the run is still populated with info from the dicom-file
     """
 
-    source  = 'DICOM'                                                                                       # TODO: generalize for non-DICOM (dicomfile -> file)?
-    series_ = dict(provenance={}, attributes={}, bids={})
+    source = 'DICOM'                                                                                        # TODO: generalize for non-DICOM (dicomfile -> file)?
+    run_   = dict(provenance={}, attributes={}, bids={})
 
-    # Loop through all bidsmodalities and series; all info goes into series_
+    # Loop through all bidsmodalities and runs; all info goes into run_
     for modality in modalities:
         if bidsmap[source][modality] is None: continue
 
-        for index, series in enumerate(bidsmap[source][modality]):
+        for index, run in enumerate(bidsmap[source][modality]):
 
-            series_ = dict(provenance={}, attributes={}, bids={})                                           # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
-            match   = any([series['attributes'][attrkey] is not None for attrkey in series['attributes']])  # Make match False if all attributes are empty
+            run_ = dict(provenance={}, attributes={}, bids={})                                              # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
+            match   = any([run['attributes'][attrkey] is not None for attrkey in run['attributes']])        # Make match False if all attributes are empty
 
             # Try to see if the dicomfile matches all of the attributes and fill all of them
-            for attrkey, attrvalue in series['attributes'].items():
+            for attrkey, attrvalue in run['attributes'].items():
 
                 # Check if the attribute value matches with the info from the dicomfile
                 dicomvalue = get_dicomfield(attrkey, dicomfile)
@@ -784,38 +786,38 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict, modalities: tuple= b
                         match = match and attrvalue==dicomvalue
 
                 # Fill the empty attribute with the info from the dicomfile
-                series_['attributes'][attrkey] = dicomvalue
+                run_['attributes'][attrkey] = dicomvalue
 
             # Try to fill the bids-labels
-            for bidskey, bidsvalue in series['bids'].items():
+            for bidskey, bidsvalue in run['bids'].items():
 
                 # Replace the dynamic bids values
-                series_['bids'][bidskey] = replace_bidsvalue(bidsvalue, dicomfile)
+                run_['bids'][bidskey] = replace_bidsvalue(bidsvalue, dicomfile)
 
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
-                series_ = strip_suffix(series_)
+                run_ = strip_suffix(run_)
 
             # Stop searching the bidsmap if we have a match
             if match:
                 # TODO: check if there are more matches (i.e. conflicts)
-                series_['provenance'] = dicomfile
-                return series_, modality, index
+                run_['provenance'] = dicomfile
+                return run_, modality, index
 
     # We don't have a match (all tests failed, so modality should be the *last* one, i.e. unknownmodality)
-    series_['provenance'] = dicomfile
+    run_['provenance'] = dicomfile
 
-    return series_, modality, None
+    return run_, modality, None
 
 
-def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='', subprefix: str='sub-', sesprefix: str='ses-') -> str:
+def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str= '', subprefix: str= 'sub-', sesprefix: str= 'ses-') -> str:
     """
-    Composes a filename as it should be according to the BIDS standard using the BIDS labels in series
+    Composes a filename as it should be according to the BIDS standard using the BIDS labels in run
 
     :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001'). Can be left empty
     :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01'). Can be left empty
     :param modality:    The bidsmodality (choose from bids.bidsmodalities)
-    :param series:      The series mapping with the BIDS labels
-    :param run:         The optional runindex label (e.g. 'run-01'). Can be left ''
+    :param run:         The run mapping with the BIDS labels
+    :param runindex:    The optional runindex label (e.g. 'run-01'). Can be left ''
     :param subprefix:   The optional subprefix (e.g. 'sub-'). Used to parse the sub-value from the provenance as default subid
     :param sesprefix:   The optional sesprefix (e.g. 'ses-'). If it is found in the provenance then a default sesid will be set
     :return:            The composed BIDS file-name (without file-extension)
@@ -824,19 +826,19 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
 
     # Add default value for subid and sesid (e.g. for the bidseditor)
     if not subid:
-        subid = os.path.dirname(series['provenance']).rsplit(os.sep + subprefix)[1].split(os.sep)[0]
-    if not sesid and os.sep + sesprefix in series['provenance']:
-        sesid = os.path.dirname(series['provenance']).rsplit(os.sep + sesprefix)[1].split(os.sep)[0]
+        subid = os.path.dirname(run['provenance']).rsplit(os.sep + subprefix)[1].split(os.sep)[0]
+    if not sesid and os.sep + sesprefix in run['provenance']:
+        sesid = os.path.dirname(run['provenance']).rsplit(os.sep + sesprefix)[1].split(os.sep)[0]
 
     # Add sub- and ses- prefixes if they are not there
     subid = 'sub-' + subid.lstrip('sub-')
     if sesid:
         sesid = 'ses-' + sesid.lstrip('ses-')
 
-    # Do some checks to allow for dragging the series entries between the different modality-sections
+    # Do some checks to allow for dragging the run entries between the different modality-sections
     for bidslabel in bidslabels:
-        if bidslabel not in series['bids']:
-            series['bids'][bidslabel] = ''
+        if bidslabel not in run['bids']:
+            run['bids'][bidslabel] = ''
 
     # Compose the BIDS filename (-> switch statement)
     if modality == 'anat':
@@ -844,19 +846,19 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         defacemask = False       # TODO: account for the 'defacemask' possibility
         if defacemask:
             suffix = 'defacemask'
-            mod    = series['bids']['suffix']
+            mod    = run['bids']['suffix']
         else:
-            suffix = series['bids']['suffix']
+            suffix = run['bids']['suffix']
             mod    = ''
 
         # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_ce-<label>][_rec-<label>][_run-<index>][_mod-<label>]_suffix
         bidsname = '{sub}{_ses}{_acq}{_ce}{_rec}{_run}{_mod}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            _acq    = add_prefix('_acq-', series['bids']['acq']),
-            _ce     = add_prefix('_ce-', series['bids']['ce']),
-            _rec    = add_prefix('_rec-', series['bids']['rec']),
-            _run    = add_prefix('_run-', run),
+            _acq    = add_prefix('_acq-', run['bids']['acq']),
+            _ce     = add_prefix('_ce-', run['bids']['ce']),
+            _rec    = add_prefix('_rec-', run['bids']['rec']),
+            _run    = add_prefix('_run-', runindex),
             _mod    = add_prefix('_mod-', mod),
             suffix  = suffix)
 
@@ -866,12 +868,12 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}{_echo}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            task    = f"task-{series['bids']['task']}",
-            _acq    = add_prefix('_acq-', series['bids']['acq']),
-            _rec    = add_prefix('_rec-', series['bids']['rec']),
-            _run    = add_prefix('_run-', run),
-            _echo   = add_prefix('_echo-', series['bids']['echo']),
-            suffix  = series['bids']['suffix'])
+            task    = f"task-{run['bids']['task']}",
+            _acq    = add_prefix('_acq-', run['bids']['acq']),
+            _rec    = add_prefix('_rec-', run['bids']['rec']),
+            _run    = add_prefix('_run-', runindex),
+            _echo   = add_prefix('_echo-', run['bids']['echo']),
+            suffix  = run['bids']['suffix'])
 
     elif modality == 'dwi':
 
@@ -879,9 +881,9 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}{_acq}{_run}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            _acq    = add_prefix('_acq-', series['bids']['acq']),
-            _run    = add_prefix('_run-', run),
-            suffix  = series['bids']['suffix'])
+            _acq    = add_prefix('_acq-', run['bids']['acq']),
+            _run    = add_prefix('_run-', runindex),
+            suffix  = run['bids']['suffix'])
 
     elif modality == 'fmap':
 
@@ -891,10 +893,10 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}{_acq}{_dir}{_run}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            _acq    = add_prefix('_acq-', series['bids']['acq']),
-            _dir    = add_prefix('_dir-', series['bids']['dir']),
-            _run    = add_prefix('_run-', run),
-            suffix  = series['bids']['suffix'])
+            _acq    = add_prefix('_acq-', run['bids']['acq']),
+            _dir    = add_prefix('_dir-', run['bids']['dir']),
+            _run    = add_prefix('_run-', runindex),
+            suffix  = run['bids']['suffix'])
 
     elif modality == 'beh':
 
@@ -902,8 +904,8 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}_{task}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            task    = f"task-{series['bids']['task']}",
-            suffix  = series['bids']['suffix'])
+            task    = f"task-{run['bids']['task']}",
+            suffix  = run['bids']['suffix'])
 
     elif modality == 'pet':
 
@@ -911,11 +913,11 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            task    = f"task-{series['bids']['task']}",
-            _acq    = add_prefix('_acq-', series['bids']['acq']),
-            _rec    = add_prefix('_rec-', series['bids']['rec']),
-            _run    = add_prefix('_run-', run),
-            suffix  = series['bids']['suffix'])
+            task    = f"task-{run['bids']['task']}",
+            _acq    = add_prefix('_acq-', run['bids']['acq']),
+            _rec    = add_prefix('_rec-', run['bids']['rec']),
+            _run    = add_prefix('_run-', runindex),
+            suffix  = run['bids']['suffix'])
 
     elif modality == unknownmodality or modality == ignoremodality:
 
@@ -923,14 +925,14 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
         bidsname = '{sub}{_ses}_{acq}{_ce}{_rec}{_task}{_echo}{_dir}{_run}{_suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            acq     = f"acq-{series['bids']['acq']}",
-            _ce     = add_prefix('_ce-', series['bids']['ce']),
-            _rec    = add_prefix('_rec-', series['bids']['rec']),
-            _task   = add_prefix('_task-',series['bids']['task']),
-            _echo   = add_prefix('_echo-', series['bids']['echo']),
-            _dir    = add_prefix('_dir-', series['bids']['dir']),
-            _run    = add_prefix('_run-', run),
-            _suffix = add_prefix('_', series['bids']['suffix']))
+            acq     = f"acq-{run['bids']['acq']}",
+            _ce     = add_prefix('_ce-', run['bids']['ce']),
+            _rec    = add_prefix('_rec-', run['bids']['rec']),
+            _task   = add_prefix('_task-', run['bids']['task']),
+            _echo   = add_prefix('_echo-', run['bids']['echo']),
+            _dir    = add_prefix('_dir-', run['bids']['dir']),
+            _run    = add_prefix('_run-', runindex),
+            _suffix = add_prefix('_', run['bids']['suffix']))
 
     else:
         raise ValueError(f'Critical error: modality "{modality}" not implemented, please inform the developers about this error')
@@ -940,7 +942,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, series: dict, run: str='
 
 def replace_bidsvalue(bidsvalue: str, sourcefile: str) -> str:
     """
-    Replaces (dynamic) bidsvalues with (DICOM) series attributes when they start with '<' and end with '>',
+    Replaces (dynamic) bidsvalues with (DICOM) run attributes when they start with '<' and end with '>',
     but not with '<<' and '>>'
 
     :param bidsvalue:   The value from the BIDS key-value pair
