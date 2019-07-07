@@ -653,7 +653,7 @@ def get_series(bidsmap: dict, source: str, modality, suffix: str) -> dict:
     :param source:      The information source in the bidsmap that is used, e.g. 'DICOM'
     :param modality:    The modality in which a matching series is searched for (e.g. 'anat')
     :param suffix:      The name of the suffix that is searched for (e.g. 'bold')
-    :return:            The series item in the bidsmap[source][bidsmodality] with the matching suffix, otherwise None
+    :return:            The (cleaned) series item in the bidsmap[source][bidsmodality] with the matching suffix, otherwise None
     """
 
     for series in bidsmap[source][modality]:
@@ -754,7 +754,7 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict, modalities: tuple= b
     :param dicomfile:   The full pathname of the dicom-file
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param modalities:  The modality in which a matching series is searched for. Default = bidsmodalities + (ignoremodality, unknownmodality)
-    :return:            (series, modality, index) The matching and filled-in series item, modality and list index as in series = bidsmap[DICOM][modality][index]
+    :return:            (series, modality, index) The matching and filled-in / cleaned series item, modality and list index as in series = bidsmap[DICOM][modality][index]
                         modality = bids.unknownmodality and index = None if there is no match, the series is still populated with info from the dicom-file
     """
 
