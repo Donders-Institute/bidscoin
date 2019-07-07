@@ -433,7 +433,7 @@ def save_bidsmap(filename: str, bidsmap: dict):
     Save the BIDSmap as a YAML text file
 
     :param filename:
-    :param bidsmap:         Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap:         Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :return:
     """
 
@@ -597,7 +597,7 @@ def exist_series(bidsmap: dict, source: str, modality: str, series: dict, matchb
     """
     Checks if there is already an entry in serieslist with the same attributes and, optionally, bids values as in the input series
 
-    :param bidsmap:         Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap:         Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param source:          The information source in the bidsmap that is used, e.g. 'DICOM'
     :param modality:        The modality in the source that is used, e.g. 'anat'. Empty values will search through all modalities
     :param series:          The series (listitem) that is searched for in the modality
@@ -645,11 +645,30 @@ def exist_series(bidsmap: dict, source: str, modality: str, series: dict, matchb
     return False
 
 
+def get_series(bidsmap: dict, source: str, modality, suffix) -> dict:
+    """
+    Find the (first) series in bidsmap[source][bidsmodality] with series['bids']['suffix'] == suffix
+
+    :param bidsmap:     This could be a template bidsmap, with all options, BIDS labels and attributes, etc
+    :param source:      The information source in the bidsmap that is used, e.g. 'DICOM'
+    :param modality:    The modality in which a matching series is searched for (e.g. 'anat')
+    :param suffix:      The name of the suffix that is searched for (e.g. 'bold')
+    :return:            The series item in the bidsmap[source][bidsmodality] with the matching suffix, otherwise None
+    """
+
+    for series in bidsmap[source][modality]:
+        if series['bids']['suffix'] == suffix:
+            return series
+
+    logger.warning(f"'{modality}' series with suffix '{suffix}' not found in bidsmap['{source}']")
+    return None
+
+
 def delete_series(bidsmap: dict, source: str, modality: str, index: int) -> dict:
     """
     Delete a series from the BIDS map
 
-    :param bidsmap:     Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param source:      The information source in the bidsmap that is used, e.g. 'DICOM'
     :param modality:    The modality in the source that is used, e.g. 'anat'
     :param index:       The index number of the series (listitem) that is deleted from the modality
@@ -665,7 +684,7 @@ def append_series(bidsmap: dict, source: str, modality: str, series: dict, clean
     """
     Append a series to the BIDS map
 
-    :param bidsmap:     Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param source:      The information source in the bidsmap that is used, e.g. 'DICOM'
     :param modality:    The modality in the source that is used, e.g. 'anat'
     :param series:      The series (listitem) that is appenden to the modality
@@ -719,12 +738,13 @@ def update_bidsmap(bidsmap: dict, source_modality: str, source_index: int, targe
     return bidsmap
 
 
-def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
+def get_matching_dicomseries(dicomfile: str, bidsmap: dict, modalities: tuple= bidsmodalities + (ignoremodality, unknownmodality)) -> tuple:
     """
     Find the series in the bidsmap with dicom attributes that match with the dicom file. Then update the (dynamic) bids values (values are cleaned-up to be BIDS-valid)
 
     :param dicomfile:   The full pathname of the dicom-file
-    :param bidsmap:     Full BIDS bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param modalities:  The modality in which a matching series is searched for. Default = bidsmodalities + (ignoremodality, unknownmodality)
     :return:            (series, modality, index) The matching and filled-in series item, modality and list index as in series = bidsmap[DICOM][modality][index]
                         modality = bids.unknownmodality and index = None if there is no match, the series is still populated with info from the dicom-file
     """
@@ -733,7 +753,7 @@ def get_matching_dicomseries(dicomfile: str, bidsmap: dict) -> tuple:
     series_ = dict(provenance={}, attributes={}, bids={})
 
     # Loop through all bidsmodalities and series; all info goes into series_
-    for modality in bidsmodalities + (ignoremodality, unknownmodality):
+    for modality in modalities:
         if bidsmap[source][modality] is None: continue
 
         for index, series in enumerate(bidsmap[source][modality]):
