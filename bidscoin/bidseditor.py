@@ -753,7 +753,7 @@ class Ui_MainWindow(object):
         if bids.is_dicomfile(filename):
             dicomdict = pydicom.dcmread(filename, force=True)
             self.popup = InspectWindow(filename, dicomdict)
-            self.popup.exec()
+            self.popup.show()
 
     def show_about(self):
         """ """
