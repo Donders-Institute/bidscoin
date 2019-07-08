@@ -802,10 +802,10 @@ class EditDialog(QDialog):
 
         self.source_modality_index = modality_index
         self.source_modality = modality
-        self.source_series = self.bidsmap[SOURCE][modality][modality_index]
+        self.source_run = self.bidsmap[SOURCE][modality][modality_index]
 
         self.target_modality = modality
-        self.target_series = copy.deepcopy(self.source_series)
+        self.target_run = copy.deepcopy(self.source_run)
         self.target_suffix = ''
 
         self.subprefix = subprefix
@@ -877,7 +877,7 @@ class EditDialog(QDialog):
 
         help_button.clicked.connect(self.get_help)
         cancel_button.clicked.connect(self.reject)
-        ok_button.clicked.connect(self.update_series)
+        ok_button.clicked.connect(self.update_run)
 
         layout_all.addWidget(scrollarea)
 
@@ -912,7 +912,7 @@ class EditDialog(QDialog):
             answer = QMessageBox.question(self, 'Edit BIDS mapping', "Closing window, do you want to save the changes you made?",
                                           QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
             if answer == QMessageBox.Yes:
-                self.update_series()
+                self.update_run()
                 return
             if answer == QMessageBox.No:
                 self.done(2)
@@ -926,7 +926,7 @@ class EditDialog(QDialog):
 
         super(EditDialog, self).reject()
 
-    def update_series(self):
+    def update_run(self):
         LOGGER.info(f'User has approved the edit')
 
         """Save the changes to the bidsmap and send it back to the main window: Finished! """
@@ -934,7 +934,7 @@ class EditDialog(QDialog):
                                            self.source_modality,
                                            self.source_modality_index,
                                            self.target_modality,
-                                           self.target_series)
+                                           self.target_run)
 
         self.done_edit.emit(self.bidsmap)
         self.done(1)
@@ -942,7 +942,7 @@ class EditDialog(QDialog):
     def inspect_dicomfile(self, row=None, column=None):
         """When double clicked, show popup window. """
         if row == 1 and column == 1:
-            filename = self.source_series['provenance']
+            filename = self.source_run['provenance']
             if bids.is_dicomfile(filename):
                 dicomdict = pydicom.dcmread(filename, force=True)
                 self.popup = InspectWindow(filename, dicomdict)
@@ -953,31 +953,31 @@ class EditDialog(QDialog):
         if column == 1:
             key = self.view_dicom.item(row, 0).text()
             value = self.view_dicom.item(row, 1).text()
-            oldvalue = self.target_series['attributes'].get(key, None)
+            oldvalue = self.target_run['attributes'].get(key, None)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
             if key != '':
-                LOGGER.info(f"User has set {SOURCE}['{key}'] from '{oldvalue}' to '{value}' for {self.source_series['provenance']}")
+                LOGGER.info(f"User has set {SOURCE}['{key}'] from '{oldvalue}' to '{value}' for {self.source_run['provenance']}")
 
                 self.view_dicom.item(row, 1).setText(value)
-                self.target_series['attributes'][key] = value
+                self.target_run['attributes'][key] = value
 
     def bids_cell_was_changed(self, row, column):
         """BIDS attribute value has been changed. """
         if column == 1:
             key = self.view_bids.item(row, 0).text()
             value = self.view_bids.item(row, 1).text()
-            oldvalue = self.target_series['bids'].get(key, None)
+            oldvalue = self.target_run['bids'].get(key, None)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
             if key != '':
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
-                value = bids.replace_bidsvalue(value, self.target_series['provenance'])
+                value = bids.replace_bidsvalue(value, self.target_run['provenance'])
 
-                LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.source_series['provenance']}")
+                LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.source_run['provenance']}")
 
                 self.view_bids.item(row, 1).setText(value)
-                self.target_series['bids'][key] = value
+                self.target_run['bids'][key] = value
 
                 self.update_bidsname()
 
@@ -1040,7 +1040,7 @@ class EditDialog(QDialog):
 
     def set_provenance_section(self):
         """Set provenance section. """
-        provenance = self.source_series['provenance']
+        provenance = self.source_run['provenance']
         provenance_file = os.path.basename(provenance)
         provenance_path = os.path.dirname(provenance)
 
@@ -1074,7 +1074,7 @@ class EditDialog(QDialog):
 
     def set_dicom_attributes_section(self):
         """Set SOURCE attributes section. """
-        dicom_attributes = self.source_series['attributes']
+        dicom_attributes = self.source_run['attributes']
 
         data = []
         for key in dicom_attributes:
@@ -1110,7 +1110,7 @@ class EditDialog(QDialog):
         target_bids_attributes = get_bids_attributes(self.template_bidsmap,
                                                      self.allowed_suffixes,
                                                      self.target_modality,
-                                                     self.source_series)
+                                                     self.source_run)
         if target_bids_attributes is not None:
             bids_values = target_bids_attributes
         else:
@@ -1155,10 +1155,10 @@ class EditDialog(QDialog):
             # Fixed list of options
             if not self.allowed_suffixes[self.target_modality]:
                 raise Exception(f'allowed suffixes empty for modality {self.target_modality}')
-            self.target_suffix = self.source_series['bids']['suffix']
+            self.target_suffix = self.source_run['bids']['suffix']
 
         bids_values, data = self.get_bids_values_data()
-        self.target_series['bids'] = bids_values
+        self.target_run['bids'] = bids_values
 
         self.label_bids = QLabel()
         self.label_bids.setText("Labels")
@@ -1183,7 +1183,7 @@ class EditDialog(QDialog):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
         self.target_modality = self.view_dropdown.currentText()
 
-        LOGGER.info(f"User has changed the BIDS modality from '{self.source_modality}' to '{self.target_modality}' for {self.source_series['provenance']}")
+        LOGGER.info(f"User has changed the BIDS modality from '{self.source_modality}' to '{self.target_modality}' for {self.source_run['provenance']}")
 
         if self.target_modality in (bids.unknownmodality, bids.ignoremodality):
             # Free field
@@ -1232,27 +1232,27 @@ class EditDialog(QDialog):
             bids_values['suffix'] = self.target_suffix
 
         # Update the BIDS output name
-        self.target_series['bids'] = bids_values
+        self.target_run['bids'] = bids_values
         self.update_bidsname()
 
     def selection_suffix_dropdown_change(self, i):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
         self.target_suffix = self.suffix_dropdown.currentText()
 
-        LOGGER.info(f"User has changed the BIDS suffix from '{self.target_series['bids']['suffix']}' to '{self.target_suffix}' for {self.source_series['provenance']}")
+        LOGGER.info(f"User has changed the BIDS suffix from '{self.target_run['bids']['suffix']}' to '{self.target_suffix}' for {self.source_run['provenance']}")
 
         bids_values, data = self.get_bids_values_data()
         bids_values['suffix'] = self.target_suffix
 
         # Update the BIDS output name
-        self.target_series['bids'] = bids_values
+        self.target_run['bids'] = bids_values
         self.update_bidsname()
 
     def update_bidsname(self):
-        subid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['participant'], self.target_series['provenance'])
-        sesid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['session'], self.target_series['provenance'])
-        runindex = self.target_series['bids'].get('run', '')
-        bids_name = os.path.join(self.target_modality, bids.get_bidsname(subid, sesid, self.target_modality, self.target_series, runindex, self.subprefix, self.sesprefix)) + '.*'
+        subid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['participant'], self.target_run['provenance'])
+        sesid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['session'], self.target_run['provenance'])
+        runindex = self.target_run['bids'].get('run', '')
+        bids_name = os.path.join(self.target_modality, bids.get_bidsname(subid, sesid, self.target_modality, self.target_run, runindex, self.subprefix, self.sesprefix)) + '.*'
         html_bids_name = get_html_bidsname(bids_name)
 
         self.view_bids_name.clear()
