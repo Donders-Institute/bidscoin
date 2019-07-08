@@ -352,7 +352,7 @@ class Ui_MainWindow(object):
             if bids.is_dicomfile(filename):
                 dicomdict = pydicom.dcmread(filename, force=True)
                 self.popup = InspectWindow(filename, dicomdict)
-                self.popup.exec()
+                self.popup.show()
 
     def set_tab_file_browser(self, sourcefolder):
         """Set the raw data folder inspector tab. """
