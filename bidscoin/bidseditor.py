@@ -14,6 +14,7 @@ import argparse
 import textwrap
 import logging
 import copy
+import ast
 import webbrowser
 import pydicom
 from functools import partial
@@ -928,6 +929,14 @@ class EditDialog(QDialog):
 
     def update_run(self):
         LOGGER.info(f'User has approved the edit')
+
+        # Interpret smart DICOM attribute lists as lists
+        for key, value in self.target_run['attributes'].items():
+            if value.startswith('[') and value.endswith(']'):
+                try:
+                    self.target_run['attributes'] = ast.literal_eval(value)
+                except:
+                    LOGGER.error(f'Could not interpret {SOURCE} attribute {{{key}: {value}}}')
 
         """Save the changes to the bidsmap and send it back to the main window: Finished! """
         self.bidsmap = bids.update_bidsmap(self.bidsmap,

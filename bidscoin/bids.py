@@ -724,10 +724,13 @@ def exist_run(bidsmap: dict, source: str, modality: str, run_item: dict, matchbi
 
         # Search for a case where all run_item items match with the run_item items
         for itemkey, itemvalue in run_item['attributes'].items():
-            if itemkey not in run['attributes']:  # Matching bids-labels which exist in one modality but not in the other
-                break                             # There is no point in searching further within the run_item now that we've found a mismatch
+            if itemkey not in run['attributes']:    # Matching bids-labels which exist in one modality but not in the other
+                break                               # There is no point in searching further within the run_item now that we've found a mismatch
             value = run['attributes'][itemkey]
-            match = match and (value == itemvalue)
+            if isinstance(itemvalue, list):         # The user-edited 'wildcard' option
+                match = match and any([str(value) in str(itemvalue_) for itemvalue_ in itemvalue])
+            else:
+                match = match and value==itemvalue
             if not match:
                 break
 
@@ -781,7 +784,7 @@ def get_matching_dicomrun(dicomfile: str, bidsmap: dict, modalities: tuple= bids
                     if not dicomvalue:
                         match = False
                     elif isinstance(attrvalue, list):                                                       # The user-edited 'wildcard' option
-                        match = match and any([attrvalue_ in dicomvalue for attrvalue_ in attrvalue])
+                        match = match and any([str(attrvalue_) in str(dicomvalue) for attrvalue_ in attrvalue])
                     else:
                         match = match and attrvalue==dicomvalue
 
