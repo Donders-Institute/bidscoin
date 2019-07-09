@@ -934,7 +934,7 @@ class EditDialog(QDialog):
         for key, value in self.target_run['attributes'].items():
             if isinstance(value, str) and value.startswith('[') and value.endswith(']'):
                 try:
-                    self.target_run['attributes'] = ast.literal_eval(value)
+                    self.target_run['attributes'][key] = ast.literal_eval(value)
                 except:
                     LOGGER.error(f'Could not interpret {SOURCE} attribute {{{key}: {value}}}')
 
