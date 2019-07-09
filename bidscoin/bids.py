@@ -727,8 +727,8 @@ def exist_run(bidsmap: dict, source: str, modality: str, run_item: dict, matchbi
             if itemkey not in run['attributes']:    # Matching bids-labels which exist in one modality but not in the other
                 break                               # There is no point in searching further within the run_item now that we've found a mismatch
             value = run['attributes'][itemkey]
-            if isinstance(itemvalue, list):         # The user-edited 'wildcard' option
-                match = match and any([str(value) in str(itemvalue_) for itemvalue_ in itemvalue])
+            if isinstance(value, list):             # The user-edited 'wildcard' option
+                match = match and any([str(value_) in str(itemvalue) for value_ in value])
             else:
                 match = match and value==itemvalue
             if not match:
