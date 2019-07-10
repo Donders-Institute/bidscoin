@@ -1328,7 +1328,7 @@ if __name__ == "__main__":
                                          DICOM Attributes
                                            An (DICOM) attribute label can also be a list, in which case the BIDS labels / mapping
                                            are applies if a (DICOM) attribute value is in this list. If the attribute value is
-                                           empty it is not used to identify the run. Wildcards can also be given, either as a singele
+                                           empty it is not used to identify the run. Wildcards can also be given, either as a single
                                            '*', or enclosed by '*'. Examples:
                                                 SequenceName: '*'
                                                 SequenceName: '*epfid*'
@@ -1354,8 +1354,8 @@ if __name__ == "__main__":
 
                                          Manual editing / inspection of the bidsmap
                                            You can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
-                                           text editor. For instance to change the `Options` to your needs or to add a dynamic
-                                           `participant` value like `<<PatientID>>`. See ./docs/bidsmap.md for more information."""))
+                                           text editor. For instance to add a dynamic `participant` value like `<<PatientID>>`. 
+                                           See ./docs/bidsmap.md for more information."""))
 
     parser.add_argument('bidsfolder',           help='The destination folder with the (future) bids data')
     parser.add_argument('-s','--sourcefolder',  help='The source folder containing the raw data. If empty, it is derived from the bidsmap provenance information')
