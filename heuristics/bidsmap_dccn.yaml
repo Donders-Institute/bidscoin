@@ -253,7 +253,7 @@ DICOM:
     provenance: ~
   - attributes:
       <<: *fmapattributes
-      SeriesDescription: ~['*fmap*', '*fieldmap*', '*field_map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*']
     bids:
       <<: *fmapbids
       suffix: magnitude1
