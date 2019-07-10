@@ -745,13 +745,15 @@ def match_attribute(longvalue, values) -> bool:
     elif isinstance(longvalue, list):
         return str(longvalue)==str(values)
 
-    # Compare the value items (with / without wildcard) with longvalue (string)
+    # Compare the value items (with / without wildcard) with the longvalue string
     for value in values:
+
+        value = str(value)
 
         if value in ('*', '**'):
             return True
 
-        if isinstance(value, str) and value.startswith('*') and value.endswith('*') and value[1:-1] in longvalue:
+        if value.startswith('*') and value.endswith('*') and value[1:-1] in longvalue:
             return True
 
         elif value==longvalue:
