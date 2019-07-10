@@ -49,7 +49,6 @@ DICOM:
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
-      SpacingBetweenSlices: ~
       FlipAngle: ~
       EchoNumbers: ~
       EchoTime: ~
@@ -150,7 +149,6 @@ DICOM:
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
-      SpacingBetweenSlices: ~
       FlipAngle: ~
       EchoNumbers: ~
       EchoTime: ~
@@ -196,7 +194,6 @@ DICOM:
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
-      SpacingBetweenSlices: ~
       FlipAngle: ~
       EchoNumbers: ~
       EchoTime: ~
@@ -224,7 +221,6 @@ DICOM:
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
-      SpacingBetweenSlices: ~
       FlipAngle: ~
       EchoNumbers: ~
       EchoTime: ~
@@ -289,7 +285,6 @@ DICOM:
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
-      SpacingBetweenSlices: ~
       FlipAngle: ~
       EchoNumbers: ~
       EchoTime: ~
@@ -344,7 +339,6 @@ DICOM:
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
-      SpacingBetweenSlices: ~
       FlipAngle: ~
       EchoNumbers: ~
       EchoTime: ~
@@ -373,7 +367,6 @@ DICOM:
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
-      SpacingBetweenSlices: ~
       FlipAngle: ~
       EchoNumbers: ~
       EchoTime: ~

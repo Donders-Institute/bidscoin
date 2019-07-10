@@ -767,8 +767,7 @@ def exist_run(bidsmap: dict, source: str, modality: str, run_item: dict, matchbi
                 if not match:
                     break                                   # There is no point in searching further within the run_item now that we've found a mismatch
 
-        # Stop searching if we found a matching run_item (i.e. which is the case if match is still True after all run tests)
-        # TODO: maybe count how many instances, could perhaps be useful info
+        # Stop searching if we found a matching run_item (i.e. which is the case if match is still True after all run tests). TODO: maybe count how many instances, could perhaps be useful info
         if match:
             return True
         else:
