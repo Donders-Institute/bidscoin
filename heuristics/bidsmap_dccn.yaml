@@ -68,6 +68,7 @@ DICOM:
   - attributes:
       <<: *anatattributes
       SeriesDescription: ['*mprage*', '*MPRAGE*', '*t1w*', '*T1w*', '*T1*']
+      MRAcquisitionType: 3D
     bids:
       <<: *anatbids
       suffix: T1w
@@ -90,7 +91,6 @@ DICOM:
   - attributes:
       <<: *anatattributes
       SeriesDescription: ['*t2star*', '*T2star*', '*T2STAR*']
-      SequenceName: '*fl3d11r'
     bids:
       <<: *anatbids
       suffix: T2star
@@ -286,14 +286,13 @@ DICOM:
       <<: *fmapbids
       suffix: fieldmap
     provenance: ~
-  - attributes: *fmapattributes
+  - attributes:
+      <<: *fmapattributes
+      SeriesDescription: ['*inverted*', '*pepolar*']
+      ScanningSequence: EP
     bids:
       <<: *fmapbids
       dir: <InPlanePhaseEncodingDirection>
-    provenance: ~
-  - attributes: *fmapattributes
-    bids:
-      <<: *fmapbids
       suffix: epi
     provenance: ~
 

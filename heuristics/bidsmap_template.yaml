@@ -268,11 +268,6 @@ DICOM:
     attributes: *fmapattributes
     bids:
       <<: *fmapbids
-      dir: <InPlanePhaseEncodingDirection>
-  - provenance: ~
-    attributes: *fmapattributes
-    bids:
-      <<: *fmapbids
       suffix: epi
 
   beh:        # ----------------------- All behavioural data ---------------------
