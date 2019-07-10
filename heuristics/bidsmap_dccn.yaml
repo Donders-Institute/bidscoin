@@ -153,7 +153,7 @@ DICOM:
       Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
-      SequenceName: [epfid2d1rs, '*fm2d2r']
+      SequenceName: ['*epfid2d1rs*', '*fm2d2r*']
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -198,7 +198,7 @@ DICOM:
       Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
-      SequenceName: [epse2d1_, ep_]
+      SequenceName: ['*epse2d1_*', '*ep_*']
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -369,7 +369,7 @@ DICOM:
   - provenance: ~
     attributes:
       Modality: ~
-      SeriesDescription: ['*Scout*', '*localizer*']
+      SeriesDescription: ['*Scout*', '*scout*', '*localizer*']
       SequenceVariant: ~
       SequenceName: ~
       ScanningSequence: ~
