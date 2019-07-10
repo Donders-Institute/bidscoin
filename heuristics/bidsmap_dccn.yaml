@@ -166,7 +166,7 @@ DICOM:
       PhaseEncodingDirection: ~
     bids: &funcbids
       task: <SeriesDescription>
-      acq: ~
+      acq: <SequenceName>
       rec: ~
       run: <<1>>
       echo: <EchoNumbers>
