@@ -697,6 +697,36 @@ def update_bidsmap(bidsmap: dict, source_modality: str, source_index: int, targe
     return bidsmap
 
 
+def match_attribute(longvalue, values) -> bool:
+    """
+
+    :param longvalue:
+    :param values:
+    :return:
+    """
+
+    if longvalue is values:
+        return True
+
+    if values is None:
+        return False
+
+    if not isinstance(values, list):
+        values = [values]
+
+    elif isinstance(longvalue, list):
+        return str(longvalue)==str(values)
+
+    for value in values:
+        if isinstance(value, str) and value.startswith('*') and value.endswith('*') and value[1:-1] in str(longvalue):
+            return True
+
+        elif value==longvalue:
+            return True
+
+    return False
+
+
 def exist_run(bidsmap: dict, source: str, modality: str, run_item: dict, matchbidslabels: bool=False) -> bool:
     """
     Checks if there is already an entry in runlist with the same attributes and, optionally, bids values as in the input run
@@ -724,30 +754,25 @@ def exist_run(bidsmap: dict, source: str, modality: str, run_item: dict, matchbi
 
         # Search for a case where all run_item items match with the run_item items
         for itemkey, itemvalue in run_item['attributes'].items():
-            if itemkey not in run['attributes']:    # Matching bids-labels which exist in one modality but not in the other
-                break                               # There is no point in searching further within the run_item now that we've found a mismatch
-            value = run['attributes'][itemkey]
-            if isinstance(value, list):             # The user-edited 'wildcard' option
-                match = match and any([str(value_) in str(itemvalue) for value_ in value])
-            else:
-                match = match and value==itemvalue
+            value = run['attributes'].get(itemkey, None)    # Matching bids-labels which exist in one modality but not in the other -> None
+            match = match and match_attribute(itemvalue, value)
             if not match:
-                break
+                break                                       # There is no point in searching further within the run_item now that we've found a mismatch
 
-        # This is probably not very useful, but maybe one day...
-        if matchbidslabels:
+        # See if the bidslabels also all match. This is probably not very useful, but maybe one day...
+        if matchbidslabels and match:
             for itemkey, itemvalue in run_item['bids'].items():
-                if itemkey not in run['bids']:    # matching bids-labels which exist in one modality but not in the other
-                    break
-                value = run['bids'][itemkey]
-                match = match and (value == itemvalue)
+                value = run['bids'].get(itemkey, None)      # Matching bids-labels which exist in one modality but not in the other -> None
+                match = match and value==itemvalue
                 if not match:
-                    break
+                    break                                   # There is no point in searching further within the run_item now that we've found a mismatch
 
         # Stop searching if we found a matching run_item (i.e. which is the case if match is still True after all run tests)
         # TODO: maybe count how many instances, could perhaps be useful info
         if match:
             return True
+        else:
+            break
 
     return False
 
@@ -772,8 +797,8 @@ def get_matching_dicomrun(dicomfile: str, bidsmap: dict, modalities: tuple= bids
 
         for index, run in enumerate(bidsmap[source][modality]):
 
-            run_ = dict(provenance={}, attributes={}, bids={})                                              # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
-            match   = any([run['attributes'][attrkey] is not None for attrkey in run['attributes']])        # Make match False if all attributes are empty
+            run_  = dict(provenance={}, attributes={}, bids={})                                             # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
+            match = any([run['attributes'][attrkey] is not None for attrkey in run['attributes']])          # Normally match==True, but make match==False if all attributes are empty
 
             # Try to see if the dicomfile matches all of the attributes and fill all of them
             for attrkey, attrvalue in run['attributes'].items():
@@ -781,12 +806,7 @@ def get_matching_dicomrun(dicomfile: str, bidsmap: dict, modalities: tuple= bids
                 # Check if the attribute value matches with the info from the dicomfile
                 dicomvalue = get_dicomfield(attrkey, dicomfile)
                 if attrvalue:
-                    if not dicomvalue:
-                        match = False
-                    elif isinstance(attrvalue, list):                                                       # The user-edited 'wildcard' option
-                        match = match and any([str(attrvalue_) in str(dicomvalue) for attrvalue_ in attrvalue])
-                    else:
-                        match = match and attrvalue==dicomvalue
+                    match = match and match_attribute(dicomvalue, attrvalue)
 
                 # Fill the empty attribute with the info from the dicomfile
                 run_['attributes'][attrkey] = dicomvalue
