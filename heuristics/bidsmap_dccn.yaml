@@ -254,6 +254,14 @@ DICOM:
   - attributes:
       <<: *fmapattributes
       SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*']
+      ImageType: ['ORIGINAL', 'PRIMARY', 'P', 'ND']
+    bids:
+      <<: *fmapbids
+      suffix: phasediff
+    provenance: ~
+  - attributes:
+      <<: *fmapattributes
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*']
     bids:
       <<: *fmapbids
       suffix: magnitude1
@@ -262,11 +270,6 @@ DICOM:
     bids:
       <<: *fmapbids
       suffix: magnitude2
-    provenance: ~
-  - attributes: *fmapattributes
-    bids:
-      <<: *fmapbids
-      suffix: phasediff
     provenance: ~
   - attributes: *fmapattributes
     bids:
