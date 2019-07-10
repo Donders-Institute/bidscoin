@@ -1330,6 +1330,7 @@ if __name__ == "__main__":
                                            are applies if a (DICOM) attribute value is in this list. If the attribute value is
                                            empty it is not used to identify the run. Wildcards can also be given, either as a singele
                                            '*', or enclosed by '*'. Examples:
+                                                SequenceName: '*'
                                                 SequenceName: '*epfid*'
                                                 SequenceName: ['epfid2d1rs', 'fm2d2r']
                                                 SequenceName: ['*epfid*', 'fm2d2r']
