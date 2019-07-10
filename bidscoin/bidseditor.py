@@ -1328,7 +1328,11 @@ if __name__ == "__main__":
                                          DICOM Attributes
                                            An (DICOM) attribute label can also be a list, in which case the BIDS labels / mapping
                                            are applies if a (DICOM) attribute value is in this list. If the attribute value is
-                                           empty it is not used to identify the run. Example: SequenceName: [epfid2d1rs, '*fm2d2r']
+                                           empty it is not used to identify the run. Wildcards can also be given, either as a singele
+                                           '*', or enclosed by '*'. Examples:
+                                                SequenceName: '*epfid*'
+                                                SequenceName: ['epfid2d1rs', 'fm2d2r']
+                                                SequenceName: ['*epfid*', 'fm2d2r']
 
                                          Dynamic BIDS labels
                                            The BIDS labels can be static, in which case the label is just a normal string, or dynamic,

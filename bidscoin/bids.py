@@ -706,10 +706,20 @@ def update_bidsmap(bidsmap: dict, source_modality: str, source_index: int, targe
 
 def match_attribute(longvalue, values) -> bool:
     """
+    Compare the value items with / without *wildcard* with the longvalue string. If both longvalue
+    and values are a list then they are directly compared as is
 
-    :param longvalue:
-    :param values:
-    :return:
+    Examples:
+        match_attribute('my_pulse_sequence_name', 'name') -> False
+        match_attribute('my_pulse_sequence_name', '*name*') -> True
+        match_attribute('T1_MPRAGE', '['T1w', 'MPRAGE']') -> False
+        match_attribute('T1_MPRAGE', '['T1w', 'T1_MPRAGE']') -> True
+        match_attribute('T1_MPRAGE', '['*T1w*', '*MPRAGE*']') -> True
+
+    :param longvalue:   The long string that is being searched in
+    :param values:      Either a list with search items or a string that is matched one-to-one
+    :return:            True if a match is found or both longvalue and values are identical or
+                        empty / None. False otherwise
     """
 
     # Consider it a match if both longvalue and values are identical or empty / None
