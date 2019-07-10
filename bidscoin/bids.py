@@ -12,6 +12,7 @@ https://github.com/dangom/dac2bids/blob/master/dac2bids.py
 import os.path
 import glob
 import inspect
+import ast
 import re
 import logging
 import coloredlogs
@@ -711,20 +712,46 @@ def match_attribute(longvalue, values) -> bool:
     :return:
     """
 
-    if longvalue is values:
+    # Consider it a match if both longvalue and values are identical or empty / None
+    if longvalue==values or (not longvalue and not values):
         return True
 
-    if values is None:
+    if not longvalue or not values:
         return False
 
+    # Make sure we start with string types
+    longvalue = str(longvalue)
+    values    = str(values)
+
+    # Interpret attribute lists as lists
+    def cast2list(string: str):
+        if string.startswith('[') and string.endswith(']'):
+            try:
+                string = ast.literal_eval(string)
+                if not isinstance(string, list):
+                    logger.error(f"Attribute value '{string}' is not a list")
+            except:
+                logger.error(f"Could not interpret attribute value '{string}'")
+        return string
+
+    longvalue = cast2list(longvalue)
+    values    = cast2list(values)
+
+    # Account for lists in the template (to combine similar mappings)
     if not isinstance(values, list):
         values = [values]
 
+    # If they are both lists, compare them as they are
     elif isinstance(longvalue, list):
         return str(longvalue)==str(values)
 
+    # Compare the value items (with / without wildcard) with longvalue (string)
     for value in values:
-        if isinstance(value, str) and value.startswith('*') and value.endswith('*') and value[1:-1] in str(longvalue):
+
+        if value in ('*', '**'):
+            return True
+
+        if isinstance(value, str) and value.startswith('*') and value.endswith('*') and value[1:-1] in longvalue:
             return True
 
         elif value==longvalue:
@@ -776,8 +803,6 @@ def exist_run(bidsmap: dict, source: str, modality: str, run_item: dict, matchbi
         # Stop searching if we found a matching run_item (i.e. which is the case if match is still True after all run tests). TODO: maybe count how many instances, could perhaps be useful info
         if match:
             return True
-        else:
-            break
 
     return False
 
@@ -827,7 +852,6 @@ def get_matching_dicomrun(dicomfile: str, bidsmap: dict, modalities: tuple= bids
 
             # Stop searching the bidsmap if we have a match. TODO: check if there are more matches (i.e. conflicts)
             if match:
-                logger.debug(f"==> Found a matching entry in the bidsmap for {modality}")
                 run_['provenance'] = dicomfile
 
                 return run_, modality, index
