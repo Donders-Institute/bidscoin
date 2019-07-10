@@ -55,13 +55,16 @@ def version() -> str:
     return str(version)
 
 
-def setup_logging(log_filename: str) -> logging.Logger:
+def setup_logging(log_filename: str, debug: bool=False) -> logging.Logger:
     """
     Setup the logging
 
     :param log_filename:    Name of the logile
+    :param debug:           Set log level to DEBUG if debug==True
     :return:                Logger object
      """
+
+    debug = True
 
     # Create the log dir if it does not exist
     os.makedirs(os.path.dirname(log_filename), exist_ok=True)
@@ -70,7 +73,10 @@ def setup_logging(log_filename: str) -> logging.Logger:
     fmt       = '%(asctime)s - %(name)s - %(levelname)s %(message)s'
     datefmt   = '%Y-%m-%d %H:%M:%S'
     formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
-    logger.setLevel(logging.INFO)
+    if debug:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
 
     # Set & add the streamhandler and add some color to those boring terminal logs! :-)
     coloredlogs.install(level='DEBUG', fmt=fmt, datefmt=datefmt)
@@ -519,9 +525,9 @@ def get_dicomfield(tagname: str, dicomfile: str):
                 logger.warning(f'Could not parse {tagname} from {dicomfile}')
                 value = None
 
-    # Cast the dicom datatype to standard to int or str (i.e. to something that yaml.dump can handle)
+    # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
     if not value:
-        return
+        return ''
 
     elif isinstance(value, int):
         return int(value)
@@ -749,7 +755,7 @@ def exist_run(bidsmap: dict, source: str, modality: str, run_item: dict, matchbi
 
     for run in bidsmap[source][modality]:
 
-        # Begin with match = False if all attributes are empty
+        # Begin with match = False only if all attributes are empty
         match = any([run_item['attributes'][key] is not None for key in run_item['attributes']])
 
         # Search for a case where all run_item items match with the run_item items
@@ -819,10 +825,11 @@ def get_matching_dicomrun(dicomfile: str, bidsmap: dict, modalities: tuple= bids
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 run_ = strip_suffix(run_)
 
-            # Stop searching the bidsmap if we have a match
+            # Stop searching the bidsmap if we have a match. TODO: check if there are more matches (i.e. conflicts)
             if match:
-                # TODO: check if there are more matches (i.e. conflicts)
+                logger.debug(f"==> Found a matching entry in the bidsmap for {modality}")
                 run_['provenance'] = dicomfile
+
                 return run_, modality, index
 
     # We don't have a match (all tests failed, so modality should be the *last* one, i.e. unknownmodality)
