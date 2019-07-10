@@ -67,7 +67,7 @@ DICOM:
     provenance: ~
   - attributes:
       <<: *anatattributes
-      SequenceName: '*tfl3d1'
+      SeriesDescription: ['*mprage*', '*MPRAGE*', '*t1w*', '*T1w*', '*T1*']
     bids:
       <<: *anatbids
       suffix: T1w
@@ -89,6 +89,7 @@ DICOM:
     provenance: ~
   - attributes:
       <<: *anatattributes
+      SeriesDescription: ['*t2star*', '*T2star*', '*T2STAR*']
       SequenceName: '*fl3d11r'
     bids:
       <<: *anatbids
@@ -96,8 +97,8 @@ DICOM:
     provenance: ~
   - attributes:
       <<: *anatattributes
-      SequenceName: ['*fm2d2r', '*spc']
       ScanningSequence: "['SE', 'IR']"
+      SeriesDescription: ['*FLAIR*', '*flair*']
     bids:
       <<: *anatbids
       suffix: FLAIR
@@ -153,7 +154,7 @@ DICOM:
       Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
-      SequenceName: ['*epfid2d1rs*', '*fm2d2r*']
+      SequenceName: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -170,12 +171,22 @@ DICOM:
       rec: ~
       run: <<1>>
       echo: <EchoNumbers>
-      suffix: bold
+      suffix: events
     provenance: ~
-  - attributes: *funcattributes
+  - attributes:
+      <<: *funcattributes
+      ProtocolName: ['*fmri*', '*fMRI*', '*task*', '*Task*']
+      SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
     bids:
       <<: *funcbids
-      suffix: events
+      suffix: sbref
+    provenance: ~
+  - attributes:
+      <<: *funcattributes
+      ProtocolName: ['*fmri*', '*fMRI*', '*task*', '*Task*']
+    bids:
+      <<: *funcbids
+      suffix: bold
     provenance: ~
   - attributes: *funcattributes
     bids:
@@ -187,18 +198,13 @@ DICOM:
       <<: *funcbids
       suffix: stim
     provenance: ~
-  - attributes: *funcattributes
-    bids:
-      <<: *funcbids
-      suffix: sbref
-    provenance: ~
 
   dwi:        # ----------------------- All diffusion series ---------------------
   - attributes: &dwiattributes
       Modality: ~
-      SeriesDescription: ~
+      SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
       SequenceVariant: ~
-      SequenceName: ['*epse2d1_*', '*ep_*']
+      SequenceName: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -207,17 +213,19 @@ DICOM:
       EchoTime: ~
       RepetitionTime: ~
       ImageType: ~
-      ProtocolName: ~
+      ProtocolName: ['*dwi*', '*DWI*', '*diffusion*', '*dti*', '*DTI*']
       PhaseEncodingDirection: ~
     bids: &dwibids
       acq: <SeriesDescription>
       run: <<1>>
-      suffix: dwi
+      suffix: sbref
     provenance: ~
-  - attributes: *dwiattributes
+  - attributes:
+      <<: *dwiattributes
+      SeriesDescription: ~
     bids:
       <<: *dwibids
-      suffix: sbref
+      suffix: dwi
     provenance: ~
 
   fmap:       # ----------------------- All fieldmap series ----------------------
@@ -225,7 +233,7 @@ DICOM:
       Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
-      SequenceName: "*fm2d2r"
+      SequenceName: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -243,7 +251,9 @@ DICOM:
       suffix: magnitude
       IntendedFor: ~
     provenance: ~
-  - attributes: *fmapattributes
+  - attributes:
+      <<: *fmapattributes
+      SeriesDescription: ~['*fmap*', '*fieldmap*', '*field_map*']
     bids:
       <<: *fmapbids
       suffix: magnitude1

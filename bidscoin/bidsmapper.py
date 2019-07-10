@@ -58,30 +58,29 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
         bidsmap_new = bids.append_run(bidsmap_new, 'DICOM', modality, run)
 
         # Communicate with the user if the run was not present in bidsmap_old or in template
-        if index is None:
-            LOGGER.info('Unknown modality found: ' + dicomfile)
+        LOGGER.info('Unknown modality found: ' + dicomfile)
 
-            # Launch a GUI to ask the user for help
-            if gui:
-                # Open the interactive edit window to get the new mapping
-                index = len(bidsmap_new['DICOM'][modality]) - 1    # Dependent on bids.append_run() above. Alternative would be to call: run, modality, index = bids.get_matching_dicomrun(dicomfile, bidsmap_new)
-                dialog_edit = bidseditor.EditDialog(index, modality, bidsmap_new, template, gui.subprefix, gui.sesprefix)
-                dialog_edit.exec()
+        # Launch a GUI to ask the user for help
+        if gui:
+            # Open the interactive edit window to get the new mapping
+            index = len(bidsmap_new['DICOM'][modality]) - 1    # Dependent on bids.append_run() above. Alternative would be to call: run, modality, index = bids.get_matching_dicomrun(dicomfile, bidsmap_new)
+            dialog_edit = bidseditor.EditDialog(index, modality, bidsmap_new, template, gui.subprefix, gui.sesprefix)
+            dialog_edit.exec()
 
-                # Get the result
-                if dialog_edit.result() == 0:           # The user has canceled the edit
-                    exit()
-                elif dialog_edit.result() == 1:         # The user has finished the edit
-                    bidsmap_new = dialog_edit.bidsmap
-                elif dialog_edit.result() == 2:         # The user has aborted the edit
-                    pass
-                else:
-                    LOGGER.debug(f'Unexpected result {dialog_edit.result()} from the edit dialog')
+            # Get the result
+            if dialog_edit.result() == 0:           # The user has canceled the edit
+                exit()
+            elif dialog_edit.result() == 1:         # The user has finished the edit
+                bidsmap_new = dialog_edit.bidsmap
+            elif dialog_edit.result() == 2:         # The user has aborted the edit
+                pass
+            else:
+                LOGGER.debug(f'Unexpected result {dialog_edit.result()} from the edit dialog')
 
-                # Open a view-only version of the main window
-                if gui.interactive==2:
-                    gui.MainWindow.show()
-                    gui.update_list(bidsmap_new)
+            # Open a view-only version of the main window
+            if gui.interactive==2:
+                gui.MainWindow.show()
+                gui.update_list(bidsmap_new)
 
     return bidsmap_new
 
