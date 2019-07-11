@@ -60,7 +60,7 @@ def setup_logging(log_file: str, debug: bool=False) -> logging.Logger:
     """
     Setup the logging
 
-    :param log_file:    Name of the logile
+    :param log_file:    Name of the logfile
     :param debug:       Set log level to DEBUG if debug==True
     :return:            Logger object
      """
@@ -71,7 +71,7 @@ def setup_logging(log_file: str, debug: bool=False) -> logging.Logger:
     logdir = os.path.dirname(log_file)
     os.makedirs(logdir, exist_ok=True)
 
-    # Derive the name of the error logfile from the log_file
+    # Derive the name of the error logfile from the normal log_file
     root, ext  = os.path.splitext(log_file)
     error_file = root + '_errors' + ext
 
