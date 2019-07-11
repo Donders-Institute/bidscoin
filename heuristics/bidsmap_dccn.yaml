@@ -253,6 +253,7 @@ DICOM:
     provenance: ~
   - attributes:
       <<: *fmapattributes
+      EchoNumbers: 2
       SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*']
       ImageType: ['ORIGINAL', 'PRIMARY', 'P', 'ND']
     bids:
@@ -261,12 +262,16 @@ DICOM:
     provenance: ~
   - attributes:
       <<: *fmapattributes
+      EchoNumbers: 1
       SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*']
     bids:
       <<: *fmapbids
       suffix: magnitude1
     provenance: ~
-  - attributes: *fmapattributes
+  - attributes:
+      <<: *fmapattributes
+      EchoNumbers: 2
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*']
     bids:
       <<: *fmapbids
       suffix: magnitude2
