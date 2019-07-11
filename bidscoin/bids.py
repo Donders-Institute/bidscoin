@@ -869,6 +869,7 @@ def get_matching_dicomrun(dicomfile: str, bidsmap: dict, modalities: tuple= bids
                 return run_, modality, index
 
     # We don't have a match (all tests failed, so modality should be the *last* one, i.e. unknownmodality)
+    logger.debug(f"Could not find a matching run in the bidsmap for {dicomfile} -> {modality}")
     run_['provenance'] = dicomfile
 
     return run_, modality, None

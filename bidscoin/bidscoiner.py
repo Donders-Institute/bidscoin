@@ -90,7 +90,12 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         # Get the cleaned-up bids labels from a dicom-file and bidsmap
         dicomfile = bids.get_dicomfile(runfolder)
         if not dicomfile: continue
-        run, modality, _ = bids.get_matching_dicomrun(dicomfile, bidsmap)
+        run, modality, index = bids.get_matching_dicomrun(dicomfile, bidsmap)
+
+        # Check if we already know this run
+        if not index:
+            LOGGER.warning(f"Unkown run detected: {dicomfile}, skipping {runfolder}")
+            continue
 
         # Check if we should ignore this run
         if modality == bids.ignoremodality:
