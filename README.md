@@ -55,8 +55,8 @@ Having an organized source data folder, the actual data-set conversion to BIDS c
     all raw source data to the BIDS labels. You can check and edit the bidsmap file with
     the bidseditor (but also with any text-editor) before passing it to the bidscoiner
     N.B.: Institute users may want to use a site-customized template bidsmap (see the
-    --template option). The bidsmap_dccn template from the Donders Institute can serve
-    as an example (or may even mostly work for other institutes as is).
+    --template option). The bidsmap_dccn template from the Donders Institute can serve as
+    an example (or may even mostly work for other institutes as it comes with the software).
     
     positional arguments:
       sourcefolder          The source folder containing the raw data in
