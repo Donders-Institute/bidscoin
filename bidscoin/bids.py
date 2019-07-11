@@ -95,7 +95,7 @@ def setup_logging(log_file: str, debug: bool=False) -> logging.Logger:
 
     # Set & add the error / warnings handler
     errorhandler = logging.FileHandler(error_file)
-    errorhandler.setLevel(logging.warning)
+    errorhandler.setLevel(logging.WARNING)
     errorhandler.setFormatter(formatter)
     logger.addHandler(errorhandler)
 
