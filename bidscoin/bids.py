@@ -56,19 +56,24 @@ def version() -> str:
     return str(version)
 
 
-def setup_logging(log_filename: str, debug: bool=False) -> logging.Logger:
+def setup_logging(log_file: str, debug: bool=False) -> logging.Logger:
     """
     Setup the logging
 
-    :param log_filename:    Name of the logile
-    :param debug:           Set log level to DEBUG if debug==True
-    :return:                Logger object
+    :param log_file:    Name of the logile
+    :param debug:       Set log level to DEBUG if debug==True
+    :return:            Logger object
      """
 
     # debug = True
 
     # Create the log dir if it does not exist
-    os.makedirs(os.path.dirname(log_filename), exist_ok=True)
+    logdir = os.path.dirname(log_file)
+    os.makedirs(logdir, exist_ok=True)
+
+    # Derive the name of the error logfile from the log_file
+    root, ext  = os.path.splitext(log_file)
+    error_file = root + '_err' + ext
 
     # Set the format and logging level
     fmt       = '%(asctime)s - %(name)s - %(levelname)s %(message)s'
@@ -82,11 +87,17 @@ def setup_logging(log_filename: str, debug: bool=False) -> logging.Logger:
     # Set & add the streamhandler and add some color to those boring terminal logs! :-)
     coloredlogs.install(level='DEBUG', fmt=fmt, datefmt=datefmt)
 
-    # Set & add the filehandler
-    filehandler = logging.FileHandler(log_filename)
-    filehandler.setLevel(logging.DEBUG)
-    filehandler.setFormatter(formatter)
-    logger.addHandler(filehandler)
+    # Set & add the log filehandler
+    loghandler = logging.FileHandler(log_file)
+    loghandler.setLevel(logging.DEBUG)
+    loghandler.setFormatter(formatter)
+    logger.addHandler(loghandler)
+
+    # Set & add the error / warnings handler
+    errorhandler = logging.FileHandler(error_file)
+    errorhandler.setLevel(logging.warning)
+    errorhandler.setFormatter(formatter)
+    logger.addHandler(errorhandler)
 
     return logger
 
