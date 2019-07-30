@@ -87,11 +87,11 @@ Having an organized source data folder, the actual data-set conversion to BIDS c
       -i {0,1,2}, --interactive {0,1,2}
                             {0}: The sourcefolder is scanned for different kinds
                             of scans without any user interaction. The resulting
-                            bidsmap can be edited using the bidseditory. {1}: The
-                            sourcefolder is scanned and the user is asked for help
-                            if an unknown run is encountered. {2}: Same as {1}
-                            except that a preview of all encountered runs is
-                            shown in the background. Default: 1
+                            bidsmap can be edited afterwards using the bidseditor.
+                            {1}: The sourcefolder is scanned and the user is asked
+                            for help if an unknown run is encountered. {2}: Same
+                            as {1} except that a preview of all encountered runs
+                            is shown in the background. Default: 1
       -v, --version         Show the BIDS and BIDScoin version
     
     examples:
