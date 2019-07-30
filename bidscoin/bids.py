@@ -72,8 +72,7 @@ def setup_logging(log_file: str, debug: bool=False) -> logging.Logger:
     os.makedirs(logdir, exist_ok=True)
 
     # Derive the name of the error logfile from the normal log_file
-    root, ext  = os.path.splitext(log_file)
-    error_file = root + '_errors' + ext
+    error_file = os.path.splitext(log_file)[0] + '.errors'
 
     # Set the format and logging level
     fmt       = '%(asctime)s - %(name)s - %(levelname)s %(message)s'
