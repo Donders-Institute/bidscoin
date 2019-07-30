@@ -7,7 +7,7 @@ bidscoiner.py after all data is collected, or whenever new data has been added t
 source folder (presuming the scan protocol hasn't changed).
 
 Provenance information, warnings and error messages are stored in the
-bidsfolder/code/bidscoiner.log file.
+bidsfolder/code/bidscoin/bidscoiner.log file.
 """
 
 import os
@@ -387,14 +387,14 @@ def coin_plugin(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -
 def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=False, participants: bool=False, bidsmapfile: str='bidsmap.yaml', subprefix: str='sub-', sesprefix: str='ses-') -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder and uses the
-    bidsmap.yaml file in bidsfolder/code to cast the data into the BIDS folder.
+    bidsmap.yaml file in bidsfolder/code/bidscoin to cast the data into the BIDS folder.
 
     :param rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
     :param bidsfolder:      The name of the BIDS root folder
     :param subjects:        List of selected subjects / participants (i.e. sub-# names / folders) to be processed (the sub- prefix can be removed). Otherwise all subjects in the sourcefolder will be selected
     :param force:           If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped
     :param participants:    If True, subjects in particpants.tsv will not be processed (this could be used e.g. to protect these subjects from being reprocessed), also when force=True
-    :param bidsmapfile:     The name of the bidsmap YAML-file. If the bidsmap pathname is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/
+    :param bidsmapfile:     The name of the bidsmap YAML-file. If the bidsmap pathname is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin
     :param subprefix:       The prefix common for all source subject-folders
     :param sesprefix:       The prefix common for all source session-folders
     :return:                Nothing
@@ -559,7 +559,7 @@ if __name__ == "__main__":
     parser.add_argument('-p','--participant_label', help='Space seperated list of selected sub-# names / folders to be processed (the sub- prefix can be removed). Otherwise all subjects in the sourcefolder will be selected', nargs='+')
     parser.add_argument('-f','--force',             help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')
     parser.add_argument('-s','--skip_participants', help='If this flag is given those subjects that are in particpants.tsv will not be processed (also when the --force flag is given). Otherwise the participants.tsv table is ignored', action='store_true')
-    parser.add_argument('-b','--bidsmap',           help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap.yaml', default='bidsmap.yaml')
+    parser.add_argument('-b','--bidsmap',           help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
     parser.add_argument('-n','--subprefix',         help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',         help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     parser.add_argument('-v','--version',           help='Show the BIDS and BIDScoin version', action='version', version=f'BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version()}')

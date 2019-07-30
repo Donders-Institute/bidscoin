@@ -51,8 +51,8 @@ Having an organized source data folder, the actual data-set conversion to BIDS c
                          [-m SESPREFIX] [-i {0,1,2}] [-v]
                          sourcefolder bidsfolder
     
-    Creates a bidsmap.yaml YAML file in the bidsfolde/code that maps the information from
-    all raw source data to the BIDS labels. You can check and edit the bidsmap file with
+    Creates a bidsmap.yaml YAML file in the bidsfolder/code/bidscoin that maps the information
+    from all raw source data to the BIDS labels. You can check and edit the bidsmap file with
     the bidseditor (but also with any text-editor) before passing it to the bidscoiner
     N.B.: Institute users may want to use a site-customized template bidsmap (see the
     --template option). The bidsmap_dccn template from the Donders Institute can serve as
@@ -63,7 +63,7 @@ Having an organized source data folder, the actual data-set conversion to BIDS c
                             sub-#/ses-#/run format (or specify --subprefix and
                             --sesprefix for different prefixes)
       bidsfolder            The destination folder with the (future) bids data and
-                            the bidsfolder/code/bidsmap.yaml output file
+                            the bidsfolder/code/bidscoin/bidsmap.yaml output file
     
     optional arguments:
       -h, --help            show this help message and exit
@@ -71,13 +71,13 @@ Having an organized source data folder, the actual data-set conversion to BIDS c
                             The bidsmap YAML-file with the study heuristics. If
                             the bidsmap filename is relative (i.e. no "/" in the
                             name) then it is assumed to be located in
-                            bidsfolder/code/. Default: bidsmap.yaml
+                            bidsfolder/code/bidscoin. Default: bidsmap.yaml
       -t TEMPLATE, --template TEMPLATE
                             The bidsmap template with the default heuristics (this
                             could be provided by your institute). If the bidsmap
                             filename is relative (i.e. no "/" in the name) then it
-                            is assumed to be located in bidsfolder/code/. Default:
-                            bidsmap_template.yaml
+                            is assumed to be located in bidsfolder/code/bidscoin.
+                            Default: bidsmap_template.yaml
       -n SUBPREFIX, --subprefix SUBPREFIX
                             The prefix common for all the source subject-folders.
                             Default: 'sub-'
@@ -124,13 +124,13 @@ When finished the bidsmapper will automatically launch step 1b, as described in 
                             The bidsmap YAML-file with the study heuristics. If
                             the bidsmap filename is relative (i.e. no "/" in the
                             name) then it is assumed to be located in
-                            bidsfolder/code/. Default: bidsmap.yaml
+                            bidsfolder/code/bidscoin. Default: bidsmap.yaml
       -t TEMPLATE, --template TEMPLATE
                             The bidsmap template with the default heuristics (this
                             could be provided by your institute). If the bidsmap
                             filename is relative (i.e. no "/" in the name) then it
-                            is assumed to be located in bidsfolder/code/. Default:
-                            bidsmap_template.yaml
+                            is assumed to be located in bidsfolder/code/bidscoin.
+                            Default: bidsmap_template.yaml
       -n SUBPREFIX, --subprefix SUBPREFIX
                             The prefix common for all the source subject-folders.
                             Default: 'sub-'
@@ -197,7 +197,7 @@ If all BIDS output names in the main window are fine, the user can click on the 
     source folder (presuming the scan protocol hasn't changed).
     
     Provenance information, warnings and error messages are stored in the
-    bidsfolder/code/bidscoiner.log file.
+    bidsfolder/code/bidscoin/bidscoiner.log file.
     
     positional arguments:
       sourcefolder          The source folder containing the raw data in
@@ -224,7 +224,7 @@ If all BIDS output names in the main window are fine, the user can click on the 
                             The bidsmap YAML-file with the study heuristics. If
                             the bidsmap filename is relative (i.e. no "/" in the
                             name) then it is assumed to be located in
-                            bidsfolder/code/. Default: bidsmap.yaml
+                            bidsfolder/code/bidscoin. Default: bidsmap.yaml
       -n SUBPREFIX, --subprefix SUBPREFIX
                             The prefix common for all the source subject-folders.
                             Default: 'sub-'
@@ -243,7 +243,7 @@ After a successful run of `bidscoiner.py`, the work to convert your data in a fu
 
 If all of the above work is done, you can (and should) run the web-based [bidsvalidator](https://bids-standard.github.io/bids-validator/) to check for inconsistencies or missing files in your bids data-set (NB: the bidsvalidator also exists as a [command-line tool](https://github.com/bids-standard/bids-validator)).
 
-> NB: The provenance of the produced BIDS data-sets is stored in the `bids/code/bidscoiner.log` file. This file is also very useful for debugging / tracking down bidsmapping issues.
+> NB: The provenance of the produced BIDS data-sets is stored in the `bids/code/bidscoin/bidscoiner.log` file. This file is also very useful for debugging / tracking down bidsmapping issues.
 
 ## Plug-in functions
 BIDScoin provides the possibility for researchers to write custom python functions that will be executed at bidsmapper.py and bidscoiner.py runtime. To use this functionality, enter the name of the module (default location is the plugins-folder; otherwise the full path must be provided) in the bidsmap dictionary file to import the plugin functions. The functions in the module should be named "bidsmapper_plugin" for bidsmapper.py and "bidscoiner_plugin" for bidscoiner.py. See [README.py](./bidscoin/plugins/README.py) for more details and placeholder code.
@@ -288,7 +288,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    ```
    bidscoiner.py raw bids
    ```
-   - Check your `bids/code/bidscoiner.log` file for any errors or warnings 
+   - Check your `bids/code/bidscoin/bidscoiner.log` and `bids/code/bidscoin/bidscoiner.error` files for any errors or warnings 
    - Compare the results in your `bids/sub-#` subject folders with the  in `bids_ref` reference result. Are the file and foldernames the same? Also check the json sidecar files of the fieldmaps. Do they have the right "EchoTime" and "IntendedFor" fields?
    - What happens if you re-run the `bidscoiner.py` command? Are the same subjects processed again? Re-run "sub-001".
    - Inspect the `bids/participants.tsv` file and decide if it is ok.

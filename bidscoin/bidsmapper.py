@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
-Creates a bidsmap.yaml YAML file in the bidsfolde/code that maps the information from
-all raw source data to the BIDS labels. You can check and edit the bidsmap file with
+Creates a bidsmap.yaml YAML file in the bidsfolder/code/bidscoin that maps the information
+from all raw source data to the BIDS labels. You can check and edit the bidsmap file with
 the bidseditor (but also with any text-editor) before passing it to the bidscoiner
 N.B.: Institute users may want to use a site-customized template bidsmap (see the
 --template option). The bidsmap_dccn template from the Donders Institute can serve as
@@ -192,7 +192,7 @@ def build_pluginmap(runfolder: str, bidsmap_new: dict, bidsmap_old: dict) -> dic
 def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, subprefix: str='sub-', sesprefix: str='ses-', interactive: bool=True) -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder
-    and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code.
+    and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code/bidscoin.
     Folders in sourcefolder are assumed to contain a single dataset.
 
     :param rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
@@ -288,7 +288,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                 if bidsmap_old['PlugIns']:
                     bidsmap_new = build_pluginmap(run, bidsmap_new, bidsmap_old)
 
-    # Create the bidsmap YAML-file in bidsfolder/code
+    # Create the bidsmap YAML-file in bidsfolder/code/bidscoin
     os.makedirs(os.path.join(bidsfolder,'code','bidscoin'), exist_ok=True)
     bidsmapfile = os.path.join(bidsfolder,'code','bidscoin','bidsmap.yaml')
 
@@ -325,9 +325,9 @@ if __name__ == "__main__":
                                             '  bidsmapper.py /project/foo/raw /project/foo/bids\n'
                                             '  bidsmapper.py /project/foo/raw /project/foo/bids -t bidsmap_dccn\n ')
     parser.add_argument('sourcefolder',       help='The source folder containing the raw data in sub-#/ses-#/run format (or specify --subprefix and --sesprefix for different prefixes)')
-    parser.add_argument('bidsfolder',         help='The destination folder with the (future) bids data and the bidsfolder/code/bidsmap.yaml output file')
-    parser.add_argument('-b','--bidsmap',     help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap.yaml', default='bidsmap.yaml')
-    parser.add_argument('-t','--template',    help='The bidsmap template with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/. Default: bidsmap_template.yaml', default='bidsmap_template.yaml')
+    parser.add_argument('bidsfolder',         help='The destination folder with the (future) bids data and the bidsfolder/code/bidscoin/bidsmap.yaml output file')
+    parser.add_argument('-b','--bidsmap',     help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
+    parser.add_argument('-t','--template',    help='The bidsmap template with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap_template.yaml', default='bidsmap_template.yaml')
     parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     parser.add_argument('-i','--interactive', help='If not zero, then the user will be asked for help if an unknown run is encountered. Default: 1', type=int, choices=[0,1,2], default=1)
