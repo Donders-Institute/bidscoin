@@ -59,7 +59,7 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
         bidsmap_new = bids.append_run(bidsmap_new, 'DICOM', modality, run)
 
         # Communicate with the user if the run was not present in bidsmap_old or in template
-        LOGGER.info('Unknown modality found: ' + dicomfile)
+        LOGGER.info(f"New '{modality}' sample found: {dicomfile}")
 
         # Launch a GUI to ask the user for help
         if gui:
