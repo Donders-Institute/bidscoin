@@ -92,14 +92,14 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         if not dicomfile: continue
         run, modality, index = bids.get_matching_dicomrun(dicomfile, bidsmap)
 
-        # Check if we already know this run
-        if not index:
-            LOGGER.warning(f"Unkown run detected: {dicomfile}, skipping {runfolder}")
-            continue
-
         # Check if we should ignore this run
         if modality == bids.ignoremodality:
             LOGGER.info(f'Leaving out: {runfolder}')
+            continue
+
+        # Check if we already know this run
+        if index is None:
+            LOGGER.warning(f"Skipping unknown '{modality}': {dicomfile}")
             continue
 
         # Create the BIDS session/modality folder
@@ -140,49 +140,50 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
 
         # Rename all files ending with _c%d, _e%d and _ph (and any combination of these): These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
         jsonfiles = []                                                                                          # Collect the associated json-files (for updating them later) -- possibly > 1
-        for suffix in ('_c', '_e', '_ph', '_i'):
-            for filename in sorted(glob.glob(os.path.join(bidsmodality, bidsname + suffix + '[0-9]*'))):
+        for dcm2niisuffix in ('_c', '_e', '_ph', '_i'):
+            for filename in sorted(glob.glob(os.path.join(bidsmodality, bidsname + dcm2niisuffix + '[0-9]*'))):
                 basepath, ext1  = os.path.splitext(filename)
                 basepath, ext2  = os.path.splitext(basepath)                                                    # Account for .nii.gz files
-                basepath, index = basepath.rsplit(suffix,1)
+                basepath, index = basepath.rsplit(dcm2niisuffix,1)
                 index           = index.split('_')[0].zfill(2)                                                  # Zero padd as specified in the BIDS-standard (assuming two digits is sufficient); strip following suffices (fieldmaps produce *_e2_ph files)
 
                 # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first(?) coil/echo image -> add it when we encounter a **_e2/_c2 file
-                if suffix in ('_c','_e') and int(index)==2 and basepath.rsplit('_',1)[1] != 'magnitude1':       # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handled below)
+                if dcm2niisuffix in ('_c','_e') and int(index)==2 and basepath.rsplit('_',1)[1] != 'magnitude1':    # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handled below)
                     filename_ce = basepath + ext2 + ext1                                                        # The file without the _c1/_e1 suffix
-                    if suffix=='_e' and bids.set_bidsvalue(basepath, 'echo'):
+                    if dcm2niisuffix=='_e' and bids.set_bidsvalue(basepath, 'echo'):
                         newbasepath_ce = bids.set_bidsvalue(basepath, 'echo', '1')
                     else:
-                        newbasepath_ce = bids.set_bidsvalue(basepath, 'dummy', suffix.upper() + '1'.zfill(len(index)))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
+                        newbasepath_ce = bids.set_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper() + '1'.zfill(len(index)))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
                     newfilename_ce = newbasepath_ce + ext2 + ext1                                               # The file as it should have been
                     if os.path.isfile(filename_ce):
                         if filename_ce != newfilename_ce:
-                            LOGGER.info(f'Found no dcm2niix {suffix} suffix for image instance 1, renaming\n{filename_ce} ->\n{newfilename_ce}')
+                            LOGGER.info(f'Found no dcm2niix {dcm2niisuffix} suffix for image instance 1, renaming\n{filename_ce} ->\n{newfilename_ce}')
                             os.rename(filename_ce, newfilename_ce)
                         if ext1=='.json':
                             jsonfiles.append(newbasepath_ce + '.json')
 
-                # Patch the basepath with the suffix info
-                if suffix=='_e' and bids.set_bidsvalue(basepath, 'echo') and index:
+                # Patch the basepath with the dcm2niix suffix info (we can't rely on the basepath info here because Siemens can e.g. put multiple echos in one series / run-folder)
+                basesuffix = basepath.rsplit('_',1)[1]                                                          # Example basepath: *_magnitude1
+                if dcm2niisuffix=='_e' and bids.set_bidsvalue(basepath, 'echo') and index:
                     basepath = bids.set_bidsvalue(basepath, 'echo', str(int(index)))                            # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
 
-                elif suffix=='_e' and basepath.rsplit('_',1)[1] in ('magnitude1','magnitude2') and index:       # i.e. modality == 'fmap'
+                elif dcm2niisuffix=='_e' and basesuffix in ('magnitude1','magnitude2') and index:               # i.e. modality == 'fmap'
                     basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_magnitude1_e[index] -> *_magnitude[index]
-                    # Read the echo times that need to be added to the json-file (see below)
+                    # Collect the echo times that need to be added to the json-file (see below)
                     if os.path.splitext(filename)[1] == '.json':
                         with open(filename, 'r') as json_fid:
                             data = json.load(json_fid)
                         TE[int(index)-1] = data['EchoTime']
-                        LOGGER.info(f"Reading EchoTime{index} = {data['EchoTime']} from: {filename}")
-                elif suffix=='_e' and basepath.rsplit('_',1)[1]=='phasediff' and index:                         # i.e. modality == 'fmap'
+                        LOGGER.info(f"Collected EchoTime{index} = {data['EchoTime']} from: {filename}")
+                elif dcm2niisuffix=='_e' and basesuffix=='phasediff' and index:                                 # i.e. modality == 'fmap'
                     pass
 
-                elif suffix=='_ph' and basepath.rsplit('_',1)[1] in ['phase1','phase2'] and index:              # i.e. modality == 'fmap' (TODO: untested)
+                elif dcm2niisuffix=='_ph' and basepath.rsplit('_',1)[1] in ['phase1','phase2'] and index:       # i.e. modality == 'fmap' (TODO: untested)
                     basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_phase1_e[index] -> *_phase[index]
                     LOGGER.warning('Untested dcm2niix "_ph"-filetype: ' + basepath)
 
                 else:
-                    basepath = bids.set_bidsvalue(basepath, 'dummy', suffix.upper() + index)                    # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
+                    basepath = bids.set_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper() + index)             # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
 
                 # Save the file with a new name
                 if runindex.startswith('<<') and runindex.endswith('>>'):
@@ -190,7 +191,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 else:
                     newbidsname = os.path.basename(basepath)
                 newfilename = os.path.join(bidsmodality, newbidsname + ext2 + ext1)
-                LOGGER.info(f'Found dcm2niix {suffix} suffix, renaming\n{filename} ->\n{newfilename}')
+                LOGGER.info(f'Found dcm2niix {dcm2niisuffix} suffix, renaming\n{filename} ->\n{newfilename}')
                 os.rename(filename, newfilename)
                 if ext1 == '.json':
                     jsonfiles.append(os.path.join(bidsmodality, newbidsname + '.json'))
@@ -202,7 +203,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
 
             # Check if dcm2niix behaved as expected
             if not os.path.isfile(jsonfile):
-                LOGGER.warning(f'Unexpected file conbids.version result: {jsonfile} not found')
+                LOGGER.warning(f'Unexpected file conversion result: {jsonfile} not found')
                 continue
 
             # Add a dummy b0 bval- and bvec-file for any file without a bval/bvec file (e.g. sbref, b0 scans)
@@ -231,15 +232,17 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
             # Add the EchoTime(s) used to create the difference image to the fmap json-file. NB: This assumes the magnitude runs have already been parsed (i.e. their nifti's had an _e suffix) -- This is normally the case for Siemens (phase-runs being saved after the magnitude runs
             elif modality == 'fmap':
                 if run['bids']['suffix'] == 'phasediff':
-                    LOGGER.info('Adding EchoTime1 and EchoTime2 to: ' + jsonfile)
+                    LOGGER.info(f'Adding EchoTime1: {TE[0]} and EchoTime2: {TE[1]} to {jsonfile}')
+                    if TE[0] is None or TE[1] is None:
+                        LOGGER.warning('Missing Echo-Time data for: ' + jsonfile)
+                    elif TE[0]>TE[1]:
+                        LOGGER.warning('EchoTime1 > EchoTime2 for: ' + jsonfile)
                     with open(jsonfile, 'r') as json_fid:
                         data = json.load(json_fid)
                     data['EchoTime1'] = TE[0]
                     data['EchoTime2'] = TE[1]
                     with open(jsonfile, 'w') as json_fid:
                         json.dump(data, json_fid, indent=4)
-                    if TE[0]>TE[1]:
-                        LOGGER.warning('EchoTime1 > EchoTime2 in: ' + jsonfile)
 
             # Parse the acquisition time from the json file
             with open(jsonfile, 'r') as json_fid:
