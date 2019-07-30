@@ -43,9 +43,9 @@ BIDScoin will take your (raw) source data as well as a YAML file with the key-va
 > If these utilities do not satisfy your needs, then have a look at this [reorganize_dicom_files](https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md) tool.
 
 ### Coining your source data to BIDS
-Having an organized source data folder, the actual data-set conversion to BIDS can be performed fully automatically by simply running 1) the `bidsmapper.py`, 2) the `bidseditor.py` and 3) the `bidscoiner.py` command-line tools after another:
+Having an organized source data folder, the actual data-set conversion to BIDS can be performed fully automatically by simply running 1a) the `bidsmapper.py`, 1b) the `bidseditor.py` and 2) the `bidscoiner.py` command-line tools after another:
 
-#### Step 1: Running the bidsmapper
+#### Step 1a: Running the bidsmapper
 
     usage: bidsmapper.py [-h] [-b BIDSMAP] [-t TEMPLATE] [-n SUBPREFIX]
                          [-m SESPREFIX] [-i {0,1,2}] [-v]
@@ -85,8 +85,13 @@ Having an organized source data folder, the actual data-set conversion to BIDS c
                             The prefix common for all the source session-folders.
                             Default: 'ses-'
       -i {0,1,2}, --interactive {0,1,2}
-                            If not zero, then the user will be asked for help if
-                            an unknown run is encountered. Default: 1
+                            {0}: The sourcefolder is scanned for different kinds
+                            of scans without any user interaction. The resulting
+                            bidsmap can be edited using the bidseditory. {1}: The
+                            sourcefolder is scanned and the user is asked for help
+                            if an unknown run is encountered. {2}: Same as {1}
+                            except that a preview of all encountered runs is
+                            shown in the background. Default: 1
       -v, --version         Show the BIDS and BIDScoin version
     
     examples:

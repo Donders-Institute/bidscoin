@@ -330,7 +330,7 @@ if __name__ == "__main__":
     parser.add_argument('-t','--template',    help='The bidsmap template with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap_template.yaml', default='bidsmap_template.yaml')
     parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
-    parser.add_argument('-i','--interactive', help='If not zero, then the user will be asked for help if an unknown run is encountered. Default: 1', type=int, choices=[0,1,2], default=1)
+    parser.add_argument('-i','--interactive', help='{0}: The sourcefolder is scanned for different kinds of scans without any user interaction. The resulting bidsmap can be edited using the bidseditory. {1}: The sourcefolder is scanned and the user is asked for help if an unknown run is encountered. {2}: Same as {1} except that a preview of all encountered runs is shown in the background. Default: 1', type=int, choices=[0,1,2], default=1)
     parser.add_argument('-v','--version',     help='Show the BIDS and BIDScoin version', action='version', version=f'BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version()}')
     args = parser.parse_args()
 
