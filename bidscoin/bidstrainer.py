@@ -175,7 +175,7 @@ def bidstrainer(bidsfolder: str, samplefolder: str, bidsmapfile: str, pattern: s
     # Input checking
     bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
     if not samplefolder:
-        samplefolder = os.path.join(bidsfolder,'code','samples')
+        samplefolder = os.path.join(bidsfolder,'code','bidscoin','samples')
         if not os.path.isdir(samplefolder):
             print('Creating an empty samples directory tree: ' + samplefolder)
             shutil.copytree(os.path.join(os.path.dirname(bids.__file__),'..','heuristics','samples'), samplefolder)
@@ -184,11 +184,11 @@ def bidstrainer(bidsfolder: str, samplefolder: str, bidsmapfile: str, pattern: s
     samplefolder = os.path.abspath(os.path.expanduser(samplefolder))
 
     # Start logging
-    bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidstrainer.log'))
+    bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidscoin', 'bidstrainer.log'))
     LOGGER.info('------------ START BIDStrainer ------------')
 
     # Get the heuristics for creating the bidsmap
-    heuristics, _ = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder, 'code'))
+    heuristics, _ = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder, 'code', 'bidscoin'))
 
     # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     bidsmap = copy.deepcopy(heuristics)
@@ -231,8 +231,8 @@ def bidstrainer(bidsfolder: str, samplefolder: str, bidsmapfile: str, pattern: s
             bidsmap = built_pluginmap(sample, bidsmap)
 
     # Create the bidsmap_sample YAML-file in bidsfolder/code
-    os.makedirs(os.path.join(bidsfolder,'code'), exist_ok=True)
-    bidsmapfile = os.path.join(bidsfolder,'code','bidsmap_sample.yaml')
+    os.makedirs(os.path.join(bidsfolder,'code','bidscoin'), exist_ok=True)
+    bidsmapfile = os.path.join(bidsfolder,'code','bidscoin','bidsmap_sample.yaml')
 
     # Save the bidsmap to the bidsmap YAML-file
     bids.save_bidsmap(bidsmapfile, bidsmap)

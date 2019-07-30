@@ -405,14 +405,14 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
 
     # Start logging
-    bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidscoiner.log'))
+    bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidscoin', 'bidscoiner.log'))
     LOGGER.info('')
     LOGGER.info(f'------------ START BIDScoiner {bids.version()}: BIDS {bids.bidsversion()} ------------')
     LOGGER.info(f'>>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} subjects={subjects} force={force}'
                 f' participants={participants} bidsmap={bidsmapfile} subprefix={subprefix} sesprefix={sesprefix}')
 
-    # Create a code subfolder
-    os.makedirs(os.path.join(bidsfolder,'code'), exist_ok=True)
+    # Create a code/bidscoin subfolder
+    os.makedirs(os.path.join(bidsfolder,'code','bidscoin'), exist_ok=True)
 
     # Create a dataset description file if it does not exist
     dataset_file = os.path.join(bidsfolder, 'dataset_description.json')
@@ -438,7 +438,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
             fid.write('A free form text ( README ) describing the dataset in more details that SHOULD be provided')
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
-    bidsmap, _ = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder, 'code'))
+    bidsmap, _ = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder, 'code', 'bidscoin'))
 
     # Save options to the .bidsignore file
     bidsignore_items = [item.strip() for item in bidsmap['Options']['bidscoin']['bidsignore'].split(';')]

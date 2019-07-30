@@ -730,7 +730,7 @@ class Ui_MainWindow(object):
         filename, _ = QFileDialog.getSaveFileName(
             self.tab3,
             "Save File",
-            os.path.join(self.bidsfolder, 'code', 'bidsmap.yaml'),
+            os.path.join(self.bidsfolder, 'code', 'bidscoin', 'bidsmap.yaml'),
             "YAML Files (*.yaml *.yml);;All Files (*)",
             options=options)
         if filename:
@@ -1272,13 +1272,13 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     """
 
     # Start logging
-    bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidseditor.log'))
+    bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidscoin', 'bidseditor.log'))
     LOGGER.info('')
     LOGGER.info('------------ START BIDSeditor ------------')
 
     # Obtain the initial bidsmap info
-    template_bidsmap, _        = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code'))
-    input_bidsmap, bidsmapfile = bids.load_bidsmap(bidsmapfile,  os.path.join(bidsfolder,'code'))
+    template_bidsmap, _        = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code','bidscoin'))
+    input_bidsmap, bidsmapfile = bids.load_bidsmap(bidsmapfile,  os.path.join(bidsfolder,'code','bidscoin'))
     output_bidsmap             = copy.deepcopy(input_bidsmap)
 
     # Parse the sourcefolder from the bidsmap provenance info

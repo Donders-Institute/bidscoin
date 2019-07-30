@@ -210,13 +210,13 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
 
     # Start logging
-    bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidsmapper.log'))
+    bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidscoin', 'bidsmapper.log'))
     LOGGER.info('')
     LOGGER.info('------------ START BIDSmapper ------------')
 
     # Get the heuristics for creating the bidsmap
-    bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder,'code'))
-    template, templatefile   = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code'))
+    bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder,'code','bidscoin'))
+    template, templatefile   = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code','bidscoin'))
     if not bidsmap_old:
         bidsmap_old = template
         bidsmapfile = templatefile
@@ -289,8 +289,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                     bidsmap_new = build_pluginmap(run, bidsmap_new, bidsmap_old)
 
     # Create the bidsmap YAML-file in bidsfolder/code
-    os.makedirs(os.path.join(bidsfolder,'code'), exist_ok=True)
-    bidsmapfile = os.path.join(bidsfolder,'code','bidsmap.yaml')
+    os.makedirs(os.path.join(bidsfolder,'code','bidscoin'), exist_ok=True)
+    bidsmapfile = os.path.join(bidsfolder,'code','bidscoin','bidsmap.yaml')
 
     # Save the bidsmap to the bidsmap YAML-file
     bids.save_bidsmap(bidsmapfile, bidsmap_new)
