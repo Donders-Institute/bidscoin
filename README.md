@@ -293,7 +293,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    ```
    bidscoiner.py raw bids
    ```
-   - Check your `bids/code/bidscoin/bidscoiner.log` and `bids/code/bidscoin/bidscoiner.error` files for any errors or warnings 
+   - Check your `bids/code/bidscoin/bidscoiner.log` and `bids/code/bidscoin/bidscoiner.errors` files for any errors or warnings
    - Compare the results in your `bids/sub-#` subject folders with the  in `bids_ref` reference result. Are the file and foldernames the same? Also check the json sidecar files of the fieldmaps. Do they have the right "EchoTime" and "IntendedFor" fields?
    - What happens if you re-run the `bidscoiner.py` command? Are the same subjects processed again? Re-run "sub-001".
    - Inspect the `bids/participants.tsv` file and decide if it is ok.
