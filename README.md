@@ -89,9 +89,11 @@ Having an organized source data folder, the actual data-set conversion to BIDS c
                             of scans without any user interaction. The resulting
                             bidsmap can be edited afterwards using the bidseditor.
                             {1}: The sourcefolder is scanned and the user is asked
-                            for help if an unknown run is encountered. {2}: Same
-                            as {1} except that a preview of all encountered runs
-                            is shown in the background. Default: 1
+                            for help if an unknown run is encountered. When
+                            finished the bidseditor is automatically launched.
+                            {2}: Same as {1} except that a (bidseditor) preview of all
+                            encountered runs is shown in the background. Default:
+                            1
       -v, --version         Show the BIDS and BIDScoin version
     
     examples:
