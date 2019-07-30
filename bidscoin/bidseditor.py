@@ -846,7 +846,7 @@ class EditDialog(QDialog):
         hbox.addWidget(cancel_button)
         hbox.addWidget(ok_button)
 
-        groupbox1 = QGroupBox(SOURCE)
+        groupbox1 = QGroupBox(SOURCE + ' input')
         layout1 = QVBoxLayout()
         layout1.addWidget(self.label_provenance)
         layout1.addWidget(self.view_provenance)
@@ -855,7 +855,7 @@ class EditDialog(QDialog):
         layout1.addStretch(1)
         groupbox1.setLayout(layout1)
 
-        groupbox2 = QGroupBox("BIDS")
+        groupbox2 = QGroupBox("BIDS output")
         layout2 = QVBoxLayout()
         layout2.addWidget(self.label_dropdown)
         layout2.addWidget(self.view_dropdown)
