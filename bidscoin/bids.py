@@ -867,7 +867,7 @@ def get_matching_dicomrun(dicomfile: str, bidsmap: dict, modalities: tuple= bids
             for bidskey, bidsvalue in run['bids'].items():
 
                 # Replace the dynamic bids values
-                run_['bids'][bidskey] = cleanup_value(replace_bidsvalue(bidsvalue, dicomfile))
+                run_['bids'][bidskey] = replace_bidsvalue(bidsvalue, dicomfile)
 
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 run_ = strip_suffix(run_)
@@ -1025,7 +1025,7 @@ def replace_bidsvalue(bidsvalue: str, sourcefile: str) -> str:
 
     :param bidsvalue:   The value from the BIDS key-value pair
     :param sourcefile:  The source (DICOM) file from which the attribute is read
-    :return:            Cleaned-up bidsvalue
+    :return:            Updated bidsvalue (if possible, otherwise the original bidsvalue is returned)
     """
 
     # Intelligent filling of the value is done runtime by bidscoiner
@@ -1038,9 +1038,9 @@ def replace_bidsvalue(bidsvalue: str, sourcefile: str) -> str:
         if not dicomvalue:
             return bidsvalue
         else:
-            return dicomvalue
+            bidsvalue = cleanup_value(dicomvalue)
 
-    return cleanup_value(bidsvalue)
+    return bidsvalue
 
 
 def set_bidsvalue(bidsname: str, bidskey: str, newvalue: str= '') -> str:
