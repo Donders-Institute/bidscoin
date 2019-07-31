@@ -972,7 +972,8 @@ class EditDialog(QDialog):
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
             if key != '':
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
-                value = bids.replace_bidsvalue(value, self.target_run['provenance'])
+                if key in bids.bidslabels:
+                    value = bids.cleanup_value(bids.replace_bidsvalue(value, self.target_run['provenance']))
 
                 LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.source_run['provenance']}")
 
