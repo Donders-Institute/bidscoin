@@ -267,7 +267,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 intendedfor = fieldmap['bids']['IntendedFor']
                 if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
                     intendedfor = intendedfor[2:-2].split('><')
-                else:
+                elif isinstance(intendedfor, str):
                     intendedfor = [intendedfor]
                 niifiles = []
                 for selector in intendedfor:
