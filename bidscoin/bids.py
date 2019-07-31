@@ -592,7 +592,7 @@ def strip_suffix(run: dict) -> dict:
     return run
 
 
-def cleanup_value(label: str) -> str:
+def cleanup_value(label):
     """
     Converts a given label to a cleaned-up label that can be used as a BIDS label. Remove leading and trailing spaces;
     convert other spaces, special BIDS characters and anything that is not an alphanumeric to a ''. This will for
@@ -601,6 +601,9 @@ def cleanup_value(label: str) -> str:
     :param label:   The given label that potentially contains undesired characters
     :return:        The cleaned-up / BIDS-valid label
     """
+
+    if label is None:
+        return label
 
     special_characters = (' ', '_', '-','.')
 
@@ -914,7 +917,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
     # Validate and do some checks to allow for dragging the run entries between the different modality-sections
     for bidslabel in bidslabels:
         if bidslabel not in run['bids']:
-            run['bids'][bidslabel] = ''
+            run['bids'][bidslabel] = None
         else:
             run['bids'][bidslabel] = cleanup_value(run['bids'][bidslabel])
 
