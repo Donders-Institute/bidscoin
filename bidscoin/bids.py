@@ -867,7 +867,7 @@ def get_matching_dicomrun(dicomfile: str, bidsmap: dict, modalities: tuple= bids
             for bidskey, bidsvalue in run['bids'].items():
 
                 # Replace the dynamic bids values
-                run_['bids'][bidskey] = replace_bidsvalue(bidsvalue, dicomfile)
+                run_['bids'][bidskey] = cleanup_value(replace_bidsvalue(bidsvalue, dicomfile))
 
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 run_ = strip_suffix(run_)
@@ -911,10 +911,12 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
     if sesid:
         sesid = 'ses-' + sesid.lstrip('ses-')
 
-    # Do some checks to allow for dragging the run entries between the different modality-sections
+    # Validate and do some checks to allow for dragging the run entries between the different modality-sections
     for bidslabel in bidslabels:
         if bidslabel not in run['bids']:
             run['bids'][bidslabel] = ''
+        else:
+            run['bids'][bidslabel] = cleanup_value(run['bids'][bidslabel])
 
     # Compose the BIDS filename (-> switch statement)
     if modality == 'anat':
