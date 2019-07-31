@@ -109,7 +109,6 @@ def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, source_run
     bids_attributes = OrderedDict()
     for key, template_value in template_bids_attributes.items():
         if not template_value:
-            template_value = ''
             # If not free choice, select the first possible option from the list of allowed suffixes
             if key == 'suffix' and modality in bids.bidsmodalities:
                 template_value = allowed_suffixes[modality][0]
