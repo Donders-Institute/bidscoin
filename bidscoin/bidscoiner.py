@@ -271,8 +271,8 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                     intendedfor = [intendedfor]
                 niifiles = []
                 for selector in intendedfor:
-                    niifiles.extend([niifile.split(os.sep+subid+os.sep, 1)[1].replace('\\','/')
-                                     for niifile in sorted(glob.glob(os.path.join(bidsses, f'**{os.sep}*{selector}*.nii*')))])     # Search in all runs using a relative path
+                    niifiles.extend([niifile.split(os.sep+subid+os.sep, 1)[1].replace('\\','/')                                                # The path needs to use forward slashes instead of backward slashes
+                                     for niifile in sorted(glob.glob(os.path.join(bidsses, f'**{os.sep}*{selector}*.nii*'))) if selector])     # Search in all runs using a relative path
 
                 # Save the IntendedFor data in the json-files (account for multiple runs and dcm2niix suffixes inserted into the acquisition label)
                 for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_', '_run-[0-9]*_') + '.json')) + \
