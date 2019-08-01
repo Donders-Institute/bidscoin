@@ -399,6 +399,18 @@ class Ui_MainWindow(object):
             if key != '':
                 self.output_bidsmap["Options"][tool][key] = value
 
+    def handle_click_plugin_test(self, plugin: str):
+        """Test the bidsmap plugin and show the result in a pop-up window
+
+        :param plugin:    Name of the plugin that is being tested in bidsmap['PlugIns']
+         """
+        if bids.test_plugins(plugin):
+            result = 'Passed'
+        else:
+            result = 'Failed'
+        QMessageBox.information(self.MainWindow, 'Test', f"Test {plugin}: {result}\n"
+                                                         f"See terminal output for more info")
+
     def handle_click_test_tool(self, tool: str):
         """Test the bidsmap tool and show the result in a pop-up window
 
