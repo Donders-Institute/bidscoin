@@ -557,6 +557,65 @@ class Ui_MainWindow(object):
             labels.append(label)
             self.tables_options.append(table)
 
+        plugins = self.output_bidsmap['PlugIns']
+
+        pluginlabel = QLabel('Plugins')
+        pluginlabel.setToolTip('List of plugins')
+
+        plugintable = QTableWidget()
+
+        num_rows = len(plugins) + 1
+        num_cols = 3                    # Always three columns (i.e. path, plugin, test-button)
+        plugintable.setRowCount(num_rows)
+        plugintable.setColumnCount(num_cols)
+        plugintable.setMouseTracking(True)
+        row_height = 24
+
+        for i, plugin in enumerate(plugins):
+            plugintable.setRowHeight(i, row_height)
+            for j in range(3):
+                plugintable.setItem(i, j, QTableWidgetItem(item))
+                if j==0:
+                    item = self.set_cell('path', is_editable=False)
+                elif j==1:
+                    item = self.set_cell(plugin, is_editable=True)
+                    plugintable.item(i, j).setToolTip('The name of the plugin in the heuristics folder or the full pathname of the plugin in a custom location')
+                elif j==2:              # Add the test-button cell
+                    plugintable.item(i, j).setFlags(QtCore.Qt.NoItemFlags)
+                    test_button = QPushButton('Test')
+                    test_button.clicked.connect(partial(self.handle_click_plugin_test, plugin))
+                    test_button.setToolTip(f'Click to test {plugin}')
+                    plugintable.setCellWidget(i, j, test_button)
+
+        # Add the Add-button cell
+        i = num_rows - 1
+        j = 2
+        plugintable.setItem(i, j, QTableWidgetItem())
+        plugintable.item(i, j).setFlags(QtCore.Qt.NoItemFlags)
+        add_button = QPushButton('Add')
+        # add_button.clicked.connect(self.handle_click_plugin_add)
+        add_button.setToolTip('Click to add a plugin')
+        plugintable.setCellWidget(i, j, add_button)
+
+        horizontal_header = plugintable.horizontalHeader()
+        horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        horizontal_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Fixed)
+        horizontal_header.setVisible(False)
+
+        vertical_header = plugintable.verticalHeader()
+        vertical_header.setVisible(False)
+
+        plugintable.setAlternatingRowColors(False)
+        plugintable.setShowGrid(False)
+
+        extra_space = 3
+        table_height = num_rows * (row_height + extra_space) + 2 * plugintable.frameWidth()
+        plugintable.setMinimumHeight(table_height)
+        plugintable.setMaximumHeight(table_height)
+
+        # plugintable.cellChanged.connect(partial(self.cell_was_changed, plugin, n))
+
         hbox = QHBoxLayout()
         hbox.addStretch(1)
         hbox.addWidget(help_button)
@@ -567,6 +626,8 @@ class Ui_MainWindow(object):
         for label, table in zip(labels, self.tables_options):
             vbox.addWidget(label)
             vbox.addWidget(table)
+        vbox.addWidget(pluginlabel)
+        vbox.addWidget(plugintable)
         vbox.addStretch(1)
         vbox.addLayout(hbox)
 
