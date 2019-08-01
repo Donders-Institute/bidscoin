@@ -423,20 +423,6 @@ class Ui_MainWindow(object):
         QMessageBox.information(self.MainWindow, 'Test', f"Test {tool}: {result}\n"
                                                          f"See terminal output for more info")
 
-    def handle_click_test_plugin(self, index: int):
-        """Test the bidsmap plug-in and show the result in a pop-up window
-
-        :param index:   Name of the plug-in that is being tested in bidsmap['Plugins']
-         """
-        plugin = self.output_bidsmap['PlugIns'][index]
-
-        if bids.test_plugins(plugin):
-            result = 'Passed'
-        else:
-            result = 'Failed'
-        QMessageBox.information(self.MainWindow, 'Test', f"Test {plugin}: {result}\n"
-                                                         f"See terminal output for more info")
-
     def set_tab_options(self):
         """Set the options tab.  """
         self.tab2 = QtWidgets.QWidget()
