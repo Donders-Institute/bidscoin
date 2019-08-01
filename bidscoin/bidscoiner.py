@@ -288,7 +288,6 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 if jsonfile.endswith('magnitude1.json'):
                     jsonfile2 = jsonfile.rsplit('1.json',1)[0] + '2.json'
                     if os.path.isfile(jsonfile2):
-
                         with open(jsonfile2, 'r') as json_fid:
                             data = json.load(json_fid)
                         if 'IntendedFor' not in data:
@@ -302,9 +301,9 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     personals['participant_id'] = subid
     if sesid:
         personals['session_id'] = sesid
-    personals['age'] = bids.get_dicomfield('PatientAge',    dicomfile)
-    personals['sex'] = bids.get_dicomfield('PatientSex',    dicomfile)
-    personals['size'] = bids.get_dicomfield('PatientSize',   dicomfile)
+    personals['age']    = bids.get_dicomfield('PatientAge',    dicomfile)
+    personals['sex']    = bids.get_dicomfield('PatientSex',    dicomfile)
+    personals['size']   = bids.get_dicomfield('PatientSize',   dicomfile)
     personals['weight'] = bids.get_dicomfield('PatientWeight', dicomfile)
 
 
