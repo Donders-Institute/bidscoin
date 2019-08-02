@@ -399,7 +399,7 @@ class Ui_MainWindow(object):
             if key != '':
                 self.output_bidsmap["Options"][tool][key] = value
 
-    def handle_click_plugin_test(self, plugin: str):
+    def handle_click_test_plugin(self, plugin: str):
         """Test the bidsmap plugin and show the result in a pop-up window
 
         :param plugin:    Name of the plugin that is being tested in bidsmap['PlugIns']
@@ -569,7 +569,7 @@ class Ui_MainWindow(object):
                 elif j==2:              # Add the test-button cell
                     plugintable.item(i, j).setFlags(QtCore.Qt.NoItemFlags)
                     test_button = QPushButton('Test')
-                    test_button.clicked.connect(partial(self.handle_click_plugin_test, plugin))
+                    test_button.clicked.connect(partial(self.handle_click_test_plugin, plugin))
                     test_button.setToolTip(f'Click to test {plugin}')
                     plugintable.setCellWidget(i, j, test_button)
 
