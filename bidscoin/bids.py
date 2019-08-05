@@ -458,6 +458,12 @@ def save_bidsmap(filename: str, bidsmap: dict):
     with open(filename, 'w') as stream:
         yaml.dump(bidsmap, stream)
 
+    # See if we can reload it, i.e. whether it is valid yaml...
+    try:
+        load_bidsmap(filename)
+    except:
+        logger.error(f'The output bidsmap does not seem to be valid YAML, please check {filename}')
+
 
 def parse_x_protocol(pattern: str, dicomfile: str) -> str:
     """
