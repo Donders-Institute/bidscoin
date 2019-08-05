@@ -560,14 +560,14 @@ class Ui_MainWindow(object):
         for i, plugin in enumerate(plugins):
             plugintable.setRowHeight(i, row_height)
             for j in range(3):
-                plugintable.setItem(i, j, QTableWidgetItem(item))
                 if j==0:
                     item = self.set_cell('path', is_editable=False)
+                    plugintable.setItem(i, j, QTableWidgetItem(item))
                 elif j==1:
                     item = self.set_cell(plugin, is_editable=True)
+                    plugintable.setItem(i, j, QTableWidgetItem(item))
                     plugintable.item(i, j).setToolTip('The name of the plugin in the heuristics folder or the full pathname of the plugin in a custom location')
                 elif j==2:              # Add the test-button cell
-                    plugintable.item(i, j).setFlags(QtCore.Qt.NoItemFlags)
                     test_button = QPushButton('Test')
                     test_button.clicked.connect(partial(self.handle_click_test_plugin, plugin))
                     test_button.setToolTip(f'Click to test {plugin}')
