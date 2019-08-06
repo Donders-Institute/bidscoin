@@ -469,9 +469,6 @@ class Ui_MainWindow(object):
         plugintable.disconnect()
         plugintable.setRowCount(num_rows)
         plugintable.setColumnCount(num_cols)
-        plugintable.setMouseTracking(True)
-        plugintable.setAlternatingRowColors(False)
-        plugintable.setShowGrid(False)
 
         for i, plugin in enumerate(plugins + ['']):
             plugintable.setRowHeight(i, row_height)
@@ -632,8 +629,11 @@ class Ui_MainWindow(object):
         plugintable = QTableWidget()
         pluginlabel = QLabel('Plugins')
         pluginlabel.setToolTip('List of plugins')
-        self.plugintable = plugintable
+        plugintable.setMouseTracking(True)
+        plugintable.setAlternatingRowColors(False)
+        plugintable.setShowGrid(False)
 
+        self.plugintable = plugintable
         self.update_plugins(row_height)
 
         hbox = QHBoxLayout()
