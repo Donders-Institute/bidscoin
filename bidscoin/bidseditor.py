@@ -479,6 +479,7 @@ class Ui_MainWindow(object):
 
         labels = []
         self.tables_options = []
+
         for n, tool_item in enumerate(tool_list):
             tool = tool_item['tool']
             tooltip_text = tool_item['tooltip_text']
@@ -1177,25 +1178,29 @@ class EditDialog(QDialog):
 
         self.update_bidsname()
 
-    def selection_dropdown_change(self, i):
-        """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
-        self.target_modality = self.view_dropdown.currentText()
+    def update_bidsname(self):
+        subid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['participant'], self.target_run['provenance'])
+        sesid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['session'], self.target_run['provenance'])
+        runindex = self.target_run['bids'].get('run', '')
+        bids_name = os.path.join(self.target_modality, bids.get_bidsname(subid, sesid, self.target_modality, self.target_run, runindex, self.subprefix, self.sesprefix)) + '.*'
+        html_bids_name = get_html_bidsname(bids_name)
 
-        LOGGER.info(f"User has changed the BIDS modality from '{self.source_modality}' to '{self.target_modality}' for {self.source_run['provenance']}")
-
-        if self.target_modality in (bids.unknownmodality, bids.ignoremodality):
-            # Free field
-            self.target_suffix = ''
+        self.view_bids_name.clear()
+        if self.target_modality == bids.ignoremodality:
+            self.view_bids_name.textCursor().insertHtml('<font color="#808080"><s>%s</s></font>' % html_bids_name)
         else:
-            # Fixed list of options
-            if not self.allowed_suffixes[self.target_modality]:
-                raise Exception(f'allowed suffixes empty for modality {self.target_modality}')
-            self.target_suffix = self.allowed_suffixes[self.target_modality][0]
+            self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % html_bids_name)
 
-        # Given the input BIDS attributes, derive the target BIDS attributes (i.e map them to the target attributes)
-        bids_values, data = self.get_bids_values_data()
+    def refresh(self):
+        """Refresh the edit dialog window. """
+
+        # Refresh the DICOM attributes
+        self.set_dicom_attributes_section()
 
         # Update the BIDS values
+        bids_values, data = self.get_bids_values_data()
+        bids_values['suffix'] = self.target_suffix
+
         table = self.view_bids
 
         for i, row in enumerate(data):
@@ -1233,31 +1238,30 @@ class EditDialog(QDialog):
         self.target_run['bids'] = bids_values
         self.update_bidsname()
 
+    def selection_dropdown_change(self, i):
+        """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
+        self.target_modality = self.view_dropdown.currentText()
+
+        LOGGER.info(f"User has changed the BIDS modality from '{self.source_modality}' to '{self.target_modality}' for {self.source_run['provenance']}")
+
+        if self.target_modality in (bids.unknownmodality, bids.ignoremodality):
+            # Free field
+            self.target_suffix = ''
+        else:
+            # Fixed list of options
+            if not self.allowed_suffixes[self.target_modality]:
+                raise Exception(f'allowed suffixes empty for modality {self.target_modality}')
+            self.target_suffix = self.allowed_suffixes[self.target_modality][0]
+
+        self.refresh()
+
     def selection_suffix_dropdown_change(self, i):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
         self.target_suffix = self.suffix_dropdown.currentText()
 
         LOGGER.info(f"User has changed the BIDS suffix from '{self.target_run['bids']['suffix']}' to '{self.target_suffix}' for {self.source_run['provenance']}")
 
-        bids_values, data = self.get_bids_values_data()
-        bids_values['suffix'] = self.target_suffix
-
-        # Update the BIDS output name
-        self.target_run['bids'] = bids_values
-        self.update_bidsname()
-
-    def update_bidsname(self):
-        subid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['participant'], self.target_run['provenance'])
-        sesid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['session'], self.target_run['provenance'])
-        runindex = self.target_run['bids'].get('run', '')
-        bids_name = os.path.join(self.target_modality, bids.get_bidsname(subid, sesid, self.target_modality, self.target_run, runindex, self.subprefix, self.sesprefix)) + '.*'
-        html_bids_name = get_html_bidsname(bids_name)
-
-        self.view_bids_name.clear()
-        if self.target_modality == bids.ignoremodality:
-            self.view_bids_name.textCursor().insertHtml('<font color="#808080"><s>%s</s></font>' % html_bids_name)
-        else:
-            self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % html_bids_name)
+        self.refresh()
 
 
 def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templatefile: str='', subprefix='sub-', sesprefix='ses-'):
