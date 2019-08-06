@@ -442,13 +442,13 @@ class Ui_MainWindow(object):
         if column==1:
             plugin = self.plugintable.item(row, column).text()
             if plugin and row == len(self.output_bidsmap['PlugIns']):
-                LOGGER.info(f'Added plugin: {plugin}')
+                LOGGER.info(f"Added plugin: '{plugin}'")
                 self.output_bidsmap['PlugIns'].append(plugin)
             elif plugin:
-                LOGGER.info(f"Edited plugin: {self.output_bidsmap['PlugIns'][row]} -> {plugin}")
+                LOGGER.info(f"Edited plugin: '{self.output_bidsmap['PlugIns'][row]}' -> '{plugin}'")
                 self.output_bidsmap['PlugIns'][row] = plugin
             elif row < len(self.output_bidsmap['PlugIns']):
-                LOGGER.info(f"Deleted plugin: {self.output_bidsmap['PlugIns'][row]}")
+                LOGGER.info(f"Deleted plugin: '{self.output_bidsmap['PlugIns'][row]}'")
                 del self.output_bidsmap['PlugIns'][row]
             else:
                 LOGGER.error(f"Unexpected cell change for {plugin}")
