@@ -428,7 +428,7 @@ class Ui_MainWindow(object):
         Add a plugin by letting the user select a plugin-file
         :return:
         """
-        plugin = QFileDialog.getOpenFileNames(self.MainWindow, 'Select a plugin-file')
+        plugin = QFileDialog.getOpenFileNames(self.MainWindow, 'Select the plugin-file(s)', directory=os.path.join(self.bidsfolder, 'code', 'bidscoin'), filter='Python files (*.py *.pyc *.pyo);; All files (*)')
         LOGGER.info(f'Added plugins: {plugin[0]}')
         self.output_bidsmap['PlugIns'] += plugin[0]
         self.update_plugintable()
