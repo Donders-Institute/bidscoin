@@ -80,6 +80,59 @@ args: Argument string that is passed to dcm2niix. Click [Test] and see the termi
       Tip: SPM users may want to use '-z n', which produces unzipped nifti's"""
 
 
+def get_template_dicomrun(dicomfile: str, template_bidsmap: dict, modalities: tuple= bids.bidsmodalities + (bids.ignoremodality, bids.unknownmodality)) -> tuple:
+    """
+    Find the first run in the bidsmap with dicom attributes that match with the dicom file. Then update the (dynamic) bids values (values are cleaned-up to be BIDS-valid)
+
+    :param dicomfile:   The full pathname of the dicom-file
+    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param modalities:  The modality in which a matching run is searched for. Default = bidsmodalities + (ignoremodality, unknownmodality)
+    :return:            (run, modality, index) The matching and filled-in / cleaned run item, modality and list index as in run = bidsmap[DICOM][modality][index]
+                        modality = bids.unknownmodality and index = None if there is no match, the run is still populated with info from the dicom-file
+    """
+    run_   = dict(provenance={}, attributes={}, bids={})
+
+    # Loop through all bidsmodalities and runs; all info goes into run_
+    for modality in modalities:
+        if template_bidsmap[SOURCE][modality] is None: continue
+
+        for index, run in enumerate(template_bidsmap[SOURCE][modality]):
+
+            run_  = dict(provenance={}, attributes={}, bids={})                                             # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
+            match = any([run['attributes'][attrkey] is not None for attrkey in run['attributes']])          # Normally match==True, but make match==False if all attributes are empty
+
+            # Try to see if the dicomfile matches all of the attributes and fill all of them
+            for attrkey, attrvalue in run['attributes'].items():
+
+                # Check if the attribute value matches with the info from the dicomfile
+                dicomvalue = bids.get_dicomfield(attrkey, dicomfile)
+                if attrvalue:
+                    match = match and bids.match_attribute(dicomvalue, attrvalue)
+
+                # Fill the empty attribute with the info from the dicomfile
+                run_['attributes'][attrkey] = dicomvalue
+
+            # Try to fill the bids-labels
+            for bidskey, bidsvalue in run['bids'].items():
+
+                # Replace the dynamic bids values
+                run_['bids'][bidskey] = bids.replace_bidsvalue(bidsvalue, dicomfile)
+
+                # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
+                run_ = bids.strip_suffix(run_)
+
+            # Stop searching the bidsmap if we have a match. TODO: check if there are more matches (i.e. conflicts)
+            if match:
+                run_['provenance'] = dicomfile
+                return run_
+
+    # We don't have a match (all tests failed, so modality should be the *last* one, i.e. unknownmodality)
+    LOGGER.debug(f"Could not find a matching run in the bidsmap for {dicomfile} -> {modality}")
+    run_['provenance'] = dicomfile
+
+    return run_
+
+
 def get_allowed_suffixes(template_bidsmap):
     """Derive the possible suffixes for each modality from the template. """
     allowed_suffixes = {}
@@ -829,7 +882,7 @@ class EditDialog(QDialog):
         layout_scrollarea = QHBoxLayout(top_widget)
 
         self.set_provenance_section()
-        self.set_dicom_attributes_section()
+        self.set_dicom_attributes_section(from_template=False)
         self.set_modality_dropdown_section()
         self.set_bids_values_section()
         self.set_bids_name_section()
@@ -1071,9 +1124,14 @@ class EditDialog(QDialog):
 
         self.view_provenance = self.get_table(data, num_rows=MAX_NUM_PROVENANCE_ATTRIBUTES)
 
-    def set_dicom_attributes_section(self):
+    def set_dicom_attributes_section(self, from_template=False):
         """Set SOURCE attributes section. """
-        dicom_attributes = self.source_run['attributes']
+        if from_template:
+            dicomfile = self.source_run['provenance']
+            source_run = get_template_dicomrun(dicomfile, self.template_bidsmap, (self.target_modality, ))
+            dicom_attributes = source_run['attributes']
+        else:
+            dicom_attributes = self.source_run['attributes']
 
         data = []
         for key in dicom_attributes:
@@ -1105,7 +1163,8 @@ class EditDialog(QDialog):
         self.view_dropdown.currentIndexChanged.connect(self.selection_modality_dropdown_change)
 
     def get_bids_values_data(self):
-        """# Given the input BIDS attributes, derive the target BIDS attributes. """
+        """Given the input BIDS attributes from the template,
+        derive the target BIDS attributes. """
         target_bids_attributes = get_bids_attributes(self.template_bidsmap,
                                                      self.allowed_suffixes,
                                                      self.target_modality,
@@ -1146,7 +1205,7 @@ class EditDialog(QDialog):
         return bids_values, data
 
     def set_bids_values_section(self):
-        """Set editable BIDS values section. """
+        """Set editable BIDS values section, derived from the template. """
         if self.target_modality in (bids.unknownmodality, bids.ignoremodality):
             # Free field
             self.target_suffix = ''
@@ -1195,7 +1254,7 @@ class EditDialog(QDialog):
         """Refresh the edit dialog window. """
 
         # Refresh the DICOM attributes
-        self.set_dicom_attributes_section()
+        self.set_dicom_attributes_section(from_template=True)
 
         # Update the BIDS values
         bids_values, data = self.get_bids_values_data()
