@@ -830,7 +830,7 @@ class EditDialog(QDialog):
 
         self.set_provenance_section()
         self.set_dicom_attributes_section()
-        self.set_dropdown_section()
+        self.set_modality_dropdown_section()
         self.set_bids_values_section()
         self.set_bids_name_section()
 
@@ -1093,7 +1093,7 @@ class EditDialog(QDialog):
 
         self.view_dicom = self.get_table(data, num_rows=len(data))
 
-    def set_dropdown_section(self):
+    def set_modality_dropdown_section(self):
         """Dropdown select modality list section. """
         self.label_dropdown = QLabel()
         self.label_dropdown.setText("Modality")
@@ -1102,7 +1102,7 @@ class EditDialog(QDialog):
         self.view_dropdown.addItems(bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality))
         self.view_dropdown.setCurrentIndex(self.view_dropdown.findText(self.target_modality))
 
-        self.view_dropdown.currentIndexChanged.connect(self.selection_dropdown_change)
+        self.view_dropdown.currentIndexChanged.connect(self.selection_modality_dropdown_change)
 
     def get_bids_values_data(self):
         """# Given the input BIDS attributes, derive the target BIDS attributes. """
@@ -1238,7 +1238,7 @@ class EditDialog(QDialog):
         self.target_run['bids'] = bids_values
         self.update_bidsname()
 
-    def selection_dropdown_change(self, i):
+    def selection_modality_dropdown_change(self, i):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
         self.target_modality = self.view_dropdown.currentText()
 
