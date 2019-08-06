@@ -6,7 +6,9 @@ import logging
 import copy
 import difflib
 
-from bidscoin.bids import load_bidsmap, save_bidsmap, bidsmodalities, unknownmodality, update_bidsmap
+from bidscoin.bids import (load_bidsmap, save_bidsmap,
+                           bidsmodalities, unknownmodality, ignoremodality,
+                           update_bidsmap)
 from bidscoin.bidseditor import SOURCE, get_allowed_suffixes, get_bids_attributes, get_index_mapping
 
 
@@ -72,7 +74,8 @@ class TestBidseditor(unittest.TestCase):
             "pet": [
                 "pet"
             ],
-            "extra_data": []
+            "extra_data": [],
+            "leave_out": []
         }
 
         self.assertEqual(allowed_suffixes, reference_allowed_suffixes)
@@ -91,7 +94,7 @@ class TestBidseditor(unittest.TestCase):
         bids_attributes = get_bids_attributes(template_bidsmap,
                                               allowed_suffixes,
                                               unknownmodality,
-                                              None,
+                                              "",
                                               source_series)
 
         reference_bids_attributes = {
@@ -150,7 +153,7 @@ class TestBidseditor(unittest.TestCase):
     def test_index_mapping(self):
         bidsmap = {}
         bidsmap[SOURCE] = {}
-        for modality in bidsmodalities + (unknownmodality,):
+        for modality in bidsmodalities + (unknownmodality, ignoremodality):
             bidsmap[SOURCE][modality] = []
 
         series1 = {'test': '1'}
@@ -171,7 +174,8 @@ class TestBidseditor(unittest.TestCase):
             'fmap': {},
             'beh': {},
             'pet': {},
-            'extra_data': {2: 0, 3: 1}
+            'extra_data': {2: 0, 3: 1},
+            'leave_out': {}
         }
         self.assertEqual(index_mapping, index_mapping_ref)
 
@@ -187,7 +191,8 @@ class TestBidseditor(unittest.TestCase):
             'fmap': {},
             'beh': {},
             'pet': {},
-            'extra_data': {3: 0}
+            'extra_data': {3: 0},
+            'leave_out': {}
         }
         self.assertEqual(index_mapping, index_mapping_ref)
 
