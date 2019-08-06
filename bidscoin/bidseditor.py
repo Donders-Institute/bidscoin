@@ -431,7 +431,7 @@ class Ui_MainWindow(object):
         plugin = QFileDialog.getOpenFileNames(self.MainWindow, 'Select a plugin-file')
         LOGGER.info(f'Added plugins: {plugin[0]}')
         self.output_bidsmap['PlugIns'] += plugin[0]
-        self.update_plugins_table()
+        self.update_plugintable()
 
     def plugincell_was_changed(self, row, column):
         """
@@ -453,9 +453,9 @@ class Ui_MainWindow(object):
             else:
                 LOGGER.error(f"Unexpected cell change for {plugin}")
 
-            self.update_plugins_table()
+            self.update_plugintable()
 
-    def update_plugins_table(self, row_height=24):
+    def update_plugintable(self, row_height=24):
         """
         Plots an extendable table of plugins from self.output_bidsmap['PlugIns']
         :param row_height:
@@ -634,7 +634,7 @@ class Ui_MainWindow(object):
         plugintable.setShowGrid(False)
 
         self.plugintable = plugintable
-        self.update_plugins_table(row_height)
+        self.update_plugintable(row_height)
 
         hbox = QHBoxLayout()
         hbox.addStretch(1)
