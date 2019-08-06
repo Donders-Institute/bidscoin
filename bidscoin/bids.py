@@ -136,7 +136,7 @@ def import_plugin(plugin: str):
 
     # See if we can find the plug-in
     if not os.path.isfile(plugin):
-        logger.error('Could not find ' + plugin)
+        logger.error(f"Could not find plugin: '{plugin}'")
         return None
 
     # Load the plugin-module
@@ -159,7 +159,7 @@ def import_plugin(plugin: str):
         return module
 
     except Exception:
-        logger.exception(f"Could not import {plugin}")
+        logger.exception(f"Could not import '{plugin}'")
 
         return None
 
@@ -178,10 +178,10 @@ def test_tooloptions(tool: str, opts: dict) -> bool:
     elif tool == 'bidscoin':
         command = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bidscoin.py -v')
     else:
-        logger.warning(f'Testing of {tool} not supported')
+        logger.warning(f"Testing of '{tool}' not supported")
         return None
 
-    logger.info('Testing: ' + tool)
+    logger.info(f"Testing: '{tool}'")
 
     return run_command(command)
 
@@ -195,7 +195,7 @@ def test_plugins(plugin: str='') -> bool:
                     was a plug-in error, None if this function has an implementation error
     """
 
-    logger.info('Testing: ' + plugin)
+    logger.info("Testing: '{plugin}'")
 
     module = import_plugin(plugin)
 
