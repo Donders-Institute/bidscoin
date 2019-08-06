@@ -91,6 +91,7 @@ class TestBidseditor(unittest.TestCase):
         bids_attributes = get_bids_attributes(template_bidsmap,
                                               allowed_suffixes,
                                               unknownmodality,
+                                              None,
                                               source_series)
 
         reference_bids_attributes = {

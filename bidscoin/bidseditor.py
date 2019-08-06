@@ -101,29 +101,33 @@ def get_allowed_suffixes(template_bidsmap):
     return allowed_suffixes
 
 
-def get_dicom_attributes(template_bidsmap, modality, source_run):
+def get_run(template_bidsmap, modality, suffix):
+    """Find the run in the BIDSmap template corresponding to the correct modality and suffix. """
+    index = 0
+    if suffix:
+        for k, run in enumerate(template_bidsmap[SOURCE][modality]):
+            if run['bids']['suffix'] == suffix:
+                index = k
+    return template_bidsmap[SOURCE][modality][index]
+
+
+def get_dicom_attributes(template_bidsmap, allowed_suffixes, modality, suffix):
     """Return the target DICOM attributes (i.e. the key, value pairs)
     given the keys from the template. """
-    template_dicom_attributes = template_bidsmap[SOURCE][modality][0]['attributes']
+    run = get_run(template_bidsmap, modality, suffix)
+    template_dicom_attributes = run['attributes']
 
     dicom_attributes = OrderedDict()
     for key, template_value in template_dicom_attributes.items():
-        source_value = source_run['attributes'].get(key, None)
-        if source_value:
-            # Set the value from the source attributes
-            dicom_attributes[key] = source_value
-        else:
-            # Set the default value from the template
-            dicom_attributes[key] = template_value
-
+        dicom_attributes[key] = template_value
     return dicom_attributes
 
 
-def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, source_run):
+def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, suffix, dicomfile):
     """Return the target BIDS attributes (i.e. the key, value pairs)
-    given the keys from the template
-    given the values from the source BIDS attributes. """
-    template_bids_attributes = template_bidsmap[SOURCE][modality][0]['bids']
+    given the keys from the template. """
+    run = get_run(template_bidsmap, modality, suffix)
+    template_bids_attributes = run['bids']
 
     bids_attributes = OrderedDict()
     for key, template_value in template_bids_attributes.items():
@@ -132,13 +136,7 @@ def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, source_run
             if key == 'suffix' and modality in bids.bidsmodalities:
                 template_value = allowed_suffixes[modality][0]
 
-        source_value = source_run['bids'].get(key, None)
-        if source_value:
-            # Set the value from the source attributes
-            bids_attributes[key] = source_value
-        else:
-            # Set the default value from the template
-            bids_attributes[key] = bids.replace_bidsvalue(template_value, source_run['provenance'])
+        bids_attributes[key] = bids.replace_bidsvalue(template_value, dicomfile)
 
     return bids_attributes
 
@@ -1125,8 +1123,9 @@ class EditDialog(QDialog):
         """Given the input DICOM attributes from the template,
         derive the target DICOM attributes. """
         target_dicom_attributes = get_dicom_attributes(self.template_bidsmap,
+                                                       self.allowed_suffixes,
                                                        self.target_modality,
-                                                       self.source_run)
+                                                       self.target_suffix)
         if target_dicom_attributes is not None:
             dicom_attributes = target_dicom_attributes
         else:
@@ -1153,7 +1152,8 @@ class EditDialog(QDialog):
         target_bids_attributes = get_bids_attributes(self.template_bidsmap,
                                                      self.allowed_suffixes,
                                                      self.target_modality,
-                                                     self.source_run)
+                                                     self.target_suffix,
+                                                     self.source_run['provenance'])
         if target_bids_attributes is not None:
             bids_values = target_bids_attributes
         else:
