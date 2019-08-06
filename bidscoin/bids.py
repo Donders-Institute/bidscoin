@@ -443,8 +443,9 @@ def load_bidsmap(yamlfile: str='', folder: str='') -> (dict, str):
         logger.warning(f'BIDScoiner version conflict: {yamlfile} was created using version {bidsmapversion}, but this is version {version()}')
 
     # Make sure we get a proper list of plugins
-    if not bidsmap['PlugIns'] or bidsmap['PlugIns'][0] is None:
+    if not bidsmap['PlugIns']:
         bidsmap['PlugIns'] = []
+    bidsmap['PlugIns'] = [plugin for plugin in bidsmap['PlugIns'] if plugin]
 
     return bidsmap, yamlfile
 
