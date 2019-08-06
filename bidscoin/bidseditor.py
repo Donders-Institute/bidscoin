@@ -453,7 +453,7 @@ class Ui_MainWindow(object):
                 del self.output_bidsmap['PlugIns'][row]
                 self.update_plugins()
             else:
-                LOGGER.warning(f"Unexpected cell change for {plugin}")
+                LOGGER.error(f"Unexpected cell change for {plugin}")
 
     def update_plugins(self, row_height=24):
         """
