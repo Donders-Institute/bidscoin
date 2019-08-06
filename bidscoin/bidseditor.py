@@ -423,6 +423,93 @@ class Ui_MainWindow(object):
         QMessageBox.information(self.MainWindow, 'Test', f"Test {tool}: {result}\n"
                                                          f"See terminal output for more info")
 
+    def handle_click_plugin_add(self):
+        """
+        Add a plugin by letting the user select a plugin-file
+        :return:
+        """
+        plugin = QFileDialog.getOpenFileNames(self.MainWindow, 'Select a plugin-file')
+        LOGGER.info(f'Added plugins: {plugin[0]}')
+        self.output_bidsmap['PlugIns'] += plugin[0]
+        self.update_plugins()
+
+    def plugincell_was_changed(self, row, column):
+        """
+        Add / edit a plugin or delete if cell is empty
+        :param row:
+        :return:
+        """
+        if column==1:
+            plugin = self.plugintable.item(row, column).text()
+            if plugin and row == len(self.output_bidsmap['PlugIns']):
+                LOGGER.info(f'Added plugin: {plugin}')
+                self.output_bidsmap['PlugIns'].append(plugin)
+                self.update_plugins()
+            elif plugin:
+                LOGGER.info(f"Edited plugin: {self.output_bidsmap['PlugIns'][row]} -> {plugin}")
+                self.output_bidsmap['PlugIns'][row] = plugin
+            elif row < len(self.output_bidsmap['PlugIns']):
+                LOGGER.info(f"Deleted plugin: {self.output_bidsmap['PlugIns'][row]}")
+                del self.output_bidsmap['PlugIns'][row]
+                self.update_plugins()
+            else:
+                LOGGER.warning(f"Unexpected cell change for {plugin}")
+
+    def update_plugins(self, row_height=24):
+        """
+        Plots an extendable table of plugins from self.output_bidsmap['PlugIns']
+        :param row_height:
+        :return:
+        """
+        plugins  = self.output_bidsmap['PlugIns']
+        num_rows = len(plugins) + 1
+        num_cols = 3  # Always three columns (i.e. path, plugin, test-button)
+
+        plugintable = self.plugintable
+        plugintable.disconnect()
+        plugintable.setRowCount(num_rows)
+        plugintable.setColumnCount(num_cols)
+        plugintable.setMouseTracking(True)
+        plugintable.setAlternatingRowColors(False)
+        plugintable.setShowGrid(False)
+
+        for i, plugin in enumerate(plugins + ['']):
+            plugintable.setRowHeight(i, row_height)
+            for j in range(3):
+                if j==0:
+                    item = self.set_cell('path', is_editable=False)
+                    plugintable.setItem(i, j, item)
+                elif j==1:
+                    item = self.set_cell(plugin, is_editable=True)
+                    item.setToolTip('Double-click to edit the name of the plugin in the heuristics folder or the full pathname of the plugin in a custom location')
+                    plugintable.setItem(i, j, item)
+                elif j==2:                  # Add the test-button cell
+                    test_button = QPushButton('Test')
+                    test_button.clicked.connect(partial(self.handle_click_test_plugin, plugin))
+                    test_button.setToolTip(f'Click to test {plugin}')
+                    plugintable.setCellWidget(i, j, test_button)
+
+        # Append the Add-button cell
+        add_button = QPushButton('Select')
+        add_button.setToolTip('Click to interactively add a plugin')
+        plugintable.setCellWidget(num_rows - 1, 2, add_button)
+        add_button.clicked.connect(self.handle_click_plugin_add)
+
+        horizontal_header = plugintable.horizontalHeader()
+        horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        horizontal_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Fixed)
+        horizontal_header.setVisible(False)
+
+        vertical_header = plugintable.verticalHeader()
+        vertical_header.setVisible(False)
+
+        table_height = num_rows * row_height + 2 * plugintable.frameWidth()
+        plugintable.setMinimumHeight(table_height)
+        plugintable.setMaximumHeight(table_height)
+
+        plugintable.cellChanged.connect(self.plugincell_was_changed)
+
     def set_tab_options(self):
         """Set the options tab.  """
         self.tab2 = QtWidgets.QWidget()
@@ -508,7 +595,7 @@ class Ui_MainWindow(object):
                     is_editable = element.get("is_editable", False)
                     tooltip_text = element.get("tooltip_text", None)
                     item = self.set_cell(value, is_editable=is_editable)
-                    table.setItem(i, j, QTableWidgetItem(item))
+                    table.setItem(i, j, item)
                     if tooltip_text:
                         table.item(i, j).setToolTip(tooltip_text)
 
@@ -533,8 +620,7 @@ class Ui_MainWindow(object):
             table.setAlternatingRowColors(False)
             table.setShowGrid(False)
 
-            extra_space = 3
-            table_height = num_rows * (row_height + extra_space) + 2 * table.frameWidth()
+            table_height = num_rows * row_height + 2 * table.frameWidth()
             table.setMinimumHeight(table_height)
             table.setMaximumHeight(table_height)
 
@@ -543,64 +629,12 @@ class Ui_MainWindow(object):
             labels.append(label)
             self.tables_options.append(table)
 
-        plugins = self.output_bidsmap['PlugIns']
-
+        plugintable = QTableWidget()
         pluginlabel = QLabel('Plugins')
         pluginlabel.setToolTip('List of plugins')
+        self.plugintable = plugintable
 
-        plugintable = QTableWidget()
-
-        num_rows = len(plugins) + 1
-        num_cols = 3                    # Always three columns (i.e. path, plugin, test-button)
-        plugintable.setRowCount(num_rows)
-        plugintable.setColumnCount(num_cols)
-        plugintable.setMouseTracking(True)
-        row_height = 24
-
-        for i, plugin in enumerate(plugins):
-            plugintable.setRowHeight(i, row_height)
-            for j in range(3):
-                if j==0:
-                    item = self.set_cell('path', is_editable=False)
-                    plugintable.setItem(i, j, QTableWidgetItem(item))
-                elif j==1:
-                    item = self.set_cell(plugin, is_editable=True)
-                    plugintable.setItem(i, j, QTableWidgetItem(item))
-                    plugintable.item(i, j).setToolTip('The name of the plugin in the heuristics folder or the full pathname of the plugin in a custom location')
-                elif j==2:              # Add the test-button cell
-                    test_button = QPushButton('Test')
-                    test_button.clicked.connect(partial(self.handle_click_test_plugin, plugin))
-                    test_button.setToolTip(f'Click to test {plugin}')
-                    plugintable.setCellWidget(i, j, test_button)
-
-        # Add the Add-button cell
-        i = num_rows - 1
-        j = 2
-        plugintable.setItem(i, j, QTableWidgetItem())
-        plugintable.item(i, j).setFlags(QtCore.Qt.NoItemFlags)
-        add_button = QPushButton('Add')
-        # add_button.clicked.connect(self.handle_click_plugin_add)
-        add_button.setToolTip('Click to add a plugin')
-        plugintable.setCellWidget(i, j, add_button)
-
-        horizontal_header = plugintable.horizontalHeader()
-        horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        horizontal_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Fixed)
-        horizontal_header.setVisible(False)
-
-        vertical_header = plugintable.verticalHeader()
-        vertical_header.setVisible(False)
-
-        plugintable.setAlternatingRowColors(False)
-        plugintable.setShowGrid(False)
-
-        extra_space = 3
-        table_height = num_rows * (row_height + extra_space) + 2 * plugintable.frameWidth()
-        plugintable.setMinimumHeight(table_height)
-        plugintable.setMaximumHeight(table_height)
-
-        # plugintable.cellChanged.connect(partial(self.cell_was_changed, plugin, n))
+        self.update_plugins(row_height)
 
         hbox = QHBoxLayout()
         hbox.addStretch(1)
@@ -664,17 +698,11 @@ class Ui_MainWindow(object):
                 sesid = bids.set_bidsvalue(bids_name, 'ses')
                 session = os.path.join(self.bidsfolder, f'sub-{subid}', f'ses-{sesid}')
 
-                item_id = QTableWidgetItem(str(idx + 1))
-                item_provenance_file = QTableWidgetItem(provenance_file)
-                item_modality = QTableWidgetItem(modality)
-                item_bids_name = QTableWidgetItem(os.path.join(modality, bids_name + '.*'))
-                item_provenance = QTableWidgetItem(provenance)
-
-                self.table.setItem(idx, 0, item_id)
-                self.table.setItem(idx, 1, item_provenance_file)
-                self.table.setItem(idx, 2, item_modality)   # Hidden column
-                self.table.setItem(idx, 3, item_bids_name)
-                self.table.setItem(idx, 5, item_provenance) # Hidden column
+                self.table.setItem(idx, 0, QTableWidgetItem(str(idx + 1)))
+                self.table.setItem(idx, 1, QTableWidgetItem(provenance_file))
+                self.table.setItem(idx, 2, QTableWidgetItem(modality))   # Hidden column
+                self.table.setItem(idx, 3, QTableWidgetItem(os.path.join(modality, bids_name + '.*')))
+                self.table.setItem(idx, 5, QTableWidgetItem(provenance)) # Hidden column
 
                 self.table.item(idx, 1).setToolTip('Double-click to inspect the header information')
                 self.table.item(idx, 1).setStatusTip(os.path.dirname(provenance) + os.sep)
@@ -1068,7 +1096,7 @@ class EditDialog(QDialog):
                 self.suffix_dropdown.setCurrentIndex(self.suffix_dropdown.findText(self.target_suffix))
                 self.suffix_dropdown.currentIndexChanged.connect(self.selection_suffix_dropdown_change)
                 item = self.set_cell("suffix", is_editable=False)
-                table.setItem(i, 0, QTableWidgetItem(item))
+                table.setItem(i, 0, item)
                 table.setCellWidget(i, 1, self.suffix_dropdown)
                 continue
             for j, element in enumerate(row):
@@ -1077,7 +1105,7 @@ class EditDialog(QDialog):
                     value = ""
                 is_editable = element.get("is_editable", False)
                 item = self.set_cell(value, is_editable=is_editable)
-                table.setItem(i, j, QTableWidgetItem(item))
+                table.setItem(i, j, item)
 
         horizontal_header = table.horizontalHeader()
         horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
@@ -1268,7 +1296,7 @@ class EditDialog(QDialog):
                 self.suffix_dropdown.setCurrentIndex(self.suffix_dropdown.findText(self.target_suffix))
                 self.suffix_dropdown.currentIndexChanged.connect(self.selection_suffix_dropdown_change)
                 item = self.set_cell("suffix", is_editable=False)
-                table.setItem(i, 0, QTableWidgetItem(item))
+                table.setItem(i, 0, item)
                 table.setCellWidget(i, 1, self.suffix_dropdown)
                 continue
             for j, element in enumerate(row):
@@ -1278,12 +1306,12 @@ class EditDialog(QDialog):
                 is_editable = element.get("is_editable", False)
                 table.removeCellWidget(i, j)
                 item = self.set_cell(value, is_editable=is_editable)
-                table.setItem(i, j, QTableWidgetItem(item))
+                table.setItem(i, j, item)
         for i in range(len(data), MAX_NUM_BIDS_ATTRIBUTES):
             for j, element in enumerate(row):
                 table.removeCellWidget(i, j)
                 item = self.set_cell('', is_editable=False)
-                table.setItem(i, j, QTableWidgetItem(item))
+                table.setItem(i, j, item)
 
         self.view_bids = table
 
