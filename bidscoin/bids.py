@@ -624,31 +624,36 @@ def cleanup_value(label):
     return re.sub(r'(?u)[^-\w.]', '', label)
 
 
-def get_run(bidsmap: dict, source: str, modality, suffix: str) -> dict:
+def get_run(bidsmap: dict, source: str, modality, suffix_idx, dicomfile: str='') -> dict:
     """
-    Find the (first) run in bidsmap[source][bidsmodality] with run['bids']['suffix'] == suffix
+    Find the (first) run in bidsmap[source][bidsmodality] with run['bids']['suffix_idx'] == suffix_idx
 
     :param bidsmap:     This could be a template bidsmap, with all options, BIDS labels and attributes, etc
     :param source:      The information source in the bidsmap that is used, e.g. 'DICOM'
     :param modality:    The modality in which a matching run is searched for (e.g. 'anat')
-    :param suffix:      The name of the suffix that is searched for (e.g. 'bold')
-    :return:            The (cleaned) run item in the bidsmap[source][bidsmodality] with the matching suffix, otherwise None
+    :param suffix_idx:  The name of the suffix that is searched for (e.g. 'bold') or the modality index number
+    :param dicomfile:   The name of the dicomfile. If given, the DICOM values are read from file
+    :return:            The clean (filled) run item in the bidsmap[source][bidsmodality] with the matching suffix_idx, otherwise None
     """
 
-    for run in bidsmap[source][modality]:
-        if run['bids']['suffix'] == suffix:
+    for index, run in enumerate(bidsmap[source][modality]):
+        if index == suffix_idx or run['bids']['suffix_idx'] == suffix_idx:
 
             run_ = dict(provenance={}, attributes={}, bids={})
 
             for attrkey, attrvalue in run['attributes'].items():
-                run_['attributes'][attrkey] = attrvalue
+                if dicomfile:
+                    run_['attributes'][attrkey] = get_dicomfield(attrkey, dicomfile)
+                    run_['provenance']          = dicomfile
+                else:
+                    run_['attributes'][attrkey] = attrvalue
 
             for bidskey, bidsvalue in run['bids'].items():
                 run_['bids'][bidskey] = bidsvalue
 
             return run_
 
-    logger.warning(f"'{modality}' run with suffix '{suffix}' not found in bidsmap['{source}']")
+    logger.warning(f"'{modality}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{source}']")
 
 
 def delete_run(bidsmap: dict, source: str, modality: str, index: int) -> dict:

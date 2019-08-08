@@ -44,14 +44,9 @@ def built_dicommap(dicomfile: str, bidsmap: dict, template: dict) -> dict:
         raise ValueError("Don't know what to do with this bidsmodality directory name: {}\n{}".format(modality, dicomfile))
 
     # Get bids-labels from the matching run in the template
-    run = bids.get_run(template, 'DICOM', modality, suffix)
+    run = bids.get_run(template, 'DICOM', modality, suffix, dicomfile)
     if not run:
         raise ValueError(f"Oops, this should not happen! BIDS modality '{modality}' or one of the bidslabels is not accounted for in the code\n{dicomfile}")
-
-    # Fill the empty attribute with the info from the dicomfile
-    run['provenance'] = dicomfile
-    for attrkey in run['attributes']:
-        run['attributes'][attrkey] = bids.get_dicomfield(attrkey, dicomfile)
 
     # Copy the filled-in run over to the bidsmap
     if not bids.exist_run(bidsmap, 'DICOM', modality, run):
