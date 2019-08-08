@@ -49,7 +49,7 @@ MAX_NUM_BIDS_ATTRIBUTES = 9
 OPTIONS_TAB_INDEX = 1
 BIDSMAP_TAB_INDEX = 2
 
-ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "brain.ico")
+ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "bidscoin.ico")
 
 MAIN_HELP_URL = "https://github.com/Donders-Institute/bidscoin/blob/master/README.md"
 
