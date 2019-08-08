@@ -3,7 +3,7 @@
 [![PyPI version](https://badge.fury.io/py/bidscoin.svg)](https://badge.fury.io/py/bidscoin)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/bidscoin.svg)
 
-<a name="bidscoin-logo" align="right">![BIDScoin](./docs/bidscoin_logo.png)</a>
+<a name="bidscoin-logo" align="right" style="float">![BIDScoin](./docs/bidscoin_logo.png)</a>
 
 - [The BIDScoin workflow](#the-bidscoin-workflow)
 - [The BIDScoin tools](#the-bidscoin-tools)
