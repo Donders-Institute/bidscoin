@@ -3,8 +3,8 @@
 [![PyPI version](https://badge.fury.io/py/bidscoin.svg)](https://badge.fury.io/py/bidscoin)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/bidscoin.svg)
 
-<img src="(../docs/bidscoin_logo.png)" alt="BIDScoin" title="A BIDS converter toolkit" width="150" />
-	
+<img name="bidscoin-logo" src="./docs/bidscoin_logo.png" alt="bidsmap_sample example" width="300">
+
 - [The BIDScoin workflow](#the-bidscoin-workflow)
 - [The BIDScoin tools](#the-bidscoin-tools)
   * [Running the bidsmapper](#running-the-bidsmapper)
