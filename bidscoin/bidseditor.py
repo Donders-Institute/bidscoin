@@ -1240,8 +1240,6 @@ class EditDialog(QDialog):
             self.target_suffix = ''
         else:
             # Fixed list of options
-            if not self.allowed_suffixes[self.target_modality]:
-                raise Exception(f'allowed suffixes empty for modality {self.target_modality}')
             self.target_suffix = self.source_run['bids']['suffix']
 
         bids_values, data = self.get_bids_values_data()
@@ -1277,8 +1275,6 @@ class EditDialog(QDialog):
             self.target_suffix = ''
         else:
             # Fixed list of options
-            if not self.allowed_suffixes[self.target_modality]:
-                raise Exception(f'allowed suffixes empty for modality {self.target_modality}')
             self.target_suffix = self.allowed_suffixes[self.target_modality][0]
 
         # Given the input BIDS attributes, derive the target BIDS attributes (i.e map them to the target attributes)
