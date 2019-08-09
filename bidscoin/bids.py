@@ -27,7 +27,7 @@ logger = logging.getLogger('bidscoin')
 bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh', 'pet')
 ignoremodality  = 'leave_out'
 unknownmodality = 'extra_data'
-bidslabels      = ('acq', 'ce', 'rec', 'task', 'echo', 'dir', 'run', 'mod', 'suffix')   # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
+bidslabels      = ('task', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'suffix')   # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
 
 
 def bidsversion() -> str:
@@ -1024,16 +1024,16 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
     elif modality == unknownmodality or modality == ignoremodality:
 
         # bidsname: sub-<participant_label>[_ses-<session_label>]_acq-<label>[..][_suffix]
-        bidsname = '{sub}{_ses}_{acq}{_ce}{_rec}{_task}{_echo}{_dir}{_run}{_suffix}'.format(
+        bidsname = '{sub}{_ses}{_task}_{acq}{_ce}{_rec}{_dir}{_run}{_echo}{_suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
+            _task   = add_prefix('_task-', run['bids']['task']),
             acq     = f"acq-{run['bids']['acq']}",
             _ce     = add_prefix('_ce-', run['bids']['ce']),
             _rec    = add_prefix('_rec-', run['bids']['rec']),
-            _task   = add_prefix('_task-', run['bids']['task']),
-            _echo   = add_prefix('_echo-', run['bids']['echo']),
             _dir    = add_prefix('_dir-', run['bids']['dir']),
             _run    = add_prefix('_run-', runindex),
+            _echo   = add_prefix('_echo-', run['bids']['echo']),
             _suffix = add_prefix('_', run['bids']['suffix']))
 
     else:

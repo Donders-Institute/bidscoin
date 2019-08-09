@@ -1208,7 +1208,7 @@ class EditDialog(QDialog):
         # Refresh the BIDS output name
         self.refresh_bidsname()
 
-    def selection_modality_dropdown_change(self, i):
+    def selection_modality_dropdown_change(self):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
         self.target_modality = self.view_dropdown.currentText()
 
@@ -1216,7 +1216,7 @@ class EditDialog(QDialog):
 
         self.refresh(0)
 
-    def selection_suffix_dropdown_change(self, i):
+    def selection_suffix_dropdown_change(self):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
         target_suffix = self.suffix_dropdown.currentText()
 
