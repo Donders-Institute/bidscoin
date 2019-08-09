@@ -966,7 +966,11 @@ class EditDialog(QDialog):
         self.allowed_suffixes = allowed_suffixes
 
     def get_editwin_data(self):
-        """Derive the tabular data needed to render the edit window. """
+        """
+        Derive the tabular data needed to render the edit window.
+
+        :return: (data_provenance, data_dicom, data_bids)
+        """
         data_provenance = [
             [
                 {
