@@ -656,7 +656,7 @@ def get_run(bidsmap: dict, source: str, modality, suffix_idx, dicomfile: str='')
 
             return run_
 
-    logger.warning(f"'{modality}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{source}']")
+    logger.error(f"'{modality}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{source}']")
 
 
 def delete_run(bidsmap: dict, source: str, modality: str, index: int) -> dict:
