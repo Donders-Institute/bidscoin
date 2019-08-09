@@ -637,7 +637,7 @@ def get_run(bidsmap: dict, source: str, modality, suffix_idx, dicomfile: str='')
     """
 
     for index, run in enumerate(bidsmap[source][modality]):
-        if index == suffix_idx or run['bids']['suffix_idx'] == suffix_idx:
+        if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
             run_ = dict(provenance={}, attributes={}, bids={})
 

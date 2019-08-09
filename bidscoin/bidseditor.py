@@ -104,7 +104,7 @@ def get_allowed_suffixes(template_bidsmap):
 def get_dicom_attributes(template_bidsmap, allowed_suffixes, modality, suffix):
     """Return the target DICOM attributes (i.e. the key, value pairs)
     given the keys from the template. """
-    run = bids.get_run(template_bidsmap, modality, suffix)
+    run = bids.get_run(template_bidsmap, SOURCE, modality, suffix)
     template_dicom_attributes = run['attributes']
 
     dicom_attributes = OrderedDict()
@@ -116,7 +116,7 @@ def get_dicom_attributes(template_bidsmap, allowed_suffixes, modality, suffix):
 def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, suffix, dicomfile):
     """Return the target BIDS attributes (i.e. the key, value pairs)
     given the keys from the template. """
-    run = bids.get_run(template_bidsmap, modality, suffix)
+    run = bids.get_run(template_bidsmap, SOURCE, modality, suffix)
     template_bids_attributes = run['bids']
 
     bids_attributes = OrderedDict()
