@@ -667,6 +667,8 @@ def delete_run(bidsmap: dict, source: str, modality: str, index: int) -> dict:
     :return:            The new bidsmap
     """
 
+    if index >= len(bidsmap[source][modality]):
+        logger.error('Unexpected modality index number: out of range')
     del bidsmap[source][modality][index]
 
     return bidsmap

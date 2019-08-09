@@ -866,7 +866,7 @@ class EditDialog(QDialog):
 
         self.source_modality_index = modality_index
         self.source_modality = modality
-        self.source_run = self.bidsmap[SOURCE][modality][modality_index]
+        self.source_run = self.bidsmap[SOURCE][modality][modality_index]        # TODO: To be used for reload / reset button
 
         self.target_modality = modality
         self.target_run = copy.deepcopy(self.source_run)
@@ -893,10 +893,21 @@ class EditDialog(QDialog):
         scrollarea.setWidget(top_widget)
         layout_scrollarea = QHBoxLayout(top_widget)
 
-        self.set_provenance_section()
-        self.set_dicom_attributes_section(self.source_run['attributes']) # from input bidsmap
+        data_provenance, data_dicom, data_bids = self.get_editwin_data()
+
+        self.label_provenance = QLabel()
+        self.label_provenance.setText("Provenance")
+        self.view_provenance = self.set_table(data_provenance, num_rows=MAX_NUM_PROVENANCE_ATTRIBUTES)
+
+        self.label_dicom = QLabel()
+        self.label_dicom.setText("Attributes")
+        self.view_dicom = self.set_table(data_dicom, num_rows=MAX_NUM_DICOM_ATTRIBUTES)
+
         self.set_modality_dropdown_section()
-        self.set_bids_values_section()
+
+        self.label_bids = QLabel()
+        self.label_bids.setText("Labels")
+        self.view_bids = self.set_table(data_bids, num_rows=MAX_NUM_BIDS_ATTRIBUTES)
 
         self.set_bids_name_section()
 
@@ -990,6 +1001,72 @@ class EditDialog(QDialog):
 
         super(EditDialog, self).reject()
 
+    def get_editwin_data(self):
+        """Derive the tabular data needed to render the edit window. """
+        data_provenance = [
+            [
+                {
+                    "value": "path",
+                    "is_editable": False
+                },
+                {
+                    "value": os.path.dirname(self.target_run['provenance']),
+                    "is_editable": False
+                },
+            ],
+            [
+                {
+                    "value": "filename",
+                    "is_editable": False
+                },
+                {
+                    "value": os.path.basename(self.target_run['provenance']),
+                    "is_editable": True
+                },
+            ]
+        ]
+
+        data_dicom = []
+        for key, value in self.target_run['attributes'].items():
+            data_dicom.append([
+                {
+                    "value": key,
+                    "is_editable": False
+                },
+                {
+                    "value": str(value),
+                    "is_editable": True
+                }
+            ])
+
+        data_bids = []
+        for key, value in self.target_run['bids'].items():
+            if self.target_modality in bids.bidsmodalities and key=='suffix':
+                value = self.target_run['bids']['suffix']
+                data_bids.append([
+                    {
+                        "value": key,
+                        "is_editable": False
+                    },
+                    {
+                        "value": value,
+                        "is_editable": False
+                    }
+                ])
+            else:
+                data_bids.append([
+                    {
+                        "value": key,
+                        "is_editable": False
+                    },
+                    {
+                        "value": value,
+                        "is_editable": True
+                    }
+                ])
+
+        return data_provenance, data_dicom, data_bids
+
     def update_run(self):
         LOGGER.info(f'User has approved the edit')
 
@@ -1006,7 +1083,7 @@ class EditDialog(QDialog):
     def inspect_dicomfile(self, row=None, column=None):
         """When double clicked, show popup window. """
         if row == 1 and column == 1:
-            filename = self.source_run['provenance']
+            filename = self.target_run['provenance']
             if bids.is_dicomfile(filename):
                 dicomdict = pydicom.dcmread(filename, force=True)
                 self.popup = InspectWindow(filename, dicomdict)
@@ -1021,7 +1098,7 @@ class EditDialog(QDialog):
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
             if key != '':
-                LOGGER.info(f"User has set {SOURCE}['{key}'] from '{oldvalue}' to '{value}' for {self.source_run['provenance']}")
+                LOGGER.info(f"User has set {SOURCE}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
 
                 self.view_dicom.item(row, 1).setText(value)
                 self.target_run['attributes'][key] = value
@@ -1039,7 +1116,7 @@ class EditDialog(QDialog):
                 if key in bids.bidslabels:
                     value = bids.cleanup_value(bids.replace_bidsvalue(value, self.target_run['provenance']))
 
-                LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.source_run['provenance']}")
+                LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
 
                 self.view_bids.item(row, 1).setText(value)
                 self.target_run['bids'][key] = value
@@ -1056,14 +1133,15 @@ class EditDialog(QDialog):
             item.setForeground(QtGui.QColor(128, 128, 128))
         return item
 
-    def get_table(self, data, num_rows=1):
-        """Return a table widget from the data. """
-        table = QTableWidget()
+    def fill_table(self, table, data, row_height=24):
+        """
+        Fill the table with data.
 
-        table.setRowCount(num_rows)
-        table.setColumnCount(2) # Always two columns (i.e. key, value)
-        row_height = 24
-
+        :param table:
+        :param data:
+        :param row_height:
+        :return:
+        """
         for i, row in enumerate(data):
             table.setRowHeight(i, row_height)
             key = row[0]["value"]
@@ -1085,6 +1163,24 @@ class EditDialog(QDialog):
                 item = self.set_cell(value, is_editable=is_editable)
                 table.setItem(i, j, item)
 
+        # Wipe old rows
+        for i in range(len(data), table.rowCount()):
+            for j, element in enumerate(row):
+                table.removeCellWidget(i, j)
+                item = self.set_cell('', is_editable=False)
+                table.setItem(i, j, item)
+
+    def set_table(self, data, num_rows=1, row_height=24):
+        """Return a table widget from the data. """
+        table = QTableWidget()
+
+        num_rows = len(data)
+
+        table.setRowCount(num_rows)
+        table.setColumnCount(2) # Always two columns (i.e. key, value)
+
+        self.fill_table(table, data, row_height=row_height)
+
         horizontal_header = table.horizontalHeader()
         horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
@@ -1103,60 +1199,6 @@ class EditDialog(QDialog):
 
         return table
 
-    def set_provenance_section(self):
-        """Set provenance section. """
-        provenance = self.source_run['provenance']
-        provenance_file = os.path.basename(provenance)
-        provenance_path = os.path.dirname(provenance)
-
-        data = [
-            [
-                {
-                    "value": "path",
-                    "is_editable": False
-                },
-                {
-                    "value": provenance_path,
-                    "is_editable": False
-                },
-            ],
-            [
-                {
-                    "value": "filename",
-                    "is_editable": False
-                },
-                {
-                    "value": provenance_file,
-                    "is_editable": True
-                },
-            ]
-        ]
-
-        self.label_provenance = QLabel()
-        self.label_provenance.setText("Provenance")
-
-        self.view_provenance = self.get_table(data, num_rows=MAX_NUM_PROVENANCE_ATTRIBUTES)
-
-    def set_dicom_attributes_section(self, dicom_attributes):
-        """Set SOURCE attributes section. """
-        data = []
-        for key in dicom_attributes:
-            data.append([
-                {
-                    "value": key,
-                    "is_editable": False
-                },
-                {
-                    "value": str(dicom_attributes[key]),
-                    "is_editable": True
-                }
-            ])
-
-        self.label_dicom = QLabel()
-        self.label_dicom.setText("Attributes")
-
-        self.view_dicom = self.get_table(data, num_rows=MAX_NUM_DICOM_ATTRIBUTES)
-
     def set_modality_dropdown_section(self):
         """Dropdown select modality list section. """
         self.label_dropdown = QLabel()
@@ -1167,17 +1209,6 @@ class EditDialog(QDialog):
         self.view_dropdown.setCurrentIndex(self.view_dropdown.findText(self.target_modality))
 
         self.view_dropdown.currentIndexChanged.connect(self.selection_modality_dropdown_change)
-
-    def set_bids_values_section(self):
-        """Set editable BIDS values section, derived from the template. """
-
-        bids_values, data = self.get_bids_values_data()
-        self.target_run['bids'] = bids_values
-
-        self.label_bids = QLabel()
-        self.label_bids.setText("Labels")
-
-        self.view_bids = self.get_table(data, num_rows=MAX_NUM_BIDS_ATTRIBUTES)
 
     def set_bids_name_section(self):
         """Set non-editable BIDS output name section. """
@@ -1214,7 +1245,7 @@ class EditDialog(QDialog):
         :return:
         """
 
-        self.target_run = bids.get_run(self.template_bidsmap, SOURCE, self.target_modality, suffix_idx, self.source_run['provenance'])
+        self.target_run = bids.get_run(self.template_bidsmap, SOURCE, self.target_modality, suffix_idx, self.target_run['provenance'])
 
         self.bidsmap = bids.update_bidsmap(self.bidsmap,
                                            self.source_modality,
@@ -1223,92 +1254,14 @@ class EditDialog(QDialog):
                                            self.target_run)
 
         self.source_modality_index = len(self.bidsmap[SOURCE][self.target_modality]) - 1
+        self.source_modality       = self.target_modality
 
-        # Refresh the DICOM attributes
-        dicom_data = []
-        for key, value in self.target_run['attributes'].items():
-            dicom_data.append([
-                {
-                    "value": key,
-                    "is_editable": False
-                },
-                {
-                    "value": str(value),
-                    "is_editable": True
-                }
-            ])
+        # Refresh the DICOM attributes and BIDS values
+        _, data_dicom, data_bids = self.get_editwin_data()
 
-        table = self.view_dicom
-
-        for i, row in enumerate(dicom_data):
-            for j, element in enumerate(row):
-                value = element.get("value", "")
-                if value == "None":
-                    value = ""
-                is_editable = element.get("is_editable", False)
-                table.removeCellWidget(i, j)
-                item = self.set_cell(value, is_editable=is_editable)
-                table.setItem(i, j, item)
-        for i in range(len(dicom_data), MAX_NUM_DICOM_ATTRIBUTES):
-            for j, element in enumerate(row):
-                table.removeCellWidget(i, j)
-                item = self.set_cell('', is_editable=False)
-                table.setItem(i, j, item)
-
-        # Refresh the BIDS values
-        bids_data = []
-        for key, value in self.target_run['bids'].items():
-            if self.target_modality in bids.bidsmodalities and key == 'suffix':
-                value = self.target_run['bids']['suffix']
-                bids_data.append([
-                    {
-                        "value": key,
-                        "is_editable": False
-                    },
-                    {
-                        "value": value,
-                        "is_editable": False
-                    }
-                ])
-            else:
-                bids_data.append([
-                    {
-                        "value": key,
-                        "is_editable": False
-                    },
-                    {
-                        "value": value,
-                        "is_editable": True
-                    }
-                ])
-
-        table = self.view_bids
-
-        for i, row in enumerate(bids_data):
-            key = row[0]["value"]
-            if self.target_modality in bids.bidsmodalities and key == 'suffix':
-                labels = self.allowed_suffixes[self.target_modality]
-                self.suffix_dropdown = QComboBox()
-                self.suffix_dropdown.addItems(labels)
-                self.suffix_dropdown.setCurrentIndex(self.suffix_dropdown.findText(self.target_run['bids']['suffix']))
-                self.suffix_dropdown.currentIndexChanged.connect(self.selection_suffix_dropdown_change)
-                item = self.set_cell("suffix", is_editable=False)
-                table.setItem(i, 0, item)
-                table.setCellWidget(i, 1, self.suffix_dropdown)
-                continue
-            for j, element in enumerate(row):
-                value = element.get("value", "")
-                if value == "None":
-                    value = ""
-                is_editable = element.get("is_editable", False)
-                table.removeCellWidget(i, j)
-                item = self.set_cell(value, is_editable=is_editable)
-                table.setItem(i, j, item)
-        for i in range(len(bids_data), MAX_NUM_BIDS_ATTRIBUTES):
-            for j, element in enumerate(row):
-                table.removeCellWidget(i, j)
-                item = self.set_cell('', is_editable=False)
-                table.setItem(i, j, item)
+        # Draw the new tables
+        self.fill_table(self.view_dicom, data_dicom)
+        self.fill_table(self.view_bids, data_bids)
 
         # Update the BIDS output name
         self.refresh_bidsname()
@@ -1317,7 +1270,7 @@ class EditDialog(QDialog):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
         self.target_modality = self.view_dropdown.currentText()
 
-        LOGGER.info(f"User has changed the BIDS modality from '{self.source_modality}' to '{self.target_modality}' for {self.source_run['provenance']}")
+        LOGGER.info(f"User has changed the BIDS modality from '{self.source_modality}' to '{self.target_modality}' for {self.target_run['provenance']}")
 
         self.refresh(0)
 
@@ -1325,7 +1278,7 @@ class EditDialog(QDialog):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
         target_suffix = self.suffix_dropdown.currentText()
 
-        LOGGER.info(f"User has changed the BIDS suffix from '{self.target_run['bids']['suffix']}' to '{target_suffix}' for {self.source_run['provenance']}")
+        LOGGER.info(f"User has changed the BIDS suffix from '{self.target_run['bids']['suffix']}' to '{target_suffix}' for {self.target_run['provenance']}")
 
         self.refresh(target_suffix)
 
