@@ -946,32 +946,6 @@ class EditDialog(QDialog):
         # Top left of rectangle becomes top left of window centering it
         self.move(qr.topLeft())
 
-    def get_help(self):
-        """Open web page for help. """
-        help_url = HELP_URLS.get(self.target_modality, HELP_URL_DEFAULT)
-        webbrowser.open(help_url)
-
-    def reject(self, confirm=True):
-        """Ask if the user really wants to close the window"""
-        if confirm:
-            self.raise_()
-            answer = QMessageBox.question(self, 'Edit BIDS mapping', "Closing window, do you want to save the changes you made?",
-                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
-            if answer == QMessageBox.Yes:
-                self.update_run()
-                return
-            if answer == QMessageBox.No:
-                self.done(2)
-                LOGGER.info(f'User has discarded the edit')
-                return
-            if answer == QMessageBox.Cancel:
-                LOGGER.info(f'User has canceled the edit')
-                return
-
-        LOGGER.info(f'User has canceled the edit')
-
-        super(EditDialog, self).reject()
-
     def get_allowed_suffixes(self):
         """Derive the possible suffixes for each modality from the template. """
         allowed_suffixes = {}
@@ -1049,19 +1023,6 @@ class EditDialog(QDialog):
                 ])
 
         return data_provenance, data_dicom, data_bids
-
-    def update_run(self):
-        LOGGER.info(f'User has approved the edit')
-
-        """Save the changes to the bidsmap and send it back to the main window: Finished! """
-        self.bidsmap = bids.update_bidsmap(self.bidsmap,
-                                           self.source_modality,
-                                           self.source_modality_index,
-                                           self.target_modality,
-                                           self.target_run)
-
-        self.done_edit.emit(self.bidsmap)
-        self.done(1)
 
     def inspect_dicomfile(self, row=None, column=None):
         """When double clicked, show popup window. """
@@ -1264,6 +1225,45 @@ class EditDialog(QDialog):
         LOGGER.info(f"User has changed the BIDS suffix from '{self.target_run['bids']['suffix']}' to '{target_suffix}' for {self.target_run['provenance']}")
 
         self.refresh(target_suffix)
+
+    def get_help(self):
+        """Open web page for help. """
+        help_url = HELP_URLS.get(self.target_modality, HELP_URL_DEFAULT)
+        webbrowser.open(help_url)
+
+    def reject(self, confirm=True):
+        """Ask if the user really wants to close the window"""
+        if confirm:
+            self.raise_()
+            answer = QMessageBox.question(self, 'Edit BIDS mapping', "Closing window, do you want to save the changes you made?",
+                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
+            if answer == QMessageBox.Yes:
+                self.update_run()
+                return
+            if answer == QMessageBox.No:
+                self.done(2)
+                LOGGER.info(f'User has discarded the edit')
+                return
+            if answer == QMessageBox.Cancel:
+                LOGGER.info(f'User has canceled the edit')
+                return
+
+        LOGGER.info(f'User has canceled the edit')
+
+        super(EditDialog, self).reject()
+
+    def update_run(self):
+        LOGGER.info(f'User has approved the edit')
+
+        """Save the changes to the bidsmap and send it back to the main window: Finished! """
+        self.bidsmap = bids.update_bidsmap(self.bidsmap,
+                                           self.source_modality,
+                                           self.source_modality_index,
+                                           self.target_modality,
+                                           self.target_run)
+
+        self.done_edit.emit(self.bidsmap)
+        self.done(1)
 
 
 def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templatefile: str='', subprefix='sub-', sesprefix='ses-'):
