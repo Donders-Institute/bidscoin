@@ -101,36 +101,6 @@ def get_allowed_suffixes(template_bidsmap):
     return allowed_suffixes
 
 
-def get_dicom_attributes(template_bidsmap, allowed_suffixes, modality, suffix):
-    """Return the target DICOM attributes (i.e. the key, value pairs)
-    given the keys from the template. """
-    run = bids.get_run(template_bidsmap, SOURCE, modality, suffix)
-    template_dicom_attributes = run['attributes']
-
-    dicom_attributes = OrderedDict()
-    for key, template_value in template_dicom_attributes.items():
-        dicom_attributes[key] = template_value
-    return dicom_attributes
-
-
-def get_bids_attributes(template_bidsmap, allowed_suffixes, modality, suffix, dicomfile):
-    """Return the target BIDS attributes (i.e. the key, value pairs)
-    given the keys from the template. """
-    run = bids.get_run(template_bidsmap, SOURCE, modality, suffix)
-    template_bids_attributes = run['bids']
-
-    bids_attributes = OrderedDict()
-    for key, template_value in template_bids_attributes.items():
-        if not template_value:
-            # If not free choice, select the first possible option from the list of allowed suffixes
-            if key == 'suffix' and modality in bids.bidsmodalities:
-                template_value = allowed_suffixes[modality][0]
-
-        bids_attributes[key] = bids.replace_bidsvalue(template_value, dicomfile)
-
-    return bids_attributes
-
-
 def get_html_bidsname(bidsname):
     """Clean bidsname . """
     return bidsname.replace('<', '&lt;').replace('>', '&gt;')
@@ -900,7 +870,6 @@ class EditDialog(QDialog):
 
         self.target_modality = modality
         self.target_run = copy.deepcopy(self.source_run)
-        self.target_suffix = ''
 
         self.subprefix = subprefix
         self.sesprefix = sesprefix
@@ -928,6 +897,7 @@ class EditDialog(QDialog):
         self.set_dicom_attributes_section(self.source_run['attributes']) # from input bidsmap
         self.set_modality_dropdown_section()
         self.set_bids_values_section()
+
         self.set_bids_name_section()
 
         help_button = QtWidgets.QPushButton("Help")
@@ -1074,7 +1044,7 @@ class EditDialog(QDialog):
                 self.view_bids.item(row, 1).setText(value)
                 self.target_run['bids'][key] = value
 
-                self.update_bidsname()
+                self.refresh_bidsname()
 
     def set_cell(self, value, is_editable=False):
         item = QTableWidgetItem()
@@ -1101,7 +1071,7 @@ class EditDialog(QDialog):
                 labels = self.allowed_suffixes[self.target_modality]
                 self.suffix_dropdown = QComboBox(self)
                 self.suffix_dropdown.addItems(labels)
-                self.suffix_dropdown.setCurrentIndex(self.suffix_dropdown.findText(self.target_suffix))
+                self.suffix_dropdown.setCurrentIndex(self.suffix_dropdown.findText(self.target_run['bids']['suffix']))
                 self.suffix_dropdown.currentIndexChanged.connect(self.selection_suffix_dropdown_change)
                 item = self.set_cell("suffix", is_editable=False)
                 table.setItem(i, 0, item)
@@ -1198,84 +1168,8 @@ class EditDialog(QDialog):
 
         self.view_dropdown.currentIndexChanged.connect(self.selection_modality_dropdown_change)
 
-    def get_dicom_attributes_data(self):
-        """Given the input DICOM attributes from the template,
-        derive the target DICOM attributes. """
-        target_dicom_attributes = get_dicom_attributes(self.template_bidsmap,
-                                                       self.allowed_suffixes,
-                                                       self.target_modality,
-                                                       self.target_suffix)
-        if target_dicom_attributes is not None:
-            dicom_attributes = target_dicom_attributes
-        else:
-            dicom_attributes = {}
-
-        data = []
-        for key, value in dicom_attributes.items():
-            data.append([
-                {
-                    "value": str(key),
-                    "is_editable": False
-                },
-                {
-                    "value": str(value),
-                    "is_editable": True
-                }
-            ])
-
-        return dicom_attributes, data
-
-    def get_bids_values_data(self):
-        """Given the input BIDS attributes from the template,
-        derive the target BIDS attributes. """
-        target_bids_attributes = get_bids_attributes(self.template_bidsmap,
-                                                     self.allowed_suffixes,
-                                                     self.target_modality,
-                                                     self.target_suffix,
-                                                     self.source_run['provenance'])
-        if target_bids_attributes is not None:
-            bids_values = target_bids_attributes
-        else:
-            bids_values = {}
-
-        data = []
-        for key, value in bids_values.items():
-            if self.target_modality in bids.bidsmodalities and key == 'suffix':
-                value = self.target_suffix
-                data.append([
-                    {
-                        "value": str(key),
-                        "is_editable": False
-                    },
-                    {
-                        "value": str(value),
-                        "is_editable": False
-                    }
-                ])
-            else:
-                key_show = str(key)
-                key_show = key_show.split('_')[0]
-                data.append([
-                    {
-                        "value": key_show,
-                        "is_editable": False
-                    },
-                    {
-                        "value": str(value),
-                        "is_editable": True
-                    }
-                ])
-
-        return bids_values, data
-
     def set_bids_values_section(self):
         """Set editable BIDS values section, derived from the template. """
-        if self.target_modality in (bids.unknownmodality, bids.ignoremodality):
-            # Free field
-            self.target_suffix = ''
-        else:
-            # Fixed list of options
-            self.target_suffix = self.source_run['bids']['suffix']
 
         bids_values, data = self.get_bids_values_data()
         self.target_run['bids'] = bids_values
@@ -1297,9 +1191,9 @@ class EditDialog(QDialog):
         extra_space = 3
         self.view_bids_name.setFixedHeight(height + extra_space)
 
-        self.update_bidsname()
+        self.refresh_bidsname()
 
-    def update_bidsname(self):
+    def refresh_bidsname(self):
         subid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['participant'], self.target_run['provenance'])
         sesid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['session'], self.target_run['provenance'])
         runindex = self.target_run['bids'].get('run', '')
@@ -1312,11 +1206,37 @@ class EditDialog(QDialog):
         else:
             self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % html_bids_name)
 
-    def refresh(self):
-        """Refresh the edit dialog window. """
+    def refresh(self, suffix_idx):
+        """
+        Refresh the edit dialog window with the new target_run.
+
+        :param suffix_idx: The suffix or index number that will used to extract the run from the template bidsmap
+        :return:
+        """
+
+        self.target_run = bids.get_run(self.template_bidsmap, SOURCE, self.target_modality, suffix_idx, self.source_run['provenance'])
+
+        self.bidsmap = bids.update_bidsmap(self.bidsmap,
+                                           self.source_modality,
+                                           self.source_modality_index,
+                                           self.target_modality,
+                                           self.target_run)
+
+        self.source_modality_index = len(self.bidsmap[SOURCE][self.target_modality]) - 1
 
         # Refresh the DICOM attributes
-        dicom_attributes, dicom_data = self.get_dicom_attributes_data()
+        dicom_data = []
+        for key, value in self.target_run['attributes'].items():
+            dicom_data.append([
+                {
+                    "value": key,
+                    "is_editable": False
+                },
+                {
+                    "value": str(value),
+                    "is_editable": True
+                }
+            ])
 
         table = self.view_dicom
 
@@ -1328,18 +1248,39 @@ class EditDialog(QDialog):
                 is_editable = element.get("is_editable", False)
                 table.removeCellWidget(i, j)
                 item = self.set_cell(value, is_editable=is_editable)
-                table.setItem(i, j, QTableWidgetItem(item))
+                table.setItem(i, j, item)
         for i in range(len(dicom_data), MAX_NUM_DICOM_ATTRIBUTES):
             for j, element in enumerate(row):
                 table.removeCellWidget(i, j)
                 item = self.set_cell('', is_editable=False)
-                table.setItem(i, j, QTableWidgetItem(item))
-
-        self.view_dicom = table
+                table.setItem(i, j, item)
 
         # Refresh the BIDS values
-        bids_values, bids_data = self.get_bids_values_data()
-        bids_values['suffix'] = self.target_suffix
+        bids_data = []
+        for key, value in self.target_run['bids'].items():
+            if self.target_modality in bids.bidsmodalities and key == 'suffix':
+                value = self.target_run['bids']['suffix']
+                bids_data.append([
+                    {
+                        "value": key,
+                        "is_editable": False
+                    },
+                    {
+                        "value": value,
+                        "is_editable": False
+                    }
+                ])
+            else:
+                bids_data.append([
+                    {
+                        "value": key,
+                        "is_editable": False
+                    },
+                    {
+                        "value": value,
+                        "is_editable": True
+                    }
+                ])
 
         table = self.view_bids
 
@@ -1349,10 +1290,10 @@ class EditDialog(QDialog):
                 labels = self.allowed_suffixes[self.target_modality]
                 self.suffix_dropdown = QComboBox()
                 self.suffix_dropdown.addItems(labels)
-                self.suffix_dropdown.setCurrentIndex(self.suffix_dropdown.findText(self.target_suffix))
+                self.suffix_dropdown.setCurrentIndex(self.suffix_dropdown.findText(self.target_run['bids']['suffix']))
                 self.suffix_dropdown.currentIndexChanged.connect(self.selection_suffix_dropdown_change)
                 item = self.set_cell("suffix", is_editable=False)
-                table.setItem(i, 0, QTableWidgetItem(item))
+                table.setItem(i, 0, item)
                 table.setCellWidget(i, 1, self.suffix_dropdown)
                 continue
             for j, element in enumerate(row):
@@ -1362,22 +1303,15 @@ class EditDialog(QDialog):
                 is_editable = element.get("is_editable", False)
                 table.removeCellWidget(i, j)
                 item = self.set_cell(value, is_editable=is_editable)
-                table.setItem(i, j, QTableWidgetItem(item))
+                table.setItem(i, j, item)
         for i in range(len(bids_data), MAX_NUM_BIDS_ATTRIBUTES):
             for j, element in enumerate(row):
                 table.removeCellWidget(i, j)
                 item = self.set_cell('', is_editable=False)
-                table.setItem(i, j, QTableWidgetItem(item))
-
-        self.view_bids = table
-
-        if self.target_modality in bids.bidsmodalities:
-            bids_values['suffix'] = self.target_suffix
+                table.setItem(i, j, item)
 
         # Update the BIDS output name
-        self.target_run['bids'] = bids_values
-        self.update_bidsname()
-
+        self.refresh_bidsname()
 
     def selection_modality_dropdown_change(self, i):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
@@ -1385,24 +1319,15 @@ class EditDialog(QDialog):
 
         LOGGER.info(f"User has changed the BIDS modality from '{self.source_modality}' to '{self.target_modality}' for {self.source_run['provenance']}")
 
-        if self.target_modality in (bids.unknownmodality, bids.ignoremodality):
-            # Free field
-            self.target_suffix = ''
-        else:
-            # Fixed list of options
-            if not self.allowed_suffixes[self.target_modality]:
-                raise Exception(f'allowed suffixes empty for modality {self.target_modality}')
-            self.target_suffix = self.allowed_suffixes[self.target_modality][0]
-
-        self.refresh()
+        self.refresh(0)
 
     def selection_suffix_dropdown_change(self, i):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
-        self.target_suffix = self.suffix_dropdown.currentText()
+        target_suffix = self.suffix_dropdown.currentText()
 
-        LOGGER.info(f"User has changed the BIDS suffix from '{self.target_run['bids']['suffix']}' to '{self.target_suffix}' for {self.source_run['provenance']}")
+        LOGGER.info(f"User has changed the BIDS suffix from '{self.target_run['bids']['suffix']}' to '{target_suffix}' for {self.source_run['provenance']}")
 
-        self.refresh()
+        self.refresh(target_suffix)
 
 
 def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templatefile: str='', subprefix='sub-', sesprefix='ses-'):
