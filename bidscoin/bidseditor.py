@@ -17,7 +17,6 @@ import copy
 import webbrowser
 import pydicom
 from functools import partial
-from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog,
@@ -42,10 +41,6 @@ EDIT_WINDOW_HEIGHT  = 600
 
 INSPECT_WINDOW_WIDTH = 650
 INSPECT_WINDOW_HEIGHT = 290
-
-MAX_NUM_PROVENANCE_ATTRIBUTES = 2
-MAX_NUM_DICOM_ATTRIBUTES = 15
-MAX_NUM_BIDS_ATTRIBUTES = 9
 
 OPTIONS_TAB_INDEX = 1
 BIDSMAP_TAB_INDEX = 2
@@ -79,47 +74,6 @@ path: Command to set the path to dcm2niix, e.g.:
       '\"C:\\Program Files\\dcm2niix\"' (note the quotes to deal with the whitespace)
 args: Argument string that is passed to dcm2niix. Click [Test] and see the terminal output for usage
       Tip: SPM users may want to use '-z n', which produces unzipped nifti's"""
-
-
-def get_allowed_suffixes(template_bidsmap):
-    """Derive the possible suffixes for each modality from the template. """
-    allowed_suffixes = {}
-    for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-        allowed_suffixes[modality] = []
-        runs = template_bidsmap[SOURCE][modality]
-        if not runs:
-            continue
-        for run in runs:
-            suffix = run['bids'].get('suffix', None)
-            if suffix and suffix not in allowed_suffixes[modality]:
-                allowed_suffixes[modality].append(suffix)
-
-    # Sort the allowed suffixes alphabetically
-    for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-        allowed_suffixes[modality] = sorted(allowed_suffixes[modality])
-
-    return allowed_suffixes
-
-
-def get_html_bidsname(bidsname):
-    """Clean bidsname . """
-    return bidsname.replace('<', '&lt;').replace('>', '&gt;')
-
-
-def get_index_mapping(bidsmap):
-    """Obtain the mapping between file_index and the index for each modality. """
-    index_mapping = {}
-    file_index = 0
-    for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):  # NB: This order needs to be the same as in update_list()
-        runs = bidsmap[SOURCE][modality]
-        index_mapping[modality] = {}
-        if not runs:
-            continue
-        for modality_index, _ in enumerate(runs):
-            index_mapping[modality][file_index] = modality_index
-            file_index += 1
-
-    return index_mapping
 
 
 class InspectWindow(QDialog):
@@ -197,7 +151,7 @@ class Ui_MainWindow(object):
         self.template_bidsmap = template_bidsmap
 
         # Make sure we have the correct index mapping for the first edit
-        self.index_mapping = get_index_mapping(input_bidsmap)
+        self.index_mapping = self.get_index_mapping(input_bidsmap)
 
         self.MainWindow.setObjectName("MainWindow")
 
@@ -318,6 +272,23 @@ class Ui_MainWindow(object):
 
         # Top left of rectangle becomes top left of window centering it
         self.MainWindow.move(qr.topLeft())
+
+    @staticmethod
+    def get_index_mapping(bidsmap):
+        """Obtain the mapping between file_index and the index for each modality. """
+        index_mapping = {}
+        file_index = 0
+        for modality in bids.bidsmodalities + (
+        bids.unknownmodality, bids.ignoremodality):  # NB: This order needs to be the same as in update_list()
+            runs = bidsmap[SOURCE][modality]
+            index_mapping[modality] = {}
+            if not runs:
+                continue
+            for modality_index, _ in enumerate(runs):
+                index_mapping[modality][file_index] = modality_index
+                file_index += 1
+
+        return index_mapping
 
     def inspect_dicomfile(self, item):
         """When double clicked, show popup window. """
@@ -646,7 +617,7 @@ class Ui_MainWindow(object):
         self.output_bidsmap = output_bidsmap  # input main window / output from edit window -> output main window
 
         # Make sure we have the correct index mapping for the next edit
-        self.index_mapping = get_index_mapping(self.output_bidsmap)
+        self.index_mapping = self.get_index_mapping(self.output_bidsmap)
 
         num_files = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
@@ -875,7 +846,7 @@ class EditDialog(QDialog):
         self.sesprefix = sesprefix
 
         self.template_bidsmap = template_bidsmap
-        self.allowed_suffixes = get_allowed_suffixes(template_bidsmap)
+        self.get_allowed_suffixes()
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -897,17 +868,17 @@ class EditDialog(QDialog):
 
         self.label_provenance = QLabel()
         self.label_provenance.setText("Provenance")
-        self.view_provenance = self.set_table(data_provenance, num_rows=MAX_NUM_PROVENANCE_ATTRIBUTES)
+        self.view_provenance = self.set_table(data_provenance)
 
         self.label_dicom = QLabel()
         self.label_dicom.setText("Attributes")
-        self.view_dicom = self.set_table(data_dicom, num_rows=MAX_NUM_DICOM_ATTRIBUTES)
+        self.view_dicom = self.set_table(data_dicom)
 
         self.set_modality_dropdown_section()
 
         self.label_bids = QLabel()
         self.label_bids.setText("Labels")
-        self.view_bids = self.set_table(data_bids, num_rows=MAX_NUM_BIDS_ATTRIBUTES)
+        self.view_bids = self.set_table(data_bids)
 
         self.set_bids_name_section()
 
@@ -1001,6 +972,25 @@ class EditDialog(QDialog):
 
         super(EditDialog, self).reject()
 
+    def get_allowed_suffixes(self):
+        """Derive the possible suffixes for each modality from the template. """
+        allowed_suffixes = {}
+        for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
+            allowed_suffixes[modality] = []
+            runs = self.template_bidsmap[SOURCE][modality]
+            if not runs:
+                continue
+            for run in runs:
+                suffix = run['bids'].get('suffix', None)
+                if suffix and suffix not in allowed_suffixes[modality]:
+                    allowed_suffixes[modality].append(suffix)
+
+        # Sort the allowed suffixes alphabetically
+        for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
+            allowed_suffixes[modality] = sorted(allowed_suffixes[modality])
+
+        self.allowed_suffixes = allowed_suffixes
+
     def get_editwin_data(self):
         """Derive the tabular data needed to render the edit window. """
         data_provenance = [
@@ -1040,28 +1030,21 @@ class EditDialog(QDialog):
             ])
 
         data_bids = []
-        for key, value in self.target_run['bids'].items():
-            if self.target_modality in bids.bidsmodalities and key=='suffix':
-                value = self.target_run['bids']['suffix']
+        for bidslabel in bids.bidslabels:
+            if bidslabel in self.target_run['bids']:
+                if self.target_modality in bids.bidsmodalities and bidslabel=='suffix':
+                    is_editable = False
+                else:
+                    is_editable = True
+
                 data_bids.append([
                     {
-                        "value": key,
+                        "value": bidslabel,
                         "is_editable": False
                     },
                     {
-                        "value": value,
-                        "is_editable": False
-                    }
-                ])
-            else:
-                data_bids.append([
-                    {
-                        "value": key,
-                        "is_editable": False
-                    },
-                    {
-                        "value": value,
-                        "is_editable": True
+                        "value": self.target_run['bids'][bidslabel],
+                        "is_editable": is_editable
                     }
                 ])
 
@@ -1142,17 +1125,32 @@ class EditDialog(QDialog):
         :param row_height:
         :return:
         """
+
+        try:
+            table.disconnect()
+        except TypeError:
+            LOGGER.debug('TypeError: disconnect() of all signals failed')
+
+        table.clearContents()
+
+        num_rows = len(data)
+        table.setRowCount(num_rows)
+        extra_space = 3
+        table_height = num_rows * (row_height + extra_space) + extra_space
+        table.setMinimumHeight(table_height)
+        table.setMaximumHeight(table_height)
+
         for i, row in enumerate(data):
             table.setRowHeight(i, row_height)
             key = row[0]["value"]
             if self.target_modality in bids.bidsmodalities and key == 'suffix':
+                item = self.set_cell("suffix", is_editable=False)
+                table.setItem(i, 0, item)
                 labels = self.allowed_suffixes[self.target_modality]
-                self.suffix_dropdown = QComboBox(self)
+                self.suffix_dropdown = QComboBox()
                 self.suffix_dropdown.addItems(labels)
                 self.suffix_dropdown.setCurrentIndex(self.suffix_dropdown.findText(self.target_run['bids']['suffix']))
                 self.suffix_dropdown.currentIndexChanged.connect(self.selection_suffix_dropdown_change)
-                item = self.set_cell("suffix", is_editable=False)
-                table.setItem(i, 0, item)
                 table.setCellWidget(i, 1, self.suffix_dropdown)
                 continue
             for j, element in enumerate(row):
@@ -1163,20 +1161,10 @@ class EditDialog(QDialog):
                 item = self.set_cell(value, is_editable=is_editable)
                 table.setItem(i, j, item)
 
-        # Wipe old rows
-        for i in range(len(data), table.rowCount()):
-            for j, element in enumerate(row):
-                table.removeCellWidget(i, j)
-                item = self.set_cell('', is_editable=False)
-                table.setItem(i, j, item)
-
-    def set_table(self, data, num_rows=1, row_height=24):
+    def set_table(self, data, row_height=24):
         """Return a table widget from the data. """
         table = QTableWidget()
 
-        num_rows = len(data)
-
-        table.setRowCount(num_rows)
         table.setColumnCount(2) # Always two columns (i.e. key, value)
 
         self.fill_table(table, data, row_height=row_height)
@@ -1191,11 +1179,6 @@ class EditDialog(QDialog):
 
         table.setAlternatingRowColors(False)
         table.setShowGrid(False)
-
-        extra_space = 3
-        table_height = num_rows * (row_height + extra_space) + extra_space
-        table.setMinimumHeight(table_height)
-        table.setMaximumHeight(table_height)
 
         return table
 
@@ -1228,8 +1211,8 @@ class EditDialog(QDialog):
         subid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['participant'], self.target_run['provenance'])
         sesid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['session'], self.target_run['provenance'])
         runindex = self.target_run['bids'].get('run', '')
-        bids_name = os.path.join(self.target_modality, bids.get_bidsname(subid, sesid, self.target_modality, self.target_run, runindex, self.subprefix, self.sesprefix)) + '.*'
-        html_bids_name = get_html_bidsname(bids_name)
+        bidsname = os.path.join(self.target_modality, bids.get_bidsname(subid, sesid, self.target_modality, self.target_run, runindex, self.subprefix, self.sesprefix)) + '.*'
+        html_bids_name = bidsname.replace('<', '&lt;').replace('>', '&gt;')
 
         self.view_bids_name.clear()
         if self.target_modality == bids.ignoremodality:
@@ -1259,11 +1242,11 @@ class EditDialog(QDialog):
         # Refresh the DICOM attributes and BIDS values
         _, data_dicom, data_bids = self.get_editwin_data()
 
-        # Draw the new tables
+        # Refresh the existing tables
         self.fill_table(self.view_dicom, data_dicom)
         self.fill_table(self.view_bids, data_bids)
 
-        # Update the BIDS output name
+        # Refresh the BIDS output name
         self.refresh_bidsname()
 
     def selection_modality_dropdown_change(self, i):
