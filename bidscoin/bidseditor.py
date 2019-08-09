@@ -1128,8 +1128,8 @@ class EditDialog(QDialog):
 
         try:
             table.disconnect()
-        except TypeError:
-            LOGGER.debug('TypeError: disconnect() of all signals failed')
+        except TypeError as disconnect_error:
+            LOGGER.debug('TypeError: ' + disconnect_error)
 
         table.clearContents()
 
