@@ -1087,11 +1087,7 @@ class EditDialog(QDialog):
         :return:
         """
 
-        try:
-            table.disconnect()
-        except TypeError as disconnect_error:
-            LOGGER.debug('TypeError: ' + disconnect_error)
-
+        table.blockSignals(True)
         table.clearContents()
 
         num_rows = len(data)
@@ -1121,6 +1117,8 @@ class EditDialog(QDialog):
                 is_editable = element.get("is_editable", False)
                 item = self.set_cell(value, is_editable=is_editable)
                 table.setItem(i, j, item)
+
+        table.blockSignals(False)
 
     def set_table(self, data, row_height=24):
         """Return a table widget from the data. """
