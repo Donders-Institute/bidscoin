@@ -1043,8 +1043,6 @@ class EditDialog(QDialog):
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
             if key != '':
                 LOGGER.info(f"User has set {SOURCE}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
-
-                self.view_dicom.item(row, 1).setText(value)
                 self.target_run['attributes'][key] = value
 
     def bids_cell_was_changed(self, row, column):
@@ -1057,14 +1055,11 @@ class EditDialog(QDialog):
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
             if key != '':
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
-                if key in bids.bidslabels:
-                    value = bids.cleanup_value(bids.replace_bidsvalue(value, self.target_run['provenance']))
-
+                value = bids.cleanup_value(bids.replace_bidsvalue(value, self.target_run['provenance']))
                 LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
 
-                self.view_bids.item(row, 1).setText(value)
                 self.target_run['bids'][key] = value
-
+                self.view_bids.item(row, 1).setText(value)
                 self.refresh_bidsname()
 
     def set_cell(self, value, is_editable=False):
