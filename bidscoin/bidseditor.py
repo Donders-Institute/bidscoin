@@ -1346,7 +1346,7 @@ if __name__ == "__main__":
                                            the bids name will be replaced with `1` or increased to `2` if a file with runindex `1`
                                            already exists in that directory.
 
-                                         Field maps: IntendedFor
+                                         Fieldmaps: IntendedFor
                                            You can use the `IntendedFor` field to indicate for which runs (DICOM series) a fieldmap
                                            was intended. The dynamic label of the `IntendedFor` field can be a list of string patterns
                                            that is used to include all runs in a session that have that string pattern in their BIDS

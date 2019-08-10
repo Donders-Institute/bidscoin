@@ -173,7 +173,7 @@ When finished the bidsmapper will automatically launch [step 1b](#step-1b--runni
       the bids name will be replaced with `1` or increased to `2` if a file with runindex `1`
       already exists in that directory.
     
-    <a name="field-maps-intendedfor">Field maps: IntendedFor</a>
+    Fieldmaps: IntendedFor
       You can use the `IntendedFor` field to indicate for which runs (DICOM series) a fieldmap
       was intended. The dynamic label of the `IntendedFor` field can be a list of string patterns
       that is used to include all runs in a session that have that string pattern in their BIDS
@@ -288,10 +288,10 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    bidsmapper.py raw bids
    ```
    - Rename the "task_label" of the functional scans into something more readable, e.g. "Reward" and "Stop"
-   - Add a search pattern to the [IntendedFor](#field-maps-intendedfor) field such that it will select your fMRI runs
-   - When done, open the bidsmap.yaml file and change the options such that you will get non-zipped nifti data (i.e. `*.nii `instead of `*.nii.gz`) in your BIDS data collection
+   - Add a search pattern to the IntendedFor field such that it will select your fMRI runs (see the [bidseditor](#step-1b--running-the-bidseditor) `fieldmap` section for more details)
+   - When all done, (re)open the `bidsmap.yaml` file and change the options such that you will get non-zipped nifti data (i.e. `*.nii `instead of `*.nii.gz`) in your BIDS data collection. You can use a text editor or, much better, run the [bidseditor.py](#step-1b--running-the-bidseditor) command line tool.
    
-3. **BIDS coining.** Convert your raw data collection into a BIDS collection by running the bidscoiner bash command (note that the input is the same as for the bidsmapper):  
+3. **BIDS coining.** Convert your raw data collection into a BIDS collection by running the [bidscoiner](#step-1b--running-the-bidscoiner) commandline tool (note that the input is the same as for the bidsmapper):
    ```
    bidscoiner.py raw bids
    ```
