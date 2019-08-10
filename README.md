@@ -190,7 +190,7 @@ As shown below, the main window of the bidseditor opens with the `BIDS map` tab 
 <a name="bidseditor-main">![Bidseditor main window](./docs/bidseditor_main.png)</a>
 
 If all BIDS output names in the main window are fine, the user can click on the `Save` button and proceed with running the bidscoiner tool.
- 
+
 #### Step 2: Running the bidscoiner
 
     usage: bidscoiner.py [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-f]
