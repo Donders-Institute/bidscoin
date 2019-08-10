@@ -283,7 +283,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    - Are the DICOM files for all the sub-*/ses-# folders organised in series-subfolders (e.g. sub-001/ses-01/003-T1MPRAGE/0001.dcm etc)? Use `dicomsort.py` if not
    - Use the `rawmapper.py` command to print out the DICOM values of the "EchoTime", "Sex" and "AcquisitionDate" of the fMRI series in the `raw` folder
 
-2. **BIDS mapping.** Scan all folders in the raw data collection for unknown data by running the [bidsmapper](##step-1a--running-the-bidsmapper) bash command:  
+2. **BIDS mapping.** Scan all folders in the raw data collection for unknown data by running the [bidsmapper](#step-1a--running-the-bidsmapper) bash command:  
    ```
    bidsmapper.py raw bids
    ```
