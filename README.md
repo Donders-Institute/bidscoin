@@ -9,7 +9,7 @@
   * [The BIDScoin workflow](#the-bidscoin-workflow)
     + [Required source data structure](#required-source-data-structure)
     + [Coining your source data to BIDS](#coining-your-source-data-to-bids)
-      - [Step 1a: Running the bidsmapper](#step-1a--running-the-bidsmapper)
+      - [Step 1a: Running the bidsmapper](#step-1a-running-the-bidsmapper)
       - [Step 1b: Running the bidseditor](#step-1b--running-the-bidseditor)
       - [Step 2: Running the bidscoiner](#step-2--running-the-bidscoiner)
     + [Finishing up](#finishing-up)
