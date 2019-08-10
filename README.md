@@ -10,8 +10,8 @@
     + [Required source data structure](#required-source-data-structure)
     + [Coining your source data to BIDS](#coining-your-source-data-to-bids)
       - [Step 1a: Running the bidsmapper](#step-1a-running-the-bidsmapper)
-      - [Step 1b: Running the bidseditor](#step-1b--running-the-bidseditor)
-      - [Step 2: Running the bidscoiner](#step-2--running-the-bidscoiner)
+      - [Step 1b: Running the bidseditor](#step-1b-running-the-bidseditor)
+      - [Step 2: Running the bidscoiner](#step-2-running-the-bidscoiner)
     + [Finishing up](#finishing-up)
   * [Plug-in functions](#options-and-plug-in-functions)
   * [BIDScoin functionality / TODO](#bidscoin-functionality--todo)
@@ -43,7 +43,7 @@ BIDScoin will take your (raw) source data as well as a YAML file with the key-va
 > If these utilities do not satisfy your needs, then have a look at this [reorganize_dicom_files](https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md) tool.
 
 ### Coining your source data to BIDS
-Having an organized source data folder, the actual data-set conversion to BIDS can be performed fully automatically by simply running [(1a)](#step-1a--running-the-bidsmapper) the `bidsmapper.py`, [(1b)](#step-1b--running-the-bidseditor) the `bidseditor.py` and [(2)](#step-2--running-the-bidscoiner) the `bidscoiner.py` command-line tools after another:
+Having an organized source data folder, the actual data-set conversion to BIDS can be performed fully automatically by simply running [(1a)](#step-1a-running-the-bidsmapper) the `bidsmapper.py`, [(1b)](#step-1b-running-the-bidseditor) the `bidseditor.py` and [(2)](#step-2-running-the-bidscoiner) the `bidscoiner.py` command-line tools after another:
 
 #### Step 1a: Running the bidsmapper
 
@@ -102,7 +102,7 @@ Having an organized source data folder, the actual data-set conversion to BIDS c
 
 The bidsmapper will scan your `sourcefolder` to look for different runs (scan-types) to create a mapping for each run to a bids output name (a.k.a. the 'bidsmap'). By default, as depicted below, the bidsmapper will use a graphical interface to interactively ask the user for input when new and unknown runs are encountered. In this interface, the user can choose the right BIDS `Modality` (drop down menu) and edit the associated BIDS `Labels` (double click black items), or (for expert usage) adapt the DICOM `Attributes` (double click black items). The new BIDS `Output name` is then shown on the bottom and, if it is all fine, the user can store the mapping to the bidsmap by clicking the `OK` button. Tip: use the `-t bidsmap_dccn` option and see if it works for you (if not, consider adapting it to your needs).
 
-When finished the bidsmapper will automatically launch [step 1b](#step-1b--running-the-bidseditor), as described in the next section (but step 1b can also always be run separately).
+When finished the bidsmapper will automatically launch [step 1b](#step-1b-running-the-bidseditor), as described in the next section (but step 1b can also always be run separately).
 
 <a name="bidseditor-edit">![Bidseditor edit window](./docs/bidseditor_edit.png)</a>
 
@@ -283,15 +283,15 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    - Are the DICOM files for all the sub-*/ses-* folders organised in series-subfolders (e.g. sub-001/ses-01/003-T1MPRAGE/0001.dcm etc)? Use `dicomsort.py` if not
    - Use the `rawmapper.py` command to print out the DICOM values of the "EchoTime", "Sex" and "AcquisitionDate" of the fMRI series in the `raw` folder
 
-2. **BIDS mapping.** Scan all folders in the raw data collection for unknown data by running the [bidsmapper](#step-1a--running-the-bidsmapper) bash command:  
+2. **BIDS mapping.** Scan all folders in the raw data collection for unknown data by running the [bidsmapper](#step-1a-running-the-bidsmapper) bash command:  
    ```
    bidsmapper.py raw bids
    ```
    - Rename the "task_label" of the functional scans into something more readable, e.g. "Reward" and "Stop"
-   - Add a search pattern to the IntendedFor field such that it will select your fMRI runs (see the [bidseditor](#step-1b--running-the-bidseditor) `fieldmap` section for more details)
-   - When all done, (re)open the `bidsmap.yaml` file and change the options such that you will get non-zipped nifti data (i.e. `*.nii `instead of `*.nii.gz`) in your BIDS data collection. You can use a text editor or, much better, run the [bidseditor](#step-1b--running-the-bidseditor) command line tool.
+   - Add a search pattern to the IntendedFor field such that it will select your fMRI runs (see the [bidseditor](#step-1b-running-the-bidseditor) `fieldmap` section for more details)
+   - When all done, (re)open the `bidsmap.yaml` file and change the options such that you will get non-zipped nifti data (i.e. `*.nii `instead of `*.nii.gz`) in your BIDS data collection. You can use a text editor or, much better, run the [bidseditor](#step-1b-running-the-bidseditor) command line tool.
 
-3. **BIDS coining.** Convert your raw data collection into a BIDS collection by running the [bidscoiner](#step-2--running-the-bidscoiner) commandline tool (note that the input is the same as for the bidsmapper):
+3. **BIDS coining.** Convert your raw data collection into a BIDS collection by running the [bidscoiner](#step-2-running-the-bidscoiner) commandline tool (note that the input is the same as for the bidsmapper):
    ```
    bidscoiner.py raw bids
    ```
