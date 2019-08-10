@@ -173,7 +173,7 @@ When finished the bidsmapper will automatically launch [step 1b](#step-1b--runni
       the bids name will be replaced with `1` or increased to `2` if a file with runindex `1`
       already exists in that directory.
     
-    {#field-maps-intendedfor}Field maps: IntendedFor
+    <a #field-maps-intendedfor>Field maps: IntendedFor</a>
       You can use the `IntendedFor` field to indicate for which runs (DICOM series) a fieldmap
       was intended. The dynamic label of the `IntendedFor` field can be a list of string patterns
       that is used to include all runs in a session that have that string pattern in their BIDS
