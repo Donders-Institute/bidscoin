@@ -270,7 +270,7 @@ BIDScoin provides the possibility for researchers to write custom python functio
 
 ## BIDScoin tutorial
 This tutorial is specific for researchers from the DCCN and makes use of data-sets stored on its central file-system. However, it should not be difficult to use (at least part of) this tutorial for other data-sets as well.
- 
+
 1. **Preparation.** Activate the bidscoin environment and create a tutorial playground folder in your home directory by executing these bash commands (see also `module help bidscoin`):  
    ```
    module add bidscoin  
@@ -290,7 +290,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
    - Rename the "task_label" of the functional scans into something more readable, e.g. "Reward" and "Stop"
    - Add a search pattern to the IntendedFor field such that it will select your fMRI runs (see the [bidseditor](#step-1b--running-the-bidseditor) `fieldmap` section for more details)
    - When all done, (re)open the `bidsmap.yaml` file and change the options such that you will get non-zipped nifti data (i.e. `*.nii `instead of `*.nii.gz`) in your BIDS data collection. You can use a text editor or, much better, run the [bidseditor](#step-1b--running-the-bidseditor) command line tool.
-   
+
 3. **BIDS coining.** Convert your raw data collection into a BIDS collection by running the [bidscoiner](#step-2--running-the-bidscoiner) commandline tool (note that the input is the same as for the bidsmapper):
    ```
    bidscoiner.py raw bids
