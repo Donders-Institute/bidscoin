@@ -828,6 +828,7 @@ class EditDialog(QDialog):
     EditDialog().result() == 2: done without result
     """
 
+    # Emit the new bidsmap when done
     done_edit = QtCore.pyqtSignal(dict)
 
     def __init__(self, modality_index, modality, bidsmap, template_bidsmap, subprefix='sub-', sesprefix='ses-'):

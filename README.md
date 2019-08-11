@@ -5,17 +5,16 @@
 [![PyPI version](https://badge.fury.io/py/bidscoin.svg)](https://badge.fury.io/py/bidscoin)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/bidscoin.svg)
 
-- [BIDScoin](#bidscoin)
-  * [The BIDScoin workflow](#the-bidscoin-workflow)
-    + [Required source data structure](#required-source-data-structure)
-    + [Coining your source data to BIDS](#coining-your-source-data-to-bids)
-      - [Step 1a: Running the bidsmapper](#step-1a-running-the-bidsmapper)
-      - [Step 1b: Running the bidseditor](#step-1b-running-the-bidseditor)
-      - [Step 2: Running the bidscoiner](#step-2-running-the-bidscoiner)
-    + [Finishing up](#finishing-up)
-  * [Plug-in functions](#options-and-plug-in-functions)
-  * [BIDScoin functionality / TODO](#bidscoin-functionality--todo)
-  * [BIDScoin tutorial](#bidscoin-tutorial)
+- [The BIDScoin workflow](#the-bidscoin-workflow)
+* [Required source data structure](#required-source-data-structure)
+* [Coining your source data to BIDS](#coining-your-source-data-to-bids)
+  + [Step 1a: Running the bidsmapper](#step-1a-running-the-bidsmapper)
+  + [Step 1b: Running the bidseditor](#step-1b-running-the-bidseditor)
+  + [Step 2: Running the bidscoiner](#step-2-running-the-bidscoiner)
+* [Finishing up](#finishing-up)
+- [Plug-in functions](#options-and-plug-in-functions)
+- [BIDScoin functionality / TODO](#bidscoin-functionality--todo)
+- [BIDScoin tutorial](#bidscoin-tutorial)
 
 BIDScoin is a user friendly [open-source](https://github.com/Donders-Institute/bidscoin) python toolkit that converts ("coins") source-level (raw) neuroimaging data-sets to [nifti](https://nifti.nimh.nih.gov/) / [json](https://www.json.org/) / [tsv](https://en.wikipedia.org/wiki/Tab-separated_values) data-sets that are organized following the Brain Imaging Data Structure, a.k.a. [BIDS](http://bids.neuroimaging.io) standard. Rather then depending on complex or ambiguous programmatic logic for the identification of imaging modalities, BIDScoin uses a direct mapping approach to identify and convert the raw source data into BIDS data. The information sources that can be used to map the source data to BIDS are:
 
