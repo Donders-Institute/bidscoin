@@ -104,6 +104,7 @@ class InspectWindow(QDialog):
 
         buttonBox = QDialogButtonBox(self)
         buttonBox.setStandardButtons(QDialogButtonBox.Ok)
+        buttonBox.button(QDialogButtonBox.Ok).setToolTip('Close this window')
         verticalLayout.addWidget(buttonBox)
 
         buttonBox.accepted.connect(self.close)
@@ -173,8 +174,8 @@ class Ui_MainWindow(object):
         buttonBox = QDialogButtonBox(self.MainWindow)
         buttonBox.setStandardButtons(QDialogButtonBox.Save | QDialogButtonBox.Reset | QDialogButtonBox.Help)
         buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
-        buttonBox.button(QDialogButtonBox.Save).setToolTip('Save Options to disk')
-        buttonBox.button(QDialogButtonBox.Reset).setToolTip('Reload Options from disk')
+        buttonBox.button(QDialogButtonBox.Save).setToolTip('Save the Options and BIDS-map to disk')
+        buttonBox.button(QDialogButtonBox.Reset).setToolTip('Reload the Options and BIDS-map from disk')
 
         top_layout.addWidget(buttonBox)
 
@@ -844,6 +845,9 @@ class EditDialog(QDialog):
 
         buttonBox = QDialogButtonBox(self)
         buttonBox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Help)
+        buttonBox.button(QDialogButtonBox.Ok).setToolTip('Save the changes you made and close this window')
+        buttonBox.button(QDialogButtonBox.Cancel).setToolTip('Cancel the changes you made and close this window')
+        buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
 
         groupbox1 = QGroupBox(SOURCE + ' input')
         layout1 = QVBoxLayout()
