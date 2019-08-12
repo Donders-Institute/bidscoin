@@ -170,6 +170,18 @@ class Ui_MainWindow(object):
 
         top_layout.addWidget(self.tabwidget)
 
+        buttonBox = QDialogButtonBox(self.MainWindow)
+        buttonBox.setStandardButtons(QDialogButtonBox.Save | QDialogButtonBox.Reset | QDialogButtonBox.Help)
+        buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
+        buttonBox.button(QDialogButtonBox.Save).setToolTip('Save Options to disk')
+        buttonBox.button(QDialogButtonBox.Reset).setToolTip('Reload Options from disk')
+
+        top_layout.addWidget(buttonBox)
+
+        buttonBox.helpRequested.connect(self.get_help)
+        buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reload)
+        buttonBox.button(QDialogButtonBox.Save).clicked.connect(self.save_bidsmap_to_file)
+
         self.MainWindow.setCentralWidget(centralwidget)
         self.set_menu_and_status_bar()
 
@@ -452,18 +464,6 @@ class Ui_MainWindow(object):
         self.tab2 = QtWidgets.QWidget()
         self.tab2.layout = QVBoxLayout()
 
-        help_button = QtWidgets.QPushButton()
-        help_button.setText("Help")
-        help_button.setToolTip("Go to the online BIDScoin documentation")
-
-        reload_button = QtWidgets.QPushButton()
-        reload_button.setText("Reload")
-        reload_button.setToolTip("Reload Options from disk")
-
-        save_button = QtWidgets.QPushButton()
-        save_button.setText("Save")
-        save_button.setToolTip("Save Options to disk")
-
         bidsmap_options = self.output_bidsmap['Options']
 
         tool_list = []
@@ -577,12 +577,6 @@ class Ui_MainWindow(object):
         self.plugintable = plugintable
         self.update_plugintable(row_height)
 
-        hbox = QHBoxLayout()
-        hbox.addStretch(1)
-        hbox.addWidget(help_button)
-        hbox.addWidget(reload_button)
-        hbox.addWidget(save_button)
-
         vbox = QVBoxLayout()
         for label, table in zip(labels, self.tables_options):
             vbox.addWidget(label)
@@ -590,7 +584,6 @@ class Ui_MainWindow(object):
         vbox.addWidget(pluginlabel)
         vbox.addWidget(plugintable)
         vbox.addStretch(1)
-        vbox.addLayout(hbox)
 
         self.tab2.layout.addLayout(vbox)
 
@@ -599,10 +592,6 @@ class Ui_MainWindow(object):
         options.setObjectName("Options")
 
         self.tabwidget.addTab(options, "")
-
-        help_button.clicked.connect(self.get_help)
-        reload_button.clicked.connect(self.reload)
-        save_button.clicked.connect(self.save_bidsmap_to_file)
 
     def update_list(self, output_bidsmap):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
@@ -696,33 +685,14 @@ class Ui_MainWindow(object):
 
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        help_button = QtWidgets.QPushButton("Help")
-        help_button.setToolTip("Go to the online BIDScoin documentation")
-
-        reload_button = QtWidgets.QPushButton("Reload")
-        reload_button.setToolTip("Reload the BIDSmap from disk")
-
-        save_button = QtWidgets.QPushButton("Save")
-        save_button.setToolTip("Save the BIDSmap to disk")
-
-        hbox = QHBoxLayout()
-        hbox.addStretch(1)
-        hbox.addWidget(help_button)
-        hbox.addWidget(reload_button)
-        hbox.addWidget(save_button)
 
         self.tab3.layout.addWidget(self.table)
-        self.tab3.layout.addLayout(hbox)
 
         self.file_sample_listing = QtWidgets.QWidget()
         self.file_sample_listing.setLayout(self.tab3.layout)
         self.file_sample_listing.setObjectName("filelister")
 
         self.tabwidget.addTab(self.file_sample_listing, "")
-
-        help_button.clicked.connect(self.get_help)
-        reload_button.clicked.connect(self.reload)
-        save_button.clicked.connect(self.save_bidsmap_to_file)
 
     def get_help(self):
         """Get online help. """
@@ -872,15 +842,8 @@ class EditDialog(QDialog):
 
         self.set_bids_name_section()
 
-        help_button = QtWidgets.QPushButton("Help")
-        cancel_button = QtWidgets.QPushButton("Cancel")
-        ok_button = QtWidgets.QPushButton("OK")
-
-        hbox = QHBoxLayout()
-        hbox.addStretch(1)
-        hbox.addWidget(help_button)
-        hbox.addWidget(cancel_button)
-        hbox.addWidget(ok_button)
+        buttonBox = QDialogButtonBox(self)
+        buttonBox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Help)
 
         groupbox1 = QGroupBox(SOURCE + ' input')
         layout1 = QVBoxLayout()
@@ -900,7 +863,7 @@ class EditDialog(QDialog):
         layout2.addWidget(self.label_bids_name)
         layout2.addWidget(self.view_bids_name)
         layout2.addStretch(1)
-        layout2.addLayout(hbox)
+        layout2.addWidget(buttonBox)
         groupbox2.setLayout(layout2)
 
         layout_scrollarea.addWidget(groupbox1)
@@ -911,9 +874,9 @@ class EditDialog(QDialog):
         self.view_dicom.cellChanged.connect(self.dicom_cell_was_changed)
         self.view_bids.cellChanged.connect(self.bids_cell_was_changed)
 
-        help_button.clicked.connect(self.get_help)
-        cancel_button.clicked.connect(self.reject)
-        ok_button.clicked.connect(self.update_run)
+        buttonBox.accepted.connect(self.update_run)
+        buttonBox.rejected.connect(self.reject)
+        buttonBox.helpRequested.connect(self.get_help)
 
         layout_all.addWidget(scrollarea)
 
