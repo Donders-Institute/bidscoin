@@ -19,7 +19,7 @@ import pydicom
 from functools import partial
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog,
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog, QDialogButtonBox,
                              QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog, QMessageBox,
                              QTableWidget, QTableWidgetItem, QGroupBox, QTextBrowser,
                              QAbstractItemView, QPushButton, QComboBox, QTextEdit, QDesktopWidget)
@@ -33,10 +33,10 @@ SOURCE = 'DICOM'            # TODO: allow for non-DICOM (e.g. PAR/REC) edits
 
 LOGGER = logging.getLogger('bidscoin')
 
-MAIN_WINDOW_WIDTH   = 1200
+MAIN_WINDOW_WIDTH   = 1250
 MAIN_WINDOW_HEIGHT  = 700
 
-EDIT_WINDOW_WIDTH   = 1200
+EDIT_WINDOW_WIDTH   = 1100
 EDIT_WINDOW_HEIGHT  = 600
 
 INSPECT_WINDOW_WIDTH = 850
@@ -102,16 +102,11 @@ class InspectWindow(QDialog):
         textBrowser.insertPlainText(str(dicomdict))
         verticalLayout.addWidget(textBrowser)
 
-        hbox = QHBoxLayout(self)
-        hbox.addStretch(1)
+        buttonBox = QDialogButtonBox(self)
+        buttonBox.setStandardButtons(QDialogButtonBox.Ok)
+        verticalLayout.addWidget(buttonBox)
 
-        pushButton = QPushButton('OK')
-        pushButton.setToolTip('Close dialog')
-        hbox.addWidget(pushButton)
-
-        verticalLayout.addLayout(hbox)
-
-        pushButton.clicked.connect(self.close)
+        buttonBox.accepted.connect(self.close)
 
 
 class MainWindow(QMainWindow):
