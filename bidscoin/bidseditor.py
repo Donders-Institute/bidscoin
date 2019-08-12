@@ -142,7 +142,7 @@ class Ui_MainWindow(object):
         self.template_bidsmap = template_bidsmap
 
         # Make sure we have the correct index mapping for the first edit
-        self.set_initial_file_index(input_bidsmap)
+        self.set_initial_file_index()
 
         self.MainWindow.setObjectName("MainWindow")
 
@@ -274,15 +274,17 @@ class Ui_MainWindow(object):
         # Top left of rectangle becomes top left of window centering it
         self.MainWindow.move(qr.topLeft())
 
-    def set_initial_file_index(self, bidsmap):
+    def set_initial_file_index(self):
         """Obtain the mapping between the provenance and the initial file-index. """
         initial_file_index = {}
         file_index = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-            runs = bidsmap[SOURCE][modality]
+            runs = self.input_bidsmap[SOURCE][modality]
             if not runs:
                 continue
             for run in runs:
+                if not run['provenance']:
+                    LOGGER.error(f'The bidsmap run {modality} run does not contain provenance data')
                 initial_file_index[run['provenance']] = file_index
                 file_index += 1
 
@@ -657,7 +659,7 @@ class Ui_MainWindow(object):
         self.table.setShowGrid(True)
 
         # Make sure we have the correct index mapping for the next edit
-        num_files = self.set_initial_file_index(self.output_bidsmap)
+        num_files = self.set_initial_file_index()
 
         self.table.setColumnCount(6)
         self.table.setRowCount(num_files)
