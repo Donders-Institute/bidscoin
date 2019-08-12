@@ -704,10 +704,12 @@ class Ui_MainWindow(object):
         webbrowser.open(HELP_URL_DEFAULT)
 
     def reload(self):
-        LOGGER.info('User has reloaded the bidsmap')
-
-        selected_tab_index = self.tabwidget.currentIndex()
         """Reset button: reload the original input BIDS map. """
+        if self.has_edit_dialog_open:
+            self.dialog_edit.reject(confirm=False)
+
+        LOGGER.info('User reloads the bidsmap')
+        selected_tab_index = self.tabwidget.currentIndex()
         self.output_bidsmap, _ = bids.load_bidsmap(self.bidsmap_filename)
         self.setupUi(self.MainWindow,
                      self.bidsfolder,
