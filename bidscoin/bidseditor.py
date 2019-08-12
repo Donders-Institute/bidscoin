@@ -648,7 +648,7 @@ class Ui_MainWindow(object):
                         self.table.item(idx, 3).setFont(f)
                     else:
                         self.table.item(idx, 3).setForeground(QtGui.QColor(0, 128, 0))
-                self.edit_button.clicked.connect(self.handle_button_clicked)
+                self.edit_button.clicked.connect(self.handle_edit_button_clicked)
                 self.edit_button.setToolTip('Click to see more details and edit the BIDS output name')
                 self.table.setCellWidget(idx, 4, self.edit_button)
 
@@ -730,7 +730,7 @@ class Ui_MainWindow(object):
         if filename:
             bids.save_bidsmap(filename, self.output_bidsmap)
 
-    def handle_button_clicked(self):
+    def handle_edit_button_clicked(self):
         """Make sure that index map has been updated. """
         button = self.MainWindow.focusWidget()
         rowindex = self.table.indexAt(button.pos()).row()
