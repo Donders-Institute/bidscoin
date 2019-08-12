@@ -178,7 +178,7 @@ class Ui_MainWindow(object):
         self.MainWindow.setCentralWidget(centralwidget)
         self.set_menu_and_status_bar()
 
-        self.MainWindow.setMinimumSize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
+        self.MainWindow.resize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
         self.center()
 
     def set_menu_and_status_bar(self):
@@ -922,7 +922,7 @@ class EditDialog(QDialog):
 
         layout_all.addWidget(scrollarea)
 
-        self.setMinimumSize(EDIT_WINDOW_WIDTH, EDIT_WINDOW_HEIGHT)
+        self.resize(EDIT_WINDOW_WIDTH, EDIT_WINDOW_HEIGHT)
         self.center()
 
         finish = QtWidgets.QAction(self)
