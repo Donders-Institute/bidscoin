@@ -33,10 +33,10 @@ SOURCE = 'DICOM'            # TODO: allow for non-DICOM (e.g. PAR/REC) edits
 
 LOGGER = logging.getLogger('bidscoin')
 
-MAIN_WINDOW_WIDTH   = 1400
+MAIN_WINDOW_WIDTH   = 1200
 MAIN_WINDOW_HEIGHT  = 700
 
-EDIT_WINDOW_WIDTH   = 1400
+EDIT_WINDOW_WIDTH   = 1200
 EDIT_WINDOW_HEIGHT  = 600
 
 INSPECT_WINDOW_WIDTH = 650
@@ -116,7 +116,7 @@ class InspectWindow(QDialog):
         top_widget.resize(top_widget.sizeHint())
 
         self.setMinimumSize(INSPECT_WINDOW_WIDTH, INSPECT_WINDOW_HEIGHT)
-        self.setMaximumSize(INSPECT_WINDOW_WIDTH, INSPECT_WINDOW_HEIGHT)
+        # self.setMaximumSize(INSPECT_WINDOW_WIDTH, INSPECT_WINDOW_HEIGHT)
 
 
 class MainWindow(QMainWindow):
@@ -159,12 +159,12 @@ class Ui_MainWindow(object):
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.MainWindow.setWindowIcon(icon)
 
-        self.centralwidget = QtWidgets.QWidget(self.MainWindow)
-        self.centralwidget.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
-        self.centralwidget.setObjectName("centralwidget")
+        centralwidget = QtWidgets.QWidget(self.MainWindow)
+        centralwidget.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
+        centralwidget.setObjectName("centralwidget")
 
-        top_widget = QtWidgets.QWidget(self.centralwidget)
-        top_layout = QtWidgets.QVBoxLayout(self.centralwidget)
+        top_widget = QtWidgets.QWidget(centralwidget)
+        top_layout = QtWidgets.QVBoxLayout(centralwidget)
 
         self.tabwidget = QtWidgets.QTabWidget(top_widget)
         self.tabwidget.setTabPosition(QtWidgets.QTabWidget.North)
@@ -180,7 +180,7 @@ class Ui_MainWindow(object):
 
         top_layout.addWidget(self.tabwidget)
 
-        self.MainWindow.setCentralWidget(self.centralwidget)
+        self.MainWindow.setCentralWidget(centralwidget)
         self.set_menu_and_status_bar()
 
         self.MainWindow.setMinimumSize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
@@ -188,77 +188,75 @@ class Ui_MainWindow(object):
 
     def set_menu_and_status_bar(self):
         """Set the menu. """
-        self.menubar = QtWidgets.QMenuBar(self.MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 997, 26))
-        self.menuFile = QtWidgets.QMenu(self.menubar)
-        self.menuHelp = QtWidgets.QMenu(self.menubar)
+        menubar = QtWidgets.QMenuBar(self.MainWindow)
+        menubar.setGeometry(QtCore.QRect(0, 0, 997, 26))
+        menuFile = QtWidgets.QMenu(menubar)
+        menuHelp = QtWidgets.QMenu(menubar)
 
-        self.MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(self.MainWindow)
+        self.MainWindow.setMenuBar(menubar)
+        statusbar = QtWidgets.QStatusBar(self.MainWindow)
 
         # Set the statusbar
-        self.statusbar.setToolTip("")
-        self.statusbar.setObjectName("statusbar")
-        self.MainWindow.setStatusBar(self.statusbar)
+        statusbar.setToolTip("")
+        statusbar.setObjectName("statusbar")
+        self.MainWindow.setStatusBar(statusbar)
 
         # Define the menu actions
-        self.actionExit = QtWidgets.QAction(self.MainWindow)
-        self.actionExit.triggered.connect(self.exit_application)
+        actionExit = QtWidgets.QAction(self.MainWindow)
+        actionExit.triggered.connect(self.exit_application)
 
-        self.actionReload = QtWidgets.QAction(self.MainWindow)
-        self.actionReload.triggered.connect(self.reload)
+        actionReload = QtWidgets.QAction(self.MainWindow)
+        actionReload.triggered.connect(self.reload)
 
-        self.actionSave = QtWidgets.QAction(self.MainWindow)
-        self.actionSave.triggered.connect(self.save_bidsmap_to_file)
+        actionSave = QtWidgets.QAction(self.MainWindow)
+        actionSave.triggered.connect(self.save_bidsmap_to_file)
 
-        self.actionAbout = QtWidgets.QAction(self.MainWindow)
-        self.actionAbout.triggered.connect(self.show_about)
+        actionAbout = QtWidgets.QAction(self.MainWindow)
+        actionAbout.triggered.connect(self.show_about)
 
-        self.actionEdit = QtWidgets.QAction(self.MainWindow)
+        actionHelp = QtWidgets.QAction(self.MainWindow)
+        actionHelp.triggered.connect(self.get_help)
 
-        self.actionHelp = QtWidgets.QAction(self.MainWindow)
-        self.actionHelp.triggered.connect(self.get_help)
+        actionBidsHelp = QtWidgets.QAction(self.MainWindow)
+        actionBidsHelp.triggered.connect(self.get_bids_help)
 
-        self.actionBidsHelp = QtWidgets.QAction(self.MainWindow)
-        self.actionBidsHelp.triggered.connect(self.get_bids_help)
+        menuFile.addAction(actionReload)
+        menuFile.addAction(actionSave)
+        menuFile.addAction(actionExit)
 
-        self.menuFile.addAction(self.actionReload)
-        self.menuFile.addAction(self.actionSave)
-        self.menuFile.addAction(self.actionExit)
+        menuHelp.addAction(actionAbout)
+        menuHelp.addAction(actionHelp)
+        menuHelp.addAction(actionBidsHelp)
 
-        self.menuHelp.addAction(self.actionAbout)
-        self.menuHelp.addAction(self.actionHelp)
-        self.menuHelp.addAction(self.actionBidsHelp)
+        menubar.addAction(menuFile.menuAction())
+        menubar.addAction(menuHelp.menuAction())
 
-        self.menubar.addAction(self.menuFile.menuAction())
-        self.menubar.addAction(self.menuHelp.menuAction())
+        menuFile.setTitle("File")
+        menuHelp.setTitle("Help")
+        statusbar.setStatusTip("Statusbar")
 
-        self.menuFile.setTitle("File")
-        self.menuHelp.setTitle("Help")
-        self.statusbar.setStatusTip("Statusbar")
+        actionReload.setText("Reload")
+        actionReload.setStatusTip("Reload the BIDSmap from disk")
+        actionReload.setShortcut("Ctrl+R")
 
-        self.actionReload.setText("Reload")
-        self.actionReload.setStatusTip("Reload the BIDSmap from disk")
-        self.actionReload.setShortcut("Ctrl+R")
+        actionSave.setText("Save")
+        actionSave.setStatusTip("Save the BIDSmap to disk")
+        actionSave.setShortcut("Ctrl+S")
 
-        self.actionSave.setText("Save")
-        self.actionSave.setStatusTip("Save the BIDSmap to disk")
-        self.actionSave.setShortcut("Ctrl+S")
+        actionExit.setText("Exit")
+        actionExit.setStatusTip("Exit the application")
+        actionExit.setShortcut("Ctrl+X")
 
-        self.actionExit.setText("Exit")
-        self.actionExit.setStatusTip("Exit the application")
-        self.actionExit.setShortcut("Ctrl+X")
+        actionAbout.setText("About")
+        actionAbout.setStatusTip("Show information about the application")
 
-        self.actionAbout.setText("About")
-        self.actionAbout.setStatusTip("Show information about the application")
+        actionHelp.setText("Documentation")
+        actionHelp.setStatusTip("Go to the online BIDScoin documentation")
+        actionHelp.setShortcut("F1")
 
-        self.actionHelp.setText("Documentation")
-        self.actionHelp.setStatusTip("Go to the online BIDScoin documentation")
-        self.actionHelp.setShortcut("F1")
-
-        self.actionBidsHelp.setText("BIDS specification")
-        self.actionBidsHelp.setStatusTip("Go to the online BIDS specification documentation")
-        self.actionBidsHelp.setShortcut("F2")
+        actionBidsHelp.setText("BIDS specification")
+        actionBidsHelp.setStatusTip("Go to the online BIDS specification documentation")
+        actionBidsHelp.setShortcut("F2")
 
     def center(self):
         """Center the main window. """
@@ -303,28 +301,27 @@ class Ui_MainWindow(object):
 
     def set_tab_file_browser(self, sourcefolder):
         """Set the raw data folder inspector tab. """
-        self.tab1 = QtWidgets.QWidget()
-        self.tab1.layout = QVBoxLayout()
-        self.label = QLabel()
-        self.label.setText("Inspect source data folder: {}".format(sourcefolder))
+        tab1 = QtWidgets.QWidget()
+        tab1.layout = QVBoxLayout()
+        label = QLabel("Inspect source data folder: {}".format(sourcefolder))
         self.model = QFileSystemModel()
         self.model.setRootPath('')
         self.model.setFilter(QtCore.QDir.NoDotAndDotDot | QtCore.QDir.AllDirs | QtCore.QDir.Files)
-        self.tree = QTreeView()
-        self.tree.setModel(self.model)
-        self.tree.setAnimated(False)
-        self.tree.setIndentation(20)
-        self.tree.setSortingEnabled(True)
-        self.tree.setRootIndex(self.model.index(sourcefolder))
-        self.tree.doubleClicked.connect(self.on_double_clicked)
-        self.tab1.layout.addWidget(self.label)
-        self.tab1.layout.addWidget(self.tree)
-        self.tree.header().resizeSection(0, 800)
+        tree = QTreeView()
+        tree.setModel(self.model)
+        tree.setAnimated(False)
+        tree.setIndentation(20)
+        tree.setSortingEnabled(True)
+        tree.setRootIndex(self.model.index(sourcefolder))
+        tree.doubleClicked.connect(self.on_double_clicked)
+        tab1.layout.addWidget(label)
+        tab1.layout.addWidget(tree)
+        tree.header().resizeSection(0, 800)
 
-        self.file_browser = QtWidgets.QWidget()
-        self.file_browser.setLayout(self.tab1.layout)
-        self.file_browser.setObjectName("filebrowser")
-        self.tabwidget.addTab(self.file_browser, "")
+        file_browser = QtWidgets.QWidget()
+        file_browser.setLayout(tab1.layout)
+        file_browser.setObjectName("filebrowser")
+        self.tabwidget.addTab(file_browser, "")
 
     def set_cell(self, value, is_editable=False):
         item = QTableWidgetItem()
@@ -602,11 +599,11 @@ class Ui_MainWindow(object):
 
         self.tab2.layout.addLayout(vbox)
 
-        self.options = QtWidgets.QWidget()
-        self.options.setLayout(self.tab2.layout)
-        self.options.setObjectName("Options")
+        options = QtWidgets.QWidget()
+        options.setLayout(self.tab2.layout)
+        options.setObjectName("Options")
 
-        self.tabwidget.addTab(self.options, "")
+        self.tabwidget.addTab(options, "")
 
         help_button.clicked.connect(self.get_help)
         reload_button.clicked.connect(self.reload)
