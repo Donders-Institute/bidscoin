@@ -19,9 +19,9 @@ import pydicom
 from functools import partial
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog,
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog, QFrame,
                              QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog, QMessageBox,
-                             QTableWidget, QTableWidgetItem, QGroupBox, QPlainTextEdit,
+                             QTableWidget, QTableWidgetItem, QGroupBox, QTextBrowser,
                              QAbstractItemView, QPushButton, QComboBox, QTextEdit, QDesktopWidget)
 
 try:
@@ -39,8 +39,8 @@ MAIN_WINDOW_HEIGHT  = 700
 EDIT_WINDOW_WIDTH   = 1200
 EDIT_WINDOW_HEIGHT  = 600
 
-INSPECT_WINDOW_WIDTH = 650
-INSPECT_WINDOW_HEIGHT = 290
+INSPECT_WINDOW_WIDTH = 450
+INSPECT_WINDOW_HEIGHT = 750
 
 OPTIONS_TAB_INDEX = 1
 BIDSMAP_TAB_INDEX = 2
@@ -76,7 +76,7 @@ args: Argument string that is passed to dcm2niix. Click [Test] and see the termi
       Tip: SPM users may want to use '-z n', which produces unzipped nifti's"""
 
 
-class InspectWindow(QDialog):
+class InspectWindow(QFrame):
 
     def __init__(self, filename, dicomdict):
         super().__init__()
@@ -86,36 +86,34 @@ class InspectWindow(QDialog):
         self.setWindowIcon(icon)
         self.setWindowTitle(f"Inspect {SOURCE} file")
 
-        top_widget = QtWidgets.QWidget(self)
-        top_layout = QtWidgets.QVBoxLayout()
+        self.resize(INSPECT_WINDOW_WIDTH, INSPECT_WINDOW_HEIGHT)
+        self.setFrameShape(QFrame.StyledPanel)
+        self.setFrameShadow(QFrame.Raised)
 
-        label = QLabel(top_widget)
-        label.setText("Filename: " + os.path.basename(filename))
+        verticalLayout = QVBoxLayout(self)
 
-        label_path = QLabel(top_widget)
-        label_path.setText("Path: " + os.path.dirname(filename))
+        label = QLabel('Filename: ' + os.path.basename(filename))
+        verticalLayout.addWidget(label)
 
-        text_area = QPlainTextEdit(top_widget)
-        text_area.insertPlainText(str(dicomdict))
+        label_path = QLabel('Path: ' + os.path.dirname(filename))
+        verticalLayout.addWidget(label_path)
 
-        pushButton = QPushButton("OK")
-        pushButton.setToolTip("Close dialog")
-        hbox = QHBoxLayout()
-        hbox.addStretch(1)
-        hbox.addWidget(pushButton)
+        textBrowser = QTextBrowser(self)
+        textBrowser.insertPlainText(str(dicomdict))
+        verticalLayout.addWidget(textBrowser)
 
-        top_layout.addWidget(label_path)
-        top_layout.addWidget(label)
-        top_layout.addWidget(text_area)
-        top_layout.addLayout(hbox)
+        hbox = QFrame(self)
+        horizontalLayout = QHBoxLayout(hbox)
+        horizontalLayout.addStretch(1)
+
+        pushButton = QPushButton('OK')
+        pushButton.setToolTip('Close dialog')
+
+        horizontalLayout.addWidget(pushButton)
+
+        verticalLayout.addWidget(hbox)
 
         pushButton.clicked.connect(self.close)
-
-        top_widget.setLayout(top_layout)
-        top_widget.resize(top_widget.sizeHint())
-
-        self.setMinimumSize(INSPECT_WINDOW_WIDTH, INSPECT_WINDOW_HEIGHT)
-        # self.setMaximumSize(INSPECT_WINDOW_WIDTH, INSPECT_WINDOW_HEIGHT)
 
 
 class MainWindow(QMainWindow):
