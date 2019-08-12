@@ -737,7 +737,7 @@ class Ui_MainWindow(object):
         modality = self.table.item(rowindex, 2).text()
         provenance = self.table.item(rowindex, 5).text()
 
-        self.show_edit(provenance, modality)
+        self.open_edit_dialog(provenance, modality)
 
     def on_double_clicked(self, index):
         filename = self.model.fileInfo(index).absoluteFilePath()
@@ -751,11 +751,10 @@ class Ui_MainWindow(object):
         about = f"BIDS editor\n{bids.version()}"
         QMessageBox.about(self.MainWindow, 'About', about)
 
-    def show_edit(self, provenance, modality, exec=False):
+    def open_edit_dialog(self, provenance, modality, exec=False):
         """Check for open edit window, find the right modality index and open the edit window"""
 
         if not self.has_edit_dialog_open:
-
             # Find the source index of the run in the list of runs (using the provenance) and open the edit window
             for modality_index, run in enumerate(self.output_bidsmap[SOURCE][modality]):
                 if run['provenance']==provenance:
@@ -775,7 +774,7 @@ class Ui_MainWindow(object):
             if self.has_edit_dialog_open:
                 return
 
-            self.show_edit(provenance, modality, exec)
+            self.open_edit_dialog(provenance, modality, exec)
 
     def release_edit_dialog(self):
         """Allow a new edit window to be opened"""
