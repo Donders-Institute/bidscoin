@@ -124,8 +124,8 @@ class MainWindow(QMainWindow):
 
 class Ui_MainWindow(object):
 
-    def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename,
-                input_bidsmap, output_bidsmap, template_bidsmap, selected_tab_index=BIDSMAP_TAB_INDEX, subprefix='sub-', sesprefix='ses-'):
+    def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, input_bidsmap, output_bidsmap, template_bidsmap,
+                selected_tab_index=BIDSMAP_TAB_INDEX, subprefix='sub-', sesprefix='ses-'):
 
         self.has_edit_dialog_open = False
 
@@ -142,7 +142,7 @@ class Ui_MainWindow(object):
         self.template_bidsmap = template_bidsmap
 
         # Make sure we have the correct index mapping for the first edit
-        self.get_index_mapping(input_bidsmap)
+        self.set_initial_file_index(input_bidsmap)
 
         self.MainWindow.setObjectName("MainWindow")
 
@@ -274,22 +274,17 @@ class Ui_MainWindow(object):
         # Top left of rectangle becomes top left of window centering it
         self.MainWindow.move(qr.topLeft())
 
-    def get_index_mapping(self, bidsmap):
-        """Obtain the mapping between file_index and the index for each modality. """
-        index_mapping = {}
+    def set_initial_file_index(self, bidsmap):
+        """Obtain the mapping between the provenance and the initial file-index. """
         initial_file_index = {}
         file_index = 0
-        for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):  # NB: This order needs to be the same as in update_list()
+        for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
             runs = bidsmap[SOURCE][modality]
-            index_mapping[modality] = {}
             if not runs:
                 continue
-            for modality_index, run in enumerate(runs):
-                index_mapping[modality][file_index] = modality_index
+            for run in runs:
                 initial_file_index[run['provenance']] = file_index
                 file_index += 1
-
-        self.index_mapping = index_mapping
 
         if not hasattr(self, 'initial_file_index'):
             self.initial_file_index = initial_file_index
@@ -598,12 +593,6 @@ class Ui_MainWindow(object):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
         self.output_bidsmap = output_bidsmap  # input main window / output from edit window -> output main window
 
-        # Make sure we have the correct index mapping for the next edit
-        num_files = self.get_index_mapping(self.output_bidsmap)
-
-        self.table.setColumnCount(6)
-        self.table.setRowCount(num_files)
-
         idx = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
             runs = self.output_bidsmap[SOURCE][modality]
@@ -656,8 +645,6 @@ class Ui_MainWindow(object):
 
         self.table.sortByColumn(0, QtCore.Qt.AscendingOrder)
 
-        assert num_files == idx
-
     def set_tab_bidsmap(self):
         """Set the SOURCE file sample listing tab.  """
         self.tab3 = QtWidgets.QWidget()
@@ -668,6 +655,12 @@ class Ui_MainWindow(object):
         self.table.setMouseTracking(True)
         self.table.setAlternatingRowColors(False)
         self.table.setShowGrid(True)
+
+        # Make sure we have the correct index mapping for the next edit
+        num_files = self.set_initial_file_index(self.output_bidsmap)
+
+        self.table.setColumnCount(6)
+        self.table.setRowCount(num_files)
 
         self.update_list(self.output_bidsmap)
 
