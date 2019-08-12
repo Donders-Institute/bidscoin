@@ -19,7 +19,7 @@ import pydicom
 from functools import partial
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog, QFrame,
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog,
                              QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog, QMessageBox,
                              QTableWidget, QTableWidgetItem, QGroupBox, QTextBrowser,
                              QAbstractItemView, QPushButton, QComboBox, QTextEdit, QDesktopWidget)
@@ -39,7 +39,7 @@ MAIN_WINDOW_HEIGHT  = 700
 EDIT_WINDOW_WIDTH   = 1200
 EDIT_WINDOW_HEIGHT  = 600
 
-INSPECT_WINDOW_WIDTH = 450
+INSPECT_WINDOW_WIDTH = 850
 INSPECT_WINDOW_HEIGHT = 750
 
 OPTIONS_TAB_INDEX = 1
@@ -76,7 +76,7 @@ args: Argument string that is passed to dcm2niix. Click [Test] and see the termi
       Tip: SPM users may want to use '-z n', which produces unzipped nifti's"""
 
 
-class InspectWindow(QFrame):
+class InspectWindow(QDialog):
 
     def __init__(self, filename, dicomdict):
         super().__init__()
@@ -87,31 +87,29 @@ class InspectWindow(QFrame):
         self.setWindowTitle(f"Inspect {SOURCE} file")
 
         self.resize(INSPECT_WINDOW_WIDTH, INSPECT_WINDOW_HEIGHT)
-        self.setFrameShape(QFrame.StyledPanel)
-        self.setFrameShadow(QFrame.Raised)
 
         verticalLayout = QVBoxLayout(self)
 
         label = QLabel('Filename: ' + os.path.basename(filename))
+        label.setWordWrap(True)
         verticalLayout.addWidget(label)
 
         label_path = QLabel('Path: ' + os.path.dirname(filename))
+        label_path.setWordWrap(True)
         verticalLayout.addWidget(label_path)
 
         textBrowser = QTextBrowser(self)
         textBrowser.insertPlainText(str(dicomdict))
         verticalLayout.addWidget(textBrowser)
 
-        hbox = QFrame(self)
-        horizontalLayout = QHBoxLayout(hbox)
-        horizontalLayout.addStretch(1)
+        hbox = QHBoxLayout(self)
+        hbox.addStretch(1)
 
         pushButton = QPushButton('OK')
         pushButton.setToolTip('Close dialog')
+        hbox.addWidget(pushButton)
 
-        horizontalLayout.addWidget(pushButton)
-
-        verticalLayout.addWidget(hbox)
+        verticalLayout.addLayout(hbox)
 
         pushButton.clicked.connect(self.close)
 
@@ -148,7 +146,7 @@ class Ui_MainWindow(object):
         self.template_bidsmap = template_bidsmap
 
         # Make sure we have the correct index mapping for the first edit
-        self.index_mapping = self.get_index_mapping(input_bidsmap)
+        self.get_index_mapping(input_bidsmap)
 
         self.MainWindow.setObjectName("MainWindow")
 
@@ -268,22 +266,27 @@ class Ui_MainWindow(object):
         # Top left of rectangle becomes top left of window centering it
         self.MainWindow.move(qr.topLeft())
 
-    @staticmethod
-    def get_index_mapping(bidsmap):
+    def get_index_mapping(self, bidsmap):
         """Obtain the mapping between file_index and the index for each modality. """
         index_mapping = {}
+        initial_file_index = {}
         file_index = 0
-        for modality in bids.bidsmodalities + (
-        bids.unknownmodality, bids.ignoremodality):  # NB: This order needs to be the same as in update_list()
+        for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):  # NB: This order needs to be the same as in update_list()
             runs = bidsmap[SOURCE][modality]
             index_mapping[modality] = {}
             if not runs:
                 continue
-            for modality_index, _ in enumerate(runs):
+            for modality_index, run in enumerate(runs):
                 index_mapping[modality][file_index] = modality_index
+                initial_file_index[run['provenance']] = file_index
                 file_index += 1
 
-        return index_mapping
+        self.index_mapping = index_mapping
+
+        if not hasattr(self, 'initial_file_index'):
+            self.initial_file_index = initial_file_index
+
+        return file_index
 
     def inspect_dicomfile(self, item):
         """When double clicked, show popup window. """
@@ -611,15 +614,7 @@ class Ui_MainWindow(object):
         self.output_bidsmap = output_bidsmap  # input main window / output from edit window -> output main window
 
         # Make sure we have the correct index mapping for the next edit
-        self.index_mapping = self.get_index_mapping(self.output_bidsmap)
-
-        num_files = 0
-        for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-            runs = self.input_bidsmap[SOURCE][modality]
-            if not runs:
-                continue
-            for _ in runs:
-                num_files += 1
+        num_files = self.get_index_mapping(self.output_bidsmap)
 
         self.table.setColumnCount(6)
         self.table.setRowCount(num_files)
@@ -634,6 +629,8 @@ class Ui_MainWindow(object):
                 provenance_file = os.path.basename(provenance)
                 runindex = run['bids'].get('run', '')
 
+                initial_file_index = self.initial_file_index[provenance]
+
                 subid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['participant'], run['provenance'])
                 sesid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['session'], run['provenance'])
                 bids_name = bids.get_bidsname(subid, sesid, modality, run, runindex, self.subprefix, self.sesprefix)
@@ -641,11 +638,11 @@ class Ui_MainWindow(object):
                 sesid = bids.set_bidsvalue(bids_name, 'ses')
                 session = os.path.join(self.bidsfolder, f'sub-{subid}', f'ses-{sesid}')
 
-                self.table.setItem(idx, 0, QTableWidgetItem(str(idx + 1)))
+                self.table.setItem(idx, 0, QTableWidgetItem(f"{initial_file_index+1:03d}"))
                 self.table.setItem(idx, 1, QTableWidgetItem(provenance_file))
-                self.table.setItem(idx, 2, QTableWidgetItem(modality))   # Hidden column
+                self.table.setItem(idx, 2, QTableWidgetItem(modality))                          # Hidden column
                 self.table.setItem(idx, 3, QTableWidgetItem(os.path.join(modality, bids_name + '.*')))
-                self.table.setItem(idx, 5, QTableWidgetItem(provenance)) # Hidden column
+                self.table.setItem(idx, 5, QTableWidgetItem(provenance))                        # Hidden column
 
                 self.table.item(idx, 1).setToolTip('Double-click to inspect the header information')
                 self.table.item(idx, 1).setStatusTip(os.path.dirname(provenance) + os.sep)
@@ -671,6 +668,8 @@ class Ui_MainWindow(object):
                 self.table.setCellWidget(idx, 4, self.edit_button)
 
                 idx += 1
+
+        self.table.sortByColumn(0, QtCore.Qt.AscendingOrder)
 
         assert num_files == idx
 
@@ -768,14 +767,15 @@ class Ui_MainWindow(object):
     def handle_button_clicked(self):
         """Make sure that index map has been updated. """
         button = self.MainWindow.focusWidget()
-        index = self.table.indexAt(button.pos())
-        if index.isValid():
-            idx = int(index.row())
-            modality = self.table.item(idx, 2).text()
-            file_index = idx # i.e. the item in the file list
-            # Obtain the source index of the run in the list of runs in the bidsmap for this modality
-            source_index = self.index_mapping[modality][file_index]
-            self.show_edit(source_index, modality)
+        rowindex = self.table.indexAt(button.pos()).row()
+        modality = self.table.item(rowindex, 2).text()
+        provenance = self.table.item(rowindex, 5).text()
+
+        # Obtain the source index of the run in the list of runs in the bidsmap for this modality
+        for modality_index, run in enumerate(self.output_bidsmap[SOURCE][modality]):
+            if run['provenance'] == provenance:
+                self.show_edit(modality_index, modality)
+                return
 
     def on_double_clicked(self, index):
         filename = self.model.fileInfo(index).absoluteFilePath()
@@ -789,10 +789,10 @@ class Ui_MainWindow(object):
         about = f"BIDS editor\n{bids.version()}"
         QMessageBox.about(self.MainWindow, 'About', about)
 
-    def show_edit(self, source_index, modality, exec=False):
+    def show_edit(self, modality_index, modality, exec=False):
         """Allow only one edit window to be open"""
         if not self.has_edit_dialog_open:
-            self.dialog_edit = EditDialog(source_index, modality, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
+            self.dialog_edit = EditDialog(modality_index, modality, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
             self.has_edit_dialog_open = True
             self.dialog_edit.done_edit.connect(self.update_list)
             self.dialog_edit.finished.connect(self.release_edit_dialog)
@@ -805,7 +805,7 @@ class Ui_MainWindow(object):
             self.dialog_edit.reject()
             if self.has_edit_dialog_open:
                 return
-            self.show_edit(source_index, modality, exec)
+            self.show_edit(modality_index, modality, exec)
 
     def release_edit_dialog(self):
         """Allow a new edit window to be opened"""
