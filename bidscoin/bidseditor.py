@@ -87,7 +87,7 @@ class InspectWindow(QDialog):
         self.setWindowTitle(f"Inspect {SOURCE} file")
 
         top_widget = QtWidgets.QWidget(self)
-        top_layout = QtWidgets.QVBoxLayout(self)
+        top_layout = QtWidgets.QVBoxLayout()
 
         label = QLabel(top_widget)
         label.setText("Filename: " + os.path.basename(filename))
@@ -107,7 +107,6 @@ class InspectWindow(QDialog):
         top_layout.addWidget(label_path)
         top_layout.addWidget(label)
         top_layout.addWidget(text_area)
-        top_layout.addStretch(1)
         top_layout.addLayout(hbox)
 
         pushButton.clicked.connect(self.close)
