@@ -737,11 +737,7 @@ class Ui_MainWindow(object):
         modality = self.table.item(rowindex, 2).text()
         provenance = self.table.item(rowindex, 5).text()
 
-        # Obtain the source index of the run in the list of runs in the bidsmap for this modality
-        for modality_index, run in enumerate(self.output_bidsmap[SOURCE][modality]):
-            if run['provenance'] == provenance:
-                self.show_edit(modality_index, modality)
-                return
+        self.show_edit(provenance, modality)
 
     def on_double_clicked(self, index):
         filename = self.model.fileInfo(index).absoluteFilePath()
@@ -755,8 +751,14 @@ class Ui_MainWindow(object):
         about = f"BIDS editor\n{bids.version()}"
         QMessageBox.about(self.MainWindow, 'About', about)
 
-    def show_edit(self, modality_index, modality, exec=False):
-        """Allow only one edit window to be open"""
+    def show_edit(self, provenance, modality, exec=False):
+        """Check for open edit window, find the right modality index and open the edit window"""
+
+        # Obtain the source index of the run in the list of runs in the bidsmap for this modality
+        for index, run in enumerate(self.output_bidsmap[SOURCE][modality]):
+            if run['provenance'] == provenance:
+                modality_index = index
+
         if not self.has_edit_dialog_open:
             self.dialog_edit = EditDialog(modality_index, modality, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
             self.has_edit_dialog_open = True
@@ -768,10 +770,12 @@ class Ui_MainWindow(object):
                 self.dialog_edit.show()
 
         else:
+            # Ask the user if he wants to save his results first before opening a new edit window
             self.dialog_edit.reject()
             if self.has_edit_dialog_open:
                 return
-            self.show_edit(modality_index, modality, exec)
+
+            self.show_edit(provenance, modality, exec)
 
     def release_edit_dialog(self):
         """Allow a new edit window to be opened"""
