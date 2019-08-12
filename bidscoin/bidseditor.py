@@ -754,20 +754,20 @@ class Ui_MainWindow(object):
     def show_edit(self, provenance, modality, exec=False):
         """Check for open edit window, find the right modality index and open the edit window"""
 
-        # Obtain the source index of the run in the list of runs in the bidsmap for this modality
-        for index, run in enumerate(self.output_bidsmap[SOURCE][modality]):
-            if run['provenance'] == provenance:
-                modality_index = index
-
         if not self.has_edit_dialog_open:
-            self.dialog_edit = EditDialog(modality_index, modality, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
-            self.has_edit_dialog_open = True
-            self.dialog_edit.done_edit.connect(self.update_list)
-            self.dialog_edit.finished.connect(self.release_edit_dialog)
-            if exec:
-                self.dialog_edit.exec()
-            else:
-                self.dialog_edit.show()
+
+            # Find the source index of the run in the list of runs (using the provenance) and open the edit window
+            for modality_index, run in enumerate(self.output_bidsmap[SOURCE][modality]):
+                if run['provenance']==provenance:
+                    self.dialog_edit = EditDialog(modality_index, modality, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
+                    self.has_edit_dialog_open = True
+                    self.dialog_edit.done_edit.connect(self.update_list)
+                    self.dialog_edit.finished.connect(self.release_edit_dialog)
+                    if exec:
+                        self.dialog_edit.exec()
+                    else:
+                        self.dialog_edit.show()
+                    break
 
         else:
             # Ask the user if he wants to save his results first before opening a new edit window
