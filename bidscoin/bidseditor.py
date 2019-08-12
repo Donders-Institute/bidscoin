@@ -845,8 +845,8 @@ class EditDialog(QDialog):
 
         buttonBox = QDialogButtonBox(self)
         buttonBox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Help)
-        buttonBox.button(QDialogButtonBox.Ok).setToolTip('Save the changes you made and close this window')
-        buttonBox.button(QDialogButtonBox.Cancel).setToolTip('Cancel the changes you made and close this window')
+        buttonBox.button(QDialogButtonBox.Ok).setToolTip('Apply the changes you made and close this window')
+        buttonBox.button(QDialogButtonBox.Cancel).setToolTip('Discard the changes you made and close this window')
         buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
 
         groupbox1 = QGroupBox(SOURCE + ' input')
