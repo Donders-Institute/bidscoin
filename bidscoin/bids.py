@@ -66,7 +66,7 @@ def setup_logging(log_file: str, debug: bool=False) -> logging.Logger:
     :return:            Logger object
      """
 
-    debug = True
+    # debug = True
 
     # Create the log dir if it does not exist
     logdir = os.path.dirname(log_file)
