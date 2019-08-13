@@ -339,12 +339,14 @@ class Ui_MainWindow(object):
 
     def subses_cell_was_changed(self, row, column):
         """Participant or session value has been changed in participant-session table. """
-        if column == 2:
-            key = self.subses_table.item(row, 1).text()
-            value = self.subses_table.item(row, 2).text()
+        if column == 1:
+            key = self.subses_table.item(row, 0).text()
+            value = self.subses_table.item(row, 1).text()
+            oldvalue = self.output_bidsmap[SOURCE][key]
 
             # Only if cell was actually clicked, update
-            if key != '':
+            if key and value!=oldvalue:
+                LOGGER.info(f"User has set {SOURCE}['{key}'] from '{oldvalue}' to '{value}'")
                 self.output_bidsmap[SOURCE][key] = value
 
     def tool_cell_was_changed(self, tool, idx, row, column):
@@ -353,9 +355,11 @@ class Ui_MainWindow(object):
             table = self.tables_options[idx]  # Select the selected table
             key = table.item(row, 1).text()
             value = table.item(row, 2).text()
+            oldvalue = self.output_bidsmap["Options"][tool][key]
 
             # Only if cell was actually clicked, update
-            if key != '':
+            if key and value!=oldvalue:
+                LOGGER.info(f"User has set {SOURCE}['Options']['{key}'] from '{oldvalue}' to '{value}'")
                 self.output_bidsmap["Options"][tool][key] = value
 
     def handle_click_test_plugin(self, plugin: str):
@@ -1041,7 +1045,7 @@ class EditDialog(QDialog):
             oldvalue = self.target_run['attributes'].get(key, None)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
-            if key != '':
+            if key and value!=oldvalue:
                 LOGGER.info(f"User has set {SOURCE}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 self.target_run['attributes'][key] = value
 
@@ -1053,7 +1057,7 @@ class EditDialog(QDialog):
             oldvalue = self.target_run['bids'].get(key, None)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
-            if key != '':
+            if key and value!=oldvalue:
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
                 if not (value.startswith('<<') and value.endswith('>>')):
                     value = bids.cleanup_value(bids.replace_bidsvalue(value, self.target_run['provenance']))
