@@ -453,7 +453,6 @@ class Ui_MainWindow(object):
 
         table_height = num_rows * row_height + 2 * plugintable.frameWidth()
         plugintable.setMinimumHeight(table_height)
-        plugintable.setMaximumHeight(table_height)
 
         plugintable.cellChanged.connect(self.plugincell_was_changed)
 
@@ -558,7 +557,6 @@ class Ui_MainWindow(object):
 
             table_height = num_rows * row_height + 2 * table.frameWidth()
             table.setMinimumHeight(table_height)
-            table.setMaximumHeight(table_height)
 
             table.cellChanged.connect(partial(self.cell_was_changed, tool, n))
 
@@ -1051,7 +1049,6 @@ class EditDialog(QDialog):
         extra_space = 3
         table_height = num_rows * (row_height + extra_space) + extra_space
         table.setMinimumHeight(table_height)
-        table.setMaximumHeight(table_height)
 
         for i, row in enumerate(data):
             table.setRowHeight(i, row_height)
