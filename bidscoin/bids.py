@@ -936,17 +936,17 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
     if sesid:
         sesid = 'ses-' + sesid.lstrip('ses-')
 
-    # Clean-up the runindex
-    if not runindex and run['bids']['run']:
-        runindex = cleanup_value(replace_bidsvalue(run['bids']['run'], run['provenance']))
-
     # Validate and do some checks to allow for dragging the run entries between the different modality-sections
     run = copy.deepcopy(run)                # Avoid side effects when changing run
     for bidslabel in bidslabels:
         if bidslabel not in run['bids']:
             run['bids'][bidslabel] = None
         else:
-            run['bids'][bidslabel] = cleanup_value(run['bids'][bidslabel])
+            run['bids'][bidslabel] = cleanup_value(replace_bidsvalue(run['bids'][bidslabel], run['provenance']))
+
+    # Clean-up the runindex
+    if not runindex:
+        runindex = run['bids']['run']
 
     # Compose the BIDS filename (-> switch statement)
     if modality == 'anat':
