@@ -659,20 +659,20 @@ def get_run(bidsmap: dict, source: str, modality, suffix_idx, dicomfile: str='')
     logger.error(f"'{modality}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{source}']")
 
 
-def delete_run(bidsmap: dict, source: str, modality: str, index: int) -> dict:
+def delete_run(bidsmap: dict, source: str, modality: str, provenance: str) -> dict:
     """
     Delete a run from the BIDS map
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param source:      The information source in the bidsmap that is used, e.g. 'DICOM'
     :param modality:    The modality in the source that is used, e.g. 'anat'
-    :param index:       The index number of the run (listitem) that is deleted from the modality
+    :param provenance:  The unique provance that is use to identify the run
     :return:            The new bidsmap
     """
 
-    if index >= len(bidsmap[source][modality]):
-        logger.error('Unexpected modality index number: out of range')
-    del bidsmap[source][modality][index]
+    for index, run in enumerate(bidsmap[source][modality]):
+        if run['provenance'] == provenance:
+            del bidsmap[source][modality][index]
 
     return bidsmap
 
@@ -709,7 +709,7 @@ def append_run(bidsmap: dict, source: str, modality: str, run: dict, clean: bool
     return bidsmap
 
 
-def update_bidsmap(bidsmap: dict, source_modality: str, source_index: int, target_modality: str, run: dict, source: str= 'DICOM', clean: bool=True) -> dict:
+def update_bidsmap(bidsmap: dict, source_modality: str, provenance: str, target_modality: str, run: dict, source: str= 'DICOM', clean: bool=True) -> dict:
     """
     Update the BIDS map:
     1. Remove the source run from the source modality section
@@ -717,7 +717,7 @@ def update_bidsmap(bidsmap: dict, source_modality: str, source_index: int, targe
 
     :param bidsmap:             Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param source_modality:     The current modality name, e.g. 'anat'
-    :param source_index:        The current index number of the run
+    :param provenance:          The unique provance that is use to identify the run
     :param target_modality:     The modality name what is should be, e.g. 'dwi'
     :param run:                 The run item that is being moved
     :param source:              The name of the information source, e.g. 'DICOM'
@@ -730,7 +730,7 @@ def update_bidsmap(bidsmap: dict, source_modality: str, source_index: int, targe
         logger.warning(f'That run from {source_modality} already exists in {target_modality}...')
 
     # Delete the source run
-    bidsmap = delete_run(bidsmap, source, source_modality, source_index)
+    bidsmap = delete_run(bidsmap, source, source_modality, provenance)
 
     # Append the (cleaned-up) target run
     bidsmap = append_run(bidsmap, source, target_modality, run, clean)

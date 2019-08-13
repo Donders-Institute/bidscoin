@@ -751,9 +751,9 @@ class Ui_MainWindow(object):
 
         if not self.has_edit_dialog_open:
             # Find the source index of the run in the list of runs (using the provenance) and open the edit window
-            for modality_index, run in enumerate(self.output_bidsmap[SOURCE][modality]):
+            for run in self.output_bidsmap[SOURCE][modality]:
                 if run['provenance']==provenance:
-                    self.dialog_edit = EditDialog(modality_index, modality, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
+                    self.dialog_edit = EditDialog(provenance, modality, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
                     self.has_edit_dialog_open = True
                     self.dialog_edit.done_edit.connect(self.update_list)
                     self.dialog_edit.finished.connect(self.release_edit_dialog)
@@ -789,14 +789,15 @@ class EditDialog(QDialog):
     # Emit the new bidsmap when done
     done_edit = QtCore.pyqtSignal(dict)
 
-    def __init__(self, modality_index, modality, bidsmap, template_bidsmap, subprefix='sub-', sesprefix='ses-'):
+    def __init__(self, provenance, modality, bidsmap, template_bidsmap, subprefix='sub-', sesprefix='ses-'):
         super().__init__()
 
         self.bidsmap = bidsmap
 
-        self.source_modality_index = modality_index
         self.source_modality = modality
-        self.source_run = self.bidsmap[SOURCE][modality][modality_index]        # TODO: To be used for reload / reset button
+        for run in self.bidsmap[SOURCE][modality]:
+            if run['provenance'] == provenance:
+                self.source_run = run        # TODO: source_run is redundant now, but may be used for a reload / reset button
 
         self.target_modality = modality
         self.target_run = copy.deepcopy(self.source_run)
@@ -1144,12 +1145,11 @@ class EditDialog(QDialog):
 
         self.bidsmap = bids.update_bidsmap(self.bidsmap,
                                            self.source_modality,
-                                           self.source_modality_index,
+                                           self.target_run['provenance'],
                                            self.target_modality,
                                            self.target_run)
 
-        self.source_modality_index = len(self.bidsmap[SOURCE][self.target_modality]) - 1
-        self.source_modality       = self.target_modality
+        self.source_modality = self.target_modality
 
         # Refresh the DICOM attributes and BIDS values
         _, data_dicom, data_bids = self.get_editwin_data()
@@ -1196,7 +1196,6 @@ class EditDialog(QDialog):
                 LOGGER.info(f'User has discarded the edit')
                 return
             if answer == QMessageBox.Cancel:
-                LOGGER.info(f'User has canceled the edit')
                 return
 
         LOGGER.info(f'User has canceled the edit')
@@ -1209,7 +1208,7 @@ class EditDialog(QDialog):
         """Save the changes to the bidsmap and send it back to the main window: Finished! """
         self.bidsmap = bids.update_bidsmap(self.bidsmap,
                                            self.source_modality,
-                                           self.source_modality_index,
+                                           self.target_run['provenance'],
                                            self.target_modality,
                                            self.target_run)
 
