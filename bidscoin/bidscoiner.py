@@ -130,10 +130,11 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 basepath, ext1  = os.path.splitext(filename)
                 basepath, ext2  = os.path.splitext(basepath)                                                    # Account for .nii.gz files
                 basepath, index = basepath.rsplit(dcm2niisuffix,1)
+                basesuffix      = basepath.rsplit('_',1)[1]                                                     # Example basepath: *_magnitude1
                 index           = index.split('_')[0].zfill(2)                                                  # Zero padd as specified in the BIDS-standard (assuming two digits is sufficient); strip following suffices (fieldmaps produce *_e2_ph files)
 
                 # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first(?) coil/echo image -> add it when we encounter a **_e2/_c2 file
-                if dcm2niisuffix in ('_c','_e') and int(index)==2 and basepath.rsplit('_',1)[1] != 'magnitude1':    # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handled below)
+                if dcm2niisuffix in ('_c','_e') and int(index)==2 and basesuffix not in ['magnitude1', 'phase1']:    # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handled below)
                     filename_ce = basepath + ext2 + ext1                                                        # The file without the _c1/_e1 suffix
                     if dcm2niisuffix=='_e' and bids.set_bidsvalue(basepath, 'echo'):
                         newbasepath_ce = bids.set_bidsvalue(basepath, 'echo', '1')
@@ -148,7 +149,6 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                             jsonfiles.append(newbasepath_ce + '.json')
 
                 # Patch the basepath with the dcm2niix suffix info (we can't rely on the basepath info here because Siemens can e.g. put multiple echos in one series / run-folder)
-                basesuffix = basepath.rsplit('_',1)[1]                                                          # Example basepath: *_magnitude1
                 if dcm2niisuffix=='_e' and bids.set_bidsvalue(basepath, 'echo') and index:
                     basepath = bids.set_bidsvalue(basepath, 'echo', str(int(index)))                            # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
 
@@ -163,7 +163,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 elif dcm2niisuffix=='_e' and basesuffix=='phasediff' and index:                                 # i.e. modality == 'fmap'
                     pass
 
-                elif dcm2niisuffix=='_ph' and basepath.rsplit('_',1)[1] in ['phase1','phase2'] and index:       # i.e. modality == 'fmap' (TODO: untested)
+                elif dcm2niisuffix=='_ph' and basesuffix in ['phase1','phase2'] and index:                      # i.e. modality == 'fmap' (TODO: untested)
                     basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_phase1_e[index] -> *_phase[index]
                     LOGGER.warning('Untested dcm2niix "_ph"-filetype: ' + basepath)
 
