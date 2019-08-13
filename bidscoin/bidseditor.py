@@ -328,7 +328,8 @@ class Ui_MainWindow(object):
         file_browser.setObjectName("filebrowser")
         self.tabwidget.addTab(file_browser, "")
 
-    def set_cell(self, value, is_editable=False):
+    @staticmethod
+    def set_cell(value, is_editable=False):
         item = QTableWidgetItem()
         item.setText(value)
         if is_editable:
@@ -337,6 +338,17 @@ class Ui_MainWindow(object):
             item.setFlags(QtCore.Qt.ItemIsEnabled)
             item.setForeground(QtGui.QColor(128, 128, 128))
         return item
+
+    def participant_session_cell_was_changed(self, row, column):
+        """Participant or session value has been changed in participant-session table. """
+        if column == 2:
+            table = self.participantsessiontable # Select the selected table
+            key = self.participantsessiontable.item(row, 1).text()
+            value = self.participantsessiontable.item(row, 2).text()
+
+            # Only if cell was actually clicked, update
+            if key != '':
+                self.output_bidsmap[SOURCE][key] = value
 
     def cell_was_changed(self, tool, idx, row, column):
         """Option value has been changed tool options table. """
@@ -589,9 +601,18 @@ class Ui_MainWindow(object):
 
         self.tabwidget.addTab(options, "")
 
-    def update_list(self, output_bidsmap):
+    def update_participantsession_and_list(self, output_bidsmap):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
         self.output_bidsmap = output_bidsmap  # input main window / output from edit window -> output main window
+
+        item = self.set_cell("participant", is_editable=False)
+        self.participantsessiontable.setItem(0, 0, item)
+        item = self.set_cell(self.output_bidsmap[SOURCE]['participant'], is_editable=True)
+        self.participantsessiontable.setItem(0, 1, item)
+        item = self.set_cell("session", is_editable=False)
+        self.participantsessiontable.setItem(1, 0, item)
+        item = self.set_cell(self.output_bidsmap[SOURCE]['session'], is_editable=True)
+        self.participantsessiontable.setItem(1, 1, item)
 
         idx = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
@@ -650,6 +671,27 @@ class Ui_MainWindow(object):
         self.tab3 = QtWidgets.QWidget()
         self.tab3.layout = QVBoxLayout()
 
+        participantsessionlabel = QLabel('Participant-session')
+        participantsessionlabel.setToolTip('Participant-session')
+
+        self.participantsessiontable = QTableWidget()
+        self.participantsessiontable.setMouseTracking(True)
+        self.participantsessiontable.setAlternatingRowColors(False)
+        self.participantsessiontable.setShowGrid(False)
+        self.participantsessiontable.setRowCount(2)
+        self.participantsessiontable.setColumnCount(2)
+        horizontal_header = self.participantsessiontable.horizontalHeader()
+        horizontal_header.setVisible(False)
+        horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        self.participantsessiontable.verticalHeader().setVisible(False)
+        self.participantsessiontable.setAlternatingRowColors(False)
+        self.participantsessiontable.setShowGrid(False)
+        self.participantsessiontable.cellChanged.connect(self.participant_session_cell_was_changed)
+
+        label = QLabel('BIDS map list')
+        label.setToolTip('BIDS map list')
+
         self.table = QTableWidget()
         self.table.itemDoubleClicked.connect(self.inspect_dicomfile)
         self.table.setMouseTracking(True)
@@ -662,7 +704,7 @@ class Ui_MainWindow(object):
         self.table.setColumnCount(6)
         self.table.setRowCount(num_files)
 
-        self.update_list(self.output_bidsmap)
+        self.update_participantsession_and_list(self.output_bidsmap)
 
         self.table.setHorizontalHeaderLabels(['', f'{SOURCE} input sample', 'BIDS modality', 'BIDS output name', 'Action'])
         header = self.table.horizontalHeader()
@@ -679,8 +721,11 @@ class Ui_MainWindow(object):
 
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-
+        self.tab3.layout.addWidget(participantsessionlabel)
+        self.tab3.layout.addWidget(self.participantsessiontable)
+        self.tab3.layout.addWidget(label)
         self.tab3.layout.addWidget(self.table)
+        self.tab3.layout.addStretch(1)
 
         self.file_sample_listing = QtWidgets.QWidget()
         self.file_sample_listing.setLayout(self.tab3.layout)
@@ -755,7 +800,7 @@ class Ui_MainWindow(object):
                 if run['provenance']==provenance:
                     self.dialog_edit = EditDialog(provenance, modality, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
                     self.has_edit_dialog_open = True
-                    self.dialog_edit.done_edit.connect(self.update_list)
+                    self.dialog_edit.done_edit.connect(self.update_participantsession_and_list)
                     self.dialog_edit.finished.connect(self.release_edit_dialog)
                     if exec:
                         self.dialog_edit.exec()
