@@ -337,17 +337,17 @@ class Ui_MainWindow(object):
         file_browser.setObjectName("filebrowser")
         self.tabwidget.addTab(file_browser, "")
 
-    def participant_session_cell_was_changed(self, row, column):
+    def subses_cell_was_changed(self, row, column):
         """Participant or session value has been changed in participant-session table. """
         if column == 2:
-            key = self.participantsessiontable.item(row, 1).text()
-            value = self.participantsessiontable.item(row, 2).text()
+            key = self.subses_table.item(row, 1).text()
+            value = self.subses_table.item(row, 2).text()
 
             # Only if cell was actually clicked, update
             if key != '':
                 self.output_bidsmap[SOURCE][key] = value
 
-    def cell_was_changed(self, tool, idx, row, column):
+    def tool_cell_was_changed(self, tool, idx, row, column):
         """Option value has been changed tool options table. """
         if column == 2:
             table = self.tables_options[idx]  # Select the selected table
@@ -392,7 +392,7 @@ class Ui_MainWindow(object):
         self.output_bidsmap['PlugIns'] += plugin[0]
         self.update_plugintable()
 
-    def plugincell_was_changed(self, row, column):
+    def plugin_cell_was_changed(self, row, column):
         """
         Add / edit a plugin or delete if cell is empty
         :param row:
@@ -463,7 +463,7 @@ class Ui_MainWindow(object):
         table_height = num_rows * row_height + 2 * plugintable.frameWidth()
         plugintable.setMaximumHeight(table_height)
 
-        plugintable.cellChanged.connect(self.plugincell_was_changed)
+        plugintable.cellChanged.connect(self.plugin_cell_was_changed)
 
     def set_tab_options(self):
         """Set the options tab.  """
@@ -567,7 +567,7 @@ class Ui_MainWindow(object):
             table_height = num_rows * row_height + 2 * table.frameWidth()
             table.setMaximumHeight(table_height)
 
-            table.cellChanged.connect(partial(self.cell_was_changed, tool, n))
+            table.cellChanged.connect(partial(self.tool_cell_was_changed, tool, n))
 
             labels.append(label)
             self.tables_options.append(table)
@@ -598,18 +598,18 @@ class Ui_MainWindow(object):
 
         self.tabwidget.addTab(options, "")
 
-    def update_participantsession_and_list(self, output_bidsmap):
+    def update_subses_and_samples(self, output_bidsmap):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
         self.output_bidsmap = output_bidsmap  # input main window / output from edit window -> output main window
 
         item = set_cell("participant", is_editable=False)
-        self.participantsessiontable.setItem(0, 0, item)
+        self.subses_table.setItem(0, 0, item)
         item = set_cell(self.output_bidsmap[SOURCE]['participant'], is_editable=True)
-        self.participantsessiontable.setItem(0, 1, item)
+        self.subses_table.setItem(0, 1, item)
         item = set_cell("session", is_editable=False)
-        self.participantsessiontable.setItem(1, 0, item)
+        self.subses_table.setItem(1, 0, item)
         item = set_cell(self.output_bidsmap[SOURCE]['session'], is_editable=True)
-        self.participantsessiontable.setItem(1, 1, item)
+        self.subses_table.setItem(1, 1, item)
 
         idx = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
@@ -666,27 +666,27 @@ class Ui_MainWindow(object):
         self.tab3 = QtWidgets.QWidget()
         self.tab3.layout = QVBoxLayout()
 
-        participantsessionlabel = QLabel('Subject')
-        participantsessionlabel.setToolTip('Subject/session mapping')
+        subses_label = QLabel('Subject')
+        subses_label.setToolTip('Subject/session mapping')
 
-        self.participantsessiontable = QTableWidget()
-        self.participantsessiontable.setMouseTracking(True)
-        self.participantsessiontable.setAlternatingRowColors(False)
-        self.participantsessiontable.setShowGrid(False)
-        self.participantsessiontable.setRowCount(2)
-        self.participantsessiontable.setColumnCount(2)
-        horizontal_header = self.participantsessiontable.horizontalHeader()
+        self.subses_table = QTableWidget()
+        self.subses_table.setMouseTracking(True)
+        self.subses_table.setAlternatingRowColors(False)
+        self.subses_table.setShowGrid(False)
+        self.subses_table.setRowCount(2)
+        self.subses_table.setColumnCount(2)
+        horizontal_header = self.subses_table.horizontalHeader()
         horizontal_header.setVisible(False)
         horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        self.participantsessiontable.verticalHeader().setVisible(False)
-        self.participantsessiontable.setAlternatingRowColors(False)
-        self.participantsessiontable.setShowGrid(False)
-        self.participantsessiontable.cellChanged.connect(self.participant_session_cell_was_changed)
+        self.subses_table.verticalHeader().setVisible(False)
+        self.subses_table.setAlternatingRowColors(False)
+        self.subses_table.setShowGrid(False)
+        self.subses_table.cellChanged.connect(self.subses_cell_was_changed)
 
-        self.participantsessiontable.setMaximumHeight(24 * 2 + 3)
-        self.participantsessiontable.setRowHeight(0,24)
-        self.participantsessiontable.setRowHeight(1,24)
+        self.subses_table.setMaximumHeight(24 * 2 + 3)
+        self.subses_table.setRowHeight(0, 24)
+        self.subses_table.setRowHeight(1, 24)
 
         label = QLabel('Data samples')
         label.setToolTip('List of unique source-data samples')
@@ -703,7 +703,7 @@ class Ui_MainWindow(object):
         self.table.setColumnCount(6)
         self.table.setRowCount(num_files)
 
-        self.update_participantsession_and_list(self.output_bidsmap)
+        self.update_subses_and_samples(self.output_bidsmap)
 
         self.table.setHorizontalHeaderLabels(['', f'{SOURCE} input', 'BIDS modality', 'BIDS output', 'Action'])
         header = self.table.horizontalHeader()
@@ -720,8 +720,8 @@ class Ui_MainWindow(object):
 
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        self.tab3.layout.addWidget(participantsessionlabel)
-        self.tab3.layout.addWidget(self.participantsessiontable)
+        self.tab3.layout.addWidget(subses_label)
+        self.tab3.layout.addWidget(self.subses_table)
         self.tab3.layout.addWidget(label)
         self.tab3.layout.addWidget(self.table)
 
@@ -798,7 +798,7 @@ class Ui_MainWindow(object):
                 if run['provenance']==provenance:
                     self.dialog_edit = EditDialog(provenance, modality, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
                     self.has_edit_dialog_open = True
-                    self.dialog_edit.done_edit.connect(self.update_participantsession_and_list)
+                    self.dialog_edit.done_edit.connect(self.update_subses_and_samples)
                     self.dialog_edit.finished.connect(self.release_edit_dialog)
                     if exec:
                         self.dialog_edit.exec()
