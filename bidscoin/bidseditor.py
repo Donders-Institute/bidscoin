@@ -22,7 +22,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog, QDialogButtonBox,
                              QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog, QMessageBox,
                              QTableWidget, QTableWidgetItem, QGroupBox, QTextBrowser,
-                             QAbstractItemView, QPushButton, QComboBox, QTextEdit, QDesktopWidget)
+                             QAbstractItemView, QPushButton, QComboBox, QDesktopWidget)
 
 try:
     from bidscoin import bids
@@ -74,6 +74,17 @@ path: Command to set the path to dcm2niix, e.g.:
       '\"C:\\Program Files\\dcm2niix\"' (note the quotes to deal with the whitespace)
 args: Argument string that is passed to dcm2niix. Click [Test] and see the terminal output for usage
       Tip: SPM users may want to use '-z n', which produces unzipped nifti's"""
+
+
+def set_cell(value, is_editable=False):
+    item = QTableWidgetItem()
+    item.setText(value)
+    if is_editable:
+        item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
+    else:
+        item.setFlags(QtCore.Qt.ItemIsEnabled)
+        item.setForeground(QtGui.QColor(128, 128, 128))
+    return item
 
 
 class InspectWindow(QDialog):
@@ -328,21 +339,9 @@ class Ui_MainWindow(object):
         file_browser.setObjectName("filebrowser")
         self.tabwidget.addTab(file_browser, "")
 
-    @staticmethod
-    def set_cell(value, is_editable=False):
-        item = QTableWidgetItem()
-        item.setText(value)
-        if is_editable:
-            item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
-        else:
-            item.setFlags(QtCore.Qt.ItemIsEnabled)
-            item.setForeground(QtGui.QColor(128, 128, 128))
-        return item
-
     def participant_session_cell_was_changed(self, row, column):
         """Participant or session value has been changed in participant-session table. """
         if column == 2:
-            table = self.participantsessiontable # Select the selected table
             key = self.participantsessiontable.item(row, 1).text()
             value = self.participantsessiontable.item(row, 2).text()
 
@@ -436,10 +435,10 @@ class Ui_MainWindow(object):
             plugintable.setRowHeight(i, row_height)
             for j in range(3):
                 if j==0:
-                    item = self.set_cell('path', is_editable=False)
+                    item = set_cell('path', is_editable=False)
                     plugintable.setItem(i, j, item)
                 elif j==1:
-                    item = self.set_cell(plugin, is_editable=True)
+                    item = set_cell(plugin, is_editable=True)
                     item.setToolTip('Double-click to edit the name of the plugin in the heuristics folder or the full pathname of the plugin in a custom location')
                     plugintable.setItem(i, j, item)
                 elif j==2:                  # Add the test-button cell
@@ -464,7 +463,7 @@ class Ui_MainWindow(object):
         vertical_header.setVisible(False)
 
         table_height = num_rows * row_height + 2 * plugintable.frameWidth()
-        plugintable.setMinimumHeight(table_height)
+        plugintable.setMaximumHeight(table_height)
 
         plugintable.cellChanged.connect(self.plugincell_was_changed)
 
@@ -541,7 +540,7 @@ class Ui_MainWindow(object):
                         value = ""
                     is_editable = element.get("is_editable", False)
                     tooltip_text = element.get("tooltip_text", None)
-                    item = self.set_cell(value, is_editable=is_editable)
+                    item = set_cell(value, is_editable=is_editable)
                     table.setItem(i, j, item)
                     if tooltip_text:
                         table.item(i, j).setToolTip(tooltip_text)
@@ -568,7 +567,7 @@ class Ui_MainWindow(object):
             table.setShowGrid(False)
 
             table_height = num_rows * row_height + 2 * table.frameWidth()
-            table.setMinimumHeight(table_height)
+            table.setMaximumHeight(table_height)
 
             table.cellChanged.connect(partial(self.cell_was_changed, tool, n))
 
@@ -605,13 +604,13 @@ class Ui_MainWindow(object):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
         self.output_bidsmap = output_bidsmap  # input main window / output from edit window -> output main window
 
-        item = self.set_cell("participant", is_editable=False)
+        item = set_cell("participant", is_editable=False)
         self.participantsessiontable.setItem(0, 0, item)
-        item = self.set_cell(self.output_bidsmap[SOURCE]['participant'], is_editable=True)
+        item = set_cell(self.output_bidsmap[SOURCE]['participant'], is_editable=True)
         self.participantsessiontable.setItem(0, 1, item)
-        item = self.set_cell("session", is_editable=False)
+        item = set_cell("session", is_editable=False)
         self.participantsessiontable.setItem(1, 0, item)
-        item = self.set_cell(self.output_bidsmap[SOURCE]['session'], is_editable=True)
+        item = set_cell(self.output_bidsmap[SOURCE]['session'], is_editable=True)
         self.participantsessiontable.setItem(1, 1, item)
 
         idx = 0
@@ -689,6 +688,10 @@ class Ui_MainWindow(object):
         self.participantsessiontable.setShowGrid(False)
         self.participantsessiontable.cellChanged.connect(self.participant_session_cell_was_changed)
 
+        self.participantsessiontable.setMaximumHeight(24 * 2 + 3)
+        self.participantsessiontable.setRowHeight(0,24)
+        self.participantsessiontable.setRowHeight(1,24)
+
         label = QLabel('BIDS map list')
         label.setToolTip('BIDS map list')
 
@@ -725,7 +728,6 @@ class Ui_MainWindow(object):
         self.tab3.layout.addWidget(self.participantsessiontable)
         self.tab3.layout.addWidget(label)
         self.tab3.layout.addWidget(self.table)
-        self.tab3.layout.addStretch(1)
 
         self.file_sample_listing = QtWidgets.QWidget()
         self.file_sample_listing.setLayout(self.tab3.layout)
@@ -837,20 +839,19 @@ class EditDialog(QDialog):
     def __init__(self, provenance, modality, bidsmap, template_bidsmap, subprefix='sub-', sesprefix='ses-'):
         super().__init__()
 
-        self.bidsmap = bidsmap
+        self.source_modality  = modality
+        self.target_modality  = modality
+        self.bidsmap          = bidsmap
+        self.template_bidsmap = template_bidsmap
+        self.subprefix        = subprefix
+        self.sesprefix        = sesprefix
 
-        self.source_modality = modality
-        for run in self.bidsmap[SOURCE][modality]:
+        for run in bidsmap[SOURCE][modality]:
             if run['provenance'] == provenance:
                 self.source_run = run        # TODO: source_run is redundant now, but may be used for a reload / reset button
 
-        self.target_modality = modality
         self.target_run = copy.deepcopy(self.source_run)
 
-        self.subprefix = subprefix
-        self.sesprefix = sesprefix
-
-        self.template_bidsmap = template_bidsmap
         self.get_allowed_suffixes()
 
         icon = QtGui.QIcon()
@@ -873,7 +874,7 @@ class EditDialog(QDialog):
 
         self.label_provenance = QLabel()
         self.label_provenance.setText("Provenance")
-        self.view_provenance = self.set_table(data_provenance)
+        self.view_provenance = self.set_table(data_provenance, maximum=True)
 
         self.label_dicom = QLabel()
         self.label_dicom.setText("Attributes")
@@ -887,19 +888,12 @@ class EditDialog(QDialog):
 
         self.set_bids_name_section()
 
-        buttonBox = QDialogButtonBox(self)
-        buttonBox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Help)
-        buttonBox.button(QDialogButtonBox.Ok).setToolTip('Apply the changes you made and close this window')
-        buttonBox.button(QDialogButtonBox.Cancel).setToolTip('Discard the changes you made and close this window')
-        buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
-
         groupbox1 = QGroupBox(SOURCE + ' input')
         layout1 = QVBoxLayout()
         layout1.addWidget(self.label_provenance)
         layout1.addWidget(self.view_provenance)
         layout1.addWidget(self.label_dicom)
         layout1.addWidget(self.view_dicom)
-        layout1.addStretch(1)
         groupbox1.setLayout(layout1)
 
         groupbox2 = QGroupBox("BIDS output")
@@ -910,9 +904,13 @@ class EditDialog(QDialog):
         layout2.addWidget(self.view_bids)
         layout2.addWidget(self.label_bids_name)
         layout2.addWidget(self.view_bids_name)
-        layout2.addStretch(1)
-        layout2.addWidget(buttonBox)
         groupbox2.setLayout(layout2)
+
+        buttonBox = QDialogButtonBox(self)
+        buttonBox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Help)
+        buttonBox.button(QDialogButtonBox.Ok).setToolTip('Apply the changes you made and close this window')
+        buttonBox.button(QDialogButtonBox.Cancel).setToolTip('Discard the changes you made and close this window')
+        buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
 
         layout_scrollarea.addWidget(groupbox1)
         layout_scrollarea.addWidget(groupbox2)
@@ -927,6 +925,7 @@ class EditDialog(QDialog):
         buttonBox.helpRequested.connect(self.get_help)
 
         layout_all.addWidget(scrollarea)
+        layout_all.addWidget(buttonBox)
 
         self.resize(EDIT_WINDOW_WIDTH, EDIT_WINDOW_HEIGHT)
         self.center()
@@ -1060,24 +1059,15 @@ class EditDialog(QDialog):
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
             if key != '':
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
-                value = bids.cleanup_value(bids.replace_bidsvalue(value, self.target_run['provenance']))
+                if not (value.startswith('<<') and value.endswith('>>')):
+                    value = bids.cleanup_value(bids.replace_bidsvalue(value, self.target_run['provenance']))
                 LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
 
                 self.target_run['bids'][key] = value
                 self.view_bids.item(row, 1).setText(value)
                 self.refresh_bidsname()
 
-    def set_cell(self, value, is_editable=False):
-        item = QTableWidgetItem()
-        item.setText(value)
-        if is_editable:
-            item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
-        else:
-            item.setFlags(QtCore.Qt.ItemIsEnabled)
-            item.setForeground(QtGui.QColor(128, 128, 128))
-        return item
-
-    def fill_table(self, table, data, row_height=24):
+    def fill_table(self, table, data, row_height=24, maximum: bool=False):
         """
         Fill the table with data.
 
@@ -1094,13 +1084,14 @@ class EditDialog(QDialog):
         table.setRowCount(num_rows)
         extra_space = 3
         table_height = num_rows * (row_height + extra_space) + extra_space
-        table.setMinimumHeight(table_height)
+        if maximum:
+            table.setMaximumHeight(table_height)
 
         for i, row in enumerate(data):
             table.setRowHeight(i, row_height)
             key = row[0]["value"]
             if self.target_modality in bids.bidsmodalities and key == 'suffix':
-                item = self.set_cell("suffix", is_editable=False)
+                item = set_cell("suffix", is_editable=False)
                 table.setItem(i, 0, item)
                 labels = self.allowed_suffixes[self.target_modality]
                 self.suffix_dropdown = QComboBox()
@@ -1114,18 +1105,18 @@ class EditDialog(QDialog):
                 if value == "None":
                     value = ""
                 is_editable = element.get("is_editable", False)
-                item = self.set_cell(value, is_editable=is_editable)
+                item = set_cell(value, is_editable=is_editable)
                 table.setItem(i, j, item)
 
         table.blockSignals(False)
 
-    def set_table(self, data, row_height=24):
+    def set_table(self, data, row_height: int=24, maximum: bool=False):
         """Return a table widget from the data. """
         table = QTableWidget()
 
         table.setColumnCount(2) # Always two columns (i.e. key, value)
 
-        self.fill_table(table, data, row_height=row_height)
+        self.fill_table(table, data, row_height=row_height, maximum=maximum)
 
         horizontal_header = table.horizontalHeader()
         horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
@@ -1156,12 +1147,11 @@ class EditDialog(QDialog):
         self.label_bids_name = QLabel()
         self.label_bids_name.setText("Output name")
 
-        self.view_bids_name = QTextEdit()
-        self.view_bids_name.setReadOnly(True)
+        self.view_bids_name = QTextBrowser()
 
         height = 40
         extra_space = 3
-        self.view_bids_name.setFixedHeight(height + extra_space)
+        self.view_bids_name.setMaximumHeight(height + extra_space)
 
         self.refresh_bidsname()
 
