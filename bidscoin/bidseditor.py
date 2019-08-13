@@ -138,19 +138,17 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, input_bidsmap, output_bidsmap, template_bidsmap,
                 selected_tab_index=BIDSMAP_TAB_INDEX, subprefix='sub-', sesprefix='ses-'):
 
-        self.has_edit_dialog_open = False
-
-        self.subprefix = subprefix
-        self.sesprefix = sesprefix
-
-        self.MainWindow = MainWindow
-
-        self.bidsfolder = bidsfolder
-        self.sourcefolder = sourcefolder
+        self.MainWindow       = MainWindow
+        self.bidsfolder       = bidsfolder
+        self.sourcefolder     = sourcefolder
         self.bidsmap_filename = bidsmap_filename
-        self.input_bidsmap = input_bidsmap
-        self.output_bidsmap = output_bidsmap
+        self.input_bidsmap    = input_bidsmap
+        self.output_bidsmap   = output_bidsmap
         self.template_bidsmap = template_bidsmap
+        self.subprefix        = subprefix
+        self.sesprefix        = sesprefix
+
+        self.has_edit_dialog_open = False
 
         # Make sure we have the correct index mapping for the first edit
         self.set_initial_file_index()
@@ -621,13 +619,12 @@ class Ui_MainWindow(object):
             for run in runs:
                 provenance = run['provenance']
                 provenance_file = os.path.basename(provenance)
-                runindex = run['bids'].get('run', '')
 
                 initial_file_index = self.initial_file_index[provenance]
 
                 subid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['participant'], run['provenance'])
                 sesid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['session'], run['provenance'])
-                bids_name = bids.get_bidsname(subid, sesid, modality, run, runindex, self.subprefix, self.sesprefix)
+                bids_name = bids.get_bidsname(subid, sesid, modality, run, '', self.subprefix, self.sesprefix)
                 subid = bids.set_bidsvalue(bids_name, 'sub')
                 sesid = bids.set_bidsvalue(bids_name, 'ses')
                 session = os.path.join(self.bidsfolder, f'sub-{subid}', f'ses-{sesid}')
@@ -1158,8 +1155,7 @@ class EditDialog(QDialog):
     def refresh_bidsname(self):
         subid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['participant'], self.target_run['provenance'])
         sesid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['session'], self.target_run['provenance'])
-        runindex = self.target_run['bids'].get('run', '')
-        bidsname = os.path.join(self.target_modality, bids.get_bidsname(subid, sesid, self.target_modality, self.target_run, runindex, self.subprefix, self.sesprefix)) + '.*'
+        bidsname = os.path.join(self.target_modality, bids.get_bidsname(subid, sesid, self.target_modality, self.target_run, '', self.subprefix, self.sesprefix)) + '.*'
         html_bids_name = bidsname.replace('<', '&lt;').replace('>', '&gt;')
 
         self.view_bids_name.clear()
