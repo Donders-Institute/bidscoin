@@ -622,9 +622,8 @@ class Ui_MainWindow(object):
 
                 initial_file_index = self.initial_file_index[provenance]
 
-                subid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['participant'], run['provenance'])
-                sesid = bids.replace_bidsvalue(self.output_bidsmap[SOURCE]['session'], run['provenance'])
-                bids_name = bids.get_bidsname(subid, sesid, modality, run, '', self.subprefix, self.sesprefix)
+                bids_name = bids.get_bidsname(output_bidsmap[SOURCE]['participant'], output_bidsmap[SOURCE]['session'],
+                                              modality, run, '', self.subprefix, self.sesprefix)
                 subid = bids.set_bidsvalue(bids_name, 'sub')
                 sesid = bids.set_bidsvalue(bids_name, 'ses')
                 session = os.path.join(self.bidsfolder, f'sub-{subid}', f'ses-{sesid}')
@@ -667,8 +666,8 @@ class Ui_MainWindow(object):
         self.tab3 = QtWidgets.QWidget()
         self.tab3.layout = QVBoxLayout()
 
-        participantsessionlabel = QLabel('Participant-session')
-        participantsessionlabel.setToolTip('Participant-session')
+        participantsessionlabel = QLabel('Subject')
+        participantsessionlabel.setToolTip('Subject/session mapping')
 
         self.participantsessiontable = QTableWidget()
         self.participantsessiontable.setMouseTracking(True)
@@ -689,8 +688,8 @@ class Ui_MainWindow(object):
         self.participantsessiontable.setRowHeight(0,24)
         self.participantsessiontable.setRowHeight(1,24)
 
-        label = QLabel('BIDS map list')
-        label.setToolTip('BIDS map list')
+        label = QLabel('Data samples')
+        label.setToolTip('List of unique source-data samples')
 
         self.table = QTableWidget()
         self.table.itemDoubleClicked.connect(self.inspect_dicomfile)
@@ -706,7 +705,7 @@ class Ui_MainWindow(object):
 
         self.update_participantsession_and_list(self.output_bidsmap)
 
-        self.table.setHorizontalHeaderLabels(['', f'{SOURCE} input sample', 'BIDS modality', 'BIDS output name', 'Action'])
+        self.table.setHorizontalHeaderLabels(['', f'{SOURCE} input', 'BIDS modality', 'BIDS output', 'Action'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
@@ -1153,9 +1152,8 @@ class EditDialog(QDialog):
         self.refresh_bidsname()
 
     def refresh_bidsname(self):
-        subid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['participant'], self.target_run['provenance'])
-        sesid = bids.replace_bidsvalue(self.bidsmap[SOURCE]['session'], self.target_run['provenance'])
-        bidsname = os.path.join(self.target_modality, bids.get_bidsname(subid, sesid, self.target_modality, self.target_run, '', self.subprefix, self.sesprefix)) + '.*'
+        bidsname = os.path.join(self.target_modality, bids.get_bidsname(self.bidsmap[SOURCE]['participant'], self.bidsmap[SOURCE]['session'],
+                                                                        self.target_modality, self.target_run, '', self.subprefix, self.sesprefix)) + '.*'
         html_bids_name = bidsname.replace('<', '&lt;').replace('>', '&gt;')
 
         self.view_bids_name.clear()

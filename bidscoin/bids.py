@@ -910,6 +910,37 @@ def get_matching_dicomrun(dicomfile: str, bidsmap: dict, modalities: tuple= bids
     return run_, modality, None
 
 
+def get_subid_sesid(dicomfile: str, subid: str='', sesid: str='', subprefix: str= 'sub-', sesprefix: str= 'ses-'):
+    """
+    Extract the cleaned-up subid and sesid from the pathname or from the dicom file if subid/sesid == '<<FileSystem>>'
+
+    :param dicomfile:   The full pathname of the dicomfile. If given, the DICOM values are read from the file
+    :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001'). Can be left empty
+    :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01'). Can be left empty
+    :param subprefix:   The optional subprefix (e.g. 'sub-'). Used to parse the sub-value from the provenance as default subid
+    :param sesprefix:   The optional sesprefix (e.g. 'ses-'). If it is found in the provenance then a default sesid will be set
+    :return:            Updated (subid, sesid) tuple
+    """
+
+    # Add default value for subid and sesid (e.g. for the bidseditor)
+    dicompath = os.path.dirname(dicomfile)
+    if not subid or subid=='<<FileSystem>>':
+        subid = dicompath.rsplit(os.sep + subprefix, 1)[1].split(os.sep)[0]
+    else:
+        subid = replace_bidsvalue(subid, dicomfile)
+    if (not sesid or sesid=='<<FileSystem>>') and os.sep + sesprefix in dicompath:
+        sesid = dicompath.rsplit(os.sep + sesprefix, 1)[1].split(os.sep)[0]
+    else:
+        sesid = replace_bidsvalue(sesid, dicomfile)
+
+    # Add sub- and ses- prefixes if they are not there
+    subid = 'sub-' + cleanup_value(subid.lstrip(subprefix))
+    if sesid:
+        sesid = 'ses-' + cleanup_value(sesid.lstrip(sesprefix))
+
+    return subid, sesid
+
+
 def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str= '', subprefix: str= 'sub-', sesprefix: str= 'ses-') -> str:
     """
     Composes a filename as it should be according to the BIDS standard using the BIDS labels in run
@@ -925,16 +956,8 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
     """
     assert modality in bidsmodalities + (unknownmodality, ignoremodality)
 
-    # Add default value for subid and sesid (e.g. for the bidseditor)
-    if not subid:
-        subid = os.path.dirname(run['provenance']).rsplit(os.sep + subprefix)[1].split(os.sep)[0]
-    if not sesid and os.sep + sesprefix in run['provenance']:
-        sesid = os.path.dirname(run['provenance']).rsplit(os.sep + sesprefix)[1].split(os.sep)[0]
-
-    # Add sub- and ses- prefixes if they are not there
-    subid = 'sub-' + subid.lstrip('sub-')
-    if sesid:
-        sesid = 'ses-' + sesid.lstrip('ses-')
+    # Try to update the sub/ses-ids
+    subid, sesid = get_subid_sesid(run['provenance'], subid, sesid, subprefix, sesprefix)
 
     # Validate and do some checks to allow for dragging the run entries between the different modality-sections
     run = copy.deepcopy(run)                # Avoid side effects when changing run

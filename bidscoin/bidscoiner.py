@@ -44,29 +44,14 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
 
     TE = [None, None]
 
-    # Get a valid BIDS subject identifier from the (first) dicom-header or from the session source folder
-    if bidsmap['DICOM']['participant'] and bidsmap['DICOM']['participant'].startswith('<<') and bidsmap['DICOM']['participant'].endswith('>>'):
-        subid = bids.get_dicomfield(bidsmap['DICOM']['participant'][2:-2], bids.get_dicomfile(bids.lsdirs(session)[0]))
-    elif bidsmap['DICOM']['participant']:
-        subid = bidsmap['DICOM']['participant']
-    else:
-        subid = session.rsplit(os.sep + subprefix, 1)[1].split(os.sep + sesprefix, 1)[0]
-    subid = 'sub-' + bids.cleanup_value(subid.lstrip(subprefix))
+    # Get valid BIDS subject/session identifiers from the (first) dicom-header or from the session source folder
+    subid, sesid = bids.get_subid_sesid(bids.get_dicomfile(bids.lsdirs(session)[0]),
+                                        bidsmap['DICOM']['participant'],
+                                        bidsmap['DICOM']['session'],
+                                        subprefix, sesprefix)
     if subid == subprefix:
         LOGGER.error('No valid subject identifier found for: ' + session)
         return
-
-    # Get a valid or empty BIDS session identifier from the (first) dicom-header or from the session source folder
-    if bidsmap['DICOM']['session'] and bidsmap['DICOM']['session'].startswith('<<') and bidsmap['DICOM']['session'].endswith('>>'):
-        sesid = bids.get_dicomfield(bidsmap['DICOM']['session'][2:-2], bids.get_dicomfile(bids.lsdirs(session)[0]))
-    elif bidsmap['DICOM']['session']:
-        sesid = bidsmap['DICOM']['session']
-    elif os.sep + sesprefix in session:
-        sesid = session.rsplit(os.sep + sesprefix)[1]
-    else:
-        sesid = ''
-    if sesid:
-        sesid = 'ses-' + bids.cleanup_value(sesid.lstrip(sesprefix))
 
     # Create the BIDS session-folder and a scans.tsv file
     bidsses = os.path.join(bidsfolder, subid, sesid)         # NB: This gives a trailing '/' if ses=='', but that should be ok
