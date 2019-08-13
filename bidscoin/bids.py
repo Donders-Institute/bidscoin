@@ -10,6 +10,7 @@ https://github.com/dangom/dac2bids/blob/master/dac2bids.py
 
 # Global imports
 import os.path
+import copy
 import glob
 import inspect
 import ast
@@ -936,6 +937,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
         sesid = 'ses-' + sesid.lstrip('ses-')
 
     # Validate and do some checks to allow for dragging the run entries between the different modality-sections
+    run = copy.deepcopy(run)                # Avoid side effects when changing run
     for bidslabel in bidslabels:
         if bidslabel not in run['bids']:
             run['bids'][bidslabel] = None
