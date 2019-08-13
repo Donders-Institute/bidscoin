@@ -69,12 +69,17 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
             dialog_edit.exec()
 
             # Get the result
-            if dialog_edit.result() == 0:           # The user has canceled the edit
-                exit()
-            elif dialog_edit.result() == 1:         # The user has finished the edit
+            if dialog_edit.result() == 1:           # The user has finished the edit
                 bidsmap_new = dialog_edit.bidsmap
-            elif dialog_edit.result() == 2:         # The user has aborted the edit
-                pass
+            elif dialog_edit.result() in [0, 2]:    # The user has canceled / aborted the edit
+                answer = QMessageBox.question(None, 'BIDSmapper', 'Do you want to abort and quit the bidsmapper?',
+                                              QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if answer==QMessageBox.No:
+                    pass
+                if answer==QMessageBox.Yes:
+                    LOGGER.info('User has quit the bidsmapper')
+                    sys.exit()
+
             else:
                 LOGGER.debug(f'Unexpected result {dialog_edit.result()} from the edit dialog')
 
