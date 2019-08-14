@@ -900,7 +900,7 @@ class EditDialog(QDialog):
         groupbox2 = QGroupBox("BIDS output")
         layout2 = QVBoxLayout()
         layout2.addWidget(self.label_dropdown)
-        layout2.addWidget(self.view_dropdown)
+        layout2.addWidget(self.modality_dropdown)
         layout2.addWidget(self.label_bids)
         layout2.addWidget(self.view_bids)
         layout2.addWidget(self.label_bids_name)
@@ -1137,11 +1137,11 @@ class EditDialog(QDialog):
         self.label_dropdown = QLabel()
         self.label_dropdown.setText("Modality")
 
-        self.view_dropdown = QComboBox()
-        self.view_dropdown.addItems(bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality))
-        self.view_dropdown.setCurrentIndex(self.view_dropdown.findText(self.target_modality))
+        self.modality_dropdown = QComboBox()
+        self.modality_dropdown.addItems(bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality))
+        self.modality_dropdown.setCurrentIndex(self.modality_dropdown.findText(self.target_modality))
 
-        self.view_dropdown.currentIndexChanged.connect(self.selection_modality_dropdown_change)
+        self.modality_dropdown.currentIndexChanged.connect(self.selection_modality_dropdown_change)
 
     def set_bids_name_section(self):
         """Set non-editable BIDS output name section. """
@@ -1169,21 +1169,24 @@ class EditDialog(QDialog):
 
     def refresh(self, suffix_idx):
         """
-        Refresh the edit dialog window with the new target_run.
+        Refresh the edit dialog window with a new target_run from the template bidsmap.
 
         :param suffix_idx: The suffix or index number that will used to extract the run from the template bidsmap
         :return:
         """
 
-        target_run = bids.get_run(self.template_bidsmap, SOURCE, self.target_modality, suffix_idx, self.target_run['provenance'])
+        # Get the new target_run
+        self.target_run = bids.get_run(self.template_bidsmap, SOURCE, self.target_modality, suffix_idx, self.target_run['provenance'])
 
+        # Insert the new target_run in our bidsmap
         self.bidsmap = bids.update_bidsmap(self.bidsmap,
                                            self.current_modality,
                                            self.target_run['provenance'],
                                            self.target_modality,
-                                           target_run)
+                                           self.target_run)
 
-        self.reload(target_run)
+        # Refresh the edit window
+        self.reload(self.target_run)
 
     def reload(self, target_run: dict={}):
 
@@ -1193,10 +1196,10 @@ class EditDialog(QDialog):
             self.current_modality = self.source_modality
             self.target_modality  = self.source_modality
             self.target_run       = copy.deepcopy(self.source_run)
-            index = self.view_dropdown.findText(self.current_modality)
-            self.view_dropdown.setCurrentIndex(index)
-        else:
-            self.target_run = target_run
+
+            # Refresh the modality dropdown menu
+            index = self.modality_dropdown.findText(self.current_modality)
+            self.modality_dropdown.setCurrentIndex(index)
 
         # Refresh the DICOM attributes and BIDS values
         _, data_dicom, data_bids = self.get_editwin_data()
@@ -1210,7 +1213,7 @@ class EditDialog(QDialog):
 
     def selection_modality_dropdown_change(self):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
-        self.target_modality = self.view_dropdown.currentText()
+        self.target_modality = self.modality_dropdown.currentText()
 
         LOGGER.info(f"User has changed the BIDS modality from '{self.current_modality}' to '{self.target_modality}' for {self.target_run['provenance']}")
 
