@@ -921,7 +921,7 @@ class EditDialog(QDialog):
         self.view_bids.cellChanged.connect(self.bids_cell_was_changed)
 
         buttonBox.accepted.connect(self.update_run)
-        buttonBox.rejected.connect(self.reject)
+        buttonBox.rejected.connect(partial(self.reject, False))
         buttonBox.helpRequested.connect(self.get_help)
 
         layout_all.addWidget(scrollarea)
