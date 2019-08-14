@@ -90,6 +90,19 @@ def set_cell(value, is_editable=False):
     return item
 
 
+def table_height(num_rows: int):
+    """Calculates the table height for windows and linux"""
+
+    if sys.platform == 'linux':
+        extra_space = 1
+    else:
+        extra_space = 9
+
+    height = num_rows * (ROW_HEIGHT + extra_space)
+
+    return height
+
+
 class InspectWindow(QDialog):
 
     def __init__(self, filename, dicomdict):
@@ -464,8 +477,7 @@ class Ui_MainWindow(object):
 
         plugintable.verticalHeader().setVisible(False)
 
-        table_height = num_rows * (ROW_HEIGHT + 9)
-        plugintable.setMaximumHeight(table_height)
+        plugintable.setMaximumHeight(table_height(num_rows))
 
         plugintable.cellChanged.connect(self.plugin_cell_was_changed)
 
@@ -565,8 +577,7 @@ class Ui_MainWindow(object):
             table.setAlternatingRowColors(False)
             table.setShowGrid(False)
 
-            table_height = num_rows * (ROW_HEIGHT + 9)
-            table.setMaximumHeight(table_height)
+            table.setMaximumHeight(table_height(num_rows))
 
             table.cellChanged.connect(partial(self.tool_cell_was_changed, tool, n))
 
@@ -685,7 +696,7 @@ class Ui_MainWindow(object):
         self.subses_table.setShowGrid(False)
         self.subses_table.cellChanged.connect(self.subses_cell_was_changed)
 
-        self.subses_table.setMaximumHeight((ROW_HEIGHT + 6) * 2 + 6)
+        self.subses_table.setMaximumHeight(table_height(2))
         self.subses_table.setRowHeight(0, ROW_HEIGHT)
         self.subses_table.setRowHeight(1, ROW_HEIGHT)
 
@@ -1077,10 +1088,8 @@ class EditDialog(QDialog):
 
         num_rows = len(data)
         table.setRowCount(num_rows)
-        extra_space = 4
-        table_height = num_rows * (ROW_HEIGHT + extra_space) + extra_space
         if maximum:
-            table.setMaximumHeight(table_height)
+            table.setMaximumHeight(table_height(num_rows))
 
         for i, row in enumerate(data):
             table.setRowHeight(i, ROW_HEIGHT)
