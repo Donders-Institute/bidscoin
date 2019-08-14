@@ -69,7 +69,7 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
 
             # Get the result
             if dialog_edit.result() == 1:           # The user has finished the edit
-                bidsmap_new = dialog_edit.bidsmap
+                bidsmap_new = dialog_edit.target_bidsmap
             elif dialog_edit.result() in [0, 2]:    # The user has canceled / aborted the edit
                 answer = QMessageBox.question(None, 'BIDSmapper', 'Do you want to abort and quit the bidsmapper?',
                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -85,7 +85,9 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
             # Open a view-only version of the main window TODO: Fix self.initial_file_index[provenance] not being set correctly!
             # if gui.interactive==2:
             #     gui.MainWindow.show()
-            #     gui.update_list(bidsmap_new)
+            #     gui.update_subses_and_samples(bidsmap_new)
+            #     gui.setupUi(gui.MainWindow, gui.bidsfolder, gui.sourcefolder, gui.bidsmap_filename, bidsmap_new,
+            #                 bidsmap_new, gui.template_bidsmap, reload=True)
 
     return bidsmap_new
 
