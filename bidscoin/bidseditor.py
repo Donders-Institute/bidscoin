@@ -603,7 +603,7 @@ class Ui_MainWindow(object):
         tab2.layout.addStretch(1)
         tab2.setLayout(tab2.layout)
 
-        self.tabwidget.addTab(tab2, "tab2")
+        self.tabwidget.addTab(tab2, "")
 
     def update_subses_and_samples(self, output_bidsmap):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
@@ -670,9 +670,9 @@ class Ui_MainWindow(object):
 
     def set_tab_bidsmap(self):
         """Set the SOURCE file sample listing tab.  """
-        self.tab3 = QtWidgets.QWidget()
-        self.tab3.layout = QVBoxLayout()
-        self.tab3.setObjectName("BIDSmapping")
+        tab3 = QtWidgets.QWidget()
+        tab3.layout = QVBoxLayout()
+        tab3.setObjectName("BIDSmapping")
 
         subses_label = QLabel('Participant labels')
         subses_label.setToolTip('Subject/session mapping')
@@ -727,13 +727,13 @@ class Ui_MainWindow(object):
 
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        self.tab3.layout.addWidget(subses_label)
-        self.tab3.layout.addWidget(self.subses_table)
-        self.tab3.layout.addWidget(label)
-        self.tab3.layout.addWidget(self.table)
+        tab3.layout.addWidget(subses_label)
+        tab3.layout.addWidget(self.subses_table)
+        tab3.layout.addWidget(label)
+        tab3.layout.addWidget(self.table)
 
-        self.tab3.setLayout(self.tab3.layout)
-        self.tabwidget.addTab(self.tab3, "")
+        tab3.setLayout(tab3.layout)
+        self.tabwidget.addTab(tab3, "")
 
     def get_help(self):
         """Get online help. """
@@ -764,12 +764,9 @@ class Ui_MainWindow(object):
     def save_bidsmap_to_file(self):
         """Save the BIDSmap to file. """
         options = QFileDialog.Options()
-        filename, _ = QFileDialog.getSaveFileName(
-            self.tab3,
-            "Save File",
-            os.path.join(self.bidsfolder, 'code', 'bidscoin', 'bidsmap.yaml'),
-            "YAML Files (*.yaml *.yml);;All Files (*)",
-            options=options)
+        filename, _ = QFileDialog.getSaveFileName(self.MainWindow, "Save File",
+                        os.path.join(self.bidsfolder, 'code', 'bidscoin', 'bidsmap.yaml'),
+                        "YAML Files (*.yaml *.yml);;All Files (*)", options=options)
         if filename:
             bids.save_bidsmap(filename, self.output_bidsmap)
 
