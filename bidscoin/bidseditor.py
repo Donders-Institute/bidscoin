@@ -175,7 +175,7 @@ class Ui_MainWindow(object):
 
         top_layout = QtWidgets.QVBoxLayout(centralwidget)
 
-        self.tabwidget = QtWidgets.QTabWidget(QtWidgets.QWidget(centralwidget))
+        self.tabwidget = QtWidgets.QTabWidget(centralwidget)
         self.tabwidget.setTabPosition(QtWidgets.QTabWidget.North)
         self.tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.tabwidget.setObjectName("tabwidget")
@@ -193,7 +193,7 @@ class Ui_MainWindow(object):
         buttonBox.setStandardButtons(QDialogButtonBox.Save | QDialogButtonBox.Reset | QDialogButtonBox.Help)
         buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
         buttonBox.button(QDialogButtonBox.Save).setToolTip('Save the Options and BIDS-map to disk')
-        buttonBox.button(QDialogButtonBox.Reset).setToolTip('Reload the Options and BIDS-map from disk')
+        buttonBox.button(QDialogButtonBox.Reset).setToolTip('Reload the options and BIDS-map from disk')
 
         top_layout.addWidget(buttonBox)
 
@@ -263,12 +263,12 @@ class Ui_MainWindow(object):
         menuHelp.setTitle("Help")
         statusbar.setStatusTip("Statusbar")
 
-        actionReload.setText("Reload")
-        actionReload.setStatusTip("Reload the BIDSmap from disk")
+        actionReload.setText("Reset")
+        actionReload.setStatusTip("Reload the BIDS-map from disk")
         actionReload.setShortcut("Ctrl+R")
 
         actionSave.setText("Save")
-        actionSave.setStatusTip("Save the BIDSmap to disk")
+        actionSave.setStatusTip("Save the BIDS-map to disk")
         actionSave.setShortcut("Ctrl+S")
 
         actionExit.setText("Exit")
@@ -332,6 +332,7 @@ class Ui_MainWindow(object):
     def set_tab_file_browser(self, sourcefolder):
         """Set the raw data folder inspector tab. """
         tab1 = QtWidgets.QWidget()
+        tab1.setObjectName("filebrowser")
         tab1.layout = QVBoxLayout()
         label = QLabel(sourcefolder)
         label.setWordWrap(True)
@@ -345,14 +346,12 @@ class Ui_MainWindow(object):
         tree.setSortingEnabled(True)
         tree.setRootIndex(self.model.index(sourcefolder))
         tree.doubleClicked.connect(self.on_double_clicked)
-        tab1.layout.addWidget(label)
-        tab1.layout.addWidget(tree)
         tree.header().resizeSection(0, 800)
 
-        file_browser = QtWidgets.QWidget()
-        file_browser.setLayout(tab1.layout)
-        file_browser.setObjectName("filebrowser")
-        self.tabwidget.addTab(file_browser, "")
+        tab1.layout.addWidget(label)
+        tab1.layout.addWidget(tree)
+        tab1.setLayout(tab1.layout)
+        self.tabwidget.addTab(tab1, "")
 
     def subses_cell_was_changed(self, row, column):
         """Subject or session value has been changed in subject-session table. """
@@ -483,8 +482,9 @@ class Ui_MainWindow(object):
 
     def set_tab_options(self):
         """Set the options tab.  """
-        self.tab2 = QtWidgets.QWidget()
-        self.tab2.layout = QVBoxLayout()
+        tab2 = QtWidgets.QWidget()
+        tab2.layout = QVBoxLayout()
+        tab2.setObjectName("Options")
 
         bidsmap_options = self.output_bidsmap['Options']
 
@@ -595,18 +595,15 @@ class Ui_MainWindow(object):
         self.update_plugintable()
 
         for label, table in zip(labels, self.tables_options):
-            self.tab2.layout.addWidget(label)
-            self.tab2.layout.addWidget(table)
+            tab2.layout.addWidget(label)
+            tab2.layout.addWidget(table)
 
-        self.tab2.layout.addWidget(pluginlabel)
-        self.tab2.layout.addWidget(plugintable)
-        self.tab2.layout.addStretch(1)
+        tab2.layout.addWidget(pluginlabel)
+        tab2.layout.addWidget(plugintable)
+        tab2.layout.addStretch(1)
+        tab2.setLayout(tab2.layout)
 
-        options = QtWidgets.QWidget()
-        options.setLayout(self.tab2.layout)
-        options.setObjectName("Options")
-
-        self.tabwidget.addTab(options, "")
+        self.tabwidget.addTab(tab2, "tab2")
 
     def update_subses_and_samples(self, output_bidsmap):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
@@ -675,6 +672,7 @@ class Ui_MainWindow(object):
         """Set the SOURCE file sample listing tab.  """
         self.tab3 = QtWidgets.QWidget()
         self.tab3.layout = QVBoxLayout()
+        self.tab3.setObjectName("BIDSmapping")
 
         subses_label = QLabel('Participant labels')
         subses_label.setToolTip('Subject/session mapping')
@@ -734,11 +732,8 @@ class Ui_MainWindow(object):
         self.tab3.layout.addWidget(label)
         self.tab3.layout.addWidget(self.table)
 
-        self.file_sample_listing = QtWidgets.QWidget()
-        self.file_sample_listing.setLayout(self.tab3.layout)
-        self.file_sample_listing.setObjectName("filelister")
-
-        self.tabwidget.addTab(self.file_sample_listing, "")
+        self.tab3.setLayout(self.tab3.layout)
+        self.tabwidget.addTab(self.tab3, "")
 
     def get_help(self):
         """Get online help. """
