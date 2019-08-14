@@ -671,7 +671,7 @@ class Ui_MainWindow(object):
         self.tab3 = QtWidgets.QWidget()
         self.tab3.layout = QVBoxLayout()
 
-        subses_label = QLabel('Participant label')
+        subses_label = QLabel('Participant labels')
         subses_label.setToolTip('Subject/session mapping')
 
         self.subses_table = QTableWidget()
