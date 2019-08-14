@@ -912,7 +912,7 @@ def get_matching_dicomrun(dicomfile: str, bidsmap: dict, modalities: tuple= bids
 
 def get_subid_sesid(dicomfile: str, subid: str='', sesid: str='', subprefix: str= 'sub-', sesprefix: str= 'ses-'):
     """
-    Extract the cleaned-up subid and sesid from the pathname or from the dicom file if subid/sesid == '<<FilePath>>'
+    Extract the cleaned-up subid and sesid from the pathname or from the dicom file if subid/sesid == '<<SourceFilePath>>'
 
     :param dicomfile:   The full pathname of the dicomfile. If given, the DICOM values are read from the file
     :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001'). Can be left empty
@@ -924,11 +924,11 @@ def get_subid_sesid(dicomfile: str, subid: str='', sesid: str='', subprefix: str
 
     # Add default value for subid and sesid (e.g. for the bidseditor)
     dicompath = os.path.dirname(dicomfile)
-    if not subid or subid=='<<FilePath>>':
+    if not subid or subid=='<<SourceFilePath>>':
         subid = dicompath.rsplit(os.sep + subprefix, 1)[1].split(os.sep)[0]
     else:
         subid = replace_bidsvalue(subid, dicomfile)
-    if (not sesid or sesid=='<<FilePath>>') and os.sep + sesprefix in dicompath:
+    if (not sesid or sesid=='<<SourceFilePath>>') and os.sep + sesprefix in dicompath:
         sesid = dicompath.rsplit(os.sep + sesprefix, 1)[1].split(os.sep)[0]
     else:
         sesid = replace_bidsvalue(sesid, dicomfile)
