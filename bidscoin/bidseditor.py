@@ -841,6 +841,7 @@ class EditDialog(QDialog):
 
         self.source_modality  = modality
         self.target_modality  = modality
+        self.current_modality = modality
         self.bidsmap          = bidsmap
         self.template_bidsmap = template_bidsmap
         self.subprefix        = subprefix
@@ -848,7 +849,7 @@ class EditDialog(QDialog):
 
         for run in bidsmap[SOURCE][modality]:
             if run['provenance'] == provenance:
-                self.source_run = run        # TODO: source_run is redundant now, but may be used for a reload / reset button
+                self.source_run = run
 
         self.target_run = copy.deepcopy(self.source_run)
 
@@ -907,7 +908,8 @@ class EditDialog(QDialog):
         groupbox2.setLayout(layout2)
 
         buttonBox = QDialogButtonBox(self)
-        buttonBox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Help)
+        buttonBox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Reset | QDialogButtonBox.Help)
+        buttonBox.button(QDialogButtonBox.Reset).setToolTip('Reset the changes you made')
         buttonBox.button(QDialogButtonBox.Ok).setToolTip('Apply the changes you made and close this window')
         buttonBox.button(QDialogButtonBox.Cancel).setToolTip('Discard the changes you made and close this window')
         buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
@@ -923,6 +925,7 @@ class EditDialog(QDialog):
         buttonBox.accepted.connect(self.update_run)
         buttonBox.rejected.connect(partial(self.reject, False))
         buttonBox.helpRequested.connect(self.get_help)
+        buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reload)
 
         layout_all.addWidget(scrollarea)
         layout_all.addWidget(buttonBox)
@@ -1172,15 +1175,28 @@ class EditDialog(QDialog):
         :return:
         """
 
-        self.target_run = bids.get_run(self.template_bidsmap, SOURCE, self.target_modality, suffix_idx, self.target_run['provenance'])
+        target_run = bids.get_run(self.template_bidsmap, SOURCE, self.target_modality, suffix_idx, self.target_run['provenance'])
 
         self.bidsmap = bids.update_bidsmap(self.bidsmap,
-                                           self.source_modality,
+                                           self.current_modality,
                                            self.target_run['provenance'],
                                            self.target_modality,
-                                           self.target_run)
+                                           target_run)
 
-        self.source_modality = self.target_modality
+        self.reload(target_run)
+
+    def reload(self, target_run: dict={}):
+
+        # reset the target_run if not given
+        if not target_run:
+            LOGGER.info('User resets the BIDS mapping')
+            self.current_modality = self.source_modality
+            self.target_modality  = self.source_modality
+            self.target_run       = copy.deepcopy(self.source_run)
+            index = self.view_dropdown.findText(self.current_modality)
+            self.view_dropdown.setCurrentIndex(index)
+        else:
+            self.target_run = target_run
 
         # Refresh the DICOM attributes and BIDS values
         _, data_dicom, data_bids = self.get_editwin_data()
@@ -1196,7 +1212,9 @@ class EditDialog(QDialog):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
         self.target_modality = self.view_dropdown.currentText()
 
-        LOGGER.info(f"User has changed the BIDS modality from '{self.source_modality}' to '{self.target_modality}' for {self.target_run['provenance']}")
+        LOGGER.info(f"User has changed the BIDS modality from '{self.current_modality}' to '{self.target_modality}' for {self.target_run['provenance']}")
+
+        self.current_modality = self.target_modality
 
         self.refresh(0)
 
@@ -1238,7 +1256,7 @@ class EditDialog(QDialog):
 
         """Save the changes to the bidsmap and send it back to the main window: Finished! """
         self.bidsmap = bids.update_bidsmap(self.bidsmap,
-                                           self.source_modality,
+                                           self.current_modality,
                                            self.target_run['provenance'],
                                            self.target_modality,
                                            self.target_run)
