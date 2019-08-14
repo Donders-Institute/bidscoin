@@ -45,6 +45,8 @@ INSPECT_WINDOW_HEIGHT = 750
 OPTIONS_TAB_INDEX = 1
 BIDSMAP_TAB_INDEX = 2
 
+ROW_HEIGHT = 24
+
 ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "bidscoin.ico")
 
 MAIN_HELP_URL = "https://github.com/Donders-Institute/bidscoin/blob/master/README.md"
@@ -53,12 +55,13 @@ HELP_URL_DEFAULT = "https://bids-specification.readthedocs.io/en/latest/"
 
 HELP_URLS = {
     "anat": "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#anatomy-imaging-data",
-    "beh": "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/07-behavioral-experiments.html",
-    "dwi": "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#diffusion-imaging-data",
+    "beh" : "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/07-behavioral-experiments.html",
+    "dwi" : "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#diffusion-imaging-data",
     "fmap": "https://bids-specification.readthedocs.io/en/latest/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#fieldmap-data",
     "func": "https://bids-specification.readthedocs.io/en/latest/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#task-including-resting-state-imaging-data",
-    "pet": "https://docs.google.com/document/d/1mqMLnxVdLwZjDd4ZiWFqjEAmOmfcModA_R535v3eQs0/edit",
-    bids.unknownmodality: HELP_URL_DEFAULT
+    "pet" : "https://docs.google.com/document/d/1mqMLnxVdLwZjDd4ZiWFqjEAmOmfcModA_R535v3eQs0/edit",
+    bids.unknownmodality: HELP_URL_DEFAULT,
+    bids.ignoremodality : HELP_URL_DEFAULT
 }
 
 OPTIONS_TOOLTIP_BIDSCOIN = """bidscoin
@@ -236,9 +239,9 @@ class Ui_MainWindow(object):
         menuFile.addAction(actionSave)
         menuFile.addAction(actionExit)
 
-        menuHelp.addAction(actionAbout)
         menuHelp.addAction(actionHelp)
         menuHelp.addAction(actionBidsHelp)
+        menuHelp.addAction(actionAbout)
 
         menubar.addAction(menuFile.menuAction())
         menubar.addAction(menuHelp.menuAction())
@@ -259,7 +262,7 @@ class Ui_MainWindow(object):
         actionExit.setStatusTip("Exit the application")
         actionExit.setShortcut("Ctrl+X")
 
-        actionAbout.setText("About")
+        actionAbout.setText("About BIDScoin")
         actionAbout.setStatusTip("Show information about the application")
 
         actionHelp.setText("Documentation")
@@ -348,6 +351,7 @@ class Ui_MainWindow(object):
             if key and value!=oldvalue:
                 LOGGER.info(f"User has set {SOURCE}['{key}'] from '{oldvalue}' to '{value}'")
                 self.output_bidsmap[SOURCE][key] = value
+                self.update_subses_and_samples(self.output_bidsmap)
 
     def tool_cell_was_changed(self, tool, idx, row, column):
         """Option value has been changed tool options table. """
@@ -418,7 +422,7 @@ class Ui_MainWindow(object):
 
             self.update_plugintable()
 
-    def update_plugintable(self, row_height=24):
+    def update_plugintable(self):
         """
         Plots an extendable table of plugins from self.output_bidsmap['PlugIns']
         :param row_height:
@@ -434,7 +438,7 @@ class Ui_MainWindow(object):
         plugintable.setColumnCount(num_cols)
 
         for i, plugin in enumerate(plugins + ['']):
-            plugintable.setRowHeight(i, row_height)
+            plugintable.setRowHeight(i, ROW_HEIGHT)
             for j in range(3):
                 if j==0:
                     item = set_cell('path', is_editable=False)
@@ -461,10 +465,9 @@ class Ui_MainWindow(object):
         horizontal_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Fixed)
         horizontal_header.setVisible(False)
 
-        vertical_header = plugintable.verticalHeader()
-        vertical_header.setVisible(False)
+        plugintable.verticalHeader().setVisible(False)
 
-        table_height = num_rows * row_height + 2 * plugintable.frameWidth()
+        table_height = num_rows * ROW_HEIGHT + 2 * plugintable.frameWidth()
         plugintable.setMaximumHeight(table_height)
 
         plugintable.cellChanged.connect(self.plugin_cell_was_changed)
@@ -531,11 +534,10 @@ class Ui_MainWindow(object):
             table.setColumnCount(num_cols)
             table.setColumnHidden(0, True)  # Hide tool column
             table.setMouseTracking(True)
-            row_height = 24
 
             for i, row in enumerate(data):
 
-                table.setRowHeight(i, row_height)
+                table.setRowHeight(i, ROW_HEIGHT)
                 for j, element in enumerate(row):
                     value = element.get("value", "")
                     if value == "None":
@@ -562,13 +564,12 @@ class Ui_MainWindow(object):
             horizontal_header.setSectionResizeMode(3, QtWidgets.QHeaderView.Fixed)
             horizontal_header.setVisible(False)
 
-            vertical_header = table.verticalHeader()
-            vertical_header.setVisible(False)
+            table.verticalHeader().setVisible(False)
 
             table.setAlternatingRowColors(False)
             table.setShowGrid(False)
 
-            table_height = num_rows * row_height + 2 * table.frameWidth()
+            table_height = num_rows * ROW_HEIGHT + 2 * table.frameWidth()
             table.setMaximumHeight(table_height)
 
             table.cellChanged.connect(partial(self.tool_cell_was_changed, tool, n))
@@ -584,7 +585,7 @@ class Ui_MainWindow(object):
         plugintable.setShowGrid(False)
 
         self.plugintable = plugintable
-        self.update_plugintable(row_height)
+        self.update_plugintable()
 
         vbox = QVBoxLayout()
         for label, table in zip(labels, self.tables_options):
@@ -688,9 +689,9 @@ class Ui_MainWindow(object):
         self.subses_table.setShowGrid(False)
         self.subses_table.cellChanged.connect(self.subses_cell_was_changed)
 
-        self.subses_table.setMaximumHeight(24 * 2 + 3)
-        self.subses_table.setRowHeight(0, 24)
-        self.subses_table.setRowHeight(1, 24)
+        self.subses_table.setMaximumHeight(ROW_HEIGHT * 2 + 3)
+        self.subses_table.setRowHeight(0, ROW_HEIGHT)
+        self.subses_table.setRowHeight(1, ROW_HEIGHT)
 
         label = QLabel('Data samples')
         label.setToolTip('List of unique source-data samples')
@@ -709,7 +710,7 @@ class Ui_MainWindow(object):
 
         self.update_subses_and_samples(self.output_bidsmap)
 
-        self.table.setHorizontalHeaderLabels(['', f'{SOURCE} input', 'BIDS modality', 'BIDS output', 'Action'])
+        self.table.setHorizontalHeaderLabels(['', f'{SOURCE} input', 'BIDS modality', 'BIDS output', 'Action', 'Provenance'])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
@@ -719,8 +720,7 @@ class Ui_MainWindow(object):
         self.table.setColumnHidden(2, True)
         self.table.setColumnHidden(5, True)
 
-        vertical_header = self.table.verticalHeader()
-        vertical_header.setVisible(False)
+        self.table.verticalHeader().setVisible(False)
 
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
@@ -1067,13 +1067,12 @@ class EditDialog(QDialog):
                 self.view_bids.item(row, 1).setText(value)
                 self.refresh_bidsname()
 
-    def fill_table(self, table, data, row_height=24, maximum: bool=False):
+    def fill_table(self, table, data, maximum: bool=False):
         """
         Fill the table with data.
 
         :param table:
         :param data:
-        :param row_height:
         :return:
         """
 
@@ -1083,12 +1082,12 @@ class EditDialog(QDialog):
         num_rows = len(data)
         table.setRowCount(num_rows)
         extra_space = 3
-        table_height = num_rows * (row_height + extra_space) + extra_space
+        table_height = num_rows * (ROW_HEIGHT + extra_space) + extra_space
         if maximum:
             table.setMaximumHeight(table_height)
 
         for i, row in enumerate(data):
-            table.setRowHeight(i, row_height)
+            table.setRowHeight(i, ROW_HEIGHT)
             key = row[0]["value"]
             if self.target_modality in bids.bidsmodalities and key == 'suffix':
                 item = set_cell("suffix", is_editable=False)
@@ -1110,21 +1109,20 @@ class EditDialog(QDialog):
 
         table.blockSignals(False)
 
-    def set_table(self, data, row_height: int=24, maximum: bool=False):
+    def set_table(self, data, maximum: bool=False):
         """Return a table widget from the data. """
         table = QTableWidget()
 
         table.setColumnCount(2) # Always two columns (i.e. key, value)
 
-        self.fill_table(table, data, row_height=row_height, maximum=maximum)
+        self.fill_table(table, data, maximum=maximum)
 
         horizontal_header = table.horizontalHeader()
         horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         horizontal_header.setVisible(False)
 
-        vertical_header = table.verticalHeader()
-        vertical_header.setVisible(False)
+        table.verticalHeader().setVisible(False)
 
         table.setAlternatingRowColors(False)
         table.setShowGrid(False)
