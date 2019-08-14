@@ -320,7 +320,8 @@ class Ui_MainWindow(object):
         """Set the raw data folder inspector tab. """
         tab1 = QtWidgets.QWidget()
         tab1.layout = QVBoxLayout()
-        label = QLabel("Inspect source data folder: {}".format(sourcefolder))
+        label = QLabel(sourcefolder)
+        label.setWordWrap(True)
         self.model = QFileSystemModel()
         self.model.setRootPath('')
         self.model.setFilter(QtCore.QDir.NoDotAndDotDot | QtCore.QDir.AllDirs | QtCore.QDir.Files)
@@ -522,8 +523,7 @@ class Ui_MainWindow(object):
             tooltip_text = tool_item['tooltip_text']
             data = tool_options[tool]
 
-            label = QLabel()
-            label.setText(tool)
+            label = QLabel(tool)
             label.setToolTip(tooltip_text)
 
             table = QTableWidget()
