@@ -64,8 +64,7 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
         # Launch a GUI to ask the user for help
         if gui:
             # Open the interactive edit window to get the new mapping
-            index = len(bidsmap_new['DICOM'][modality]) - 1    # Dependent on bids.append_run() above. Alternative would be to call: run, modality, index = bids.get_matching_dicomrun(dicomfile, bidsmap_new)
-            dialog_edit = bidseditor.EditDialog(index, modality, bidsmap_new, template, gui.subprefix, gui.sesprefix)
+            dialog_edit = bidseditor.EditDialog(dicomfile, modality, bidsmap_new, template, gui.subprefix, gui.sesprefix)
             dialog_edit.exec()
 
             # Get the result
