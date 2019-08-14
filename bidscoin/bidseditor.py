@@ -341,7 +341,7 @@ class Ui_MainWindow(object):
         self.tabwidget.addTab(file_browser, "")
 
     def subses_cell_was_changed(self, row, column):
-        """Participant or session value has been changed in participant-session table. """
+        """Subject or session value has been changed in subject-session table. """
         if column == 1:
             key = self.subses_table.item(row, 0).text()
             value = self.subses_table.item(row, 1).text()
@@ -607,9 +607,9 @@ class Ui_MainWindow(object):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
         self.output_bidsmap = output_bidsmap  # input main window / output from edit window -> output main window
 
-        item = set_cell("participant", is_editable=False)
+        item = set_cell("subject", is_editable=False)
         self.subses_table.setItem(0, 0, item)
-        item = set_cell(self.output_bidsmap[SOURCE]['participant'], is_editable=True)
+        item = set_cell(self.output_bidsmap[SOURCE]['subject'], is_editable=True)
         self.subses_table.setItem(0, 1, item)
         item = set_cell("session", is_editable=False)
         self.subses_table.setItem(1, 0, item)
@@ -627,7 +627,7 @@ class Ui_MainWindow(object):
 
                 initial_file_index = self.initial_file_index[provenance]
 
-                bids_name = bids.get_bidsname(output_bidsmap[SOURCE]['participant'], output_bidsmap[SOURCE]['session'],
+                bids_name = bids.get_bidsname(output_bidsmap[SOURCE]['subject'], output_bidsmap[SOURCE]['session'],
                                               modality, run, '', self.subprefix, self.sesprefix)
                 subid = bids.set_bidsvalue(bids_name, 'sub')
                 sesid = bids.set_bidsvalue(bids_name, 'ses')
@@ -1157,7 +1157,7 @@ class EditDialog(QDialog):
         self.refresh_bidsname()
 
     def refresh_bidsname(self):
-        bidsname = os.path.join(self.target_modality, bids.get_bidsname(self.bidsmap[SOURCE]['participant'], self.bidsmap[SOURCE]['session'],
+        bidsname = os.path.join(self.target_modality, bids.get_bidsname(self.bidsmap[SOURCE]['subject'], self.bidsmap[SOURCE]['session'],
                                                                         self.target_modality, self.target_run, '', self.subprefix, self.sesprefix)) + '.*'
         html_bids_name = bidsname.replace('<', '&lt;').replace('>', '&gt;')
 

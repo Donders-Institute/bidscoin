@@ -46,7 +46,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
 
     # Get valid BIDS subject/session identifiers from the (first) dicom-header or from the session source folder
     subid, sesid = bids.get_subid_sesid(bids.get_dicomfile(bids.lsdirs(session)[0]),
-                                        bidsmap['DICOM']['participant'],
+                                        bidsmap['DICOM']['subject'],
                                         bidsmap['DICOM']['session'],
                                         subprefix, sesprefix)
     if subid == subprefix:
