@@ -94,11 +94,11 @@ def table_height(num_rows: int):
     """Calculates the table height for windows and linux"""
 
     if sys.platform == 'linux':
-        extra_space = 1
+        num_rows *= 1.1
     else:
-        extra_space = 9
+        num_rows *= 1.45
 
-    height = num_rows * (ROW_HEIGHT + extra_space)
+    height = num_rows * ROW_HEIGHT
 
     return height
 
@@ -594,15 +594,13 @@ class Ui_MainWindow(object):
         self.plugintable = plugintable
         self.update_plugintable()
 
-        vbox = QVBoxLayout()
         for label, table in zip(labels, self.tables_options):
-            vbox.addWidget(label)
-            vbox.addWidget(table)
-        vbox.addWidget(pluginlabel)
-        vbox.addWidget(plugintable)
-        vbox.addStretch(1)
+            self.tab2.layout.addWidget(label)
+            self.tab2.layout.addWidget(table)
 
-        self.tab2.layout.addLayout(vbox)
+        self.tab2.layout.addWidget(pluginlabel)
+        self.tab2.layout.addWidget(plugintable)
+        self.tab2.layout.addStretch(1)
 
         options = QtWidgets.QWidget()
         options.setLayout(self.tab2.layout)
