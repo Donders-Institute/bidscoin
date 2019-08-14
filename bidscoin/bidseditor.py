@@ -1185,6 +1185,8 @@ class EditDialog(QDialog):
                                            self.target_modality,
                                            self.target_run)
 
+        self.current_modality = self.target_modality
+
         # Refresh the edit window
         self.reload(self.target_run)
 
@@ -1216,8 +1218,6 @@ class EditDialog(QDialog):
         self.target_modality = self.modality_dropdown.currentText()
 
         LOGGER.info(f"User has changed the BIDS modality from '{self.current_modality}' to '{self.target_modality}' for {self.target_run['provenance']}")
-
-        self.current_modality = self.target_modality
 
         self.refresh(0)
 
