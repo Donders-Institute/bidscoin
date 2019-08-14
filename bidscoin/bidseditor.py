@@ -865,12 +865,7 @@ class EditDialog(QDialog):
 
         layout_all = QVBoxLayout(self)
 
-        scrollarea = QtWidgets.QScrollArea(self)
-        scrollarea.setWidgetResizable(True)
-
-        top_widget = QtWidgets.QWidget()
-        scrollarea.setWidget(top_widget)
-        layout_scrollarea = QHBoxLayout(top_widget)
+        layout_tables = QHBoxLayout(self)
 
         data_provenance, data_dicom, data_bids = self.get_editwin_data()
 
@@ -915,8 +910,8 @@ class EditDialog(QDialog):
         buttonBox.button(QDialogButtonBox.Cancel).setToolTip('Discard the changes you made and close this window')
         buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
 
-        layout_scrollarea.addWidget(groupbox1)
-        layout_scrollarea.addWidget(groupbox2)
+        layout_tables.addWidget(groupbox1)
+        layout_tables.addWidget(groupbox2)
 
         self.view_provenance.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.view_provenance.cellDoubleClicked.connect(self.inspect_dicomfile)
@@ -928,7 +923,7 @@ class EditDialog(QDialog):
         buttonBox.helpRequested.connect(self.get_help)
         buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reset)
 
-        layout_all.addWidget(scrollarea)
+        layout_all.addLayout(layout_tables)
         layout_all.addWidget(buttonBox)
 
         self.resize(EDIT_WINDOW_WIDTH, EDIT_WINDOW_HEIGHT)
