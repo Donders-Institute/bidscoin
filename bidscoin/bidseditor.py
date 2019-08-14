@@ -139,7 +139,7 @@ class MainWindow(QMainWindow):
 class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, input_bidsmap, output_bidsmap, template_bidsmap,
-                selected_tab_index=BIDSMAP_TAB_INDEX, subprefix='sub-', sesprefix='ses-'):
+                selected_tab_index=BIDSMAP_TAB_INDEX, subprefix='sub-', sesprefix='ses-', reload: bool=False):
 
         self.MainWindow       = MainWindow
         self.bidsfolder       = bidsfolder
@@ -198,8 +198,9 @@ class Ui_MainWindow(object):
         self.MainWindow.setCentralWidget(centralwidget)
         self.set_menu_and_status_bar()
 
-        self.MainWindow.resize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
-        self.center()
+        if not reload:
+            self.MainWindow.resize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
+            self.center()
 
     def set_menu_and_status_bar(self):
         """Set the menu. """
@@ -758,7 +759,8 @@ class Ui_MainWindow(object):
                      self.input_bidsmap,
                      self.output_bidsmap,
                      self.template_bidsmap,
-                     selected_tab_index=selected_tab_index)
+                     selected_tab_index=selected_tab_index,
+                     reload=True)
 
     def save_bidsmap_to_file(self):
         """Save the BIDSmap to file. """
