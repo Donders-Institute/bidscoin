@@ -154,11 +154,11 @@ def build_filesystemmap(runfolder: str, bidsmap_new: dict, bidsmap_old: dict) ->
     """
     All the logic to map filesystem-info onto bids labels go into this function
 
-    :param runfolder:    The full-path name of the source folder
-    :param bidsmap_new:     The bidsmap that we are building
-    :param bidsmap_old:     Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param automatic:       If True, the user will not be asked for help if an unknown run is encountered
-    :return:                The bidsmap with new entries in it
+    :param runfolder:   The full-path name of the source folder
+    :param bidsmap_new: The bidsmap that we are building
+    :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param automatic:   If True, the user will not be asked for help if an unknown run is encountered
+    :return:            The bidsmap with new entries in it
     """
 
     # Input checks
@@ -174,10 +174,10 @@ def build_pluginmap(runfolder: str, bidsmap_new: dict, bidsmap_old: dict) -> dic
     """
     Call the plugin to map info onto bids labels
 
-    :param runfolder:    The full-path name of the source folder
-    :param bidsmap_new:     The bidsmap that we are building
-    :param bidsmap_old:     Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:                The bidsmap with new entries in it
+    :param runfolder:   The full-path name of the source folder
+    :param bidsmap_new: The bidsmap that we are building
+    :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :return:            The bidsmap with new entries in it
     """
 
     # Input checks
@@ -243,7 +243,9 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         mainwin = bidseditor.MainWindow()
         gui = bidseditor.Ui_MainWindow()
         gui.interactive = interactive
-        gui.setupUi(mainwin, bidsfolder, rawfolder, bidsmapfile, bidsmap_new, bidsmap_new, template, subprefix=subprefix, sesprefix=sesprefix)
+        gui.subprefix = subprefix
+        gui.sesprefix = sesprefix
+        # gui.setupUi(mainwin, bidsfolder, rawfolder, bidsmapfile, bidsmap_new, bidsmap_new, template, subprefix=subprefix, sesprefix=sesprefix)
 
         QMessageBox.information(mainwin, 'bidsmapper workflow',
                                 f"The bidsmapper will now scan {bidsfolder} and whenever "
