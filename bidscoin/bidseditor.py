@@ -1202,8 +1202,7 @@ class EditDialog(QDialog):
             self.target_run       = copy.deepcopy(self.source_run)
 
             # Refresh the modality dropdown menu
-            index = self.modality_dropdown.findText(self.current_modality)
-            self.modality_dropdown.setCurrentIndex(index)
+            self.modality_dropdown.setCurrentIndex(self.modality_dropdown.findText(self.target_modality))
 
         # Refresh the DICOM attributes and BIDS values
         _, data_dicom, data_bids = self.get_editwin_data()
