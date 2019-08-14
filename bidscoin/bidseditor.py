@@ -970,7 +970,7 @@ class EditDialog(QDialog):
 
     def get_editwin_data(self):
         """
-        Derive the tabular data needed to render the edit window.
+        Derive the tabular data from the target_run, needed to render the edit window.
 
         :return: (data_provenance, data_dicom, data_bids)
         """
@@ -1201,10 +1201,10 @@ class EditDialog(QDialog):
             self.target_modality  = self.source_modality
             self.target_run       = copy.deepcopy(self.source_run)
 
-            # Refresh the modality dropdown menu
+            # Reset the modality dropdown menu
             self.modality_dropdown.setCurrentIndex(self.modality_dropdown.findText(self.target_modality))
 
-        # Refresh the DICOM attributes and BIDS values
+        # Refresh the DICOM attributes and BIDS values with data from the target_run
         _, data_dicom, data_bids = self.get_editwin_data()
 
         # Refresh the existing tables
