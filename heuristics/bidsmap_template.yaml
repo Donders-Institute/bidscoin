@@ -37,8 +37,8 @@ DICOM:
 # --------------------------------------------------------------------------------
 # DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  participant: <<FileSystem>>     # <<FileSystem>> extracts the subject label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
-  session: <<FileSystem>>         # <<FileSystem>> extracts the session label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+  participant: <<FilePath>>       # <<FilePath>> extracts the subject label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
+  session: <<FilePath>>           # <<FilePath>> extracts the session label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
   anat:       # ----------------------- All anatomical series --------------------
   - provenance: ~
     attributes: &anatattributes
@@ -405,8 +405,8 @@ FileSystem:
 # to the BIDS labels; Special substitutions can be performed using python's
 # Format Specification Mini-Language)
 # --------------------------------------------------------------------------------
-  participant: <<FileSystem>>     # <<FileSystem>> extracts the subject label from the source directory during bidscoiner runtime
-  session: <<FileSystem>>         # <<FileSystem>> extracts the session label from the source directory during bidscoiner runtime
+  participant: <<FilePath>>       # <<FilePath>> extracts the subject label from the source directory during bidscoiner runtime
+  session: <<FilePath>>           # <<FilePath>> extracts the session label from the source directory during bidscoiner runtime
   anat:       # ----------------------- All anatomical series --------------------
   - attributes: &anatattributes_file
       FolderName: ~
