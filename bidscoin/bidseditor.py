@@ -156,20 +156,13 @@ class Ui_MainWindow(object):
         # Make sure we have the correct index mapping for the first edit
         self.set_initial_file_index()
 
-        self.MainWindow.setObjectName("MainWindow")
-
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.MainWindow.setWindowIcon(icon)
-
         centralwidget = QtWidgets.QWidget(self.MainWindow)
         centralwidget.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
         centralwidget.setObjectName("centralwidget")
 
-        top_widget = QtWidgets.QWidget(centralwidget)
         top_layout = QtWidgets.QVBoxLayout(centralwidget)
 
-        self.tabwidget = QtWidgets.QTabWidget(top_widget)
+        self.tabwidget = QtWidgets.QTabWidget(QtWidgets.QWidget(centralwidget))
         self.tabwidget.setTabPosition(QtWidgets.QTabWidget.North)
         self.tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.tabwidget.setObjectName("tabwidget")
@@ -196,16 +189,22 @@ class Ui_MainWindow(object):
         buttonBox.button(QDialogButtonBox.Save).clicked.connect(self.save_bidsmap_to_file)
 
         self.MainWindow.setCentralWidget(centralwidget)
-        self.set_menu_and_status_bar()
 
         if not reload:
+            self.MainWindow.setObjectName("MainWindow")
+
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.MainWindow.setWindowIcon(icon)
+
+            self.set_menu_and_status_bar()
+
             self.MainWindow.resize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
             self.center()
 
     def set_menu_and_status_bar(self):
         """Set the menu. """
-        menubar = QtWidgets.QMenuBar(self.MainWindow)
-        menubar.setGeometry(QtCore.QRect(0, 0, 997, 26))
+        menubar  = QtWidgets.QMenuBar(self.MainWindow)
         menuFile = QtWidgets.QMenu(menubar)
         menuHelp = QtWidgets.QMenu(menubar)
 
