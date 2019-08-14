@@ -45,7 +45,7 @@ INSPECT_WINDOW_HEIGHT = 750
 OPTIONS_TAB_INDEX = 1
 BIDSMAP_TAB_INDEX = 2
 
-ROW_HEIGHT = 24
+ROW_HEIGHT = 22
 
 ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "bidscoin.ico")
 
@@ -424,11 +424,7 @@ class Ui_MainWindow(object):
             self.update_plugintable()
 
     def update_plugintable(self):
-        """
-        Plots an extendable table of plugins from self.output_bidsmap['PlugIns']
-        :param row_height:
-        :return:
-        """
+        """Plots an extendable table of plugins from self.output_bidsmap['PlugIns']"""
         plugins  = self.output_bidsmap['PlugIns']
         num_rows = len(plugins) + 1
         num_cols = 3  # Always three columns (i.e. path, plugin, test-button)
@@ -468,7 +464,7 @@ class Ui_MainWindow(object):
 
         plugintable.verticalHeader().setVisible(False)
 
-        table_height = num_rows * ROW_HEIGHT + 2 * plugintable.frameWidth()
+        table_height = num_rows * (ROW_HEIGHT + 9)
         plugintable.setMaximumHeight(table_height)
 
         plugintable.cellChanged.connect(self.plugin_cell_was_changed)
@@ -569,7 +565,7 @@ class Ui_MainWindow(object):
             table.setAlternatingRowColors(False)
             table.setShowGrid(False)
 
-            table_height = num_rows * ROW_HEIGHT + 2 * table.frameWidth()
+            table_height = num_rows * (ROW_HEIGHT + 9)
             table.setMaximumHeight(table_height)
 
             table.cellChanged.connect(partial(self.tool_cell_was_changed, tool, n))
@@ -689,7 +685,7 @@ class Ui_MainWindow(object):
         self.subses_table.setShowGrid(False)
         self.subses_table.cellChanged.connect(self.subses_cell_was_changed)
 
-        self.subses_table.setMaximumHeight(ROW_HEIGHT * 2 + 3)
+        self.subses_table.setMaximumHeight((ROW_HEIGHT + 6) * 2 + 6)
         self.subses_table.setRowHeight(0, ROW_HEIGHT)
         self.subses_table.setRowHeight(1, ROW_HEIGHT)
 
@@ -1081,7 +1077,7 @@ class EditDialog(QDialog):
 
         num_rows = len(data)
         table.setRowCount(num_rows)
-        extra_space = 3
+        extra_space = 4
         table_height = num_rows * (ROW_HEIGHT + extra_space) + extra_space
         if maximum:
             table.setMaximumHeight(table_height)
@@ -1147,9 +1143,7 @@ class EditDialog(QDialog):
 
         self.view_bids_name = QTextBrowser()
 
-        height = 40
-        extra_space = 3
-        self.view_bids_name.setMaximumHeight(height + extra_space)
+        self.view_bids_name.setMaximumHeight(45)
 
         self.refresh_bidsname()
 
