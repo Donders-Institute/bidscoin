@@ -925,7 +925,7 @@ class EditDialog(QDialog):
         buttonBox.accepted.connect(self.update_run)
         buttonBox.rejected.connect(partial(self.reject, False))
         buttonBox.helpRequested.connect(self.get_help)
-        buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reload)
+        buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reset)
 
         layout_all.addWidget(scrollarea)
         layout_all.addWidget(buttonBox)
@@ -1185,15 +1185,17 @@ class EditDialog(QDialog):
                                            self.target_modality,
                                            self.target_run)
 
+        # Now that we have updated the bidsmap, we can also update the current_modality
         self.current_modality = self.target_modality
 
         # Refresh the edit window
-        self.reload(self.target_run)
+        self.reset(refresh=True)
 
-    def reload(self, target_run: dict={}):
+    def reset(self, refresh: bool=False):
+        """Resets the edit with the target_run if refresh=True or otherwise with the original source_run (=default)"""
 
-        # reset the target_run if not given
-        if not target_run:
+        # Reset the target_run to the source_run
+        if not refresh:
             LOGGER.info('User resets the BIDS mapping')
             self.current_modality = self.source_modality
             self.target_modality  = self.source_modality
