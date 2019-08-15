@@ -153,6 +153,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, input_bidsmap, output_bidsmap, template_bidsmap,
                 selected_tab_index=BIDSMAP_TAB_INDEX, subprefix='sub-', sesprefix='ses-', reload: bool=False):
 
+        # Set the data
         self.MainWindow       = MainWindow
         self.bidsfolder       = bidsfolder
         self.sourcefolder     = sourcefolder
@@ -168,37 +169,38 @@ class Ui_MainWindow(object):
         # Make sure we have the correct index mapping for the first edit
         self.set_initial_file_index()
 
-        centralwidget = QtWidgets.QWidget(self.MainWindow)
-        centralwidget.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
-        centralwidget.setObjectName("centralwidget")
+        # Set-up the tabs
+        self.tabwidget = QtWidgets.QTabWidget()
+        tabwidget = self.tabwidget
+        tabwidget.setTabPosition(QtWidgets.QTabWidget.North)
+        tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
+        tabwidget.setObjectName("tabwidget")
 
-        top_layout = QtWidgets.QVBoxLayout(centralwidget)
-
-        self.tabwidget = QtWidgets.QTabWidget(centralwidget)
-        self.tabwidget.setTabPosition(QtWidgets.QTabWidget.North)
-        self.tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
-        self.tabwidget.setObjectName("tabwidget")
         self.set_tab_file_browser(sourcefolder)
         self.set_tab_options()
         self.set_tab_bidsmap()
-        self.tabwidget.setTabText(0, "File browser")
-        self.tabwidget.setTabText(1, "Options")
-        self.tabwidget.setTabText(2, "BIDS map")
-        self.tabwidget.setCurrentIndex(selected_tab_index)
+        tabwidget.setTabText(0, "File browser")
+        tabwidget.setTabText(1, "Options")
+        tabwidget.setTabText(2, "BIDS map")
+        tabwidget.setCurrentIndex(selected_tab_index)
 
-        top_layout.addWidget(self.tabwidget)
-
-        buttonBox = QDialogButtonBox(self.MainWindow)
+        # Set-up the buttons
+        buttonBox = QDialogButtonBox()
         buttonBox.setStandardButtons(QDialogButtonBox.Save | QDialogButtonBox.Reset | QDialogButtonBox.Help)
         buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
         buttonBox.button(QDialogButtonBox.Save).setToolTip('Save the Options and BIDS-map to disk')
         buttonBox.button(QDialogButtonBox.Reset).setToolTip('Reload the options and BIDS-map from disk')
-
-        top_layout.addWidget(buttonBox)
-
         buttonBox.helpRequested.connect(self.get_help)
         buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reload)
         buttonBox.button(QDialogButtonBox.Save).clicked.connect(self.save_bidsmap_to_file)
+
+        # Set-up the main layout
+        centralwidget = QtWidgets.QWidget(self.MainWindow)
+        centralwidget.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
+        centralwidget.setObjectName("centralwidget")
+        top_layout = QtWidgets.QVBoxLayout(centralwidget)
+        top_layout.addWidget(tabwidget)
+        top_layout.addWidget(buttonBox)
 
         self.MainWindow.setCentralWidget(centralwidget)
 
@@ -841,28 +843,35 @@ class EditDialog(QDialog):
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMaximizeButtonHint)
         self.setWindowTitle("Edit BIDS mapping")
 
+        # Get data for the tables
         data_provenance, data_dicom, data_bids = self.get_editwin_data()
 
+        # Set-up the provenance table
         self.label_provenance = QLabel()
         self.label_provenance.setText("Provenance")
         self.view_provenance = self.set_table(data_provenance, maximum=True)
         self.view_provenance.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.view_provenance.cellDoubleClicked.connect(self.inspect_dicomfile)
 
+        # Set-up the DICOM table
         self.label_dicom = QLabel()
         self.label_dicom.setText("Attributes")
         self.view_dicom = self.set_table(data_dicom)
         self.view_dicom.cellChanged.connect(self.dicom_cell_was_changed)
 
+        # Set-up the modality dropdown menu
         self.set_modality_dropdown_section()
 
+        # Set-up the BIDS table
         self.label_bids = QLabel()
         self.label_bids.setText("Labels")
         self.view_bids = self.set_table(data_bids)
         self.view_bids.cellChanged.connect(self.bids_cell_was_changed)
 
+        # Set-up the BIDS outputname field
         self.set_bids_name_section()
 
+        # Group the tables in boxes
         groupbox1 = QGroupBox(SOURCE + ' input')
         layout1 = QVBoxLayout()
         layout1.addWidget(self.label_provenance)
@@ -881,22 +890,24 @@ class EditDialog(QDialog):
         layout2.addWidget(self.view_bids_name)
         groupbox2.setLayout(layout2)
 
+        # Add the boxes to the layout
         layout_tables = QHBoxLayout()
         layout_tables.addWidget(groupbox1)
         layout_tables.addWidget(groupbox2)
 
+        # Set-up buttons
         buttonBox = QDialogButtonBox()
         buttonBox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Reset | QDialogButtonBox.Help)
         buttonBox.button(QDialogButtonBox.Reset).setToolTip('Reset the edits you made')
         buttonBox.button(QDialogButtonBox.Ok).setToolTip('Apply the edits you made and close this window')
         buttonBox.button(QDialogButtonBox.Cancel).setToolTip('Discard the edits you made and close this window')
         buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
-
         buttonBox.accepted.connect(self.update_run)
         buttonBox.rejected.connect(partial(self.reject, False))
         buttonBox.helpRequested.connect(self.get_help)
         buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reset)
 
+        # Set-up the main layout
         layout_all = QVBoxLayout(self)
         layout_all.addLayout(layout_tables)
         layout_all.addWidget(buttonBox)
