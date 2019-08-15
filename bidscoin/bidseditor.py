@@ -430,7 +430,7 @@ class Ui_MainWindow(object):
     def plugin_cell_was_changed(self, row, column):
         """Add / edit a plugin or delete if cell is empty"""
         if column==1:
-            plugin = self.plugintable.item(row, column).text()
+            plugin = self.plugin_table.item(row, column).text()
             if plugin and row == len(self.output_bidsmap['PlugIns']):
                 LOGGER.info(f"Added plugin: '{plugin}'")
                 self.output_bidsmap['PlugIns'].append(plugin)
@@ -451,7 +451,7 @@ class Ui_MainWindow(object):
         num_rows = len(plugins) + 1
 
         # Fill the rows of the plugin table
-        plugintable = self.plugintable
+        plugintable = self.plugin_table
         plugintable.disconnect()
         plugintable.setRowCount(num_rows)
         for i, plugin in enumerate(plugins + ['']):
@@ -531,12 +531,12 @@ class Ui_MainWindow(object):
             label = QLabel(tool)
             label.setToolTip(tooltip_text)
 
-            table = myQTableWidget()
-            table.setRowCount(num_rows)
-            table.setColumnCount(num_cols)
-            table.setColumnHidden(0, True)  # Hide tool column
-            table.setMouseTracking(True)
-            horizontal_header = table.horizontalHeader()
+            tool_table = myQTableWidget()
+            tool_table.setRowCount(num_rows)
+            tool_table.setColumnCount(num_cols)
+            tool_table.setColumnHidden(0, True)  # Hide tool column
+            tool_table.setMouseTracking(True)
+            horizontal_header = tool_table.horizontalHeader()
             horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
             horizontal_header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
             horizontal_header.setSectionResizeMode(2, QHeaderView.Stretch)
@@ -552,43 +552,43 @@ class Ui_MainWindow(object):
                     iseditable = element.get("iseditable", False)
                     tooltip_text = element.get("tooltip_text", None)
                     item = myWidgetItem(value, iseditable=iseditable)
-                    table.setItem(i, j, item)
+                    tool_table.setItem(i, j, item)
                     if tooltip_text:
-                        table.item(i, j).setToolTip(tooltip_text)
+                        tool_table.item(i, j).setToolTip(tooltip_text)
 
             # Add the test-button cell
             test_button = QPushButton('Test')
             test_button.clicked.connect(partial(self.handle_click_test_tool, tool))
             test_button.setToolTip(f'Click to test the {tool} options')
-            table.setCellWidget(0, num_cols-1, test_button)
+            tool_table.setCellWidget(0, num_cols-1, test_button)
 
-            table.cellChanged.connect(partial(self.tool_cell_was_changed, tool, n))
+            tool_table.cellChanged.connect(partial(self.tool_cell_was_changed, tool, n))
 
             labels.append(label)
-            self.tables_options.append(table)
+            self.tables_options.append(tool_table)
 
         # Create the plugin table
-        plugintable = myQTableWidget(minimum=False)
-        pluginlabel = QLabel('Plugins')
-        pluginlabel.setToolTip('List of plugins')
-        plugintable.setMouseTracking(True)
-        plugintable.setColumnCount(3)   # Always three columns (i.e. path, plugin, test-button)
-        horizontal_header = plugintable.horizontalHeader()
+        plugin_table = myQTableWidget(minimum=False)
+        plugin_label = QLabel('Plugins')
+        plugin_label.setToolTip('List of plugins')
+        plugin_table.setMouseTracking(True)
+        plugin_table.setColumnCount(3)   # Always three columns (i.e. path, plugin, test-button)
+        horizontal_header = plugin_table.horizontalHeader()
         horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
         horizontal_header.setSectionResizeMode(2, QHeaderView.Fixed)
         horizontal_header.setVisible(False)
 
-        self.plugintable = plugintable
+        self.plugin_table = plugin_table
         self.update_plugintable()
 
         # Set-up the tab layout and add the tables
         layout = QVBoxLayout()
-        for label, table in zip(labels, self.tables_options):
+        for label, tool_table in zip(labels, self.tables_options):
             layout.addWidget(label)
-            layout.addWidget(table)
-        layout.addWidget(pluginlabel)
-        layout.addWidget(plugintable)
+            layout.addWidget(tool_table)
+        layout.addWidget(plugin_label)
+        layout.addWidget(plugin_table)
         layout.addStretch(1)
 
         tab2 = QtWidgets.QWidget()
@@ -601,7 +601,7 @@ class Ui_MainWindow(object):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
         self.output_bidsmap = output_bidsmap  # input main window / output from edit window -> output main window
         subses_table        = self.subses_table
-        table               = self.samples_table
+        samples_table       = self.samples_table
 
         subses_table.setItem(0, 0, myWidgetItem("subject", iseditable=False))
         subses_table.setItem(1, 0, myWidgetItem("session", iseditable=False))
@@ -623,39 +623,39 @@ class Ui_MainWindow(object):
                 sesid = bids.set_bidsvalue(bids_name, 'ses')
                 session = os.path.join(self.bidsfolder, f'sub-{subid}', f'ses-{sesid}')
 
-                table.setItem(idx, 0, QTableWidgetItem(f"{initial_file_index+1:03d}"))
-                table.setItem(idx, 1, QTableWidgetItem(provenance_file))
-                table.setItem(idx, 2, QTableWidgetItem(modality))                          # Hidden column
-                table.setItem(idx, 3, QTableWidgetItem(os.path.join(modality, bids_name + '.*')))
-                table.setItem(idx, 5, QTableWidgetItem(provenance))                        # Hidden column
+                samples_table.setItem(idx, 0, QTableWidgetItem(f"{initial_file_index+1:03d}"))
+                samples_table.setItem(idx, 1, QTableWidgetItem(provenance_file))
+                samples_table.setItem(idx, 2, QTableWidgetItem(modality))                          # Hidden column
+                samples_table.setItem(idx, 3, QTableWidgetItem(os.path.join(modality, bids_name + '.*')))
+                samples_table.setItem(idx, 5, QTableWidgetItem(provenance))                        # Hidden column
 
-                table.item(idx, 0).setFlags(QtCore.Qt.NoItemFlags)
-                table.item(idx, 2).setFlags(QtCore.Qt.ItemIsEnabled)
-                table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
-                table.item(idx, 1).setToolTip('Double-click to inspect the header information')
-                table.item(idx, 1).setStatusTip(os.path.dirname(provenance) + os.sep)
-                table.item(idx, 3).setStatusTip(session + os.sep)
+                samples_table.item(idx, 0).setFlags(QtCore.Qt.NoItemFlags)
+                samples_table.item(idx, 2).setFlags(QtCore.Qt.ItemIsEnabled)
+                samples_table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
+                samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information')
+                samples_table.item(idx, 1).setStatusTip(os.path.dirname(provenance) + os.sep)
+                samples_table.item(idx, 3).setStatusTip(session + os.sep)
 
-                if table.item(idx, 3):
+                if samples_table.item(idx, 3):
                     if modality == bids.unknownmodality:
-                        table.item(idx, 3).setForeground(QtGui.QColor('red'))
+                        samples_table.item(idx, 3).setForeground(QtGui.QColor('red'))
                     elif modality == bids.ignoremodality:
-                        table.item(idx, 1).setForeground(QtGui.QColor('gray'))
-                        table.item(idx, 3).setForeground(QtGui.QColor('gray'))
-                        f = table.item(idx, 3).font()
+                        samples_table.item(idx, 1).setForeground(QtGui.QColor('gray'))
+                        samples_table.item(idx, 3).setForeground(QtGui.QColor('gray'))
+                        f = samples_table.item(idx, 3).font()
                         f.setStrikeOut(True)
-                        table.item(idx, 3).setFont(f)
+                        samples_table.item(idx, 3).setFont(f)
                     else:
-                        table.item(idx, 3).setForeground(QtGui.QColor('green'))
+                        samples_table.item(idx, 3).setForeground(QtGui.QColor('green'))
 
                 edit_button = QPushButton('Edit')
                 edit_button.setToolTip('Click to see more details and edit the BIDS output name')
                 edit_button.clicked.connect(self.handle_edit_button_clicked)
-                table.setCellWidget(idx, 4, edit_button)
+                samples_table.setCellWidget(idx, 4, edit_button)
 
                 idx += 1
 
-        table.sortByColumn(0, QtCore.Qt.AscendingOrder)
+        samples_table.sortByColumn(0, QtCore.Qt.AscendingOrder)
 
     def set_tab_bidsmap(self):
         """Set the SOURCE file sample listing tab.  """
@@ -838,26 +838,26 @@ class EditDialog(QDialog):
         data_provenance, data_dicom, data_bids = self.get_editwin_data()
 
         # Set-up the provenance table
-        self.label_provenance = QLabel()
-        self.label_provenance.setText("Provenance")
-        self.table_provenance = self.set_table(data_provenance)
-        self.table_provenance.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.table_provenance.cellDoubleClicked.connect(self.inspect_dicomfile)
+        self.provenance_label = QLabel()
+        self.provenance_label.setText("Provenance")
+        self.provenance_table = self.set_table(data_provenance)
+        self.provenance_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.provenance_table.cellDoubleClicked.connect(self.inspect_dicomfile)
 
         # Set-up the DICOM table
-        self.label_dicom = QLabel()
-        self.label_dicom.setText("Attributes")
-        self.table_dicom = self.set_table(data_dicom, minimum=False)
-        self.table_dicom.cellChanged.connect(self.dicom_cell_was_changed)
+        self.dicom_label = QLabel()
+        self.dicom_label.setText("Attributes")
+        self.dicom_table = self.set_table(data_dicom, minimum=False)
+        self.dicom_table.cellChanged.connect(self.dicom_cell_was_changed)
 
         # Set-up the modality dropdown menu
         self.set_modality_dropdown_section()
 
         # Set-up the BIDS table
-        self.label_bids = QLabel()
-        self.label_bids.setText("Labels")
-        self.table_bids = self.set_table(data_bids, minimum=False)
-        self.table_bids.cellChanged.connect(self.bids_cell_was_changed)
+        self.bids_label = QLabel()
+        self.bids_label.setText("Labels")
+        self.bids_table = self.set_table(data_bids, minimum=False)
+        self.bids_table.cellChanged.connect(self.bids_cell_was_changed)
 
         # Set-up the BIDS outputname field
         self.set_bids_name_section()
@@ -865,18 +865,18 @@ class EditDialog(QDialog):
         # Group the tables in boxes
         groupbox1 = QGroupBox(SOURCE + ' input')
         layout1 = QVBoxLayout()
-        layout1.addWidget(self.label_provenance)
-        layout1.addWidget(self.table_provenance)
-        layout1.addWidget(self.label_dicom)
-        layout1.addWidget(self.table_dicom)
+        layout1.addWidget(self.provenance_label)
+        layout1.addWidget(self.provenance_table)
+        layout1.addWidget(self.dicom_label)
+        layout1.addWidget(self.dicom_table)
         groupbox1.setLayout(layout1)
 
         groupbox2 = QGroupBox("BIDS output")
         layout2 = QVBoxLayout()
         layout2.addWidget(self.label_dropdown)
         layout2.addWidget(self.modality_dropdown)
-        layout2.addWidget(self.label_bids)
-        layout2.addWidget(self.table_bids)
+        layout2.addWidget(self.bids_label)
+        layout2.addWidget(self.bids_table)
         layout2.addWidget(self.label_bids_name)
         layout2.addWidget(self.view_bids_name)
         groupbox2.setLayout(layout2)
@@ -1016,8 +1016,8 @@ class EditDialog(QDialog):
     def dicom_cell_was_changed(self, row, column):
         """DICOM attribute value has been changed. """
         if column == 1:
-            key = self.table_dicom.item(row, 0).text()
-            value = self.table_dicom.item(row, 1).text()
+            key = self.dicom_table.item(row, 0).text()
+            value = self.dicom_table.item(row, 1).text()
             oldvalue = self.target_run['attributes'].get(key, None)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
@@ -1028,8 +1028,8 @@ class EditDialog(QDialog):
     def bids_cell_was_changed(self, row, column):
         """BIDS attribute value has been changed. """
         if column == 1:
-            key = self.table_bids.item(row, 0).text()
-            value = self.table_bids.item(row, 1).text()
+            key = self.bids_table.item(row, 0).text()
+            value = self.bids_table.item(row, 1).text()
             oldvalue = self.target_run['bids'].get(key, None)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
@@ -1040,7 +1040,7 @@ class EditDialog(QDialog):
                 LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
 
                 self.target_run['bids'][key] = value
-                self.table_bids.item(row, 1).setText(value)
+                self.bids_table.item(row, 1).setText(value)
                 self.refresh_bidsname()
 
     def fill_table(self, table, data):
@@ -1164,8 +1164,8 @@ class EditDialog(QDialog):
         _, data_dicom, data_bids = self.get_editwin_data()
 
         # Refresh the existing tables
-        self.fill_table(self.table_dicom, data_dicom)
-        self.fill_table(self.table_bids, data_bids)
+        self.fill_table(self.dicom_table, data_dicom)
+        self.fill_table(self.bids_table, data_bids)
 
         # Refresh the BIDS output name
         self.refresh_bidsname()
