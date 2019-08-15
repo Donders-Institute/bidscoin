@@ -433,7 +433,6 @@ class Ui_MainWindow(object):
         plugintable.setRowCount(num_rows)
         plugintable.setMinimumHeight(table_height(1))
         for i, plugin in enumerate(plugins + ['']):
-            plugintable.setRowHeight(i, ROW_HEIGHT)
             for j in range(3):
                 if j==0:
                     item = set_cell('path', is_editable=False)
@@ -518,10 +517,11 @@ class Ui_MainWindow(object):
             table.verticalHeader().setVisible(False)
             table.setAlternatingRowColors(False)
             table.setShowGrid(False)
-            # table.setMaximumHeight(table_height(num_rows))
             table.setMinimumHeight(table_height(1))
             table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
             table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+            table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+            table.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
             horizontal_header = table.horizontalHeader()
             horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
             horizontal_header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
@@ -531,7 +531,6 @@ class Ui_MainWindow(object):
 
             for i, row in enumerate(data):
 
-                table.setRowHeight(i, ROW_HEIGHT)
                 for j, element in enumerate(row):
                     value = element.get("value", "")
                     if value == "None":
@@ -564,6 +563,8 @@ class Ui_MainWindow(object):
         plugintable.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         plugintable.setColumnCount(3)   # Always three columns (i.e. path, plugin, test-button)
         plugintable.verticalHeader().setVisible(False)
+        plugintable.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        plugintable.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
         horizontal_header = plugintable.horizontalHeader()
         horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
@@ -665,9 +666,8 @@ class Ui_MainWindow(object):
         subses_table.setShowGrid(False)
         subses_table.setRowCount(2)
         subses_table.setColumnCount(2)
-        subses_table.setRowHeight(0, ROW_HEIGHT)
-        subses_table.setRowHeight(1, ROW_HEIGHT)
-        # subses_table.setMaximumHeight(table_height(2))
+        subses_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        subses_table.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
         subses_table.setMinimumHeight(table_height(1))
         subses_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         subses_table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -1058,17 +1058,17 @@ class EditDialog(QDialog):
 
         num_rows = len(data)
         table.setRowCount(num_rows)
+        table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        table.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
         table.setMinimumHeight(table_height(1))
         table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         if minimum:
-            # table.setMaximumHeight(table_height(num_rows))
             table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
 
         self.suffix_dropdown = QComboBox()
         suffix_dropdown = self.suffix_dropdown
 
         for i, row in enumerate(data):
-            table.setRowHeight(i, ROW_HEIGHT)
             key = row[0]["value"]
             if self.target_modality in bids.bidsmodalities and key == 'suffix':
                 item = set_cell("suffix", is_editable=False)
@@ -1121,7 +1121,6 @@ class EditDialog(QDialog):
         self.label_bids_name.setText("Output name")
 
         self.view_bids_name = QTextBrowser()
-        # self.view_bids_name.setMaximumHeight(45)
         self.view_bids_name.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.view_bids_name.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.view_bids_name.setMinimumHeight(table_height(1))
