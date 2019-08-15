@@ -431,6 +431,7 @@ class Ui_MainWindow(object):
         plugintable = self.plugintable
         plugintable.disconnect()
         plugintable.setRowCount(num_rows)
+        plugintable.setMinimumHeight(table_height(1))
         for i, plugin in enumerate(plugins + ['']):
             plugintable.setRowHeight(i, ROW_HEIGHT)
             for j in range(3):
@@ -517,7 +518,10 @@ class Ui_MainWindow(object):
             table.verticalHeader().setVisible(False)
             table.setAlternatingRowColors(False)
             table.setShowGrid(False)
-            table.setMaximumHeight(table_height(num_rows))
+            # table.setMaximumHeight(table_height(num_rows))
+            table.setMinimumHeight(table_height(1))
+            table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+            table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
             horizontal_header = table.horizontalHeader()
             horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
             horizontal_header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
@@ -663,7 +667,10 @@ class Ui_MainWindow(object):
         subses_table.setColumnCount(2)
         subses_table.setRowHeight(0, ROW_HEIGHT)
         subses_table.setRowHeight(1, ROW_HEIGHT)
-        subses_table.setMaximumHeight(table_height(2))
+        # subses_table.setMaximumHeight(table_height(2))
+        subses_table.setMinimumHeight(table_height(1))
+        subses_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        subses_table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         horizontal_header = subses_table.horizontalHeader()
         horizontal_header.setVisible(False)
         horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
@@ -840,7 +847,7 @@ class EditDialog(QDialog):
         # Set-up the provenance table
         self.label_provenance = QLabel()
         self.label_provenance.setText("Provenance")
-        self.view_provenance = self.set_table(data_provenance, maximum=True)
+        self.view_provenance = self.set_table(data_provenance, minimum=True)
         self.view_provenance.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.view_provenance.cellDoubleClicked.connect(self.inspect_dicomfile)
 
@@ -1043,7 +1050,7 @@ class EditDialog(QDialog):
                 self.view_bids.item(row, 1).setText(value)
                 self.refresh_bidsname()
 
-    def fill_table(self, table, data, maximum: bool=False):
+    def fill_table(self, table, data, minimum: bool=False):
         """Fill the table with data"""
 
         table.blockSignals(True)
@@ -1051,8 +1058,11 @@ class EditDialog(QDialog):
 
         num_rows = len(data)
         table.setRowCount(num_rows)
-        if maximum:
-            table.setMaximumHeight(table_height(num_rows))
+        table.setMinimumHeight(table_height(1))
+        table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        if minimum:
+            # table.setMaximumHeight(table_height(num_rows))
+            table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
 
         self.suffix_dropdown = QComboBox()
         suffix_dropdown = self.suffix_dropdown
@@ -1079,7 +1089,7 @@ class EditDialog(QDialog):
 
         table.blockSignals(False)
 
-    def set_table(self, data, maximum: bool=False) -> QTableWidget:
+    def set_table(self, data, minimum: bool=False) -> QTableWidget:
         """Return a table widget from the data. """
         table = QTableWidget()
         table.setColumnCount(2) # Always two columns (i.e. key, value)
@@ -1091,7 +1101,7 @@ class EditDialog(QDialog):
         horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
         horizontal_header.setVisible(False)
 
-        self.fill_table(table, data, maximum=maximum)
+        self.fill_table(table, data, minimum=minimum)
 
         return table
 
@@ -1111,7 +1121,10 @@ class EditDialog(QDialog):
         self.label_bids_name.setText("Output name")
 
         self.view_bids_name = QTextBrowser()
-        self.view_bids_name.setMaximumHeight(45)
+        # self.view_bids_name.setMaximumHeight(45)
+        self.view_bids_name.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.view_bids_name.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.view_bids_name.setMinimumHeight(table_height(1))
 
         self.refresh_bidsname()
 
