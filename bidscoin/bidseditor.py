@@ -114,24 +114,24 @@ class InspectWindow(QDialog):
         self.setWindowTitle(f"Inspect {SOURCE} file")
         self.resize(INSPECT_WINDOW_WIDTH, INSPECT_WINDOW_HEIGHT)
 
-        verticalLayout = QVBoxLayout(self)
+        layout = QVBoxLayout(self)
 
         label = QLabel('Filename: ' + os.path.basename(filename))
         label.setWordWrap(True)
-        verticalLayout.addWidget(label)
+        layout.addWidget(label)
 
         label_path = QLabel('Path: ' + os.path.dirname(filename))
         label_path.setWordWrap(True)
-        verticalLayout.addWidget(label_path)
+        layout.addWidget(label_path)
 
         textBrowser = QTextBrowser(self)
         textBrowser.insertPlainText(str(dicomdict))
-        verticalLayout.addWidget(textBrowser)
+        layout.addWidget(textBrowser)
 
         buttonBox = QDialogButtonBox(self)
         buttonBox.setStandardButtons(QDialogButtonBox.Ok)
         buttonBox.button(QDialogButtonBox.Ok).setToolTip('Close this window')
-        verticalLayout.addWidget(buttonBox)
+        layout.addWidget(buttonBox)
 
         buttonBox.accepted.connect(self.close)
 
@@ -338,12 +338,12 @@ class Ui_MainWindow(object):
         tree.doubleClicked.connect(self.on_double_clicked)
         tree.header().resizeSection(0, 800)
 
+        layout = QVBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(tree)
         tab1 = QtWidgets.QWidget()
         tab1.setObjectName("filebrowser")
-        tab1.layout = QVBoxLayout()
-        tab1.layout.addWidget(label)
-        tab1.layout.addWidget(tree)
-        tab1.setLayout(tab1.layout)
+        tab1.setLayout(layout)
 
         self.tabwidget.addTab(tab1, "")
 
@@ -427,11 +427,11 @@ class Ui_MainWindow(object):
         plugins  = self.output_bidsmap['PlugIns']
         num_rows = len(plugins) + 1
 
+        # Fill the rows of the plugin table
         plugintable = self.plugintable
         plugintable.disconnect()
         plugintable.setRowCount(num_rows)
         plugintable.setMaximumHeight(table_height(num_rows))
-
         for i, plugin in enumerate(plugins + ['']):
             plugintable.setRowHeight(i, ROW_HEIGHT)
             for j in range(3):
@@ -570,16 +570,17 @@ class Ui_MainWindow(object):
         self.update_plugintable()
 
         # Set-up the tab layout and add the tables
-        tab2 = QtWidgets.QWidget()
-        tab2.layout = QVBoxLayout()
-        tab2.setObjectName("Options")
+        layout = QVBoxLayout()
         for label, table in zip(labels, self.tables_options):
-            tab2.layout.addWidget(label)
-            tab2.layout.addWidget(table)
-        tab2.layout.addWidget(pluginlabel)
-        tab2.layout.addWidget(plugintable)
-        tab2.layout.addStretch(1)
-        tab2.setLayout(tab2.layout)
+            layout.addWidget(label)
+            layout.addWidget(table)
+        layout.addWidget(pluginlabel)
+        layout.addWidget(plugintable)
+        layout.addStretch(1)
+
+        tab2 = QtWidgets.QWidget()
+        tab2.setObjectName("Options")
+        tab2.setLayout(layout)
 
         self.tabwidget.addTab(tab2, "")
 
@@ -698,14 +699,14 @@ class Ui_MainWindow(object):
 
         self.update_subses_and_samples(self.output_bidsmap)
 
+        layout = QVBoxLayout()
+        layout.addWidget(subses_label)
+        layout.addWidget(subses_table)
+        layout.addWidget(label)
+        layout.addWidget(table)
         tab3 = QtWidgets.QWidget()
         tab3.setObjectName("BIDSmapping")
-        tab3.layout = QVBoxLayout()
-        tab3.layout.addWidget(subses_label)
-        tab3.layout.addWidget(subses_table)
-        tab3.layout.addWidget(label)
-        tab3.layout.addWidget(table)
-        tab3.setLayout(tab3.layout)
+        tab3.setLayout(layout)
 
         self.tabwidget.addTab(tab3, "")
 
@@ -820,13 +821,10 @@ class EditDialog(QDialog):
         self.template_bidsmap = template_bidsmap
         self.subprefix        = subprefix
         self.sesprefix        = sesprefix
-
         for run in bidsmap[SOURCE][modality]:
             if run['provenance'] == provenance:
                 self.source_run = run
-
         self.target_run = copy.deepcopy(self.source_run)
-
         self.get_allowed_suffixes()
 
         # Set-up the window
