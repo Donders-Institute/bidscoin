@@ -39,11 +39,8 @@ MAIN_WINDOW_HEIGHT  = 750
 EDIT_WINDOW_WIDTH   = 1100
 EDIT_WINDOW_HEIGHT  = 550
 
-INSPECT_WINDOW_WIDTH = 850
+INSPECT_WINDOW_WIDTH  = 850
 INSPECT_WINDOW_HEIGHT = 750
-
-OPTIONS_TAB_INDEX = 1
-BIDSMAP_TAB_INDEX = 2
 
 ROW_HEIGHT = 22
 
@@ -151,7 +148,7 @@ class MainWindow(QMainWindow):
 class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, input_bidsmap, output_bidsmap, template_bidsmap,
-                selected_tab_index=BIDSMAP_TAB_INDEX, subprefix='sub-', sesprefix='ses-', reload: bool=False):
+                selected_tab_index=2, subprefix='sub-', sesprefix='ses-', reload: bool=False):
 
         # Set the data
         self.MainWindow       = MainWindow
