@@ -514,12 +514,12 @@ class Ui_MainWindow(object):
             table.setColumnCount(num_cols)
             table.setColumnHidden(0, True)  # Hide tool column
             table.setMouseTracking(True)
-            table.verticalHeader().setVisible(False)
             table.setAlternatingRowColors(False)
             table.setShowGrid(False)
             table.setMinimumHeight(table_height(1))
             table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
             table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+            table.verticalHeader().setVisible(False)
             table.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
             horizontal_header = table.horizontalHeader()
             horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
@@ -664,15 +664,15 @@ class Ui_MainWindow(object):
         subses_table.setShowGrid(False)
         subses_table.setRowCount(2)
         subses_table.setColumnCount(2)
-        subses_table.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
         subses_table.setMinimumHeight(table_height(1))
         subses_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         subses_table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        subses_table.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
+        subses_table.verticalHeader().setVisible(False)
         horizontal_header = subses_table.horizontalHeader()
         horizontal_header.setVisible(False)
         horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
-        subses_table.verticalHeader().setVisible(False)
         subses_table.cellChanged.connect(self.subses_cell_was_changed)
 
         # Set the BIDSmap table
@@ -844,15 +844,15 @@ class EditDialog(QDialog):
         # Set-up the provenance table
         self.label_provenance = QLabel()
         self.label_provenance.setText("Provenance")
-        self.view_provenance = self.set_table(data_provenance, minimum=True)
-        self.view_provenance.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.view_provenance.cellDoubleClicked.connect(self.inspect_dicomfile)
+        self.table_provenance = self.set_table(data_provenance, minimum=True)
+        self.table_provenance.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table_provenance.cellDoubleClicked.connect(self.inspect_dicomfile)
 
         # Set-up the DICOM table
         self.label_dicom = QLabel()
         self.label_dicom.setText("Attributes")
-        self.view_dicom = self.set_table(data_dicom)
-        self.view_dicom.cellChanged.connect(self.dicom_cell_was_changed)
+        self.table_dicom = self.set_table(data_dicom)
+        self.table_dicom.cellChanged.connect(self.dicom_cell_was_changed)
 
         # Set-up the modality dropdown menu
         self.set_modality_dropdown_section()
@@ -860,8 +860,8 @@ class EditDialog(QDialog):
         # Set-up the BIDS table
         self.label_bids = QLabel()
         self.label_bids.setText("Labels")
-        self.view_bids = self.set_table(data_bids)
-        self.view_bids.cellChanged.connect(self.bids_cell_was_changed)
+        self.table_bids = self.set_table(data_bids)
+        self.table_bids.cellChanged.connect(self.bids_cell_was_changed)
 
         # Set-up the BIDS outputname field
         self.set_bids_name_section()
@@ -870,9 +870,9 @@ class EditDialog(QDialog):
         groupbox1 = QGroupBox(SOURCE + ' input')
         layout1 = QVBoxLayout()
         layout1.addWidget(self.label_provenance)
-        layout1.addWidget(self.view_provenance)
+        layout1.addWidget(self.table_provenance)
         layout1.addWidget(self.label_dicom)
-        layout1.addWidget(self.view_dicom)
+        layout1.addWidget(self.table_dicom)
         groupbox1.setLayout(layout1)
 
         groupbox2 = QGroupBox("BIDS output")
@@ -880,7 +880,7 @@ class EditDialog(QDialog):
         layout2.addWidget(self.label_dropdown)
         layout2.addWidget(self.modality_dropdown)
         layout2.addWidget(self.label_bids)
-        layout2.addWidget(self.view_bids)
+        layout2.addWidget(self.table_bids)
         layout2.addWidget(self.label_bids_name)
         layout2.addWidget(self.view_bids_name)
         groupbox2.setLayout(layout2)
@@ -1020,8 +1020,8 @@ class EditDialog(QDialog):
     def dicom_cell_was_changed(self, row, column):
         """DICOM attribute value has been changed. """
         if column == 1:
-            key = self.view_dicom.item(row, 0).text()
-            value = self.view_dicom.item(row, 1).text()
+            key = self.table_dicom.item(row, 0).text()
+            value = self.table_dicom.item(row, 1).text()
             oldvalue = self.target_run['attributes'].get(key, None)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
@@ -1032,8 +1032,8 @@ class EditDialog(QDialog):
     def bids_cell_was_changed(self, row, column):
         """BIDS attribute value has been changed. """
         if column == 1:
-            key = self.view_bids.item(row, 0).text()
-            value = self.view_bids.item(row, 1).text()
+            key = self.table_bids.item(row, 0).text()
+            value = self.table_bids.item(row, 1).text()
             oldvalue = self.target_run['bids'].get(key, None)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
@@ -1044,10 +1044,10 @@ class EditDialog(QDialog):
                 LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
 
                 self.target_run['bids'][key] = value
-                self.view_bids.item(row, 1).setText(value)
+                self.table_bids.item(row, 1).setText(value)
                 self.refresh_bidsname()
 
-    def fill_table(self, table, data, minimum: bool=False):
+    def fill_table(self, table, data):
         """Fill the table with data"""
 
         table.blockSignals(True)
@@ -1055,11 +1055,6 @@ class EditDialog(QDialog):
 
         num_rows = len(data)
         table.setRowCount(num_rows)
-        table.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
-        table.setMinimumHeight(table_height(1))
-        table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        if minimum:
-            table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
 
         self.suffix_dropdown = QComboBox()
         suffix_dropdown = self.suffix_dropdown
@@ -1092,12 +1087,17 @@ class EditDialog(QDialog):
         table.setAlternatingRowColors(False)
         table.setShowGrid(False)
         table.verticalHeader().setVisible(False)
+        table.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
+        table.setMinimumHeight(table_height(1))
+        table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        if minimum:
+            table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         horizontal_header = table.horizontalHeader()
         horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
         horizontal_header.setVisible(False)
 
-        self.fill_table(table, data, minimum=minimum)
+        self.fill_table(table, data)
 
         return table
 
@@ -1176,8 +1176,8 @@ class EditDialog(QDialog):
         _, data_dicom, data_bids = self.get_editwin_data()
 
         # Refresh the existing tables
-        self.fill_table(self.view_dicom, data_dicom)
-        self.fill_table(self.view_bids, data_bids)
+        self.fill_table(self.table_dicom, data_dicom)
+        self.fill_table(self.table_bids, data_bids)
 
         # Refresh the BIDS output name
         self.refresh_bidsname()
