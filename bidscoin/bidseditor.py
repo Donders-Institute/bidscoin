@@ -79,7 +79,7 @@ args: Argument string that is passed to dcm2niix. Click [Test] and see the termi
       Tip: SPM users may want to use '-z n', which produces unzipped nifti's"""
 
 
-def set_cell(value, is_editable=False):
+def set_cell(value, is_editable=False) -> QTableWidgetItem:
     item = QTableWidgetItem()
     item.setText(value)
     if is_editable:
@@ -90,7 +90,7 @@ def set_cell(value, is_editable=False):
     return item
 
 
-def table_height(num_rows: int):
+def table_height(num_rows: int) -> int:
     """Calculates the table height for windows and linux"""
 
     if sys.platform == 'linux':
@@ -290,7 +290,7 @@ class Ui_MainWindow(object):
         # Top left of rectangle becomes top left of window centering it
         self.MainWindow.move(qr.topLeft())
 
-    def set_initial_file_index(self):
+    def set_initial_file_index(self) -> int:
         """Obtain the mapping between the provenance and the initial file-index. """
         initial_file_index = {}
         file_index = 0
@@ -398,21 +398,14 @@ class Ui_MainWindow(object):
                                                          f"See terminal output for more info")
 
     def handle_click_plugin_add(self):
-        """
-        Add a plugin by letting the user select a plugin-file
-        :return:
-        """
+        """Add a plugin by letting the user select a plugin-file"""
         plugin = QFileDialog.getOpenFileNames(self.MainWindow, 'Select the plugin-file(s)', directory=os.path.join(self.bidsfolder, 'code', 'bidscoin'), filter='Python files (*.py *.pyc *.pyo);; All files (*)')
         LOGGER.info(f'Added plugins: {plugin[0]}')
         self.output_bidsmap['PlugIns'] += plugin[0]
         self.update_plugintable()
 
     def plugin_cell_was_changed(self, row, column):
-        """
-        Add / edit a plugin or delete if cell is empty
-        :param row:
-        :return:
-        """
+        """Add / edit a plugin or delete if cell is empty"""
         if column==1:
             plugin = self.plugintable.item(row, column).text()
             if plugin and row == len(self.output_bidsmap['PlugIns']):
@@ -950,7 +943,7 @@ class EditDialog(QDialog):
 
         self.allowed_suffixes = allowed_suffixes
 
-    def get_editwin_data(self):
+    def get_editwin_data(self) -> tuple:
         """
         Derive the tabular data from the target_run, needed to render the edit window.
 
@@ -1088,7 +1081,7 @@ class EditDialog(QDialog):
 
         table.blockSignals(False)
 
-    def set_table(self, data, maximum: bool=False):
+    def set_table(self, data, maximum: bool=False) -> QTableWidget:
         """Return a table widget from the data. """
         table = QTableWidget()
         table.setColumnCount(2) # Always two columns (i.e. key, value)
