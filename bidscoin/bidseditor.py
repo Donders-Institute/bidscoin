@@ -431,7 +431,6 @@ class Ui_MainWindow(object):
         plugintable = self.plugintable
         plugintable.disconnect()
         plugintable.setRowCount(num_rows)
-        plugintable.setMaximumHeight(table_height(num_rows))
         for i, plugin in enumerate(plugins + ['']):
             plugintable.setRowHeight(i, ROW_HEIGHT)
             for j in range(3):
@@ -558,6 +557,7 @@ class Ui_MainWindow(object):
         plugintable.setMouseTracking(True)
         plugintable.setAlternatingRowColors(False)
         plugintable.setShowGrid(False)
+        plugintable.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         plugintable.setColumnCount(3)   # Always three columns (i.e. path, plugin, test-button)
         plugintable.verticalHeader().setVisible(False)
         horizontal_header = plugintable.horizontalHeader()
