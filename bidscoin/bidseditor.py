@@ -112,7 +112,6 @@ class InspectWindow(QDialog):
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
         self.setWindowTitle(f"Inspect {SOURCE} file")
-
         self.resize(INSPECT_WINDOW_WIDTH, INSPECT_WINDOW_HEIGHT)
 
         verticalLayout = QVBoxLayout(self)
@@ -216,75 +215,65 @@ class Ui_MainWindow(object):
             self.center()
 
     def set_menu_and_status_bar(self):
-        """Set the menu. """
+        # Set the menus
         menubar  = QtWidgets.QMenuBar(self.MainWindow)
         menuFile = QtWidgets.QMenu(menubar)
-        menuHelp = QtWidgets.QMenu(menubar)
-
-        self.MainWindow.setMenuBar(menubar)
-        statusbar = QtWidgets.QStatusBar(self.MainWindow)
-
-        # Set the statusbar
-        statusbar.setToolTip("")
-        statusbar.setObjectName("statusbar")
-        self.MainWindow.setStatusBar(statusbar)
-
-        # Define the menu actions
-        actionExit = QtWidgets.QAction(self.MainWindow)
-        actionExit.triggered.connect(self.exit_application)
-
-        actionReload = QtWidgets.QAction(self.MainWindow)
-        actionReload.triggered.connect(self.reload)
-
-        actionSave = QtWidgets.QAction(self.MainWindow)
-        actionSave.triggered.connect(self.save_bidsmap_to_file)
-
-        actionAbout = QtWidgets.QAction(self.MainWindow)
-        actionAbout.triggered.connect(self.show_about)
-
-        actionHelp = QtWidgets.QAction(self.MainWindow)
-        actionHelp.triggered.connect(self.get_help)
-
-        actionBidsHelp = QtWidgets.QAction(self.MainWindow)
-        actionBidsHelp.triggered.connect(self.get_bids_help)
-
-        menuFile.addAction(actionReload)
-        menuFile.addAction(actionSave)
-        menuFile.addAction(actionExit)
-
-        menuHelp.addAction(actionHelp)
-        menuHelp.addAction(actionBidsHelp)
-        menuHelp.addAction(actionAbout)
-
-        menubar.addAction(menuFile.menuAction())
-        menubar.addAction(menuHelp.menuAction())
-
         menuFile.setTitle("File")
+        menubar.addAction(menuFile.menuAction())
+        menuHelp = QtWidgets.QMenu(menubar)
         menuHelp.setTitle("Help")
-        statusbar.setStatusTip("Statusbar")
+        menubar.addAction(menuHelp.menuAction())
+        self.MainWindow.setMenuBar(menubar)
 
+        # Set the file menu actions
+        actionReload = QtWidgets.QAction(self.MainWindow)
         actionReload.setText("Reset")
         actionReload.setStatusTip("Reload the BIDS-map from disk")
         actionReload.setShortcut("Ctrl+R")
+        actionReload.triggered.connect(self.reload)
+        menuFile.addAction(actionReload)
 
+        actionSave = QtWidgets.QAction(self.MainWindow)
         actionSave.setText("Save")
         actionSave.setStatusTip("Save the BIDS-map to disk")
         actionSave.setShortcut("Ctrl+S")
+        actionSave.triggered.connect(self.save_bidsmap_to_file)
+        menuFile.addAction(actionSave)
 
+        actionExit = QtWidgets.QAction(self.MainWindow)
         actionExit.setText("Exit")
         actionExit.setStatusTip("Exit the application")
         actionExit.setShortcut("Ctrl+X")
+        actionExit.triggered.connect(self.exit_application)
+        menuFile.addAction(actionExit)
 
-        actionAbout.setText("About BIDScoin")
-        actionAbout.setStatusTip("Show information about the application")
-
+        # Set help menu actions
+        actionHelp = QtWidgets.QAction(self.MainWindow)
         actionHelp.setText("Documentation")
         actionHelp.setStatusTip("Go to the online BIDScoin documentation")
         actionHelp.setShortcut("F1")
+        actionHelp.triggered.connect(self.get_help)
+        menuHelp.addAction(actionHelp)
 
+        actionBidsHelp = QtWidgets.QAction(self.MainWindow)
         actionBidsHelp.setText("BIDS specification")
         actionBidsHelp.setStatusTip("Go to the online BIDS specification documentation")
         actionBidsHelp.setShortcut("F2")
+        actionBidsHelp.triggered.connect(self.get_bids_help)
+        menuHelp.addAction(actionBidsHelp)
+
+        actionAbout = QtWidgets.QAction(self.MainWindow)
+        actionAbout.setText("About BIDScoin")
+        actionAbout.setStatusTip("Show information about the application")
+        actionAbout.triggered.connect(self.show_about)
+        menuHelp.addAction(actionAbout)
+
+        # Set the statusbar
+        statusbar = QtWidgets.QStatusBar(self.MainWindow)
+        statusbar.setObjectName("statusbar")
+        statusbar.setToolTip("")
+        statusbar.setStatusTip("Statusbar")
+        self.MainWindow.setStatusBar(statusbar)
 
     def center(self):
         """Center the main window. """
@@ -331,26 +320,29 @@ class Ui_MainWindow(object):
 
     def set_tab_file_browser(self, sourcefolder):
         """Set the raw data folder inspector tab. """
-        tab1 = QtWidgets.QWidget()
-        tab1.setObjectName("filebrowser")
-        tab1.layout = QVBoxLayout()
         label = QLabel(sourcefolder)
         label.setWordWrap(True)
+
         self.model = QFileSystemModel()
-        self.model.setRootPath('')
-        self.model.setFilter(QtCore.QDir.NoDotAndDotDot | QtCore.QDir.AllDirs | QtCore.QDir.Files)
+        model = self.model
+        model.setRootPath('')
+        model.setFilter(QtCore.QDir.NoDotAndDotDot | QtCore.QDir.AllDirs | QtCore.QDir.Files)
         tree = QTreeView()
-        tree.setModel(self.model)
+        tree.setModel(model)
         tree.setAnimated(False)
         tree.setIndentation(20)
         tree.setSortingEnabled(True)
-        tree.setRootIndex(self.model.index(sourcefolder))
+        tree.setRootIndex(model.index(sourcefolder))
         tree.doubleClicked.connect(self.on_double_clicked)
         tree.header().resizeSection(0, 800)
 
+        tab1 = QtWidgets.QWidget()
+        tab1.setObjectName("filebrowser")
+        tab1.layout = QVBoxLayout()
         tab1.layout.addWidget(label)
         tab1.layout.addWidget(tree)
         tab1.setLayout(tab1.layout)
+
         self.tabwidget.addTab(tab1, "")
 
     def subses_cell_was_changed(self, row, column):
@@ -439,12 +431,11 @@ class Ui_MainWindow(object):
         """Plots an extendable table of plugins from self.output_bidsmap['PlugIns']"""
         plugins  = self.output_bidsmap['PlugIns']
         num_rows = len(plugins) + 1
-        num_cols = 3  # Always three columns (i.e. path, plugin, test-button)
 
         plugintable = self.plugintable
         plugintable.disconnect()
         plugintable.setRowCount(num_rows)
-        plugintable.setColumnCount(num_cols)
+        plugintable.setMaximumHeight(table_height(num_rows))
 
         for i, plugin in enumerate(plugins + ['']):
             plugintable.setRowHeight(i, ROW_HEIGHT)
@@ -468,24 +459,12 @@ class Ui_MainWindow(object):
         plugintable.setCellWidget(num_rows - 1, 2, add_button)
         add_button.clicked.connect(self.handle_click_plugin_add)
 
-        horizontal_header = plugintable.horizontalHeader()
-        horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        horizontal_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Fixed)
-        horizontal_header.setVisible(False)
-
-        plugintable.verticalHeader().setVisible(False)
-
-        plugintable.setMaximumHeight(table_height(num_rows))
-
         plugintable.cellChanged.connect(self.plugin_cell_was_changed)
 
     def set_tab_options(self):
         """Set the options tab.  """
-        tab2 = QtWidgets.QWidget()
-        tab2.layout = QVBoxLayout()
-        tab2.setObjectName("Options")
 
+        # Create the tool tables
         bidsmap_options = self.output_bidsmap['Options']
 
         tool_list = []
@@ -530,18 +509,27 @@ class Ui_MainWindow(object):
             tool = tool_item['tool']
             tooltip_text = tool_item['tooltip_text']
             data = tool_options[tool]
+            num_rows = len(data)
+            num_cols = len(data[0]) + 1     # Always three columns (i.e. tool, key, value) + test-button
 
             label = QLabel(tool)
             label.setToolTip(tooltip_text)
 
             table = QTableWidget()
-
-            num_rows = len(data)
-            num_cols = len(data[0]) + 1     # Always three columns (i.e. tool, key, value) + test-button
             table.setRowCount(num_rows)
             table.setColumnCount(num_cols)
             table.setColumnHidden(0, True)  # Hide tool column
             table.setMouseTracking(True)
+            table.verticalHeader().setVisible(False)
+            table.setAlternatingRowColors(False)
+            table.setShowGrid(False)
+            table.setMaximumHeight(table_height(num_rows))
+            horizontal_header = table.horizontalHeader()
+            horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+            horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+            horizontal_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+            horizontal_header.setSectionResizeMode(3, QtWidgets.QHeaderView.Fixed)
+            horizontal_header.setVisible(False)
 
             for i, row in enumerate(data):
 
@@ -557,47 +545,42 @@ class Ui_MainWindow(object):
                     if tooltip_text:
                         table.item(i, j).setToolTip(tooltip_text)
 
-                table.setItem(i, num_cols-1, QTableWidgetItem())            # Add the test-button cell
-                table.item(i, num_cols-1).setFlags(QtCore.Qt.NoItemFlags)
-
+            # Add the test-button cell
             test_button = QPushButton('Test')
             test_button.clicked.connect(partial(self.handle_click_test_tool, tool))
             test_button.setToolTip(f'Click to test the {tool} options')
             table.setCellWidget(0, num_cols-1, test_button)
-
-            horizontal_header = table.horizontalHeader()
-            horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-            horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-            horizontal_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
-            horizontal_header.setSectionResizeMode(3, QtWidgets.QHeaderView.Fixed)
-            horizontal_header.setVisible(False)
-
-            table.verticalHeader().setVisible(False)
-
-            table.setAlternatingRowColors(False)
-            table.setShowGrid(False)
-
-            table.setMaximumHeight(table_height(num_rows))
 
             table.cellChanged.connect(partial(self.tool_cell_was_changed, tool, n))
 
             labels.append(label)
             self.tables_options.append(table)
 
+        # Create the plugin table
         plugintable = QTableWidget()
         pluginlabel = QLabel('Plugins')
         pluginlabel.setToolTip('List of plugins')
         plugintable.setMouseTracking(True)
         plugintable.setAlternatingRowColors(False)
         plugintable.setShowGrid(False)
+        plugintable.setColumnCount(3)   # Always three columns (i.e. path, plugin, test-button)
+        plugintable.verticalHeader().setVisible(False)
+        horizontal_header = plugintable.horizontalHeader()
+        horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        horizontal_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Fixed)
+        horizontal_header.setVisible(False)
 
         self.plugintable = plugintable
         self.update_plugintable()
 
+        # Set-up the tab layout and add the tables
+        tab2 = QtWidgets.QWidget()
+        tab2.layout = QVBoxLayout()
+        tab2.setObjectName("Options")
         for label, table in zip(labels, self.tables_options):
             tab2.layout.addWidget(label)
             tab2.layout.addWidget(table)
-
         tab2.layout.addWidget(pluginlabel)
         tab2.layout.addWidget(plugintable)
         tab2.layout.addStretch(1)
@@ -608,15 +591,17 @@ class Ui_MainWindow(object):
     def update_subses_and_samples(self, output_bidsmap):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
         self.output_bidsmap = output_bidsmap  # input main window / output from edit window -> output main window
+        subses_table        = self.subses_table
+        table               = self.table
 
         item = set_cell("subject", is_editable=False)
-        self.subses_table.setItem(0, 0, item)
+        subses_table.setItem(0, 0, item)
         item = set_cell(self.output_bidsmap[SOURCE]['subject'], is_editable=True)
-        self.subses_table.setItem(0, 1, item)
+        subses_table.setItem(0, 1, item)
         item = set_cell("session", is_editable=False)
-        self.subses_table.setItem(1, 0, item)
+        subses_table.setItem(1, 0, item)
         item = set_cell(self.output_bidsmap[SOURCE]['session'], is_editable=True)
-        self.subses_table.setItem(1, 1, item)
+        subses_table.setItem(1, 1, item)
 
         idx = 0
         for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
@@ -626,113 +611,107 @@ class Ui_MainWindow(object):
             for run in runs:
                 provenance = run['provenance']
                 provenance_file = os.path.basename(provenance)
-
                 initial_file_index = self.initial_file_index[provenance]
-
                 bids_name = bids.get_bidsname(output_bidsmap[SOURCE]['subject'], output_bidsmap[SOURCE]['session'],
                                               modality, run, '', self.subprefix, self.sesprefix)
                 subid = bids.set_bidsvalue(bids_name, 'sub')
                 sesid = bids.set_bidsvalue(bids_name, 'ses')
                 session = os.path.join(self.bidsfolder, f'sub-{subid}', f'ses-{sesid}')
 
-                self.table.setItem(idx, 0, QTableWidgetItem(f"{initial_file_index+1:03d}"))
-                self.table.setItem(idx, 1, QTableWidgetItem(provenance_file))
-                self.table.setItem(idx, 2, QTableWidgetItem(modality))                          # Hidden column
-                self.table.setItem(idx, 3, QTableWidgetItem(os.path.join(modality, bids_name + '.*')))
-                self.table.setItem(idx, 5, QTableWidgetItem(provenance))                        # Hidden column
+                table.setItem(idx, 0, QTableWidgetItem(f"{initial_file_index+1:03d}"))
+                table.setItem(idx, 1, QTableWidgetItem(provenance_file))
+                table.setItem(idx, 2, QTableWidgetItem(modality))                          # Hidden column
+                table.setItem(idx, 3, QTableWidgetItem(os.path.join(modality, bids_name + '.*')))
+                table.setItem(idx, 5, QTableWidgetItem(provenance))                        # Hidden column
 
-                self.table.item(idx, 1).setToolTip('Double-click to inspect the header information')
-                self.table.item(idx, 1).setStatusTip(os.path.dirname(provenance) + os.sep)
-                self.table.item(idx, 0).setFlags(QtCore.Qt.NoItemFlags)
-                self.table.item(idx, 2).setFlags(QtCore.Qt.ItemIsEnabled)
-                self.table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
-                self.table.item(idx, 3).setStatusTip(session + os.sep)
+                table.item(idx, 0).setFlags(QtCore.Qt.NoItemFlags)
+                table.item(idx, 2).setFlags(QtCore.Qt.ItemIsEnabled)
+                table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
+                table.item(idx, 1).setToolTip('Double-click to inspect the header information')
+                table.item(idx, 1).setStatusTip(os.path.dirname(provenance) + os.sep)
+                table.item(idx, 3).setStatusTip(session + os.sep)
 
-                self.edit_button = QPushButton('Edit')
-                if self.table.item(idx, 3):
+                edit_button = QPushButton('Edit')
+                if table.item(idx, 3):
                     if modality == bids.unknownmodality:
-                        self.table.item(idx, 3).setForeground(QtGui.QColor(255, 0, 0))
+                        table.item(idx, 3).setForeground(QtGui.QColor(255, 0, 0))
                     elif modality == bids.ignoremodality:
-                        self.table.item(idx, 1).setForeground(QtGui.QColor(128, 128, 128))
-                        self.table.item(idx, 3).setForeground(QtGui.QColor(128, 128, 128))
-                        f = self.table.item(idx, 3).font()
+                        table.item(idx, 1).setForeground(QtGui.QColor(128, 128, 128))
+                        table.item(idx, 3).setForeground(QtGui.QColor(128, 128, 128))
+                        f = table.item(idx, 3).font()
                         f.setStrikeOut(True)
-                        self.table.item(idx, 3).setFont(f)
+                        table.item(idx, 3).setFont(f)
                     else:
-                        self.table.item(idx, 3).setForeground(QtGui.QColor(0, 128, 0))
-                self.edit_button.clicked.connect(self.handle_edit_button_clicked)
-                self.edit_button.setToolTip('Click to see more details and edit the BIDS output name')
-                self.table.setCellWidget(idx, 4, self.edit_button)
+                        table.item(idx, 3).setForeground(QtGui.QColor(0, 128, 0))
+                edit_button.setToolTip('Click to see more details and edit the BIDS output name')
+                edit_button.clicked.connect(self.handle_edit_button_clicked)
+                table.setCellWidget(idx, 4, edit_button)
 
                 idx += 1
 
-        self.table.sortByColumn(0, QtCore.Qt.AscendingOrder)
+        table.sortByColumn(0, QtCore.Qt.AscendingOrder)
 
     def set_tab_bidsmap(self):
         """Set the SOURCE file sample listing tab.  """
-        tab3 = QtWidgets.QWidget()
-        tab3.layout = QVBoxLayout()
-        tab3.setObjectName("BIDSmapping")
 
+        # Set the Participant labels table
         subses_label = QLabel('Participant labels')
         subses_label.setToolTip('Subject/session mapping')
 
         self.subses_table = QTableWidget()
-        self.subses_table.setMouseTracking(True)
-        self.subses_table.setAlternatingRowColors(False)
-        self.subses_table.setShowGrid(False)
-        self.subses_table.setRowCount(2)
-        self.subses_table.setColumnCount(2)
-        horizontal_header = self.subses_table.horizontalHeader()
+        subses_table = self.subses_table
+        subses_table.setMouseTracking(True)
+        subses_table.setAlternatingRowColors(False)
+        subses_table.setShowGrid(False)
+        subses_table.setRowCount(2)
+        subses_table.setColumnCount(2)
+        subses_table.setRowHeight(0, ROW_HEIGHT)
+        subses_table.setRowHeight(1, ROW_HEIGHT)
+        subses_table.setMaximumHeight(table_height(2))
+        horizontal_header = subses_table.horizontalHeader()
         horizontal_header.setVisible(False)
         horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        self.subses_table.verticalHeader().setVisible(False)
-        self.subses_table.setAlternatingRowColors(False)
-        self.subses_table.setShowGrid(False)
-        self.subses_table.cellChanged.connect(self.subses_cell_was_changed)
+        subses_table.verticalHeader().setVisible(False)
+        subses_table.cellChanged.connect(self.subses_cell_was_changed)
 
-        self.subses_table.setMaximumHeight(table_height(2))
-        self.subses_table.setRowHeight(0, ROW_HEIGHT)
-        self.subses_table.setRowHeight(1, ROW_HEIGHT)
+        # Set the BIDSmap table
+        num_files = self.set_initial_file_index()  # The number of DICOM files in the bidsmap
 
         label = QLabel('Data samples')
         label.setToolTip('List of unique source-data samples')
 
         self.table = QTableWidget()
-        self.table.itemDoubleClicked.connect(self.inspect_dicomfile)
-        self.table.setMouseTracking(True)
-        self.table.setAlternatingRowColors(False)
-        self.table.setShowGrid(True)
-
-        # Make sure we have the correct index mapping for the next edit
-        num_files = self.set_initial_file_index()
-
-        self.table.setColumnCount(6)
-        self.table.setRowCount(num_files)
-
-        self.update_subses_and_samples(self.output_bidsmap)
-
-        self.table.setHorizontalHeaderLabels(['', f'{SOURCE} input', 'BIDS modality', 'BIDS output', 'Action', 'Provenance'])
-        header = self.table.horizontalHeader()
+        table = self.table
+        table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        table.itemDoubleClicked.connect(self.inspect_dicomfile)
+        table.setMouseTracking(True)
+        table.setAlternatingRowColors(False)
+        table.setShowGrid(True)
+        table.setColumnCount(6)
+        table.setRowCount(num_files)
+        table.setHorizontalHeaderLabels(['', f'{SOURCE} input', 'BIDS modality', 'BIDS output', 'Action', 'Provenance'])
+        table.verticalHeader().setVisible(False)
+        header = table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
-        self.table.setColumnHidden(2, True)
-        self.table.setColumnHidden(5, True)
+        table.setColumnHidden(2, True)
+        table.setColumnHidden(5, True)
 
-        self.table.verticalHeader().setVisible(False)
+        self.update_subses_and_samples(self.output_bidsmap)
 
-        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-
+        tab3 = QtWidgets.QWidget()
+        tab3.setObjectName("BIDSmapping")
+        tab3.layout = QVBoxLayout()
         tab3.layout.addWidget(subses_label)
-        tab3.layout.addWidget(self.subses_table)
+        tab3.layout.addWidget(subses_table)
         tab3.layout.addWidget(label)
-        tab3.layout.addWidget(self.table)
-
+        tab3.layout.addWidget(table)
         tab3.setLayout(tab3.layout)
+
         self.tabwidget.addTab(tab3, "")
 
     def get_help(self):
@@ -837,6 +816,7 @@ class EditDialog(QDialog):
     def __init__(self, provenance, modality, bidsmap, template_bidsmap, subprefix='sub-', sesprefix='ses-'):
         super().__init__()
 
+        # Set the data
         self.source_modality  = modality
         self.target_modality  = modality
         self.current_modality = modality
@@ -854,32 +834,32 @@ class EditDialog(QDialog):
 
         self.get_allowed_suffixes()
 
+        # Set-up the window
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
-
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMaximizeButtonHint)
         self.setWindowTitle("Edit BIDS mapping")
-
-        layout_all = QVBoxLayout(self)
-
-        layout_tables = QHBoxLayout(self)
 
         data_provenance, data_dicom, data_bids = self.get_editwin_data()
 
         self.label_provenance = QLabel()
         self.label_provenance.setText("Provenance")
         self.view_provenance = self.set_table(data_provenance, maximum=True)
+        self.view_provenance.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.view_provenance.cellDoubleClicked.connect(self.inspect_dicomfile)
 
         self.label_dicom = QLabel()
         self.label_dicom.setText("Attributes")
         self.view_dicom = self.set_table(data_dicom)
+        self.view_dicom.cellChanged.connect(self.dicom_cell_was_changed)
 
         self.set_modality_dropdown_section()
 
         self.label_bids = QLabel()
         self.label_bids.setText("Labels")
         self.view_bids = self.set_table(data_bids)
+        self.view_bids.cellChanged.connect(self.bids_cell_was_changed)
 
         self.set_bids_name_section()
 
@@ -901,26 +881,23 @@ class EditDialog(QDialog):
         layout2.addWidget(self.view_bids_name)
         groupbox2.setLayout(layout2)
 
-        buttonBox = QDialogButtonBox(self)
+        layout_tables = QHBoxLayout()
+        layout_tables.addWidget(groupbox1)
+        layout_tables.addWidget(groupbox2)
+
+        buttonBox = QDialogButtonBox()
         buttonBox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Reset | QDialogButtonBox.Help)
         buttonBox.button(QDialogButtonBox.Reset).setToolTip('Reset the edits you made')
         buttonBox.button(QDialogButtonBox.Ok).setToolTip('Apply the edits you made and close this window')
         buttonBox.button(QDialogButtonBox.Cancel).setToolTip('Discard the edits you made and close this window')
         buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
 
-        layout_tables.addWidget(groupbox1)
-        layout_tables.addWidget(groupbox2)
-
-        self.view_provenance.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.view_provenance.cellDoubleClicked.connect(self.inspect_dicomfile)
-        self.view_dicom.cellChanged.connect(self.dicom_cell_was_changed)
-        self.view_bids.cellChanged.connect(self.bids_cell_was_changed)
-
         buttonBox.accepted.connect(self.update_run)
         buttonBox.rejected.connect(partial(self.reject, False))
         buttonBox.helpRequested.connect(self.get_help)
         buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reset)
 
+        layout_all = QVBoxLayout(self)
         layout_all.addLayout(layout_tables)
         layout_all.addWidget(buttonBox)
 
@@ -1065,13 +1042,7 @@ class EditDialog(QDialog):
                 self.refresh_bidsname()
 
     def fill_table(self, table, data, maximum: bool=False):
-        """
-        Fill the table with data.
-
-        :param table:
-        :param data:
-        :return:
-        """
+        """Fill the table with data"""
 
         table.blockSignals(True)
         table.clearContents()
@@ -1081,6 +1052,9 @@ class EditDialog(QDialog):
         if maximum:
             table.setMaximumHeight(table_height(num_rows))
 
+        self.suffix_dropdown = QComboBox()
+        suffix_dropdown = self.suffix_dropdown
+
         for i, row in enumerate(data):
             table.setRowHeight(i, ROW_HEIGHT)
             key = row[0]["value"]
@@ -1088,11 +1062,10 @@ class EditDialog(QDialog):
                 item = set_cell("suffix", is_editable=False)
                 table.setItem(i, 0, item)
                 labels = self.allowed_suffixes[self.target_modality]
-                self.suffix_dropdown = QComboBox()
-                self.suffix_dropdown.addItems(labels)
-                self.suffix_dropdown.setCurrentIndex(self.suffix_dropdown.findText(self.target_run['bids']['suffix']))
-                self.suffix_dropdown.currentIndexChanged.connect(self.selection_suffix_dropdown_change)
-                table.setCellWidget(i, 1, self.suffix_dropdown)
+                suffix_dropdown.addItems(labels)
+                suffix_dropdown.setCurrentIndex(suffix_dropdown.findText(self.target_run['bids']['suffix']))
+                suffix_dropdown.currentIndexChanged.connect(self.selection_suffix_dropdown_change)
+                table.setCellWidget(i, 1, suffix_dropdown)
                 continue
             for j, element in enumerate(row):
                 value = element.get("value", "")
@@ -1107,20 +1080,16 @@ class EditDialog(QDialog):
     def set_table(self, data, maximum: bool=False):
         """Return a table widget from the data. """
         table = QTableWidget()
-
         table.setColumnCount(2) # Always two columns (i.e. key, value)
-
-        self.fill_table(table, data, maximum=maximum)
-
+        table.setAlternatingRowColors(False)
+        table.setShowGrid(False)
+        table.verticalHeader().setVisible(False)
         horizontal_header = table.horizontalHeader()
         horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         horizontal_header.setVisible(False)
 
-        table.verticalHeader().setVisible(False)
-
-        table.setAlternatingRowColors(False)
-        table.setShowGrid(False)
+        self.fill_table(table, data, maximum=maximum)
 
         return table
 
@@ -1132,7 +1101,6 @@ class EditDialog(QDialog):
         self.modality_dropdown = QComboBox()
         self.modality_dropdown.addItems(bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality))
         self.modality_dropdown.setCurrentIndex(self.modality_dropdown.findText(self.target_modality))
-
         self.modality_dropdown.currentIndexChanged.connect(self.selection_modality_dropdown_change)
 
     def set_bids_name_section(self):
@@ -1141,7 +1109,6 @@ class EditDialog(QDialog):
         self.label_bids_name.setText("Output name")
 
         self.view_bids_name = QTextBrowser()
-
         self.view_bids_name.setMaximumHeight(45)
 
         self.refresh_bidsname()
