@@ -21,8 +21,8 @@ from functools import partial
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog, QDialogButtonBox,
                              QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog, QMessageBox,
-                             QTableWidget, QTableWidgetItem, QGroupBox, QTextBrowser,
-                             QAbstractItemView, QPushButton, QComboBox, QDesktopWidget)
+                             QTableWidget, QTableWidgetItem, QHeaderView, QGroupBox, QTextBrowser,
+                             QAbstractItemView, QPushButton, QComboBox, QDesktopWidget, QAction)
 
 try:
     from bidscoin import bids
@@ -140,7 +140,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        actionQuit = QtWidgets.QAction("Quit", self)
+        actionQuit = QAction("Quit", self)
         actionQuit.triggered.connect(self.closeEvent)
 
     def closeEvent(self, event):
@@ -228,21 +228,21 @@ class Ui_MainWindow(object):
         self.MainWindow.setMenuBar(menubar)
 
         # Set the file menu actions
-        actionReload = QtWidgets.QAction(self.MainWindow)
+        actionReload = QAction(self.MainWindow)
         actionReload.setText("Reset")
         actionReload.setStatusTip("Reload the BIDS-map from disk")
         actionReload.setShortcut("Ctrl+R")
         actionReload.triggered.connect(self.reload)
         menuFile.addAction(actionReload)
 
-        actionSave = QtWidgets.QAction(self.MainWindow)
+        actionSave = QAction(self.MainWindow)
         actionSave.setText("Save")
         actionSave.setStatusTip("Save the BIDS-map to disk")
         actionSave.setShortcut("Ctrl+S")
         actionSave.triggered.connect(self.save_bidsmap_to_file)
         menuFile.addAction(actionSave)
 
-        actionExit = QtWidgets.QAction(self.MainWindow)
+        actionExit = QAction(self.MainWindow)
         actionExit.setText("Exit")
         actionExit.setStatusTip("Exit the application")
         actionExit.setShortcut("Ctrl+X")
@@ -250,21 +250,21 @@ class Ui_MainWindow(object):
         menuFile.addAction(actionExit)
 
         # Set help menu actions
-        actionHelp = QtWidgets.QAction(self.MainWindow)
+        actionHelp = QAction(self.MainWindow)
         actionHelp.setText("Documentation")
         actionHelp.setStatusTip("Go to the online BIDScoin documentation")
         actionHelp.setShortcut("F1")
         actionHelp.triggered.connect(self.get_help)
         menuHelp.addAction(actionHelp)
 
-        actionBidsHelp = QtWidgets.QAction(self.MainWindow)
+        actionBidsHelp = QAction(self.MainWindow)
         actionBidsHelp.setText("BIDS specification")
         actionBidsHelp.setStatusTip("Go to the online BIDS specification documentation")
         actionBidsHelp.setShortcut("F2")
         actionBidsHelp.triggered.connect(self.get_bids_help)
         menuHelp.addAction(actionBidsHelp)
 
-        actionAbout = QtWidgets.QAction(self.MainWindow)
+        actionAbout = QAction(self.MainWindow)
         actionAbout.setText("About BIDScoin")
         actionAbout.setStatusTip("Show information about the application")
         actionAbout.triggered.connect(self.show_about)
@@ -520,10 +520,10 @@ class Ui_MainWindow(object):
             table.setShowGrid(False)
             table.setMaximumHeight(table_height(num_rows))
             horizontal_header = table.horizontalHeader()
-            horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-            horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-            horizontal_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
-            horizontal_header.setSectionResizeMode(3, QtWidgets.QHeaderView.Fixed)
+            horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+            horizontal_header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+            horizontal_header.setSectionResizeMode(2, QHeaderView.Stretch)
+            horizontal_header.setSectionResizeMode(3, QHeaderView.Fixed)
             horizontal_header.setVisible(False)
 
             for i, row in enumerate(data):
@@ -561,9 +561,9 @@ class Ui_MainWindow(object):
         plugintable.setColumnCount(3)   # Always three columns (i.e. path, plugin, test-button)
         plugintable.verticalHeader().setVisible(False)
         horizontal_header = plugintable.horizontalHeader()
-        horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        horizontal_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Fixed)
+        horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
+        horizontal_header.setSectionResizeMode(2, QHeaderView.Fixed)
         horizontal_header.setVisible(False)
 
         self.plugintable = plugintable
@@ -666,8 +666,8 @@ class Ui_MainWindow(object):
         subses_table.setMaximumHeight(table_height(2))
         horizontal_header = subses_table.horizontalHeader()
         horizontal_header.setVisible(False)
-        horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
         subses_table.verticalHeader().setVisible(False)
         subses_table.cellChanged.connect(self.subses_cell_was_changed)
 
@@ -689,11 +689,11 @@ class Ui_MainWindow(object):
         table.setHorizontalHeaderLabels(['', f'{SOURCE} input', 'BIDS modality', 'BIDS output', 'Action', 'Provenance'])
         table.verticalHeader().setVisible(False)
         header = table.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
         table.setColumnHidden(2, True)
         table.setColumnHidden(5, True)
 
@@ -906,7 +906,7 @@ class EditDialog(QDialog):
         self.resize(EDIT_WINDOW_WIDTH, EDIT_WINDOW_HEIGHT)
         self.center()
 
-        finish = QtWidgets.QAction(self)
+        finish = QAction(self)
         finish.triggered.connect(self.closeEvent)
 
     def center(self):
@@ -1087,8 +1087,8 @@ class EditDialog(QDialog):
         table.setShowGrid(False)
         table.verticalHeader().setVisible(False)
         horizontal_header = table.horizontalHeader()
-        horizontal_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        horizontal_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
         horizontal_header.setVisible(False)
 
         self.fill_table(table, data, maximum=maximum)
