@@ -739,10 +739,9 @@ class Ui_MainWindow(object):
 
     def save_bidsmap_to_file(self):
         """Save the BIDSmap to file. """
-        options = QFileDialog.Options()
-        filename, _ = QFileDialog.getSaveFileName(self.MainWindow, "Save File",
+        filename, _ = QFileDialog.getSaveFileName(self.MainWindow, 'Save File',
                         os.path.join(self.bidsfolder, 'code', 'bidscoin', 'bidsmap.yaml'),
-                        "YAML Files (*.yaml *.yml);;All Files (*)", options=options)
+                        'YAML Files (*.yaml *.yml);;All Files (*)')
         if filename:
             bids.save_bidsmap(filename, self.output_bidsmap)
 
