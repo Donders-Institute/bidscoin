@@ -728,7 +728,7 @@ def update_bidsmap(bidsmap: dict, source_modality: str, provenance: str, target_
 
     # Check if we have to do anything and, if so, warn the user if the target run already exists
     if source_modality == target_modality:
-        return
+        return bidsmap
     elif exist_run(bidsmap, source, target_modality, run):
         logger.warning(f'That run from {source_modality} already exists in {target_modality}...')
 
