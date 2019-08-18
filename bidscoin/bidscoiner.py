@@ -163,8 +163,8 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 elif dcm2niisuffix=='_e' and basesuffix=='phasediff' and index:                                 # i.e. modality == 'fmap'
                     pass
 
-                elif dcm2niisuffix=='_e' and basesuffix in ['phase1','phase2'] and index:                      # i.e. modality == 'fmap' (TODO: untested)
-                    basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_phase1_e[index] -> *_phase[index]
+                elif dcm2niisuffix=='_e' and basesuffix in ['phase1','phase2'] and index:                       # i.e. modality == 'fmap'
+                    basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_phase1_e[index]_ph -> *_phase[index]
 
                 else:
                     basepath = bids.set_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper() + index)             # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
