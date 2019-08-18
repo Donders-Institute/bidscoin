@@ -1127,15 +1127,15 @@ class EditDialog(QDialog):
 
         f = self.view_bids_name.font()
         if self.target_modality==bids.unknownmodality:
-            self.view_bids_name.setToolTip(f"Red: This imaging modality is not part of BIDS but will be converted to a BIDS-like entry in the '{bids.unknownmodality}' folder. Click 'OK' if you think this looks good")
+            self.view_bids_name.setToolTip(f"Red: This imaging modality is not part of BIDS but will be converted to a BIDS-like entry in the '{bids.unknownmodality}' folder. Click 'OK' if you want your BIDS directory to look like this")
             self.view_bids_name.setTextColor(QtGui.QColor('red'))
             f.setStrikeOut(False)
         elif self.target_modality == bids.ignoremodality:
-            self.view_bids_name.setToolTip("Gray / Strike-out: This imaging modality will be ignored and not converted BIDS. Click 'OK' if you think this looks good")
+            self.view_bids_name.setToolTip("Gray / Strike-out: This imaging modality will be ignored and not converted BIDS. Click 'OK' if you want your BIDS directory to look like this")
             self.view_bids_name.setTextColor(QtGui.QColor('gray'))
             f.setStrikeOut(True)
         else:
-            self.view_bids_name.setToolTip(f"Green: This '{self.target_modality}' imaging modality is part of BIDS. Click 'OK' if you think this looks good")
+            self.view_bids_name.setToolTip(f"Green: This '{self.target_modality}' imaging modality is part of BIDS. Click 'OK' if you want your BIDS directory to look like this")
             self.view_bids_name.setTextColor(QtGui.QColor('green'))
             f.setStrikeOut(False)
         self.view_bids_name.setFont(f)
