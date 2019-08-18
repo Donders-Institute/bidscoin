@@ -865,7 +865,7 @@ class EditDialog(QDialog):
         self.bids_label = QLabel()
         self.bids_label.setText("Labels")
         self.bids_table = self.set_table(data_bids, minimum=False)
-        self.bids_table.setToolTip(f"The BIDS key-value pairs that are used to construct the BIDS output name. Feel free to change the values until you are satisfied with the output name -- except for the dynamic 'run' field, which should normally not be touched, and the fieldmap 'IntendedFor' field, which is used to find the associated BIDS ouput files)")
+        self.bids_table.setToolTip(f"The BIDS key-value pairs that are used to construct the BIDS output name. Feel free to change the values except for the dynamic 'run' field, which should normally not be touched")
         self.bids_table.cellChanged.connect(self.bids_cell_was_changed)
 
         # Set-up the BIDS outputname field
