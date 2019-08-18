@@ -519,7 +519,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
 
     # Write the collected data to the participant files
     LOGGER.info('Writing subject data to: ' + participants_tsv)
-    participants_table.to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
+    participants_table.replace('','n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
     LOGGER.info('Writing subject data dictionary to: ' + participants_json)
     with open(participants_json, 'w') as json_fid:
