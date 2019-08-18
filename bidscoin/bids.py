@@ -826,7 +826,7 @@ def exist_run(bidsmap: dict, source: str, modality: str, run_item: dict, matchbi
             if exist_run(bidsmap, source, modality, run_item, matchbidslabels):
                 return True
 
-    if not bidsmap[source][modality]:
+    if not bidsmap[source] or not bidsmap[source][modality]:
         return False
 
     for run in bidsmap[source][modality]:
