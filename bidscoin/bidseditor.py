@@ -609,6 +609,7 @@ class Ui_MainWindow(object):
         subses_table.setItem(1, 1, myWidgetItem(self.output_bidsmap[SOURCE]['session']))
 
         idx = 0
+        samples_table.setSortingEnabled(False)
         for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
             runs = self.output_bidsmap[SOURCE][modality]
             if not runs:
@@ -655,7 +656,7 @@ class Ui_MainWindow(object):
 
                 idx += 1
 
-        samples_table.sortByColumn(0, QtCore.Qt.AscendingOrder)
+        samples_table.setSortingEnabled(True)
 
     def set_tab_bidsmap(self):
         """Set the SOURCE file sample listing tab.  """
@@ -688,6 +689,8 @@ class Ui_MainWindow(object):
         samples_table.setColumnCount(6)
         samples_table.setRowCount(num_files)
         samples_table.setHorizontalHeaderLabels(['', f'{SOURCE} input', 'BIDS modality', 'BIDS output', 'Action', 'Provenance'])
+        samples_table.setSortingEnabled(True)
+        samples_table.sortByColumn(0, QtCore.Qt.AscendingOrder)
         header = samples_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.Stretch)
