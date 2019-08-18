@@ -649,7 +649,7 @@ class Ui_MainWindow(object):
                         samples_table.item(idx, 3).setToolTip("Gray / Strike-out: This imaging modality will be ignored and not converted BIDS")
                     else:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('green'))
-                        samples_table.item(idx, 3).setToolTip("Green: This '{self.target_modality}' imaging modality is part of BIDS")
+                        samples_table.item(idx, 3).setToolTip(f"Green: This '{modality}' imaging modality is part of BIDS")
 
                 edit_button = QPushButton('Edit')
                 edit_button.setToolTip('Click to see more details and edit the BIDS output name')
