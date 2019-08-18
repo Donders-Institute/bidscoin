@@ -640,14 +640,17 @@ class Ui_MainWindow(object):
                 if samples_table.item(idx, 3):
                     if modality == bids.unknownmodality:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('red'))
+                        samples_table.item(idx, 3).setToolTip(f"Red: This imaging modality is not part of BIDS but will be converted to a BIDS-like entry in the '{bids.unknownmodality}' folder")
                     elif modality == bids.ignoremodality:
                         samples_table.item(idx, 1).setForeground(QtGui.QColor('gray'))
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('gray'))
                         f = samples_table.item(idx, 3).font()
                         f.setStrikeOut(True)
                         samples_table.item(idx, 3).setFont(f)
+                        samples_table.item(idx, 3).setToolTip('Gray / Strike-out: This imaging modality will be ignored and not converted BIDS')
                     else:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('green'))
+                        samples_table.item(idx, 3).setToolTip('Green: This imaging modality is part of BIDS')
 
                 edit_button = QPushButton('Edit')
                 edit_button.setToolTip('Click to see more details and edit the BIDS output name')
@@ -1117,13 +1120,24 @@ class EditDialog(QDialog):
     def refresh_bidsname(self):
         bidsname = os.path.join(self.target_modality, bids.get_bidsname(self.target_bidsmap[SOURCE]['subject'], self.target_bidsmap[SOURCE]['session'],
                                                                         self.target_modality, self.target_run, '', self.subprefix, self.sesprefix)) + '.*'
-        html_bids_name = bidsname.replace('<', '&lt;').replace('>', '&gt;')
 
-        self.view_bids_name.clear()
-        if self.target_modality == bids.ignoremodality:
-            self.view_bids_name.textCursor().insertHtml('<font color="#808080"><s>%s</s></font>' % html_bids_name)
+        f = self.view_bids_name.font()
+        if self.target_modality==bids.unknownmodality:
+            self.view_bids_name.setToolTip(f"Red: This imaging modality is not part of BIDS but will be converted to a BIDS-like entry in the '{bids.unknownmodality}' folder")
+            self.view_bids_name.setTextColor(QtGui.QColor('red'))
+            f.setStrikeOut(False)
+        elif self.target_modality == bids.ignoremodality:
+            self.view_bids_name.setToolTip('Gray / Strike-out: This imaging modality will be ignored and not converted BIDS')
+            self.view_bids_name.setTextColor(QtGui.QColor('gray'))
+            f.setStrikeOut(True)
         else:
-            self.view_bids_name.textCursor().insertHtml('<font color="#808080">%s</font>' % html_bids_name)
+            self.view_bids_name.setToolTip('Green: This imaging modality is part of BIDS')
+            self.view_bids_name.setTextColor(QtGui.QColor('green'))
+            f.setStrikeOut(False)
+        self.view_bids_name.setFont(f)
+        self.view_bids_name.clear()
+        self.view_bids_name.textCursor().insertText(bidsname)
+
 
     def refresh(self, suffix_idx):
         """
