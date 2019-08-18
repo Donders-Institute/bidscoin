@@ -296,7 +296,6 @@ class Ui_MainWindow(object):
         # Set the statusbar
         statusbar = QtWidgets.QStatusBar(self.MainWindow)
         statusbar.setObjectName("statusbar")
-        statusbar.setToolTip("")
         statusbar.setStatusTip("Statusbar")
         self.MainWindow.setStatusBar(statusbar)
 
@@ -848,6 +847,7 @@ class EditDialog(QDialog):
         self.provenance_label.setText("Provenance")
         self.provenance_table = self.set_table(data_provenance)
         self.provenance_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.provenance_table.setToolTip(f"The {SOURCE} source file from which the attributes were taken")
         self.provenance_table.cellDoubleClicked.connect(self.inspect_dicomfile)
 
         # Set-up the DICOM table
@@ -855,14 +855,17 @@ class EditDialog(QDialog):
         self.dicom_label.setText("Attributes")
         self.dicom_table = self.set_table(data_dicom, minimum=False)
         self.dicom_table.cellChanged.connect(self.dicom_cell_was_changed)
+        self.dicom_table.setToolTip(f"The {SOURCE} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using wildcards, see documentation), only change these if you know what you are doing!")
 
         # Set-up the modality dropdown menu
         self.set_modality_dropdown_section()
+        self.modality_dropdown.setToolTip('The BIDS modality (data type). First make sure this one is correct, then choose the right suffix')
 
         # Set-up the BIDS table
         self.bids_label = QLabel()
         self.bids_label.setText("Labels")
         self.bids_table = self.set_table(data_bids, minimum=False)
+        self.bids_table.setToolTip(f"The BIDS key-value pairs that are used to construct the BIDS output name. Feel free to change the values until you are satisfied with the output name -- except for the dynamic 'run' field, which should normally not be touched, and the fieldmap 'IntendedFor' field, which is used to find the associated BIDS ouput files)")
         self.bids_table.cellChanged.connect(self.bids_cell_was_changed)
 
         # Set-up the BIDS outputname field
@@ -1060,6 +1063,7 @@ class EditDialog(QDialog):
 
         self.suffix_dropdown = QComboBox()
         suffix_dropdown = self.suffix_dropdown
+        suffix_dropdown.setToolTip("The suffix that sets the different run types apart. First make sure the 'Modality' dropdown-menu is set correctly before chosing the right suffix here")
 
         for i, row in enumerate(data):
             key = row[0]["value"]
