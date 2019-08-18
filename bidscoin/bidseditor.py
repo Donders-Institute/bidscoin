@@ -855,7 +855,7 @@ class EditDialog(QDialog):
         self.dicom_label.setText("Attributes")
         self.dicom_table = self.set_table(data_dicom, minimum=False)
         self.dicom_table.cellChanged.connect(self.dicom_cell_was_changed)
-        self.dicom_table.setToolTip(f"The {SOURCE} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using wildcards, see documentation), only change these if you know what you are doing!")
+        self.dicom_table.setToolTip(f"The {SOURCE} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using **wildcards**, see documentation), only change these if you know what you are doing!")
 
         # Set-up the modality dropdown menu
         self.set_modality_dropdown_section()
