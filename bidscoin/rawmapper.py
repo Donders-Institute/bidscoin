@@ -8,6 +8,7 @@ during subject registration (i.e. stored in the PatientComments dicom field)
 """
 
 import os
+import re
 import glob
 import warnings
 try:
@@ -88,14 +89,14 @@ def rawmapper(rawfolder: str, outfolder: str='', sessions: list=[], rename: bool
                 else:
                     delim = '\r\n'
                 newsubsesid = [val for val in dcmval.split(delim) if val]   # Skip empty lines / entries
-                newsubid    = subprefix + bids.cleanup_value(newsubsesid[0].lstrip(subprefix))
+                newsubid    = subprefix + bids.cleanup_value(re.sub(f'^{subprefix}', '', newsubsesid[0]))
                 if newsubid==subprefix or newsubid==subprefix+'None':
                     newsubid = subid
                     warnings.warn('Could not rename {} because the dicom-field was empty for: {}'.format(subid, session))
                 if len(newsubsesid)==1:
                     newsesid = sesid
                 elif len(newsubsesid)==2:
-                    newsesid = sesprefix + bids.cleanup_value(newsubsesid[1].lstrip(sesprefix))
+                    newsesid = sesprefix + bids.cleanup_value(re.sub(f'^{sesprefix}', '', newsubsesid[1]))
                 else:
                     warnings.warn('Skipping renaming of {} because the dicom-field "{}" could not be parsed into [subid, sesid]'.format(session, dcmval))
                     continue

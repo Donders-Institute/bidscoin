@@ -12,6 +12,7 @@ bidsfolder/code/bidscoin/bidscoiner.log file.
 
 import os
 import glob
+import re
 import pandas as pd
 import json
 import dateutil.parser
@@ -451,7 +452,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     if not subjects:
         subjects = bids.lsdirs(rawfolder, subprefix + '*')
     else:
-        subjects = [subprefix + subject.lstrip(subprefix) for subject in subjects]        # Make sure there is a "sub-" prefix
+        subjects = [subprefix + re.sub(f'^{subprefix}', '', subject) for subject in subjects]        # Make sure there is a "sub-" prefix
         subjects = [os.path.join(rawfolder,subject) for subject in subjects if os.path.isdir(os.path.join(rawfolder,subject))]
 
     # Loop over all subjects and sessions and convert them using the bidsmap entries
