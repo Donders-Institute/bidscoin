@@ -742,8 +742,8 @@ def update_bidsmap(bidsmap: dict, source_modality: str, provenance: str, target_
         bidsmap = append_run(bidsmap, source, target_modality, run, clean)
 
     else:
-        for index, sourcefile in enumerate(bidsmap[source][target_modality]):
-            if sourcefile == provenance:
+        for index, run_ in enumerate(bidsmap[source][target_modality]):
+            if run_['provenance'] == provenance:
                 bidsmap[source][target_modality][index] = run
                 break
 
