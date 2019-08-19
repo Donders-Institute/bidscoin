@@ -872,12 +872,16 @@ class EditDialog(QDialog):
         self.set_bids_name_section()
 
         # Group the tables in boxes
+        sizepolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizepolicy.setHorizontalStretch(1)
+
         groupbox1 = QGroupBox(SOURCE + ' input')
         layout1 = QVBoxLayout()
         layout1.addWidget(self.provenance_label)
         layout1.addWidget(self.provenance_table)
         layout1.addWidget(self.dicom_label)
         layout1.addWidget(self.dicom_table)
+        groupbox1.setSizePolicy(sizepolicy)
         groupbox1.setLayout(layout1)
 
         groupbox2 = QGroupBox("BIDS output")
@@ -888,6 +892,7 @@ class EditDialog(QDialog):
         layout2.addWidget(self.bids_table)
         layout2.addWidget(self.label_bids_name)
         layout2.addWidget(self.view_bids_name)
+        groupbox2.setSizePolicy(sizepolicy)
         groupbox2.setLayout(layout2)
 
         # Add the boxes to the layout
