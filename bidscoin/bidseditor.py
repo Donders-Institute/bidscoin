@@ -876,15 +876,16 @@ class EditDialog(QDialog):
         sizepolicy.setHorizontalStretch(1)
 
         groupbox1 = QGroupBox(SOURCE + ' input')
+        groupbox1.setSizePolicy(sizepolicy)
         layout1 = QVBoxLayout()
         layout1.addWidget(self.provenance_label)
         layout1.addWidget(self.provenance_table)
         layout1.addWidget(self.dicom_label)
         layout1.addWidget(self.dicom_table)
-        groupbox1.setSizePolicy(sizepolicy)
         groupbox1.setLayout(layout1)
 
         groupbox2 = QGroupBox("BIDS output")
+        groupbox2.setSizePolicy(sizepolicy)
         layout2 = QVBoxLayout()
         layout2.addWidget(self.label_dropdown)
         layout2.addWidget(self.modality_dropdown)
@@ -892,7 +893,6 @@ class EditDialog(QDialog):
         layout2.addWidget(self.bids_table)
         layout2.addWidget(self.label_bids_name)
         layout2.addWidget(self.view_bids_name)
-        groupbox2.setSizePolicy(sizepolicy)
         groupbox2.setLayout(layout2)
 
         # Add the boxes to the layout
