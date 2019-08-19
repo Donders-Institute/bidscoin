@@ -936,9 +936,9 @@ def get_subid_sesid(dicomfile: str, subid: str='', sesid: str='', subprefix: str
         sesid = replace_bidsvalue(sesid, dicomfile)
 
     # Add sub- and ses- prefixes if they are not there
-    subid = 'sub-' + cleanup_value(subid.lstrip(subprefix))
+    subid = 'sub-' + cleanup_value(re.sub(f'^{subprefix}', '', subid))
     if sesid:
-        sesid = 'ses-' + cleanup_value(sesid.lstrip(sesprefix))
+        sesid = 'ses-' + cleanup_value(re.sub(f'^{sesprefix}$', '', sesid))
 
     return subid, sesid
 
