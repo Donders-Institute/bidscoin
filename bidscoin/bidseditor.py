@@ -88,7 +88,7 @@ class myQTableWidget(QTableWidget):
 
         self.verticalHeader().setVisible(False)
         self.verticalHeader().setDefaultSectionSize(rowheight)
-        self.setMinimumHeight(2 * (rowheight + 2))
+        self.setMinimumHeight(2 * (rowheight + 5))
         self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
 
         self.minimizeHeight(minimum)
