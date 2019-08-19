@@ -712,9 +712,13 @@ def append_run(bidsmap: dict, source: str, modality: str, run: dict, clean: bool
 
 def update_bidsmap(bidsmap: dict, source_modality: str, provenance: str, target_modality: str, run: dict, source: str= 'DICOM', clean: bool=True) -> dict:
     """
-    Update the BIDS map:
+    Update the BIDS map if the modality changes:
     1. Remove the source run from the source modality section
     2. Append the (cleaned) target run to the target modality section
+
+    Else:
+    1. Use the provenance to look-up the index number in that modality
+    2. Replace the run
 
     :param bidsmap:             Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param source_modality:     The current modality name, e.g. 'anat'
@@ -726,17 +730,22 @@ def update_bidsmap(bidsmap: dict, source_modality: str, provenance: str, target_
     :return:
     """
 
-    # Check if we have to do anything and, if so, warn the user if the target run already exists
-    if source_modality == target_modality:
-        return bidsmap
-    elif exist_run(bidsmap, source, target_modality, run):
-        logger.warning(f'That run from {source_modality} already exists in {target_modality}...')
+    # Warn the user if the target run already exists when the run is moved to another modality
+    if source_modality!=target_modality:
+        if exist_run(bidsmap, source, target_modality, run):
+            logger.warning(f'That run from {source_modality} already exists in {target_modality}...')
 
-    # Delete the source run
-    bidsmap = delete_run(bidsmap, source, source_modality, provenance)
+        # Delete the source run
+        bidsmap = delete_run(bidsmap, source, source_modality, provenance)
 
-    # Append the (cleaned-up) target run
-    bidsmap = append_run(bidsmap, source, target_modality, run, clean)
+        # Append the (cleaned-up) target run
+        bidsmap = append_run(bidsmap, source, target_modality, run, clean)
+
+    else:
+        for index, sourcefile in enumerate(bidsmap[source][target_modality]):
+            if sourcefile == provenance:
+                bidsmap[source][target_modality][index] = run
+                break
 
     return bidsmap
 

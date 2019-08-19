@@ -617,16 +617,16 @@ class Ui_MainWindow(object):
                 provenance = run['provenance']
                 provenance_file = os.path.basename(provenance)
                 initial_file_index = self.initial_file_index[provenance]
-                bids_name = bids.get_bidsname(output_bidsmap[SOURCE]['subject'], output_bidsmap[SOURCE]['session'],
+                bidsname = bids.get_bidsname(output_bidsmap[SOURCE]['subject'], output_bidsmap[SOURCE]['session'],
                                               modality, run, '', self.subprefix, self.sesprefix)
-                subid = bids.set_bidsvalue(bids_name, 'sub')
-                sesid = bids.set_bidsvalue(bids_name, 'ses')
+                subid = bids.set_bidsvalue(bidsname, 'sub')
+                sesid = bids.set_bidsvalue(bidsname, 'ses')
                 session = os.path.join(self.bidsfolder, f'sub-{subid}', f'ses-{sesid}')
 
                 samples_table.setItem(idx, 0, QTableWidgetItem(f"{initial_file_index+1:03d}"))
                 samples_table.setItem(idx, 1, QTableWidgetItem(provenance_file))
                 samples_table.setItem(idx, 2, QTableWidgetItem(modality))                          # Hidden column
-                samples_table.setItem(idx, 3, QTableWidgetItem(os.path.join(modality, bids_name + '.*')))
+                samples_table.setItem(idx, 3, QTableWidgetItem(os.path.join(modality, bidsname + '.*')))
                 samples_table.setItem(idx, 5, QTableWidgetItem(provenance))                        # Hidden column
 
                 samples_table.item(idx, 0).setFlags(QtCore.Qt.NoItemFlags)
@@ -1052,9 +1052,9 @@ class EditDialog(QDialog):
                 if not (value.startswith('<<') and value.endswith('>>')):
                     value = bids.cleanup_value(bids.replace_bidsvalue(value, self.target_run['provenance']))
                 LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
-
                 self.target_run['bids'][key] = value
                 self.bids_table.item(row, 1).setText(value)
+
                 self.refresh_bidsname()
 
     def fill_table(self, table, data):
@@ -1078,7 +1078,7 @@ class EditDialog(QDialog):
                 labels = self.allowed_suffixes[self.target_modality]
                 suffix_dropdown.addItems(labels)
                 suffix_dropdown.setCurrentIndex(suffix_dropdown.findText(self.target_run['bids']['suffix']))
-                suffix_dropdown.currentIndexChanged.connect(self.selection_suffix_dropdown_change)
+                suffix_dropdown.currentIndexChanged.connect(self.suffix_dropdown_change)
                 table.setCellWidget(i, 1, suffix_dropdown)
                 continue
             for j, element in enumerate(row):
@@ -1112,7 +1112,7 @@ class EditDialog(QDialog):
         self.modality_dropdown = QComboBox()
         self.modality_dropdown.addItems(bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality))
         self.modality_dropdown.setCurrentIndex(self.modality_dropdown.findText(self.target_modality))
-        self.modality_dropdown.currentIndexChanged.connect(self.selection_modality_dropdown_change)
+        self.modality_dropdown.currentIndexChanged.connect(self.modality_dropdown_change)
 
     def set_bids_name_section(self):
         """Set non-editable BIDS output name section. """
@@ -1195,7 +1195,7 @@ class EditDialog(QDialog):
         # Refresh the BIDS output name
         self.refresh_bidsname()
 
-    def selection_modality_dropdown_change(self):
+    def modality_dropdown_change(self):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
         self.target_modality = self.modality_dropdown.currentText()
 
@@ -1203,7 +1203,7 @@ class EditDialog(QDialog):
 
         self.refresh(0)
 
-    def selection_suffix_dropdown_change(self):
+    def suffix_dropdown_change(self):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
         target_suffix = self.suffix_dropdown.currentText()
 
