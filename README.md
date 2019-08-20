@@ -160,6 +160,7 @@ The bidsmapper will scan your `sourcefolder` to look for different runs (scan-ty
            SequenceName: '*epfid*'
            SequenceName: ['epfid2d1rs', 'fm2d2r']
            SequenceName: ['*epfid*', 'fm2d2r']
+       NB: Editing the DICOM attributes is normally not necessary and adviced against
     
     Dynamic BIDS labels
       The BIDS labels can be static, in which case the label is just a normal string, or dynamic,
@@ -177,6 +178,7 @@ The bidsmapper will scan your `sourcefolder` to look for different runs (scan-ty
       that is used to include all runs in a session that have that string pattern in their BIDS
       file name. Example: use `<<task>>` to include all functional runs or `<<Stop*Go><Reward>>`
       to include "Stop1Go"-, "Stop2Go"- and "Reward"-runs.
+      NB: The fieldmap might not be used at all if this field is left empty!
     
     Manual editing / inspection of the bidsmap
       You can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
