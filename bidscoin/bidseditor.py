@@ -292,6 +292,9 @@ class Ui_MainWindow(object):
 
     def center(self):
         """Center the main window. """
+
+        self.MainWindow.adjustSize()
+
         qr = self.MainWindow.frameGeometry()
 
         # Center point of screen
