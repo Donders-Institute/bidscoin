@@ -62,7 +62,7 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
         LOGGER.info(f"New '{modality}' sample found: {dicomfile}")
 
         # Launch a GUI to ask the user for help
-        if gui:
+        if gui and gui.interactive == 2:
             # Open the interactive edit window to get the new mapping
             dialog_edit = bidseditor.EditDialog(dicomfile, modality, bidsmap_new, template, gui.subprefix, gui.sesprefix)
             dialog_edit.exec()
@@ -81,13 +81,6 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
 
             else:
                 LOGGER.debug(f'Unexpected result {dialog_edit.result()} from the edit dialog')
-
-            # Open a view-only version of the main window TODO: Fix self.initial_file_index[provenance] not being set correctly!
-            # if gui.interactive==2:
-            #     gui.MainWindow.show()
-            #     gui.update_subses_and_samples(bidsmap_new)
-            #     gui.setupUi(gui.MainWindow, gui.bidsfolder, gui.sourcefolder, gui.bidsmap_filename, bidsmap_new,
-            #                 bidsmap_new, gui.template_bidsmap, reload=True)
 
     return bidsmap_new
 
@@ -245,16 +238,16 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         gui.interactive = interactive
         gui.subprefix = subprefix
         gui.sesprefix = sesprefix
-        # gui.setupUi(mainwin, bidsfolder, rawfolder, bidsmapfile, bidsmap_new, bidsmap_new, template, subprefix=subprefix, sesprefix=sesprefix)
 
-        QMessageBox.information(mainwin, 'bidsmapper workflow',
-                                f"The bidsmapper will now scan {bidsfolder} and whenever "
-                                f"it detects a new type of scan it will ask you to identify it.\n\n"
-                                f"It is important that you choose the correct BIDS modality "
-                                f"(e.g. 'anat', 'dwi' or 'func') and suffix (e.g. 'bold' or 'sbref').\n\n"
-                                f"At the end you will be shown an overview of all the "
-                                f"different scan types and BIDScoin options (as in the "
-                                f"bidseditor) that you can then (re)edit to your needs")
+        if gui.interactive == 2:
+            QMessageBox.information(mainwin, 'bidsmapper workflow',
+                                    f"The bidsmapper will now scan {bidsfolder} and whenever "
+                                    f"it detects a new type of scan it will ask you to identify it.\n\n"
+                                    f"It is important that you choose the correct BIDS modality "
+                                    f"(e.g. 'anat', 'dwi' or 'func') and suffix (e.g. 'bold' or 'sbref').\n\n"
+                                    f"At the end you will be shown an overview of all the "
+                                    f"different scan types and BIDScoin options (as in the "
+                                    f"bidseditor) that you can then (re)edit to your needs")
 
     # Loop over all subjects and sessions and built up the bidsmap entries
     subjects = bids.lsdirs(rawfolder, subprefix + '*')
@@ -340,7 +333,7 @@ if __name__ == "__main__":
     parser.add_argument('-t','--template',    help='The bidsmap template with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap_template.yaml', default='bidsmap_template.yaml')
     parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
-    parser.add_argument('-i','--interactive', help='{0}: The sourcefolder is scanned for different kinds of scans without any user interaction. The resulting bidsmap can be edited afterwards using the bidseditor. {1}: The sourcefolder is scanned and the user is asked for help if an unknown run is encountered. When finished the bidseditor is automatically launched. {2}: Same as {1} except that a (bidseditor) preview of all encountered runs is shown in the background (NB: Option is currently disabled). Default: 1', type=int, choices=[0,1,2], default=1)
+    parser.add_argument('-i','--interactive', help='{0}: The sourcefolder is scanned for different kinds of scans without any user interaction. {1}: The sourcefolder is scanned for different kinds of scans and, when finished, the resulting bidsmap is opened using the bidseditor. {2}: As {1}, except that already during scanning the user is asked for help if an unknown run is encountered. Default: 1', type=int, choices=[0,1,2], default=1)
     parser.add_argument('-v','--version',     help='Show the BIDS and BIDScoin version', action='version', version=f'BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version()}')
     args = parser.parse_args()
 
