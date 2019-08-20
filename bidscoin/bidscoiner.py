@@ -393,7 +393,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     # Start logging
     bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidscoin', 'bidscoiner.log'))
     LOGGER.info('')
-    LOGGER.info(f'------------ START BIDScoiner {bids.version()}: BIDS {bids.bidsversion()} ------------')
+    LOGGER.info(f'-------------- START BIDScoiner {bids.version()}: BIDS {bids.bidsversion()} ------------')
     LOGGER.info(f'>>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} subjects={subjects} force={force}'
                 f' participants={participants} bidsmap={bidsmapfile} subprefix={subprefix} sesprefix={sesprefix}')
 
@@ -525,7 +525,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     with open(participants_json, 'w') as json_fid:
         json.dump(participants_dict, json_fid, indent=4)
 
-    LOGGER.info('------------ FINISHED! ------------')
+    LOGGER.info('-------------- FINISHED! ------------')
     LOGGER.info('')
 
     bids.reporterrors()

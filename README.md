@@ -42,7 +42,7 @@ BIDScoin will take your (raw) source data as well as a YAML file with the key-va
 > If these utilities do not satisfy your needs, then have a look at this [reorganize_dicom_files](https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md) tool.
 
 ### Coining your source data to BIDS
-Having an organized source data folder, the actual data-set conversion to BIDS can be performed fully automatically by simply running [(1a)](#step-1a-running-the-bidsmapper) the `bidsmapper.py`, [(1b)](#step-1b-running-the-bidseditor) the `bidseditor.py` and [(2)](#step-2-running-the-bidscoiner) the `bidscoiner.py` command-line tools after another:
+Having an organized source data folder, the actual data-set conversion to BIDS can be performed by simply running [(1a)](#step-1a-running-the-bidsmapper) the `bidsmapper.py`, [(1b)](#step-1b-running-the-bidseditor) the `bidseditor.py` and [(2)](#step-2-running-the-bidscoiner) the `bidscoiner.py` command-line tools after another:
 
 #### Step 1a: Running the bidsmapper
 
@@ -55,7 +55,7 @@ Having an organized source data folder, the actual data-set conversion to BIDS c
     the bidseditor (but also with any text-editor) before passing it to the bidscoiner
     N.B.: Institute users may want to use a site-customized template bidsmap (see the
     --template option). The bidsmap_dccn template from the Donders Institute can serve as
-    an example (or may even mostly work for other institutes as it comes with the software).
+    an example (or may even mostly work for other institutes out of the box).
     
     positional arguments:
       sourcefolder          The source folder containing the raw data in
@@ -85,25 +85,24 @@ Having an organized source data folder, the actual data-set conversion to BIDS c
                             Default: 'ses-'
       -i {0,1,2}, --interactive {0,1,2}
                             {0}: The sourcefolder is scanned for different kinds
-                            of scans without any user interaction. The resulting
-                            bidsmap can be edited afterwards using the bidseditor.
-                            {1}: The sourcefolder is scanned and the user is asked
-                            for help if an unknown run is encountered. When
-                            finished the bidseditor is automatically launched.
-                            {2}: Same as {1} except that a (bidseditor) preview of
-                            all encountered runs is shown in the background.
-                            Default: 1
+                            of scans without any user interaction. {1}: The
+                            sourcefolder is scanned for different kinds of scans
+                            and, when finished, the resulting bidsmap is opened
+                            using the bidseditor. {2}: As {1}, except that already
+                            during scanning the user is asked for help if a new
+                            and unknown run is encountered. This option is most
+                            useful when re-running the bidsmapper (e.g. when the
+                            scan protocol was changed since last running the
+                            bidsmapper). Default: 1
       -v, --version         Show the BIDS and BIDScoin version
     
     examples:
       bidsmapper.py /project/foo/raw /project/foo/bids
       bidsmapper.py /project/foo/raw /project/foo/bids -t bidsmap_dccn
 
-The bidsmapper will scan your `sourcefolder` to look for different runs (scan-types) to create a mapping for each run to a bids output name (a.k.a. the 'bidsmap'). By default, as depicted below, the bidsmapper will use a graphical interface to interactively ask the user for input when new and unknown runs are encountered. In this interface, the user can choose the right BIDS `Modality` (drop down menu) and edit the associated BIDS `Labels` (double click black items), or (for expert usage) adapt the DICOM `Attributes` (double click black items). The new BIDS `Output name` is then shown on the bottom and, if it is all fine, the user can store the mapping to the bidsmap by clicking the `OK` button. Tip: use the `-t bidsmap_dccn` option and see if it works for you (if not, consider adapting it to your needs).
+The bidsmapper will scan your `sourcefolder` to look for different runs (scan-types) to create a mapping for each run to a bids output name (a.k.a. the 'bidsmap'). By default (but see the `-i` option above), when finished the bidsmapper will automatically launch [step 1b](#step-1b-running-the-bidseditor), as described in the next section (but step 1b can also always be run separately by directly running the bidseditor).
 
-When finished the bidsmapper will automatically launch [step 1b](#step-1b-running-the-bidseditor), as described in the next section (but step 1b can also always be run separately).
-
-<a name="bidseditor-edit">![Bidseditor edit window](./docs/bidseditor_edit.png)</a>
+> Tip: use the `-t bidsmap_dccn` option and see if it works for you. If not, consider opening it with a text editor and adapt it to your needs.
 
 #### Step 1b: Running the bidseditor
 
@@ -184,11 +183,15 @@ When finished the bidsmapper will automatically launch [step 1b](#step-1b-runnin
       text editor. For instance to add a dynamic `participant` value like `<<PatientID>>`. 
       See ./docs/bidsmap.md for more information.
 
-As shown below, the main window of the bidseditor opens with the `BIDS map` tab that contains a list of `input samples` that uniquely represents all the different files that are present in the source folder, together with the associated `BIDS output name`. The path in the `BIDS output name` is shown in red if the modality is not part of the BIDS standard, striked-out gray when the runs will be ignored in the conversion to BIDS, otherwise it is colored green. Double clicking the sample (DICOM) filename opens an inspection window with the full header information (double clicking sample filenames works throughout the GUI). The user can click the `Edit` button for each list item to open a new edit window, as in the bidsmapper.
+As shown below, the main window of the bidseditor opens with the `BIDS map` tab that contains a list of `input samples` that uniquely represents all the different files that are present in the source folder, together with the associated `BIDS output name`. The path in the `BIDS output name` is shown in red if the modality is not part of the BIDS standard, striked-out gray when the runs will be ignored in the conversion to BIDS, otherwise it is colored green. Double clicking the sample (DICOM) filename opens an inspection window with the full header information (double clicking sample filenames works throughout the GUI).
 
 <a name="bidseditor-main">![Bidseditor main window](./docs/bidseditor_main.png)</a>
 
-If all BIDS output names in the main window are fine, the user can click on the `Save` button and proceed with running the bidscoiner tool.
+The user can click the `Edit` button for each list item to open a new edit window, as show below. In this interface, the right BIDS `Modality` (drop down menu) and the `suffix` label (drop down menu) can set correctly, after which the associated BIDS `Labels` can be edited (double click black items). As a result, the new BIDS `Output name` is then shown in the bottom text field. This is how the BIDS output data will look like and, if this looks all fine, the user can store this mapping to the bidsmap and return to the main window by clicking the `OK` button.
+
+<a name="bidseditor-edit">![Bidseditor edit window](./docs/bidseditor_edit.png)</a>
+
+Finally, if all BIDS output names in the main window are fine, the user can click on the `Save` button and proceed with running the bidscoiner tool.
 
 #### Step 2: Running the bidscoiner
 

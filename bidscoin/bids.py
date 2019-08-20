@@ -418,7 +418,9 @@ def get_niftifile(folder: str) -> str:
 
 def load_bidsmap(yamlfile: str='', folder: str='', report: bool=True) -> (dict, str):
     """
-    Read the mapping heuristics from the bidsmap yaml-file
+    Read the mapping heuristics from the bidsmap yaml-file. If yamlfile is not fullpath, then 'folder' is first searched before
+    the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, them 'bidsmap_template.yaml'. So fullpath
+    has precendence over folder and bidsmap.yaml has precedence over bidsmap_template.yaml
 
     :param yamlfile:    The full pathname or basename of the bidsmap yaml-file. If None, the default bidsmap_template.yaml file in the heuristics folder is used
     :param folder:      Only used when yamlfile=basename or None: yamlfile is then first searched for in folder and then falls back to the ./heuristics folder (useful for centrally managed template yaml-files)

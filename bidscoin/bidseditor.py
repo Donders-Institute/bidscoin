@@ -1255,7 +1255,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     # Start logging
     bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidscoin', 'bidseditor.log'))
     LOGGER.info('')
-    LOGGER.info('------------ START BIDSeditor ------------')
+    LOGGER.info('-------------- START BIDSeditor ------------')
 
     # Obtain the initial bidsmap info
     template_bidsmap, _ = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code','bidscoin'))
@@ -1288,7 +1288,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     mainwin.show()
     app.exec()
 
-    LOGGER.info('------------ FINISHED! -------------------')
+    LOGGER.info('-------------- FINISHED! -------------------')
     LOGGER.info('')
 
     bids.reporterrors()
@@ -1317,6 +1317,7 @@ if __name__ == "__main__":
                                                 SequenceName: '*epfid*'
                                                 SequenceName: ['epfid2d1rs', 'fm2d2r']
                                                 SequenceName: ['*epfid*', 'fm2d2r']
+                                            NB: Editing the DICOM attributes is normally not necessary and adviced against
 
                                          Dynamic BIDS labels
                                            The BIDS labels can be static, in which case the label is just a normal string, or dynamic,
@@ -1334,6 +1335,7 @@ if __name__ == "__main__":
                                            that is used to include all runs in a session that have that string pattern in their BIDS
                                            file name. Example: use `<<task>>` to include all functional runs or `<<Stop*Go><Reward>>`
                                            to include "Stop1Go"-, "Stop2Go"- and "Reward"-runs.
+                                           NB: The fieldmap might not be used at all if this field is left empty!
 
                                          Manual editing / inspection of the bidsmap
                                            You can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
