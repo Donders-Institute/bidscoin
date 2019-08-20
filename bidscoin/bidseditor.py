@@ -78,7 +78,7 @@ args: Argument string that is passed to dcm2niix. Click [Test] and see the termi
 
 class myQTableWidget(QTableWidget):
 
-    def __init__(self, minimum: bool=True, rowheight: int=22):
+    def __init__(self, minimum: bool=True, rowheight: int=ROW_HEIGHT):
         super().__init__()
 
         self.row_height = rowheight
