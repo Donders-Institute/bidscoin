@@ -737,7 +737,12 @@ class Ui_MainWindow(MainWindow):
                      reload=True)
 
     def save_bidsmap_to_file(self):
-        """Save the BIDSmap to file. """
+        """Check and save the BIDSmap to file. """
+        if 'fmap' in self.output_bidsmap[SOURCE]:
+            for run in self.output_bidsmap[SOURCE]['fmap']:
+                if not run['bids']['IntendedFor']:
+                    LOGGER.warning(f"IntendedFor fieldmap value is empty for {run['provenance']}")
+
         filename, _ = QFileDialog.getSaveFileName(self.MainWindow, 'Save File',
                         os.path.join(self.bidsfolder, 'code', 'bidscoin', 'bidsmap.yaml'),
                         'YAML Files (*.yaml *.yml);;All Files (*)')
@@ -1029,7 +1034,7 @@ class EditDialog(QDialog):
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
             if key and value!=oldvalue:
-                LOGGER.info(f"User has set {SOURCE}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                LOGGER.warning(f"Expert usage: User has set {SOURCE}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 self.target_run['attributes'][key] = value
 
     def bids_cell_was_changed(self, row, column):
@@ -1044,7 +1049,10 @@ class EditDialog(QDialog):
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
                 if not (value.startswith('<<') and value.endswith('>>')):
                     value = bids.cleanup_value(bids.replace_bidsvalue(value, self.target_run['provenance']))
-                LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                if key == 'run':
+                    LOGGER.warning(f"Expert usage: User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                else:
+                    LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 self.target_run['bids'][key] = value
                 self.bids_table.item(row, 1).setText(value)
 
@@ -1231,6 +1239,9 @@ class EditDialog(QDialog):
 
     def update_run(self):
         LOGGER.info(f'User has approved the edit')
+
+        if self.target_modality=='fmap' and not self.target_run['bids']['IntendedFor']:
+            LOGGER.warning(f"'IntendedFor' fieldmap value was not set")
 
         """Save the changes to the target_bidsmap and send it back to the main window: Finished! """
         self.target_bidsmap = bids.update_bidsmap(self.target_bidsmap,
