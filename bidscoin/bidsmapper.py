@@ -50,7 +50,7 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
 
     # If not, see if we can find a matching run in the template
     if index is None:
-        run, modality, index = bids.get_matching_dicomrun(dicomfile, template)
+        run, modality, _ = bids.get_matching_dicomrun(dicomfile, template)
 
     # See if we have collected the run in our new bidsmap
     if not bids.exist_run(bidsmap_new, 'DICOM', '', run):
@@ -61,8 +61,8 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
         # Communicate with the user if the run was not present in bidsmap_old or in template
         LOGGER.info(f"New '{modality}' sample found: {dicomfile}")
 
-        # Launch a GUI to ask the user for help
-        if gui and gui.interactive == 2:
+        # Launch a GUI to ask the user for help if the new run comes from the template (i.e. was not yet in the old bidsmap)
+        if gui and gui.interactive==2 and index is None:
             # Open the interactive edit window to get the new mapping
             dialog_edit = bidseditor.EditDialog(dicomfile, modality, bidsmap_new, template, gui.subprefix, gui.sesprefix)
             dialog_edit.exec()
@@ -213,20 +213,23 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     LOGGER.info('')
     LOGGER.info('------------ START BIDSmapper ------------')
 
-    # Get the heuristics for creating the bidsmap
+    # Get the heuristics for filling the new bidsmap
     bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder,'code','bidscoin'))
     template, templatefile   = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code','bidscoin'))
-    if not bidsmap_old:
-        bidsmap_old = template
-        bidsmapfile = templatefile
 
-    # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
-    bidsmap_new = copy.deepcopy(bidsmap_old)
+    # Create the new bidsmap as a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
+    if bidsmap_old:
+        bidsmap_new = copy.deepcopy(bidsmap_old)
+    else:
+        bidsmap_new = copy.deepcopy(template)
     for logic in ('DICOM', 'PAR', 'P7', 'Nifti', 'FileSystem'):
         for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
 
             if bidsmap_new[logic] and modality in bidsmap_new[logic]:
                 bidsmap_new[logic][modality] = None
+
+    if not bidsmap_old:
+        bidsmap_old = copy.deepcopy(bidsmap_new)
 
     # Start the Qt-application
     gui = interactive
@@ -333,7 +336,7 @@ if __name__ == "__main__":
     parser.add_argument('-t','--template',    help='The bidsmap template with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap_template.yaml', default='bidsmap_template.yaml')
     parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
-    parser.add_argument('-i','--interactive', help='{0}: The sourcefolder is scanned for different kinds of scans without any user interaction. {1}: The sourcefolder is scanned for different kinds of scans and, when finished, the resulting bidsmap is opened using the bidseditor. {2}: As {1}, except that already during scanning the user is asked for help if an unknown run is encountered. Default: 1', type=int, choices=[0,1,2], default=1)
+    parser.add_argument('-i','--interactive', help='{0}: The sourcefolder is scanned for different kinds of scans without any user interaction. {1}: The sourcefolder is scanned for different kinds of scans and, when finished, the resulting bidsmap is opened using the bidseditor. {2}: As {1}, except that already during scanning the user is asked for help if a new and unknown run is encountered. This option is most useful when re-running the bidsmapper (e.g. when the scan protocol was changed since last running the bidsmapper). Default: 1', type=int, choices=[0,1,2], default=1)
     parser.add_argument('-v','--version',     help='Show the BIDS and BIDScoin version', action='version', version=f'BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version()}')
     args = parser.parse_args()
 

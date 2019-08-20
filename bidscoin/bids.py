@@ -113,11 +113,11 @@ def reporterrors():
             if os.path.getsize(errorfile):
                 with open(errorfile, 'r') as fid:
                     errors = fid.read()
-                logger.info(f'The following errors and warnings were reported:')
+                logger.info(f'The following BIDScoin errors and warnings were reported:')
                 logger.info(f'\n{errors}')
 
             else:
-                logger.info(f'No errors or warnings were reported')
+                logger.info(f'No BIDScoin errors or warnings were reported')
                 logger.info('')
 
         elif filehandler.name == 'loghandler':
