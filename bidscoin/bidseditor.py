@@ -78,17 +78,15 @@ args: Argument string that is passed to dcm2niix. Click [Test] and see the termi
 
 class myQTableWidget(QTableWidget):
 
-    def __init__(self, minimum: bool=True, rowheight: int=ROW_HEIGHT):
+    def __init__(self, minimum: bool=True):
         super().__init__()
-
-        self.row_height = rowheight
 
         self.setAlternatingRowColors(False)
         self.setShowGrid(False)
 
         self.verticalHeader().setVisible(False)
-        self.verticalHeader().setDefaultSectionSize(rowheight)
-        self.setMinimumHeight(2 * (rowheight + 5))
+        self.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
+        self.setMinimumHeight(2 * (ROW_HEIGHT + 5))
         self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
 
         self.minimizeHeight(minimum)
