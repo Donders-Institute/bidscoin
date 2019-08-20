@@ -117,12 +117,12 @@ def reporterrors():
                 logger.info(f'\n{errors}')
 
             else:
-                logger.info(f'No errors and warnings were reported')
+                logger.info(f'No errors or warnings were reported')
+                logger.info('')
 
         elif filehandler.name == 'loghandler':
             logfile = filehandler.baseFilename
 
-    logger.info('')
     logger.info(f'For the complete log see: {logfile}')
 
 
