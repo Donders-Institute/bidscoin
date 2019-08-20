@@ -321,6 +321,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     LOGGER.info('------------ FINISHED! -------------------')
     LOGGER.info('')
 
+    bids.reporterrors()
+
 
 # Shell usage
 if __name__ == "__main__":

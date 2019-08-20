@@ -1291,6 +1291,8 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     LOGGER.info('------------ FINISHED! -------------------')
     LOGGER.info('')
 
+    bids.reporterrors()
+
 
 if __name__ == "__main__":
 

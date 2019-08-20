@@ -91,15 +91,39 @@ def setup_logging(log_file: str, debug: bool=False) -> logging.Logger:
     loghandler = logging.FileHandler(log_file)
     loghandler.setLevel(logging.DEBUG)
     loghandler.setFormatter(formatter)
+    loghandler.set_name('loghandler')
     logger.addHandler(loghandler)
 
     # Set & add the error / warnings handler
     errorhandler = logging.FileHandler(error_file)
     errorhandler.setLevel(logging.WARNING)
     errorhandler.setFormatter(formatter)
+    errorhandler.set_name('errorhandler')
     logger.addHandler(errorhandler)
 
     return logger
+
+
+def reporterrors():
+
+    for filehandler in logger.handlers:
+        if filehandler.name == 'errorhandler':
+
+            errorfile = filehandler.baseFilename
+            if os.path.getsize(errorfile):
+                with open(errorfile, 'r') as fid:
+                    errors = fid.read()
+                logger.info(f'The following errors and warnings were reported:')
+                logger.info(f'\n{errors}')
+
+            else:
+                logger.info(f'No errors and warnings were reported')
+
+        elif filehandler.name == 'loghandler':
+            logfile = filehandler.baseFilename
+
+    logger.info('')
+    logger.info(f'For the complete log see: {logfile}')
 
 
 def run_command(command: str) -> bool:
@@ -392,12 +416,13 @@ def get_niftifile(folder: str) -> str:
     return None
 
 
-def load_bidsmap(yamlfile: str='', folder: str='') -> (dict, str):
+def load_bidsmap(yamlfile: str='', folder: str='', report: bool=True) -> (dict, str):
     """
     Read the mapping heuristics from the bidsmap yaml-file
 
     :param yamlfile:    The full pathname or basename of the bidsmap yaml-file. If None, the default bidsmap_template.yaml file in the heuristics folder is used
     :param folder:      Only used when yamlfile=basename or None: yamlfile is then first searched for in folder and then falls back to the ./heuristics folder (useful for centrally managed template yaml-files)
+    :param report:      Report log.info when reading a file
     :return:            Tuple with (1) ruamel.yaml dict structure, with all options, BIDS mapping heuristics, labels and attributes, etc and (2) the fullpath yaml-file
     """
 
@@ -425,8 +450,8 @@ def load_bidsmap(yamlfile: str='', folder: str='') -> (dict, str):
     if not os.path.isfile(yamlfile):
         logger.info('No bidsmap file found: ' + os.path.abspath(yamlfile))
         return dict(), yamlfile
-    else:
-        logger.info('Using: ' + os.path.abspath(yamlfile))
+    elif report:
+        logger.info('Reading: ' + os.path.abspath(yamlfile))
 
     # Read the heuristics from the bidsmap file
     with open(yamlfile, 'r') as stream:
@@ -466,7 +491,7 @@ def save_bidsmap(filename: str, bidsmap: dict):
 
     # See if we can reload it, i.e. whether it is valid yaml...
     try:
-        load_bidsmap(filename)
+        load_bidsmap(filename, '', False)
     except:
         logger.error(f'The output bidsmap does not seem to be valid YAML, please check {filename}')
 

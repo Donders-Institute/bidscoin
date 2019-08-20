@@ -528,6 +528,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     LOGGER.info('------------ FINISHED! ------------')
     LOGGER.info('')
 
+    bids.reporterrors()
+
 
 # Shell usage
 if __name__ == "__main__":
