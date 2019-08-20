@@ -1122,7 +1122,7 @@ class EditDialog(QDialog):
         self.view_bids_name = QTextBrowser()
         self.view_bids_name.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.view_bids_name.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.view_bids_name.setMinimumHeight(22)
+        self.view_bids_name.setMinimumHeight(ROW_HEIGHT + 2)
 
         self.refresh_bidsname()
 
