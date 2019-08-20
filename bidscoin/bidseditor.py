@@ -1258,9 +1258,9 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     LOGGER.info('------------ START BIDSeditor ------------')
 
     # Obtain the initial bidsmap info
-    template_bidsmap, _        = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code','bidscoin'))
-    input_bidsmap, bidsmapfile = bids.load_bidsmap(bidsmapfile,  os.path.join(bidsfolder,'code','bidscoin'))
-    output_bidsmap             = copy.deepcopy(input_bidsmap)
+    template_bidsmap, _ = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code','bidscoin'))
+    input_bidsmap, _    = bids.load_bidsmap(bidsmapfile,  os.path.join(bidsfolder,'code','bidscoin'))
+    output_bidsmap      = copy.deepcopy(input_bidsmap)
 
     # Parse the sourcefolder from the bidsmap provenance info
     if not sourcefolder:

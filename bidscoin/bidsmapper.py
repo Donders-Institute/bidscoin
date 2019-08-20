@@ -214,8 +214,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     LOGGER.info('------------ START BIDSmapper ------------')
 
     # Get the heuristics for filling the new bidsmap
-    bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder,'code','bidscoin'))
-    template, templatefile   = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code','bidscoin'))
+    bidsmap_old, _ = bids.load_bidsmap(bidsmapfile,  os.path.join(bidsfolder,'code','bidscoin'))
+    template, _    = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code','bidscoin'))
 
     # Create the new bidsmap as a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     if bidsmap_old:
