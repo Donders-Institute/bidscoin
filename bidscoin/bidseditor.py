@@ -33,12 +33,6 @@ SOURCE = 'DICOM'            # TODO: allow for non-DICOM (e.g. PAR/REC) edits
 
 LOGGER = logging.getLogger('bidscoin')
 
-MAIN_WINDOW_WIDTH   = 1250
-MAIN_WINDOW_HEIGHT  = 750
-
-EDIT_WINDOW_WIDTH   = 1100
-EDIT_WINDOW_HEIGHT  = 550
-
 INSPECT_WINDOW_WIDTH  = 850
 INSPECT_WINDOW_HEIGHT = 750
 
@@ -234,7 +228,6 @@ class Ui_MainWindow(object):
 
             self.set_menu_and_status_bar()
 
-            self.MainWindow.resize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
             self.center()
 
     def set_menu_and_status_bar(self):
@@ -915,7 +908,6 @@ class EditDialog(QDialog):
         layout_all.addLayout(layout_tables)
         layout_all.addWidget(buttonBox)
 
-        self.resize(EDIT_WINDOW_WIDTH, EDIT_WINDOW_HEIGHT)
         self.center()
 
         finish = QAction(self)
