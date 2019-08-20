@@ -158,12 +158,16 @@ class MainWindow(QMainWindow):
         actionQuit = QAction("Quit", self)
         actionQuit.triggered.connect(self.closeEvent)
 
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.setWindowIcon(icon)
+
     def closeEvent(self, event):
         """Handle exit. """
         QApplication.quit()     # TODO: Do not use class method but self.something
 
 
-class Ui_MainWindow(object):
+class Ui_MainWindow(MainWindow):
 
     def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, input_bidsmap, output_bidsmap, template_bidsmap,
                 selected_tab_index=2, subprefix='sub-', sesprefix='ses-', reload: bool=False):
@@ -221,10 +225,6 @@ class Ui_MainWindow(object):
 
         if not reload:
             self.MainWindow.setObjectName("MainWindow")
-
-            icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.MainWindow.setWindowIcon(icon)
 
             self.set_menu_and_status_bar()
 

@@ -5,7 +5,7 @@ from all raw source data to the BIDS labels. You can check and edit the bidsmap 
 the bidseditor (but also with any text-editor) before passing it to the bidscoiner
 N.B.: Institute users may want to use a site-customized template bidsmap (see the
 --template option). The bidsmap_dccn template from the Donders Institute can serve as
-an example (or may even mostly work for other institutes as it comes with the software).
+an example (or may even mostly work for other institutes out of the box).
 """
 
 # Global imports (plugin modules may be imported when needed)
@@ -211,7 +211,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     # Start logging
     bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidscoin', 'bidsmapper.log'))
     LOGGER.info('')
-    LOGGER.info('------------ START BIDSmapper ------------')
+    LOGGER.info('-------------- START BIDSeditor ------------')
 
     # Get the heuristics for filling the new bidsmap
     bidsmap_old, _ = bids.load_bidsmap(bidsmapfile,  os.path.join(bidsfolder,'code','bidscoin'))
@@ -228,6 +228,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             if bidsmap_new[logic] and modality in bidsmap_new[logic]:
                 bidsmap_new[logic][modality] = None
 
+    # Start with an empty skeleton if we didn't have an old bidsmap
     if not bidsmap_old:
         bidsmap_old = copy.deepcopy(bidsmap_new)
 
@@ -235,7 +236,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     gui = interactive
     if gui:
         app = QApplication(sys.argv)
-        app.setApplicationName('BIDS mapper')
+        app.setApplicationName('BIDS editor')
         mainwin = bidseditor.MainWindow()
         gui = bidseditor.Ui_MainWindow()
         gui.interactive = interactive
@@ -243,7 +244,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         gui.sesprefix = sesprefix
 
         if gui.interactive == 2:
-            QMessageBox.information(mainwin, 'bidsmapper workflow',
+            QMessageBox.information(mainwin, 'BIDS mapping workflow',
                                     f"The bidsmapper will now scan {bidsfolder} and whenever "
                                     f"it detects a new type of scan it will ask you to identify it.\n\n"
                                     f"It is important that you choose the correct BIDS modality "
@@ -301,7 +302,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
     # (Re)launch the bidseditor UI_MainWindow
     if gui:
-        QMessageBox.information(mainwin, 'bidseditor',
+        QMessageBox.information(mainwin, 'BIDS mapping workflow',
                                 f"The bidsmapper has finished scanning {rawfolder}\n\n"
                                 f"Please carefully check all the different BIDS output names "
                                 f"and BIDScoin options and (re)edit them to your needs.\n\n"
@@ -309,12 +310,11 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                                 f"bidsmapper or by just running the bidseditor tool")
 
         LOGGER.info('Opening the bidseditor')
-        app.setApplicationName('BIDS editor')
         gui.setupUi(mainwin, bidsfolder, rawfolder, bidsmapfile, bidsmap_new, copy.deepcopy(bidsmap_new), template, subprefix=subprefix, sesprefix=sesprefix)
         mainwin.show()
         app.exec()
 
-    LOGGER.info('------------ FINISHED! -------------------')
+    LOGGER.info('-------------- FINISHED! -------------------')
     LOGGER.info('')
 
     bids.reporterrors()
