@@ -739,7 +739,9 @@ class Ui_MainWindow(MainWindow):
         # Start with a fresh errorlog
         for filehandler in LOGGER.handlers:
             if filehandler.name=='errorhandler':
-                os.remove(filehandler.baseFilename)
+                LOGGER.info(f'Reseting {filehandler.baseFilename}')
+                with open (filehandler.baseFilename, 'w'):
+                    pass
 
     def save_bidsmap_to_file(self):
         """Check and save the BIDSmap to file. """
@@ -1274,8 +1276,8 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     LOGGER.info('-------------- START BIDSeditor ------------')
 
     # Obtain the initial bidsmap info
-    template_bidsmap, _ = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code','bidscoin'))
-    input_bidsmap, _    = bids.load_bidsmap(bidsmapfile,  os.path.join(bidsfolder,'code','bidscoin'))
+    template_bidsmap, templatefile = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code','bidscoin'))
+    input_bidsmap, bidsmapfile     = bids.load_bidsmap(bidsmapfile,  os.path.join(bidsfolder,'code','bidscoin'))
     output_bidsmap      = copy.deepcopy(input_bidsmap)
 
     # Parse the sourcefolder from the bidsmap provenance info
