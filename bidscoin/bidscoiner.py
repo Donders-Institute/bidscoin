@@ -246,6 +246,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     # Search for the IntendedFor images and add them to the json-files. This has been postponed untill all modalities have been processed (i.e. so that all target images are indeed on disk)
     if bidsmap['DICOM']['fmap'] is not None:
         for fieldmap in bidsmap['DICOM']['fmap']:
+            niifiles = []
             if fieldmap['bids']['IntendedFor']:
 
                 # Search for the imaging files that match the IntendedFor search criteria
@@ -256,7 +257,6 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                     intendedfor = intendedfor[2:-2].split('><')
                 elif not isinstance(intendedfor, list):
                     intendedfor = [intendedfor]
-                niifiles = []
                 for selector in intendedfor:
                     niifiles.extend([niifile.split(os.sep+subid+os.sep, 1)[1].replace('\\','/')                                                # The path needs to use forward slashes instead of backward slashes
                                      for niifile in sorted(glob.glob(os.path.join(bidsses, f'**{os.sep}*{selector}*.nii*'))) if selector])     # Search in all runs using a relative path
@@ -283,8 +283,8 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                             with open(jsonfile2, 'w') as json_fid:
                                 json.dump(data, json_fid, indent=4)
 
-            if not fieldmap['bids']['IntendedFor']:
-                LOGGER.warning(f"IntendedFor fieldmap value is empty for: {jsonfile}")
+            if not niifiles:
+                LOGGER.warning(f"The fieldmap {intendedfor} search did not return any result: The IntendedFor value in {jsonfile} is empty")
 
     # Collect personal data from the DICOM header
     dicomfile = bids.get_dicomfile(runfolder)
