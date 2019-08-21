@@ -1246,10 +1246,17 @@ class EditDialog(QDialog):
         super(EditDialog, self).reject()
 
     def update_run(self):
-        LOGGER.info(f'User has approved the edit')
 
         if self.target_modality=='fmap' and not self.target_run['bids']['IntendedFor']:
+            answer = QMessageBox.question(self, 'Edit BIDS mapping', "The 'IntendedFor' bids-label was not set, which can make that your fieldmap won't be used when "
+                                                                     "pre-processing / analyzing the associated imaging data (e.g. fMRI data). Do you want to go back "
+                                                                     "and set this label?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Yes)
+            if answer == QMessageBox.Yes:
+                return
+
             LOGGER.warning(f"'IntendedFor' fieldmap value was not set")
+
+        LOGGER.info(f'User has approved the edit')
 
         """Save the changes to the target_bidsmap and send it back to the main window: Finished! """
         self.target_bidsmap = bids.update_bidsmap(self.target_bidsmap,
