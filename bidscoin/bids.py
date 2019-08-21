@@ -965,8 +965,11 @@ def get_subid_sesid(dicomfile: str, subid: str='', sesid: str='', subprefix: str
         subid = dicompath.rsplit(os.sep + subprefix, 1)[1].split(os.sep)[0]
     else:
         subid = replace_bidsvalue(subid, dicomfile)
-    if (not sesid or sesid=='<<SourceFilePath>>') and os.sep + sesprefix in dicompath:
-        sesid = dicompath.rsplit(os.sep + sesprefix, 1)[1].split(os.sep)[0]
+    if not sesid or sesid=='<<SourceFilePath>>':
+        if os.sep + sesprefix in dicompath:
+            sesid = dicompath.rsplit(os.sep + sesprefix, 1)[1].split(os.sep)[0]
+        else:
+            sesid = ''
     else:
         sesid = replace_bidsvalue(sesid, dicomfile)
 
