@@ -739,8 +739,8 @@ class Ui_MainWindow(MainWindow):
         # Start with a fresh errorlog
         for filehandler in LOGGER.handlers:
             if filehandler.name=='errorhandler':
-                LOGGER.info(f'Reseting {filehandler.baseFilename}')
-                with open (filehandler.baseFilename, 'w'):
+                LOGGER.info(f'Resetting {filehandler.baseFilename}')
+                with open (filehandler.baseFilename, 'w'):      # TODO: This works but it is a hack that somehow prefixes a lot of whitespace
                     pass
 
     def save_bidsmap_to_file(self):
