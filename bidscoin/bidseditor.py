@@ -372,7 +372,7 @@ class Ui_MainWindow(MainWindow):
 
             # Only if cell was actually clicked, update
             if key and value!=oldvalue:
-                LOGGER.info(f"User has set {SOURCE}['{key}'] from '{oldvalue}' to '{value}'")
+                LOGGER.warning(f"Expert usage: User has set {SOURCE}['{key}'] from '{oldvalue}' to '{value}'")
                 self.output_bidsmap[SOURCE][key] = value
                 self.update_subses_and_samples(self.output_bidsmap)
 
@@ -735,6 +735,11 @@ class Ui_MainWindow(MainWindow):
                      self.template_bidsmap,
                      selected_tab_index=current_tab_index,
                      reload=True)
+
+        # Start with a fresh errorlog
+        for filehandler in LOGGER.handlers:
+            if filehandler.name=='errorhandler':
+                os.remove(filehandler.baseFilename)
 
     def save_bidsmap_to_file(self):
         """Check and save the BIDSmap to file. """

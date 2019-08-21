@@ -283,6 +283,9 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                             with open(jsonfile2, 'w') as json_fid:
                                 json.dump(data, json_fid, indent=4)
 
+            if not fieldmap['bids']['IntendedFor']:
+                LOGGER.warning(f"IntendedFor fieldmap value is empty for: {jsonfile}")
+
     # Collect personal data from the DICOM header
     dicomfile = bids.get_dicomfile(runfolder)
     personals['participant_id'] = subid
