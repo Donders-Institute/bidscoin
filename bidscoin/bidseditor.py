@@ -738,9 +738,10 @@ class Ui_MainWindow(MainWindow):
 
         # Start with a fresh errorlog
         for filehandler in LOGGER.handlers:
-            if filehandler.name=='errorhandler':
-                LOGGER.info(f'Resetting {filehandler.baseFilename}')
-                with open (filehandler.baseFilename, 'w'):      # TODO: This works but it is a hack that somehow prefixes a lot of whitespace
+            if filehandler.name=='errorhandler' and os.path.getsize(filehandler.name):
+                errorfile = filehandler.baseFilename
+                LOGGER.info(f'Resetting {errorfile}')
+                with open (errorfile, 'w'):         # TODO: This works but it is a hack that somehow prefixes a lot of whitespace to the first LOGGER call
                     pass
 
     def save_bidsmap_to_file(self):
