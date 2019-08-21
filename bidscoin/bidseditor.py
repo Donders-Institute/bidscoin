@@ -1355,6 +1355,12 @@ if __name__ == "__main__":
                                            the bids name will be replaced with `1` or increased to `2` if a file with runindex `1`
                                            already exists in that directory.
 
+                                         Fieldmaps: suffix
+                                           Select 'magnitude1' if you have 'magnitude1' and 'magnitude2' data in one series-folder
+                                           (this is what Siemens does) -- the bidscoiner will automatically pick up the 'magnitude2'
+                                           data during runtime. The same holds for 'phase1' and 'phase2' data. See the BIDS
+                                           specification for more details on fieldmap suffixes
+                                           
                                          Fieldmaps: IntendedFor
                                            You can use the `IntendedFor` field to indicate for which runs (DICOM series) a fieldmap
                                            was intended. The dynamic label of the `IntendedFor` field can be a list of string patterns
