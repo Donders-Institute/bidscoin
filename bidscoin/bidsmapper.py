@@ -2,7 +2,10 @@
 """
 Creates a bidsmap.yaml YAML file in the bidsfolder/code/bidscoin that maps the information
 from all raw source data to the BIDS labels. You can check and edit the bidsmap file with
-the bidseditor (but also with any text-editor) before passing it to the bidscoiner
+the bidseditor (but also with any text-editor) before passing it to the bidscoiner. See the
+bidseditor help for more information and useful tips for running the bidsmapper in interactive
+mode (which is the default).
+
 N.B.: Institute users may want to use a site-customized template bidsmap (see the
 --template option). The bidsmap_dccn template from the Donders Institute can serve as
 an example (or may even mostly work for other institutes out of the box).

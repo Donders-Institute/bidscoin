@@ -57,7 +57,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     # Create the BIDS session-folder and a scans.tsv file
     bidsses = os.path.join(bidsfolder, subid, sesid)         # NB: This gives a trailing '/' if ses=='', but that should be ok
     if os.path.isdir(bidsses):
-        LOGGER.warning(f"Existing BIDS output-directory found, potentially duplicate data will be added (with increased run-index). Make sure {bidsses} is cleaned-up before running the bidscoiner")
+        LOGGER.warning(f"Existing BIDS output-directory found, which may result in duplicate data (with increased run-index). Make sure {bidsses} was cleaned-up from old data before (re)running the bidscoiner")
     os.makedirs(bidsses, exist_ok=True)
     scans_tsv = os.path.join(bidsses, f'{subid}{bids.add_prefix("_",sesid)}_scans.tsv')
     if os.path.exists(scans_tsv):
@@ -95,12 +95,10 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         os.makedirs(bidsmodality, exist_ok=True)
 
         # Compose the BIDS filename using the bids labels and run-index
+        bidsname = bids.get_bidsname(subid, sesid, modality, run)
         runindex = run['bids']['run']
         if runindex.startswith('<<') and runindex.endswith('>>'):
-            bidsname = bids.get_bidsname(subid, sesid, modality, run, runindex[2:-2])
             bidsname = bids.increment_runindex(bidsmodality, bidsname)
-        else:
-            bidsname = bids.get_bidsname(subid, sesid, modality, run, runindex)
 
         # Check if file already exists
         if os.path.isfile(os.path.join(bidsmodality, bidsname + '.json')):
@@ -139,10 +137,10 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first(?) coil/echo image -> add it when we encounter a **_e2/_c2 file
                 if dcm2niisuffix in ('_c','_e') and int(index)==2 and basesuffix not in ['magnitude1', 'phase1']:    # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handled below)
                     filename_ce = basepath + ext2 + ext1                                                        # The file without the _c1/_e1 suffix
-                    if dcm2niisuffix=='_e' and bids.set_bidsvalue(basepath, 'echo'):
-                        newbasepath_ce = bids.set_bidsvalue(basepath, 'echo', '1')
+                    if dcm2niisuffix=='_e' and bids.get_bidsvalue(basepath, 'echo'):
+                        newbasepath_ce = bids.get_bidsvalue(basepath, 'echo', '1')
                     else:
-                        newbasepath_ce = bids.set_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper() + '1'.zfill(len(index)))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
+                        newbasepath_ce = bids.get_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper() + '1'.zfill(len(index)))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
                     newfilename_ce = newbasepath_ce + ext2 + ext1                                               # The file as it should have been
                     if os.path.isfile(filename_ce):
                         if filename_ce != newfilename_ce:
@@ -152,8 +150,8 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                             jsonfiles.append(newbasepath_ce + '.json')
 
                 # Patch the basepath with the dcm2niix suffix info (we can't rely on the basepath info here because Siemens can e.g. put multiple echos in one series / run-folder)
-                if dcm2niisuffix=='_e' and bids.set_bidsvalue(basepath, 'echo') and index:
-                    basepath = bids.set_bidsvalue(basepath, 'echo', str(int(index)))                            # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
+                if dcm2niisuffix=='_e' and bids.get_bidsvalue(basepath, 'echo') and index:
+                    basepath = bids.get_bidsvalue(basepath, 'echo', str(int(index)))                            # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
 
                 elif dcm2niisuffix=='_e' and basesuffix in ('magnitude1','magnitude2') and index:               # i.e. modality == 'fmap'
                     basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_magnitude1_e[index] -> *_magnitude[index]
@@ -170,13 +168,12 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                     basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_phase1_e[index]_ph -> *_phase[index]
 
                 else:
-                    basepath = bids.set_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper() + index)             # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
+                    basepath = bids.get_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper() + index)             # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
 
                 # Save the file with a new name
+                newbidsname = os.path.basename(basepath)
                 if runindex.startswith('<<') and runindex.endswith('>>'):
-                    newbidsname = bids.increment_runindex(bidsmodality, os.path.basename(basepath), ext2 + ext1)  # Update the runindex now that the acq-label has changed
-                else:
-                    newbidsname = os.path.basename(basepath)
+                    newbidsname = bids.increment_runindex(bidsmodality, newbidsname, ext2 + ext1)               # Update the runindex now that the acq-label has changed
                 newfilename = os.path.join(bidsmodality, newbidsname + ext2 + ext1)
                 LOGGER.info(f'Found dcm2niix {dcm2niisuffix} suffix, renaming\n{filename} ->\n{newfilename}')
                 os.rename(filename, newfilename)
@@ -248,13 +245,15 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     # Search for the IntendedFor images and add them to the json-files. This has been postponed untill all modalities have been processed (i.e. so that all target images are indeed on disk)
     if bidsmap['DICOM']['fmap'] is not None:
         for fieldmap in bidsmap['DICOM']['fmap']:
-            niifiles = []
-            if fieldmap['bids']['IntendedFor']:
+            niifiles    = []
+            intendedfor = fieldmap['bids']['IntendedFor']
+            bidsname    = bids.get_bidsname(subid, sesid, 'fmap', fieldmap)
+            if not intendedfor:
+                intendedfor = []
+
+            else:
 
                 # Search for the imaging files that match the IntendedFor search criteria
-                bidsname    = bids.get_bidsname(subid, sesid, 'fmap', fieldmap, '1')
-                acqlabel    = bids.set_bidsvalue(bidsname, 'acq')
-                intendedfor = fieldmap['bids']['IntendedFor']
                 if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
                     intendedfor = intendedfor[2:-2].split('><')
                 elif not isinstance(intendedfor, list):
@@ -264,6 +263,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                                      for niifile in sorted(glob.glob(os.path.join(bidsses, f'**{os.sep}*{selector}*.nii*'))) if selector])     # Search in all runs using a relative path
 
                 # Save the IntendedFor data in the json-files (account for multiple runs and dcm2niix suffixes inserted into the acquisition label)
+                acqlabel = bids.get_bidsvalue(bidsname, 'acq')
                 for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_', '_run-[0-9]*_') + '.json')) + \
                                 glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_', '_run-[0-9]*_').replace(acqlabel, acqlabel+'[CE][0-9]*') + '.json')):
                     with open(jsonfile, 'r') as json_fid:
@@ -273,8 +273,8 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                     with open(jsonfile, 'w') as json_fid:
                         json.dump(data, json_fid, indent=4)
 
-                # Catch magnitude2 files produced by dcm2niix (i.e. magnitude1 & magnitude2 both in the same runfolder)
-                if jsonfile.endswith('magnitude1.json'):
+                # Catch magnitude2 and phase2 files produced by dcm2niix (i.e. magnitude1 & magnitude2 both in the same runfolder)
+                if jsonfile.endswith('magnitude1.json') or jsonfile.endswith('phase1.json'):
                     jsonfile2 = jsonfile.rsplit('1.json',1)[0] + '2.json'
                     if os.path.isfile(jsonfile2):
                         with open(jsonfile2, 'r') as json_fid:
@@ -286,7 +286,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                                 json.dump(data, json_fid, indent=4)
 
             if not niifiles:
-                LOGGER.warning(f"The fieldmap {intendedfor} search did not return any result: The IntendedFor value in {jsonfile} is empty")
+                LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {os.path.join(bidsses,'fmap',bidsname)}.json: the search for {intendedfor} from the bidsmap gave no results")
 
     # Collect personal data from the DICOM header
     dicomfile = bids.get_dicomfile(runfolder)
