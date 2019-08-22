@@ -1056,7 +1056,7 @@ class EditDialog(QDialog):
             if key and value!=oldvalue:
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
                 if not (value.startswith('<<') and value.endswith('>>')):
-                    value = bids.cleanup_value(bids.replace_bidsvalue(value, self.target_run['provenance']))
+                    value = bids.cleanup_value(bids.get_dynamic_value(value, self.target_run['provenance']))
                 if key == 'run':
                     LOGGER.warning(f"Expert usage: User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 else:

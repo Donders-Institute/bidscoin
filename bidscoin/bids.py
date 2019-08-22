@@ -677,7 +677,7 @@ def get_run(bidsmap: dict, source: str, modality, suffix_idx, dicomfile: str='')
 
             for bidskey, bidsvalue in run['bids'].items():
                 if dicomfile:
-                    run_['bids'][bidskey] = replace_bidsvalue(bidsvalue, dicomfile)
+                    run_['bids'][bidskey] = get_dynamic_value(bidsvalue, dicomfile)
                 else:
                     run_['bids'][bidskey] = bidsvalue
 
@@ -891,7 +891,7 @@ def exist_run(bidsmap: dict, source: str, modality: str, run_item: dict, matchbi
     return False
 
 
-def get_matching_dicomrun(dicomfile: str, bidsmap: dict, modalities: tuple= bidsmodalities + (ignoremodality, unknownmodality)) -> tuple:
+def get_matching_run(dicomfile: str, bidsmap: dict, modalities: tuple = bidsmodalities + (ignoremodality, unknownmodality)) -> tuple:
     """
     Find the first run in the bidsmap with dicom attributes that match with the dicom file. Then update the (dynamic) bids values (values are cleaned-up to be BIDS-valid)
 
@@ -929,7 +929,7 @@ def get_matching_dicomrun(dicomfile: str, bidsmap: dict, modalities: tuple= bids
             for bidskey, bidsvalue in run['bids'].items():
 
                 # Replace the dynamic bids values
-                run_['bids'][bidskey] = replace_bidsvalue(bidsvalue, dicomfile)
+                run_['bids'][bidskey] = get_dynamic_value(bidsvalue, dicomfile)
 
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 run_ = strip_suffix(run_)
@@ -964,14 +964,14 @@ def get_subid_sesid(dicomfile: str, subid: str='', sesid: str='', subprefix: str
     if not subid or subid=='<<SourceFilePath>>':
         subid = dicompath.rsplit(os.sep + subprefix, 1)[1].split(os.sep)[0]
     else:
-        subid = replace_bidsvalue(subid, dicomfile)
+        subid = get_dynamic_value(subid, dicomfile)
     if not sesid or sesid=='<<SourceFilePath>>':
         if os.sep + sesprefix in dicompath:
             sesid = dicompath.rsplit(os.sep + sesprefix, 1)[1].split(os.sep)[0]
         else:
             sesid = ''
     else:
-        sesid = replace_bidsvalue(sesid, dicomfile)
+        sesid = get_dynamic_value(sesid, dicomfile)
 
     # Add sub- and ses- prefixes if they are not there
     subid = 'sub-' + cleanup_value(re.sub(f'^{subprefix}', '', subid))
@@ -1005,7 +1005,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
         if bidslabel not in run['bids']:
             run['bids'][bidslabel] = None
         else:
-            run['bids'][bidslabel] = cleanup_value(replace_bidsvalue(run['bids'][bidslabel], run['provenance']))
+            run['bids'][bidslabel] = cleanup_value(get_dynamic_value(run['bids'][bidslabel], run['provenance']))
 
     # Use the clean-up runindex
     if not runindex:
@@ -1111,7 +1111,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
     return bidsname
 
 
-def replace_bidsvalue(bidsvalue: str, sourcefile: str) -> str:
+def get_dynamic_value(bidsvalue: str, sourcefile: str) -> str:
     """
     Replaces (dynamic) bidsvalues with (DICOM) run attributes when they start with '<' and end with '>',
     but not with '<<' and '>>'

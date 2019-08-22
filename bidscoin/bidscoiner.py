@@ -78,7 +78,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         # Get the cleaned-up bids labels from a dicom-file and bidsmap
         dicomfile = bids.get_dicomfile(runfolder)
         if not dicomfile: continue
-        run, modality, index = bids.get_matching_dicomrun(dicomfile, bidsmap)
+        run, modality, index = bids.get_matching_run(dicomfile, bidsmap)
 
         # Check if we should ignore this run
         if modality == bids.ignoremodality:
@@ -245,25 +245,25 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     # Search for the IntendedFor images and add them to the json-files. This has been postponed untill all modalities have been processed (i.e. so that all target images are indeed on disk)
     if bidsmap['DICOM']['fmap'] is not None:
         for fieldmap in bidsmap['DICOM']['fmap']:
+            bidsname    = bids.get_bidsname(subid, sesid, 'fmap', fieldmap)
             niifiles    = []
             intendedfor = fieldmap['bids']['IntendedFor']
-            bidsname    = bids.get_bidsname(subid, sesid, 'fmap', fieldmap)
             if not intendedfor:
                 intendedfor = []
 
             else:
-
                 # Search for the imaging files that match the IntendedFor search criteria
                 if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
                     intendedfor = intendedfor[2:-2].split('><')
                 elif not isinstance(intendedfor, list):
                     intendedfor = [intendedfor]
                 for selector in intendedfor:
-                    niifiles.extend([niifile.split(os.sep+subid+os.sep, 1)[1].replace('\\','/')                                                # The path needs to use forward slashes instead of backward slashes
-                                     for niifile in sorted(glob.glob(os.path.join(bidsses, f'**{os.sep}*{selector}*.nii*'))) if selector])     # Search in all runs using a relative path
+                    niifiles.extend([niifile.split(os.sep+subid+os.sep, 1)[1].replace('\\','/')                                                 # The path needs to use forward slashes instead of backward slashes
+                                     for niifile in sorted(glob.glob(os.path.join(bidsses, f'**{os.sep}*{selector}*.nii*'))) if selector])      # Search in all runs using a relative path
 
                 # Save the IntendedFor data in the json-files (account for multiple runs and dcm2niix suffixes inserted into the acquisition label)
                 acqlabel = bids.get_bidsvalue(bidsname, 'acq')
+                jsonfile = ''                                                                                                                   # Catch runs where the fieldmap was not acquired
                 for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_', '_run-[0-9]*_') + '.json')) + \
                                 glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_', '_run-[0-9]*_').replace(acqlabel, acqlabel+'[CE][0-9]*') + '.json')):
                     with open(jsonfile, 'r') as json_fid:

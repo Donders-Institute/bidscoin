@@ -49,11 +49,11 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
         return bidsmap_new
 
     # See if we can find a matching run in the old bidsmap
-    run, modality, index = bids.get_matching_dicomrun(dicomfile, bidsmap_old)
+    run, modality, index = bids.get_matching_run(dicomfile, bidsmap_old)
 
     # If not, see if we can find a matching run in the template
     if index is None:
-        run, modality, _ = bids.get_matching_dicomrun(dicomfile, template)
+        run, modality, _ = bids.get_matching_run(dicomfile, template)
 
     # See if we have collected the run in our new bidsmap
     if not bids.exist_run(bidsmap_new, 'DICOM', '', run):
