@@ -262,7 +262,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                                      for niifile in sorted(glob.glob(os.path.join(bidsses, f'**{os.sep}*{selector}*.nii*'))) if selector])      # Search in all runs using a relative path
 
                 # Save the IntendedFor data in the json-files (account for multiple runs and dcm2niix suffixes inserted into the acquisition label)
-                jsonfile = ''                                                                                                                   # Catch runs where the fieldmap was not acquired
+                jsonfile = ''                                                                       # Catch runs where the fieldmap was not acquired
                 acqlabel = bids.get_bidsvalue(bidsname, 'acq')
                 for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_', '_run-[0-9]*_') + '.json')) + \
                                 glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_', '_run-[0-9]*_').replace(acqlabel, acqlabel+'[CE][0-9]*') + '.json')):
