@@ -219,11 +219,15 @@ def test_plugins(plugin: str='') -> bool:
                     was a plug-in error, None if this function has an implementation error
     """
 
-    logger.info("Testing: '{plugin}'")
+    logger.info(f"Testing: '{plugin}' plugin")
 
     module = import_plugin(plugin)
+    if inspect.ismodule(module):
+        logger.info(f"Result:\n{module.__doc__}")
+        return True
 
-    return inspect.ismodule(module)
+    else:
+        return False
 
 
 def lsdirs(folder: str, wildcard: str='*'):
