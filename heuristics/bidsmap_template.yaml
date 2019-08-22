@@ -44,9 +44,11 @@ DICOM:
   - provenance: ~
     attributes: &anatattributes
       Modality: ~
+      ProtocolName: ~
       SeriesDescription: ~
-      SequenceVariant: ~
+      ImageType: ~
       SequenceName: ~
+      SequenceVariant: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -54,8 +56,6 @@ DICOM:
       EchoNumbers: ~
       EchoTime: ~
       RepetitionTime: ~
-      ImageType: ~
-      ProtocolName: ~
       PhaseEncodingDirection: ~
     bids: &anatbids
       acq: <SeriesDescription>
@@ -144,9 +144,11 @@ DICOM:
   - provenance: ~
     attributes: &funcattributes
       Modality: ~
+      ProtocolName: ~
       SeriesDescription: ~
-      SequenceVariant: ~
+      ImageType: ~
       SequenceName: ~
+      SequenceVariant: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -154,8 +156,6 @@ DICOM:
       EchoNumbers: ~
       EchoTime: ~
       RepetitionTime: ~
-      ImageType: ~
-      ProtocolName: ~
       PhaseEncodingDirection: ~
     bids: &funcbids
       task: <SeriesDescription>
@@ -189,9 +189,11 @@ DICOM:
   - provenance: ~
     attributes: &dwiattributes
       Modality: ~
+      ProtocolName: ~
       SeriesDescription: ~
-      SequenceVariant: ~
+      ImageType: ~
       SequenceName: ~
+      SequenceVariant: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -199,8 +201,6 @@ DICOM:
       EchoNumbers: ~
       EchoTime: ~
       RepetitionTime: ~
-      ImageType: ~
-      ProtocolName: ~
       PhaseEncodingDirection: ~
     bids: &dwibids
       acq: <SeriesDescription>
@@ -216,9 +216,11 @@ DICOM:
   - provenance: ~
     attributes: &fmapattributes
       Modality: ~
+      ProtocolName: ~
       SeriesDescription: ~
-      SequenceVariant: ~
+      ImageType: ~
       SequenceName: ~
+      SequenceVariant: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -226,8 +228,6 @@ DICOM:
       EchoNumbers: ~
       EchoTime: ~
       RepetitionTime: ~
-      ImageType: ~
-      ProtocolName: ~
       PhaseEncodingDirection: ~
     bids: &fmapbids
       acq: <SeriesDescription>
@@ -275,9 +275,11 @@ DICOM:
   - provenance: ~
     attributes: &behattributes
       Modality: ~
+      ProtocolName: ~
       SeriesDescription: ~
-      SequenceVariant: ~
+      ImageType: ~
       SequenceName: ~
+      SequenceVariant: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -285,8 +287,6 @@ DICOM:
       EchoNumbers: ~
       EchoTime: ~
       RepetitionTime: ~
-      ImageType: ~
-      ProtocolName: ~
       PhaseEncodingDirection: ~
     bids: &behbids
       task: <SeriesDescription>
@@ -313,11 +313,11 @@ DICOM:
       Modality: PT
       SeriesDescription: ~
       Radiopharmaceutical: ~
+      ImageType: ~
       SliceThickness: ~
       PixelSpacing: ~
       Rows: ~
       Columns: ~
-      ImageType: ~
     bids: &petbids
       task: <SeriesDescription>
       acq: <Radiopharmaceutical>
@@ -329,9 +329,11 @@ DICOM:
   - provenance: ~
     attributes:
       Modality: ~
+      ProtocolName: ~
       SeriesDescription: ~
-      SequenceVariant: ~
+      ImageType: ~
       SequenceName: ~
+      SequenceVariant: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -339,8 +341,6 @@ DICOM:
       EchoNumbers: ~
       EchoTime: ~
       RepetitionTime: ~
-      ImageType: ~
-      ProtocolName: ~
       PhaseEncodingDirection: ~
     bids:
       acq: <SeriesDescription>
@@ -357,9 +357,11 @@ DICOM:
   - provenance: ~
     attributes:
       Modality: ~
+      ProtocolName: ~
       SeriesDescription: ~
-      SequenceVariant: ~
+      ImageType: ~
       SequenceName: ~
+      SequenceVariant: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -367,8 +369,6 @@ DICOM:
       EchoNumbers: ~
       EchoTime: ~
       RepetitionTime: ~
-      ImageType: ~
-      ProtocolName: ~
       PhaseEncodingDirection: ~
     bids:
       acq: <SeriesDescription>

@@ -44,9 +44,11 @@ DICOM:
   anat:       # ----------------------- All anatomical series --------------------
   - attributes: &anatattributes   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = T1w
       Modality: ~
+      ProtocolName: ~
       SeriesDescription: ~
-      SequenceVariant: ~
+      ImageType: ~
       SequenceName: ~
+      SequenceVariant: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -54,8 +56,6 @@ DICOM:
       EchoNumbers: ~
       EchoTime: ~
       RepetitionTime: ~
-      ImageType: ~
-      ProtocolName: ~
       PhaseEncodingDirection: ~
     bids: &anatbids
       acq: <SeriesDescription>
@@ -160,9 +160,11 @@ DICOM:
   func:       # ----------------------- All functional series --------------------
   - attributes: &funcattributes   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = bold
       Modality: ~
+      ProtocolName: ~
       SeriesDescription: ~
-      SequenceVariant: ~
+      ImageType: ~
       SequenceName: ~
+      SequenceVariant: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -170,8 +172,6 @@ DICOM:
       EchoNumbers: ~
       EchoTime: ~
       RepetitionTime: ~
-      ImageType: ~
-      ProtocolName: ~
       PhaseEncodingDirection: ~
     bids: &funcbids
       task: <SeriesDescription>
@@ -215,9 +215,11 @@ DICOM:
   dwi:        # ----------------------- All diffusion series ---------------------
   - attributes:   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = dwi
       Modality: ~
+      ProtocolName: ~
       SeriesDescription: ~
-      SequenceVariant: ~
+      ImageType: ~
       SequenceName: ~
+      SequenceVariant: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -225,8 +227,6 @@ DICOM:
       EchoNumbers: ~
       EchoTime: ~
       RepetitionTime: ~
-      ImageType: ~
-      ProtocolName: ~
       PhaseEncodingDirection: ~
     bids: &dwibids
       acq: <SeriesDescription>
@@ -235,9 +235,11 @@ DICOM:
     provenance: ~
   - attributes: &dwiattributes_sbref      # First match the SBREF dwi series (the normal dwi series don't have SBREF in the seriesdescription)
       Modality: ~
+      ProtocolName: ['*dwi*', '*DWI*', '*diffusion*', '*dti*', '*DTI*']
       SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
-      SequenceVariant: ~
+      ImageType: ~
       SequenceName: ~
+      SequenceVariant: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -245,8 +247,6 @@ DICOM:
       EchoNumbers: ~
       EchoTime: ~
       RepetitionTime: ~
-      ImageType: ~
-      ProtocolName: ['*dwi*', '*DWI*', '*diffusion*', '*dti*', '*DTI*']
       PhaseEncodingDirection: ~
     bids:
       <<: *dwibids
@@ -278,9 +278,11 @@ DICOM:
   fmap:       # ----------------------- All fieldmap series ----------------------
   - attributes: &fmapattributes     # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = magnitude
       Modality: ~
+      ProtocolName: ~
       SeriesDescription: ~
-      SequenceVariant: ~
+      ImageType: ~
       SequenceName: ~
+      SequenceVariant: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -288,8 +290,6 @@ DICOM:
       EchoNumbers: ~
       EchoTime: ~
       RepetitionTime: ~
-      ImageType: ~
-      ProtocolName: ~
       PhaseEncodingDirection: ~
     bids: &fmapbids
       acq: <SeriesDescription>
@@ -311,7 +311,7 @@ DICOM:
       <<: *fmapattributes
       EchoNumbers: 1
       SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*']
-      ImageType: ['ORIGINAL', 'PRIMARY', 'M', 'ND']
+      ImageType: ['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM']
     bids:
       <<: *fmapbids
       suffix: magnitude1
@@ -320,7 +320,7 @@ DICOM:
       <<: *fmapattributes
       EchoNumbers: 2
       SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*']
-      ImageType: ['ORIGINAL', 'PRIMARY', 'M', 'ND']
+      ImageType: ['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM']
     bids:
       <<: *fmapbids
       suffix: magnitude2
@@ -357,7 +357,9 @@ DICOM:
   beh:        # ----------------------- All behavioural data ---------------------
   - attributes: &behattributes
       Modality: ~
+      ProtocolName: ~
       SeriesDescription: ~
+      ImageType: ~
       SequenceVariant: ~
       SequenceName: ~
       ScanningSequence: ~
@@ -367,8 +369,6 @@ DICOM:
       EchoNumbers: ~
       EchoTime: ~
       RepetitionTime: ~
-      ImageType: ~
-      ProtocolName: ~
       PhaseEncodingDirection: ~
     bids: &behbids
       task: <SeriesDescription>
@@ -394,11 +394,11 @@ DICOM:
       Modality: PT
       SeriesDescription: ~
       Radiopharmaceutical: ~
+      ImageType: ~
       SliceThickness: ~
       PixelSpacing: ~
       Rows: ~
       Columns: ~
-      ImageType: ~
     bids: &petbids
       task: <SeriesDescription>
       acq: <Radiopharmaceutical>
@@ -410,9 +410,11 @@ DICOM:
   extra_data: # ----------------------- All extra data ---------------------------
   - attributes:
       Modality: ~
+      ProtocolName: ~
       SeriesDescription: ~
-      SequenceVariant: ~
+      ImageType: ~
       SequenceName: ~
+      SequenceVariant: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -420,8 +422,6 @@ DICOM:
       EchoNumbers: ~
       EchoTime: ~
       RepetitionTime: ~
-      ImageType: ~
-      ProtocolName: ~
       PhaseEncodingDirection: ~
     bids:
       acq: <SeriesDescription>
@@ -439,9 +439,11 @@ DICOM:
   - provenance: ~
     attributes: &leaveout_attributes
       Modality: ~
-      SeriesDescription: ['*Scout*', '*scout*', '*localizer*']
-      SequenceVariant: ~
+      ProtocolName: ['*Scout*', '*scout*', '*localizer*']
+      SeriesDescription: ~
+      ImageType: ~
       SequenceName: ~
+      SequenceVariant: ~
       ScanningSequence: ~
       MRAcquisitionType: ~
       SliceThickness: ~
@@ -449,8 +451,6 @@ DICOM:
       EchoNumbers: ~
       EchoTime: ~
       RepetitionTime: ~
-      ImageType: ~
-      ProtocolName: ~
       PhaseEncodingDirection: ~
     bids: &leaveout_bids
       acq: <SeriesDescription>
