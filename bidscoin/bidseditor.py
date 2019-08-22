@@ -613,8 +613,8 @@ class Ui_MainWindow(MainWindow):
                 initial_file_index = self.initial_file_index[provenance]
                 bidsname = bids.get_bidsname(output_bidsmap[SOURCE]['subject'], output_bidsmap[SOURCE]['session'],
                                               modality, run, '', self.subprefix, self.sesprefix)
-                subid = bids.set_bidsvalue(bidsname, 'sub')
-                sesid = bids.set_bidsvalue(bidsname, 'ses')
+                subid = bids.get_bidsvalue(bidsname, 'sub')
+                sesid = bids.get_bidsvalue(bidsname, 'ses')
                 session = os.path.join(self.bidsfolder, f'sub-{subid}', f'ses-{sesid}')
 
                 samples_table.setItem(idx, 0, QTableWidgetItem(f"{initial_file_index+1:03d}"))
