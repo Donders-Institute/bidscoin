@@ -785,6 +785,7 @@ class Ui_MainWindow(MainWindow):
             # Find the source index of the run in the list of runs (using the provenance) and open the edit window
             for run in self.output_bidsmap[SOURCE][modality]:
                 if run['provenance']==provenance:
+                    LOGGER.info(f'User is editing {provenance}')
                     self.dialog_edit = EditDialog(provenance, modality, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
                     self.has_edit_dialog_open = True
                     self.dialog_edit.done_edit.connect(self.update_subses_and_samples)
