@@ -227,6 +227,22 @@ DICOM:
       <<: *dwibids
       suffix: dwi
     provenance: ~
+  - attributes:
+      <<: *dwiattributes
+      ImageType: '*DIFFUSION*'
+      ProtocolName: ~
+    bids:
+      <<: *dwibids
+    provenance: ~
+  - attributes:
+      <<: *dwiattributes
+      SeriesDescription: ~
+      ImageType: '*DIFFUSION*'
+      ProtocolName: ~
+    bids:
+      <<: *dwibids
+      suffix: dwi
+    provenance: ~
 
   fmap:       # ----------------------- All fieldmap series ----------------------
   - attributes: &fmapattributes
