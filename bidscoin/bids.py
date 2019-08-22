@@ -956,7 +956,7 @@ def get_subid_sesid(dicomfile: str, subid: str='', sesid: str='', subprefix: str
     :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01'). Can be left empty
     :param subprefix:   The optional subprefix (e.g. 'sub-'). Used to parse the sub-value from the provenance as default subid
     :param sesprefix:   The optional sesprefix (e.g. 'ses-'). If it is found in the provenance then a default sesid will be set
-    :return:            Updated (subid, sesid) tuple
+    :return:            Updated (subid, sesid) tuple, including the sub/sesprefix
     """
 
     # Add default value for subid and sesid (e.g. for the bidseditor)
@@ -1007,7 +1007,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
         else:
             run['bids'][bidslabel] = cleanup_value(replace_bidsvalue(run['bids'][bidslabel], run['provenance']))
 
-    # Clean-up the runindex
+    # Use the clean-up runindex
     if not runindex:
         runindex = run['bids']['run']
 
@@ -1136,7 +1136,7 @@ def replace_bidsvalue(bidsvalue: str, sourcefile: str) -> str:
     return bidsvalue
 
 
-def set_bidsvalue(bidsname: str, bidskey: str, newvalue: str= '') -> str:
+def get_bidsvalue(bidsname: str, bidskey: str, newvalue: str= '') -> str:
     """
     Sets the bidslabel, i.e. '*_bidskey-*_' is replaced with '*_bidskey-bidsvalue_'. If the key is not in the bidsname
     then the newvalue is appended to the acquisition label. If newvalue is empty (= default), then the parsed existing
@@ -1187,18 +1187,10 @@ def increment_runindex(bidsfolder: str, bidsname: str, ext: str='.*') -> str:
     :return:            The bidsname with the incremented runindex
     """
 
-    if not '_run-' in bidsname:
-        return bidsname
-
     while glob.glob(os.path.join(bidsfolder, bidsname + ext)):
 
-        basename, runindex = bidsname.rsplit('_run-', 1)
-        if '_' in runindex:
-            runindex, suffix = runindex.split('_',1)
-            suffix = '_' + suffix
-        else:
-            suffix = ''
-
-        bidsname = f'{basename}_run-{int(runindex) + 1}{suffix}'
+        runindex = get_bidsvalue(bidsname, 'run')
+        if runindex:
+            bidsname = get_bidsvalue(bidsname, 'run', int(runindex) + 1)
 
     return bidsname
