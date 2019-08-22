@@ -42,7 +42,7 @@ DICOM:
   subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
   session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
   anat:       # ----------------------- All anatomical series --------------------
-  - attributes: &anatattributes
+  - attributes: &anatattributes   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = T1w
       Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
@@ -158,7 +158,7 @@ DICOM:
     provenance: ~
 
   func:       # ----------------------- All functional series --------------------
-  - attributes: &funcattributes
+  - attributes: &funcattributes   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = bold
       Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
@@ -181,7 +181,7 @@ DICOM:
       echo: <EchoNumbers>
       suffix: bold
     provenance: ~
-  - attributes:
+  - attributes:                   # First match the SBREF bold series (the normal bold series don't have SBREF in the seriesdescription)
       <<: *funcattributes
       ProtocolName: ['*fmri*', '*fMRI*', '*task*', '*Task*']
       SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
@@ -189,7 +189,7 @@ DICOM:
       <<: *funcbids
       suffix: sbref
     provenance: ~
-  - attributes:
+  - attributes:                   # Then catch the bold series itself
       <<: *funcattributes
       ProtocolName: ['*fmri*', '*fMRI*', '*task*', '*Task*']
     bids:
@@ -213,7 +213,27 @@ DICOM:
     provenance: ~
 
   dwi:        # ----------------------- All diffusion series ---------------------
-  - attributes: &dwiattributes
+  - attributes:   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = dwi
+      Modality: ~
+      SeriesDescription: ~
+      SequenceVariant: ~
+      SequenceName: ~
+      ScanningSequence: ~
+      MRAcquisitionType: ~
+      SliceThickness: ~
+      FlipAngle: ~
+      EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
+      ImageType: ~
+      ProtocolName: ~
+      PhaseEncodingDirection: ~
+    bids: &dwibids
+      acq: <SeriesDescription>
+      run: <<1>>
+      suffix: dwi
+    provenance: ~
+  - attributes: &dwiattributes_sbref      # First match the SBREF dwi series (the normal dwi series don't have SBREF in the seriesdescription)
       Modality: ~
       SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
       SequenceVariant: ~
@@ -228,37 +248,35 @@ DICOM:
       ImageType: ~
       ProtocolName: ['*dwi*', '*DWI*', '*diffusion*', '*dti*', '*DTI*']
       PhaseEncodingDirection: ~
-    bids: &dwibids
-      acq: <SeriesDescription>
-      run: <<1>>
+    bids:
+      <<: *dwibids
       suffix: sbref
     provenance: ~
-  - attributes:
-      <<: *dwiattributes
-      SeriesDescription: ~
+  - attributes:                           # Then catch the normal DWI series
+      <<: *dwiattributes_sbref
+      SeriesDescription: ~                # Remove the SBREF filter
     bids:
       <<: *dwibids
-      suffix: dwi
     provenance: ~
-  - attributes:
-      <<: *dwiattributes
+  - attributes:                           # First match the SBREF dwi series (the normal dwi series don't have SBREF in the seriesdescription)
+      <<: *dwiattributes_sbref
       ImageType: '*DIFFUSION*'
       ProtocolName: ~
     bids:
       <<: *dwibids
+      suffix: sbref
     provenance: ~
-  - attributes:
-      <<: *dwiattributes
-      SeriesDescription: ~
+  - attributes:                           # Then catch the normal DWI series
+      <<: *dwiattributes_sbref
+      SeriesDescription: ~                # Remove the SBREF filter
       ImageType: '*DIFFUSION*'
       ProtocolName: ~
     bids:
       <<: *dwibids
-      suffix: dwi
     provenance: ~
 
   fmap:       # ----------------------- All fieldmap series ----------------------
-  - attributes: &fmapattributes
+  - attributes: &fmapattributes     # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = magnitude
       Modality: ~
       SeriesDescription: ~
       SequenceVariant: ~
@@ -293,6 +311,7 @@ DICOM:
       <<: *fmapattributes
       EchoNumbers: 1
       SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*']
+      ImageType: ['ORIGINAL', 'PRIMARY', 'M', 'ND']
     bids:
       <<: *fmapbids
       suffix: magnitude1
@@ -301,11 +320,16 @@ DICOM:
       <<: *fmapattributes
       EchoNumbers: 2
       SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*']
+      ImageType: ['ORIGINAL', 'PRIMARY', 'M', 'ND']
     bids:
       <<: *fmapbids
       suffix: magnitude2
     provenance: ~
-  - attributes: *fmapattributes
+  - attributes:
+      <<: *fmapattributes
+      EchoNumbers: 1
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*']
+      ImageType: ['ORIGINAL', 'PRIMARY', 'P', 'ND']
     bids:
       <<: *fmapbids
       suffix: phase1
