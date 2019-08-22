@@ -400,7 +400,7 @@ DICOM:
 
   leave_out:  # ----------------------- Data that will be left out ---------------
   - provenance: ~
-    attributes:
+    attributes: &leaveout_attributes
       Modality: ~
       SeriesDescription: ['*Scout*', '*scout*', '*localizer*']
       SequenceVariant: ~
@@ -415,7 +415,7 @@ DICOM:
       ImageType: ~
       ProtocolName: ~
       PhaseEncodingDirection: ~
-    bids:
+    bids: &leaveout_bids
       acq: <SeriesDescription>
       rec: ~
       ce: ~
@@ -425,6 +425,14 @@ DICOM:
       run: <<1>>
       suffix: ~
       mod: ~
+  - provenance: ~
+    attributes:
+      <<: *leaveout_attributes
+      SeriesDescription: ~
+      ImageType: '*DERIVED*'
+    bids:
+      <<: *leaveout_bids
+      rec: DERIVED
 
 
 PAR: ~
