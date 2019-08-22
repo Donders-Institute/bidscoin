@@ -183,7 +183,7 @@ DICOM:
     provenance: ~
   - attributes:                   # First match the SBREF bold series (the normal bold series don't have SBREF in the seriesdescription)
       <<: *funcattributes
-      ProtocolName: ['*fmri*', '*fMRI*', '*task*', '*Task*']
+      ProtocolName: ['*fmri*', '*fMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
       SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
     bids:
       <<: *funcbids
@@ -191,7 +191,7 @@ DICOM:
     provenance: ~
   - attributes:                   # Then catch the bold series itself
       <<: *funcattributes
-      ProtocolName: ['*fmri*', '*fMRI*', '*task*', '*Task*']
+      ProtocolName: ['*fmri*', '*fMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
     bids:
       <<: *funcbids
       suffix: bold
