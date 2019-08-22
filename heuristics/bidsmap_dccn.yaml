@@ -62,7 +62,7 @@ DICOM:
       rec: ~
       run: <<1>>
       mod: ~
-      suffix: T2w
+      suffix: T1w
       ce: ~
     provenance: ~
   - attributes:
@@ -94,6 +94,14 @@ DICOM:
     bids:
       <<: *anatbids
       suffix: T2star
+    provenance: ~
+  - attributes:
+      <<: *anatattributes
+      SeriesDescription: ['*t2*', '*T2*']
+      SequenceVariant: "['SK', 'SP']"
+    bids:
+      <<: *anatbids
+      suffix: T2w
     provenance: ~
   - attributes:
       <<: *anatattributes
@@ -171,7 +179,7 @@ DICOM:
       rec: ~
       run: <<1>>
       echo: <EchoNumbers>
-      suffix: events
+      suffix: bold
     provenance: ~
   - attributes:
       <<: *funcattributes
@@ -187,6 +195,11 @@ DICOM:
     bids:
       <<: *funcbids
       suffix: bold
+    provenance: ~
+  - attributes: *funcattributes
+    bids:
+      <<: *funcbids
+      suffix: events
     provenance: ~
   - attributes: *funcattributes
     bids:
