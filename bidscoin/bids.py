@@ -223,7 +223,8 @@ def test_plugins(plugin: str='') -> bool:
 
     module = import_plugin(plugin)
     if inspect.ismodule(module):
-        logger.info(f"Result:\n{module.__doc__}")
+        methods = [method for method in dir(module) if not method.startswith('_')]
+        logger.info(f"Result:\n{module.__doc__}\n{plugin} attributes and methods:\n{methods}\n")
         return True
 
     else:
