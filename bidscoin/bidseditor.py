@@ -224,11 +224,24 @@ class Ui_MainWindow(MainWindow):
         self.MainWindow.setCentralWidget(centralwidget)
 
         if not reload:
-            self.MainWindow.setObjectName("MainWindow")
+            self.setObjectName("MainWindow")
 
             self.set_menu_and_status_bar()
 
-            self.center()
+            # Set the main window's size and restore the samples_table stretching
+            self.MainWindow.adjustSize()
+            header = self.samples_table.horizontalHeader()
+            header.setSectionResizeMode(1, QHeaderView.Stretch)
+
+            # Center the main window to the center point of screen
+            cp = QDesktopWidget().availableGeometry().center()
+
+            # Move rectangle's center point to screen's center point
+            qr = self.MainWindow.frameGeometry()
+            qr.moveCenter(cp)
+
+            # Top left of rectangle becomes top left of window centering it
+            self.MainWindow.move(qr.topLeft())
 
     def set_menu_and_status_bar(self):
         # Set the menus
@@ -289,22 +302,6 @@ class Ui_MainWindow(MainWindow):
         statusbar.setObjectName("statusbar")
         statusbar.setStatusTip("Statusbar")
         self.MainWindow.setStatusBar(statusbar)
-
-    def center(self):
-        """Center the main window. """
-
-        self.MainWindow.adjustSize()
-
-        qr = self.MainWindow.frameGeometry()
-
-        # Center point of screen
-        cp = QDesktopWidget().availableGeometry().center()
-
-        # Move rectangle's center point to screen's center point
-        qr.moveCenter(cp)
-
-        # Top left of rectangle becomes top left of window centering it
-        self.MainWindow.move(qr.topLeft())
 
     def set_initial_file_index(self) -> int:
         """Obtain the mapping between the provenance and the initial file-index and return the total nr of runs. """
@@ -689,7 +686,7 @@ class Ui_MainWindow(MainWindow):
         samples_table.sortByColumn(0, QtCore.Qt.AscendingOrder)
         header = samples_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)    # Temporarily set it to ResizeToContents to have Qt set the right window width -> set to Stretch at the end of the set-up
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
