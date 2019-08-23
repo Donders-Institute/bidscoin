@@ -1037,9 +1037,12 @@ class EditDialog(QDialog):
         if row == 1 and column == 1:
             filename = self.target_run['provenance']
             if bids.is_dicomfile(filename):
+                LOGGER.info(f"Inspecting: {filename}")
                 dicomdict = pydicom.dcmread(filename, force=True)
                 self.popup = InspectWindow(filename, dicomdict)
                 self.popup.exec()
+            else:
+                LOGGER.warning(f"Could not read: {filename}")
 
     def dicom_cell_was_changed(self, row, column):
         """DICOM attribute value has been changed. """
