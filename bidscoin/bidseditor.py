@@ -228,8 +228,7 @@ class Ui_MainWindow(MainWindow):
 
             self.set_menu_and_status_bar()
 
-            # Set the main window's size and restore the samples_table stretching
-            self.MainWindow.adjustSize()
+            # Restore the samples_table stretching after the main window has been sized (otherwise it can become too narrow)
             header = self.samples_table.horizontalHeader()
             header.setSectionResizeMode(1, QHeaderView.Stretch)
 
@@ -237,6 +236,7 @@ class Ui_MainWindow(MainWindow):
             cp = QDesktopWidget().availableGeometry().center()
 
             # Move rectangle's center point to screen's center point
+            self.MainWindow.adjustSize()
             qr = self.MainWindow.frameGeometry()
             qr.moveCenter(cp)
 
@@ -686,7 +686,7 @@ class Ui_MainWindow(MainWindow):
         samples_table.sortByColumn(0, QtCore.Qt.AscendingOrder)
         header = samples_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)    # Temporarily set it to ResizeToContents to have Qt set the right window width -> set to Stretch at the end of the set-up
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)    # Temporarily set it to ResizeToContents to have Qt set the right window width -> set to Stretch in setupUI -> not reload
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
