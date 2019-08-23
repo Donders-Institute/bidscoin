@@ -426,7 +426,10 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     if not os.path.isfile(readme_file):
         LOGGER.info('Creating README file: ' + readme_file)
         with open(readme_file, 'w') as fid:
-            fid.write('A free form text ( README ) describing the dataset in more details that SHOULD be provided')
+            fid.write(f'A free form text ( README ) describing the dataset in more details that SHOULD be provided\n\n'
+                      f'The raw BIDS data was created using BIDScoin {bids.version()} and should be BIDS {bids.bidsversion()} compliant\n'
+                      f'All provenance information and settings can be found in ./code/bidscoin\n'
+                      f'For more information see: https://github.com/Donders-Institute/bidscoin')
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
     bidsmap, _ = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder, 'code', 'bidscoin'))
