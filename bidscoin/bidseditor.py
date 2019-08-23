@@ -333,7 +333,6 @@ class Ui_MainWindow(MainWindow):
             provenance = self.samples_table.item(row, 5)
             filename = provenance.text()
             if bids.is_dicomfile(filename):
-                LOGGER.info(f"Inspecting: {filename}")
                 dicomdict = pydicom.dcmread(filename, force=True)
                 self.popup = InspectWindow(filename, dicomdict)
                 self.popup.show()
@@ -1037,7 +1036,6 @@ class EditDialog(QDialog):
         if row == 1 and column == 1:
             filename = self.target_run['provenance']
             if bids.is_dicomfile(filename):
-                LOGGER.info(f"Inspecting: {filename}")
                 dicomdict = pydicom.dcmread(filename, force=True)
                 self.popup = InspectWindow(filename, dicomdict)
                 self.popup.exec()
