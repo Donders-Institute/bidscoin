@@ -127,7 +127,6 @@ class InspectWindow(QDialog):
         icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
         self.setWindowTitle(f"Inspect {SOURCE} file")
-        self.resize(INSPECT_WINDOW_WIDTH, INSPECT_WINDOW_HEIGHT)
 
         layout = QVBoxLayout(self)
 
@@ -139,14 +138,22 @@ class InspectWindow(QDialog):
         label_path.setWordWrap(True)
         layout.addWidget(label_path)
 
+        text        = str(dicomdict)
         textBrowser = QTextBrowser(self)
-        textBrowser.insertPlainText(str(dicomdict))
+        textBrowser.insertPlainText(text)
+        textBrowser.setLineWrapMode(False)
+        self.scrollbar = textBrowser.verticalScrollBar()        # For setting the slider to the top (can only be done after self.show()
         layout.addWidget(textBrowser)
 
         buttonBox = QDialogButtonBox(self)
         buttonBox.setStandardButtons(QDialogButtonBox.Ok)
         buttonBox.button(QDialogButtonBox.Ok).setToolTip('Close this window')
         layout.addWidget(buttonBox)
+
+        # Set the width to the width of the text
+        fontMetrics = QtGui.QFontMetrics(textBrowser.font())
+        textwidth   = fontMetrics.size(0, text).width()
+        self.resize(textwidth + 70, self.height())
 
         buttonBox.accepted.connect(self.close)
 
@@ -329,9 +336,13 @@ class Ui_MainWindow(MainWindow):
             provenance = self.samples_table.item(row, 5)
             filename = provenance.text()
             if bids.is_dicomfile(filename):
+                LOGGER.info(f"Inspecting: {filename}")
                 dicomdict = pydicom.dcmread(filename, force=True)
                 self.popup = InspectWindow(filename, dicomdict)
                 self.popup.show()
+                self.popup.scrollbar.setValue(0)     # This can only be done after self.popup.show()
+            else:
+                LOGGER.warning(f"Could not read: {filename}")
 
     def set_tab_file_browser(self, sourcefolder):
         """Set the raw data folder inspector tab. """
@@ -621,6 +632,7 @@ class Ui_MainWindow(MainWindow):
                 samples_table.setItem(idx, 5, QTableWidgetItem(provenance))                        # Hidden column
 
                 samples_table.item(idx, 0).setFlags(QtCore.Qt.NoItemFlags)
+                samples_table.item(idx, 1).setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
                 samples_table.item(idx, 2).setFlags(QtCore.Qt.ItemIsEnabled)
                 samples_table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
                 samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information')
@@ -769,6 +781,7 @@ class Ui_MainWindow(MainWindow):
             dicomdict = pydicom.dcmread(filename, force=True)
             self.popup = InspectWindow(filename, dicomdict)
             self.popup.show()
+            self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
 
     def show_about(self):
         """ """
