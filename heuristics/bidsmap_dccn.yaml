@@ -151,11 +151,6 @@ DICOM:
       <<: *anatbids
       suffix: defacemask
     provenance: ~
-  - attributes: *anatattributes
-    bids:
-      <<: *anatbids
-      suffix: SWImagandphase
-    provenance: ~
 
   func:       # ----------------------- All functional series --------------------
   - attributes: &funcattributes   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = bold

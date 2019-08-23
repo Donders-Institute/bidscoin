@@ -415,7 +415,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
                                "Acknowledgements":      "OPTIONAL. List of individuals who contributed to the creation/curation of the dataset",
                                "HowToAcknowledge":      "OPTIONAL. Instructions how researchers using this dataset should acknowledge the original authors. This field can also be used to define a publication that should be cited in publications that use the dataset",
                                "Funding":               ["OPTIONAL. List of sources of funding (grant numbers)"],
-                               "ReferencesAndLinks":    ["OPTIONAL. List of references to publication that contain information on the dataset, or links"],
+                               "ReferencesAndLinks":    ["OPTIONAL. List of references to publication that contain information on the dataset, or links", "https://github.com/Donders-Institute/bidscoin"],
                                "DatasetDOI":            "OPTIONAL. The Document Object Identifier of the dataset (not the corresponding paper)"}
         LOGGER.info('Creating dataset description file: ' + dataset_file)
         with open(dataset_file, 'w') as fid:
@@ -427,7 +427,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
         LOGGER.info('Creating README file: ' + readme_file)
         with open(readme_file, 'w') as fid:
             fid.write(f'A free form text ( README ) describing the dataset in more details that SHOULD be provided\n\n'
-                      f'The raw BIDS data was created using BIDScoin {bids.version()} and should be BIDS {bids.bidsversion()} compliant\n'
+                      f'The raw BIDS data was created using BIDScoin {bids.version()}\n'
                       f'All provenance information and settings can be found in ./code/bidscoin\n'
                       f'For more information see: https://github.com/Donders-Institute/bidscoin')
 
@@ -521,7 +521,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
                 participants_dict[key]  = dict(LongName     = 'Long (unabbreviated) name of the column',
                                                Description  = 'Description of the the column',
                                                Levels       = dict(Key='Value (This is for categorical variables: a dictionary of possible values (keys) and their descriptions (values))'),
-                                               Units        = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is',
+                                               Units        = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is RECOMMENDED',
                                                TermURL      = 'URL pointing to a formal definition of this type of data in an ontology available on the web')
             participants_table.loc[personals['participant_id'], key] = personals[key]
 

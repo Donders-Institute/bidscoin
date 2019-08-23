@@ -134,11 +134,6 @@ DICOM:
     bids:
       <<: *anatbids
       suffix: defacemask
-  - provenance: ~
-    attributes: *anatattributes
-    bids:
-      <<: *anatbids
-      suffix: SWImagandphase
 
   func:       # ----------------------- All functional series --------------------
   - provenance: ~
