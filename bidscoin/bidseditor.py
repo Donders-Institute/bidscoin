@@ -33,9 +33,6 @@ SOURCE = 'DICOM'            # TODO: allow for non-DICOM (e.g. PAR/REC) edits
 
 LOGGER = logging.getLogger('bidscoin')
 
-INSPECT_WINDOW_WIDTH  = 850
-INSPECT_WINDOW_HEIGHT = 750
-
 ROW_HEIGHT = 22
 
 ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "bidscoin.ico")
