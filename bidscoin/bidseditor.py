@@ -223,14 +223,14 @@ class Ui_MainWindow(MainWindow):
 
         self.MainWindow.setCentralWidget(centralwidget)
 
+        # Restore the samples_table stretching after the main window has been sized / current tabindex has been set (otherwise the main window can become too narrow)
+        header = self.samples_table.horizontalHeader()
+        header.setSectionResizeMode(1, QHeaderView.Stretch)
+
         if not reload:
             self.setObjectName("MainWindow")
 
             self.set_menu_and_status_bar()
-
-            # Restore the samples_table stretching after the main window has been sized (otherwise it can become too narrow)
-            header = self.samples_table.horizontalHeader()
-            header.setSectionResizeMode(1, QHeaderView.Stretch)
 
             # Center the main window to the center point of screen
             cp = QDesktopWidget().availableGeometry().center()
