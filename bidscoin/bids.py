@@ -1032,7 +1032,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
             sub     = subid,
             _ses    = add_prefix('_', sesid),
             _acq    = add_prefix('_acq-', run['bids']['acq']),
-            _ce     = add_prefix('_ce-', run['bids']['ce']),
+            _ce     = add_prefix('_ce-',  run['bids']['ce']),
             _rec    = add_prefix('_rec-', run['bids']['rec']),
             _run    = add_prefix('_run-', runindex),
             _mod    = add_prefix('_mod-', mod),
@@ -1040,24 +1040,27 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
 
     elif modality == 'func':
 
-        # bidsname: sub-<participant_label>[_ses-<session_label>]_task-<task_label>[_acq-<label>][_rec-<label>][_run-<index>][_echo-<index>]_suffix
-        bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}{_echo}_{suffix}'.format(
+        # bidsname: sub-<label>[_ses-<label>]_task-<label>[_acq-<label>][_ce-<label>][_dir-<label>][_rec-<label>][_run-<index>][_echo-<index>]_<contrast_label>.nii[.gz]
+        bidsname = '{sub}{_ses}_{task}{_acq}{_ce}{_dir}{_rec}{_run}{_echo}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
             task    = f"task-{run['bids']['task']}",
-            _acq    = add_prefix('_acq-', run['bids']['acq']),
-            _rec    = add_prefix('_rec-', run['bids']['rec']),
-            _run    = add_prefix('_run-', runindex),
+            _acq    = add_prefix('_acq-',  run['bids']['acq']),
+            _ce     = add_prefix('_ce-',   run['bids']['ce']),
+            _dir    = add_prefix('_dir-',  run['bids']['dir']),
+            _rec    = add_prefix('_rec-',  run['bids']['rec']),
+            _run    = add_prefix('_run-',  runindex),
             _echo   = add_prefix('_echo-', run['bids']['echo']),
             suffix  = run['bids']['suffix'])
 
     elif modality == 'dwi':
 
-        # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_run-<index>]_suffix
-        bidsname = '{sub}{_ses}{_acq}{_run}_{suffix}'.format(
+        # bidsname: sub-<label>[_ses-<label>][_acq-<label>][_dir-<label>][_run-<index>]_dwi.nii[.gz]
+        bidsname = '{sub}{_ses}{_acq}{_dir}{_run}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
             _acq    = add_prefix('_acq-', run['bids']['acq']),
+            _dir    = add_prefix('_dir-', run['bids']['dir']),
             _run    = add_prefix('_run-', runindex),
             suffix  = run['bids']['suffix'])
 
@@ -1065,11 +1068,12 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
 
         # TODO: add more fieldmap logic?
 
-        # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_dir-<dir_label>][_run-<run_index>]_suffix
-        bidsname = '{sub}{_ses}{_acq}{_dir}{_run}_{suffix}'.format(
+        # bidsname: sub-<label>[_ses-<label>][_acq-<label>][_ce-<label>]_dir-<label>[_run-<index>]_epi.nii[.gz]
+        bidsname = '{sub}{_ses}{_acq}{_ce}{_dir}{_run}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
             _acq    = add_prefix('_acq-', run['bids']['acq']),
+            _ce     = add_prefix('_ce-',  run['bids']['ce']),
             _dir    = add_prefix('_dir-', run['bids']['dir']),
             _run    = add_prefix('_run-', runindex),
             suffix  = run['bids']['suffix'])
@@ -1098,17 +1102,18 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
     elif modality == unknownmodality or modality == ignoremodality:
 
         # bidsname: sub-<participant_label>[_ses-<session_label>]_acq-<label>[..][_suffix]
-        bidsname = '{sub}{_ses}{_task}_{acq}{_ce}{_rec}{_dir}{_run}{_echo}{_suffix}'.format(
+        bidsname = '{sub}{_ses}{_task}_{acq}{_ce}{_rec}{_dir}{_run}{_echo}{_mod}{_suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
             _task   = add_prefix('_task-', run['bids']['task']),
             acq     = f"acq-{run['bids']['acq']}",
-            _ce     = add_prefix('_ce-', run['bids']['ce']),
-            _rec    = add_prefix('_rec-', run['bids']['rec']),
-            _dir    = add_prefix('_dir-', run['bids']['dir']),
-            _run    = add_prefix('_run-', runindex),
+            _ce     = add_prefix('_ce-',   run['bids']['ce']),
+            _rec    = add_prefix('_rec-',  run['bids']['rec']),
+            _dir    = add_prefix('_dir-',  run['bids']['dir']),
+            _run    = add_prefix('_run-',  runindex),
             _echo   = add_prefix('_echo-', run['bids']['echo']),
-            _suffix = add_prefix('_', run['bids']['suffix']))
+            _mod    = add_prefix('_mod-',  run['bids']['mod']),
+            _suffix = add_prefix('_',      run['bids']['suffix']))
 
     else:
         raise ValueError(f'Critical error: modality "{modality}" not implemented, please inform the developers about this error')
