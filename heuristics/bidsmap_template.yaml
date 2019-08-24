@@ -41,7 +41,7 @@ DICOM:
   subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
   session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
   anat:       # ----------------------- All anatomical series --------------------
-  - provenance: ~
+  - provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     attributes: &anatattributes
       Modality: ~
       ProtocolName: ~
@@ -59,11 +59,11 @@ DICOM:
       PhaseEncodingDirection: ~
     bids: &anatbids
       acq: <SeriesDescription>
+      ce: ~
       rec: ~
       run: <<1>>
       mod: ~
       suffix: T1w
-      ce: ~
   - provenance: ~
     attributes: *anatattributes
     bids:
@@ -155,10 +155,22 @@ DICOM:
     bids: &funcbids
       task: <SeriesDescription>
       acq: <SequenceName>
+      ce: ~
+      dir: <InPlanePhaseEncodingDirection>
       rec: ~
       run: <<1>>
       echo: <EchoNumbers>
       suffix: bold
+  - provenance: ~
+    attributes: *funcattributes
+    bids:
+      <<: *funcbids
+      suffix: cbv
+  - provenance: ~
+    attributes: *funcattributes
+    bids:
+      <<: *funcbids
+      suffix: phase
   - provenance: ~
     attributes: *funcattributes
     bids:
@@ -199,6 +211,7 @@ DICOM:
       PhaseEncodingDirection: ~
     bids: &dwibids
       acq: <SeriesDescription>
+      dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
       suffix: dwi
   - provenance: ~
@@ -226,8 +239,9 @@ DICOM:
       PhaseEncodingDirection: ~
     bids: &fmapbids
       acq: <SeriesDescription>
-      run: <<1>>
+      ce: ~
       dir: ~
+      run: <<1>>
       suffix: magnitude
       IntendedFor: ~
   - provenance: ~
@@ -264,6 +278,7 @@ DICOM:
     attributes: *fmapattributes
     bids:
       <<: *fmapbids
+      dir: <InPlanePhaseEncodingDirection>
       suffix: epi
 
   beh:        # ----------------------- All behavioural data ---------------------
@@ -343,10 +358,10 @@ DICOM:
       ce: ~
       task: ~
       echo: ~
-      dir: ~
+      dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
-      suffix: ~
       mod: ~
+      suffix: ~
 
   leave_out:  # ----------------------- Data that will be left out ---------------
   - provenance: ~
@@ -371,10 +386,10 @@ DICOM:
       ce: ~
       task: ~
       echo: ~
-      dir: ~
+      dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
-      suffix: ~
       mod: ~
+      suffix: ~
 
 
 PAR: ~
@@ -414,7 +429,7 @@ FileSystem:
       ce: ~
       task: ~
       echo: ~
-      dir: ~
+      dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
       mod: ~
       suffix: T1w
@@ -528,7 +543,7 @@ FileSystem:
     bids: &fmapbids_file
       acq: <FileName>
       run: <<1>>
-      dir: ~
+      dir: <InPlanePhaseEncodingDirection>
       suffix: magnitude1
       IntendedFor: ~
   - attributes: *fmapattributes_file
@@ -592,7 +607,7 @@ FileSystem:
       ce: ~
       task: ~
       echo: ~
-      dir: ~
+      dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
       suffix: ~
       mod: ~
@@ -608,7 +623,7 @@ FileSystem:
       ce: ~
       task: ~
       echo: ~
-      dir: ~
+      dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
       suffix: ~
       mod: ~
