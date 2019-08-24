@@ -1020,7 +1020,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
     # Compose the BIDS filename (-> switch statement)
     if modality == 'anat':
 
-        defacemask = False       # TODO: account for the 'defacemask' possibility
+        defacemask = True       # TODO: account for the 'defacemask' possibility
         if defacemask:
             suffix = 'defacemask'
             mod    = run['bids']['suffix']
