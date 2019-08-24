@@ -1020,14 +1020,6 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
     # Compose the BIDS filename (-> switch statement)
     if modality == 'anat':
 
-        defacemask = True       # TODO: account for the 'defacemask' possibility
-        if defacemask:
-            suffix = 'defacemask'
-            mod    = run['bids']['suffix']
-        else:
-            suffix = run['bids']['suffix']
-            mod    = ''
-
         # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_ce-<label>][_rec-<label>][_run-<index>][_mod-<label>]_suffix
         bidsname = '{sub}{_ses}{_acq}{_ce}{_rec}{_run}{_mod}_{suffix}'.format(
             sub     = subid,
@@ -1036,8 +1028,8 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
             _ce     = add_prefix('_ce-',  run['bids']['ce']),
             _rec    = add_prefix('_rec-', run['bids']['rec']),
             _run    = add_prefix('_run-', runindex),
-            _mod    = add_prefix('_mod-', mod),
-            suffix  = suffix)
+            _mod    = add_prefix('_mod-', run['bids']['mod']),
+            suffix  = run['bids']['suffix'])
 
     elif modality == 'func':
 
