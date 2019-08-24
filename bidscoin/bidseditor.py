@@ -668,6 +668,8 @@ class Ui_MainWindow(MainWindow):
 
         self.subses_table = myQTableWidget()
         subses_table = self.subses_table
+        subses_table.setToolTip('Use <<SourceFilePath>> or leave empty to parse the subject and (optional) session label from the pathname\n'
+                                'Use <YourDicomFieldName> (e.g. <PatientID>) to extract the subject and (optional) session label from the DICOM header')
         subses_table.setMouseTracking(True)
         subses_table.setRowCount(2)
         subses_table.setColumnCount(2)
