@@ -122,7 +122,8 @@ def reporterrors():
         elif filehandler.name == 'loghandler':
             logfile = filehandler.baseFilename
 
-    logger.info(f'For the complete log see: {logfile}\nNB: logfiles may contain identifiable information, e.g. from pathnames')
+    logger.info(f'For the complete log see: {logfile}')
+    logger.info(f'NB: logfiles may contain identifiable information, e.g. from pathnames')
 
 
 def run_command(command: str) -> bool:
