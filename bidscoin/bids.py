@@ -25,10 +25,10 @@ yaml = YAML()
 
 logger = logging.getLogger('bidscoin')
 
-bidsmodalities  = ('anat', 'func', 'dwi', 'fmap', 'beh', 'pet')
+bidsmodalities  = ('fmap', 'anat', 'func', 'dwi', 'beh', 'pet')                                         # NB: get_matching_run() uses this order to search for a match
 ignoremodality  = 'leave_out'
 unknownmodality = 'extra_data'
-bidslabels      = ('task', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'suffix', 'IntendedFor')   # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
+bidslabels      = ('task', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'suffix', 'IntendedFor')    # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
 
 
 def bidsversion() -> str:
