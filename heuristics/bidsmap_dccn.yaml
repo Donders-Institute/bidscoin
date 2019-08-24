@@ -59,12 +59,12 @@ DICOM:
       PhaseEncodingDirection: ~
     bids: &anatbids
       acq: <SeriesDescription>
+      ce: ~
       rec: ~
       run: <<1>>
       mod: ~
       suffix: T1w
-      ce: ~
-    provenance: ~
+    provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
   - attributes:
       <<: *anatattributes
       SeriesDescription: ['*mprage*', '*MPRAGE*', '*t1w*', '*T1w*', '*T1*']
@@ -171,6 +171,8 @@ DICOM:
     bids: &funcbids
       task: <SeriesDescription>
       acq: <SequenceName>
+      ce: ~
+      dir: <InPlanePhaseEncodingDirection>
       rec: ~
       run: <<1>>
       echo: <EchoNumbers>
@@ -191,6 +193,15 @@ DICOM:
       <<: *funcbids
       suffix: bold
     provenance: ~
+  - attributes: *funcattributes
+    bids:
+      <<: *funcbids
+      suffix: phase
+    provenance: ~
+  - attributes: *funcattributes
+    bids:
+      <<: *funcbids
+      suffix: cbv
   - attributes: *funcattributes
     bids:
       <<: *funcbids
@@ -225,6 +236,7 @@ DICOM:
       PhaseEncodingDirection: ~
     bids: &dwibids
       acq: <SeriesDescription>
+      dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
       suffix: dwi
     provenance: ~
@@ -288,8 +300,9 @@ DICOM:
       PhaseEncodingDirection: ~
     bids: &fmapbids
       acq: <SeriesDescription>
-      run: <<1>>
+      ce: ~
       dir: ~
+      run: <<1>>
       suffix: magnitude
       IntendedFor: ~
     provenance: ~
@@ -424,7 +437,7 @@ DICOM:
       ce: ~
       task: ~
       echo: ~
-      dir: ~
+      dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
       suffix: ~
       mod: ~
@@ -453,7 +466,7 @@ DICOM:
       ce: ~
       task: ~
       echo: ~
-      dir: ~
+      dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
       suffix: ~
       mod: ~
