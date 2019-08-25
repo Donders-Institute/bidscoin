@@ -674,6 +674,8 @@ def dir_bidsmap(bidsmap: dict, source: str='DICOM') -> list:
                 if not run['provenance']:
                     logger.warning(f'The bidsmap run {modality} run does not contain provenance data')
 
+    provenance.sort()
+
     return provenance
 
 

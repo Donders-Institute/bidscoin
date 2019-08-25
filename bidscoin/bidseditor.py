@@ -311,7 +311,6 @@ class Ui_MainWindow(MainWindow):
         """Obtain the mapping between the ordered provenance and an increasing file-index. Return the total nr of runs / files"""
 
         provenance = bids.dir_bidsmap(self.input_bidsmap, SOURCE)
-        provenance.sort()
 
         ordered_file_index = {}
         for file_index, file_name in enumerate(provenance):
