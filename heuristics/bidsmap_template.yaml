@@ -357,7 +357,7 @@ DICOM:
       rec: ~
       ce: ~
       task: ~
-      echo: ~
+      echo: <EchoNumbers>
       dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
       mod: ~
@@ -385,7 +385,7 @@ DICOM:
       rec: ~
       ce: ~
       task: ~
-      echo: ~
+      echo: <EchoNumbers>
       dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
       mod: ~
@@ -429,7 +429,7 @@ FileSystem:
       ce: ~
       task: ~
       echo: ~
-      dir: <InPlanePhaseEncodingDirection>
+      dir: ~
       run: <<1>>
       mod: ~
       suffix: T1w
@@ -543,7 +543,7 @@ FileSystem:
     bids: &fmapbids_file
       acq: <FileName>
       run: <<1>>
-      dir: <InPlanePhaseEncodingDirection>
+      dir: ~
       suffix: magnitude1
       IntendedFor: ~
   - attributes: *fmapattributes_file
@@ -602,12 +602,12 @@ FileSystem:
       FileName: ~
       FileExt: ~
     bids:
-      acq: <SeriesDescription>
+      acq: ~
       rec: ~
       ce: ~
       task: ~
       echo: ~
-      dir: <InPlanePhaseEncodingDirection>
+      dir: ~
       run: <<1>>
       suffix: ~
       mod: ~
@@ -618,12 +618,12 @@ FileSystem:
       FileName: ~
       FileExt: ~
     bids:
-      acq: <SeriesDescription>
+      acq: ~
       rec: ~
       ce: ~
       task: ~
       echo: ~
-      dir: <InPlanePhaseEncodingDirection>
+      dir: ~
       run: <<1>>
       suffix: ~
       mod: ~

@@ -436,7 +436,7 @@ DICOM:
       rec: ~
       ce: ~
       task: ~
-      echo: ~
+      echo: <EchoNumbers>
       dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
       suffix: ~
@@ -465,7 +465,7 @@ DICOM:
       rec: ~
       ce: ~
       task: ~
-      echo: ~
+      echo: <EchoNumbers>
       dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
       suffix: ~
@@ -691,7 +691,7 @@ FileSystem:
       FileName: ~
       FileExt: ~
     bids:
-      acq: <SeriesDescription>
+      acq: ~
       rec: ~
       ce: ~
       task: ~
@@ -707,7 +707,7 @@ FileSystem:
       FileName: ~
       FileExt: ~
     bids:
-      acq: <SeriesDescription>
+      acq: ~
       rec: ~
       ce: ~
       task: ~
