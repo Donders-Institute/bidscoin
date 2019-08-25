@@ -317,8 +317,7 @@ class Ui_MainWindow(MainWindow):
         for file_index, file_name in enumerate(provenance):
             ordered_file_index[file_name] = file_index
 
-        if not hasattr(self, 'ordered_file_index'):
-            self.ordered_file_index = ordered_file_index
+        self.ordered_file_index = ordered_file_index
 
         return file_index + 1
 
