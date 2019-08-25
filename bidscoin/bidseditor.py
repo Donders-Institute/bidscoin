@@ -190,7 +190,7 @@ class Ui_MainWindow(MainWindow):
         self.has_edit_dialog_open = False
 
         # Make sure we have the correct index mapping for the first edit
-        self.set_initial_file_index()
+        self.set_ordered_file_index()
 
         # Set-up the tabs
         self.tabwidget = QtWidgets.QTabWidget()
@@ -307,24 +307,20 @@ class Ui_MainWindow(MainWindow):
         statusbar.setStatusTip("Statusbar")
         self.MainWindow.setStatusBar(statusbar)
 
-    def set_initial_file_index(self) -> int:
-        """Obtain the mapping between the provenance and the initial file-index and return the total nr of runs. """
-        initial_file_index = {}
-        file_index = 0
-        for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-            runs = self.input_bidsmap[SOURCE][modality]
-            if not runs:
-                continue
-            for run in runs:
-                if not run['provenance']:
-                    LOGGER.error(f'The bidsmap run {modality} run does not contain provenance data')
-                initial_file_index[run['provenance']] = file_index
-                file_index += 1
+    def set_ordered_file_index(self) -> int:
+        """Obtain the mapping between the ordered provenance and an increasing file-index. Return the total nr of runs / files"""
 
-        if not hasattr(self, 'initial_file_index'):
-            self.initial_file_index = initial_file_index
+        provenance, _ = bids.dir_bidsmap(self.input_bidsmap, SOURCE)
+        provenance.sort()
 
-        return file_index
+        ordered_file_index = {}
+        for file_index, file_name in enumerate(provenance):
+            ordered_file_index[file_name] = file_index
+
+        if not hasattr(self, 'ordered_file_index'):
+            self.ordered_file_index = ordered_file_index
+
+        return file_index + 1
 
     def inspect_dicomfile(self, item):
         """When double clicked, show popup window. """
@@ -614,14 +610,14 @@ class Ui_MainWindow(MainWindow):
             for run in runs:
                 provenance = run['provenance']
                 provenance_file = os.path.basename(provenance)
-                initial_file_index = self.initial_file_index[provenance]
+                ordered_file_index = self.ordered_file_index[provenance]
                 bidsname = bids.get_bidsname(output_bidsmap[SOURCE]['subject'], output_bidsmap[SOURCE]['session'],
-                                              modality, run, '', self.subprefix, self.sesprefix)
+                                             modality, run, '', self.subprefix, self.sesprefix)
                 subid = bids.get_bidsvalue(bidsname, 'sub')
                 sesid = bids.get_bidsvalue(bidsname, 'ses')
                 session = os.path.join(self.bidsfolder, f'sub-{subid}', f'ses-{sesid}')
 
-                samples_table.setItem(idx, 0, QTableWidgetItem(f"{initial_file_index+1:03d}"))
+                samples_table.setItem(idx, 0, QTableWidgetItem(f"{ordered_file_index+1:03d}"))
                 samples_table.setItem(idx, 1, QTableWidgetItem(provenance_file))
                 samples_table.setItem(idx, 2, QTableWidgetItem(modality))                          # Hidden column
                 samples_table.setItem(idx, 3, QTableWidgetItem(os.path.join(modality, bidsname + '.*')))
@@ -680,7 +676,7 @@ class Ui_MainWindow(MainWindow):
         subses_table.cellChanged.connect(self.subses_cell_was_changed)
 
         # Set the BIDSmap table
-        num_files = self.set_initial_file_index()  # The number of DICOM files in the bidsmap
+        num_files = self.set_ordered_file_index()  # The number of DICOM files in the bidsmap
 
         label = QLabel('Data samples')
         label.setToolTip('List of unique source-data samples')

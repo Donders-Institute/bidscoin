@@ -657,6 +657,28 @@ def cleanup_value(label):
     return re.sub(r'(?u)[^-\w.]', '', label)
 
 
+def dir_bidsmap(bidsmap: dict, source: str='DICOM') -> tuple:
+    """
+    Make a list of all runs in bidsmap[source]
+
+    :param bidsmap: The bidsmap, with all the runs in it
+    :param source:  The information source in the bidsmap that is used, e.g. 'DICOM'
+    :return:        (list from all provenances, list from all runs)
+    """
+
+    runs       = []
+    provenance = []
+    for modality in bidsmodalities + (unknownmodality, ignoremodality):
+        if bidsmap[source][modality]:
+            for run in bidsmap[source][modality]:
+                runs.append(run)
+                provenance.append(run['provenance'])
+                if not run['provenance']:
+                    logger.warning(f'The bidsmap run {modality} run does not contain provenance data')
+
+    return provenance, runs
+
+
 def get_run(bidsmap: dict, source: str, modality, suffix_idx, dicomfile: str='') -> dict:
     """
     Find the (first) run in bidsmap[source][bidsmodality] with run['bids']['suffix_idx'] == suffix_idx
