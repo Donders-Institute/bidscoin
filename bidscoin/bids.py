@@ -657,7 +657,7 @@ def cleanup_value(label):
     return re.sub(r'(?u)[^-\w.]', '', label)
 
 
-def dir_bidsmap(bidsmap: dict, source: str='DICOM') -> list:
+def dir_bidsmap(bidsmap: dict, source: str) -> list:
     """
     Make a provenance list of all the runs in the bidsmap[source]
 
