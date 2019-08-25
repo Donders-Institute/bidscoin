@@ -668,7 +668,7 @@ def dir_bidsmap(bidsmap: dict, source: str='DICOM') -> list:
 
     provenance = []
     for modality in bidsmodalities + (unknownmodality, ignoremodality):
-        if bidsmap[source][modality]:
+        if modality in bidsmap[source] and bidsmap[source][modality]:
             for run in bidsmap[source][modality]:
                 provenance.append(run['provenance'])
                 if not run['provenance']:
