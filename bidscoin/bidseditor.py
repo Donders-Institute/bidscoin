@@ -227,7 +227,7 @@ class Ui_MainWindow(MainWindow):
         # Restore the samples_table stretching after the main window has been sized / current tabindex has been set (otherwise the main window can become too narrow)
         header = self.samples_table.horizontalHeader()
         header.setSectionResizeMode(1, QHeaderView.Stretch)
-        header.update()
+        self.samples_table.update()
 
         if not reload:
             self.setObjectName("MainWindow")
