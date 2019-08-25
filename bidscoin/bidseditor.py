@@ -310,7 +310,7 @@ class Ui_MainWindow(MainWindow):
     def set_ordered_file_index(self) -> int:
         """Obtain the mapping between the ordered provenance and an increasing file-index. Return the total nr of runs / files"""
 
-        provenance, _ = bids.dir_bidsmap(self.input_bidsmap, SOURCE)
+        provenance = bids.dir_bidsmap(self.input_bidsmap, SOURCE)
         provenance.sort()
 
         ordered_file_index = {}
