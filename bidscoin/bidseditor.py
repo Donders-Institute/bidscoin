@@ -189,9 +189,6 @@ class Ui_MainWindow(MainWindow):
 
         self.has_edit_dialog_open = False
 
-        # Make sure we have the correct index mapping for the first edit
-        self.set_ordered_file_index()
-
         # Set-up the tabs
         self.tabwidget = QtWidgets.QTabWidget()
         tabwidget = self.tabwidget
@@ -306,19 +303,6 @@ class Ui_MainWindow(MainWindow):
         statusbar.setObjectName("statusbar")
         statusbar.setStatusTip("Statusbar")
         self.MainWindow.setStatusBar(statusbar)
-
-    def set_ordered_file_index(self) -> int:
-        """Obtain the mapping between the ordered provenance and an increasing file-index. Return the total nr of runs / files"""
-
-        provenance = bids.dir_bidsmap(self.input_bidsmap, SOURCE)
-
-        ordered_file_index = {}
-        for file_index, file_name in enumerate(provenance):
-            ordered_file_index[file_name] = file_index
-
-        self.ordered_file_index = ordered_file_index
-
-        return file_index + 1
 
     def inspect_dicomfile(self, item):
         """When double clicked, show popup window. """
@@ -674,7 +658,13 @@ class Ui_MainWindow(MainWindow):
         subses_table.cellChanged.connect(self.subses_cell_was_changed)
 
         # Set the BIDSmap table
-        num_files = self.set_ordered_file_index()  # The number of DICOM files in the bidsmap
+        provenance = bids.dir_bidsmap(self.input_bidsmap, SOURCE)
+        ordered_file_index = {}                                         # The mapping between the ordered provenance and an increasing file-index
+        for file_index, file_name in enumerate(provenance):
+            ordered_file_index[file_name] = file_index
+            num_files = file_index + 1
+
+        self.ordered_file_index = ordered_file_index
 
         label = QLabel('Data samples')
         label.setToolTip('List of unique source-data samples')
