@@ -127,13 +127,13 @@ class InspectWindow(QDialog):
 
         layout = QVBoxLayout(self)
 
-        label = QLabel('Filename: ' + os.path.basename(filename))
-        label.setWordWrap(True)
-        layout.addWidget(label)
-
         label_path = QLabel('Path: ' + os.path.dirname(filename))
         label_path.setWordWrap(True)
         layout.addWidget(label_path)
+
+        label = QLabel('Filename: ' + os.path.basename(filename))
+        label.setWordWrap(True)
+        layout.addWidget(label)
 
         text        = str(dicomdict)
         textBrowser = QTextBrowser(self)
