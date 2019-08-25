@@ -805,7 +805,7 @@ def update_bidsmap(bidsmap: dict, source_modality: str, provenance: str, target_
 
     num_runs_out = len(dir_bidsmap(bidsmap, source))
     if num_runs_out != num_runs_in:
-        logger.error(f"Number of runs in the bidsmap changed unexpectedly: {num_runs_in} -> {num_runs_out}")
+        logger.error(f"Number of runs in bidsmap['{source}'] changed unexpectedly: {num_runs_in} -> {num_runs_out}")
 
     return bidsmap
 
