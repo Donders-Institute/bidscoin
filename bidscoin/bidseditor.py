@@ -729,7 +729,7 @@ class Ui_MainWindow(MainWindow):
 
         # Start with a fresh errorlog
         for filehandler in LOGGER.handlers:
-            if filehandler.name=='errorhandler' and os.path.getsize(filehandler.name):
+            if filehandler.name=='errorhandler' and os.path.getsize(filehandler.baseFilename):
                 errorfile = filehandler.baseFilename
                 LOGGER.info(f'Resetting {errorfile}')
                 with open(errorfile, 'w'):          # TODO: This works but it is a hack that somehow prefixes a lot of whitespace to the first LOGGER call
