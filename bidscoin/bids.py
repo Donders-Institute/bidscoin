@@ -784,6 +784,8 @@ def update_bidsmap(bidsmap: dict, source_modality: str, provenance: str, target_
     :return:
     """
 
+    num_runs_in = len(dir_bidsmap(bidsmap, source))
+
     # Warn the user if the target run already exists when the run is moved to another modality
     if source_modality!=target_modality:
         if exist_run(bidsmap, source, target_modality, run):
@@ -800,6 +802,10 @@ def update_bidsmap(bidsmap: dict, source_modality: str, provenance: str, target_
             if run_['provenance'] == provenance:
                 bidsmap[source][target_modality][index] = run
                 break
+
+    num_runs_out = len(dir_bidsmap(bidsmap, source))
+    if num_runs_out != num_runs_in:
+        logger.error(f"Number of runs in the bidsmap changed unexpectedly: {num_runs_in} -> {num_runs_out}")
 
     return bidsmap
 
