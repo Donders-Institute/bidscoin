@@ -309,7 +309,7 @@ DICOM:
   - attributes:
       <<: *fmapattributes
       EchoNumbers: 2
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       ImageType: ['ORIGINAL', 'PRIMARY', 'P', 'ND']
     bids:
       <<: *fmapbids
@@ -318,7 +318,7 @@ DICOM:
   - attributes:
       <<: *fmapattributes
       EchoNumbers: 1
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       ImageType: ['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM']
     bids:
       <<: *fmapbids
@@ -327,7 +327,7 @@ DICOM:
   - attributes:
       <<: *fmapattributes
       EchoNumbers: 2
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       ImageType: ['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM']
     bids:
       <<: *fmapbids
@@ -336,7 +336,7 @@ DICOM:
   - attributes:
       <<: *fmapattributes
       EchoNumbers: 1
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       ImageType: ['ORIGINAL', 'PRIMARY', 'P', 'ND']
     bids:
       <<: *fmapbids
