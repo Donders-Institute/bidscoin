@@ -189,9 +189,7 @@ DICOM:
   - attributes:                   # Then catch the bold series itself
       <<: *funcattributes
       ProtocolName: ['*fmri*', '*fMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
-    bids:
-      <<: *funcbids
-      suffix: bold
+    bids: *funcbids
     provenance: ~
   - attributes: *funcattributes
     bids:
@@ -262,8 +260,7 @@ DICOM:
   - attributes:                           # Then catch the normal DWI series
       <<: *dwiattributes_sbref
       SeriesDescription: ~                # Remove the SBREF filter
-    bids:
-      <<: *dwibids
+    bids: *dwibids
     provenance: ~
   - attributes:                           # First match the SBREF dwi series (the normal dwi series don't have SBREF in the seriesdescription)
       <<: *dwiattributes_sbref
@@ -278,8 +275,7 @@ DICOM:
       SeriesDescription: ~                # Remove the SBREF filter
       ImageType: '*DIFFUSION*'
       ProtocolName: ~
-    bids:
-      <<: *dwibids
+    bids: *dwibids
     provenance: ~
 
   fmap:       # ----------------------- All fieldmap series ----------------------
@@ -310,7 +306,7 @@ DICOM:
       <<: *fmapattributes
       EchoNumbers: 2
       SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
-      ImageType: ['ORIGINAL', 'PRIMARY', 'P', 'ND']
+      ImageType: '*P*'
     bids:
       <<: *fmapbids
       suffix: phasediff
@@ -319,7 +315,7 @@ DICOM:
       <<: *fmapattributes
       EchoNumbers: 1
       SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
-      ImageType: ['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM']
+      ImageType: '*M*'
     bids:
       <<: *fmapbids
       suffix: magnitude1
@@ -328,7 +324,7 @@ DICOM:
       <<: *fmapattributes
       EchoNumbers: 2
       SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
-      ImageType: ['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM']
+      ImageType: '*M*'
     bids:
       <<: *fmapbids
       suffix: magnitude2
@@ -337,17 +333,23 @@ DICOM:
       <<: *fmapattributes
       EchoNumbers: 1
       SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
-      ImageType: ['ORIGINAL', 'PRIMARY', 'P', 'ND']
+      ImageType: '*P*'
     bids:
       <<: *fmapbids
       suffix: phase1
     provenance: ~
-  - attributes: *fmapattributes
+  - attributes:
+      <<: *fmapattributes
+      EchoNumbers: 2
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
+      ImageType: '*P*'
     bids:
       <<: *fmapbids
       suffix: phase2
     provenance: ~
-  - attributes: *fmapattributes
+  - attributes:
+      <<: *fmapattributes
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
     bids:
       <<: *fmapbids
       suffix: fieldmap
