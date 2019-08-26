@@ -475,7 +475,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *leaveout_attributes
-      SeriesDescription: ~
+      ProtocolName: ~
       ImageType: '*DERIVED*'
     bids:
       <<: *leaveout_bids
