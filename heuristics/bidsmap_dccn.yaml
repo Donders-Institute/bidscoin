@@ -272,9 +272,9 @@ DICOM:
     provenance: ~
   - attributes:                           # Then catch the normal DWI series
       <<: *dwiattributes_sbref
-      SeriesDescription: ~                # Remove the SBREF filter
       ImageType: '*DIFFUSION*'
       ProtocolName: ~
+      SeriesDescription: ~                # Remove the SBREF filter
     bids: *dwibids
     provenance: ~
 
