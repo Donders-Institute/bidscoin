@@ -44,8 +44,8 @@ BIDScoin will take your (raw) source data as well as a YAML file with the key-va
 ### Coining your source data to BIDS
 Having an organized source data folder, the actual data-set conversion to BIDS is performed by the [(1a)](#step-1a-running-the-bidsmapper) the `bidsmapper.py`, [(1b)](#step-1b-running-the-bidseditor) the `bidseditor.py` and [(2)](#step-2-running-the-bidscoiner) the `bidscoiner.py` command-line tools. The `bidsmapper` makes a map of the different kind of datatypes in your source dataset, with the `bidseditor` you can edit this map, and the `bidscoiner` does the actual work to convert the source data into BIDS. By default (but see the `-i` option of the bidsmapper below), step 1a automatically launches step 1b, so in it's simplest form, all you need to do to convert your raw source data into BIDS is to run, e.g.:
    ```
-   bidsmapper sourcefolder bidsfolder
-   bidscoiner sourcefolder bidsfolder
+   bidsmapper.py sourcefolder bidsfolder
+   bidscoiner.py sourcefolder bidsfolder
    ```
 
 #### Step 1a: Running the bidsmapper
