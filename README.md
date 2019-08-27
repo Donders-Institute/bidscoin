@@ -192,8 +192,9 @@ The bidsmapper will scan your `sourcefolder` to look for different runs (scan-ty
     
     Manual editing / inspection of the bidsmap
       You can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
-      text editor. For instance to add a dynamic `participant` value like `<<PatientID>>`. 
-      See ./docs/bidsmap.md for more information.
+      text editor. For instance to add a wildcard to a DICOM attribute and remove the lists items
+      that then have become redundant / obsolete. See ./docs/bidsmap.md and 
+      ./heuristics/bidsmap_dccn.yaml for more information.
 
 As shown below, the main window of the bidseditor opens with the `BIDS map` tab that contains a list of `input samples` that uniquely represents all the different files that are present in the source folder, together with the associated `BIDS output name`. The path in the `BIDS output name` is shown in red if the modality is not part of the BIDS standard, striked-out gray when the runs will be ignored in the conversion to BIDS, otherwise it is colored green. Double clicking the sample (DICOM) filename opens an inspection window with the full header information (double clicking sample filenames works throughout the GUI).
 

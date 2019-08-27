@@ -1366,8 +1366,9 @@ if __name__ == "__main__":
 
                                          Manual editing / inspection of the bidsmap
                                            You can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
-                                           text editor. For instance to add a dynamic `participant` value like `<<PatientID>>`. 
-                                           See ./docs/bidsmap.md for more information."""))
+                                           text editor. For instance to add a wildcard to a DICOM attribute and remove the lists items
+                                           that then have become redundant / obsolete. See ./docs/bidsmap.md and 
+                                           ./heuristics/bidsmap_dccn.yaml for more information."""))
 
     parser.add_argument('bidsfolder',           help='The destination folder with the (future) bids data')
     parser.add_argument('-s','--sourcefolder',  help='The source folder containing the raw data. If empty, it is derived from the bidsmap provenance information')
