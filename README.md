@@ -42,7 +42,7 @@ BIDScoin will take your (raw) source data as well as a YAML file with the key-va
 > If these utilities do not satisfy your needs, then have a look at this [reorganize_dicom_files](https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md) tool.
 
 ### Coining your source data to BIDS
-Having an organized source data folder, the actual data-set conversion to BIDS can be performed by simply running [(1a)](#step-1a-running-the-bidsmapper) the `bidsmapper.py`, [(1b)](#step-1b-running-the-bidseditor) the `bidseditor.py` and [(2)](#step-2-running-the-bidscoiner) the `bidscoiner.py` command-line tools after another. By default (but see the `-i` option below), step 1a calls step 1b are, so in it's simplest form, all you need to do to convert your raw source data into BISD is run, e.g.:
+Having an organized source data folder, the actual data-set conversion to BIDS can be performed by simply running [(1a)](#step-1a-running-the-bidsmapper) the `bidsmapper.py`, [(1b)](#step-1b-running-the-bidseditor) the `bidseditor.py` and [(2)](#step-2-running-the-bidscoiner) the `bidscoiner.py` command-line tools after another. By default (but see the `-i` option below), step 1a calls step 1b are, so in it's simplest form, all you need to do to convert your raw source data into BIDS is run, e.g.:
    ```
    bidsmapper raw bids
    bidscoiner raw bids
