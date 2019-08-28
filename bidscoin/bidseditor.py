@@ -187,7 +187,7 @@ class Ui_MainWindow(MainWindow):
         self.subprefix        = subprefix
         self.sesprefix        = sesprefix
 
-        self.has_edit_dialog_open = False
+        self.has_edit_dialog_open = None
 
         # Set-up the tabs
         self.tabwidget = QtWidgets.QTabWidget()
@@ -601,9 +601,9 @@ class Ui_MainWindow(MainWindow):
 
                 samples_table.setItem(idx, 0, QTableWidgetItem(f"{ordered_file_index+1:03d}"))
                 samples_table.setItem(idx, 1, QTableWidgetItem(provenance_file))
-                samples_table.setItem(idx, 2, QTableWidgetItem(modality))                          # Hidden column
+                samples_table.setItem(idx, 2, QTableWidgetItem(modality))                           # Hidden column
                 samples_table.setItem(idx, 3, QTableWidgetItem(os.path.join(modality, bidsname + '.*')))
-                samples_table.setItem(idx, 5, QTableWidgetItem(provenance))                        # Hidden column
+                samples_table.setItem(idx, 5, QTableWidgetItem(provenance))                         # Hidden column
 
                 samples_table.item(idx, 0).setFlags(QtCore.Qt.NoItemFlags)
                 samples_table.item(idx, 1).setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
@@ -612,6 +612,10 @@ class Ui_MainWindow(MainWindow):
                 samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information')
                 samples_table.item(idx, 1).setStatusTip(os.path.dirname(provenance) + os.sep)
                 samples_table.item(idx, 3).setStatusTip(session + os.sep)
+                if self.has_edit_dialog_open == provenance:
+                    samples_table.item(idx, 1).setSelected(True)                                    # Highlight the previously opened rowitem
+                else:
+                    samples_table.item(idx, 1).setSelected(False)
 
                 if samples_table.item(idx, 3):
                     if modality == bids.unknownmodality:
@@ -755,6 +759,7 @@ class Ui_MainWindow(MainWindow):
         modality = self.samples_table.item(rowindex, 2).text()
         provenance = self.samples_table.item(rowindex, 5).text()
 
+        self.samples_table.item(rowindex, 1).setSelected(True)
         self.open_edit_dialog(provenance, modality)
 
     def on_double_clicked(self, index):
@@ -779,7 +784,7 @@ class Ui_MainWindow(MainWindow):
                 if run['provenance']==provenance:
                     LOGGER.info(f'User is editing {provenance}')
                     self.dialog_edit = EditDialog(provenance, modality, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
-                    self.has_edit_dialog_open = True
+                    self.has_edit_dialog_open = provenance
                     self.dialog_edit.done_edit.connect(self.update_subses_and_samples)
                     self.dialog_edit.finished.connect(self.release_edit_dialog)
                     if exec:
@@ -798,7 +803,7 @@ class Ui_MainWindow(MainWindow):
 
     def release_edit_dialog(self):
         """Allow a new edit window to be opened"""
-        self.has_edit_dialog_open = False
+        self.has_edit_dialog_open = None
 
     def exit_application(self):
         """Handle exit. """
