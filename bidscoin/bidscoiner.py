@@ -69,12 +69,6 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     # Process all the dicom run subfolders
     for runfolder in bids.lsdirs(session):
 
-        if runfolder.startswith('.'):
-            LOGGER.info('Ignoring hidden dicom-folder: ' + runfolder)
-            continue
-        else:
-            LOGGER.info('Processing dicom-folder: ' + runfolder)
-
         # Get the cleaned-up bids labels from a dicom-file and bidsmap
         dicomfile = bids.get_dicomfile(runfolder)
         if not dicomfile: continue
@@ -89,6 +83,8 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         if index is None:
             LOGGER.warning(f"Skipping unknown '{modality}': {dicomfile}")
             continue
+
+        LOGGER.info('Processing folder: ' + runfolder)
 
         # Create the BIDS session/modality folder
         bidsmodality = os.path.join(bidsses, modality)
