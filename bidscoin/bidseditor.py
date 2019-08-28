@@ -755,7 +755,6 @@ class Ui_MainWindow(MainWindow):
         modality = self.samples_table.item(rowindex, 2).text()
         provenance = self.samples_table.item(rowindex, 5).text()
 
-        self.samples_table.item(rowindex, 3).setSelected(True)
         self.open_edit_dialog(provenance, modality)
 
     def on_double_clicked(self, index):
