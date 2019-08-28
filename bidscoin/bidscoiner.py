@@ -69,9 +69,11 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
     # Process all the dicom run subfolders
     for runfolder in bids.lsdirs(session):
 
-        # Get the cleaned-up bids labels from a dicom-file and bidsmap
+        # Get a dicom-file
         dicomfile = bids.get_dicomfile(runfolder)
         if not dicomfile: continue
+
+        # Get a matching run from the bidsmap
         run, modality, index = bids.get_matching_run(dicomfile, bidsmap)
 
         # Check if we should ignore this run
@@ -90,13 +92,13 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         bidsmodality = os.path.join(bidsses, modality)
         os.makedirs(bidsmodality, exist_ok=True)
 
-        # Compose the BIDS filename using the bids labels and run-index
+        # Compose the BIDS filename using the matched run
         bidsname = bids.get_bidsname(subid, sesid, modality, run)
         runindex = run['bids']['run']
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(bidsmodality, bidsname)
 
-        # Check if file already exists
+        # Check if file already exists (-> e.g. when a static runindex is used)
         if os.path.isfile(os.path.join(bidsmodality, bidsname + '.json')):
             LOGGER.warning(os.path.join(bidsmodality, bidsname) + '.* already exists -- check your results carefully!')
 
