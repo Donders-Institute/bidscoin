@@ -612,10 +612,6 @@ class Ui_MainWindow(MainWindow):
                 samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information')
                 samples_table.item(idx, 1).setStatusTip(os.path.dirname(provenance) + os.sep)
                 samples_table.item(idx, 3).setStatusTip(session + os.sep)
-                if self.has_edit_dialog_open == provenance:
-                    samples_table.item(idx, 1).setSelected(True)                                    # Highlight the previously opened rowitem
-                else:
-                    samples_table.item(idx, 1).setSelected(False)
 
                 if samples_table.item(idx, 3):
                     if modality == bids.unknownmodality:
@@ -635,6 +631,11 @@ class Ui_MainWindow(MainWindow):
                 edit_button = QPushButton('Edit')
                 edit_button.setToolTip('Click to see more details and edit the BIDS output name')
                 edit_button.clicked.connect(self.handle_edit_button_clicked)
+                edit_button.setCheckable(True)
+                if provenance and provenance==self.has_edit_dialog_open:    # Highlight the previously opened item
+                    edit_button.setChecked(True)
+                else:
+                    edit_button.setChecked(False)
                 samples_table.setCellWidget(idx, 4, edit_button)
 
                 idx += 1
@@ -759,7 +760,6 @@ class Ui_MainWindow(MainWindow):
         modality = self.samples_table.item(rowindex, 2).text()
         provenance = self.samples_table.item(rowindex, 5).text()
 
-        self.samples_table.item(rowindex, 1).setSelected(True)
         self.open_edit_dialog(provenance, modality)
 
     def on_double_clicked(self, index):
@@ -784,7 +784,10 @@ class Ui_MainWindow(MainWindow):
                 if run['provenance']==provenance:
                     LOGGER.info(f'User is editing {provenance}')
                     self.dialog_edit = EditDialog(provenance, modality, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
-                    self.has_edit_dialog_open = provenance
+                    if provenance:
+                        self.has_edit_dialog_open = provenance
+                    else:
+                        self.has_edit_dialog_open = True
                     self.dialog_edit.done_edit.connect(self.update_subses_and_samples)
                     self.dialog_edit.finished.connect(self.release_edit_dialog)
                     if exec:
