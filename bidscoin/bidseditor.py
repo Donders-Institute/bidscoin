@@ -632,6 +632,7 @@ class Ui_MainWindow(MainWindow):
                 edit_button.setToolTip('Click to see more details and edit the BIDS output name')
                 edit_button.clicked.connect(self.handle_edit_button_clicked)
                 edit_button.setCheckable(True)
+                edit_button.setAutoExclusive(True)
                 if provenance and provenance==self.has_edit_dialog_open:    # Highlight the previously opened item
                     edit_button.setChecked(True)
                 else:
