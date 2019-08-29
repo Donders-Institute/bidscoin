@@ -86,7 +86,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
             LOGGER.warning(f"Skipping unknown '{modality}': {dicomfile}")
             continue
 
-        LOGGER.info('Processing folder: ' + runfolder)
+        LOGGER.info('Processing: ' + runfolder)
 
         # Create the BIDS session/modality folder
         bidsmodality = os.path.join(bidsses, modality)
