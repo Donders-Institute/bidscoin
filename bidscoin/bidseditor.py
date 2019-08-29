@@ -150,7 +150,7 @@ class InspectWindow(QDialog):
         # Set the width to the width of the text
         fontMetrics = QtGui.QFontMetrics(textBrowser.font())
         textwidth   = fontMetrics.size(0, text).width()
-        self.resize(textwidth + 70, self.height())
+        self.resize(min(textwidth + 70, 1200), self.height())
 
         buttonBox.accepted.connect(self.close)
 
