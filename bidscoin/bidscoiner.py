@@ -259,7 +259,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
             if len(niifiles)<=1:
                 niifiles = ''.join(niifiles)                                                                                                    # Only use a list for more than 1 file
             if not niifiles:
-                LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {os.path.join(bidsses)}: the search for {intendedfor} from the bidsmap gave no results")
+                LOGGER.warning(f"Empty 'IntendedFor' fieldmap value: the search for {intendedfor} in {bidsses} gave no results")
 
             # Save the IntendedFor data in the json-files (account for multiple runs and dcm2niix suffixes inserted into the acquisition label)
             acqlabel = bids.get_bidsvalue(bidsname, 'acq')
