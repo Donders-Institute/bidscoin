@@ -246,11 +246,9 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
             bidsname    = bids.get_bidsname(subid, sesid, 'fmap', fieldmap)
             niifiles    = []
             intendedfor = fieldmap['bids']['IntendedFor']
-            if not intendedfor:
-                intendedfor = []
 
-            else:
-                # Search for the imaging files that match the IntendedFor search criteria
+            # Search for the imaging files that match the IntendedFor search criteria
+            if intendedfor:
                 if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
                     intendedfor = intendedfor[2:-2].split('><')
                 elif not isinstance(intendedfor, list):
@@ -259,17 +257,20 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                     niifiles.extend([niifile.split(os.sep+subid+os.sep, 1)[1].replace('\\','/')                                                 # The path needs to use forward slashes instead of backward slashes
                                      for niifile in sorted(glob.glob(os.path.join(bidsses, f'**{os.sep}*{selector}*.nii*'))) if selector])      # Search in all runs using a relative path
 
-                # Save the IntendedFor data in the json-files (account for multiple runs and dcm2niix suffixes inserted into the acquisition label)
-                jsonfile = ''                                                                       # Catch runs where the fieldmap was not acquired
-                acqlabel = bids.get_bidsvalue(bidsname, 'acq')
-                for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_', '_run-[0-9]*_') + '.json')) + \
-                                glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_', '_run-[0-9]*_').replace(acqlabel, acqlabel+'[CE][0-9]*') + '.json')):
-                    with open(jsonfile, 'r') as json_fid:
-                        data = json.load(json_fid)
-                    data['IntendedFor'] = niifiles
-                    LOGGER.info('Adding IntendedFor to: ' + jsonfile)
-                    with open(jsonfile, 'w') as json_fid:
-                        json.dump(data, json_fid, indent=4)
+            # Save the IntendedFor data in the json-files (account for multiple runs and dcm2niix suffixes inserted into the acquisition label)
+            acqlabel = bids.get_bidsvalue(bidsname, 'acq')
+            for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_', '_run-[0-9]*_') + '.json')) + \
+                            glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_', '_run-[0-9]*_').replace(acqlabel, acqlabel+'[CE][0-9]*') + '.json')):
+
+                if not niifiles:
+                    LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the search for {intendedfor} from the bidsmap gave no results")
+                else:
+                    LOGGER.info(f'Adding IntendedFor to: {jsonfile}')
+                with open(jsonfile, 'r') as json_fid:
+                    data = json.load(json_fid)
+                data['IntendedFor'] = niifiles
+                with open(jsonfile, 'w') as json_fid:
+                    json.dump(data, json_fid, indent=4)
 
                 # Catch magnitude2 and phase2 files produced by dcm2niix (i.e. magnitude1 & magnitude2 both in the same runfolder)
                 if jsonfile.endswith('magnitude1.json') or jsonfile.endswith('phase1.json'):
@@ -282,9 +283,6 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                             LOGGER.info('Adding IntendedFor to: ' + jsonfile2)
                             with open(jsonfile2, 'w') as json_fid:
                                 json.dump(data, json_fid, indent=4)
-
-            if not niifiles:
-                LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {os.path.join(bidsses,'fmap',bidsname)}.json: the search for {intendedfor} from the bidsmap gave no results")
 
     # Collect personal data from the DICOM header
     dicomfile = bids.get_dicomfile(runfolder)
