@@ -266,10 +266,10 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
             for jsonfile in glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_', '_run-[0-9]*_') + '.json')) + \
                             glob.glob(os.path.join(bidsses, 'fmap', bidsname.replace('_run-1_', '_run-[0-9]*_').replace(acqlabel, acqlabel+'[CE][0-9]*') + '.json')):
 
-                LOGGER.info(f'Adding IntendedFor to: {jsonfile}')
                 with open(jsonfile, 'r') as json_fid:
                     data = json.load(json_fid)
                 data['IntendedFor'] = niifiles
+                LOGGER.info(f'Adding IntendedFor to: {jsonfile}')
                 with open(jsonfile, 'w') as json_fid:
                     json.dump(data, json_fid, indent=4)
 
