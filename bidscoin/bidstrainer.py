@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 """
+*** OBSOLETE function ***
+
 Takes example files from the samples folder as training data and creates a key-value
 mapping, i.e. a bidsmap_sample.yaml file, by associating the file attributes with the
-file's BIDS-semantic pathname
+file's BIDS-semantic pathname. This function has become obsolete / has been replaced
+by the bidseditor, but it may still be useful for institutes that want to build large
+bidsmap.yaml templates?
 """
 
-import os.path
+import os
 import glob
-import shutil
 import copy
 import re
 import textwrap
@@ -167,23 +170,28 @@ def bidstrainer(bidsfolder: str, samplefolder: str, bidsmapfile: str, pattern: s
     :return:                The name of the new (trained) bidsmap YAML-file that is save in bidsfolder/code/bidscoin
     """
 
-    # Input checking
-    bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
-    if not samplefolder:
-        samplefolder = os.path.join(bidsfolder,'code','bidscoin','samples')
-        if not os.path.isdir(samplefolder):
-            print('Creating an empty samples directory tree: ' + samplefolder)
-            shutil.copytree(os.path.join(os.path.dirname(bids.__file__),'..','heuristics','samples'), samplefolder)
-            print('Fill the directory tree with example DICOM files and re-run bidstrainer.py')
-            return ''
-    samplefolder = os.path.abspath(os.path.expanduser(samplefolder))
-
     # Start logging
     bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidscoin', 'bidstrainer.log'))
     LOGGER.info('------------ START BIDStrainer ------------')
 
     # Get the heuristics for creating the bidsmap
     heuristics, _ = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder, 'code', 'bidscoin'))
+
+    # Input checking
+    bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
+    if not samplefolder:
+        samplefolder = os.path.join(bidsfolder,'code','bidscoin','samples')
+        if not os.path.isdir(samplefolder):
+            LOGGER.info('Creating an empty samples directory tree: ' + samplefolder)
+            for modality in bids.bidsmodalities + (bids.ignoremodality, bids.unknownmodality):
+                for run in heuristics['DICOM'][modality]:
+                    if not run['bids']['suffix']:
+                        run['bids']['suffix'] = ''
+                    os.makedirs(os.path.join(samplefolder, modality, run['bids']['suffix']))
+            LOGGER.info('Fill the directory tree with example DICOM files and re-run bidstrainer.py')
+            return ''
+
+    samplefolder = os.path.abspath(os.path.expanduser(samplefolder))
 
     # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     bidsmap = copy.deepcopy(heuristics)
@@ -199,7 +207,7 @@ def bidstrainer(bidsfolder: str, samplefolder: str, bidsmapfile: str, pattern: s
     for sample in samples:
 
         if not os.path.isfile(sample): continue
-        print('Parsing: ' + sample)
+        LOGGER.info('Parsing: ' + sample)
 
         # Try to get a dicom mapping
         if bids.is_dicomfile(sample) and heuristics['DICOM']:
