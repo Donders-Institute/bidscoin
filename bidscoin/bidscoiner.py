@@ -86,7 +86,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
             LOGGER.warning(f"Skipping unknown '{modality}': {dicomfile}")
             continue
 
-        LOGGER.info('Processing: ' + runfolder)
+        LOGGER.info(f'Processing: {runfolder}')
 
         # Create the BIDS session/modality folder
         bidsmodality = os.path.join(bidsses, modality)
@@ -185,7 +185,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
 
             # Check if dcm2niix behaved as expected
             if not os.path.isfile(jsonfile):
-                LOGGER.warning(f'Unexpected file conversion result: {jsonfile} not found')
+                LOGGER.error(f'Unexpected file conversion result: {jsonfile} not found')
                 continue
 
             # Add a dummy b0 bval- and bvec-file for any file without a bval/bvec file (e.g. sbref, b0 scans)
