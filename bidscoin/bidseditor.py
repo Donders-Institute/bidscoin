@@ -129,10 +129,12 @@ class InspectWindow(QDialog):
 
         label_path = QLabel('Path: ' + os.path.dirname(filename))
         label_path.setWordWrap(True)
+        label_path.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         layout.addWidget(label_path)
 
         label = QLabel('Filename: ' + os.path.basename(filename))
         label.setWordWrap(True)
+        label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         layout.addWidget(label)
 
         text        = str(dicomdict)
