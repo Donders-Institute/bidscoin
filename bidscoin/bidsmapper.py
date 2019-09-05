@@ -270,9 +270,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
                 # Update / append the dicom mapping
                 if bidsmap_old['DICOM']:
-                    dicomfile   = bids.get_dicomfile(run, 0)
-                    bidsmap_new = build_dicommap(dicomfile, bidsmap_new, bidsmap_old, template, gui)
-                    dicomfile   = bids.get_dicomfile(run, 1)    # Useful for e.g. fieldmaps, where two series are saved in one seriesfolder
+                    dicomfile   = bids.get_dicomfile(run)
                     bidsmap_new = build_dicommap(dicomfile, bidsmap_new, bidsmap_old, template, gui)
 
                 # Update / append the PAR/REC mapping
