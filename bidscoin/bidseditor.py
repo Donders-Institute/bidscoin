@@ -611,7 +611,7 @@ class Ui_MainWindow(MainWindow):
                 samples_table.item(idx, 1).setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
                 samples_table.item(idx, 2).setFlags(QtCore.Qt.ItemIsEnabled)
                 samples_table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
-                samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information')
+                samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information (Copy: Ctrl+C)')
                 samples_table.item(idx, 1).setStatusTip(os.path.dirname(provenance) + os.sep)
                 samples_table.item(idx, 3).setStatusTip(session + os.sep)
 
@@ -858,7 +858,7 @@ class EditDialog(QDialog):
         self.provenance_label.setText("Provenance")
         self.provenance_table = self.set_table(data_provenance)
         self.provenance_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.provenance_table.setToolTip(f"The {SOURCE} source file from which the attributes were taken")
+        self.provenance_table.setToolTip(f"The {SOURCE} source file from which the attributes were taken (Copy: Ctrl+C)")
         self.provenance_table.cellDoubleClicked.connect(self.inspect_dicomfile)
 
         # Set-up the DICOM table
