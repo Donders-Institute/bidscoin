@@ -354,22 +354,27 @@ def is_incomplete_acquisition(folder: str) -> bool:
         return False
 
 
-def get_dicomfile(folder: str) -> str:
+def get_dicomfile(folder: str, index: int=0) -> str:
     """
     Gets a dicom-file from the folder
 
     :param folder:  The full pathname of the folder
+    :index:         The index number of the dicom file
     :return:        The filename of the first dicom-file in the folder.
     """
 
+    idx = 0
     for file in sorted(os.listdir(folder)):
         if os.path.basename(file).startswith('.'):
             logger.warning(f'Ignoring hidden DICOM file: {file}')
             continue
         if is_dicomfile(os.path.join(folder, file)):
-            return os.path.join(folder, file)
+            if idx == index:
+                return os.path.join(folder, file)
+            else:
+                idx += 1
 
-    logger.warning('Cannot find dicom files in:' + folder)
+    logger.warning(f'Cannot find >{index} dicom files in: {folder}')
     return None
 
 
