@@ -215,8 +215,10 @@ Finally, if all BIDS output names in the main window are fine, the user can clic
     Converts ("coins") datasets in the sourcefolder to nifti / json / tsv datasets in the
     bidsfolder according to the BIDS standard. Check and edit the bidsmap.yaml file to
     your needs using the bidseditor.py tool before running this function. You can run
-    bidscoiner.py after all data is collected, or whenever new data has been added to the
-    source folder (presuming the scan protocol hasn't changed).
+    bidscoiner.py after all data is collected, or run / re-run it whenever new data has
+    been added to the source folder (presuming the scan protocol hasn't changed). If you
+    delete a (subject/) session folder from the bidsfolder, it will be re-created from the
+    sourcefolder the next time you run the bidscoiner.
     
     Provenance information, warnings and error messages are stored in the
     bidsfolder/code/bidscoin/bidscoiner.log file.
