@@ -992,7 +992,7 @@ def get_subid_sesid(dicomfile: str, subid: str='', sesid: str='', subprefix: str
 
     :param dicomfile:   The full pathname of the dicomfile. If given, the DICOM values are read from the file
     :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001'). Can be left empty
-    :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01'). Can be left empty
+    :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01')
     :param subprefix:   The optional subprefix (e.g. 'sub-'). Used to parse the sub-value from the provenance as default subid
     :param sesprefix:   The optional sesprefix (e.g. 'ses-'). If it is found in the provenance then a default sesid will be set
     :return:            Updated (subid, sesid) tuple, including the sub/sesprefix
@@ -1000,11 +1000,11 @@ def get_subid_sesid(dicomfile: str, subid: str='', sesid: str='', subprefix: str
 
     # Add default value for subid and sesid (e.g. for the bidseditor)
     dicompath = os.path.dirname(dicomfile)
-    if not subid or subid=='<<SourceFilePath>>':
+    if subid=='<<SourceFilePath>>':
         subid = dicompath.rsplit(os.sep + subprefix, 1)[1].split(os.sep)[0]
     else:
         subid = get_dynamic_value(subid, dicomfile)
-    if not sesid or sesid=='<<SourceFilePath>>':
+    if sesid=='<<SourceFilePath>>':
         if os.sep + sesprefix in dicompath:
             sesid = dicompath.rsplit(os.sep + sesprefix, 1)[1].split(os.sep)[0]
         else:
