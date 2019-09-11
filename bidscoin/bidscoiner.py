@@ -294,15 +294,19 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                             with open(jsonfile2, 'w') as json_fid:
                                 json.dump(data, json_fid, indent=4)
 
-    # Collect personal data from the DICOM header
+    # Collect personal data from the DICOM header: only from the first session (-> BIDS specification)
     dicomfile = bids.get_dicomfile(runfolder)
     personals['participant_id'] = subid
     if sesid:
-        personals['session_id'] = sesid
-    personals['age']    = bids.get_dicomfield('PatientAge',    dicomfile)
-    personals['sex']    = bids.get_dicomfield('PatientSex',    dicomfile)
-    personals['size']   = bids.get_dicomfield('PatientSize',   dicomfile)
-    personals['weight'] = bids.get_dicomfield('PatientWeight', dicomfile)
+        if 'session_id' not in personals:
+            personals['session_id'] = sesid
+        else:
+            return
+    if bids.get_dicomfield('PatientAge', dicomfile):
+        personals['age'] = str(int(float(bids.get_dicomfield('PatientAge', dicomfile).replace('Y',''))))
+    personals['sex']     = bids.get_dicomfield('PatientSex',     dicomfile)
+    personals['size']    = bids.get_dicomfield('PatientSize',    dicomfile)
+    personals['weight']  = bids.get_dicomfield('PatientWeight',  dicomfile)
 
 
 def coin_par(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
