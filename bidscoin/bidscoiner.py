@@ -485,9 +485,14 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
         for session in sessions:
 
             # Check if we should skip the session-folder
-            if not force and os.path.isdir(session.replace(rawfolder, bidsfolder)):
-                LOGGER.info(f'Skipping processed session: {session}')
-                continue
+            if not force:
+                modalities = []
+                for modality in bids.bidsmodalities + (bids.unknownmodality,):
+                    if modality in [os.path.basename(bidsmodality) for bidsmodality in bids.lsdirs(session.replace(rawfolder, bidsfolder))]:
+                        modalities.append(os.path.basename(modality))
+                if modalities:
+                    LOGGER.info(f'Skipping processed session: {session} having {modalities} data (use the -f option to overrule)')
+                    continue
 
             # Update / append the dicom mapping
             if bidsmap['DICOM']:
