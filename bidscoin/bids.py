@@ -21,7 +21,7 @@ import subprocess
 import pydicom
 from importlib import util
 from ruamel.yaml import YAML
-yaml = YAML(typ='safe', pure=True)                                                                      # 'safe' load and dump
+yaml = YAML()
 
 logger = logging.getLogger('bidscoin')
 
@@ -505,7 +505,13 @@ def save_bidsmap(filename: str, bidsmap: dict):
     try:
         load_bidsmap(filename, '', False)
     except:
-        logger.error(f'The saved output bidsmap does not seem to be valid YAML, please check {filename}, e.g. by way of an online yaml validator, such as https://yamlchecker.com/')
+        # Just trying again seems to help? :-)
+        with open(filename, 'w') as stream:
+            yaml.dump(bidsmap, stream)
+        try:
+            load_bidsmap(filename, '', False)
+        except:
+            logger.error(f'The saved output bidsmap does not seem to be valid YAML, please check {filename}, e.g. by way of an online yaml validator, such as https://yamlchecker.com/')
 
 
 def parse_x_protocol(pattern: str, dicomfile: str) -> str:
