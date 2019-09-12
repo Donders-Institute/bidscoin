@@ -21,7 +21,7 @@ import subprocess
 import pydicom
 from importlib import util
 from ruamel.yaml import YAML
-yaml = YAML()
+yaml = YAML(typ='safe', pure=True)                                                                      # 'safe' load and dump
 
 logger = logging.getLogger('bidscoin')
 

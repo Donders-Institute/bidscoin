@@ -18,8 +18,6 @@ import copy
 import logging
 import sys
 from PyQt5.QtWidgets import QApplication, QMessageBox
-from ruamel.yaml import YAML
-yaml = YAML()
 try:
     from bidscoin import bids
     from bidscoin import bidseditor
