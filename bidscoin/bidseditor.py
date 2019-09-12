@@ -745,7 +745,7 @@ class Ui_MainWindow(MainWindow):
 
     def save_bidsmap_to_file(self):
         """Check and save the BIDSmap to file. """
-        if 'fmap' in self.output_bidsmap[SOURCE]:
+        if self.output_bidsmap[SOURCE].get('fmap'):
             for run in self.output_bidsmap[SOURCE]['fmap']:
                 if not run['bids']['IntendedFor']:
                     LOGGER.warning(f"IntendedFor fieldmap value is empty for {run['provenance']}")
@@ -1292,7 +1292,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     # Obtain the initial bidsmap info
     template_bidsmap, templatefile = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code','bidscoin'))
     input_bidsmap, bidsmapfile     = bids.load_bidsmap(bidsmapfile,  os.path.join(bidsfolder,'code','bidscoin'))
-    output_bidsmap      = copy.deepcopy(input_bidsmap)
+    output_bidsmap                 = copy.deepcopy(input_bidsmap)
 
     # Parse the sourcefolder from the bidsmap provenance info
     if not sourcefolder:
