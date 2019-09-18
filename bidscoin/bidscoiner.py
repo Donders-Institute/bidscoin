@@ -469,6 +469,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     # Get the list of subjects
     if not subjects:
         subjects = bids.lsdirs(rawfolder, subprefix + '*')
+        if not subjects:
+            LOGGER.warning(f'No subjects found in: {os.path.join(rawfolder, subprefix)}*')
     else:
         subjects = [subprefix + re.sub(f'^{subprefix}', '', subject) for subject in subjects]        # Make sure there is a "sub-" prefix
         subjects = [os.path.join(rawfolder,subject) for subject in subjects if os.path.isdir(os.path.join(rawfolder,subject))]
