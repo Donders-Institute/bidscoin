@@ -178,7 +178,7 @@ def bidstrainer(bidsfolder: str, samplefolder: str, bidsmapfile: str, pattern: s
     heuristics, _ = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder, 'code', 'bidscoin'))
 
     # Input checking
-    bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
+    bidsfolder = os.path.abspath(os.path.realpath(os.path.expanduser(bidsfolder)))
     if not samplefolder:
         samplefolder = os.path.join(bidsfolder,'code','bidscoin','samples')
         if not os.path.isdir(samplefolder):
@@ -191,7 +191,7 @@ def bidstrainer(bidsfolder: str, samplefolder: str, bidsmapfile: str, pattern: s
             LOGGER.info('Fill the directory tree with example DICOM files and re-run bidstrainer.py')
             return ''
 
-    samplefolder = os.path.abspath(os.path.expanduser(samplefolder))
+    samplefolder = os.path.abspath(os.path.realpath(os.path.expanduser(samplefolder)))
 
     # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     bidsmap = copy.deepcopy(heuristics)

@@ -235,7 +235,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                 data['AcquisitionTime'] = bids.get_dicomfield('AcquisitionTime', dicomfile)
             acq_time = dateutil.parser.parse(data['AcquisitionTime'])
             niipath  = glob.glob(os.path.splitext(jsonfile)[0] + '.nii*')[0]    # Find the corresponding nifti file (there should be only one, let's not make assumptions about the .gz extension)
-            niipath  = niipath.replace(bidsses+os.sep,'')                       # Use a relative path. Somehow .strip(bidsses) instead of replace(bidsses,'') does not work properly
+            niipath  = niipath.replace(bidsses+os.sep,'')                       # Use a relative path
             scans_table.loc[niipath, 'acq_time'] = '1900-01-01T' + acq_time.strftime('%H:%M:%S')
 
     # Write the scans_table to disk
@@ -403,8 +403,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
     """
 
     # Input checking & defaults
-    rawfolder  = os.path.abspath(os.path.expanduser(rawfolder))
-    bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
+    rawfolder  = os.path.abspath(os.path.realpath(os.path.expanduser(rawfolder)))
+    bidsfolder = os.path.abspath(os.path.realpath(os.path.expanduser(bidsfolder)))
 
     # Start logging
     bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidscoin', 'bidscoiner.log'))
@@ -483,6 +483,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
             LOGGER.info(f'Skipping subject: {subject} ({n}/{len(subjects)})')
             continue
 
+        LOGGER.info('-------------------------------------')
         LOGGER.info(f'Coining subject ({n}/{len(subjects)}): {subject}')
 
         personals = dict()

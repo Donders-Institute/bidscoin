@@ -157,7 +157,7 @@ def import_plugin(plugin: str):
         plugin = os.path.join(os.path.dirname(__file__), 'plugins', plugin)
     else:
         plugin = plugin
-    plugin = os.path.abspath(os.path.expanduser(plugin))
+    plugin = os.path.abspath(os.path.realpath(os.path.expanduser(plugin)))
 
     # See if we can find the plug-in
     if not os.path.isfile(plugin):
@@ -458,7 +458,7 @@ def load_bidsmap(yamlfile: str='', folder: str='', report: bool=True) -> (dict, 
         else:
             yamlfile = os.path.join(heuristics_folder, yamlfile)
 
-    yamlfile = os.path.abspath(os.path.expanduser(yamlfile))
+    yamlfile = os.path.abspath(os.path.realpath(os.path.expanduser(yamlfile)))
     if not os.path.isfile(yamlfile):
         logger.info('No bidsmap file found: ' + os.path.abspath(yamlfile))
         return dict(), yamlfile

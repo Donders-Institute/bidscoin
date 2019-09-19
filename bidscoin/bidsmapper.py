@@ -206,8 +206,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     """
 
     # Input checking
-    rawfolder  = os.path.abspath(os.path.expanduser(rawfolder))
-    bidsfolder = os.path.abspath(os.path.expanduser(bidsfolder))
+    rawfolder  = os.path.abspath(os.path.realpath(os.path.expanduser(rawfolder)))
+    bidsfolder = os.path.abspath(os.path.realpath(os.path.expanduser(bidsfolder)))
 
     # Start logging
     bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidscoin', 'bidsmapper.log'))
