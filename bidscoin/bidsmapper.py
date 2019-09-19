@@ -258,6 +258,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     subjects = bids.lsdirs(rawfolder, subprefix + '*')
     if not subjects:
         LOGGER.warning(f'No subjects found in: {os.path.join(rawfolder, subprefix)}*')
+        gui = None
     for n, subject in enumerate(subjects,1):
 
         sessions = bids.lsdirs(subject, sesprefix + '*')
