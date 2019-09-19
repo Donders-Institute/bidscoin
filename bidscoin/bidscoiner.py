@@ -57,7 +57,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
         return
 
     # Create the BIDS session-folder and a scans.tsv file
-    bidsses = os.path.join(bidsfolder, subid, sesid)         # NB: This gives a trailing '/' if ses=='', but that should be ok
+    bidsses = os.path.join(bidsfolder, subid, sesid).rstrip(os.sep)
     if os.path.isdir(bidsses):
         LOGGER.warning(f"Existing BIDS output-directory found, which may result in duplicate data (with increased run-index). Make sure {bidsses} was cleaned-up from old data before (re)running the bidscoiner")
     os.makedirs(bidsses, exist_ok=True)
