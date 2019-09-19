@@ -303,8 +303,17 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
             personals['session_id'] = sesid
         else:
             return
-    if bids.get_dicomfield('PatientAge', dicomfile):
-        personals['age'] = str(int(float(bids.get_dicomfield('PatientAge', dicomfile).replace('Y',''))))
+    Age = bids.get_dicomfield('PatientAge', dicomfile)          # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
+    if Age.endswith('D'):
+        personals['age'] = str(int(float(Age.rstrip('D'))/365.2524))
+    elif Age.endswith('W'):
+        personals['age'] = str(int(float(Age.rstrip('W'))/52.1775))
+    elif Age.endswith('M'):
+        personals['age'] = str(int(float(Age.rstrip('M'))/12))
+    elif Age.endswith('Y'):
+        personals['age'] = str(int(float(Age.rstrip('Y'))))
+    elif Age:
+        personals['age'] = Age
     personals['sex']     = bids.get_dicomfield('PatientSex',     dicomfile)
     personals['size']    = bids.get_dicomfield('PatientSize',    dicomfile)
     personals['weight']  = bids.get_dicomfield('PatientWeight',  dicomfile)
