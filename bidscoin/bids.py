@@ -460,7 +460,8 @@ def load_bidsmap(yamlfile: str='', folder: str='', report: bool=True) -> (dict, 
 
     yamlfile = os.path.abspath(os.path.realpath(os.path.expanduser(yamlfile)))
     if not os.path.isfile(yamlfile):
-        logger.info('No bidsmap file found: ' + os.path.abspath(yamlfile))
+        if report:
+            logger.info('No existing bidsmap file found: ' + os.path.abspath(yamlfile))
         return dict(), yamlfile
     elif report:
         logger.info('Reading: ' + os.path.abspath(yamlfile))
@@ -477,7 +478,7 @@ def load_bidsmap(yamlfile: str='', folder: str='', report: bool=True) -> (dict, 
     else:
         bidsmapversion = 'Unknown'
 
-    if bidsmapversion != version():
+    if bidsmapversion != version() and report:
         logger.warning(f'BIDScoiner version conflict: {yamlfile} was created using version {bidsmapversion}, but this is version {version()}')
 
     # Make sure we get a proper list of plugins

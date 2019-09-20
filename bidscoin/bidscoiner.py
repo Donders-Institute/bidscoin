@@ -228,7 +228,7 @@ def coin_dicom(session: str, bidsmap: dict, bidsfolder: str, personals: dict, su
                     with open(jsonfile, 'w') as json_fid:
                         json.dump(data, json_fid, indent=4)
 
-            # Parse the acquisition time from the json file
+            # Parse the acquisition time from the json file or else from the dicom header (NB: assuming the dicom file represents the first aqcuisition)
             with open(jsonfile, 'r') as json_fid:
                 data = json.load(json_fid)
             if 'AcquisitionTime' not in data:
