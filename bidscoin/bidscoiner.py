@@ -453,6 +453,9 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: tuple=(), force: bool=
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
     bidsmap, _ = bids.load_bidsmap(bidsmapfile, os.path.join(bidsfolder, 'code', 'bidscoin'))
+    if not bidsmap:
+        LOGGER.error('No bidsmap file found. Please run the bidsmapper first and / or use the correct bidsfolder')
+        return
 
     # Save options to the .bidsignore file
     bidsignore_items = [item.strip() for item in bidsmap['Options']['bidscoin']['bidsignore'].split(';')]
