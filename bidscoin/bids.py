@@ -554,6 +554,9 @@ def get_dicomfield(tagname: str, dicomfile: str):
     :return:            Extracted tag-values from the dicom-file
     """
 
+    if not dicomfile:
+        return ''
+
     global _DICOMDICT_CACHE, _DICOMFILE_CACHE
 
     if not os.path.isfile(dicomfile):
@@ -1006,7 +1009,7 @@ def get_subid_sesid(dicomfile: str, subid: str='', sesid: str='', subprefix: str
     """
 
     # Add default value for subid and sesid (e.g. for the bidseditor)
-    dicompath = os.path.dirname(dicomfile)
+    dicompath = os.path.dirname(str(dicomfile))
     if subid=='<<SourceFilePath>>':
         subid = dicompath.rsplit(os.sep + subprefix, 1)[1].split(os.sep)[0]
     else:
@@ -1169,7 +1172,7 @@ def get_dynamic_value(bidsvalue: str, sourcefile: str) -> str:
         return bidsvalue
 
     # Fill any bids-label with the <annotated> dicom attribute
-    if bidsvalue.startswith('<') and bidsvalue.endswith('>'):
+    if bidsvalue.startswith('<') and bidsvalue.endswith('>') and sourcefile:
         dicomvalue = get_dicomfield(bidsvalue[1:-1], sourcefile)
         if not dicomvalue:
             return bidsvalue
