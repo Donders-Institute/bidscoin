@@ -599,7 +599,10 @@ class Ui_MainWindow(MainWindow):
                                              modality, run, '', self.subprefix, self.sesprefix)
                 subid = bids.get_bidsvalue(bidsname, 'sub')
                 sesid = bids.get_bidsvalue(bidsname, 'ses')
-                session = os.path.join(self.bidsfolder, f'sub-{subid}', f'ses-{sesid}')
+                if sesid:
+                    session = os.path.join(self.bidsfolder, f'sub-{subid}', f'ses-{sesid}')
+                else:
+                    session = os.path.join(self.bidsfolder, f'sub-{subid}')
 
                 samples_table.setItem(idx, 0, QTableWidgetItem(f"{ordered_file_index+1:03d}"))
                 samples_table.setItem(idx, 1, QTableWidgetItem(provenance_file))
