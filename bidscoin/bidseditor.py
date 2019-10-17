@@ -758,6 +758,7 @@ class Ui_MainWindow(MainWindow):
                         'YAML Files (*.yaml *.yml);;All Files (*)')
         if filename:
             bids.save_bidsmap(filename, self.output_bidsmap)
+            QtCore.QCoreApplication.setApplicationName(f'{filename} - BIDS editor')
 
     def handle_edit_button_clicked(self):
         """Make sure that index map has been updated. """
@@ -1319,7 +1320,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
 
     # Start the Qt-application
     app = QApplication(sys.argv)
-    app.setApplicationName('BIDS editor')
+    app.setApplicationName(f'{bidsmapfile} - BIDS editor')
     mainwin = MainWindow()
     gui = Ui_MainWindow()
     gui.setupUi(mainwin, bidsfolder, sourcefolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap, subprefix=subprefix, sesprefix=sesprefix)
