@@ -1333,16 +1333,17 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     bids.reporterrors()
 
 
-if __name__ == "__main__":
+def main():
+    """Console script usage"""
 
     # Parse the input arguments and run bidseditor
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog=textwrap.dedent("""
                                          examples:
-                                           bidseditor.py /project/foo/bids
-                                           bidseditor.py /project/foo/bids -t bidsmap_dccn.yaml
-                                           bidseditor.py /project/foo/bids -b my/custom/bidsmap.yaml
+                                           bidseditor /project/foo/bids
+                                           bidseditor /project/foo/bids -t bidsmap_dccn.yaml
+                                           bidseditor /project/foo/bids -b my/custom/bidsmap.yaml
 
                                          Here are a few tips & tricks:
                                          -----------------------------
@@ -1402,3 +1403,7 @@ if __name__ == "__main__":
                templatefile = args.template,
                subprefix    = args.subprefix,
                sesprefix    = args.sesprefix)
+
+
+if __name__ == "__main__":
+    main()

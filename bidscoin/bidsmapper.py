@@ -324,16 +324,16 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     bids.reporterrors()
 
 
-# Shell usage
-if __name__ == "__main__":
+def main():
+    """Console script usage"""
 
     # Parse the input arguments and run bidsmapper(args)
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
-                                            '  bidsmapper.py /project/foo/raw /project/foo/bids\n'
-                                            '  bidsmapper.py /project/foo/raw /project/foo/bids -t bidsmap_dccn\n ')
+                                            '  bidsmapper /project/foo/raw /project/foo/bids\n'
+                                            '  bidsmapper /project/foo/raw /project/foo/bids -t bidsmap_dccn\n ')
     parser.add_argument('sourcefolder',       help='The source folder containing the raw data in sub-#/ses-#/run format (or specify --subprefix and --sesprefix for different prefixes)')
     parser.add_argument('bidsfolder',         help='The destination folder with the (future) bids data and the bidsfolder/code/bidscoin/bidsmap.yaml output file')
     parser.add_argument('-b','--bidsmap',     help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
@@ -351,3 +351,7 @@ if __name__ == "__main__":
                subprefix    = args.subprefix,
                sesprefix    = args.sesprefix,
                interactive  = args.interactive)
+
+
+if __name__ == "__main__":
+    main()

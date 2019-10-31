@@ -243,16 +243,16 @@ def bidstrainer(bidsfolder: str, samplefolder: str, bidsmapfile: str, pattern: s
     LOGGER.info('------------ FINISHED! ------------')
 
 
-# Shell usage
-if __name__ == "__main__":
+def main():
+    """Console script usage"""
 
     # Parse the input arguments and run bidstrainer(args)
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n' 
-                                            '  bidstrainer.py /project/foo/bids\n' 
-                                            '  bidstrainer.py /project/foo/bids -s /project/foo/samples -t bidsmap_custom\n ')
+                                            '  bidstrainer /project/foo/bids\n' 
+                                            '  bidstrainer /project/foo/bids -s /project/foo/samples -t bidsmap_custom\n ')
     parser.add_argument('bidsfolder',           help='The destination folder with the bids data structure')
     parser.add_argument('-s','--samplefolder',  help='The root folder of the directory tree containing the sample files / training data. By default the bidsfolder/code/bidscoin/samples folder is used or such an empty directory tree is created', default='')
     parser.add_argument('-t','--template',      help='The bidsmap template file with the BIDS heuristics (default: ./heuristics/bidsmap_template.yaml)', default='bidsmap_template.yaml')
@@ -263,3 +263,7 @@ if __name__ == "__main__":
                 samplefolder = args.samplefolder,
                 bidsmapfile  = args.template,
                 pattern      = args.pattern)
+
+
+if __name__ == "__main__":
+    main()

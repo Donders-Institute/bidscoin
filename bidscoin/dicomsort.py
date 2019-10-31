@@ -157,8 +157,8 @@ def sortsessions(session: str, subjectid: str='', sessionid: str='', rename: boo
             sortsession(sessionfolder, dicomfiles, rename, ext, nosort)
 
 
-# Shell usage
-if __name__ == "__main__":
+def main():
+    """Console script usage"""
 
     # Parse the input arguments and run the sortsessions(args)
     import argparse
@@ -170,10 +170,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
-                                            '  dicomsort.py /project/3022026.01/raw\n'
-                                            '  dicomsort.py /project/3022026.01/raw --subjectid sub\n'
-                                            '  dicomsort.py /project/3022026.01/raw --subjectid sub-01 --sessionid ses\n'
-                                            '  dicomsort.py /project/3022026.01/raw/sub-011/ses-mri01/DICOMDIR -r -e .dcm\n')
+                                            '  dicomsort /project/3022026.01/raw\n'
+                                            '  dicomsort /project/3022026.01/raw --subjectid sub\n'
+                                            '  dicomsort /project/3022026.01/raw --subjectid sub-01 --sessionid ses\n'
+                                            '  dicomsort /project/3022026.01/raw/sub-011/ses-mri01/DICOMDIR -r -e .dcm\n')
     parser.add_argument('dicomsource',      help='The name of the root folder containing the dicomsource/[sub/][ses/]dicomfiles or the name of the (single session/study) DICOMDIR file')
     parser.add_argument('-i','--subjectid', help='The prefix string for recursive searching in dicomsource/subject subfolders (e.g. "sub")')
     parser.add_argument('-j','--sessionid', help='The prefix string for recursive searching in dicomsource/subject/session subfolders (e.g. "ses")')
@@ -190,3 +190,7 @@ if __name__ == "__main__":
                  ext        = args.ext,
                  nosort     = args.nosort,
                  pattern    = args.pattern)
+
+
+if __name__ == "__main__":
+    main()

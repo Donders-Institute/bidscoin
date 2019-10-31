@@ -124,8 +124,8 @@ def rawmapper(rawfolder: str, outfolder: str='', sessions: list=[], rename: bool
                     fid.write('{}\t{}\t{}\t{}\n'.format(subid, sesid, os.path.basename(series), '\t'.join(dcmval.split('/'))))
 
 
-# Shell usage
-if __name__ == "__main__":
+def main():
+    """Console script usage"""
 
     # Parse the input arguments and run the rawmapper(args)
     import argparse
@@ -137,12 +137,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n' 
-                                            '  rawmapper.py /project/3022026.01/raw/\n'
-                                            '  rawmapper.py /project/3022026.01/raw -d AcquisitionDate\n' 
-                                            '  rawmapper.py /project/3022026.01/raw -s sub-100/ses-mri01 sub-126/ses-mri01\n'
-                                            '  rawmapper.py /project/3022026.01/raw -r -d ManufacturerModelName AcquisitionDate --dryrun\n' 
-                                            '  rawmapper.py raw/ -r -s sub-1*/* sub-2*/ses-mri01 --dryrun\n'
-                                            '  rawmapper.py -d EchoTime -w *fMRI* /project/3022026.01/raw\n ')
+                                            '  rawmapper /project/3022026.01/raw/\n'
+                                            '  rawmapper /project/3022026.01/raw -d AcquisitionDate\n' 
+                                            '  rawmapper /project/3022026.01/raw -s sub-100/ses-mri01 sub-126/ses-mri01\n'
+                                            '  rawmapper /project/3022026.01/raw -r -d ManufacturerModelName AcquisitionDate --dryrun\n' 
+                                            '  rawmapper raw/ -r -s sub-1*/* sub-2*/ses-mri01 --dryrun\n'
+                                            '  rawmapper -d EchoTime -w *fMRI* /project/3022026.01/raw\n ')
     parser.add_argument('sourcefolder',      help='The source folder with the raw data in sub-#/ses-#/series organisation')
     parser.add_argument('-s','--sessions',   help='Space separated list of selected sub-#/ses-# names / folders to be processed. Otherwise all sessions in the bidsfolder will be selected', nargs='+')
     parser.add_argument('-d','--dicomfield', help='The name of the dicomfield that is mapped / used to rename the subid/sesid foldernames', default=['PatientComments'], nargs='+')
@@ -163,3 +163,7 @@ if __name__ == "__main__":
               subprefix  = args.subprefix,
               sesprefix  = args.sesprefix,
               dryrun     = args.dryrun)
+
+
+if __name__ == "__main__":
+    main()
