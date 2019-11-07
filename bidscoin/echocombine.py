@@ -10,6 +10,7 @@ import multiecho as me
 import json
 import re
 import logging
+import pandas as pd
 from pathlib import Path
 try:
     from bidscoin import bids
@@ -51,7 +52,7 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
 
             sub_id, ses_id = bids.get_subid_sesid(session)
 
-            # Search for matches
+            # Search for multi-echo matches
             for match in sorted((bidsdir/sub_id/ses_id).glob(pattern)):
 
                 # Check if it is normal/BIDS multi-echo data
@@ -65,7 +66,7 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                     LOGGER.warning(f"Only one echo image found, nothing to do for: {match}")
                     continue
 
-                # Create the multi-echo output filename and check if that file already exists
+                # Construct the multi-echo output filename and check if that file already exists
                 mename = match.name.replace(f"_echo-{echonr}", '')
                 if not output:
                     mefile = bidsdir/sub_id/ses_id/match.parent.name/mename
@@ -78,23 +79,23 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                     LOGGER.warning(f"Outputfile {mefile} already exists, skipping: {match}")
                     continue
 
-                # Combine the echo images
+                # Combine the multi-echo images
                 me.me_combine(mepattern, mefile, algorithm, weights, saveweights=False)
 
                 # Add a multi-echo json sidecar-file
                 mejson = mefile.with_suffix('').with_suffix('.json')
                 LOGGER.info(f"Adding a json sidecar-file: {mejson}")
                 shutil.copyfile(echos[0].with_suffix('').with_suffix('.json'), mejson)
-                with mejson.open('w') as json_fid:
-                    data               = json.load(json_fid)
+                with mejson.open('w') as fmap_fid:
+                    data               = json.load(fmap_fid)
                     data['EchoTime']   = 'n/a'
                     data['EchoNumber'] = 1
-                    json.dump(data, json_fid, indent=4)
+                    json.dump(data, fmap_fid, indent=4)
 
-                # (Re)move the original echo images
+                # (Re)move the original multi-echo images
                 if not output:
-                    for echo in echos:
-                        newecho = echo.parents[1]/bids.unknownmodality/echo.name
+                    newechos = [echo.parents[1]/bids.unknownmodality/echo.name for echo in echos]
+                    for echo, newecho in zip(echos, newechos):
                         LOGGER.info(f'Moving original echo image: {echo} -> {newecho}')
                         echo.replace(newecho)
                         echo.with_suffix('').with_suffix('.json').replace(newecho.with_suffix('').with_suffix('.json'))
@@ -103,6 +104,44 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                         LOGGER.info(f'Removing original echo image: {echo}')
                         echo.unlink()
                         echo.with_suffix('').with_suffix('.json').unlink()
+
+                # Update the IntendedFor fields in the fieldmap sidecar files
+                if (match.parent/'fieldmap').is_dir():
+                    for fmap in (match.parent/'fieldmap').glob('*.json'):
+                        with fmap.open('w') as fmap_fid:
+                            fmap_data   = json.load(fmap_fid)
+                            IntendedFor = data['IntendedFor']
+                            if echos[0] in IntendedFor:
+                                LOGGER.info(f"Updating 'IntendedFor' to {mefile} in {fmap}")
+                                if not output:
+                                    IntendedFor = [file for file in IntendedFor if not Path(file) in echos] + [str(mefile)] + [str(newecho) for newecho in newechos]
+                                elif output == match.parent.name:
+                                    IntendedFor = [file for file in IntendedFor if not Path(file) in echos] + [str(mefile)]
+                                else:
+                                    IntendedFor = IntendedFor + [str(mefile)]
+                                fmap_data['IntendedFor'] = IntendedFor
+                                json.dump(fmap_data, fmap_fid, indent=4)
+
+                # Update the scans.tsv file
+                scans_tsv = bidsdir/sub_id/ses_id/'scans.tsv'
+                if scans_tsv.is_file():
+
+                    scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
+
+                    LOGGER.info(f"Adding {mefile} to {scans_tsv}")
+                    scans_table.loc[mefile] = scans_table.loc[echos[0]]
+
+                    for echo, newecho in zip(echos, newechos):
+                        if not output:
+                            LOGGER.info(f"Updating {echo} -> {newecho} in {scans_tsv}")
+                            scans_table.loc[newecho] = scans_table.loc[echo]
+                            scans_table.drop(echo)
+                        elif output==match.parent.name:
+                            LOGGER.info(f"Removing {echo} from {scans_tsv}")
+                            scans_table.drop(echo)
+
+                    scans_table.sort_values(by=['acq_time','filename'], inplace=True)
+                    scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
 
 def main():
