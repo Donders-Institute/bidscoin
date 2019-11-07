@@ -36,7 +36,7 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
         if not subjects:
             LOGGER.warning(f"No subjects found in: {bidsdir/'sub-*'}")
     else:
-        subjects = ['sub-' + re.sub('^sub-','',subject) for subject in subjects]            # Make sure there is a "sub-" prefix
+        subjects = ['sub-' + re.sub('^sub-', '', subject) for subject in subjects]            # Make sure there is a "sub-" prefix
         subjects = [bidsdir/subject for subject in subjects if (bidsdir/subject).is_dir()]
 
     # Loop over bids subject/session-directories
@@ -70,7 +70,7 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                 mename = match.name.replace(f"_echo-{echonr}", '')
                 if not output:
                     mefile = bidsdir/sub_id/ses_id/match.parent.name/mename
-                elif output=='derivatives':
+                elif output == 'derivatives':
                     mefile = bidsdir/'derivatives'/'multi-echo'/sub_id/ses_id/match.parent.name/mename
                 else:
                     mefile = bidsdir/sub_id/ses_id/output/mename
@@ -110,16 +110,16 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                     for fmap in (match.parent/'fieldmap').glob('*.json'):
                         with fmap.open('w') as fmap_fid:
                             fmap_data   = json.load(fmap_fid)
-                            IntendedFor = data['IntendedFor']
-                            if echos[0] in IntendedFor:
+                            intendedfor = data['IntendedFor']
+                            if echos[0] in intendedfor:
                                 LOGGER.info(f"Updating 'IntendedFor' to {mefile} in {fmap}")
                                 if not output:
-                                    IntendedFor = [file for file in IntendedFor if not Path(file) in echos] + [str(mefile)] + [str(newecho) for newecho in newechos]
+                                    intendedfor = [file for file in intendedfor if not Path(file) in echos] + [str(mefile)] + [str(newecho) for newecho in newechos]
                                 elif output == match.parent.name:
-                                    IntendedFor = [file for file in IntendedFor if not Path(file) in echos] + [str(mefile)]
+                                    intendedfor = [file for file in intendedfor if not Path(file) in echos] + [str(mefile)]
                                 else:
-                                    IntendedFor = IntendedFor + [str(mefile)]
-                                fmap_data['IntendedFor'] = IntendedFor
+                                    intendedfor = intendedfor + [str(mefile)]
+                                fmap_data['IntendedFor'] = intendedfor
                                 json.dump(fmap_data, fmap_fid, indent=4)
 
                 # Update the scans.tsv file
@@ -136,7 +136,7 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                             LOGGER.info(f"Updating {echo} -> {newecho} in {scans_tsv}")
                             scans_table.loc[newecho] = scans_table.loc[echo]
                             scans_table.drop(echo)
-                        elif output==match.parent.name:
+                        elif output == match.parent.name:
                             LOGGER.info(f"Removing {echo} from {scans_tsv}")
                             scans_table.drop(echo)
 
