@@ -142,6 +142,9 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
                     scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
+    LOGGER.info('-------------- FINISHED! ------------')
+    LOGGER.info('')
+
 
 def main():
     """Console script usage"""
