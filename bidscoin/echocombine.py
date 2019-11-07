@@ -126,9 +126,8 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                 scans_tsv = bidsdir/sub_id/ses_id/'scans.tsv'
                 if scans_tsv.is_file():
 
-                    scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
-
                     LOGGER.info(f"Adding {mefile} to {scans_tsv}")
+                    scans_table             = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
                     scans_table.loc[mefile] = scans_table.loc[echos[0]]
 
                     for echo, newecho in zip(echos, newechos):
