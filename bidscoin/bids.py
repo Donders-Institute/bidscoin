@@ -8,10 +8,7 @@ https://github.com/dangom/dac2bids/blob/master/dac2bids.py
 @author: Marcel Zwiers
 """
 
-# Global imports
-import os.path
 import copy
-import glob
 import inspect
 import ast
 import re
@@ -19,6 +16,8 @@ import logging
 import coloredlogs
 import subprocess
 import pydicom
+from typing import Union, List, Tuple
+from pathlib import Path
 from importlib import util
 from ruamel.yaml import YAML
 yaml = YAML()
@@ -38,7 +37,7 @@ def bidsversion() -> str:
     :return:    The BIDS version number
     """
 
-    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'bidsversion.txt')) as fid:
+    with (Path(__file__).parent.parent/'bidsversion.txt').open('r') as fid:
         version = fid.read().strip()
 
     return str(version)
@@ -51,13 +50,13 @@ def version() -> str:
     :return:    The BIDSCOIN version number
     """
 
-    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'version.txt')) as fid:
+    with (Path(__file__).parent.parent/'version.txt').open('r') as fid:
         version = fid.read().strip()
 
     return str(version)
 
 
-def setup_logging(log_file: str, debug: bool=False) -> logging.Logger:
+def setup_logging(log_file: Path, debug: bool=False) -> logging.Logger:
     """
     Setup the logging
 
@@ -69,11 +68,10 @@ def setup_logging(log_file: str, debug: bool=False) -> logging.Logger:
     # debug = True
 
     # Create the log dir if it does not exist
-    logdir = os.path.dirname(log_file)
-    os.makedirs(logdir, exist_ok=True)
+    log_file.parent.mkdir(parents=True, exist_ok=True)
 
     # Derive the name of the error logfile from the normal log_file
-    error_file = os.path.splitext(log_file)[0] + '.errors'
+    error_file = log_file.with_suffix('.errors')
 
     # Set the format and logging level
     fmt       = '%(asctime)s - %(name)s - %(levelname)s %(message)s'
@@ -104,14 +102,19 @@ def setup_logging(log_file: str, debug: bool=False) -> logging.Logger:
     return logger
 
 
-def reporterrors():
+def reporterrors() -> None:
+    """
+    Summarized the warning and errors from the logfile
+
+    :return:
+    """
 
     for filehandler in logger.handlers:
         if filehandler.name == 'errorhandler':
 
-            errorfile = filehandler.baseFilename
-            if os.path.getsize(errorfile):
-                with open(errorfile, 'r') as fid:
+            errorfile = Path(filehandler.baseFilename)
+            if errorfile.stat().st_size:
+                with errorfile.open('r') as fid:
                     errors = fid.read()
                 logger.info(f"The following BIDScoin errors and warnings were reported:\n\n{40*'>'}\n{errors}{40*'<'}\n")
 
@@ -122,8 +125,9 @@ def reporterrors():
         elif filehandler.name == 'loghandler':
             logfile = filehandler.baseFilename
 
-    logger.info(f'For the complete log see: {logfile}')
-    logger.info(f'NB: logfiles may contain identifiable information, e.g. from pathnames')
+    if 'logfile' in locals():
+        logger.info(f"For the complete log see: {logfile}")
+        logger.info(f"NB: logfiles may contain identifiable information, e.g. from pathnames")
 
 
 def run_command(command: str) -> bool:
@@ -145,7 +149,7 @@ def run_command(command: str) -> bool:
     return True
 
 
-def import_plugin(plugin: str):
+def import_plugin(plugin: Path) -> util.module_from_spec:
     """
 
     :param plugin:  Name of the plugin
@@ -153,14 +157,12 @@ def import_plugin(plugin: str):
     """
 
     # Get the full path to the plugin-module
-    if os.path.basename(plugin)==plugin:
-        plugin = os.path.join(os.path.dirname(__file__), 'plugins', plugin)
-    else:
-        plugin = plugin
-    plugin = os.path.abspath(os.path.realpath(os.path.expanduser(plugin)))
+    plugin = Path(plugin)
+    if len(plugin.parents) == 1:
+        plugin = Path(__file__).parent/'plugins'/plugin
 
     # See if we can find the plug-in
-    if not os.path.isfile(plugin):
+    if not plugin.is_file():
         logger.error(f"Could not find plugin: '{plugin}'")
         return None
 
@@ -172,11 +174,11 @@ def import_plugin(plugin: str):
 
         # bidsmapper -> module.bidsmapper_plugin(runfolder, bidsmap_new, bidsmap_old)
         if 'bidsmapper_plugin' not in dir(module):
-            logger.info('Could not find bidscoiner_plugin() in ' + plugin)
+            logger.info(f"Could not find bidscoiner_plugin() in {plugin}")
 
         # bidscoiner -> module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals)
         if 'bidscoiner_plugin' not in dir(module):
-            logger.info('Could not find bidscoiner_plugin() in ' + plugin)
+            logger.info(f"Could not find bidscoiner_plugin() in {plugin}")
 
         if 'bidsmapper_plugin' not in dir(module) and 'bidscoiner_plugin' not in dir(module):
             logger.warning(f"{plugin} can (and will) not perform any operation")
@@ -200,8 +202,10 @@ def test_tooloptions(tool: str, opts: dict) -> bool:
 
     if tool == 'dcm2niix':
         command = f"{opts['path']}dcm2niix -h"
-    elif tool == 'bidscoin':
-        command = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bidscoin.py -v')
+    elif tool == 'bidsmapper':
+        command = f"{Path(__file__).parent/'bidsmapper.py'} -v"
+    elif tool in ('bidscoin', 'bidscoiner'):
+        command = f"{Path(__file__).parent/'bidscoiner.py'} -v"
     else:
         logger.warning(f"Testing of '{tool}' not supported")
         return None
@@ -211,7 +215,7 @@ def test_tooloptions(tool: str, opts: dict) -> bool:
     return run_command(command)
 
 
-def test_plugins(plugin: str='') -> bool:
+def test_plugins(plugin: Path) -> bool:
     """
     Performs tests of the plug-ins in bidsmap['PlugIns']
 
@@ -232,21 +236,19 @@ def test_plugins(plugin: str='') -> bool:
         return False
 
 
-def lsdirs(folder: str, wildcard: str='*'):
+def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
     """
     Gets all directories in a folder, ignores files
 
     :param folder:      The full pathname of the folder
     :param wildcard:    Simple (glob.glob) shell-style wildcards. Foldernames starting with a dot are special cases that are not matched by '*' and '?' patterns.") wildcard
-    :return:            An iterable filter object with all directories in a folder
+    :return:            A list with all directories in the folder
     """
 
-    if wildcard:
-        folder = os.path.join(folder, wildcard)
-    return [fname for fname in sorted(glob.glob(folder)) if os.path.isdir(fname)]
+    return [fname for fname in sorted(folder.glob(wildcard)) if fname.is_dir()]
 
 
-def is_dicomfile(file: str) -> bool:
+def is_dicomfile(file: Path) -> bool:
     """
     Checks whether a file is a DICOM-file. It uses the feature that Dicoms have the string DICM hardcoded at offset 0x80.
 
@@ -254,21 +256,21 @@ def is_dicomfile(file: str) -> bool:
     :return:        Returns true if a file is a DICOM-file
     """
 
-    if os.path.isfile(file):
-        if os.path.basename(file).startswith('.'):
-            logger.warning(f'DICOM file is hidden: {file}')
-        with open(file, 'rb') as dcmfile:
+    if file.is_file():
+        if file.stem.startswith('.'):
+            logger.warning(f'File is hidden: {file}')
+        with file.open('rb') as dcmfile:
             dcmfile.seek(0x80, 1)
             if dcmfile.read(4) == b'DICM':
                 return True
             else:
-                dicomdict = pydicom.dcmread(file, force=True)       # The DICM tag may be missing for anonymized DICOM files
+                dicomdict = pydicom.dcmread(str(file), force=True)       # The DICM tag may be missing for anonymized DICOM files
                 return 'Modality' in dicomdict
     else:
         return False
 
 
-def is_dicomfile_siemens(file: str) -> bool:
+def is_dicomfile_siemens(file: Path) -> bool:
     """
     Checks whether a file is a *SIEMENS* DICOM-file. All Siemens Dicoms contain a dump of the
     MrProt structure. The dump is marked with a header starting with 'ASCCONV BEGIN'. Though
@@ -278,10 +280,10 @@ def is_dicomfile_siemens(file: str) -> bool:
     :return:        Returns true if a file is a Siemens DICOM-file
     """
 
-    return b'ASCCONV BEGIN' in open(file, 'rb').read()
+    return b'ASCCONV BEGIN' in file.open('rb').read()
 
 
-def is_parfile(file: str) -> bool:
+def is_parfile(file: Path) -> bool:
     """
     Checks whether a file is a Philips PAR file
 
@@ -292,13 +294,10 @@ def is_parfile(file: str) -> bool:
     """
 
     # TODO: Returns true if filetype is PAR.
-    if os.path.isfile(file):
-        with open(file, 'r') as parfile:
-            pass
-        return False
+    pass
 
 
-def is_p7file(file: str) -> bool:
+def is_p7file(file: Path) -> bool:
     """
     Checks whether a file is a GE P*.7 file
 
@@ -309,13 +308,10 @@ def is_p7file(file: str) -> bool:
     """
 
     # TODO: Returns true if filetype is P7.
-    if os.path.isfile(file):
-        with open(file, 'r') as p7file:
-            pass
-        return False
+    pass
 
 
-def is_niftifile(file: str) -> bool:
+def is_niftifile(file: Path) -> bool:
     """
     Checks whether a file is a nifti file
 
@@ -326,13 +322,10 @@ def is_niftifile(file: str) -> bool:
     """
 
     # TODO: Returns true if filetype is nifti.
-    if os.path.isfile(file):
-        with open(file, 'r') as niftifile:
-            pass
-        return False
+    pass
 
 
-def is_incomplete_acquisition(folder: str) -> bool:
+def is_incomplete_acquisition(folder: Path) -> bool:
     """
     If a scan was aborted in the middle of the experiment, it is likely that images will be saved
     anyway. We want to avoid converting these incomplete directories. This function checks the number
@@ -344,17 +337,17 @@ def is_incomplete_acquisition(folder: str) -> bool:
 
     dicomfile = get_dicomfile(folder)
     nrep      = get_dicomfield('lRepetitions', dicomfile)
-    nfiles    = len(os.listdir(folder))     # TODO: filter out non-imaging files
+    nfiles    = len(list(folder.iterdir()))     # TODO: filter out non-imaging files
 
     if nrep and nrep > nfiles:
-        logger.warning('Incomplete acquisition found in: {}'\
-                       '\nExpected {}, found {} dicomfiles'.format(folder, nrep, nfiles))
+        logger.warning(f"Incomplete acquisition found in: {folder}\n"
+                       f"Expected {nrep}, found {nfiles} dicomfiles")
         return True
     else:
         return False
 
 
-def get_dicomfile(folder: str, index: int=0) -> str:
+def get_dicomfile(folder: Path, index: int=0) -> Path:
     """
     Gets a dicom-file from the folder
 
@@ -364,21 +357,21 @@ def get_dicomfile(folder: str, index: int=0) -> str:
     """
 
     idx = 0
-    for file in sorted(os.listdir(folder)):
-        if os.path.basename(file).startswith('.'):
+    for file in sorted(folder.iterdir()):
+        if file.stem.startswith('.'):
             logger.warning(f'Ignoring hidden DICOM file: {file}')
             continue
-        if is_dicomfile(os.path.join(folder, file)):
+        if is_dicomfile(folder/file):
             if idx == index:
-                return os.path.join(folder, file)
+                return folder/file
             else:
                 idx += 1
 
-    logger.warning(f'Cannot find >{index} dicom files in: {folder}')
+    logger.warning(f"Cannot find >{index} dicom files in: {folder}")
     return None
 
 
-def get_parfile(folder: str) -> str:
+def get_parfile(folder: Path) -> Path:
     """
     Gets a Philips PAR-file from the folder
 
@@ -386,15 +379,15 @@ def get_parfile(folder: str) -> str:
     :return:        The filename of the first PAR-file in the folder.
     """
 
-    for file in sorted(os.listdir(folder)):
+    for file in sorted(folder.iterdir()):
         if is_parfile(file):
-            return os.path.join(folder, file)
+            return folder/file
 
-    logger.warning('Cannot find PAR files in:' + folder)
+    logger.warning(f"Cannot find PAR files in: {folder}")
     return None
 
 
-def get_p7file(folder: str) -> str:
+def get_p7file(folder: Path) -> Path:
     """
     Gets a GE P*.7-file from the folder
 
@@ -402,15 +395,11 @@ def get_p7file(folder: str) -> str:
     :return:        The filename of the first P7-file in the folder.
     """
 
-    for file in sorted(os.listdir(folder)):
-        if is_p7file(file):
-            return os.path.join(folder, file)
-
-    logger.warning('Cannot find P7 files in:' + folder)
+    pass
     return None
 
 
-def get_niftifile(folder: str) -> str:
+def get_niftifile(folder: Path) -> Path:
     """
     Gets a nifti-file from the folder
 
@@ -418,15 +407,11 @@ def get_niftifile(folder: str) -> str:
     :return:        The filename of the first nifti-file in the folder.
     """
 
-    for file in sorted(os.listdir(folder)):
-        if is_niftifile(file):
-            return os.path.join(folder, file)
-
-    logger.warning('Cannot find nifti files in:' + folder)
+    pass
     return None
 
 
-def load_bidsmap(yamlfile: str='', folder: str='', report: bool=True) -> (dict, str):
+def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: bool=True) -> Tuple[dict, Path]:
     """
     Read the mapping heuristics from the bidsmap yaml-file. If yamlfile is not fullpath, then 'folder' is first searched before
     the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, them 'bidsmap_template.yaml'. So fullpath
@@ -439,35 +424,34 @@ def load_bidsmap(yamlfile: str='', folder: str='', report: bool=True) -> (dict, 
     """
 
     # Input checking
-    heuristics_folder = os.path.join(os.path.dirname(__file__),'..','heuristics')
-    if not folder:
+    heuristics_folder = Path(__file__).parents[1]/'heuristics'
+    if not folder.name:
         folder = heuristics_folder
-    if not yamlfile:
-        yamlfile = os.path.join(folder,'bidsmap.yaml')
-        if not os.path.isfile(yamlfile):
-            yamlfile = os.path.join(heuristics_folder,'bidsmap_template.yaml')
+    if not yamlfile.name:
+        yamlfile = folder/'bidsmap.yaml'
+        if not yamlfile.is_file():
+            yamlfile = heuristics_folder/'bidsmap_template.yaml'
 
     # Add a standard file-extension if needed
-    if not os.path.splitext(yamlfile)[1]:
-        yamlfile = yamlfile + '.yaml'
+    if not yamlfile.suffix:
+        yamlfile = yamlfile.with_suffix('.yaml')
 
     # Get the full path to the bidsmap yaml-file
-    if os.path.basename(yamlfile) == yamlfile:
-        if os.path.isfile(os.path.join(folder, yamlfile)):
-            yamlfile = os.path.join(folder, yamlfile)
+    if len(yamlfile.parents) == 1:
+        if (folder/yamlfile).is_file():
+            yamlfile = folder/yamlfile
         else:
-            yamlfile = os.path.join(heuristics_folder, yamlfile)
+            yamlfile = heuristics_folder/yamlfile
 
-    yamlfile = os.path.abspath(os.path.realpath(os.path.expanduser(yamlfile)))
-    if not os.path.isfile(yamlfile):
+    if not yamlfile.is_file():
         if report:
-            logger.info('No existing bidsmap file found: ' + os.path.abspath(yamlfile))
+            logger.info(f"No existing bidsmap file found: {yamlfile}")
         return dict(), yamlfile
     elif report:
-        logger.info('Reading: ' + os.path.abspath(yamlfile))
+        logger.info(f"Reading: {yamlfile}")
 
     # Read the heuristics from the bidsmap file
-    with open(yamlfile, 'r') as stream:
+    with yamlfile.open('r') as stream:
         bidsmap = yaml.load(stream)
 
     # Issue a warning if the version in the bidsmap YAML-file is not the same as the bidscoin version
@@ -489,7 +473,7 @@ def load_bidsmap(yamlfile: str='', folder: str='', report: bool=True) -> (dict, 
     return bidsmap, yamlfile
 
 
-def save_bidsmap(filename: str, bidsmap: dict):
+def save_bidsmap(filename: Path, bidsmap: dict) -> None:
     """
     Save the BIDSmap as a YAML text file
 
@@ -498,24 +482,24 @@ def save_bidsmap(filename: str, bidsmap: dict):
     :return:
     """
 
-    logger.info('Writing bidsmap to: ' + filename)
-    with open(filename, 'w') as stream:
+    logger.info(f"Writing bidsmap to: {filename}")
+    with filename.open('w') as stream:
         yaml.dump(bidsmap, stream)
 
     # See if we can reload it, i.e. whether it is valid yaml...
     try:
-        load_bidsmap(filename, '', False)
+        load_bidsmap(filename, report=False)
     except:
         # Just trying again seems to help? :-)
-        with open(filename, 'w') as stream:
+        with filename.open('w') as stream:
             yaml.dump(bidsmap, stream)
         try:
-            load_bidsmap(filename, '', False)
+            load_bidsmap(filename, report=False)
         except:
             logger.error(f'The saved output bidsmap does not seem to be valid YAML, please check {filename}, e.g. by way of an online yaml validator, such as https://yamlchecker.com/')
 
 
-def parse_x_protocol(pattern: str, dicomfile: str) -> str:
+def parse_x_protocol(pattern: str, dicomfile: Path) -> str:
     """
     Siemens writes a protocol structure as text into each DICOM file.
     This structure is necessary to recreate a scanning protocol from a DICOM,
@@ -527,25 +511,25 @@ def parse_x_protocol(pattern: str, dicomfile: str) -> str:
     """
 
     if not is_dicomfile_siemens(dicomfile):
-        logger.warning('Parsing {} may fail because {} does not seem to be a Siemens DICOM file'.format(pattern, dicomfile))
+        logger.warning(f"Parsing {pattern} may fail because {dicomfile} does not seem to be a Siemens DICOM file")
 
     regexp = '^' + pattern + '\t = \t(.*)\n'
     regex  = re.compile(regexp.encode('utf-8'))
 
-    with open(dicomfile, 'rb') as openfile:
+    with dicomfile.open('rb') as openfile:
         for line in openfile:
             match = regex.match(line)
             if match:
                 return match.group(1).decode('utf-8')
 
-    logger.warning('Pattern: "' + regexp.encode('unicode_escape').decode() + '" not found in: ' + dicomfile)
+    logger.warning(f"Pattern: '{regexp.encode('unicode_escape').decode()}' not found in: {dicomfile}")
     return None
 
 
 # Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) _DICOMDICT_CACHE optimization
 _DICOMDICT_CACHE = None
 _DICOMFILE_CACHE = None
-def get_dicomfield(tagname: str, dicomfile: str):
+def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
     """
     Robustly extracts a DICOM field/tag from a dictionary or from vendor specific fields
 
@@ -554,19 +538,23 @@ def get_dicomfield(tagname: str, dicomfile: str):
     :return:            Extracted tag-values from the dicom-file
     """
 
-    if not dicomfile:
+    if not dicomfile.name:
         return ''
 
     global _DICOMDICT_CACHE, _DICOMFILE_CACHE
 
-    if not os.path.isfile(dicomfile):
+    if not dicomfile.is_file():
         logger.warning(f"{dicomfile} not found")
+        value = None
+
+    elif not is_dicomfile(dicomfile):
+        logger.warning(f"{dicomfile} is not a DICOM file, cannot read {tagname}")
         value = None
 
     else:
         try:
             if dicomfile != _DICOMFILE_CACHE:
-                dicomdict = pydicom.dcmread(dicomfile, force=True)      # The DICM tag may be missing for anonymized DICOM files
+                dicomdict = pydicom.dcmread(str(dicomfile), force=True)      # The DICM tag may be missing for anonymized DICOM files
                 if 'Modality' not in dicomdict:
                     raise ValueError(f'Cannot read {dicomfile}')
                 _DICOMDICT_CACHE = dicomdict
@@ -651,7 +639,7 @@ def strip_suffix(run: dict) -> dict:
     return run
 
 
-def cleanup_value(label):
+def cleanup_value(label: str) -> str:
     """
     Converts a given label to a cleaned-up label that can be used as a BIDS label. Remove leading and trailing spaces;
     convert other spaces, special BIDS characters and anything that is not an alphanumeric to a ''. This will for
@@ -667,12 +655,12 @@ def cleanup_value(label):
     special_characters = (' ', '_', '-','.')
 
     for special in special_characters:
-        label = str(label).strip().replace(special, '')
+        label = label.strip().replace(special, '')
 
     return re.sub(r'(?u)[^-\w.]', '', label)
 
 
-def dir_bidsmap(bidsmap: dict, source: str) -> list:
+def dir_bidsmap(bidsmap: dict, source: str) -> List[Path]:
     """
     Make a provenance list of all the runs in the bidsmap[source]
 
@@ -685,7 +673,7 @@ def dir_bidsmap(bidsmap: dict, source: str) -> list:
     for modality in bidsmodalities + (unknownmodality, ignoremodality):
         if modality in bidsmap[source] and bidsmap[source][modality]:
             for run in bidsmap[source][modality]:
-                provenance.append(run['provenance'])
+                provenance.append(Path(run['provenance']))
                 if not run['provenance']:
                     logger.warning(f'The bidsmap run {modality} run does not contain provenance data')
 
@@ -694,7 +682,7 @@ def dir_bidsmap(bidsmap: dict, source: str) -> list:
     return provenance
 
 
-def get_run(bidsmap: dict, source: str, modality, suffix_idx, dicomfile: str='') -> dict:
+def get_run(bidsmap: dict, source: str, modality: str, suffix_idx: Union[int, str], dicomfile: Path='') -> dict:
     """
     Find the (first) run in bidsmap[source][bidsmodality] with run['bids']['suffix_idx'] == suffix_idx
 
@@ -712,14 +700,14 @@ def get_run(bidsmap: dict, source: str, modality, suffix_idx, dicomfile: str='')
             run_ = dict(provenance={}, attributes={}, bids={})
 
             for attrkey, attrvalue in run['attributes'].items():
-                if dicomfile:
+                if dicomfile.name:
                     run_['attributes'][attrkey] = get_dicomfield(attrkey, dicomfile)
-                    run_['provenance']          = dicomfile
+                    run_['provenance']          = str(dicomfile)
                 else:
                     run_['attributes'][attrkey] = attrvalue
 
             for bidskey, bidsvalue in run['bids'].items():
-                if dicomfile:
+                if dicomfile.name:
                     run_['bids'][bidskey] = get_dynamic_value(bidsvalue, dicomfile)
                 else:
                     run_['bids'][bidskey] = bidsvalue
@@ -729,7 +717,7 @@ def get_run(bidsmap: dict, source: str, modality, suffix_idx, dicomfile: str='')
     logger.error(f"'{modality}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{source}']")
 
 
-def delete_run(bidsmap: dict, source: str, modality: str, provenance: str) -> dict:
+def delete_run(bidsmap: dict, source: str, modality: str, provenance: Path) -> dict:
     """
     Delete a run from the BIDS map
 
@@ -741,7 +729,7 @@ def delete_run(bidsmap: dict, source: str, modality: str, provenance: str) -> di
     """
 
     for index, run in enumerate(bidsmap[source][modality]):
-        if run['provenance'] == provenance:
+        if run['provenance'] == str(provenance):
             del bidsmap[source][modality][index]
 
     return bidsmap
@@ -755,6 +743,7 @@ def append_run(bidsmap: dict, source: str, modality: str, run: dict, clean: bool
     :param source:      The information source in the bidsmap that is used, e.g. 'DICOM'
     :param modality:    The modality in the source that is used, e.g. 'anat'
     :param run:         The run (listitem) that is appenden to the modality
+    :param clean:       A boolean to clean-up commentedMap fields
     :return:            The new bidsmap
     """
 
@@ -779,7 +768,7 @@ def append_run(bidsmap: dict, source: str, modality: str, run: dict, clean: bool
     return bidsmap
 
 
-def update_bidsmap(bidsmap: dict, source_modality: str, provenance: str, target_modality: str, run: dict, source: str= 'DICOM', clean: bool=True) -> dict:
+def update_bidsmap(bidsmap: dict, source_modality: str, provenance: Path, target_modality: str, run: dict, source: str= 'DICOM', clean: bool=True) -> dict:
     """
     Update the BIDS map if the modality changes:
     1. Remove the source run from the source modality section
@@ -814,7 +803,7 @@ def update_bidsmap(bidsmap: dict, source_modality: str, provenance: str, target_
 
     else:
         for index, run_ in enumerate(bidsmap[source][target_modality]):
-            if run_['provenance'] == provenance:
+            if run_['provenance'] == str(provenance):
                 bidsmap[source][target_modality][index] = run
                 break
 
@@ -940,7 +929,7 @@ def exist_run(bidsmap: dict, source: str, modality: str, run_item: dict, matchbi
     return False
 
 
-def get_matching_run(dicomfile: str, bidsmap: dict, modalities: tuple = bidsmodalities + (ignoremodality, unknownmodality)) -> tuple:
+def get_matching_run(dicomfile: Path, bidsmap: dict, modalities: tuple = bidsmodalities + (ignoremodality, unknownmodality)) -> Tuple[dict, str, int]:
     """
     Find the first run in the bidsmap with dicom attributes that match with the dicom file. Then update the (dynamic) bids values (values are cleaned-up to be BIDS-valid)
 
@@ -985,42 +974,41 @@ def get_matching_run(dicomfile: str, bidsmap: dict, modalities: tuple = bidsmoda
 
             # Stop searching the bidsmap if we have a match. TODO: check if there are more matches (i.e. conflicts)
             if match:
-                run_['provenance'] = dicomfile
+                run_['provenance'] = str(dicomfile)
 
                 return run_, modality, index
 
     # We don't have a match (all tests failed, so modality should be the *last* one, i.e. unknownmodality)
     logger.debug(f"Could not find a matching run in the bidsmap for {dicomfile} -> {modality}")
-    run_['provenance'] = dicomfile
+    run_['provenance'] = str(dicomfile)
 
     return run_, modality, None
 
 
-def get_subid_sesid(dicomfile: str, subid: str='', sesid: str='', subprefix: str= 'sub-', sesprefix: str= 'ses-'):
+def get_subid_sesid(bidsfile: Path, subid: str= '<<SourceFilePath>>', sesid: str= '<<SourceFilePath>>', subprefix: str= 'sub-', sesprefix: str= 'ses-') -> Tuple[str, str]:
     """
     Extract the cleaned-up subid and sesid from the pathname or from the dicom file if subid/sesid == '<<SourceFilePath>>'
 
-    :param dicomfile:   The full pathname of the dicomfile. If given, the DICOM values are read from the file
-    :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001'). Can be left empty
-    :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01')
-    :param subprefix:   The optional subprefix (e.g. 'sub-'). Used to parse the sub-value from the provenance as default subid
-    :param sesprefix:   The optional sesprefix (e.g. 'ses-'). If it is found in the provenance then a default sesid will be set
-    :return:            Updated (subid, sesid) tuple, including the sub/sesprefix
+    :param bidsfile:   The full pathname of the file. If it is a DICOM file, the sub/ses values are read from the DICOM field
+    :param subid:      The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001') or DICOM field. Can be left empty
+    :param sesid:      The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01') or DICOM field
+    :param subprefix:  The optional subprefix (e.g. 'sub-'). Used to parse the sub-value from the provenance as default subid
+    :param sesprefix:  The optional sesprefix (e.g. 'ses-'). If it is found in the provenance then a default sesid will be set
+    :return:           Updated (subid, sesid) tuple, including the sub/sesprefix
     """
 
     # Add default value for subid and sesid (e.g. for the bidseditor)
-    dicompath = os.path.dirname(str(dicomfile))
     if subid=='<<SourceFilePath>>':
-        subid = dicompath.rsplit(os.sep + subprefix, 1)[1].split(os.sep)[0]
+        subid = [part.split(subprefix)[1] for part in bidsfile.parent.parts if part.startswith(subprefix)][-1]
     else:
-        subid = get_dynamic_value(subid, dicomfile)
+        subid = get_dynamic_value(subid, bidsfile)
     if sesid=='<<SourceFilePath>>':
-        if os.sep + sesprefix in dicompath:
-            sesid = dicompath.rsplit(os.sep + sesprefix, 1)[1].split(os.sep)[0]
+        if bidsfile.parents[1].match(sesprefix + '*'):
+            sesid = [part.split(sesprefix)[1] for part in bidsfile.parent.parts if part.startswith(sesprefix)][-1]
         else:
             sesid = ''
     else:
-        sesid = get_dynamic_value(sesid, dicomfile)
+        sesid = get_dynamic_value(sesid, bidsfile)
 
     # Add sub- and ses- prefixes if they are not there
     subid = 'sub-' + cleanup_value(re.sub(f'^{subprefix}', '', subid))
@@ -1046,7 +1034,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
     assert modality in bidsmodalities + (unknownmodality, ignoremodality)
 
     # Try to update the sub/ses-ids
-    subid, sesid = get_subid_sesid(run['provenance'], subid, sesid, subprefix, sesprefix)
+    subid, sesid = get_subid_sesid(Path(run['provenance']), subid, sesid, subprefix, sesprefix)
 
     # Validate and do some checks to allow for dragging the run entries between the different modality-sections
     run = copy.deepcopy(run)                # Avoid side effects when changing run
@@ -1054,7 +1042,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
         if bidslabel not in run['bids']:
             run['bids'][bidslabel] = None
         else:
-            run['bids'][bidslabel] = cleanup_value(get_dynamic_value(run['bids'][bidslabel], run['provenance']))
+            run['bids'][bidslabel] = cleanup_value(get_dynamic_value(run['bids'][bidslabel], Path(run['provenance'])))
 
     # Use the clean-up runindex
     if not runindex:
@@ -1157,7 +1145,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
     return bidsname
 
 
-def get_dynamic_value(bidsvalue: str, sourcefile: str) -> str:
+def get_dynamic_value(bidsvalue: str, sourcefile: Path) -> str:
     """
     Replaces (dynamic) bidsvalues with (DICOM) run attributes when they start with '<' and end with '>',
     but not with '<<' and '>>'
@@ -1172,31 +1160,31 @@ def get_dynamic_value(bidsvalue: str, sourcefile: str) -> str:
         return bidsvalue
 
     # Fill any bids-label with the <annotated> dicom attribute
-    if bidsvalue.startswith('<') and bidsvalue.endswith('>') and sourcefile:
+    if bidsvalue.startswith('<') and bidsvalue.endswith('>') and sourcefile.name:
         dicomvalue = get_dicomfield(bidsvalue[1:-1], sourcefile)
         if not dicomvalue:
             return bidsvalue
         else:
-            bidsvalue = cleanup_value(dicomvalue)
+            bidsvalue = cleanup_value(str(dicomvalue))
 
     return bidsvalue
 
 
-def get_bidsvalue(bidsname: str, bidskey: str, newvalue: str= '') -> str:
+def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str= '') -> Union[Path, str]:
     """
     Sets the bidslabel, i.e. '*_bidskey-*_' is replaced with '*_bidskey-bidsvalue_'. If the key is not in the bidsname
     then the newvalue is appended to the acquisition label. If newvalue is empty (= default), then the parsed existing
     bidsvalue is returned and nothing is set
 
-    :param bidsname:    The bidsname (e.g. as returned from get_bidsname or fullpath)
+    :param bidsfile:    The bidsname (e.g. as returned from get_bidsname or fullpath)
     :param bidskey:     The name of the bidskey, e.g. 'echo'
     :param newvalue:    The new bidsvalue
     :return:            The bidsname with the new bidsvalue or, if newvalue is empty, the existing bidsvalue
     """
 
     newvalue = cleanup_value(newvalue)
-    pathname = os.path.dirname(bidsname)
-    bidsname = os.path.basename(bidsname)
+    bidspath = Path(bidsfile).parent
+    bidsname = Path(bidsfile).with_suffix('').stem
 
     # Get the existing bidsvalue
     oldvalue = ''
@@ -1212,17 +1200,29 @@ def get_bidsvalue(bidsname: str, bidskey: str, newvalue: str= '') -> str:
     # Replace the existing bidsvalue with the new value or append the newvalue to the acquisition value
     if newvalue:
         if f'_{bidskey}-' not in bidsname:
+            if '_acq-' not in bidsname:         # Insert the 'acq' key right after the sub/ses key-value pairs
+                keyval = bidsname.split('_')
+                if get_bidsvalue(bidsname, 'ses'):
+                    keyval.insert(2, 'acq-')
+                else:
+                    keyval.insert(1, 'acq-')
+                bidsname = '_'.join(keyval)
             bidskey  = 'acq'
             oldvalue = acqvalue
             newvalue = acqvalue + newvalue
-        return os.path.join(pathname, bidsname.replace(f'{bidskey}-{oldvalue}', f'{bidskey}-{newvalue}'))
+
+        # Return the updated bidsfile
+        newbidsfile = bidspath / (bidsname.replace(f'{bidskey}-{oldvalue}', f'{bidskey}-{newvalue}'))
+        if isinstance(bidsfile, str):
+            newbidsfile = str(newbidsfile)
+        return newbidsfile
 
     # Or just return the parsed old bidsvalue
     else:
         return oldvalue
 
 
-def increment_runindex(bidsfolder: str, bidsname: str, ext: str='.*') -> str:
+def increment_runindex(bidsfolder: Path, bidsname: str, ext: str='.*') -> Union[Path, str]:
     """
     Checks if a file with the same the bidsname already exists in the folder and then increments the runindex (if any)
     until no such file is found
@@ -1233,10 +1233,10 @@ def increment_runindex(bidsfolder: str, bidsname: str, ext: str='.*') -> str:
     :return:            The bidsname with the incremented runindex
     """
 
-    while glob.glob(os.path.join(bidsfolder, bidsname + ext)):
+    while list(bidsfolder.glob(bidsname + ext)):
 
         runindex = get_bidsvalue(bidsname, 'run')
         if runindex:
-            bidsname = get_bidsvalue(bidsname, 'run', int(runindex) + 1)
+            bidsname = get_bidsvalue(bidsname, 'run', str(int(runindex) + 1))
 
     return bidsname

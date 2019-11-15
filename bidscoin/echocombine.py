@@ -105,7 +105,7 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                         echo.unlink()
                         echo.with_suffix('').with_suffix('.json').unlink()
 
-                # Update the IntendedFor fields in the fieldmap sidecar files
+                # Update the IntendedFor fields in the fieldmap sidecar files (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
                 if (match.parent/'fieldmap').is_dir():
                     for fmap in (match.parent/'fieldmap').glob('*.json'):
                         with fmap.open('w') as fmap_fid:

@@ -18,9 +18,9 @@
 
 BIDScoin is a user friendly [open-source](https://github.com/Donders-Institute/bidscoin) python toolkit that converts ("coins") source-level (raw) neuroimaging data-sets to [nifti](https://nifti.nimh.nih.gov/) / [json](https://www.json.org/) / [tsv](https://en.wikipedia.org/wiki/Tab-separated_values) data-sets that are organized following the Brain Imaging Data Structure, a.k.a. [BIDS](http://bids.neuroimaging.io) standard. Rather then depending on complex or ambiguous programmatic logic for the identification of imaging modalities, BIDScoin uses a direct mapping approach to identify and convert the raw source data into BIDS data. The information sources that can be used to map the source data to BIDS are:
 
- 1. Information in MRI header files (DICOM, PAR/REC or .7 format; e.g. SeriesDescription)
- 2. Information from nifti headers (e.g. image dimensionality)
- 3. Information in the file structure (file- and/or directory names, e.g. number of files)
+1. Information in MRI header files (DICOM, PAR/REC or .7 format; e.g. SeriesDescription)
+2. Information from nifti headers (e.g. image dimensionality)
+3. Information in the file structure (file- and/or directory names, e.g. number of files)
 
 > NB: Currently, the DICOM support (option 1) has been fully implemented, but the support for option 2 and 3 is planned for [future](#bidscoin-functionality--todo) releases.
 
@@ -43,10 +43,9 @@ BIDScoin will take your (raw) source data as well as a YAML file with the key-va
 
 ### Coining your source data to BIDS
 Having an organized source data folder, the actual data-set conversion to BIDS is performed by the [(1a)](#step-1a-running-the-bidsmapper) the `bidsmapper`, [(1b)](#step-1b-running-the-bidseditor) the `bidseditor` and [(2)](#step-2-running-the-bidscoiner) the `bidscoiner` command-line tools. The `bidsmapper` makes a map of the different kind of datatypes in your source dataset, with the `bidseditor` you can edit this map, and the `bidscoiner` does the actual work to convert the source data into BIDS. By default (but see the `-i` option of the bidsmapper below), step 1a automatically launches step 1b, so in it's simplest form, all you need to do to convert your raw source data into BIDS is to run two simple commands, e.g.:
-   ```
-   bidsmapper sourcefolder bidsfolder
-   bidscoiner sourcefolder bidsfolder
-   ```
+
+    bidsmapper sourcefolder bidsfolder
+    bidscoiner sourcefolder bidsfolder
 
 #### Step 1a: Running the bidsmapper
 
@@ -288,7 +287,7 @@ BIDScoin provides the possibility for researchers to write custom python functio
 ## BIDScoin tutorial
 This tutorial is specific for researchers from the DCCN and makes use of data-sets stored on its central file-system. However, it should not be difficult to use (at least part of) this tutorial for other data-sets as well.
 
-1. **Preparation.** Activate the bidscoin environment and create a tutorial playground folder in your home directory by executing these bash commands (see also `module help bidscoin`):  
+1. **Preparation.** Activate the bidscoin environment and create a tutorial playground folder in your home directory by executing these bash commands (see also `module help bidscoin`):
    ```
    module add bidscoin  
    source activate /opt/bidscoin  

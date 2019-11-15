@@ -12,11 +12,11 @@ an example (or may even mostly work for other institutes out of the box).
 """
 
 # Global imports (plugin modules may be imported when needed)
-import os.path
 import textwrap
 import copy
 import logging
 import sys
+from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QMessageBox
 try:
     from bidscoin import bids
@@ -29,11 +29,11 @@ except ImportError:
 LOGGER = logging.getLogger('bidscoin')
 
 
-def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, template: dict, gui: object) -> dict:
+def build_dicommap(runfolder: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, gui: object) -> dict:
     """
     All the logic to map dicom-attributes (fields/tags) onto bids-labels go into this function
 
-    :param dicomfile:   The full-path name of the source dicom-file
+    :param runfolder:   The full-path name of the series-folder containing source dicom-files
     :param bidsmap_new: The bidsmap that we are building
     :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     :param template:    The bidsmap template with the default heuristics
@@ -42,7 +42,8 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
     """
 
     # Input checks
-    if not dicomfile or (not template['DICOM'] and not bidsmap_old['DICOM']):
+    dicomfile = bids.get_dicomfile(runfolder)
+    if not dicomfile.name or (not template['DICOM'] and not bidsmap_old['DICOM']):
         LOGGER.info('No DICOM information found in the bidsmap and template')
         return bidsmap_new
 
@@ -86,18 +87,18 @@ def build_dicommap(dicomfile: str, bidsmap_new: dict, bidsmap_old: dict, templat
     return bidsmap_new
 
 
-def build_parmap(parfile: str, bidsmap_new: dict, bidsmap_old: dict) -> dict:
+def build_parmap(runfolder: Path, bidsmap_new: dict, bidsmap_old: dict) -> dict:
     """
     All the logic to map PAR/REC fields onto bids labels go into this function
 
-    :param parfile:     The full-path name of the source PAR-file
+    :param runfolder:   The full-path name of the source folder containing PAR-files
     :param bidsmap_new: The bidsmap that we are building
     :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     :return:            The bidsmap with new entries in it
     """
 
     # Input checks
-    if not parfile or not bidsmap_old['PAR']:
+    if not runfolder or not bidsmap_old['PAR']:
         return bidsmap_new
 
     # TODO: Loop through all bidsmodalities and runs
@@ -105,18 +106,18 @@ def build_parmap(parfile: str, bidsmap_new: dict, bidsmap_old: dict) -> dict:
     return bidsmap_new
 
 
-def build_p7map(p7file: str, bidsmap_new: dict, bidsmap_old: dict) -> dict:
+def build_p7map(runfolder: Path, bidsmap_new: dict, bidsmap_old: dict) -> dict:
     """
     All the logic to map P*.7-fields onto bids labels go into this function
 
-    :param p7file:      The full-path name of the source P7-file
+    :param runfolder:   The full-path name of the source folder containing P*.7-files
     :param bidsmap_new: The bidsmap that we are building
     :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     :return:            The bidsmap with new entries in it
     """
 
     # Input checks
-    if not p7file or not bidsmap_old['P7']:
+    if not runfolder or not bidsmap_old['P7']:
         return bidsmap_new
 
     # TODO: Loop through all bidsmodalities and runs
@@ -124,19 +125,18 @@ def build_p7map(p7file: str, bidsmap_new: dict, bidsmap_old: dict) -> dict:
     return bidsmap_new
 
 
-def build_niftimap(niftifile: str, bidsmap_new: dict, bidsmap_old: dict) -> dict:
+def build_niftimap(runfolder: Path, bidsmap_new: dict, bidsmap_old: dict) -> dict:
     """
     All the logic to map nifti-info onto bids labels go into this function
 
-    :param niftifile:   The full-path name of the source nifti-file
+    :param runfolder:   The full-path name of the source folder containing nifti-files
     :param bidsmap_new: The bidsmap that we are building
     :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param automatic:   If True, the user will not be asked for help if an unknown run is encountered
     :return:            The bidsmap with new entries in it
     """
 
     # Input checks
-    if not niftifile or not bidsmap_old['Nifti']:
+    if not runfolder or not bidsmap_old['Nifti']:
         return bidsmap_new
 
     # TODO: Loop through all bidsmodalities and runs
@@ -144,14 +144,13 @@ def build_niftimap(niftifile: str, bidsmap_new: dict, bidsmap_old: dict) -> dict
     return bidsmap_new
 
 
-def build_filesystemmap(runfolder: str, bidsmap_new: dict, bidsmap_old: dict) -> dict:
+def build_filesystemmap(runfolder: Path, bidsmap_new: dict, bidsmap_old: dict) -> dict:
     """
     All the logic to map filesystem-info onto bids labels go into this function
 
     :param runfolder:   The full-path name of the source folder
     :param bidsmap_new: The bidsmap that we are building
     :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :param automatic:   If True, the user will not be asked for help if an unknown run is encountered
     :return:            The bidsmap with new entries in it
     """
 
@@ -164,7 +163,7 @@ def build_filesystemmap(runfolder: str, bidsmap_new: dict, bidsmap_old: dict) ->
     return bidsmap_new
 
 
-def build_pluginmap(runfolder: str, bidsmap_new: dict, bidsmap_old: dict) -> dict:
+def build_pluginmap(runfolder: Path, bidsmap_new: dict, bidsmap_old: dict) -> dict:
     """
     Call the plugin to map info onto bids labels
 
@@ -206,17 +205,19 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     """
 
     # Input checking
-    rawfolder  = os.path.abspath(os.path.realpath(os.path.expanduser(rawfolder)))
-    bidsfolder = os.path.abspath(os.path.realpath(os.path.expanduser(bidsfolder)))
+    rawfolder    = Path(rawfolder)
+    bidsfolder   = Path(bidsfolder)
+    bidsmapfile  = Path(bidsmapfile)
+    templatefile = Path(templatefile)
 
     # Start logging
-    bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidscoin', 'bidsmapper.log'))
+    bids.setup_logging(bidsfolder/'code'/'bidscoin'/'bidsmapper.log')
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSmapper ------------')
 
     # Get the heuristics for filling the new bidsmap
-    bidsmap_old, _ = bids.load_bidsmap(bidsmapfile,  os.path.join(bidsfolder,'code','bidscoin'))
-    template, _    = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code','bidscoin'))
+    bidsmap_old, _ = bids.load_bidsmap(bidsmapfile,  bidsfolder/'code'/'bidscoin')
+    template, _    = bids.load_bidsmap(templatefile, bidsfolder/'code'/'bidscoin')
 
     # Create the new bidsmap as a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     if bidsmap_old:
@@ -225,7 +226,6 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         bidsmap_new = copy.deepcopy(template)
     for logic in ('DICOM', 'PAR', 'P7', 'Nifti', 'FileSystem'):
         for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-
             if bidsmap_new[logic] and modality in bidsmap_new[logic]:
                 bidsmap_new[logic][modality] = None
 
@@ -257,49 +257,46 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     # Loop over all subjects and sessions and built up the bidsmap entries
     subjects = bids.lsdirs(rawfolder, subprefix + '*')
     if not subjects:
-        LOGGER.warning(f'No subjects found in: {os.path.join(rawfolder, subprefix)}*')
+        LOGGER.warning(f'No subjects found in: {rawfolder/subprefix}*')
         gui = None
     for n, subject in enumerate(subjects,1):
 
         sessions = bids.lsdirs(subject, sesprefix + '*')
-        if not sessions: sessions = [subject]
+        if not sessions:
+            sessions = [subject]
         for session in sessions:
 
-            LOGGER.info(f'Parsing: {session} (subject {n}/{len(subjects)})')
+            LOGGER.info(f"Parsing: {session} (subject {n}/{len(subjects)})")
 
-            for run in bids.lsdirs(session):
+            for runfolder in bids.lsdirs(session):
 
                 # Update / append the dicom mapping
                 if bidsmap_old['DICOM']:
-                    dicomfile   = bids.get_dicomfile(run)
-                    bidsmap_new = build_dicommap(dicomfile, bidsmap_new, bidsmap_old, template, gui)
+                    bidsmap_new = build_dicommap(runfolder, bidsmap_new, bidsmap_old, template, gui)
 
                 # Update / append the PAR/REC mapping
                 if bidsmap_old['PAR']:
-                    parfile     = bids.get_parfile(run)
-                    bidsmap_new = build_parmap(parfile, bidsmap_new, bidsmap_old)
+                    bidsmap_new = build_parmap(runfolder, bidsmap_new, bidsmap_old)
 
                 # Update / append the P7 mapping
                 if bidsmap_old['P7']:
-                    p7file      = bids.get_p7file(run)
-                    bidsmap_new = build_p7map(p7file, bidsmap_new, bidsmap_old)
+                    bidsmap_new = build_p7map(runfolder, bidsmap_new, bidsmap_old)
 
                 # Update / append the nifti mapping
                 if bidsmap_old['Nifti']:
-                    niftifile   = bids.get_niftifile(run)
-                    bidsmap_new = build_niftimap(niftifile, bidsmap_new, bidsmap_old)
+                    bidsmap_new = build_niftimap(runfolder, bidsmap_new, bidsmap_old)
 
                 # Update / append the file-system mapping
                 if bidsmap_old['FileSystem']:
-                    bidsmap_new = build_filesystemmap(run, bidsmap_new, bidsmap_old)
+                    bidsmap_new = build_filesystemmap(runfolder, bidsmap_new, bidsmap_old)
 
                 # Update / append the plugin mapping
                 if bidsmap_old['PlugIns']:
-                    bidsmap_new = build_pluginmap(run, bidsmap_new, bidsmap_old)
+                    bidsmap_new = build_pluginmap(runfolder, bidsmap_new, bidsmap_old)
 
     # Create the bidsmap YAML-file in bidsfolder/code/bidscoin
-    os.makedirs(os.path.join(bidsfolder,'code','bidscoin'), exist_ok=True)
-    bidsmapfile = os.path.join(bidsfolder,'code','bidscoin','bidsmap.yaml')
+    bidsmapfile = bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'
+    bidsmapfile.parent.mkdir(parents=True, exist_ok=True)
 
     # Save the bidsmap to the bidsmap YAML-file
     bids.save_bidsmap(bidsmapfile, bidsmap_new)

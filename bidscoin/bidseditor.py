@@ -8,7 +8,6 @@ bidsmap.yaml output file can be used for converting the source data to BIDS usin
 the bidscoiner.
 """
 
-import os
 import sys
 import argparse
 import textwrap
@@ -16,8 +15,8 @@ import logging
 import copy
 import webbrowser
 import pydicom
+from pathlib import Path
 from functools import partial
-
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog, QDialogButtonBox,
                              QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog, QMessageBox,
@@ -35,19 +34,19 @@ LOGGER = logging.getLogger('bidscoin')
 
 ROW_HEIGHT = 22
 
-ICON_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons", "bidscoin.ico")
+ICON_FILENAME = Path(__file__).parent/'icons'/'bidscoin.ico'
 
-MAIN_HELP_URL = "https://github.com/Donders-Institute/bidscoin/blob/master/README.md"
+MAIN_HELP_URL = 'https://github.com/Donders-Institute/bidscoin/blob/master/README.md'
 
-HELP_URL_DEFAULT = "https://bids-specification.readthedocs.io/en/latest/"
+HELP_URL_DEFAULT = 'https://bids-specification.readthedocs.io/en/latest/'
 
 HELP_URLS = {
-    "anat": "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#anatomy-imaging-data",
-    "beh" : "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/07-behavioral-experiments.html",
-    "dwi" : "https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#diffusion-imaging-data",
-    "fmap": "https://bids-specification.readthedocs.io/en/latest/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#fieldmap-data",
-    "func": "https://bids-specification.readthedocs.io/en/latest/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#task-including-resting-state-imaging-data",
-    "pet" : "https://docs.google.com/document/d/1mqMLnxVdLwZjDd4ZiWFqjEAmOmfcModA_R535v3eQs0/edit",
+    'anat': 'https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#anatomy-imaging-data',
+    'beh' : 'https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/07-behavioral-experiments.html',
+    'dwi' : 'https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#diffusion-imaging-data',
+    'fmap': 'https://bids-specification.readthedocs.io/en/latest/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#fieldmap-data',
+    'func': 'https://bids-specification.readthedocs.io/en/latest/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#task-including-resting-state-imaging-data',
+    'pet' : 'https://docs.google.com/document/d/1mqMLnxVdLwZjDd4ZiWFqjEAmOmfcModA_R535v3eQs0/edit',
     bids.unknownmodality: HELP_URL_DEFAULT,
     bids.ignoremodality : HELP_URL_DEFAULT
 }
@@ -117,22 +116,22 @@ class myWidgetItem(QTableWidgetItem):
 
 class InspectWindow(QDialog):
 
-    def __init__(self, filename, dicomdict):
+    def __init__(self, filename: Path, dicomdict):
         super().__init__()
 
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(str(ICON_FILENAME)), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
         self.setWindowTitle(f"Inspect {SOURCE} file")
 
         layout = QVBoxLayout(self)
 
-        label_path = QLabel('Path: ' + os.path.dirname(filename))
+        label_path = QLabel(f"Path: {filename.parent}")
         label_path.setWordWrap(True)
         label_path.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         layout.addWidget(label_path)
 
-        label = QLabel('Filename: ' + os.path.basename(filename))
+        label = QLabel(f"Filename: {filename.name}")
         label.setWordWrap(True)
         label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         layout.addWidget(label)
@@ -140,7 +139,7 @@ class InspectWindow(QDialog):
         text        = str(dicomdict)
         textBrowser = QTextBrowser(self)
         textBrowser.insertPlainText(text)
-        textBrowser.setLineWrapMode(False)
+        textBrowser.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
         self.scrollbar = textBrowser.verticalScrollBar()        # For setting the slider to the top (can only be done after self.show()
         layout.addWidget(textBrowser)
 
@@ -161,11 +160,11 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        actionQuit = QAction("Quit", self)
+        actionQuit = QAction('Quit', self)
         actionQuit.triggered.connect(self.closeEvent)
 
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(str(ICON_FILENAME)), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
 
     def closeEvent(self, event):
@@ -180,9 +179,9 @@ class Ui_MainWindow(MainWindow):
 
         # Set the data
         self.MainWindow       = MainWindow
-        self.bidsfolder       = bidsfolder
-        self.sourcefolder     = sourcefolder
-        self.bidsmap_filename = bidsmap_filename
+        self.bidsfolder       = Path(bidsfolder)
+        self.sourcefolder     = Path(sourcefolder)
+        self.bidsmap_filename = Path(bidsmap_filename)
         self.input_bidsmap    = input_bidsmap
         self.output_bidsmap   = output_bidsmap
         self.template_bidsmap = template_bidsmap
@@ -196,14 +195,14 @@ class Ui_MainWindow(MainWindow):
         tabwidget = self.tabwidget
         tabwidget.setTabPosition(QtWidgets.QTabWidget.North)
         tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
-        tabwidget.setObjectName("tabwidget")
+        tabwidget.setObjectName('tabwidget')
 
         self.set_tab_file_browser(sourcefolder)
         self.set_tab_options()
         self.set_tab_bidsmap()
-        tabwidget.setTabText(0, "File browser")
-        tabwidget.setTabText(1, "Options")
-        tabwidget.setTabText(2, "BIDS map")
+        tabwidget.setTabText(0, 'File browser')
+        tabwidget.setTabText(1, 'Options')
+        tabwidget.setTabText(2, 'BIDS map')
         tabwidget.setCurrentIndex(selected_tab_index)
 
         # Set-up the buttons
@@ -219,7 +218,7 @@ class Ui_MainWindow(MainWindow):
         # Set-up the main layout
         centralwidget = QtWidgets.QWidget(self.MainWindow)
         centralwidget.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
-        centralwidget.setObjectName("centralwidget")
+        centralwidget.setObjectName('centralwidget')
         top_layout = QtWidgets.QVBoxLayout(centralwidget)
         top_layout.addWidget(tabwidget)
         top_layout.addWidget(buttonBox)
@@ -231,7 +230,7 @@ class Ui_MainWindow(MainWindow):
         header.setSectionResizeMode(1, QHeaderView.Stretch)
 
         if not reload:
-            self.setObjectName("MainWindow")
+            self.setObjectName('MainWindow')
 
             self.set_menu_and_status_bar()
 
@@ -250,79 +249,79 @@ class Ui_MainWindow(MainWindow):
         # Set the menus
         menubar  = QtWidgets.QMenuBar(self.MainWindow)
         menuFile = QtWidgets.QMenu(menubar)
-        menuFile.setTitle("File")
+        menuFile.setTitle('File')
         menubar.addAction(menuFile.menuAction())
         menuHelp = QtWidgets.QMenu(menubar)
-        menuHelp.setTitle("Help")
+        menuHelp.setTitle('Help')
         menubar.addAction(menuHelp.menuAction())
         self.MainWindow.setMenuBar(menubar)
 
         # Set the file menu actions
         actionReload = QAction(self.MainWindow)
-        actionReload.setText("Reset")
-        actionReload.setStatusTip("Reload the BIDS-map from disk")
-        actionReload.setShortcut("Ctrl+R")
+        actionReload.setText('Reset')
+        actionReload.setStatusTip('Reload the BIDS-map from disk')
+        actionReload.setShortcut('Ctrl+R')
         actionReload.triggered.connect(self.reload)
         menuFile.addAction(actionReload)
 
         actionSave = QAction(self.MainWindow)
-        actionSave.setText("Save")
-        actionSave.setStatusTip("Save the BIDS-map to disk")
-        actionSave.setShortcut("Ctrl+S")
+        actionSave.setText('Save')
+        actionSave.setStatusTip('Save the BIDS-map to disk')
+        actionSave.setShortcut('Ctrl+S')
         actionSave.triggered.connect(self.save_bidsmap_to_file)
         menuFile.addAction(actionSave)
 
         actionExit = QAction(self.MainWindow)
-        actionExit.setText("Exit")
-        actionExit.setStatusTip("Exit the application")
-        actionExit.setShortcut("Ctrl+X")
+        actionExit.setText('Exit')
+        actionExit.setStatusTip('Exit the application')
+        actionExit.setShortcut('Ctrl+X')
         actionExit.triggered.connect(self.exit_application)
         menuFile.addAction(actionExit)
 
         # Set help menu actions
         actionHelp = QAction(self.MainWindow)
-        actionHelp.setText("Documentation")
-        actionHelp.setStatusTip("Go to the online BIDScoin documentation")
-        actionHelp.setShortcut("F1")
+        actionHelp.setText('Documentation')
+        actionHelp.setStatusTip('Go to the online BIDScoin documentation')
+        actionHelp.setShortcut('F1')
         actionHelp.triggered.connect(self.get_help)
         menuHelp.addAction(actionHelp)
 
         actionBidsHelp = QAction(self.MainWindow)
-        actionBidsHelp.setText("BIDS specification")
-        actionBidsHelp.setStatusTip("Go to the online BIDS specification documentation")
-        actionBidsHelp.setShortcut("F2")
+        actionBidsHelp.setText('BIDS specification')
+        actionBidsHelp.setStatusTip('Go to the online BIDS specification documentation')
+        actionBidsHelp.setShortcut('F2')
         actionBidsHelp.triggered.connect(self.get_bids_help)
         menuHelp.addAction(actionBidsHelp)
 
         actionAbout = QAction(self.MainWindow)
-        actionAbout.setText("About BIDScoin")
-        actionAbout.setStatusTip("Show information about the application")
+        actionAbout.setText('About BIDScoin')
+        actionAbout.setStatusTip('Show information about the application')
         actionAbout.triggered.connect(self.show_about)
         menuHelp.addAction(actionAbout)
 
         # Set the statusbar
         statusbar = QtWidgets.QStatusBar(self.MainWindow)
-        statusbar.setObjectName("statusbar")
-        statusbar.setStatusTip("Statusbar")
+        statusbar.setObjectName('statusbar')
+        statusbar.setStatusTip('Statusbar')
         self.MainWindow.setStatusBar(statusbar)
 
     def inspect_dicomfile(self, item):
         """When double clicked, show popup window. """
         if item.column() == 1:
             row = item.row()
-            provenance = self.samples_table.item(row, 5)
-            filename = provenance.text()
+            cell = self.samples_table.item(row, 5)
+            filename = Path(cell.text())
             if bids.is_dicomfile(filename):
-                dicomdict = pydicom.dcmread(filename, force=True)
+                dicomdict = pydicom.dcmread(str(filename), force=True)
                 self.popup = InspectWindow(filename, dicomdict)
                 self.popup.show()
                 self.popup.scrollbar.setValue(0)     # This can only be done after self.popup.show()
             else:
                 LOGGER.warning(f"Could not read: {filename}")
 
-    def set_tab_file_browser(self, sourcefolder):
+    def set_tab_file_browser(self, sourcefolder: Path):
         """Set the raw data folder inspector tab. """
-        label = QLabel(sourcefolder)
+        label = QLabel(str(sourcefolder))
         label.setWordWrap(True)
 
         self.model = QFileSystemModel()
@@ -334,7 +333,7 @@ class Ui_MainWindow(MainWindow):
         tree.setAnimated(False)
         tree.setIndentation(20)
         tree.setSortingEnabled(True)
-        tree.setRootIndex(model.index(sourcefolder))
+        tree.setRootIndex(model.index(str(sourcefolder)))
         tree.doubleClicked.connect(self.on_double_clicked)
         tree.header().resizeSection(0, 800)
 
@@ -342,12 +341,12 @@ class Ui_MainWindow(MainWindow):
         layout.addWidget(label)
         layout.addWidget(tree)
         tab1 = QtWidgets.QWidget()
-        tab1.setObjectName("filebrowser")
+        tab1.setObjectName('filebrowser')
         tab1.setLayout(layout)
 
-        self.tabwidget.addTab(tab1, "")
+        self.tabwidget.addTab(tab1, '')
 
-    def subses_cell_was_changed(self, row, column):
+    def subses_cell_was_changed(self, row: int, column:int):
         """Subject or session value has been changed in subject-session table. """
         if column == 1:
             key = self.subses_table.item(row, 0).text()
@@ -360,25 +359,25 @@ class Ui_MainWindow(MainWindow):
                 self.output_bidsmap[SOURCE][key] = value
                 self.update_subses_and_samples(self.output_bidsmap)
 
-    def tool_cell_was_changed(self, tool, idx, row, column):
+    def tool_cell_was_changed(self, tool: str, idx: int, row: int, column: int):
         """Option value has been changed tool options table. """
         if column == 2:
             table = self.tables_options[idx]  # Select the selected table
             key = table.item(row, 1).text()
             value = table.item(row, 2).text()
-            oldvalue = self.output_bidsmap["Options"][tool][key]
+            oldvalue = self.output_bidsmap['Options'][tool][key]
 
             # Only if cell was actually clicked, update
             if key and value!=oldvalue:
                 LOGGER.info(f"User has set {SOURCE}['Options']['{key}'] from '{oldvalue}' to '{value}'")
-                self.output_bidsmap["Options"][tool][key] = value
+                self.output_bidsmap['Options'][tool][key] = value
 
     def handle_click_test_plugin(self, plugin: str):
         """Test the bidsmap plugin and show the result in a pop-up window
 
         :param plugin:    Name of the plugin that is being tested in bidsmap['PlugIns']
          """
-        if bids.test_plugins(plugin):
+        if bids.test_plugins(Path(plugin)):
             result = 'Passed'
         else:
             result = 'Failed'
@@ -399,12 +398,12 @@ class Ui_MainWindow(MainWindow):
 
     def handle_click_plugin_add(self):
         """Add a plugin by letting the user select a plugin-file"""
-        plugin = QFileDialog.getOpenFileNames(self.MainWindow, 'Select the plugin-file(s)', directory=os.path.join(self.bidsfolder, 'code', 'bidscoin'), filter='Python files (*.py *.pyc *.pyo);; All files (*)')
+        plugin = QFileDialog.getOpenFileNames(self.MainWindow, 'Select the plugin-file(s)', directory=str(self.bidsfolder/'code'/'bidscoin'), filter='Python files (*.py *.pyc *.pyo);; All files (*)')
         LOGGER.info(f'Added plugins: {plugin[0]}')
         self.output_bidsmap['PlugIns'] += plugin[0]
         self.update_plugintable()
 
-    def plugin_cell_was_changed(self, row, column):
+    def plugin_cell_was_changed(self, row: int, column: int):
         """Add / edit a plugin or delete if cell is empty"""
         if column==1:
             plugin = self.plugin_table.item(row, column).text()
@@ -438,12 +437,12 @@ class Ui_MainWindow(MainWindow):
                     plugintable.setItem(i, j, item)
                 elif j==1:
                     item = myWidgetItem(plugin)
-                    item.setToolTip('Double-click to edit the name of the plugin in the heuristics folder or the full pathname of the plugin in a custom location')
+                    item.setToolTip('Double-click to edit/delete the plugin, which can be the basename of the plugin in the heuristics folder or a custom full pathname')
                     plugintable.setItem(i, j, item)
                 elif j==2:                  # Add the test-button cell
                     test_button = QPushButton('Test')
                     test_button.clicked.connect(partial(self.handle_click_test_plugin, plugin))
-                    test_button.setToolTip(f'Click to test {plugin}')
+                    test_button.setToolTip(f"Click to test {plugin}")
                     plugintable.setCellWidget(i, j, test_button)
 
         # Append the Add-button cell
@@ -464,34 +463,34 @@ class Ui_MainWindow(MainWindow):
         tool_options = {}
         for tool, parameters in bidsmap_options.items():
             # Set the tools
-            if tool == "bidscoin":
+            if tool == 'bidscoin':
                 tooltip_text = OPTIONS_TOOLTIP_BIDSCOIN
-            elif tool == "dcm2niix":
+            elif tool == 'dcm2niix':
                 tooltip_text = OPTIONS_TOOLTIP_DCM2NIIX
             else:
                 tooltip_text = tool
             tool_list.append({
-                "tool": tool,
-                "tooltip_text": tooltip_text
+                'tool': tool,
+                'tooltip_text': tooltip_text
             })
             # Store the options for each tool
             tool_options[tool] = []
             for key, value in parameters.items():
                 tool_options[tool].append([
                     {
-                        "value": tool,
-                        "iseditable": False,
-                        "tooltip_text": None
+                        'value': tool,
+                        'iseditable': False,
+                        'tooltip_text': None
                     },
                     {
-                        "value": key,
-                        "iseditable": False,
-                        "tooltip_text": tooltip_text
+                        'value': key,
+                        'iseditable': False,
+                        'tooltip_text': tooltip_text
                     },
                     {
-                        "value": value,
-                        "iseditable": True,
-                        "tooltip_text": "Double-click to edit the option"
+                        'value': value,
+                        'iseditable': True,
+                        'tooltip_text': 'Double-click to edit the option'
                     }
                 ])
 
@@ -523,11 +522,11 @@ class Ui_MainWindow(MainWindow):
             for i, row in enumerate(data):
 
                 for j, element in enumerate(row):
-                    value = element.get("value", "")
-                    if value == "None":
-                        value = ""
-                    iseditable = element.get("iseditable", False)
-                    tooltip_text = element.get("tooltip_text", None)
+                    value = element.get('value', '')
+                    if value == 'None':
+                        value = ''
+                    iseditable = element.get('iseditable', False)
+                    tooltip_text = element.get('tooltip_text', None)
                     item = myWidgetItem(value, iseditable=iseditable)
                     tool_table.setItem(i, j, item)
                     if tooltip_text:
@@ -569,10 +568,10 @@ class Ui_MainWindow(MainWindow):
         layout.addStretch(1)
 
         tab2 = QtWidgets.QWidget()
-        tab2.setObjectName("Options")
+        tab2.setObjectName('Options')
         tab2.setLayout(layout)
 
-        self.tabwidget.addTab(tab2, "")
+        self.tabwidget.addTab(tab2, '')
 
     def update_subses_and_samples(self, output_bidsmap):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
@@ -580,8 +579,8 @@ class Ui_MainWindow(MainWindow):
         subses_table        = self.subses_table
         samples_table       = self.samples_table
 
-        subses_table.setItem(0, 0, myWidgetItem("subject", iseditable=False))
-        subses_table.setItem(1, 0, myWidgetItem("session", iseditable=False))
+        subses_table.setItem(0, 0, myWidgetItem('subject', iseditable=False))
+        subses_table.setItem(1, 0, myWidgetItem('session', iseditable=False))
         subses_table.setItem(0, 1, myWidgetItem(self.output_bidsmap[SOURCE]['subject']))
         subses_table.setItem(1, 1, myWidgetItem(self.output_bidsmap[SOURCE]['session']))
 
@@ -592,31 +591,26 @@ class Ui_MainWindow(MainWindow):
             if not runs:
                 continue
             for run in runs:
-                provenance = run['provenance']
-                provenance_file = os.path.basename(provenance)
+                provenance = Path(run['provenance'])
                 ordered_file_index = self.ordered_file_index[provenance]
                 bidsname = bids.get_bidsname(output_bidsmap[SOURCE]['subject'], output_bidsmap[SOURCE]['session'],
                                              modality, run, '', self.subprefix, self.sesprefix)
-                subid = bids.get_bidsvalue(bidsname, 'sub')
-                sesid = bids.get_bidsvalue(bidsname, 'ses')
-                if sesid:
-                    session = os.path.join(self.bidsfolder, f'sub-{subid}', f'ses-{sesid}')
-                else:
-                    session = os.path.join(self.bidsfolder, f'sub-{subid}')
+                subid, sesid = bids.get_subid_sesid(provenance)
+                session = self.bidsfolder/subid/sesid
 
                 samples_table.setItem(idx, 0, QTableWidgetItem(f"{ordered_file_index+1:03d}"))
-                samples_table.setItem(idx, 1, QTableWidgetItem(provenance_file))
+                samples_table.setItem(idx, 1, QTableWidgetItem(provenance.name))
                 samples_table.setItem(idx, 2, QTableWidgetItem(modality))                           # Hidden column
-                samples_table.setItem(idx, 3, QTableWidgetItem(os.path.join(modality, bidsname + '.*')))
-                samples_table.setItem(idx, 5, QTableWidgetItem(provenance))                         # Hidden column
+                samples_table.setItem(idx, 3, QTableWidgetItem(str(Path(modality)/bidsname) + '.*'))
+                samples_table.setItem(idx, 5, QTableWidgetItem(str(provenance)))                    # Hidden column
 
                 samples_table.item(idx, 0).setFlags(QtCore.Qt.NoItemFlags)
                 samples_table.item(idx, 1).setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
                 samples_table.item(idx, 2).setFlags(QtCore.Qt.ItemIsEnabled)
                 samples_table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
                 samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information (Copy: Ctrl+C)')
-                samples_table.item(idx, 1).setStatusTip(os.path.dirname(provenance) + os.sep)
-                samples_table.item(idx, 3).setStatusTip(session + os.sep)
+                samples_table.item(idx, 1).setStatusTip(str(provenance.parent) + str(Path('/')))
+                samples_table.item(idx, 3).setStatusTip(str(session) + str(Path('/')))
 
                 if samples_table.item(idx, 3):
                     if modality == bids.unknownmodality:
@@ -628,7 +622,7 @@ class Ui_MainWindow(MainWindow):
                         f = samples_table.item(idx, 3).font()
                         f.setStrikeOut(True)
                         samples_table.item(idx, 3).setFont(f)
-                        samples_table.item(idx, 3).setToolTip("Gray / Strike-out: This imaging modality will be ignored and not converted BIDS")
+                        samples_table.item(idx, 3).setToolTip('Gray / Strike-out: This imaging modality will be ignored and not converted BIDS')
                     else:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('green'))
                         samples_table.item(idx, 3).setToolTip(f"Green: This '{modality}' imaging modality is part of BIDS")
@@ -638,7 +632,7 @@ class Ui_MainWindow(MainWindow):
                 edit_button.clicked.connect(self.handle_edit_button_clicked)
                 edit_button.setCheckable(True)
                 edit_button.setAutoExclusive(True)
-                if provenance and provenance==self.has_edit_dialog_open:    # Highlight the previously opened item
+                if provenance.name and str(provenance)==self.has_edit_dialog_open:    # Highlight the previously opened item
                     edit_button.setChecked(True)
                 else:
                     edit_button.setChecked(False)
@@ -671,6 +665,7 @@ class Ui_MainWindow(MainWindow):
         # Set the BIDSmap table
         provenance = bids.dir_bidsmap(self.input_bidsmap, SOURCE)
         ordered_file_index = {}                                         # The mapping between the ordered provenance and an increasing file-index
+        num_files = 0
         for file_index, file_name in enumerate(provenance):
             ordered_file_index[file_name] = file_index
             num_files = file_index + 1
@@ -707,10 +702,10 @@ class Ui_MainWindow(MainWindow):
         layout.addWidget(label)
         layout.addWidget(samples_table)
         tab3 = QtWidgets.QWidget()
-        tab3.setObjectName("BIDSmapping")
+        tab3.setObjectName('BIDSmapping')
         tab3.setLayout(layout)
 
-        self.tabwidget.addTab(tab3, "")
+        self.tabwidget.addTab(tab3, '')
 
     def get_help(self):
         """Get online help. """
@@ -740,9 +735,9 @@ class Ui_MainWindow(MainWindow):
 
         # Start with a fresh errorlog
         for filehandler in LOGGER.handlers:
-            if filehandler.name=='errorhandler' and os.path.getsize(filehandler.baseFilename):
+            if filehandler.name=='errorhandler' and Path(filehandler.baseFilename).stat().st_size:
                 errorfile = filehandler.baseFilename
-                LOGGER.info(f'Resetting {errorfile}')
+                LOGGER.info(f"Resetting {errorfile}")
                 with open(errorfile, 'w'):          # TODO: This works but it is a hack that somehow prefixes a lot of whitespace to the first LOGGER call
                     pass
 
@@ -754,50 +749,51 @@ class Ui_MainWindow(MainWindow):
                     LOGGER.warning(f"IntendedFor fieldmap value is empty for {run['provenance']}")
 
         filename, _ = QFileDialog.getSaveFileName(self.MainWindow, 'Save File',
-                        os.path.join(self.bidsfolder, 'code', 'bidscoin', 'bidsmap.yaml'),
+                        str(self.bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'),
                         'YAML Files (*.yaml *.yml);;All Files (*)')
         if filename:
-            bids.save_bidsmap(filename, self.output_bidsmap)
-            QtCore.QCoreApplication.setApplicationName(f'{filename} - BIDS editor')
+            bids.save_bidsmap(Path(filename), self.output_bidsmap)
+            QtCore.QCoreApplication.setApplicationName(f"{filename} - BIDS editor")
 
     def handle_edit_button_clicked(self):
         """Make sure that index map has been updated. """
-        button = self.MainWindow.focusWidget()
-        rowindex = self.samples_table.indexAt(button.pos()).row()
-        modality = self.samples_table.item(rowindex, 2).text()
-        provenance = self.samples_table.item(rowindex, 5).text()
+        button     = self.MainWindow.focusWidget()
+        rowindex   = self.samples_table.indexAt(button.pos()).row()
+        modality   = self.samples_table.item(rowindex, 2).text()
+        provenance = Path(self.samples_table.item(rowindex, 5).text())
 
         self.open_edit_dialog(provenance, modality)
 
-    def on_double_clicked(self, index):
-        filename = self.model.fileInfo(index).absoluteFilePath()
+    def on_double_clicked(self, index: int):
+        """Opens the inspect window when a DICOM file in the file-tree tab is double-clicked"""
+        filename = Path(self.model.fileInfo(index).absoluteFilePath())
         if bids.is_dicomfile(filename):
-            dicomdict = pydicom.dcmread(filename, force=True)
+            dicomdict = pydicom.dcmread(str(filename), force=True)
             self.popup = InspectWindow(filename, dicomdict)
             self.popup.show()
             self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
 
     def show_about(self):
-        """ """
+        """Shows a pop-up window with the BIDScoin version"""
         about = f"BIDS editor\n{bids.version()}"
         QMessageBox.about(self.MainWindow, 'About', about)
 
-    def open_edit_dialog(self, provenance, modality, exec=False):
+    def open_edit_dialog(self, provenance: Path, modality: str, modal=False):
         """Check for open edit window, find the right modality index and open the edit window"""
 
         if not self.has_edit_dialog_open:
             # Find the source index of the run in the list of runs (using the provenance) and open the edit window
             for run in self.output_bidsmap[SOURCE][modality]:
-                if run['provenance']==provenance:
+                if run['provenance']==str(provenance):
                     LOGGER.info(f'User is editing {provenance}')
                     self.dialog_edit = EditDialog(provenance, modality, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
-                    if provenance:
-                        self.has_edit_dialog_open = provenance
+                    if provenance.name:
+                        self.has_edit_dialog_open = str(provenance)
                     else:
                         self.has_edit_dialog_open = True
                     self.dialog_edit.done_edit.connect(self.update_subses_and_samples)
                     self.dialog_edit.finished.connect(self.release_edit_dialog)
-                    if exec:
+                    if modal:
                         self.dialog_edit.exec()
                     else:
                         self.dialog_edit.show()
@@ -809,7 +805,7 @@ class Ui_MainWindow(MainWindow):
             if self.has_edit_dialog_open:
                 return
 
-            self.open_edit_dialog(provenance, modality, exec)
+            self.open_edit_dialog(provenance, modality, modal)
 
     def release_edit_dialog(self):
         """Allow a new edit window to be opened"""
@@ -826,10 +822,10 @@ class EditDialog(QDialog):
     EditDialog().result() == 2: done without result
     """
 
-    # Emit the new bidsmap when done
+    # Emit the new bidsmap when done (see docstring)
     done_edit = QtCore.pyqtSignal(dict)
 
-    def __init__(self, provenance, modality, bidsmap, template_bidsmap, subprefix='sub-', sesprefix='ses-'):
+    def __init__(self, provenance: Path, modality: str, bidsmap: dict, template_bidsmap: dict, subprefix='sub-', sesprefix='ses-'):
         super().__init__()
 
         # Set the data
@@ -842,24 +838,24 @@ class EditDialog(QDialog):
         self.subprefix        = subprefix
         self.sesprefix        = sesprefix
         for run in bidsmap[SOURCE][modality]:
-            if run['provenance'] == provenance:
+            if run['provenance'] == str(provenance):
                 self.source_run = run
         self.target_run = copy.deepcopy(self.source_run)
         self.get_allowed_suffixes()
 
         # Set-up the window
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(ICON_FILENAME), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(str(ICON_FILENAME)), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMaximizeButtonHint)
-        self.setWindowTitle("Edit BIDS mapping")
+        self.setWindowTitle('Edit BIDS mapping')
 
         # Get data for the tables
         data_provenance, data_dicom, data_bids = self.get_editwin_data()
 
         # Set-up the provenance table
         self.provenance_label = QLabel()
-        self.provenance_label.setText("Provenance")
+        self.provenance_label.setText('Provenance')
         self.provenance_table = self.set_table(data_provenance)
         self.provenance_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.provenance_table.setToolTip(f"The {SOURCE} source file from which the attributes were taken (Copy: Ctrl+C)")
@@ -867,7 +863,7 @@ class EditDialog(QDialog):
 
         # Set-up the DICOM table
         self.dicom_label = QLabel()
-        self.dicom_label.setText("Attributes")
+        self.dicom_label.setText('Attributes')
         self.dicom_table = self.set_table(data_dicom, minimum=False)
         self.dicom_table.cellChanged.connect(self.dicom_cell_was_changed)
         self.dicom_table.setToolTip(f"The {SOURCE} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using '*string*' wildcards, see documentation), only change these if you know what you are doing!")
@@ -878,7 +874,7 @@ class EditDialog(QDialog):
 
         # Set-up the BIDS table
         self.bids_label = QLabel()
-        self.bids_label.setText("Labels")
+        self.bids_label.setText('Labels')
         self.bids_table = self.set_table(data_bids, minimum=False)
         self.bids_table.setToolTip(f"The BIDS key-value pairs that are used to construct the BIDS output name. Feel free to change the values except for the dynamic 'run' field, which should normally not be touched")
         self.bids_table.cellChanged.connect(self.bids_cell_was_changed)
@@ -899,7 +895,7 @@ class EditDialog(QDialog):
         layout1.addWidget(self.dicom_table)
         groupbox1.setLayout(layout1)
 
-        groupbox2 = QGroupBox("BIDS output")
+        groupbox2 = QGroupBox('BIDS output')
         groupbox2.setSizePolicy(sizepolicy)
         layout2 = QVBoxLayout()
         layout2.addWidget(self.label_dropdown)
@@ -978,22 +974,22 @@ class EditDialog(QDialog):
         data_provenance = [
             [
                 {
-                    "value": "path",
-                    "iseditable": False
+                    'value': 'path',
+                    'iseditable': False
                 },
                 {
-                    "value": os.path.dirname(self.target_run['provenance']),
-                    "iseditable": False
+                    'value': str(Path(self.target_run['provenance']).parent),
+                    'iseditable': False
                 },
             ],
             [
                 {
-                    "value": "filename",
-                    "iseditable": False
+                    'value': 'filename',
+                    'iseditable': False
                 },
                 {
-                    "value": os.path.basename(self.target_run['provenance']),
-                    "iseditable": True
+                    'value': Path(self.target_run['provenance']).name,
+                    'iseditable': True
                 },
             ]
         ]
@@ -1002,12 +998,12 @@ class EditDialog(QDialog):
         for key, value in self.target_run['attributes'].items():
             data_dicom.append([
                 {
-                    "value": key,
-                    "iseditable": False
+                    'value': key,
+                    'iseditable': False
                 },
                 {
-                    "value": str(value),
-                    "iseditable": True
+                    'value': str(value),
+                    'iseditable': True
                 }
             ])
 
@@ -1021,52 +1017,52 @@ class EditDialog(QDialog):
 
                 data_bids.append([
                     {
-                        "value": bidslabel,
-                        "iseditable": False
+                        'value': bidslabel,
+                        'iseditable': False
                     },
                     {
-                        "value": self.target_run['bids'][bidslabel],
-                        "iseditable": iseditable
+                        'value': self.target_run['bids'][bidslabel],
+                        'iseditable': iseditable
                     }
                 ])
 
         return data_provenance, data_dicom, data_bids
 
-    def inspect_dicomfile(self, row=None, column=None):
+    def inspect_dicomfile(self, row: int=None, column: int=None):
         """When double clicked, show popup window. """
         if row == 1 and column == 1:
-            filename = self.target_run['provenance']
+            filename = Path(self.target_run['provenance'])
             if bids.is_dicomfile(filename):
-                dicomdict = pydicom.dcmread(filename, force=True)
+                dicomdict = pydicom.dcmread(str(filename), force=True)
                 self.popup = InspectWindow(filename, dicomdict)
                 self.popup.exec()
             else:
                 LOGGER.warning(f"Could not read: {filename}")
 
-    def dicom_cell_was_changed(self, row, column):
+    def dicom_cell_was_changed(self, row: int, column: int):
         """DICOM attribute value has been changed. """
         if column == 1:
             key = self.dicom_table.item(row, 0).text()
             value = self.dicom_table.item(row, 1).text()
             oldvalue = self.target_run['attributes'].get(key, None)
 
-            # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
+            # Only if cell was actually clicked, update (i.e. not when BIDS modality changes)
             if key and value!=oldvalue:
                 LOGGER.warning(f"Expert usage: User has set {SOURCE}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 self.target_run['attributes'][key] = value
 
-    def bids_cell_was_changed(self, row, column):
+    def bids_cell_was_changed(self, row: int, column: int):
         """BIDS attribute value has been changed. """
         if column == 1:
             key = self.bids_table.item(row, 0).text()
             value = self.bids_table.item(row, 1).text()
             oldvalue = self.target_run['bids'].get(key, None)
 
-            # Only if cell was actually clicked, update (i.e. not when BIDS modality changes). TODO: fix
+            # Only if cell was actually clicked, update (i.e. not when BIDS modality changes)
             if key and value!=oldvalue:
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
                 if not (value.startswith('<<') and value.endswith('>>')):
-                    value = bids.cleanup_value(bids.get_dynamic_value(value, self.target_run['provenance']))
+                    value = bids.cleanup_value(bids.get_dynamic_value(value, Path(self.target_run['provenance'])))
                 if key == 'run':
                     LOGGER.warning(f"Expert usage: User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 else:
@@ -1087,12 +1083,12 @@ class EditDialog(QDialog):
 
         self.suffix_dropdown = QComboBox()
         suffix_dropdown = self.suffix_dropdown
-        suffix_dropdown.setToolTip("The suffix that sets the different run types apart. First make sure the 'Modality' dropdown-menu is set correctly before chosing the right suffix here")
+        suffix_dropdown.setToolTip('The suffix that sets the different run types apart. First make sure the "Modality" dropdown-menu is set correctly before chosing the right suffix here')
 
         for i, row in enumerate(data):
-            key = row[0]["value"]
+            key = row[0]['value']
             if self.target_modality in bids.bidsmodalities and key == 'suffix':
-                item = myWidgetItem("suffix", iseditable=False)
+                item = myWidgetItem('suffix', iseditable=False)
                 table.setItem(i, 0, item)
                 labels = self.allowed_suffixes[self.target_modality]
                 suffix_dropdown.addItems(labels)
@@ -1101,10 +1097,10 @@ class EditDialog(QDialog):
                 table.setCellWidget(i, 1, suffix_dropdown)
                 continue
             for j, element in enumerate(row):
-                value = element.get("value", "")
-                if value == "None":
-                    value = ""
-                iseditable = element.get("iseditable", False)
+                value = element.get('value', '')
+                if value == 'None':
+                    value = ''
+                iseditable = element.get('iseditable', False)
                 item = myWidgetItem(value, iseditable=iseditable)
                 table.setItem(i, j, item)
 
@@ -1126,7 +1122,7 @@ class EditDialog(QDialog):
     def set_modality_dropdown_section(self):
         """Dropdown select modality list section. """
         self.label_dropdown = QLabel()
-        self.label_dropdown.setText("Modality")
+        self.label_dropdown.setText('Modality')
 
         self.modality_dropdown = QComboBox()
         self.modality_dropdown.addItems(bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality))
@@ -1136,7 +1132,7 @@ class EditDialog(QDialog):
     def set_bids_name_section(self):
         """Set non-editable BIDS output name section. """
         self.label_bids_name = QLabel()
-        self.label_bids_name.setText("Output name")
+        self.label_bids_name.setText('Output name')
 
         self.view_bids_name = QTextBrowser()
         self.view_bids_name.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
@@ -1146,8 +1142,8 @@ class EditDialog(QDialog):
         self.refresh_bidsname()
 
     def refresh_bidsname(self):
-        bidsname = os.path.join(self.target_modality, bids.get_bidsname(self.target_bidsmap[SOURCE]['subject'], self.target_bidsmap[SOURCE]['session'],
-                                                                        self.target_modality, self.target_run, '', self.subprefix, self.sesprefix)) + '.*'
+        bidsname = (Path(self.target_modality)/bids.get_bidsname(self.target_bidsmap[SOURCE]['subject'], self.target_bidsmap[SOURCE]['session'],
+                                                                 self.target_modality, self.target_run, '', self.subprefix, self.sesprefix)).with_suffix('.*')
 
         f = self.view_bids_name.font()
         if self.target_modality==bids.unknownmodality:
@@ -1164,7 +1160,7 @@ class EditDialog(QDialog):
             f.setStrikeOut(False)
         self.view_bids_name.setFont(f)
         self.view_bids_name.clear()
-        self.view_bids_name.textCursor().insertText(bidsname)
+        self.view_bids_name.textCursor().insertText(str(bidsname))
 
     def refresh(self, suffix_idx):
         """
@@ -1175,12 +1171,12 @@ class EditDialog(QDialog):
         """
 
         # Get the new target_run
-        self.target_run = bids.get_run(self.template_bidsmap, SOURCE, self.target_modality, suffix_idx, self.target_run['provenance'])
+        self.target_run = bids.get_run(self.template_bidsmap, SOURCE, self.target_modality, suffix_idx, Path(self.target_run['provenance']))
 
         # Insert the new target_run in our target_bidsmap
         self.target_bidsmap = bids.update_bidsmap(self.target_bidsmap,
                                                   self.current_modality,
-                                                  self.target_run['provenance'],
+                                                  Path(self.target_run['provenance']),
                                                   self.target_modality,
                                                   self.target_run)
 
@@ -1239,7 +1235,7 @@ class EditDialog(QDialog):
         """Ask if the user really wants to close the window"""
         if confirm:
             self.raise_()
-            answer = QMessageBox.question(self, 'Edit BIDS mapping', "Closing window, do you want to save the changes you made?",
+            answer = QMessageBox.question(self, 'Edit BIDS mapping', 'Closing window, do you want to save the changes you made?',
                                           QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
             if answer == QMessageBox.Yes:
                 self.update_run()
@@ -1281,42 +1277,41 @@ class EditDialog(QDialog):
 
 def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templatefile: str='', subprefix='sub-', sesprefix='ses-'):
     """
+    Collects input and lanches the bidseditor GUI
 
     :param bidsfolder:
+    :param sourcefolder:
     :param bidsmapfile:
     :param templatefile:
+    :param subprefix:
+    :param sesprefix:
     :return:
     """
 
+    bidsfolder   = Path(bidsfolder)
+    sourcefolder = Path(sourcefolder)
+    bidsmapfile  = Path(bidsmapfile)
+    templatefile = Path(templatefile)
+
     # Start logging
-    bids.setup_logging(os.path.join(bidsfolder, 'code', 'bidscoin', 'bidseditor.log'))
+    bids.setup_logging(bidsfolder/'code'/'bidscoin'/'bidseditor.log')
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSeditor ------------')
 
     # Obtain the initial bidsmap info
-    template_bidsmap, templatefile = bids.load_bidsmap(templatefile, os.path.join(bidsfolder,'code','bidscoin'))
-    input_bidsmap, bidsmapfile     = bids.load_bidsmap(bidsmapfile,  os.path.join(bidsfolder,'code','bidscoin'))
+    template_bidsmap, templatefile = bids.load_bidsmap(templatefile, bidsfolder/'code'/'bidscoin')
+    input_bidsmap, bidsmapfile     = bids.load_bidsmap(bidsmapfile,  bidsfolder/'code'/'bidscoin')
     output_bidsmap                 = copy.deepcopy(input_bidsmap)
     if not input_bidsmap:
         LOGGER.error(f'No bidsmap file found in {bidsfolder}. Please run the bidsmapper first and / or use the correct bidsfolder')
         return
 
     # Parse the sourcefolder from the bidsmap provenance info
-    if not sourcefolder:
-
-        # Loop through all bidsmodalities and runs until we find provenance info
-        for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-            if input_bidsmap[SOURCE][modality] is None:
-                continue
-
-            for run in input_bidsmap[SOURCE][modality]:
-                if run['provenance']:
-                    sourcefolder = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(run['provenance']))))
-                    LOGGER.info(f'Source: {sourcefolder}')
-                    break
-
-            if sourcefolder:
-                break
+    if not sourcefolder.name:
+        for provenance in bids.dir_bidsmap(input_bidsmap, SOURCE):
+            sourcefolder = provenance.parents[3]
+            LOGGER.info(f'Derived source-folder: {sourcefolder}')
+            break
 
     # Start the Qt-application
     app = QApplication(sys.argv)
@@ -1384,13 +1379,13 @@ def main():
                                            NB: The fieldmap might not be used at all if this field is left empty!
 
                                          Manual editing / inspection of the bidsmap
-                                           You can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
+                                           You `can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
                                            text editor. For instance to merge a set of runs that by adding a wildcard to a DICOM
                                            attribute in one run item and then remove the other runs in the set. See ./docs/bidsmap.md
                                            and ./heuristics/bidsmap_dccn.yaml for more information."""))
 
     parser.add_argument('bidsfolder',           help='The destination folder with the (future) bids data')
-    parser.add_argument('-s','--sourcefolder',  help='The source folder containing the raw data. If empty, it is derived from the bidsmap provenance information')
+    parser.add_argument('-s','--sourcefolder',  help='The source folder containing the raw data. If empty, it is derived from the bidsmap provenance information', default='')
     parser.add_argument('-b','--bidsmap',       help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
     parser.add_argument('-t','--template',      help='The bidsmap template with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap_template.yaml', default='bidsmap_template.yaml')
     parser.add_argument('-n','--subprefix',     help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
@@ -1405,5 +1400,5 @@ def main():
                sesprefix    = args.sesprefix)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

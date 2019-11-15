@@ -3,9 +3,9 @@
 Sorts and / or renames DICOM files into local subdirectories with a (3-digit) SeriesNumber-SeriesDescription directory name (i.e. following the same listing as on the scanner console)
 """
 
-import os
 import re
 import warnings
+from pathlib import Path
 try:
     from bidscoin import bids
 except ImportError:
@@ -20,7 +20,7 @@ def cleanup(name: str) -> str:
     :return:     The cleaned file- or directory-name
     """
 
-    special_characters = (os.sep, '*', '?', '"')        # These are the worst offenders, but there are many more
+    special_characters = ('/', '\\', '*', '?', '"')        # These are the worst offenders, but there are many more
 
     for special in special_characters:
         name = name.strip().replace(special, '')
@@ -28,7 +28,7 @@ def cleanup(name: str) -> str:
     return name
 
 
-def sortsession(sessionfolder: str, dicomfiles: list, rename: bool, ext: str, nosort: bool) -> None:
+def sortsession(sessionfolder: Path, dicomfiles: list, rename: bool, ext: str, nosort: bool) -> None:
     """
     Sorts dicomfiles into (3-digit) SeriesNumber-SeriesDescription subfolders (e.g. '003-T1MPRAGE')
 
@@ -41,9 +41,8 @@ def sortsession(sessionfolder: str, dicomfiles: list, rename: bool, ext: str, no
     """
 
     # Map all dicomfiles and move them to series folders
-    print(f'>> Processing: {sessionfolder} ({len(dicomfiles)} files)')
-    if not os.path.isdir(sessionfolder):
-        os.makedirs(sessionfolder)
+    print(f">> Processing: {sessionfolder} ({len(dicomfiles)} files)")
+    sessionfolder.mkdir(parents=True, exist_ok=True)
 
     seriesdirs = []
     for dicomfile in dicomfiles:
@@ -52,13 +51,13 @@ def sortsession(sessionfolder: str, dicomfiles: list, rename: bool, ext: str, no
         seriesnr    = bids.get_dicomfield('SeriesNumber', dicomfile)
         seriesdescr = bids.get_dicomfield('SeriesDescription', dicomfile)
         if not seriesnr:
-            warnings.warn(f'No SeriesNumber found, skipping: {dicomfile}')          # This is not a normal DICOM file, better not do anything with it
+            warnings.warn(f"No SeriesNumber found, skipping: {dicomfile}")          # This is not a normal DICOM file, better not do anything with it
             continue
         if not seriesdescr:
             seriesdescr = bids.get_dicomfield('ProtocolName', dicomfile)
             if not seriesdescr:
                 seriesdescr = 'unknown_protocol'
-                warnings.warn(f'No SeriesDecription or ProtocolName found for: {dicomfile}')
+                warnings.warn(f"No SeriesDecription or ProtocolName found for: {dicomfile}")
         if rename:
             acquisitionnr = bids.get_dicomfield('AcquisitionNumber', dicomfile)
             instancenr    = bids.get_dicomfield('InstanceNumber', dicomfile)
@@ -70,31 +69,36 @@ def sortsession(sessionfolder: str, dicomfiles: list, rename: bool, ext: str, no
 
         # Move and/or rename the dicomfile in(to) the (series sub)folder
         if rename and not (patientname and seriesnr and seriesdescr and acquisitionnr and instancenr):
-            warnings.warn(f'Missing one or more crucial DICOM-fields, cannot safely rename {dicomfile}\npatientname = {patientname}\nseriesnumber = {seriesnr}\nseriesdescription = {seriesdescr}\nacquisitionnr = {acquisitionnr}\ninstancenr = {instancenr}')
-            filename = os.path.basename(dicomfile)
+            warnings.warn(f"Missing one or more essential DICOM-fields, cannot safely rename {dicomfile}\n"
+                          f"patientname = {patientname}\n"
+                          f"seriesnumber = {seriesnr}\n"
+                          f"seriesdescription = {seriesdescr}\n"
+                          f"acquisitionnr = {acquisitionnr}\n"
+                          f"instancenr = {instancenr}")
+            filename = dicomfile.name
         elif rename:
-            filename = cleanup(f'{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}')
+            filename = cleanup(f"{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}")
         else:
-            filename = os.path.basename(dicomfile)
+            filename = dicomfile.name
         if nosort:
             pathname = sessionfolder
         else:
             # Create the series subfolder
-            seriesdir = cleanup(f'{seriesnr:03d}-{seriesdescr}')
+            seriesdir = cleanup(f"{seriesnr:03d}-{seriesdescr}")
             if seriesdir not in seriesdirs:  # We have a new series
-                if not os.path.isdir(os.path.join(sessionfolder, seriesdir)):
-                    print('   Creating:  ' + os.path.join(sessionfolder, seriesdir))
-                    os.makedirs(os.path.join(sessionfolder, seriesdir))
+                if not (sessionfolder/seriesdir).is_dir():
+                    print(f"   Creating:  {sessionfolder/seriesdir}")
+                    (sessionfolder/seriesdir).mkdir(parents=True)
                 seriesdirs.append(seriesdir)
-            pathname = os.path.join(sessionfolder, seriesdir)
+            pathname = sessionfolder/seriesdir
         if ext:
-            newfilename = os.path.join(pathname, os.path.splitext(filename)[0] + ext)
+            newfilename = (pathname/filename).with_suffix(ext)
         else:
-            newfilename = os.path.join(pathname, filename)
-        if os.path.isfile(newfilename):
-            warnings.warn(f'File already exists, cannot safely rename {dicomfile} -> {newfilename}')
+            newfilename = pathname/filename
+        if newfilename.is_file():
+            warnings.warn(f"File already exists, cannot safely rename {dicomfile} -> {newfilename}")
         else:
-            os.rename(dicomfile, newfilename)
+            dicomfile.replace(newfilename)
 
 
 def sortsessions(session: str, subjectid: str='', sessionid: str='', rename: bool=False, ext: str='', nosort: bool=False, pattern: str='.*\.(IMA|dcm)$') -> None:
@@ -111,7 +115,7 @@ def sortsessions(session: str, subjectid: str='', sessionid: str='', rename: boo
     """
 
     # Input checking
-    session = os.path.abspath(os.path.expanduser(session))
+    session = Path(session)
 
     # Define the sessionfolder, collect all DICOM files and run sortsession()
     if subjectid:   # Do a recursive search, assuming session is a foldername, not a DICOMDIR file
@@ -123,38 +127,36 @@ def sortsessions(session: str, subjectid: str='', sessionid: str='', rename: boo
                 sessionfolders = [subfolder]
 
             for sessionfolder in sessionfolders:
-                dicomfiles = [os.path.join(sessionfolder, dcmfile) for dcmfile in os.listdir(sessionfolder) if re.match(pattern, dcmfile)]
+                dicomfiles = [dcmfile for dcmfile in sessionfolder.iterdir() if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
                 sortsession(sessionfolder, dicomfiles, rename, ext, nosort)
 
     else:
 
-        if os.path.basename(session) == 'DICOMDIR':
+        if session.name == 'DICOMDIR':
 
             from pydicom.filereader import read_dicomdir
 
             dicomdir = read_dicomdir(session)
 
-            sessionfolder  = os.path.dirname(session)
-            sessionfolder_ = sessionfolder
+            sessionfolder = session.parent
             for patient in dicomdir.patient_records:
                 if len(dicomdir.patient_records) > 1:
-                    sessionfolder = os.path.join(sessionfolder_, f'sub-{cleanup(str(patient.PatientName))}')
+                    sessionfolder = session.parent/f"sub-{cleanup(patient.PatientName)}"
 
-                for n, study in enumerate(patient.children, 1):                                                             # TODO: Check order
+                for n, study in enumerate(patient.children, 1):                                                 # TODO: Check order
                     if len(patient.children) > 1:
-                        sessionfolder = os.path.join(sessionfolder_, f'ses-{n:02}{cleanup(str(study.StudyDescription))}')   # TODO: Leave out StudyDescrtiption?
-                        print(f'WARNING: the session index-number "{n:02}" is not necessarily meaningful: {sessionfolder}')
+                        sessionfolder = session.parent/f"ses-{n:02}{cleanup(study.StudyDescription)}"           # TODO: Leave out StudyDescrtiption?
+                        print(f"WARNING: the session index-number '{n:02}' is not necessarily meaningful: {sessionfolder}")
 
                     dicomfiles = []
                     for series in study.children:
-                        dicomfiles.extend([os.path.join(sessionfolder_, *image.ReferencedFileID) for image in series.children])
+                        dicomfiles.extend([session.parent.joinpath(*image.ReferencedFileID) for image in series.children])
                     sortsession(sessionfolder, dicomfiles, rename, ext, nosort)
 
         else:
 
-            sessionfolder = session
-            dicomfiles    = [os.path.join(sessionfolder,dcmfile) for dcmfile in os.listdir(sessionfolder) if re.match(pattern, dcmfile)]
-            sortsession(sessionfolder, dicomfiles, rename, ext, nosort)
+            dicomfiles = [dcmfile for dcmfile in session.iterdir() if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
+            sortsession(session, dicomfiles, rename, ext, nosort)
 
 
 def main():

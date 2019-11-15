@@ -7,17 +7,16 @@ when an alternative subject id was entered in the [Additional info] field
 during subject registration (i.e. stored in the PatientComments dicom field)
 """
 
-import os
 import re
-import glob
 import warnings
+from pathlib import Path
 try:
     from bidscoin import bids
 except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
 
 
-def rawmapper(rawfolder: str, outfolder: str='', sessions: list=[], rename: bool=False, dicomfield: tuple=('PatientComments',), wildcard: str='*', subprefix: str='sub-', sesprefix: str='ses-', dryrun: bool=False) -> None:
+def rawmapper(rawfolder, outfolder: Path=Path(), sessions: list=[], rename: bool=False, dicomfield: tuple=('PatientComments',), wildcard: str='*', subprefix: str='sub-', sesprefix: str='ses-', dryrun: bool=False) -> None:
     """
     :param rawfolder:   The root folder-name of the sub/ses/data/file tree containing the source data files
     :param outfolder:   The name of the folder where the mapping-file is saved (default = sourcefolder)
@@ -32,35 +31,34 @@ def rawmapper(rawfolder: str, outfolder: str='', sessions: list=[], rename: bool
     """
 
     # Input checking
+    rawfolder = Path(rawfolder)
     if not outfolder:
         outfolder = rawfolder
-    rawfolder = os.path.abspath(os.path.expanduser(rawfolder))
-    outfolder = os.path.abspath(os.path.expanduser(outfolder))
+    outfolder = Path(outfolder)
 
     # Create or append the output to a mapper logfile
+    mapperfile = outfolder/f"rawmapper_{'_'.join(dicomfield)}.tsv"
     if not dryrun:
-        mapperfile = os.path.join(outfolder, 'rawmapper_{}.tsv'.format('_'.join(dicomfield)))
         if rename:
-            with open(mapperfile, 'a') as fid:
-                fid.write('{}\t{}\t{}\t{}\n'.format('subid', 'sesid', 'newsubid', 'newsesid'))
+            with mapperfile.open('a') as fid:
+                fid.write('subid\tsesid\tnewsubid\tnewsesid\n')
         else:
-            with open(mapperfile, 'x') as fid:
-                fid.write('{}\t{}\t{}\t{}\n'.format('subid', 'sesid', 'seriesname', '\t'.join(dicomfield)))
+            with mapperfile.open('x') as fid:
+                fid.write('subid\tsesid\tseriesname\t{}\n'.format('\t'.join(dicomfield)))
 
     # Map the sessions in the sourcefolder
     if not sessions:
-        sessions = glob.glob(os.path.join(rawfolder, f'{subprefix}*{os.sep}{sesprefix}*'))
-        if not sessions:
-            sessions = glob.glob(os.path.join(rawfolder, f'{subprefix}*'))      # Try without session-subfolders
+        sessions = rawfolder.glob(f"{subprefix}*/{sesprefix}*")
+        if not list(sessions):
+            sessions = rawfolder.glob(f"{subprefix}*")      # Try without session-subfolders
     else:
-        sessions = [sessionitem for session in sessions for sessionitem in glob.glob(os.path.join(rawfolder, session), recursive=True)]
+        sessions = [sessionitem for session in sessions for sessionitem in rawfolder.rglob(session)]
 
     # Loop over the selected sessions in the sourcefolder
     for session in sessions:
 
         # Get the subject and session identifiers from the raw folder
-        subid = subprefix + session.rsplit(os.sep+subprefix, 1)[1].split(os.sep+sesprefix, 1)[0]
-        sesid = sesprefix + session.rsplit(os.sep+sesprefix)[1]                                         # TODO: Fix crashing on session-less datasets
+        subid, sesid = bids.get_subid_sesid(session)
 
         # Parse the new subject and session identifiers from the dicomfield
         series = bids.lsdirs(session, wildcard)
@@ -79,7 +77,7 @@ def rawmapper(rawfolder: str, outfolder: str='', sessions: list=[], rename: bool
 
             # Get the new subid and sesid
             if not dcmval or dcmval=='None':
-                warnings.warn('Skipping renaming because the dicom-field was empty for: ' + session)
+                warnings.warn(f"Skipping renaming because the dicom-field was empty for: {session}")
                 continue
             else:
                 if '/' in dcmval:               # Allow for different sub/ses delimiters that could be entered at the console (i.e. in PatientComments)
@@ -98,30 +96,30 @@ def rawmapper(rawfolder: str, outfolder: str='', sessions: list=[], rename: bool
                 elif len(newsubsesid)==2:
                     newsesid = sesprefix + bids.cleanup_value(re.sub(f'^{sesprefix}', '', newsubsesid[1]))
                 else:
-                    warnings.warn('Skipping renaming of {} because the dicom-field "{}" could not be parsed into [subid, sesid]'.format(session, dcmval))
+                    warnings.warn(f"Skipping renaming of {session} because the dicom-field '{dcmval}' could not be parsed into [subid, sesid]")
                     continue
                 if newsesid==sesprefix or newsesid==subprefix+'None':
                     newsesid = sesid
-                    warnings.warn('Could not rename {} because the dicom-field was empty for: {}'.format(sesid, session))
+                    warnings.warn(f"Could not rename {sesid} because the dicom-field was empty for: {session}")
 
             # Save the dicomfield / sub-ses mapping to disk and rename the session subfolder (but skip if it already exists)
-            newsession = os.path.join(rawfolder, newsubid, newsesid)
-            print(session + ' -> ' + newsession)
+            newsession = rawfolder/newsubid/newsesid
+            print(f"{session} -> {newsession}")
             if newsession == session:
                 continue
-            if os.path.isdir(newsession):
-                warnings.warn('{} already exists, skipping renaming of {}'.format(newsession, session))
+            if newsession.is_dir():
+                warnings.warn(f"{newsession} already exists, skipping renaming of {session}")
             elif not dryrun:
-                with open(os.path.join(outfolder, mapperfile), 'a') as fid:
-                    fid.write('{}\t{}\t{}\t{}\n'.format(subid, sesid, newsubid, newsesid))
-                os.renames(session, newsession)
+                with mapperfile.open('a') as fid:
+                    fid.write(f"{subid}\t{sesid}\t{newsubid}\t{newsesid}\n")
+                session.rename(newsession)
 
         # Print & save the dicom values
         else:
-            print('{}{}{}\t-> {}'.format(subid+os.sep, sesid+os.sep, os.path.basename(series), '\t'.join(dcmval.split('/'))))
+            print('{}/{}/{}\t-> {}'.format(subid, sesid, series.name, '\t'.join(dcmval.split('/'))))
             if not dryrun:
-                with open(os.path.join(outfolder, mapperfile), 'a') as fid:
-                    fid.write('{}\t{}\t{}\t{}\n'.format(subid, sesid, os.path.basename(series), '\t'.join(dcmval.split('/'))))
+                with mapperfile.open('a') as fid:
+                    fid.write('{}\t{}\t{}\t{}\n'.format(subid, sesid, series.name, '\t'.join(dcmval.split('/'))))
 
 
 def main():
