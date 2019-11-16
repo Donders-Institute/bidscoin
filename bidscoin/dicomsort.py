@@ -136,7 +136,7 @@ def sortsessions(session: str, subjectid: str='', sessionid: str='', rename: boo
 
             from pydicom.filereader import read_dicomdir
 
-            dicomdir = read_dicomdir(session)
+            dicomdir = read_dicomdir(str(session))
 
             sessionfolder = session.parent
             for patient in dicomdir.patient_records:

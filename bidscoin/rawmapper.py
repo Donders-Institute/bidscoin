@@ -34,6 +34,7 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: list=[], rename: bool
     rawfolder = Path(rawfolder)
     if not outfolder:
         outfolder = rawfolder
+        print(f"Outfolder: {outfolder}")
     outfolder = Path(outfolder)
 
     # Create or append the output to a mapper logfile
