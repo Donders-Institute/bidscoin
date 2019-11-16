@@ -352,7 +352,7 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
     Gets a dicom-file from the folder
 
     :param folder:  The full pathname of the folder
-    :index:         The index number of the dicom file
+    :param index:   The index number of the dicom file
     :return:        The filename of the first dicom-file in the folder.
     """
 
