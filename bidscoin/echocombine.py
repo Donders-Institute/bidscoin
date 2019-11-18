@@ -156,10 +156,10 @@ def main():
                                             '  echocombine /project/3017065.01/bids -a PAID -s\n\n')
     parser.add_argument('bidsfolder', type=str,
                         help='The bids-directory with the (multi-echo) subject data')
-    parser.add_argument('pattern', type=str, choices=bids.bidsmodalities + (bids.unknownmodality, 'derivatives'),
+    parser.add_argument('pattern', type=str,
                         help="Globlike search pattern (relative to the subject/session folder) to select the first echo of the images that need to be combined, e.g. 'func/*task-stroop*echo-1*'")
     parser.add_argument('-p','--participant_label', type=str, nargs='+',
-                        help='Space seperated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed')
+                        help='Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed')
     parser.add_argument('-o','--output', type=str, choices=bids.bidsmodalities + (bids.unknownmodality, 'derivatives'),
                         help=f"A string that determines where the output is saved. It can be the name of a BIDS modality folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output = [the name of the input modality folder] then the original echo images are replaced by one combined image. If output is left empty then the combined image is saved in the input modality folder and the original echo images are moved to the {bids.unknownmodality} folder (= default)")
     parser.add_argument('-a','--algorithm', choices=['PAID', 'TE', 'average'], default='TE',
