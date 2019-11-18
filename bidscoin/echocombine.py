@@ -50,7 +50,7 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
             sessions = [subject]
         for session in sessions:
 
-            sub_id, ses_id = bids.get_subid_sesid(session)
+            sub_id, ses_id = bids.get_subid_sesid(session/'dum.my')
 
             # Search for multi-echo matches
             for match in sorted((bidsdir/sub_id/ses_id).glob(pattern)):

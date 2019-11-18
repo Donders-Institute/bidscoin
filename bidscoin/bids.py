@@ -987,7 +987,7 @@ def get_matching_run(dicomfile: Path, bidsmap: dict, modalities: tuple = bidsmod
 
 def get_subid_sesid(bidsfile: Path, subid: str= '<<SourceFilePath>>', sesid: str= '<<SourceFilePath>>', subprefix: str= 'sub-', sesprefix: str= 'ses-') -> Tuple[str, str]:
     """
-    Extract the cleaned-up subid and sesid from the pathname or from the dicom file if subid/sesid == '<<SourceFilePath>>'
+    Extract the cleaned-up subid and sesid from the pathname if subid/sesid == '<<SourceFilePath>>', or from the dicom header
 
     :param bidsfile:   The full pathname of the file. If it is a DICOM file, the sub/ses values are read from the DICOM field
     :param subid:      The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001') or DICOM field. Can be left empty
