@@ -6,11 +6,11 @@ This wrapper is fully BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 
 import shutil
 import argparse
-import multiecho as me
 import json
 import re
 import logging
 import pandas as pd
+from multiecho import combination as me
 from pathlib import Path
 try:
     from bidscoin import bids
