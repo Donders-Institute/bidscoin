@@ -1182,7 +1182,6 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str= '') -
     :return:            The bidsname with the new bidsvalue or, if newvalue is empty, the existing bidsvalue
     """
 
-    newvalue = cleanup_value(newvalue)
     bidspath = Path(bidsfile).parent
     bidsname = Path(bidsfile).with_suffix('').stem
 
