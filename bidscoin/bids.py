@@ -1184,6 +1184,7 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str= '') -
 
     bidspath = Path(bidsfile).parent
     bidsname = Path(bidsfile).with_suffix('').stem
+    bidsext  = ''.join(Path(bidsfile).suffixes)
 
     # Get the existing bidsvalue
     oldvalue = ''
@@ -1211,7 +1212,7 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str= '') -
             newvalue = acqvalue + newvalue
 
         # Return the updated bidsfile
-        newbidsfile = bidspath / (bidsname.replace(f'{bidskey}-{oldvalue}', f'{bidskey}-{newvalue}'))
+        newbidsfile = (bidspath / (bidsname.replace(f'{bidskey}-{oldvalue}', f'{bidskey}-{newvalue}'))).with_suffix(bidsext)
         if isinstance(bidsfile, str):
             newbidsfile = str(newbidsfile)
         return newbidsfile
