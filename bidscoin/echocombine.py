@@ -57,90 +57,94 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
 
                 # Check if it is normal/BIDS multi-echo data
                 echonr    = bids.get_bidsvalue(match, 'echo')
-                mepattern = bids.get_bidsvalue(match, 'echo', '*')
-                echos     = match.parent.glob(mepattern.name)
                 if not echonr:
-                    LOGGER.warning(f"No 'echo' key-value pair found in the filename, skipping: {match}")
-                    continue
-                if len(echos) == 1:
-                    LOGGER.warning(f"Only one echo image found, nothing to do for: {match}")
-                    continue
+                    LOGGER.warning(f"No 'echo' key-value pair found in the filename, skipping: {session}")
+                    break
 
-                # Construct the multi-echo output filename and check if that file already exists
-                mename = match.name.replace(f"_echo-{echonr}", '')
-                if not output:
-                    mefile = bidsdir/sub_id/ses_id/match.parent.name/mename
-                elif output == 'derivatives':
-                    mefile = bidsdir/'derivatives'/'multi-echo'/sub_id/ses_id/match.parent.name/mename
-                else:
-                    mefile = bidsdir/sub_id/ses_id/output/mename
-                mefile.parent.mkdir(parents=True, exist_ok=True)
-                if mefile.is_file():
-                    LOGGER.warning(f"Outputfile {mefile} already exists, skipping: {match}")
-                    continue
+            # Check whether there are multiple echo's to combine
+            if echonr == 1:
+                LOGGER.warning(f"Only one echo image found, nothing to do for: {session}")
+                continue
 
-                # Combine the multi-echo images
-                me.me_combine(mepattern, mefile, algorithm, weights, saveweights=False)
+            # Define glob pattern and echo paths
+            mepattern = bids.get_bidsvalue(match, 'echo', '*')
+            echos     = sorted(match.parent.glob(mepattern.name))
 
-                # Add a multi-echo json sidecar-file
-                mejson = mefile.with_suffix('').with_suffix('.json')
-                LOGGER.info(f"Adding a json sidecar-file: {mejson}")
-                shutil.copyfile(echos[0].with_suffix('').with_suffix('.json'), mejson)
-                with mejson.open('w') as fmap_fid:
-                    data               = json.load(fmap_fid)
-                    data['EchoTime']   = 'n/a'
-                    data['EchoNumber'] = 1
-                    json.dump(data, fmap_fid, indent=4)
+            # Construct the multi-echo output filename and check if that file already exists
+            mename = match.name.replace(f"_echo-{echonr}", '')
+            if not output:
+                mefile = bidsdir/sub_id/ses_id/match.parent.name/mename
+            elif output == 'derivatives':
+                mefile = bidsdir/'derivatives'/'multi-echo'/sub_id/ses_id/match.parent.name/mename
+            else:
+                mefile = bidsdir/sub_id/ses_id/output/mename
+            mefile.parent.mkdir(parents=True, exist_ok=True)
+            if mefile.is_file():
+                LOGGER.warning(f"Outputfile {mefile} already exists, skipping: {match}")
+                continue
 
-                # (Re)move the original multi-echo images
-                if not output:
-                    newechos = [echo.parents[1]/bids.unknownmodality/echo.name for echo in echos]
-                    for echo, newecho in zip(echos, newechos):
-                        LOGGER.info(f'Moving original echo image: {echo} -> {newecho}')
-                        echo.replace(newecho)
-                        echo.with_suffix('').with_suffix('.json').replace(newecho.with_suffix('').with_suffix('.json'))
-                elif output == match.parent.name:
-                    for echo in echos:
-                        LOGGER.info(f'Removing original echo image: {echo}')
-                        echo.unlink()
-                        echo.with_suffix('').with_suffix('.json').unlink()
+            # Combine the multi-echo images
+            me.me_combine(mepattern, mefile, algorithm, weights, saveweights=False)
 
-                # Update the IntendedFor fields in the fieldmap sidecar files (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
-                if (match.parent/'fieldmap').is_dir():
-                    for fmap in (match.parent/'fieldmap').glob('*.json'):
-                        with fmap.open('w') as fmap_fid:
-                            fmap_data   = json.load(fmap_fid)
-                            intendedfor = data['IntendedFor']
-                            if echos[0] in intendedfor:
-                                LOGGER.info(f"Updating 'IntendedFor' to {mefile} in {fmap}")
-                                if not output:
-                                    intendedfor = [file for file in intendedfor if not Path(file) in echos] + [str(mefile)] + [str(newecho) for newecho in newechos]
-                                elif output == match.parent.name:
-                                    intendedfor = [file for file in intendedfor if not Path(file) in echos] + [str(mefile)]
-                                else:
-                                    intendedfor = intendedfor + [str(mefile)]
-                                fmap_data['IntendedFor'] = intendedfor
-                                json.dump(fmap_data, fmap_fid, indent=4)
+            # Add a multi-echo json sidecar-file
+            mejson = mefile.with_suffix('').with_suffix('.json')
+            LOGGER.info(f"Adding a json sidecar-file: {mejson}")
+            shutil.copyfile(echos[0].with_suffix('').with_suffix('.json'), mejson)
+            with mejson.open('r+') as fmap_fid:
+                data               = json.load(fmap_fid)
+                data['EchoTime']   = 'n/a'
+                data['EchoNumber'] = 1
+                json.dump(data, fmap_fid, indent=4)
 
-                # Update the scans.tsv file
-                scans_tsv = bidsdir/sub_id/ses_id/'scans.tsv'
-                if scans_tsv.is_file():
+            # (Re)move the original multi-echo images
+            if not output:
+                newechos = [echo.parents[1]/bids.unknownmodality/echo.name for echo in echos]
+                for echo, newecho in zip(echos, newechos):
+                    LOGGER.info(f'Moving original echo image: {echo} -> {newecho}')
+                    echo.replace(newecho)
+                    echo.with_suffix('').with_suffix('.json').replace(newecho.with_suffix('').with_suffix('.json'))
+            elif output == match.parent.name:
+                for echo in echos:
+                    LOGGER.info(f'Removing original echo image: {echo}')
+                    echo.unlink()
+                    echo.with_suffix('').with_suffix('.json').unlink()
 
-                    LOGGER.info(f"Adding {mefile} to {scans_tsv}")
-                    scans_table             = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
-                    scans_table.loc[mefile] = scans_table.loc[echos[0]]
+            # Update the IntendedFor fields in the fieldmap sidecar files (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
+            if (match.parent/'fieldmap').is_dir():
+                for fmap in (match.parent/'fieldmap').glob('*.json'):
+                    with fmap.open('w') as fmap_fid:
+                        fmap_data   = json.load(fmap_fid)
+                        intendedfor = data['IntendedFor']
+                        if echos[0] in intendedfor:
+                            LOGGER.info(f"Updating 'IntendedFor' to {mefile} in {fmap}")
+                            if not output:
+                                intendedfor = [file for file in intendedfor if not Path(file) in echos] + [str(mefile)] + [str(newecho) for newecho in newechos]
+                            elif output == match.parent.name:
+                                intendedfor = [file for file in intendedfor if not Path(file) in echos] + [str(mefile)]
+                            else:
+                                intendedfor = intendedfor + [str(mefile)]
+                            fmap_data['IntendedFor'] = intendedfor
+                            json.dump(fmap_data, fmap_fid, indent=4)
 
-                    for echo, newecho in zip(echos, newechos):
-                        if not output:
-                            LOGGER.info(f"Updating {echo} -> {newecho} in {scans_tsv}")
-                            scans_table.loc[newecho] = scans_table.loc[echo]
-                            scans_table.drop(echo)
-                        elif output == match.parent.name:
-                            LOGGER.info(f"Removing {echo} from {scans_tsv}")
-                            scans_table.drop(echo)
+            # Update the scans.tsv file
+            scans_tsv = bidsdir/sub_id/ses_id/'scans.tsv'
+            if scans_tsv.is_file():
 
-                    scans_table.sort_values(by=['acq_time','filename'], inplace=True)
-                    scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
+                LOGGER.info(f"Adding {mefile} to {scans_tsv}")
+                scans_table             = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
+                scans_table.loc[mefile] = scans_table.loc[echos[0]]
+
+                for echo, newecho in zip(echos, newechos):
+                    if not output:
+                        LOGGER.info(f"Updating {echo} -> {newecho} in {scans_tsv}")
+                        scans_table.loc[newecho] = scans_table.loc[echo]
+                        scans_table.drop(echo)
+                    elif output == match.parent.name:
+                        LOGGER.info(f"Removing {echo} from {scans_tsv}")
+                        scans_table.drop(echo)
+
+                scans_table.sort_values(by=['acq_time','filename'], inplace=True)
+                scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
     LOGGER.info('-------------- FINISHED! ------------')
     LOGGER.info('')
