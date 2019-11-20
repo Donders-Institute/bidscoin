@@ -24,6 +24,8 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
 
     # Input checking
     bidsdir = Path(bidsdir)
+    if 'echo' not in pattern:
+        LOGGER.warning(f"Missing 'echo-#' substring in glob-like search pattern, i.e. '{pattern}' does not seem to select the first echo")
 
     # Start logging
     bids.setup_logging(bidsdir/'code'/'bidscoin'/'mecombine.log')
@@ -58,7 +60,7 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                 # Check if it is normal/BIDS multi-echo data
                 echonr    = bids.get_bidsvalue(match, 'echo')
                 mepattern = bids.get_bidsvalue(match, 'echo', '*')
-                echos     = match.parent.glob(mepattern.name)
+                echos     = sorted(match.parent.glob(mepattern.name))
                 if not echonr:
                     LOGGER.warning(f"No 'echo' key-value pair found in the filename, skipping: {match}")
                     continue
@@ -71,7 +73,7 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                 if not output:
                     mefile = bidsdir/sub_id/ses_id/match.parent.name/mename
                 elif output == 'derivatives':
-                    mefile = bidsdir/'derivatives'/'multi-echo'/sub_id/ses_id/match.parent.name/mename
+                    mefile = bidsdir/'derivatives'/'multiecho'/sub_id/ses_id/match.parent.name/mename
                 else:
                     mefile = bidsdir/sub_id/ses_id/output/mename
                 mefile.parent.mkdir(parents=True, exist_ok=True)
@@ -151,13 +153,15 @@ def main():
 
     parser = argparse.ArgumentParser(description=__doc__,
                                      epilog='examples:\n'
-                                            '  echocombine /project/3017065.01/bids\n'
-                                            '  echocombine /project/3017065.01/bids -o /project/3017065.01/bids/derivatives/mecombine\n'
-                                            '  echocombine /project/3017065.01/bids -a PAID -s\n\n')
+                                            '  echocombine /project/3017065.01/bids func/*task-stroop*echo-1*\n'
+                                            '  echocombine /project/3017065.01/bids func/*task-stroop*echo-1* -p 001 003\n'
+                                            '  echocombine /project/3017065.01/bids func/*task-*echo-1* -o func\n'
+                                            '  echocombine /project/3017065.01/bids func/*task-*echo-1* -o derivatives -w 13 26 39 52\n'
+                                            '  echocombine /project/3017065.01/bids func/*task-*echo-1* -a PAID\n\n')
     parser.add_argument('bidsfolder', type=str,
                         help='The bids-directory with the (multi-echo) subject data')
     parser.add_argument('pattern', type=str,
-                        help="Globlike search pattern (relative to the subject/session folder) to select the first echo of the images that need to be combined, e.g. 'func/*task-stroop*echo-1*'")
+                        help="Globlike search pattern (relative to the subject/session folder) to select the first echo of the images that need to be combined, e.g. 'func/*task-*echo-1*'")
     parser.add_argument('-p','--participant_label', type=str, nargs='+',
                         help='Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed')
     parser.add_argument('-o','--output', type=str, choices=bids.bidsmodalities + (bids.unknownmodality, 'derivatives'),
