@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""A wrapper around the 'mecombine' multi-echo combination utility (https://github.com/Donders-Institute/multiecho).
+"""
+A wrapper around the 'mecombine' multi-echo combination tool (https://github.com/Donders-Institute/multiecho).
 
 This wrapper is fully BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 """
@@ -55,7 +56,7 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
             sub_id, ses_id = bids.get_subid_sesid(session/'dum.my')
 
             # Search for multi-echo matches
-            for match in sorted((bidsdir/sub_id/ses_id).glob(pattern)):
+            for match in sorted([match for match in (bidsdir/sub_id/ses_id).glob(pattern) if match.suffix.startswith('.nii')]):
 
                 # Check if it is normal/BIDS multi-echo data
                 echonr    = bids.get_bidsvalue(match, 'echo')
@@ -88,10 +89,11 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                 mejson = mefile.with_suffix('').with_suffix('.json')
                 LOGGER.info(f"Adding a json sidecar-file: {mejson}")
                 shutil.copyfile(echos[0].with_suffix('').with_suffix('.json'), mejson)
+                with mejson.open('r') as fmap_fid:
+                    data = json.load(fmap_fid)
+                data['EchoTime']   = 'n/a'
+                data['EchoNumber'] = 1
                 with mejson.open('w') as fmap_fid:
-                    data               = json.load(fmap_fid)
-                    data['EchoTime']   = 'n/a'
-                    data['EchoNumber'] = 1
                     json.dump(data, fmap_fid, indent=4)
 
                 # (Re)move the original multi-echo images
@@ -110,22 +112,27 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                 # Update the IntendedFor fields in the fieldmap sidecar files (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
                 if (match.parent/'fieldmap').is_dir():
                     for fmap in (match.parent/'fieldmap').glob('*.json'):
-                        with fmap.open('w') as fmap_fid:
-                            fmap_data   = json.load(fmap_fid)
-                            intendedfor = data['IntendedFor']
-                            if echos[0] in intendedfor:
-                                LOGGER.info(f"Updating 'IntendedFor' to {mefile} in {fmap}")
-                                if not output:
-                                    intendedfor = [file for file in intendedfor if not Path(file) in echos] + [str(mefile)] + [str(newecho) for newecho in newechos]
-                                elif output == match.parent.name:
-                                    intendedfor = [file for file in intendedfor if not Path(file) in echos] + [str(mefile)]
-                                else:
-                                    intendedfor = intendedfor + [str(mefile)]
-                                fmap_data['IntendedFor'] = intendedfor
+                        with fmap.open('r') as fmap_fid:
+                            fmap_data = json.load(fmap_fid)
+                        intendedfor = data['IntendedFor']
+                        if echos[0] in intendedfor:
+                            LOGGER.info(f"Updating 'IntendedFor' to {mefile} in {fmap}")
+                            if not output:
+                                intendedfor = [file for file in intendedfor if not Path(file) in echos] + [str(mefile)] + [str(newecho) for newecho in newechos]
+                            elif output == match.parent.name:
+                                intendedfor = [file for file in intendedfor if not Path(file) in echos] + [str(mefile)]
+                            else:
+                                intendedfor = intendedfor + [str(mefile)]
+                            fmap_data['IntendedFor'] = intendedfor
+                            with fmap.open('w') as fmap_fid:
                                 json.dump(fmap_data, fmap_fid, indent=4)
 
                 # Update the scans.tsv file
-                scans_tsv = bidsdir/sub_id/ses_id/'scans.tsv'
+                if ses_id:
+                    _ses_id = '_' + ses_id
+                else:
+                    _ses_id = ''
+                scans_tsv = bidsdir/sub_id/ses_id/f"{sub_id}{_ses_id}_scans.tsv"     # TODO: fix sessionless datasets
                 if scans_tsv.is_file():
 
                     LOGGER.info(f"Adding {mefile} to {scans_tsv}")
