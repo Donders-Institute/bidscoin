@@ -5,6 +5,7 @@ A wrapper around the 'mecombine' multi-echo combination tool (https://github.com
 This wrapper is fully BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 """
 
+import textwrap
 import shutil
 import argparse
 import json
@@ -132,7 +133,7 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                     _ses_id = '_' + ses_id
                 else:
                     _ses_id = ''
-                scans_tsv = bidsdir/sub_id/ses_id/f"{sub_id}{_ses_id}_scans.tsv"     # TODO: fix sessionless datasets
+                scans_tsv = bidsdir/sub_id/ses_id/f"{sub_id}{_ses_id}_scans.tsv"
                 if scans_tsv.is_file():
 
                     mefile_rel   = str(mefile.relative_to(bidsdir/sub_id/ses_id))
@@ -161,7 +162,7 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
 def main():
     """Console script usage"""
 
-    parser = argparse.ArgumentParser(description=__doc__,
+    parser = argparse.ArgumentParser(description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
                                             '  echocombine /project/3017065.01/bids func/*task-stroop*echo-1*\n'
                                             '  echocombine /project/3017065.01/bids func/*task-stroop*echo-1* -p 001 003\n'
