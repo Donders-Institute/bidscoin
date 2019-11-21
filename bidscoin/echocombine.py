@@ -181,7 +181,7 @@ def main():
     parser.add_argument('-o','--output', type=str, choices=bids.bidsmodalities + (bids.unknownmodality, 'derivatives'),
                         help=f"A string that determines where the output is saved. It can be the name of a BIDS modality folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output = [the name of the input modality folder] then the original echo images are replaced by one combined image. If output is left empty then the combined image is saved in the input modality folder and the original echo images are moved to the {bids.unknownmodality} folder (= default)")
     parser.add_argument('-a','--algorithm', choices=['PAID', 'TE', 'average'], default='TE',
-                        help='Combination algorithm. Default: TE')
+                        help='Combination algorithm')
     parser.add_argument('-w','--weights', nargs='*', default=[], type=list,
                         help='Weights for each echo')
     args = parser.parse_args()
