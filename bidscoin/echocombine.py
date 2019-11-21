@@ -5,7 +5,6 @@ A wrapper around the 'mecombine' multi-echo combination tool (https://github.com
 This wrapper is fully BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 """
 
-import textwrap
 import shutil
 import argparse
 import json
