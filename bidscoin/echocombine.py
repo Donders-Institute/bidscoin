@@ -167,7 +167,7 @@ def main():
                                             '  echocombine /project/3017065.01/bids func/*task-stroop*echo-1* -p 001 003\n'
                                             '  echocombine /project/3017065.01/bids func/*task-*echo-1* -o func\n'
                                             '  echocombine /project/3017065.01/bids func/*task-*echo-1* -o derivatives -w 13 26 39 52\n'
-                                            '  echocombine /project/3017065.01/bids func/*task-*echo-1* -a PAID\n\n')
+                                            '  echocombine /project/3017065.01/bids func/*task-*echo-1* -a PAID\n\n ')
     parser.add_argument('bidsfolder', type=str,
                         help='The bids-directory with the (multi-echo) subject data')
     parser.add_argument('pattern', type=str,
