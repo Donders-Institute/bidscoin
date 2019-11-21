@@ -56,7 +56,7 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
             sub_id, ses_id = bids.get_subid_sesid(session/'dum.my')
 
             # Search for multi-echo matches
-            for match in sorted([match for match in (bidsdir/sub_id/ses_id).glob(pattern) if match.suffix.startswith('.nii')]):
+            for match in sorted([match for match in (bidsdir/sub_id/ses_id).glob(pattern) if '.nii' in match.suffixes]):
 
                 # Check if it is normal/BIDS multi-echo data
                 echonr    = bids.get_bidsvalue(match, 'echo')
@@ -135,11 +135,14 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                 scans_tsv = bidsdir/sub_id/ses_id/f"{sub_id}{_ses_id}_scans.tsv"     # TODO: fix sessionless datasets
                 if scans_tsv.is_file():
 
-                    LOGGER.info(f"Adding {mefile} to {scans_tsv}")
-                    scans_table             = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
-                    scans_table.loc[mefile] = scans_table.loc[echos[0]]
+                    mefile_rel   = str(mefile.relative_to(bidsdir/sub_id/ses_id))
+                    echos_rel    = [str(echo.relative_to(bidsdir/sub_id/ses_id)) for echo in echos]
+                    newechos_rel = [str(echo.relative_to(bidsdir/sub_id/ses_id)) for echo in newechos]
+                    LOGGER.info(f"Adding {mefile_rel} to {scans_tsv}")
+                    scans_table                 = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
+                    scans_table.loc[mefile_rel] = scans_table.loc[echos_rel[0]]
 
-                    for echo, newecho in zip(echos, newechos):
+                    for echo, newecho in zip(echos_rel, newechos_rel):
                         if not output:
                             LOGGER.info(f"Updating {echo} -> {newecho} in {scans_tsv}")
                             scans_table.loc[newecho] = scans_table.loc[echo]
