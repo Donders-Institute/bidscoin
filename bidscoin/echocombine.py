@@ -163,7 +163,7 @@ def main():
 
     parser = argparse.ArgumentParser(description=__doc__,
                                      epilog='examples:\n'
-                                            '  echocombine /project/3017065.01/bids func/*task-stroop*echo-1*\n'
+                                            '  echocombine /project/3017065.01/bids func/*task-stroop*echo-1\*\n'
                                             '  echocombine /project/3017065.01/bids func/*task-stroop*echo-1* -p 001 003\n'
                                             '  echocombine /project/3017065.01/bids func/*task-*echo-1* -o func\n'
                                             '  echocombine /project/3017065.01/bids func/*task-*echo-1* -o derivatives -w 13 26 39 52\n'
