@@ -162,7 +162,7 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
 def main():
     """Console script usage"""
 
-    parser = argparse.ArgumentParser(description=textwrap.dedent(__doc__),
+    parser = argparse.ArgumentParser(description=textwrap.__doc__,
                                      epilog='examples:\n'
                                             '  echocombine /project/3017065.01/bids func/*task-stroop*echo-1*\n'
                                             '  echocombine /project/3017065.01/bids func/*task-stroop*echo-1* -p 001 003\n'
