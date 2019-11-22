@@ -128,11 +128,7 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                                 json.dump(fmap_data, fmap_fid, indent=4)
 
                 # Update the scans.tsv file
-                if ses_id:
-                    _ses_id = '_' + ses_id
-                else:
-                    _ses_id = ''
-                scans_tsv = bidsdir/sub_id/ses_id/f"{sub_id}{_ses_id}_scans.tsv"
+                scans_tsv = bidsdir/sub_id/ses_id/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
                 if scans_tsv.is_file():
 
                     mefile_rel   = str(mefile.relative_to(bidsdir/sub_id/ses_id))
