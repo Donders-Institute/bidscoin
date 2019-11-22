@@ -44,13 +44,13 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
     # Loop over bids subject/session-directories
     for n, subject in enumerate(subjects, 1):
 
-        LOGGER.info('-------------------------------------')
-        LOGGER.info(f'Combining echos for ({n}/{len(subjects)}): {subject}')
-
         sessions = bids.lsdirs(subject, 'ses-*')
         if not sessions:
             sessions = [subject]
         for session in sessions:
+
+            LOGGER.info('-------------------------------------')
+            LOGGER.info(f'Combining echos for ({n}/{len(subjects)}): {session}')
 
             sub_id, ses_id = bids.get_subid_sesid(session/'dum.my')
 
