@@ -61,6 +61,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 echonr    = bids.get_bidsvalue(match, 'echo')
                 mepattern = bids.get_bidsvalue(match, 'echo', '*')
                 echos     = sorted(match.parent.glob(mepattern.name))
+                newechos  = [echo.parents[1]/bids.unknownmodality/echo.name for echo in echos]
                 if not echonr:
                     LOGGER.warning(f"No 'echo' key-value pair found in the filename, skipping: {match}")
                     continue
@@ -97,7 +98,6 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
 
                 # (Re)move the original multi-echo images
                 if not output:
-                    newechos = [echo.parents[1]/bids.unknownmodality/echo.name for echo in echos]
                     for echo, newecho in zip(echos, newechos):
                         LOGGER.info(f'Moving original echo image: {echo} -> {newecho}')
                         echo.replace(newecho)
