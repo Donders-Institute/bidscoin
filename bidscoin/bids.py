@@ -1003,7 +1003,7 @@ def get_subid_sesid(bidsfile: Path, subid: str= '<<SourceFilePath>>', sesid: str
     else:
         subid = get_dynamic_value(subid, bidsfile)
     if sesid=='<<SourceFilePath>>':
-        if bidsfile.parents[1].match(sesprefix + '*'):
+        if bidsfile.parents[0].match(sesprefix + '*'):
             sesid = [part.split(sesprefix)[1] for part in bidsfile.parent.parts if part.startswith(sesprefix)][-1]
         else:
             sesid = ''

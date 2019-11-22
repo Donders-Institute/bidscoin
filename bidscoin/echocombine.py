@@ -55,7 +55,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
             sub_id, ses_id = bids.get_subid_sesid(session/'dum.my')
 
             # Search for multi-echo matches
-            for match in sorted([match for match in (bidsdir/sub_id/ses_id).glob(pattern) if '.nii' in match.suffixes]):
+            for match in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
 
                 # Check if it is normal/BIDS multi-echo data
                 echonr    = bids.get_bidsvalue(match, 'echo')
@@ -71,11 +71,11 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 # Construct the multi-echo output filename and check if that file already exists
                 mename = match.name.replace(f"_echo-{echonr}", '')
                 if not output:
-                    mefile = bidsdir/sub_id/ses_id/match.parent.name/mename
+                    mefile = session/match.parent.name/mename
                 elif output == 'derivatives':
                     mefile = bidsdir/'derivatives'/'multiecho'/sub_id/ses_id/match.parent.name/mename
                 else:
-                    mefile = bidsdir/sub_id/ses_id/output/mename
+                    mefile = session/output/mename
                 mefile.parent.mkdir(parents=True, exist_ok=True)
                 if mefile.is_file():
                     LOGGER.warning(f"Outputfile {mefile} already exists, skipping: {match}")
@@ -109,9 +109,9 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                         echo.with_suffix('').with_suffix('.json').unlink()
 
                 # Construct relative path names as they are used in BIDS
-                mefile_rel   = str(mefile.relative_to(bidsdir/sub_id/ses_id))
-                echos_rel    = [str(echo.relative_to(bidsdir/sub_id/ses_id)) for echo in echos]
-                newechos_rel = [str(echo.relative_to(bidsdir/sub_id/ses_id)) for echo in newechos]
+                mefile_rel   = str(mefile.relative_to(session))
+                echos_rel    = [str(echo.relative_to(session)) for echo in echos]
+                newechos_rel = [str(echo.relative_to(session)) for echo in newechos]
 
                 # Update the IntendedFor fields in the fieldmap sidecar files (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
                 if (match.parent/'fieldmap').is_dir():
@@ -132,7 +132,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                                 json.dump(fmap_data, fmap_fid, indent=4)
 
                 # Update the scans.tsv file
-                scans_tsv = bidsdir/sub_id/ses_id/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
+                scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
                 if scans_tsv.is_file():
 
                     LOGGER.info(f"Adding {mefile_rel} to {scans_tsv}")
@@ -151,7 +151,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
                     scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
-    LOGGER.info('-------------- FINISHED! ------------')
+    LOGGER.info('-------------- FINISHED! -------------')
     LOGGER.info('')
 
 

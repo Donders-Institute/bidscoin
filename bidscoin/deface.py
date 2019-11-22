@@ -42,7 +42,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, args: dict):
     # Loop over bids subject/session-directories
     for n, subject in enumerate(subjects, 1):
 
-        LOGGER.info('-------------------------------------')
+        LOGGER.info('--------------------------------------')
         LOGGER.info(f'Defacing ({n}/{len(subjects)}): {subject}')
 
         sessions = bids.lsdirs(subject, 'ses-*')
@@ -53,7 +53,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, args: dict):
             sub_id, ses_id = bids.get_subid_sesid(session/'dum.my')
 
             # Search for images that need to be defaced
-            for match in sorted([match for match in (bidsdir/sub_id/ses_id).glob(pattern) if '.nii' in match.suffixes]):
+            for match in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
 
                 # Construct the output filename and check if that file already exists
                 if not output:
@@ -61,7 +61,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, args: dict):
                 elif output == 'derivatives':
                     outputfile = bidsdir/'derivatives'/'deface'/sub_id/ses_id/match.parent.name/match.name
                 else:
-                    outputfile = bidsdir/sub_id/ses_id/output/match.name
+                    outputfile = session/output/match.name
                 outputfile.parent.mkdir(parents=True, exist_ok=True)
 
                 # Deface the image
@@ -73,8 +73,8 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, args: dict):
                 shutil.copyfile(match.with_suffix('').with_suffix('.json'), outputjson)
 
                 # Construct relative path names as they are used in BIDS
-                match_rel      = str(     match.relative_to(bidsdir/sub_id/ses_id))
-                outputfile_rel = str(outputfile.relative_to(bidsdir/sub_id/ses_id))
+                match_rel      = str(     match.relative_to(session))
+                outputfile_rel = str(outputfile.relative_to(session))
 
                 # Update the IntendedFor fields in the fieldmap sidecar files
                 if output and (match.parent/'fieldmap').is_dir():
@@ -89,7 +89,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, args: dict):
                                 json.dump(fmap_data, fmap_fid, indent=4)
 
                 # Update the scans.tsv file
-                scans_tsv = bidsdir/sub_id/ses_id/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
+                scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
                 if output and scans_tsv.is_file():
                     LOGGER.info(f"Adding {outputfile_rel} to {scans_tsv}")
                     scans_table                     = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
@@ -97,7 +97,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, args: dict):
                     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
                     scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
-    LOGGER.info('-------------- FINISHED! ------------')
+    LOGGER.info('-------------- FINISHED! -------------')
     LOGGER.info('')
 
 
@@ -110,13 +110,13 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
                                      description=__doc__,
                                      epilog='examples:\n'
-                                            '  deface /project/3017065.01/bids anat/*_T1w\n'
-                                            '  deface /project/3017065.01/bids anat/*_T1w -p 001 003 -o derivatives\n'
-                                            '  deface /project/3017065.01/bids anat/*_T1w -a \'{"cost": "corratio", "verbose": ""}\'\n ')
+                                            '  deface /project/3017065.01/bids anat/*_T1w*\n'
+                                            '  deface /project/3017065.01/bids anat/*_T1w* -p 001 003 -o derivatives\n'
+                                            '  deface /project/3017065.01/bids anat/*_T1w* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
     parser.add_argument('bidsfolder', type=str,
                         help='The bids-directory with the (multi-echo) subject data')
     parser.add_argument('pattern', type=str,
-                        help="Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T1w'")
+                        help="Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T1w*'")
     parser.add_argument('-p','--participant_label', type=str, nargs='+',
                         help='Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed')
     parser.add_argument('-o','--output', type=str, choices=bids.bidsmodalities + (bids.unknownmodality, 'derivatives'),
