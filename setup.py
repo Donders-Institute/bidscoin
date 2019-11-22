@@ -28,8 +28,9 @@ setup(name                           = 'bidscoin',          # Required
                                                             'bidsmapper  = bidscoin.bidsmapper:main',
                                                             'bidscoiner  = bidscoin.bidscoiner:main',
                                                             'rawmapper   = bidscoin.rawmapper:main',
-                                                            'dicomsort   = bidscoin.dicomsort:main'
-                                                            'echocombine = bidscoin.echocombine:main']},
+                                                            'dicomsort   = bidscoin.dicomsort:main',
+                                                            'echocombine = bidscoin.echocombine:main',
+                                                            'deface      = bidscoin.deface:main']},
       classifiers                    = ['Programming Language :: Python :: 3',
                                         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
                                         'Operating System :: OS Independent'],

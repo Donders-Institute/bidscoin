@@ -8,7 +8,6 @@ This wrapper is fully BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 import shutil
 import argparse
 import json
-import re
 import logging
 import pandas as pd
 from multiecho import combination as me
@@ -18,10 +17,10 @@ try:
 except ImportError:
     import bids             # This should work if bidscoin was not pip-installed
 
-LOGGER = logging.getLogger('echocombine')
+LOGGER = logging.getLogger('bidscoin')
 
 
-def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorithm: str, weights: list):
+def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorithm: str, weights: list):
 
     # Input checking
     bidsdir = Path(bidsdir)
@@ -29,7 +28,7 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
         LOGGER.warning(f"Missing 'echo-#' substring in glob-like search pattern, i.e. '{pattern}' does not seem to select the first echo")
 
     # Start logging
-    bids.setup_logging(bidsdir/'code'/'bidscoin'/'mecombine.log')
+    bids.setup_logging(bidsdir/'code'/'bidscoin'/'echocombine.log')
     LOGGER.info('')
     LOGGER.info('------------ START echocombine ------------')
 
@@ -39,7 +38,7 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
         if not subjects:
             LOGGER.warning(f"No subjects found in: {bidsdir/'sub-*'}")
     else:
-        subjects = ['sub-' + re.sub('^sub-', '', subject) for subject in subjects]            # Make sure there is a "sub-" prefix
+        subjects = ['sub-' + subject.replace('^sub-', '') for subject in subjects]              # Make sure there is a "sub-" prefix
         subjects = [bidsdir/subject for subject in subjects if (bidsdir/subject).is_dir()]
 
     # Loop over bids subject/session-directories
@@ -109,20 +108,25 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                         echo.unlink()
                         echo.with_suffix('').with_suffix('.json').unlink()
 
+                # Construct relative path names as they are used in BIDS
+                mefile_rel   = str(mefile.relative_to(bidsdir/sub_id/ses_id))
+                echos_rel    = [str(echo.relative_to(bidsdir/sub_id/ses_id)) for echo in echos]
+                newechos_rel = [str(echo.relative_to(bidsdir/sub_id/ses_id)) for echo in newechos]
+
                 # Update the IntendedFor fields in the fieldmap sidecar files (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
                 if (match.parent/'fieldmap').is_dir():
                     for fmap in (match.parent/'fieldmap').glob('*.json'):
                         with fmap.open('r') as fmap_fid:
                             fmap_data = json.load(fmap_fid)
-                        intendedfor = data['IntendedFor']
-                        if echos[0] in intendedfor:
-                            LOGGER.info(f"Updating 'IntendedFor' to {mefile} in {fmap}")
+                        intendedfor = fmap_data['IntendedFor']
+                        if echos_rel[0] in intendedfor:
+                            LOGGER.info(f"Updating 'IntendedFor' to {mefile_rel} in {fmap}")
                             if not output:
-                                intendedfor = [file for file in intendedfor if not Path(file) in echos] + [str(mefile)] + [str(newecho) for newecho in newechos]
+                                intendedfor = [file for file in intendedfor if not file in echos_rel] + [mefile_rel] + [newecho for newecho in newechos_rel]
                             elif output == match.parent.name:
-                                intendedfor = [file for file in intendedfor if not Path(file) in echos] + [str(mefile)]
+                                intendedfor = [file for file in intendedfor if not file in echos_rel] + [mefile_rel]
                             else:
-                                intendedfor = intendedfor + [str(mefile)]
+                                intendedfor = intendedfor + [mefile_rel]
                             fmap_data['IntendedFor'] = intendedfor
                             with fmap.open('w') as fmap_fid:
                                 json.dump(fmap_data, fmap_fid, indent=4)
@@ -131,9 +135,6 @@ def echocombine(bidsdir: str, subjects: list, pattern: str, output: str, algorit
                 scans_tsv = bidsdir/sub_id/ses_id/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
                 if scans_tsv.is_file():
 
-                    mefile_rel   = str(mefile.relative_to(bidsdir/sub_id/ses_id))
-                    echos_rel    = [str(echo.relative_to(bidsdir/sub_id/ses_id)) for echo in echos]
-                    newechos_rel = [str(echo.relative_to(bidsdir/sub_id/ses_id)) for echo in newechos]
                     LOGGER.info(f"Adding {mefile_rel} to {scans_tsv}")
                     scans_table                 = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
                     scans_table.loc[mefile_rel] = scans_table.loc[echos_rel[0]]
@@ -183,8 +184,8 @@ def main():
     args = parser.parse_args()
 
     echocombine(bidsdir   = args.bidsfolder,
-                subjects  = args.participant_label,
                 pattern   = args.pattern,
+                subjects  = args.participant_label,
                 output    = args.output,
                 algorithm = args.algorithm,
                 weights   = args.weights)

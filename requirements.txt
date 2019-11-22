@@ -5,5 +5,5 @@ ruamel.yaml>=0.15.35
 coloredlogs
 multiecho==0.2
 dateutil
-pybids
+pydeface
 # dcm2niix. For more information, see ./docs/installation.md and ./heuristics/bidsmap_template.yaml
