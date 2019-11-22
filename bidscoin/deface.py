@@ -65,6 +65,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, args: dict):
                 outputfile.parent.mkdir(parents=True, exist_ok=True)
 
                 # Deface the image
+                LOGGER.info(f'Defacing: {match} -> {outputfile}')
                 pdu.deface_image(match, outputfile, force=True, forcecleanup=True, **args)
 
                 # Add a json sidecar-file
