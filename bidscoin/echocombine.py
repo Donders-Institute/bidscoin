@@ -50,7 +50,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
         for session in sessions:
 
             LOGGER.info('-------------------------------------')
-            LOGGER.info(f'Combining echos for ({n}/{len(subjects)}): {session}')
+            LOGGER.info(f"Combining echos for ({n}/{len(subjects)}): {session}")
 
             sub_id, ses_id = bids.get_subid_sesid(session/'dum.my')
 
@@ -99,12 +99,12 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 # (Re)move the original multi-echo images
                 if not output:
                     for echo, newecho in zip(echos, newechos):
-                        LOGGER.info(f'Moving original echo image: {echo} -> {newecho}')
+                        LOGGER.info(f"Moving original echo image: {echo} -> {newecho}")
                         echo.replace(newecho)
                         echo.with_suffix('').with_suffix('.json').replace(newecho.with_suffix('').with_suffix('.json'))
                 elif output == match.parent.name:
                     for echo in echos:
-                        LOGGER.info(f'Removing original echo image: {echo}')
+                        LOGGER.info(f"Removing original echo image: {echo}")
                         echo.unlink()
                         echo.with_suffix('').with_suffix('.json').unlink()
 
@@ -114,7 +114,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 newechos_rel = [str(echo.relative_to(session)) for echo in newechos]
 
                 # Update the IntendedFor fields in the fieldmap sidecar files (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
-                if (match.parent/'fieldmap').is_dir():
+                if output != 'derivatives' and (match.parent/'fieldmap').is_dir():
                     for fmap in (match.parent/'fieldmap').glob('*.json'):
                         with fmap.open('r') as fmap_fid:
                             fmap_data = json.load(fmap_fid)
@@ -133,7 +133,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
 
                 # Update the scans.tsv file
                 scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
-                if scans_tsv.is_file():
+                if output != 'derivatives' and scans_tsv.is_file():
 
                     LOGGER.info(f"Adding {mefile_rel} to {scans_tsv}")
                     scans_table                 = pd.read_csv(scans_tsv, sep='\t', index_col='filename')

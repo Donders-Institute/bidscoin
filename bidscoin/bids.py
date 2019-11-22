@@ -83,7 +83,7 @@ def setup_logging(log_file: Path, debug: bool=False) -> logging.Logger:
         logger.setLevel(logging.INFO)
 
     # Set & add the streamhandler and add some color to those boring terminal logs! :-)
-    coloredlogs.install(level='DEBUG', fmt=fmt, datefmt=datefmt)
+    coloredlogs.install(level=logger.level, fmt=fmt, datefmt=datefmt)
 
     # Set & add the log filehandler
     loghandler = logging.FileHandler(log_file)

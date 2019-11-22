@@ -48,24 +48,28 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, args: dict):
         for session in sessions:
 
             LOGGER.info('--------------------------------------')
-            LOGGER.info(f'Defacing ({n}/{len(subjects)}): {session}')
+            LOGGER.info(f"Defacing ({n}/{len(subjects)}): {session}")
 
             sub_id, ses_id = bids.get_subid_sesid(session/'dum.my')
 
             # Search for images that need to be defaced
             for match in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
 
-                # Construct the output filename and check if that file already exists
+                # Construct the output filename and relative path name (used in BIDS)
+                match_rel = str(match.relative_to(session))
                 if not output:
-                    outputfile = match
+                    outputfile     = match
+                    outputfile_rel = match_rel
                 elif output == 'derivatives':
-                    outputfile = bidsdir/'derivatives'/'deface'/sub_id/ses_id/match.parent.name/match.name
+                    outputfile     = bidsdir/'derivatives'/'deface'/sub_id/ses_id/match.parent.name/match.name
+                    outputfile_rel = str(outputfile.relative_to(bidsdir))
                 else:
-                    outputfile = session/output/match.name
+                    outputfile     = session/output/match.name
+                    outputfile_rel = str(outputfile.relative_to(session))
                 outputfile.parent.mkdir(parents=True, exist_ok=True)
 
                 # Deface the image
-                LOGGER.info(f'Defacing: {match} -> {outputfile}')
+                LOGGER.info(f"Defacing: {match_rel} -> {outputfile_rel}")
                 pdu.deface_image(match, outputfile, force=True, forcecleanup=True, **args)
 
                 # Add a json sidecar-file
@@ -73,12 +77,8 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, args: dict):
                 LOGGER.info(f"Adding a json sidecar-file: {outputjson}")
                 shutil.copyfile(match.with_suffix('').with_suffix('.json'), outputjson)
 
-                # Construct relative path names as they are used in BIDS
-                match_rel      = str(     match.relative_to(session))
-                outputfile_rel = str(outputfile.relative_to(session))
-
                 # Update the IntendedFor fields in the fieldmap sidecar files
-                if output and (match.parent/'fieldmap').is_dir():
+                if output and output != 'derivatives' and (match.parent/'fieldmap').is_dir():
                     for fmap in (match.parent/'fieldmap').glob('*.json'):
                         with fmap.open('r') as fmap_fid:
                             fmap_data = json.load(fmap_fid)
@@ -91,7 +91,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, args: dict):
 
                 # Update the scans.tsv file
                 scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
-                if output and scans_tsv.is_file():
+                if output and output != 'derivatives' and scans_tsv.is_file():
                     LOGGER.info(f"Adding {outputfile_rel} to {scans_tsv}")
                     scans_table                     = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
                     scans_table.loc[outputfile_rel] = scans_table.loc[match_rel]
