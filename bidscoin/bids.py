@@ -999,12 +999,12 @@ def get_subid_sesid(bidsfile: Path, subid: str= '<<SourceFilePath>>', sesid: str
 
     # Add default value for subid and sesid (e.g. for the bidseditor)
     if subid=='<<SourceFilePath>>':
-        subid = [part.split(subprefix)[1] for part in bidsfile.parent.parts if part.startswith(subprefix)][-1]
+        subid = [part for part in bidsfile.parent.parts if part.startswith(subprefix)][-1]
     else:
         subid = get_dynamic_value(subid, bidsfile)
     if sesid=='<<SourceFilePath>>':
-        if bidsfile.parents[0].match(sesprefix + '*'):
-            sesid = [part.split(sesprefix)[1] for part in bidsfile.parent.parts if part.startswith(sesprefix)][-1]
+        if bidsfile.parts[-2].startswith(sesprefix):
+            sesid = bidsfile.parts[-2]
         else:
             sesid = ''
     else:

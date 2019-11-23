@@ -70,7 +70,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, args: dict):
 
                 # Deface the image
                 LOGGER.info(f"Defacing: {match_rel} -> {outputfile_rel}")
-                pdu.deface_image(match, outputfile, force=True, forcecleanup=True, **args)
+                pdu.deface_image(str(match), str(outputfile), force=True, forcecleanup=True, **args)
 
                 # Add a json sidecar-file
                 outputjson = outputfile.with_suffix('').with_suffix('.json')
