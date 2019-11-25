@@ -78,8 +78,8 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, args: dict):
                 shutil.copyfile(match.with_suffix('').with_suffix('.json'), outputjson)
 
                 # Update the IntendedFor fields in the fieldmap sidecar files
-                if output and output != 'derivatives' and (match.parent/'fieldmap').is_dir():
-                    for fmap in (match.parent/'fieldmap').glob('*.json'):
+                if output and output != 'derivatives' and (session/'fieldmap').is_dir():
+                    for fmap in (session/'fieldmap').glob('*.json'):
                         with fmap.open('r') as fmap_fid:
                             fmap_data = json.load(fmap_fid)
                         intendedfor = fmap_data['IntendedFor']

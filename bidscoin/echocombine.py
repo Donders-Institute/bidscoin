@@ -58,6 +58,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
             for match in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
 
                 # Check if it is normal/BIDS multi-echo data
+                input     = match.parent.name
                 echonr    = bids.get_bidsvalue(match, 'echo')
                 mepattern = bids.get_bidsvalue(match, 'echo', '*')
                 echos     = sorted(match.parent.glob(mepattern.name))
@@ -72,9 +73,9 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 # Construct the multi-echo output filename and check if that file already exists
                 mename = match.name.replace(f"_echo-{echonr}", '')
                 if not output:
-                    mefile = session/match.parent.name/mename
+                    mefile = session/input/mename
                 elif output == 'derivatives':
-                    mefile = bidsdir/'derivatives'/'multiecho'/sub_id/ses_id/match.parent.name/mename
+                    mefile = bidsdir/'derivatives'/'multiecho'/sub_id/ses_id/input/mename
                 else:
                     mefile = session/output/mename
                 mefile.parent.mkdir(parents=True, exist_ok=True)
@@ -102,7 +103,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                         LOGGER.info(f"Moving original echo image: {echo} -> {newecho}")
                         echo.replace(newecho)
                         echo.with_suffix('').with_suffix('.json').replace(newecho.with_suffix('').with_suffix('.json'))
-                elif output == match.parent.name:
+                elif output == input:
                     for echo in echos:
                         LOGGER.info(f"Removing original echo image: {echo}")
                         echo.unlink()
@@ -114,8 +115,8 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 newechos_rel = [str(echo.relative_to(session)) for echo in newechos]
 
                 # Update the IntendedFor fields in the fieldmap sidecar files (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
-                if output != 'derivatives' and (match.parent/'fieldmap').is_dir():
-                    for fmap in (match.parent/'fieldmap').glob('*.json'):
+                if output != 'derivatives' and (session/'fieldmap').is_dir():
+                    for fmap in (session/'fieldmap').glob('*.json'):
                         with fmap.open('r') as fmap_fid:
                             fmap_data = json.load(fmap_fid)
                         intendedfor = fmap_data['IntendedFor']
@@ -123,7 +124,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                             LOGGER.info(f"Updating 'IntendedFor' to {mefile_rel} in {fmap}")
                             if not output:
                                 intendedfor = [file for file in intendedfor if not file in echos_rel] + [mefile_rel] + [newecho for newecho in newechos_rel]
-                            elif output == match.parent.name:
+                            elif output == input:
                                 intendedfor = [file for file in intendedfor if not file in echos_rel] + [mefile_rel]
                             else:
                                 intendedfor = intendedfor + [mefile_rel]
@@ -144,7 +145,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                             LOGGER.info(f"Updating {echo} -> {newecho} in {scans_tsv}")
                             scans_table.loc[newecho] = scans_table.loc[echo]
                             scans_table.drop(echo)
-                        elif output == match.parent.name:
+                        elif output == input:
                             LOGGER.info(f"Removing {echo} from {scans_tsv}")
                             scans_table.drop(echo)
 
