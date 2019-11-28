@@ -6,4 +6,5 @@ coloredlogs
 multiecho==0.2
 dateutil
 pydeface
+drmaa
 # dcm2niix. For more information, see ./docs/installation.md and ./heuristics/bidsmap_template.yaml

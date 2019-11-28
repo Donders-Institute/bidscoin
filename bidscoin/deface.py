@@ -5,12 +5,14 @@ A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/py
 This wrapper is fully BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 """
 
+import os
 import shutil
 import argparse
 import json
 import logging
 import pandas as pd
 import pydeface.utils as pdu
+import drmaa
 from pathlib import Path
 try:
     from bidscoin import bids
@@ -20,7 +22,7 @@ except ImportError:
 LOGGER = logging.getLogger('bidscoin')
 
 
-def deface(bidsdir: str, pattern: str, subjects: list, output: str, args: dict):
+def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: bool, kwargs: dict):
 
     # Input checking
     bidsdir = Path(bidsdir)
@@ -39,64 +41,85 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, args: dict):
         subjects = ['sub-' + subject.replace('^sub-', '') for subject in subjects]              # Make sure there is a "sub-" prefix
         subjects = [bidsdir/subject for subject in subjects if (bidsdir/subject).is_dir()]
 
-    # Loop over bids subject/session-directories
-    for n, subject in enumerate(subjects, 1):
+    # Prepare the HPC job submission
+    with drmaa.Session() as pbatch:
+        if cluster:
+            jt                     = pbatch.createJobTemplate()
+            jt.jobName             = 'pydeface'
+            jt.jobEnvironment      = os.environ
+            jt.remoteCommand       = shutil.which('pydeface')
+            jt.nativeSpecification = '-l walltime=00:30:00,mem=500mb'
+            jt.joinFiles           = True
 
-        sessions = bids.lsdirs(subject, 'ses-*')
-        if not sessions:
-            sessions = [subject]
-        for session in sessions:
+        # Loop over bids subject/session-directories
+        for n, subject in enumerate(subjects, 1):
 
-            LOGGER.info('--------------------------------------')
-            LOGGER.info(f"Defacing ({n}/{len(subjects)}): {session}")
+            sessions = bids.lsdirs(subject, 'ses-*')
+            if not sessions:
+                sessions = [subject]
+            for session in sessions:
 
-            sub_id, ses_id = bids.get_subid_sesid(session/'dum.my')
+                LOGGER.info('--------------------------------------')
+                LOGGER.info(f"Defacing ({n}/{len(subjects)}): {session}")
 
-            # Search for images that need to be defaced
-            for match in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
+                sub_id, ses_id = bids.get_subid_sesid(session/'dum.my')
 
-                # Construct the output filename and relative path name (used in BIDS)
-                match_rel = str(match.relative_to(session))
-                if not output:
-                    outputfile     = match
-                    outputfile_rel = match_rel
-                elif output == 'derivatives':
-                    outputfile     = bidsdir/'derivatives'/'deface'/sub_id/ses_id/match.parent.name/match.name
-                    outputfile_rel = str(outputfile.relative_to(bidsdir))
-                else:
-                    outputfile     = session/output/match.name
-                    outputfile_rel = str(outputfile.relative_to(session))
-                outputfile.parent.mkdir(parents=True, exist_ok=True)
+                # Search for images that need to be defaced
+                for match in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
 
-                # Deface the image
-                LOGGER.info(f"Defacing: {match_rel} -> {outputfile_rel}")
-                pdu.deface_image(str(match), str(outputfile), force=True, forcecleanup=True, **args)
+                    # Construct the output filename and relative path name (used in BIDS)
+                    match_rel = str(match.relative_to(session))
+                    if not output:
+                        outputfile     = match
+                        outputfile_rel = match_rel
+                    elif output == 'derivatives':
+                        outputfile     = bidsdir/'derivatives'/'deface'/sub_id/ses_id/match.parent.name/match.name
+                        outputfile_rel = str(outputfile.relative_to(bidsdir))
+                    else:
+                        outputfile     = session/output/match.name
+                        outputfile_rel = str(outputfile.relative_to(session))
+                    outputfile.parent.mkdir(parents=True, exist_ok=True)
 
-                # Add a json sidecar-file
-                outputjson = outputfile.with_suffix('').with_suffix('.json')
-                LOGGER.info(f"Adding a json sidecar-file: {outputjson}")
-                shutil.copyfile(match.with_suffix('').with_suffix('.json'), outputjson)
+                    # Deface the image
+                    LOGGER.info(f"Defacing: {match_rel} -> {outputfile_rel}")
+                    if cluster:
+                        jt.args = [str(match), '--outfile', str(outputfile), '--force'] + [item for pair in [[f"--{key}",val] for key,val in kwargs.items()] for item in pair]
+                        jobid   = pbatch.runJob(jt)
+                        LOGGER.info(f"Your deface job has been submitted with ID: {jobid}")
+                    else:
+                        pdu.deface_image(str(match), str(outputfile), force=True, forcecleanup=True, **kwargs)
 
-                # Update the IntendedFor fields in the fieldmap sidecar files
-                if output and output != 'derivatives' and (session/'fieldmap').is_dir():
-                    for fmap in (session/'fieldmap').glob('*.json'):
-                        with fmap.open('r') as fmap_fid:
-                            fmap_data = json.load(fmap_fid)
-                        intendedfor = fmap_data['IntendedFor']
-                        if match_rel in intendedfor:
-                            LOGGER.info(f"Updating 'IntendedFor' to {outputfile_rel} in {fmap}")
-                            fmap_data['IntendedFor'] = intendedfor + [outputfile_rel]
-                            with fmap.open('w') as fmap_fid:
-                                json.dump(fmap_data, fmap_fid, indent=4)
+                    # Add a json sidecar-file
+                    outputjson = outputfile.with_suffix('').with_suffix('.json')
+                    LOGGER.info(f"Adding a json sidecar-file: {outputjson}")
+                    shutil.copyfile(match.with_suffix('').with_suffix('.json'), outputjson)
 
-                # Update the scans.tsv file
-                scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
-                if output and output != 'derivatives' and scans_tsv.is_file():
-                    LOGGER.info(f"Adding {outputfile_rel} to {scans_tsv}")
-                    scans_table                     = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
-                    scans_table.loc[outputfile_rel] = scans_table.loc[match_rel]
-                    scans_table.sort_values(by=['acq_time','filename'], inplace=True)
-                    scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
+                    # Update the IntendedFor fields in the fieldmap sidecar files
+                    if output and output != 'derivatives' and (session/'fieldmap').is_dir():
+                        for fmap in (session/'fieldmap').glob('*.json'):
+                            with fmap.open('r') as fmap_fid:
+                                fmap_data = json.load(fmap_fid)
+                            intendedfor = fmap_data['IntendedFor']
+                            if match_rel in intendedfor:
+                                LOGGER.info(f"Updating 'IntendedFor' to {outputfile_rel} in {fmap}")
+                                fmap_data['IntendedFor'] = intendedfor + [outputfile_rel]
+                                with fmap.open('w') as fmap_fid:
+                                    json.dump(fmap_data, fmap_fid, indent=4)
+
+                    # Update the scans.tsv file
+                    scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
+                    if output and output != 'derivatives' and scans_tsv.is_file():
+                        LOGGER.info(f"Adding {outputfile_rel} to {scans_tsv}")
+                        scans_table                     = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
+                        scans_table.loc[outputfile_rel] = scans_table.loc[match_rel]
+                        scans_table.sort_values(by=['acq_time','filename'], inplace=True)
+                        scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
+
+        if cluster:
+            LOGGER.info('Waiting for the deface jobs to finish...')
+            pbatch.synchronize(jobIds=[pbatch.JOB_IDS_SESSION_ALL], timeout=pbatch.TIMEOUT_WAIT_FOREVER, dispose=True)
+            pbatch.deleteJobTemplate(jt)
+
 
     LOGGER.info('-------------- FINISHED! -------------')
     LOGGER.info('')
@@ -122,6 +145,8 @@ def main():
                         help='Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed')
     parser.add_argument('-o','--output', type=str, choices=bids.bidsmodalities + (bids.unknownmodality, 'derivatives'),
                         help=f"A string that determines where the defaced images are saved. It can be the name of a BIDS modality folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images")
+    parser.add_argument('-c','--cluster', action='store_true',
+                        help='Flag to submit the deface jobs to the high-performance compute (HPC) cluster')
     parser.add_argument('-a','--args',
                         help='Additional arguments (in dict/json-style) that are passed to pydeface. See examples for usage', type=json.loads, default={})
     args = parser.parse_args()
@@ -130,7 +155,8 @@ def main():
            pattern  = args.pattern,
            subjects = args.participant_label,
            output   = args.output,
-           args     = args.args)
+           cluster  = args.cluster,
+           kwargs   = args.args)
 
 
 if __name__ == '__main__':
