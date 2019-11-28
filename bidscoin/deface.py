@@ -136,6 +136,7 @@ def main():
                                      epilog='examples:\n'
                                             '  deface /project/3017065.01/bids anat/*_T1w*\n'
                                             '  deface /project/3017065.01/bids anat/*_T1w* -p 001 003 -o derivatives\n'
+                                            '  deface /project/3017065.01/bids anat/*_T1w* -n "-l walltime=00:60:00,mem=2gb"\n'
                                             '  deface /project/3017065.01/bids anat/*_T1w* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
     parser.add_argument('bidsfolder', type=str,
                         help='The bids-directory with the (multi-echo) subject data')
