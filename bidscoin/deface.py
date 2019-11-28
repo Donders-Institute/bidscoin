@@ -22,7 +22,7 @@ except ImportError:
 LOGGER = logging.getLogger('bidscoin')
 
 
-def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: bool, kwargs: dict):
+def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: bool, nativespec: str, kwargs: dict):
 
     # Input checking
     bidsdir = Path(bidsdir)
@@ -47,7 +47,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
             jt.remoteCommand       = shutil.which('pydeface')
-            jt.nativeSpecification = '-l walltime=00:30:00,mem=500mb'
+            jt.nativeSpecification = nativespec
             jt.joinFiles           = True
 
         # Loop over bids subject/session-directories
@@ -147,16 +147,19 @@ def main():
                         help=f"A string that determines where the defaced images are saved. It can be the name of a BIDS modality folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images")
     parser.add_argument('-c','--cluster', action='store_true',
                         help='Flag to submit the deface jobs to the high-performance compute (HPC) cluster')
+    parser.add_argument('-n','--nativespec', type=str, default='-l walltime=00:30:00,mem=1gb',
+                        help='Native specifications for submitting deface jobs to the HPC cluster')
     parser.add_argument('-a','--args',
                         help='Additional arguments (in dict/json-style) that are passed to pydeface. See examples for usage', type=json.loads, default={})
     args = parser.parse_args()
 
-    deface(bidsdir  = args.bidsfolder,
-           pattern  = args.pattern,
-           subjects = args.participant_label,
-           output   = args.output,
-           cluster  = args.cluster,
-           kwargs   = args.args)
+    deface(bidsdir    = args.bidsfolder,
+           pattern    = args.pattern,
+           subjects   = args.participant_label,
+           output     = args.output,
+           cluster    = args.cluster,
+           nativespec = args.nativespec,
+           kwargs     = args.args)
 
 
 if __name__ == '__main__':
