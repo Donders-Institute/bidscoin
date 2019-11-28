@@ -3,7 +3,7 @@ pydicom>=1.0.2
 PyQt5>=5.12.1
 ruamel.yaml>=0.15.35
 coloredlogs
-multiecho==0.2
+multiecho==0.21
 dateutil
 pydeface
 drmaa

@@ -84,7 +84,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                     continue
 
                 # Combine the multi-echo images
-                me.me_combine(mepattern, mefile, algorithm, weights, saveweights=False)
+                me.me_combine(mepattern, mefile, algorithm, weights, saveweights=False, logger=LOGGER.name)
 
                 # Add a multi-echo json sidecar-file
                 mejson = mefile.with_suffix('').with_suffix('.json')
