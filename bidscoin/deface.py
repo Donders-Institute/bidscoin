@@ -45,7 +45,6 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
     with drmaa.Session() as pbatch:
         if cluster:
             jt                     = pbatch.createJobTemplate()
-            jt.jobName             = 'pydeface'
             jt.jobEnvironment      = os.environ
             jt.remoteCommand       = shutil.which('pydeface')
             jt.nativeSpecification = '-l walltime=00:30:00,mem=500mb'
@@ -60,7 +59,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
             for session in sessions:
 
                 LOGGER.info('--------------------------------------')
-                LOGGER.info(f"Defacing ({n}/{len(subjects)}): {session}")
+                LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
 
                 sub_id, ses_id = bids.get_subid_sesid(session/'dum.my')
 
@@ -83,8 +82,9 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
                     # Deface the image
                     LOGGER.info(f"Defacing: {match_rel} -> {outputfile_rel}")
                     if cluster:
-                        jt.args = [str(match), '--outfile', str(outputfile), '--force'] + [item for pair in [[f"--{key}",val] for key,val in kwargs.items()] for item in pair]
-                        jobid   = pbatch.runJob(jt)
+                        jt.args    = [str(match), '--outfile', str(outputfile), '--force'] + [item for pair in [[f"--{key}",val] for key,val in kwargs.items()] for item in pair]
+                        jt.jobName = f"pydeface_{sub_id}_{ses_id}"
+                        jobid      = pbatch.runJob(jt)
                         LOGGER.info(f"Your deface job has been submitted with ID: {jobid}")
                     else:
                         pdu.deface_image(str(match), str(outputfile), force=True, forcecleanup=True, **kwargs)
