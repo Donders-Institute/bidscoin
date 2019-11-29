@@ -121,6 +121,8 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                         with fmap.open('r') as fmap_fid:
                             fmap_data = json.load(fmap_fid)
                         intendedfor = fmap_data['IntendedFor']
+                        if type(intendedfor)==str:
+                            intendedfor = [intendedfor]
                         if echos_rel[0] in intendedfor:
                             LOGGER.info(f"Updating 'IntendedFor' to {mefile_rel} in {fmap}")
                             if not output:

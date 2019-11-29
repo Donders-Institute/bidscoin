@@ -100,6 +100,8 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
                             with fmap.open('r') as fmap_fid:
                                 fmap_data = json.load(fmap_fid)
                             intendedfor = fmap_data['IntendedFor']
+                            if type(intendedfor)==str:
+                                intendedfor = [intendedfor]
                             if match_rel in intendedfor:
                                 LOGGER.info(f"Updating 'IntendedFor' to {outputfile_rel} in {fmap}")
                                 fmap_data['IntendedFor'] = intendedfor + [outputfile_rel]
