@@ -55,7 +55,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
             sub_id, ses_id = bids.get_subid_sesid(session/'dum.my')
 
             # Search for multi-echo matches
-            for match in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
+            for match in sorted([match for match in session.rglob(pattern) if '.nii' in match.suffixes]):
 
                 # Check if it is normal/BIDS multi-echo data
                 input     = match.parent.name
@@ -110,9 +110,10 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                         echo.with_suffix('').with_suffix('.json').unlink()
 
                 # Construct relative path names as they are used in BIDS
-                mefile_rel   = str(mefile.relative_to(session))
                 echos_rel    = [str(echo.relative_to(session)) for echo in echos]
                 newechos_rel = [str(echo.relative_to(session)) for echo in newechos]
+                if output != 'derivatives':
+                    mefile_rel = str(mefile.relative_to(session))
 
                 # Update the IntendedFor fields in the fieldmap sidecar files (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
                 if output != 'derivatives' and (session/'fieldmap').is_dir():
@@ -144,10 +145,10 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                         if not output:
                             LOGGER.info(f"Updating {echo} -> {newecho} in {scans_tsv}")
                             scans_table.loc[newecho] = scans_table.loc[echo]
-                            scans_table.drop(echo)
+                            scans_table.drop(echo, inplace=True)
                         elif output == input:
                             LOGGER.info(f"Removing {echo} from {scans_tsv}")
-                            scans_table.drop(echo)
+                            scans_table.drop(echo, inplace=True)
 
                     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
                     scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
@@ -166,14 +167,14 @@ def main():
                                      description=__doc__,
                                      epilog='examples:\n'
                                             '  echocombine /project/3017065.01/bids func/*task-stroop*echo-1*\n'
-                                            '  echocombine /project/3017065.01/bids func/*task-stroop*echo-1* -p 001 003\n'
+                                            '  echocombine /project/3017065.01/bids *task-stroop*echo-1* -p 001 003\n'
                                             '  echocombine /project/3017065.01/bids func/*task-*echo-1* -o func\n'
                                             '  echocombine /project/3017065.01/bids func/*task-*echo-1* -o derivatives -w 13 26 39 52\n'
                                             '  echocombine /project/3017065.01/bids func/*task-*echo-1* -a PAID\n ')
     parser.add_argument('bidsfolder', type=str,
                         help='The bids-directory with the (multi-echo) subject data')
     parser.add_argument('pattern', type=str,
-                        help="Globlike search pattern (relative to the subject/session folder) to select the first echo of the images that need to be combined, e.g. 'func/*task-*echo-1*'")
+                        help="Globlike recursive search pattern (relative to the subject/session folder) to select the first echo of the images that need to be combined, e.g. '*task-*echo-1*'")
     parser.add_argument('-p','--participant_label', type=str, nargs='+',
                         help='Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed')
     parser.add_argument('-o','--output', type=str, choices=bids.bidsmodalities + (bids.unknownmodality, 'derivatives'),
