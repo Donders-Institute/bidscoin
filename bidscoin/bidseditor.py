@@ -1297,6 +1297,8 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     bids.setup_logging(bidsfolder/'code'/'bidscoin'/'bidseditor.log')
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSeditor ------------')
+    LOGGER.info(f">>> bidseditor bidsfolder={bidsfolder} sourcefolder={sourcefolder}"
+                f" bidsmap={bidsmapfile} template={templatefile} subprefix={subprefix} sesprefix={sesprefix}")
 
     # Obtain the initial bidsmap info
     template_bidsmap, templatefile = bids.load_bidsmap(templatefile, bidsfolder/'code'/'bidscoin')

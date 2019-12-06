@@ -30,7 +30,9 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
     # Start logging
     bids.setup_logging(bidsdir/'code'/'bidscoin'/'echocombine.log')
     LOGGER.info('')
-    LOGGER.info('------------ START echocombine ------------')
+    LOGGER.info(f"--------- START echocombine ---------")
+    LOGGER.info(f">>> echocombine bidsfolder={bidsdir} pattern={pattern} subjects={subjects} output={output}"
+                f" algorithm={algorithm} weights={weights}")
 
     # Get the list of subjects
     if not subjects:

@@ -31,6 +31,8 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
     bids.setup_logging(bidsdir/'code'/'bidscoin'/'deface.log')
     LOGGER.info('')
     LOGGER.info('------------ START deface ------------')
+    LOGGER.info(f">>> deface bidsfolder={bidsdir} pattern={pattern} subjects={subjects} output={output}"
+                f" cluster={cluster} nativespec={nativespec} {kwargs}")
 
     # Get the list of subjects
     if not subjects:
