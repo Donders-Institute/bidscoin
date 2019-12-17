@@ -84,7 +84,7 @@ def coin_dicom(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, 
 
         # Check if we already know this run
         if index is None:
-            LOGGER.warning(f"Skipping unknown '{modality}': {dicomfile}")
+            LOGGER.warning(f"Skipping unknown '{modality}': {dicomfile}\n-> re-run the bidsmapper and delete {session} to solve this warning")
             continue
 
         LOGGER.info(f"Processing: {runfolder}")
@@ -124,7 +124,7 @@ def coin_dicom(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, 
         # Rename all files ending with _c%d, _e%d and _ph (and any combination of these): These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
         jsonfiles = []                                                                                          # Collect the associated json-files (for updating them later) -- possibly > 1
         for dcm2niisuffix in ('_c', '_e', '_ph', '_i'):
-            for filename in sorted(bidsmodality.glob(bidsname + dcm2niisuffix + '[0-9]*')):
+            for filename in sorted(bidsmodality.glob(bidsname + dcm2niisuffix + '*')):
                 ext             = ''.join(filename.suffixes)
                 basepath, index = str(filename).rsplit(ext,1)[0].rsplit(dcm2niisuffix,1)                        # basepath = the name without the added stuff (i.e. bidsmodality/bidsname), index = added dcm2niix index (e.g. _c1 -> index=1)
                 basesuffix      = basepath.rsplit('_',1)[1]                                                     # The BIDS suffix, e.g. basepath = *_magnitude1 -> basesuffix=magnitude1
