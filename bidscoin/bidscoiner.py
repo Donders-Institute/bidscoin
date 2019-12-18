@@ -266,6 +266,8 @@ def coin_dicom(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, 
                     LOGGER.info(f"Adding IntendedFor to: {jsonfile}")
                 elif intendedfor:
                     LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the search for {intendedfor} gave no results")
+                else:
+                    LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the IntendedFor value of the bidsmap entry was empty")
                 with jsonfile.open('r') as json_fid:
                     data = json.load(json_fid)
                 data['IntendedFor'] = [niifile.as_posix() for niifile in niifiles]                                                              # The path needs to use forward slashes instead of backward slashes
