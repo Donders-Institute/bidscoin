@@ -264,7 +264,7 @@ def coin_dicom(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, 
 
                 if niifiles:
                     LOGGER.info(f"Adding IntendedFor to: {jsonfile}")
-                else:
+                elif intendedfor:
                     LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the search for {intendedfor} gave no results")
                 with jsonfile.open('r') as json_fid:
                     data = json.load(json_fid)
