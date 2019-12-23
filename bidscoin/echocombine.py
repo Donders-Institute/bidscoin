@@ -24,8 +24,6 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
 
     # Input checking
     bidsdir = Path(bidsdir)
-    if 'echo' not in pattern:
-        LOGGER.warning(f"Missing 'echo-#' substring in glob-like search pattern, i.e. '{pattern}' does not seem to select the first echo")
 
     # Start logging
     bids.setup_logging(bidsdir/'code'/'bidscoin'/'echocombine.log')
@@ -33,6 +31,9 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
     LOGGER.info(f"--------- START echocombine ---------")
     LOGGER.info(f">>> echocombine bidsfolder={bidsdir} pattern={pattern} subjects={subjects} output={output}"
                 f" algorithm={algorithm} weights={weights}")
+
+    if 'echo' not in pattern:
+        LOGGER.warning(f"Missing 'echo-#' substring in glob-like search pattern, i.e. '{pattern}' does not seem to select the first echo")
 
     # Get the list of subjects
     if not subjects:
