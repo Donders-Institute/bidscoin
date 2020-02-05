@@ -91,10 +91,16 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
                     else:
                         pdu.deface_image(str(match), str(outputfile), force=True, forcecleanup=True, **kwargs)
 
-                    # Add a json sidecar-file
+                    # Overwrite or add a json sidecar-file
+                    inputjson  = match.with_suffix('').with_suffix('.json')
                     outputjson = outputfile.with_suffix('').with_suffix('.json')
-                    LOGGER.info(f"Adding a json sidecar-file: {outputjson}")
-                    shutil.copyfile(match.with_suffix('').with_suffix('.json'), outputjson)
+                    if inputjson.is_file():
+                        if outputjson.is_file():
+                            LOGGER.info(f"Overwriting the json sidecar-file: {outputjson}")
+                            outputjson.unlink()
+                        else:
+                            LOGGER.info(f"Adding a json sidecar-file: {outputjson}")
+                        shutil.copyfile(inputjson, outputjson)
 
                     # Update the IntendedFor fields in the fieldmap sidecar files
                     if output and output != 'derivatives' and (session/'fmap').is_dir():
