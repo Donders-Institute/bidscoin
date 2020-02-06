@@ -94,7 +94,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
                     # Overwrite or add a json sidecar-file
                     inputjson  = match.with_suffix('').with_suffix('.json')
                     outputjson = outputfile.with_suffix('').with_suffix('.json')
-                    if inputjson.is_file():
+                    if inputjson.is_file() and inputjson != outputjson:
                         if outputjson.is_file():
                             LOGGER.info(f"Overwriting the json sidecar-file: {outputjson}")
                             outputjson.unlink()
