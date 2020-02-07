@@ -73,32 +73,34 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                     LOGGER.warning(f"Only one echo image found, nothing to do for: {match}")
                     continue
 
-                # Construct the multi-echo output filename and check if that file already exists
-                mename = match.name.replace(f"_echo-{echonr}", '')
+                # Construct the combined-echo output filename and check if that file already exists
+                cename = match.name.replace(f"_echo-{echonr}", '')
                 if not output:
-                    mefile = session/input/mename
+                    cefile = session/input/cename
                 elif output == 'derivatives':
-                    mefile = bidsdir/'derivatives'/'multiecho'/sub_id/ses_id/input/mename
+                    cefile = bidsdir/'derivatives'/'multiecho'/sub_id/ses_id/input/cename
                 else:
-                    mefile = session/output/mename
-                mefile.parent.mkdir(parents=True, exist_ok=True)
-                if mefile.is_file():
-                    LOGGER.warning(f"Outputfile {mefile} already exists, skipping: {match}")
+                    cefile = session/output/cename
+                cefile.parent.mkdir(parents=True, exist_ok=True)
+                if cefile.is_file():
+                    LOGGER.warning(f"Outputfile {cefile} already exists, skipping: {match}")
                     continue
 
                 # Combine the multi-echo images
-                me.me_combine(mepattern, mefile, algorithm, weights, saveweights=False, logger=LOGGER.name)
+                me.me_combine(mepattern, cefile, algorithm, weights, saveweights=False, logger=LOGGER.name)
 
-                # Add a multi-echo json sidecar-file
-                mejson = mefile.with_suffix('').with_suffix('.json')
-                LOGGER.info(f"Adding a json sidecar-file: {mejson}")
-                shutil.copyfile(echos[0].with_suffix('').with_suffix('.json'), mejson)
-                with mejson.open('r') as fmap_fid:
-                    data = json.load(fmap_fid)
-                data['EchoTime']   = 'n/a'
-                data['EchoNumber'] = 1
-                with mejson.open('w') as fmap_fid:
-                    json.dump(data, fmap_fid, indent=4)
+                # Add a combined-echo json sidecar-file
+                cejson = cefile.with_suffix('').with_suffix('.json')
+                sejson = echos[0].with_suffix('').with_suffix('.json')
+                if sejson.is_file():
+                    LOGGER.info(f"Adding a json sidecar-file: {sejson} -> {cejson}")
+                    shutil.copyfile(sejson, cejson)
+                    with cejson.open('r') as fmap_fid:
+                        data = json.load(fmap_fid)
+                    data['EchoTime']   = 'n/a'
+                    data['EchoNumber'] = 1
+                    with cejson.open('w') as fmap_fid:
+                        json.dump(data, fmap_fid, indent=4)
 
                 # (Re)move the original multi-echo images
                 if not output:
@@ -116,7 +118,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 echos_rel    = [str(echo.relative_to(session)) for echo in echos]
                 newechos_rel = [str(echo.relative_to(session)) for echo in newechos]
                 if output != 'derivatives':
-                    mefile_rel = str(mefile.relative_to(session))
+                    cefile_rel = str(cefile.relative_to(session))
 
                 # Update the IntendedFor fields in the fieldmap sidecar files (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
                 if output != 'derivatives' and (session/'fmap').is_dir():
@@ -127,13 +129,13 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                         if type(intendedfor)==str:
                             intendedfor = [intendedfor]
                         if echos_rel[0] in intendedfor:
-                            LOGGER.info(f"Updating 'IntendedFor' to {mefile_rel} in {fmap}")
+                            LOGGER.info(f"Updating 'IntendedFor' to {cefile_rel} in {fmap}")
                             if not output:
-                                intendedfor = [file for file in intendedfor if not file in echos_rel] + [mefile_rel] + [newecho for newecho in newechos_rel]
+                                intendedfor = [file for file in intendedfor if not file in echos_rel] + [cefile_rel] + [newecho for newecho in newechos_rel]
                             elif output == input:
-                                intendedfor = [file for file in intendedfor if not file in echos_rel] + [mefile_rel]
+                                intendedfor = [file for file in intendedfor if not file in echos_rel] + [cefile_rel]
                             else:
-                                intendedfor = intendedfor + [mefile_rel]
+                                intendedfor = intendedfor + [cefile_rel]
                             fmap_data['IntendedFor'] = intendedfor
                             with fmap.open('w') as fmap_fid:
                                 json.dump(fmap_data, fmap_fid, indent=4)
@@ -142,9 +144,9 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
                 if output != 'derivatives' and scans_tsv.is_file():
 
-                    LOGGER.info(f"Adding {mefile_rel} to {scans_tsv}")
+                    LOGGER.info(f"Adding {cefile_rel} to {scans_tsv}")
                     scans_table                 = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
-                    scans_table.loc[mefile_rel] = scans_table.loc[echos_rel[0]]
+                    scans_table.loc[cefile_rel] = scans_table.loc[echos_rel[0]]
 
                     for echo, newecho in zip(echos_rel, newechos_rel):
                         if not output:
