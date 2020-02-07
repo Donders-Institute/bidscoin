@@ -62,7 +62,7 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
                 seriesdescr = bids.get_dicomfield('ProtocolName', dicomfile)
                 if not seriesdescr:
                     seriesdescr = 'unknown_protocol'
-                    warnings.warn(f"No SeriesDecription or ProtocolName found for: {dicomfile}")
+                    warnings.warn(f"No {dicomfield}, SeriesDecription or ProtocolName found for: {dicomfile}")
         if rename:
             acquisitionnr = bids.get_dicomfield('AcquisitionNumber', dicomfile)
             instancenr    = bids.get_dicomfield('InstanceNumber', dicomfile)
@@ -77,7 +77,7 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
             warnings.warn(f"Missing one or more essential DICOM-fields, cannot safely rename {dicomfile}\n"
                           f"patientname = {patientname}\n"
                           f"seriesnumber = {seriesnr}\n"
-                          f"seriesdescription = {seriesdescr}\n"
+                          f"{dicomfield} = {seriesdescr}\n"
                           f"acquisitionnr = {acquisitionnr}\n"
                           f"instancenr = {instancenr}")
             filename = dicomfile.name
@@ -189,7 +189,7 @@ def main():
     parser.add_argument('-j','--sessionid', help='The prefix string for recursive searching in dicomsource/subject/session subfolders (e.g. "ses")')
     parser.add_argument('-f','--fieldname', help='The dicomfield that is used to construct the series folder name ("SeriesDescription" and "ProtocolName" are both used as fallback)', default='SeriesDescription')
     parser.add_argument('-r','--rename',    help='Flag to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme (recommended for DICOMDIR data)', action='store_true')
-    parser.add_argument('-e','--ext',       help='The file extension after sorting (empty value keeps the original file extension)', default='')
+    parser.add_argument('-e','--ext',       help='The file extension after sorting (empty value keeps the original file extension), e.g. ".dcm"', default='')
     parser.add_argument('-n','--nosort',    help='Flag to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)', action='store_true')
     parser.add_argument('-p','--pattern',   help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')
     parser.add_argument('-d','--dryrun',    help='Add this flag to just print the dicomsort commands without actually doing anything', action='store_true')
