@@ -361,9 +361,9 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
         if file.stem.startswith('.'):
             logger.warning(f'Ignoring hidden DICOM file: {file}')
             continue
-        if is_dicomfile(folder/file):
+        if is_dicomfile(file):
             if idx == index:
-                return folder/file
+                return file
             else:
                 idx += 1
 
