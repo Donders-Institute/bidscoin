@@ -381,7 +381,7 @@ def get_parfile(folder: Path) -> Path:
 
     for file in sorted(folder.iterdir()):
         if is_parfile(file):
-            return folder/file
+            return file
 
     logger.warning(f"Cannot find PAR files in: {folder}")
     return None

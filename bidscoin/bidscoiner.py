@@ -502,7 +502,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=[], force: bool=F
 
             # Check if we should skip the session-folder
             if not force:
-                bidssession = bidsfolder / session.relative_to(rawfolder)                   # Append the sub-*/ses-* from the rawfolder to the bidsfolder
+                bidssession = bidsfolder / session.relative_to(rawfolder)                   # Append the sub-*/ses-* subdirectories from the rawfolder to the bidsfolder
                 if not bidsmap['DICOM']['session']:                                         # TODO: Generalize for non-DICOM modalities
                     bidssession = bidssession.parent
                 modalities = []
