@@ -125,20 +125,21 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                     for fmap in (session/'fmap').glob('*.json'):
                         with fmap.open('r') as fmap_fid:
                             fmap_data = json.load(fmap_fid)
-                        intendedfor = fmap_data['IntendedFor']
-                        if type(intendedfor)==str:
-                            intendedfor = [intendedfor]
-                        if echos_rel[0] in intendedfor:
-                            LOGGER.info(f"Updating 'IntendedFor' to {cefile_rel} in {fmap}")
-                            if not output:
-                                intendedfor = [file for file in intendedfor if not file in echos_rel] + [cefile_rel] + [newecho for newecho in newechos_rel]
-                            elif output == input:
-                                intendedfor = [file for file in intendedfor if not file in echos_rel] + [cefile_rel]
-                            else:
-                                intendedfor = intendedfor + [cefile_rel]
-                            fmap_data['IntendedFor'] = intendedfor
-                            with fmap.open('w') as fmap_fid:
-                                json.dump(fmap_data, fmap_fid, indent=4)
+                        if 'IntendedFor' in fmap_data:
+                            intendedfor = fmap_data['IntendedFor']
+                            if type(intendedfor)==str:
+                                intendedfor = [intendedfor]
+                            if echos_rel[0] in intendedfor:
+                                LOGGER.info(f"Updating 'IntendedFor' to {cefile_rel} in {fmap}")
+                                if not output:
+                                    intendedfor = [file for file in intendedfor if not file in echos_rel] + [cefile_rel] + [newecho for newecho in newechos_rel]
+                                elif output == input:
+                                    intendedfor = [file for file in intendedfor if not file in echos_rel] + [cefile_rel]
+                                else:
+                                    intendedfor = intendedfor + [cefile_rel]
+                                fmap_data['IntendedFor'] = intendedfor
+                                with fmap.open('w') as fmap_fid:
+                                    json.dump(fmap_data, fmap_fid, indent=4)
 
                 # Update the scans.tsv file
                 scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
