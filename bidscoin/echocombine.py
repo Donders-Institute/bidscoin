@@ -95,7 +95,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 shutil.copyfile(echos[0].with_suffix('').with_suffix('.json'), mejson)
                 with mejson.open('r') as fmap_fid:
                     data = json.load(fmap_fid)
-                data['EchoTime']   = 'n/a'
+                data.pop('EchoTime')
                 data['EchoNumber'] = 1
                 with mejson.open('w') as fmap_fid:
                     json.dump(data, fmap_fid, indent=4)
