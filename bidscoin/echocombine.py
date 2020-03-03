@@ -97,8 +97,10 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                     shutil.copyfile(sejson, cejson)
                     with cejson.open('r') as fmap_fid:
                         data = json.load(fmap_fid)
-                    data['EchoTime']   = 'n/a'
-                    data['EchoNumber'] = 1
+                    if 'EchoTime' in data:
+                        data.pop('EchoTime')
+                    if 'EchoNumber' in data:
+                        data.pop('EchoNumber')
                     with cejson.open('w') as fmap_fid:
                         json.dump(data, fmap_fid, indent=4)
 
