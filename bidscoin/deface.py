@@ -102,7 +102,14 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
                             LOGGER.info(f"Adding a json sidecar-file: {outputjson}")
                         shutil.copyfile(inputjson, outputjson)
 
-                    # Update the IntendedFor fields in the fieldmap sidecar files
+                    # Add a custom "Defaced" field to the json sidecar-file
+                    with outputjson.open('r') as output_fid:
+                        data = json.load(output_fid)
+                    data['Defaced'] = True
+                    with outputjson.open('w') as output_fid:
+                        json.dump(data, output_fid, indent=4)
+
+                    # Update the IntendedFor fields in the fieldmap sidecar-files
                     if output and output != 'derivatives' and (session/'fmap').is_dir():
                         for fmap in (session/'fmap').glob('*.json'):
                             with fmap.open('r') as fmap_fid:
@@ -159,7 +166,7 @@ def main():
     parser.add_argument('-c','--cluster', action='store_true',
                         help='Flag to submit the deface jobs to the high-performance compute (HPC) cluster')
     parser.add_argument('-n','--nativespec', type=str, default='-l walltime=00:30:00,mem=1gb',
-                        help='Native specifications for submitting deface jobs to the HPC cluster')
+                        help='DRMAA native specifications for submitting deface jobs to the HPC cluster')
     parser.add_argument('-a','--args',
                         help='Additional arguments (in dict/json-style) that are passed to pydeface. See examples for usage', type=json.loads, default={})
     args = parser.parse_args()
