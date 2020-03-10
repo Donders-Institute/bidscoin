@@ -10,6 +10,7 @@ import argparse
 import json
 import logging
 import pandas as pd
+import numpy as np
 from multiecho import combination as me
 from pathlib import Path
 try:
@@ -90,15 +91,16 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 me.me_combine(mepattern, cefile, algorithm, weights, saveweights=False, logger=LOGGER.name)
 
                 # Add a combined-echo json sidecar-file
-                cejson = cefile.with_suffix('').with_suffix('.json')
-                sejson = echos[0].with_suffix('').with_suffix('.json')
-                if sejson.is_file():
-                    LOGGER.info(f"Adding a json sidecar-file: {sejson} -> {cejson}")
-                    shutil.copyfile(sejson, cejson)
+                cejson  = cefile.with_suffix('').with_suffix('.json')
+                sejsons = [echo.with_suffix('').with_suffix('.json') for echo in echos]
+                if sejsons[0].is_file():
+                    TEs = [json.load(sejson.open('r'))['EchoTime'] for sejson in sejsons]
+                    LOGGER.info(f"Adding a json sidecar-file: {sejsons[0]} -> {cejson}")
+                    shutil.copyfile(sejsons[0], cejson)
                     with cejson.open('r') as fmap_fid:
                         data = json.load(fmap_fid)
-                    data['EchoTime']   = ''
-                    data['EchoNumber'] = ''
+                    data['EchoTime']   = np.average(TEs, weights=weights)
+                    data['EchoNumber'] = 1
                     with cejson.open('w') as fmap_fid:
                         json.dump(data, fmap_fid, indent=4)
 
@@ -189,7 +191,7 @@ def main():
                         help=f"A string that determines where the output is saved. It can be the name of a BIDS modality folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output = [the name of the input modality folder] then the original echo images are replaced by one combined image. If output is left empty then the combined image is saved in the input modality folder and the original echo images are moved to the {bids.unknownmodality} folder")
     parser.add_argument('-a','--algorithm', choices=['PAID', 'TE', 'average'], default='TE',
                         help='Combination algorithm')
-    parser.add_argument('-w','--weights', nargs='*', default=[], type=list,
+    parser.add_argument('-w','--weights', nargs='*', default=None, type=list,
                         help='Weights for each echo')
     args = parser.parse_args()
 
