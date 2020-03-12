@@ -364,7 +364,8 @@ def unpack(folder: Path) -> [Path, bool]:
     """
 
     # Create a temporary directory for unpacking the data
-    tempfolder = Path(tempfile.mkdtemp())
+    subid, sesid = get_subid_sesid(folder/'dum.my')
+    tempfolder = Path(tempfile.mkdtemp()/subid/sesid)
     unpacked   = False
 
     # Copy all data to the temporary folder if there is a DICOMDIR file in the folder
