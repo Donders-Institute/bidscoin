@@ -99,7 +99,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                     shutil.copyfile(sejsons[0], cejson)
                     with cejson.open('r') as fmap_fid:
                         data = json.load(fmap_fid)
-                    data['EchoTime']   = np.average(TEs, weights=weights)
+                    data['EchoTime']   = np.average(TEs, weights=weights)       # This seems to be the best we can do (the BIDS validator indicates there has to be a nr here, an empty value generates a warning)
                     data['EchoNumber'] = 1
                     with cejson.open('w') as fmap_fid:
                         json.dump(data, fmap_fid, indent=4)

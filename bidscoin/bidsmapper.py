@@ -16,6 +16,7 @@ import textwrap
 import copy
 import logging
 import sys
+import shutil
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QMessageBox
 try:
@@ -268,6 +269,9 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             sessions = [subject]
         for session in sessions:
 
+            # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
+            session, unpacked = bids.unpack(session)
+
             LOGGER.info(f"Parsing: {session} (subject {n}/{len(subjects)})")
 
             for runfolder in bids.lsdirs(session):
@@ -295,6 +299,10 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                 # Update / append the plugin mapping
                 if bidsmap_old['PlugIns']:
                     bidsmap_new = build_pluginmap(runfolder, bidsmap_new, bidsmap_old)
+
+            # Clean-up the temporary unpacked data
+            if unpacked:
+                shutil.rmtree(session)
 
     # Create the bidsmap YAML-file in bidsfolder/code/bidscoin
     bidsmapfile = bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'

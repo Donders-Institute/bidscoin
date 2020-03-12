@@ -17,6 +17,7 @@ import pandas as pd
 import json
 import dateutil.parser
 import logging
+import shutil
 from pathlib import Path
 try:
     from bidscoin import bids
@@ -513,6 +514,9 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=[], force: bool=F
                     LOGGER.info(f"Skipping processed session: {session} already has {modalities} data (use the -f option to overrule)")
                     continue
 
+            # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
+            session, unpacked = bids.unpack(session)
+
             # Update / append the dicom mapping
             if bidsmap['DICOM']:
                 coin_dicom(session, bidsmap, bidsfolder, personals, subprefix, sesprefix)
@@ -536,6 +540,10 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=[], force: bool=F
             # Update / append the plugin mapping
             if bidsmap['PlugIns']:
                 coin_plugin(session, bidsmap, bidsfolder, personals)
+
+            # Clean-up the temporary unpacked data
+            if unpacked:
+                shutil.rmtree(session)
 
         # Store the collected personals in the participant_table
         for key in personals:

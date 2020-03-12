@@ -16,6 +16,11 @@ import logging
 import coloredlogs
 import subprocess
 import pydicom
+import tempfile
+import tarfile
+import zipfile
+from distutils.dir_util import copy_tree
+from bidscoin.dicomsort import sortsessions
 from typing import Union, List, Tuple
 from pathlib import Path
 from importlib import util
@@ -345,6 +350,57 @@ def is_incomplete_acquisition(folder: Path) -> bool:
         return True
     else:
         return False
+
+
+def unpack(folder: Path) -> [Path, bool]:
+    """
+    Unpacks and sorts DICOM files in folder to a temporary folder if folder contains a DICOMDIR file or .tar.gz, .gz or .zip files
+
+    :param folder:  The full pathname of the source folder
+    :return:        A tuple with the full pathname of the source or temporary folder and a boolean that is True for the latter case (i.e. when data is unpacked in a temporary folder)
+    """
+
+    # Create a temporary directory for unpacking the data
+    tempfolder = Path(tempfile.mkdtemp())
+    unpacked   = False
+
+    # Copy all data to the temporary folder if there is a DICOMDIR file in the folder
+    if (folder/'DICOMDIR').is_file():
+        copy_tree(folder, tempfolder)
+        unpacked = True
+
+    # Search for zipped/tarballed files
+    packedfiles = []
+    packedfiles.extend(folder.glob('*.tar'))
+    packedfiles.extend(folder.glob('*.tar.gz'))
+    packedfiles.extend(folder.glob('*.zip'))
+    packedfiles.extend(tempfolder.glob('*.tar'))
+    packedfiles.extend(tempfolder.glob('*.tar.gz'))
+    packedfiles.extend(tempfolder.glob('*.zip'))
+
+    # If we have any, unpack them in the temporary folder
+    for packedfile in packedfiles:
+        ext = packedfile.suffixes
+        if ext[-1] == '.zip':
+            with zipfile.ZipFile(packedfile, 'r') as zip_fid:
+                zip_fid.extractall(tempfolder)
+                unpacked = True
+        elif '.tar' in ext:
+            with tarfile.open(packedfile, 'r') as tar_fid:
+                tar_fid.extractall(tempfolder)
+                unpacked = True
+
+    # Sort the DICOM files if not sorted yet
+    if unpacked:
+        if (tempfolder/'DICOMDIR').is_file():
+            tempfolder = tempfolder/'DICOMDIR'      # Use the DICOMDIR file if it is there
+        sortsessions(tempfolder)
+        folder = tempfolder
+
+    else:
+        tempfolder.rmdir()
+
+    return folder, unpacked
 
 
 def get_dicomfile(folder: Path, index: int=0) -> Path:
