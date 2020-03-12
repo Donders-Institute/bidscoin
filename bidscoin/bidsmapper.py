@@ -20,11 +20,9 @@ import shutil
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QMessageBox
 try:
-    from bidscoin import bids
-    from bidscoin import bidseditor
+    from bidscoin import bids, bidseditor
 except ImportError:
-    import bids         # This should work if bidscoin was not pip-installed
-    import bidseditor
+    import bids, bidseditor         # This should work if bidscoin was not pip-installed
 
 
 LOGGER = logging.getLogger('bidscoin')
