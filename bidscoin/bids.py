@@ -395,7 +395,7 @@ def unpack(folder: Path) -> [Path, bool]:
         if (tempfolder/'DICOMDIR').is_file():
             tempfolder = tempfolder/'DICOMDIR'      # Use the DICOMDIR file if it is there
         dicomsort.sortsessions(tempfolder)
-        logger.info(f"Unpacked data in temporary folder: {tempfolder}")
+        logger.info(f"Unpacked data in temporary folder: {folder} -> {tempfolder}")
         folder = tempfolder
 
     else:
