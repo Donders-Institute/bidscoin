@@ -8,6 +8,7 @@ https://github.com/dangom/dac2bids/blob/master/dac2bids.py
 @author: Marcel Zwiers
 """
 
+import bidscoin
 import copy
 import inspect
 import ast
@@ -20,7 +21,6 @@ import tempfile
 import tarfile
 import zipfile
 from distutils.dir_util import copy_tree
-from bidscoin.dicomsort import sortsessions
 from typing import Union, List, Tuple
 from pathlib import Path
 from importlib import util
@@ -394,7 +394,7 @@ def unpack(folder: Path) -> [Path, bool]:
     if unpacked:
         if (tempfolder/'DICOMDIR').is_file():
             tempfolder = tempfolder/'DICOMDIR'      # Use the DICOMDIR file if it is there
-        sortsessions(tempfolder)
+        bidscoin.dicomsort.sortsessions(tempfolder)
         folder = tempfolder
 
     else:
