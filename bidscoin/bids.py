@@ -19,7 +19,10 @@ import pydicom
 import tempfile
 import tarfile
 import zipfile
-from bidscoin import dicomsort
+try:
+    from bidscoin import dicomsort
+except ImportError:
+    import dicomsort  # This should work if bidscoin was not pip-installed
 from distutils.dir_util import copy_tree
 from typing import Union, List, Tuple
 from pathlib import Path
