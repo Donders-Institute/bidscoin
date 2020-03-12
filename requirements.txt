@@ -4,7 +4,7 @@ PyQt5>=5.12.1
 ruamel.yaml>=0.15.35
 coloredlogs
 multiecho==0.21
-dateutil
+python-dateutil
 pydeface
 drmaa
 # dcm2niix. For more information, see ./docs/installation.md and ./heuristics/bidsmap_template.yaml
