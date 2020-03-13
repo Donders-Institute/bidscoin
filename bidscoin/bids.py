@@ -374,7 +374,8 @@ def unpack(folder: Path, subprefix: str='sub-', sesprefix: str='ses-', wildcard:
     # Search for zipped/tarballed files
     packedfiles = []
     packedfiles.extend(folder.glob(f"{wildcard}.tar"))
-    packedfiles.extend(folder.glob(f"{wildcard}.tar.gz"))
+    packedfiles.extend(folder.glob(f"{wildcard}.tar.?z"))
+    packedfiles.extend(folder.glob(f"{wildcard}.tar.bz2"))
     packedfiles.extend(folder.glob(f"{wildcard}.zip"))
 
     # Copy everything over to the tempfolder if we are going to do unpacking and/or sorting
