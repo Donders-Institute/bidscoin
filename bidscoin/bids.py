@@ -355,58 +355,54 @@ def is_incomplete_acquisition(folder: Path) -> bool:
         return False
 
 
-def unpack(folder: Path) -> [Path, bool]:
+def unpack(folder: Path, subprefix: str='sub-', sesprefix: str='ses-', wildcard: str='*') -> [Path, bool]:
     """
     Unpacks and sorts DICOM files in folder to a temporary folder if folder contains a DICOMDIR file or .tar.gz, .gz or .zip files
 
-    :param folder:  The full pathname of the source folder
-    :return:        A tuple with the full pathname of the source or temporary folder and a boolean that is True for the latter case (i.e. when data is unpacked in a temporary folder)
+    :param folder:      The full pathname of the source folder
+    :param subprefix:   The optional subprefix (e.g. 'sub-'). Used to parse the subid
+    :param sesprefix:   The optional sesprefix (e.g. 'ses-'). Used to parse the sesid
+    :param str:         A glob search pattern to select the tarballed/zipped files
+    :return:            A tuple with the full pathname of the source or temporary folder and a boolean that is True for the latter case (i.e. when data is unpacked in a temporary folder)
     """
 
     # Create a temporary directory for unpacking the data
-    subid, sesid = get_subid_sesid(folder/'dum.my')
+    subid, sesid = get_subid_sesid(folder/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
     tempfolder   = Path(tempfile.mkdtemp())/subid/sesid
-    unpacked     = False
     tempfolder.mkdir()
-
-    # Copy all data to the temporary folder if there is a DICOMDIR file in the folder
-    if (folder/'DICOMDIR').is_file():
-        copy_tree(folder, tempfolder)
-        unpacked = True
 
     # Search for zipped/tarballed files
     packedfiles = []
-    packedfiles.extend(folder.glob('*.tar'))
-    packedfiles.extend(folder.glob('*.tar.gz'))
-    packedfiles.extend(folder.glob('*.zip'))
-    packedfiles.extend(tempfolder.glob('*.tar'))
-    packedfiles.extend(tempfolder.glob('*.tar.gz'))
-    packedfiles.extend(tempfolder.glob('*.zip'))
+    packedfiles.extend(folder.glob(f"{wildcard}.tar"))
+    packedfiles.extend(folder.glob(f"{wildcard}.tar.gz"))
+    packedfiles.extend(folder.glob(f"{wildcard}.zip"))
 
-    # If we have any, unpack them in the temporary folder
+    # Copy everything over to the tempfolder if we are going to do unpacking and/or sorting
+    if packedfiles or (folder/'DICOMDIR').is_file():
+        copy_tree(str(folder), str(tempfolder))     # Older python versions don't support PathLib
+        packedfiles = [tempfolder/packedfile.name for packedfile in packedfiles]
+
+    # If we have any packed files, unpack them in the temporary folder
     for packedfile in packedfiles:
         ext = packedfile.suffixes
         if ext[-1] == '.zip':
             with zipfile.ZipFile(packedfile, 'r') as zip_fid:
                 zip_fid.extractall(tempfolder)
-                unpacked = True
         elif '.tar' in ext:
             with tarfile.open(packedfile, 'r') as tar_fid:
                 tar_fid.extractall(tempfolder)
-                unpacked = True
 
     # Sort the DICOM files if not sorted yet
-    if unpacked:
+    if packedfiles or (tempfolder/'DICOMDIR').is_file():
         if (tempfolder/'DICOMDIR').is_file():
             tempfolder = tempfolder/'DICOMDIR'      # Use the DICOMDIR file if it is there
         dicomsort.sortsessions(tempfolder)
         logger.info(f"Unpacked data in temporary folder: {folder} -> {tempfolder}")
-        folder = tempfolder
+        return tempfolder, True
 
     else:
         tempfolder.rmdir()
-
-    return folder, unpacked
+        return folder, False
 
 
 def get_dicomfile(folder: Path, index: int=0) -> Path:
