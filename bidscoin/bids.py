@@ -380,6 +380,7 @@ def unpack(folder: Path, subprefix: str='sub-', sesprefix: str='ses-', wildcard:
         subid, sesid = get_subid_sesid(folder/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
         tempfolder   = Path(tempfile.mkdtemp())/subid/sesid
         tempfolder.mkdir()
+        logger.info(f"Unpacking data in temporary folder: {folder} -> {tempfolder}")
 
         # Copy everything over to the tempfolder
         copy_tree(str(folder), str(tempfolder))     # Older python versions don't support PathLib
@@ -398,7 +399,6 @@ def unpack(folder: Path, subprefix: str='sub-', sesprefix: str='ses-', wildcard:
         if (tempfolder/'DICOMDIR').is_file():
             tempfolder = tempfolder/'DICOMDIR'      # Use the DICOMDIR file if it is there
         dicomsort.sortsessions(tempfolder)
-        logger.info(f"Unpacked data in temporary folder: {folder} -> {tempfolder}")
 
         return tempfolder, True
 
