@@ -382,11 +382,12 @@ def unpack(folder: Path, subprefix: str='sub-', sesprefix: str='ses-', wildcard:
         tempfolder.mkdir()
 
         # Copy everything over to the tempfolder
+        logger.info(f"Making temporary copy: {folder} -> {tempfolder}")
         copy_tree(str(folder), str(tempfolder))     # Older python versions don't support PathLib
 
         # Unpack the zip/tarballed files in the temporary folder
         for packedfile in [tempfolder/packedfile.name for packedfile in packedfiles]:
-            logger.info(f"Unpacking: {packedfile} -> {tempfolder}")
+            logger.info(f"Unpacking: {packedfile.name} -> {tempfolder}")
             ext = packedfile.suffixes
             if ext[-1] == '.zip':
                 with zipfile.ZipFile(packedfile, 'r') as zip_fid:
