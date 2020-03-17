@@ -396,8 +396,6 @@ def unpack(folder: Path, subprefix: str='sub-', sesprefix: str='ses-', wildcard:
                     tar_fid.extractall(tempfolder)
 
         # Sort the DICOM files if not sorted yet
-        if (tempfolder/'DICOMDIR').is_file():
-            tempfolder = tempfolder/'DICOMDIR'      # Use the DICOMDIR file if it is there
         dicomsort.sortsessions(tempfolder)
 
         return tempfolder, True

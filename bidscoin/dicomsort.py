@@ -6,6 +6,7 @@ Sorts and / or renames DICOM files into local subdirectories with a (3-digit) Se
 import re
 import warnings
 from pathlib import Path
+from pydicom.filereader import read_dicomdir
 try:
     from bidscoin import bids
 except ImportError:
@@ -107,12 +108,12 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
             dicomfile.replace(newfilename)
 
 
-def sortsessions(session: str, subjectid: str='', sessionid: str='', dicomfield: str='SeriesDescription', rename: bool=False, ext: str='', nosort: bool=False, pattern: str='.*\.(IMA|dcm)$', dryrun: bool=False) -> None:
+def sortsessions(session: str, subprefix: str='', sesprefix: str='', dicomfield: str='SeriesDescription', rename: bool=False, ext: str='', nosort: bool=False, pattern: str='.*\.(IMA|dcm)$', dryrun: bool=False) -> None:
     """
 
     :param session:     The root folder containing the source [sub/][ses/]dicomfiles or the DICOMDIR file
-    :param subjectid:   The prefix of the sub folders in session
-    :param sessionid:   The prefix of the ses folders in sub folder
+    :param subprefix:   The prefix for searching the sub folders in session
+    :param sesprefix:   The prefix for searching the ses folders in sub folder
     :param dicomfield:  The dicomfield that is used to construct the series folder name (e.g. SeriesDescription or ProtocolName, which are both used as fallback)
     :param rename:      Boolean to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme
     :param ext:         The file extension after sorting (empty value keeps original file extension)
@@ -125,46 +126,42 @@ def sortsessions(session: str, subjectid: str='', sessionid: str='', dicomfield:
     # Input checking
     session = Path(session)
 
-    # Define the sessionfolder, collect all DICOM files and run sortsession()
-    if subjectid:   # Do a recursive search, assuming session is a foldername, not a DICOMDIR file
+    # Do a recursive call if subprefix is given
+    if subprefix:
 
-        for subfolder in bids.lsdirs(session, subjectid + '*'):
-            if sessionid:
-                sessionfolders = bids.lsdirs(subfolder, sessionid + '*')
+        for subfolder in bids.lsdirs(session, subprefix + '*'):
+            if sesprefix:
+                sessionfolders = bids.lsdirs(subfolder, sesprefix + '*')
             else:
                 sessionfolders = [subfolder]
 
             for sessionfolder in sessionfolders:
-                dicomfiles = [dcmfile for dcmfile in sessionfolder.iterdir() if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
+                sortsessions(session=sessionfolder, dicomfield=dicomfield, rename=rename, ext=ext, nosort=nosort, pattern=pattern, dryrun=dryrun)
+
+    # Use the DICOMDIR file if it is there
+    if (session/'DICOMDIR').is_file():
+
+        dicomdir = read_dicomdir(str(session/'DICOMDIR'))
+
+        sessionfolder = session
+        for patient in dicomdir.patient_records:
+            if len(dicomdir.patient_records) > 1:
+                sessionfolder = session/f"sub-{cleanup(patient.PatientName)}"
+
+            for n, study in enumerate(patient.children, 1):                                    # TODO: Check order
+                if len(patient.children) > 1:
+                    sessionfolder = session/f"ses-{n:02}{cleanup(study.StudyDescription)}"     # TODO: Leave out StudyDescrtiption? Include PatientName/StudiesDescription?
+                    print(f"WARNING: the session index-number '{n:02}' is not necessarily meaningful: {sessionfolder}")
+
+                dicomfiles = []
+                for series in study.children:
+                    dicomfiles.extend([session.joinpath(*image.ReferencedFileID) for image in series.children])
                 sortsession(sessionfolder, dicomfiles, dicomfield, rename, ext, nosort, dryrun)
 
     else:
 
-        if session.name == 'DICOMDIR':
-
-            from pydicom.filereader import read_dicomdir
-
-            dicomdir = read_dicomdir(str(session))
-
-            sessionfolder = session.parent
-            for patient in dicomdir.patient_records:
-                if len(dicomdir.patient_records) > 1:
-                    sessionfolder = session.parent/f"sub-{cleanup(patient.PatientName)}"
-
-                for n, study in enumerate(patient.children, 1):                                                 # TODO: Check order
-                    if len(patient.children) > 1:
-                        sessionfolder = session.parent/f"ses-{n:02}{cleanup(study.StudyDescription)}"           # TODO: Leave out StudyDescrtiption?
-                        print(f"WARNING: the session index-number '{n:02}' is not necessarily meaningful: {sessionfolder}")
-
-                    dicomfiles = []
-                    for series in study.children:
-                        dicomfiles.extend([session.parent.joinpath(*image.ReferencedFileID) for image in series.children])
-                    sortsession(sessionfolder, dicomfiles, dicomfield, rename, ext, nosort, dryrun)
-
-        else:
-
-            dicomfiles = [dcmfile for dcmfile in session.iterdir() if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
-            sortsession(session, dicomfiles, dicomfield, rename, ext, nosort, dryrun)
+        dicomfiles = [dcmfile for dcmfile in session.iterdir() if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
+        sortsession(session, dicomfiles, dicomfield, rename, ext, nosort, dryrun)
 
 
 def main():
@@ -181,12 +178,12 @@ def main():
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
                                             '  dicomsort /project/3022026.01/raw\n'
-                                            '  dicomsort /project/3022026.01/raw --subjectid sub\n'
-                                            '  dicomsort /project/3022026.01/raw --subjectid sub-01 --sessionid ses\n'
+                                            '  dicomsort /project/3022026.01/raw --subprefix sub\n'
+                                            '  dicomsort /project/3022026.01/raw --subprefix sub-01 --sesprefix ses\n'
                                             '  dicomsort /project/3022026.01/raw/sub-011/ses-mri01/DICOMDIR -r -e .dcm\n ')
-    parser.add_argument('dicomsource',      help='The name of the root folder containing the dicomsource/[sub/][ses/]dicomfiles or the name of the (single session/study) DICOMDIR file')
-    parser.add_argument('-i','--subjectid', help='The prefix string for recursive searching in dicomsource/subject subfolders (e.g. "sub")')
-    parser.add_argument('-j','--sessionid', help='The prefix string for recursive searching in dicomsource/subject/session subfolders (e.g. "ses")')
+    parser.add_argument('dicomsource',      help='The name of the root folder containing the dicomsource/[sub/][ses/]dicomfiles and / or the (single session/study) DICOMDIR file')
+    parser.add_argument('-i','--subprefix', help='Provide a prefix string for recursive searching in dicomsource/subject subfolders (e.g. "sub")')
+    parser.add_argument('-j','--sesprefix', help='Provide a prefix string for recursive searching in dicomsource/subject/session subfolders (e.g. "ses")')
     parser.add_argument('-f','--fieldname', help='The dicomfield that is used to construct the series folder name ("SeriesDescription" and "ProtocolName" are both used as fallback)', default='SeriesDescription')
     parser.add_argument('-r','--rename',    help='Flag to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme (recommended for DICOMDIR data)', action='store_true')
     parser.add_argument('-e','--ext',       help='The file extension after sorting (empty value keeps the original file extension), e.g. ".dcm"', default='')
@@ -196,8 +193,8 @@ def main():
     args = parser.parse_args()
 
     sortsessions(session    = args.dicomsource,
-                 subjectid  = args.subjectid,
-                 sessionid  = args.sessionid,
+                 subprefix  = args.subprefix,
+                 sesprefix  = args.sesprefix,
                  dicomfield = args.fieldname,
                  rename     = args.rename,
                  ext        = args.ext,
