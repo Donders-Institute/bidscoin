@@ -380,7 +380,7 @@ def unpack(folder: Path, subprefix: str='sub-', sesprefix: str='ses-', wildcard:
         subid, sesid = get_subid_sesid(folder/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
         tempfolder   = Path(tempfile.mkdtemp())/subid/sesid
         tempfolder.mkdir()
-        logger.info(f"Unpacking data in temporary folder: {folder} -> {tempfolder}")
+        logger.info(f"Unpacking: {packedfiles} -> {tempfolder}")
 
         # Copy everything over to the tempfolder
         copy_tree(str(folder), str(tempfolder))     # Older python versions don't support PathLib
