@@ -44,7 +44,7 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
     """
 
     # Map all dicomfiles and move them to series folders
-    print(f">> Processing: {sessionfolder} ({len(dicomfiles)} files)")
+    print(f">> Sorting: {sessionfolder} ({len(dicomfiles)} files)")
     if not dryrun:
         sessionfolder.mkdir(parents=True, exist_ok=True)
 
