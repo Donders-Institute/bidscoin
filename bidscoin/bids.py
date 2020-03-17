@@ -380,13 +380,13 @@ def unpack(folder: Path, subprefix: str='sub-', sesprefix: str='ses-', wildcard:
         subid, sesid = get_subid_sesid(folder/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
         tempfolder   = Path(tempfile.mkdtemp())/subid/sesid
         tempfolder.mkdir()
-        logger.info(f"Unpacking: {packedfiles} -> {tempfolder}")
 
         # Copy everything over to the tempfolder
         copy_tree(str(folder), str(tempfolder))     # Older python versions don't support PathLib
 
         # Unpack the zip/tarballed files in the temporary folder
         for packedfile in [tempfolder/packedfile.name for packedfile in packedfiles]:
+            logger.info(f"Unpacking: {packedfile} -> {tempfolder}")
             ext = packedfile.suffixes
             if ext[-1] == '.zip':
                 with zipfile.ZipFile(packedfile, 'r') as zip_fid:

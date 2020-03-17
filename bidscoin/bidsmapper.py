@@ -60,7 +60,7 @@ def build_dicommap(runfolder: Path, bidsmap_new: dict, bidsmap_old: dict, templa
         bidsmap_new = bids.append_run(bidsmap_new, 'DICOM', modality, run)
 
         # Communicate with the user if the run was not present in bidsmap_old or in template
-        LOGGER.info(f"'{modality}' sample found: {dicomfile}")
+        LOGGER.info(f"Found '{modality}' sample: {dicomfile}")
 
         # Launch a GUI to ask the user for help if the new run comes from the template (i.e. was not yet in the old bidsmap)
         if gui and gui.interactive==2 and index is None:
