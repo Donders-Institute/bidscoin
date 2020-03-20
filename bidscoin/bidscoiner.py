@@ -27,12 +27,12 @@ except ImportError:
 LOGGER = logging.getLogger('bidscoin')
 
 
-def coin_dicom(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, subprefix: str, sesprefix: str) -> None:
+def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, subprefix: str, sesprefix: str) -> None:
     """
-    Converts the session dicom-files into BIDS-valid nifti-files in the corresponding bidsfolder and
-    extracts personals (e.g. Age, Sex) from the dicom header
+    Converts the session source-files into BIDS-valid nifti-files in the corresponding bidsfolder and
+    extracts personals (e.g. Age, Sex) from the source header
 
-    :param session:     The full-path name of the subject/session source folder
+    :param session:     The full-path name of the subject/session source file/folder
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
     :param bidsfolder:  The full-path name of the BIDS root-folder
     :param personals:   The dictionary with the personal information
@@ -41,17 +41,25 @@ def coin_dicom(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, 
     :return:            Nothing
     """
 
-    if not bids.lsdirs(session):
-        LOGGER.warning(f"No run subfolder(s) found in: {session}")
-        return
+    # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
+    if dataformat=='DICOM':
+        sourcefile = Path()
+        sources    = bids.lsdirs(session)
+        for source in sources:
+            sourcefile = bids.get_dicomfile(source)
+            if sourcefile.name:
+                break
 
-    TE = [None, None]
+    elif dataformat=='PAR':
+        sources = bids.get_parfiles(session)
+        if sources:
+            sourcefile = sources[0]
 
-    # Get valid BIDS subject/session identifiers from the (first) dicom-header or from the session source folder
-    subid, sesid = bids.get_subid_sesid(bids.get_dicomfile(bids.lsdirs(session)[0]),
-                                        bidsmap['DICOM']['subject'],
-                                        bidsmap['DICOM']['session'],
+    subid, sesid = bids.get_subid_sesid(sourcefile,
+                                        bidsmap[dataformat]['subject'],
+                                        bidsmap[dataformat]['session'],
                                         subprefix, sesprefix)
+
     if subid == subprefix:
         LOGGER.error(f"No valid subject identifier found for: {session}")
         return
@@ -68,27 +76,31 @@ def coin_dicom(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, 
         scans_table = pd.DataFrame(columns=['acq_time'], dtype='str')
         scans_table.index.name = 'filename'
 
-    # Process all the dicom run subfolders
-    for runfolder in bids.lsdirs(session):
+    # Process all the source files or run subfolders
+    for source in sources:
 
-        # Get a dicom-file
-        dicomfile = bids.get_dicomfile(runfolder)
-        if not dicomfile.name: continue
+        # Get a source-file
+        if dataformat=='DICOM':
+            sourcefile = bids.get_dicomfile(source)
+        elif dataformat=='PAR':
+            sourcefile = source
+        if not sourcefile.name:
+            continue
 
         # Get a matching run from the bidsmap
-        run, modality, index = bids.get_matching_run(dicomfile, bidsmap)
+        run, modality, index = bids.get_matching_run(sourcefile, bidsmap, dataformat)
 
         # Check if we should ignore this run
         if modality == bids.ignoremodality:
-            LOGGER.info(f"Leaving out: {runfolder}")
+            LOGGER.info(f"Leaving out: {source}")
             continue
 
         # Check if we already know this run
         if index is None:
-            LOGGER.warning(f"Skipping unknown '{modality}': {dicomfile}\n-> re-run the bidsmapper and delete {session} to solve this warning")
+            LOGGER.warning(f"Skipping unknown '{modality}': {sourcefile}\n-> re-run the bidsmapper and delete {session} to solve this warning")
             continue
 
-        LOGGER.info(f"Processing: {runfolder}")
+        LOGGER.info(f"Processing: {source}")
 
         # Create the BIDS session/modality folder
         bidsmodality = bidsses/modality
@@ -104,13 +116,13 @@ def coin_dicom(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, 
         if (bidsmodality/bidsname).with_suffix('.json').is_file():
             LOGGER.warning(f"{bidsmodality/bidsname}.* already exists -- check your results carefully!")
 
-        # Convert the dicom-files in the run folder to nifti's in the BIDS-folder
-        command = '{path}dcm2niix {args} -f "{filename}" -o "{outfolder}" "{infolder}"'.format(
+        # Convert the source-files in the run folder to nifti's in the BIDS-folder
+        command = '{path}dcm2niix {args} -f "{filename}" -o "{outfolder}" "{source}"'.format(
             path      = bidsmap['Options']['dcm2niix']['path'],
             args      = bidsmap['Options']['dcm2niix']['args'],
             filename  = bidsname,
             outfolder = bidsmodality,
-            infolder  = runfolder)
+            source    = source)
         if not bids.run_command(command):
             continue
 
@@ -124,6 +136,7 @@ def coin_dicom(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, 
 
         # Rename all files ending with _c%d, _e%d and _ph (and any combination of these): These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
         jsonfiles = []                                                                                          # Collect the associated json-files (for updating them later) -- possibly > 1
+        TE        = [None, None]
         for dcm2niisuffix in ('_c', '_e', '_ph', '_i'):
             for filename in sorted(bidsmodality.glob(bidsname + dcm2niisuffix + '*')):
                 ext             = ''.join(filename.suffixes)
@@ -225,11 +238,13 @@ def coin_dicom(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, 
                     with jsonfile.open('w') as json_fid:
                         json.dump(data, json_fid, indent=4)
 
-            # Parse the acquisition time from the json file or else from the dicom header (NB: assuming the dicom file represents the first aqcuisition)
+            # Parse the acquisition time from the json file or else from the source header (NB: assuming the source file represents the first acquisition)
             with jsonfile.open('r') as json_fid:
                 data = json.load(json_fid)
-            if 'AcquisitionTime' not in data:
-                data['AcquisitionTime'] = bids.get_dicomfield('AcquisitionTime', dicomfile)
+            if 'AcquisitionTime' not in data or not data['AcquisitionTime']:
+                data['AcquisitionTime'] = bids.get_sourcefield('AcquisitionTime', sourcefile)
+            if not data['AcquisitionTime']:
+                data['AcquisitionTime'] = bids.get_sourcefield('exam_date', sourcefile)
             acq_time = dateutil.parser.parse(data['AcquisitionTime'])
             scanpath = list(jsonfile.parent.glob(jsonfile.stem + '.nii*'))[0].relative_to(bidsses)    # Find the corresponding nifti file (there should be only one, let's not make assumptions about the .gz extension)
             scans_table.loc[scanpath.as_posix(), 'acq_time'] = '1900-01-01T' + acq_time.strftime('%H:%M:%S')
@@ -240,8 +255,8 @@ def coin_dicom(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, 
     scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
     # Search for the IntendedFor images and add them to the json-files. This has been postponed untill all modalities have been processed (i.e. so that all target images are indeed on disk)
-    if bidsmap['DICOM']['fmap'] is not None:
-        for fieldmap in bidsmap['DICOM']['fmap']:
+    if bidsmap[dataformat]['fmap'] is not None:
+        for fieldmap in bidsmap[dataformat]['fmap']:
             bidsname    = bids.get_bidsname(subid, sesid, 'fmap', fieldmap)
             niifiles    = []
             intendedfor = fieldmap['bids']['IntendedFor']
@@ -290,16 +305,15 @@ def coin_dicom(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, 
                             with jsonfile2.open('w') as json_fid:
                                 json.dump(data, json_fid, indent=4)
 
-    # Collect personal data from the DICOM header: only from the first session (-> BIDS specification)
-    if 'runfolder' in locals():
-        dicomfile = bids.get_dicomfile(runfolder)
+    # Collect personal data from a source header (PAR/XML does not contain personal info)
+    if dataformat=='DICOM' and sourcefile.name:
         personals['participant_id'] = subid
         if sesid:
             if 'session_id' not in personals:
                 personals['session_id'] = sesid
             else:
-                return
-        age = bids.get_dicomfield('PatientAge', dicomfile)          # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
+                return                                              # Only from the first session -> BIDS specification
+        age = bids.get_dicomfield('PatientAge', sourcefile)         # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
         if age.endswith('D'):
             personals['age'] = str(int(float(age.rstrip('D'))/365.2524))
         elif age.endswith('W'):
@@ -310,35 +324,9 @@ def coin_dicom(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, 
             personals['age'] = str(int(float(age.rstrip('Y'))))
         elif age:
             personals['age'] = age
-        personals['sex']     = bids.get_dicomfield('PatientSex',    dicomfile)
-        personals['size']    = bids.get_dicomfield('PatientSize',   dicomfile)
-        personals['weight']  = bids.get_dicomfield('PatientWeight', dicomfile)
-
-
-def coin_par(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict) -> None:
-    """
-
-    :param session:     The full-path name of the subject/session source folder
-    :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
-    :param bidsfolder:  The full-path name of the BIDS root-folder
-    :param personals:   The dictionary with the personal information
-    :return:            Nothing
-    """
-
-    pass
-
-
-def coin_p7(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict) -> None:
-    """
-
-    :param session:     The full-path name of the subject/session source folder
-    :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
-    :param bidsfolder:  The full-path name of the BIDS root-folder
-    :param personals:   The dictionary with the personal information
-    :return:            Nothing
-    """
-
-    pass
+        personals['sex']     = bids.get_dicomfield('PatientSex',    sourcefile)
+        personals['size']    = bids.get_dicomfield('PatientSize',   sourcefile)
+        personals['weight']  = bids.get_dicomfield('PatientWeight', sourcefile)
 
 
 def coin_nifti(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict) -> None:
@@ -488,12 +476,10 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=[], force: bool=F
     # Loop over all subjects and sessions and convert them using the bidsmap entries
     for n, subject in enumerate(subjects, 1):
 
+        LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
         if participants and subject.name in list(participants_table.index):
             LOGGER.info(f"Skipping subject: {subject} ({n}/{len(subjects)})")
             continue
-
-        LOGGER.info('-------------------------------------')
-        LOGGER.info(f"Coining subject ({n}/{len(subjects)}): {subject}")
 
         personals = dict()
         sessions  = bids.lsdirs(subject, sesprefix + '*')
@@ -501,40 +487,42 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=[], force: bool=F
             sessions = [subject]
         for session in sessions:
 
+            # See what dataformat we have
+            dataformat = bids.get_dataformat(session)
+
             # Check if we should skip the session-folder
             if not force:
                 bidssession = bidsfolder / session.relative_to(rawfolder)                   # Append the sub-*/ses-* subdirectories from the rawfolder to the bidsfolder
-                if not bidsmap['DICOM']['session']:                                         # TODO: Generalize for non-DICOM modalities
+                if not bidsmap[dataformat]['session']:
                     bidssession = bidssession.parent
                 modalities = []
                 for modality in bids.lsdirs(bidssession):                                   # See what modalities we already have in the bids session-folder
-                    if modality.glob('*') and bidsmap['DICOM'].get(modality.name):          # See if we are going to add data for this modality TODO: also check for other sources
+                    if modality.glob('*') and bidsmap[dataformat].get(modality.name):       # See if we are going to add data for this modality
                         modalities.append(modality.name)
                 if modalities:
                     LOGGER.info(f"Skipping processed session: {session} already has {modalities} data (use the -f option to overrule)")
                     continue
 
+            LOGGER.info(f"Coining session: {session}")
+
             # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
             session, unpacked = bids.unpack(session, subprefix, sesprefix, '*')
 
-            # Update / append the dicom mapping
-            if bidsmap['DICOM']:
-                coin_dicom(session, bidsmap, bidsfolder, personals, subprefix, sesprefix)
-
-            # Update / append the PAR/REC mapping
-            if bidsmap['PAR']:
-                coin_par(session, bidsmap, bidsfolder, personals)
+            # Update / append the sourde data mapping
+            if dataformat in ('DICOM', 'PAR'):
+                coin_data2bids(dataformat, session, bidsmap, bidsfolder, personals, subprefix, sesprefix)
 
             # Update / append the P7 mapping
-            if bidsmap['P7']:
-                coin_p7(session, bidsmap, bidsfolder, personals)
+            if dataformat=='P7':
+                LOGGER.error(f"{dataformat} not (yet) supported, skipping session: {session}")
+                continue
 
             # Update / append the nifti mapping
-            if bidsmap['Nifti']:
+            if dataformat=='Nifti':
                 coin_nifti(session, bidsmap, bidsfolder, personals)
 
             # Update / append the file-system mapping
-            if bidsmap['FileSystem']:
+            if dataformat=='FileSystem':
                 coin_filesystem(session, bidsmap, bidsfolder, personals)
 
             # Update / append the plugin mapping
@@ -556,11 +544,11 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=[], force: bool=F
             # TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
 
             if key not in participants_dict:
-                participants_dict[key]  = dict(LongName     = 'Long (unabbreviated) name of the column',
-                                               Description  = 'Description of the the column',
-                                               Levels       = dict(Key='Value (This is for categorical variables: a dictionary of possible values (keys) and their descriptions (values))'),
-                                               Units        = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is RECOMMENDED',
-                                               TermURL      = 'URL pointing to a formal definition of this type of data in an ontology available on the web')
+                participants_dict[key] = dict(LongName     = 'Long (unabbreviated) name of the column',
+                                              Description  = 'Description of the the column',
+                                              Levels       = dict(Key='Value (This is for categorical variables: a dictionary of possible values (keys) and their descriptions (values))'),
+                                              Units        = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is RECOMMENDED',
+                                              TermURL      = 'URL pointing to a formal definition of this type of data in an ontology available on the web')
             participants_table.loc[personals['participant_id'], key] = personals[key]
 
     # Write the collected data to the participant files

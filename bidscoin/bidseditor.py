@@ -28,8 +28,6 @@ try:
 except ImportError:
     import bids             # This should work if bidscoin was not pip-installed
 
-SOURCE = 'DICOM'            # TODO: allow for non-DICOM (e.g. PAR/REC) edits
-
 LOGGER = logging.getLogger('bidscoin')
 
 ROW_HEIGHT = 22
@@ -116,13 +114,13 @@ class myWidgetItem(QTableWidgetItem):
 
 class InspectWindow(QDialog):
 
-    def __init__(self, filename: Path, dicomdict):
+    def __init__(self, filename: Path, sourcedict, dataformat: str):
         super().__init__()
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(str(ICON_FILENAME)), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
-        self.setWindowTitle(f"Inspect {SOURCE} file")
+        self.setWindowTitle(f"Inspect {dataformat} file")
 
         layout = QVBoxLayout(self)
 
@@ -136,8 +134,9 @@ class InspectWindow(QDialog):
         label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         layout.addWidget(label)
 
-        text        = str(dicomdict)
+        text        = str(sourcedict)
         textBrowser = QTextBrowser(self)
+        textBrowser.setFont(QtGui.QFont("Courier New"))
         textBrowser.insertPlainText(text)
         textBrowser.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
         self.scrollbar = textBrowser.verticalScrollBar()        # For setting the slider to the top (can only be done after self.show()
@@ -175,7 +174,7 @@ class MainWindow(QMainWindow):
 class Ui_MainWindow(MainWindow):
 
     def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, input_bidsmap, output_bidsmap, template_bidsmap,
-                selected_tab_index=2, subprefix='sub-', sesprefix='ses-', reload: bool=False):
+                dataformat, selected_tab_index=2, subprefix='sub-', sesprefix='ses-', reload: bool=False):
 
         # Set the data
         self.MainWindow       = MainWindow
@@ -185,6 +184,7 @@ class Ui_MainWindow(MainWindow):
         self.input_bidsmap    = input_bidsmap
         self.output_bidsmap   = output_bidsmap
         self.template_bidsmap = template_bidsmap
+        self.dataformat       = dataformat
         self.subprefix        = subprefix
         self.sesprefix        = sesprefix
 
@@ -305,19 +305,23 @@ class Ui_MainWindow(MainWindow):
         statusbar.setStatusTip('Statusbar')
         self.MainWindow.setStatusBar(statusbar)
 
-    def inspect_dicomfile(self, item):
+    def inspect_sourcefile(self, item):
         """When double clicked, show popup window. """
         if item.column() == 1:
-            row = item.row()
+            row  = item.row()
             cell = self.samples_table.item(row, 5)
-            filename = Path(cell.text())
-            if bids.is_dicomfile(filename):
-                dicomdict = pydicom.dcmread(str(filename), force=True)
-                self.popup = InspectWindow(filename, dicomdict)
-                self.popup.show()
-                self.popup.scrollbar.setValue(0)     # This can only be done after self.popup.show()
+            sourcefile = Path(cell.text())
+            if bids.is_dicomfile(sourcefile):
+                sourcedata = pydicom.dcmread(str(sourcefile), force=True)
+            elif bids.is_parfile(sourcefile):
+                with open(sourcefile, 'r') as parfid:
+                    sourcedata = parfid.read()
             else:
-                LOGGER.warning(f"Could not read: {filename}")
+                LOGGER.warning(f"Could not read {self.dataformat} file: {sourcefile}")
+                return
+            self.popup = InspectWindow(sourcefile, sourcedata, self.dataformat)
+            self.popup.show()
+            self.popup.scrollbar.setValue(0)     # This can only be done after self.popup.show()
 
     def set_tab_file_browser(self, sourcefolder: Path):
         """Set the raw data folder inspector tab. """
@@ -351,12 +355,12 @@ class Ui_MainWindow(MainWindow):
         if column == 1:
             key = self.subses_table.item(row, 0).text()
             value = self.subses_table.item(row, 1).text()
-            oldvalue = self.output_bidsmap[SOURCE][key]
+            oldvalue = self.output_bidsmap[self.dataformat][key]
 
             # Only if cell was actually clicked, update
             if key and value!=oldvalue:
-                LOGGER.warning(f"Expert usage: User has set {SOURCE}['{key}'] from '{oldvalue}' to '{value}'")
-                self.output_bidsmap[SOURCE][key] = value
+                LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}'")
+                self.output_bidsmap[self.dataformat][key] = value
                 self.update_subses_and_samples(self.output_bidsmap)
 
     def tool_cell_was_changed(self, tool: str, idx: int, row: int, column: int):
@@ -369,7 +373,7 @@ class Ui_MainWindow(MainWindow):
 
             # Only if cell was actually clicked, update
             if key and value!=oldvalue:
-                LOGGER.info(f"User has set {SOURCE}['Options']['{key}'] from '{oldvalue}' to '{value}'")
+                LOGGER.info(f"User has set {self.dataformat}['Options']['{key}'] from '{oldvalue}' to '{value}'")
                 self.output_bidsmap['Options'][tool][key] = value
 
     def handle_click_test_plugin(self, plugin: str):
@@ -581,19 +585,19 @@ class Ui_MainWindow(MainWindow):
 
         subses_table.setItem(0, 0, myWidgetItem('subject', iseditable=False))
         subses_table.setItem(1, 0, myWidgetItem('session', iseditable=False))
-        subses_table.setItem(0, 1, myWidgetItem(self.output_bidsmap[SOURCE]['subject']))
-        subses_table.setItem(1, 1, myWidgetItem(self.output_bidsmap[SOURCE]['session']))
+        subses_table.setItem(0, 1, myWidgetItem(self.output_bidsmap[self.dataformat]['subject']))
+        subses_table.setItem(1, 1, myWidgetItem(self.output_bidsmap[self.dataformat]['session']))
 
         idx = 0
         samples_table.setSortingEnabled(False)
         for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-            runs = self.output_bidsmap[SOURCE][modality]
+            runs = self.output_bidsmap[self.dataformat][modality]
             if not runs:
                 continue
             for run in runs:
                 provenance = Path(run['provenance'])
                 ordered_file_index = self.ordered_file_index[provenance]
-                bidsname = bids.get_bidsname(output_bidsmap[SOURCE]['subject'], output_bidsmap[SOURCE]['session'],
+                bidsname = bids.get_bidsname(output_bidsmap[self.dataformat]['subject'], output_bidsmap[self.dataformat]['session'],
                                              modality, run, '', self.subprefix, self.sesprefix)
                 subid, sesid = bids.get_subid_sesid(provenance)
                 session = self.bidsfolder/subid/sesid
@@ -651,8 +655,8 @@ class Ui_MainWindow(MainWindow):
 
         self.subses_table = myQTableWidget()
         subses_table = self.subses_table
-        subses_table.setToolTip('Use <<SourceFilePath>> to parse the subject and (optional) session label from the pathname\n'
-                                'Use <YourDicomFieldName> (e.g. <PatientID>) to extract the subject and (optional) session label from the DICOM header')
+        subses_table.setToolTip(f"Use <<SourceFilePath>> to parse the subject and (optional) session label from the pathname\n"
+                                f"Use <Your{self.dataformat}FieldName> (e.g. <PatientID>) to extract the subject and (optional) session label from the {self.dataformat} header")
         subses_table.setMouseTracking(True)
         subses_table.setRowCount(2)
         subses_table.setColumnCount(2)
@@ -663,7 +667,7 @@ class Ui_MainWindow(MainWindow):
         subses_table.cellChanged.connect(self.subses_cell_was_changed)
 
         # Set the BIDSmap table
-        provenance = bids.dir_bidsmap(self.input_bidsmap, SOURCE)
+        provenance = bids.dir_bidsmap(self.input_bidsmap, self.dataformat)
         ordered_file_index = {}                                         # The mapping between the ordered provenance and an increasing file-index
         num_files = 0
         for file_index, file_name in enumerate(provenance):
@@ -681,7 +685,7 @@ class Ui_MainWindow(MainWindow):
         samples_table.setShowGrid(True)
         samples_table.setColumnCount(6)
         samples_table.setRowCount(num_files)
-        samples_table.setHorizontalHeaderLabels(['', f'{SOURCE} input', 'BIDS modality', 'BIDS output', 'Action', 'Provenance'])
+        samples_table.setHorizontalHeaderLabels(['', f'{self.dataformat} input', 'BIDS modality', 'BIDS output', 'Action', 'Provenance'])
         samples_table.setSortingEnabled(True)
         samples_table.sortByColumn(0, QtCore.Qt.AscendingOrder)
         header = samples_table.horizontalHeader()
@@ -692,7 +696,7 @@ class Ui_MainWindow(MainWindow):
         header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
         samples_table.setColumnHidden(2, True)
         samples_table.setColumnHidden(5, True)
-        samples_table.itemDoubleClicked.connect(self.inspect_dicomfile)
+        samples_table.itemDoubleClicked.connect(self.inspect_sourcefile)
 
         self.update_subses_and_samples(self.output_bidsmap)
 
@@ -730,6 +734,7 @@ class Ui_MainWindow(MainWindow):
                      self.input_bidsmap,
                      self.output_bidsmap,
                      self.template_bidsmap,
+                     self.dataformat,
                      selected_tab_index=current_tab_index,
                      reload=True)
 
@@ -743,8 +748,8 @@ class Ui_MainWindow(MainWindow):
 
     def save_bidsmap_to_file(self):
         """Check and save the BIDSmap to file. """
-        if self.output_bidsmap[SOURCE].get('fmap'):
-            for run in self.output_bidsmap[SOURCE]['fmap']:
+        if self.output_bidsmap[self.dataformat].get('fmap'):
+            for run in self.output_bidsmap[self.dataformat]['fmap']:
                 if not run['bids']['IntendedFor']:
                     LOGGER.warning(f"IntendedFor fieldmap value is empty for {run['provenance']}")
 
@@ -765,13 +770,19 @@ class Ui_MainWindow(MainWindow):
         self.open_edit_dialog(provenance, modality)
 
     def on_double_clicked(self, index: int):
-        """Opens the inspect window when a DICOM file in the file-tree tab is double-clicked"""
-        filename = Path(self.model.fileInfo(index).absoluteFilePath())
-        if bids.is_dicomfile(filename):
-            dicomdict = pydicom.dcmread(str(filename), force=True)
-            self.popup = InspectWindow(filename, dicomdict)
-            self.popup.show()
-            self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
+        """Opens the inspect window when a source file in the file-tree tab is double-clicked"""
+        sourcefile = Path(self.model.fileInfo(index).absoluteFilePath())
+        if bids.is_dicomfile(sourcefile):
+            sourcedata = pydicom.dcmread(str(sourcefile), force=True)
+        elif bids.is_parfile(sourcefile):
+            with open(sourcefile, 'r') as parfid:
+                sourcedata = parfid.read()
+        else:
+            LOGGER.warning(f"Could not read {self.dataformat} file: {sourcefile}")
+            return
+        self.popup = InspectWindow(sourcefile, sourcedata, self.dataformat)
+        self.popup.show()
+        self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
 
     def show_about(self):
         """Shows a pop-up window with the BIDScoin version"""
@@ -783,10 +794,10 @@ class Ui_MainWindow(MainWindow):
 
         if not self.has_edit_dialog_open:
             # Find the source index of the run in the list of runs (using the provenance) and open the edit window
-            for run in self.output_bidsmap[SOURCE][modality]:
+            for run in self.output_bidsmap[self.dataformat][modality]:
                 if run['provenance']==str(provenance):
                     LOGGER.info(f'User is editing {provenance}')
-                    self.dialog_edit = EditDialog(provenance, modality, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
+                    self.dialog_edit = EditDialog(self.dataformat, provenance, modality, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
                     if provenance.name:
                         self.has_edit_dialog_open = str(provenance)
                     else:
@@ -825,10 +836,11 @@ class EditDialog(QDialog):
     # Emit the new bidsmap when done (see docstring)
     done_edit = QtCore.pyqtSignal(dict)
 
-    def __init__(self, provenance: Path, modality: str, bidsmap: dict, template_bidsmap: dict, subprefix='sub-', sesprefix='ses-'):
+    def __init__(self, dataformat: str, provenance: Path, modality: str, bidsmap: dict, template_bidsmap: dict, subprefix='sub-', sesprefix='ses-'):
         super().__init__()
 
         # Set the data
+        self.dataformat       = dataformat
         self.source_modality  = modality
         self.target_modality  = modality
         self.current_modality = modality
@@ -837,7 +849,7 @@ class EditDialog(QDialog):
         self.template_bidsmap = template_bidsmap
         self.subprefix        = subprefix
         self.sesprefix        = sesprefix
-        for run in bidsmap[SOURCE][modality]:
+        for run in bidsmap[self.dataformat][modality]:
             if run['provenance'] == str(provenance):
                 self.source_run = run
         self.target_run = copy.deepcopy(self.source_run)
@@ -851,22 +863,22 @@ class EditDialog(QDialog):
         self.setWindowTitle('Edit BIDS mapping')
 
         # Get data for the tables
-        data_provenance, data_dicom, data_bids = self.get_editwin_data()
+        data_provenance, data_source, data_bids = self.get_editwin_data()
 
         # Set-up the provenance table
         self.provenance_label = QLabel()
         self.provenance_label.setText('Provenance')
         self.provenance_table = self.set_table(data_provenance)
         self.provenance_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.provenance_table.setToolTip(f"The {SOURCE} source file from which the attributes were taken (Copy: Ctrl+C)")
-        self.provenance_table.cellDoubleClicked.connect(self.inspect_dicomfile)
+        self.provenance_table.setToolTip(f"The {self.dataformat} source file from which the attributes were taken (Copy: Ctrl+C)")
+        self.provenance_table.cellDoubleClicked.connect(self.inspect_sourcefile)
 
-        # Set-up the DICOM table
-        self.dicom_label = QLabel()
-        self.dicom_label.setText('Attributes')
-        self.dicom_table = self.set_table(data_dicom, minimum=False)
-        self.dicom_table.cellChanged.connect(self.dicom_cell_was_changed)
-        self.dicom_table.setToolTip(f"The {SOURCE} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using '*string*' wildcards, see documentation), only change these if you know what you are doing!")
+        # Set-up the source table
+        self.source_label = QLabel()
+        self.source_label.setText('Attributes')
+        self.source_table = self.set_table(data_source, minimum=False)
+        self.source_table.cellChanged.connect(self.source_cell_changed)
+        self.source_table.setToolTip(f"The {self.dataformat} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using '*string*' wildcards, see documentation), only change these if you know what you are doing!")
 
         # Set-up the modality dropdown menu
         self.set_modality_dropdown_section()
@@ -877,7 +889,7 @@ class EditDialog(QDialog):
         self.bids_label.setText('Labels')
         self.bids_table = self.set_table(data_bids, minimum=False)
         self.bids_table.setToolTip(f"The BIDS key-value pairs that are used to construct the BIDS output name. Feel free to change the values except for the dynamic 'run' field, which should normally not be touched")
-        self.bids_table.cellChanged.connect(self.bids_cell_was_changed)
+        self.bids_table.cellChanged.connect(self.bids_cell_changed)
 
         # Set-up the BIDS outputname field
         self.set_bids_name_section()
@@ -886,13 +898,13 @@ class EditDialog(QDialog):
         sizepolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizepolicy.setHorizontalStretch(1)
 
-        groupbox1 = QGroupBox(SOURCE + ' input')
+        groupbox1 = QGroupBox(self.dataformat + ' input')
         groupbox1.setSizePolicy(sizepolicy)
         layout1 = QVBoxLayout()
         layout1.addWidget(self.provenance_label)
         layout1.addWidget(self.provenance_table)
-        layout1.addWidget(self.dicom_label)
-        layout1.addWidget(self.dicom_table)
+        layout1.addWidget(self.source_label)
+        layout1.addWidget(self.source_table)
         groupbox1.setLayout(layout1)
 
         groupbox2 = QGroupBox('BIDS output')
@@ -951,7 +963,7 @@ class EditDialog(QDialog):
         allowed_suffixes = {}
         for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
             allowed_suffixes[modality] = []
-            runs = self.template_bidsmap[SOURCE][modality]
+            runs = self.template_bidsmap[self.dataformat][modality]
             if not runs:
                 continue
             for run in runs:
@@ -969,7 +981,7 @@ class EditDialog(QDialog):
         """
         Derive the tabular data from the target_run, needed to render the edit window.
 
-        :return: (data_provenance, data_dicom, data_bids)
+        :return: (data_provenance, data_source, data_bids)
         """
         data_provenance = [
             [
@@ -994,9 +1006,9 @@ class EditDialog(QDialog):
             ]
         ]
 
-        data_dicom = []
+        data_source = []
         for key, value in self.target_run['attributes'].items():
-            data_dicom.append([
+            data_source.append([
                 {
                     'value': key,
                     'iseditable': False
@@ -1026,32 +1038,37 @@ class EditDialog(QDialog):
                     }
                 ])
 
-        return data_provenance, data_dicom, data_bids
+        return data_provenance, data_source, data_bids
 
-    def inspect_dicomfile(self, row: int=None, column: int=None):
+    def inspect_sourcefile(self, row: int=None, column: int=None):
         """When double clicked, show popup window. """
         if row == 1 and column == 1:
-            filename = Path(self.target_run['provenance'])
-            if bids.is_dicomfile(filename):
-                dicomdict = pydicom.dcmread(str(filename), force=True)
-                self.popup = InspectWindow(filename, dicomdict)
-                self.popup.exec()
+            sourcefile = Path(self.target_run['provenance'])
+            if bids.is_dicomfile(sourcefile):
+                sourcedata = pydicom.dcmread(str(sourcefile), force=True)
+            elif bids.is_parfile(sourcefile):
+                with open(sourcefile, 'r') as parfid:
+                    sourcedata = parfid.read()
             else:
-                LOGGER.warning(f"Could not read: {filename}")
+                LOGGER.warning(f"Could not read {self.dataformat} file: {sourcefile}")
+                return
+            self.popup = InspectWindow(sourcefile, sourcedata, self.dataformat)
+            self.popup.show()
+            self.popup.scrollbar.setValue(0)     # This can only be done after self.popup.show()
 
-    def dicom_cell_was_changed(self, row: int, column: int):
-        """DICOM attribute value has been changed. """
+    def source_cell_changed(self, row: int, column: int):
+        """Source attribute value has been changed. """
         if column == 1:
-            key = self.dicom_table.item(row, 0).text()
-            value = self.dicom_table.item(row, 1).text()
+            key = self.source_table.item(row, 0).text()
+            value = self.source_table.item(row, 1).text()
             oldvalue = self.target_run['attributes'].get(key, None)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS modality changes)
             if key and value!=oldvalue:
-                LOGGER.warning(f"Expert usage: User has set {SOURCE}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 self.target_run['attributes'][key] = value
 
-    def bids_cell_was_changed(self, row: int, column: int):
+    def bids_cell_changed(self, row: int, column: int):
         """BIDS attribute value has been changed. """
         if column == 1:
             key = self.bids_table.item(row, 0).text()
@@ -1142,7 +1159,7 @@ class EditDialog(QDialog):
         self.refresh_bidsname()
 
     def refresh_bidsname(self):
-        bidsname = (Path(self.target_modality)/bids.get_bidsname(self.target_bidsmap[SOURCE]['subject'], self.target_bidsmap[SOURCE]['session'],
+        bidsname = (Path(self.target_modality)/bids.get_bidsname(self.target_bidsmap[self.dataformat]['subject'], self.target_bidsmap[self.dataformat]['session'],
                                                                  self.target_modality, self.target_run, '', self.subprefix, self.sesprefix)).with_suffix('.*')
 
         f = self.view_bids_name.font()
@@ -1171,14 +1188,15 @@ class EditDialog(QDialog):
         """
 
         # Get the new target_run
-        self.target_run = bids.get_run(self.template_bidsmap, SOURCE, self.target_modality, suffix_idx, Path(self.target_run['provenance']))
+        self.target_run = bids.get_run(self.template_bidsmap, self.dataformat, self.target_modality, suffix_idx, Path(self.target_run['provenance']))
 
         # Insert the new target_run in our target_bidsmap
         self.target_bidsmap = bids.update_bidsmap(self.target_bidsmap,
                                                   self.current_modality,
                                                   Path(self.target_run['provenance']),
                                                   self.target_modality,
-                                                  self.target_run)
+                                                  self.target_run,
+                                                  self.dataformat)
 
         # Now that we have updated the bidsmap, we can also update the current_modality
         self.current_modality = self.target_modality
@@ -1200,11 +1218,11 @@ class EditDialog(QDialog):
             # Reset the modality dropdown menu
             self.modality_dropdown.setCurrentIndex(self.modality_dropdown.findText(self.target_modality))
 
-        # Refresh the DICOM attributes and BIDS values with data from the target_run
-        _, data_dicom, data_bids = self.get_editwin_data()
+        # Refresh the source attributes and BIDS values with data from the target_run
+        _, data_source, data_bids = self.get_editwin_data()
 
         # Refresh the existing tables
-        self.fill_table(self.dicom_table, data_dicom)
+        self.fill_table(self.source_table, data_source)
         self.fill_table(self.bids_table, data_bids)
 
         # Refresh the BIDS output name
@@ -1269,13 +1287,14 @@ class EditDialog(QDialog):
                                                   self.current_modality,
                                                   self.target_run['provenance'],
                                                   self.target_modality,
-                                                  self.target_run)
+                                                  self.target_run,
+                                                  self.dataformat)
 
         self.done_edit.emit(self.target_bidsmap)
         self.done(1)
 
 
-def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templatefile: str='', subprefix='sub-', sesprefix='ses-'):
+def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templatefile: str='', dataformat: str='DICOM', subprefix='sub-', sesprefix='ses-'):
     """
     Collects input and lanches the bidseditor GUI
 
@@ -1283,6 +1302,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     :param sourcefolder:
     :param bidsmapfile:
     :param templatefile:
+    :param dataformat:
     :param subprefix:
     :param sesprefix:
     :return:
@@ -1310,7 +1330,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
 
     # Parse the sourcefolder from the bidsmap provenance info
     if not sourcefolder.name:
-        for provenance in bids.dir_bidsmap(input_bidsmap, SOURCE):
+        for provenance in bids.dir_bidsmap(input_bidsmap, dataformat):
             sourcefolder = provenance.parents[3]
             LOGGER.info(f'Derived source-folder: {sourcefolder}')
             break
@@ -1320,7 +1340,7 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     app.setApplicationName(f'{bidsmapfile} - BIDS editor')
     mainwin = MainWindow()
     gui = Ui_MainWindow()
-    gui.setupUi(mainwin, bidsfolder, sourcefolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap, subprefix=subprefix, sesprefix=sesprefix)
+    gui.setupUi(mainwin, bidsfolder, sourcefolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap, dataformat, subprefix=subprefix, sesprefix=sesprefix)
     mainwin.show()
     app.exec()
 
@@ -1390,6 +1410,7 @@ def main():
     parser.add_argument('-s','--sourcefolder',  help='The source folder containing the raw data. If empty, it is derived from the bidsmap provenance information', default='')
     parser.add_argument('-b','--bidsmap',       help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
     parser.add_argument('-t','--template',      help='The bidsmap template with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap_template.yaml', default='bidsmap_template.yaml')
+    parser.add_argument('-d','--dataformat',    help='The format of the source data, e.g. DICOM or PAR. Default: DICOM', default='DICOM')
     parser.add_argument('-n','--subprefix',     help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',     help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     args = parser.parse_args()
@@ -1398,6 +1419,7 @@ def main():
                sourcefolder = args.sourcefolder,
                bidsmapfile  = args.bidsmap,
                templatefile = args.template,
+               dataformat   = args.dataformat,
                subprefix    = args.subprefix,
                sesprefix    = args.sesprefix)
 

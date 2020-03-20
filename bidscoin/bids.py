@@ -16,6 +16,7 @@ import logging
 import coloredlogs
 import subprocess
 import pydicom
+import nibabel
 import tempfile
 import tarfile
 import zipfile
@@ -46,9 +47,9 @@ def bidsversion() -> str:
     """
 
     with (Path(__file__).parent.parent/'bidsversion.txt').open('r') as fid:
-        version = fid.read().strip()
+        value = fid.read().strip()
 
-    return str(version)
+    return str(value)
 
 
 def version() -> str:
@@ -59,9 +60,9 @@ def version() -> str:
     """
 
     with (Path(__file__).parent.parent/'version.txt').open('r') as fid:
-        version = fid.read().strip()
+        value = fid.read().strip()
 
-    return str(version)
+    return str(value)
 
 
 def setup_logging(log_file: Path, debug: bool=False) -> logging.Logger:
@@ -293,16 +294,17 @@ def is_dicomfile_siemens(file: Path) -> bool:
 
 def is_parfile(file: Path) -> bool:
     """
-    Checks whether a file is a Philips PAR file
-
-    WIP!!!!!!
+    Rudimentary check (on file extensions and whether it exists) whether a file is a Philips PAR file
 
     :param file:    The full pathname of the file
     :return:        Returns true if a file is a Philips PAR-file
     """
 
-    # TODO: Returns true if filetype is PAR.
-    pass
+    # TODO: Implement a proper check, e.g. using nibabel
+    if file.is_file() and file.suffix in ('.PAR', '.par', '.XML', '.xml'):
+        return True
+    else:
+        return False
 
 
 def is_p7file(file: Path) -> bool:
@@ -323,33 +325,12 @@ def is_niftifile(file: Path) -> bool:
     """
     Checks whether a file is a nifti file
 
-    WIP!!!!!!
-
     :param file:    The full pathname of the file
     :return:        Returns true if a file is a nifti-file
     """
 
-    # TODO: Returns true if filetype is nifti.
-    pass
-
-
-def is_incomplete_acquisition(folder: Path) -> bool:
-    """
-    If a scan was aborted in the middle of the experiment, it is likely that images will be saved
-    anyway. We want to avoid converting these incomplete directories. This function checks the number
-    of measurements specified in the protocol against the number of imaging files in the folder.
-
-    :param folder:  The full pathname of the folder
-    :return:        Returns true if the acquisition was incomplete
-    """
-
-    dicomfile = get_dicomfile(folder)
-    nrep      = get_dicomfield('lRepetitions', dicomfile)
-    nfiles    = len(list(folder.iterdir()))     # TODO: filter out non-imaging files
-
-    if nrep and nrep > nfiles:
-        logger.warning(f"Incomplete acquisition found in: {folder}\n"
-                       f"Expected {nrep}, found {nfiles} dicomfiles")
+    # TODO: Implement a proper check, e.g. using nibabel
+    if file.is_file() and file.suffix in ('.nii', '.nii.gz', '.img', '.hdr'):
         return True
     else:
         return False
@@ -362,7 +343,7 @@ def unpack(folder: Path, subprefix: str='sub-', sesprefix: str='ses-', wildcard:
     :param folder:      The full pathname of the source folder
     :param subprefix:   The optional subprefix (e.g. 'sub-'). Used to parse the subid
     :param sesprefix:   The optional sesprefix (e.g. 'ses-'). Used to parse the sesid
-    :param str:         A glob search pattern to select the tarballed/zipped files
+    :param wildcard:    A glob search pattern to select the tarballed/zipped files
     :return:            A tuple with the full pathname of the source or temporary folder and a boolean that is True for the latter case (i.e. when data is unpacked in a temporary folder)
     """
 
@@ -418,7 +399,7 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
     idx = 0
     for file in sorted(folder.iterdir()):
         if file.stem.startswith('.'):
-            logger.warning(f'Ignoring hidden DICOM file: {file}')
+            logger.warning(f'Ignoring hidden file: {file}')
             continue
         if is_dicomfile(file):
             if idx == index:
@@ -426,11 +407,10 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
             else:
                 idx += 1
 
-    logger.warning(f"Cannot find >{index} dicom files in: {folder}")
-    return None
+    return Path()
 
 
-def get_parfile(folder: Path) -> Path:
+def get_parfiles(folder: Path) -> List[Path]:
     """
     Gets a Philips PAR-file from the folder
 
@@ -438,12 +418,12 @@ def get_parfile(folder: Path) -> Path:
     :return:        The filename of the first PAR-file in the folder.
     """
 
+    parfiles = []
     for file in sorted(folder.iterdir()):
         if is_parfile(file):
-            return file
+            parfiles.append(file)
 
-    logger.warning(f"Cannot find PAR files in: {folder}")
-    return None
+    return parfiles
 
 
 def get_p7file(folder: Path) -> Path:
@@ -455,7 +435,7 @@ def get_p7file(folder: Path) -> Path:
     """
 
     pass
-    return None
+    return Path()
 
 
 def get_niftifile(folder: Path) -> Path:
@@ -467,7 +447,7 @@ def get_niftifile(folder: Path) -> Path:
     """
 
     pass
-    return None
+    return Path()
 
 
 def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: bool=True) -> Tuple[dict, Path]:
@@ -597,10 +577,10 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
     :return:            Extracted tag-values from the dicom-file
     """
 
+    global _DICOMDICT_CACHE, _DICOMFILE_CACHE
+
     if not dicomfile.name:
         return ''
-
-    global _DICOMDICT_CACHE, _DICOMFILE_CACHE
 
     if not dicomfile.is_file():
         logger.warning(f"{dicomfile} not found")
@@ -643,7 +623,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                 value = None
 
     # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
-    if not value:
+    if value is None:
         return ''
 
     elif isinstance(value, int):
@@ -654,6 +634,120 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
     else:
         return str(value)
+
+
+# Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) _PARDICT_CACHE optimization
+_PARDICT_CACHE = None
+_PARFILE_CACHE = None
+def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
+    """
+    Extracts the value from a PAR/XML field
+
+    :param tagname: Name of the PAR/XML field
+    :param parfile: The full pathname of the PAR/XML file
+    :return:        Extracted tag-values from the PAR/XML file
+    """
+
+    global _PARDICT_CACHE, _PARFILE_CACHE
+
+    if not parfile.name:
+        return ''
+
+    if not parfile.is_file():
+        logger.warning(f"{parfile} not found")
+        value = None
+
+    elif not is_parfile(parfile):
+        logger.warning(f"{parfile} is not a PAR/XML file, cannot read {tagname}")
+        value = None
+
+    else:
+        try:
+            if parfile != _PARFILE_CACHE:
+                pardict = nibabel.parrec.parse_PAR_header(parfile.open('r'))
+                if 'series_type' not in pardict[0]:
+                    raise ValueError(f'Cannot read {parfile}')
+                _PARDICT_CACHE = pardict
+                _PARFILE_CACHE = parfile
+            else:
+                pardict = _PARDICT_CACHE
+            value = pardict[0].get(tagname)
+
+        except IOError:
+            logger.warning(f'Cannot read {tagname} from {parfile}')
+            value = None
+
+        except Exception:
+            logger.warning(f'Could not parse {tagname} from {parfile}')
+            value = None
+
+    # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
+    if value is None:
+        return ''
+
+    elif isinstance(value, int):
+        return int(value)
+
+    elif not isinstance(value, str):  # Assume it's a MultiValue type and flatten it
+        return str(value)
+
+    else:
+        return str(value)
+
+
+def get_dataformat(source: Path) -> str:
+    """
+    TODO: replace sourcefile with a class as soon as Pathlib supports subclassing
+
+    :param source:  The full pathname of a (e.g. DICOM or PAR/XML) session directory or of a source file
+    :return:        'DICOM' if sourcefile is a DICOM-file or 'PAR' when it is a PAR/XML file
+    """
+
+
+    # If source is a session directory, get a sourcefile
+    if source.is_dir():
+
+        # Try to see if we can find DICOM files
+        sourcedirs = lsdirs(source)
+        for sourcedir in sourcedirs:
+            sourcefile = get_dicomfile(sourcedir)
+            if sourcefile.name:
+                return 'DICOM'
+
+        # Try to see if we can find PAR/XML files
+        sourcefiles = get_parfiles(source)
+        if sourcefiles:
+            return 'PAR'
+
+    # If we don't know the dataformat, just try
+    if is_dicomfile(source):
+        return 'DICOM'
+
+    if is_parfile(source):
+        return 'PAR'
+
+    logger.warning(f"Cannot determine the dataformat of: {source}")
+    return ''
+
+
+def get_sourcefield(tagname: str, sourcefile: Path=Path(), dataformat: str='') -> Union[str, int]:
+    """
+    Wrapper around get_dicomfield and get_parfield
+
+    :param tagname:     Name of the field in the sourcefile
+    :param sourcefile:  The full pathname of the (e.g. DICOM or PAR/XML) sourcefile
+    :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
+    :return:
+    """
+
+    if not dataformat:
+        dataformat = get_dataformat(sourcefile)
+
+    if dataformat=='DICOM':
+        return get_dicomfield(tagname, sourcefile)
+
+    if dataformat=='PAR':
+        return get_parfield(tagname, sourcefile)
 
 
 def add_prefix(prefix: str, tag: str) -> str:
@@ -719,19 +813,19 @@ def cleanup_value(label: str) -> str:
     return re.sub(r'(?u)[^-\w.]', '', label)
 
 
-def dir_bidsmap(bidsmap: dict, source: str) -> List[Path]:
+def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
     """
-    Make a provenance list of all the runs in the bidsmap[source]
+    Make a provenance list of all the runs in the bidsmap[dataformat]
 
-    :param bidsmap: The bidsmap, with all the runs in it
-    :param source:  The information source in the bidsmap that is used, e.g. 'DICOM'
-    :return:        List of all provenances
+    :param bidsmap:     The bidsmap, with all the runs in it
+    :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
+    :return:            List of all provenances
     """
 
     provenance = []
     for modality in bidsmodalities + (unknownmodality, ignoremodality):
-        if modality in bidsmap[source] and bidsmap[source][modality]:
-            for run in bidsmap[source][modality]:
+        if modality in bidsmap[dataformat] and bidsmap[dataformat][modality]:
+            for run in bidsmap[dataformat][modality]:
                 provenance.append(Path(run['provenance']))
                 if not run['provenance']:
                     logger.warning(f'The bidsmap run {modality} run does not contain provenance data')
@@ -741,70 +835,79 @@ def dir_bidsmap(bidsmap: dict, source: str) -> List[Path]:
     return provenance
 
 
-def get_run(bidsmap: dict, source: str, modality: str, suffix_idx: Union[int, str], dicomfile: Path='') -> dict:
+def get_run(bidsmap: dict, dataformat: str, modality: str, suffix_idx: Union[int, str], sourcefile: Path='') -> dict:
     """
-    Find the (first) run in bidsmap[source][bidsmodality] with run['bids']['suffix_idx'] == suffix_idx
+    Find the (first) run in bidsmap[dataformat][bidsmodality] with run['bids']['suffix_idx'] == suffix_idx
 
     :param bidsmap:     This could be a template bidsmap, with all options, BIDS labels and attributes, etc
-    :param source:      The information source in the bidsmap that is used, e.g. 'DICOM'
+    :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
     :param modality:    The modality in which a matching run is searched for (e.g. 'anat')
     :param suffix_idx:  The name of the suffix that is searched for (e.g. 'bold') or the modality index number
-    :param dicomfile:   The name of the dicomfile. If given, the DICOM values are read from file
-    :return:            The clean (filled) run item in the bidsmap[source][bidsmodality] with the matching suffix_idx, otherwise None
+    :param sourcefile:  The name of the sourcefile. If given, the bidsmap values are read from file
+    :return:            The clean (filled) run item in the bidsmap[dataformat][bidsmodality] with the matching suffix_idx, otherwise None
     """
 
-    for index, run in enumerate(bidsmap[source][modality]):
+    if not dataformat:
+        dataformat = get_dataformat(sourcefile)
+
+    for index, run in enumerate(bidsmap[dataformat][modality]):
         if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
             run_ = dict(provenance={}, attributes={}, bids={})
 
             for attrkey, attrvalue in run['attributes'].items():
-                if dicomfile.name:
-                    run_['attributes'][attrkey] = get_dicomfield(attrkey, dicomfile)
-                    run_['provenance']          = str(dicomfile)
+                if sourcefile.name:
+                    run_['attributes'][attrkey] = get_sourcefield(attrkey, sourcefile, dataformat)
+                    run_['provenance']          = str(sourcefile)
                 else:
                     run_['attributes'][attrkey] = attrvalue
 
             for bidskey, bidsvalue in run['bids'].items():
-                if dicomfile.name:
-                    run_['bids'][bidskey] = get_dynamic_value(bidsvalue, dicomfile)
+                if sourcefile.name:
+                    run_['bids'][bidskey] = get_dynamic_value(bidsvalue, sourcefile)
                 else:
                     run_['bids'][bidskey] = bidsvalue
 
             return run_
 
-    logger.error(f"'{modality}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{source}']")
+    logger.error(f"'{modality}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{dataformat}']")
 
 
-def delete_run(bidsmap: dict, source: str, modality: str, provenance: Path) -> dict:
+def delete_run(bidsmap: dict, dataformat: str, modality: str, provenance: Path) -> dict:
     """
     Delete a run from the BIDS map
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
-    :param source:      The information source in the bidsmap that is used, e.g. 'DICOM'
-    :param modality:    The modality in the source that is used, e.g. 'anat'
+    :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
+    :param modality:    The modality that is used, e.g. 'anat'
     :param provenance:  The unique provance that is use to identify the run
     :return:            The new bidsmap
     """
 
-    for index, run in enumerate(bidsmap[source][modality]):
+    if not dataformat:
+        dataformat = get_dataformat(provenance)
+
+    for index, run in enumerate(bidsmap[dataformat][modality]):
         if run['provenance'] == str(provenance):
-            del bidsmap[source][modality][index]
+            del bidsmap[dataformat][modality][index]
 
     return bidsmap
 
 
-def append_run(bidsmap: dict, source: str, modality: str, run: dict, clean: bool=True) -> dict:
+def append_run(bidsmap: dict, dataformat: str, modality: str, run: dict, clean: bool=True) -> dict:
     """
     Append a run to the BIDS map
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
-    :param source:      The information source in the bidsmap that is used, e.g. 'DICOM'
-    :param modality:    The modality in the source that is used, e.g. 'anat'
-    :param run:         The run (listitem) that is appenden to the modality
+    :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
+    :param modality:    The modality that is used, e.g. 'anat'
+    :param run:         The run (listitem) that is appended to the modality
     :param clean:       A boolean to clean-up commentedMap fields
     :return:            The new bidsmap
     """
+
+    if not dataformat:
+        dataformat = get_dataformat(run['provenance'])
 
     # Copy the values from the run to an empty dict
     if clean:
@@ -819,15 +922,15 @@ def append_run(bidsmap: dict, source: str, modality: str, run: dict, clean: bool
 
         run = run_
 
-    if bidsmap[source][modality] is None:
-        bidsmap[source][modality] = [run]
+    if bidsmap[dataformat][modality] is None:
+        bidsmap[dataformat][modality] = [run]
     else:
-        bidsmap[source][modality].append(run)
+        bidsmap[dataformat][modality].append(run)
 
     return bidsmap
 
 
-def update_bidsmap(bidsmap: dict, source_modality: str, provenance: Path, target_modality: str, run: dict, source: str= 'DICOM', clean: bool=True) -> dict:
+def update_bidsmap(bidsmap: dict, source_modality: str, provenance: Path, target_modality: str, run: dict, dataformat: str, clean: bool=True) -> dict:
     """
     Update the BIDS map if the modality changes:
     1. Remove the source run from the source modality section
@@ -842,33 +945,36 @@ def update_bidsmap(bidsmap: dict, source_modality: str, provenance: Path, target
     :param provenance:          The unique provance that is use to identify the run
     :param target_modality:     The modality name what is should be, e.g. 'dwi'
     :param run:                 The run item that is being moved
-    :param source:              The name of the information source, e.g. 'DICOM'
+    :param dataformat:          The name of the dataformat, e.g. 'DICOM'
     :param clean:               A boolean that is passed to bids.append_run (telling it to clean-up commentedMap fields)
     :return:
     """
 
-    num_runs_in = len(dir_bidsmap(bidsmap, source))
+    if not dataformat:
+        dataformat = get_dataformat(run['provenance'])
+
+    num_runs_in = len(dir_bidsmap(bidsmap, dataformat))
 
     # Warn the user if the target run already exists when the run is moved to another modality
     if source_modality!=target_modality:
-        if exist_run(bidsmap, source, target_modality, run):
+        if exist_run(bidsmap, dataformat, target_modality, run):
             logger.warning(f'That run from {source_modality} already exists in {target_modality}...')
 
         # Delete the source run
-        bidsmap = delete_run(bidsmap, source, source_modality, provenance)
+        bidsmap = delete_run(bidsmap, dataformat, source_modality, provenance)
 
         # Append the (cleaned-up) target run
-        bidsmap = append_run(bidsmap, source, target_modality, run, clean)
+        bidsmap = append_run(bidsmap, dataformat, target_modality, run, clean)
 
     else:
-        for index, run_ in enumerate(bidsmap[source][target_modality]):
+        for index, run_ in enumerate(bidsmap[dataformat][target_modality]):
             if run_['provenance'] == str(provenance):
-                bidsmap[source][target_modality][index] = run
+                bidsmap[dataformat][target_modality][index] = run
                 break
 
-    num_runs_out = len(dir_bidsmap(bidsmap, source))
+    num_runs_out = len(dir_bidsmap(bidsmap, dataformat))
     if num_runs_out != num_runs_in:
-        logger.error(f"Number of runs in bidsmap['{source}'] changed unexpectedly: {num_runs_in} -> {num_runs_out}")
+        logger.error(f"Number of runs in bidsmap['{dataformat}'] changed unexpectedly: {num_runs_in} -> {num_runs_out}")
 
     return bidsmap
 
@@ -941,27 +1047,30 @@ def match_attribute(longvalue, values) -> bool:
     return False
 
 
-def exist_run(bidsmap: dict, source: str, modality: str, run_item: dict, matchbidslabels: bool=False) -> bool:
+def exist_run(bidsmap: dict, dataformat: str, modality: str, run_item: dict, matchbidslabels: bool=False) -> bool:
     """
     Checks if there is already an entry in runlist with the same attributes and, optionally, bids values as in the input run
 
     :param bidsmap:         Full bidsmap data structure, with all options, BIDS labels and attributes, etc
-    :param source:          The information source in the bidsmap that is used, e.g. 'DICOM'
+    :param dataformat:      The information source in the bidsmap that is used, e.g. 'DICOM'
     :param modality:        The modality in the source that is used, e.g. 'anat'. Empty values will search through all modalities
     :param run_item:        The run (listitem) that is searched for in the modality
     :param matchbidslabels: If True, also matches the BIDS-labels, otherwise only run['attributes']
     :return:                True if the run exists in runlist
     """
 
+    if not dataformat:
+        dataformat = get_dataformat(run_item['provenance'])
+
     if not modality:
         for modality in bidsmodalities + (unknownmodality, ignoremodality):
-            if exist_run(bidsmap, source, modality, run_item, matchbidslabels):
+            if exist_run(bidsmap, dataformat, modality, run_item, matchbidslabels):
                 return True
 
-    if not bidsmap[source] or not bidsmap[source][modality]:
+    if not bidsmap[dataformat] or not bidsmap[dataformat][modality]:
         return False
 
-    for run in bidsmap[source][modality]:
+    for run in bidsmap[dataformat][modality]:
 
         # Begin with match = False only if all attributes are empty
         match = any([run_item['attributes'][key] is not None for key in run_item['attributes']])
@@ -988,67 +1097,70 @@ def exist_run(bidsmap: dict, source: str, modality: str, run_item: dict, matchbi
     return False
 
 
-def get_matching_run(dicomfile: Path, bidsmap: dict, modalities: tuple = bidsmodalities + (ignoremodality, unknownmodality)) -> Tuple[dict, str, int]:
+def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, modalities: tuple = bidsmodalities + (ignoremodality, unknownmodality)) -> Tuple[dict, str, int]:
     """
     Find the first run in the bidsmap with dicom attributes that match with the dicom file. Then update the (dynamic) bids values (values are cleaned-up to be BIDS-valid)
 
-    :param dicomfile:   The full pathname of the dicom-file
+    :param sourcefile:  The full pathname of the source dicom-file or PAR/XML file
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
     :param modalities:  The modality in which a matching run is searched for. Default = bidsmodalities + (ignoremodality, unknownmodality)
     :return:            (run, modality, index) The matching and filled-in / cleaned run item, modality and list index as in run = bidsmap[DICOM][modality][index]
                         modality = bids.unknownmodality and index = None if there is no match, the run is still populated with info from the dicom-file
     """
 
-    source = 'DICOM'                                                                                        # TODO: generalize for non-DICOM (dicomfile -> file)?
-    run_   = dict(provenance={}, attributes={}, bids={})
+    if not dataformat:
+        dataformat = get_dataformat(sourcefile)
 
     # Loop through all bidsmodalities and runs; all info goes into run_
+    run_ = dict(provenance={}, attributes={}, bids={})
     for modality in modalities:
-        if bidsmap[source][modality] is None: continue
 
-        for index, run in enumerate(bidsmap[source][modality]):
+        if bidsmap[dataformat][modality] is None: continue
+
+        for index, run in enumerate(bidsmap[dataformat][modality]):
 
             run_  = dict(provenance={}, attributes={}, bids={})                                             # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
             match = any([run['attributes'][attrkey] is not None for attrkey in run['attributes']])          # Normally match==True, but make match==False if all attributes are empty
 
-            # Try to see if the dicomfile matches all of the attributes and fill all of them
+            # Try to see if the sourcefile matches all of the attributes and fill all of them
             for attrkey, attrvalue in run['attributes'].items():
 
-                # Check if the attribute value matches with the info from the dicomfile
-                dicomvalue = get_dicomfield(attrkey, dicomfile)
+                # Check if the attribute value matches with the info from the sourcefile
+                sourcevalue = get_sourcefield(attrkey, sourcefile, dataformat)
                 if attrvalue:
-                    match = match and match_attribute(dicomvalue, attrvalue)
+                    match = match and match_attribute(sourcevalue, attrvalue)
 
-                # Fill the empty attribute with the info from the dicomfile
-                run_['attributes'][attrkey] = dicomvalue
+                # Fill the empty attribute with the info from the sourcefile
+                run_['attributes'][attrkey] = sourcevalue
 
             # Try to fill the bids-labels
             for bidskey, bidsvalue in run['bids'].items():
 
                 # Replace the dynamic bids values
-                run_['bids'][bidskey] = get_dynamic_value(bidsvalue, dicomfile)
+                run_['bids'][bidskey] = get_dynamic_value(bidsvalue, sourcefile)
 
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 run_ = strip_suffix(run_)
 
             # Stop searching the bidsmap if we have a match. TODO: check if there are more matches (i.e. conflicts)
             if match:
-                run_['provenance'] = str(dicomfile)
+                run_['provenance'] = str(sourcefile)
 
                 return run_, modality, index
 
     # We don't have a match (all tests failed, so modality should be the *last* one, i.e. unknownmodality)
-    logger.debug(f"Could not find a matching run in the bidsmap for {dicomfile} -> {modality}")
-    run_['provenance'] = str(dicomfile)
+    logger.debug(f"Could not find a matching run in the bidsmap for {sourcefile} -> {modality}")
+    run_['provenance'] = str(sourcefile)
 
     return run_, modality, None
 
 
-def get_subid_sesid(bidsfile: Path, subid: str= '<<SourceFilePath>>', sesid: str= '<<SourceFilePath>>', subprefix: str= 'sub-', sesprefix: str= 'ses-') -> Tuple[str, str]:
+def get_subid_sesid(sourcefile: Path, subid: str= '<<SourceFilePath>>', sesid: str= '<<SourceFilePath>>', subprefix: str= 'sub-', sesprefix: str= 'ses-') -> Tuple[str, str]:
     """
     Extract the cleaned-up subid and sesid from the pathname if subid/sesid == '<<SourceFilePath>>', or from the dicom header
 
-    :param bidsfile:   The full pathname of the file. If it is a DICOM file, the sub/ses values are read from the DICOM field
+    :param sourcefile: The full pathname of the file. If it is a DICOM file, the sub/ses values are read from the DICOM field
     :param subid:      The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001') or DICOM field. Can be left empty
     :param sesid:      The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01') or DICOM field
     :param subprefix:  The optional subprefix (e.g. 'sub-'). Used to parse the sub-value from the provenance as default subid
@@ -1058,17 +1170,17 @@ def get_subid_sesid(bidsfile: Path, subid: str= '<<SourceFilePath>>', sesid: str
 
     # Add default value for subid and sesid (e.g. for the bidseditor)
     if subid=='<<SourceFilePath>>':
-        subid = [part for part in bidsfile.parent.parts if part.startswith(subprefix)][-1]
+        subid = [part for part in sourcefile.parent.parts if part.startswith(subprefix)][-1]
     else:
-        subid = get_dynamic_value(subid, bidsfile)
+        subid = get_dynamic_value(subid, sourcefile)
     if sesid=='<<SourceFilePath>>':
-        sesid = [part for part in bidsfile.parent.parts if part.startswith(sesprefix)]
+        sesid = [part for part in sourcefile.parent.parts if part.startswith(sesprefix)]
         if sesid:
             sesid = sesid[-1]
         else:
             sesid = ''
     else:
-        sesid = get_dynamic_value(sesid, bidsfile)
+        sesid = get_dynamic_value(sesid, sourcefile)
 
     # Add sub- and ses- prefixes if they are not there
     subid = 'sub-' + cleanup_value(re.sub(f'^{subprefix}', '', subid))
@@ -1211,7 +1323,7 @@ def get_dynamic_value(bidsvalue: str, sourcefile: Path) -> str:
     but not with '<<' and '>>'
 
     :param bidsvalue:   The value from the BIDS key-value pair
-    :param sourcefile:  The source (DICOM) file from which the attribute is read
+    :param sourcefile:  The source (e.g. DICOM or PAR/XML) file from which the attribute is read
     :return:            Updated bidsvalue (if possible, otherwise the original bidsvalue is returned)
     """
 
@@ -1221,11 +1333,11 @@ def get_dynamic_value(bidsvalue: str, sourcefile: Path) -> str:
 
     # Fill any bids-label with the <annotated> dicom attribute
     if bidsvalue.startswith('<') and bidsvalue.endswith('>') and sourcefile.name:
-        dicomvalue = get_dicomfield(bidsvalue[1:-1], sourcefile)
-        if not dicomvalue:
+        sourcevalue = get_sourcefield(bidsvalue[1:-1], sourcefile)
+        if not sourcevalue:
             return bidsvalue
         else:
-            bidsvalue = cleanup_value(str(dicomvalue))
+            bidsvalue = cleanup_value(str(sourcevalue))
 
     return bidsvalue
 
