@@ -495,7 +495,7 @@ PAR:
       exam_name: ~
       protocol_name: ['*mprage*', '*MPRAGE*', '*MPRage*', '*t1w*', '*T1w*', '*T1*']
       tech: ~
-      diffusion: ~
+      diffusion: 0
       fov: ~
       scan_resolution: ~
       scan_mode: ~
@@ -593,7 +593,7 @@ PAR:
       exam_name: ~
       protocol_name: ['*fmri*', '*fMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
       tech: ~
-      diffusion: ~
+      diffusion: 0
       fov: ~
       scan_resolution: ~
       scan_mode: ~
@@ -676,7 +676,7 @@ PAR:
       exam_name: ~
       protocol_name: ~
       tech: ~
-      diffusion: ~
+      diffusion: 0
       fov: ~
       scan_resolution: ~
       scan_mode: ~
