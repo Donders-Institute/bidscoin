@@ -13,6 +13,7 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+from pathlib import Path
 
 
 # -- Project information -----------------------------------------------------
@@ -22,7 +23,9 @@ copyright = '2020, Marcel Zwiers'
 author = 'Marcel Zwiers'
 
 # The full version, including alpha/beta/rc tags
-release = '3.0'
+# Read the version from file
+with open(Path(__file__).parent.parent/'version.txt') as fid:
+    release = fid.read().strip()
 
 
 # -- General configuration ---------------------------------------------------
