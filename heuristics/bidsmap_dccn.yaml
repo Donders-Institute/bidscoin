@@ -67,7 +67,7 @@ DICOM:
     provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
   - attributes:
       <<: *anatattributes_dicom
-      SeriesDescription: ['*mprage*', '*MPRAGE*', '*t1w*', '*T1w*', '*T1*']
+      SeriesDescription: ['*mprage*', '*MPRAGE*', '*MPRage*', '*t1w*', '*T1w*', '*T1*']
       MRAcquisitionType: 3D
     bids:
       <<: *anatbids_dicom
@@ -449,7 +449,7 @@ DICOM:
   - provenance: ~
     attributes: &leaveout_attributes_dicom
       Modality: ~
-      ProtocolName: ['*Scout*', '*scout*', '*localizer*']
+      ProtocolName: ['*Scout*', '*scout*', '*localizer*', '*Localizer*']
       SeriesDescription: ~
       ImageType: ~
       SequenceName: ~
@@ -493,7 +493,7 @@ PAR:
     attributes: &anatattributes_par
       series_type: ~
       exam_name: ~
-      protocol_name: ['*t1w*', '*T1w*', '*T1*']
+      protocol_name: ['*mprage*', '*MPRAGE*', '*MPRage*', '*t1w*', '*T1w*', '*T1*']
       tech: ~
       diffusion: ~
       fov: ~
@@ -819,7 +819,7 @@ PAR:
     attributes:
       series_type: ~
       exam_name: ~
-      protocol_name: ['*Scout*', '*scout*', '*localizer*']
+      protocol_name: ['*Scout*', '*scout*', '*localizer*', '*Localizer*']
       tech: ~
       diffusion: ~
       fov: ~
