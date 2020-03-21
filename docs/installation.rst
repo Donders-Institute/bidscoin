@@ -3,7 +3,7 @@ BIDScoin installation
 
 BIDScoin can be installed and should work on linux, windows and,
 presumably, on OS-X computers (this latter option has not been tested)
-that satisfy the `system requirements`_
+that satisfy the system requirements
 
 System requirements
 -------------------
@@ -46,12 +46,12 @@ option):
    pip install -e bidscoin
 
 If the installation somehow failed, you can have a look at the packages
-in `requirements.txt`_ and try to find another way to install them
+in ``requirements.txt`` and try to find another way to install them
 beforehand
 
 After a succesful installation, if needed, edit the
 ``Options : dcm2niix : path`` value in the
-`[bidscoin]/heuristics/bidsmap_template.yaml`_ file according to your
+``[bidscoin]/heuristics/bidsmap_template.yaml`` file according to your
 system configuration (you may want to use the ``-e`` install option for
 this).
 
@@ -60,15 +60,11 @@ Updating
 
 Run the pip command as before with the additional ``--upgrade`` option
 and redo any edits you made to your ``bidsmap_template.yaml`` file. The
-`bidsmap-files`_ are not garanteed to be compatible between different
-version, so it may be necessary to re-run the ``bidstrainer.py`` and the
-``bidsmapper.py`` commands before using ``bidscoiner.py``.
+bidsmap-files are not garanteed to be compatible between different
+version, so it may be necessary to re-run the ``bidsmapper.py`` command
+before using ``bidscoiner.py``.
 
-.. _system requirements: #system-requirements
 .. _dcm2niix: https://github.com/rordenlab/dcm2niix
 .. _virtual: https://docs.python.org/3.6/tutorial/venv.html
 .. _conda: https://conda.io/docs/user-guide/tasks/manage-environments.html
 .. _download: https://github.com/Donders-Institute/bidscoin
-.. _requirements.txt: ../requirements.txt
-.. _[bidscoin]/heuristics/bidsmap_template.yaml: ../heuristics/bidsmap_template.yaml
-.. _bidsmap-files: #the-bidsmap-files
