@@ -33,7 +33,7 @@ For information on the BIDScoin installation and requirements, see the [installa
 ## The BIDScoin workflow
 
 ### Required source data structure
-BIDScoin will take your (raw) source data as well as a YAML file with the key-value mapping (dictionary) information as input, and returns a BIDS folder as output. The source data input folder should be organised according to a `/sub-identifier/[ses-identifier]/seriesfolder/dicomfile` structure. This data organization is how users receive their data from the (Siemens) scanners at the [DCCN](https://www.ru.nl/donders/) (NB: the `ses-identifier` sub-folder is optional and can be left out).
+BIDScoin will take your (raw) source data as well as a YAML file with the key-value mapping (dictionary) information as input, and returns a BIDS folder as output. The source data input folder should be organised according to a `/sub-identifier/[ses-identifier]/seriesfolder/dicomfiles` structure. This data organization is how users receive their data from the (Siemens) scanners at the [DCCN](https://www.ru.nl/donders/) (NB: the `ses-identifier` sub-folder is optional and can be left out).
 
 - If your data is not already organized in this way, you can use the handy [dicomsort](./bidscoin/dicomsort.py) command-line utility to move your unordered or DICOMDIR ordered DICOM-files into a `seriesfolder` organization with the DICOM series-folders being named [SeriesNumber]-[SeriesDescription]. Series folders contain a single data type and are typically acquired in a single run.
  
@@ -49,21 +49,24 @@ Having an organized source data folder, the actual data-set conversion to BIDS i
 
 #### Step 1a: Running the bidsmapper
 
-    usage: bidsmapper [-h] [-b BIDSMAP] [-t TEMPLATE] [-n SUBPREFIX]
-                      [-m SESPREFIX] [-i {0,1,2}] [-v]
-                      sourcefolder bidsfolder
+    usage: bidsmapper.py [-h] [-b BIDSMAP] [-t TEMPLATE] [-n SUBPREFIX]
+                         [-m SESPREFIX] [-i {0,1,2}] [-v]
+                         sourcefolder bidsfolder
     
     Creates a bidsmap.yaml YAML file in the bidsfolder/code/bidscoin that maps the information
     from all raw source data to the BIDS labels. You can check and edit the bidsmap file with
-    the bidseditor (but also with any text-editor) before passing it to the bidscoiner
+    the bidseditor (but also with any text-editor) before passing it to the bidscoiner. See the
+    bidseditor help for more information and useful tips for running the bidsmapper in interactive
+    mode (which is the default).
+    
     N.B.: Institute users may want to use a site-customized template bidsmap (see the
     --template option). The bidsmap_dccn template from the Donders Institute can serve as
     an example (or may even mostly work for other institutes out of the box).
     
     positional arguments:
-      sourcefolder          The source folder containing the raw data in
-                            sub-#/ses-#/run format (or specify --subprefix and
-                            --sesprefix for different prefixes)
+      sourcefolder          The study root folder containing the raw data in
+                            sub-#/[ses-#/]run subfolders (or specify --subprefix
+                            and --sesprefix for different prefixes)
       bidsfolder            The destination folder with the (future) bids data and
                             the bidsfolder/code/bidscoin/bidsmap.yaml output file
     
