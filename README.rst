@@ -4,11 +4,12 @@ BIDScoin: Coin your imaging data to BIDS
 .. image:: ./_static/bidscoin_logo.png
   :height: 325px
   :align: right
-  :alt: .
+  :alt: See: https://bidscoin.readthedocs.io
+  :target: https://bidscoin.readthedocs.io
 
 .. raw:: html
 
-   <img name="bidscoin-logo" src="./docs/_static/bidscoin_logo.png" height="325px" align="right" alt=" ">
+   <img name="bidscoin-logo" src="./docs/_static/bidscoin_logo.png" height="325px" align="right" alt=" " src="https://bidscoin.readthedocs.io">
 
 |PyPI version| |PyPI - Python Version|
 
