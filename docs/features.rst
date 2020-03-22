@@ -11,6 +11,7 @@ BIDScoin functionality / TODO
 -  [x] Multi-coil data\*
 -  [x] PET data\*
 -  [ ] Stimulus / behavioural logfiles
+
    ``* = Only for DICOM source data``
 
     Are you a python programmer with an interest in BIDS who knows all
