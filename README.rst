@@ -4,7 +4,7 @@ BIDScoin: Coin your imaging data to BIDS
 |PyPI version| |PyPI - Python Version|
 
 .. image:: ./docs/_static/bidscoin_logo.png
-   :height: 125
+   :height: 325px
    :alt: A BIDS converter toolkit
    :align: right
 
