@@ -38,9 +38,7 @@ Because all the mapping information can be edited with a graphical user
 interface, BIDScoin requires no programming knowledge in order to use
 it.
 
-::
-
-   The full BIDScoin documentation is hosted at `Read the Docs <https://bidscoin.readthedocs.io>`__.
+.. note:: **The full BIDScoin documentation is hosted at `Read the Docs <https://bidscoin.readthedocs.io>`__ **
 
 .. |PyPI version| image:: https://badge.fury.io/py/bidscoin.svg
    :target: https://badge.fury.io/py/bidscoin
