@@ -494,5 +494,5 @@ series in the ``raw`` folder
 .. |PyPI version| image:: https://badge.fury.io/py/bidscoin.svg
    :target: https://badge.fury.io/py/bidscoin
 .. |PyPI - Python Version| image:: https://img.shields.io/pypi/pyversions/bidscoin.svg
-.. |Bidseditor main window| image:: ./docs/bidseditor_main.png
-.. |Bidseditor edit window| image:: ./docs/bidseditor_edit.png
+.. |Bidseditor main window| image:: ./docs/_static/bidseditor_main.png
+.. |Bidseditor edit window| image:: ./docs/_static/bidseditor_edit.png
