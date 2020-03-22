@@ -273,3 +273,5 @@ Step 2: Running the bidscoiner
       bidscoiner /project/foo/raw /project/foo/bids
       bidscoiner -f /project/foo/raw /project/foo/bids -p sub-009 sub-030
 
+.. |Bidseditor main window| image:: ./docs/bidseditor_main.png
+.. |Bidseditor edit window| image:: ./docs/bidseditor_edit.png

@@ -40,8 +40,9 @@ it.
 
 .. note:: For the the full documentation visit the `BIDScoin readthedocs page <https://bidscoin.readthedocs.io>`__.
 
--- image:: ./docs/_static/bidseditor_main.png
+\ |Bidseditor main window|\ 
 
 .. |PyPI version| image:: https://badge.fury.io/py/bidscoin.svg
    :target: https://badge.fury.io/py/bidscoin
 .. |PyPI - Python Version| image:: https://img.shields.io/pypi/pyversions/bidscoin.svg
+.. |Bidseditor main window| image:: ./docs/bidseditor_main.png
