@@ -4,7 +4,7 @@ BIDScoin: Coin your imaging data to BIDS
 .. image:: ./_static/bidscoin_logo.png
   :height: 325px
   :align: right
-  :alt: " "
+  :alt: .
 
 .. raw:: html
 
