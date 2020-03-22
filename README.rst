@@ -3,7 +3,7 @@ BIDScoin: Coin your imaging data to BIDS
 
 .. raw:: html
 
-   <img name="bidscoin-logo" src="./_static/bidscoin_logo.png" height="325" align="right">
+   <img name="bidscoin-logo" src="./_static/bidscoin_logo.png" height="325px" align="right">
 
 |PyPI version| |PyPI - Python Version|
 
