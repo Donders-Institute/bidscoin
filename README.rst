@@ -68,9 +68,8 @@ BIDScoin functionality / TODO
 
 Note:
 
-   **The full BIDScoin documentation is hosted at** `Read the Docs <https://bidscoin.readthedocs.io>`__
-
-   **Please report any issues at** `github <https://github.com/Donders-Institute/bidscoin/issues>`__
+|   **The full BIDScoin documentation is hosted at** `Read the Docs <https://bidscoin.readthedocs.io>`__
+|   **Issues can be reported at** `github <https://github.com/Donders-Institute/bidscoin/issues>`__
 
 .. |PyPI version| image:: https://badge.fury.io/py/bidscoin.svg
    :target: https://badge.fury.io/py/bidscoin
