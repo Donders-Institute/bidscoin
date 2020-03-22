@@ -5,7 +5,7 @@ BIDScoin: Coin your imaging data to BIDS
 
 .. raw html
 
-   <img name="bidscoin-logo" src="./docs/bidscoin_logo.png" alt="A BIDS converter toolkit" height="325" align="right">
+   <img name="bidscoin-logo" src="./docs/_static/bidscoin_logo.png" alt="A BIDS converter toolkit" height="325" align="right">
 
 BIDScoin is a user friendly
 `open-source <https://github.com/Donders-Institute/bidscoin>`__ python
@@ -26,10 +26,6 @@ that can be used to map the source data to BIDS are:
 3. Information in the file structure (file- and/or directory names, e.g.
    number of files)
 
-    NB: Currently, the DICOM support (option 1) has been fully
-    implemented, but the support for option 2 and 3 is planned for
-    `future <#bidscoin-functionality--todo>`__ releases.
-
 The mapping information is stored as key-value pairs in the human
 readable and widely supported `YAML <http://yaml.org/>`__ files. The
 nifti- and json-files are generated with
@@ -42,7 +38,7 @@ Because all the mapping information can be edited with a graphical user
 interface, BIDScoin requires no programming knowledge in order to use
 it.
 
-For the the full documentation visit the `BIDScoin readthedocs page <https://bidscoin.readthedocs.io>`__.
+.. Note:: For the the full documentation visit the `BIDScoin readthedocs page <https://bidscoin.readthedocs.io>`__.
 
 .. |PyPI version| image:: https://badge.fury.io/py/bidscoin.svg
    :target: https://badge.fury.io/py/bidscoin
