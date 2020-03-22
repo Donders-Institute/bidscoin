@@ -39,7 +39,7 @@ interface, BIDScoin requires no programming knowledge in order to use
 it.
 
 BIDScoin functionality / TODO
-=============================
+-----------------------------
 
 -  [x] DICOM source data
 -  [x] PAR / REC source data
@@ -61,6 +61,7 @@ BIDScoin functionality / TODO
     contribute to this project on https://github.com/Donders-Institute/bidscoin.
 
 Note:
+-----
 
    **The full BIDScoin documentation is hosted at** `Read the Docs <https://bidscoin.readthedocs.io>`__
 
