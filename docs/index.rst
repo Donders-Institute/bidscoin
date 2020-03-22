@@ -3,11 +3,10 @@
 .. toctree::
    :maxdepth: 2
 
-   features
    installation
-   options
    preparation
    workflow
    finalizing
+   options
    tutorial
 

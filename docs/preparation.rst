@@ -1,5 +1,5 @@
-Source data structure
-=====================
+Data preparation
+================
 
 BIDScoin will take your (raw) source data as well as a YAML file with
 the key-value mapping (dictionary) information as input, and returns a
