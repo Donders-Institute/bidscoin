@@ -58,3 +58,5 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 html_static_path = ['_static']
 
 master_doc = 'index'
+
+html_logo = "./_static/bidscoin_logo.png"
