@@ -1,11 +1,11 @@
 BIDScoin: Coin your imaging data to BIDS
 ========================================
 
-|PyPI version| |PyPI - Python Version|
-
 .. raw:: html
 
-   <img name="bidscoin-logo" src="./docs/_static/bidscoin_logo.png" alt="A BIDS converter toolkit" height="325" align="right">
+   <img name="bidscoin-logo" src="./docs/_static/bidscoin_logo.png" height="325" align="right">
+
+|PyPI version| |PyPI - Python Version|
 
 BIDScoin is a user friendly
 `open-source <https://github.com/Donders-Institute/bidscoin>`__ python
