@@ -4,11 +4,11 @@ BIDScoin: Coin your imaging data to BIDS
 .. image:: ./_static/bidscoin_logo.png
   :height: 325px
   :align: right
-  :alt: 
+  :alt: Radboud University
 
 .. raw:: html
 
-   <img name="bidscoin-logo" src="./docs/_static/bidscoin_logo.png" height="325px" align="right" alt="">
+   <img name="bidscoin-logo" src="./docs/_static/bidscoin_logo.png" height="325px" align="right" alt="Radboud University">
 
 |PyPI version| |PyPI - Python Version|
 
