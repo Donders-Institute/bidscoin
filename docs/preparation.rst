@@ -25,9 +25,9 @@ This data organization is how users receive their data from the
    entered subject-identifiers as [Additional info] at the scanner
    console and you want to use these to rename your subject folders).
 
-    If these utilities do not satisfy your needs, then have a look at
-    this
-    `reorganize\_dicom\_files <https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md>`__
-    tool.
+.. note::
+   If these utilities do not satisfy your needs, then have a look at this
+   `reorganize\_dicom\_files <https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md>`__
+   tool.
 
 

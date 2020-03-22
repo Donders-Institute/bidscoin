@@ -16,8 +16,8 @@ e.g.:
 
 ::
 
-    bidsmapper sourcefolder bidsfolder
-    bidscoiner sourcefolder bidsfolder
+    $ bidsmapper sourcefolder bidsfolder
+    $ bidscoiner sourcefolder bidsfolder
 
 Step 1a: Running the bidsmapper
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -89,9 +89,9 @@ when finished the bidsmapper will automatically launch `step
 section (but step 1b can also always be run separately by directly
 running the bidseditor).
 
-    Tip: use the ``-t bidsmap_dccn`` option and see if it works for you.
-    If not, consider opening it with a text editor and adapt it to your
-    needs.
+.. note::
+   Tip: use the ``-t bidsmap_dccn`` option and see if it works for you.
+   If not, consider opening it with a text editor and adapt it to your needs.
 
 Step 1b: Running the bidseditor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

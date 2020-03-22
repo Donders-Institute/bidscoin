@@ -23,8 +23,9 @@ check for inconsistencies or missing files in your bids data-set (NB:
 the bidsvalidator also exists as a `command-line
 tool <https://github.com/bids-standard/bids-validator>`__).
 
-    NB: The provenance of the produced BIDS data-sets is stored in the
-    ``bids/code/bidscoin/bidscoiner.log`` file. This file is also very
-    useful for debugging / tracking down bidsmapping issues.
+.. note::
+   NB: The provenance of the produced BIDS data-sets is stored in the
+   ``bids/code/bidscoin/bidscoiner.log`` file. This file is also very
+   useful for debugging / tracking down bidsmapping issues.
 
 
