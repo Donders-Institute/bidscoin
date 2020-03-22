@@ -1,9 +1,6 @@
 The BIDScoin workflow
 =====================
 
-Coining your source data to BIDS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Having an organized source data folder, the actual data-set conversion
 to BIDS is performed by the `(1a) <#step-1a-running-the-bidsmapper>`__
 the ``bidsmapper``, `(1b) <#step-1b-running-the-bidseditor>`__ the
@@ -23,7 +20,7 @@ e.g.:
     bidscoiner sourcefolder bidsfolder
 
 Step 1a: Running the bidsmapper
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
@@ -97,7 +94,7 @@ running the bidseditor).
     needs.
 
 Step 1b: Running the bidseditor
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
@@ -216,7 +213,7 @@ can click on the ``Save`` button and proceed with running the bidscoiner
 tool.
 
 Step 2: Running the bidscoiner
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
