@@ -4,25 +4,9 @@ BIDScoin: Coin your imaging data to BIDS
 |PyPI version| |PyPI - Python Version|
 
 .. image:: ./docs/_static/bidscoin_logo.png
-   :height: 325
+   :height: 125
    :alt: A BIDS converter toolkit
    :align: right
-
--  `The BIDScoin workflow <#the-bidscoin-workflow>`__
--  `Required source data structure <#required-source-data-structure>`__
--  `Coining your source data to BIDS <#coining-your-source-data-to-bids>`__
-
-   -  `Step 1a: Running the
-      bidsmapper <#step-1a-running-the-bidsmapper>`__
-   -  `Step 1b: Running the
-      bidseditor <#step-1b-running-the-bidseditor>`__
-   -  `Step 2: Running the
-      bidscoiner <#step-2-running-the-bidscoiner>`__
-
--  `Finishing up <#finishing-up>`__
--  `Plug-in functions <#options-and-plug-in-functions>`__
--  `BIDScoin functionality / TODO <#bidscoin-functionality--todo>`__
--  `BIDScoin tutorial <#bidscoin-tutorial>`__
 
 BIDScoin is a user friendly
 `open-source <https://github.com/Donders-Institute/bidscoin>`__ python
