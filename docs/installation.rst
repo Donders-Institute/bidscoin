@@ -96,7 +96,7 @@ A Docker image of BIDScoin is available on
 `dockerhub <https://hub.docker.com/r/kasbohm/bidscoin>`__. Follow 
 `these instructions <https://docs.docker.com/get-started>`__ to download, 
 install and run a Docker container. **NB: This is currently still an 
-outdated version, but new versions will be upload soon.**
+outdated version, but new versions will be uploaded soon.**
 
 .. _dcm2niix: https://github.com/rordenlab/dcm2niix
 .. _virtual: https://docs.python.org/3.6/tutorial/venv.html
