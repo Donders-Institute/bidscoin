@@ -96,10 +96,10 @@ BIDS valid output.
 
 ::
 
-    usage: deface.py [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]]
-                     [-o {fmap,anat,func,dwi,beh,pet,extra_data,derivatives}] [-c]
-                     [-n NATIVESPEC] [-a ARGS]
-                     bidsfolder pattern
+    usage: deface [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]]
+                  [-o {fmap,anat,func,dwi,beh,pet,extra_data,derivatives}] [-c]
+                  [-n NATIVESPEC] [-a ARGS]
+                  bidsfolder pattern
 
     A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface).
 
