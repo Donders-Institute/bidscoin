@@ -826,9 +826,10 @@ def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
     for modality in bidsmodalities + (unknownmodality, ignoremodality):
         if modality in bidsmap[dataformat] and bidsmap[dataformat][modality]:
             for run in bidsmap[dataformat][modality]:
-                provenance.append(Path(run['provenance']))
                 if not run['provenance']:
                     logger.warning(f'The bidsmap run {modality} run does not contain provenance data')
+                else:
+                    provenance.append(Path(run['provenance']))
 
     provenance.sort()
 
