@@ -77,13 +77,7 @@ After a succesful installation, if needed, edit the
 ``Options : dcm2niix : path`` value in the
 ``[bidscoin]/heuristics/bidsmap_template.yaml`` file according to your
 system configuration (you may want to use the ``-e`` install option for
-this). You can then do this using a text editor or e.g. like this:
-
-::
-
-   $ bidseditor tmpfolder -b bidsmap_template
-
-And set the correct value in the ``Options`` tab
+this). You can best do this using a text editor.
 
 Updating
 ^^^^^^^^
