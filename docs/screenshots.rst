@@ -4,16 +4,15 @@ Screenshots
 The bidseditor
 ~~~~~~~~~~~~~~
 
-\ |Bidseditor main window|\ 
+.. figure:: ./_static/bidseditor_main.png
 
-\ |Bidseditor edit window|\ 
+   The BIDSeditor `Main` window
 
-\ |Bidseditor options window|\ 
+.. figure:: ./_static/bidseditor_edit.png
 
-.. |Bidseditor main window| figure:: ./_static/bidseditor_main.png
-   The bidseditor `Main` window
-.. |Bidseditor edit window| figure:: ./_static/bidseditor_edit.png
-   The bidseditor `Edit` window
-.. |Bidseditor main window| figure:: ./_static/bidseditor_options.png
-   The bidseditor `Options` window
+   The BIDSeditor `Edit` window
+
+.. figure:: ./_static/bidseditor_options.png
+
+   The BIDSeditor `Options` window
 

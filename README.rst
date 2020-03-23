@@ -33,9 +33,9 @@ that can be used to map the source data to BIDS are:
 3. Information in the file structure (file- and/or directory names, e.g.
    number of files)
 
-Because all the mapping information can be easily edited with a graphical 
-user interface, BIDScoin requires no programming knowledge in order to use
-it.
+Because all the mapping information can be easily edited with a Graphical 
+User Interface (GUI), BIDScoin requires no programming knowledge in order 
+to use it.
 
 BIDScoin functionality
 ----------------------
