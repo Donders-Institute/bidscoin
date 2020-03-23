@@ -34,7 +34,7 @@ Multi-echo combination
 ----------------------
 
 Before sharing or pre-processing their images, users may want to combine
-the seperate the individual echos of multi-echo MRI acquisitions. The
+the separate the individual echos of multi-echo MRI acquisitions. The
 ``echcombine``-tool is a wrapper around ``mecombine`` that writes BIDS valid
 output.
 
