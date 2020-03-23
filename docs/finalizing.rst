@@ -1,5 +1,5 @@
 Finishing up
-~~~~~~~~~~~~
+============
 
 After a successful run of ``bidscoiner``, the work to convert your data
 in a fully compliant BIDS dataset is unfortunately not yet fully over

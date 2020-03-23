@@ -1,3 +1,4 @@
+========================================
 BIDScoin: Coin your imaging data to BIDS
 ========================================
 
@@ -36,16 +37,16 @@ The mapping information is stored as key-value pairs in the human
 readable and widely supported `YAML <http://yaml.org/>`__ files. The
 nifti- and json-files are generated with
 `dcm2niix <https://github.com/rordenlab/dcm2niix>`__. In addition, users
-can provide custom written `plug-in
-functions <#options-and-plug-in-functions>`__, e.g. for using additional
+can provide custom written `plug-in functions 
+<#options-and-plug-in-functions>`__, e.g. for using additional
 sources of information or e.g. for parsing of Presentation logfiles.
 
-Because all the mapping information can be edited with a graphical user
-interface, BIDScoin requires no programming knowledge in order to use
+Because all the mapping information can be easily edited with a graphical 
+user interface, BIDScoin requires no programming knowledge in order to use
 it.
 
-BIDScoin functionality / TODO
------------------------------
+BIDScoin functionality
+----------------------
 
 -  [x] DICOM source data
 -  [x] PAR / REC source data
@@ -67,6 +68,7 @@ BIDScoin functionality / TODO
     provide feedback or contribute to this project on https://github.com/Donders-Institute/bidscoin.
 
 Note:
+-----
 
    **The full BIDScoin documentation is hosted at** `Read the Docs <https://bidscoin.readthedocs.io>`__
 
