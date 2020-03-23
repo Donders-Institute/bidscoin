@@ -35,7 +35,7 @@ Multi-echo combination
 
 Before sharing or pre-processing their images, users may want to combine
 the seperate the individual echos of multi-echo MRI acquisitions. The
-`echcombine`-tool is a wrapper around `mecombine` that writes BIDS valid
+``echcombine``-tool is a wrapper around ``mecombine`` that writes BIDS valid
 output.
 
 ::
@@ -91,7 +91,7 @@ Defacing
 
 Before sharing or pre-processing their images, users may want to deface
 their anatomical MRI acquisitions as to protect the privacy of their
-subjects. The `deface`-tool is a wrapper around `pydeface` that writes
+subjects. The ``deface``-tool is a wrapper around ``pydeface`` that writes
 BIDS valid output.
 
 ::
