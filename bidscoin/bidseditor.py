@@ -595,10 +595,7 @@ class Ui_MainWindow(MainWindow):
             if not runs:
                 continue
             for run in runs:
-                if run['provenance']:
-                    provenance = Path(run['provenance'])
-                else:
-                    provenance = Path(f"unknown{idx}")
+                provenance = Path(run['provenance'])
                 ordered_file_index = self.ordered_file_index[provenance]
                 bidsname = bids.get_bidsname(output_bidsmap[self.dataformat]['subject'], output_bidsmap[self.dataformat]['session'],
                                              modality, run, '', self.subprefix, self.sesprefix)
