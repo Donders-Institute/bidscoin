@@ -20,7 +20,7 @@ e.g.:
     $ bidscoiner sourcefolder bidsfolder
 
 Step 1a: Running the bidsmapper
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 ::
 
@@ -94,7 +94,7 @@ running the bidseditor).
    If not, consider opening it with a text editor and adapt it to your needs.
 
 Step 1b: Running the bidseditor
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 ::
 
@@ -213,7 +213,7 @@ can click on the ``Save`` button and proceed with running the bidscoiner
 tool.
 
 Step 2: Running the bidscoiner
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 ::
 
@@ -269,6 +269,11 @@ Step 2: Running the bidscoiner
     examples:
       bidscoiner /project/foo/raw /project/foo/bids
       bidscoiner -f /project/foo/raw /project/foo/bids -p sub-009 sub-030
+
+.. note::
+   NB: The provenance of the produced BIDS data-sets is stored in the
+   ``bids/code/bidscoin/bidscoiner.log`` file. This file is also very
+   useful for debugging / tracking down bidscoin issues.
 
 .. |Bidseditor main window| image:: ./_static/bidseditor_main.png
 .. |Bidseditor edit window| image:: ./_static/bidseditor_edit.png

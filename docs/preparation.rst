@@ -1,6 +1,9 @@
 Data preparation
 ================
 
+Required source data structure
+------------------------------
+
 BIDScoin will take your (raw) source data as well as a YAML file with
 the key-value mapping (dictionary) information as input, and returns a
 BIDS folder as output. The source data input folder should be organised
@@ -9,6 +12,9 @@ according to a
 This data organization is how users receive their data from the
 (Siemens) scanners at the `DCCN <https://www.ru.nl/donders/>`__ (NB: the
 ``ses-identifier`` sub-folder is optional and can be left out).
+
+Utilitities
+-----------
 
 -  If your data is not already organized in this way, you can use the
    handy `dicomsort <./bidscoin/dicomsort.py>`__ command-line utility to
