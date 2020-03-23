@@ -29,12 +29,13 @@ the path to the ``dcm2niix`` binary / executable is set correctly in the
 BIDScoin ``Options`` (see below)
 
 Python 3 installation
-"""""""""""""""""""
+"""""""""""""""""""""
 
 BIDScoin is a python package and therefore a python interpreter needs to be 
 present on the system. On linux this is usually already the case, but Windows 
-users may need to install python themselves. See e.g. `
-here <https://docs.anaconda.com/anaconda/install/windows/>`__ for instructions.
+users may need to install python themselves. See e.g. 
+`this python 3 distribution <https://docs.anaconda.com/anaconda/install/windows/>`__ 
+for instructions.
 
 BIDScoin installation
 ^^^^^^^^^^^^^^^^^^^^^
@@ -77,7 +78,7 @@ After a succesful installation, if needed, edit the
 ``Options : dcm2niix : path`` value in the
 ``[bidscoin]/heuristics/bidsmap_template.yaml`` file according to your
 system configuration (you may want to use the ``-e`` install option for
-this). You can best do this using a text editor.
+this). You can best do this using a plain text editor.
 
 Updating
 ^^^^^^^^
