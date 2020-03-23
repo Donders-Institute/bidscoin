@@ -33,14 +33,6 @@ that can be used to map the source data to BIDS are:
 3. Information in the file structure (file- and/or directory names, e.g.
    number of files)
 
-The mapping information is stored as key-value pairs in the human
-readable and widely supported `YAML <http://yaml.org/>`__ files. The
-nifti- and json-files are generated with
-`dcm2niix <https://github.com/rordenlab/dcm2niix>`__. In addition, users
-can provide custom written `plug-in functions 
-<#options-and-plug-in-functions>`__, e.g. for using additional
-sources of information or e.g. for parsing of Presentation logfiles.
-
 Because all the mapping information can be easily edited with a graphical 
 user interface, BIDScoin requires no programming knowledge in order to use
 it.
@@ -57,6 +49,7 @@ BIDScoin functionality
 -  [x] Multi-coil data\*
 -  [x] PET data\*
 -  [ ] Stimulus / behavioural logfiles
+-  [x] Plug-ins
 
    ``* = Only for DICOM source data``
 
