@@ -1,5 +1,8 @@
-Options and plug-in functions
------------------------------
+Options
+=======
+
+Plugins
+-------
 
 BIDScoin provides the possibility for researchers to write custom python
 functions that will be executed at bidsmapper and bidscoiner runtime. To

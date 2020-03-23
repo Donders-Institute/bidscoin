@@ -1,21 +1,21 @@
-BIDScoin installation
-=====================
-
-BIDScoin can be installed and should work on linux, windows and,
-presumably, on OS-X computers (this latter option has not been tested)
-that satisfy the system requirements
+Installation
+============
 
 System requirements
 -------------------
 
+BIDScoin can be installed and should work on linux, windows and,
+presumably, on OS-X computers (this latter option has not been tested)
+that satisfy the system requirements:
+
 -  python 3
 -  `dcm2niix`_
 
-Installation
-------------
+BIDScoin installation
+---------------------
 
-Run the following command in your command-shell (institute users may
-want to activate a `virtual`_ / `conda`_ environments first):
+To instal bidscoin run the following command in your command-shell (institute 
+users may want to activate a `virtual`_ / `conda`_ environments first):
 
 ::
 

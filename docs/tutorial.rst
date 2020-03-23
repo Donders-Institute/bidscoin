@@ -1,5 +1,5 @@
-BIDScoin tutorial
------------------
+Tutorial
+--------
 
 This tutorial is specific for researchers from the DCCN and makes use of
 data-sets stored on its central file-system. However, it should not be
