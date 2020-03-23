@@ -24,7 +24,7 @@ series in the ``raw`` folder
 2. **BIDS mapping.** Scan all folders in the raw data collection for
    unknown data by running the
    `bidsmapper <#step-1a-running-the-bidsmapper>`__ bash command:
-    ``bidsmapper raw bids``
+   ``$ bidsmapper raw bids``
 
 -  Rename the "task\_label" of the functional scans into something more
    readable, e.g. "Reward" and "Stop"
@@ -42,7 +42,7 @@ series in the ``raw`` folder
    collection by running the
    `bidscoiner <#step-2-running-the-bidscoiner>`__ commandline tool
    (note that the input is the same as for the bidsmapper):
-   ``bidscoiner raw bids``
+   ``$ bidscoiner raw bids``
 
 -  Check your ``bids/code/bidscoin/bidscoiner.log`` and
    ``bids/code/bidscoin/bidscoiner.errors`` files for any errors or
@@ -60,10 +60,4 @@ series in the ``raw`` folder
    `bids-validator <https://github.com/bids-standard/bids-validator>`__
    on your ``~/bids_tutorial`` folder. Are you completely ready now to
    share this dataset?
-
-.. |PyPI version| image:: https://badge.fury.io/py/bidscoin.svg
-   :target: https://badge.fury.io/py/bidscoin
-.. |PyPI - Python Version| image:: https://img.shields.io/pypi/pyversions/bidscoin.svg
-.. |Bidseditor main window| image:: ./_static/bidseditor_main.png
-.. |Bidseditor edit window| image:: ./_static/bidseditor_edit.png
 
