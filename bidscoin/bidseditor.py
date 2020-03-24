@@ -49,7 +49,7 @@ HELP_URLS = {
     bids.ignoremodality : HELP_URL_DEFAULT
 }
 
-OPTIONS_TOOLTIP_BIDSCOIN = """bidscoin
+OPTIONS_TOOLTIP_BIDSCOIN = """BIDScoin
 version:    should correspond with the version in ../bidscoin/version.txt
 bidsignore: Semicolon-separated list of entries that are added to the .bidsignore file
             (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv"""
@@ -336,6 +336,7 @@ class Ui_MainWindow(MainWindow):
         tree.setModel(model)
         tree.setAnimated(False)
         tree.setIndentation(20)
+        tree.sortByColumn(0, QtCore.Qt.AscendingOrder)
         tree.setSortingEnabled(True)
         tree.setRootIndex(model.index(str(sourcefolder)))
         tree.doubleClicked.connect(self.on_double_clicked)
@@ -467,7 +468,7 @@ class Ui_MainWindow(MainWindow):
         tool_options = {}
         for tool, parameters in bidsmap_options.items():
             # Set the tools
-            if tool == 'bidscoin':
+            if tool == 'BIDScoin':
                 tooltip_text = OPTIONS_TOOLTIP_BIDSCOIN
             elif tool == 'dcm2niix':
                 tooltip_text = OPTIONS_TOOLTIP_DCM2NIIX
