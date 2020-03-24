@@ -6,8 +6,8 @@ BIDScoin options
 The nifti- and json-files are generated with
 `dcm2niix <https://github.com/rordenlab/dcm2niix>`__. 
 
-Bidsmap
--------
+dcm2niix
+--------
 
 The mapping information is stored as key-value pairs in the human
 readable and widely supported `YAML <http://yaml.org/>`__ files.

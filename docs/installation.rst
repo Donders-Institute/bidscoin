@@ -12,9 +12,9 @@ There are two ways to install BIDScoin:
 System requirements
 ^^^^^^^^^^^^^^^^^^^
 
-BIDScoin can be installed and should work on linux, windows and,
-presumably, on OS-X computers (this latter option has not been tested)
-that satisfy the system requirements:
+BIDScoin can be installed and should work on Linux, MS Windows and on OS-X 
+computers (this latter option has not been tested) that satisfy the 
+system requirements:
 
 -  dcm2niix
 -  python 3
@@ -22,17 +22,17 @@ that satisfy the system requirements:
 Dcm2niix installation
 """""""""""""""""""""
 
-BIDScoin relies on `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ 
-to convert the source imaging data to nifti. Please download and install 
-``dcm2niix`` yourself according to the instructions. When done, make sure that 
-the path to the ``dcm2niix`` binary / executable is set correctly in the 
-BIDScoin ``Options`` (see below)
+BIDScoin relies on dcm2niix to convert the source imaging data to nifti. 
+Please download and install `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ 
+yourself according to the instructions. When done, make sure that 
+the path to the dcm2niix binary / executable is set correctly in the 
+BIDScoin `options <./options.html#dcm2niix>`__ (see also below)
 
 Python 3 installation
 """""""""""""""""""""
 
 BIDScoin is a python package and therefore a python interpreter needs to be 
-present on the system. On linux this is usually already the case, but Windows 
+present on the system. On Linux this is usually already the case, but MS Windows 
 users may need to install python themselves. See e.g. 
 `this python 3 distribution <https://docs.anaconda.com/anaconda/install/windows/>`__ 
 for instructions.
@@ -40,7 +40,7 @@ for instructions.
 BIDScoin installation
 ^^^^^^^^^^^^^^^^^^^^^
 
-To instal bidscoin run the following command in your command-shell (institute 
+To install bidscoin run the following command in your command-shell (institute 
 users may want to activate a `virtual`_ / `conda`_ python environment first):
 
 ::
@@ -48,8 +48,8 @@ users may want to activate a `virtual`_ / `conda`_ python environment first):
    $ pip install bidscoin
 
 This will give you the latest stable release of the software. To get the
-very latest version of the software you can install the package directly
-from the github source code repository:
+very latest (development) version of the software you can install the package 
+directly from the github source code repository:
 
 ::
 
@@ -70,24 +70,26 @@ named e.g. ``bidscoin`` and run (again, with or without the ``-e`` option):
 
    $ pip install -e bidscoin
 
-If the installation somehow failed, you can have a look at the packages
-in ``requirements.txt`` and try to find another way to install them
-beforehand
-
 After a succesful installation, if needed, edit the
 ``Options : dcm2niix : path`` value in the
-``[bidscoin]/heuristics/bidsmap_template.yaml`` file according to your
+``[path_to_bidscoin]/heuristics/bidsmap_template.yaml`` file according to your
 system configuration (you may want to use the ``-e`` install option for
 this). You can best do this using a plain text editor.
 
 Updating
 ^^^^^^^^
 
-Run the pip command as before with the additional ``--upgrade`` option
-and redo any edits you made to your ``bidsmap_template.yaml`` file. The
-bidsmap-files are not garanteed to be compatible between different
-version, so it may be necessary to re-run the ``bidsmapper.py`` command
-before using ``bidscoiner.py``.
+Run the pip command as before with the additional ``--upgrade`` option:
+
+::
+
+   $ pip install --upgrade bidscoin
+
+.. note::
+   - The bidsmap-files are not garanteed to be compatible between different 
+     BIDScoin versions, so after upgrading it may be necessary to re-run the 
+     ``bidsmapper.py`` command before using ``bidscoiner.py``.
+   - After upgrading, redo any edits you made to your ``bidsmap_template.yaml`` file.
 
 2. Docker installation
 ----------------------
