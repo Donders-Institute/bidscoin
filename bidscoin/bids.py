@@ -360,7 +360,6 @@ def unpack(folder: Path, subprefix: str='sub-', sesprefix: str='ses-', wildcard:
         # Create a temporary directory for unpacking the data
         subid, sesid = get_subid_sesid(folder/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
         tempfolder   = Path(tempfile.mkdtemp())/subid/sesid
-        tempfolder.mkdir()
 
         # Copy everything over to the tempfolder
         logger.info(f"Making temporary copy: {folder} -> {tempfolder}")
