@@ -23,9 +23,20 @@ LOGGER = logging.getLogger('bidscoin')
 
 
 def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: bool, nativespec: str, kwargs: dict):
+    """
+
+    :param bidsdir:     The bids-directory with the (multi-echo) subject data
+    :param pattern:     Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T1w*'
+    :param subjects:    List of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
+    :param output:      Determines where the defaced images are saved. It can be the name of a BIDS modality folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images
+    :param cluster:     Flag to submit the deface jobs to the high-performance compute (HPC) cluster
+    :param nativespec:  DRMAA native specifications for submitting deface jobs to the HPC cluster
+    :param kwargs:      Additional arguments (in dict/json-style) that are passed to pydeface. See examples for usage
+    :return:
+    """
 
     # Input checking
-    bidsdir = Path(bidsdir)
+    bidsdir = Path(bidsdir).resolve()
 
     # Start logging
     bids.setup_logging(bidsdir/'code'/'bidscoin'/'deface.log')
