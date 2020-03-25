@@ -173,13 +173,12 @@ class MainWindow(QMainWindow):
 
 class Ui_MainWindow(MainWindow):
 
-    def setupUi(self, MainWindow, bidsfolder, sourcefolder, bidsmap_filename, input_bidsmap, output_bidsmap, template_bidsmap,
+    def setupUi(self, MainWindow, bidsfolder, bidsmap_filename, input_bidsmap, output_bidsmap, template_bidsmap,
                 dataformat, selected_tab_index=2, subprefix='sub-', sesprefix='ses-', reload: bool=False):
 
-        # Set the data
+        # Set the input data
         self.MainWindow       = MainWindow
         self.bidsfolder       = Path(bidsfolder)
-        self.sourcefolder     = Path(sourcefolder)
         self.bidsmap_filename = Path(bidsmap_filename)
         self.input_bidsmap    = input_bidsmap
         self.output_bidsmap   = output_bidsmap
@@ -197,7 +196,7 @@ class Ui_MainWindow(MainWindow):
         tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
         tabwidget.setObjectName('tabwidget')
 
-        self.set_tab_file_browser(sourcefolder)
+        self.set_tab_file_browser()
         self.set_tab_options()
         self.set_tab_bidsmap()
         tabwidget.setTabText(0, 'File browser')
@@ -323,8 +322,14 @@ class Ui_MainWindow(MainWindow):
             self.popup.show()
             self.popup.scrollbar.setValue(0)     # This can only be done after self.popup.show()
 
-    def set_tab_file_browser(self, sourcefolder: Path):
+    def set_tab_file_browser(self):
         """Set the raw data folder inspector tab. """
+        # Parse the sourcefolder from the bidsmap provenance info
+        sourcefolder = Path('/').resolve()
+        for provenance in bids.dir_bidsmap(self.input_bidsmap, self.dataformat):
+            sourcefolder = Path(provenance.parents[3])
+            break
+
         label = QLabel(str(sourcefolder))
         label.setWordWrap(True)
 
@@ -730,7 +735,6 @@ class Ui_MainWindow(MainWindow):
         self.output_bidsmap, _ = bids.load_bidsmap(self.bidsmap_filename)
         self.setupUi(self.MainWindow,
                      self.bidsfolder,
-                     self.sourcefolder,
                      self.bidsmap_filename,
                      self.input_bidsmap,
                      self.output_bidsmap,
@@ -1295,12 +1299,11 @@ class EditDialog(QDialog):
         self.done(1)
 
 
-def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templatefile: str='', dataformat: str='DICOM', subprefix='sub-', sesprefix='ses-'):
+def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', dataformat: str='DICOM', subprefix='sub-', sesprefix='ses-'):
     """
     Collects input and lanches the bidseditor GUI
 
     :param bidsfolder:
-    :param sourcefolder:
     :param bidsmapfile:
     :param templatefile:
     :param dataformat:
@@ -1310,7 +1313,6 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     """
 
     bidsfolder   = Path(bidsfolder)
-    sourcefolder = Path(sourcefolder)
     bidsmapfile  = Path(bidsmapfile)
     templatefile = Path(templatefile)
 
@@ -1318,8 +1320,8 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
     bids.setup_logging(bidsfolder/'code'/'bidscoin'/'bidseditor.log')
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSeditor ------------')
-    LOGGER.info(f">>> bidseditor bidsfolder={bidsfolder} sourcefolder={sourcefolder}"
-                f" bidsmap={bidsmapfile} template={templatefile} subprefix={subprefix} sesprefix={sesprefix}")
+    LOGGER.info(f">>> bidseditor bidsfolder={bidsfolder} bidsmap={bidsmapfile} template={templatefile}"
+                f"dataformat={dataformat} subprefix={subprefix} sesprefix={sesprefix}")
 
     # Obtain the initial bidsmap info
     template_bidsmap, templatefile = bids.load_bidsmap(templatefile, bidsfolder/'code'/'bidscoin')
@@ -1329,19 +1331,12 @@ def bidseditor(bidsfolder: str, sourcefolder: str='', bidsmapfile: str='', templ
         LOGGER.error(f'No bidsmap file found in {bidsfolder}. Please run the bidsmapper first and / or use the correct bidsfolder')
         return
 
-    # Parse the sourcefolder from the bidsmap provenance info
-    if not sourcefolder.name:
-        for provenance in bids.dir_bidsmap(input_bidsmap, dataformat):
-            sourcefolder = provenance.parents[3]
-            LOGGER.info(f'Derived source-folder: {sourcefolder}')
-            break
-
     # Start the Qt-application
     app = QApplication(sys.argv)
     app.setApplicationName(f'{bidsmapfile} - BIDS editor')
     mainwin = MainWindow()
     gui = Ui_MainWindow()
-    gui.setupUi(mainwin, bidsfolder, sourcefolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap, dataformat, subprefix=subprefix, sesprefix=sesprefix)
+    gui.setupUi(mainwin, bidsfolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap, dataformat, subprefix=subprefix, sesprefix=sesprefix)
     mainwin.show()
     app.exec()
 
@@ -1408,7 +1403,6 @@ def main():
                                            and ./heuristics/bidsmap_dccn.yaml for more information."""))
 
     parser.add_argument('bidsfolder',           help='The destination folder with the (future) bids data')
-    parser.add_argument('-s','--sourcefolder',  help='The source folder containing the raw data. If empty, it is derived from the bidsmap provenance information', default='')
     parser.add_argument('-b','--bidsmap',       help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
     parser.add_argument('-t','--template',      help='The bidsmap template with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap_template.yaml', default='bidsmap_template.yaml')
     parser.add_argument('-d','--dataformat',    help='The format of the source data, e.g. DICOM or PAR. Default: DICOM', default='DICOM')
@@ -1417,7 +1411,6 @@ def main():
     args = parser.parse_args()
 
     bidseditor(bidsfolder   = args.bidsfolder,
-               sourcefolder = args.sourcefolder,
                bidsmapfile  = args.bidsmap,
                templatefile = args.template,
                dataformat   = args.dataformat,
