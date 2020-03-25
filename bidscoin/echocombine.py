@@ -22,9 +22,19 @@ LOGGER = logging.getLogger('bidscoin')
 
 
 def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorithm: str, weights: list):
+    """
+
+    :param bidsdir:     The bids-directory with the (multi-echo) subject data
+    :param pattern:     Globlike recursive search pattern (relative to the subject/session folder) to select the first echo of the images that need to be combined, e.g. '*task-*echo-1*'
+    :param subjects:    List of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
+    :param output:      Determines where the output is saved. It can be the name of a BIDS modality folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output = [the name of the input modality folder] then the original echo images are replaced by one combined image. If output is left empty then the combined image is saved in the input modality folder and the original echo images are moved to the {bids.unknownmodality} folder
+    :param algorithm:   Combination algorithm, either 'PAID', 'TE' or 'average'
+    :param weights:     Weights for each echo
+    :return:
+    """
 
     # Input checking
-    bidsdir = Path(bidsdir)
+    bidsdir = Path(bidsdir).resolve()
 
     # Start logging
     bids.setup_logging(bidsdir/'code'/'bidscoin'/'echocombine.log')
