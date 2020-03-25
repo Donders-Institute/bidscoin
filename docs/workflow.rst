@@ -14,9 +14,9 @@ Step 1a: Running the bidsmapper
 
 ::
 
-    usage: bidsmapper.py [-h] [-b BIDSMAP] [-t TEMPLATE] [-n SUBPREFIX]
-                         [-m SESPREFIX] [-i {0,1,2}] [-v]
-                         sourcefolder bidsfolder
+    usage: bidsmapper [-h] [-b BIDSMAP] [-t TEMPLATE] [-n SUBPREFIX]
+                      [-m SESPREFIX] [-i {0,1,2}] [-v]
+                      sourcefolder bidsfolder
 
     Creates a bidsmap.yaml YAML file in the bidsfolder/code/bidscoin that maps the information
     from all raw source data to the BIDS labels. You can check and edit the bidsmap file with
@@ -30,7 +30,7 @@ Step 1a: Running the bidsmapper
 
     positional arguments:
       sourcefolder          The study root folder containing the raw data in
-                            sub-#/[ses-#/]run subfolders (or specify --subprefix
+                            sub-#/[ses-#/]data subfolders (or specify --subprefix
                             and --sesprefix for different prefixes)
       bidsfolder            The destination folder with the (future) bids data and
                             the bidsfolder/code/bidscoin/bidsmap.yaml output file
@@ -81,7 +81,7 @@ Step 1b: Running the bidseditor
 
 ::
 
-    usage: bidseditor [-h] [-s SOURCEFOLDER] [-b BIDSMAP] [-t TEMPLATE]
+    usage: bidseditor [-h] [-b BIDSMAP] [-t TEMPLATE] [-d DATAFORMAT]
                       [-n SUBPREFIX] [-m SESPREFIX]
                       bidsfolder
 
@@ -93,30 +93,30 @@ Step 1b: Running the bidseditor
     the bidscoiner.
 
     positional arguments:
-      bidsfolder            The destination folder with the (future) bids data
+      bidsfolder        The destination folder with the (future) bids data
 
     optional arguments:
-      -h, --help            show this help message and exit
-      -s SOURCEFOLDER, --sourcefolder SOURCEFOLDER
-                            The source folder containing the raw data. If empty,
-                            it is derived from the bidsmap provenance information
+      -h, --help        show this help message and exit
       -b BIDSMAP, --bidsmap BIDSMAP
-                            The bidsmap YAML-file with the study heuristics. If
-                            the bidsmap filename is relative (i.e. no "/" in the
-                            name) then it is assumed to be located in
-                            bidsfolder/code/bidscoin. Default: bidsmap.yaml
+                        The bidsmap YAML-file with the study heuristics. If
+                        the bidsmap filename is relative (i.e. no "/" in the
+                        name) then it is assumed to be located in
+                        bidsfolder/code/bidscoin. Default: bidsmap.yaml
       -t TEMPLATE, --template TEMPLATE
-                            The bidsmap template with the default heuristics (this
-                            could be provided by your institute). If the bidsmap
-                            filename is relative (i.e. no "/" in the name) then it
-                            is assumed to be located in bidsfolder/code/bidscoin.
-                            Default: bidsmap_template.yaml
+                        The bidsmap template with the default heuristics (this
+                        could be provided by your institute). If the bidsmap
+                        filename is relative (i.e. no "/" in the name) then it
+                        is assumed to be located in bidsfolder/code/bidscoin.
+                        Default: bidsmap_template.yaml
+      -d DATAFORMAT, --dataformat DATAFORMAT
+                        The format of the source data, e.g. DICOM or PAR.
+                        Default: DICOM
       -n SUBPREFIX, --subprefix SUBPREFIX
-                            The prefix common for all the source subject-folders.
-                            Default: 'sub-'
+                        The prefix common for all the source subject-folders.
+                        Default: 'sub-'
       -m SESPREFIX, --sesprefix SESPREFIX
-                            The prefix common for all the source session-folders.
-                            Default: 'ses-'
+                        The prefix common for all the source session-folders.
+                        Default: 'ses-'
 
     examples:
       bidseditor /project/foo/bids
@@ -162,18 +162,18 @@ Step 1b: Running the bidseditor
       NB: The fieldmap might not be used at all if this field is left empty!
 
     Manual editing / inspection of the bidsmap
-      You can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
+      You `can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
       text editor. For instance to merge a set of runs that by adding a wildcard to a DICOM
       attribute in one run item and then remove the other runs in the set. See ./docs/bidsmap.md
       and ./heuristics/bidsmap_dccn.yaml for more information.
 
 As shown below, the main window of the bidseditor opens with the ``BIDS map`` tab that contains a list of ``input samples`` that uniquely represents all the different files that are present in the source folder, together with the associated ``BIDS output name``. The path in the ``BIDS output name`` is shown in red if the modality is not part of the BIDS standard, striked-out gray when the runs will be ignored in the conversion to BIDS, otherwise it is colored green. Double clicking the sample (DICOM) filename opens an inspection window with the full header information (double clicking sample filenames works throughout the GUI).
 
-\ |Bidseditor main window|\ 
+\ |Bidseditor main window|\
 
 The user can click the ``Edit`` button for each list item to open a new edit window, as show below. In this interface, the right BIDS ``Modality`` (drop down menu) and the ``suffix`` label (drop down menu) can set correctly, after which the associated BIDS ``Labels`` can be edited (double click black items). As a result, the new BIDS ``Output name`` is then shown in the bottom text field. This is how the BIDS output data will look like and, if this looks all fine, the user can store this mapping to the bidsmap and return to the main window by clicking the ``OK`` button.
 
-\ |Bidseditor edit window|\ 
+\ |Bidseditor edit window|\
 
 Finally, if all BIDS output names in the main window are fine, the user can click on the ``Save`` button and proceed with running the bidscoiner tool.
 
@@ -199,7 +199,7 @@ Step 2: Running the bidscoiner
 
     positional arguments:
       sourcefolder          The source folder containing the raw data in
-                            sub-#/[ses-#]/run format (or specify --subprefix and
+                            sub-#/[ses-#]/data format (or specify --subprefix and
                             --sesprefix for different prefixes)
       bidsfolder            The destination / output folder with the bids data
 

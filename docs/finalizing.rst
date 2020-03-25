@@ -7,11 +7,6 @@ Adding meta-data
 ----------------
 For instance, you should update the content of the ``dataset_description.json`` and ``README`` files in your bids folder and you may need to provide e.g. additional ``*_scans.tsv``,\ ``*_sessions.tsv`` or ``participants.json`` files (see the `BIDS specification <http://bids.neuroimaging.io/bids_spec.pdf>`__ for more information). Moreover, if you have behavioural log-files you will find that BIDScoin does not (yet) `support <#bidscoin-functionality--todo>`__ converting these into BIDS compliant ``*_events.tsv/json`` files (advanced users are encouraged to use the ``bidscoiner`` `plug-in <#options-and-plug-in-functions>`__ possibility and write their own log-file parser).
 
-BIDS validation
----------------
-
-If all of the above work is done, you can (and should) run the web-based `bidsvalidator <https://bids-standard.github.io/bids-validator/>`__ to check for inconsistencies or missing files in your bids data-set (NB: the bidsvalidator also exists as a `command-line tool <https://github.com/bids-standard/bids-validator>`__).
-
 Multi-echo combination
 ----------------------
 
@@ -116,3 +111,9 @@ Before sharing or pre-processing their images, users may want to deface their an
       deface /project/3017065.01/bids anat/*_T1w* -p 001 003 -o derivatives
       deface /project/3017065.01/bids anat/*_T1w* -n "-l walltime=00:60:00,mem=2gb"
       deface /project/3017065.01/bids anat/*_T1w* -a '{"cost": "corratio", "verbose": ""}'
+
+BIDS validation
+---------------
+
+If all of the above work is done, you can (and should) run the web-based `bidsvalidator <https://bids-standard.github.io/bids-validator/>`__ to check for inconsistencies or missing files in your bids data-set (NB: the bidsvalidator also exists as a `command-line tool <https://github.com/bids-standard/bids-validator>`__).
+

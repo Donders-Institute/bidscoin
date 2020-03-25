@@ -13,7 +13,7 @@ The bidseditor
    The editor window for customizing the individual bidsmap entries
 
 .. figure:: ./_static/bidseditor_options.png
-   :scale: 60 %
+   :scale: 60%
 
    The options window with BIDScoin settings
 
