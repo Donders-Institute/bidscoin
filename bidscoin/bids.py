@@ -858,7 +858,7 @@ def get_run(bidsmap: dict, dataformat: str, modality: str, suffix_idx: Union[int
             for attrkey, attrvalue in run['attributes'].items():
                 if sourcefile.name:
                     run_['attributes'][attrkey] = get_sourcefield(attrkey, sourcefile, dataformat)
-                    run_['provenance']          = str(sourcefile)
+                    run_['provenance']          = str(sourcefile.resolve())
                 else:
                     run_['attributes'][attrkey] = attrvalue
 
@@ -1145,13 +1145,13 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, modalitie
 
             # Stop searching the bidsmap if we have a match. TODO: check if there are more matches (i.e. conflicts)
             if match:
-                run_['provenance'] = str(sourcefile)
+                run_['provenance'] = str(sourcefile.resolve())
 
                 return run_, modality, index
 
     # We don't have a match (all tests failed, so modality should be the *last* one, i.e. unknownmodality)
     logger.debug(f"Could not find a matching run in the bidsmap for {sourcefile} -> {modality}")
-    run_['provenance'] = str(sourcefile)
+    run_['provenance'] = str(sourcefile.resolve())
 
     return run_, modality, None
 
