@@ -22,6 +22,6 @@ is the plugins-folder; otherwise the full path must be provided) in the
 bidsmap dictionary file to import the plugin functions. The functions in
 the module should be named ``bidsmapper_plugin`` for bidsmapper and
 ``bidscoiner_plugin`` for bidscoiner. See
-`README.py <./bidscoin/plugins/README.py>`__ for more details and
+``[path_to_bidscoin]/plugins/README.py`` for more details and
 placeholder code.
 

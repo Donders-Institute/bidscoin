@@ -35,7 +35,8 @@ BIDScoin is a python package and therefore a python interpreter needs to be
 present on the system. On Linux this is usually already the case, but MS Windows 
 users may need to install python themselves. See e.g. 
 `this python 3 distribution <https://docs.anaconda.com/anaconda/install/windows/>`__ 
-for instructions.
+for instructions. They may also need to install the `MS Visual C++ 
+<https://visualstudio.microsoft.com/downloads/>`__ (sorry for this pain).
 
 BIDScoin installation
 ^^^^^^^^^^^^^^^^^^^^^
@@ -76,8 +77,8 @@ After a succesful installation, if needed, edit the
 system configuration (you may want to use the ``-e`` install option for
 this). You can best do this using a plain text editor.
 
-Updating
-^^^^^^^^
+Updating BIDScoin
+^^^^^^^^^^^^^^^^^
 
 Run the pip command as before with the additional ``--upgrade`` option:
 
