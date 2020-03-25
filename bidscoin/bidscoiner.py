@@ -580,7 +580,7 @@ def main():
                                      epilog='examples:\n'
                                             '  bidscoiner /project/foo/raw /project/foo/bids\n'
                                             '  bidscoiner -f /project/foo/raw /project/foo/bids -p sub-009 sub-030\n ')
-    parser.add_argument('sourcefolder',             help='The study root folder containing the raw data in sub-#/[ses-#/]run subfolders (or specify --subprefix and --sesprefix for different prefixes)')
+    parser.add_argument('sourcefolder',             help='The study root folder containing the raw data in sub-#/[ses-#/]data subfolders (or specify --subprefix and --sesprefix for different prefixes)')
     parser.add_argument('bidsfolder',               help='The destination / output folder with the bids data')
     parser.add_argument('-p','--participant_label', help='Space separated list of selected sub-# names / folders to be processed (the sub- prefix can be removed). Otherwise all subjects in the sourcefolder will be selected', nargs='+')
     parser.add_argument('-f','--force',             help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')
