@@ -1,18 +1,8 @@
 The BIDScoin workflow
 =====================
 
-Having an organized source data folder, the actual data-set conversion
-to BIDS is performed by the `(1a) <#step-1a-running-the-bidsmapper>`__
-the ``bidsmapper``, `(1b) <#step-1b-running-the-bidseditor>`__ the
-``bidseditor`` and `(2) <#step-2-running-the-bidscoiner>`__ the
-``bidscoiner`` command-line tools. The ``bidsmapper`` makes a map of the
-different kind of datatypes in your source dataset, with the
-``bidseditor`` you can edit this map, and the ``bidscoiner`` does the
-actual work to convert the source data into BIDS. By default (but see
-the ``-i`` option of the bidsmapper below), step 1a automatically
-launches step 1b, so in it's simplest form, all you need to do to
-convert your raw source data into BIDS is to run two simple commands,
-e.g.:
+Having an organized source data folder, the actual data-set conversion to BIDS is performed by the `(1a) <#step-1a-running-the-bidsmapper>`__ the ``bidsmapper``, `(1b) <#step-1b-running-the-bidseditor>`__ the ``bidseditor`` and `(2) <#step-2-running-the-bidscoiner>`__ the ``bidscoiner`` command-line tools. The ``bidsmapper`` makes a map of the different kind of datatypes in your source dataset, with the ``bidseditor`` you can edit this map, and the ``bidscoiner`` does the actual work to convert the source data into BIDS. By default (but see the ``-i`` option of the bidsmapper below), step 1a automatically
+launches step 1b, so in it's simplest form, all you need to do to convert your raw source data into BIDS is to run two simple commands, e.g.:
 
 ::
 
@@ -81,17 +71,10 @@ Step 1a: Running the bidsmapper
       bidsmapper /project/foo/raw /project/foo/bids
       bidsmapper /project/foo/raw /project/foo/bids -t bidsmap_dccn
 
-The bidsmapper will scan your ``sourcefolder`` to look for different
-runs (scan-types) to create a mapping for each run to a bids output name
-(a.k.a. the 'bidsmap'). By default (but see the ``-i`` option above),
-when finished the bidsmapper will automatically launch `step
-1b <#step-1b-running-the-bidseditor>`__, as described in the next
-section (but step 1b can also always be run separately by directly
-running the bidseditor).
+The bidsmapper will scan your ``sourcefolder`` to look for different runs (scan-types) to create a mapping for each run to a bids output name (a.k.a. the 'bidsmap'). By default (but see the ``-i`` option above), when finished the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__, as described in the next section (but step 1b can also always be run separately by directly running the bidseditor).
 
 .. note::
-   Tip: use the ``-t bidsmap_dccn`` option and see if it works for you.
-   If not, consider opening it with a text editor and adapt it to your needs.
+   Tip: use the ``-t bidsmap_dccn`` option and see if it works for you. If not, consider opening it with a text editor and adapt it to your needs.
 
 Step 1b: Running the bidseditor
 -------------------------------
@@ -184,33 +167,15 @@ Step 1b: Running the bidseditor
       attribute in one run item and then remove the other runs in the set. See ./docs/bidsmap.md
       and ./heuristics/bidsmap_dccn.yaml for more information.
 
-As shown below, the main window of the bidseditor opens with the
-``BIDS map`` tab that contains a list of ``input samples`` that uniquely
-represents all the different files that are present in the source
-folder, together with the associated ``BIDS output name``. The path in
-the ``BIDS output name`` is shown in red if the modality is not part of
-the BIDS standard, striked-out gray when the runs will be ignored in the
-conversion to BIDS, otherwise it is colored green. Double clicking the
-sample (DICOM) filename opens an inspection window with the full header
-information (double clicking sample filenames works throughout the GUI).
+As shown below, the main window of the bidseditor opens with the ``BIDS map`` tab that contains a list of ``input samples`` that uniquely represents all the different files that are present in the source folder, together with the associated ``BIDS output name``. The path in the ``BIDS output name`` is shown in red if the modality is not part of the BIDS standard, striked-out gray when the runs will be ignored in the conversion to BIDS, otherwise it is colored green. Double clicking the sample (DICOM) filename opens an inspection window with the full header information (double clicking sample filenames works throughout the GUI).
 
 \ |Bidseditor main window|\ 
 
-The user can click the ``Edit`` button for each list item to open a new
-edit window, as show below. In this interface, the right BIDS
-``Modality`` (drop down menu) and the ``suffix`` label (drop down menu)
-can set correctly, after which the associated BIDS ``Labels`` can be
-edited (double click black items). As a result, the new BIDS
-``Output name`` is then shown in the bottom text field. This is how the
-BIDS output data will look like and, if this looks all fine, the user
-can store this mapping to the bidsmap and return to the main window by
-clicking the ``OK`` button.
+The user can click the ``Edit`` button for each list item to open a new edit window, as show below. In this interface, the right BIDS ``Modality`` (drop down menu) and the ``suffix`` label (drop down menu) can set correctly, after which the associated BIDS ``Labels`` can be edited (double click black items). As a result, the new BIDS ``Output name`` is then shown in the bottom text field. This is how the BIDS output data will look like and, if this looks all fine, the user can store this mapping to the bidsmap and return to the main window by clicking the ``OK`` button.
 
 \ |Bidseditor edit window|\ 
 
-Finally, if all BIDS output names in the main window are fine, the user
-can click on the ``Save`` button and proceed with running the bidscoiner
-tool.
+Finally, if all BIDS output names in the main window are fine, the user can click on the ``Save`` button and proceed with running the bidscoiner tool.
 
 Step 2: Running the bidscoiner
 ------------------------------
@@ -271,9 +236,7 @@ Step 2: Running the bidscoiner
       bidscoiner -f /project/foo/raw /project/foo/bids -p sub-009 sub-030
 
 .. note::
-   NB: The provenance of the produced BIDS data-sets is stored in the
-   ``bids/code/bidscoin/bidscoiner.log`` file. This file is also very
-   useful for debugging / tracking down bidscoin issues.
+   NB: The provenance of the produced BIDS data-sets is stored in the ``bids/code/bidscoin/bidscoiner.log`` file. This file is also very useful for debugging / tracking down bidscoin issues.
 
 .. |Bidseditor main window| image:: ./_static/bidseditor_main.png
 .. |Bidseditor edit window| image:: ./_static/bidseditor_edit.png

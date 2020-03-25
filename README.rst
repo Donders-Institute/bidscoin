@@ -14,28 +14,13 @@ BIDScoin: Coin your imaging data to BIDS
 
 |PyPI version| |PyPI - Python Version|
 
-BIDScoin is a user friendly
-`open-source <https://github.com/Donders-Institute/bidscoin>`__ python
-toolkit that converts ("coins") source-level (raw) neuroimaging
-data-sets to `nifti <https://nifti.nimh.nih.gov/>`__ /
-`json <https://www.json.org/>`__ /
-`tsv <https://en.wikipedia.org/wiki/Tab-separated_values>`__ data-sets
-that are organized following the Brain Imaging Data Structure, a.k.a.
-`BIDS <http://bids.neuroimaging.io>`__ standard. Rather then depending
-on complex or ambiguous programmatic logic for the identification of
-imaging modalities, BIDScoin uses a direct mapping approach to identify
-and convert the raw source data into BIDS data. The information sources
-that can be used to map the source data to BIDS are:
+BIDScoin is a user friendly `open-source <https://github.com/Donders-Institute/bidscoin>`__ python toolkit that converts ("coins") source-level (raw) neuroimaging data-sets to `nifti <https://nifti.nimh.nih.gov/>`__ / `json <https://www.json.org/>`__ / `tsv <https://en.wikipedia.org/wiki/Tab-separated_values>`__ data-sets that are organized following the Brain Imaging Data Structure, a.k.a. `BIDS <http://bids.neuroimaging.io>`__ standard. Rather then depending on complex or ambiguous programmatic logic for the identification of imaging modalities, BIDScoin uses a direct mapping approach to identify and convert the raw source data into BIDS data. The information sources that can be used to map the source data to BIDS are:
 
-1. Information in MRI header files (DICOM, PAR/REC or .7 format; e.g.
-   SeriesDescription)
+1. Information in MRI header files (DICOM, PAR/REC or .7 format; e.g. SeriesDescription)
 2. Information from nifti headers (e.g. image dimensionality)
-3. Information in the file structure (file- and/or directory names, e.g.
-   number of files)
+3. Information in the file structure (file- and/or directory names, e.g. number of files)
 
-Because all the mapping information can be easily edited with a Graphical 
-User Interface (GUI), BIDScoin requires no programming knowledge in order 
-to use it.
+Because all the mapping information can be easily edited with a Graphical User Interface (GUI), BIDScoin requires no programming knowledge in order to use it.
 
 BIDScoin functionality
 ----------------------
