@@ -167,10 +167,10 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     """
 
     # Input checking
-    rawfolder    = Path(rawfolder)
-    bidsfolder   = Path(bidsfolder)
-    bidsmapfile  = Path(bidsmapfile)
-    templatefile = Path(templatefile)
+    rawfolder    = Path(rawfolder).resolve()
+    bidsfolder   = Path(bidsfolder).resolve()
+    bidsmapfile  = Path(bidsmapfile).resolve()
+    templatefile = Path(templatefile).resolve()
 
     # Start logging
     bids.setup_logging(bidsfolder/'code'/'bidscoin'/'bidsmapper.log')
@@ -256,7 +256,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
             # Update the bidsmap with the info from the source files
             for sourcefile in sourcefiles:
-                bidsmap_new = build_bidsmap(dataformat, sourcefile.resolve(), bidsmap_new, bidsmap_old, template, gui)
+                bidsmap_new = build_bidsmap(dataformat, sourcefile, bidsmap_new, bidsmap_old, template, gui)
 
             # Update / append the nifti mapping
             if dataformat=='Nifti':
