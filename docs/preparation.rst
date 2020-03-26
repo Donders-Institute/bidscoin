@@ -4,9 +4,9 @@ Data preparation
 Required source data structure
 ------------------------------
 
-BIDScoin requires that the source data input folder is be organised according to a ``sub-identifier/[ses-identifier]/sessiondata`` structure (the ``ses-identifier`` subfolder is optional). The ``sessiondata`` can have any of the following file organizations:
+BIDScoin requires that the source data input folder is organized according to a ``sub-identifier/[ses-identifier]/sessiondata`` structure (the ``ses-identifier`` subfolder is optional). The ``sessiondata`` can have various formats, as shown in the following examples:
 
-1. **A 'seriesfolder' organization**. This is how users receive their data from the (Siemens) scanners at the `DCCN <https://www.ru.nl/donders/>`__::
+1. **A 'seriesfolder' organization**. A series folder contains a single data type and are typically acquired in a single run -- a.k.a 'Series' in DICOM speak. This is how users receive their data from the (Siemens) scanners at the `DCCN <https://www.ru.nl/donders/>`__::
 
     sourcedata
     |-- sub-001
@@ -39,7 +39,7 @@ BIDScoin requires that the source data input folder is be organised according to
     |       [..]
     [..]
 
-2. **A 'DICOMDIR' organization**. This is how data is often exported in clinical settings::
+2. **A 'DICOMDIR' organization**. A DICOMDIR is dictionary-file that indicates the various places where all the DICOM files are stored of each DICOM Series. This is how data is often exported in clinical settings::
 
     sourcedata
     |-- sub-001
@@ -65,7 +65,7 @@ BIDScoin requires that the source data input folder is be organised according to
     |   [..]
     [..]
 
-3. **A flat DICOM organization**. This is how data is sometimes exported in clinical settings::
+3. **A flat DICOM organization**. In a flat DICOM organization all the DICOM files of all the different Series are simply put in one large directory. This is how data is sometimes exported in clinical settings::
 
     sourcedata
     |-- sub-001
@@ -83,7 +83,7 @@ BIDScoin requires that the source data input folder is be organised according to
     |       [..]
     [..]
 
-4. **A PAR/REC organization**. This is how users often export their data from Philips scanners in research settings::
+4. **A PAR/REC organization**. All PAR/REC(/XML) files of all the different Series are put in one directory. This is how users often export their data from Philips scanners in research settings::
 
     sourcedata
     |-- sub-001
@@ -108,15 +108,15 @@ BIDScoin requires that the source data input folder is be organised according to
     [..]
 
 .. note::
-   BIDScoin unpacks the above data structures if they are stored in a ``.zip`` or e.g. ``.tar.gz`` format
+   You can store the ``sessiondata`` in any of the above data organizations as zipped (``.zip``) or tarzipped (e.g. ``.tar.gz``) archive files. BIDScoin `workflow tools <workflow.html>`_ will unpack/unzip those archive files in a temporary folder and will process the ``sessiondata`` from there.
 
-Data management utilitities
----------------------------
+Data management utilities
+-------------------------
 
 dicomsort
 ^^^^^^^^^
 
-The ``dicomsort`` command-line tool is a utility to move your unordered or DICOMDIR ordered DICOM-files into a 'seriesfolder' organization (series folders contain a single data type and are typically acquired in a single run). This can be useful to organise your source data in a more convenient and human readable way, as DICOMDIR or flat DICOM directories can often be hard to comprehend. The BIDScoin tools will run ``dicomsort`` in a temporary folder if your data is not already organised in series-folders, so in principle you don't really need to run it yourself. Running ``dicomsort`` by yourself, does, however, give you more flexibility in handling special cases that are not handled properly and it can also give you a speed benefit.
+The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-organized files (see `above <#required-source-data-structure>`__) into a 'seriesfolder' organization. This can be useful to organise your source data in a more convenient and human readable way, as DICOMDIR or flat DICOM directories can often be hard to comprehend. The BIDScoin tools will run ``dicomsort`` in a temporary folder if your data is not already organised in series-folders, so in principle you don't really need to run it yourself. Running ``dicomsort`` beforehand does, however, give you more flexibility in handling special cases that are not handled properly and it can also give you a speed benefit.
 
 ::
 

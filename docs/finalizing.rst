@@ -7,8 +7,11 @@ Adding meta-data
 ----------------
 For instance, you should update the content of the ``dataset_description.json`` and ``README`` files in your bids folder and you may need to provide e.g. additional ``*_scans.tsv``,\ ``*_sessions.tsv`` or ``participants.json`` files (see the `BIDS specification <http://bids.neuroimaging.io/bids_spec.pdf>`__ for more information). Moreover, if you have behavioural log-files you will find that BIDScoin does not (yet) `support <#bidscoin-functionality--todo>`__ converting these into BIDS compliant ``*_events.tsv/json`` files (advanced users are encouraged to use the ``bidscoiner`` `plug-in <#options-and-plug-in-functions>`__ possibility and write their own log-file parser).
 
-Multi-echo combination
+Data sharing utilities
 ----------------------
+
+Multi-echo combination
+^^^^^^^^^^^^^^^^^^^^^^
 
 Before sharing or pre-processing their images, users may want to combine the separate the individual echos of multi-echo MRI acquisitions. The ``echcombine``-tool is a wrapper around ``mecombine`` that writes BIDS valid output.
 
@@ -61,7 +64,7 @@ Before sharing or pre-processing their images, users may want to combine the sep
 
 
 Defacing
---------
+^^^^^^^^
 
 Before sharing or pre-processing their images, users may want to deface their anatomical MRI acquisitions as to protect the privacy of their subjects. The ``deface``-tool is a wrapper around ``pydeface`` that writes BIDS valid output.
 

@@ -20,7 +20,7 @@ BIDScoin can be installed and should work on Linux, MS Windows and on OS-X compu
 Dcm2niix installation
 """""""""""""""""""""
 
-BIDScoin relies on dcm2niix to convert the source imaging data to nifti. Please download and install `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ yourself according to the instructions. When done, make sure that the path to the dcm2niix binary / executable is set correctly in the BIDScoin `options <./options.html#dcm2niix>`__ (see also below)
+BIDScoin relies on dcm2niix to convert the source imaging data to nifti. Please download and install `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ yourself according to the instructions. When done, make sure that the path to the dcm2niix binary / executable is set correctly in the BIDScoin `Options`_ in the ``[path_to_bidscoin]/heuristics/bidsmap_template.yaml`` file or in the `Site specific / customized template`_ file.
 
 Python 3 installation
 """""""""""""""""""""
@@ -65,14 +65,20 @@ Run the pip command as before with the additional ``--upgrade`` option:
 
 .. note::
    - The bidsmap-files are not garanteed to be compatible between different BIDScoin versions, so after upgrading it may be necessary to re-run the ``bidsmapper`` command before using ``bidscoiner``.
-   - After a succesful BIDScoin installation or upgrade, it may be needed to (re)edit the ``Options : dcm2niix : path`` value(s) in the ``[path_to_bidscoin]/heuristics/bidsmap_template.yaml`` file according to your system configuration. You can best do this using a plain text editor, but also see `Options <./options.html>`__ for more information.
+   - After a succesful BIDScoin installation or upgrade, it may be needed to (re)do any adjustments that were done on the ``[path_to_bidscoin]/heuristics/bidsmap_template.yaml`` or `Site specific / customized template`_ file.
 
 2. Docker installation
 ----------------------
 
 A Docker image of BIDScoin is available on `dockerhub <https://hub.docker.com/r/kasbohm/bidscoin>`__. Follow `these instructions <https://docs.docker.com/get-started>`__ to download, install and run a Docker container. **NB: This is currently still an outdated version, but new versions will be uploaded soon.**
 
-.. _dcm2niix: https://github.com/rordenlab/dcm2niix
+Site specific / customized template
+-----------------------------------
+
+TODO / WIP
+Example: [path_to_bidscoin]/heuristics/bidsmap_dccn.yaml
+
+.. _Options: options.html
 .. _virtual: https://docs.python.org/3.6/tutorial/venv.html
 .. _conda: https://conda.io/docs/user-guide/tasks/manage-environments.html
 .. _download: https://github.com/Donders-Institute/bidscoin
