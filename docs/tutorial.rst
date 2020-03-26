@@ -11,10 +11,10 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
 
    The new ``tutorial`` folder contains a ``raw`` source-data folder and a ``bids_ref`` reference BIDS folder, i.e. the end product of this tutorial.
 
-Let's begin with inspecting this new raw data collection:
+   Let's begin with inspecting this new raw data collection:
 
-- Are the DICOM files for all the sub-\ */ses-* folders organised in series-subfolders (e.g. sub-001/ses-01/003-T1MPRAGE/0001.dcm etc)? Use ``dicomsort`` if this is not the case
-- Use the ``rawmapper`` command to print out the DICOM values of the "EchoTime", "Sex" and "AcquisitionDate" of the fMRI series in the ``raw`` folder
+- Are the DICOM files for all the sub-\ */ses-* folders organised in series-subfolders (e.g. sub-001/ses-01/003-T1MPRAGE/0001.dcm etc)? Use `dicomsort <preparation.html#dicomsort`__ if this is not the case
+- Use the `rawmapper <preparation.html#rawmapper>`__ command to print out the DICOM values of the "EchoTime", "Sex" and "AcquisitionDate" of the fMRI series in the ``raw`` folder
 
 2. **BIDS mapping.** Scan all folders in the raw data collection for unknown data by running the `bidsmapper <workflow.html#step-1a-running-the-bidsmapper>`__ bash command::
 
@@ -30,7 +30,7 @@ Let's begin with inspecting this new raw data collection:
 
 -  Check your ``bids/code/bidscoin/bidscoiner.log`` and ``bids/code/bidscoin/bidscoiner.errors`` files for any errors or warnings
 -  Compare the results in your ``bids/sub-*`` subject folders with the in ``bids_ref`` reference result. Are the file and foldernames the same? Also check the json sidecar files of the fieldmaps. Do they have the right "EchoTime" and "IntendedFor" fields?
--  What happens if you re-run the ``bidscoiner`` command? Are the same subjects processed again? Re-run "sub-001".
+-  What happens if you re-run the `bidscoiner <workflow.html#step-2-running-the-bidscoiner>`__ command? Are the same subjects processed again? Re-run "sub-001".
 -  Inspect the ``bids/participants.tsv`` file and decide if it is ok.
 -  Update the ``dataset_description.json`` and ``README`` files in your ``bids`` folder
 -  As a final step, run the `bids-validator <https://bids-standard.github.io/bids-validator/>`__ on your ``~/bids_tutorial`` folder. Are you completely ready now to share this dataset?

@@ -4,7 +4,111 @@ Data preparation
 Required source data structure
 ------------------------------
 
-BIDScoin requires that the source data input folder is be organised according to a ``/sub-identifier/[ses-identifier]/seriesfolder/dicomfiles`` structure. This data organization is how users receive their data from the (Siemens) scanners at the `DCCN <https://www.ru.nl/donders/>`__ (NB: the ``ses-identifier`` sub-folder is optional and can be left out).
+BIDScoin requires that the source data input folder is be organised according to a ``sub-identifier/[ses-identifier]/sessiondata`` structure (the ``ses-identifier`` subfolder is optional). The ``sessiondata`` can have any of the following file organizations:
+
+1. **A 'seriesfolder' organization**. This is how users receive their data from the (Siemens) scanners at the `DCCN <https://www.ru.nl/donders/>`__::
+
+    sourcedata
+    |-- sub-001
+    |   |-- ses-mri01
+    |   |   |-- 001-localizer
+    |   |   |   |-- 00001_1.3.12.2.1107.5.2.19.45416.2017121914582956872274162.IMA
+    |   |   |   |-- 00002_1.3.12.2.1107.5.2.19.45416.2017121914583757650874172.IMA
+    |   |   |   `-- 00003_1.3.12.2.1107.5.2.19.45416.2017121914583358068374167.IMA
+    |   |   |
+    |   |   |-- 002-t1_mprage_sag_p2_iso_1.0
+    |   |   |   |-- 00002_1.3.12.2.1107.5.2.19.45416.2017121915051526005675150.IMA
+    |   |   |   |-- 00003_1.3.12.2.1107.5.2.19.45416.2017121915051520026075138.IMA
+    |   |   |   |-- 00004_1.3.12.2.1107.5.2.19.45416.2017121915051515689275130.IMA
+    |   |   |   [..]
+    |   |   [..]
+    |   |
+    |   `-- ses-mri02
+    |       |-- 001-localizer
+    |       |   |-- 00001_1.3.12.2.1107.5.2.19.45416.2017121914582956872274162.IMA
+    |       |   |-- 00002_1.3.12.2.1107.5.2.19.45416.2017121914583757650874172.IMA
+    |       |   `-- 00003_1.3.12.2.1107.5.2.19.45416.2017121914583358068374167.IMA
+    |       [..]
+    |
+    |-- sub-002
+    |   `-- ses-mri01
+    |       |-- 001-localizer
+    |       |   |-- 00001_1.3.12.2.1107.5.2.19.45416.2017121914582956872274162.IMA
+    |       |   |-- 00002_1.3.12.2.1107.5.2.19.45416.2017121914583757650874172.IMA
+    |       |   `-- 00003_1.3.12.2.1107.5.2.19.45416.2017121914583358068374167.IMA
+    |       [..]
+    [..]
+
+2. **A 'DICOMDIR' organization**. This is how data is often exported in clinical settings::
+
+    sourcedata
+    |-- sub-001
+    |   |-- DICOM
+    |   |   `-- 00001EE9
+    |   |       `-- AAFC99B8
+    |   |           `-- AA547EAB
+    |   |               |-- 00000025
+    |   |               |   |-- EE008C45
+    |   |               |   |-- EE027F55
+    |   |               |   |-- EE03D17C
+    |   |               |   [..]
+    |   |               |
+    |   |               |-- 000000B4
+    |   |               |   |-- EE07CCDA
+    |   |               |   |-- EE0E0701
+    |   |               |   |-- EE0E200A
+    |   |               |   [..]
+    |   |               [..]
+    |   `-- DICOMDIR
+    |
+    |-- sub-002
+    |   [..]
+    [..]
+
+3. **A flat DICOM organization**. This is how data is sometimes exported in clinical settings::
+
+    sourcedata
+    |-- sub-001
+    |   `-- ses-mri01
+    |       |-- IM_0001.dcm
+    |       |-- IM_0002.dcm
+    |       |-- IM_0003.dcm
+    |       [..]
+    |
+    |-- sub-002
+    |   `-- ses-mri01
+    |       |-- IM_0001.dcm
+    |       |-- IM_0002.dcm
+    |       |-- IM_0003.dcm
+    |       [..]
+    [..]
+
+4. **A PAR/REC organization**. This is how users often export their data from Philips scanners in research settings:
+
+    sourcedata
+    |-- sub-001
+    |   `-- ses-mri01
+    |       |-- TCHC_066_1_WIP_Hanneke_Block_2_SENSE_4_1.PAR
+    |       |-- TCHC_066_1_WIP_Hanneke_Block_2_SENSE_4_1.REC
+    |       |-- TCHC_066_1_WIP_IDED_SENSE_6_1.PAR
+    |       |-- TCHC_066_1_WIP_IDED_SENSE_6_1.REC
+    |       |-- TCHC_066_1_WIP_Localizer_CLEAR_1_1.PAR
+    |       |-- TCHC_066_1_WIP_Localizer_CLEAR_1_1.REC
+    |       [..]
+    |
+    |-- sub-002
+    |   `-- ses-mri01
+    |       |-- TCHC_066_1_WIP_Hanneke_Block_2_SENSE_4_1.PAR
+    |       |-- TCHC_066_1_WIP_Hanneke_Block_2_SENSE_4_1.REC
+    |       |-- TCHC_066_1_WIP_IDED_SENSE_6_1.PAR
+    |       |-- TCHC_066_1_WIP_IDED_SENSE_6_1.REC
+    |       |-- TCHC_066_1_WIP_Localizer_CLEAR_1_1.PAR
+    |       |-- TCHC_066_1_WIP_Localizer_CLEAR_1_1.REC
+    |       [..]
+    [..]
+
+.. note::
+   BIDScoin unpacks the above data structures if they are stored in a ``.zip`` or e.g. ``.tar.gz`` format
 
 Data management utilitities
 ---------------------------
@@ -20,7 +124,9 @@ The ``dicomsort`` command-line tool is a utility to move your unordered or DICOM
                      [-e EXT] [-n] [-p PATTERN] [-d]
                      dicomsource
     
-    Sorts and / or renames DICOM files into local subdirectories with a (3-digit) SeriesNumber-SeriesDescription directory name (i.e. following the same listing as on the scanner console)
+    Sorts and / or renames DICOM files into local subdirectories with a (3-digit)
+    SeriesNumber-SeriesDescription directory name (i.e. following the same listing
+    as on the scanner console)
     
     positional arguments:
       dicomsource           The name of the root folder containing the

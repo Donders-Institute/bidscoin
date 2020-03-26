@@ -64,7 +64,7 @@ Run the pip command as before with the additional ``--upgrade`` option:
    $ pip install --upgrade bidscoin
 
 .. note::
-   - The bidsmap-files are not garanteed to be compatible between different BIDScoin versions, so after upgrading it may be necessary to re-run the ``bidsmapper.py`` command before using ``bidscoiner.py``.
+   - The bidsmap-files are not garanteed to be compatible between different BIDScoin versions, so after upgrading it may be necessary to re-run the ``bidsmapper`` command before using ``bidscoiner``.
    - After a succesful BIDScoin installation or upgrade, it may be needed to (re)edit the ``Options : dcm2niix : path`` value(s) in the ``[path_to_bidscoin]/heuristics/bidsmap_template.yaml`` file according to your system configuration. You can best do this using a plain text editor, but also see `Options <./options.html>`__ for more information.
 
 2. Docker installation
