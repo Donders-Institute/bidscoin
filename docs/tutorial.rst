@@ -13,7 +13,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
 
    Let's begin with inspecting this new raw data collection:
 
-- Are the DICOM files for all the sub-\ */ses-* folders organised in series-subfolders (e.g. sub-001/ses-01/003-T1MPRAGE/0001.dcm etc)? Use `dicomsort <preparation.html#dicomsort`__ if this is not the case
+- Are the DICOM files for all the sub-\ */ses-* folders organised in series-subfolders (e.g. sub-001/ses-01/003-T1MPRAGE/0001.dcm etc)? Use `dicomsort <preparation.html#dicomsort>`__ if this is not the case
 - Use the `rawmapper <preparation.html#rawmapper>`__ command to print out the DICOM values of the "EchoTime", "Sex" and "AcquisitionDate" of the fMRI series in the ``raw`` folder
 
 2. **BIDS mapping.** Scan all folders in the raw data collection for unknown data by running the `bidsmapper <workflow.html#step-1a-running-the-bidsmapper>`__ bash command::
