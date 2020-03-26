@@ -83,7 +83,7 @@ BIDScoin requires that the source data input folder is be organised according to
     |       [..]
     [..]
 
-4. **A PAR/REC organization**. This is how users often export their data from Philips scanners in research settings:
+4. **A PAR/REC organization**. This is how users often export their data from Philips scanners in research settings::
 
     sourcedata
     |-- sub-001
