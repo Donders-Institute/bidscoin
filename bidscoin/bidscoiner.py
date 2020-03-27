@@ -402,7 +402,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=[], force: bool=F
     # Input checking & defaults
     rawfolder   = Path(rawfolder).resolve()
     bidsfolder  = Path(bidsfolder).resolve()
-    bidsmapfile = Path(bidsmapfile).resolve()
+    bidsmapfile = Path(bidsmapfile)
 
     # Start logging
     bids.setup_logging(bidsfolder/'code'/'bidscoin'/'bidscoiner.log')
