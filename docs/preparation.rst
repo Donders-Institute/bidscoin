@@ -4,7 +4,7 @@ Data preparation
 Required source data structure
 ------------------------------
 
-BIDScoin requires that the source data input folder is organized according to a ``sub-identifier/[ses-identifier]/sessiondata`` structure (the ``ses-identifier`` subfolder is optional). The ``sessiondata`` can have various formats, as shown in the following examples:
+BIDScoin requires that the source data input folder is organized according to a ``sub-identifier/[ses-identifier]/sessiondata`` structure (NB: the ``ses-identifier`` subfolder is optional). The ``sessiondata`` can have various formats, as shown in the following examples:
 
 1. **A 'seriesfolder' organization**. A series folder contains a single data type and are typically acquired in a single run -- a.k.a 'Series' in DICOM speak. This is how users receive their data from the (Siemens) scanners at the `DCCN <https://www.ru.nl/donders/>`__::
 

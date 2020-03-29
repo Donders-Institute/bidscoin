@@ -74,7 +74,7 @@ Step 1a: Running the bidsmapper
 The bidsmapper will scan your ``sourcefolder`` to look for different runs (scan-types) to create a mapping for each run to a bids output name (a.k.a. the 'bidsmap'). By default (but see the ``-i`` option above), when finished the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__, as described in the next section (but step 1b can also always be run separately by directly running the bidseditor).
 
 .. note::
-   Tip: use the ``-t bidsmap_dccn`` option and see if it works for you. If not, consider opening it with a text editor and adapt it to your needs.
+   Tip: use the ``-t bidsmap_dccn`` option and see if it works for you. If not, consider opening it with a text editor and `adapt it to your needs <installation.html#site-specific-customized-template>`__.
 
 Step 1b: Running the bidseditor
 -------------------------------

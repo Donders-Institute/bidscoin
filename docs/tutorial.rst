@@ -20,7 +20,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
 
    $ bidsmapper raw bids
 
--  Rename the task-label of the functional scans into something more readable, e.g. "Reward" and "Stop"
+-  Rename the task label of the functional scans into something more readable, e.g. "Reward" and "Stop"
 -  Add a search pattern to the IntendedFor field such that it will select your fMRI runs (see the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ ``fieldmap`` section for more details)
 -  When all done, (re)open the ``bidsmap.yaml`` file and change the options such that you will get non-zipped nifti data (i.e. ``*.nii``\ instead of ``*.nii.gz``) in your BIDS data collection. You can use a text editor or, much better, run the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ command line tool.
 
