@@ -54,7 +54,7 @@ A good start to create your own template is to have a look at the DCCN ``[path_t
 Plugins
 -------
 
-BIDScoin has the option to import plugins to further automate / complete the conversion from source data to BIDS. The plugin takes is called each time the BIDScoin tool has finished processing a run or session, with arguments containing information about the run or session -- see the plugin example code below. The functions in the plugin module should be named ``bidsmapper_plugin`` to be called by ``bidsmapper` and ``bidscoiner_plugin`` to be called by ``bidscoiner``.
+BIDScoin has the option to import plugins to further automate / complete the conversion from source data to BIDS. The plugin takes is called each time the BIDScoin tool has finished processing a run or session, with arguments containing information about the run or session, as shown in the plugin example code below. The functions in the plugin module should be named ``bidsmapper_plugin`` to be called by ``bidsmapper`` and ``bidscoiner_plugin`` to be called by ``bidscoiner``.
 
 .. code-block:: python3
 
