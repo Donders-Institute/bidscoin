@@ -52,8 +52,8 @@ Run the pip command as before with the additional ``--upgrade`` option:
 
    $ pip install --upgrade bidscoin
 
-.. note::
-   - The bidsmap-files are not garanteed to be compatible between different BIDScoin versions, so after upgrading it may be necessary to re-run the ``bidsmapper`` command before using ``bidscoiner``.
+.. caution::
+   - The bidsmaps are not garanteed to be compatible between different BIDScoin versions.
    - After a succesful BIDScoin installation or upgrade, it may be needed to (re)do any adjustments that were done on the `Site specific / customized template <advanced.html#site-specific-customized-template>`__ file(s) (so make a back-up of these before you upgrade).
 
 .. _Options: options.html

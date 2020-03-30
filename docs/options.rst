@@ -30,7 +30,7 @@ The nifti- and json-files are generated with `dcm2niix <https://github.com/rorde
 
 - ``args``: Argument string that is passed to dcm2niix. Click [Test] and see the terminal output for usage
 
-.. note::
+.. tip::
    SPM users may want to use '-z n', which produces unzipped nifti's
 
 Plugins
