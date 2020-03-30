@@ -6,10 +6,8 @@ or "myplugin.py". The functions in this module should be named "bidsmapper_plugi
 "bidscoiner_plugin" for bidscoiner.py. See the code for the (positional) input arguments of the plugin-functions.
 """
 
-
 import logging
 from pathlib import Path
-
 
 LOGGER = logging.getLogger(f'bidscoin.{Path(__file__).stem}')
 
@@ -26,6 +24,7 @@ def bidsmapper_plugin(seriesfolder: Path, bidsmap: dict, bidsmap_template: dict)
 
     LOGGER.debug(f'This is a bidsmapper demo-plugin working on: {seriesfolder}')
     return bidsmap
+
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict) -> None:
     """

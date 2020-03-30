@@ -54,13 +54,12 @@ A good start to create your own template is to have a look at the DCCN ``[path_t
 Plugins
 -------
 
-BIDScoin has the option to import plugins to further automate / complete the conversion from source data to BIDS. The functions in the module should be named ``bidsmapper_plugin`` for bidsmapper and ``bidscoiner_plugin`` for bidscoiner.
+BIDScoin has the option to import plugins to further automate / complete the conversion from source data to BIDS. The plugin takes is called each time the BIDScoin tool has finished processing a run or session, with arguments containing information about the run or session -- see the plugin example code below. The functions in the plugin module should be named ``bidsmapper_plugin`` to be called by ``bidsmapper` and ``bidscoiner_plugin`` to be called by ``bidscoiner``.
 
 .. code-block:: python3
 
    import logging
    from pathlib import Path
-
 
    LOGGER = logging.getLogger(f'bidscoin.{Path(__file__).stem}')
 
@@ -77,6 +76,7 @@ BIDScoin has the option to import plugins to further automate / complete the con
 
        LOGGER.debug(f'This is a bidsmapper demo-plugin working on: {seriesfolder}')
        return bidsmap
+
 
    def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict) -> None:
        """

@@ -4,7 +4,7 @@ Installation
 BIDScoin can be installed and should work on Linux, MS Windows and on OS-X computers (this latter option has not been tested) that satisfy the system requirements:
 
 -  dcm2niix
--  python 3
+-  python 3.6 or higher
 
 Dcm2niix installation
 ---------------------
