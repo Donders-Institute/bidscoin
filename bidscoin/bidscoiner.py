@@ -251,7 +251,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                 data['AcquisitionTime'] = bids.get_sourcefield('exam_date', sourcefile)
             acq_time = dateutil.parser.parse(data['AcquisitionTime'])
             scanpath = list(jsonfile.parent.glob(jsonfile.stem + '.nii*'))[0].relative_to(bidsses)    # Find the corresponding nifti file (there should be only one, let's not make assumptions about the .gz extension)
-            scans_table.loc[scanpath.as_posix(), 'acq_time'] = '1900-01-01T' + acq_time.strftime('%H:%M:%S')
+            scans_table.loc[scanpath.as_posix(), 'acq_time'] = '1925-01-01T' + acq_time.strftime('%H:%M:%S')
 
     # Write the scans_table to disk
     LOGGER.info(f"Writing acquisition time data to: {scans_tsv}")
