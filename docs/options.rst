@@ -36,5 +36,5 @@ The nifti- and json-files are generated with `dcm2niix <https://github.com/rorde
 Plugins
 -------
 
-BIDScoin provides the possibility for researchers to write custom python functions that will be executed at bidsmapper and bidscoiner runtime. To use this functionality, enter the name of the module (default location is the plugins-folder; otherwise the full path must be provided) in the bidsmap dictionary file to import the plugin functions. The functions in the module should be named ``bidsmapper_plugin`` for bidsmapper and ``bidscoiner_plugin`` for bidscoiner. See ``[path_to_bidscoin]/plugins/README.py`` for more details and placeholder code.
+BIDScoin provides the possibility for researchers to write custom python functions that will be executed at bidsmapper and bidscoiner runtime. To use this functionality, enter the name of the module (default location is the plugins-folder; otherwise the full path must be provided) in the bidsmap dictionary file to import the plugin functions. See `advanced.html#plugins` for more details.
 

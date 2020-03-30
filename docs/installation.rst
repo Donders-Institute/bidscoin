@@ -19,26 +19,36 @@ BIDScoin is a python package and therefore a python interpreter needs to be pres
 BIDScoin installation
 ---------------------
 
-To install BIDScoin run the following command in your command-shell (institute users may want to activate a `virtual`_ / `conda`_ python environment first)::
+To install BIDScoin run the following command in your command-shell (institute users may want to activate a `virtual`_ / `conda`_ python environment first):
+
+.. code-block:: bash
 
    $ pip install bidscoin
 
-This will give you the latest stable release of the software. To get the very latest (development) version of the software you can install the package directly from the github source code repository::
+This will give you the latest stable release of the software. To get the very latest (development) version of the software you can install the package directly from the github source code repository:
+
+.. code-block:: bash
 
    $ pip install git+https://github.com/Donders-Institute/bidscoin
 
-If you want to edit the code or want to contribute back to the project, you can use the ``-e`` option::
+If you want to edit the code or want to contribute back to the project, you can use the ``-e`` option:
+
+.. code-block:: bash
 
    $ pip install -e git+https://github.com/Donders-Institute/bidscoin#egg=bidscoin
 
-If you do not have git (or any other version control system) installed you can `download`_ and unzip the code yourself in a directory named e.g. ``bidscoin`` and run (again, with or without the ``-e`` option)::
+If you do not have git (or any other version control system) installed you can `download`_ and unzip the code yourself in a directory named e.g. ``bidscoin`` and run (again, with or without the ``-e`` option):
+
+.. code-block:: bash
 
    $ pip install -e bidscoin
 
 Updating BIDScoin
 ^^^^^^^^^^^^^^^^^
 
-Run the pip command as before with the additional ``--upgrade`` option::
+Run the pip command as before with the additional ``--upgrade`` option:
+
+.. code-block:: bash
 
    $ pip install --upgrade bidscoin
 
@@ -50,3 +60,4 @@ Run the pip command as before with the additional ``--upgrade`` option::
 .. _virtual: https://docs.python.org/3.6/tutorial/venv.html
 .. _conda: https://conda.io/docs/user-guide/tasks/manage-environments.html
 .. _download: https://github.com/Donders-Institute/bidscoin
+

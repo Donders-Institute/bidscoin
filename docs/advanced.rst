@@ -14,7 +14,7 @@ Generally speaking, a bidsmap file contains a collection of key-value dictionari
    
 A good start to create your own template is to have a look at the DCCN ``[path_to_bidscoin]/heuristics/bidsmap_dccn.yaml`` template and see if you can adapt that to your needs. If you open the template, there are a few things to take notice of (as shown in the template snippet below). First, you can see that the DCCN template makes use of YAML `anchors and aliases <https://blog.daemonl.com/2016/02/yaml.html>`__ (to make maintanance more sustainable). The second thing to notice is that, of the first run, all values of the attribute dictionary are empty. In that way, the subsequent runs that alias (``<<: *anatattributes_dicom``) this anchor (``&anatattributes_dicom``) will inherit only the keys and can inject their own values. The first run of each modality sub-section (like ``anat``) also serves as the default bidsmapping when users manually overrule / change the bids modality using the `bidsmapper <workflow.html#step-1a-running-the-bidsmapper>`__ GUI. Finally, it is important to take notice of the usage of `matching patterns <workflow.html#step-1b-running-the-bidseditor>`__ (see ``DICOM Attributes``).
 
-::
+.. code-block:: yaml
 
    anat:       # ----------------------- All anatomical runs --------------------
    - provenance: ~                 # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = T1w
@@ -50,3 +50,45 @@ A good start to create your own template is to have a look at the DCCN ``[path_t
        suffix: T1w
 
 *Snippet from the ``bidsmap_dccn.yaml`` template*
+
+Plugins
+-------
+
+BIDScoin has the option to import plugins to further automate / complete the conversion from source data to BIDS. The functions in the module should be named ``bidsmapper_plugin`` for bidsmapper and ``bidscoiner_plugin`` for bidscoiner.
+
+.. code-block:: python3
+
+   import logging
+   from pathlib import Path
+
+
+   LOGGER = logging.getLogger(f'bidscoin.{Path(__file__).stem}')
+
+
+   def bidsmapper_plugin(seriesfolder: Path, bidsmap: dict, bidsmap_template: dict) -> dict:
+       """
+       The plugin to map info onto bids labels
+
+       :param seriesfolder:        The full-path name of the raw-data series folder
+       :param bidsmap:             The study bidsmap
+       :param bidsmap_template:    Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+       :return:                    The study bidsmap with new entries in it
+       """
+
+       LOGGER.debug(f'This is a bidsmapper demo-plugin working on: {seriesfolder}')
+       return bidsmap
+
+   def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict) -> None:
+       """
+       The plugin to cast the series into the bids folder
+
+       :param session:     The full-path name of the subject/session raw data source folder
+       :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
+       :param bidsfolder:  The full-path name of the BIDS root-folder
+       :param personals:   The dictionary with the personal information
+       :return:            Nothing
+       """
+
+       LOGGER.debug(f'This is a bidscoiner demo-plugin working on: {session} -> {bidsfolder}')
+
+*Plugin example code*

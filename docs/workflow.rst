@@ -4,7 +4,7 @@ The BIDScoin workflow
 Having an organized source data folder, the actual data-set conversion to BIDS is performed by the `(1a) <#step-1a-running-the-bidsmapper>`__ the ``bidsmapper``, `(1b) <#step-1b-running-the-bidseditor>`__ the ``bidseditor`` and `(2) <#step-2-running-the-bidscoiner>`__ the ``bidscoiner`` command-line tools. The ``bidsmapper`` makes a map of the different kind of datatypes in your source dataset, with the ``bidseditor`` you can edit this map, and the ``bidscoiner`` does the actual work to convert the source data into BIDS. By default (but see the ``-i`` option of the bidsmapper below), step 1a automatically
 launches step 1b, so in it's simplest form, all you need to do to convert your raw source data into BIDS is to run two simple commands, e.g.:
 
-::
+.. code-block:: bash
 
     $ bidsmapper sourcefolder bidsfolder
     $ bidscoiner sourcefolder bidsfolder

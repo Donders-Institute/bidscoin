@@ -7,28 +7,27 @@ or "myplugin.py". The functions in this module should be named "bidsmapper_plugi
 """
 
 
-import os
 import logging
+from pathlib import Path
 
 
-LOGGER = logging.getLogger(f'bidscoin.{os.path.splitext(os.path.basename(__file__))[0]}')
+LOGGER = logging.getLogger(f'bidscoin.{Path(__file__).stem}')
 
 
-def bidsmapper_plugin(seriesfolder: str, bidsmap: dict, heuristics: dict) -> dict:
+def bidsmapper_plugin(seriesfolder: Path, bidsmap: dict, bidsmap_template: dict) -> dict:
     """
     The plugin to map info onto bids labels
 
-    :param seriesfolder:    The full-path name of the raw-data series folder
-    :param bidsmap:         The bidsmap
-    :param heuristics:      Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:                The bidsmap with new entries in it
+    :param seriesfolder:        The full-path name of the raw-data series folder
+    :param bidsmap:             The study bidsmap
+    :param bidsmap_template:    Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :return:                    The study bidsmap with new entries in it
     """
 
     LOGGER.debug(f'This is a bidsmapper demo-plugin working on: {seriesfolder}')
     return bidsmap
 
-
-def bidscoiner_plugin(session: str, bidsmap: dict, bidsfolder: str, personals: dict) -> None:
+def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict) -> None:
     """
     The plugin to cast the series into the bids folder
 
