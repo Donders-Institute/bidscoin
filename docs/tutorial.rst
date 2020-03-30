@@ -5,7 +5,7 @@ This tutorial is specific for researchers from the DCCN and makes use of data-se
 
 1. **Preparation.** Activate the bidscoin environment and create a tutorial playground folder in your home directory by executing these bash commands (see also ``module help bidscoin``):
 
-.. code-block:: bash
+.. code-block:: console
 
    $ module add bidscoin
    $ source activate /opt/bidscoin
@@ -20,7 +20,7 @@ Let's begin with inspecting this new raw data collection:
 
 2. **BIDS mapping.** Scan all folders in the raw data collection for unknown data by running the `bidsmapper <workflow.html#step-1a-running-the-bidsmapper>`__ bash command:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ bidsmapper raw bids
 
@@ -30,7 +30,7 @@ Let's begin with inspecting this new raw data collection:
 
 3. **BIDS coining.** Convert your raw data collection into a BIDS collection by running the `bidscoiner <workflow.html#step-2-running-the-bidscoiner>`__ commandline tool (note that the input is the same as for the bidsmapper):
 
-.. code-block:: bash
+.. code-block:: console
 
    $ bidscoiner raw bids
 
