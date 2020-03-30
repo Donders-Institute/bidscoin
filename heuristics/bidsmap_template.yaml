@@ -40,7 +40,7 @@ DICOM:
 # --------------------------------------------------------------------------------
   subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
   session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
-  anat:       # ----------------------- All anatomical series --------------------
+  anat:       # ----------------------- All anatomical runs --------------------
   - provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     attributes: &anatattributes_dicom
       Modality: ~
@@ -135,7 +135,7 @@ DICOM:
       <<: *anatbids_dicom
       suffix: defacemask
 
-  func:       # ----------------------- All functional series --------------------
+  func:       # ----------------------- All functional runs --------------------
   - provenance: ~
     attributes: &funcattributes_dicom
       Modality: ~
@@ -192,7 +192,7 @@ DICOM:
       <<: *funcbids_dicom
       suffix: sbref
 
-  dwi:        # ----------------------- All diffusion series ---------------------
+  dwi:        # ----------------------- All diffusion runs ---------------------
   - provenance: ~
     attributes: &dwiattributes_dicom
       Modality: ~
@@ -220,7 +220,7 @@ DICOM:
       <<: *dwibids_dicom
       suffix: sbref
 
-  fmap:       # ----------------------- All fieldmap series ----------------------
+  fmap:       # ----------------------- All fieldmap runs ----------------------
   - provenance: ~
     attributes: &fmapattributes_dicom
       Modality: ~
@@ -281,7 +281,7 @@ DICOM:
       dir: <InPlanePhaseEncodingDirection>
       suffix: epi
 
-  beh:        # ----------------------- All behavioural data ---------------------
+  beh:        # ----------------------- All behavioural data -------------------
   - provenance: ~
     attributes: &behattributes_dicom
       Modality: ~
@@ -317,7 +317,7 @@ DICOM:
       <<: *behbids_dicom
       suffix: stim
 
-  pet:        # ----------------------- All PET series ---------------------------
+  pet:        # ----------------------- All PET runs ---------------------------
   - provenance: ~
     attributes: &petattributes_dicom
       Modality: PT
@@ -335,7 +335,7 @@ DICOM:
       run: <<1>>
       suffix: pet
 
-  extra_data: # ----------------------- All extra data ---------------------------
+  extra_data: # ----------------------- All extra data -------------------------
   - provenance: ~
     attributes:
       Modality: ~
@@ -363,7 +363,7 @@ DICOM:
       mod: ~
       suffix: ~
 
-  leave_out:  # ----------------------- Data that will be left out ---------------
+  leave_out:  # ----------------------- Data that will be left out -------------
   - provenance: ~
     attributes:
       Modality: ~
@@ -398,7 +398,7 @@ PAR:
 # --------------------------------------------------------------------------------
   subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
   session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
-  anat:       # ----------------------- All anatomical series --------------------
+  anat:       # ----------------------- All anatomical runs --------------------
   - provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     attributes: &anatattributes_par
       series_type: ~
@@ -492,7 +492,7 @@ PAR:
       <<: *anatbids_par
       suffix: defacemask
 
-  func:       # ----------------------- All functional series --------------------
+  func:       # ----------------------- All functional runs --------------------
   - provenance: ~
     attributes: &funcattributes_par
       series_type: ~
@@ -548,7 +548,7 @@ PAR:
       <<: *funcbids_par
       suffix: sbref
 
-  dwi:        # ----------------------- All diffusion series ---------------------
+  dwi:        # ----------------------- All diffusion runs ---------------------
   - provenance: ~
     attributes: &dwiattributes_par
       series_type: ~
@@ -575,7 +575,7 @@ PAR:
       <<: *dwibids_par
       suffix: sbref
 
-  fmap:       # ----------------------- All fieldmap series ----------------------
+  fmap:       # ----------------------- All fieldmap runs ----------------------
   - provenance: ~
     attributes: &fmapattributes_par
       series_type: ~
@@ -635,7 +635,7 @@ PAR:
       dir: <InPlanePhaseEncodingDirection>
       suffix: epi
 
-  beh:        # ----------------------- All behavioural data ---------------------
+  beh:        # ----------------------- All behavioural data -------------------
   - provenance: ~
     attributes: &behattributes_par
       series_type: ~
@@ -670,7 +670,7 @@ PAR:
       <<: *behbids_par
       suffix: stim
 
-  pet:        # ----------------------- All PET series ---------------------------
+  pet:        # ----------------------- All PET runs ---------------------------
   - provenance: ~
     attributes: &petattributes_par
       series_type: ~
@@ -693,7 +693,7 @@ PAR:
       run: <<1>>
       suffix: pet
 
-  extra_data: # ----------------------- All extra data ---------------------------
+  extra_data: # ----------------------- All extra data -------------------------
   - provenance: ~
     attributes:
       series_type: ~
@@ -720,7 +720,7 @@ PAR:
       mod: ~
       suffix: ~
 
-  leave_out:  # ----------------------- Data that will be left out ---------------
+  leave_out:  # ----------------------- Data that will be left out -------------
   - provenance: ~
     attributes:
       series_type: ~
@@ -768,7 +768,7 @@ FileSystem:
 # --------------------------------------------------------------------------------
   subject: <<SourceFilePath>>       # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime
   session: <<SourceFilePath>>       # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime
-  anat:       # ----------------------- All anatomical series --------------------
+  anat:       # ----------------------- All anatomical runs --------------------
   - attributes: &anatattributes_file
       FolderName: ~
       FileName: ~
@@ -844,7 +844,7 @@ FileSystem:
       <<: *anatbids_file
       suffix: SWImagandphase
 
-  func:       # ----------------------- All functional series --------------------
+  func:       # ----------------------- All functional runs --------------------
   - attributes: &funcattributes_file
       FolderName: ~
       FileName: ~
@@ -875,7 +875,7 @@ FileSystem:
       recording: <FileName>
       suffix: stim
 
-  dwi:        # ----------------------- All diffusion series ---------------------
+  dwi:        # ----------------------- All diffusion runs ---------------------
   - attributes: &dwiattributes_file
       FolderName: ~
       FileName: ~
@@ -885,7 +885,7 @@ FileSystem:
       run: <<1>>
       suffix: dwi
 
-  fmap:       # ----------------------- All fieldmap series ----------------------
+  fmap:       # ----------------------- All fieldmap runs ----------------------
   - attributes: &fmapattributes_file
       FolderName: ~
       FileName: ~
@@ -925,7 +925,7 @@ FileSystem:
       <<: *fmapbids_file
       suffix: epi
 
-  beh:        # ----------------------- All behavioural data ---------------------
+  beh:        # ----------------------- All behavioural data -------------------
   - attributes: &behattributes_file
       FolderName: ~
       FileName: ~
@@ -946,7 +946,7 @@ FileSystem:
       <<: *behbids_file
       suffix: stim
 
-  extra_data: # ----------------------- All extra data ---------------------------
+  extra_data: # ----------------------- All extra data -------------------------
   - attributes:
       FolderName: ~
       FileName: ~
@@ -962,7 +962,7 @@ FileSystem:
       suffix: ~
       mod: ~
 
-  leave_out:  # ----------------------- Data that will be left out ---------------
+  leave_out:  # ----------------------- Data that will be left out -------------
   - attributes:
       FolderName: ~
       FileName: ~

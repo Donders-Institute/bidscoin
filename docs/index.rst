@@ -9,6 +9,7 @@
    workflow
    finalizing
    options
+   advanced
    screenshots
    tutorial
 

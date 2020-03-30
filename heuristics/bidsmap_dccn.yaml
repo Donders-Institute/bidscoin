@@ -41,7 +41,7 @@ DICOM:
 # --------------------------------------------------------------------------------
   subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
   session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
-  anat:       # ----------------------- All anatomical series --------------------
+  anat:       # ----------------------- All anatomical runs --------------------
   - attributes: &anatattributes_dicom   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = T1w
       Modality: ~
       ProtocolName: ~
@@ -152,7 +152,7 @@ DICOM:
       suffix: defacemask
     provenance: ~
 
-  func:       # ----------------------- All functional series --------------------
+  func:       # ----------------------- All functional runs --------------------
   - attributes: &funcattributes_dicom   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = bold
       Modality: ~
       ProtocolName: ~
@@ -178,7 +178,7 @@ DICOM:
       echo: <EchoNumbers>
       suffix: bold
     provenance: ~
-  - attributes:                   # First match the SBREF bold series (the normal bold series don't have SBREF in the seriesdescription)
+  - attributes:                   # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
       <<: *funcattributes_dicom
       ProtocolName: ['*fmri*', '*fMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
       SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
@@ -186,7 +186,7 @@ DICOM:
       <<: *funcbids_dicom
       suffix: sbref
     provenance: ~
-  - attributes:                   # Then catch the bold series itself
+  - attributes:                   # Then catch the bold runs itself
       <<: *funcattributes_dicom
       ProtocolName: ['*fmri*', '*fMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
     bids: *funcbids_dicom
@@ -216,7 +216,7 @@ DICOM:
       suffix: stim
     provenance: ~
 
-  dwi:        # ----------------------- All diffusion series ---------------------
+  dwi:        # ----------------------- All diffusion runs ---------------------
   - attributes:   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = dwi
       Modality: ~
       ProtocolName: ~
@@ -238,7 +238,7 @@ DICOM:
       run: <<1>>
       suffix: dwi
     provenance: ~
-  - attributes: &dwiattributes_dicom_sbref      # First match the SBREF dwi series (the normal dwi series don't have SBREF in the seriesdescription)
+  - attributes: &dwiattributes_dicom_sbref      # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
       Modality: ~
       ProtocolName: ['*dwi*', '*DWI*', '*diffusion*', '*dti*', '*DTI*']
       SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
@@ -257,12 +257,12 @@ DICOM:
       <<: *dwibids_dicom
       suffix: sbref
     provenance: ~
-  - attributes:                           # Then catch the normal DWI series
+  - attributes:                           # Then catch the normal DWI runs
       <<: *dwiattributes_dicom_sbref
       SeriesDescription: ~                # Remove the SBREF filter
     bids: *dwibids_dicom
     provenance: ~
-  - attributes:                           # First match the SBREF dwi series (the normal dwi series don't have SBREF in the seriesdescription)
+  - attributes:                           # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
       <<: *dwiattributes_dicom_sbref
       ImageType: '*DIFFUSION*'
       ProtocolName: ~
@@ -270,7 +270,7 @@ DICOM:
       <<: *dwibids_dicom
       suffix: sbref
     provenance: ~
-  - attributes:                           # Then catch the normal DWI series
+  - attributes:                           # Then catch the normal DWI runs
       <<: *dwiattributes_dicom_sbref
       ImageType: '*DIFFUSION*'
       ProtocolName: ~
@@ -278,7 +278,7 @@ DICOM:
     bids: *dwibids_dicom
     provenance: ~
 
-  fmap:       # ----------------------- All fieldmap series ----------------------
+  fmap:       # ----------------------- All fieldmap runs ----------------------
   - attributes: &fmapattributes_dicom     # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = magnitude
       Modality: ~
       ProtocolName: ~
@@ -364,7 +364,7 @@ DICOM:
       suffix: epi
     provenance: ~
 
-  beh:        # ----------------------- All behavioural data ---------------------
+  beh:        # ----------------------- All behavioural data -------------------
   - attributes: &behattributes
       Modality: ~
       ProtocolName: ~
@@ -399,7 +399,7 @@ DICOM:
       <<: *behbids
       suffix: stim
 
-  pet:        # ----------------------- All PET series ---------------------------
+  pet:        # ----------------------- All PET runs ---------------------------
   - attributes: &petattributes
       Modality: PT
       SeriesDescription: ~
@@ -417,7 +417,7 @@ DICOM:
       suffix: pet
     provenance: ~
 
-  extra_data: # ----------------------- All extra data ---------------------------
+  extra_data: # ----------------------- All extra data -------------------------
   - attributes:
       Modality: ~
       ProtocolName: ~
@@ -445,7 +445,7 @@ DICOM:
       mod: ~
     provenance: ~
 
-  leave_out:  # ----------------------- Data that will be left out ---------------
+  leave_out:  # ----------------------- Data that will be left out -------------
   - provenance: ~
     attributes: &leaveout_attributes_dicom
       Modality: ~
@@ -488,7 +488,7 @@ PAR:
 # --------------------------------------------------------------------------------
   subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
   session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
-  anat:       # ----------------------- All anatomical series --------------------
+  anat:       # ----------------------- All anatomical runs --------------------
   - provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     attributes: &anatattributes_par
       series_type: ~
@@ -586,7 +586,7 @@ PAR:
       <<: *anatbids_par
       suffix: defacemask
 
-  func:       # ----------------------- All functional series --------------------
+  func:       # ----------------------- All functional runs --------------------
   - provenance: ~
     attributes: &funcattributes_par
       series_type: ~
@@ -642,7 +642,7 @@ PAR:
       <<: *funcbids_par
       suffix: sbref
 
-  dwi:        # ----------------------- All diffusion series ---------------------
+  dwi:        # ----------------------- All diffusion runs ---------------------
   - provenance: ~
     attributes: &dwiattributes_par
       series_type: ~
@@ -669,7 +669,7 @@ PAR:
       <<: *dwibids_par
       suffix: sbref
 
-  fmap:       # ----------------------- All fieldmap series ----------------------
+  fmap:       # ----------------------- All fieldmap runs ----------------------
   - provenance: ~
     attributes: &fmapattributes_par
       series_type: ~
@@ -729,7 +729,7 @@ PAR:
       dir: <InPlanePhaseEncodingDirection>
       suffix: epi
 
-  beh:        # ----------------------- All behavioural data ---------------------
+  beh:        # ----------------------- All behavioural data -------------------
   - provenance: ~
     attributes: &behattributes_par
       series_type: ~
@@ -764,7 +764,7 @@ PAR:
       <<: *behbids_par
       suffix: stim
 
-  pet:        # ----------------------- All PET series ---------------------------
+  pet:        # ----------------------- All PET runs ---------------------------
   - provenance: ~
     attributes: &petattributes_par
       series_type: ~
@@ -787,7 +787,7 @@ PAR:
       run: <<1>>
       suffix: pet
 
-  extra_data: # ----------------------- All extra data ---------------------------
+  extra_data: # ----------------------- All extra data -------------------------
   - provenance: ~
     attributes:
       series_type: ~
@@ -814,7 +814,7 @@ PAR:
       mod: ~
       suffix: ~
 
-  leave_out:  # ----------------------- Data that will be left out ---------------
+  leave_out:  # ----------------------- Data that will be left out -------------
   - provenance: ~
     attributes:
       series_type: ~
@@ -862,7 +862,7 @@ FileSystem:
 # --------------------------------------------------------------------------------
   subject: <<SourceFilePath>>       # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime
   session: <<SourceFilePath>>       # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime
-  anat:       # ----------------------- All anatomical series --------------------
+  anat:       # ----------------------- All anatomical runs --------------------
   - attributes: &anatattributes_file
       FolderName: ~
       FileName: ~
@@ -938,7 +938,7 @@ FileSystem:
       <<: *anatbids_file
       suffix: SWImagandphase
 
-  func:       # ----------------------- All functional series --------------------
+  func:       # ----------------------- All functional runs --------------------
   - attributes: &funcattributes_file
       FolderName: ~
       FileName: ~
@@ -969,7 +969,7 @@ FileSystem:
       recording: <FileName>
       suffix: stim
 
-  dwi:        # ----------------------- All diffusion series ---------------------
+  dwi:        # ----------------------- All diffusion runs ---------------------
   - attributes: &dwiattributes_file
       FolderName: ~
       FileName: ~
@@ -979,7 +979,7 @@ FileSystem:
       run: <<1>>
       suffix: dwi
 
-  fmap:       # ----------------------- All fieldmap series ----------------------
+  fmap:       # ----------------------- All fieldmap runs ----------------------
   - attributes: &fmapattributes_file
       FolderName: ~
       FileName: ~
@@ -1019,7 +1019,7 @@ FileSystem:
       <<: *fmapbids_file
       suffix: epi
 
-  beh:        # ----------------------- All behavioural data ---------------------
+  beh:        # ----------------------- All behavioural data -------------------
   - attributes: &behattributes_file
       FolderName: ~
       FileName: ~
@@ -1040,7 +1040,7 @@ FileSystem:
       <<: *behbids_file
       suffix: stim
 
-  extra_data: # ----------------------- All extra data ---------------------------
+  extra_data: # ----------------------- All extra data -------------------------
   - attributes:
       FolderName: ~
       FileName: ~
@@ -1056,7 +1056,7 @@ FileSystem:
       suffix: ~
       mod: ~
 
-  leave_out:  # ----------------------- Data that will be left out ---------------
+  leave_out:  # ----------------------- Data that will be left out -------------
   - attributes:
       FolderName: ~
       FileName: ~

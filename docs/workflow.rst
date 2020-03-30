@@ -128,7 +128,7 @@ Step 1b: Running the bidseditor
 
     DICOM Attributes
       An (DICOM) attribute label can also be a list, in which case the BIDS labels / mapping
-      are applies if a (DICOM) attribute value is in this list. If the attribute value is
+      are applied if a (DICOM) attribute value is in this list. If the attribute value is
       empty it is not used to identify the run. Wildcards can also be given, either as a single
       '*', or enclosed by '*'. Examples:
            SequenceName: '*'

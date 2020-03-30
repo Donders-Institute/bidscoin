@@ -1,7 +1,7 @@
 Options
 =======
 
-BIDScoin has different options and settings (see below) that can be adjusted per bidsmap. You can use a text editor to edit the bidsmap template ``[path_to_bidscoin]/heuristics/bidsmap_template.yaml`` if you want to adjust the default)
+BIDScoin has different options and settings (see below) that can be adjusted per study bidsmap. You can use a text editor to edit the bidsmap template ``[path_to_bidscoin]/heuristics/bidsmap_template.yaml`` if you want to adjust the default)
 
 .. figure:: ./_static/bidseditor_options.png
    :scale: 75%
