@@ -136,7 +136,6 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
 
         # Rename all files ending with _c%d, _e%d and _ph (and any combination of these): These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
         jsonfiles = []                                                                                          # Collect the associated json-files (for updating them later) -- possibly > 1
-        TE        = [None, None]
         for dcm2niisuffix in ('_c', '_e', '_ph', '_i'):
             for filename in sorted(bidsmodality.glob(bidsname + dcm2niisuffix + '*')):
                 ext             = ''.join(filename.suffixes)
@@ -169,12 +168,6 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
 
                 elif dcm2niisuffix=='_e' and basesuffix in ('magnitude1','magnitude2') and index:               # i.e. modality == 'fmap'
                     basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_magnitude1_e[index] -> *_magnitude[index]
-                    # Collect the echo times that need to be added to the json-file (see below)
-                    if filename.suffix == '.json':
-                        with filename.open('r') as json_fid:
-                            data = json.load(json_fid)
-                        TE[int(index)-1] = data['EchoTime']
-                        LOGGER.info(f"Collected EchoTime{index} = {data['EchoTime']} from: {filename}")
                 elif dcm2niisuffix=='_e' and basesuffix=='phasediff' and index:                                 # i.e. modality == 'fmap'
                     pass
 
@@ -227,20 +220,31 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     with jsonfile.open('w') as json_fid:
                         json.dump(data, json_fid, indent=4)
 
-            # Add the EchoTime(s) used to create the difference image to the fmap json-file. NB: This assumes the magnitude runs have already been parsed (i.e. their nifti's had an _e suffix) -- This is normally the case for Siemens (phase-runs being saved after the magnitude runs
+            # Add the EchoTimes used to create the difference image to the fmap json-file
             elif modality == 'fmap':
                 if run['bids']['suffix'] == 'phasediff':
-                    LOGGER.info(f"Adding EchoTime1: {TE[0]} and EchoTime2: {TE[1]} to {jsonfile}")
-                    if TE[0] is None or TE[1] is None:
-                        LOGGER.warning(f"Missing Echo-Time data for: {jsonfile}")
-                    elif TE[0]>TE[1]:
-                        LOGGER.warning(f"EchoTime1 > EchoTime2 for: {jsonfile}")
-                    with jsonfile.open('r') as json_fid:
-                        data = json.load(json_fid)
-                    data['EchoTime1'] = TE[0]
-                    data['EchoTime2'] = TE[1]
-                    with jsonfile.open('w') as json_fid:
-                        json.dump(data, json_fid, indent=4)
+                    # Extract the echo times from magnitude1 and magnitude2
+                    if filename.suffix == '.json':
+                        json_magnitude1 = jsonfile.parent / jsonfile.name.replace('_phasediff', '_magnitude1')
+                        json_magnitude2 = jsonfile.parent / jsonfile.name.replace('_phasediff', '_magnitude2')
+                        with json_magnitude1.open('r') as json_fid:
+                            data = json.load(json_fid)
+                        TE1 = data['EchoTime']
+                        if not json_magnitude2.isfile:
+                            LOGGER.warning(f"Cannot find and add EchoTime2 data to: {jsonfile}")
+                        else:
+                            with json_magnitude2.open('r') as json_fid:
+                                data = json.load(json_fid)
+                            TE2 = data['EchoTime']
+                            if TE1>TE2:
+                                LOGGER.error(f"EchoTime1 > EchoTime2 for: {jsonfile}")
+                            LOGGER.info(f"Adding EchoTime1: {TE1} and EchoTime2: {TE2} to {jsonfile}")
+                            with jsonfile.open('r') as json_fid:
+                                data = json.load(json_fid)
+                            data['EchoTime1'] = TE1
+                            data['EchoTime2'] = TE2
+                            with jsonfile.open('w') as json_fid:
+                                json.dump(data, json_fid, indent=4)
 
             # Parse the acquisition time from the json file or else from the source header (NB: assuming the source file represents the first acquisition)
             with jsonfile.open('r') as json_fid:
