@@ -166,13 +166,11 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                 if dcm2niisuffix=='_e' and bids.get_bidsvalue(basepath, 'echo') and index:
                     basepath = bids.get_bidsvalue(basepath, 'echo', str(int(index)))                            # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
 
-                elif dcm2niisuffix=='_e' and basesuffix in ('magnitude1','magnitude2') and index:               # i.e. modality == 'fmap'
-                    basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_magnitude1_e[index] -> *_magnitude[index]
+                elif dcm2niisuffix=='_e' and basesuffix in ('magnitude1','magnitude2','phase1','phase2') and index:  # i.e. modality == 'fmap'
+                    basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_magnitude1_e[index] -> *_magnitude[index] and *_phase1_e[index]_ph -> *_phase[index]
+
                 elif dcm2niisuffix=='_e' and basesuffix=='phasediff' and index:                                 # i.e. modality == 'fmap'
                     pass
-
-                elif dcm2niisuffix=='_e' and basesuffix in ['phase1','phase2'] and index:                       # i.e. modality == 'fmap'
-                    basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_phase1_e[index]_ph -> *_phase[index]
 
                 else:
                     basepath = bids.get_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper() + index)             # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
