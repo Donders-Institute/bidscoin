@@ -220,41 +220,15 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     with jsonfile.open('w') as json_fid:
                         json.dump(data, json_fid, indent=4)
 
-            # Add the EchoTimes used to create the difference image to the fmap json-file
-            elif modality == 'fmap':
-                if run['bids']['suffix'] == 'phasediff':
-                    # Extract the echo times from magnitude1 and magnitude2
-                    if filename.suffix == '.json':
-                        json_magnitude1 = jsonfile.parent / jsonfile.name.replace('_phasediff', '_magnitude1')
-                        json_magnitude2 = jsonfile.parent / jsonfile.name.replace('_phasediff', '_magnitude2')
-                        with json_magnitude1.open('r') as json_fid:
-                            data = json.load(json_fid)
-                        TE1 = data['EchoTime']
-                        if not json_magnitude2.isfile:
-                            LOGGER.warning(f"Cannot find and add EchoTime2 data to: {jsonfile}")
-                        else:
-                            with json_magnitude2.open('r') as json_fid:
-                                data = json.load(json_fid)
-                            TE2 = data['EchoTime']
-                            if TE1>TE2:
-                                LOGGER.error(f"EchoTime1 > EchoTime2 for: {jsonfile}")
-                            LOGGER.info(f"Adding EchoTime1: {TE1} and EchoTime2: {TE2} to {jsonfile}")
-                            with jsonfile.open('r') as json_fid:
-                                data = json.load(json_fid)
-                            data['EchoTime1'] = TE1
-                            data['EchoTime2'] = TE2
-                            with jsonfile.open('w') as json_fid:
-                                json.dump(data, json_fid, indent=4)
-
             # Parse the acquisition time from the json file or else from the source header (NB: assuming the source file represents the first acquisition)
             with jsonfile.open('r') as json_fid:
                 data = json.load(json_fid)
             if 'AcquisitionTime' not in data or not data['AcquisitionTime']:
-                data['AcquisitionTime'] = bids.get_sourcefield('AcquisitionTime', sourcefile)
+                data['AcquisitionTime'] = bids.get_sourcefield('AcquisitionTime', sourcefile)       # DICOM
             if not data['AcquisitionTime']:
-                data['AcquisitionTime'] = bids.get_sourcefield('exam_date', sourcefile)
+                data['AcquisitionTime'] = bids.get_sourcefield('exam_date', sourcefile)             # PAR/XML
             acq_time = dateutil.parser.parse(data['AcquisitionTime'])
-            scanpath = list(jsonfile.parent.glob(jsonfile.stem + '.nii*'))[0].relative_to(bidsses)    # Find the corresponding nifti file (there should be only one, let's not make assumptions about the .gz extension)
+            scanpath = list(jsonfile.parent.glob(jsonfile.stem + '.nii*'))[0].relative_to(bidsses)  # Find the corresponding nifti file (there should be only one, let's not make assumptions about the .gz extension)
             scans_table.loc[scanpath.as_posix(), 'acq_time'] = '1925-01-01T' + acq_time.strftime('%H:%M:%S')
 
     # Write the scans_table to disk
@@ -262,7 +236,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
     scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
-    # Search for the IntendedFor images and add them to the json-files. This has been postponed untill all modalities have been processed (i.e. so that all target images are indeed on disk)
+    # Search for the IntendedFor images and TE1+TE2 and add them to the json-files. This has been postponed untill all modalities have been processed (i.e. so that all target images are indeed on disk)
     if bidsmap[dataformat]['fmap'] is not None:
         for fieldmap in bidsmap[dataformat]['fmap']:
             bidsname    = bids.get_bidsname(subid, sesid, 'fmap', fieldmap)
@@ -312,6 +286,32 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                             data['IntendedFor'] = [niifile.as_posix() for niifile in niifiles]                                                  # The path needs to use forward slashes instead of backward slashes
                             with jsonfile2.open('w') as json_fid:
                                 json.dump(data, json_fid, indent=4)
+
+                # Extract the echo times from magnitude1 and magnitude2 and add them to the phasediff json-file
+                if jsonfile.name.endswith('phasediff.json'):
+                    json_magnitude1 = jsonfile.parent / jsonfile.name.replace('_phasediff', '_magnitude1')
+                    json_magnitude2 = jsonfile.parent / jsonfile.name.replace('_phasediff', '_magnitude2')
+                    with json_magnitude1.open('r') as json_fid:
+                        data = json.load(json_fid)
+                    TE1 = data['EchoTime']
+                    if not json_magnitude2.isfile:
+                        TE2 = None
+                    else:
+                        with json_magnitude2.open('r') as json_fid:
+                            data = json.load(json_fid)
+                        TE2 = data['EchoTime']
+                    if TE1 is None or TE2 is None:
+                        LOGGER.error(f"Cannot find and add valid EchoTime1={TE1} and EchoTime2={TE2} data to: {jsonfile}")
+                    elif TE1 > TE2:
+                        LOGGER.error(f"Found invalid EchoTime1={TE1} > EchoTime2={TE2} to: {jsonfile}")
+                    else:
+                        with jsonfile.open('r') as json_fid:
+                            data = json.load(json_fid)
+                        data['EchoTime1'] = TE1
+                        data['EchoTime2'] = TE2
+                        LOGGER.info(f"Adding EchoTime1: {TE1} and EchoTime2: {TE2} to {jsonfile}")
+                        with jsonfile.open('w') as json_fid:
+                            json.dump(data, json_fid, indent=4)
 
     # Collect personal data from a source header (PAR/XML does not contain personal info)
     if dataformat=='DICOM' and sourcefile.name:
