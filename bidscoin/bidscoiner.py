@@ -289,27 +289,26 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
 
                 # Extract the echo times from magnitude1 and magnitude2 and add them to the phasediff json-file
                 if jsonfile.name.endswith('phasediff.json'):
-                    json_magnitude1 = jsonfile.parent / jsonfile.name.replace('_phasediff', '_magnitude1')
-                    json_magnitude2 = jsonfile.parent / jsonfile.name.replace('_phasediff', '_magnitude2')
-                    with json_magnitude1.open('r') as json_fid:
-                        data = json.load(json_fid)
-                    TE1 = data['EchoTime']
-                    if not json_magnitude2.is_file():
-                        TE2 = None
-                    else:
-                        with json_magnitude2.open('r') as json_fid:
-                            data = json.load(json_fid)
-                        TE2 = data['EchoTime']
-                    if TE1 is None or TE2 is None:
-                        LOGGER.error(f"Cannot find and add valid EchoTime1={TE1} and EchoTime2={TE2} data to: {jsonfile}")
-                    elif TE1 > TE2:
-                        LOGGER.error(f"Found invalid EchoTime1={TE1} > EchoTime2={TE2} to: {jsonfile}")
+                    json_magnitude = []
+                    TE             = [None, None]
+                    for n in (0,1):
+                        json_magnitude[n] = jsonfile.parent / jsonfile.name.replace('_phasediff', f"_magnitude{n+1}")
+                        if not json_magnitude[n].is_file():
+                            LOGGER.error(f"Could not find expected magnitude{n+1} image associated with: {jsonfile}")
+                        else:
+                            with json_magnitude[n].open('r') as json_fid:
+                                data = json.load(json_fid)
+                            TE[n] = data['EchoTime']
+                    if None in TE:
+                        LOGGER.error(f"Cannot find and add valid EchoTime1={TE[0]} and EchoTime2={TE[1]} data to: {jsonfile}")
+                    elif TE[0] > TE[1]:
+                        LOGGER.error(f"Found invalid EchoTime1={TE[0]} > EchoTime2={TE[1]} to: {jsonfile}")
                     else:
                         with jsonfile.open('r') as json_fid:
                             data = json.load(json_fid)
-                        data['EchoTime1'] = TE1
-                        data['EchoTime2'] = TE2
-                        LOGGER.info(f"Adding EchoTime1: {TE1} and EchoTime2: {TE2} to {jsonfile}")
+                        data['EchoTime1'] = TE[0]
+                        data['EchoTime2'] = TE[1]
+                        LOGGER.info(f"Adding EchoTime1: {TE[0]} and EchoTime2: {TE[1]} to {jsonfile}")
                         with jsonfile.open('w') as json_fid:
                             json.dump(data, json_fid, indent=4)
 
