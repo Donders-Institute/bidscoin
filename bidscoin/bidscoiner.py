@@ -143,10 +143,6 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                 basesuffix      = basepath.rsplit('_',1)[1]                                                     # The BIDS suffix, e.g. basepath = *_magnitude1 -> basesuffix=magnitude1
                 index           = index.split('_')[0].zfill(2)                                                  # Zero padd as specified in the BIDS-standard (assuming two digits is sufficient); strip following suffices (fieldmaps produce *_e2_ph files)
 
-                # TODO: implement support for PAR dataformat
-                if dataformat=='PAR':
-                    LOGGER.warning(f"Multi-echo, multi-coil and magnitude/phase {dataformat} images are not properly supported, check your results")
-
                 # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first(?) coil/echo image -> add it when we encounter a **_e2/_c2 file
                 if dcm2niisuffix in ('_c','_e') and int(index)==2 and basesuffix not in ['magnitude1', 'phase1']:    # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handled below)
                     filename_ce = Path(basepath + ext)                                                          # The file without the _c1/_e1 suffix
@@ -236,7 +232,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
     scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
-    # Search for the IntendedFor images and TE1+TE2 and add them to the json-files. This has been postponed untill all modalities have been processed (i.e. so that all target images are indeed on disk)
+    # Add IntendedFor and TE1+TE2 meta-data the fieldmap json-files. This has been postponed untill all modalities have been processed (i.e. so that all target images are indeed on disk)
     if bidsmap[dataformat]['fmap'] is not None:
         for fieldmap in bidsmap[dataformat]['fmap']:
             bidsname    = bids.get_bidsname(subid, sesid, 'fmap', fieldmap)
@@ -255,37 +251,34 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
             else:
                 intendedfor = []
 
-            # Save the IntendedFor data in the json-files (account for multiple runs and dcm2niix suffixes inserted into the acquisition label)
-            acqlabel = bids.get_bidsvalue(bidsname, 'acq')
-            for jsonfile in list((bidsses/'fmap').glob(bidsname.replace('_run-1_', '_run-[0-9]*_') + '.json')) + \
-                            list((bidsses/'fmap').glob(bidsname.replace('_run-1_', '_run-[0-9]*_').replace(acqlabel, acqlabel+'[CE][0-9]*') + '.json')):
+            # Get the set of json-files (account for multiple runs in one data source and dcm2niix suffixes inserted into the acquisition label)
+            pattern   = bidsname.replace('_run-1_',     '_run-[0-9]*_').\
+                                 replace('_magnitude1', '_magnitude*').\
+                                 replace('_magnitude2', '_magnitude*').\
+                                 replace('_phase1',     '_phase*').\
+                                 replace('_phase2',     '_phase*')
+            jsonfiles = list((bidsses/'fmap').glob(pattern  + '.json'))
+            acqlabel  = bids.get_bidsvalue(bidsname, 'acq')
+            if acqlabel:
+                pattern2 = bids.get_bidsvalue(pattern, 'acq', acqlabel+'[CE][0-9]*')
+                jsonfiles.extend(list((bidsses/'fmap').glob(pattern2 + '.json')))
 
-                if niifiles:
-                    LOGGER.info(f"Adding IntendedFor to: {jsonfile}")
-                elif intendedfor:
-                    LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the search for {intendedfor} gave no results")
-                else:
-                    LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the IntendedFor value of the bidsmap entry was empty")
+            # Save the meta-data in the jsonfiles
+            for jsonfile in jsonfiles:
+
+                # Add the IntendedFor data
                 with jsonfile.open('r') as json_fid:
                     data = json.load(json_fid)
-                data['IntendedFor'] = [niifile.as_posix() for niifile in niifiles]                                                              # The path needs to use forward slashes instead of backward slashes
-                with jsonfile.open('w') as json_fid:
-                    json.dump(data, json_fid, indent=4)
-
-                # Catch magnitude2 and phase2 files produced by dcm2niix (i.e. magnitude1 & magnitude2 both in the same runfolder)
-                if jsonfile.name.endswith('magnitude1.json') or jsonfile.name.endswith('phase1.json'):
-                    jsonfile2 = jsonfile.with_name(jsonfile.name.rsplit('1.json',1)[0] + '2.json')
-                    if jsonfile2.is_file():
-                        with jsonfile2.open('r') as json_fid:
-                            data = json.load(json_fid)
-                        if 'IntendedFor' not in data:
-                            if niifiles:
-                                LOGGER.info(f"Adding IntendedFor to: {jsonfile2}")
-                            else:
-                                LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile2}: the search for {intendedfor} gave no results")
-                            data['IntendedFor'] = [niifile.as_posix() for niifile in niifiles]                                                  # The path needs to use forward slashes instead of backward slashes
-                            with jsonfile2.open('w') as json_fid:
-                                json.dump(data, json_fid, indent=4)
+                if 'IntendedFor' not in data:
+                    if niifiles:
+                        LOGGER.info(f"Adding IntendedFor to: {jsonfile}")
+                    elif intendedfor:
+                        LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the search for {intendedfor} gave no results")
+                    else:
+                        LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the IntendedFor value of the bidsmap entry was empty")
+                    data['IntendedFor'] = [niifile.as_posix() for niifile in niifiles]                                                              # The path needs to use forward slashes instead of backward slashes
+                    with jsonfile.open('w') as json_fid:
+                        json.dump(data, json_fid, indent=4)
 
                 # Extract the echo times from magnitude1 and magnitude2 and add them to the phasediff json-file
                 if jsonfile.name.endswith('phasediff.json'):
