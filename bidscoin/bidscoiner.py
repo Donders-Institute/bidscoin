@@ -264,7 +264,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                 jsonfiles.extend(list((bidsses/'fmap').glob(pattern2 + '.json')))
 
             # Save the meta-data in the jsonfiles
-            for jsonfile in jsonfiles:
+            for jsonfile in set(jsonfiles):
 
                 # Add the IntendedFor data
                 with jsonfile.open('r') as json_fid:
