@@ -139,12 +139,12 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
         for dcm2niisuffix in ('_c', '_e', '_ph', '_i'):
             for filename in sorted(bidsmodality.glob(f"{bidsname}*{dcm2niisuffix}*")):
                 ext             = ''.join(filename.suffixes)
-                basepath, index = str(filename).rsplit(ext,1)[0].rsplit(dcm2niisuffix,1)                        # basepath = the name without the added stuff (i.e. bidsmodality/bidsname), index = added dcm2niix index (e.g. _c1 -> index=1)
+                basepath, index = str(filename).rsplit(ext)[0].rsplit(dcm2niisuffix,1)                          # basepath = the name without the added stuff (i.e. bidsmodality/bidsname), index = added dcm2niix index (e.g. _c1 -> index=1)
                 basesuffix      = basepath.rsplit('_',1)[1]                                                     # The BIDS suffix, e.g. basepath = *_magnitude1 -> basesuffix=magnitude1
                 index           = index.split('_')[0].zfill(2)                                                  # Zero padd as specified in the BIDS-standard (assuming two digits is sufficient); strip following suffices (fieldmaps produce *_e2_ph files)
 
                 # Phase data may be stored in the magnitude data source (e.g. Philips fieldmaps)
-                if dcm2niisuffix in ('_c','_e') and '_ph' in filename.name:
+                if f"ph{int(index)}" in filename.name.rsplit(ext)[0].split('_'):
                     basepath = basepath.replace('_magnitude', '_phase')
 
                 # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first(?) coil/echo image -> add it when we encounter a **_e2/_c2 file
