@@ -294,7 +294,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     with json_magnitude1.open('r') as json_fid:
                         data = json.load(json_fid)
                     TE1 = data['EchoTime']
-                    if not json_magnitude2.isfile:
+                    if not json_magnitude2.is_file():
                         TE2 = None
                     else:
                         with json_magnitude2.open('r') as json_fid:
