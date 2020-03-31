@@ -36,7 +36,7 @@ BIDScoin functionality
 -  [ ] Stimulus / behavioural logfiles
 -  [x] Plug-ins
 
-   ``* = Only for DICOM source data``
+   ``* = Experimental support for PAR / REC source data``
 
 ::
 
