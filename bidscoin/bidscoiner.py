@@ -289,7 +289,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
 
                 # Extract the echo times from magnitude1 and magnitude2 and add them to the phasediff json-file
                 if jsonfile.name.endswith('phasediff.json'):
-                    json_magnitude = []
+                    json_magnitude = [None, None]
                     TE             = [None, None]
                     for n in (0,1):
                         json_magnitude[n] = jsonfile.parent / jsonfile.name.replace('_phasediff', f"_magnitude{n+1}")
@@ -302,7 +302,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     if None in TE:
                         LOGGER.error(f"Cannot find and add valid EchoTime1={TE[0]} and EchoTime2={TE[1]} data to: {jsonfile}")
                     elif TE[0] > TE[1]:
-                        LOGGER.error(f"Found invalid EchoTime1={TE[0]} > EchoTime2={TE[1]} to: {jsonfile}")
+                        LOGGER.error(f"Found invalid EchoTime1={TE[0]} > EchoTime2={TE[1]} for: {jsonfile}")
                     else:
                         with jsonfile.open('r') as json_fid:
                             data = json.load(json_fid)
