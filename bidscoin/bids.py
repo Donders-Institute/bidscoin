@@ -1349,7 +1349,7 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str= '') -
     bidsvalue is returned and nothing is set
 
     :param bidsfile:    The bidsname (e.g. as returned from get_bidsname or fullpath)
-    :param bidskey:     The name of the bidskey, e.g. 'echo'
+    :param bidskey:     The name of the bidskey, e.g. 'echo' or 'suffix'
     :param newvalue:    The new bidsvalue
     :return:            The bidsname with the new bidsvalue or, if newvalue is empty, the existing bidsvalue
     """
@@ -1361,17 +1361,20 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str= '') -
     # Get the existing bidsvalue
     oldvalue = ''
     acqvalue = ''
-    for label in bidsname.split('_'):
-        if '-' in str(label):
-            key, value = str(label).split('-', 1)
-            if key == bidskey:
-                oldvalue = value
-            if key == 'acq':
-                acqvalue = value
+    if bidskey=='suffix':
+        oldvalue = bidsname.split('_')[-1]
+    else:
+        for label in bidsname.split('_'):
+            if '-' in label:
+                key, value = label.split('-', 1)
+                if key==bidskey:
+                    oldvalue = value
+                if key=='acq':
+                    acqvalue = value
 
     # Replace the existing bidsvalue with the new value or append the newvalue to the acquisition value
     if newvalue:
-        if f'_{bidskey}-' not in bidsname:
+        if f'_{bidskey}-' not in bidsname + 'suffix':
             if '_acq-' not in bidsname:         # Insert the 'acq' key right after the sub/ses key-value pairs
                 keyval = bidsname.split('_')
                 if get_bidsvalue(bidsname, 'ses'):
@@ -1384,7 +1387,10 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str= '') -
             newvalue = acqvalue + newvalue
 
         # Return the updated bidsfile
-        newbidsfile = (bidspath / (bidsname.replace(f'{bidskey}-{oldvalue}', f'{bidskey}-{newvalue}'))).with_suffix(bidsext)
+        if bidskey=='suffix':
+            newbidsfile = (bidspath/(bidsname.replace(f'_{oldvalue}', f'_{newvalue}'))).with_suffix(bidsext)
+        else:
+            newbidsfile = (bidspath/(bidsname.replace(f'{bidskey}-{oldvalue}', f'{bidskey}-{newvalue}'))).with_suffix(bidsext)
         if isinstance(bidsfile, str):
             newbidsfile = str(newbidsfile)
         return newbidsfile
