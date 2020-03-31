@@ -137,11 +137,15 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
         # Rename all files ending with _c%d, _e%d and _ph (and any combination of these): These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
         jsonfiles = []                                                                                          # Collect the associated json-files (for updating them later) -- possibly > 1
         for dcm2niisuffix in ('_c', '_e', '_ph', '_i'):
-            for filename in sorted(bidsmodality.glob(bidsname + dcm2niisuffix + '*')):
+            for filename in sorted(bidsmodality.glob(f"{bidsname}*{dcm2niisuffix}*")):
                 ext             = ''.join(filename.suffixes)
                 basepath, index = str(filename).rsplit(ext,1)[0].rsplit(dcm2niisuffix,1)                        # basepath = the name without the added stuff (i.e. bidsmodality/bidsname), index = added dcm2niix index (e.g. _c1 -> index=1)
                 basesuffix      = basepath.rsplit('_',1)[1]                                                     # The BIDS suffix, e.g. basepath = *_magnitude1 -> basesuffix=magnitude1
                 index           = index.split('_')[0].zfill(2)                                                  # Zero padd as specified in the BIDS-standard (assuming two digits is sufficient); strip following suffices (fieldmaps produce *_e2_ph files)
+
+                # Phase data may be stored in the magnitude data source (e.g. Philips fieldmaps)
+                if dcm2niisuffix in ('_c','_e') and '_ph' in filename.name:
+                    basepath = basepath.replace('_magnitude', '_phase')
 
                 # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first(?) coil/echo image -> add it when we encounter a **_e2/_c2 file
                 if dcm2niisuffix in ('_c','_e') and int(index)==2 and basesuffix not in ['magnitude1', 'phase1']:    # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handled below)
