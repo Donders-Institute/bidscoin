@@ -160,7 +160,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *anatattributes_dicom
-      SeriesDescription: ['*Angio*', '*angio*']
+      SeriesDescription: ['*angio*', '*Angio*', '*ANGIO*']
     bids:
       <<: *anatbids_dicom
       suffix: angio
@@ -350,6 +350,7 @@ DICOM:
       <<: *fmapattributes_dicom
     bids:
       <<: *fmapbids_dicom
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       suffix: fieldmap
   - provenance: ~
     attributes:
@@ -447,7 +448,7 @@ DICOM:
   - provenance: ~
     attributes: &leaveout_attributes_dicom
       Modality: ~
-      ProtocolName: ['*Scout*', '*scout*', '*localizer*', '*Localizer*']
+      ProtocolName: ~
       SeriesDescription: ~
       ImageType: ~
       SequenceName: ~
@@ -473,7 +474,11 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *leaveout_attributes_dicom
-      ProtocolName: ~
+      ProtocolName: ['*Scout*', '*scout*', '*localizer*', '*Localizer*']
+    bids: *leaveout_bids_dicom
+  - provenance: ~
+    attributes:
+      <<: *leaveout_attributes_dicom
       ImageType: '*DERIVED*'
     bids:
       <<: *leaveout_bids_dicom
@@ -601,14 +606,14 @@ PAR:
   - provenance: ~
     attributes:
       <<: *anatattributes_par
-      protocol_name: ['*angio*']
+      protocol_name: ['*angio*', '*Angio*', '*ANGIO*']
     bids:
       <<: *anatbids_par
       suffix: angio
   - provenance: ~
     attributes:
       <<: *anatattributes_par
-      protocol_name: ['*defacemask*']
+      protocol_name: ['*defacemask*', '*Defacemask*']
     bids:
       <<: *anatbids_par
       suffix: defacemask
@@ -641,7 +646,7 @@ PAR:
   - provenance: ~
     attributes:
       <<: *funcattributes_par
-      protocol_name: ['*fMRI*SBREF*', '*fMRI*sbref*', 'fMRI*SBRef*']
+      protocol_name: ['*fMRI*SBREF*', '*fMRI*sbref*', '*fMRI*SBRef*']
     bids:
       <<: *funcbids_par
       suffix: sbref
@@ -729,18 +734,18 @@ PAR:
       ce: ~
       dir: ~
       run: <<1>>
-      suffix: magnitude
+      suffix: magnitude1
       IntendedFor: ~
   - provenance: ~
     attributes: *fmapattributes_par
     bids:
       <<: *fmapbids_par
-      suffix: magnitude1
+      suffix: magnitude2
   - provenance: ~
     attributes: *fmapattributes_par
     bids:
       <<: *fmapbids_par
-      suffix: magnitude2
+      suffix: magnitude
   - provenance: ~
     attributes: *fmapattributes_par
     bids:
