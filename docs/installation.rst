@@ -14,7 +14,7 @@ BIDScoin relies on dcm2niix to convert the source imaging data to nifti. Please 
 Python 3 installation
 ---------------------
 
-BIDScoin is a python package and therefore a python interpreter needs to be present on the system. On Linux this is usually already the case, but MS Windows users may need to install python themselves. See e.g. `this python 3 distribution <https://docs.anaconda.com/anaconda/install/windows/>`__ for instructions. They may also need to install the `MS Visual C++ <https://visualstudio.microsoft.com/downloads/>`__ (sorry for this pain).
+BIDScoin is a python package and therefore a python interpreter needs to be present on the system. On Linux this is usually already the case, but MS Windows users may need to install python themselves. See e.g. `this python 3 distribution <https://docs.anaconda.com/anaconda/install/windows/>`__ for instructions. They may also need to install the `MS Visual C++ <https://visualstudio.microsoft.com/downloads/>`__ build tools (sorry for this pain).
 
 BIDScoin installation
 ---------------------

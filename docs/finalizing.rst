@@ -5,7 +5,7 @@ After a successful run of ``bidscoiner``, the work to convert your data in a ful
 
 Adding meta-data
 ----------------
-For instance, you should update the content of the ``dataset_description.json`` and ``README`` files in your bids folder and you may need to provide e.g. additional ``*_scans.tsv``,\ ``*_sessions.tsv`` or ``participants.json`` files (see the `BIDS specification <http://bids.neuroimaging.io/bids_spec.pdf>`__ for more information). Moreover, if you have behavioural log-files you will find that BIDScoin does not (yet) `support <#bidscoin-functionality--todo>`__ converting these into BIDS compliant ``*_events.tsv/json`` files (advanced users are encouraged to use the ``bidscoiner`` `plug-in <#options-and-plug-in-functions>`__ possibility and write their own log-file parser).
+For instance, you should update the content of the ``dataset_description.json`` and ``README`` files in your bids folder and you may need to provide e.g. additional ``*_scans.tsv``,\ ``*_sessions.tsv`` or ``participants.json`` files (see the `BIDS specification <http://bids.neuroimaging.io/bids_spec.pdf>`__ for more information). Moreover, if you have behavioural log-files you will find that BIDScoin does not (yet) `support <index.html#bidscoin-functionality>`__ converting these into BIDS compliant ``*_events.tsv/json`` files (advanced users are encouraged to use the ``bidscoiner`` `plug-in <advanced.html#plugins>`__ possibility and write their own log-file parser).
 
 Data sharing utilities
 ----------------------
