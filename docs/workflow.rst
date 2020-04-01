@@ -235,6 +235,9 @@ Step 2: Running the bidscoiner
       bidscoiner /project/foo/raw /project/foo/bids
       bidscoiner -f /project/foo/raw /project/foo/bids -p sub-009 sub-030
 
+.. tip::
+   Check your json sidecar files of your fieldmaps, in particular see if they have the expected ``IntendedFor`` values.
+
 .. note::
    The provenance of the produced BIDS data-sets is stored in the ``bids/code/bidscoin/bidscoiner.log`` file. This file is also very useful for debugging / tracking down bidscoin issues.
 
