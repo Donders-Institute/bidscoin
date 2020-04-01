@@ -42,7 +42,8 @@ DICOM:
   subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
   session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
   anat:       # ----------------------- All anatomical runs --------------------
-  - attributes: &anatattributes_dicom   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = T1w
+  - provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    attributes: &anatattributes_dicom   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = T1w
       Modality: ~
       ProtocolName: ~
       SeriesDescription: ~
@@ -64,96 +65,116 @@ DICOM:
       run: <<1>>
       mod: ~
       suffix: T1w
-    provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
-  - attributes:
+  - provenance: ~
+    attributes:
       <<: *anatattributes_dicom
       SeriesDescription: ['*mprage*', '*MPRAGE*', '*MPRage*', '*t1w*', '*T1w*', '*T1*']
       MRAcquisitionType: 3D
     bids:
       <<: *anatbids_dicom
       suffix: T1w
-    provenance: ~
-  - attributes: *anatattributes_dicom
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_dicom
+      SeriesDescription: ['*T1rho*', '*T1Rho*', '*t1rho*', '*t1Rho*']
     bids:
       <<: *anatbids_dicom
       suffix: T1rho
-    provenance: ~
-  - attributes: *anatattributes_dicom
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_dicom
+      SeriesDescription: ['*T1map*', '*T1Map*', '*t1map*', '*t1Map*']
     bids:
       <<: *anatbids_dicom
       suffix: T1map
-    provenance: ~
-  - attributes: *anatattributes_dicom
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_dicom
+      SeriesDescription: ['*T2map*', '*T2Map*', '*t2map*', '*t2Map*']
     bids:
       <<: *anatbids_dicom
       suffix: T2map
-    provenance: ~
-  - attributes:
+  - provenance: ~
+    attributes:
       <<: *anatattributes_dicom
-      SeriesDescription: ['*t2star*', '*T2star*', '*T2STAR*']
+      SeriesDescription: ['*t2star*', '*T2star*', '*T2STAR*', '*T2Star*']
     bids:
       <<: *anatbids_dicom
       suffix: T2star
-    provenance: ~
-  - attributes:
+  - provenance: ~
+    attributes:
       <<: *anatattributes_dicom
-      SeriesDescription: ['*t2*', '*T2*']
+      SeriesDescription: ['*t2w*', '*T2w*', '*T2*']
       SequenceVariant: "['SK', 'SP']"
     bids:
       <<: *anatbids_dicom
       suffix: T2w
-    provenance: ~
-  - attributes:
+  - provenance: ~
+    attributes:
       <<: *anatattributes_dicom
       ScanningSequence: "['SE', 'IR']"
       SeriesDescription: ['*FLAIR*', '*flair*']
     bids:
       <<: *anatbids_dicom
       suffix: FLAIR
-    provenance: ~
-  - attributes: *anatattributes_dicom
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_dicom
+      SeriesDescription: ['*FLASH*', '*Flash*']
     bids:
       <<: *anatbids_dicom
       suffix: FLASH
-    provenance: ~
-  - attributes: *anatattributes_dicom
+  - provenance: ~
+    attributes: *anatattributes_dicom
     bids:
       <<: *anatbids_dicom
       suffix: PD
-    provenance: ~
-  - attributes: *anatattributes_dicom
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_dicom
+      SeriesDescription: ['*PDMap*', '*PDmap*']
     bids:
       <<: *anatbids_dicom
       suffix: PDmap
-    provenance: ~
-  - attributes: *anatattributes_dicom
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_dicom
+      SeriesDescription: ['*PDT2*', '*PDt2*']
     bids:
       <<: *anatbids_dicom
       suffix: PDT2
-    provenance: ~
-  - attributes: *anatattributes_dicom
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_dicom
+      SeriesDescription: ['*InplaneT1*', '*inplaneT1*']
     bids:
       <<: *anatbids_dicom
       suffix: inplaneT1
-    provenance: ~
-  - attributes: *anatattributes_dicom
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_dicom
+      SeriesDescription: ['*InplaneT2*', '*inplaneT2*']
     bids:
       <<: *anatbids_dicom
       suffix: inplaneT2
-    provenance: ~
-  - attributes: *anatattributes_dicom
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_dicom
+      SeriesDescription: ['*Angio*', '*angio*']
     bids:
       <<: *anatbids_dicom
       suffix: angio
-    provenance: ~
-  - attributes: *anatattributes_dicom
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_dicom
+      SeriesDescription: ['*defacemask*', '*Defacemask*']
     bids:
       <<: *anatbids_dicom
       suffix: defacemask
-    provenance: ~
 
   func:       # ----------------------- All functional runs --------------------
-  - attributes: &funcattributes_dicom   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = bold
+  - provenance: ~
+    attributes: &funcattributes_dicom   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = bold
       Modality: ~
       ProtocolName: ~
       SeriesDescription: ~
@@ -177,47 +198,50 @@ DICOM:
       run: <<1>>
       echo: <EchoNumbers>
       suffix: bold
-    provenance: ~
-  - attributes:                   # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
+  - provenance: ~
+    attributes:                   # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
       <<: *funcattributes_dicom
       ProtocolName: ['*fmri*', '*fMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
       SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
     bids:
       <<: *funcbids_dicom
       suffix: sbref
-    provenance: ~
-  - attributes:                   # Then catch the bold runs itself
+  - provenance: ~
+    attributes:                   # Then catch the bold runs itself
       <<: *funcattributes_dicom
       ProtocolName: ['*fmri*', '*fMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
     bids: *funcbids_dicom
-    provenance: ~
-  - attributes: *funcattributes_dicom
+  - provenance: ~
+    attributes: *funcattributes_dicom
     bids:
       <<: *funcbids_dicom
       suffix: phase
-    provenance: ~
-  - attributes: *funcattributes_dicom
+  - provenance: ~
+    attributes:
+      <<: *funcattributes_dicom
+      ProtocolName: ['*CBV*', '*cbv*']
     bids:
       <<: *funcbids_dicom
       suffix: cbv
-  - attributes: *funcattributes_dicom
+  - provenance: ~
+    attributes: *funcattributes_dicom
     bids:
       <<: *funcbids_dicom
       suffix: events
-    provenance: ~
-  - attributes: *funcattributes_dicom
+  - provenance: ~
+    attributes: *funcattributes_dicom
     bids:
       <<: *funcbids_dicom
       suffix: physio
-    provenance: ~
-  - attributes: *funcattributes_dicom
+  - provenance: ~
+    attributes: *funcattributes_dicom
     bids:
       <<: *funcbids_dicom
       suffix: stim
-    provenance: ~
 
   dwi:        # ----------------------- All diffusion runs ---------------------
-  - attributes:   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = dwi
+  - provenance: ~
+    attributes: &dwiattributes_dicom   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = dwi
       Modality: ~
       ProtocolName: ~
       SeriesDescription: ~
@@ -237,52 +261,26 @@ DICOM:
       dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
       suffix: dwi
-    provenance: ~
-  - attributes: &dwiattributes_dicom_sbref      # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
-      Modality: ~
-      ProtocolName: ['*dwi*', '*DWI*', '*diffusion*', '*dti*', '*DTI*']
+  - provenance: ~
+    attributes:
+      <<:  *dwiattributes_dicom   # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
+      ProtocolName: ['*dwi*', '*DWI*', '*diffusion*', 'DIFFUSION', '*dti*', '*DTI*']
       SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
-      ImageType: ~
-      SequenceName: ~
-      SequenceVariant: ~
-      ScanningSequence: ~
-      MRAcquisitionType: ~
-      SliceThickness: ~
-      FlipAngle: ~
-      EchoNumbers: ~
-      EchoTime: ~
-      RepetitionTime: ~
-      PhaseEncodingDirection: ~
     bids:
       <<: *dwibids_dicom
       suffix: sbref
-    provenance: ~
-  - attributes:                           # Then catch the normal DWI runs
-      <<: *dwiattributes_dicom_sbref
-      SeriesDescription: ~                # Remove the SBREF filter
+  - provenance: ~
+    attributes:                           # Then catch the normal DWI runs
+      <<: *dwiattributes_dicom
+      ProtocolName: ['*dwi*', '*DWI*', '*diffusion*', 'DIFFUSION', '*dti*', '*DTI*']
     bids: *dwibids_dicom
-    provenance: ~
-  - attributes:                           # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
-      <<: *dwiattributes_dicom_sbref
-      ImageType: '*DIFFUSION*'
-      ProtocolName: ~
-    bids:
-      <<: *dwibids_dicom
-      suffix: sbref
-    provenance: ~
-  - attributes:                           # Then catch the normal DWI runs
-      <<: *dwiattributes_dicom_sbref
-      ImageType: '*DIFFUSION*'
-      ProtocolName: ~
-      SeriesDescription: ~                # Remove the SBREF filter
-    bids: *dwibids_dicom
-    provenance: ~
 
   fmap:       # ----------------------- All fieldmap runs ----------------------
-  - attributes: &fmapattributes_dicom     # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = magnitude
+  - provenance: ~
+    attributes: &fmapattributes_dicom     # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = magnitude
       Modality: ~
       ProtocolName: ~
-      SeriesDescription: ~
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       ImageType: ~
       SequenceName: ~
       SequenceVariant: ~
@@ -301,60 +299,54 @@ DICOM:
       run: <<1>>
       suffix: magnitude
       IntendedFor: ~
-    provenance: ~
-  - attributes:
+  - provenance: ~
+    attributes:
       <<: *fmapattributes_dicom
       EchoNumbers: 2
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       ImageType: '*P*'
     bids:
       <<: *fmapbids_dicom
       suffix: phasediff
-    provenance: ~
-  - attributes:
+  - provenance: ~
+    attributes:
       <<: *fmapattributes_dicom
       EchoNumbers: 1
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       ImageType: '*M*'
     bids:
       <<: *fmapbids_dicom
       suffix: magnitude1
-    provenance: ~
-  - attributes:
+  - provenance: ~
+    attributes:
       <<: *fmapattributes_dicom
       EchoNumbers: 2
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       ImageType: '*M*'
     bids:
       <<: *fmapbids_dicom
       suffix: magnitude2
-    provenance: ~
-  - attributes:
+  - provenance: ~
+    attributes:
       <<: *fmapattributes_dicom
       EchoNumbers: 1
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       ImageType: '*P*'
     bids:
       <<: *fmapbids_dicom
       suffix: phase1
-    provenance: ~
-  - attributes:
+  - provenance: ~
+    attributes:
       <<: *fmapattributes_dicom
       EchoNumbers: 2
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       ImageType: '*P*'
     bids:
       <<: *fmapbids_dicom
       suffix: phase2
-    provenance: ~
-  - attributes:
+  - provenance: ~
+    attributes:
       <<: *fmapattributes_dicom
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
     bids:
       <<: *fmapbids_dicom
       suffix: fieldmap
-    provenance: ~
-  - attributes:
+  - provenance: ~
+    attributes:
       <<: *fmapattributes_dicom
       SeriesDescription: ['*inverted*', '*pepolar*']
       ScanningSequence: EP
@@ -362,10 +354,10 @@ DICOM:
       <<: *fmapbids_dicom
       dir: <InPlanePhaseEncodingDirection>
       suffix: epi
-    provenance: ~
 
   beh:        # ----------------------- All behavioural data -------------------
-  - attributes: &behattributes
+  - provenance: ~
+    attributes: &behattributes
       Modality: ~
       ProtocolName: ~
       SeriesDescription: ~
@@ -383,24 +375,25 @@ DICOM:
     bids: &behbids
       task: <SeriesDescription>
       suffix: events
-    provenance: ~
-  - attributes: *behattributes
+  - provenance: ~
+    attributes: *behattributes
     bids:
       <<: *behbids
       suffix: beh
-    provenance: ~
-  - attributes: *behattributes
+  - provenance: ~
+    attributes: *behattributes
     bids:
       <<: *behbids
       suffix: physio
-    provenance: ~
-  - attributes: *behattributes
+  - provenance: ~
+    attributes: *behattributes
     bids:
       <<: *behbids
       suffix: stim
 
   pet:        # ----------------------- All PET runs ---------------------------
-  - attributes: &petattributes
+  - provenance: ~
+    attributes: &petattributes
       Modality: PT
       SeriesDescription: ~
       Radiopharmaceutical: ~
@@ -415,10 +408,10 @@ DICOM:
       rec: ~
       run: <<1>>
       suffix: pet
-    provenance: ~
 
   extra_data: # ----------------------- All extra data -------------------------
-  - attributes:
+  - provenance: ~
+    attributes:
       Modality: ~
       ProtocolName: ~
       SeriesDescription: ~
@@ -443,7 +436,6 @@ DICOM:
       run: <<1>>
       suffix: ~
       mod: ~
-    provenance: ~
 
   leave_out:  # ----------------------- Data that will be left out -------------
   - provenance: ~
@@ -493,9 +485,9 @@ PAR:
     attributes: &anatattributes_par
       series_type: ~
       exam_name: ~
-      protocol_name: ['*mprage*', '*MPRAGE*', '*MPRage*', '*t1w*', '*T1w*', '*T1*']
+      protocol_name: ~
       tech: ~
-      diffusion: 0
+      diffusion: ~
       fov: ~
       scan_resolution: ~
       scan_mode: ~
@@ -511,18 +503,31 @@ PAR:
       run: <<1>>
       mod: ~
       suffix: T1w
+  - provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    attributes:
+      <<: *anatattributes_par
+      protocol_name: ['*mprage*', '*MPRAGE*', '*MPRage*', '*t1w*', '*T1w*', '*T1*']
+    bids:
+      <<: *anatbids_par
+      suffix: T1w
   - provenance: ~
-    attributes: *anatattributes_par
+    attributes:
+      <<: *anatattributes_par
+      protocol_name: ['*T1rho*', '*T1Rho*', '*t1rho*', '*t1Rho*']
     bids:
       <<: *anatbids_par
       suffix: T1rho
   - provenance: ~
-    attributes: *anatattributes_par
+    attributes:
+      <<: *anatattributes_par
+      protocol_name: ['*t1map*', '*T1map*', '*T1Map*']
     bids:
       <<: *anatbids_par
       suffix: T1map
   - provenance: ~
-    attributes: *anatattributes_par
+    attributes:
+      <<: *anatattributes_par
+      protocol_name: ['*t2map*', '*T2map*', '*T2Map*']
     bids:
       <<: *anatbids_par
       suffix: T2map
@@ -536,17 +541,21 @@ PAR:
   - provenance: ~
     attributes:
       <<: *anatattributes_par
-      protocol_name: ['*t2*', '*T2*']
+      protocol_name: ['*t2w*', '*T2w*', '*T2*']
     bids:
       <<: *anatbids_par
       suffix: T2w
   - provenance: ~
-    attributes: *anatattributes_par
+    attributes:
+      <<: *anatattributes_par
+      protocol_name: ['*FLAIR*']
     bids:
       <<: *anatbids_par
       suffix: FLAIR
   - provenance: ~
-    attributes: *anatattributes_par
+    attributes:
+      <<: *anatattributes_par
+      protocol_name: ['*FLASH*']
     bids:
       <<: *anatbids_par
       suffix: FLASH
@@ -556,32 +565,44 @@ PAR:
       <<: *anatbids_par
       suffix: PD
   - provenance: ~
-    attributes: *anatattributes_par
+    attributes:
+      <<: *anatattributes_par
+      protocol_name: ['*PDmap*', '*PDMap*']
     bids:
       <<: *anatbids_par
       suffix: PDmap
   - provenance: ~
-    attributes: *anatattributes_par
+    attributes:
+      <<: *anatattributes_par
+      protocol_name: ['*PDT2*']
     bids:
       <<: *anatbids_par
       suffix: PDT2
   - provenance: ~
-    attributes: *anatattributes_par
+    attributes:
+      <<: *anatattributes_par
+      protocol_name: ['*inplaneT1*', '*InplaneT1*']
     bids:
       <<: *anatbids_par
       suffix: inplaneT1
   - provenance: ~
-    attributes: *anatattributes_par
+    attributes:
+      <<: *anatattributes_par
+      protocol_name: ['*inplaneT2*', '*InplaneT2*']
     bids:
       <<: *anatbids_par
       suffix: inplaneT2
   - provenance: ~
-    attributes: *anatattributes_par
+    attributes:
+      <<: *anatattributes_par
+      protocol_name: ['*angio*']
     bids:
       <<: *anatbids_par
       suffix: angio
   - provenance: ~
-    attributes: *anatattributes_par
+    attributes:
+      <<: *anatattributes_par
+      protocol_name: ['*defacemask*']
     bids:
       <<: *anatbids_par
       suffix: defacemask
@@ -591,9 +612,9 @@ PAR:
     attributes: &funcattributes_par
       series_type: ~
       exam_name: ~
-      protocol_name: ['*fmri*', '*fMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
+      protocol_name: ~
       tech: ~
-      diffusion: 0
+      diffusion: ~
       fov: ~
       scan_resolution: ~
       scan_mode: ~
@@ -612,7 +633,24 @@ PAR:
       echo: ~
       suffix: bold
   - provenance: ~
-    attributes: *funcattributes_par
+    attributes:
+      <<: *funcattributes_par
+      protocol_name: ['*fMRI*SBREF*', '*fMRI*sbref*', 'fMRI*SBRef*']
+    bids:
+      <<: *funcbids_par
+      suffix: sbref
+  - provenance: ~
+    attributes:
+      <<: *funcattributes_par
+      series_type: ~
+      protocol_name: ['*fmri*', '*fMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
+    bids:
+      <<: *funcbids_par
+      suffix: bold
+  - provenance: ~
+    attributes:
+      <<: *funcattributes_par
+      protocol_name: ['*cbv*', '*CBV*']
     bids:
       <<: *funcbids_par
       suffix: cbv
@@ -636,18 +674,13 @@ PAR:
     bids:
       <<: *funcbids_par
       suffix: stim
-  - provenance: ~
-    attributes: *funcattributes_par
-    bids:
-      <<: *funcbids_par
-      suffix: sbref
 
   dwi:        # ----------------------- All diffusion runs ---------------------
   - provenance: ~
     attributes: &dwiattributes_par
       series_type: ~
       exam_name: ~
-      protocol_name: ~
+      protocol_name: ['*dwi*', '*DWI*', '*diffusion*', 'DIFFUSION', '*dti*', '*DTI*']
       tech: ~
       diffusion: 1
       fov: ~
@@ -674,7 +707,7 @@ PAR:
     attributes: &fmapattributes_par
       series_type: ~
       exam_name: ~
-      protocol_name: ~
+      protocol_name: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       tech: ~
       diffusion: 0
       fov: ~
