@@ -258,9 +258,12 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
             acqlabel  = bids.get_bidsvalue(bidsname, 'acq')
             patterns  = (bidsname.replace('_run-1_',     '_run-[0-9]*_').
                                   replace('_magnitude1', '_magnitude*').
-                                  replace('_phase1',     '_phase*'),
+                                  replace('_magnitude2', '_magnitude*').
+                                  replace('_phase1',     '_phase*').
+                                  replace('_phase2',     '_phase*'),
                          bidsname.replace('_run-1_',     '_run-[0-9]*_').
-                                  replace('_magnitude1', '_phase*'))
+                                  replace('_magnitude1', '_phase*').
+                                  replace('_magnitude2', '_phase*'))
             for pattern in patterns:
                 jsonfiles.extend((bidsses/'fmap').glob(pattern  + '.json'))
                 if acqlabel:
