@@ -258,7 +258,8 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                                  replace('_magnitude1', '_magnitude*').\
                                  replace('_magnitude2', '_magnitude*').\
                                  replace('_phase1',     '_phase*').\
-                                 replace('_phase2',     '_phase*')
+                                 replace('_phase2',     '_phase*').\
+                                 replace('_phasediff',  '_phase*')
             jsonfiles = list((bidsses/'fmap').glob(pattern  + '.json'))
             acqlabel  = bids.get_bidsvalue(bidsname, 'acq')
             if acqlabel:
