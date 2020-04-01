@@ -243,3 +243,4 @@ Step 2: Running the bidscoiner
 
 .. |Bidseditor main window| image:: ./_static/bidseditor_main.png
 .. |Bidseditor edit window| image:: ./_static/bidseditor_edit.png
+
