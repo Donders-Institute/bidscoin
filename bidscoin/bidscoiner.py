@@ -254,17 +254,18 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                 intendedfor = []
 
             # Get the set of json-files (account for multiple runs in one data source and dcm2niix suffixes inserted into the acquisition label)
-            pattern   = bidsname.replace('_run-1_',     '_run-[0-9]*_').\
-                                 replace('_magnitude1', '_magnitude*').\
-                                 replace('_magnitude2', '_magnitude*').\
-                                 replace('_phase1',     '_phase*').\
-                                 replace('_phase2',     '_phase*').\
-                                 replace('_phasediff',  '_phase*')
-            jsonfiles = list((bidsses/'fmap').glob(pattern  + '.json'))
+            jsonfiles = []
             acqlabel  = bids.get_bidsvalue(bidsname, 'acq')
-            if acqlabel:
-                pattern2 = bids.get_bidsvalue(pattern, 'acq', acqlabel+'[CE][0-9]*')
-                jsonfiles.extend(list((bidsses/'fmap').glob(pattern2 + '.json')))
+            patterns  = (bidsname.replace('_run-1_',     '_run-[0-9]*_').
+                                  replace('_magnitude1', '_magnitude*').
+                                  replace('_phase1',     '_phase*'),
+                         bidsname.replace('_run-1_',     '_run-[0-9]*_').
+                                  replace('_magnitude1', '_phase*'))
+            for pattern in patterns:
+                jsonfiles.extend((bidsses/'fmap').glob(pattern  + '.json'))
+                if acqlabel:
+                    cepattern = bids.get_bidsvalue(pattern, 'acq', acqlabel + '[CE][0-9]*')
+                    jsonfiles.extend(list((bidsses/'fmap').glob(cepattern + '.json')))
 
             # Save the meta-data in the jsonfiles
             for jsonfile in set(jsonfiles):
