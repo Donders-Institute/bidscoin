@@ -4,7 +4,7 @@ Demo and tutorial
 BIDS introduction and BIDScoin demo
 -----------------------------------
 
-A good starting point to learn more about BIDS and BIDScoin is to watch `this presentation <https://youtu.be/aRDK4Gj5qzE>`__ at the OpenMR Benelux 2020 meeting (`slides <https://osf.io/pm36z/>`__). The first 15 minutes Robert Oostenveld provides a more general overview of the BIDS standard, after which Marcel Zwiers presents the design of BIDScoin and demonstrates hands-on how you can use it to convert a dataset to BIDS. 
+A good starting point to learn more about BIDS and BIDScoin is to watch `this presentation <https://youtu.be/aRDK4Gj5qzE>`__ from the OpenMR Benelux 2020 meeting (`slides <https://osf.io/pm36z/>`__). The first 15 minutes Robert Oostenveld provides a general overview of the BIDS standard, after which Marcel Zwiers presents the design of BIDScoin and demonstrates hands-on how you can use it to convert a dataset to BIDS. 
 
 Hands-on tutorial
 -----------------
