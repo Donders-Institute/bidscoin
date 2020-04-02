@@ -34,7 +34,7 @@ setup(name                           = 'bidscoin',          # Required
       classifiers                    = ['Programming Language :: Python :: 3',
                                         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
                                         'Operating System :: OS Independent'],
-      keywords                       = 'bids mri imaging neuroimaging dicom nifti pet',
+      keywords                       = 'bids mri imaging neuroimaging dicom par rec nifti pet defacing echo-combination',
       description                    = 'Converts and organises raw MRI data-sets according to the Brain Imaging Data Structure (BIDS)',
       long_description               = readme,
       long_description_content_type  = 'text/x-rst',
