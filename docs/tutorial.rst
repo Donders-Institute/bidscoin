@@ -1,5 +1,13 @@
-Tutorial
-========
+Demo and tutorial
+=================
+
+BIDS introduction and BIDScoin demo
+-----------------------------------
+
+A good starting point to learn more about BIDS and BIDScoin is to watch `this presentation <https://youtu.be/aRDK4Gj5qzE>`__ at the OpenMR Benelux 2020 meeting (`slides <https://osf.io/pm36z/>`__).
+
+Hands-on tutorial
+-----------------
 
 This tutorial is specific for researchers from the DCCN and makes use of data-sets stored on its central file-system. However, it should not be difficult to use (at least part of) this tutorial for other data-sets as well.
 
