@@ -14,7 +14,7 @@ BIDScoin: Coin your imaging data to BIDS
 
 |PyPI version| |PyPI - Python Version|
 
-BIDScoin is a user friendly `open-source <https://github.com/Donders-Institute/bidscoin>`__ python toolkit that converts ("coins") source-level (raw) neuroimaging data-sets to `nifti <https://nifti.nimh.nih.gov/>`__ / `json <https://www.json.org/>`__ / `tsv <https://en.wikipedia.org/wiki/Tab-separated_values>`__ data-sets that are organized following the Brain Imaging Data Structure, a.k.a. `BIDS <http://bids.neuroimaging.io>`__ standard. Rather then depending on complex or ambiguous programmatic logic for the identification of imaging modalities, BIDScoin uses a direct mapping approach to identify and convert the raw source data into BIDS data. Different runs of source data are identified by reading information from MRI header files (DICOM or PAR/REC or .7 format; e.g. SeriesDescription) and the mapping information about how these different runs should be named in BIDS can be specified a priori as well as by the researcher -- bringing in the missing knowledge that often exists only in his or her head.
+BIDScoin is a user friendly `open-source <https://github.com/Donders-Institute/bidscoin>`__ python toolkit that converts ("coins") source-level (raw) neuroimaging data-sets to `nifti <https://nifti.nimh.nih.gov/>`__ / `json <https://www.json.org/>`__ / `tsv <https://en.wikipedia.org/wiki/Tab-separated_values>`__ data-sets that are organized following the Brain Imaging Data Structure, a.k.a. `BIDS <http://bids.neuroimaging.io>`__ standard. Rather then depending on complex or ambiguous programmatic logic for the identification of imaging modalities, BIDScoin uses a direct mapping approach to identify and convert the raw source data into BIDS data. Different runs of source data are identified by reading information from MRI header files (DICOM or PAR/REC; e.g. ProtocolName) and the mapping information about how these different runs should be named in BIDS can be specified a priori as well as interactively by the researcher -- bringing in the missing knowledge that often exists only in his or her head!
 
 Because all the mapping information can be easily edited with a Graphical User Interface (GUI), BIDScoin requires no programming knowledge in order to use it.
 
@@ -22,8 +22,8 @@ BIDScoin functionality
 ----------------------
 
 -  [x] DICOM source data
--  [x] PAR / REC source data
--  [ ] P7 source data
+-  [x] PAR / REC source data (Philips)
+-  [ ] P7 source data (GE)
 -  [ ] Nifti source data
 -  [x] Fieldmaps\*
 -  [x] Multi-echo data\*
@@ -31,15 +31,17 @@ BIDScoin functionality
 -  [x] PET data\*
 -  [ ] Stimulus / behavioural logfiles
 -  [x] Plug-ins
+-  [x] Defacing
+-  [x] Multi-echo combination
 
    ``* = Experimental support for PAR / REC source data``
 
 ::
 
-    Are you a python programmer with an interest in BIDS who knows all about GE and / or Philips data?
-    Are you experienced with parsing stimulus presentation log-files? Or do you have ideas to improve
-    the this toolkit or its documentation? Have you come across bugs? Then you are highly encouraged to
-    provide feedback or contribute to this project on https://github.com/Donders-Institute/bidscoin.
+   Are you a python programmer with an interest in BIDS who knows all about GE and / or Philips data?
+   Are you experienced with parsing stimulus presentation log-files? Or do you have ideas to improve
+   the this toolkit or its documentation? Have you come across bugs? Then you are highly encouraged to
+   provide feedback or contribute to this project on https://github.com/Donders-Institute/bidscoin.
 
 Note:
 -----
