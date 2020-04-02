@@ -9,7 +9,7 @@ A good starting point to learn more about BIDS and BIDScoin is to watch `this pr
 Hands-on tutorial
 -----------------
 
-This tutorial is specific for researchers from the DCCN and makes use of data-sets stored on its central file-system. However, it should not be difficult to use (at least part of) this tutorial for other data-sets as well.
+The following tutorial is specific for researchers from the DCCN and makes use of data-sets stored on its central file-system. However, it should not be difficult to use (at least part of) this tutorial for other data-sets as well.
 
 1. **Preparation.** Activate the bidscoin environment and create a tutorial playground folder in your home directory by executing these bash commands (see also ``module help bidscoin``):
 
