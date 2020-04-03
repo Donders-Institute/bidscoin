@@ -134,7 +134,8 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                 LOGGER.info(f"Found dcm2niix _Crop_ suffix, replacing original file\n{filename} ->\n{newfilename}")
                 filename.replace(newfilename)
 
-        # Rename all files ending with _c%d, _e%d and _ph (and any combination of these): These are produced by dcm2niix for multi-coil data, multi-echo data and phase data, respectively
+        # Rename all files ending with _c%d, _e%d and _ph (and any combination of these) that are added by dcm2niix for multi-coil data, multi-echo data and phase data
+        # See: https://github.com/rordenlab/dcm2niix/blob/master/FILENAMING.md
         jsonfiles = []                                                                                          # Collect the associated json-files (for updating them later) -- possibly > 1
         for dcm2niisuffix in ('_c', '_e', '_ph', '_i'):
             for filename in sorted(bidsmodality.glob(f"{bidsname}*{dcm2niisuffix}*")):
@@ -148,6 +149,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     basepath = basepath.replace('_magnitude', '_phase')
 
                 # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first(?) coil/echo image -> add it when we encounter a **_e2/_c2 file
+                # https://github.com/rordenlab/dcm2niix/issues/381
                 if dcm2niisuffix in ('_c','_e') and int(index)==2 and basesuffix not in ['magnitude1', 'phase1']:    # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handled below)
                     filename_ce = Path(basepath + ext)                                                          # The file without the _c1/_e1 suffix
                     if dcm2niisuffix=='_e' and bids.get_bidsvalue(basepath, 'echo'):
@@ -157,7 +159,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     newfilename_ce = newbasepath_ce.with_suffix(ext)                                            # The file as it should have been
                     if filename_ce.is_file():
                         if filename_ce != newfilename_ce:
-                            LOGGER.info(f"Found no dcm2niix {dcm2niisuffix} suffix for image instance 1, renaming\n{filename_ce} ->\n{newfilename_ce}")
+                            LOGGER.warning(f"Found no dcm2niix {dcm2niisuffix} suffix for image instance 1, renaming\n{filename_ce} ->\n{newfilename_ce}\nConsider upgrading dcm2niix: https://github.com/rordenlab/dcm2niix/issues/381")
                             filename_ce.replace(newfilename_ce)
                         if ext == '.json':
                             jsonfiles.append(newbasepath_ce.with_suffix('.json'))
