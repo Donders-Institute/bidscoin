@@ -32,6 +32,7 @@ BIDScoin functionality
 -  [x] Multi-coil data\*
 -  [x] PET data\*
 -  [ ] Stimulus / behavioural logfiles
+-  [ ] Physiological data
 -  [x] Plug-ins
 -  [x] Defacing
 -  [x] Multi-echo combination
