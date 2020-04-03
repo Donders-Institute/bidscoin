@@ -336,54 +336,55 @@ def is_niftifile(file: Path) -> bool:
         return False
 
 
-def unpack(folder: Path, subprefix: str='sub-', sesprefix: str='ses-', wildcard: str='*') -> [Path, bool]:
+def unpack(sourcefolder: Path, subprefix: str='sub-', sesprefix: str='ses-', wildcard: str='*', tempfolder: Path=Path(tempfile.mkdtemp())) -> (Path, bool):
     """
-    Unpacks and sorts DICOM files in folder to a temporary folder if folder contains a DICOMDIR file or .tar.gz, .gz or .zip files
+    Unpacks and sorts DICOM files in sourcefolder to a temporary folder if sourcefolder contains a DICOMDIR file or .tar.gz, .gz or .zip files
 
-    :param folder:      The full pathname of the source folder
-    :param subprefix:   The optional subprefix (e.g. 'sub-'). Used to parse the subid
-    :param sesprefix:   The optional sesprefix (e.g. 'ses-'). Used to parse the sesid
-    :param wildcard:    A glob search pattern to select the tarballed/zipped files
-    :return:            A tuple with the full pathname of the source or temporary folder and a boolean that is True for the latter case (i.e. when data is unpacked in a temporary folder)
+    :param sourcefolder:    The full pathname of the folder with the source data
+    :param subprefix:       The optional subprefix (e.g. 'sub-'). Used to parse the subid
+    :param sesprefix:       The optional sesprefix (e.g. 'ses-'). Used to parse the sesid
+    :param wildcard:        A glob search pattern to select the tarballed/zipped files
+    :param tempfolder:      A root folder for temporary data
+    :return:                A tuple with the full pathname of the source or temporary folder and a boolean that is True for the latter case (i.e. when data is unpacked in a temporary folder)
     """
 
     # Search for zipped/tarballed files
     packedfiles = []
-    packedfiles.extend(folder.glob(f"{wildcard}.tar"))
-    packedfiles.extend(folder.glob(f"{wildcard}.tar.?z"))
-    packedfiles.extend(folder.glob(f"{wildcard}.tar.bz2"))
-    packedfiles.extend(folder.glob(f"{wildcard}.zip"))
+    packedfiles.extend(sourcefolder.glob(f"{wildcard}.tar"))
+    packedfiles.extend(sourcefolder.glob(f"{wildcard}.tar.?z"))
+    packedfiles.extend(sourcefolder.glob(f"{wildcard}.tar.bz2"))
+    packedfiles.extend(sourcefolder.glob(f"{wildcard}.zip"))
 
     # Check if we are going to do unpacking and/or sorting
-    if packedfiles or (folder/'DICOMDIR').is_file():
+    if packedfiles or (sourcefolder/'DICOMDIR').is_file():
 
         # Create a temporary directory for unpacking the data
-        subid, sesid = get_subid_sesid(folder/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
-        tempfolder   = Path(tempfile.mkdtemp())/subid/sesid
+        subid, sesid = get_subid_sesid(sourcefolder/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
+        tempsubses   = tempfolder/subid/sesid
 
         # Copy everything over to the tempfolder
-        logger.info(f"Making temporary copy: {folder} -> {tempfolder}")
-        copy_tree(str(folder), str(tempfolder))     # Older python versions don't support PathLib
+        logger.info(f"Making temporary copy: {sourcefolder} -> {tempsubses}")
+        copy_tree(str(sourcefolder), str(tempsubses))     # Older python versions don't support PathLib
 
         # Unpack the zip/tarballed files in the temporary folder
-        for packedfile in [tempfolder/packedfile.name for packedfile in packedfiles]:
-            logger.info(f"Unpacking: {packedfile.name} -> {tempfolder}")
+        for packedfile in [tempsubses/packedfile.name for packedfile in packedfiles]:
+            logger.info(f"Unpacking: {packedfile.name} -> {tempsubses}")
             ext = packedfile.suffixes
             if ext[-1] == '.zip':
                 with zipfile.ZipFile(packedfile, 'r') as zip_fid:
-                    zip_fid.extractall(tempfolder)
+                    zip_fid.extractall(tempsubses)
             elif '.tar' in ext:
                 with tarfile.open(packedfile, 'r') as tar_fid:
-                    tar_fid.extractall(tempfolder)
+                    tar_fid.extractall(tempsubses)
 
         # Sort the DICOM files if not sorted yet
-        dicomsort.sortsessions(tempfolder)
+        dicomsort.sortsessions(tempsubses)
 
-        return tempfolder, True
+        return tempsubses, True
 
     else:
 
-        return folder, False
+        return sourcefolder, False
 
 
 def get_dicomfile(folder: Path, index: int=0) -> Path:

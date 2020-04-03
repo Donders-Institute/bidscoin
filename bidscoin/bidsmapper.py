@@ -17,6 +17,7 @@ import copy
 import logging
 import sys
 import shutil
+import tempfile
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QMessageBox
 try:
@@ -28,7 +29,7 @@ except ImportError:
 LOGGER = logging.getLogger('bidscoin')
 
 
-def build_bidsmap(dataformat: str, sourcefile: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, gui: object) -> dict:
+def build_bidsmap(dataformat: str, sourcefile: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, gui: object) -> (dict, bool):
     """
     All the logic to map the Philips PAR/XML fields onto bids labels go into this function
 
@@ -38,13 +39,14 @@ def build_bidsmap(dataformat: str, sourcefile: Path, bidsmap_new: dict, bidsmap_
     :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     :param template:    The bidsmap template with the default heuristics
     :param gui:         If not None, the user will not be asked for help if an unknown run is encountered
-    :return:            The bidsmap with new entries in it
+    :return:            Tuple with the bidsmap with new entries in it and with a boolean that is True when the sourcefile was a new sample
     """
 
     # Input checks
+    newsample = False
     if not sourcefile.name or (not template[dataformat] and not bidsmap_old[dataformat]):
         LOGGER.info(f"No {dataformat} source information found in the bidsmap and template")
-        return bidsmap_new
+        return bidsmap_new, newsample
 
     # See if we can find a matching run in the old bidsmap
     run, modality, index = bids.get_matching_run(sourcefile, bidsmap_old, dataformat)
@@ -59,8 +61,9 @@ def build_bidsmap(dataformat: str, sourcefile: Path, bidsmap_new: dict, bidsmap_
         # Copy the filled-in run over to the new bidsmap
         bidsmap_new = bids.append_run(bidsmap_new, dataformat, modality, run)
 
-        # Communicate with the user if the run was not present in bidsmap_old or in template
+        # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
         LOGGER.info(f"Found '{modality}' {dataformat} sample: {sourcefile}")
+        newsample = True
 
         # Launch a GUI to ask the user for help if the new run comes from the template (i.e. was not yet in the old bidsmap)
         if gui and gui.interactive==2 and index is None:
@@ -84,7 +87,7 @@ def build_bidsmap(dataformat: str, sourcefile: Path, bidsmap_new: dict, bidsmap_
             else:
                 LOGGER.debug(f'Unexpected result {dialog_edit.result()} from the edit dialog')
 
-    return bidsmap_new
+    return bidsmap_new, newsample
 
 
 def build_niftimap(session: Path, bidsmap_new: dict, bidsmap_old: dict) -> dict:
@@ -220,6 +223,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
     # Loop over all subjects and sessions and built up the bidsmap entries
     subjects = bids.lsdirs(rawfolder, subprefix + '*')
+    workdir  = tempfile.mkdtemp()
     if not subjects:
         LOGGER.warning(f'No subjects found in: {rawfolder/subprefix}*')
         gui = None
@@ -231,10 +235,12 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         for session in sessions:
 
             # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-            session, unpacked = bids.unpack(session, subprefix, sesprefix, '*')
+            session, unpacked = bids.unpack(session, subprefix, sesprefix, '*', workdir)
+            newsample         = False
 
             # Loop of the different DICOM runs (series) and collect source files
-            dataformat = bids.get_dataformat(session)
+            sourcefiles = []
+            dataformat  = bids.get_dataformat(session)
             if not dataformat:
                 LOGGER.info(f"Skipping: {session} (subject {n}/{len(subjects)})")
                 continue
@@ -242,7 +248,6 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             LOGGER.info(f"Parsing: {session} (subject {n}/{len(subjects)})")
 
             if dataformat=='DICOM':
-                sourcefiles = []
                 for sourcedir in bids.lsdirs(session):
                     sourcefile = bids.get_dicomfile(sourcedir)
                     if sourcefile.name:
@@ -256,7 +261,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
             # Update the bidsmap with the info from the source files
             for sourcefile in sourcefiles:
-                bidsmap_new = build_bidsmap(dataformat, sourcefile, bidsmap_new, bidsmap_old, template, gui)
+                bidsmap_new, newsample = build_bidsmap(dataformat, sourcefile, bidsmap_new, bidsmap_old, template, gui)
 
             # Update / append the nifti mapping
             if dataformat=='Nifti':
@@ -271,7 +276,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                 bidsmap_new = build_pluginmap(session, bidsmap_new, bidsmap_old)
 
             # Clean-up the temporary unpacked data
-            if unpacked:
+            if unpacked and not newsample:
                 shutil.rmtree(session)
 
     # Create the bidsmap YAML-file in bidsfolder/code/bidscoin
@@ -301,6 +306,10 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             gui.setupUi(mainwin, bidsfolder, bidsmapfile, bidsmap_new, copy.deepcopy(bidsmap_new), template, dataformat, subprefix=subprefix, sesprefix=sesprefix)
             mainwin.show()
             app.exec()
+
+    # Clean-up the temporary unpacked data
+    LOGGER.info(f"Cleaning up workdir {workdir}")
+    shutil.rmtree(workdir)
 
     LOGGER.info('-------------- FINISHED! -------------------')
     LOGGER.info('')
