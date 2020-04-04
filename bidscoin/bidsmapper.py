@@ -17,7 +17,6 @@ import copy
 import logging
 import sys
 import shutil
-import tempfile
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QMessageBox
 try:
@@ -57,6 +56,7 @@ def build_bidsmap(dataformat: str, sourcefile: Path, bidsmap_new: dict, bidsmap_
     # See if we have collected the run in our new bidsmap
     if not bids.exist_run(bidsmap_new, dataformat, '', run):
 
+        # Now work from the provenance store
         if store:
             targetfile        = store['target']/sourcefile.relative_to(store['source'])
             targetfile.parent.mkdir(parents=True, exist_ok=True)
@@ -232,7 +232,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                                     f"bidseditor) that you can then (re)edit to your needs")
 
     # Loop over all subjects and sessions and built up the bidsmap entries
-    subjects = bids.lsdirs(rawfolder, subprefix + '*')
+    dataformat = ''
+    subjects   = bids.lsdirs(rawfolder, subprefix + '*')
     if not subjects:
         LOGGER.warning(f'No subjects found in: {rawfolder/subprefix}*')
         gui = None
