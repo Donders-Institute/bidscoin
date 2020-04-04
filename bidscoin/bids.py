@@ -1171,6 +1171,11 @@ def get_subid_sesid(sourcefile: Path, subid: str= '<<SourceFilePath>>', sesid: s
     :return:           Updated (subid, sesid) tuple, including the sub/sesprefix
     """
 
+    # Input checking
+    if not sourcefile.is_file():
+        logger.warning(f"Could not determine sub/ses-id information, {sourcefile} should be a source file")
+        return '', ''
+
     # Add default value for subid and sesid (e.g. for the bidseditor)
     if subid=='<<SourceFilePath>>':
         subid = [part for part in sourcefile.parent.parts if part.startswith(subprefix)][-1]

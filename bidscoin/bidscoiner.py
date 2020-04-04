@@ -55,6 +55,14 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
         if sources:
             sourcefile = sources[0]
 
+    else:
+        LOGGER.error(f"Unsupported data format: {dataformat}\nPlease report this bug")
+        return
+
+    if not sources:
+        LOGGER.info(f"No data found for: {session}")
+        return
+
     subid, sesid = bids.get_subid_sesid(sourcefile,
                                         bidsmap[dataformat]['subject'],
                                         bidsmap[dataformat]['session'],
