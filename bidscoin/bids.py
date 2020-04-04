@@ -1172,8 +1172,8 @@ def get_subid_sesid(sourcefile: Path, subid: str= '<<SourceFilePath>>', sesid: s
     """
 
     # Input checking
-    if not sourcefile.is_file():
-        logger.warning(f"Could not determine sub/ses-id information, {sourcefile} should be a source file")
+    if subprefix not in str(sourcefile):
+        logger.warning(f"Could not parse sub/ses-id information from '{sourcefile}': no '{subprefix}' label in its path")
         return '', ''
 
     # Add default value for subid and sesid (e.g. for the bidseditor)
