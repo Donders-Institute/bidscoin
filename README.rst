@@ -3,7 +3,7 @@ BIDScoin: Coin your imaging data to BIDS
 ========================================
 
 .. image:: ./_static/bidscoin_logo.png
-  :height: 280px
+  :height: 260px
   :align: right
   :alt: Full documentation: https://bidscoin.readthedocs.io
   :target: https://bidscoin.readthedocs.io
