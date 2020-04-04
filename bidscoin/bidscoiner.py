@@ -504,6 +504,10 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=[], force: bool=F
             sessions = [subject]
         for session in sessions:
 
+            # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
+            bidssession       = bidsfolder/session.relative_to(rawfolder)  # Append the sub-*/ses-* subdirectories from the rawfolder to the bidsfolder
+            session, unpacked = bids.unpack(session, subprefix, sesprefix, '*')
+
             # See what dataformat we have
             dataformat = bids.get_dataformat(session)
             if not dataformat:
@@ -512,7 +516,6 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=[], force: bool=F
 
             # Check if we should skip the session-folder
             if not force:
-                bidssession = bidsfolder / session.relative_to(rawfolder)                   # Append the sub-*/ses-* subdirectories from the rawfolder to the bidsfolder
                 if not bidsmap[dataformat]['session']:
                     bidssession = bidssession.parent
                 modalities = []
@@ -524,9 +527,6 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=[], force: bool=F
                     continue
 
             LOGGER.info(f"Coining session: {session}")
-
-            # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-            session, unpacked = bids.unpack(session, subprefix, sesprefix, '*')
 
             # Update / append the sourde data mapping
             if dataformat in ('DICOM', 'PAR'):
