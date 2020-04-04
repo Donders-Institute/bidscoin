@@ -336,7 +336,7 @@ def is_niftifile(file: Path) -> bool:
         return False
 
 
-def unpack(sourcefolder: Path, subprefix: str='sub-', sesprefix: str='ses-', wildcard: str='*', tempfolder: Path=tempfile.mkdtemp()) -> (Path, bool):
+def unpack(sourcefolder: Path, subprefix: str='sub-', sesprefix: str='ses-', wildcard: str='*', workfolder: Path=tempfile.mkdtemp()) -> (Path, bool):
     """
     Unpacks and sorts DICOM files in sourcefolder to a temporary folder if sourcefolder contains a DICOMDIR file or .tar.gz, .gz or .zip files
 
@@ -344,8 +344,8 @@ def unpack(sourcefolder: Path, subprefix: str='sub-', sesprefix: str='ses-', wil
     :param subprefix:       The optional subprefix (e.g. 'sub-'). Used to parse the subid
     :param sesprefix:       The optional sesprefix (e.g. 'ses-'). Used to parse the sesid
     :param wildcard:        A glob search pattern to select the tarballed/zipped files
-    :param tempfolder:      A root folder for temporary data
-    :return:                A tuple with the full pathname of the source or temporary folder and a boolean that is True for the latter case (i.e. when data is unpacked in a temporary folder)
+    :param workfolder:      A root folder for temporary data
+    :return:                A tuple with the full pathname of the source or workfolder and a workdir-path or False when the data is not unpacked in a temporary folder
     """
 
     # Search for zipped/tarballed files
@@ -358,29 +358,30 @@ def unpack(sourcefolder: Path, subprefix: str='sub-', sesprefix: str='ses-', wil
     # Check if we are going to do unpacking and/or sorting
     if packedfiles or (sourcefolder/'DICOMDIR').is_file():
 
-        # Create a temporary directory for unpacking the data
+        # Create a temporary workfolder for unpacking the data
         subid, sesid = get_subid_sesid(sourcefolder/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
-        tempsubses   = Path(tempfolder)/subid/sesid
+        workfolder   = Path(workfolder)
+        worksubses   = workfolder/subid/sesid
 
-        # Copy everything over to the tempfolder
-        logger.info(f"Making temporary copy: {sourcefolder} -> {tempsubses}")
-        copy_tree(str(sourcefolder), str(tempsubses))     # Older python versions don't support PathLib
+        # Copy everything over to the workfolder
+        logger.info(f"Making temporary copy: {sourcefolder} -> {worksubses}")
+        copy_tree(str(sourcefolder), str(worksubses))     # Older python versions don't support PathLib
 
         # Unpack the zip/tarballed files in the temporary folder
-        for packedfile in [tempsubses/packedfile.name for packedfile in packedfiles]:
-            logger.info(f"Unpacking: {packedfile.name} -> {tempsubses}")
+        for packedfile in [worksubses/packedfile.name for packedfile in packedfiles]:
+            logger.info(f"Unpacking: {packedfile.name} -> {worksubses}")
             ext = packedfile.suffixes
             if ext[-1] == '.zip':
                 with zipfile.ZipFile(packedfile, 'r') as zip_fid:
-                    zip_fid.extractall(tempsubses)
+                    zip_fid.extractall(worksubses)
             elif '.tar' in ext:
                 with tarfile.open(packedfile, 'r') as tar_fid:
-                    tar_fid.extractall(tempsubses)
+                    tar_fid.extractall(worksubses)
 
         # Sort the DICOM files if not sorted yet
-        dicomsort.sortsessions(tempsubses)
+        dicomsort.sortsessions(worksubses)
 
-        return tempsubses, True
+        return worksubses, workfolder
 
     else:
 
@@ -522,6 +523,7 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
     """
 
     logger.info(f"Writing bidsmap to: {filename}")
+    filename.parent.mkdir(parents=True, exist_ok=True)
     with filename.open('w') as stream:
         yaml.dump(bidsmap, stream)
 

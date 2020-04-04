@@ -54,6 +54,8 @@ Step 1a: Running the bidsmapper
       -m SESPREFIX, --sesprefix SESPREFIX
                             The prefix common for all the source session-folders.
                             Default: 'ses-'
+      -s, --store           Flag to store the provenance data samples in the
+                            bidsfolder/'code'/'provenance' folder
       -i {0,1,2}, --interactive {0,1,2}
                             {0}: The sourcefolder is scanned for different kinds
                             of scans without any user interaction. {1}: The
@@ -239,7 +241,7 @@ Step 2: Running the bidscoiner
    Check your json sidecar files of your fieldmaps, in particular see if they have the expected ``IntendedFor`` values.
 
 .. note::
-   The provenance of the produced BIDS data-sets is stored in the ``bids/code/bidscoin/bidscoiner.log`` file. This file is also very useful for debugging / tracking down bidscoin issues.
+   The provenance of the produced BIDS data-sets is stored in the ``[bidsfolder]/code/bidscoin/bidscoiner.log`` file. This file is also very useful for debugging / tracking down bidscoin issues.
 
 .. |Bidseditor main window| image:: ./_static/bidseditor_main.png
 .. |Bidseditor edit window| image:: ./_static/bidseditor_edit.png

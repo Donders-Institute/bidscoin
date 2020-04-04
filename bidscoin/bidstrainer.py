@@ -182,7 +182,7 @@ def bidstrainer(bidsfolder: str, samplefolder: str, bidsmapfile: str, pattern: s
 
     # Input checking
     if not samplefolder:
-        samplefolder = bidsfolder/'code'/'bidscoin'/'samples'
+        samplefolder = bidsfolder/'code'/'bidscoin'/'provenance'
         if not samplefolder.is_dir():
             LOGGER.info(f"Creating an empty samples directory tree: {samplefolder}")
             for modality in bids.bidsmodalities + (bids.ignoremodality, bids.unknownmodality):
@@ -254,7 +254,7 @@ def main():
                                             '  bidstrainer /project/foo/bids\n' 
                                             '  bidstrainer /project/foo/bids -s /project/foo/samples -t bidsmap_custom\n ')
     parser.add_argument('bidsfolder',           help='The destination folder with the bids data structure')
-    parser.add_argument('-s','--samplefolder',  help='The root folder of the directory tree containing the sample files / training data. By default the bidsfolder/code/bidscoin/samples folder is used or such an empty directory tree is created', default='')
+    parser.add_argument('-s','--samplefolder',  help='The root folder of the directory tree containing the sample files / training data. By default the bidsfolder/code/bidscoin/provenance folder is used or such an empty directory tree is created', default='')
     parser.add_argument('-t','--template',      help='The bidsmap template file with the BIDS heuristics (default: ./heuristics/bidsmap_template.yaml)', default='bidsmap_template.yaml')
     parser.add_argument('-p','--pattern',       help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default=r'.*\.(IMA|dcm)$')
     args = parser.parse_args()

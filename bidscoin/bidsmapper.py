@@ -29,7 +29,7 @@ except ImportError:
 LOGGER = logging.getLogger('bidscoin')
 
 
-def build_bidsmap(dataformat: str, sourcefile: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, gui: object) -> (dict, bool):
+def build_bidsmap(dataformat: str, sourcefile: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict, gui: object) -> dict:
     """
     All the logic to map the Philips PAR/XML fields onto bids labels go into this function
 
@@ -39,14 +39,13 @@ def build_bidsmap(dataformat: str, sourcefile: Path, bidsmap_new: dict, bidsmap_
     :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     :param template:    The bidsmap template with the default heuristics
     :param gui:         If not None, the user will not be asked for help if an unknown run is encountered
-    :return:            Tuple with the bidsmap with new entries in it and with a boolean that is True when the sourcefile was a new sample
+    :return:            The bidsmap with new entries in it
     """
 
     # Input checks
-    newsample = False
     if not sourcefile.name or (not template[dataformat] and not bidsmap_old[dataformat]):
         LOGGER.info(f"No {dataformat} source information found in the bidsmap and template")
-        return bidsmap_new, newsample
+        return bidsmap_new
 
     # See if we can find a matching run in the old bidsmap
     run, modality, index = bids.get_matching_run(sourcefile, bidsmap_old, dataformat)
@@ -58,12 +57,17 @@ def build_bidsmap(dataformat: str, sourcefile: Path, bidsmap_new: dict, bidsmap_
     # See if we have collected the run in our new bidsmap
     if not bids.exist_run(bidsmap_new, dataformat, '', run):
 
-        # Copy the filled-in run over to the new bidsmap
-        bidsmap_new = bids.append_run(bidsmap_new, dataformat, modality, run)
+        if store:
+            targetfile        = store['target']/sourcefile.relative_to(store['source'])
+            targetfile.parent.mkdir(parents=True, exist_ok=True)
+            sourcefile        = Path(shutil.copy2(sourcefile, targetfile))
+            run['provenance'] = str(sourcefile.resolve())
 
         # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
         LOGGER.info(f"Found '{modality}' {dataformat} sample: {sourcefile}")
-        newsample = True
+
+        # Copy the filled-in run over to the new bidsmap
+        bidsmap_new = bids.append_run(bidsmap_new, dataformat, modality, run)
 
         # Launch a GUI to ask the user for help if the new run comes from the template (i.e. was not yet in the old bidsmap)
         if gui and gui.interactive==2 and index is None:
@@ -87,7 +91,7 @@ def build_bidsmap(dataformat: str, sourcefile: Path, bidsmap_new: dict, bidsmap_
             else:
                 LOGGER.debug(f'Unexpected result {dialog_edit.result()} from the edit dialog')
 
-    return bidsmap_new, newsample
+    return bidsmap_new
 
 
 def build_niftimap(session: Path, bidsmap_new: dict, bidsmap_old: dict) -> dict:
@@ -153,7 +157,7 @@ def build_pluginmap(session: Path, bidsmap_new: dict, bidsmap_old: dict) -> dict
     return bidsmap_new
 
 
-def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, subprefix: str='sub-', sesprefix: str='ses-', interactive: bool=True) -> None:
+def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, subprefix: str='sub-', sesprefix: str='ses-', store: bool=False, interactive: bool=True) -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder
     and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code/bidscoin.
@@ -165,26 +169,32 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     :param templatefile:    The name of the bidsmap template YAML-file
     :param subprefix:       The prefix common for all source subject-folders
     :param sesprefix:       The prefix common for all source session-folders
+    :param store:           If True, the provenance samples will be stored
     :param interactive:     If True, the user will be asked for help if an unknown run is encountered
     :return:bidsmapfile:    The name of the mapped bidsmap YAML-file
     """
 
     # Input checking
-    rawfolder    = Path(rawfolder).resolve()
-    bidsfolder   = Path(bidsfolder).resolve()
-    bidsmapfile  = Path(bidsmapfile)
-    templatefile = Path(templatefile)
+    rawfolder      = Path(rawfolder).resolve()
+    bidsfolder     = Path(bidsfolder).resolve()
+    bidsmapfile    = Path(bidsmapfile)
+    templatefile   = Path(templatefile)
+    bidscoinfolder = bidsfolder/'code'/'bidscoin'
+    if store:
+        store = dict(source=rawfolder, target=bidscoinfolder/'provenance')
+    else:
+        store = dict()
 
     # Start logging
-    bids.setup_logging(bidsfolder/'code'/'bidscoin'/'bidsmapper.log')
+    bids.setup_logging(bidscoinfolder/'bidsmapper.log')
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSmapper ------------')
     LOGGER.info(f">>> bidsmapper sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmapfile} "
                 f" template={templatefile} subprefix={subprefix} sesprefix={sesprefix} interactive={interactive}")
 
     # Get the heuristics for filling the new bidsmap
-    bidsmap_old, _ = bids.load_bidsmap(bidsmapfile,  bidsfolder/'code'/'bidscoin')
-    template, _    = bids.load_bidsmap(templatefile, bidsfolder/'code'/'bidscoin')
+    bidsmap_old, _ = bids.load_bidsmap(bidsmapfile,  bidscoinfolder)
+    template, _    = bids.load_bidsmap(templatefile, bidscoinfolder)
 
     # Create the new bidsmap as a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
     if bidsmap_old:
@@ -223,7 +233,6 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
     # Loop over all subjects and sessions and built up the bidsmap entries
     subjects = bids.lsdirs(rawfolder, subprefix + '*')
-    workdir  = tempfile.mkdtemp()
     if not subjects:
         LOGGER.warning(f'No subjects found in: {rawfolder/subprefix}*')
         gui = None
@@ -235,8 +244,9 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         for session in sessions:
 
             # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-            session, unpacked = bids.unpack(session, subprefix, sesprefix, '*', workdir)
-            newsample         = False
+            session, unpacked = bids.unpack(session, subprefix, sesprefix, '*')
+            if unpacked:
+                store = dict(source=unpacked, target=bidscoinfolder/'provenance')
 
             # Loop of the different DICOM runs (series) and collect source files
             sourcefiles = []
@@ -261,7 +271,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
             # Update the bidsmap with the info from the source files
             for sourcefile in sourcefiles:
-                bidsmap_new, newsample = build_bidsmap(dataformat, sourcefile, bidsmap_new, bidsmap_old, template, gui)
+                bidsmap_new = build_bidsmap(dataformat, sourcefile, bidsmap_new, bidsmap_old, template, store, gui)
 
             # Update / append the nifti mapping
             if dataformat=='Nifti':
@@ -276,14 +286,11 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                 bidsmap_new = build_pluginmap(session, bidsmap_new, bidsmap_old)
 
             # Clean-up the temporary unpacked data
-            if unpacked and not newsample:
+            if unpacked:
                 shutil.rmtree(session)
 
-    # Create the bidsmap YAML-file in bidsfolder/code/bidscoin
-    bidsmapfile = bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'
-    bidsmapfile.parent.mkdir(parents=True, exist_ok=True)
-
-    # Save the bidsmap to the bidsmap YAML-file
+    # Save the bidsmap in the bidscoinfolder
+    bidsmapfile = bidscoinfolder/'bidsmap.yaml'
     bids.save_bidsmap(bidsmapfile, bidsmap_new)
 
     # (Re)launch the bidseditor UI_MainWindow
@@ -307,10 +314,6 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             mainwin.show()
             app.exec()
 
-    # Clean-up the temporary unpacked data
-    LOGGER.info(f"Cleaning up workdir {workdir}")
-    shutil.rmtree(workdir)
-
     LOGGER.info('-------------- FINISHED! -------------------')
     LOGGER.info('')
 
@@ -333,6 +336,7 @@ def main():
     parser.add_argument('-t','--template',    help='The bidsmap template with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap_template.yaml', default='bidsmap_template.yaml')
     parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
+    parser.add_argument('-s','--store',       help="Flag to store the provenance data samples in the bidsfolder/'code'/'provenance' folder", action='store_true')
     parser.add_argument('-i','--interactive', help='{0}: The sourcefolder is scanned for different kinds of scans without any user interaction. {1}: The sourcefolder is scanned for different kinds of scans and, when finished, the resulting bidsmap is opened using the bidseditor. {2}: As {1}, except that already during scanning the user is asked for help if a new and unknown run is encountered. This option is most useful when re-running the bidsmapper (e.g. when the scan protocol was changed since last running the bidsmapper). Default: 1', type=int, choices=[0,1,2], default=1)
     parser.add_argument('-v','--version',     help='Show the BIDS and BIDScoin version', action='version', version=f'BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version()}')
     args = parser.parse_args()
@@ -343,6 +347,7 @@ def main():
                templatefile = args.template,
                subprefix    = args.subprefix,
                sesprefix    = args.sesprefix,
+               store        = args.store,
                interactive  = args.interactive)
 
 

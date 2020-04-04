@@ -108,7 +108,7 @@ BIDScoin requires that the source data input folder is organized according to a 
     [..]
 
 .. note::
-   You can store the ``sessiondata`` in any of the above data organizations as zipped (``.zip``) or tarzipped (e.g. ``.tar.gz``) archive files. BIDScoin `workflow tools <workflow.html>`_ will unpack/unzip those archive files in a temporary folder and will process the ``sessiondata`` from there. The BIDScoin tools will run `dicomsort <#dicomsort>`__ in a temporary folder for flat/DICOMDIR data to sort them in seriesfolders. BIDScoin tools that work from a temporary folder have the downsde of getting a speed penalty, and a downside that the ``bidseditor`` (when run outside the ``bidsmapper``) cannot change the modality label anymore at a later moment in time (as the temporary source data will no longer be there).
+   You can store the ``sessiondata`` in any of the above data organizations as zipped (``.zip``) or tarzipped (e.g. ``.tar.gz``) archive files. BIDScoin `workflow tools <workflow.html>`_ will unpack/unzip those archive files in a temporary folder and will process the ``sessiondata`` from there. The BIDScoin tools will run `dicomsort <#dicomsort>`__ in a temporary folder for flat/DICOMDIR data to sort them in seriesfolders. BIDScoin tools that work from a temporary folder has the downsde of getting a speed penalty. Also note that privacy-sensitive data samples will then be stored in ``[bidsfolder]/code/bidscoin/provenance``.
 
 Data management utilities
 -------------------------
