@@ -506,6 +506,9 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=[], force: bool=F
 
             # See what dataformat we have
             dataformat = bids.get_dataformat(session)
+            if not dataformat:
+                LOGGER.info(f"Skipping unknown session: {session}")
+                continue
 
             # Check if we should skip the session-folder
             if not force:
