@@ -131,11 +131,11 @@ def reporterrors() -> None:
                 logger.info('')
 
         elif filehandler.name == 'loghandler':
-            logfile = filehandler.baseFilename
+            logfile = Path(filehandler.baseFilename)
 
     if 'logfile' in locals():
         logger.info(f"For the complete log see: {logfile}")
-        logger.info(f"NB: logfiles may contain identifiable information, e.g. from pathnames")
+        logger.info(f"NB: {logfile.parent} may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
 
 
 def run_command(command: str) -> bool:
