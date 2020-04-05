@@ -76,12 +76,6 @@ def setup_logging(log_file: Path, debug: bool=False) -> logging.Logger:
 
     # debug = True
 
-    # Create the log dir if it does not exist
-    log_file.parent.mkdir(parents=True, exist_ok=True)
-
-    # Derive the name of the error logfile from the normal log_file
-    error_file = log_file.with_suffix('.errors')
-
     # Set the format and logging level
     fmt       = '%(asctime)s - %(name)s - %(levelname)s %(message)s'
     datefmt   = '%Y-%m-%d %H:%M:%S'
@@ -94,7 +88,11 @@ def setup_logging(log_file: Path, debug: bool=False) -> logging.Logger:
     # Set & add the streamhandler and add some color to those boring terminal logs! :-)
     coloredlogs.install(level=logger.level, fmt=fmt, datefmt=datefmt)
 
+    if not log_file.name:
+        return logger
+
     # Set & add the log filehandler
+    log_file.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
     loghandler = logging.FileHandler(log_file)
     loghandler.setLevel(logging.DEBUG)
     loghandler.setFormatter(formatter)
@@ -102,6 +100,7 @@ def setup_logging(log_file: Path, debug: bool=False) -> logging.Logger:
     logger.addHandler(loghandler)
 
     # Set & add the error / warnings handler
+    error_file = log_file.with_suffix('.errors')            # Derive the name of the error logfile from the normal log_file
     errorhandler = logging.FileHandler(error_file, mode='w')
     errorhandler.setLevel(logging.WARNING)
     errorhandler.setFormatter(formatter)
