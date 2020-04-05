@@ -5,12 +5,15 @@ Sorts and / or renames DICOM files into local subdirectories with a (3-digit) Se
 
 import re
 import warnings
+import logging
 from pathlib import Path
 from pydicom.filereader import read_dicomdir
 try:
     from bidscoin import bids
 except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
+
+LOGGER = logging.getLogger('bidscoin')
 
 
 def cleanup(name: str) -> str:
@@ -44,7 +47,7 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
     """
 
     # Map all dicomfiles and move them to series folders
-    print(f">> Sorting: {sessionfolder} ({len(dicomfiles)} files)")
+    LOGGER.info(f">> Sorting: {sessionfolder} ({len(dicomfiles)} files)")
     if not dryrun:
         sessionfolder.mkdir(parents=True, exist_ok=True)
 
@@ -93,7 +96,7 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
             seriesdir = cleanup(f"{seriesnr:03d}-{seriesdescr}")
             if seriesdir not in seriesdirs:  # We have a new series
                 if not (sessionfolder/seriesdir).is_dir():
-                    print(f"   Creating:  {sessionfolder/seriesdir}")
+                    LOGGER.info(f"   Creating:  {sessionfolder/seriesdir}")
                     if not dryrun:
                         (sessionfolder/seriesdir).mkdir(parents=True)
                 seriesdirs.append(seriesdir)
@@ -126,6 +129,9 @@ def sortsessions(session: str, subprefix: str='', sesprefix: str='', dicomfield:
     # Input checking
     session = Path(session)
 
+    # Start logging
+    bids.setup_logging()
+
     # Do a recursive call if subprefix is given
     if subprefix:
 
@@ -151,7 +157,7 @@ def sortsessions(session: str, subprefix: str='', sesprefix: str='', dicomfield:
             for n, study in enumerate(patient.children, 1):                                    # TODO: Check order
                 if len(patient.children) > 1:
                     sessionfolder = session/f"ses-{n:02}{cleanup(study.StudyDescription)}"     # TODO: Leave out StudyDescrtiption? Include PatientName/StudiesDescription?
-                    print(f"WARNING: the session index-number '{n:02}' is not necessarily meaningful: {sessionfolder}")
+                    LOGGER.warning(f"The session index-number '{n:02}' is not necessarily meaningful: {sessionfolder}")
 
                 dicomfiles = []
                 for series in study.children:

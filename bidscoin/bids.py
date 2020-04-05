@@ -65,7 +65,7 @@ def version() -> str:
     return str(value)
 
 
-def setup_logging(log_file: Path, debug: bool=False) -> logging.Logger:
+def setup_logging(log_file: Path=Path(), debug: bool=False) -> logging.Logger:
     """
     Setup the logging
 
@@ -89,7 +89,7 @@ def setup_logging(log_file: Path, debug: bool=False) -> logging.Logger:
     coloredlogs.install(level=logger.level, fmt=fmt, datefmt=datefmt)
 
     if not log_file.name:
-        return logger
+        return
 
     # Set & add the log filehandler
     log_file.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
