@@ -4,7 +4,6 @@ Sorts and / or renames DICOM files into local subdirectories with a (3-digit) Se
 """
 
 import re
-import warnings
 import logging
 from pathlib import Path
 from pydicom.filereader import read_dicomdir
