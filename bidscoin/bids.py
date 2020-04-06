@@ -336,7 +336,7 @@ def is_niftifile(file: Path) -> bool:
         return False
 
 
-def unpack(sourcefolder: Path, subprefix: str='sub-', sesprefix: str='ses-', wildcard: str='*', workfolder: Path=tempfile.mkdtemp()) -> (Path, bool):
+def unpack(sourcefolder: Path, subprefix: str='sub-', sesprefix: str='ses-', wildcard: str='*', workfolder: Path='') -> (Path, bool):
     """
     Unpacks and sorts DICOM files in sourcefolder to a temporary folder if sourcefolder contains a DICOMDIR file or .tar.gz, .gz or .zip files
 
@@ -358,10 +358,14 @@ def unpack(sourcefolder: Path, subprefix: str='sub-', sesprefix: str='ses-', wil
     # Check if we are going to do unpacking and/or sorting
     if packedfiles or (sourcefolder/'DICOMDIR').is_file():
 
+        # Input checking
+        if not workfolder:
+            workfolder = tempfile.mkdtemp
+        workfolder = Path(workfolder)
+
         # Create a temporary workfolder for unpacking the data
         subid, sesid = get_subid_sesid(sourcefolder/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
-        workfolder   = Path(workfolder)
-        worksubses   = workfolder/subid/sesid
+        worksubses   = (workfolder/subid/sesid).mkdir(parents=True, exist_ok=True)
 
         # Copy everything over to the workfolder
         logger.info(f"Making temporary copy: {sourcefolder} -> {worksubses}")
