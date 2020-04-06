@@ -380,8 +380,8 @@ def unpack(sourcefolder: Path, subprefix: str='sub-', sesprefix: str='ses-', wil
                 with tarfile.open(packedfile, 'r') as tar_fid:
                     tar_fid.extractall(worksubses)
 
-        # Sort the DICOM files if not sorted yet
-        dicomsort.sortsessions(worksubses)
+            # Sort the DICOM files if not sorted yet
+            dicomsort.sortsessions(worksubses)
 
         return worksubses, workfolder
 
