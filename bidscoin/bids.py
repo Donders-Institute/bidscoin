@@ -360,7 +360,7 @@ def unpack(sourcefolder: Path, subprefix: str='sub-', sesprefix: str='ses-', wil
 
         # Create a (temporary) sub/ses workfolder for unpacking the data
         if not workfolder:
-            workfolder = tempfile.mkdtemp
+            workfolder = tempfile.mkdtemp()
         workfolder   = Path(workfolder)
         subid, sesid = get_subid_sesid(sourcefolder/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
         worksubses   = workfolder/subid/sesid
