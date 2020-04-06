@@ -57,7 +57,7 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
         # Extract the SeriesDescription and SeriesNumber from the dicomfield
         seriesnr = bids.get_dicomfield('SeriesNumber', dicomfile)
         if not seriesnr:
-            warnings.warn(f"No SeriesNumber found, skipping: {dicomfile}")          # This is not a normal DICOM file, better not do anything with it
+            LOGGER.warning(f"No SeriesNumber found, skipping: {dicomfile}")          # This is not a normal DICOM file, better not do anything with it
             continue
         seriesdescr = bids.get_dicomfield(dicomfield, dicomfile)
         if not seriesdescr:
@@ -66,7 +66,7 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
                 seriesdescr = bids.get_dicomfield('ProtocolName', dicomfile)
                 if not seriesdescr:
                     seriesdescr = 'unknown_protocol'
-                    warnings.warn(f"No {dicomfield}, SeriesDecription or ProtocolName found for: {dicomfile}")
+                    LOGGER.warning(f"No {dicomfield}, SeriesDecription or ProtocolName found for: {dicomfile}")
         if rename:
             acquisitionnr = bids.get_dicomfield('AcquisitionNumber', dicomfile)
             instancenr    = bids.get_dicomfield('InstanceNumber', dicomfile)
@@ -78,7 +78,7 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
 
         # Move and/or rename the dicomfile in(to) the (series sub)folder
         if rename and not (patientname and seriesnr and seriesdescr and acquisitionnr and instancenr):
-            warnings.warn(f"Missing one or more essential DICOM-fields, cannot safely rename {dicomfile}\n"
+            LOGGER.warning(f"Missing one or more essential DICOM-fields, cannot safely rename {dicomfile}\n"
                           f"patientname = {patientname}\n"
                           f"seriesnumber = {seriesnr}\n"
                           f"{dicomfield} = {seriesdescr}\n"
@@ -106,7 +106,7 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
         else:
             newfilename = pathname/filename
         if newfilename.is_file():
-            warnings.warn(f"File already exists, cannot safely rename {dicomfile} -> {newfilename}")
+            LOGGER.warning(f"File already exists, cannot safely rename {dicomfile} -> {newfilename}")
         elif not dryrun:
             dicomfile.replace(newfilename)
 
