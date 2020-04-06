@@ -363,7 +363,8 @@ def unpack(sourcefolder: Path, subprefix: str='sub-', sesprefix: str='ses-', wil
             workfolder = tempfile.mkdtemp
         workfolder   = Path(workfolder)
         subid, sesid = get_subid_sesid(sourcefolder/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
-        worksubses   = (workfolder/subid/sesid).mkdir(parents=True, exist_ok=True)
+        worksubses   = workfolder/subid/sesid
+        worksubses.mkdir(parents=True, exist_ok=True)
 
         # Copy everything over to the workfolder
         logger.info(f"Making temporary copy: {sourcefolder} -> {worksubses}")

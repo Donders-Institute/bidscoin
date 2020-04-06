@@ -111,7 +111,7 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
             dicomfile.replace(newfilename)
 
 
-def sortsessions(session: str, subprefix: str='', sesprefix: str='', dicomfield: str='SeriesDescription', rename: bool=False, ext: str='', nosort: bool=False, pattern: str='.*\.(IMA|dcm)$', dryrun: bool=False) -> None:
+def sortsessions(session: Path, subprefix: str='', sesprefix: str='', dicomfield: str='SeriesDescription', rename: bool=False, ext: str='', nosort: bool=False, pattern: str='.*\.(IMA|dcm)$', dryrun: bool=False) -> None:
     """
 
     :param session:     The root folder containing the source [sub/][ses/]dicomfiles or the DICOMDIR file
