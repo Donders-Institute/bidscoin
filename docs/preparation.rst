@@ -116,23 +116,23 @@ Data management utilities
 dicomsort
 ^^^^^^^^^
 
-The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-organized files (see `above <#required-source-data-structure>`__) into a 'seriesfolder' organization. This can be useful to organise your source data in a more convenient and human readable way, as DICOMDIR or flat DICOM directories can often be hard to comprehend. The BIDScoin tools will run ``dicomsort`` in a temporary folder if your data is not already organised in series-folders, so in principle you don't really need to run it yourself. Running ``dicomsort`` beforehand does, however, give you more flexibility in handling special cases that are not handled properly and it can also give you a speed benefit.
+The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-organized files (see `above <#required-source-data-structure>`__) into a 'seriesfolder' organization (see above). This can be useful to organise your source data in a more convenient and human readable way, as DICOMDIR or flat DICOM directories can often be hard to comprehend. The BIDScoin tools will run ``dicomsort`` in a temporary folder if your data is not already organised in series-folders, so in principle you don't really need to run it yourself. Running ``dicomsort`` beforehand does, however, give you more flexibility in handling special cases that are not handled properly and it can also give you a speed benefit.
 
 ::
 
     usage: dicomsort [-h] [-i SUBPREFIX] [-j SESPREFIX] [-f FIELDNAME] [-r]
                      [-e EXT] [-n] [-p PATTERN] [-d]
                      dicomsource
-    
+
     Sorts and / or renames DICOM files into local subdirectories with a (3-digit)
     SeriesNumber-SeriesDescription directory name (i.e. following the same listing
     as on the scanner console)
-    
+
     positional arguments:
       dicomsource           The name of the root folder containing the
                             dicomsource/[sub/][ses/]dicomfiles and / or the
                             (single session/study) DICOMDIR file
-    
+
     optional arguments:
       -h, --help            show this help message and exit
       -i SUBPREFIX, --subprefix SUBPREFIX
@@ -163,7 +163,7 @@ The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-
                             (default: .*\.(IMA|dcm)$)
       -d, --dryrun          Add this flag to just print the dicomsort commands
                             without actually doing anything (default: False)
-    
+
     examples:
       dicomsort /project/3022026.01/raw
       dicomsort /project/3022026.01/raw --subprefix sub
