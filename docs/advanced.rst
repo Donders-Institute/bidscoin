@@ -17,7 +17,7 @@ A good start to create your own template is to have a look at the DCCN ``[path_t
 .. code-block:: yaml
 
    anat:       # ----------------------- All anatomical runs --------------------
-   - provenance: ~                 # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = T1w
+   - provenance: ~                 # The first run item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = T1w
      attributes: &anatattributes_dicom
        Modality: ~
        ProtocolName: ~
@@ -34,13 +34,13 @@ A good start to create your own template is to have a look at the DCCN ``[path_t
        RepetitionTime: ~
        PhaseEncodingDirection: ~
      bids: &anatbids_dicom
-       acq: <SeriesDescription>
+       acq: <SeriesDescription>    # A dynamic label which will be replaced during bidscoiner runtime with the DICOM attribute value
        ce: ~
        rec: ~
-       run: <<1>>
+       run: <<1>>                  # A dynamic label that will be increased during bidscoiner runtime. NB: changing this value may lead to collisions / overwriting of BIDS data
        mod: ~
        suffix: T1w
-   - provenance: ~
+   - provenance: ~                 # The second run item with non-empty attributes ('SeriesDescription' and 'MRAcquisitionType') will match any run with these attribute values
      attributes:
        <<: *anatattributes_dicom
        SeriesDescription: ['*mprage*', '*MPRAGE*', '*MPRage*', '*t1w*', '*T1w*', '*T1*']
@@ -49,7 +49,7 @@ A good start to create your own template is to have a look at the DCCN ``[path_t
        <<: *anatbids_dicom
        suffix: T1w
 
-*Snippet from the ``bidsmap_dccn.yaml`` template*
+*Snippet from the ``bidsmap_dccn.yaml`` template*, showing a ``DICOM`` section with the first two `run` items in the ``anat`` subsection
 
 Plugins
 -------
