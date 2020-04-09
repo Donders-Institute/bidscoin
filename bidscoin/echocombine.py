@@ -21,7 +21,7 @@ except ImportError:
 LOGGER = logging.getLogger('bidscoin')
 
 
-def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorithm: str, weights: list):
+def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorithm: str, weights: list, force: bool=False):
     """
 
     :param bidsdir:     The bids-directory with the (multi-echo) subject data
@@ -30,6 +30,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
     :param output:      Determines where the output is saved. It can be the name of a BIDS modality folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output = [the name of the input modality folder] then the original echo images are replaced by one combined image. If output is left empty then the combined image is saved in the input modality folder and the original echo images are moved to the {bids.unknownmodality} folder
     :param algorithm:   Combination algorithm, either 'PAID', 'TE' or 'average'
     :param weights:     Weights for each echo
+    :param force:       Boolean to overwrite existing ME target files
     :return:
     """
 
@@ -93,7 +94,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 else:
                     cefile = session/output/cename
                 cefile.parent.mkdir(parents=True, exist_ok=True)
-                if cefile.is_file():
+                if cefile.is_file() and not force:
                     LOGGER.warning(f"Outputfile {cefile} already exists, skipping: {match}")
                     continue
 
@@ -203,6 +204,8 @@ def main():
                         help='Combination algorithm')
     parser.add_argument('-w','--weights', nargs='*', default=None, type=list,
                         help='Weights for each echo')
+    parser.add_argument('-f','--force', action='store_true',
+                        help='If this flag is given subjects will be processed, regardless of existing target files already exist. Otherwise the echo-combination will be skipped')
     args = parser.parse_args()
 
     echocombine(bidsdir   = args.bidsfolder,
@@ -210,7 +213,8 @@ def main():
                 subjects  = args.participant_label,
                 output    = args.output,
                 algorithm = args.algorithm,
-                weights   = args.weights)
+                weights   = args.weights,
+                force     = args.force)
 
 
 if __name__ == '__main__':
