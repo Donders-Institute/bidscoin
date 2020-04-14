@@ -163,7 +163,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     if dcm2niisuffix=='_e' and bids.get_bidsvalue(basepath, 'echo'):
                         newbasepath_ce = Path(bids.get_bidsvalue(basepath, 'echo', '1'))
                     else:
-                        newbasepath_ce = Path(bids.get_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper() + '1'.zfill(len(index))))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
+                        newbasepath_ce = Path(bids.get_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper()[1:] + '1'.zfill(len(index))))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
                     newfilename_ce = newbasepath_ce.with_suffix(ext)                                            # The file as it should have been
                     if filename_ce.is_file():
                         if filename_ce != newfilename_ce:
@@ -183,7 +183,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     pass
 
                 else:
-                    basepath = bids.get_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper() + index)             # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
+                    basepath = bids.get_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper()[1:] + index)             # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
 
                 # Save the file with a new name
                 newbidsname = str(Path(basepath).name)
