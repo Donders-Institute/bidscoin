@@ -1364,7 +1364,7 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str= '') -
 
     :param bidsfile:    The bidsname (e.g. as returned from get_bidsname or fullpath)
     :param bidskey:     The name of the bidskey, e.g. 'echo' or 'suffix'
-    :param newvalue:    The new bidsvalue
+    :param newvalue:    The new bidsvalue. NB: remove non-BIDS compliant characters beforehand (e.g. using cleanup_value)
     :return:            The bidsname with the new bidsvalue or, if newvalue is empty, the existing bidsvalue
     """
 
