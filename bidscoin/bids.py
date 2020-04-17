@@ -363,6 +363,7 @@ def unpack(sourcefolder: Path, subprefix: str='sub-', sesprefix: str='ses-', wil
             workfolder = tempfile.mkdtemp()
         workfolder   = Path(workfolder)
         subid, sesid = get_subid_sesid(sourcefolder/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
+        subid, sesid = subid.replace('sub-', subprefix), sesid.replace('ses-', sesprefix)
         worksubses   = workfolder/subid/sesid
         worksubses.mkdir(parents=True, exist_ok=True)
 
@@ -1174,7 +1175,7 @@ def get_subid_sesid(sourcefile: Path, subid: str= '<<SourceFilePath>>', sesid: s
     :param sesid:      The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01') or DICOM field
     :param subprefix:  The optional subprefix (e.g. 'sub-'). Used to parse the sub-value from the provenance as default subid
     :param sesprefix:  The optional sesprefix (e.g. 'ses-'). If it is found in the provenance then a default sesid will be set
-    :return:           Updated (subid, sesid) tuple, including the sub/sesprefix
+    :return:           Updated (subid, sesid) tuple, including the BIDS-compliant sub-/ses-prefix
     """
 
     # Input checking
