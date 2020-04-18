@@ -145,7 +145,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
         # Rename all files ending with _c%d, _e%d and _ph (and any combination of these) that are added by dcm2niix for multi-coil data, multi-echo data and phase data
         # See: https://github.com/rordenlab/dcm2niix/blob/master/FILENAMING.md
         jsonfiles = []                                                                                          # Collect the associated json-files (for updating them later) -- possibly > 1
-        for dcm2niisuffix in ('_c', '_e', '_ph', '_i'):
+        for dcm2niisuffix in ('_c', '_e', '_ph', '_i', '_Eq', '_real', '_imaginary', '_MoCo', '_t', '_Tilt'):
             for filename in sorted(bidsmodality.glob(f"{bidsname}*{dcm2niisuffix}*")):
                 ext             = ''.join(filename.suffixes)
                 basepath, index = str(filename).rsplit(ext)[0].rsplit(dcm2niisuffix,1)                          # basepath = the name without the added stuff (i.e. bidsmodality/bidsname), index = added dcm2niix index (e.g. _c1 -> index=1)
