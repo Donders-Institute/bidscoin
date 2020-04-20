@@ -404,8 +404,18 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
     :return:        The filename of the first dicom-file in the folder.
     """
 
+    if (folder/'DICOMDIR').is_file():
+        dicomdir = pydicom.filereader.read_dicomdir(str(folder/'DICOMDIR'))
+        for patient in dicomdir.patient_records:
+            for study in enumerate(patient.children, 1):
+                files = []
+                for series in study.children:
+                    files.extend([folder.joinpath(*image.ReferencedFileID) for image in series.children])
+    else:
+        files = sorted(folder.iterdir())
+
     idx = 0
-    for file in sorted(folder.iterdir()):
+    for file in files:
         if file.stem.startswith('.'):
             logger.warning(f'Ignoring hidden file: {file}')
             continue
