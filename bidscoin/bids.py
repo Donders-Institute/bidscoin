@@ -406,9 +406,9 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
 
     if (folder/'DICOMDIR').is_file():
         dicomdir = pydicom.filereader.read_dicomdir(str(folder/'DICOMDIR'))
+        files    = []
         for patient in dicomdir.patient_records:
-            for study in enumerate(patient.children, 1):
-                files = []
+            for study in patient.children:
                 for series in study.children:
                     files.extend([folder.joinpath(*image.ReferencedFileID) for image in series.children])
     else:
