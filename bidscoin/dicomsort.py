@@ -78,11 +78,11 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
         # Move and/or rename the dicomfile in(to) the (series sub)folder
         if rename and not (patientname and seriesnr and seriesdescr and acquisitionnr and instancenr):
             LOGGER.warning(f"Missing one or more essential DICOM-fields, cannot safely rename {dicomfile}\n"
-                          f"patientname = {patientname}\n"
-                          f"seriesnumber = {seriesnr}\n"
-                          f"{dicomfield} = {seriesdescr}\n"
-                          f"acquisitionnr = {acquisitionnr}\n"
-                          f"instancenr = {instancenr}")
+                           f"patientname = {patientname}\n"
+                           f"seriesnumber = {seriesnr}\n"
+                           f"{dicomfield} = {seriesdescr}\n"
+                           f"acquisitionnr = {acquisitionnr}\n"
+                           f"instancenr = {instancenr}")
             filename = dicomfile.name
         elif rename:
             filename = cleanup(f"{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}")
@@ -163,7 +163,7 @@ def sortsessions(session: Path, subprefix: str='', sesprefix: str='', dicomfield
 
     else:
 
-        dicomfiles = [dcmfile for dcmfile in session.iterdir() if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
+        dicomfiles = [dcmfile for dcmfile in session.rglob('*') if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
         sortsession(session, dicomfiles, dicomfield, rename, ext, nosort, dryrun)
 
 

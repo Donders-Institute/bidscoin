@@ -397,7 +397,7 @@ def unpack(sourcefolder: Path, subprefix: str='sub-', sesprefix: str='ses-', wil
 
 def get_dicomfile(folder: Path, index: int=0) -> Path:
     """
-    Gets a dicom-file from the folder
+    Gets a dicom-file from the folder or subfolders (supports DICOMDIR)
 
     :param folder:  The full pathname of the folder
     :param index:   The index number of the dicom file
@@ -411,7 +411,7 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
                                                              for series  in study.children
                                                              for image   in series.children]
     else:
-        files = sorted(folder.iterdir())
+        files = sorted(folder.rglob('*'))
 
     idx = 0
     for file in files:
