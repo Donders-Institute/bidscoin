@@ -163,7 +163,7 @@ def sortsessions(session: Path, subprefix: str='', sesprefix: str='', dicomfield
 
     else:
 
-        dicomfiles = [dcmfile for dcmfile in session.rglob('*') if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
+        dicomfiles = [dcmfile for dcmfile in session.iterdir() if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
         sortsession(session, dicomfiles, dicomfield, rename, ext, nosort, dryrun)
 
 
