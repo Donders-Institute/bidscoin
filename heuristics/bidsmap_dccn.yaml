@@ -67,7 +67,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *anatattributes_dicom
-      SeriesDescription: ['*mprage*', '*MPRAGE*', '*MPRage*', '*t1w*', '*T1w*', '*T1*']
+      SeriesDescription: ['*mprage*', '*MPRAGE*', '*MPRage*', '*t1w*', '*T1W*', '*T1w*', '*T1*']
       MRAcquisitionType: 3D
     bids:
       <<: *anatbids_dicom
@@ -103,7 +103,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *anatattributes_dicom
-      SeriesDescription: ['*t2w*', '*T2w*', '*T2*']
+      SeriesDescription: ['*t2w*', '*T2w*', '*T2W*', '*T2*']
       SequenceVariant: "['SK', 'SP']"
     bids:
       <<: *anatbids_dicom
@@ -211,6 +211,19 @@ DICOM:
       ProtocolName: ['*fmri*', '*fMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
     bids: *funcbids_dicom
   - provenance: ~
+    attributes:                   # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
+      <<: *funcattributes_dicom
+      ProtocolName: '*cmrr_*_m*_TR*'
+      SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
+    bids:
+      <<: *funcbids_dicom
+      suffix: sbref
+  - provenance: ~
+    attributes:                   # Then catch the bold runs itself
+      <<: *funcattributes_dicom
+      ProtocolName: '*cmrr_*_m*_TR*'
+    bids: *funcbids_dicom
+  - provenance: ~
     attributes: *funcattributes_dicom
     bids:
       <<: *funcbids_dicom
@@ -303,7 +316,7 @@ DICOM:
       <<: *fmapattributes_dicom
       SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       EchoNumbers: 2
-      ImageType: '*P*'
+      ImageType: P
     bids:
       <<: *fmapbids_dicom
       suffix: phasediff
@@ -312,7 +325,7 @@ DICOM:
       <<: *fmapattributes_dicom
       SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       EchoNumbers: 1
-      ImageType: '*M*'
+      ImageType: M
     bids:
       <<: *fmapbids_dicom
       suffix: magnitude1
@@ -321,7 +334,7 @@ DICOM:
       <<: *fmapattributes_dicom
       SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       EchoNumbers: 2
-      ImageType: '*M*'
+      ImageType: M
     bids:
       <<: *fmapbids_dicom
       suffix: magnitude2
@@ -330,7 +343,7 @@ DICOM:
       <<: *fmapattributes_dicom
       SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       EchoNumbers: 1
-      ImageType: '*P*'
+      ImageType: P
     bids:
       <<: *fmapbids_dicom
       suffix: phase1
@@ -339,7 +352,7 @@ DICOM:
       SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       <<: *fmapattributes_dicom
       EchoNumbers: 2
-      ImageType: '*P*'
+      ImageType: P
     bids:
       <<: *fmapbids_dicom
       SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
@@ -354,7 +367,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmapattributes_dicom
-      SeriesDescription: ['*inverted*', '*pepolar*']
+      ProtocolName: ['*inverted*', '*pepolar*', '*_inv']
       ScanningSequence: EP
     bids:
       <<: *fmapbids_dicom
@@ -478,7 +491,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *leaveout_attributes_dicom
-      ImageType: '*DERIVED*'
+      ImageType: DERIVED
     bids:
       <<: *leaveout_bids_dicom
       rec: DERIVED
@@ -516,7 +529,7 @@ PAR:
   - provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     attributes:
       <<: *anatattributes_par
-      protocol_name: ['*mprage*', '*MPRAGE*', '*MPRage*', '*t1w*', '*T1w*', '*T1*']
+      protocol_name: ['*mprage*', '*MPRAGE*', '*MPRage*', '*t1w*', '*T1w*', '*T1W*', '*T1*']
     bids:
       <<: *anatbids_par
       suffix: T1w
@@ -551,7 +564,7 @@ PAR:
   - provenance: ~
     attributes:
       <<: *anatattributes_par
-      protocol_name: ['*t2w*', '*T2w*', '*T2*']
+      protocol_name: ['*t2w*', '*T2w*', '*T2W*', '*T2*']
     bids:
       <<: *anatbids_par
       suffix: T2w
