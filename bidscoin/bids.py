@@ -20,6 +20,7 @@ import nibabel
 import tempfile
 import tarfile
 import zipfile
+import fnmatch
 try:
     from bidscoin import dicomsort
 except ImportError:
@@ -1049,18 +1050,11 @@ def match_attribute(longvalue, values) -> bool:
     elif isinstance(longvalue, list):
         return str(longvalue)==str(values)
 
-    # Compare the value items (with / without wildcard) with the longvalue string
+    # Compare the value items (with / without wildcard) with the longvalue string items
+    if not isinstance(longvalue, list):
+        longvalue = [longvalue]
     for value in values:
-
-        value = str(value)
-
-        if value in ('*', '**'):
-            return True
-
-        if value.startswith('*') and value.endswith('*') and value[1:-1] in longvalue:
-            return True
-
-        elif value==longvalue:
+        if any([fnmatch.fnmatch(item, str(value)) for item in longvalue]):
             return True
 
     return False
@@ -1116,14 +1110,14 @@ def exist_run(bidsmap: dict, dataformat: str, modality: str, run_item: dict, mat
     return False
 
 
-def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, modalities: tuple = bidsmodalities + (ignoremodality, unknownmodality)) -> Tuple[dict, str, int]:
+def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, modalities: tuple = (ignoremodality,) + bidsmodalities + (unknownmodality,)) -> Tuple[dict, str, int]:
     """
     Find the first run in the bidsmap with dicom attributes that match with the dicom file. Then update the (dynamic) bids values (values are cleaned-up to be BIDS-valid)
 
     :param sourcefile:  The full pathname of the source dicom-file or PAR/XML file
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
-    :param modalities:  The modality in which a matching run is searched for. Default = bidsmodalities + (ignoremodality, unknownmodality)
+    :param modalities:  The modality in which a matching run is searched for. Default = (ignoremodality,) + bidsmodalities + (unknownmodality,)
     :return:            (run, modality, index) The matching and filled-in / cleaned run item, modality and list index as in run = bidsmap[DICOM][modality][index]
                         modality = bids.unknownmodality and index = None if there is no match, the run is still populated with info from the dicom-file
     """
