@@ -37,6 +37,7 @@ def build_bidsmap(dataformat: str, sourcefile: Path, bidsmap_new: dict, bidsmap_
     :param bidsmap_new: The bidsmap that we are building
     :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
     :param template:    The bidsmap template with the default heuristics
+    :param store:       The paths of the source- and target-folder
     :param gui:         If not None, the user will not be asked for help if an unknown run is encountered
     :return:            The bidsmap with new entries in it
     """
@@ -180,10 +181,6 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     bidsmapfile    = Path(bidsmapfile)
     templatefile   = Path(templatefile)
     bidscoinfolder = bidsfolder/'code'/'bidscoin'
-    if store:
-        store = dict(source=rawfolder, target=bidscoinfolder/'provenance')
-    else:
-        store = dict()
 
     # Start logging
     bids.setup_logging(bidscoinfolder/'bidsmapper.log')
@@ -248,6 +245,10 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             session, unpacked = bids.unpack(session, subprefix, sesprefix, '*')
             if unpacked:
                 store = dict(source=unpacked, target=bidscoinfolder/'provenance')
+            elif store:
+                store = dict(source=rawfolder, target=bidscoinfolder/'provenance')
+            else:
+                store = dict()
 
             # Loop of the different DICOM runs (series) and collect source files
             sourcefiles = []
