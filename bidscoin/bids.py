@@ -39,6 +39,9 @@ ignoremodality  = 'leave_out'
 unknownmodality = 'extra_data'
 bidslabels      = ('task', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'suffix', 'IntendedFor')    # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
 
+heuristics_folder = Path(__file__).parents[1]/'heuristics'
+bidsmap_template  = heuristics_folder/'bidsmap_template.yaml'
+
 
 def bidsversion() -> str:
     """
@@ -481,13 +484,12 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: bool=True) -> Tupl
     """
 
     # Input checking
-    heuristics_folder = Path(__file__).parents[1]/'heuristics'
     if not folder.name:
         folder = heuristics_folder
     if not yamlfile.name:
         yamlfile = folder/'bidsmap.yaml'
         if not yamlfile.is_file():
-            yamlfile = heuristics_folder/'bidsmap_template.yaml'
+            yamlfile = bidsmap_template
 
     # Add a standard file-extension if needed
     if not yamlfile.suffix:
@@ -919,7 +921,7 @@ def append_run(bidsmap: dict, dataformat: str, modality: str, run: dict, clean: 
     Append a run to the BIDS map
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
-    :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
+    :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'. If empty then it is determined from the provenance
     :param modality:    The modality that is used, e.g. 'anat'
     :param run:         The run (listitem) that is appended to the modality
     :param clean:       A boolean to clean-up commentedMap fields

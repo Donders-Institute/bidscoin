@@ -929,7 +929,11 @@ class EditDialog(QDialog):
         layout_tables.addWidget(groupbox2)
 
         # Set-up buttons
-        buttonBox = QDialogButtonBox()
+        buttonBox    = QDialogButtonBox()
+        exportbutton = buttonBox.addButton('Export', QDialogButtonBox.ActionRole)
+        exportbutton.setIcon(QtGui.QIcon.fromTheme('document-save'))
+        exportbutton.setToolTip('Export this run item to an existing (template) bidsmap')
+        exportbutton.clicked.connect(self.export_run)
         buttonBox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Reset | QDialogButtonBox.Help)
         buttonBox.button(QDialogButtonBox.Reset).setToolTip('Reset the edits you made')
         buttonBox.button(QDialogButtonBox.Ok).setToolTip('Apply the edits you made and close this window')
@@ -1297,6 +1301,16 @@ class EditDialog(QDialog):
 
         self.done_edit.emit(self.target_bidsmap)
         self.done(1)
+
+    def export_run(self):
+
+        filename, _ = QFileDialog.getSaveFileName(self, 'Export run item to (template) bidsmap',
+                        str(bids.bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
+        if filename:
+            LOGGER.info(f'Exporting run item: bidsmap[{self.dataformat}][{self.target_modality}] -> {filename}')
+            bidsmap, _ = bids.load_bidsmap(Path(filename), Path(), False)
+            bidsmap    = bids.append_run(bidsmap, self.dataformat, self.target_modality, self.target_run)
+            bids.save_bidsmap(Path(filename), bidsmap)
 
 
 def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', dataformat: str='DICOM', subprefix='sub-', sesprefix='ses-'):
