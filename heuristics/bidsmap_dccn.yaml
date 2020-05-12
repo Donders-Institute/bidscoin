@@ -111,6 +111,15 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *anatattributes_dicom
+      SeriesDescription: '*tse_vfl*'
+      SequenceVariant: "['SK', 'SP']"
+      ScanningSequence: SE
+    bids:
+      <<: *anatbids_dicom
+      suffix: T2w
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_dicom
       ScanningSequence: "['SE', 'IR']"
       SeriesDescription: ['*FLAIR*', '*flair*']
     bids:
@@ -214,6 +223,7 @@ DICOM:
     attributes:                   # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
       <<: *funcattributes_dicom
       ProtocolName: '*cmrr_*_m*_TR*'
+      ScanningSequence: EP
       SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
     bids:
       <<: *funcbids_dicom
@@ -222,6 +232,7 @@ DICOM:
     attributes:                   # Then catch the bold runs itself
       <<: *funcattributes_dicom
       ProtocolName: '*cmrr_*_m*_TR*'
+      ScanningSequence: EP
     bids: *funcbids_dicom
   - provenance: ~
     attributes: *funcattributes_dicom
@@ -486,7 +497,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *leaveout_attributes_dicom
-      ProtocolName: ['*Scout*', '*scout*', '*localizer*', '*Localizer*']
+      ProtocolName: ['*Scout*', '*scout*', '*localizer*', '*Localizer*', 't2_haste_sag_ipat2']
     bids: *leaveout_bids_dicom
   - provenance: ~
     attributes:
