@@ -227,13 +227,16 @@ DICOM:
       SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
     bids:
       <<: *funcbids_dicom
+      dir: ~
       suffix: sbref
   - provenance: ~
     attributes:                   # Then catch the bold runs itself
       <<: *funcattributes_dicom
       ProtocolName: '*cmrr_*_m*_TR*'
       ScanningSequence: EP
-    bids: *funcbids_dicom
+    bids:
+      <<: *funcbids_dicom
+      dir: ~
   - provenance: ~
     attributes: *funcattributes_dicom
     bids:
