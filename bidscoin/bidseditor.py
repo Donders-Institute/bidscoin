@@ -1304,13 +1304,18 @@ class EditDialog(QDialog):
 
     def export_run(self):
 
-        filename, _ = QFileDialog.getSaveFileName(self, 'Export run item to (template) bidsmap',
+        yamlfile, _ = QFileDialog.getSaveFileName(self, 'Export run item to (template) bidsmap',
                         str(bids.bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
-        if filename:
-            LOGGER.info(f'Exporting run item: bidsmap[{self.dataformat}][{self.target_modality}] -> {filename}')
-            bidsmap, _ = bids.load_bidsmap(Path(filename), Path(), False)
-            bidsmap    = bids.append_run(bidsmap, self.dataformat, self.target_modality, self.target_run)
-            bids.save_bidsmap(Path(filename), bidsmap)
+        if yamlfile:
+            yamlfile = Path(yamlfile)
+            if yamlfile.is_file():
+                LOGGER.info(f'Exporting run item: bidsmap[{self.dataformat}][{self.target_modality}] -> {yamlfile}')
+                bidsmap, _ = bids.load_bidsmap(yamlfile, Path(), False)
+                bidsmap    = bids.append_run(bidsmap, self.dataformat, self.target_modality, self.target_run)
+                bids.save_bidsmap(yamlfile, bidsmap)
+            else:
+                QMessageBox.critical(self, 'Export run item', f"Cannot export to:\n\n{yamlfile}\n\nPlease select an existing bidsmap yaml-file")
+                self.export_run()
 
 
 def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', dataformat: str='DICOM', subprefix='sub-', sesprefix='ses-'):
