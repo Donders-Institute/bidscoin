@@ -1312,6 +1312,7 @@ class EditDialog(QDialog):
             bidsmap, _ = bids.load_bidsmap(yamlfile, Path(), False)
             bidsmap    = bids.append_run(bidsmap, self.dataformat, self.target_modality, self.target_run)
             bids.save_bidsmap(yamlfile, bidsmap)
+            QMessageBox.information(self, 'Edit BIDS mapping', f"Succesfully exported:\nbidsmap[{self.dataformat}][{self.target_modality}] -> {yamlfile}")
 
 
 def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', dataformat: str='DICOM', subprefix='sub-', sesprefix='ses-'):
