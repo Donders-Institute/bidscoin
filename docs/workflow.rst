@@ -76,7 +76,7 @@ Step 1a: Running the bidsmapper
 The bidsmapper will scan your ``sourcefolder`` to look for different runs (scan-types) to create a mapping for each run to a bids output name (a.k.a. the 'bidsmap'). By default (but see the ``-i`` option above), when finished the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__, as described in the next section (but step 1b can also always be run separately by directly running the bidseditor).
 
 .. tip::
-   Use the ``-t bidsmap_dccn`` option and see if it works for you. If not, consider opening it with a text editor and `adapt it to your needs <advanced.html#site-specific-customized-template>`__.
+   Use the ``-t bidsmap_dccn`` option and see if it works for you. If not, consider `adapting it to your needs <advanced.html#site-specific-customized-template>`__.
 
 Step 1b: Running the bidseditor
 -------------------------------
@@ -165,7 +165,7 @@ Step 1b: Running the bidseditor
 
     Manual editing / inspection of the bidsmap
       You `can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
-      text editor. For instance to merge a set of runs that by adding a wildcard to a DICOM
+      text editor. For instance to merge a set of runs that by adding a '*' wildcard to a DICOM
       attribute in one run item and then remove the other runs in the set. See ./docs/bidsmap.md
       and ./heuristics/bidsmap_dccn.yaml for more information.
 
@@ -176,6 +176,9 @@ As shown below, the main window of the bidseditor opens with the ``BIDS map`` ta
 The user can click the ``Edit`` button for each list item to open a new edit window, as show below. In this interface, the right BIDS ``Modality`` (drop down menu) and the ``suffix`` label (drop down menu) can set correctly, after which the associated BIDS ``Labels`` can be edited (double click black items). As a result, the new BIDS ``Output name`` is then shown in the bottom text field. This is how the BIDS output data will look like and, if this looks all fine, the user can store this mapping to the bidsmap and return to the main window by clicking the ``OK`` button.
 
 \ |Bidseditor edit window|\
+
+.. tip::
+   Use the ``Export`` button to append new or unknown run items to your `template bidsmap <advanced.html#site-specific-customized-template>`__ for usage in other studies
 
 Finally, if all BIDS output names in the main window are fine, the user can click on the ``Save`` button and proceed with running the bidscoiner tool.
 

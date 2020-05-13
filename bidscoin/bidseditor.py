@@ -1312,12 +1312,12 @@ class EditDialog(QDialog):
             bidsmap, _ = bids.load_bidsmap(yamlfile, Path(), False)
             bidsmap    = bids.append_run(bidsmap, self.dataformat, self.target_modality, self.target_run)
             bids.save_bidsmap(yamlfile, bidsmap)
-            QMessageBox.information(self, 'Edit BIDS mapping', f"Succesfully exported:\nbidsmap[{self.dataformat}][{self.target_modality}] -> {yamlfile}")
+            QMessageBox.information(self, 'Edit BIDS mapping', f"Successfully exported:\n\nbidsmap[{self.dataformat}][{self.target_modality}] -> {yamlfile}")
 
 
 def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', dataformat: str='DICOM', subprefix='sub-', sesprefix='ses-'):
     """
-    Collects input and lanches the bidseditor GUI
+    Collects input and launches the bidseditor GUI
 
     :param bidsfolder:
     :param bidsmapfile:
@@ -1380,12 +1380,12 @@ def main():
                                          DICOM Attributes
                                            An (DICOM) attribute label can also be a list, in which case the BIDS labels / mapping
                                            are applied if a (DICOM) attribute value is in this list. If the attribute value is
-                                           empty it is not used to identify the run. Wildcards can also be given, either as a single
-                                           '*', or enclosed by '*'. Examples:
+                                           empty it is not used to identify the run. Unix shell-style wildcards can also be given,
+                                           for instance like this:
                                                 SequenceName: '*'
                                                 SequenceName: '*epfid*'
                                                 SequenceName: ['epfid2d1rs', 'fm2d2r']
-                                                SequenceName: ['*epfid*', 'fm2d2r']
+                                                SequenceName: ['epfid?d*', 'fm?d2r']
                                             NB: Editing the DICOM attributes is normally not necessary and adviced against
 
                                          Dynamic BIDS labels
@@ -1414,7 +1414,7 @@ def main():
 
                                          Manual editing / inspection of the bidsmap
                                            You `can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
-                                           text editor. For instance to merge a set of runs that by adding a wildcard to a DICOM
+                                           text editor. For instance to merge a set of runs that by adding a '*' wildcard to a DICOM
                                            attribute in one run item and then remove the other runs in the set. See ./docs/bidsmap.md
                                            and ./heuristics/bidsmap_dccn.yaml for more information."""))
 
