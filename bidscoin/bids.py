@@ -1056,7 +1056,7 @@ def match_attribute(longvalue, values) -> bool:
     if not isinstance(longvalue, list):
         longvalue = [longvalue]
     for value in values:
-        if any([fnmatch.fnmatch(item, str(value)) for item in longvalue]):
+        if any([fnmatch.fnmatch(str(item), str(value)) for item in longvalue]):
             return True
 
     return False
