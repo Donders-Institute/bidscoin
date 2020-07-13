@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
-(Re)scans datasets in the bidsfolder, e.g. after you run bidscoiner.py and edited
-the data.
+(Re)scans data sets in the source folder for subject meta data to populate the participants.tsv file in the bids
+directory (e.g. after you run bidscoiner.py and managed data in the bids folder).
 
 Provenance information, warnings and error messages are stored in the
 bidsfolder/code/bidscoin/bidsparticipants.log file.
@@ -205,21 +205,21 @@ def main():
                                      epilog='examples:\n'
                                             '  bidsparticipants /project/foo/raw /project/foo/bids\n'
                                             '  bidsparticipants /project/foo/raw /project/foo/bids -k participant_id age sex\n ')
-    parser.add_argument('sourcefolder',             help='The study root folder containing the raw data in sub-#/[ses-#/]data subfolders (or specify --subprefix and --sesprefix for different prefixes)')
-    parser.add_argument('bidsfolder',               help='The destination / output folder with the bids data')
-    parser.add_argument('-k','--keys',              help="Space separated list of the participants.tsv columns. Default: 'sub-'", nargs='+', default=['participant_id', 'age', 'sex', 'size' ,'weight'])
-    parser.add_argument('-n','--subprefix',         help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
-    parser.add_argument('-m','--sesprefix',         help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
-    parser.add_argument('-d','--dryrun',            help='Add this flag to only print the participants info on screen', action='store_true')
-    parser.add_argument('-v','--version',           help='Show the BIDS and BIDScoin version', action='version', version=f"BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version()}")
+    parser.add_argument('sourcefolder',     help='The study root folder containing the raw data in sub-#/[ses-#/]data subfolders (or specify --subprefix and --sesprefix for different prefixes)')
+    parser.add_argument('bidsfolder',       help='The destination / output folder with the bids data')
+    parser.add_argument('-k','--keys',      help="Space separated list of the participants.tsv columns. Default: 'sub-'", nargs='+', default=['participant_id', 'age', 'sex', 'size' ,'weight'])
+    parser.add_argument('-n','--subprefix', help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
+    parser.add_argument('-m','--sesprefix', help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
+    parser.add_argument('-d','--dryrun',    help='Add this flag to only print the participants info on screen', action='store_true')
+    parser.add_argument('-v','--version',   help='Show the BIDS and BIDScoin version', action='version', version=f"BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version()}")
     args = parser.parse_args()
 
-    bidsparticipants(rawfolder    = args.sourcefolder,
-                     bidsfolder   = args.bidsfolder,
-                     keys         = args.keys,
-                     subprefix    = args.subprefix,
-                     sesprefix    = args.sesprefix,
-                     dryrun       = args.dryrun)
+    bidsparticipants(rawfolder  = args.sourcefolder,
+                     bidsfolder = args.bidsfolder,
+                     keys       = args.keys,
+                     subprefix  = args.subprefix,
+                     sesprefix  = args.sesprefix,
+                     dryrun     = args.dryrun)
 
 
 if __name__ == "__main__":
