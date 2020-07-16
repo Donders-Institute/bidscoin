@@ -168,6 +168,8 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     if filename_ce.is_file():
                         if filename_ce != newfilename_ce:
                             LOGGER.warning(f"Found no dcm2niix {dcm2niisuffix} suffix for image instance 1, renaming\n{filename_ce} ->\n{newfilename_ce}\nConsider upgrading dcm2niix: https://github.com/rordenlab/dcm2niix/issues/381")
+                            if newfilename_ce.is_file():
+                                LOGGER.warning(f"Overwriting existing {newfilename_ce} file -- check your results carefully!")
                             filename_ce.replace(newfilename_ce)
                         if ext == '.json':
                             jsonfiles.append(newbasepath_ce.with_suffix('.json'))
@@ -191,6 +193,8 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     newbidsname = bids.increment_runindex(bidsmodality, newbidsname, ext)                       # Update the runindex now that the acq-label has changed
                 newfilename = (bidsmodality/newbidsname).with_suffix(ext)
                 LOGGER.info(f"Found dcm2niix {dcm2niisuffix} suffix, renaming\n{filename} ->\n{newfilename}")
+                if newfilename.is_file():
+                    LOGGER.warning(f"Overwriting existing {newfilename} file -- check your results carefully!")
                 filename.replace(newfilename)
                 if ext == '.json':
                     jsonfiles.append((bidsmodality/newbidsname).with_suffix('.json'))
@@ -302,7 +306,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     json_magnitude = [None, None]
                     TE             = [None, None]
                     for n in (0,1):
-                        json_magnitude[n] = jsonfile.parent / jsonfile.name.replace('_phasediff', f"_magnitude{n+1}")
+                        json_magnitude[n] = jsonfile.parent/jsonfile.name.replace('_phasediff', f"_magnitude{n+1}")
                         if not json_magnitude[n].is_file():
                             LOGGER.error(f"Could not find expected magnitude{n+1} image associated with: {jsonfile}")
                         else:
