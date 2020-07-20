@@ -182,9 +182,14 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, subprefix: str=
             participants_table.loc[personals['participant_id'], key] = personals[key]
 
     # Write the collected data to the participant files
+    LOGGER.info(f"Writing subject data to: {participants_tsv}")
     if not dryrun:
-        LOGGER.info(f"Writing subject data to: {participants_tsv}")
         participants_table.replace('','n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
+
+    LOGGER.info(f"Writing subject data dictionary to: {participants_json}")
+    if not dryrun:
+        with participants_json.open('w') as json_fid:
+            json.dump(participants_dict, json_fid, indent=4)
 
     print(participants_table)
 
