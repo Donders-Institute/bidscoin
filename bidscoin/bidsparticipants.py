@@ -121,7 +121,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, subprefix: str=
         with participants_json.open('r') as json_fid:
             participants_dict = json.load(json_fid)
     else:
-        participants_dict = dict()
+        participants_dict = {'participant_id': {'Description': 'Unique participant identifier'}}
 
     # Get the list of subjects
     subjects = bids.lsdirs(bidsfolder, 'sub-*')
