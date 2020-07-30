@@ -164,7 +164,7 @@ def main():
                                      epilog='examples:\n'
                                             '  deface /project/3017065.01/bids anat/*_T1w*\n'
                                             '  deface /project/3017065.01/bids anat/*_T1w* -p 001 003 -o derivatives\n'
-                                            '  deface /project/3017065.01/bids anat/*_T1w* -n "-l walltime=00:60:00,mem=2gb"\n'
+                                            '  deface /project/3017065.01/bids anat/*_T1w* -n "-l walltime=00:60:00,mem=4gb"\n'
                                             '  deface /project/3017065.01/bids anat/*_T1w* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
     parser.add_argument('bidsfolder', type=str,
                         help='The bids-directory with the (multi-echo) subject data')
@@ -176,7 +176,7 @@ def main():
                         help=f"A string that determines where the defaced images are saved. It can be the name of a BIDS modality folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images")
     parser.add_argument('-c','--cluster', action='store_true',
                         help='Flag to submit the deface jobs to the high-performance compute (HPC) cluster')
-    parser.add_argument('-n','--nativespec', type=str, default='-l walltime=00:30:00,mem=1gb',
+    parser.add_argument('-n','--nativespec', type=str, default='-l walltime=00:30:00,mem=2gb',
                         help='DRMAA native specifications for submitting deface jobs to the HPC cluster')
     parser.add_argument('-a','--args',
                         help='Additional arguments (in dict/json-style) that are passed to pydeface. See examples for usage', type=json.loads, default={})
