@@ -436,11 +436,12 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=[], force: bool=F
     if not dataset_file.is_file():
         dataset_description = {"Name":                  "REQUIRED. Name of the dataset",
                                "BIDSVersion":           bids.bidsversion(),
-                               "License":               "RECOMMENDED. What license is this dataset distributed under?. The use of license name abbreviations is suggested for specifying a license",
+                               "License":               "RECOMMENDED. The license for the dataset. The use of license name abbreviations is RECOMMENDED for specifying a license. The corresponding full license text MAY be specified in an additional LICENSE file",
                                "Authors":               ["OPTIONAL. List of individuals who contributed to the creation/curation of the dataset"],
-                               "Acknowledgements":      "OPTIONAL. List of individuals who contributed to the creation/curation of the dataset",
+                               "Acknowledgements":      "OPTIONAL. Text acknowledging contributions of individuals or institutions beyond those listed in Authors or Funding",
                                "HowToAcknowledge":      "OPTIONAL. Instructions how researchers using this dataset should acknowledge the original authors. This field can also be used to define a publication that should be cited in publications that use the dataset",
                                "Funding":               ["OPTIONAL. List of sources of funding (grant numbers)"],
+                               "EthicsApprovals":    	["OPTIONAL. List of ethics committee approvals of the research protocols and/or protocol identifiers"],
                                "ReferencesAndLinks":    ["OPTIONAL. List of references to publication that contain information on the dataset, or links", "https://github.com/Donders-Institute/bidscoin"],
                                "DatasetDOI":            "OPTIONAL. The Document Object Identifier of the dataset (not the corresponding paper)"}
         LOGGER.info(f"Creating dataset description file: {dataset_file}")
