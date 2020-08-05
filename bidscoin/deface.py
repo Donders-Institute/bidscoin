@@ -136,7 +136,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
 
                     # Update the scans.tsv file
                     scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
-                    if output and output not in {'derivatives', 'extra_data'} and scans_tsv.is_file():   # TODO: load from bidsmap['Options']['bidscoin']['bidsignore']?
+                    if output and output not in {'derivatives', bids.unknownmodality} and scans_tsv.is_file():   # TODO: load from bidsmap['Options']['bidscoin']['bidsignore']?
                         LOGGER.info(f"Adding {outputfile_rel} to {scans_tsv}")
                         scans_table                     = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
                         scans_table.loc[outputfile_rel] = scans_table.loc[match_rel]
