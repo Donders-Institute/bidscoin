@@ -134,7 +134,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                     cefile_rel = str(cefile.relative_to(session))
 
                 # Update the IntendedFor fields in the fieldmap sidecar files (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
-                if output not in {'derivatives', bids.unknownmodality} and (session/'fmap').is_dir():   # TODO: load from bidsmap['Options']['bidscoin']['bidsignore']?
+                if output != 'derivatives' and (session/'fmap').is_dir():
                     for fmap in (session/'fmap').glob('*.json'):
                         with fmap.open('r') as fmap_fid:
                             fmap_data = json.load(fmap_fid)
@@ -155,8 +155,11 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                                     json.dump(fmap_data, fmap_fid, indent=4)
 
                 # Update the scans.tsv file
+                with (bidsdir / '.bidsignore').open('r') as fid:
+                    bidsignore = fid.read().split('\n')
+                bidsignore.append('derivatives/')
                 scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
-                if output != 'derivatives' and scans_tsv.is_file():
+                if output+'/' not in bidsignore and scans_tsv.is_file():
 
                     LOGGER.info(f"Adding {cefile_rel} to {scans_tsv}")
                     scans_table                 = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
