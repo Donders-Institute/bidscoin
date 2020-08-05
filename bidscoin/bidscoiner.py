@@ -233,15 +233,16 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                         json.dump(data, json_fid, indent=4)
 
             # Parse the acquisition time from the json file or else from the source header (NB: assuming the source file represents the first acquisition)
-            with jsonfile.open('r') as json_fid:
-                data = json.load(json_fid)
-            if 'AcquisitionTime' not in data or not data['AcquisitionTime']:
-                data['AcquisitionTime'] = bids.get_sourcefield('AcquisitionTime', sourcefile)       # DICOM
-            if not data['AcquisitionTime']:
-                data['AcquisitionTime'] = bids.get_sourcefield('exam_date', sourcefile)             # PAR/XML
-            acq_time = dateutil.parser.parse(data['AcquisitionTime'])
-            scanpath = list(jsonfile.parent.glob(jsonfile.stem + '.nii*'))[0].relative_to(bidsses)  # Find the corresponding nifti file (there should be only one, let's not make assumptions about the .gz extension)
-            scans_table.loc[scanpath.as_posix(), 'acq_time'] = '1925-01-01T' + acq_time.strftime('%H:%M:%S')
+            if bidsmodality.name not in bidsmap['Options']['bidscoin']['bidsignore']:
+                with jsonfile.open('r') as json_fid:
+                    data = json.load(json_fid)
+                if 'AcquisitionTime' not in data or not data['AcquisitionTime']:
+                    data['AcquisitionTime'] = bids.get_sourcefield('AcquisitionTime', sourcefile)       # DICOM
+                if not data['AcquisitionTime']:
+                    data['AcquisitionTime'] = bids.get_sourcefield('exam_date', sourcefile)             # PAR/XML
+                acq_time = dateutil.parser.parse(data['AcquisitionTime'])
+                scanpath = list(jsonfile.parent.glob(jsonfile.stem + '.nii*'))[0].relative_to(bidsses)  # Find the corresponding nifti file (there should be only one, let's not make assumptions about the .gz extension)
+                scans_table.loc[scanpath.as_posix(), 'acq_time'] = '1925-01-01T' + acq_time.strftime('%H:%M:%S')
 
     # Write the scans_table to disk
     LOGGER.info(f"Writing acquisition time data to: {scans_tsv}")

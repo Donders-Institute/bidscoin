@@ -134,7 +134,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                     cefile_rel = str(cefile.relative_to(session))
 
                 # Update the IntendedFor fields in the fieldmap sidecar files (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
-                if output != 'derivatives' and (session/'fmap').is_dir():
+                if output not in {'derivatives', 'extra_data'} and (session/'fmap').is_dir():   # TODO: load from bidsmap['Options']['bidscoin']['bidsignore']?
                     for fmap in (session/'fmap').glob('*.json'):
                         with fmap.open('r') as fmap_fid:
                             fmap_data = json.load(fmap_fid)
