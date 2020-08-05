@@ -17,10 +17,10 @@ The following tutorial is somewhat tailored to the dataflow in the DCCN (e.g. us
 
    $ module add bidscoin
    $ source activate /opt/bidscoin
-   $ tutorialdata
+   $ pulltutorialdata
    $ cd bidscointutorial
 
-The new ``tutorial`` folder contains a ``raw`` source-data folder and a ``bids_ref`` reference BIDS folder, i.e. the intended end product of this tutorial. In the ``raw`` folder you will find these DICOM series:
+The new ``bidscointutorial`` folder contains a ``raw`` source-data folder and a ``bids_ref`` reference BIDS folder, i.e. the intended end product of this tutorial. In the ``raw`` folder you will find these DICOM series:
 
 ::
 
