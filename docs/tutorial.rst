@@ -41,18 +41,18 @@ Let's begin with inspecting this new raw data collection:
 - Are the DICOM files for all the ``bids/sub-*`` folders organised in series-subfolders (e.g. ``sub-001/ses-01/003-T1MPRAGE/0001.dcm`` etc)? Use `dicomsort <preparation.html#dicomsort>`__ if this is not the case. A help text for all BIDScoin tools is available by running the tool with the ``-h`` flag (e.g. ``rawmapper -h``)
 - Use the `rawmapper <preparation.html#rawmapper>`__ command to print out the DICOM values of the "EchoTime", "Sex" and "AcquisitionDate" of the fMRI series in the ``raw`` folder
 
-2. **BIDS mapping.** Scan all folders in the raw data collection for unknown data by running the `bidsmapper <workflow.html#step-1a-running-the-bidsmapper>`__ bash command:
+2. **BIDS mapping.** Now we can make a ``bidsmap``, i.e. the mapping from DICOM source-files to BIDS target-files. To that end, scan all folders in the raw data collection by running the `bidsmapper <workflow.html#step-1a-running-the-bidsmapper>`__ command:
 
 .. code-block:: console
 
    $ bidsmapper raw bids
 
--  Rename the task and acquisition label of the functional scans into something more readable, e.g. ``task-Reward`` for the ``acq-mb8`` scans and "task-Stop" for the ``acq-mb3me3 scans``. Also make the name of the T1 scan more pleasant, e.g. by naming the aquisition label simply ``acq-mprage``.
+-  In the GUI that appears, rename the task and acquisition label of the functional scans into something more readable, e.g. ``task-Reward`` for the ``acq-mb8`` scans and "task-Stop" for the ``acq-mb3me3 scans``. Also make the name of the T1 scan more pleasant, e.g. by naming the aquisition label simply ``acq-mprage``.
 -  Add a search pattern to the IntendedFor field such that it will select your fMRI runs correctly (see the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ ``fieldmap`` section for more details)
 -  Since for this dataset we only have one session per subject, remove the session label (and note how the output names simplify, omitting the session subfolders and labels)
 -  When all done, (re)open the ``bidsmap.yaml`` file and change the options such that you will get non-zipped nifti data (i.e. ``*.nii`` instead of ``*.nii.gz``) in your BIDS data collection. You can use a text editor or, much better, run the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ command line tool.
 
-3. **BIDS coining.** Convert your raw data collection into a BIDS collection by running the `bidscoiner <workflow.html#step-2-running-the-bidscoiner>`__ commandline tool (note that the input is the same as for the bidsmapper):
+3. **BIDS coining.** The next step is very simple (and can be repeated when new data comes in) and just applies the previously made bidsmap when converting the source data into a BIDS collection. To do this run the `bidscoiner <workflow.html#step-2-running-the-bidscoiner>`__ commandline tool (note that the input is the same as for the bidsmapper):
 
 .. code-block:: console
 
