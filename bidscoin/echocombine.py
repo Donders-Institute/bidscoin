@@ -155,8 +155,11 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                                     json.dump(fmap_data, fmap_fid, indent=4)
 
                 # Update the scans.tsv file
-                with (bidsdir/'.bidsignore').open('r') as fid:
-                    bidsignore = fid.read().splitlines()
+                if (bidsdir/'.bidsignore').is_file():
+                    with (bidsdir/'.bidsignore').open('r') as fid:
+                        bidsignore = fid.read().splitlines()
+                else:
+                    bidsignore = []
                 bidsignore.append('derivatives/')
                 scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
                 if output+'/' not in bidsignore and scans_tsv.is_file():
