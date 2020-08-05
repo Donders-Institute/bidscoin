@@ -159,7 +159,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                     with (bidsdir/'.bidsignore').open('r') as fid:
                         bidsignore = fid.read().splitlines()
                 else:
-                    bidsignore = [bids.unknownmodality]
+                    bidsignore = [bids.unknownmodality + '/']
                 bidsignore.append('derivatives/')
                 scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
                 if output+'/' not in bidsignore and scans_tsv.is_file():
