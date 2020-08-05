@@ -23,7 +23,7 @@ def getdata(tutorialfolder) -> None:
     :return:
     """
 
-    tutorialfolder = Path(tutorialfolder)
+    tutorialfolder = Path(tutorialfolder).resolve()
     tutorialtargz  = tutorialfolder/'bidscointutorial.tar.gz'
     tutorialfolder.mkdir(parents=True, exist_ok=True)
 
