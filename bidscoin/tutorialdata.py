@@ -36,7 +36,7 @@ def getdata(tutorialfolder) -> None:
     print(f"Unzipping the downloaded data in: {tutorialfolder}")
     with tarfile.open(tutorialtargz, 'r') as targz_fid:
         targz_fid.extractall(tutorialfolder)
-    Path(tutorialtargz).unlink()
+    tutorialtargz.unlink()
 
 
 def main():
