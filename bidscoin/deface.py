@@ -136,7 +136,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
 
                     # Update the scans.tsv file
                     with (bidsdir/'.bidsignore').open('r') as fid:
-                        bidsignore = fid.read().split('\n')
+                        bidsignore = fid.read().splitlines()
                     bidsignore.append('derivatives/')
                     scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
                     if output and output+'/' not in bidsignore and scans_tsv.is_file():
