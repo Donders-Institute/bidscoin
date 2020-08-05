@@ -58,13 +58,13 @@ Let's begin with inspecting this new raw data collection:
    $ bidscoiner raw bids
 
 -  Check your ``bids/code/bidscoin/bidscoiner.log`` (the complete terminal output) and ``bids/code/bidscoin/bidscoiner.errors`` (the summary that is also printed at the end) files for any errors or warnings. You shouldn't have any :-)
--  Compare the results in your ``bids/sub-*`` subject folders with the in ``bids_ref`` reference result. Are the file and foldernames the same (don't worry about the multi-echo images, they are combined as described below)? Also check the json sidecar files of the fieldmaps. Do they have the right "EchoTime" and "IntendedFor" fields?
+-  Compare the results in your ``bids/sub-*`` subject folders with the in ``bids_ref`` reference result. Are the file and foldernames the same (don't worry about the multi-echo images and the ``extra_data`` images, they are combined/generated as described below)? Also check the json sidecar files of the fieldmaps. Do they have the right "EchoTime" and "IntendedFor" fields?
 -  What happens if you re-run the `bidscoiner <workflow.html#step-2-running-the-bidscoiner>`__ command? Are the same subjects processed again? Re-run "sub-001".
 
 4. **Finishing up.** Now that you have converted the data to BIDS, you still need to do some manual work to make it fully ready for data analysis and sharing
 
 -  Combine the echos using the `echocombine <finalizing.html#multi-echo-combination>`__ tool, such that the individual echo images are replaced by the ech-combined image
--  Deface the anatomical scans using the `echocombine <finalizing.html#multi-echo-combination>`__ tool. This will fail because we have phantom data now, therefore store the 'defaced' output in the ``extra_data`` folder
+-  Deface the anatomical scans using the `echocombine <finalizing.html#multi-echo-combination>`__ tool. This will take a while, but will obviously not work well for our phantom dataset. Therefore store the 'defaced' output in the ``extra_data`` folder (instead of e.g. overwriting the existing images)
 -  Inspect the ``bids/participants.tsv`` file and decide if it is ok.
 -  Update the ``dataset_description.json`` and ``README`` files in your ``bids`` folder
 -  As a final step, run the `bids-validator <https://bids-standard.github.io/bids-validator/>`__ on your ``~/bids_tutorial`` folder. Are you completely ready now to share this dataset?
