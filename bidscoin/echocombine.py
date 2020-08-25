@@ -119,6 +119,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 if not output:
                     for echo, newecho in zip(echos, newechos):
                         LOGGER.info(f"Moving original echo image: {echo} -> {newecho}")
+                        newecho.parent.mkdir(parents=True, exist_ok=True)
                         echo.replace(newecho)
                         echo.with_suffix('').with_suffix('.json').replace(newecho.with_suffix('').with_suffix('.json'))
                 elif output == input:
