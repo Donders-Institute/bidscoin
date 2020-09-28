@@ -41,7 +41,7 @@ DICOM:
   subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
   session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
   anat:       # ----------------------- All anatomical runs --------------------
-  - provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+  - provenance: ""                # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     attributes: &anatattributes_dicom   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = T1w
       Modality: ~
       ProtocolName: ~
@@ -518,7 +518,7 @@ PAR:
   subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
   session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
   anat:       # ----------------------- All anatomical runs --------------------
-  - provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+  - provenance: ""                # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     attributes: &anatattributes_par
       series_type: ~
       exam_name: ~
@@ -540,7 +540,7 @@ PAR:
       run: <<1>>
       mod: ~
       suffix: T1w
-  - provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+  - provenance: ""                # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     attributes:
       <<: *anatattributes_par
       protocol_name: ['*mprage*', '*MPRAGE*', '*MPRage*', '*t1w*', '*T1w*', '*T1W*', '*T1*']

@@ -1226,7 +1226,8 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
     assert modality in bidsmodalities + (unknownmodality, ignoremodality)
 
     # Try to update the sub/ses-ids
-    subid, sesid = get_subid_sesid(Path(run['provenance']), subid, sesid, subprefix, sesprefix)
+    if run['provenance']:
+        subid, sesid = get_subid_sesid(Path(run['provenance']), subid, sesid, subprefix, sesprefix)
 
     # Validate and do some checks to allow for dragging the run entries between the different modality-sections
     run = copy.deepcopy(run)                # Avoid side effects when changing run
