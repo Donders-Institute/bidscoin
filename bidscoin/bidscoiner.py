@@ -405,7 +405,7 @@ def coin_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict)
             module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals)
 
 
-def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=[], force: bool=False, participants: bool=False, bidsmapfile: str='bidsmap.yaml', subprefix: str='sub-', sesprefix: str='ses-') -> None:
+def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=False, participants: bool=False, bidsmapfile: str='bidsmap.yaml', subprefix: str='sub-', sesprefix: str='ses-') -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder and uses the
     bidsmap.yaml file in bidsfolder/code/bidscoin to cast the data into the BIDS folder.
