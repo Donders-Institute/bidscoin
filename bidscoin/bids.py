@@ -1112,7 +1112,7 @@ def exist_run(bidsmap: dict, dataformat: str, modality: str, run_item: dict, mat
     return False
 
 
-def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, modalities: tuple = (ignoremodality,) + bidsmodalities + (unknownmodality,)) -> Tuple[dict, str, int]:
+def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, modalities: tuple = (ignoremodality,) + bidsmodalities + (unknownmodality,)) -> Tuple[dict, str, Union[int, None]]:
     """
     Find the first run in the bidsmap with dicom attributes that match with the dicom file. Then update the (dynamic) bids values (values are cleaned-up to be BIDS-valid)
 
