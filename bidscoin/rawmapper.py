@@ -16,7 +16,7 @@ except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
 
 
-def rawmapper(rawfolder, outfolder: Path=Path(), sessions: list=(), rename: bool=False, dicomfield: tuple=('PatientComments',), wildcard: str='*', subprefix: str='sub-', sesprefix: str='ses-', dryrun: bool=False) -> None:
+def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: bool=False, dicomfield: tuple=('PatientComments',), wildcard: str='*', subprefix: str='sub-', sesprefix: str='ses-', dryrun: bool=False) -> None:
     """
     :param rawfolder:   The root folder-name of the sub/ses/data/file tree containing the source data files
     :param outfolder:   The name of the folder where the mapping-file is saved (default = sourcefolder)
@@ -60,7 +60,7 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: list=(), rename: bool
     for session in sessions:
 
         # Get the subject and session identifiers from the raw folder
-        subid, sesid = bids.get_subid_sesid(session)
+        subid, sesid = bids.get_subid_sesid(session/'dum.my')
 
         # Parse the new subject and session identifiers from the dicomfield
         series = bids.lsdirs(session, wildcard)
