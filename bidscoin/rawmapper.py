@@ -37,14 +37,14 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: list=(), rename: bool
         print(f"Outfolder: {outfolder}")
     outfolder = Path(outfolder)
 
-    # Create or append the output to a mapper logfile
+    # Write the header of the mapper logfile
     mapperfile = outfolder/f"rawmapper_{'_'.join(dicomfield)}.tsv"
     if not dryrun:
-        if rename:
-            with mapperfile.open('a') as fid:
+        if rename and not mapperfile.is_file():     # Write the header once
+            with mapperfile.open('w') as fid:
                 fid.write('subid\tsesid\tnewsubid\tnewsesid\n')
-        else:
-            with mapperfile.open('x') as fid:
+        else:     # Write the header once
+            with mapperfile.open('w') as fid:
                 fid.write('subid\tsesid\tseriesname\t{}\n'.format('\t'.join(dicomfield)))
 
     # Map the sessions in the sourcefolder
@@ -104,7 +104,7 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: list=(), rename: bool
                     newsesid = sesid
                     warnings.warn(f"Could not rename {sesid} because the dicom-field was empty for: {session}")
 
-            # Save the dicomfield / sub-ses mapping to disk and rename the session subfolder (but skip if it already exists)
+            # Save the dicomfield / sub-ses mapping in the mapper logfile and rename the session subfolder (but skip if it already exists)
             newsession = rawfolder/newsubid/newsesid
             print(f"{session} -> {newsession}")
             if newsession == session:
@@ -116,7 +116,7 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: list=(), rename: bool
                     fid.write(f"{subid}\t{sesid}\t{newsubid}\t{newsesid}\n")
                 session.rename(newsession)
 
-        # Print & save the dicom values
+        # Print & save the dicom values in the mapper logfile
         else:
             print('{}/{}/{}\t-> {}'.format(subid, sesid, series.name, '\t'.join(dcmval.split('/'))))
             if not dryrun:
