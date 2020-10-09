@@ -475,7 +475,7 @@ DICOM:
       SeriesDescription: ['*mp2rage*UNI*', '*MP2RAGE*UNI*', '*MP2Rage*UNI*', '*mp2rage*uni*', '*MP2RAGE*uni*', '*MP2Rage*uni*']
       MRAcquisitionType: 3D
     bids:
-      acq: <SeriesDescription>
+      acq: <ProtocolName>
       rec: ~
       ce: ~
       task: ~
@@ -490,7 +490,7 @@ DICOM:
       SeriesDescription: ['*mp2rage*INV1*', '*MP2RAGE*INV1*', '*MP2Rage*INV1*', '*mp2rage*inv1*', '*MP2RAGE*inv1*', '*MP2Rage*inv1*']
       MRAcquisitionType: 3D
     bids:
-      acq: <SeriesDescription>
+      acq: <ProtocolName>
       rec: ~
       ce: ~
       task: ~
@@ -505,7 +505,7 @@ DICOM:
       SeriesDescription: ['*mp2rage*INV2*', '*MP2RAGE*INV2*', '*MP2Rage*INV2*', '*mp2rage*inv2*', '*MP2RAGE*inv2*', '*MP2Rage*inv2*']
       MRAcquisitionType: 3D
     bids:
-      acq: <SeriesDescription>
+      acq: <ProtocolName>
       rec: ~
       ce: ~
       task: ~
@@ -518,7 +518,7 @@ DICOM:
     attributes:
       <<: *extra_data_attributes_dicom
       SeriesDescription: ['*b1map*', '*B1map*']
-      ImageType: '*FLIP ANGLE MAP*'
+      ImageType: 'FLIP ANGLE MAP'
     bids:
       acq: <SeriesDescription>
       rec: ~

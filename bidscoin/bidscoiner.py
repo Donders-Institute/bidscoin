@@ -185,7 +185,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     pass
 
                 else:
-                    basepath = bids.get_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper()[1:] + index)             # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
+                    basepath = bids.get_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper()[1:] + index)         # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
 
                 # Save the file with a new name
                 newbidsname = str(Path(basepath).name)
