@@ -154,9 +154,9 @@ DICOM:
       PhaseEncodingDirection: ~
     bids: &funcbids_dicom
       task: <SeriesDescription>
-      acq: <SequenceName>
+      acq: <ProtocolName>
       ce: ~
-      dir: <InPlanePhaseEncodingDirection>
+      dir: ~
       rec: ~
       run: <<1>>
       echo: <EchoNumbers>
@@ -211,7 +211,7 @@ DICOM:
       PhaseEncodingDirection: ~
     bids: &dwibids_dicom
       acq: <SeriesDescription>
-      dir: <InPlanePhaseEncodingDirection>
+      dir: ~
       run: <<1>>
       suffix: dwi
   - provenance: ~
@@ -278,7 +278,7 @@ DICOM:
     attributes: *fmapattributes_dicom
     bids:
       <<: *fmapbids_dicom
-      dir: <InPlanePhaseEncodingDirection>
+      dir: ~
       suffix: epi
 
   beh:        # ----------------------- All behavioural data -------------------
@@ -353,15 +353,15 @@ DICOM:
       RepetitionTime: ~
       PhaseEncodingDirection: ~
     bids:
-      acq: <SeriesDescription>
-      rec: ~
+      acq: <ProtocolName>
+      rec: <ImageType>
       ce: ~
-      task: ~
+      task: <SeriesDescription>
       echo: <EchoNumbers>
-      dir: <InPlanePhaseEncodingDirection>
+      dir: ~
       run: <<1>>
-      mod: ~
-      suffix: ~
+      mod: <MRAcquisitionType>
+      suffix: <ScanningSequence>
 
   leave_out:  # ----------------------- Data that will be left out -------------
   - provenance: ~
@@ -381,15 +381,15 @@ DICOM:
       RepetitionTime: ~
       PhaseEncodingDirection: ~
     bids:
-      acq: <SeriesDescription>
-      rec: ~
+      acq: <ProtocolName>
+      rec: <ImageType>
       ce: ~
-      task: ~
+      task: <SeriesDescription>
       echo: <EchoNumbers>
-      dir: <InPlanePhaseEncodingDirection>
+      dir: ~
       run: <<1>>
-      mod: ~
-      suffix: ~
+      mod: <MRAcquisitionType>
+      suffix: <ScanningSequence>
 
 
 PAR:
@@ -632,7 +632,7 @@ PAR:
     attributes: *fmapattributes_par
     bids:
       <<: *fmapbids_par
-      dir: <InPlanePhaseEncodingDirection>
+      dir: ~
       suffix: epi
 
   beh:        # ----------------------- All behavioural data -------------------

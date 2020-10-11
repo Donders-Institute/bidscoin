@@ -201,7 +201,7 @@ DICOM:
       task: <SeriesDescription>
       acq: <SequenceName>
       ce: ~
-      dir: <InPlanePhaseEncodingDirection>
+      dir: ~
       rec: ~
       run: <<1>>
       echo: <EchoNumbers>
@@ -284,7 +284,7 @@ DICOM:
       PhaseEncodingDirection: ~
     bids: &dwibids_dicom
       acq: <SeriesDescription>
-      dir: <InPlanePhaseEncodingDirection>
+      dir: ~
       run: <<1>>
       suffix: dwi
   - provenance: ~
@@ -390,7 +390,7 @@ DICOM:
       ScanningSequence: EP
     bids:
       <<: *fmapbids_dicom
-      dir: <InPlanePhaseEncodingDirection>
+      dir: ~
       suffix: epi
 
   beh:        # ----------------------- All behavioural data -------------------
@@ -465,15 +465,15 @@ DICOM:
       RepetitionTime: ~
       PhaseEncodingDirection: ~
     bids:
-      acq: <SeriesDescription>
-      rec: ~
+      acq: <ProtocolName>
+      rec: <ImageType>
       ce: ~
-      task: ~
+      task: <SeriesDescription>
       echo: <EchoNumbers>
-      dir: <InPlanePhaseEncodingDirection>
+      dir: ~
       run: <<1>>
-      suffix: ~
-      mod: ~
+      mod: <MRAcquisitionType>
+      suffix: <ScanningSequence>
   - provenance: ~
     attributes:
       <<: *extra_data_attributes_dicom
@@ -548,6 +548,19 @@ DICOM:
       run: <<1>>
       suffix: magnitude
       mod: ~
+  - provenance: ~               # The last item, taken if nothing else matches
+    attributes:
+      <<: *extra_data_attributes_dicom
+    bids:
+      acq: <ProtocolName>
+      rec: <ImageType>
+      ce: ~
+      task: <SeriesDescription>
+      echo: <EchoNumbers>
+      dir: ~
+      run: <<1>>
+      mod: <MRAcquisitionType>
+      suffix: <ScanningSequence>
 
   leave_out:  # ----------------------- Data that will be left out -------------
   - provenance: ~
@@ -567,15 +580,15 @@ DICOM:
       RepetitionTime: ~
       PhaseEncodingDirection: ~
     bids: &leaveout_bids_dicom
-      acq: <SeriesDescription>
-      rec: ~
+      acq: <ProtocolName>
+      rec: <ImageType>
       ce: ~
-      task: ~
+      task: <SeriesDescription>
       echo: <EchoNumbers>
-      dir: <InPlanePhaseEncodingDirection>
+      dir: ~
       run: <<1>>
-      suffix: ~
-      mod: ~
+      mod: <MRAcquisitionType>
+      suffix: <ScanningSequence>
   - provenance: ~
     attributes:
       <<: *leaveout_attributes_dicom
@@ -876,7 +889,6 @@ PAR:
     attributes: *fmapattributes_par
     bids:
       <<: *fmapbids_par
-      dir: <InPlanePhaseEncodingDirection>
       suffix: epi
 
   beh:        # ----------------------- All behavioural data -------------------
