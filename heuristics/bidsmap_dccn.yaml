@@ -300,6 +300,11 @@ DICOM:
       <<: *dwiattributes_dicom
       ProtocolName: ['*dwi*', '*DWI*', '*diffusion*', 'DIFFUSION', '*dti*', '*DTI*']
     bids: *dwibids_dicom
+  - provenance: ~
+    attributes:
+      <<: *dwiattributes_dicom
+      ImageType: 'DIFFUSION'
+    bids: *dwibids_dicom
 
   fmap:       # ----------------------- All fieldmap runs ----------------------
   - provenance: ~
@@ -580,6 +585,7 @@ DICOM:
     attributes:
       <<: *leaveout_attributes_dicom
       ImageType: DERIVED
+      MRAcquisitionType: 2D       # Make an exception for 3D MP2RAGE UNI-images
     bids:
       <<: *leaveout_bids_dicom
       rec: DERIVED
