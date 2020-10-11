@@ -487,8 +487,8 @@ DICOM:
       echo: ~
       dir: ~
       run: <<1>>
-      suffix: uni
       mod: ~
+      suffix: uni
   - provenance: ~
     attributes:
       <<: *extra_data_attributes_dicom
@@ -502,8 +502,8 @@ DICOM:
       echo: ~
       dir: ~
       run: <<1>>
-      suffix: inv1
       mod: ~
+      suffix: inv1
   - provenance: ~
     attributes:
       <<: *extra_data_attributes_dicom
@@ -517,8 +517,8 @@ DICOM:
       echo: ~
       dir: ~
       run: <<1>>
-      suffix: inv2
       mod: ~
+      suffix: inv2
   - provenance: ~
     attributes:
       <<: *extra_data_attributes_dicom
@@ -532,8 +532,8 @@ DICOM:
       echo: ~
       dir: ~
       run: <<1>>
-      suffix: B1map
       mod: ~
+      suffix: B1map
   - provenance: ~
     attributes:
       <<: *extra_data_attributes_dicom
@@ -546,8 +546,8 @@ DICOM:
       echo: ~
       dir: ~
       run: <<1>>
+      mod: B1map
       suffix: magnitude
-      mod: ~
   - provenance: ~               # The last item, taken if nothing else matches
     attributes:
       <<: *extra_data_attributes_dicom
