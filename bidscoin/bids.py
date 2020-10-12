@@ -277,6 +277,7 @@ def is_dicomfile(file: Path) -> bool:
             if dcmfile.read(4) == b'DICM':
                 return True
             else:
+                logger.debug(f"Reading non-standard DICOM file: {file}")
                 dicomdict = pydicom.dcmread(str(file), force=True)       # The DICM tag may be missing for anonymized DICOM files
                 return 'Modality' in dicomdict
     else:
