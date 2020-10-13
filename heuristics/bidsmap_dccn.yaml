@@ -111,7 +111,8 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *anatattributes_dicom
-      SeriesDescription: '*tse_vfl*'
+      SeriesDescription: '*tse*vfl*'
+      ImageType: 'NORM'                             # NB: The non-NORM image is saved in 'extra_data'
       SequenceVariant: "['SK', 'SP']"
       ScanningSequence: SE
     bids:
@@ -548,6 +549,16 @@ DICOM:
       run: <<1>>
       mod: B1map
       suffix: magnitude
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_dicom
+      SeriesDescription: '*tse*vfl*'
+      ImageType: ~              # Make an exception for this non-NORM TSE T2w-image (i.e. ['ORIGINAL', 'PRIMARY', 'M', 'ND'], the filtered 'NORM' version is saved in 'anat')
+      SequenceVariant: "['SK', 'SP']"
+      ScanningSequence: SE
+    bids:
+      <<: *anatbids_dicom
+      suffix: T2w
   - provenance: ~               # The last item, taken if nothing else matches
     attributes:
       <<: *extra_data_attributes_dicom
@@ -598,7 +609,7 @@ DICOM:
     attributes:
       <<: *leaveout_attributes_dicom
       ImageType: DERIVED
-      MRAcquisitionType: 2D       # Make an exception for 3D MP2RAGE UNI-images
+      MRAcquisitionType: 2D       # Make an exception for DERIVED 3D MP2RAGE UNI-images
     bids:
       <<: *leaveout_bids_dicom
       rec: DERIVED
