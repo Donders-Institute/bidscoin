@@ -138,8 +138,8 @@ def reporterrors() -> None:
             logfile = Path(filehandler.baseFilename)
 
     if 'logfile' in locals():
-        logger.info(f"For the complete log see: {logfile}")
-        logger.info(f"NB: {logfile.parent} may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
+        logger.info(f"For the complete log see: {logfile}\n"
+                    f"NB: Files in {logfile.parent} may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
 
 
 def run_command(command: str) -> bool:
