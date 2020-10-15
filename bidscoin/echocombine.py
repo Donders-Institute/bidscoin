@@ -5,12 +5,10 @@ A wrapper around the 'mecombine' multi-echo combination tool (https://github.com
 This wrapper is fully BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 """
 
-import shutil
 import argparse
 import json
 import logging
 import pandas as pd
-import numpy as np
 from multiecho import combination as me
 from pathlib import Path
 try:
