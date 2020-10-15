@@ -101,20 +101,6 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 # Combine the multi-echo images
                 me.me_combine(mepattern, cefile, algorithm, weights, saveweights=False, logger=LOGGER.name)
 
-                # Add a combined-echo json sidecar-file
-                cejson  = cefile.with_suffix('').with_suffix('.json')
-                sejsons = [echo.with_suffix('').with_suffix('.json') for echo in echos]
-                if sejsons[0].is_file():
-                    TEs = [json.load(sejson.open('r'))['EchoTime'] for sejson in sejsons]
-                    LOGGER.info(f"Adding a json sidecar-file: {sejsons[0]} -> {cejson}")
-                    shutil.copyfile(sejsons[0], cejson)
-                    with cejson.open('r') as fmap_fid:
-                        data = json.load(fmap_fid)
-                    data['EchoTime']   = np.average(TEs, weights=weights)       # This seems to be the best we can do (the BIDS validator indicates there has to be a nr here, an empty value generates a warning)
-                    data['EchoNumber'] = 1
-                    with cejson.open('w') as fmap_fid:
-                        json.dump(data, fmap_fid, indent=4)
-
                 # (Re)move the original multi-echo images
                 if not output:
                     for echo, newecho in zip(echos, newechos):
