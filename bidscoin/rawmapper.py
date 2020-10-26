@@ -59,8 +59,10 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: boo
     # Loop over the selected sessions in the sourcefolder
     for session in sessions:
 
-        # Get the subject and session identifiers from the raw folder
-        subid, sesid = bids.get_subid_sesid(session/'dum.my')
+        # Get the subject and session identifiers from the sub/ses session folder
+        subid, sesid = bids.get_subid_sesid(session/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
+        subid = subid.replace('sub-', subprefix)
+        sesid = sesid.replace('ses-', sesprefix)
 
         # Parse the new subject and session identifiers from the dicomfield
         series = bids.lsdirs(session, wildcard)
@@ -92,7 +94,7 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: boo
                 newsubid    = subprefix + bids.cleanup_value(re.sub(f'^{subprefix}', '', newsubsesid[0]))
                 if newsubid==subprefix or newsubid==subprefix+'None':
                     newsubid = subid
-                    warnings.warn('Could not rename {} because the dicom-field was empty for: {}'.format(subid, session))
+                    warnings.warn(f"Could not rename {subid} because the dicom-field was empty for: {session}")
                 if len(newsubsesid)==1:
                     newsesid = sesid
                 elif len(newsubsesid)==2:
@@ -114,7 +116,10 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: boo
             elif not dryrun:
                 with mapperfile.open('a') as fid:
                     fid.write(f"{subid}\t{sesid}\t{newsubid}\t{newsesid}\n")
-                session.rename(newsession)
+                if sesid and newsesid != sesid:
+                    (rawfolder/subid/sesid).rename(rawfolder/subid/newsesid)
+                if newsubid != subid:
+                    (rawfolder/subid).rename(rawfolder/newsubid)
 
         # Print & save the dicom values in the mapper logfile
         else:
