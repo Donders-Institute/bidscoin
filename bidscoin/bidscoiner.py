@@ -32,6 +32,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
     Converts the session source-files into BIDS-valid nifti-files in the corresponding bidsfolder and
     extracts personals (e.g. Age, Sex) from the source header
 
+    :param dataformat:  The format of the raw input data that is to be coined (e.g. 'DICOM' or 'PAR', see bids.get_dataformat)
     :param session:     The full-path name of the subject/session source file/folder
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
     :param bidsfolder:  The full-path name of the BIDS root-folder

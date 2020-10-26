@@ -31,11 +31,11 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: boo
     """
 
     # Input checking
-    rawfolder = Path(rawfolder)
+    rawfolder = Path(rawfolder).resolve()
     if not outfolder:
         outfolder = rawfolder
         print(f"Outfolder: {outfolder}")
-    outfolder = Path(outfolder)
+    outfolder = Path(outfolder).resolve()
 
     # Write the header of the mapper logfile
     mapperfile = outfolder/f"rawmapper_{'_'.join(dicomfield)}.tsv"
