@@ -727,26 +727,30 @@ def get_dataformat(source: Path) -> str:
 
 
     # If source is a session directory, get a sourcefile
-    if source.is_dir():
+    try:
+        if source.is_dir():
 
-        # Try to see if we can find DICOM files
-        sourcedirs = lsdirs(source)
-        for sourcedir in sourcedirs:
-            sourcefile = get_dicomfile(sourcedir)
-            if sourcefile.name:
-                return 'DICOM'
+            # Try to see if we can find DICOM files
+            sourcedirs = lsdirs(source)
+            for sourcedir in sourcedirs:
+                sourcefile = get_dicomfile(sourcedir)
+                if sourcefile.name:
+                    return 'DICOM'
 
-        # Try to see if we can find PAR/XML files
-        sourcefiles = get_parfiles(source)
-        if sourcefiles:
+            # Try to see if we can find PAR/XML files
+            sourcefiles = get_parfiles(source)
+            if sourcefiles:
+                return 'PAR'
+
+        # If we don't know the dataformat, just try
+        if is_dicomfile(source):
+            return 'DICOM'
+
+        if is_parfile(source):
             return 'PAR'
 
-    # If we don't know the dataformat, just try
-    if is_dicomfile(source):
-        return 'DICOM'
-
-    if is_parfile(source):
-        return 'PAR'
+    except IOError as nosource:
+        logger.warning(nosource, exc_info=True)
 
     logger.warning(f"Cannot determine the dataformat of: {source}")
     return ''
