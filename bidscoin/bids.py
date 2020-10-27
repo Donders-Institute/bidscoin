@@ -829,7 +829,7 @@ def cleanup_value(label: str) -> str:
     """
 
     if label is None:
-        return label
+        return ''
 
     special_characters = (' ', '_', '-','.')
 
