@@ -750,7 +750,7 @@ def get_dataformat(source: Path) -> str:
             return 'PAR'
 
     except IOError as nosource:
-        logger.warning(nosource, exc_info=True)
+        logger.warning(nosource)
 
     logger.warning(f"Cannot determine the dataformat of: {source}")
     return ''
