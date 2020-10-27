@@ -557,7 +557,7 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
         try:
             load_bidsmap(filename, report=False)
         except:
-            logger.error(f'The saved output bidsmap does not seem to be valid YAML, please check {filename}, e.g. by way of an online yaml validator, such as https://yamlchecker.com/')
+            logger.exception(f'The saved output bidsmap does not seem to be valid YAML, please check {filename}, e.g. by way of an online yaml validator, such as https://yamlchecker.com/')
 
 
 def parse_x_protocol(pattern: str, dicomfile: Path) -> str:
