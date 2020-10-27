@@ -106,7 +106,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
 
         # Check if we already know this run
         if index is None:
-            LOGGER.warning(f"Skipping unknown '{modality}' run: {sourcefile}\n-> re-run the bidsmapper and delete {session} to solve this warning")
+            LOGGER.warning(f"Skipping unknown '{modality}' run: {sourcefile}\n-> Re-run the bidsmapper to solve this warning")
             continue
 
         LOGGER.info(f"Processing: {source}")
