@@ -632,7 +632,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                         value = elem.value
                         continue
 
-        except IOError:
+        except OSError:
             logger.warning(f'Cannot read {tagname} from {dicomfile}')
             value = None
 
@@ -695,7 +695,7 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
                 pardict = _PARDICT_CACHE
             value = pardict[0].get(tagname)
 
-        except IOError:
+        except OSError:
             logger.warning(f'Cannot read {tagname} from {parfile}')
             value = None
 
@@ -749,7 +749,7 @@ def get_dataformat(source: Path) -> str:
         if is_parfile(source):
             return 'PAR'
 
-    except IOError as nosource:
+    except OSError as nosource:
         logger.warning(nosource)
 
     logger.warning(f"Cannot determine the dataformat of: {source}")
