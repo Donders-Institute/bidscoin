@@ -121,9 +121,11 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(bidsmodality, bidsname)
 
-        # Check if file already exists (-> e.g. when a static runindex is used)
+        # Check if file already exists (-> e.g. when a static runindex is used). TODO: Future dcm2niix versions may contain a `-w 1` option: https://github.com/rordenlab/dcm2niix/issues/276
         if (bidsmodality/bidsname).with_suffix('.json').is_file():
-            LOGGER.warning(f"{bidsmodality/bidsname}.* already exists -- check your results carefully!")
+            LOGGER.warning(f"{bidsmodality/bidsname}.* already exists and will be deleted -- check your results carefully!")
+            for ext in ('.nii.gz', '.nii', '.json', '.bval', '.bvec'):
+                (bidsmodality/bidsname).with_suffix(ext).unlink(missing_ok=True)
 
         # Convert the source-files in the run folder to nifti's in the BIDS-folder
         command = '{path}dcm2niix {args} -f "{filename}" -o "{outfolder}" "{source}"'.format(
