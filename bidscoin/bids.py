@@ -155,7 +155,7 @@ def run_command(command: str) -> bool:
     logger.info(f"Output:\n{process.stdout.decode('utf-8')}")
 
     if process.stderr.decode('utf-8') or process.returncode!=0:
-        logger.error(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stderr.decode('utf-8')}")
+        logger.exception(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stderr.decode('utf-8')}")
         logger.debug(f"{process.stdout.decode('utf-8')}")
         return False
 
@@ -1001,7 +1001,7 @@ def update_bidsmap(bidsmap: dict, source_modality: str, provenance: Path, target
 
     num_runs_out = len(dir_bidsmap(bidsmap, dataformat))
     if num_runs_out != num_runs_in:
-        logger.error(f"Number of runs in bidsmap['{dataformat}'] changed unexpectedly: {num_runs_in} -> {num_runs_out}")
+        logger.exception(f"Number of runs in bidsmap['{dataformat}'] changed unexpectedly: {num_runs_in} -> {num_runs_out}")
 
     return bidsmap
 
