@@ -291,13 +291,11 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             if unpacked:
                 shutil.rmtree(session)
 
-    # Save the bidsmap in the bidscoinfolder
-    bidsmapfile = bidscoinfolder/'bidsmap.yaml'
-    bids.save_bidsmap(bidsmapfile, bidsmap_new)
-
-    # (Re)launch the bidseditor UI_MainWindow
     if not dataformat:
         LOGGER.warning('Could not determine the dataformat of the source data')
+
+    # (Re)launch the bidseditor UI_MainWindow
+    bidsmapfile = bidscoinfolder/'bidsmap.yaml'
     if gui:
         if not dataformat:
             QMessageBox.information(mainwin, 'BIDS mapping workflow',
@@ -315,6 +313,9 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             gui.setupUi(mainwin, bidsfolder, bidsmapfile, bidsmap_new, copy.deepcopy(bidsmap_new), template, dataformat, subprefix=subprefix, sesprefix=sesprefix)
             mainwin.show()
             app.exec()
+    else:
+        # Save the bidsmap in the bidscoinfolder
+        bids.save_bidsmap(bidsmapfile, bidsmap_new)
 
     LOGGER.info('-------------- FINISHED! -------------------')
     LOGGER.info('')
