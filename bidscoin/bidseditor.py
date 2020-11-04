@@ -1390,13 +1390,13 @@ def main():
 
                                          Dynamic BIDS labels
                                            The BIDS labels can be static, in which case the label is just a normal string, or dynamic,
-                                           when the string is enclosed with pointy brackets like `<attribute name>` or
-                                           `<<argument1><argument2>>`. In case of single pointy brackets the label will be replaced
-                                           during bidsmapper, bidseditor and bidscoiner runtime by the value of the (DICOM) attribute
-                                           with that name. In case of double pointy brackets, the label will be updated for each
-                                           subject/session during bidscoiner runtime. For instance, then the `run` label `<<1>>` in
-                                           the bids name will be replaced with `1` or increased to `2` if a file with runindex `1`
-                                           already exists in that directory.
+                                           when the string is enclosed with pointy brackets like `<attribute>`,
+                                           `<attribute1><attribute2>` or `<<attribute1><attribute2>>`. In case of single enclosed
+                                           pointy brackets the label will be replaced during bidsmapper, bidseditor and bidscoiner
+                                           runtime by the value of the (DICOM) attribute with that name. In case of double enclosed
+                                           pointy brackets, the label will be updated for each subject/session during bidscoiner
+                                           runtime. For instance, the `run` label `<<1>>` in the bids name will be replaced with
+                                           `1` or increased to `2` if a file with runindex `1` already exists in that directory.
 
                                          Fieldmaps: suffix
                                            Select 'magnitude1' if you have 'magnitude1' and 'magnitude2' data in one series-folder

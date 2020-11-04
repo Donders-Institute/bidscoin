@@ -334,7 +334,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmapattributes_dicom
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       EchoNumbers: 2
       ImageType: P
     bids:
@@ -343,7 +343,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmapattributes_dicom
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       EchoNumbers: 1
       ImageType: M
     bids:
@@ -352,7 +352,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmapattributes_dicom
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       EchoNumbers: 2
       ImageType: M
     bids:
@@ -361,7 +361,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmapattributes_dicom
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       EchoNumbers: 1
       ImageType: P
     bids:
@@ -369,20 +369,20 @@ DICOM:
       suffix: phase1
   - provenance: ~
     attributes:
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       <<: *fmapattributes_dicom
       EchoNumbers: 2
       ImageType: P
     bids:
       <<: *fmapbids_dicom
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       suffix: phase2
   - provenance: ~
     attributes:
       <<: *fmapattributes_dicom
     bids:
       <<: *fmapbids_dicom
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       suffix: fieldmap
   - provenance: ~
     attributes:
@@ -848,7 +848,7 @@ PAR:
     attributes: &fmapattributes_par
       series_type: ~
       exam_name: ~
-      protocol_name: ['*fmap*', '*fieldmap*', '*field_map*', '*B0map*', '*b0map*']
+      protocol_name: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*field_map*', '*B0map*', '*b0map*']
       tech: ~
       diffusion: 0
       fov: ~
