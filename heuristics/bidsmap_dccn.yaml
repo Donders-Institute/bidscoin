@@ -210,7 +210,7 @@ DICOM:
   - provenance: ~
     attributes:                   # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
       <<: *funcattributes_dicom
-      ProtocolName: ['*fmri*', '*fMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
+      ProtocolName: ['*fmri*', '*fMRI*', '*FMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
       SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
     bids:
       <<: *funcbids_dicom
@@ -218,7 +218,7 @@ DICOM:
   - provenance: ~
     attributes:                   # Then catch the bold runs itself
       <<: *funcattributes_dicom
-      ProtocolName: ['*fmri*', '*fMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
+      ProtocolName: ['*fmri*', '*fMRI*', '*FMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
     bids: *funcbids_dicom
   - provenance: ~
     attributes:                   # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
@@ -467,13 +467,13 @@ DICOM:
       PhaseEncodingDirection: ~
     bids:
       acq: <ProtocolName>
-      rec: <ImageType>
+      rec: <MRAcquisitionType><ImageType>
       ce: ~
-      task: <SeriesDescription>
+      task: ~
       echo: <EchoNumbers>
       dir: ~
       run: <<1>>
-      mod: <MRAcquisitionType>
+      mod: <SeriesDescription>
       suffix: <ScanningSequence>
   - provenance: ~
     attributes:
@@ -564,13 +564,13 @@ DICOM:
       <<: *extra_data_attributes_dicom
     bids:
       acq: <ProtocolName>
-      rec: <ImageType>
+      rec: <MRAcquisitionType><ImageType>
       ce: ~
-      task: <SeriesDescription>
+      task: ~
       echo: <EchoNumbers>
       dir: ~
       run: <<1>>
-      mod: <MRAcquisitionType>
+      mod: <SeriesDescription>
       suffix: <ScanningSequence>
 
   leave_out:  # ----------------------- Data that will be left out -------------
@@ -784,7 +784,7 @@ PAR:
     attributes:
       <<: *funcattributes_par
       series_type: ~
-      protocol_name: ['*fmri*', '*fMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
+      protocol_name: ['*fmri*', '*fMRI*', '*FMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
     bids:
       <<: *funcbids_par
       suffix: bold

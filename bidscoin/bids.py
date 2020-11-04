@@ -1357,9 +1357,9 @@ def get_dynamic_value(bidsvalue: str, sourcefile: Path) -> str:
     if not bidsvalue or not isinstance(bidsvalue, str) or bidsvalue.startswith('<<') and bidsvalue.endswith('>>'):
         return bidsvalue
 
-    # Fill any bids-label with the <annotated> dicom attribute
+    # Fill any bids-label with the <annotated> dicom attribute(s)
     if bidsvalue.startswith('<') and bidsvalue.endswith('>') and sourcefile.name:
-        sourcevalue = get_sourcefield(bidsvalue[1:-1], sourcefile)
+        sourcevalue = ''.join([str(get_sourcefield(value, sourcefile)) for value in bidsvalue[1:-1].split('><')])
         if not sourcevalue:
             return bidsvalue
         else:
