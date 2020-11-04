@@ -354,13 +354,13 @@ DICOM:
       PhaseEncodingDirection: ~
     bids:
       acq: <ProtocolName>
-      rec: <ImageType>
+      rec: <MRAcquisitionType><ImageType>
       ce: ~
-      task: <SeriesDescription>
+      task: ~
       echo: <EchoNumbers>
       dir: ~
       run: <<1>>
-      mod: <MRAcquisitionType>
+      mod: <SeriesDescription>
       suffix: <ScanningSequence>
 
   leave_out:  # ----------------------- Data that will be left out -------------
