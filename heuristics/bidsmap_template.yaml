@@ -218,6 +218,11 @@ DICOM:
     attributes: *dwiattributes_dicom
     bids:
       <<: *dwibids_dicom
+      suffix: physio
+  - provenance: ~
+    attributes: *dwiattributes_dicom
+    bids:
+      <<: *dwibids_dicom
       suffix: sbref
 
   fmap:       # ----------------------- All fieldmap runs ----------------------

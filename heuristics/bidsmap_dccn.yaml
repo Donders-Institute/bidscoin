@@ -216,6 +216,17 @@ DICOM:
       <<: *funcbids_dicom
       suffix: sbref
   - provenance: ~
+    attributes:                   # Then match the physio runs (the normal bold runs don't have PHYSIO in the ImageType)
+      <<: *funcattributes_dicom
+      ProtocolName: ['*fmri*', '*fMRI*', '*FMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
+      ImageType: PHYSIO
+    bids:
+      <<: *funcbids_dicom
+      acq: ~
+      task: <ProtocolName>
+      echo: ~
+      suffix: physio
+  - provenance: ~
     attributes:                   # Then catch the bold runs itself
       <<: *funcattributes_dicom
       ProtocolName: ['*fmri*', '*fMRI*', '*FMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
@@ -259,11 +270,6 @@ DICOM:
     attributes: *funcattributes_dicom
     bids:
       <<: *funcbids_dicom
-      suffix: physio
-  - provenance: ~
-    attributes: *funcattributes_dicom
-    bids:
-      <<: *funcbids_dicom
       suffix: stim
 
   dwi:        # ----------------------- All diffusion runs ---------------------
@@ -290,12 +296,21 @@ DICOM:
       suffix: dwi
   - provenance: ~
     attributes:
-      <<:  *dwiattributes_dicom   # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
+      <<:  *dwiattributes_dicom           # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
       ProtocolName: ['*dwi*', '*DWI*', '*diffusion*', 'DIFFUSION', '*dti*', '*DTI*']
       SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
     bids:
       <<: *dwibids_dicom
       suffix: sbref
+  - provenance: ~
+    attributes:                           # Then match the physio runs (the normal dwi runs don't have PHYSIO in the ImageType)
+      <<: *dwiattributes_dicom
+      ProtocolName: ['*dwi*', '*DWI*', '*diffusion*', 'DIFFUSION', '*dti*', '*DTI*']
+      ImageType: PHYSIO
+    bids:
+      <<: *dwibids_dicom
+      acq: <ProtocolName>
+      suffix: physio
   - provenance: ~
     attributes:                           # Then catch the normal DWI runs
       <<: *dwiattributes_dicom
@@ -420,7 +435,9 @@ DICOM:
       <<: *behbids
       suffix: beh
   - provenance: ~
-    attributes: *behattributes
+    attributes:
+      <<: *behattributes
+      ImageType: PHYSIO
     bids:
       <<: *behbids
       suffix: physio
