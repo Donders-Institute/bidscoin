@@ -22,7 +22,6 @@ setup(name                           = 'bidscoin',          # Required
       tests_require                  = ["pytest", "pytest-cov", "coverage"],
       package_data                   = {'bidscoin': ['../*version.txt', 'icons/brain.ico'],
                                         '': ['*.yaml']},
-      include_package_data           = True,
       entry_points                   = {'console_scripts': ['bidseditor       = bidscoin.bidseditor:main',
                                                             'bidstrainer      = bidscoin.bidstrainer:main',
                                                             'bidsmapper       = bidscoin.bidsmapper:main',
