@@ -202,18 +202,18 @@ def plotphysio(physio:dict, actualsamples: int):
         """Plot the trace and update minimum and maximum values"""
         if logdatatype not in physio: return
         nonlocal miny, maxy
-        trace    = physio[logdatatype][starttick:endtick, 0]
-        mintrace = int(min(trace))      # type(ACQ)==bool
-        maxtrace = int(max(trace))
-        newminy  = min(miny, mintrace)
-        newmaxy  = max(maxy, maxtrace)
+        trace      = physio[logdatatype][starttick:endtick, 0]
+        mintrace   = int(min(trace))        # type(ACQ)==bool
+        maxtrace   = int(max(trace))
+        newminy    = min(miny, mintrace)
+        newmaxy    = max(maxy, maxtrace)
+        miny, maxy = newminy, newmaxy
         if scale and (newminy != mintrace or newmaxy != maxtrace):
             trace = trace * (newmaxy - newminy)/(maxtrace - mintrace) - mintrace + newminy
         if logdatatype == 'ACQ':
             plt.fill_between(np.arange(trace.size), trace, color=color, label=logdatatype)
         else:
             plt.plot(trace, color=color, label=logdatatype)
-        miny, maxy = newminy, newmaxy
 
     plot_trace('ECG1', False, 'green')
     plot_trace('ECG2', False, 'green')
