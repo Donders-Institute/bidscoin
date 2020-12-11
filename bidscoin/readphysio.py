@@ -198,29 +198,32 @@ def plotphysio(physio:dict, actualsamples: int):
         starttick = int(actualsamples / 2) - int(displaymax / 2)
         endtick   = starttick + displaymax
 
-    def plot_trace(logdatatype, color, scale):
+    def plot_trace(logdatatype, scale, color):
         """Plot the trace and update minimum and maximum values"""
         if logdatatype not in physio: return
         nonlocal miny, maxy
-        trace    = physio[logdatatype][starttick:endtick]
+        trace    = physio[logdatatype][starttick:endtick, 0]
         mintrace = int(min(trace))      # type(ACQ)==bool
         maxtrace = int(max(trace))
         newminy  = min(miny, mintrace)
         newmaxy  = max(maxy, maxtrace)
         if scale and (newminy != mintrace or newmaxy != maxtrace):
             trace = trace * (newmaxy - newminy)/(maxtrace - mintrace) - mintrace + newminy
-        plt.plot(trace, color=color, label=logdatatype)
+        if logdatatype == 'ACQ':
+            plt.fill_between(np.arange(trace.size), trace, color=color, label=logdatatype)
+        else:
+            plt.plot(trace, color=color, label=logdatatype)
         miny, maxy = newminy, newmaxy
 
-    plot_trace('ECG1', 'green', False)
-    plot_trace('ECG2', 'green', False)
-    plot_trace('ECG3', 'green', False)
-    plot_trace('ECG4', 'green', False)
-    plot_trace('RESP', 'blue',  False)
-    plot_trace('PULS', 'red',   False)
-    plot_trace('EXT',  'cyan',  True)
-    plot_trace('EXT2', 'olive', True)
-    plot_trace('ACQ',  'gray',  True)
+    plot_trace('ECG1', False, 'green')
+    plot_trace('ECG2', False, 'green')
+    plot_trace('ECG3', False, 'green')
+    plot_trace('ECG4', False, 'green')
+    plot_trace('RESP', False, 'blue')
+    plot_trace('PULS', False, 'red')
+    plot_trace('EXT',  True,  'cyan')
+    plot_trace('EXT2', True,  'olive')
+    plot_trace('ACQ',  True,  'lightgray')
 
     plt.legend(loc='lower right')
     plt.axis([1, min(displaymax, actualsamples), miny - maxy*0.05, maxy + maxy*0.05])
