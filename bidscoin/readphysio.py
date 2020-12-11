@@ -187,9 +187,8 @@ def readparsefile(fn: Union[bytes,Path], logdatatype, firsttime, expectedsamples
         return traces, UUID
 
 
-def plotphysio(physio:dict, actualsamples: int):
+def plotphysio(physio:dict, actualsamples: int, displaymax: int=1000):
     """Plot the samples of the physiological traces in a rudimentary way. If too large, only plot the middle 1k ticks or so"""
-    displaymax = 1000
     miny       = 5E4        # Actual range is 0..4095
     maxy       = -5E4
     starttick  = 0
