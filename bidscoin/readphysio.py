@@ -94,27 +94,27 @@ def readparsefile(fn: Union[bytes,Path], logdatatype, firsttime, expectedsamples
                 if value != logdatatype:
                     LOGGER.error(f"Expected [{logdatatype}] data, found [{value}]? Check filenames?"); raise
             if varname == 'SampleTime':
-                if logdatatype =='ACQUISITION_INFO':
+                if logdatatype == 'ACQUISITION_INFO':
                     LOGGER.error(f"Invalid [{varname}] parameter found"); raise
                 sampletime = int(value)
             if varname == 'NumSlices':
-                if logdatatype !='ACQUISITION_INFO':
+                if logdatatype != 'ACQUISITION_INFO':
                     LOGGER.error(f"Invalid [{varname}] parameter found"); raise
                 nrslices = int(value)
             if varname == 'NumVolumes':
-                if logdatatype !='ACQUISITION_INFO':
+                if logdatatype != 'ACQUISITION_INFO':
                     LOGGER.error(f"Invalid [{varname}] parameter found"); raise
                 nrvolumes = int(value)
             if varname == 'FirstTime':
-                if logdatatype !='ACQUISITION_INFO':
+                if logdatatype != 'ACQUISITION_INFO':
                     LOGGER.error(f"Invalid [{varname}] parameter found"); raise
                 firsttime = int(value)
             if varname == 'LastTime':
-                if logdatatype !='ACQUISITION_INFO':
+                if logdatatype != 'ACQUISITION_INFO':
                     LOGGER.error(f"Invalid [{varname}] parameter found"); raise
                 lasttime = int(value)
             if varname == 'NumEchoes':
-                if logdatatype !='ACQUISITION_INFO':
+                if logdatatype != 'ACQUISITION_INFO':
                     LOGGER.error(f"Invalid [{varname}] parameter found"); raise
                 nrechoes = int(value)
 
@@ -129,7 +129,7 @@ def readparsefile(fn: Union[bytes,Path], logdatatype, firsttime, expectedsamples
                 continue
 
             # Store data in output array based on the file type
-            if logdatatype =='ACQUISITION_INFO':
+            if logdatatype == 'ACQUISITION_INFO':
 
                 if ('nrvolumes' not in locals() or nrvolumes < 1 or
                     'nrslices'  not in locals() or nrslices  < 1 or
