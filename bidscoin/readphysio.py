@@ -208,8 +208,7 @@ def plotphysio(physio:dict, actualsamples: int):
         newminy  = min(miny, mintrace)
         newmaxy  = max(maxy, maxtrace)
         if scale and (newminy != mintrace or newmaxy != maxtrace):
-            trace = trace * ((newmaxy - newminy) / (maxtrace - mintrace))
-            trace = trace - min(trace) + newminy
+            trace = trace * (newmaxy - newminy)/(maxtrace - mintrace) - mintrace + newminy
         plt.plot(trace, color=color, label=logdatatype)
         miny, maxy = newminy, newmaxy
 
