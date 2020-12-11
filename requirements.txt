@@ -1,5 +1,6 @@
 pandas
-pydicom>=1.0.2
+matplotlib
+pydicom>=2
 PyQt5>=5.12.1
 ruamel.yaml>=0.15.35
 coloredlogs
