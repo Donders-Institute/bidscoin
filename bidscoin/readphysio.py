@@ -201,7 +201,7 @@ def plotphysio(physio:dict, actualsamples: int, displaymax: int=1000):
     def plot_trace(logdatatype, scale, color):
         """Plot the trace and update minimum and maximum values"""
         if logdatatype not in physio: return
-        nonlocal miny, maxy, starttick, endtick
+        nonlocal miny, maxy
         trace    = physio[logdatatype][starttick:endtick]
         mintrace = int(min(trace))      # type(ACQ)==bool
         maxtrace = int(max(trace))
