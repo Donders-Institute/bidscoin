@@ -192,7 +192,7 @@ def plotphysio(physio:dict, actualsamples: int):
     displaymax = 1000
     miny       = 5E4        # Actual range is 0..4095
     maxy       = -5E4
-    starttick  = 1
+    starttick  = 0
     endtick    = actualsamples
     if actualsamples > displaymax:
         starttick = int(actualsamples / 2) - int(displaymax / 2)
