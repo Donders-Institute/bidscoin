@@ -11,16 +11,16 @@ You can also import the internal 'readphysio` library function to obtain active 
 ECG2, ECG3, ECG4, RESP, PULS, EXT and EXT2 signals:
 
 physio['UUID']:     unique identifier string for this measurement
-physio['SliceMap']: [2 x Volumes x Slices]  [1:2,:,:] = start & finish time stamp of each volume/slice
-physio['ACQ']:      [total scan time x 1]   True if acquisition is active at this time; False if not
-physio['ECG1']:     [total scan time x 1]   ECG signal on this channel
-physio['ECG2']:     [total scan time x 1]   [..]
-physio['ECG3']:     [total scan time x 1]   [..]
-physio['ECG4']:     [total scan time x 1]   [..]
-physio['RESP']:     [total scan time x 1]   RESP signal on this channel
-physio['PULS']:     [total scan time x 1]   PULS signal on this channel
-physio['EXT']:      [total scan time x 1]   True if EXT signal detected; False if not
-physio['EXT2']:     [total scan time x 1]   True if EXT2 signal detected; False if not
+physio['SliceMap']: [2 x Volumes x Slices]     [1:2,:,:] = start & finish time stamp of each volume/slice
+physio['ACQ']:      [size = total scan time]   True if acquisition is active at this time; False if not
+physio['ECG1']:     [size = total scan time]   ECG signal on this channel
+physio['ECG2']:     [size = total scan time]   [..]
+physio['ECG3']:     [size = total scan time]   [..]
+physio['ECG4']:     [size = total scan time]   [..]
+physio['RESP']:     [size = total scan time]   RESP signal on this channel
+physio['PULS']:     [size = total scan time]   PULS signal on this channel
+physio['EXT']:      [size = total scan time]   True if EXT signal detected; False if not
+physio['EXT2']:     [size = total scan time]   True if EXT2 signal detected; False if not
 
 The unit of time is clock ticks (2.5 ms per tick).
 """
@@ -241,16 +241,16 @@ def readphysio(fn: Union[str,Path], showplot: bool=0) -> dict:
 
     Returns active (i.e. non-zero) physio traces for ECG1, ECG2, ECG3, ECG4, RESP, PULS, EXT and EXT2 signals:
     physio['UUID']:     unique identifier string for this measurement
-    physio['SliceMap']: [2 x Volumes x Slices]  [1:2,:,:] = start & finish time stamp of each volume/slice
-    physio['ACQ']:      [total scan time x 1]   True if acquisition is active at this time; False if not
-    physio['ECG1']:     [total scan time x 1]   ECG signal on this channel
-    physio['ECG2']:     [total scan time x 1]   [..]
-    physio['ECG3']:     [total scan time x 1]   [..]
-    physio['ECG4']:     [total scan time x 1]   [..]
-    physio['RESP']:     [total scan time x 1]   RESP signal on this channel
-    physio['PULS']:     [total scan time x 1]   PULS signal on this channel
-    physio['EXT']:      [total scan time x 1]   True if EXT signal detected; False if not
-    physio['EXT2']:     [total scan time x 1]   True if EXT2 signal detected; False if not
+    physio['SliceMap']: [2 x Volumes x Slices]     [1:2,:,:] = start & finish time stamp of each volume/slice
+    physio['ACQ']:      [size = total scan time]   True if acquisition is active at this time; False if not
+    physio['ECG1']:     [size = total scan time]   ECG signal on this channel
+    physio['ECG2']:     [size = total scan time]   [..]
+    physio['ECG3']:     [size = total scan time]   [..]
+    physio['ECG4']:     [size = total scan time]   [..]
+    physio['RESP']:     [size = total scan time]   RESP signal on this channel
+    physio['PULS']:     [size = total scan time]   PULS signal on this channel
+    physio['EXT']:      [size = total scan time]   True if EXT signal detected; False if not
+    physio['EXT2']:     [size = total scan time]   True if EXT2 signal detected; False if not
 
     The unit of time is clock ticks (2.5 ms per tick).
 
