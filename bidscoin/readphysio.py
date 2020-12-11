@@ -203,13 +203,13 @@ def plotphysio(physio:dict, actualsamples: int):
         if logdatatype not in physio: return
         nonlocal miny, maxy
         trace    = physio[logdatatype][starttick:endtick]
-        mintrace = int(min(trace))        # type(ACQ)==bool
+        mintrace = int(min(trace))      # type(ACQ)==bool
         maxtrace = int(max(trace))
         if scale and (miny != mintrace or maxy != maxtrace):
             trace = (trace - mintrace) * (maxy - miny)/(maxtrace - mintrace) + miny
         else:
-            miny = min(miny, mintrace)
-            maxy = max(maxy, maxtrace)
+            miny = min(miny, mintrace)  # Update the (non-local) minimum
+            maxy = max(maxy, maxtrace)  # Update the (non-local) maximum
         if logdatatype == 'ACQ':
             plt.fill_between(np.arange(trace.size), trace, color=color, label=logdatatype)
         else:
