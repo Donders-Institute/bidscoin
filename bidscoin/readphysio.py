@@ -371,16 +371,16 @@ def readphysio(fn: Union[str,Path], showplot: bool=0) -> dict:
     physio             = dict()
     physio['UUID']     = UUID1
     physio['SliceMap'] = slicemap
-    physio['ACQ']      = ACQ.flatten()
+    physio['ACQ']      = ACQ[:,0]
     if foundECG and ECG.any():
         if sum(ECG[:,0]): physio['ECG1'] = ECG[:,0]
         if sum(ECG[:,1]): physio['ECG2'] = ECG[:,1]
         if sum(ECG[:,2]): physio['ECG3'] = ECG[:,2]
         if sum(ECG[:,3]): physio['ECG4'] = ECG[:,3]
     if foundRESP and RESP.any():
-        if sum(RESP):     physio['RESP'] = RESP.flatten()
+        if sum(RESP):     physio['RESP'] = RESP[:,0]
     if foundPULS and PULS.any():
-        if sum(PULS):     physio['PULS'] = PULS.flatten()
+        if sum(PULS):     physio['PULS'] = PULS[:,0]
     if foundEXT and EXT.any():
         if sum(EXT[:,0]): physio['EXT']  = EXT[:,0]
         if sum(EXT[:,1]): physio['EXT2'] = EXT[:,1]
