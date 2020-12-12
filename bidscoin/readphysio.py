@@ -271,7 +271,7 @@ def readphysio(fn: Union[str,Path], showplot: bool=0) -> dict:
     if bids.is_dicomfile(fn):
         LOGGER.info(f"Reading physio DICOM file: {fn}")
         dicomdata    = dcmread(fn, force=True)          # The DICM tag may be missing for anonymized DICOM files
-        manufacturer = dicomdata['Manufacturer'].value
+        manufacturer = dicomdata.get('Manufacturer')
         physiotag    = tag.Tag('7fe1', '1010')
         if manufacturer != 'SIEMENS':
             LOGGER.warning(f"Unsupported manufacturer: {manufacturer}, this function is designed for SIEMENS advanced physiological logging data")
