@@ -67,7 +67,7 @@ def readparsefile(fn: Union[bytes,Path], logdatatype, firsttime, expectedsamples
         lines = fn.decode('UTF-8').splitlines()
     elif isinstance(fn, Path):
         # Otherwise, fn must be a filename
-        LOGGER.info(f"Reading: {fn}")
+        LOGGER.info(f"Reading physio log-file: {fn}")
         with fn.open('r') as fid:
             lines = fid.read().splitlines()
     else:
@@ -268,13 +268,13 @@ def readphysio(fn: Union[str,Path], showplot: bool=0) -> dict:
     fn = Path(fn).resolve()
 
     # First, check if the base is pointing to a DICOM we should extract
-    if fn.is_file():
-        LOGGER.info(f"Attempting to read physio DICOM format file from: {fn}")
-        manufacturer = bids.get_dicomfield('Manufacturer', fn)  # Performs checks
+    if bids.is_dicomfile(fn):
+        LOGGER.info(f"Reading physio DICOM file: {fn}")
+        dicomdata    = dcmread(fn, force=True)          # The DICM tag may be missing for anonymized DICOM files
+        manufacturer = dicomdata['Manufacturer'].value
+        physiotag    = tag.Tag('7fe1', '1010')
         if manufacturer != 'SIEMENS':
             LOGGER.warning(f"Unsupported manufacturer: {manufacturer}, this function is designed for SIEMENS advanced physiological logging data")
-        dicomdata = dcmread(fn, force=True)                     # The DICM tag may be missing for anonymized DICOM files
-        physiotag = tag.Tag('7fe1', '1010')
         if dicomdata.get('ImageType')==['ORIGINAL','PRIMARY','RAWDATA','PHYSIO'] and dicomdata.get(physiotag).private_creator=='SIEMENS CSA NON-IMAGE':
             physiodata = dicomdata[physiotag].value
             rows       = int(dicomdata.AcquisitionNumber)
