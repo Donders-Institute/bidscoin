@@ -187,14 +187,15 @@ def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, exp
         return traces, UUID
 
 
-def plotphysio(physio:dict, actualsamples: int, showsamples: int=1000):
+def plotphysio(physio:dict, showsamples: int=1000):
     """Plot the samples of the physiological traces in a rudimentary way. If too large, only plot the middle 1k ticks or so"""
-    miny       = 5E4        # Actual range is 0..4095
-    maxy       = -5E4
-    starttick  = 0
-    endtick    = actualsamples
-    if actualsamples > showsamples:
-        starttick = int(actualsamples / 2) - int(showsamples / 2)
+    miny      = 5E4        # Actual range is 0..4095
+    maxy      = -5E4
+    nrsamples = len(physio['ACQ'])
+    starttick = 0
+    endtick   = nrsamples
+    if nrsamples > showsamples:
+        starttick = int(nrsamples / 2) - int(showsamples / 2)
         endtick   = starttick + showsamples
     ticks = np.arange(starttick, endtick)
 
@@ -387,7 +388,7 @@ def readphysio(fn: Union[str,Path], showsamples: int=0) -> dict:
 
     # Plot the data if requested
     if showsamples:
-        plotphysio(physio, actualsamples, showsamples)
+        plotphysio(physio, showsamples)
 
     return physio
 
