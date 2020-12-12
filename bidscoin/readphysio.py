@@ -46,14 +46,14 @@ LOGGER = logging.getLogger('bidscoin')
 bids.setup_logging()
 
 
-def readparsefile(fn: Union[bytes,Path], logdatatype, firsttime, expectedsamples) -> tuple:
+def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, expectedsamples: int=0) -> tuple:
     """
     Read and parse physiologal traces from the DICOM data or from individual logfiles
 
     :param fn:              Physiological data from DICOM or the basename of the physiological logfiles
     :param logdatatype:     Datatype that is extracted, e.g. 'ECG', 'RESP', 'PULS' or 'EXT'. Additional meta data is extracted if 'ACQUISITION_INFO'
-    :param firsttime:
-    :param expectedsamples:
+    :param firsttime:       Value from readparsefile('ACQUISITION_INFO', ..) that has to be passed for parsing other logdatatypes
+    :param expectedsamples: Number of samples of the parsed traces
     :return:                traces, UUID[, nrslices, nrvolumes, firsttime, lasttime, nrechoes] ([..] if logdatatype=='ACQUISITION_INFO')
     """
 
@@ -143,8 +143,8 @@ def readparsefile(fn: Union[bytes,Path], logdatatype, firsttime, expectedsamples
                     traces = np.zeros((2, nrvolumes, nrslices, nrechoes), dtype=int)
                 curvol    = int(dataitems[0])
                 curslc    = int(dataitems[1])
-                curstart  = int(dataitems[2])   # TODO: check zero/one based indexing
-                curfinish = int(dataitems[3])   # TODO: check zero/one based indexing
+                curstart  = int(dataitems[2])
+                curfinish = int(dataitems[3])
                 if len(dataitems[4]):
                     cureco = int(dataitems[4])
                     if traces[:, curvol, curslc, cureco].any():
@@ -178,7 +178,7 @@ def readparsefile(fn: Union[bytes,Path], logdatatype, firsttime, expectedsamples
                         traces = np.zeros((expectedsamples, 1), dtype=int)
                     chaidx = 0
 
-                traces[curstart:curstart+int(sampletime), chaidx] = curvalue * np.ones(sampletime, dtype=int)
+                traces[curstart:curstart+int(sampletime), chaidx] = curvalue
 
     if logdatatype == 'ACQUISITION_INFO':
         traces = traces - firsttime
@@ -187,15 +187,15 @@ def readparsefile(fn: Union[bytes,Path], logdatatype, firsttime, expectedsamples
         return traces, UUID
 
 
-def plotphysio(physio:dict, actualsamples: int, displaymax: int=1000):
+def plotphysio(physio:dict, actualsamples: int, showsamples: int=1000):
     """Plot the samples of the physiological traces in a rudimentary way. If too large, only plot the middle 1k ticks or so"""
     miny       = 5E4        # Actual range is 0..4095
     maxy       = -5E4
     starttick  = 0
     endtick    = actualsamples
-    if actualsamples > displaymax:
-        starttick = int(actualsamples / 2) - int(displaymax / 2)
-        endtick   = starttick + displaymax
+    if actualsamples > showsamples:
+        starttick = int(actualsamples / 2) - int(showsamples / 2)
+        endtick   = starttick + showsamples
     ticks = np.arange(starttick, endtick)
 
     def plot_trace(logdatatype, scale, color):
@@ -231,7 +231,7 @@ def plotphysio(physio:dict, actualsamples: int, displaymax: int=1000):
     plt.show()
 
 
-def readphysio(fn: Union[str,Path], showplot: bool=0) -> dict:
+def readphysio(fn: Union[str,Path], showsamples: int=0) -> dict:
     """
     Read and plots active (i.e. non-zero) signals from SIEMENS advanced physiological log / DICOM files (>=R013, >=VD13A)
     E. Auerbach, CMRR, 2015-9
@@ -255,7 +255,7 @@ def readphysio(fn: Union[str,Path], showplot: bool=0) -> dict:
     The unit of time is clock ticks (2.5 ms per tick).
 
     :param fn:          Either the fullpath of the DICOM file or the basename of the PHYSIO logfiles (fullpath without suffix and file extension, e.g. 'foo/bar/Physio_DATE_TIME_UUID')
-    :param showplot:    Plots the physiological traces if True
+    :param showsamples: The nr of plotted samples of the physiological traces (nothing is plotted if showsamples==0)
     :return:            The active (non-zero) physio traces for ECG1, ECG2, ECG3, ECG4, RESP, PULS, EXT, and EXT2 signals
     """
 
@@ -327,10 +327,10 @@ def readphysio(fn: Union[str,Path], showplot: bool=0) -> dict:
         LOGGER.error('No data files (ECG/RESP/PULS/EXT) found'); raise
 
     # Read in and / or parse the data
-    slicemap, UUID1, nrslices, nrvolumes, firsttime, lasttime, nrechoes = readparsefile(fnINFO, 'ACQUISITION_INFO', 0, 0)
+    slicemap, UUID1, nrslices, nrvolumes, firsttime, lasttime, nrechoes = readparsefile(fnINFO, 'ACQUISITION_INFO')
     if lasttime <= firsttime:
         LOGGER.error(f"Last timestamp {lasttime} is not greater than first timestamp {firsttime}, aborting..."); raise
-    actualsamples   = lasttime - firsttime + 1  # TODO: check zero/one indexing
+    actualsamples   = lasttime - firsttime + 1
     expectedsamples = actualsamples + 8         # Some padding at the end for worst case EXT sample at last timestamp
 
     if foundECG:
@@ -365,7 +365,7 @@ def readphysio(fn: Union[str,Path], showplot: bool=0) -> dict:
     for v in range(nrvolumes):
         for s in range(nrslices):
             for e in range(nrechoes):
-                ACQ[slicemap[0,v,s,e]:slicemap[1,v,s,e]+1, 0] = True        # TODO: check zero/one based indexing
+                ACQ[slicemap[0,v,s,e]:slicemap[1,v,s,e]+1, 0] = True
 
     # Only return active (nonzero) physio traces
     physio             = dict()
@@ -386,8 +386,8 @@ def readphysio(fn: Union[str,Path], showplot: bool=0) -> dict:
         if sum(EXT[:,1]): physio['EXT2'] = EXT[:,1]
 
     # Plot the data if requested
-    if showplot:
-        plotphysio(physio, actualsamples)
+    if showsamples:
+        plotphysio(physio, actualsamples, showsamples)
 
     return physio
 
@@ -402,11 +402,12 @@ def main():
                                      description=__doc__,
                                      epilog='examples:\n'
                                             '  readphysio /project/3022026.01/sub-001/MR000000.dcm\n'
-                                            '  readphysio /project/3022026.01/sub-001/Physio_20200428_142451_007e910e-02d9-4d7a-8fdb-8e3568be8322 -s\n ')
-    parser.add_argument('filename', help="Either the fullpath of the DICOM file or the basename of the PHYSIO logfiles (fullpath without suffix and file extension, e.g. 'foo/bar/Physio_DATE_TIME_UUID'")
+                                            '  readphysio -s 2000 /project/3022026.01/sub-001/Physio_20200428_142451_007e910e-02d9-4d7a-8fdb-8e3568be8322\n ')
+    parser.add_argument('filename',           help="Either the fullpath of the DICOM file or the basename of the PHYSIO logfiles (fullpath without suffix and file extension, e.g. 'foo/bar/Physio_DATE_TIME_UUID'")
+    parser.add_argument('-s','--showsamples', help='The nr of plotted samples of the physiological traces (default 1000, nothing is plotted if 0)', default=1000, type=int)
     args = parser.parse_args()
 
-    readphysio(fn=args.filename, showplot=True)
+    readphysio(fn=args.filename, showsamples=args.showsamples)
 
 
 if __name__ == "__main__":
