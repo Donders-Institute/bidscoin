@@ -188,7 +188,7 @@ def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, exp
 
 
 def plotphysio(physio:dict, showsamples: int=1000):
-    """Plot the samples of the physiological traces in a rudimentary way. If too large, only plot the middle 1k ticks or so"""
+    """Plot the samples of the physiological traces in a rudimentary way. If too large, only plot the middle 'showsamples' ticks"""
     miny, maxy = 5E4, -5E4      # Actual range is 0..4095
     nrsamples  = len(physio['ACQ'])
     starttick  = 0
