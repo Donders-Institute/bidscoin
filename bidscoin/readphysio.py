@@ -211,7 +211,7 @@ def plotphysio(physio:dict, showsamples: int=1000):
             miny = min(miny, mintrace)  # Update the (non-local) minimum
             maxy = max(maxy, maxtrace)  # Update the (non-local) maximum
         if logdatatype == 'ACQ':
-            plt.fill_between(ticks, trace, color=color, label=logdatatype)
+            plt.fill_between(ticks, trace, miny, color=color, label=logdatatype)
         else:
             plt.plot(ticks, trace, color=color, label=logdatatype)
 
