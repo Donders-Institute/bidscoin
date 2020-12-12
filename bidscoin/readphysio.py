@@ -178,7 +178,7 @@ def readparsefile(fn: Union[bytes,Path], logdatatype, firsttime, expectedsamples
                         traces = np.zeros((expectedsamples, 1), dtype=int)
                     chaidx = 0
 
-                traces[curstart:curstart+int(sampletime), chaidx] = curvalue * np.ones((sampletime), dtype=int)
+                traces[curstart:curstart+int(sampletime), chaidx] = curvalue * np.ones(sampletime, dtype=int)
 
     if logdatatype == 'ACQUISITION_INFO':
         traces = traces - firsttime

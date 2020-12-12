@@ -1,5 +1,6 @@
 pandas
 matplotlib
+numpy
 pydicom>=2
 PyQt5>=5.12.1
 ruamel.yaml>=0.15.35
