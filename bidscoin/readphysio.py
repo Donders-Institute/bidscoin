@@ -215,7 +215,7 @@ def plotphysio(physio:dict, showsamples: int=1000):
         else:
             plt.plot(ticks, trace, color=color, label=logdatatype)
 
-    plt.figure(num=f"readphysio UUID: {physio['UUID']}")
+    plt.figure(num=f"readphysio: UUID {physio['UUID']}")
     plot_trace('ECG1', False, 'green')
     plot_trace('ECG2', False, 'green')
     plot_trace('ECG3', False, 'green')
