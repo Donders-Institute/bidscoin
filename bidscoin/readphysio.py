@@ -189,11 +189,10 @@ def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, exp
 
 def plotphysio(physio:dict, showsamples: int=1000):
     """Plot the samples of the physiological traces in a rudimentary way. If too large, only plot the middle 1k ticks or so"""
-    miny      = 5E4        # Actual range is 0..4095
-    maxy      = -5E4
-    nrsamples = len(physio['ACQ'])
-    starttick = 0
-    endtick   = nrsamples
+    miny, maxy = 5E4, -5E4      # Actual range is 0..4095
+    nrsamples  = len(physio['ACQ'])
+    starttick  = 0
+    endtick    = nrsamples
     if nrsamples > showsamples:
         starttick = int(nrsamples / 2) - int(showsamples / 2)
         endtick   = starttick + showsamples
@@ -260,10 +259,7 @@ def readphysio(fn: Union[str,Path], showsamples: int=0) -> dict:
     :return:            The active (non-zero) physio traces for ECG1, ECG2, ECG3, ECG4, RESP, PULS, EXT, and EXT2 signals
     """
 
-    foundECG  = False
-    foundRESP = False
-    foundPULS = False
-    foundEXT  = False
+    foundECG = foundRESP = foundPULS = foundEXT = False
 
     # Check input
     fn = Path(fn).resolve()
