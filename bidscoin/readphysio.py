@@ -33,14 +33,14 @@ from pathlib import Path
 try:
     from bidscoin import bids
 except ImportError:
-    import bids         # This should work if bidscoin was not pip-installed
+    import bids         # This should work if bidscoin was not pip-installed. NB: the bidscoin dependenccy can be easily removed (see comments)
 
 # This is the file format this function expects; must match log file version
 expectedversion = 'EJA_1'
 
 # Set-up logging
 LOGGER = logging.getLogger('bidscoin')
-bids.setup_logging()
+bids.setup_logging()    # A simple alternative set-up (not dependend on bidscoin): coloredlogs.install()
 
 
 def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, expectedsamples: int=0) -> tuple:
@@ -267,7 +267,7 @@ def readphysio(fn: Union[str,Path], showsamples: int=0) -> dict:
     fn = Path(fn).resolve()
 
     # First, check if the base is pointing to a DICOM we should extract
-    if bids.is_dicomfile(fn):
+    if bids.is_dicomfile(fn):                           # A simple alternative check (not dependend on bidscoin): if fn.is_file()
         LOGGER.info(f"Reading physio DICOM file: {fn}")
         dicomdata    = dcmread(fn, force=True)          # The DICM tag may be missing for anonymized DICOM files
         manufacturer = dicomdata.get('Manufacturer')
@@ -403,7 +403,7 @@ def main():
                                             '  readphysio /project/3022026.01/sub-001/MR000000.dcm\n'
                                             '  readphysio -s 2000 /project/3022026.01/sub-001/Physio_20200428_142451_007e910e-02d9-4d7a-8fdb-8e3568be8322\n ')
     parser.add_argument('filename',           help="Either the fullpath of the DICOM file or the basename of the PHYSIO logfiles (fullpath without suffix and file extension, e.g. 'foo/bar/Physio_DATE_TIME_UUID'")
-    parser.add_argument('-s','--showsamples', help='The nr of plotted samples of the physiological traces (default 1000, nothing is plotted if 0)', default=1000, type=int)
+    parser.add_argument('-s','--showsamples', help='The nr of plotted samples of the physiological traces (default: 1000, nothing is plotted if 0)', default=1000, type=int)
     args = parser.parse_args()
 
     readphysio(fn=args.filename, showsamples=args.showsamples)

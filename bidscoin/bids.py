@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Module with helper functions
 
