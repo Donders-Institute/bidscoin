@@ -24,23 +24,20 @@ The unit of time is clock ticks (2.5 ms per tick).
 
 
 import struct
-import logging
+import logging, coloredlogs
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import Union
 from pydicom import dcmread, tag
 from pathlib import Path
-try:
-    from bidscoin import bids
-except ImportError:
-    import bids         # This should work if bidscoin was not pip-installed. NB: the bidscoin dependenccy can be easily removed (see comments)
 
 # This is the file format this function expects; must match log file version
 expectedversion = 'EJA_1'
 
 # Set-up logging
-LOGGER = logging.getLogger('bidscoin')
-bids.setup_logging()    # A simple alternative set-up (not dependend on bidscoin): coloredlogs.install()
+LOGGER = logging.getLogger('readphysio')
+if not LOGGER.handlers:
+    coloredlogs.install(fmt='%(asctime)s - %(name)s - %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 
 def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, expectedsamples: int=0) -> tuple:
@@ -267,7 +264,7 @@ def readphysio(fn: Union[str,Path], showsamples: int=0) -> dict:
     fn = Path(fn).resolve()
 
     # First, check if the base is pointing to a DICOM we should extract
-    if bids.is_dicomfile(fn):                           # A simple alternative check (not dependend on bidscoin): if fn.is_file()
+    if fn.is_file():
         LOGGER.info(f"Reading physio DICOM file: {fn}")
         dicomdata    = dcmread(fn, force=True)          # The DICM tag may be missing for anonymized DICOM files
         manufacturer = dicomdata.get('Manufacturer')
