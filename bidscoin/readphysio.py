@@ -263,16 +263,14 @@ def readphysio(fn: Union[str,Path], showsamples: int=0) -> dict:
     # Check input
     fn = Path(fn).resolve()
 
-    # First, check if the base is pointing to a DICOM we should extract
+    # First, check if the input points to a valid DICOM file. If so, extract the physiological data
     if fn.is_file():
         LOGGER.info(f"Reading physio DICOM file: {fn}")
         dicomdata    = dcmread(fn, force=True)          # The DICM tag may be missing for anonymized DICOM files
         manufacturer = dicomdata.get('Manufacturer')
         physiotag    = tag.Tag('7fe1', '1010')
-        if 'Modality' not in dicomdata:
-            LOGGER.error('Invalid DICOM image'); raise
-        if manufacturer != 'SIEMENS':
-            LOGGER.warning(f"Unsupported manufacturer: {manufacturer}, this function is designed for SIEMENS advanced physiological logging data")
+        if manufacturer in dicomdata and manufacturer != 'SIEMENS':
+            LOGGER.warning(f"Unsupported manufacturer: '{manufacturer}', this function is designed for SIEMENS advanced physiological logging data")
         if dicomdata.get('ImageType')==['ORIGINAL','PRIMARY','RAWDATA','PHYSIO'] and dicomdata.get(physiotag).private_creator=='SIEMENS CSA NON-IMAGE':
             physiodata = dicomdata[physiotag].value
             rows       = int(dicomdata.AcquisitionNumber)
@@ -324,7 +322,7 @@ def readphysio(fn: Union[str,Path], showsamples: int=0) -> dict:
     if not foundECG and not foundRESP and not foundPULS and not foundEXT:
         LOGGER.error('No data files (ECG/RESP/PULS/EXT) found'); raise
 
-    # Read in and / or parse the data
+    # Read in and/or parse the data
     slicemap, UUID1, nrslices, nrvolumes, firsttime, lasttime, nrechoes = readparsefile(fnINFO, 'ACQUISITION_INFO')
     if lasttime <= firsttime:
         LOGGER.error(f"Last timestamp {lasttime} is not greater than first timestamp {firsttime}, aborting..."); raise

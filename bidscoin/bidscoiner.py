@@ -20,9 +20,10 @@ import logging
 import shutil
 from pathlib import Path
 try:
-    from bidscoin import bids
+    from bidscoin import bids, physio
 except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
+    import physio as phys
 
 LOGGER = logging.getLogger('bidscoin')
 
@@ -127,85 +128,87 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
             for ext in ('.nii.gz', '.nii', '.json', '.bval', '.bvec', 'tsv.gz'):
                 (bidsmodality/bidsname).with_suffix(ext).unlink(missing_ok=True)
 
-        # Convert physiological log files first (dcm2niix can't handle these)
+        # Convert physiological log files (dcm2niix can't handle these)
         if run['bids']['suffix'] == 'physio':
-            LOGGER.info('Converting physiological logfiles is not (yet) supported')
-            continue
+            if bids.get_dicomfile(source, 2).name:
+                LOGGER.warning(f"Found > 1 DICOM file in {source}, using: {sourcefile}")
+            phys.physio2tsv(sourcefile, bidsmodality/bidsname)
 
         # Convert the source-files in the run folder to nifti's in the BIDS-folder
-        command = '{path}dcm2niix {args} -f "{filename}" -o "{outfolder}" "{source}"'.format(
-            path      = bidsmap['Options']['dcm2niix']['path'],
-            args      = bidsmap['Options']['dcm2niix']['args'],
-            filename  = bidsname,
-            outfolder = bidsmodality,
-            source    = source)
-        if not bids.run_command(command):
-            continue
+        else:
+            command = '{path}dcm2niix {args} -f "{filename}" -o "{outfolder}" "{source}"'.format(
+                path      = bidsmap['Options']['dcm2niix']['path'],
+                args      = bidsmap['Options']['dcm2niix']['args'],
+                filename  = bidsname,
+                outfolder = bidsmodality,
+                source    = source)
+            if not bids.run_command(command):
+                continue
 
-        # Replace uncropped output image with the cropped one
-        if '-x y' in bidsmap['Options']['dcm2niix']['args']:
-            for filename in sorted(bidsmodality.glob(bidsname + '*_Crop_*')):                                   # e.g. *_Crop_1.nii.gz
-                ext         = ''.join(filename.suffixes)
-                newfilename = str(filename).rsplit(ext,1)[0].rsplit('_Crop_',1)[0] + ext
-                LOGGER.info(f"Found dcm2niix _Crop_ suffix, replacing original file\n{filename} ->\n{newfilename}")
-                filename.replace(newfilename)
+            # Replace uncropped output image with the cropped one
+            if '-x y' in bidsmap['Options']['dcm2niix']['args']:
+                for filename in sorted(bidsmodality.glob(bidsname + '*_Crop_*')):                                   # e.g. *_Crop_1.nii.gz
+                    ext         = ''.join(filename.suffixes)
+                    newfilename = str(filename).rsplit(ext,1)[0].rsplit('_Crop_',1)[0] + ext
+                    LOGGER.info(f"Found dcm2niix _Crop_ suffix, replacing original file\n{filename} ->\n{newfilename}")
+                    filename.replace(newfilename)
 
-        # Rename all files ending with _c%d, _e%d and _ph (and any combination of these) that are added by dcm2niix for multi-coil data, multi-echo data and phase data
-        # See: https://github.com/rordenlab/dcm2niix/blob/master/FILENAMING.md
-        jsonfiles = []                                                                                          # Collect the associated json-files (for updating them later) -- possibly > 1
-        for dcm2niisuffix in ('_c', '_e', '_ph', '_i', '_Eq', '_real', '_imaginary', '_MoCo', '_t', '_Tilt'):
-            for filename in sorted(bidsmodality.glob(f"{bidsname}*{dcm2niisuffix}*")):
-                ext             = ''.join(filename.suffixes)
-                basepath, index = str(filename).rsplit(ext)[0].rsplit(dcm2niisuffix,1)                          # basepath = the name without the added stuff (i.e. bidsmodality/bidsname), index = added dcm2niix index (e.g. _c1 -> index=1)
-                basesuffix      = basepath.rsplit('_',1)[1]                                                     # The BIDS suffix, e.g. basepath = *_magnitude1 -> basesuffix=magnitude1
-                index           = index.split('_')[0].zfill(2)                                                  # Zero padd as specified in the BIDS-standard (assuming two digits is sufficient); strip following suffices (fieldmaps produce *_e2_ph files)
+            # Rename all files ending with _c%d, _e%d and _ph (and any combination of these) that are added by dcm2niix for multi-coil data, multi-echo data and phase data
+            # See: https://github.com/rordenlab/dcm2niix/blob/master/FILENAMING.md
+            jsonfiles = []                                                                                          # Collect the associated json-files (for updating them later) -- possibly > 1
+            for dcm2niisuffix in ('_c', '_e', '_ph', '_i', '_Eq', '_real', '_imaginary', '_MoCo', '_t', '_Tilt'):
+                for filename in sorted(bidsmodality.glob(f"{bidsname}*{dcm2niisuffix}*")):
+                    ext             = ''.join(filename.suffixes)
+                    basepath, index = str(filename).rsplit(ext)[0].rsplit(dcm2niisuffix,1)                          # basepath = the name without the added stuff (i.e. bidsmodality/bidsname), index = added dcm2niix index (e.g. _c1 -> index=1)
+                    basesuffix      = basepath.rsplit('_',1)[1]                                                     # The BIDS suffix, e.g. basepath = *_magnitude1 -> basesuffix=magnitude1
+                    index           = index.split('_')[0].zfill(2)                                                  # Zero padd as specified in the BIDS-standard (assuming two digits is sufficient); strip following suffices (fieldmaps produce *_e2_ph files)
 
-                # Phase data may be stored in the magnitude data source (e.g. Philips fieldmaps)
-                if 'ph' in filename.name.rsplit(ext)[0].split('_'):
-                    basepath = basepath.replace('_magnitude', '_phase')
+                    # Phase data may be stored in the magnitude data source (e.g. Philips fieldmaps)
+                    if 'ph' in filename.name.rsplit(ext)[0].split('_'):
+                        basepath = basepath.replace('_magnitude', '_phase')
 
-                # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first(?) coil/echo image -> add it when we encounter a **_e2/_c2 file
-                # https://github.com/rordenlab/dcm2niix/issues/381
-                if dcm2niisuffix in ('_c','_e') and int(index)==2 and basesuffix not in ['magnitude1', 'phase1']:    # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handled below)
-                    filename_ce = Path(basepath + ext)                                                          # The file without the _c1/_e1 suffix
-                    if dcm2niisuffix=='_e' and bids.get_bidsvalue(basepath, 'echo'):
-                        newbasepath_ce = Path(bids.get_bidsvalue(basepath, 'echo', '1'))
+                    # This is a special hack: dcm2niix does not always add a _c/_e suffix for the first(?) coil/echo image -> add it when we encounter a **_e2/_c2 file
+                    # https://github.com/rordenlab/dcm2niix/issues/381
+                    if dcm2niisuffix in ('_c','_e') and int(index)==2 and basesuffix not in ['magnitude1', 'phase1']:    # For fieldmaps: *_magnitude1_e[index] -> *_magnitude[index] (This is handled below)
+                        filename_ce = Path(basepath + ext)                                                          # The file without the _c1/_e1 suffix
+                        if dcm2niisuffix=='_e' and bids.get_bidsvalue(basepath, 'echo'):
+                            newbasepath_ce = Path(bids.get_bidsvalue(basepath, 'echo', '1'))
+                        else:
+                            newbasepath_ce = Path(bids.get_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper()[1:] + '1'.zfill(len(index))))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
+                        newfilename_ce = newbasepath_ce.with_suffix(ext)                                            # The file as it should have been
+                        if filename_ce.is_file():
+                            if filename_ce != newfilename_ce:
+                                LOGGER.warning(f"Found no dcm2niix {dcm2niisuffix} suffix for image instance 1, renaming\n{filename_ce} ->\n{newfilename_ce}\nConsider upgrading dcm2niix: https://github.com/rordenlab/dcm2niix/issues/381")
+                                if newfilename_ce.is_file():
+                                    LOGGER.warning(f"Overwriting existing {newfilename_ce} file -- check your results carefully!")
+                                filename_ce.replace(newfilename_ce)
+                            if ext == '.json':
+                                jsonfiles.append(newbasepath_ce.with_suffix('.json'))
+
+                    # Patch the basepath with the dcm2niix suffix info (we can't rely on the basepath info here because Siemens can e.g. put multiple echos in one series / run-folder)
+                    if dcm2niisuffix=='_e' and bids.get_bidsvalue(basepath, 'echo') and index:
+                        basepath = bids.get_bidsvalue(basepath, 'echo', str(int(index)))                            # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
+
+                    elif dcm2niisuffix=='_e' and basesuffix in ('magnitude1','magnitude2','phase1','phase2') and index:  # i.e. modality == 'fmap'
+                        basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_magnitude1_e[index] -> *_magnitude[index] and *_phase1_e[index]_ph -> *_phase[index]
+
+                    elif dcm2niisuffix=='_e' and basesuffix=='phasediff' and index:                                 # i.e. modality == 'fmap'
+                        pass
+
                     else:
-                        newbasepath_ce = Path(bids.get_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper()[1:] + '1'.zfill(len(index))))  # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
-                    newfilename_ce = newbasepath_ce.with_suffix(ext)                                            # The file as it should have been
-                    if filename_ce.is_file():
-                        if filename_ce != newfilename_ce:
-                            LOGGER.warning(f"Found no dcm2niix {dcm2niisuffix} suffix for image instance 1, renaming\n{filename_ce} ->\n{newfilename_ce}\nConsider upgrading dcm2niix: https://github.com/rordenlab/dcm2niix/issues/381")
-                            if newfilename_ce.is_file():
-                                LOGGER.warning(f"Overwriting existing {newfilename_ce} file -- check your results carefully!")
-                            filename_ce.replace(newfilename_ce)
-                        if ext == '.json':
-                            jsonfiles.append(newbasepath_ce.with_suffix('.json'))
+                        basepath = bids.get_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper()[1:] + index)         # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
 
-                # Patch the basepath with the dcm2niix suffix info (we can't rely on the basepath info here because Siemens can e.g. put multiple echos in one series / run-folder)
-                if dcm2niisuffix=='_e' and bids.get_bidsvalue(basepath, 'echo') and index:
-                    basepath = bids.get_bidsvalue(basepath, 'echo', str(int(index)))                            # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
-
-                elif dcm2niisuffix=='_e' and basesuffix in ('magnitude1','magnitude2','phase1','phase2') and index:  # i.e. modality == 'fmap'
-                    basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_magnitude1_e[index] -> *_magnitude[index] and *_phase1_e[index]_ph -> *_phase[index]
-
-                elif dcm2niisuffix=='_e' and basesuffix=='phasediff' and index:                                 # i.e. modality == 'fmap'
-                    pass
-
-                else:
-                    basepath = bids.get_bidsvalue(basepath, 'dummy', dcm2niisuffix.upper()[1:] + index)         # --> append to acq-label, may need to be elaborated for future BIDS standards, supporting multi-coil data
-
-                # Save the file with a new name
-                newbidsname = str(Path(basepath).name)
-                if runindex.startswith('<<') and runindex.endswith('>>'):
-                    newbidsname = bids.increment_runindex(bidsmodality, newbidsname, ext)                       # Update the runindex now that the acq-label has changed
-                newfilename = (bidsmodality/newbidsname).with_suffix(ext)
-                LOGGER.info(f"Found dcm2niix {dcm2niisuffix} suffix, renaming\n{filename} ->\n{newfilename}")
-                if newfilename.is_file():
-                    LOGGER.warning(f"Overwriting existing {newfilename} file -- check your results carefully!")
-                filename.replace(newfilename)
-                if ext == '.json':
-                    jsonfiles.append((bidsmodality/newbidsname).with_suffix('.json'))
+                    # Save the file with a new name
+                    newbidsname = str(Path(basepath).name)
+                    if runindex.startswith('<<') and runindex.endswith('>>'):
+                        newbidsname = bids.increment_runindex(bidsmodality, newbidsname, ext)                       # Update the runindex now that the acq-label has changed
+                    newfilename = (bidsmodality/newbidsname).with_suffix(ext)
+                    LOGGER.info(f"Found dcm2niix {dcm2niisuffix} suffix, renaming\n{filename} ->\n{newfilename}")
+                    if newfilename.is_file():
+                        LOGGER.warning(f"Overwriting existing {newfilename} file -- check your results carefully!")
+                    filename.replace(newfilename)
+                    if ext == '.json':
+                        jsonfiles.append((bidsmodality/newbidsname).with_suffix('.json'))
 
         # Loop over and adapt all the newly produced json files and write to the scans.tsv file (every nifti-file comes with a json-file)
         if not jsonfiles:
