@@ -20,6 +20,9 @@ physio['EXT1']:     [length = nr of samples]   True if EXT/EXT1 signal detected;
 physio['EXT2']:     [length = nr of samples]   True if EXT2 signal detected; False if not
 
 The unit of time is clock ticks (2.5 ms per tick).
+
+This function has been derived from the readCMRRPhysio.m function of https://github.com/CMRR-C2P/MB
+@author: Marcel Zwiers
 """
 
 
