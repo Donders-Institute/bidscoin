@@ -269,7 +269,7 @@ def readphysio(fn: Union[str,Path], showsamples: int=0) -> dict:
         dicomdata    = dcmread(fn, force=True)          # The DICM tag may be missing for anonymized DICOM files
         manufacturer = dicomdata.get('Manufacturer')
         physiotag    = tag.Tag('7fe1', '1010')
-        if manufacturer in dicomdata and manufacturer != 'SIEMENS':
+        if manufacturer and manufacturer != 'SIEMENS':
             LOGGER.warning(f"Unsupported manufacturer: '{manufacturer}', this function is designed for SIEMENS advanced physiological logging data")
         if dicomdata.get('ImageType')==['ORIGINAL','PRIMARY','RAWDATA','PHYSIO'] and dicomdata.get(physiotag).private_creator=='SIEMENS CSA NON-IMAGE':
             physiodata = dicomdata[physiotag].value
