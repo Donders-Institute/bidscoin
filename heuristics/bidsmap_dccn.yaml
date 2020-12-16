@@ -59,6 +59,8 @@ DICOM:
       PhaseEncodingDirection: ~
     bids: &anatbids_dicom
       acq: <SeriesDescription>
+      inv: ~
+      part: ~
       ce: ~
       rec: ~
       run: <<1>>
@@ -86,6 +88,32 @@ DICOM:
     bids:
       <<: *anatbids_dicom
       suffix: T1map
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_dicom
+      SeriesDescription: ['*mp2rage*UNI*', '*MP2RAGE*UNI*', '*MP2Rage*UNI*', '*mp2rage*uni*', '*MP2RAGE*uni*', '*MP2Rage*uni*']
+      MRAcquisitionType: 3D
+    bids:
+      <<: *anatbids_dicom
+      suffix: UNIT1
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_dicom
+      SeriesDescription: ['*mp2rage*INV1*', '*MP2RAGE*INV1*', '*MP2Rage*INV1*', '*mp2rage*inv1*', '*MP2RAGE*inv1*', '*MP2Rage*inv1*']
+      MRAcquisitionType: 3D
+    bids:
+      <<: *anatbids_dicom
+      inv: '1'
+      suffix: MP2RAGE
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_dicom
+      SeriesDescription: ['*mp2rage*INV2*', '*MP2RAGE*INV2*', '*MP2Rage*INV2*', '*mp2rage*inv2*', '*MP2RAGE*inv2*', '*MP2Rage*inv2*']
+      MRAcquisitionType: 3D
+    bids:
+      <<: *anatbids_dicom
+      inv: '2'
+      suffix: MP2RAGE
   - provenance: ~
     attributes:
       <<: *anatattributes_dicom
@@ -467,6 +495,8 @@ DICOM:
       PhaseEncodingDirection: ~
     bids:
       acq: <ProtocolName>
+      inv: ~
+      part: ~
       rec: <MRAcquisitionType><ImageType>
       ce: ~
       task: ~
@@ -475,51 +505,6 @@ DICOM:
       run: <<1>>
       mod: <SeriesDescription>
       suffix: <ScanningSequence>
-  - provenance: ~
-    attributes:
-      <<: *extra_data_attributes_dicom
-      SeriesDescription: ['*mp2rage*UNI*', '*MP2RAGE*UNI*', '*MP2Rage*UNI*', '*mp2rage*uni*', '*MP2RAGE*uni*', '*MP2Rage*uni*']
-      MRAcquisitionType: 3D
-    bids:
-      acq: <ProtocolName>
-      rec: ~
-      ce: ~
-      task: ~
-      echo: ~
-      dir: ~
-      run: <<1>>
-      mod: ~
-      suffix: uni
-  - provenance: ~
-    attributes:
-      <<: *extra_data_attributes_dicom
-      SeriesDescription: ['*mp2rage*INV1*', '*MP2RAGE*INV1*', '*MP2Rage*INV1*', '*mp2rage*inv1*', '*MP2RAGE*inv1*', '*MP2Rage*inv1*']
-      MRAcquisitionType: 3D
-    bids:
-      acq: <ProtocolName>
-      rec: ~
-      ce: ~
-      task: ~
-      echo: ~
-      dir: ~
-      run: <<1>>
-      mod: ~
-      suffix: inv1
-  - provenance: ~
-    attributes:
-      <<: *extra_data_attributes_dicom
-      SeriesDescription: ['*mp2rage*INV2*', '*MP2RAGE*INV2*', '*MP2Rage*INV2*', '*mp2rage*inv2*', '*MP2RAGE*inv2*', '*MP2Rage*inv2*']
-      MRAcquisitionType: 3D
-    bids:
-      acq: <ProtocolName>
-      rec: ~
-      ce: ~
-      task: ~
-      echo: ~
-      dir: ~
-      run: <<1>>
-      mod: ~
-      suffix: inv2
   - provenance: ~
     attributes:
       <<: *extra_data_attributes_dicom
@@ -639,6 +624,8 @@ PAR:
       prep_direction: ~
     bids: &anatbids_par
       acq: <protocol_name>
+      inv: ~
+      part: ~
       ce: ~
       rec: ~
       run: <<1>>
@@ -665,6 +652,32 @@ PAR:
     bids:
       <<: *anatbids_par
       suffix: T1map
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_par
+      SeriesDescription: ['*mp2rage*UNI*', '*MP2RAGE*UNI*', '*MP2Rage*UNI*', '*mp2rage*uni*', '*MP2RAGE*uni*', '*MP2Rage*uni*']
+      MRAcquisitionType: 3D
+    bids:
+      <<: *anatbids_par
+      suffix: UNIT1
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_par
+      SeriesDescription: ['*mp2rage*INV1*', '*MP2RAGE*INV1*', '*MP2Rage*INV1*', '*mp2rage*inv1*', '*MP2RAGE*inv1*', '*MP2Rage*inv1*']
+      MRAcquisitionType: 3D
+    bids:
+      <<: *anatbids_par
+      inv: '1'
+      suffix: MP2RAGE
+  - provenance: ~
+    attributes:
+      <<: *anatattributes_par
+      SeriesDescription: ['*mp2rage*INV2*', '*MP2RAGE*INV2*', '*MP2Rage*INV2*', '*mp2rage*inv2*', '*MP2RAGE*inv2*', '*MP2Rage*inv2*']
+      MRAcquisitionType: 3D
+    bids:
+      <<: *anatbids_par
+      inv: '2'
+      suffix: MP2RAGE
   - provenance: ~
     attributes:
       <<: *anatattributes_par
@@ -978,6 +991,8 @@ PAR:
       prep_direction: ~
     bids:
       acq: <protocol_name>
+      inv: ~
+      part: ~
       rec: <tech>
       ce: ~
       task: ~

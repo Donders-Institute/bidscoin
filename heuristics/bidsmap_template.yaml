@@ -59,11 +59,23 @@ DICOM:
       PhaseEncodingDirection: ~
     bids: &anatbids_dicom
       acq: <SeriesDescription>
+      inv: ~
+      part: ~
       ce: ~
       rec: ~
       run: <<1>>
       mod: ~
       suffix: T1w
+  - provenance: ~
+    attributes: *anatattributes_dicom
+    bids:
+      <<: *anatbids_dicom
+      suffix: UNIT1
+  - provenance: ~
+    attributes: *anatattributes_dicom
+    bids:
+      <<: *anatbids_dicom
+      suffix: MP2RAGE
   - provenance: ~
     attributes: *anatattributes_dicom
     bids:
@@ -354,6 +366,8 @@ DICOM:
       PhaseEncodingDirection: ~
     bids:
       acq: <ProtocolName>
+      inv: ~
+      part: ~
       rec: <MRAcquisitionType><ImageType>
       ce: ~
       task: ~
@@ -416,11 +430,23 @@ PAR:
       prep_direction: ~
     bids: &anatbids_par
       acq: <protocol_name>
+      inv: ~
+      part: ~
       ce: ~
       rec: ~
       run: <<1>>
       mod: ~
       suffix: T1w
+  - provenance: ~
+    attributes: *anatattributes_par
+    bids:
+      <<: *anatbids_par
+      suffix: UNIT1
+  - provenance: ~
+    attributes: *anatattributes_par
+    bids:
+      <<: *anatbids_par
+      suffix: MP2RAGE
   - provenance: ~
     attributes: *anatattributes_par
     bids:
@@ -711,6 +737,8 @@ PAR:
       prep_direction: ~
     bids:
       acq: <protocol_name>
+      inv: ~
+      part: ~
       rec: <tech>
       ce: ~
       task: ~
@@ -775,6 +803,8 @@ FileSystem:
       FileExt: ~
     bids: &anatbids_file
       acq: <FileName>
+      inv: ~
+      part: ~
       rec: ~
       ce: ~
       task: ~

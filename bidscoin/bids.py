@@ -34,10 +34,10 @@ yaml = YAML()
 
 logger = logging.getLogger('bidscoin')
 
-bidsmodalities  = ('fmap', 'anat', 'func', 'dwi', 'beh', 'pet')                                         # NB: get_matching_run() uses this order to search for a match
+bidsmodalities  = ('fmap', 'anat', 'func', 'dwi', 'beh', 'pet')                                                         # NB: get_matching_run() uses this order to search for a match
 ignoremodality  = 'leave_out'
 unknownmodality = 'extra_data'
-bidslabels      = ('task', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'suffix', 'IntendedFor')    # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
+bidslabels      = ('task', 'acq', 'inv', 'part', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'suffix', 'IntendedFor')     # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
 
 heuristics_folder = Path(__file__).parents[1]/'heuristics'
 bidsmap_template  = heuristics_folder/'bidsmap_template.yaml'
@@ -1250,14 +1250,16 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
     if modality == 'anat':
 
         # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_ce-<label>][_rec-<label>][_run-<index>][_mod-<label>]_suffix
-        bidsname = '{sub}{_ses}{_acq}{_ce}{_rec}{_run}{_mod}_{suffix}'.format(
+        bidsname = '{sub}{_ses}{_acq}{_inv}{_part}{_ce}{_rec}{_run}{_mod}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            _acq    = add_prefix('_acq-', run['bids']['acq']),
-            _ce     = add_prefix('_ce-',  run['bids']['ce']),
-            _rec    = add_prefix('_rec-', run['bids']['rec']),
-            _run    = add_prefix('_run-', runindex),
-            _mod    = add_prefix('_mod-', run['bids']['mod']),
+            _acq    = add_prefix('_acq-',  run['bids']['acq']),
+            _inv    = add_prefix('_inv-',  run['bids']['inv']),
+            _part   = add_prefix('_part-', run['bids']['part']),
+            _ce     = add_prefix('_ce-',   run['bids']['ce']),
+            _rec    = add_prefix('_rec-',  run['bids']['rec']),
+            _run    = add_prefix('_run-',  runindex),
+            _mod    = add_prefix('_mod-',  run['bids']['mod']),
             suffix  = run['bids']['suffix'])
 
     elif modality == 'func':
