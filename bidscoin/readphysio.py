@@ -36,6 +36,7 @@ from pathlib import Path
 
 # This is the file format this function expects; must match log file version
 expectedversion = 'EJA_1'
+Freq            = 1 / 2.5E-3                # Sampling frequency (the unit of SIEMENS ticks is 2.5 ms)
 
 # Set-up logging
 LOGGER = logging.getLogger('readphysio')
@@ -357,7 +358,7 @@ def readphysio(fn: Union[str,Path], showsamples: int=0) -> dict:
     LOGGER.info(f"Echoes per slc/vol:  {nrechoes}")
     LOGGER.info(f"First timestamp:     {firsttime}")
     LOGGER.info(f"Last timestamp:      {lasttime}")
-    LOGGER.info(f"Total scan duration: {actualsamples} ticks = {actualsamples*2.5/1000:.4f} s")
+    LOGGER.info(f"Total scan duration: {actualsamples} ticks = {actualsamples/Freq:.4f} s")
 
     LOGGER.info('Formatting ACQ data...')
     ACQ = np.full((expectedsamples, 1), False)
