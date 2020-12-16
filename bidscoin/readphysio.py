@@ -33,9 +33,9 @@ from typing import Union
 from pydicom import dcmread, tag
 from pathlib import Path
 
-# This is the file format this function expects; must match log file version
-expectedversion = 'EJA_1'
-Freq            = 1 / 2.5E-3                # Sampling frequency (the unit of SIEMENS ticks is 2.5 ms)
+# Defaults
+LOGVERSION = 'EJA_1'                # This is the file format this function expects; must match log file version
+FREQ       = 1 / 2.5E-3             # Sampling frequency (the unit of SIEMENS ticks is 2.5 ms)
 
 # Set-up logging
 LOGGER = logging.getLogger('readphysio')
@@ -85,8 +85,8 @@ def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, exp
             if varname == 'UUID':
                 UUID = value
             if varname == 'LogVersion':
-                if value != expectedversion:
-                    LOGGER.error(f"File format [{value}] not supported by this function (expected [{expectedversion}])"); raise
+                if value != LOGVERSION:
+                    LOGGER.error(f"File format [{value}] not supported by this function (expected [{LOGVERSION}])"); raise
             if varname == 'LogDataType':
                 if value != logdatatype:
                     LOGGER.error(f"Expected [{logdatatype}] data, found [{value}]? Check filenames?"); raise
@@ -356,7 +356,7 @@ def readphysio(fn: Union[str,Path], showsamples: int=0) -> dict:
     LOGGER.info(f"Echoes per slc/vol:  {nrechoes}")
     LOGGER.info(f"First timestamp:     {firsttime}")
     LOGGER.info(f"Last timestamp:      {lasttime}")
-    LOGGER.info(f"Total scan duration: {actualsamples} ticks = {actualsamples/Freq:.4f} s")
+    LOGGER.info(f"Total scan duration: {actualsamples} ticks = {actualsamples / FREQ:.4f} s")
 
     LOGGER.info('Formatting ACQ data...')
     ACQ = np.full((expectedsamples, 1), False)
@@ -368,7 +368,7 @@ def readphysio(fn: Union[str,Path], showsamples: int=0) -> dict:
     # Only return active (nonzero) physio traces
     physio             = dict()
     physio['UUID']     = UUID1
-    physio['Freq']     = Freq
+    physio['Freq']     = FREQ
     physio['SliceMap'] = slicemap
     physio['ACQ']      = ACQ[:,0]
     if foundECG and ECG.any():
