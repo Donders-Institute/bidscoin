@@ -65,30 +65,30 @@ def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, exp
                     LOGGER.error(f"File format [{value}] not supported by this function (expected [{LOGVERSION}])"); raise NotImplementedError(f"Version{value}")
             if varname == 'LogDataType':
                 if value != logdatatype:
-                    LOGGER.error(f"Expected [{logdatatype}] data, found [{value}]? Check filenames?"); raise RuntimeError(value)
+                    LOGGER.error(f"Expected [{logdatatype}] data, found [{value}]? Check filenames?"); raise ValueError(value)
             if varname == 'SampleTime':
                 if logdatatype == 'ACQUISITION_INFO':
-                    LOGGER.error(f"Invalid [{varname}] parameter found"); raise RuntimeError(varname)
+                    LOGGER.error(f"Invalid [{varname}] parameter found"); raise ValueError(varname)
                 sampletime = int(value)
             if varname == 'NumSlices':
                 if logdatatype != 'ACQUISITION_INFO':
-                    LOGGER.error(f"Invalid [{varname}] parameter found"); raise RuntimeError(varname)
+                    LOGGER.error(f"Invalid [{varname}] parameter found"); raise ValueError(varname)
                 nrslices = int(value)
             if varname == 'NumVolumes':
                 if logdatatype != 'ACQUISITION_INFO':
-                    LOGGER.error(f"Invalid [{varname}] parameter found"); raise RuntimeError(varname)
+                    LOGGER.error(f"Invalid [{varname}] parameter found"); raise ValueError(varname)
                 nrvolumes = int(value)
             if varname == 'FirstTime':
                 if logdatatype != 'ACQUISITION_INFO':
-                    LOGGER.error(f"Invalid [{varname}] parameter found"); raise RuntimeError(varname)
+                    LOGGER.error(f"Invalid [{varname}] parameter found"); raise ValueError(varname)
                 firsttime = int(value)
             if varname == 'LastTime':
                 if logdatatype != 'ACQUISITION_INFO':
-                    LOGGER.error(f"Invalid [{varname}] parameter found"); raise RuntimeError(varname)
+                    LOGGER.error(f"Invalid [{varname}] parameter found"); raise ValueError(varname)
                 lasttime = int(value)
             if varname == 'NumEchoes':
                 if logdatatype != 'ACQUISITION_INFO':
-                    LOGGER.error(f"Invalid [{varname}] parameter found"); raise RuntimeError(varname)
+                    LOGGER.error(f"Invalid [{varname}] parameter found"); raise ValueError(varname)
                 nrechoes = int(value)
 
         else:
@@ -121,7 +121,7 @@ def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, exp
                 if len(dataitems[4]):
                     cureco = int(dataitems[4])
                     if traces[:, curvol, curslc, cureco].any():
-                        LOGGER.error(f"Received duplicate timing data for vol{curvol} slc{curslc} eco{cureco}"); raise RuntimeError(fn)
+                        LOGGER.error(f"Received duplicate timing data for vol{curvol} slc{curslc} eco{cureco}"); raise ValueError(fn)
                 else:
                     cureco = 0
                     if traces[:, curvol, curslc, cureco]:
@@ -138,13 +138,13 @@ def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, exp
                     if traces is None:
                         traces = np.zeros((expectedsamples, 4), dtype=int)
                     if curchannel not in ['ECG1', 'ECG2', 'ECG3', 'ECG4']:
-                        LOGGER.error(f"Invalid ECG channel ID [{curchannel}]"); raise RuntimeError(curchannel)
+                        LOGGER.error(f"Invalid ECG channel ID [{curchannel}]"); raise ValueError(curchannel)
                     chaidx = ['ECG1', 'ECG2', 'ECG3', 'ECG4'].index(curchannel)
                 elif logdatatype == 'EXT':
                     if traces is None:
                         traces = np.zeros((expectedsamples, 2), dtype=int)
                     if curchannel not in ['EXT', 'EXT1', 'EXT2']:
-                        LOGGER.error(f"Invalid EXT channel ID [{curchannel}]"); raise RuntimeError(curchannel)
+                        LOGGER.error(f"Invalid EXT channel ID [{curchannel}]"); raise ValueError(curchannel)
                     if curchannel == 'EXT':
                         chaidx = 0
                     else:
@@ -210,7 +210,7 @@ def readphysio(fn: Union[str,Path]) -> dict:
             columns    = len(physiodata)/rows
             nrfiles    = columns/1024
             if columns%1 or nrfiles%1:
-                LOGGER.error(f"Invalid image size: [rows x columns] = [{rows} x {columns}]"); raise RuntimeError
+                LOGGER.error(f"Invalid image size: [rows x columns] = [{rows} x {columns}]"); raise ValueError
             # Encoded DICOM format: columns = 1024*nrfiles
             #                       first row: uint32 datalen, uint32 filenamelen, char[filenamelen] filename
             #                       remaining rows: char[datalen] data
@@ -258,29 +258,29 @@ def readphysio(fn: Union[str,Path]) -> dict:
     # Read in and/or parse the data
     slicemap, UUID1, nrslices, nrvolumes, firsttime, lasttime, nrechoes = readparsefile(fnINFO, 'ACQUISITION_INFO')
     if lasttime <= firsttime:
-        LOGGER.error(f"Last timestamp {lasttime} is not greater than first timestamp {firsttime}, aborting..."); raise RuntimeError(lasttime)
+        LOGGER.error(f"Last timestamp {lasttime} is not greater than first timestamp {firsttime}, aborting..."); raise ValueError(lasttime)
     actualsamples   = lasttime - firsttime + 1
     expectedsamples = actualsamples + 8         # Some padding at the end for worst case EXT sample at last timestamp
 
     if foundECG:
         ECG, UUID2 = readparsefile(fnECG, 'ECG', firsttime, expectedsamples)
         if UUID1 != UUID2:
-            LOGGER.error('UUID mismatch between Info and ECG files'); raise RuntimeError(UUID2)
+            LOGGER.error('UUID mismatch between Info and ECG files'); raise ValueError(UUID2)
 
     if foundRESP:
         RESP, UUID3 = readparsefile(fnRESP, 'RESP', firsttime, expectedsamples)
         if UUID1 != UUID3:
-            LOGGER.error('UUID mismatch between Info and RESP files'); raise RuntimeError(UUID3)
+            LOGGER.error('UUID mismatch between Info and RESP files'); raise ValueError(UUID3)
 
     if foundPULS:
         PULS, UUID4 = readparsefile(fnPULS, 'PULS', firsttime, expectedsamples)
         if UUID1 != UUID4:
-            LOGGER.error('UUID mismatch between Info and PULS files'); raise RuntimeError(UUID4)
+            LOGGER.error('UUID mismatch between Info and PULS files'); raise ValueError(UUID4)
 
     if foundEXT:
         EXT, UUID5 = readparsefile(fnEXT, 'EXT', firsttime, expectedsamples)
         if UUID1 != UUID5:
-            LOGGER.error('UUID mismatch between Info and EXT files'); raise RuntimeError(UUID5)
+            LOGGER.error('UUID mismatch between Info and EXT files'); raise ValueError(UUID5)
 
     LOGGER.info(f"Slices in scan:      {nrslices}")
     LOGGER.info(f"Volumes in scan:     {nrvolumes}")
