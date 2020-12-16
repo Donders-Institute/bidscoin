@@ -23,7 +23,7 @@ try:
     from bidscoin import bids, physio
 except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
-    import physio as phys
+    import physio as ph
 
 LOGGER = logging.getLogger('bidscoin')
 
@@ -132,7 +132,8 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
         if run['bids']['suffix'] == 'physio':
             if bids.get_dicomfile(source, 2).name:
                 LOGGER.warning(f"Found > 1 DICOM file in {source}, using: {sourcefile}")
-            phys.physio2tsv(sourcefile, bidsmodality/bidsname)
+            physio = ph.readphysio(sourcefile)
+            ph.physio2tsv(physio, bidsmodality/bidsname)
 
         # Convert the source-files in the run folder to nifti's in the BIDS-folder
         else:
