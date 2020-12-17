@@ -59,7 +59,6 @@ DICOM:
       PhaseEncodingDirection: ~
     bids: &anatbids_dicom
       acq: <SeriesDescription>
-      inv: ~
       part: ~
       ce: ~
       rec: ~
@@ -75,6 +74,7 @@ DICOM:
     attributes: *anatattributes_dicom
     bids:
       <<: *anatbids_dicom
+      inv: ~
       suffix: MP2RAGE
   - provenance: ~
     attributes: *anatattributes_dicom
@@ -226,6 +226,11 @@ DICOM:
       dir: ~
       run: <<1>>
       suffix: dwi
+  - provenance: ~
+    attributes: *dwiattributes_dicom
+    bids:
+      <<: *dwibids_dicom
+      suffix: physio
   - provenance: ~
     attributes: *dwiattributes_dicom
     bids:
@@ -430,7 +435,6 @@ PAR:
       prep_direction: ~
     bids: &anatbids_par
       acq: <protocol_name>
-      inv: ~
       part: ~
       ce: ~
       rec: ~
@@ -446,6 +450,7 @@ PAR:
     attributes: *anatattributes_par
     bids:
       <<: *anatbids_par
+      inv: ~
       suffix: MP2RAGE
   - provenance: ~
     attributes: *anatattributes_par
@@ -595,6 +600,11 @@ PAR:
       dir: ~
       run: <<1>>
       suffix: dwi
+  - provenance: ~
+    attributes: *dwiattributes_par
+    bids:
+      <<: *dwibids_par
+      suffix: physio
   - provenance: ~
     attributes: *dwiattributes_par
     bids:
