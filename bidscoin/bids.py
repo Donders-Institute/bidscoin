@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Module with helper functions
 
@@ -15,20 +14,21 @@ import re
 import logging
 import coloredlogs
 import subprocess
-import pydicom
 import nibabel
 import tempfile
 import tarfile
 import zipfile
 import fnmatch
-try:
-    from bidscoin import dicomsort
-except ImportError:
-    import dicomsort  # This should work if bidscoin was not pip-installed
+import pydicom
+from pydicom.fileset import FileSet
 from distutils.dir_util import copy_tree
 from typing import Union, List, Tuple
 from pathlib import Path
 from importlib import util
+try:
+    from bidscoin import dicomsort
+except ImportError:
+    import dicomsort  # This should work if bidscoin was not pip-installed
 from ruamel.yaml import YAML
 yaml = YAML()
 
@@ -272,14 +272,14 @@ def is_dicomfile(file: Path) -> bool:
     if file.is_file():
         if file.stem.startswith('.'):
             logger.warning(f'File is hidden: {file}')
-        with file.open('rb') as dcmfile:
-            dcmfile.seek(0x80, 1)
-            if dcmfile.read(4) == b'DICM':
+        with file.open('rb') as dicomfile:
+            dicomfile.seek(0x80, 1)
+            if dicomfile.read(4) == b'DICM':
                 return True
             else:
                 logger.debug(f"Reading non-standard DICOM file: {file}")
-                dicomdict = pydicom.dcmread(str(file), force=True)       # The DICM tag may be missing for anonymized DICOM files
-                return 'Modality' in dicomdict
+                dicomdata = pydicom.dcmread(file, force=True)       # The DICM tag may be missing for anonymized DICOM files
+                return 'Modality' in dicomdata
     else:
         return False
 
@@ -410,11 +410,8 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
     """
 
     if (folder/'DICOMDIR').is_file():
-        dicomdir = pydicom.filereader.read_dicomdir(str(folder/'DICOMDIR'))
-        files    = [folder.joinpath(*image.ReferencedFileID) for patient in dicomdir.patient_records
-                                                             for study   in patient.children
-                                                             for series  in study.children
-                                                             for image   in series.children]
+        dicomdir = FileSet(folder/'DICOMDIR')
+        files    = [Path(file.path) for file in dicomdir]
     else:
         files = sorted(folder.iterdir())
 
@@ -615,19 +612,19 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
     else:
         try:
             if dicomfile != _DICOMFILE_CACHE:
-                dicomdict = pydicom.dcmread(str(dicomfile), force=True)      # The DICM tag may be missing for anonymized DICOM files
-                if 'Modality' not in dicomdict:
+                dicomdata = pydicom.dcmread(dicomfile, force=True)      # The DICM tag may be missing for anonymized DICOM files
+                if 'Modality' not in dicomdata:
                     raise ValueError(f'Cannot read {dicomfile}')
-                _DICOMDICT_CACHE = dicomdict
+                _DICOMDICT_CACHE = dicomdata
                 _DICOMFILE_CACHE = dicomfile
             else:
-                dicomdict = _DICOMDICT_CACHE
+                dicomdata = _DICOMDICT_CACHE
 
-            value = dicomdict.get(tagname)
+            value = dicomdata.get(tagname)
 
             # Try a recursive search
             if not value:
-                for elem in dicomdict.iterall():
+                for elem in dicomdata.iterall():
                     if elem.name==tagname:
                         value = elem.value
                         continue

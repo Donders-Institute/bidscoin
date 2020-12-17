@@ -311,7 +311,7 @@ class Ui_MainWindow(MainWindow):
             cell = self.samples_table.item(row, 5)
             sourcefile = Path(cell.text())
             if bids.is_dicomfile(sourcefile):
-                sourcedata = pydicom.dcmread(str(sourcefile), force=True)
+                sourcedata = pydicom.dcmread(sourcefile, force=True)
             elif bids.is_parfile(sourcefile):
                 with open(sourcefile, 'r') as parfid:
                     sourcedata = parfid.read()
@@ -778,7 +778,7 @@ class Ui_MainWindow(MainWindow):
         """Opens the inspect window when a source file in the file-tree tab is double-clicked"""
         sourcefile = Path(self.model.fileInfo(index).absoluteFilePath())
         if bids.is_dicomfile(sourcefile):
-            sourcedata = pydicom.dcmread(str(sourcefile), force=True)
+            sourcedata = pydicom.dcmread(sourcefile, force=True)
         elif bids.is_parfile(sourcefile):
             with open(sourcefile, 'r') as parfid:
                 sourcedata = parfid.read()
@@ -1054,7 +1054,7 @@ class EditDialog(QDialog):
         if row == 1 and column == 1:
             sourcefile = Path(self.target_run['provenance'])
             if bids.is_dicomfile(sourcefile):
-                sourcedata = pydicom.dcmread(str(sourcefile), force=True)
+                sourcedata = pydicom.dcmread(sourcefile, force=True)
             elif bids.is_parfile(sourcefile):
                 with open(sourcefile, 'r') as parfid:
                     sourcedata = parfid.read()

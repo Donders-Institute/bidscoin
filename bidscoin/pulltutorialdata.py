@@ -42,8 +42,7 @@ def getdata(tutorialfolder) -> None:
 def main():
     """Console script usage"""
 
-    class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
-        pass
+    class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter): pass
 
     parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
                                      description=__doc__,
