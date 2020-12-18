@@ -98,42 +98,42 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
             continue
 
         # Get a matching run from the bidsmap
-        run, modality, index = bids.get_matching_run(sourcefile, bidsmap, dataformat)
+        run, datatype, index = bids.get_matching_run(sourcefile, bidsmap, dataformat)
 
         # Check if we should ignore this run
-        if modality == bids.ignoredatatype:
+        if datatype == bids.ignoredatatype:
             LOGGER.info(f"Leaving out: {source}")
             continue
 
         # Check if we already know this run
         if index is None:
-            LOGGER.error(f"Skipping unknown '{modality}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+            LOGGER.error(f"Skipping unknown '{datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
             continue
 
         LOGGER.info(f"Processing: {source}")
 
         # Create the BIDS session/datatype folder
-        bidsmodality = bidsses/modality
-        bidsmodality.mkdir(parents=True, exist_ok=True)
+        bidsdatatype = bidsses/datatype
+        bidsdatatype.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        bidsname = bids.get_bidsname(subid, sesid, modality, run)
+        bidsname = bids.get_bidsname(subid, sesid, datatype, run)
         runindex = run['bids']['run']
         if runindex.startswith('<<') and runindex.endswith('>>'):
-            bidsname = bids.increment_runindex(bidsmodality, bidsname)
+            bidsname = bids.increment_runindex(bidsdatatype, bidsname)
 
         # Check if file already exists (-> e.g. when a static runindex is used). TODO: Future dcm2niix versions may contain a `-w 1` option: https://github.com/rordenlab/dcm2niix/issues/276
-        if (bidsmodality/bidsname).with_suffix('.json').is_file():
-            LOGGER.warning(f"{bidsmodality/bidsname}.* already exists and will be deleted -- check your results carefully!")
+        if (bidsdatatype/bidsname).with_suffix('.json').is_file():
+            LOGGER.warning(f"{bidsdatatype/bidsname}.* already exists and will be deleted -- check your results carefully!")
             for ext in ('.nii.gz', '.nii', '.json', '.bval', '.bvec', 'tsv.gz'):
-                (bidsmodality/bidsname).with_suffix(ext).unlink(missing_ok=True)
+                (bidsdatatype/bidsname).with_suffix(ext).unlink(missing_ok=True)
 
         # Convert physiological log files (dcm2niix can't handle these)
         if run['bids']['suffix'] == 'physio':
             if bids.get_dicomfile(source, 2).name:
                 LOGGER.warning(f"Found > 1 DICOM file in {source}, using: {sourcefile}")
             physio = ph.readphysio(sourcefile)
-            ph.physio2tsv(physio, bidsmodality/bidsname)
+            ph.physio2tsv(physio, bidsdatatype/bidsname)
 
         # Convert the source-files in the run folder to nifti's in the BIDS-folder
         else:
@@ -141,14 +141,14 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                 path      = bidsmap['Options']['dcm2niix']['path'],
                 args      = bidsmap['Options']['dcm2niix']['args'],
                 filename  = bidsname,
-                outfolder = bidsmodality,
+                outfolder = bidsdatatype,
                 source    = source)
             if not bids.run_command(command):
                 continue
 
             # Replace uncropped output image with the cropped one
             if '-x y' in bidsmap['Options']['dcm2niix']['args']:
-                for filename in sorted(bidsmodality.glob(bidsname + '*_Crop_*')):                                   # e.g. *_Crop_1.nii.gz
+                for filename in sorted(bidsdatatype.glob(bidsname + '*_Crop_*')):                                   # e.g. *_Crop_1.nii.gz
                     ext         = ''.join(filename.suffixes)
                     newfilename = str(filename).rsplit(ext,1)[0].rsplit('_Crop_',1)[0] + ext
                     LOGGER.info(f"Found dcm2niix _Crop_ suffix, replacing original file\n{filename} ->\n{newfilename}")
@@ -158,9 +158,9 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
             # See: https://github.com/rordenlab/dcm2niix/blob/master/FILENAMING.md
             jsonfiles = []                                                                                          # Collect the associated json-files (for updating them later) -- possibly > 1
             for dcm2niisuffix in ('_c', '_e', '_ph', '_i', '_Eq', '_real', '_imaginary', '_MoCo', '_t', '_Tilt'):
-                for filename in sorted(bidsmodality.glob(f"{bidsname}*{dcm2niisuffix}*")):
+                for filename in sorted(bidsdatatype.glob(f"{bidsname}*{dcm2niisuffix}*")):
                     ext             = ''.join(filename.suffixes)
-                    basepath, index = str(filename).rsplit(ext)[0].rsplit(dcm2niisuffix,1)                          # basepath = the name without the added stuff (i.e. bidsmodality/bidsname), index = added dcm2niix index (e.g. _c1 -> index=1)
+                    basepath, index = str(filename).rsplit(ext)[0].rsplit(dcm2niisuffix,1)                          # basepath = the name without the added stuff (i.e. bidsdatatype/bidsname), index = added dcm2niix index (e.g. _c1 -> index=1)
                     basesuffix      = basepath.rsplit('_',1)[1]                                                     # The BIDS suffix, e.g. basepath = *_magnitude1 -> basesuffix=magnitude1
                     index           = index.split('_')[0].zfill(2)                                                  # Zero padd as specified in the BIDS-standard (assuming two digits is sufficient); strip following suffices (fieldmaps produce *_e2_ph files)
 
@@ -202,18 +202,18 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     # Save the file with a new name
                     newbidsname = str(Path(basepath).name)
                     if runindex.startswith('<<') and runindex.endswith('>>'):
-                        newbidsname = bids.increment_runindex(bidsmodality, newbidsname, ext)                       # Update the runindex now that the acq-label has changed
-                    newfilename = (bidsmodality/newbidsname).with_suffix(ext)
+                        newbidsname = bids.increment_runindex(bidsdatatype, newbidsname, ext)                       # Update the runindex now that the acq-label has changed
+                    newfilename = (bidsdatatype/newbidsname).with_suffix(ext)
                     LOGGER.info(f"Found dcm2niix {dcm2niisuffix} suffix, renaming\n{filename} ->\n{newfilename}")
                     if newfilename.is_file():
                         LOGGER.warning(f"Overwriting existing {newfilename} file -- check your results carefully!")
                     filename.replace(newfilename)
                     if ext == '.json':
-                        jsonfiles.append((bidsmodality/newbidsname).with_suffix('.json'))
+                        jsonfiles.append((bidsdatatype/newbidsname).with_suffix('.json'))
 
         # Loop over and adapt all the newly produced json files and write to the scans.tsv file (every nifti-file comes with a json-file)
         if not jsonfiles:
-            jsonfiles = [(bidsmodality/bidsname).with_suffix('.json')]
+            jsonfiles = [(bidsdatatype/bidsname).with_suffix('.json')]
         for jsonfile in set(jsonfiles):
 
             # Check if dcm2niix behaved as expected
@@ -222,7 +222,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                 continue
 
             # Add a dummy b0 bval- and bvec-file for any file without a bval/bvec file (e.g. sbref, b0 scans)
-            if modality == 'dwi':
+            if datatype == 'dwi':
                 bvecfile = jsonfile.with_suffix('.bvec')
                 bvalfile = jsonfile.with_suffix('.bval')
                 if not bvecfile.is_file():
@@ -235,7 +235,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                         bval_fid.write('0\n')
 
             # Add the TaskName to the func json-file
-            elif modality == 'func':
+            elif datatype == 'func':
                 with jsonfile.open('r') as json_fid:
                     data = json.load(json_fid)
                 if not 'TaskName' in data:
@@ -245,7 +245,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                         json.dump(data, json_fid, indent=4)
 
             # Parse the acquisition time from the json file or else from the source header (NB: assuming the source file represents the first acquisition)
-            if bidsmodality.name not in bidsmap['Options']['bidscoin']['bidsignore']:
+            if bidsdatatype.name not in bidsmap['Options']['bidscoin']['bidsignore']:
                 with jsonfile.open('r') as json_fid:
                     data = json.load(json_fid)
                 if 'AcquisitionTime' not in data or not data['AcquisitionTime']:
@@ -540,12 +540,12 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             if not force:
                 if not bidsmap[dataformat]['session']:
                     bidssession = bidssession.parent
-                modalities = []
-                for modality in bids.lsdirs(bidssession):                                   # See what datatypes we already have in the bids session-folder
-                    if modality.glob('*') and bidsmap[dataformat].get(modality.name):       # See if we are going to add data for this datatype
-                        modalities.append(modality.name)
-                if modalities:
-                    LOGGER.info(f"Skipping processed session: {bidssession} already has {modalities} data (use the -f option to overrule)")
+                datatypes = []
+                for datatype in bids.lsdirs(bidssession):                                   # See what datatypes we already have in the bids session-folder
+                    if datatype.glob('*') and bidsmap[dataformat].get(datatype.name):       # See if we are going to add data for this datatype
+                        datatypes.append(datatype.name)
+                if datatypes:
+                    LOGGER.info(f"Skipping processed session: {bidssession} already has {datatypes} data (use the -f option to overrule)")
                     continue
 
             LOGGER.info(f"Coining session: {session}")
