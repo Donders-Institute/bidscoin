@@ -298,23 +298,26 @@ DICOM:
       dir: ~
       suffix: epi
 
+  eeg:        # ----------------------- All EEG data ---------------------------
+  - provenance: ~
+    attributes:
+      Modality: EEG
+      ProtocolName: ~
+      SeriesDescription: ~
+    bids:
+      task: <SeriesDescription>
+      suffix: eeg
+
+  ieeg: ~     # ----------------------- All iEEG data --------------------------
+
+  meg: ~      # ----------------------- All MEG data ---------------------------
+
   beh:        # ----------------------- All behavioural data -------------------
   - provenance: ~
     attributes: &behattributes_dicom
       Modality: ~
       ProtocolName: ~
       SeriesDescription: ~
-      ImageType: ~
-      SequenceName: ~
-      SequenceVariant: ~
-      ScanningSequence: ~
-      MRAcquisitionType: ~
-      SliceThickness: ~
-      FlipAngle: ~
-      EchoNumbers: ~
-      EchoTime: ~
-      RepetitionTime: ~
-      PhaseEncodingDirection: ~
     bids: &behbids_dicom
       task: <SeriesDescription>
       suffix: events
@@ -671,22 +674,18 @@ PAR:
       dir: ~
       suffix: epi
 
+  eeg: ~      # ----------------------- All EEG data ---------------------------
+
+  ieeg: ~     # ----------------------- All iEEG data --------------------------
+
+  meg: ~      # ----------------------- All MEG data ---------------------------
+
   beh:        # ----------------------- All behavioural data -------------------
   - provenance: ~
     attributes: &behattributes_par
       series_type: ~
       exam_name: ~
       protocol_name: ~
-      tech: ~
-      diffusion: ~
-      fov: ~
-      scan_resolution: ~
-      scan_mode: ~
-      max_slices: ~
-      flow_compensation: ~
-      max_echoes: ~
-      repetition_time: ~
-      prep_direction: ~
     bids: &behbids_par
       task: <protocol_name>
       suffix: events
@@ -708,7 +707,7 @@ PAR:
 
   pet:        # ----------------------- All PET runs ---------------------------
   - provenance: ~
-    attributes: &petattributes_par
+    attributes:
       series_type: ~
       exam_name: ~
       protocol_name: ~
@@ -722,7 +721,7 @@ PAR:
       max_echoes: ~
       repetition_time: ~
       prep_direction: ~
-    bids: &petbids_par
+    bids:
       task: <protocol_name>
       acq: <tech>
       rec: ~
