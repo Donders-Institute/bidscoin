@@ -1,6 +1,6 @@
 # --------------------------------------------------------------------------------
 # This is a bidsmap YAML file with the key-value mappings for the different BIDS
-# modalities (anat, func, dwi, etc). The modality attributes are the keys that map
+# datatypes (anat, func, dwi, etc). The datatype attributes are the keys that map
 # onto the BIDS labels. The bidsmap data-structure should be 5 levels deep:
 # dict > dict > list > dict > dict
 #
@@ -42,7 +42,7 @@ DICOM:
   session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
   anat:       # ----------------------- All anatomical runs --------------------
   - provenance: ""                # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
-    attributes: &anatattributes_dicom   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = T1w
+    attributes: &anatattributes_dicom   # The first item with empty attributes will not match anything but will be used when changing datatype in the bidseditor GUI -> suffix = T1w
       Modality: ~
       ProtocolName: ~
       SeriesDescription: ~
@@ -213,7 +213,7 @@ DICOM:
 
   func:       # ----------------------- All functional runs --------------------
   - provenance: ~
-    attributes: &funcattributes_dicom   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = bold
+    attributes: &funcattributes_dicom   # The first item with empty attributes will not match anything but will be used when changing datatype in the bidseditor GUI -> suffix = bold
       Modality: ~
       ProtocolName: ~
       SeriesDescription: ~
@@ -302,7 +302,7 @@ DICOM:
 
   dwi:        # ----------------------- All diffusion runs ---------------------
   - provenance: ~
-    attributes: &dwiattributes_dicom   # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = dwi
+    attributes: &dwiattributes_dicom   # The first item with empty attributes will not match anything but will be used when changing datatype in the bidseditor GUI -> suffix = dwi
       Modality: ~
       ProtocolName: ~
       SeriesDescription: ~
@@ -351,7 +351,7 @@ DICOM:
 
   fmap:       # ----------------------- All fieldmap runs ----------------------
   - provenance: ~
-    attributes: &fmapattributes_dicom     # The first item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = magnitude
+    attributes: &fmapattributes_dicom     # The first item with empty attributes will not match anything but will be used when changing datatype in the bidseditor GUI -> suffix = magnitude
       Modality: ~
       ProtocolName: ~
       SeriesDescription: ~

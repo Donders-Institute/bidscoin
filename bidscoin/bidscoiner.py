@@ -101,7 +101,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
         run, modality, index = bids.get_matching_run(sourcefile, bidsmap, dataformat)
 
         # Check if we should ignore this run
-        if modality == bids.ignoremodality:
+        if modality == bids.ignoredatatype:
             LOGGER.info(f"Leaving out: {source}")
             continue
 
@@ -112,7 +112,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
 
         LOGGER.info(f"Processing: {source}")
 
-        # Create the BIDS session/modality folder
+        # Create the BIDS session/datatype folder
         bidsmodality = bidsses/modality
         bidsmodality.mkdir(parents=True, exist_ok=True)
 
@@ -190,10 +190,10 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     if dcm2niisuffix=='_e' and bids.get_bidsvalue(basepath, 'echo') and index:
                         basepath = bids.get_bidsvalue(basepath, 'echo', str(int(index)))                            # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
 
-                    elif dcm2niisuffix=='_e' and basesuffix in ('magnitude1','magnitude2','phase1','phase2') and index:  # i.e. modality == 'fmap'
+                    elif dcm2niisuffix=='_e' and basesuffix in ('magnitude1','magnitude2','phase1','phase2') and index:  # i.e. datatype == 'fmap'
                         basepath = basepath[0:-1] + str(int(index))                                                 # basepath: *_magnitude1_e[index] -> *_magnitude[index] and *_phase1_e[index]_ph -> *_phase[index]
 
-                    elif dcm2niisuffix=='_e' and basesuffix=='phasediff' and index:                                 # i.e. modality == 'fmap'
+                    elif dcm2niisuffix=='_e' and basesuffix=='phasediff' and index:                                 # i.e. datatype == 'fmap'
                         pass
 
                     else:
@@ -265,7 +265,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
     scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
-    # Add IntendedFor and TE1+TE2 meta-data the fieldmap json-files. This has been postponed untill all modalities have been processed (i.e. so that all target images are indeed on disk)
+    # Add IntendedFor and TE1+TE2 meta-data the fieldmap json-files. This has been postponed untill all datatypes have been processed (i.e. so that all target images are indeed on disk)
     if bidsmap[dataformat]['fmap'] is not None:
         for fieldmap in bidsmap[dataformat]['fmap']:
             bidsname    = bids.get_bidsname(subid, sesid, 'fmap', fieldmap)
@@ -541,8 +541,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                 if not bidsmap[dataformat]['session']:
                     bidssession = bidssession.parent
                 modalities = []
-                for modality in bids.lsdirs(bidssession):                                   # See what modalities we already have in the bids session-folder
-                    if modality.glob('*') and bidsmap[dataformat].get(modality.name):       # See if we are going to add data for this modality
+                for modality in bids.lsdirs(bidssession):                                   # See what datatypes we already have in the bids session-folder
+                    if modality.glob('*') and bidsmap[dataformat].get(modality.name):       # See if we are going to add data for this datatype
                         modalities.append(modality.name)
                 if modalities:
                     LOGGER.info(f"Skipping processed session: {bidssession} already has {modalities} data (use the -f option to overrule)")

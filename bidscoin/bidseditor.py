@@ -45,8 +45,8 @@ HELP_URLS = {
     'fmap': 'https://bids-specification.readthedocs.io/en/latest/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#fieldmap-data',
     'func': 'https://bids-specification.readthedocs.io/en/latest/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#task-including-resting-state-imaging-data',
     'pet' : 'https://docs.google.com/document/d/1mqMLnxVdLwZjDd4ZiWFqjEAmOmfcModA_R535v3eQs0/edit',
-    bids.unknownmodality: HELP_URL_DEFAULT,
-    bids.ignoremodality : HELP_URL_DEFAULT
+    bids.unknowndatatype: HELP_URL_DEFAULT,
+    bids.ignoredatatype : HELP_URL_DEFAULT
 }
 
 OPTIONS_TOOLTIP_BIDSCOIN = """BIDScoin
@@ -596,22 +596,22 @@ class Ui_MainWindow(MainWindow):
 
         idx = 0
         samples_table.setSortingEnabled(False)
-        for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-            runs = self.output_bidsmap[self.dataformat][modality]
+        for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
+            runs = self.output_bidsmap[self.dataformat][datatype]
             if not runs:
                 continue
             for run in runs:
                 provenance = Path(run['provenance'])
                 ordered_file_index = self.ordered_file_index[provenance]
                 bidsname = bids.get_bidsname(output_bidsmap[self.dataformat]['subject'], output_bidsmap[self.dataformat]['session'],
-                                             modality, run, '', self.subprefix, self.sesprefix)
+                                             datatype, run, '', self.subprefix, self.sesprefix)
                 subid, sesid = bids.get_subid_sesid(provenance)
                 session = self.bidsfolder/subid/sesid
 
                 samples_table.setItem(idx, 0, QTableWidgetItem(f"{ordered_file_index+1:03d}"))
                 samples_table.setItem(idx, 1, QTableWidgetItem(provenance.name))
-                samples_table.setItem(idx, 2, QTableWidgetItem(modality))                           # Hidden column
-                samples_table.setItem(idx, 3, QTableWidgetItem(str(Path(modality)/bidsname) + '.*'))
+                samples_table.setItem(idx, 2, QTableWidgetItem(datatype))                           # Hidden column
+                samples_table.setItem(idx, 3, QTableWidgetItem(str(Path(datatype)/bidsname) + '.*'))
                 samples_table.setItem(idx, 5, QTableWidgetItem(str(provenance)))                    # Hidden column
 
                 samples_table.item(idx, 0).setFlags(QtCore.Qt.NoItemFlags)
@@ -623,19 +623,19 @@ class Ui_MainWindow(MainWindow):
                 samples_table.item(idx, 3).setStatusTip(str(session) + str(Path('/')))
 
                 if samples_table.item(idx, 3):
-                    if modality == bids.unknownmodality:
+                    if datatype == bids.unknowndatatype:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('red'))
-                        samples_table.item(idx, 3).setToolTip(f"Red: This imaging modality is not part of BIDS but will be converted to a BIDS-like entry in the '{bids.unknownmodality}' folder")
-                    elif modality == bids.ignoremodality:
+                        samples_table.item(idx, 3).setToolTip(f"Red: This imaging datatype is not part of BIDS but will be converted to a BIDS-like entry in the '{bids.unknowndatatype}' folder")
+                    elif datatype == bids.ignoredatatype:
                         samples_table.item(idx, 1).setForeground(QtGui.QColor('gray'))
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('gray'))
                         f = samples_table.item(idx, 3).font()
                         f.setStrikeOut(True)
                         samples_table.item(idx, 3).setFont(f)
-                        samples_table.item(idx, 3).setToolTip('Gray / Strike-out: This imaging modality will be ignored and not converted BIDS')
+                        samples_table.item(idx, 3).setToolTip('Gray / Strike-out: This imaging datatype will be ignored and not converted BIDS')
                     else:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('green'))
-                        samples_table.item(idx, 3).setToolTip(f"Green: This '{modality}' imaging modality is part of BIDS")
+                        samples_table.item(idx, 3).setToolTip(f"Green: This '{datatype}' imaging datatype is part of BIDS")
 
                 edit_button = QPushButton('Edit')
                 edit_button.setToolTip('Click to see more details and edit the BIDS output name')
@@ -691,7 +691,7 @@ class Ui_MainWindow(MainWindow):
         samples_table.setShowGrid(True)
         samples_table.setColumnCount(6)
         samples_table.setRowCount(num_files)
-        samples_table.setHorizontalHeaderLabels(['', f'{self.dataformat} input', 'BIDS modality', 'BIDS output', 'Action', 'Provenance'])
+        samples_table.setHorizontalHeaderLabels(['', f'{self.dataformat} input', 'BIDS datatype', 'BIDS output', 'Action', 'Provenance'])
         samples_table.setSortingEnabled(True)
         samples_table.sortByColumn(0, QtCore.Qt.AscendingOrder)
         header = samples_table.horizontalHeader()
@@ -769,10 +769,10 @@ class Ui_MainWindow(MainWindow):
         """Make sure that index map has been updated. """
         button     = self.MainWindow.focusWidget()
         rowindex   = self.samples_table.indexAt(button.pos()).row()
-        modality   = self.samples_table.item(rowindex, 2).text()
+        datatype   = self.samples_table.item(rowindex, 2).text()
         provenance = Path(self.samples_table.item(rowindex, 5).text())
 
-        self.open_edit_dialog(provenance, modality)
+        self.open_edit_dialog(provenance, datatype)
 
     def on_double_clicked(self, index: int):
         """Opens the inspect window when a source file in the file-tree tab is double-clicked"""
@@ -794,15 +794,15 @@ class Ui_MainWindow(MainWindow):
         about = f"BIDS editor\n{bids.version()}"
         QMessageBox.about(self.MainWindow, 'About', about)
 
-    def open_edit_dialog(self, provenance: Path, modality: str, modal=False):
-        """Check for open edit window, find the right modality index and open the edit window"""
+    def open_edit_dialog(self, provenance: Path, datatype: str, modal=False):
+        """Check for open edit window, find the right datatype index and open the edit window"""
 
         if not self.has_edit_dialog_open:
             # Find the source index of the run in the list of runs (using the provenance) and open the edit window
-            for run in self.output_bidsmap[self.dataformat][modality]:
+            for run in self.output_bidsmap[self.dataformat][datatype]:
                 if run['provenance']==str(provenance):
                     LOGGER.info(f'User is editing {provenance}')
-                    self.dialog_edit = EditDialog(self.dataformat, provenance, modality, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
+                    self.dialog_edit = EditDialog(self.dataformat, provenance, datatype, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
                     if provenance.name:
                         self.has_edit_dialog_open = str(provenance)
                     else:
@@ -821,7 +821,7 @@ class Ui_MainWindow(MainWindow):
             if self.has_edit_dialog_open:
                 return
 
-            self.open_edit_dialog(provenance, modality, modal)
+            self.open_edit_dialog(provenance, datatype, modal)
 
     def release_edit_dialog(self):
         """Allow a new edit window to be opened"""
@@ -841,20 +841,20 @@ class EditDialog(QDialog):
     # Emit the new bidsmap when done (see docstring)
     done_edit = QtCore.pyqtSignal(dict)
 
-    def __init__(self, dataformat: str, provenance: Path, modality: str, bidsmap: dict, template_bidsmap: dict, subprefix='sub-', sesprefix='ses-'):
+    def __init__(self, dataformat: str, provenance: Path, datatype: str, bidsmap: dict, template_bidsmap: dict, subprefix='sub-', sesprefix='ses-'):
         super().__init__()
 
         # Set the data
         self.dataformat       = dataformat
-        self.source_modality  = modality
-        self.target_modality  = modality
-        self.current_modality = modality
+        self.source_datatype  = datatype
+        self.target_datatype  = datatype
+        self.current_datatype = datatype
         self.source_bidsmap   = bidsmap
         self.target_bidsmap   = copy.deepcopy(bidsmap)
         self.template_bidsmap = template_bidsmap
         self.subprefix        = subprefix
         self.sesprefix        = sesprefix
-        for run in bidsmap[self.dataformat][modality]:
+        for run in bidsmap[self.dataformat][datatype]:
             if run['provenance'] == str(provenance):
                 self.source_run = run
         self.target_run = copy.deepcopy(self.source_run)
@@ -885,9 +885,9 @@ class EditDialog(QDialog):
         self.source_table.cellChanged.connect(self.source_cell_changed)
         self.source_table.setToolTip(f"The {self.dataformat} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using '*string*' wildcards, see documentation), only change these if you know what you are doing!")
 
-        # Set-up the modality dropdown menu
-        self.set_modality_dropdown_section()
-        self.modality_dropdown.setToolTip('The BIDS modality (data type). First make sure this one is correct, then choose the right suffix')
+        # Set-up the datatype dropdown menu
+        self.set_datatype_dropdown_section()
+        self.datatype_dropdown.setToolTip('The BIDS datatype (data type). First make sure this one is correct, then choose the right suffix')
 
         # Set-up the BIDS table
         self.bids_label = QLabel()
@@ -916,7 +916,7 @@ class EditDialog(QDialog):
         groupbox2.setSizePolicy(sizepolicy)
         layout2 = QVBoxLayout()
         layout2.addWidget(self.label_dropdown)
-        layout2.addWidget(self.modality_dropdown)
+        layout2.addWidget(self.datatype_dropdown)
         layout2.addWidget(self.bids_label)
         layout2.addWidget(self.bids_table)
         layout2.addWidget(self.label_bids_name)
@@ -968,21 +968,21 @@ class EditDialog(QDialog):
         self.move(qr.topLeft())
 
     def get_allowed_suffixes(self):
-        """Derive the possible suffixes for each modality from the template. """
+        """Derive the possible suffixes for each datatype from the template. """
         allowed_suffixes = {}
-        for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-            allowed_suffixes[modality] = []
-            runs = self.template_bidsmap[self.dataformat][modality]
+        for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
+            allowed_suffixes[datatype] = []
+            runs = self.template_bidsmap[self.dataformat][datatype]
             if not runs:
                 continue
             for run in runs:
                 suffix = run['bids'].get('suffix', None)
-                if suffix and suffix not in allowed_suffixes[modality]:
-                    allowed_suffixes[modality].append(suffix)
+                if suffix and suffix not in allowed_suffixes[datatype]:
+                    allowed_suffixes[datatype].append(suffix)
 
         # Sort the allowed suffixes alphabetically
-        for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-            allowed_suffixes[modality] = sorted(allowed_suffixes[modality])
+        for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
+            allowed_suffixes[datatype] = sorted(allowed_suffixes[datatype])
 
         self.allowed_suffixes = allowed_suffixes
 
@@ -1031,7 +1031,7 @@ class EditDialog(QDialog):
         data_bids = []
         for bidslabel in bids.bidslabels:
             if bidslabel in self.target_run['bids']:
-                if self.target_modality in bids.bidsmodalities and bidslabel=='suffix':
+                if self.target_datatype in bids.bidsdatatypes and bidslabel=='suffix':
                     iseditable = False
                 else:
                     iseditable = True
@@ -1072,7 +1072,7 @@ class EditDialog(QDialog):
             value = self.source_table.item(row, 1).text()
             oldvalue = self.target_run['attributes'].get(key, None)
 
-            # Only if cell was actually clicked, update (i.e. not when BIDS modality changes)
+            # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
             if key and value!=oldvalue:
                 LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 self.target_run['attributes'][key] = value
@@ -1084,7 +1084,7 @@ class EditDialog(QDialog):
             value = self.bids_table.item(row, 1).text()
             oldvalue = self.target_run['bids'].get(key, None)
 
-            # Only if cell was actually clicked, update (i.e. not when BIDS modality changes)
+            # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
             if key and value!=oldvalue:
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
                 if not (value.startswith('<<') and value.endswith('>>')):
@@ -1113,10 +1113,10 @@ class EditDialog(QDialog):
 
         for i, row in enumerate(data):
             key = row[0]['value']
-            if self.target_modality in bids.bidsmodalities and key == 'suffix':
+            if self.target_datatype in bids.bidsdatatypes and key =='suffix':
                 item = myWidgetItem('suffix', iseditable=False)
                 table.setItem(i, 0, item)
-                labels = self.allowed_suffixes[self.target_modality]
+                labels = self.allowed_suffixes[self.target_datatype]
                 suffix_dropdown.addItems(labels)
                 suffix_dropdown.setCurrentIndex(suffix_dropdown.findText(self.target_run['bids']['suffix']))
                 suffix_dropdown.currentIndexChanged.connect(self.suffix_dropdown_change)
@@ -1145,15 +1145,15 @@ class EditDialog(QDialog):
 
         return table
 
-    def set_modality_dropdown_section(self):
-        """Dropdown select modality list section. """
+    def set_datatype_dropdown_section(self):
+        """Dropdown select datatype list section. """
         self.label_dropdown = QLabel()
         self.label_dropdown.setText('Modality')
 
-        self.modality_dropdown = QComboBox()
-        self.modality_dropdown.addItems(bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality))
-        self.modality_dropdown.setCurrentIndex(self.modality_dropdown.findText(self.target_modality))
-        self.modality_dropdown.currentIndexChanged.connect(self.modality_dropdown_change)
+        self.datatype_dropdown = QComboBox()
+        self.datatype_dropdown.addItems(bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype))
+        self.datatype_dropdown.setCurrentIndex(self.datatype_dropdown.findText(self.target_datatype))
+        self.datatype_dropdown.currentIndexChanged.connect(self.datatype_dropdown_change)
 
     def set_bids_name_section(self):
         """Set non-editable BIDS output name section. """
@@ -1168,20 +1168,20 @@ class EditDialog(QDialog):
         self.refresh_bidsname()
 
     def refresh_bidsname(self):
-        bidsname = (Path(self.target_modality)/bids.get_bidsname(self.target_bidsmap[self.dataformat]['subject'], self.target_bidsmap[self.dataformat]['session'],
-                                                                 self.target_modality, self.target_run, '', self.subprefix, self.sesprefix)).with_suffix('.*')
+        bidsname = (Path(self.target_datatype) / bids.get_bidsname(self.target_bidsmap[self.dataformat]['subject'], self.target_bidsmap[self.dataformat]['session'],
+                                                                   self.target_datatype, self.target_run, '', self.subprefix, self.sesprefix)).with_suffix('.*')
 
         f = self.view_bids_name.font()
-        if self.target_modality==bids.unknownmodality:
-            self.view_bids_name.setToolTip(f"Red: This imaging modality is not part of BIDS but will be converted to a BIDS-like entry in the '{bids.unknownmodality}' folder. Click 'OK' if you want your BIDS output data to look like this")
+        if self.target_datatype==bids.unknowndatatype:
+            self.view_bids_name.setToolTip(f"Red: This imaging datatype is not part of BIDS but will be converted to a BIDS-like entry in the '{bids.unknowndatatype}' folder. Click 'OK' if you want your BIDS output data to look like this")
             self.view_bids_name.setTextColor(QtGui.QColor('red'))
             f.setStrikeOut(False)
-        elif self.target_modality == bids.ignoremodality:
-            self.view_bids_name.setToolTip("Gray / Strike-out: This imaging modality will be ignored and not converted BIDS. Click 'OK' if you want your BIDS output data to look like this")
+        elif self.target_datatype == bids.ignoredatatype:
+            self.view_bids_name.setToolTip("Gray / Strike-out: This imaging datatype will be ignored and not converted BIDS. Click 'OK' if you want your BIDS output data to look like this")
             self.view_bids_name.setTextColor(QtGui.QColor('gray'))
             f.setStrikeOut(True)
         else:
-            self.view_bids_name.setToolTip(f"Green: This '{self.target_modality}' imaging modality is part of BIDS. Click 'OK' if you want your BIDS output data to look like this")
+            self.view_bids_name.setToolTip(f"Green: This '{self.target_datatype}' imaging datatype is part of BIDS. Click 'OK' if you want your BIDS output data to look like this")
             self.view_bids_name.setTextColor(QtGui.QColor('green'))
             f.setStrikeOut(False)
         self.view_bids_name.setFont(f)
@@ -1197,18 +1197,18 @@ class EditDialog(QDialog):
         """
 
         # Get the new target_run
-        self.target_run = bids.get_run(self.template_bidsmap, self.dataformat, self.target_modality, suffix_idx, Path(self.target_run['provenance']))
+        self.target_run = bids.get_run(self.template_bidsmap, self.dataformat, self.target_datatype, suffix_idx, Path(self.target_run['provenance']))
 
         # Insert the new target_run in our target_bidsmap
         self.target_bidsmap = bids.update_bidsmap(self.target_bidsmap,
-                                                  self.current_modality,
+                                                  self.current_datatype,
                                                   Path(self.target_run['provenance']),
-                                                  self.target_modality,
+                                                  self.target_datatype,
                                                   self.target_run,
                                                   self.dataformat)
 
-        # Now that we have updated the bidsmap, we can also update the current_modality
-        self.current_modality = self.target_modality
+        # Now that we have updated the bidsmap, we can also update the current_datatype
+        self.current_datatype = self.target_datatype
 
         # Refresh the edit window
         self.reset(refresh=True)
@@ -1219,13 +1219,13 @@ class EditDialog(QDialog):
         # Reset the target_run to the source_run
         if not refresh:
             LOGGER.info('User resets the BIDS mapping')
-            self.current_modality = self.source_modality
-            self.target_modality  = self.source_modality
+            self.current_datatype = self.source_datatype
+            self.target_datatype  = self.source_datatype
             self.target_run       = copy.deepcopy(self.source_run)
             self.target_bidsmap   = copy.deepcopy(self.source_bidsmap)
 
-            # Reset the modality dropdown menu
-            self.modality_dropdown.setCurrentIndex(self.modality_dropdown.findText(self.target_modality))
+            # Reset the datatype dropdown menu
+            self.datatype_dropdown.setCurrentIndex(self.datatype_dropdown.findText(self.target_datatype))
 
         # Refresh the source attributes and BIDS values with data from the target_run
         _, data_source, data_bids = self.get_editwin_data()
@@ -1237,11 +1237,11 @@ class EditDialog(QDialog):
         # Refresh the BIDS output name
         self.refresh_bidsname()
 
-    def modality_dropdown_change(self):
+    def datatype_dropdown_change(self):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
-        self.target_modality = self.modality_dropdown.currentText()
+        self.target_datatype = self.datatype_dropdown.currentText()
 
-        LOGGER.info(f"User has changed the BIDS modality from '{self.current_modality}' to '{self.target_modality}' for {self.target_run['provenance']}")
+        LOGGER.info(f"User has changed the BIDS datatype from '{self.current_datatype}' to '{self.target_datatype}' for {self.target_run['provenance']}")
 
         self.refresh(0)
 
@@ -1255,7 +1255,7 @@ class EditDialog(QDialog):
 
     def get_help(self):
         """Open web page for help. """
-        help_url = HELP_URLS.get(self.target_modality, HELP_URL_DEFAULT)
+        help_url = HELP_URLS.get(self.target_datatype, HELP_URL_DEFAULT)
         webbrowser.open(help_url)
 
     def reject(self, confirm=True):
@@ -1280,7 +1280,7 @@ class EditDialog(QDialog):
 
     def update_run(self):
 
-        if self.target_modality=='fmap' and not self.target_run['bids']['IntendedFor']:
+        if self.target_datatype=='fmap' and not self.target_run['bids']['IntendedFor']:
             answer = QMessageBox.question(self, 'Edit BIDS mapping', "The 'IntendedFor' bids-label was not set, which can make that your fieldmap won't be used when "
                                                                      "pre-processing / analyzing the associated imaging data (e.g. fMRI data). Do you want to go back "
                                                                      "and set this label?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Yes)
@@ -1293,9 +1293,9 @@ class EditDialog(QDialog):
 
         """Save the changes to the target_bidsmap and send it back to the main window: Finished! """
         self.target_bidsmap = bids.update_bidsmap(self.target_bidsmap,
-                                                  self.current_modality,
+                                                  self.current_datatype,
                                                   self.target_run['provenance'],
-                                                  self.target_modality,
+                                                  self.target_datatype,
                                                   self.target_run,
                                                   self.dataformat)
 
@@ -1307,12 +1307,12 @@ class EditDialog(QDialog):
         yamlfile, _ = QFileDialog.getOpenFileName(self, 'Export run item to (template) bidsmap',
                         str(bids.bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if yamlfile:
-            LOGGER.info(f'Exporting run item: bidsmap[{self.dataformat}][{self.target_modality}] -> {yamlfile}')
+            LOGGER.info(f'Exporting run item: bidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}')
             yamlfile   = Path(yamlfile)
             bidsmap, _ = bids.load_bidsmap(yamlfile, Path(), False)
-            bidsmap    = bids.append_run(bidsmap, self.dataformat, self.target_modality, self.target_run)
+            bidsmap    = bids.append_run(bidsmap, self.dataformat, self.target_datatype, self.target_run)
             bids.save_bidsmap(yamlfile, bidsmap)
-            QMessageBox.information(self, 'Edit BIDS mapping', f"Successfully exported:\n\nbidsmap[{self.dataformat}][{self.target_modality}] -> {yamlfile}")
+            QMessageBox.information(self, 'Edit BIDS mapping', f"Successfully exported:\n\nbidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}")
 
 
 def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', dataformat: str='DICOM', subprefix='sub-', sesprefix='ses-'):

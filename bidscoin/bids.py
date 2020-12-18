@@ -34,9 +34,9 @@ yaml = YAML()
 
 logger = logging.getLogger('bidscoin')
 
-bidsmodalities  = ('fmap', 'anat', 'func', 'dwi', 'beh', 'pet')                                                         # NB: get_matching_run() uses this order to search for a match
-ignoremodality  = 'leave_out'
-unknownmodality = 'extra_data'
+bidsdatatypes   = ('fmap', 'anat', 'func', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')                                   # NB: get_matching_run() uses this order to search for a match
+ignoredatatype  = 'leave_out'
+unknowndatatype = 'extra_data'
 bidslabels      = ('task', 'acq', 'inv', 'part', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'suffix', 'IntendedFor')     # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
 
 heuristics_folder = Path(__file__).parents[1]/'heuristics'
@@ -799,7 +799,7 @@ def strip_suffix(run: dict) -> dict:
     :return:    The run with these suffixes removed
     """
 
-    # See if we have a suffix for this modality
+    # See if we have a suffix for this datatype
     if 'suffix' in run['bids'] and run['bids']['suffix']:
         suffix = run['bids']['suffix'].lower()
     else:
@@ -846,11 +846,11 @@ def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
     """
 
     provenance = []
-    for modality in bidsmodalities + (unknownmodality, ignoremodality):
-        if modality in bidsmap[dataformat] and bidsmap[dataformat][modality]:
-            for run in bidsmap[dataformat][modality]:
+    for datatype in bidsdatatypes + (unknowndatatype, ignoredatatype):
+        if datatype in bidsmap[dataformat] and bidsmap[dataformat][datatype]:
+            for run in bidsmap[dataformat][datatype]:
                 if not run['provenance']:
-                    logger.warning(f'The bidsmap run {modality} run does not contain provenance data')
+                    logger.warning(f'The bidsmap run {datatype} run does not contain provenance data')
                 else:
                     provenance.append(Path(run['provenance']))
 
@@ -859,22 +859,22 @@ def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
     return provenance
 
 
-def get_run(bidsmap: dict, dataformat: str, modality: str, suffix_idx: Union[int, str], sourcefile: Path='') -> dict:
+def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int, str], sourcefile: Path= '') -> dict:
     """
-    Find the (first) run in bidsmap[dataformat][bidsmodality] with run['bids']['suffix_idx'] == suffix_idx
+    Find the (first) run in bidsmap[dataformat][bidsdatatype] with run['bids']['suffix_idx'] == suffix_idx
 
     :param bidsmap:     This could be a template bidsmap, with all options, BIDS labels and attributes, etc
     :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
-    :param modality:    The modality in which a matching run is searched for (e.g. 'anat')
-    :param suffix_idx:  The name of the suffix that is searched for (e.g. 'bold') or the modality index number
+    :param datatype:    The datatype in which a matching run is searched for (e.g. 'anat')
+    :param suffix_idx:  The name of the suffix that is searched for (e.g. 'bold') or the datatype index number
     :param sourcefile:  The name of the sourcefile. If given, the bidsmap values are read from file
-    :return:            The clean (filled) run item in the bidsmap[dataformat][bidsmodality] with the matching suffix_idx, otherwise None
+    :return:            The clean (filled) run item in the bidsmap[dataformat][bidsdatatype] with the matching suffix_idx, otherwise None
     """
 
     if not dataformat:
         dataformat = get_dataformat(sourcefile)
 
-    for index, run in enumerate(bidsmap[dataformat][modality]):
+    for index, run in enumerate(bidsmap[dataformat][datatype]):
         if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
             run_ = dict(provenance={}, attributes={}, bids={})
@@ -894,16 +894,16 @@ def get_run(bidsmap: dict, dataformat: str, modality: str, suffix_idx: Union[int
 
             return run_
 
-    logger.error(f"'{modality}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{dataformat}']")
+    logger.error(f"'{datatype}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{dataformat}']")
 
 
-def delete_run(bidsmap: dict, dataformat: str, modality: str, provenance: Path) -> dict:
+def delete_run(bidsmap: dict, dataformat: str, datatype: str, provenance: Path) -> dict:
     """
     Delete a run from the BIDS map
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
-    :param modality:    The modality that is used, e.g. 'anat'
+    :param datatype:    The datatype that is used, e.g. 'anat'
     :param provenance:  The unique provance that is use to identify the run
     :return:            The new bidsmap
     """
@@ -911,21 +911,21 @@ def delete_run(bidsmap: dict, dataformat: str, modality: str, provenance: Path) 
     if not dataformat:
         dataformat = get_dataformat(provenance)
 
-    for index, run in enumerate(bidsmap[dataformat][modality]):
+    for index, run in enumerate(bidsmap[dataformat][datatype]):
         if run['provenance'] == str(provenance):
-            del bidsmap[dataformat][modality][index]
+            del bidsmap[dataformat][datatype][index]
 
     return bidsmap
 
 
-def append_run(bidsmap: dict, dataformat: str, modality: str, run: dict, clean: bool=True) -> dict:
+def append_run(bidsmap: dict, dataformat: str, datatype: str, run: dict, clean: bool=True) -> dict:
     """
     Append a run to the BIDS map
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'. If empty then it is determined from the provenance
-    :param modality:    The modality that is used, e.g. 'anat'
-    :param run:         The run (listitem) that is appended to the modality
+    :param datatype:    The datatype that is used, e.g. 'anat'
+    :param run:         The run (listitem) that is appended to the datatype
     :param clean:       A boolean to clean-up commentedMap fields
     :return:            The new bidsmap
     """
@@ -946,28 +946,28 @@ def append_run(bidsmap: dict, dataformat: str, modality: str, run: dict, clean: 
 
         run = run_
 
-    if bidsmap[dataformat][modality] is None:
-        bidsmap[dataformat][modality] = [run]
+    if bidsmap[dataformat][datatype] is None:
+        bidsmap[dataformat][datatype] = [run]
     else:
-        bidsmap[dataformat][modality].append(run)
+        bidsmap[dataformat][datatype].append(run)
 
     return bidsmap
 
 
-def update_bidsmap(bidsmap: dict, source_modality: str, provenance: Path, target_modality: str, run: dict, dataformat: str, clean: bool=True) -> dict:
+def update_bidsmap(bidsmap: dict, source_datatype: str, provenance: Path, target_datatype: str, run: dict, dataformat: str, clean: bool=True) -> dict:
     """
-    Update the BIDS map if the modality changes:
-    1. Remove the source run from the source modality section
-    2. Append the (cleaned) target run to the target modality section
+    Update the BIDS map if the datatype changes:
+    1. Remove the source run from the source datatype section
+    2. Append the (cleaned) target run to the target datatype section
 
     Else:
-    1. Use the provenance to look-up the index number in that modality
+    1. Use the provenance to look-up the index number in that datatype
     2. Replace the run
 
     :param bidsmap:             Full bidsmap data structure, with all options, BIDS labels and attributes, etc
-    :param source_modality:     The current modality name, e.g. 'anat'
+    :param source_datatype:     The current datatype name, e.g. 'anat'
     :param provenance:          The unique provance that is use to identify the run
-    :param target_modality:     The modality name what is should be, e.g. 'dwi'
+    :param target_datatype:     The datatype name what is should be, e.g. 'dwi'
     :param run:                 The run item that is being moved
     :param dataformat:          The name of the dataformat, e.g. 'DICOM'
     :param clean:               A boolean that is passed to bids.append_run (telling it to clean-up commentedMap fields)
@@ -979,21 +979,21 @@ def update_bidsmap(bidsmap: dict, source_modality: str, provenance: Path, target
 
     num_runs_in = len(dir_bidsmap(bidsmap, dataformat))
 
-    # Warn the user if the target run already exists when the run is moved to another modality
-    if source_modality!=target_modality:
-        if exist_run(bidsmap, dataformat, target_modality, run):
-            logger.warning(f'That run from {source_modality} already exists in {target_modality}...')
+    # Warn the user if the target run already exists when the run is moved to another datatype
+    if source_datatype!=target_datatype:
+        if exist_run(bidsmap, dataformat, target_datatype, run):
+            logger.warning(f'That run from {source_datatype} already exists in {target_datatype}...')
 
         # Delete the source run
-        bidsmap = delete_run(bidsmap, dataformat, source_modality, provenance)
+        bidsmap = delete_run(bidsmap, dataformat, source_datatype, provenance)
 
         # Append the (cleaned-up) target run
-        bidsmap = append_run(bidsmap, dataformat, target_modality, run, clean)
+        bidsmap = append_run(bidsmap, dataformat, target_datatype, run, clean)
 
     else:
-        for index, run_ in enumerate(bidsmap[dataformat][target_modality]):
+        for index, run_ in enumerate(bidsmap[dataformat][target_datatype]):
             if run_['provenance'] == str(provenance):
-                bidsmap[dataformat][target_modality][index] = run
+                bidsmap[dataformat][target_datatype][index] = run
                 break
 
     num_runs_out = len(dir_bidsmap(bidsmap, dataformat))
@@ -1064,14 +1064,14 @@ def match_attribute(longvalue, values) -> bool:
     return False
 
 
-def exist_run(bidsmap: dict, dataformat: str, modality: str, run_item: dict, matchbidslabels: bool=False) -> bool:
+def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, matchbidslabels: bool=False) -> bool:
     """
     Checks if there is already an entry in runlist with the same attributes and, optionally, bids values as in the input run
 
     :param bidsmap:         Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param dataformat:      The information source in the bidsmap that is used, e.g. 'DICOM'
-    :param modality:        The modality in the source that is used, e.g. 'anat'. Empty values will search through all modalities
-    :param run_item:        The run (listitem) that is searched for in the modality
+    :param datatype:        The datatype in the source that is used, e.g. 'anat'. Empty values will search through all datatypes
+    :param run_item:        The run (listitem) that is searched for in the datatype
     :param matchbidslabels: If True, also matches the BIDS-labels, otherwise only run['attributes']
     :return:                True if the run exists in runlist
     """
@@ -1079,22 +1079,22 @@ def exist_run(bidsmap: dict, dataformat: str, modality: str, run_item: dict, mat
     if not dataformat:
         dataformat = get_dataformat(run_item['provenance'])
 
-    if not modality:
-        for modality in bidsmodalities + (unknownmodality, ignoremodality):
-            if exist_run(bidsmap, dataformat, modality, run_item, matchbidslabels):
+    if not datatype:
+        for datatype in bidsdatatypes + (unknowndatatype, ignoredatatype):
+            if exist_run(bidsmap, dataformat, datatype, run_item, matchbidslabels):
                 return True
 
-    if not bidsmap[dataformat] or not bidsmap[dataformat][modality]:
+    if not bidsmap[dataformat] or not bidsmap[dataformat][datatype]:
         return False
 
-    for run in bidsmap[dataformat][modality]:
+    for run in bidsmap[dataformat][datatype]:
 
         # Begin with match = False only if all attributes are empty
         match = any([run_item['attributes'][key] is not None for key in run_item['attributes']])
 
         # Search for a case where all run_item items match with the run_item items
         for itemkey, itemvalue in run_item['attributes'].items():
-            value = run['attributes'].get(itemkey, None)    # Matching bids-labels which exist in one modality but not in the other -> None
+            value = run['attributes'].get(itemkey, None)    # Matching bids-labels which exist in one datatype but not in the other -> None
             match = match and match_attribute(itemvalue, value)
             if not match:
                 break                                       # There is no point in searching further within the run_item now that we've found a mismatch
@@ -1102,7 +1102,7 @@ def exist_run(bidsmap: dict, dataformat: str, modality: str, run_item: dict, mat
         # See if the bidslabels also all match. This is probably not very useful, but maybe one day...
         if matchbidslabels and match:
             for itemkey, itemvalue in run_item['bids'].items():
-                value = run['bids'].get(itemkey, None)      # Matching bids-labels which exist in one modality but not in the other -> None
+                value = run['bids'].get(itemkey, None)      # Matching bids-labels which exist in one datatype but not in the other -> None
                 match = match and value==itemvalue
                 if not match:
                     break                                   # There is no point in searching further within the run_item now that we've found a mismatch
@@ -1114,28 +1114,28 @@ def exist_run(bidsmap: dict, dataformat: str, modality: str, run_item: dict, mat
     return False
 
 
-def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, modalities: tuple = (ignoremodality,) + bidsmodalities + (unknownmodality,)) -> Tuple[dict, str, Union[int, None]]:
+def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, datatypes: tuple = (ignoredatatype,) + bidsdatatypes + (unknowndatatype,)) -> Tuple[dict, str, Union[int, None]]:
     """
     Find the first run in the bidsmap with dicom attributes that match with the dicom file. Then update the (dynamic) bids values (values are cleaned-up to be BIDS-valid)
 
     :param sourcefile:  The full pathname of the source dicom-file or PAR/XML file
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
-    :param modalities:  The modality in which a matching run is searched for. Default = (ignoremodality,) + bidsmodalities + (unknownmodality,)
-    :return:            (run, modality, index) The matching and filled-in / cleaned run item, modality and list index as in run = bidsmap[DICOM][modality][index]
-                        modality = bids.unknownmodality and index = None if there is no match, the run is still populated with info from the dicom-file
+    :param datatypes:   The datatypes in which a matching run is searched for. Default = (ignoredatatype,) + bidsdatatypes + (unknowndatatype,)
+    :return:            (run, datatype, index) The matching and filled-in / cleaned run item, datatype and list index as in run = bidsmap[DICOM][datatype][index]
+                        datatype = bids.unknowndatatype and index = None if there is no match, the run is still populated with info from the dicom-file
     """
 
     if not dataformat:
         dataformat = get_dataformat(sourcefile)
 
-    # Loop through all bidsmodalities and runs; all info goes into run_
+    # Loop through all bidsdatatypes and runs; all info goes into run_
     run_ = dict(provenance={}, attributes={}, bids={})
-    for modality in modalities:
+    for datatype in datatypes:
 
-        if bidsmap[dataformat][modality] is None: continue
+        if bidsmap[dataformat][datatype] is None: continue
 
-        for index, run in enumerate(bidsmap[dataformat][modality]):
+        for index, run in enumerate(bidsmap[dataformat][datatype]):
 
             run_  = dict(provenance={}, attributes={}, bids={})                                             # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
             match = any([run['attributes'][attrkey] is not None for attrkey in run['attributes']])          # Normally match==True, but make match==False if all attributes are empty
@@ -1164,13 +1164,13 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, modalitie
             if match:
                 run_['provenance'] = str(sourcefile.resolve())
 
-                return run_, modality, index
+                return run_, datatype, index
 
-    # We don't have a match (all tests failed, so modality should be the *last* one, i.e. unknownmodality)
-    logger.debug(f"Could not find a matching run in the bidsmap for {sourcefile} -> {modality}")
+    # We don't have a match (all tests failed, so datatype should be the *last* one, i.e. unknowndatatype)
+    logger.debug(f"Could not find a matching run in the bidsmap for {sourcefile} -> {datatype}")
     run_['provenance'] = str(sourcefile.resolve())
 
-    return run_, modality, None
+    return run_, datatype, None
 
 
 def get_subid_sesid(sourcefile: Path, subid: str= '<<SourceFilePath>>', sesid: str= '<<SourceFilePath>>', subprefix: str= 'sub-', sesprefix: str= 'ses-') -> Tuple[str, str]:
@@ -1212,26 +1212,26 @@ def get_subid_sesid(sourcefile: Path, subid: str= '<<SourceFilePath>>', sesid: s
     return subid, sesid
 
 
-def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str= '', subprefix: str= 'sub-', sesprefix: str= 'ses-') -> str:
+def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str= '', subprefix: str= 'sub-', sesprefix: str= 'ses-') -> str:
     """
     Composes a filename as it should be according to the BIDS standard using the BIDS labels in run
 
     :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001'). Can be left empty
     :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01'). Can be left empty
-    :param modality:    The bidsmodality (choose from bids.bidsmodalities)
+    :param datatype:    The bids datatype (choose from bids.bidsdatatypes)
     :param run:         The run mapping with the BIDS labels
     :param runindex:    The optional runindex label (e.g. 'run-01'). Can be left ''
     :param subprefix:   The optional subprefix (e.g. 'sub-'). Used to parse the sub-value from the provenance as default subid
     :param sesprefix:   The optional sesprefix (e.g. 'ses-'). If it is found in the provenance then a default sesid will be set
     :return:            The composed BIDS file-name (without file-extension)
     """
-    assert modality in bidsmodalities + (unknownmodality, ignoremodality)
+    assert datatype in bidsdatatypes + (unknowndatatype, ignoredatatype)
 
     # Try to update the sub/ses-ids
     if run['provenance']:
         subid, sesid = get_subid_sesid(Path(run['provenance']), subid, sesid, subprefix, sesprefix)
 
-    # Validate and do some checks to allow for dragging the run entries between the different modality-sections
+    # Validate and do some checks to allow for dragging the run entries between the different datatype-sections
     run = copy.deepcopy(run)                # Avoid side effects when changing run
     for bidslabel in bidslabels:
         if bidslabel not in run['bids']:
@@ -1244,7 +1244,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
         runindex = run['bids']['run']
 
     # Compose the BIDS filename (-> switch statement)
-    if modality == 'anat':
+    if datatype =='anat':
 
         # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_ce-<label>][_rec-<label>][_run-<index>][_mod-<label>]_suffix
         bidsname = '{sub}{_ses}{_acq}{_inv}{_part}{_ce}{_rec}{_run}{_mod}_{suffix}'.format(
@@ -1259,7 +1259,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
             _mod    = add_prefix('_mod-',  run['bids']['mod']),
             suffix  = run['bids']['suffix'])
 
-    elif modality == 'func':
+    elif datatype =='func':
 
         # bidsname: sub-<label>[_ses-<label>]_task-<label>[_acq-<label>][_ce-<label>][_dir-<label>][_rec-<label>][_run-<index>][_echo-<index>]_<contrast_label>.nii[.gz]
         bidsname = '{sub}{_ses}_{task}{_acq}{_ce}{_dir}{_rec}{_run}{_echo}_{suffix}'.format(
@@ -1274,7 +1274,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
             _echo   = add_prefix('_echo-', run['bids']['echo']),
             suffix  = run['bids']['suffix'])
 
-    elif modality == 'dwi':
+    elif datatype =='dwi':
 
         # bidsname: sub-<label>[_ses-<label>][_acq-<label>][_dir-<label>][_run-<index>]_dwi.nii[.gz]
         bidsname = '{sub}{_ses}{_acq}{_dir}{_run}_{suffix}'.format(
@@ -1285,7 +1285,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
             _run    = add_prefix('_run-', runindex),
             suffix  = run['bids']['suffix'])
 
-    elif modality == 'fmap':
+    elif datatype =='fmap':
 
         # TODO: add more fieldmap logic?
 
@@ -1299,7 +1299,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
             _run    = add_prefix('_run-', runindex),
             suffix  = run['bids']['suffix'])
 
-    elif modality == 'beh':
+    elif datatype =='beh':
 
         # bidsname: sub-<participant_label>[_ses-<session_label>]_task-<task_name>_suffix
         bidsname = '{sub}{_ses}_{task}_{suffix}'.format(
@@ -1308,7 +1308,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
             task    = f"task-{run['bids']['task']}",
             suffix  = run['bids']['suffix'])
 
-    elif modality == 'pet':
+    elif datatype =='pet':
 
         # bidsname: sub-<participant_label>[_ses-<session_label>]_task-<task_label>[_acq-<label>][_rec-<label>][_run-<index>]_suffix
         bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}_{suffix}'.format(
@@ -1320,7 +1320,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
             _run    = add_prefix('_run-', runindex),
             suffix  = run['bids']['suffix'])
 
-    elif modality == unknownmodality or modality == ignoremodality:
+    elif datatype == unknowndatatype or datatype == ignoredatatype:
 
         # bidsname: sub-<participant_label>[_ses-<session_label>]_acq-<label>[..][_suffix]
         bidsname = '{sub}{_ses}{_task}_{acq}{_ce}{_rec}{_dir}{_run}{_echo}{_mod}{_suffix}'.format(
@@ -1337,7 +1337,7 @@ def get_bidsname(subid: str, sesid: str, modality: str, run: dict, runindex: str
             _suffix = add_prefix('_',      run['bids']['suffix']))
 
     else:
-        raise ValueError(f'Critical error: modality "{modality}" not implemented, please inform the developers about this error')
+        raise ValueError(f'Critical error: datatype "{datatype}" not implemented, please inform the developers about this error')
 
     return bidsname
 

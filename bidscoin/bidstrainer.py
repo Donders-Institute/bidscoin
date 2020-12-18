@@ -32,27 +32,27 @@ def built_dicommap(dicomfile: Path, bidsmap: dict, template: dict) -> dict:
     :return:            The bidsmap with new entries in it
     """
 
-    # Get the bidsmodality and dirname (= bidslabel) from the pathname (samples/bidsmodality/[dirname/]dicomfile)
+    # Get the bidsdatatype and dirname (= bidslabel) from the pathname (samples/bidsdatatype/[dirname/]dicomfile)
     suffix = dicomfile.parts[-2]
-    if suffix in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-        modality = suffix
+    if suffix in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
+        datatype = suffix
     else:
-        modality = dicomfile.parts[-3]
+        datatype = dicomfile.parts[-3]
 
     # Input checks
-    if not bids.is_dicomfile(dicomfile) or not template['DICOM'] or not template['DICOM'][modality]:
+    if not bids.is_dicomfile(dicomfile) or not template['DICOM'] or not template['DICOM'][datatype]:
         return bidsmap
-    if modality not in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-        raise ValueError("Don't know what to do with this bidsmodality directory name: {}\n{}".format(modality, dicomfile))
+    if datatype not in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
+        raise ValueError("Don't know what to do with this bidsdatatype directory name: {}\n{}".format(datatype, dicomfile))
 
     # Get bids-labels from the matching run in the template
-    run = bids.get_run(template, 'DICOM', modality, suffix, dicomfile)      # TODO: check if the dicomfile argument is not broken
+    run = bids.get_run(template, 'DICOM', datatype, suffix, dicomfile)      # TODO: check if the dicomfile argument is not broken
     if not run:
-        raise ValueError(f"Oops, this should not happen! BIDS modality '{modality}' or one of the bidslabels is not accounted for in the code\n{dicomfile}")
+        raise ValueError(f"Oops, this should not happen! BIDS datatype '{datatype}' or one of the bidslabels is not accounted for in the code\n{dicomfile}")
 
     # Copy the filled-in run over to the bidsmap
-    if not bids.exist_run(bidsmap, 'DICOM', modality, run):
-        bidsmap = bids.append_run(bidsmap, 'DICOM', modality, run)
+    if not bids.exist_run(bidsmap, 'DICOM', datatype, run):
+        bidsmap = bids.append_run(bidsmap, 'DICOM', datatype, run)
 
     return bidsmap
 
@@ -71,7 +71,7 @@ def built_parmap(parfile: Path, bidsmap: dict, heuristics: dict) -> dict:
     if not parfile or not heuristics['PAR']:
         return bidsmap
 
-    # TODO: Loop through all bidsmodalities and series
+    # TODO: Loop through all bidsdatatypes and series
 
     return bidsmap
 
@@ -90,7 +90,7 @@ def built_p7map(p7file: Path, bidsmap: dict, heuristics: dict) -> dict:
     if not p7file or not heuristics['P7']:
         return bidsmap
 
-    # TODO: Loop through all bidsmodalities and series
+    # TODO: Loop through all bidsdatatypes and series
 
     return bidsmap
 
@@ -109,7 +109,7 @@ def built_niftimap(niftifile: Path, bidsmap: dict, heuristics: dict) -> dict:
     if not niftifile or not heuristics['Nifti']:
         return bidsmap
 
-    # TODO: Loop through all bidsmodalities and series
+    # TODO: Loop through all bidsdatatypes and series
 
     return bidsmap
 
@@ -128,7 +128,7 @@ def built_filesystemmap(seriesfolder: Path, bidsmap: dict, heuristics: dict) -> 
     if not seriesfolder or not heuristics['FileSystem']:
         return bidsmap
 
-    # TODO: Loop through all bidsmodalities and series
+    # TODO: Loop through all bidsdatatypes and series
 
     return bidsmap
 
@@ -185,23 +185,23 @@ def bidstrainer(bidsfolder: str, samplefolder: str, bidsmapfile: str, pattern: s
         samplefolder = bidsfolder/'code'/'bidscoin'/'provenance'
         if not samplefolder.is_dir():
             LOGGER.info(f"Creating an empty samples directory tree: {samplefolder}")
-            for modality in bids.bidsmodalities + (bids.ignoremodality, bids.unknownmodality):
-                for run in heuristics['DICOM'][modality]:
+            for datatype in bids.bidsdatatypes + (bids.ignoredatatype, bids.unknowndatatype):
+                for run in heuristics['DICOM'][datatype]:
                     if not run['bids']['suffix']:
                         run['bids']['suffix'] = ''
-                    (samplefolder/modality/run['bids']['suffix']).mkdir(parents=True, exist_ok=True)
+                    (samplefolder/datatype/run['bids']['suffix']).mkdir(parents=True, exist_ok=True)
             LOGGER.info('Fill the directory tree with example DICOM files and re-run bidstrainer.py')
             return
 
-    # Create a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
+    # Create a copy / bidsmap skeleton with no datatype entries (i.e. bidsmap with empty lists)
     bidsmap = copy.deepcopy(heuristics)
     for logic in ('DICOM', 'PAR', 'P7', 'Nifti', 'FileSystem'):
-        for modality in bids.bidsmodalities:
+        for datatype in bids.bidsdatatypes:
 
-            if bidsmap[logic] and modality in bidsmap[logic]:
-                bidsmap[logic][modality] = None
+            if bidsmap[logic] and datatype in bidsmap[logic]:
+                bidsmap[logic][datatype] = None
 
-    # Loop over all bidsmodalities and instances and built up the bidsmap entries
+    # Loop over all bidsdatatypes and instances and built up the bidsmap entries
     files   = samplefolder.rglob('*')
     samples = [Path(dcmfile) for dcmfile in files if re.match(pattern, str(dcmfile))]
     for sample in samples:

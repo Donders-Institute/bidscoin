@@ -48,11 +48,11 @@ def build_bidsmap(dataformat: str, sourcefile: Path, bidsmap_new: dict, bidsmap_
         return bidsmap_new
 
     # See if we can find a matching run in the old bidsmap
-    run, modality, index = bids.get_matching_run(sourcefile, bidsmap_old, dataformat)
+    run, datatype, index = bids.get_matching_run(sourcefile, bidsmap_old, dataformat)
 
     # If not, see if we can find a matching run in the template
     if index is None:
-        run, modality, _ = bids.get_matching_run(sourcefile, template, dataformat)
+        run, datatype, _ = bids.get_matching_run(sourcefile, template, dataformat)
 
     # See if we have collected the run in our new bidsmap
     if not bids.exist_run(bidsmap_new, dataformat, '', run):
@@ -65,16 +65,16 @@ def build_bidsmap(dataformat: str, sourcefile: Path, bidsmap_new: dict, bidsmap_
             run['provenance'] = str(sourcefile.resolve())
 
         # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
-        LOGGER.info(f"Found '{modality}' {dataformat} sample: {sourcefile}")
+        LOGGER.info(f"Found '{datatype}' {dataformat} sample: {sourcefile}")
 
         # Copy the filled-in run over to the new bidsmap
-        bidsmap_new = bids.append_run(bidsmap_new, dataformat, modality, run)
+        bidsmap_new = bids.append_run(bidsmap_new, dataformat, datatype, run)
 
         # Launch a GUI to ask the user for help if the new run comes from the template (i.e. was not yet in the old bidsmap)
         if gui and gui.interactive==2 and index is None:
 
             # Open the interactive edit window to get the new mapping
-            dialog_edit = bidseditor.EditDialog(dataformat, sourcefile, modality, bidsmap_new, template, gui.subprefix, gui.sesprefix)
+            dialog_edit = bidseditor.EditDialog(dataformat, sourcefile, datatype, bidsmap_new, template, gui.subprefix, gui.sesprefix)
             dialog_edit.exec()
 
             # Get the result
@@ -109,7 +109,7 @@ def build_niftimap(session: Path, bidsmap_new: dict, bidsmap_old: dict) -> dict:
     if not session or not bidsmap_old['Nifti']:
         return bidsmap_new
 
-    # TODO: Loop through all bidsmodalities and runs
+    # TODO: Loop through all bidsdatatypes and runs
 
     return bidsmap_new
 
@@ -128,7 +128,7 @@ def build_filesystemmap(session: Path, bidsmap_new: dict, bidsmap_old: dict) -> 
     if not session or not bidsmap_old['FileSystem']:
         return bidsmap_new
 
-    # TODO: Loop through all bidsmodalities and runs
+    # TODO: Loop through all bidsdatatypes and runs
 
     return bidsmap_new
 
@@ -193,15 +193,15 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     bidsmap_old, _ = bids.load_bidsmap(bidsmapfile,  bidscoinfolder)
     template, _    = bids.load_bidsmap(templatefile, bidscoinfolder)
 
-    # Create the new bidsmap as a copy / bidsmap skeleton with no modality entries (i.e. bidsmap with empty lists)
+    # Create the new bidsmap as a copy / bidsmap skeleton with no datatype entries (i.e. bidsmap with empty lists)
     if bidsmap_old:
         bidsmap_new = copy.deepcopy(bidsmap_old)
     else:
         bidsmap_new = copy.deepcopy(template)
     for logic in ('DICOM', 'PAR', 'P7', 'Nifti', 'FileSystem'):
-        for modality in bids.bidsmodalities + (bids.unknownmodality, bids.ignoremodality):
-            if bidsmap_new[logic] and modality in bidsmap_new[logic]:
-                bidsmap_new[logic][modality] = None
+        for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
+            if bidsmap_new[logic] and datatype in bidsmap_new[logic]:
+                bidsmap_new[logic][datatype] = None
 
     # Start with an empty skeleton if we didn't have an old bidsmap
     if not bidsmap_old:
@@ -222,7 +222,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             QMessageBox.information(mainwin, 'BIDS mapping workflow',
                                     f"The bidsmapper will now scan {bidsfolder} and whenever "
                                     f"it detects a new type of scan it will ask you to identify it.\n\n"
-                                    f"It is important that you choose the correct BIDS modality "
+                                    f"It is important that you choose the correct BIDS datatype "
                                     f"(e.g. 'anat', 'dwi' or 'func') and suffix (e.g. 'bold' or 'sbref').\n\n"
                                     f"At the end you will be shown an overview of all the "
                                     f"different scan types and BIDScoin options (as in the "

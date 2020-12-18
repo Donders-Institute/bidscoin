@@ -25,7 +25,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
     :param bidsdir:     The bids-directory with the (multi-echo) subject data
     :param pattern:     Globlike recursive search pattern (relative to the subject/session folder) to select the first echo of the images that need to be combined, e.g. '*task-*echo-1*'
     :param subjects:    List of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
-    :param output:      Determines where the output is saved. It can be the name of a BIDS modality folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output = [the name of the input modality folder] then the original echo images are replaced by one combined image. If output is left empty then the combined image is saved in the input modality folder and the original echo images are moved to the {bids.unknownmodality} folder
+    :param output:      Determines where the output is saved. It can be the name of a BIDS datatype folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output = [the name of the input datatype folder] then the original echo images are replaced by one combined image. If output is left empty then the combined image is saved in the input datatype folder and the original echo images are moved to the {bids.unknowndatatype} folder
     :param algorithm:   Combination algorithm, either 'PAID', 'TE' or 'average'
     :param weights:     Weights for each echo
     :param force:       Boolean to overwrite existing ME target files
@@ -75,7 +75,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 echonr    = bids.get_bidsvalue(match, 'echo')
                 mepattern = bids.get_bidsvalue(match, 'echo', '*')
                 echos     = sorted(match.parent.glob(mepattern.name))
-                newechos  = [echo.parents[1]/bids.unknownmodality/echo.name for echo in echos]
+                newechos  = [echo.parents[1] / bids.unknowndatatype / echo.name for echo in echos]
                 if not echonr:
                     LOGGER.warning(f"No 'echo' key-value pair found in the filename, skipping: {match}")
                     continue
@@ -144,7 +144,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                     with (bidsdir/'.bidsignore').open('r') as fid:
                         bidsignore = fid.read().splitlines()
                 else:
-                    bidsignore = [bids.unknownmodality + '/']
+                    bidsignore = [bids.unknowndatatype + '/']
                 bidsignore.append('derivatives/')
                 scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
                 if output+'/' not in bidsignore and scans_tsv.is_file():
@@ -188,8 +188,8 @@ def main():
                         help="Globlike recursive search pattern (relative to the subject/session folder) to select the first echo of the images that need to be combined, e.g. '*task-*echo-1*'")
     parser.add_argument('-p','--participant_label', type=str, nargs='+',
                         help='Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed')
-    parser.add_argument('-o','--output', type=str, choices=bids.bidsmodalities + (bids.unknownmodality, 'derivatives'), default='',
-                        help=f"A string that determines where the output is saved. It can be the name of a BIDS modality folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output = [the name of the input modality folder] then the original echo images are replaced by one combined image. If output is left empty then the combined image is saved in the input modality folder and the original echo images are moved to the {bids.unknownmodality} folder")
+    parser.add_argument('-o','--output', type=str, choices=bids.bidsdatatypes + (bids.unknowndatatype, 'derivatives'), default='',
+                        help=f"A string that determines where the output is saved. It can be the name of a BIDS datatype folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output = [the name of the input datatype folder] then the original echo images are replaced by one combined image. If output is left empty then the combined image is saved in the input datatype folder and the original echo images are moved to the {bids.unknowndatatype} folder")
     parser.add_argument('-a','--algorithm', choices=['PAID', 'TE', 'average'], default='TE',
                         help='Combination algorithm')
     parser.add_argument('-w','--weights', nargs='*', default=None, type=list,
