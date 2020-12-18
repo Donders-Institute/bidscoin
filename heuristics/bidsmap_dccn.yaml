@@ -249,7 +249,7 @@ DICOM:
     attributes:                   # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
       <<: *funcattributes_dicom
       ProtocolName: ['*fmri*', '*fMRI*', '*FMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
-      ImageType: 'PHYSIO'
+      ImageType: PHYSIO
     bids:
       <<: *funcbids_dicom
       echo: ~
@@ -334,7 +334,7 @@ DICOM:
     attributes:                           # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
       <<: *dwiattributes_dicom
       ProtocolName: ['*dwi*', '*DWI*', '*diffusion*', 'DIFFUSION', '*dti*', '*DTI*']
-      ImageType: 'PHYSIO'
+      ImageType: PHYSIO
     bids:
       <<: *dwibids_dicom
       suffix: physio
@@ -346,7 +346,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *dwiattributes_dicom
-      ImageType: 'DIFFUSION'
+      ImageType: DIFFUSION
     bids: *dwibids_dicom
 
   fmap:       # ----------------------- All fieldmap runs ----------------------
@@ -436,23 +436,22 @@ DICOM:
       dir: ~
       suffix: epi
 
+  eeg:        # ----------------------- All EEG data ---------------------------
+  - provenance: ~
+    attributes:
+      Modality: EEG
+      ProtocolName: ~
+      SeriesDescription: ~
+    bids:
+      task: <SeriesDescription>
+      suffix: eeg
+
   beh:        # ----------------------- All behavioural data -------------------
   - provenance: ~
     attributes: &behattributes
       Modality: ~
       ProtocolName: ~
       SeriesDescription: ~
-      ImageType: ~
-      SequenceVariant: ~
-      SequenceName: ~
-      ScanningSequence: ~
-      MRAcquisitionType: ~
-      SliceThickness: ~
-      FlipAngle: ~
-      EchoNumbers: ~
-      EchoTime: ~
-      RepetitionTime: ~
-      PhaseEncodingDirection: ~
     bids: &behbids
       task: <SeriesDescription>
       suffix: events
@@ -933,64 +932,6 @@ PAR:
       <<: *fmapbids_par
       suffix: epi
 
-  beh:        # ----------------------- All behavioural data -------------------
-  - provenance: ~
-    attributes: &behattributes_par
-      series_type: ~
-      exam_name: ~
-      protocol_name: ~
-      tech: ~
-      diffusion: ~
-      fov: ~
-      scan_resolution: ~
-      scan_mode: ~
-      max_slices: ~
-      flow_compensation: ~
-      max_echoes: ~
-      repetition_time: ~
-      prep_direction: ~
-    bids: &behbids_par
-      task: <protocol_name>
-      suffix: events
-  - provenance: ~
-    attributes: *behattributes_par
-    bids:
-      <<: *behbids_par
-      suffix: beh
-  - provenance: ~
-    attributes: *behattributes_par
-    bids:
-      <<: *behbids_par
-      suffix: physio
-  - provenance: ~
-    attributes: *behattributes_par
-    bids:
-      <<: *behbids_par
-      suffix: stim
-
-  pet:        # ----------------------- All PET runs ---------------------------
-  - provenance: ~
-    attributes: &petattributes_par
-      series_type: ~
-      exam_name: ~
-      protocol_name: ~
-      tech: ~
-      diffusion: ~
-      fov: ~
-      scan_resolution: ~
-      scan_mode: ~
-      max_slices: ~
-      flow_compensation: ~
-      max_echoes: ~
-      repetition_time: ~
-      prep_direction: ~
-    bids: &petbids_par
-      task: <protocol_name>
-      acq: <tech>
-      rec: ~
-      run: <<1>>
-      suffix: pet
-
   extra_data: # ----------------------- All extra data -------------------------
   - provenance: ~
     attributes:
@@ -1046,234 +987,3 @@ PAR:
       run: <<1>>
       mod: ~
       suffix: ~
-
-
-P7: ~
-# --------------------------------------------------------------------------------
-# P*.7 key-value heuristics (GE fields that are mapped to the BIDS labels)
-# --------------------------------------------------------------------------------
-
-
-Nifti: ~
-# --------------------------------------------------------------------------------
-# Nifti key-value heuristics (Nifti fields that are mapped to the BIDS labels)
-# --------------------------------------------------------------------------------
-
-
-FileSystem:
-# --------------------------------------------------------------------------------
-# File system key-value heuristics (these file- and foldernames will be mapped
-# to the BIDS labels; Special substitutions can be performed using python's
-# Format Specification Mini-Language)
-# --------------------------------------------------------------------------------
-  subject: <<SourceFilePath>>       # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime
-  session: <<SourceFilePath>>       # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime
-  anat:       # ----------------------- All anatomical runs --------------------
-  - attributes: &anatattributes_file
-      FolderName: ~
-      FileName: ~
-      FileExt: ~
-    bids: &anatbids_file
-      acq: <FileName>
-      rec: ~
-      ce: ~
-      task: ~
-      echo: ~
-      dir: ~
-      run: <<1>>
-      mod: ~
-      suffix: T1w
-  - attributes: *anatattributes_file
-    bids:
-      <<: *anatbids_file
-      suffix: T2w
-  - attributes: *anatattributes_file
-    bids:
-      <<: *anatbids_file
-      suffix: T1rho
-  - attributes: *anatattributes_file
-    bids:
-      <<: *anatbids_file
-      suffix: T1map
-  - attributes: *anatattributes_file
-    bids:
-      <<: *anatbids_file
-      suffix: T2map
-  - attributes: *anatattributes_file
-    bids:
-      <<: *anatbids_file
-      suffix: T2star
-  - attributes: *anatattributes_file
-    bids:
-      <<: *anatbids_file
-      suffix: FLAIR
-  - attributes: *anatattributes_file
-    bids:
-      <<: *anatbids_file
-      suffix: FLASH
-  - attributes: *anatattributes_file
-    bids:
-      <<: *anatbids_file
-      suffix: PD
-  - attributes: *anatattributes_file
-    bids:
-      <<: *anatbids_file
-      suffix: PDmap
-  - attributes: *anatattributes_file
-    bids:
-      <<: *anatbids_file
-      suffix: PDT2
-  - attributes: *anatattributes_file
-    bids:
-      <<: *anatbids_file
-      suffix: inplaneT1
-  - attributes: *anatattributes_file
-    bids:
-      <<: *anatbids_file
-      suffix: inplaneT2
-  - attributes: *anatattributes_file
-    bids:
-      <<: *anatbids_file
-      suffix: angio
-  - attributes: *anatattributes_file
-    bids:
-      <<: *anatbids_file
-      suffix: defacemask
-  - attributes: *anatattributes_file
-    bids:
-      <<: *anatbids_file
-      suffix: SWImagandphase
-
-  func:       # ----------------------- All functional runs --------------------
-  - attributes: &funcattributes_file
-      FolderName: ~
-      FileName: ~
-      FileExt: ~
-    bids: &funcbids_file
-      task: <FileName>
-      acq: ~
-      rec: ~
-      run: <<1>>
-      echo: ~
-      suffix: bold
-  - attributes: *funcattributes_file
-    bids:
-      <<: *funcbids_file
-      suffix: sbref
-  - attributes: *funcattributes_file
-    bids:
-      <<: *funcbids_file
-      suffix: events
-  - attributes: *funcattributes_file
-    bids:
-      <<: *funcbids_file
-      recording: <FileName>
-      suffix: physio
-  - attributes: *funcattributes_file
-    bids:
-      <<: *funcbids_file
-      recording: <FileName>
-      suffix: stim
-
-  dwi:        # ----------------------- All diffusion runs ---------------------
-  - attributes: &dwiattributes_file
-      FolderName: ~
-      FileName: ~
-      FileExt: ~
-    bids: &dwibids_file
-      acq: <FileName>
-      run: <<1>>
-      suffix: dwi
-
-  fmap:       # ----------------------- All fieldmap runs ----------------------
-  - attributes: &fmapattributes_file
-      FolderName: ~
-      FileName: ~
-      FileExt: ~
-    bids: &fmapbids_file
-      acq: <FileName>
-      run: <<1>>
-      dir: ~
-      suffix: magnitude1
-      IntendedFor: ~
-  - attributes: *fmapattributes_file
-    bids:
-      <<: *fmapbids_file
-      suffix: magnitude2
-  - attributes: *fmapattributes_file
-    bids:
-      <<: *fmapbids_file
-      suffix: phasediff
-  - attributes: *fmapattributes_file
-    bids:
-      <<: *fmapbids_file
-      suffix: phase1
-  - attributes: *fmapattributes_file
-    bids:
-      <<: *fmapbids_file
-      suffix: phase2
-  - attributes: *fmapattributes_file
-    bids:
-      <<: *fmapbids_file
-      suffix: magnitude
-  - attributes: *fmapattributes_file
-    bids:
-      <<: *fmapbids_file
-      suffix: fieldmap
-  - attributes: *fmapattributes_file
-    bids:
-      <<: *fmapbids_file
-      suffix: epi
-
-  beh:        # ----------------------- All behavioural data -------------------
-  - attributes: &behattributes_file
-      FolderName: ~
-      FileName: ~
-      FileExt: ~
-    bids: &behbids_file
-      task: <FileName>
-      suffix: events
-  - attributes: *behattributes_file
-    bids:
-      <<: *behbids_file
-      suffix: beh
-  - attributes: *behattributes_file
-    bids:
-      <<: *behbids_file
-      suffix: physio
-  - attributes: *behattributes_file
-    bids:
-      <<: *behbids_file
-      suffix: stim
-
-  extra_data: # ----------------------- All extra data -------------------------
-  - attributes:
-      FolderName: ~
-      FileName: ~
-      FileExt: ~
-    bids:
-      acq: ~
-      rec: ~
-      ce: ~
-      task: ~
-      echo: ~
-      dir: ~
-      run: <<1>>
-      suffix: ~
-      mod: ~
-
-  leave_out:  # ----------------------- Data that will be left out -------------
-  - attributes:
-      FolderName: ~
-      FileName: ~
-      FileExt: ~
-    bids:
-      acq: ~
-      rec: ~
-      ce: ~
-      task: ~
-      echo: ~
-      dir: ~
-      run: <<1>>
-      suffix: ~
-      mod: ~
