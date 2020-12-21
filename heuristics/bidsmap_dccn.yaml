@@ -448,7 +448,7 @@ DICOM:
       run: <<1>>
       suffix: eeg
 
-  ieeg: ~     # ----------------------- All iEEG data --------------------------
+  ieeg:       # ----------------------- All iEEG data --------------------------
   - provenance: ~
     attributes: *eegattributes
     bids:
