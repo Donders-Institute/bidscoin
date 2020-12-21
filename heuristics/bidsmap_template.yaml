@@ -310,7 +310,7 @@ DICOM:
       run: <<1>>
       suffix: eeg
 
-  ieeg: ~     # ----------------------- All iEEG data --------------------------
+  ieeg:       # ----------------------- All iEEG data --------------------------
   - provenance: ~
     attributes:
       Modality: EEG
@@ -322,7 +322,7 @@ DICOM:
       run: <<1>>
       suffix: ieeg
 
-  meg: ~      # ----------------------- All MEG data ---------------------------
+  meg:        # ----------------------- All MEG data ---------------------------
   - provenance: ~
     attributes:
       Modality: EEG
