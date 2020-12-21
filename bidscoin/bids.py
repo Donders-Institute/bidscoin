@@ -859,7 +859,7 @@ def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
     return provenance
 
 
-def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int, str], sourcefile: Path= '') -> dict:
+def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int, str], sourcefile: Path=Path()) -> dict:
     """
     Find the (first) run in bidsmap[dataformat][bidsdatatype] with run['bids']['suffix_idx'] == suffix_idx
 
@@ -868,7 +868,7 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
     :param datatype:    The datatype in which a matching run is searched for (e.g. 'anat')
     :param suffix_idx:  The name of the suffix that is searched for (e.g. 'bold') or the datatype index number
     :param sourcefile:  The name of the sourcefile. If given, the bidsmap values are read from file
-    :return:            The clean (filled) run item in the bidsmap[dataformat][bidsdatatype] with the matching suffix_idx, otherwise None
+    :return:            The clean (filled) run item in the bidsmap[dataformat][bidsdatatype] with the matching suffix_idx, otherwise a dict with empty attributes & bids keys
     """
 
     if not dataformat:
@@ -877,12 +877,11 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
     for index, run in enumerate(bidsmap.get(dataformat).get(datatype,[])):
         if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
-            run_ = dict(provenance={}, attributes={}, bids={})
+            run_ = dict(provenance=str(sourcefile.resolve()), attributes={}, bids={})
 
             for attrkey, attrvalue in run['attributes'].items():
                 if sourcefile.name:
                     run_['attributes'][attrkey] = get_sourcefield(attrkey, sourcefile, dataformat)
-                    run_['provenance']          = str(sourcefile.resolve())
                 else:
                     run_['attributes'][attrkey] = attrvalue
 
@@ -895,6 +894,7 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
             return run_
 
     logger.warning(f"'{datatype}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{dataformat}']")
+    return dict(provenance=str(sourcefile.resolve()), attributes={}, bids={})
 
 
 def delete_run(bidsmap: dict, dataformat: str, datatype: str, provenance: Path) -> dict:
@@ -982,7 +982,7 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, provenance: Path, target
     num_runs_in = len(dir_bidsmap(bidsmap, dataformat))
 
     # Warn the user if the target run already exists when the run is moved to another datatype
-    if source_datatype!=target_datatype:
+    if source_datatype != target_datatype:
         if exist_run(bidsmap, dataformat, target_datatype, run):
             logger.warning(f'That run from {source_datatype} already exists in {target_datatype}...')
 

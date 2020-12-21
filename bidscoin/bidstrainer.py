@@ -47,7 +47,7 @@ def built_dicommap(dicomfile: Path, bidsmap: dict, template: dict) -> dict:
 
     # Get bids-labels from the matching run in the template
     run = bids.get_run(template, 'DICOM', datatype, suffix, dicomfile)      # TODO: check if the dicomfile argument is not broken
-    if not run:
+    if run.get('attributes'):
         raise ValueError(f"Oops, this should not happen! BIDS datatype '{datatype}' or one of the bidslabels is not accounted for in the code\n{dicomfile}")
 
     # Copy the filled-in run over to the bidsmap

@@ -1193,8 +1193,6 @@ class EditDialog(QDialog):
 
         # Get the new target_run
         self.target_run = bids.get_run(self.template_bidsmap, self.dataformat, self.target_datatype, suffix_idx, Path(self.target_run['provenance']))
-        if not self.target_run:
-            self.target_run = self.source_run
 
         # Insert the new target_run in our target_bidsmap
         self.target_bidsmap = bids.update_bidsmap(self.target_bidsmap,
