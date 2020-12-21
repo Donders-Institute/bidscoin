@@ -305,12 +305,35 @@ DICOM:
       ProtocolName: ~
       SeriesDescription: ~
     bids:
+      acq: <ProtocolName>
       task: <SeriesDescription>
+      run: <<1>>
       suffix: eeg
 
   ieeg: ~     # ----------------------- All iEEG data --------------------------
+  - provenance: ~
+    attributes:
+      Modality: EEG
+      ProtocolName: ~
+      SeriesDescription: ~
+    bids:
+      acq: <ProtocolName>
+      task: <SeriesDescription>
+      run: <<1>>
+      suffix: ieeg
 
   meg: ~      # ----------------------- All MEG data ---------------------------
+  - provenance: ~
+    attributes:
+      Modality: EEG
+      ProtocolName: ~
+      SeriesDescription: ~
+    bids:
+      acq: <ProtocolName>
+      task: <SeriesDescription>
+      proc: ~
+      run: <<1>>
+      suffix: meg
 
   beh:        # ----------------------- All behavioural data -------------------
   - provenance: ~

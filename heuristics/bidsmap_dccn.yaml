@@ -438,13 +438,22 @@ DICOM:
 
   eeg:        # ----------------------- All EEG data ---------------------------
   - provenance: ~
-    attributes:
+    attributes: &eegattributes
       Modality: EEG
       ProtocolName: ~
       SeriesDescription: ~
-    bids:
+    bids: &eegbids
+      acq: <ProtocolName>
       task: <SeriesDescription>
+      run: <<1>>
       suffix: eeg
+
+  ieeg: ~     # ----------------------- All iEEG data --------------------------
+  - provenance: ~
+    attributes: *eegattributes
+    bids:
+      <<: *eegbids
+      suffix: ieeg
 
   beh:        # ----------------------- All behavioural data -------------------
   - provenance: ~
