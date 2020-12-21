@@ -37,7 +37,7 @@ logger = logging.getLogger('bidscoin')
 bidsdatatypes   = ('fmap', 'anat', 'func', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')                                   # NB: get_matching_run() uses this order to search for a match
 ignoredatatype  = 'leave_out'
 unknowndatatype = 'extra_data'
-bidslabels      = ('task', 'acq', 'inv', 'part', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'suffix', 'IntendedFor')     # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
+bidslabels      = ('task', 'acq', 'inv', 'part', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'proc', 'suffix', 'IntendedFor')     # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
 
 heuristics_folder = Path(__file__).parents[1]/'heuristics'
 bidsmap_template  = heuristics_folder/'bidsmap_template.yaml'
@@ -874,7 +874,7 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
     if not dataformat:
         dataformat = get_dataformat(sourcefile)
 
-    for index, run in enumerate(bidsmap[dataformat][datatype]):
+    for index, run in enumerate(bidsmap.get(dataformat).get(datatype,[])):
         if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
             run_ = dict(provenance={}, attributes={}, bids={})
@@ -894,7 +894,7 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
 
             return run_
 
-    logger.error(f"'{datatype}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{dataformat}']")
+    logger.warning(f"'{datatype}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{dataformat}']")
 
 
 def delete_run(bidsmap: dict, dataformat: str, datatype: str, provenance: Path) -> dict:
@@ -946,7 +946,9 @@ def append_run(bidsmap: dict, dataformat: str, datatype: str, run: dict, clean: 
 
         run = run_
 
-    if bidsmap[dataformat][datatype] is None:
+    if not bidsmap.get(dataformat):
+        bidsmap[dataformat] = {}
+    elif not bidsmap.get(dataformat).get(datatype):
         bidsmap[dataformat][datatype] = [run]
     else:
         bidsmap[dataformat][datatype].append(run)
@@ -1084,7 +1086,7 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, mat
             if exist_run(bidsmap, dataformat, datatype, run_item, matchbidslabels):
                 return True
 
-    if not bidsmap[dataformat] or not bidsmap[dataformat][datatype]:
+    if not bidsmap.get(dataformat).get(datatype):
         return False
 
     for run in bidsmap[dataformat][datatype]:
@@ -1133,7 +1135,7 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, datatypes
     run_ = dict(provenance={}, attributes={}, bids={})
     for datatype in datatypes:
 
-        if bidsmap[dataformat][datatype] is None: continue
+        if bidsmap.get(dataformat).get(datatype) is None: continue
 
         for index, run in enumerate(bidsmap[dataformat][datatype]):
 
@@ -1246,7 +1248,7 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
     # Compose the BIDS filename (-> switch statement)
     if datatype =='anat':
 
-        # bidsname: sub-<participant_label>[_ses-<session_label>][_acq-<label>][_ce-<label>][_rec-<label>][_run-<index>][_mod-<label>]_suffix
+        # bidsname: sub-<label>[_ses-<label>][_acq-<label>][_ce-<label>][_rec-<label>][_run-<index>][_mod-<label>]_suffix
         bidsname = '{sub}{_ses}{_acq}{_inv}{_part}{_ce}{_rec}{_run}{_mod}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
@@ -1299,9 +1301,41 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
             _run    = add_prefix('_run-', runindex),
             suffix  = run['bids']['suffix'])
 
+    elif datatype =='meg':
+
+        # bidsname: sub-<label>[_ses-<label>]_task-<label>[_acq-<label>][_run-<index>][_proc-<label>]_meg.<manufacturer_specific_extension>
+        bidsname = '{sub}{_ses}_{task}{_acq}{_proc}{_run}_{suffix}'.format(
+            sub     = subid,
+            _ses    = add_prefix('_', sesid),
+            task    = f"task-{run['bids']['task']}",
+            _acq    = add_prefix('_acq-', run['bids']['acq']),
+            _proc   = add_prefix('_proc-', run['bids']['proc']),
+            _run    = add_prefix('_run-', runindex),
+            suffix  = run['bids']['suffix'])
+
+    elif datatype =='eeg':
+        # bidsname: sub-<label>[_ses-<label>]_task-<label>[_acq-<label>][_run-<index>]_eeg.<manufacturer_specific_extension>
+        bidsname = '{sub}{_ses}_{task}{_acq}{_run}_{suffix}'.format(
+            sub     = subid,
+            _ses    = add_prefix('_', sesid),
+            task    = f"task-{run['bids']['task']}",
+            _acq    = add_prefix('_acq-', run['bids']['acq']),
+            _run    = add_prefix('_run-', runindex),
+            suffix  = run['bids']['suffix'])
+
+    elif datatype =='ieeg':
+        # bidsname: sub-<label>[_ses-<label>]_task-<label>[_acq-<label>][_run-<index>]_ieeg.<manufacturer_specific_extension>
+        bidsname = '{sub}{_ses}_{task}{_acq}{_run}_{suffix}'.format(
+            sub     = subid,
+            _ses    = add_prefix('_', sesid),
+            task    = f"task-{run['bids']['task']}",
+            _acq    = add_prefix('_acq-', run['bids']['acq']),
+            _run    = add_prefix('_run-', runindex),
+            suffix  = run['bids']['suffix'])
+
     elif datatype =='beh':
 
-        # bidsname: sub-<participant_label>[_ses-<session_label>]_task-<task_name>_suffix
+        # bidsname: sub-<label>[_ses-<label>]_task-<task_name>_suffix
         bidsname = '{sub}{_ses}_{task}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
@@ -1310,7 +1344,7 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
 
     elif datatype =='pet':
 
-        # bidsname: sub-<participant_label>[_ses-<session_label>]_task-<task_label>[_acq-<label>][_rec-<label>][_run-<index>]_suffix
+        # bidsname: sub-<label>[_ses-<label>]_task-<task_label>[_acq-<label>][_rec-<label>][_run-<index>]_suffix
         bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
@@ -1322,7 +1356,7 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
 
     elif datatype == unknowndatatype or datatype == ignoredatatype:
 
-        # bidsname: sub-<participant_label>[_ses-<session_label>]_acq-<label>[..][_suffix]
+        # bidsname: sub-<label>[_ses-<label>]_acq-<label>[..][_suffix]
         bidsname = '{sub}{_ses}{_task}_{acq}{_ce}{_rec}{_dir}{_run}{_echo}{_mod}{_suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
@@ -1337,7 +1371,8 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
             _suffix = add_prefix('_',      run['bids']['suffix']))
 
     else:
-        raise ValueError(f'Critical error: datatype "{datatype}" not implemented, please inform the developers about this error')
+        logger.exception(f'Critical error: datatype "{datatype}" not implemented, please inform the developers about this error')
+        raise ValueError()
 
     return bidsname
 

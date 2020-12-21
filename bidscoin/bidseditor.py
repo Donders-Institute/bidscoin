@@ -597,7 +597,7 @@ class Ui_MainWindow(MainWindow):
         idx = 0
         samples_table.setSortingEnabled(False)
         for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
-            runs = self.output_bidsmap[self.dataformat][datatype]
+            runs = self.output_bidsmap.get(self.dataformat).get(datatype)
             if not runs:
                 continue
             for run in runs:
@@ -625,17 +625,17 @@ class Ui_MainWindow(MainWindow):
                 if samples_table.item(idx, 3):
                     if datatype == bids.unknowndatatype:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('red'))
-                        samples_table.item(idx, 3).setToolTip(f"Red: This imaging datatype is not part of BIDS but will be converted to a BIDS-like entry in the '{bids.unknowndatatype}' folder")
+                        samples_table.item(idx, 3).setToolTip(f"Red: This imaging data type is not part of BIDS but will be converted to a BIDS-like entry in the '{bids.unknowndatatype}' folder")
                     elif datatype == bids.ignoredatatype:
                         samples_table.item(idx, 1).setForeground(QtGui.QColor('gray'))
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('gray'))
                         f = samples_table.item(idx, 3).font()
                         f.setStrikeOut(True)
                         samples_table.item(idx, 3).setFont(f)
-                        samples_table.item(idx, 3).setToolTip('Gray / Strike-out: This imaging datatype will be ignored and not converted BIDS')
+                        samples_table.item(idx, 3).setToolTip('Gray / Strike-out: This imaging data type will be ignored and not converted BIDS')
                     else:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('green'))
-                        samples_table.item(idx, 3).setToolTip(f"Green: This '{datatype}' imaging datatype is part of BIDS")
+                        samples_table.item(idx, 3).setToolTip(f"Green: This '{datatype}' imaging data type is part of BIDS")
 
                 edit_button = QPushButton('Edit')
                 edit_button.setToolTip('Click to see more details and edit the BIDS output name')
@@ -691,7 +691,7 @@ class Ui_MainWindow(MainWindow):
         samples_table.setShowGrid(True)
         samples_table.setColumnCount(6)
         samples_table.setRowCount(num_files)
-        samples_table.setHorizontalHeaderLabels(['', f'{self.dataformat} input', 'BIDS datatype', 'BIDS output', 'Action', 'Provenance'])
+        samples_table.setHorizontalHeaderLabels(['', f'{self.dataformat} input', 'BIDS data type', 'BIDS output', 'Action', 'Provenance'])
         samples_table.setSortingEnabled(True)
         samples_table.sortByColumn(0, QtCore.Qt.AscendingOrder)
         header = samples_table.horizontalHeader()
@@ -887,7 +887,7 @@ class EditDialog(QDialog):
 
         # Set-up the datatype dropdown menu
         self.set_datatype_dropdown_section()
-        self.datatype_dropdown.setToolTip('The BIDS datatype (data type). First make sure this one is correct, then choose the right suffix')
+        self.datatype_dropdown.setToolTip('The BIDS data type. First make sure this one is correct, then choose the right suffix')
 
         # Set-up the BIDS table
         self.bids_label = QLabel()
@@ -971,18 +971,13 @@ class EditDialog(QDialog):
         """Derive the possible suffixes for each datatype from the template. """
         allowed_suffixes = {}
         for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
-            allowed_suffixes[datatype] = []
-            runs = self.template_bidsmap[self.dataformat][datatype]
-            if not runs:
-                continue
+            runs = self.template_bidsmap.get(self.dataformat).get(datatype, [])
             for run in runs:
                 suffix = run['bids'].get('suffix', None)
-                if suffix and suffix not in allowed_suffixes[datatype]:
+                if suffix and suffix not in allowed_suffixes.get(datatype,[]):
+                    if datatype not in allowed_suffixes:
+                        allowed_suffixes[datatype] = []
                     allowed_suffixes[datatype].append(suffix)
-
-        # Sort the allowed suffixes alphabetically
-        for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
-            allowed_suffixes[datatype] = sorted(allowed_suffixes[datatype])
 
         self.allowed_suffixes = allowed_suffixes
 
@@ -1109,14 +1104,14 @@ class EditDialog(QDialog):
 
         self.suffix_dropdown = QComboBox()
         suffix_dropdown = self.suffix_dropdown
-        suffix_dropdown.setToolTip('The suffix that sets the different run types apart. First make sure the "Modality" dropdown-menu is set correctly before chosing the right suffix here')
+        suffix_dropdown.setToolTip('The suffix that sets the different run types apart. First make sure the "Data type" dropdown-menu is set correctly before chosing the right suffix here')
 
         for i, row in enumerate(data):
             key = row[0]['value']
             if self.target_datatype in bids.bidsdatatypes and key =='suffix':
                 item = myWidgetItem('suffix', iseditable=False)
                 table.setItem(i, 0, item)
-                labels = self.allowed_suffixes[self.target_datatype]
+                labels = self.allowed_suffixes.get(self.target_datatype,[''])
                 suffix_dropdown.addItems(labels)
                 suffix_dropdown.setCurrentIndex(suffix_dropdown.findText(self.target_run['bids']['suffix']))
                 suffix_dropdown.currentIndexChanged.connect(self.suffix_dropdown_change)
@@ -1148,7 +1143,7 @@ class EditDialog(QDialog):
     def set_datatype_dropdown_section(self):
         """Dropdown select datatype list section. """
         self.label_dropdown = QLabel()
-        self.label_dropdown.setText('Modality')
+        self.label_dropdown.setText('Data type')
 
         self.datatype_dropdown = QComboBox()
         self.datatype_dropdown.addItems(bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype))
@@ -1173,15 +1168,15 @@ class EditDialog(QDialog):
 
         f = self.view_bids_name.font()
         if self.target_datatype==bids.unknowndatatype:
-            self.view_bids_name.setToolTip(f"Red: This imaging datatype is not part of BIDS but will be converted to a BIDS-like entry in the '{bids.unknowndatatype}' folder. Click 'OK' if you want your BIDS output data to look like this")
+            self.view_bids_name.setToolTip(f"Red: This imaging data type is not part of BIDS but will be converted to a BIDS-like entry in the '{bids.unknowndatatype}' folder. Click 'OK' if you want your BIDS output data to look like this")
             self.view_bids_name.setTextColor(QtGui.QColor('red'))
             f.setStrikeOut(False)
         elif self.target_datatype == bids.ignoredatatype:
-            self.view_bids_name.setToolTip("Gray / Strike-out: This imaging datatype will be ignored and not converted BIDS. Click 'OK' if you want your BIDS output data to look like this")
+            self.view_bids_name.setToolTip("Gray / Strike-out: This imaging data type will be ignored and not converted BIDS. Click 'OK' if you want your BIDS output data to look like this")
             self.view_bids_name.setTextColor(QtGui.QColor('gray'))
             f.setStrikeOut(True)
         else:
-            self.view_bids_name.setToolTip(f"Green: This '{self.target_datatype}' imaging datatype is part of BIDS. Click 'OK' if you want your BIDS output data to look like this")
+            self.view_bids_name.setToolTip(f"Green: This '{self.target_datatype}' imaging data type is part of BIDS. Click 'OK' if you want your BIDS output data to look like this")
             self.view_bids_name.setTextColor(QtGui.QColor('green'))
             f.setStrikeOut(False)
         self.view_bids_name.setFont(f)
@@ -1198,6 +1193,8 @@ class EditDialog(QDialog):
 
         # Get the new target_run
         self.target_run = bids.get_run(self.template_bidsmap, self.dataformat, self.target_datatype, suffix_idx, Path(self.target_run['provenance']))
+        if not self.target_run:
+            self.target_run = self.source_run
 
         # Insert the new target_run in our target_bidsmap
         self.target_bidsmap = bids.update_bidsmap(self.target_bidsmap,
@@ -1241,7 +1238,7 @@ class EditDialog(QDialog):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
         self.target_datatype = self.datatype_dropdown.currentText()
 
-        LOGGER.info(f"User has changed the BIDS datatype from '{self.current_datatype}' to '{self.target_datatype}' for {self.target_run['provenance']}")
+        LOGGER.info(f"User has changed the BIDS data type from '{self.current_datatype}' to '{self.target_datatype}' for {self.target_run['provenance']}")
 
         self.refresh(0)
 

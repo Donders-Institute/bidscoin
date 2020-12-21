@@ -200,7 +200,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         bidsmap_new = copy.deepcopy(template)
     for logic in ('DICOM', 'PAR', 'P7', 'Nifti', 'FileSystem'):
         for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
-            if bidsmap_new[logic] and datatype in bidsmap_new[logic]:
+            if logic in bidsmap_new and datatype in bidsmap_new[logic]:
                 bidsmap_new[logic][datatype] = None
 
     # Start with an empty skeleton if we didn't have an old bidsmap
