@@ -3,6 +3,7 @@ Reads PHYSIO data and writes it to a BIDS compliant tsv-file
 """
 
 
+import re
 import pandas as pd
 import json
 import struct
@@ -333,8 +334,8 @@ def physio2tsv(physio: dict, bidsname: Union[str,Path]):
     # Set the clock at zero at the start of the MRI acquisition
     starttime = -physio['ACQ'].nonzero()[0][0] / physio['Freq']     # Assumes that the physiological acquisition always starts before the MRI acquisition
 
-    # Add each trace to a data table and save the table as a BIDS-compliant gzipped tsv file
-    physiotable = pd.DataFrame(columns=[key for key in physio if key not in ('UUID','Freq','SliceMap','ACQ')])
+    # Add each trace to a data table and save the table as a BIDS-compliant (snake_case) gzipped tsv file
+    physiotable = pd.DataFrame(columns=[re.sub(r'(?<!^)(?=[A-Z])', '_', key).lower() for key in physio if key not in ('UUID','Freq','SliceMap','ACQ')])
     for key in physiotable.columns:
         physiotable[key] = physio[key]
     LOGGER.info(f"Writing physiological traces to: '{bidsname.with_suffix('.tsv.gz')}'")
