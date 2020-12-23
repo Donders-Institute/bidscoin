@@ -1248,17 +1248,17 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
     # Compose the BIDS filename (-> switch statement)
     if datatype =='anat':
 
-        # bidsname: sub-<label>[_ses-<label>][_acq-<label>][_ce-<label>][_rec-<label>][_run-<index>][_mod-<label>]_suffix
-        bidsname = '{sub}{_ses}{_acq}{_inv}{_part}{_ce}{_rec}{_run}{_mod}_{suffix}'.format(
+        # bidsname: sub-<label>[_ses-<label>][_acq-<label>][_ce-<label>][_rec-<label>][_run-<index>][_part-<label>]_<modality_label>
+        bidsname = '{sub}{_ses}{_acq}{_inv}{_ce}{_rec}{_run}{_mod}{_part}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
             _acq    = add_prefix('_acq-',  run['bids']['acq']),
             _inv    = add_prefix('_inv-',  run['bids']['inv']),
-            _part   = add_prefix('_part-', run['bids']['part']),
             _ce     = add_prefix('_ce-',   run['bids']['ce']),
             _rec    = add_prefix('_rec-',  run['bids']['rec']),
             _run    = add_prefix('_run-',  runindex),
             _mod    = add_prefix('_mod-',  run['bids']['mod']),
+            _part   = add_prefix('_part-', run['bids']['part']),
             suffix  = run['bids']['suffix'])
 
     elif datatype =='func':
