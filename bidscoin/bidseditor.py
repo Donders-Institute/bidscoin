@@ -530,15 +530,13 @@ class Ui_MainWindow(MainWindow):
             horizontal_header.setVisible(False)
 
             for i, row in enumerate(data):
-
-                for j, element in enumerate(row):
-                    value = element.get('value', '')
+                for j, item in enumerate(row):
+                    value = item.get('value', '')
                     if value == 'None':
                         value = ''
-                    iseditable = element.get('iseditable', False)
-                    tooltip_text = element.get('tooltip_text', None)
-                    item = myWidgetItem(value, iseditable=iseditable)
-                    tool_table.setItem(i, j, item)
+                    iseditable = item.get('iseditable', False)
+                    tooltip_text = item.get('tooltip_text', None)
+                    tool_table.setItem(i, j, myWidgetItem(value, iseditable=iseditable))
                     if tooltip_text:
                         tool_table.item(i, j).setToolTip(tooltip_text)
 
@@ -1063,8 +1061,8 @@ class EditDialog(QDialog):
     def source_cell_changed(self, row: int, column: int):
         """Source attribute value has been changed. """
         if column == 1:
-            key = self.source_table.item(row, 0).text()
-            value = self.source_table.item(row, 1).text()
+            key      = self.source_table.item(row, 0).text()
+            value    = self.source_table.item(row, 1).text()
             oldvalue = self.target_run['attributes'].get(key, None)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
@@ -1075,8 +1073,8 @@ class EditDialog(QDialog):
     def bids_cell_changed(self, row: int, column: int):
         """BIDS attribute value has been changed. """
         if column == 1:
-            key = self.bids_table.item(row, 0).text()
-            value = self.bids_table.item(row, 1).text()
+            key      = self.bids_table.item(row, 0).text()
+            value    = self.bids_table.item(row, 1).text()
             oldvalue = self.target_run['bids'].get(key, None)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
@@ -1098,32 +1096,26 @@ class EditDialog(QDialog):
 
         table.blockSignals(True)
         table.clearContents()
-
-        num_rows = len(data)
-        table.setRowCount(num_rows)
-
-        self.suffix_dropdown = QComboBox()
-        suffix_dropdown = self.suffix_dropdown
-        suffix_dropdown.setToolTip('The suffix that sets the different run types apart. First make sure the "Data type" dropdown-menu is set correctly before chosing the right suffix here')
+        table.setRowCount(len(data))
 
         for i, row in enumerate(data):
             key = row[0]['value']
-            if self.target_datatype in bids.bidsdatatypes and key =='suffix':
-                item = myWidgetItem('suffix', iseditable=False)
-                table.setItem(i, 0, item)
-                labels = self.allowed_suffixes.get(self.target_datatype,[''])
-                suffix_dropdown.addItems(labels)
+            if self.target_datatype in bids.bidsdatatypes and key == 'suffix':
+                table.setItem(i, 0, myWidgetItem('suffix', iseditable=False))
+                suffixes = self.allowed_suffixes.get(self.target_datatype,[''])
+                suffix_dropdown = self.suffix_dropdown = QComboBox()
+                suffix_dropdown.addItems(suffixes)
                 suffix_dropdown.setCurrentIndex(suffix_dropdown.findText(self.target_run['bids']['suffix']))
                 suffix_dropdown.currentIndexChanged.connect(self.suffix_dropdown_change)
+                suffix_dropdown.setToolTip('The suffix that sets the different run types apart. First make sure the "Data type" dropdown-menu is set correctly before chosing the right suffix here')
                 table.setCellWidget(i, 1, suffix_dropdown)
                 continue
-            for j, element in enumerate(row):
-                value = element.get('value', '')
+            for j, item in enumerate(row):
+                value = item.get('value', '')
                 if value == 'None':
                     value = ''
-                iseditable = element.get('iseditable', False)
-                item = myWidgetItem(value, iseditable=iseditable)
-                table.setItem(i, j, item)
+                iseditable = item.get('iseditable', False)
+                table.setItem(i, j, myWidgetItem(value, iseditable=iseditable))
 
         table.blockSignals(False)
 
@@ -1183,9 +1175,9 @@ class EditDialog(QDialog):
         self.view_bids_name.clear()
         self.view_bids_name.textCursor().insertText(str(bidsname))
 
-    def refresh(self, suffix_idx):
+    def get_run(self, suffix_idx):
         """
-        Refresh the edit dialog window with a new target_run from the template bidsmap.
+        Resets the edit dialog window with a new target_run from the template bidsmap.
 
         :param suffix_idx: The suffix or index number that will used to extract the run from the template bidsmap
         :return:
@@ -1205,7 +1197,7 @@ class EditDialog(QDialog):
         # Now that we have updated the bidsmap, we can also update the current_datatype
         self.current_datatype = self.target_datatype
 
-        # Refresh the edit window
+        # Reset the edit window with the new target_run
         self.reset(refresh=True)
 
     def reset(self, refresh: bool=False):
@@ -1238,7 +1230,7 @@ class EditDialog(QDialog):
 
         LOGGER.info(f"User has changed the BIDS data type from '{self.current_datatype}' to '{self.target_datatype}' for {self.target_run['provenance']}")
 
-        self.refresh(0)
+        self.get_run(0)
 
     def suffix_dropdown_change(self):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
@@ -1246,7 +1238,7 @@ class EditDialog(QDialog):
 
         LOGGER.info(f"User has changed the BIDS suffix from '{self.target_run['bids']['suffix']}' to '{target_suffix}' for {self.target_run['provenance']}")
 
-        self.refresh(target_suffix)
+        self.get_run(target_suffix)
 
     def get_help(self):
         """Open web page for help. """
