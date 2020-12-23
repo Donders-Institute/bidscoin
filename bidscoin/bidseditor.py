@@ -884,7 +884,12 @@ class EditDialog(QDialog):
         self.source_table.setToolTip(f"The {self.dataformat} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using '*string*' wildcards, see documentation), only change these if you know what you are doing!")
 
         # Set-up the datatype dropdown menu
-        self.set_datatype_dropdown_section()
+        self.label_dropdown = QLabel()
+        self.label_dropdown.setText('Data type')
+        self.datatype_dropdown = QComboBox()
+        self.datatype_dropdown.addItems(bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype))
+        self.datatype_dropdown.setCurrentIndex(self.datatype_dropdown.findText(self.target_datatype))
+        self.datatype_dropdown.currentIndexChanged.connect(self.datatype_dropdown_change)
         self.datatype_dropdown.setToolTip('The BIDS data type. First make sure this one is correct, then choose the right suffix')
 
         # Set-up the BIDS table
@@ -894,8 +899,14 @@ class EditDialog(QDialog):
         self.bids_table.setToolTip(f"The BIDS key-value pairs that are used to construct the BIDS output name. Feel free to change the values except for the dynamic 'run' field, which should normally not be touched")
         self.bids_table.cellChanged.connect(self.bids_cell_changed)
 
-        # Set-up the BIDS outputname field
-        self.set_bids_name_section()
+        # Set-up non-editable BIDS output name section
+        self.label_bids_name = QLabel()
+        self.label_bids_name.setText('Output name')
+        self.view_bids_name = QTextBrowser()
+        self.view_bids_name.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.view_bids_name.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.view_bids_name.setMinimumHeight(ROW_HEIGHT + 2)
+        self.refresh_bidsname()
 
         # Group the tables in boxes
         sizepolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -937,7 +948,7 @@ class EditDialog(QDialog):
         buttonBox.button(QDialogButtonBox.Ok).setToolTip('Apply the edits you made and close this window')
         buttonBox.button(QDialogButtonBox.Cancel).setToolTip('Discard the edits you made and close this window')
         buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
-        buttonBox.accepted.connect(self.update_run)
+        buttonBox.accepted.connect(self.accept_run)
         buttonBox.rejected.connect(partial(self.reject, False))
         buttonBox.helpRequested.connect(self.get_help)
         buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reset)
@@ -1132,29 +1143,8 @@ class EditDialog(QDialog):
 
         return table
 
-    def set_datatype_dropdown_section(self):
-        """Dropdown select datatype list section. """
-        self.label_dropdown = QLabel()
-        self.label_dropdown.setText('Data type')
-
-        self.datatype_dropdown = QComboBox()
-        self.datatype_dropdown.addItems(bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype))
-        self.datatype_dropdown.setCurrentIndex(self.datatype_dropdown.findText(self.target_datatype))
-        self.datatype_dropdown.currentIndexChanged.connect(self.datatype_dropdown_change)
-
-    def set_bids_name_section(self):
-        """Set non-editable BIDS output name section. """
-        self.label_bids_name = QLabel()
-        self.label_bids_name.setText('Output name')
-
-        self.view_bids_name = QTextBrowser()
-        self.view_bids_name.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.view_bids_name.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.view_bids_name.setMinimumHeight(ROW_HEIGHT + 2)
-
-        self.refresh_bidsname()
-
     def refresh_bidsname(self):
+        """Updates the bidsname with the current (edited) bids values"""
         bidsname = (Path(self.target_datatype) / bids.get_bidsname(self.target_bidsmap[self.dataformat]['subject'], self.target_bidsmap[self.dataformat]['session'],
                                                                    self.target_datatype, self.target_run, '', self.subprefix, self.sesprefix)).with_suffix('.*')
 
@@ -1175,7 +1165,7 @@ class EditDialog(QDialog):
         self.view_bids_name.clear()
         self.view_bids_name.textCursor().insertText(str(bidsname))
 
-    def get_run(self, suffix_idx):
+    def change_run(self, suffix_idx):
         """
         Resets the edit dialog window with a new target_run from the template bidsmap.
 
@@ -1230,7 +1220,7 @@ class EditDialog(QDialog):
 
         LOGGER.info(f"User has changed the BIDS data type from '{self.current_datatype}' to '{self.target_datatype}' for {self.target_run['provenance']}")
 
-        self.get_run(0)
+        self.change_run(0)
 
     def suffix_dropdown_change(self):
         """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
@@ -1238,7 +1228,7 @@ class EditDialog(QDialog):
 
         LOGGER.info(f"User has changed the BIDS suffix from '{self.target_run['bids']['suffix']}' to '{target_suffix}' for {self.target_run['provenance']}")
 
-        self.get_run(target_suffix)
+        self.change_run(target_suffix)
 
     def get_help(self):
         """Open web page for help. """
@@ -1252,7 +1242,7 @@ class EditDialog(QDialog):
             answer = QMessageBox.question(self, 'Edit BIDS mapping', 'Closing window, do you want to save the changes you made?',
                                           QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
             if answer == QMessageBox.Yes:
-                self.update_run()
+                self.accept_run()
                 return
             if answer == QMessageBox.No:
                 self.done(2)
@@ -1265,7 +1255,7 @@ class EditDialog(QDialog):
 
         super(EditDialog, self).reject()
 
-    def update_run(self):
+    def accept_run(self):
 
         if self.target_datatype=='fmap' and not self.target_run['bids']['IntendedFor']:
             answer = QMessageBox.question(self, 'Edit BIDS mapping', "The 'IntendedFor' bids-label was not set, which can make that your fieldmap won't be used when "
