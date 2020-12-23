@@ -453,6 +453,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     if not dataset_file.is_file():
         dataset_description = {"Name":                  "REQUIRED. Name of the dataset",
                                "BIDSVersion":           str(bids.bidsversion()),
+                               "DatasetType":           "raw",
                                "License":               "RECOMMENDED. The license for the dataset. The use of license name abbreviations is RECOMMENDED for specifying a license. The corresponding full license text MAY be specified in an additional LICENSE file",
                                "Authors":               ["OPTIONAL. List of individuals who contributed to the creation/curation of the dataset"],
                                "Acknowledgements":      "OPTIONAL. Text acknowledging contributions of individuals or institutions beyond those listed in Authors or Funding",
