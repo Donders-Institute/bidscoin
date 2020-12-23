@@ -93,7 +93,7 @@ class myQTableWidget(QTableWidget):
 class myWidgetItem(QTableWidgetItem):
 
     def __init__(self, value: str='', iseditable: bool=True):
-        """A QTableWidget that is editable or not"""
+        """A QTableWidgetItem that is editable or not"""
         super().__init__()
 
         self.setText(value)
