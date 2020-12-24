@@ -1023,22 +1023,24 @@ class EditDialog(QDialog):
             ])
 
         data_bids = []
-        for bidskey, bidsvalue in self.target_run['bids'].items():
-            if (self.target_datatype in bids.bidsdatatypes and bidskey=='suffix') or isinstance(bidsvalue, list):
-                iseditable = False
-            else:
-                iseditable = True
+        for bidskey in bids.bidskeys:       # Using bidskeys imposes a desired order
+            if bidskey in self.target_run['bids']:
+                bidsvalue = self.target_run['bids'].get(bidskey, '')
+                if (self.target_datatype in bids.bidsdatatypes and bidskey=='suffix') or isinstance(bidsvalue, list):
+                    iseditable = False
+                else:
+                    iseditable = True
 
-            data_bids.append([
-                {
-                    'value': bidskey,
-                    'iseditable': False
-                },
-                {
-                    'value': bidsvalue,
-                    'iseditable': iseditable
-                }
-            ])
+                data_bids.append([
+                    {
+                        'value': bidskey,
+                        'iseditable': False
+                    },
+                    {
+                        'value': bidsvalue,
+                        'iseditable': iseditable
+                    }
+                ])
 
         return data_provenance, data_source, data_bids
 
