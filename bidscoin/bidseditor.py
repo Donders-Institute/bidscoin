@@ -1084,9 +1084,15 @@ class EditDialog(QDialog):
     def bids_cell_changed(self, row: int, column: int):
         """BIDS attribute value has been changed. """
         if column == 1:
-            key      = self.bids_table.item(row, 0).text()
-            value    = self.bids_table.item(row, 1).text()
-            oldvalue = self.target_run['bids'].get(key, None)
+            key = self.bids_table.item(row, 0).text()
+            if isinstance(self.bids_table.cellWidget(row,1), QComboBox):
+                value      = self.bids_table.cellWidget(row,1).currentText()
+                values     = self.target_run['bids'].get(key, None)
+                oldvalue   = values[values[-1]]
+                values[-1] = self.bids_table.cellWidget(row,1).currentIndex()
+            else:
+                value    = self.bids_table.item(row, 1).text()
+                oldvalue = self.target_run['bids'].get(key, None)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
             if key and value!=oldvalue:
@@ -1097,8 +1103,12 @@ class EditDialog(QDialog):
                     LOGGER.warning(f"Expert usage: User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 else:
                     LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
-                self.target_run['bids'][key] = value
-                self.bids_table.item(row, 1).setText(value)
+                if isinstance(self.bids_table.cellWidget(row, 1), QComboBox):
+                    self.target_run['bids'][key] = values
+                    self.bids_table.item(row, 1).setText(value)
+                else:
+                    self.target_run['bids'][key] = value
+                    self.bids_table.item(row, 1).setText(value)
 
                 self.refresh_bidsname()
 
