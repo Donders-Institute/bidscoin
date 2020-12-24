@@ -1239,7 +1239,7 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
     # Validate and do some checks to allow for dragging the run entries between the different datatype-sections
     run = copy.deepcopy(run)                # Avoid side effects when changing run
     for bidskey in bidskeys:
-        bidsvalue = run['bids'].get(bidskey)
+        bidsvalue = run['bids'].get(bidskey, '')
         if isinstance(bidsvalue, list):
             bidsvalue = bidsvalue[bidsvalue[-1]]    # Get the selected item
         else:
@@ -1266,7 +1266,7 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
             _part   = add_prefix('_part-', run['bids']['part']),
             suffix  = run['bids']['suffix'])
 
-    elif datatype =='func':
+    elif datatype == 'func':
 
         # bidsname: sub-<label>[_ses-<label>]_task-<label>[_acq-<label>][_ce-<label>][_dir-<label>][_rec-<label>][_run-<index>][_echo-<index>]_<contrast_label>.nii[.gz]
         bidsname = '{sub}{_ses}_{task}{_acq}{_ce}{_dir}{_rec}{_run}{_echo}_{suffix}'.format(
@@ -1281,7 +1281,7 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
             _echo   = add_prefix('_echo-', run['bids']['echo']),
             suffix  = run['bids']['suffix'])
 
-    elif datatype =='dwi':
+    elif datatype == 'dwi':
 
         # bidsname: sub-<label>[_ses-<label>][_acq-<label>][_dir-<label>][_run-<index>]_dwi.nii[.gz]
         bidsname = '{sub}{_ses}{_acq}{_dir}{_run}_{suffix}'.format(
@@ -1292,7 +1292,7 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
             _run    = add_prefix('_run-', runindex),
             suffix  = run['bids']['suffix'])
 
-    elif datatype =='fmap':
+    elif datatype == 'fmap':
 
         # TODO: add more fieldmap logic?
 
@@ -1306,7 +1306,7 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
             _run    = add_prefix('_run-', runindex),
             suffix  = run['bids']['suffix'])
 
-    elif datatype =='meg':
+    elif datatype == 'meg':
 
         # bidsname: sub-<label>[_ses-<label>]_task-<label>[_acq-<label>][_run-<index>][_proc-<label>]_meg.<manufacturer_specific_extension>
         bidsname = '{sub}{_ses}_{task}{_acq}{_proc}{_run}_{suffix}'.format(
@@ -1318,7 +1318,7 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
             _run    = add_prefix('_run-', runindex),
             suffix  = run['bids']['suffix'])
 
-    elif datatype =='eeg':
+    elif datatype == 'eeg':
         # bidsname: sub-<label>[_ses-<label>]_task-<label>[_acq-<label>][_run-<index>]_eeg.<manufacturer_specific_extension>
         bidsname = '{sub}{_ses}_{task}{_acq}{_run}_{suffix}'.format(
             sub     = subid,
@@ -1328,7 +1328,7 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
             _run    = add_prefix('_run-', runindex),
             suffix  = run['bids']['suffix'])
 
-    elif datatype =='ieeg':
+    elif datatype == 'ieeg':
         # bidsname: sub-<label>[_ses-<label>]_task-<label>[_acq-<label>][_run-<index>]_ieeg.<manufacturer_specific_extension>
         bidsname = '{sub}{_ses}_{task}{_acq}{_run}_{suffix}'.format(
             sub     = subid,
@@ -1338,7 +1338,7 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
             _run    = add_prefix('_run-', runindex),
             suffix  = run['bids']['suffix'])
 
-    elif datatype =='beh':
+    elif datatype == 'beh':
 
         # bidsname: sub-<label>[_ses-<label>]_task-<task_name>_suffix
         bidsname = '{sub}{_ses}_{task}_{suffix}'.format(
@@ -1347,7 +1347,7 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
             task    = f"task-{run['bids']['task']}",
             suffix  = run['bids']['suffix'])
 
-    elif datatype =='pet':
+    elif datatype == 'pet':
 
         # bidsname: sub-<label>[_ses-<label>]_task-<task_label>[_acq-<label>][_rec-<label>][_run-<index>]_suffix
         bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}_{suffix}'.format(
