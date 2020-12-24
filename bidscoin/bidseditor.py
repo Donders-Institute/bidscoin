@@ -234,15 +234,11 @@ class Ui_MainWindow(MainWindow):
             self.set_menu_and_status_bar()
 
             # Center the main window to the center point of screen
-            cp = QDesktopWidget().availableGeometry().center()
-
-            # Move rectangle's center point to screen's center point
             self.MainWindow.adjustSize()
+            cp = QDesktopWidget().availableGeometry().center()
             qr = self.MainWindow.frameGeometry()
             qr.moveCenter(cp)
-
-            # Top left of rectangle becomes top left of window centering it
-            self.MainWindow.move(qr.topLeft())
+            self.MainWindow.move(qr.topLeft())            # Top left of rectangle becomes top left of window centering it
 
     def set_menu_and_status_bar(self):
         # Set the menus
@@ -965,16 +961,10 @@ class EditDialog(QDialog):
 
     def center(self):
         """Center the edit window. """
-        qr = self.frameGeometry()
-
-        # Center point of screen
-        cp = QDesktopWidget().availableGeometry().center()
-
-        # Move rectangle's center point to screen's center point
-        qr.moveCenter(cp)
-
-        # Top left of rectangle becomes top left of window centering it
-        self.move(qr.topLeft())
+        cp = QDesktopWidget().availableGeometry().center()  # Center point of screen
+        qr = self.frameGeometry()                           # Get the rectangular geometry
+        qr.moveCenter(cp)                                   # Move rectangle's center point to screen's center point
+        self.move(qr.topLeft())                             # Top left of rectangle becomes top left of window centering it
 
     def get_allowed_suffixes(self):
         """Derive the possible suffixes for each datatype from the template. """
@@ -1033,23 +1023,22 @@ class EditDialog(QDialog):
             ])
 
         data_bids = []
-        for bidslabel in bids.bidslabels:
-            if bidslabel in self.target_run['bids']:
-                if self.target_datatype in bids.bidsdatatypes and bidslabel=='suffix':
-                    iseditable = False
-                else:
-                    iseditable = True
+        for bidskey, bidsvalue in sorted(self.target_run['bids'].items()):
+            if (self.target_datatype in bids.bidsdatatypes and bidskey=='suffix') or isinstance(bidsvalue, list):
+                iseditable = False
+            else:
+                iseditable = True
 
-                data_bids.append([
-                    {
-                        'value': bidslabel,
-                        'iseditable': False
-                    },
-                    {
-                        'value': self.target_run['bids'][bidslabel],
-                        'iseditable': iseditable
-                    }
-                ])
+            data_bids.append([
+                {
+                    'value': bidskey,
+                    'iseditable': False
+                },
+                {
+                    'value': bidsvalue,
+                    'iseditable': iseditable
+                }
+            ])
 
         return data_provenance, data_source, data_bids
 
@@ -1085,11 +1074,10 @@ class EditDialog(QDialog):
         """BIDS attribute value has been changed. """
         if column == 1:
             key = self.bids_table.item(row, 0).text()
-            if isinstance(self.bids_table.cellWidget(row,1), QComboBox):
-                value      = self.bids_table.cellWidget(row,1).currentText()
-                values     = self.target_run['bids'].get(key, None)
-                oldvalue   = values[values[-1]]
-                values[-1] = self.bids_table.cellWidget(row,1).currentIndex()
+            if isinstance(self.bids_table.cellWidget(row, 1), QComboBox):
+                widget     = self.bids_table.cellWidget(row, 1)
+                value      = [widget.itemText(n) for n in range(len(widget))] + [widget.currentIndex()]
+                oldvalue   = self.target_run['bids'].get(key, None)
             else:
                 value    = self.bids_table.item(row, 1).text()
                 oldvalue = self.target_run['bids'].get(key, None)
@@ -1097,20 +1085,16 @@ class EditDialog(QDialog):
             # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
             if key and value!=oldvalue:
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
-                if not (value.startswith('<<') and value.endswith('>>')):
+                if isinstance(value, str) and not (value.startswith('<<') and value.endswith('>>')):
                     value = bids.cleanup_value(bids.get_dynamic_value(value, Path(self.target_run['provenance'])))
+                    self.bids_table.item(row, 1).setText(value)
+                self.target_run['bids'][key] = value
+                self.refresh_bidsname()
                 if key == 'run':
                     LOGGER.warning(f"Expert usage: User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 else:
                     LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
-                if isinstance(self.bids_table.cellWidget(row, 1), QComboBox):
-                    self.target_run['bids'][key] = values
-                    self.bids_table.item(row, 1).setText(value)
-                else:
-                    self.target_run['bids'][key] = value
-                    self.bids_table.item(row, 1).setText(value)
 
-                self.refresh_bidsname()
 
     def fill_table(self, table, data):
         """Fill the table with data"""
@@ -1119,9 +1103,15 @@ class EditDialog(QDialog):
         table.clearContents()
         table.setRowCount(len(data))
 
+        # Check if data == data_bids (not very beautiful, but hey, most of us aren't ;-))
+        dropdownmenu = False
+        for i, row in enumerate(data):
+            if 'suffix' in row[0]['value']:
+                dropdownmenu = True
+
         for i, row in enumerate(data):
             key = row[0]['value']
-            if self.target_datatype in bids.bidsdatatypes and key == 'suffix':
+            if self.target_datatype in bids.bidsdatatypes and key=='suffix':
                 table.setItem(i, 0, myWidgetItem('suffix', iseditable=False))
                 suffixes = self.allowed_suffixes.get(self.target_datatype,[''])
                 suffix_dropdown = self.suffix_dropdown = QComboBox()
@@ -1135,8 +1125,14 @@ class EditDialog(QDialog):
                 value = item.get('value', '')
                 if value == 'None':
                     value = ''
-                iseditable = item.get('iseditable', False)
-                table.setItem(i, j, myWidgetItem(value, iseditable=iseditable))
+                if dropdownmenu and isinstance(value, list):
+                    value_dropdown = QComboBox()
+                    value_dropdown.addItems(value[0:-1])
+                    value_dropdown.setCurrentIndex(value[-1])
+                    value_dropdown.currentIndexChanged.connect(partial(self.bids_cell_changed, i, j))
+                    table.setCellWidget(i, j, value_dropdown)
+                else:
+                    table.setItem(i, j, myWidgetItem(value, iseditable=item['iseditable']))
 
         table.blockSignals(False)
 
@@ -1155,23 +1151,23 @@ class EditDialog(QDialog):
 
     def refresh_bidsname(self):
         """Updates the bidsname with the current (edited) bids values"""
-        bidsname = (Path(self.target_datatype) / bids.get_bidsname(self.target_bidsmap[self.dataformat]['subject'], self.target_bidsmap[self.dataformat]['session'],
-                                                                   self.target_datatype, self.target_run, '', self.subprefix, self.sesprefix)).with_suffix('.*')
+        bidsname = (Path(self.target_datatype)/bids.get_bidsname(self.target_bidsmap[self.dataformat]['subject'], self.target_bidsmap[self.dataformat]['session'],
+                                                                 self.target_datatype, self.target_run, '', self.subprefix, self.sesprefix)).with_suffix('.*')
 
-        f = self.view_bids_name.font()
+        font = self.view_bids_name.font()
         if self.target_datatype==bids.unknowndatatype:
             self.view_bids_name.setToolTip(f"Red: This imaging data type is not part of BIDS but will be converted to a BIDS-like entry in the '{bids.unknowndatatype}' folder. Click 'OK' if you want your BIDS output data to look like this")
             self.view_bids_name.setTextColor(QtGui.QColor('red'))
-            f.setStrikeOut(False)
+            font.setStrikeOut(False)
         elif self.target_datatype == bids.ignoredatatype:
             self.view_bids_name.setToolTip("Gray / Strike-out: This imaging data type will be ignored and not converted BIDS. Click 'OK' if you want your BIDS output data to look like this")
             self.view_bids_name.setTextColor(QtGui.QColor('gray'))
-            f.setStrikeOut(True)
+            font.setStrikeOut(True)
         else:
             self.view_bids_name.setToolTip(f"Green: This '{self.target_datatype}' imaging data type is part of BIDS. Click 'OK' if you want your BIDS output data to look like this")
             self.view_bids_name.setTextColor(QtGui.QColor('green'))
-            f.setStrikeOut(False)
-        self.view_bids_name.setFont(f)
+            font.setStrikeOut(False)
+        self.view_bids_name.setFont(font)
         self.view_bids_name.clear()
         self.view_bids_name.textCursor().insertText(str(bidsname))
 

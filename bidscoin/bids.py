@@ -37,7 +37,6 @@ logger = logging.getLogger('bidscoin')
 bidsdatatypes   = ('fmap', 'anat', 'func', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')                                   # NB: get_matching_run() uses this order to search for a match
 ignoredatatype  = 'leave_out'
 unknowndatatype = 'extra_data'
-bidslabels      = ('task', 'acq', 'inv', 'part', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'proc', 'suffix', 'IntendedFor')     # This is not really something from BIDS, but these are the BIDS-labels used in the bidsmap
 
 heuristics_folder = Path(__file__).parents[1]/'heuristics'
 bidsmap_template  = heuristics_folder/'bidsmap_template.yaml'
@@ -827,6 +826,8 @@ def cleanup_value(label: str) -> str:
 
     if label is None:
         return ''
+    if not isinstance(label, str):
+        return label
 
     special_characters = (' ', '_', '-','.')
 
@@ -1074,7 +1075,7 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, mat
     :param dataformat:      The information source in the bidsmap that is used, e.g. 'DICOM'
     :param datatype:        The datatype in the source that is used, e.g. 'anat'. Empty values will search through all datatypes
     :param run_item:        The run (listitem) that is searched for in the datatype
-    :param matchbidslabels: If True, also matches the BIDS-labels, otherwise only run['attributes']
+    :param matchbidslabels: If True, also matches the BIDS-keys, otherwise only run['attributes']
     :return:                True if the run exists in runlist
     """
 
@@ -1101,7 +1102,7 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, mat
             if not match:
                 break                                       # There is no point in searching further within the run_item now that we've found a mismatch
 
-        # See if the bidslabels also all match. This is probably not very useful, but maybe one day...
+        # See if the bidskeys also all match. This is probably not very useful, but maybe one day...
         if matchbidslabels and match:
             for itemkey, itemvalue in run_item['bids'].items():
                 value = run['bids'].get(itemkey, None)      # Matching bids-labels which exist in one datatype but not in the other -> None
@@ -1121,7 +1122,7 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, datatypes
     Find the first run in the bidsmap with dicom attributes that match with the dicom file. Then update the (dynamic) bids values (values are cleaned-up to be BIDS-valid)
 
     :param sourcefile:  The full pathname of the source dicom-file or PAR/XML file
-    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap:     Full bidsmap data structure, with all options, BIDS keys and attributes, etc
     :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
     :param datatypes:   The datatypes in which a matching run is searched for. Default = (ignoredatatype,) + bidsdatatypes + (unknowndatatype,)
     :return:            (run, datatype, index) The matching and filled-in / cleaned run item, datatype and list index as in run = bidsmap[DICOM][datatype][index]
@@ -1216,18 +1217,20 @@ def get_subid_sesid(sourcefile: Path, subid: str= '<<SourceFilePath>>', sesid: s
 
 def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str= '', subprefix: str= 'sub-', sesprefix: str= 'ses-') -> str:
     """
-    Composes a filename as it should be according to the BIDS standard using the BIDS labels in run
+    Composes a filename as it should be according to the BIDS standard using the BIDS keys in run
 
     :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001'). Can be left empty
     :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01'). Can be left empty
     :param datatype:    The bids datatype (choose from bids.bidsdatatypes)
-    :param run:         The run mapping with the BIDS labels
+    :param run:         The run mapping with the BIDS key-value pairs
     :param runindex:    The optional runindex label (e.g. 'run-01'). Can be left ''
     :param subprefix:   The optional subprefix (e.g. 'sub-'). Used to parse the sub-value from the provenance as default subid
     :param sesprefix:   The optional sesprefix (e.g. 'ses-'). If it is found in the provenance then a default sesid will be set
     :return:            The composed BIDS file-name (without file-extension)
     """
+
     assert datatype in bidsdatatypes + (unknowndatatype, ignoredatatype)
+    bidskeys = ('task', 'acq', 'inv', 'part', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'proc', 'suffix', 'IntendedFor')  # This is not really something from BIDS, but these are the BIDS-keys used in the bidsmap
 
     # Try to update the sub/ses-ids
     if run['provenance']:
@@ -1235,11 +1238,13 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
 
     # Validate and do some checks to allow for dragging the run entries between the different datatype-sections
     run = copy.deepcopy(run)                # Avoid side effects when changing run
-    for bidslabel in bidslabels:
-        if bidslabel not in run['bids']:
-            run['bids'][bidslabel] = None
+    for bidskey in bidskeys:
+        bidsvalue = run['bids'].get(bidskey)
+        if isinstance(bidsvalue, list):
+            bidsvalue = bidsvalue[bidsvalue[-1]]    # Get the selected item
         else:
-            run['bids'][bidslabel] = cleanup_value(get_dynamic_value(run['bids'][bidslabel], Path(run['provenance'])))
+            bidsvalue = cleanup_value(get_dynamic_value(bidsvalue, Path(run['provenance'])))
+        run['bids'][bidskey] = bidsvalue
 
     # Use the clean-up runindex
     if not runindex:
@@ -1391,7 +1396,7 @@ def get_dynamic_value(bidsvalue: str, sourcefile: Path) -> str:
     if not bidsvalue or not isinstance(bidsvalue, str) or bidsvalue.startswith('<<') and bidsvalue.endswith('>>'):
         return bidsvalue
 
-    # Fill any bids-label with the <annotated> dicom attribute(s)
+    # Fill any bids-key with the <annotated> dicom attribute(s)
     if bidsvalue.startswith('<') and bidsvalue.endswith('>') and sourcefile.name:
         sourcevalue = ''.join([str(get_sourcefield(value, sourcefile)) for value in bidsvalue[1:-1].split('><')])
         if not sourcevalue:
@@ -1421,12 +1426,12 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str= '') -
     # Get the existing bidsvalue
     oldvalue = ''
     acqvalue = ''
-    if bidskey=='suffix':
+    if bidskey == 'suffix':
         oldvalue = bidsname.split('_')[-1]
     else:
-        for label in bidsname.split('_'):
-            if '-' in label:
-                key, value = label.split('-', 1)
+        for entity in bidsname.split('_'):
+            if '-' in entity:
+                key, value = entity.split('-', 1)
                 if key==bidskey:
                     oldvalue = value
                 if key=='acq':
@@ -1447,7 +1452,7 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str= '') -
             newvalue = acqvalue + newvalue
 
         # Return the updated bidsfile
-        if bidskey=='suffix':
+        if bidskey == 'suffix':
             newbidsfile = (bidspath/(bidsname.replace(f'_{oldvalue}', f'_{newvalue}'))).with_suffix(bidsext)
         else:
             newbidsfile = (bidspath/(bidsname.replace(f'{bidskey}-{oldvalue}', f'{bidskey}-{newvalue}'))).with_suffix(bidsext)

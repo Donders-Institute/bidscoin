@@ -59,7 +59,7 @@ DICOM:
       PhaseEncodingDirection: ~
     bids: &anatbids_dicom
       acq: <SeriesDescription>
-      part: ~
+      part: ['', 'mag', 'phase', 0]
       ce: ~
       rec: ~
       run: <<1>>
@@ -398,7 +398,7 @@ DICOM:
     bids:
       acq: <ProtocolName>
       inv: ~
-      part: ~
+      part: ['', 'mag', 'phase', 0]
       rec: <MRAcquisitionType><ImageType>
       ce: ~
       task: ~
@@ -461,7 +461,7 @@ PAR:
       prep_direction: ~
     bids: &anatbids_par
       acq: <protocol_name>
-      part: ~
+      part: ['', 'mag', 'phase', 0]
       ce: ~
       rec: ~
       run: <<1>>
@@ -770,7 +770,7 @@ PAR:
     bids:
       acq: <protocol_name>
       inv: ~
-      part: ~
+      part: ['', 'mag', 'phase', 0]
       rec: <tech>
       ce: ~
       task: ~
@@ -836,7 +836,7 @@ FileSystem:
     bids: &anatbids_file
       acq: <FileName>
       inv: ~
-      part: ~
+      part: ['', 'mag', 'phase', 0]
       rec: ~
       ce: ~
       task: ~
