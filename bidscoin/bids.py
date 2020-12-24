@@ -34,9 +34,10 @@ yaml = YAML()
 
 logger = logging.getLogger('bidscoin')
 
-bidsdatatypes   = ('fmap', 'anat', 'func', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')                                   # NB: get_matching_run() uses this order to search for a match
+bidsdatatypes   = ('fmap', 'anat', 'func', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')                                       # NB: get_matching_run() uses this order to search for a match
 ignoredatatype  = 'leave_out'
 unknowndatatype = 'extra_data'
+bidskeys        = ('task', 'acq', 'inv', 'part', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'proc', 'suffix', 'IntendedFor') # This is not really something from BIDS, but these are the BIDS-keys used in the bidsmap
 
 heuristics_folder = Path(__file__).parents[1]/'heuristics'
 bidsmap_template  = heuristics_folder/'bidsmap_template.yaml'
@@ -936,7 +937,7 @@ def append_run(bidsmap: dict, dataformat: str, datatype: str, run: dict, clean: 
 
     # Copy the values from the run to an empty dict
     if clean:
-        run_ = dict(provenance={}, attributes={}, bids={})
+        run_ = dict(provenance='', attributes={}, bids={})
 
         run_['provenance'] = run['provenance']
 
@@ -1133,14 +1134,14 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, datatypes
         dataformat = get_dataformat(sourcefile)
 
     # Loop through all bidsdatatypes and runs; all info goes into run_
-    run_ = dict(provenance={}, attributes={}, bids={})
+    run_ = dict(provenance='', attributes={}, bids={})
     for datatype in datatypes:
 
         if bidsmap.get(dataformat).get(datatype) is None: continue
 
         for index, run in enumerate(bidsmap[dataformat][datatype]):
 
-            run_  = dict(provenance={}, attributes={}, bids={})                                             # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
+            run_  = dict(provenance='', attributes={}, bids={})                                             # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
             match = any([run['attributes'][attrkey] is not None for attrkey in run['attributes']])          # Normally match==True, but make match==False if all attributes are empty
 
             # Try to see if the sourcefile matches all of the attributes and fill all of them
@@ -1230,7 +1231,6 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
     """
 
     assert datatype in bidsdatatypes + (unknowndatatype, ignoredatatype)
-    bidskeys = ('task', 'acq', 'inv', 'part', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'proc', 'suffix', 'IntendedFor')  # This is not really something from BIDS, but these are the BIDS-keys used in the bidsmap
 
     # Try to update the sub/ses-ids
     if run['provenance']:
