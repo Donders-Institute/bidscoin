@@ -59,11 +59,11 @@ DICOM:
       PhaseEncodingDirection: ~
     bids: &anatbids_dicom
       acq: <SeriesDescription>
-      part: ['', 'mag', 'phase', 0]
       ce: ~
       rec: ~
       run: <<1>>
       mod: ~
+      part: ['', 'mag', 'phase', 0]
       suffix: T1w
   - provenance: ~
     attributes:
@@ -518,7 +518,6 @@ DICOM:
     bids:
       acq: <ProtocolName>
       inv: ~
-      part: ['', 'mag', 'phase', 0]
       rec: <MRAcquisitionType><ImageType>
       ce: ~
       task: ~
@@ -526,6 +525,7 @@ DICOM:
       dir: ~
       run: <<1>>
       mod: <SeriesDescription>
+      part: ['', 'mag', 'phase', 0]
       suffix: <ScanningSequence>
   - provenance: ~
     attributes:
@@ -541,6 +541,7 @@ DICOM:
       dir: ~
       run: <<1>>
       mod: ~
+      part: ['', 'mag', 'phase', 0]
       suffix: B1map
   - provenance: ~
     attributes:
@@ -555,7 +556,8 @@ DICOM:
       dir: ~
       run: <<1>>
       mod: B1map
-      suffix: magnitude
+      part: ['', 'mag', 'phase', 1]
+      suffix: B1map
   - provenance: ~
     attributes:
       <<: *anatattributes_dicom
@@ -565,6 +567,7 @@ DICOM:
       ScanningSequence: SE
     bids:
       <<: *anatbids_dicom
+      part: ['', 'mag', 'phase', 0]
       suffix: T2w
   - provenance: ~               # The last item, taken if nothing else matches
     attributes:
@@ -578,6 +581,7 @@ DICOM:
       dir: ~
       run: <<1>>
       mod: <SeriesDescription>
+      part: ['', 'mag', 'phase', 0]
       suffix: <ScanningSequence>
 
   leave_out:  # ----------------------- Data that will be left out -------------
@@ -600,10 +604,8 @@ DICOM:
     bids: &leaveout_bids_dicom
       acq: <ProtocolName>
       rec: <ImageType>
-      ce: ~
       task: <SeriesDescription>
       echo: <EchoNumbers>
-      dir: ~
       run: <<1>>
       mod: <MRAcquisitionType>
       suffix: <ScanningSequence>
@@ -646,11 +648,11 @@ PAR:
       prep_direction: ~
     bids: &anatbids_par
       acq: <protocol_name>
-      part: ['', 'mag', 'phase', 0]
       ce: ~
       rec: ~
       run: <<1>>
       mod: ~
+      part: ['', 'mag', 'phase', 0]
       suffix: T1w
   - provenance: ""                # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     attributes:
@@ -960,7 +962,6 @@ PAR:
     bids:
       acq: <protocol_name>
       inv: ~
-      part: ['', 'mag', 'phase', 0]
       rec: <tech>
       ce: ~
       task: ~
@@ -968,6 +969,7 @@ PAR:
       dir: ~
       run: <<1>>
       mod: ~
+      part: ['', 'mag', 'phase', 0]
       suffix: ~
 
   leave_out:  # ----------------------- Data that will be left out -------------
@@ -987,12 +989,7 @@ PAR:
       repetition_time: ~
       prep_direction: ~
     bids:
-      acq: <protocol_name>
-      rec: ~
-      ce: ~
-      task: ~
-      echo: ~
-      dir: ~
+      acq: <protocol_name><exam_name>
       run: <<1>>
       mod: ~
-      suffix: ~
+      suffix: <series_type>

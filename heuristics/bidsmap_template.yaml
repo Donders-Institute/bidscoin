@@ -59,11 +59,11 @@ DICOM:
       PhaseEncodingDirection: ~
     bids: &anatbids_dicom
       acq: <SeriesDescription>
-      part: ['', 'mag', 'phase', 0]
       ce: ~
       rec: ~
       run: <<1>>
       mod: ~
+      part: ['', 'mag', 'phase', 0]
       suffix: T1w
   - provenance: ~
     attributes: *anatattributes_dicom
@@ -398,7 +398,6 @@ DICOM:
     bids:
       acq: <ProtocolName>
       inv: ~
-      part: ['', 'mag', 'phase', 0]
       rec: <MRAcquisitionType><ImageType>
       ce: ~
       task: ~
@@ -406,6 +405,7 @@ DICOM:
       dir: ~
       run: <<1>>
       mod: <SeriesDescription>
+      part: ['', 'mag', 'phase', 0]
       suffix: <ScanningSequence>
 
   leave_out:  # ----------------------- Data that will be left out -------------
@@ -428,10 +428,8 @@ DICOM:
     bids:
       acq: <ProtocolName>
       rec: <ImageType>
-      ce: ~
       task: <SeriesDescription>
       echo: <EchoNumbers>
-      dir: ~
       run: <<1>>
       mod: <MRAcquisitionType>
       suffix: <ScanningSequence>
@@ -461,11 +459,11 @@ PAR:
       prep_direction: ~
     bids: &anatbids_par
       acq: <protocol_name>
-      part: ['', 'mag', 'phase', 0]
       ce: ~
       rec: ~
       run: <<1>>
       mod: ~
+      part: ['', 'mag', 'phase', 0]
       suffix: T1w
   - provenance: ~
     attributes: *anatattributes_par
@@ -770,7 +768,6 @@ PAR:
     bids:
       acq: <protocol_name>
       inv: ~
-      part: ['', 'mag', 'phase', 0]
       rec: <tech>
       ce: ~
       task: ~
@@ -778,6 +775,7 @@ PAR:
       dir: ~
       run: <<1>>
       mod: ~
+      part: ['', 'mag', 'phase', 0]
       suffix: ~
 
   leave_out:  # ----------------------- Data that will be left out -------------
@@ -797,15 +795,10 @@ PAR:
       repetition_time: ~
       prep_direction: ~
     bids:
-      acq: <protocol_name>
-      rec: ~
-      ce: ~
-      task: ~
-      echo: ~
-      dir: ~
+      acq: <protocol_name><exam_name>
       run: <<1>>
       mod: ~
-      suffix: ~
+      suffix: <series_type>
 
 
 P7: ~
@@ -836,7 +829,6 @@ FileSystem:
     bids: &anatbids_file
       acq: <FileName>
       inv: ~
-      part: ['', 'mag', 'phase', 0]
       rec: ~
       ce: ~
       task: ~
@@ -844,6 +836,7 @@ FileSystem:
       dir: ~
       run: <<1>>
       mod: ~
+      part: ['', 'mag', 'phase', 0]
       suffix: T1w
   - attributes: *anatattributes_file
     bids:
