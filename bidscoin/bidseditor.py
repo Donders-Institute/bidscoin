@@ -1023,7 +1023,7 @@ class EditDialog(QDialog):
             ])
 
         data_bids = []
-        for bidskey, bidsvalue in sorted(self.target_run['bids'].items()):
+        for bidskey, bidsvalue in self.target_run['bids'].items():
             if (self.target_datatype in bids.bidsdatatypes and bidskey=='suffix') or isinstance(bidsvalue, list):
                 iseditable = False
             else:
@@ -1083,7 +1083,7 @@ class EditDialog(QDialog):
                 oldvalue = self.target_run['bids'].get(key, None)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
-            if key and value!=oldvalue:
+            if key and value != oldvalue:
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
                 if isinstance(value, str) and not (value.startswith('<<') and value.endswith('>>')):
                     value = bids.cleanup_value(bids.get_dynamic_value(value, Path(self.target_run['provenance'])))
@@ -1094,7 +1094,6 @@ class EditDialog(QDialog):
                     LOGGER.warning(f"Expert usage: User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 else:
                     LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
-
 
     def fill_table(self, table, data):
         """Fill the table with data"""
