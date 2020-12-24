@@ -37,7 +37,7 @@ logger = logging.getLogger('bidscoin')
 bidsdatatypes   = ('fmap', 'anat', 'func', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')                                       # NB: get_matching_run() uses this order to search for a match
 ignoredatatype  = 'leave_out'
 unknowndatatype = 'extra_data'
-bidskeys        = ('task', 'acq', 'inv', 'part', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'proc', 'suffix', 'IntendedFor') # This is not really something from BIDS, but these are the BIDS-keys used in the bidsmap
+bidskeys        = ('task', 'acq', 'inv', 'ce', 'rec', 'dir', 'run', 'echo', 'mod', 'proc', 'part', 'suffix', 'IntendedFor') # This is not really something from BIDS, but these are the BIDS-keys used in the bidsmap
 
 heuristics_folder = Path(__file__).parents[1]/'heuristics'
 bidsmap_template  = heuristics_folder/'bidsmap_template.yaml'
