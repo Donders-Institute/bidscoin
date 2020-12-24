@@ -23,7 +23,7 @@ try:
     from bidscoin import bids, physio
 except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
-    import physio as ph
+    import physio
 
 LOGGER = logging.getLogger('bidscoin')
 
@@ -117,10 +117,11 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
         bidsdatatype.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        bidsname = bids.get_bidsname(subid, sesid, datatype, run)
-        runindex = run['bids']['run']
+        bidsname  = bids.get_bidsname(subid, sesid, datatype, run)
+        runindex  = run['bids'].get('run', '')
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(bidsdatatype, bidsname)
+        jsonfiles = [(bidsdatatype/bidsname).with_suffix('.json')]      # List -> Collect the associated json-files (for updating them later) -- possibly > 1
 
         # Check if file already exists (-> e.g. when a static runindex is used). TODO: Future dcm2niix versions may contain a `-w 1` option: https://github.com/rordenlab/dcm2niix/issues/276
         if (bidsdatatype/bidsname).with_suffix('.json').is_file():
@@ -132,8 +133,8 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
         if run['bids']['suffix'] == 'physio':
             if bids.get_dicomfile(source, 2).name:
                 LOGGER.warning(f"Found > 1 DICOM file in {source}, using: {sourcefile}")
-            physio = ph.readphysio(sourcefile)
-            ph.physio2tsv(physio, bidsdatatype/bidsname)
+            physiodata = physio.readphysio(sourcefile)
+            physio.physio2tsv(physiodata, bidsdatatype/bidsname)
 
         # Convert the source-files in the run folder to nifti's in the BIDS-folder
         else:
@@ -156,7 +157,6 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
 
             # Rename all files ending with _c%d, _e%d and _ph (and any combination of these) that are added by dcm2niix for multi-coil data, multi-echo data and phase data
             # See: https://github.com/rordenlab/dcm2niix/blob/master/FILENAMING.md
-            jsonfiles = []                                                                                          # Collect the associated json-files (for updating them later) -- possibly > 1
             for dcm2niisuffix in ('_c', '_e', '_ph', '_i', '_Eq', '_real', '_imaginary', '_MoCo', '_t', '_Tilt'):
                 for filename in sorted(bidsdatatype.glob(f"{bidsname}*{dcm2niisuffix}*")):
                     ext             = ''.join(filename.suffixes)
@@ -212,8 +212,6 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                         jsonfiles.append((bidsdatatype/newbidsname).with_suffix('.json'))
 
         # Loop over and adapt all the newly produced json files and write to the scans.tsv file (every nifti-file comes with a json-file)
-        if not jsonfiles:
-            jsonfiles = [(bidsdatatype/bidsname).with_suffix('.json')]
         for jsonfile in set(jsonfiles):
 
             # Check if dcm2niix behaved as expected
@@ -245,7 +243,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                         json.dump(data, json_fid, indent=4)
 
             # Parse the acquisition time from the json file or else from the source header (NB: assuming the source file represents the first acquisition)
-            if bidsdatatype.name not in bidsmap['Options']['bidscoin']['bidsignore']:
+            if bidsdatatype.name not in bidsmap['Options']['bidscoin']['bidsignore'] and run['bids']['suffix'] != 'physio':
                 with jsonfile.open('r') as json_fid:
                     data = json.load(json_fid)
                 if 'AcquisitionTime' not in data or not data['AcquisitionTime']:
