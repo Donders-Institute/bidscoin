@@ -61,6 +61,9 @@ DICOM:
       acq: <SeriesDescription>
       ce: ~
       rec: ~
+      inv: ~
+      flip: ~
+      mt: ~
       run: <<1>>
       mod: ~
       part: ['', 'mag', 'phase', 0]
@@ -374,7 +377,7 @@ DICOM:
     bids: &petbids_dicom
       task: <SeriesDescription>
       acq: <Radiopharmaceutical>
-      rec: ~
+      rec: ['', 'acdyn', 'acstat', 'nacdyn', 'nacstat', 0]
       run: <<1>>
       suffix: pet
 

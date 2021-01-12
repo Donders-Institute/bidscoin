@@ -34,10 +34,10 @@ yaml = YAML()
 
 logger = logging.getLogger('bidscoin')
 
-bidsdatatypes   = ('fmap', 'anat', 'func', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')                                       # NB: get_matching_run() uses this order to search for a match
+bidsdatatypes   = ('fmap', 'anat', 'func', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')           # NB: get_matching_run() uses this order to search for a match
 ignoredatatype  = 'leave_out'
 unknowndatatype = 'extra_data'
-bidskeys        = ('task', 'acq', 'inv', 'ce', 'rec', 'dir', 'run', 'echo', 'mod', 'proc', 'part', 'suffix', 'IntendedFor') # This is not really something from BIDS, but these are the BIDS-keys used in the bidsmap
+bidskeys        = ('task', 'acq', 'inv', 'mt', 'flip', 'ce', 'rec', 'dir', 'run', 'echo', 'mod', 'proc', 'part', 'suffix', 'IntendedFor') # This is not really something from BIDS, but these are the BIDS-keys used in the bidsmap
 
 heuristics_folder = Path(__file__).parents[1]/'heuristics'
 bidsmap_template  = heuristics_folder/'bidsmap_template.yaml'
@@ -1251,7 +1251,7 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
         runindex = run['bids']['run']
 
     # Compose the BIDS filename (-> switch statement)
-    if datatype =='anat':
+    if datatype == 'anat':
 
         # bidsname: sub-<label>[_ses-<label>][_acq-<label>][_ce-<label>][_rec-<label>][_run-<index>][_part-<label>]_<modality_label>
         bidsname = '{sub}{_ses}{_acq}{_inv}{_ce}{_rec}{_run}{_mod}{_part}_{suffix}'.format(
@@ -1349,14 +1349,14 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
 
     elif datatype == 'pet':
 
-        # bidsname: sub-<label>[_ses-<label>]_task-<task_label>[_acq-<label>][_rec-<label>][_run-<index>]_suffix
-        bidsname = '{sub}{_ses}_{task}{_acq}{_rec}{_run}_{suffix}'.format(
+        # bidsname: sub-<label>[_ses-<label>][_task-<task_label>][_acq-<label>][_rec-<label>][_run-<index>]_suffix
+        bidsname = '{sub}{_ses}{_task}{_acq}{_rec}{_run}_{suffix}'.format(
             sub     = subid,
             _ses    = add_prefix('_', sesid),
-            task    = f"task-{run['bids']['task']}",
-            _acq    = add_prefix('_acq-', run['bids']['acq']),
-            _rec    = add_prefix('_rec-', run['bids']['rec']),
-            _run    = add_prefix('_run-', runindex),
+            _task   = add_prefix('_task-', run['bids']['task']),
+            _acq    = add_prefix('_acq-',  run['bids']['acq']),
+            _rec    = add_prefix('_rec-',  run['bids']['rec']),
+            _run    = add_prefix('_run-',  runindex),
             suffix  = run['bids']['suffix'])
 
     elif datatype == unknowndatatype or datatype == ignoredatatype:
