@@ -34,7 +34,7 @@ yaml = YAML()
 
 logger = logging.getLogger('bidscoin')
 
-bidsdatatypes   = ('fmap', 'anat', 'func', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')           # NB: get_matching_run() uses this order to search for a match
+bidsdatatypes   = ('fmap', 'anat', 'func', 'perf', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')           # NB: get_matching_run() uses this order to search for a match
 ignoredatatype  = 'leave_out'
 unknowndatatype = 'extra_data'
 bidskeys        = ('task', 'acq', 'inv', 'mt', 'flip', 'ce', 'rec', 'dir', 'run', 'echo', 'mod', 'proc', 'part', 'suffix', 'IntendedFor') # This is not really something from BIDS, but these are the BIDS-keys used in the bidsmap
@@ -1279,6 +1279,18 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
             _rec    = add_prefix('_rec-',  run['bids']['rec']),
             _run    = add_prefix('_run-',  runindex),
             _echo   = add_prefix('_echo-', run['bids']['echo']),
+            suffix  = run['bids']['suffix'])
+
+    elif datatype == 'perf':
+
+        # bidsname: sub-<label>[_ses-<label>][_acq-<label>][_rec-<label>][_dir-<label>][_run-<index>]_<perf_label>.nii[.gz]
+        bidsname = '{sub}{_ses}{_acq}{_rec}{_dir}{_run}_{suffix}'.format(
+            sub     = subid,
+            _ses    = add_prefix('_', sesid),
+            _acq    = add_prefix('_acq-',  run['bids']['acq']),
+            _rec    = add_prefix('_rec-',  run['bids']['rec']),
+            _dir    = add_prefix('_dir-',  run['bids']['dir']),
+            _run    = add_prefix('_run-',  runindex),
             suffix  = run['bids']['suffix'])
 
     elif datatype == 'dwi':

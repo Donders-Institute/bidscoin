@@ -303,6 +303,41 @@ DICOM:
       <<: *funcbids_dicom
       suffix: stim
 
+  perf:       # ----------------------- All perfusion runs ---------------------
+  - provenance: ~
+    attributes: &perfattributes_dicom
+      Modality: ~
+      ProtocolName: ~
+      SeriesDescription: ~
+      ImageType: ~
+      SequenceName: ~
+      SequenceVariant: ~
+      ScanningSequence: ~
+      MRAcquisitionType: ~
+      SliceThickness: ~
+      FlipAngle: ~
+      EchoNumbers: ~
+      EchoTime: ~
+      RepetitionTime: ~
+      PhaseEncodingDirection: ~
+    bids: &perfbids_dicom
+      acq: <ProtocolName>
+      rec: <SeriesDescription>
+      dir: ~
+      run: <<1>>
+      suffix: asl
+  - provenance: ~
+    attributes:
+      <<: *perfattributes_dicom
+      ProtocolName: ['*ASL*', '*Perfusion*']
+    bids:
+      <<: *perfbids_dicom
+  - provenance: ~
+    attributes: *perfattributes_dicom
+    bids:
+      <<: *perfbids_dicom
+      suffix: m0scan
+
   dwi:        # ----------------------- All diffusion runs ---------------------
   - provenance: ~
     attributes: &dwiattributes_dicom   # The first item with empty attributes will not match anything but will be used when changing datatype in the bidseditor GUI -> suffix = dwi
