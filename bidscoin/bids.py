@@ -1019,7 +1019,7 @@ def match_attribute(longvalue, values) -> bool:
         match_attribute('T1_MPRAGE', '['T1w', 'T1_MPRAGE']') -> True
         match_attribute('T1_MPRAGE', '['*T1w*', '*MPRAGE*']') -> True
 
-    :param longvalue:   The long string that is being searched in
+    :param longvalue:   The long string that is being searched in (e.g. a DICOM attribute)
     :param values:      Either a list with search items or a string that is matched one-to-one
     :return:            True if a match is found or both longvalue and values are identical or
                         empty / None. False otherwise
@@ -1062,7 +1062,7 @@ def match_attribute(longvalue, values) -> bool:
     if not isinstance(longvalue, list):
         longvalue = [longvalue]
     for value in values:
-        if any([fnmatch.fnmatch(str(item), str(value)) for item in longvalue]):
+        if any([fnmatch.fnmatchcase(str(item), str(value)) for item in longvalue]):
             return True
 
     return False
