@@ -583,8 +583,12 @@ class Ui_MainWindow(MainWindow):
         subses_table        = self.subses_table
         samples_table       = self.samples_table
 
-        subses_table.setItem(0, 0, myWidgetItem('subject', iseditable=False))
-        subses_table.setItem(1, 0, myWidgetItem('session', iseditable=False))
+        subitem = myWidgetItem('subject', iseditable=False)
+        subitem.setToolTip(bids.get_bidshelp('sub'))
+        sesitem = myWidgetItem('session', iseditable=False)
+        sesitem.setToolTip(bids.get_bidshelp('ses'))
+        subses_table.setItem(0, 0, subitem)
+        subses_table.setItem(1, 0, sesitem)
         subses_table.setItem(0, 1, myWidgetItem(self.output_bidsmap[self.dataformat]['subject']))
         subses_table.setItem(1, 1, myWidgetItem(self.output_bidsmap[self.dataformat]['session']))
 
@@ -1105,10 +1109,10 @@ class EditDialog(QDialog):
         table.setRowCount(len(data))
 
         # Check if data == data_bids (not very beautiful, but hey, most of us aren't ;-))
-        dropdownmenu = False
+        bidstable = False
         for i, row in enumerate(data):
             if 'suffix' in row[0]['value']:
-                dropdownmenu = True
+                bidstable = True
 
         for i, row in enumerate(data):
             key = row[0]['value']
@@ -1126,14 +1130,19 @@ class EditDialog(QDialog):
                 value = item.get('value', '')
                 if value == 'None':
                     value = ''
-                if dropdownmenu and isinstance(value, list):
+                if bidstable and isinstance(value, list):
                     value_dropdown = QComboBox()
                     value_dropdown.addItems(value[0:-1])
                     value_dropdown.setCurrentIndex(value[-1])
                     value_dropdown.currentIndexChanged.connect(partial(self.bids_cell_changed, i, j))
+                    if j == 0:
+                        value_dropdown.setToolTip(bids.get_bidshelp(key))
                     table.setCellWidget(i, j, value_dropdown)
                 else:
-                    table.setItem(i, j, myWidgetItem(value, iseditable=item['iseditable']))
+                    value_item = myWidgetItem(value, iseditable=item['iseditable'])
+                    if j == 0:
+                        value_item.setToolTip(bids.get_bidshelp(key))
+                    table.setItem(i, j, value_item)
 
         table.blockSignals(False)
 

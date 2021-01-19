@@ -1394,6 +1394,23 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
     return bidsname
 
 
+def get_bidshelp(entity: str) -> str:
+    """
+    Reads the meta-data of a matching entity in the heuristics/entities.yaml file
+
+    :param entity:
+    :return:
+    """
+    # Read the heuristics from the bidsmap file
+    yamlfile = heuristics_folder/'entities.yaml'
+    with yamlfile.open('r') as stream:
+        entities = yaml.load(stream)
+    for item in entities:
+        if entities[item]['entity'] == entity:
+            return f"{entities[item]['name']}\n{entities[item]['description']}"
+    return ''
+
+
 def get_dynamic_value(bidsvalue: str, sourcefile: Path) -> str:
     """
     Replaces (dynamic) bidsvalues with (DICOM) run attributes when they start with '<' and end with '>',
