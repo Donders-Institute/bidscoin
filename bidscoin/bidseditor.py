@@ -1140,7 +1140,7 @@ class EditDialog(QDialog):
                     table.setCellWidget(i, j, value_dropdown)
                 else:
                     value_item = myWidgetItem(value, iseditable=item['iseditable'])
-                    if j == 0:
+                    if bidstable and j == 0:
                         value_item.setToolTip(bids.get_bidshelp(key))
                     table.setItem(i, j, value_item)
 
