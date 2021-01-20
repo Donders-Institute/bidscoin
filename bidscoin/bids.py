@@ -1119,13 +1119,13 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, mat
     return False
 
 
-def check_run(datatype: str, run_item: dict):
+def check_run(datatype: str, run_item: dict) -> bool:
     """
     Check run for required and optional entitities using the BIDS schema files
 
-    :param datatype:
-    :param run_item:
-    :return:
+    :param datatype:        The datatype that is checked, e.g. 'anat'
+    :param run_item:        The run (listitem) with bids entities that are checked against missing values & invalid keys
+    :return:                False if an inconsistency was found, otherwise True
     """
 
     run_ok = True
