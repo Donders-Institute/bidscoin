@@ -1,0 +1,69 @@
+---
+# First group
+- suffixes:
+    - bold
+    - cbv
+    - sbref
+  extensions:
+    - .nii.gz
+    - .nii
+    - .json
+  entities:
+    sub: required
+    ses: optional
+    task: required
+    acq: optional
+    ce: optional
+    rec: optional
+    dir: optional
+    run: optional
+    echo: optional
+    part: optional
+# Second group
+- suffixes:
+    - phase
+  extensions:
+    - .nii.gz
+    - .nii
+    - .json
+  entities:
+    sub: required
+    ses: optional
+    task: required
+    acq: optional
+    ce: optional
+    rec: optional
+    dir: optional
+    run: optional
+    echo: optional
+# Third group
+- suffixes:
+    - events
+  extensions:
+    - .tsv
+    - .json
+  entities:
+    sub: required
+    ses: optional
+    task: required
+    acq: optional
+    ce: optional
+    rec: optional
+    dir: optional
+    run: optional
+    echo: optional
+# Fourth group
+- suffixes:
+    - physio
+    - stim
+  extensions:
+    - .tsv.gz
+    - .json
+  entities:
+    sub: required
+    ses: optional
+    task: required
+    acq: optional
+    rec: optional
+    run: optional
+    recording: optional

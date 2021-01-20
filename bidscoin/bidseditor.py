@@ -531,7 +531,7 @@ class Ui_MainWindow(MainWindow):
                     if value == 'None':
                         value = ''
                     iseditable = item.get('iseditable', False)
-                    tooltip_text = item.get('tooltip_text', None)
+                    tooltip_text = item.get('tooltip_text')
                     tool_table.setItem(i, j, myWidgetItem(value, iseditable=iseditable))
                     if tooltip_text:
                         tool_table.item(i, j).setToolTip(tooltip_text)
@@ -896,7 +896,7 @@ class EditDialog(QDialog):
         self.bids_label = QLabel()
         self.bids_label.setText('Labels')
         self.bids_table = self.set_table(data_bids, minimum=False)
-        self.bids_table.setToolTip(f"The BIDS key-value pairs that are used to construct the BIDS output name. Feel free to change the values except for the dynamic 'run' field, which should normally not be touched")
+        self.bids_table.setToolTip(f"The BIDS value that is used to construct the BIDS output name. You can freely change the value to be more meaningful and readable")
         self.bids_table.cellChanged.connect(self.bids_cell_changed)
 
         # Set-up non-editable BIDS output name section
@@ -976,7 +976,7 @@ class EditDialog(QDialog):
         for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
             runs = self.template_bidsmap.get(self.dataformat).get(datatype, [])
             for run in runs:
-                suffix = run['bids'].get('suffix', None)
+                suffix = run['bids'].get('suffix')
                 if suffix and suffix not in allowed_suffixes.get(datatype,[]):
                     if datatype not in allowed_suffixes:
                         allowed_suffixes[datatype] = []
@@ -1069,7 +1069,7 @@ class EditDialog(QDialog):
         if column == 1:
             key      = self.source_table.item(row, 0).text()
             value    = self.source_table.item(row, 1).text()
-            oldvalue = self.target_run['attributes'].get(key, None)
+            oldvalue = self.target_run['attributes'].get(key)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
             if key and value!=oldvalue:
@@ -1083,10 +1083,10 @@ class EditDialog(QDialog):
             if isinstance(self.bids_table.cellWidget(row, 1), QComboBox):
                 widget     = self.bids_table.cellWidget(row, 1)
                 value      = [widget.itemText(n) for n in range(len(widget))] + [widget.currentIndex()]
-                oldvalue   = self.target_run['bids'].get(key, None)
+                oldvalue   = self.target_run['bids'].get(key)
             else:
                 value    = self.bids_table.item(row, 1).text()
-                oldvalue = self.target_run['bids'].get(key, None)
+                oldvalue = self.target_run['bids'].get(key)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
             if key and value != oldvalue:
@@ -1094,12 +1094,12 @@ class EditDialog(QDialog):
                 if isinstance(value, str) and not (value.startswith('<<') and value.endswith('>>')):
                     value = bids.cleanup_value(bids.get_dynamic_value(value, Path(self.target_run['provenance'])))
                     self.bids_table.item(row, 1).setText(value)
-                self.target_run['bids'][key] = value
-                self.refresh_bidsname()
                 if key == 'run':
                     LOGGER.warning(f"Expert usage: User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 else:
                     LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                self.target_run['bids'][key] = value
+                self.refresh_bidsname()
 
     def fill_table(self, table, data):
         """Fill the table with data"""
@@ -1173,6 +1173,10 @@ class EditDialog(QDialog):
             self.view_bids_name.setToolTip("Gray / Strike-out: This imaging data type will be ignored and not converted BIDS. Click 'OK' if you want your BIDS output data to look like this")
             self.view_bids_name.setTextColor(QtGui.QColor('gray'))
             font.setStrikeOut(True)
+        elif not bids.check_run(self.target_datatype, self.target_run):
+            self.view_bids_name.setToolTip(f"Red: This name is not valid according to the BIDS standard")
+            self.view_bids_name.setTextColor(QtGui.QColor('red'))
+            font.setStrikeOut(False)
         else:
             self.view_bids_name.setToolTip(f"Green: This '{self.target_datatype}' imaging data type is part of BIDS. Click 'OK' if you want your BIDS output data to look like this")
             self.view_bids_name.setTextColor(QtGui.QColor('green'))
@@ -1272,6 +1276,14 @@ class EditDialog(QDialog):
         super(EditDialog, self).reject()
 
     def accept_run(self):
+        """Save the changes to the target_bidsmap and send it back to the main window: Finished! """
+
+        if not bids.check_run(self.target_datatype, self.target_run):
+            answer = QMessageBox.question(self, 'Edit BIDS mapping', f'The "{self.target_datatype}/*_{self.target_run["bids"]["suffix"]}" run is not valid according to the BIDS standard. Do you want to go back and edit the run?',
+                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Yes)
+            if answer == QMessageBox.Yes:
+                return
+            LOGGER.warning(f'The "{self.view_bids_name.toPlainText()}" run is not valid according to the BIDS standard")')
 
         if self.target_datatype=='fmap' and not self.target_run['bids']['IntendedFor']:
             answer = QMessageBox.question(self, 'Edit BIDS mapping', "The 'IntendedFor' bids-label was not set, which can make that your fieldmap won't be used when "
@@ -1279,12 +1291,9 @@ class EditDialog(QDialog):
                                                                      "and set this label?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Yes)
             if answer == QMessageBox.Yes:
                 return
-
             LOGGER.warning(f"'IntendedFor' fieldmap value was not set")
 
         LOGGER.info(f'User has approved the edit')
-
-        """Save the changes to the target_bidsmap and send it back to the main window: Finished! """
         self.target_bidsmap = bids.update_bidsmap(self.target_bidsmap,
                                                   self.current_datatype,
                                                   self.target_run['provenance'],

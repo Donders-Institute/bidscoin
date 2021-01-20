@@ -39,6 +39,7 @@ ignoredatatype  = 'leave_out'
 unknowndatatype = 'extra_data'
 bidskeys        = ('task', 'acq', 'inv', 'mt', 'flip', 'ce', 'rec', 'dir', 'run', 'echo', 'mod', 'proc', 'part', 'suffix', 'IntendedFor') # This is not really something from BIDS, but these are the BIDS-keys used in the bidsmap
 
+schema_folder     = Path(__file__).parents[1]/'schema'
 heuristics_folder = Path(__file__).parents[1]/'heuristics'
 bidsmap_template  = heuristics_folder/'bidsmap_template.yaml'
 
@@ -1118,6 +1119,41 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, mat
     return False
 
 
+def check_run(datatype: str, run_item: dict):
+    """
+    Check run for required and optional entitities using the BIDS schema files
+
+    :param datatype:
+    :param run_item:
+    :return:
+    """
+
+    run_ok = True
+
+    # Read the entities from the datatype file
+    datatypefile = schema_folder/'datatypes'/f"{datatype}.yaml"
+    if not datatypefile.is_file():
+        logger.warning(f"Could not find {datatypefile}")
+        return run_ok
+    with datatypefile.open('r') as stream:
+        groups = yaml.load(stream)
+    for group in groups:
+        if run_item['bids']['suffix'] in group['suffixes']:
+            # Check if all the entities are ok
+            for entity in group['entities']:
+                if entity in ('sub', 'ses'): continue
+                if group['entities'][entity]=='required' and not run_item['bids'].get(entity):
+                    logger.info(f'Run entity "{entity}" is required for {datatype}/*_{run_item["bids"]["suffix"]}')
+                    run_ok = False
+            for entity in run_item['bids']:
+                if entity in ('suffix', 'IntendedFor'): continue
+                if entity not in group['entities'] and run_item["bids"][entity]:
+                    logger.info(f'Run entity "{entity}"-"{run_item["bids"][entity]}" is not allowed according to the BIDS standard (clear "{run_item["bids"][entity]})" to resolve this issue)')
+                    run_ok = False
+
+    return run_ok
+
+
 def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, datatypes: tuple = (ignoredatatype,) + bidsdatatypes + (unknowndatatype,)) -> Tuple[dict, str, Union[int, None]]:
     """
     Find the first run in the bidsmap with dicom attributes that match with the dicom file. Then update the (dynamic) bids values (values are cleaned-up to be BIDS-valid)
@@ -1401,8 +1437,9 @@ def get_bidshelp(entity: str) -> str:
     :param entity:
     :return:
     """
+
     # Read the heuristics from the bidsmap file
-    yamlfile = heuristics_folder/'entities.yaml'
+    yamlfile = schema_folder/'entities.yaml'
     with yamlfile.open('r') as stream:
         entities = yaml.load(stream)
     for item in entities:

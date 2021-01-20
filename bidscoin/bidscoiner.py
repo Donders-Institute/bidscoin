@@ -123,6 +123,10 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
             bidsname = bids.increment_runindex(bidsdatatype, bidsname)
         jsonfiles = [(bidsdatatype/bidsname).with_suffix('.json')]      # List -> Collect the associated json-files (for updating them later) -- possibly > 1
 
+        # Check if the run is valid according to the BIDS standard
+        if not bids.check_run(datatype, run):
+            LOGGER.warning(f"{bidsdatatype/bidsname}.* is not valid according to the BIDS standard")
+
         # Check if file already exists (-> e.g. when a static runindex is used). TODO: Future dcm2niix versions may contain a `-w 1` option: https://github.com/rordenlab/dcm2niix/issues/276
         if (bidsdatatype/bidsname).with_suffix('.json').is_file():
             LOGGER.warning(f"{bidsdatatype/bidsname}.* already exists and will be deleted -- check your results carefully!")
