@@ -1129,17 +1129,19 @@ def check_run(datatype: str, run_item: dict):
     """
 
     run_ok = True
+    found  = False
 
     # Read the entities from the datatype file
     datatypefile = schema_folder/'datatypes'/f"{datatype}.yaml"
     if not datatypefile.is_file():
         logger.warning(f"Could not find {datatypefile}")
-        return run_ok
+        return True
     with datatypefile.open('r') as stream:
         groups = yaml.load(stream)
     for group in groups:
         if run_item['bids']['suffix'] in group['suffixes']:
             # Check if all the entities are ok
+            found = True
             for entity in group['entities']:
                 if entity in ('sub', 'ses'): continue
                 if group['entities'][entity]=='required' and not run_item['bids'].get(entity):
@@ -1151,7 +1153,7 @@ def check_run(datatype: str, run_item: dict):
                     logger.info(f'Run entity "{entity}"-"{run_item["bids"][entity]}" is not allowed according to the BIDS standard (clear "{run_item["bids"][entity]})" to resolve this issue)')
                     run_ok = False
 
-    return run_ok
+    return found and run_ok
 
 
 def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, datatypes: tuple = (ignoredatatype,) + bidsdatatypes + (unknowndatatype,)) -> Tuple[dict, str, Union[int, None]]:
