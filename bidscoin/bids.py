@@ -1134,7 +1134,8 @@ def check_run(datatype: str, run_item: dict):
     # Read the entities from the datatype file
     datatypefile = schema_folder/'datatypes'/f"{datatype}.yaml"
     if not datatypefile.is_file():
-        logger.warning(f"Could not find {datatypefile}")
+        if datatype in bidsdatatypes:
+            logger.warning(f"Could not find {datatypefile}")
         return True
     with datatypefile.open('r') as stream:
         groups = yaml.load(stream)
