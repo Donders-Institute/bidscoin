@@ -1255,6 +1255,16 @@ def get_subid_sesid(sourcefile: Path, subid: str= '<<SourceFilePath>>', sesid: s
     return subid, sesid
 
 
+def get_derivatives() -> list:
+    """
+    Retrieves a list of suffixes that are stored in the derivatives folder (e.g. the qMRI maps). TODO: Replace with a more systematic / documented method
+    """
+
+    with (schema_folder/'datatypes'/'anat.yaml').open('r') as stream:
+        groups      = yaml.load(stream)
+        return groups[1]['suffixes']            # The qMRI data (maps)
+
+
 def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str= '', subprefix: str= 'sub-', sesprefix: str= 'ses-') -> str:
     """
     Composes a filename as it should be according to the BIDS standard using the BIDS keys in run

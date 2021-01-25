@@ -48,12 +48,14 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
         sourcefile = Path()
         sources    = bids.lsdirs(session)
         for source in sources:
-            sourcefile = bids.get_dicomfile(source)
+            sourcefile   = bids.get_dicomfile(source)
+            manufacturer = bids.get_dicomfield('Manufacturer', sourcefile)
             if sourcefile.name:
                 break
 
     elif dataformat=='PAR':
         sources = bids.get_parfiles(session)
+        manufacturer = 'Philips Medical Systems'
         if sources:
             sourcefile = sources[0]
 
@@ -112,33 +114,36 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
 
         LOGGER.info(f"Processing: {source}")
 
-        # Create the BIDS session/datatype folder
-        bidsdatatype = bidsses/datatype
-        bidsdatatype.mkdir(parents=True, exist_ok=True)
+        # Create the BIDS session/datatype output folder
+        if run['bids']['suffix'] in bids.get_derivatives():
+            outfolder = bidsfolder/'derivatives'/manufacturer.replace(' ','')/subid/sesid/datatype
+        else:
+            outfolder = bidsses/datatype
+        outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
         bidsname  = bids.get_bidsname(subid, sesid, datatype, run)
         runindex  = run['bids'].get('run', '')
         if runindex.startswith('<<') and runindex.endswith('>>'):
-            bidsname = bids.increment_runindex(bidsdatatype, bidsname)
-        jsonfiles = [(bidsdatatype/bidsname).with_suffix('.json')]      # List -> Collect the associated json-files (for updating them later) -- possibly > 1
+            bidsname = bids.increment_runindex(outfolder, bidsname)
+        jsonfiles = [(outfolder/bidsname).with_suffix('.json')]      # List -> Collect the associated json-files (for updating them later) -- possibly > 1
 
         # Check if the run is valid according to the BIDS standard
         if not bids.check_run(datatype, run):
-            LOGGER.warning(f"{bidsdatatype/bidsname}.* is not valid according to the BIDS standard")
+            LOGGER.warning(f"{outfolder/bidsname}.* is not valid according to the BIDS standard")
 
         # Check if file already exists (-> e.g. when a static runindex is used). TODO: Future dcm2niix versions may contain a `-w 1` option: https://github.com/rordenlab/dcm2niix/issues/276
-        if (bidsdatatype/bidsname).with_suffix('.json').is_file():
-            LOGGER.warning(f"{bidsdatatype/bidsname}.* already exists and will be deleted -- check your results carefully!")
+        if (outfolder/bidsname).with_suffix('.json').is_file():
+            LOGGER.warning(f"{outfolder/bidsname}.* already exists and will be deleted -- check your results carefully!")
             for ext in ('.nii.gz', '.nii', '.json', '.bval', '.bvec', 'tsv.gz'):
-                (bidsdatatype/bidsname).with_suffix(ext).unlink(missing_ok=True)
+                (outfolder/bidsname).with_suffix(ext).unlink(missing_ok=True)
 
         # Convert physiological log files (dcm2niix can't handle these)
         if run['bids']['suffix'] == 'physio':
             if bids.get_dicomfile(source, 2).name:
                 LOGGER.warning(f"Found > 1 DICOM file in {source}, using: {sourcefile}")
             physiodata = physio.readphysio(sourcefile)
-            physio.physio2tsv(physiodata, bidsdatatype/bidsname)
+            physio.physio2tsv(physiodata, outfolder/bidsname)
 
         # Convert the source-files in the run folder to nifti's in the BIDS-folder
         else:
@@ -146,14 +151,14 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                 path      = bidsmap['Options']['dcm2niix']['path'],
                 args      = bidsmap['Options']['dcm2niix']['args'],
                 filename  = bidsname,
-                outfolder = bidsdatatype,
+                outfolder = outfolder,
                 source    = source)
             if not bids.run_command(command):
                 continue
 
             # Replace uncropped output image with the cropped one
             if '-x y' in bidsmap['Options']['dcm2niix']['args']:
-                for filename in sorted(bidsdatatype.glob(bidsname + '*_Crop_*')):                                   # e.g. *_Crop_1.nii.gz
+                for filename in sorted(outfolder.glob(bidsname + '*_Crop_*')):                                   # e.g. *_Crop_1.nii.gz
                     ext         = ''.join(filename.suffixes)
                     newfilename = str(filename).rsplit(ext,1)[0].rsplit('_Crop_',1)[0] + ext
                     LOGGER.info(f"Found dcm2niix _Crop_ suffix, replacing original file\n{filename} ->\n{newfilename}")
@@ -162,9 +167,9 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
             # Rename all files ending with _c%d, _e%d and _ph (and any combination of these) that are added by dcm2niix for multi-coil data, multi-echo data and phase data
             # See: https://github.com/rordenlab/dcm2niix/blob/master/FILENAMING.md
             for dcm2niisuffix in ('_c', '_e', '_ph', '_i', '_Eq', '_real', '_imaginary', '_MoCo', '_t', '_Tilt'):
-                for filename in sorted(bidsdatatype.glob(f"{bidsname}*{dcm2niisuffix}*")):
+                for filename in sorted(outfolder.glob(f"{bidsname}*{dcm2niisuffix}*")):
                     ext             = ''.join(filename.suffixes)
-                    basepath, index = str(filename).rsplit(ext)[0].rsplit(dcm2niisuffix,1)                          # basepath = the name without the added stuff (i.e. bidsdatatype/bidsname), index = added dcm2niix index (e.g. _c1 -> index=1)
+                    basepath, index = str(filename).rsplit(ext)[0].rsplit(dcm2niisuffix,1)                          # basepath = the name without the added stuff (i.e. outfolder/bidsname), index = added dcm2niix index (e.g. _c1 -> index=1)
                     basesuffix      = basepath.rsplit('_',1)[1]                                                     # The BIDS suffix, e.g. basepath = *_magnitude1 -> basesuffix=magnitude1
                     index           = index.split('_')[0].zfill(2)                                                  # Zero padd as specified in the BIDS-standard (assuming two digits is sufficient); strip following suffices (fieldmaps produce *_e2_ph files)
 
@@ -206,14 +211,14 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     # Save the file with a new name
                     newbidsname = str(Path(basepath).name)
                     if runindex.startswith('<<') and runindex.endswith('>>'):
-                        newbidsname = bids.increment_runindex(bidsdatatype, newbidsname, ext)                       # Update the runindex now that the acq-label has changed
-                    newfilename = (bidsdatatype/newbidsname).with_suffix(ext)
+                        newbidsname = bids.increment_runindex(outfolder, newbidsname, ext)                       # Update the runindex now that the acq-label has changed
+                    newfilename = (outfolder/newbidsname).with_suffix(ext)
                     LOGGER.info(f"Found dcm2niix {dcm2niisuffix} suffix, renaming\n{filename} ->\n{newfilename}")
                     if newfilename.is_file():
                         LOGGER.warning(f"Overwriting existing {newfilename} file -- check your results carefully!")
                     filename.replace(newfilename)
                     if ext == '.json':
-                        jsonfiles.append((bidsdatatype/newbidsname).with_suffix('.json'))
+                        jsonfiles.append((outfolder/newbidsname).with_suffix('.json'))
 
         # Loop over and adapt all the newly produced json files and write to the scans.tsv file (every nifti-file comes with a json-file)
         for jsonfile in set(jsonfiles):
@@ -247,7 +252,8 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                         json.dump(data, json_fid, indent=4)
 
             # Parse the acquisition time from the json file or else from the source header (NB: assuming the source file represents the first acquisition)
-            if bidsdatatype.name not in bidsmap['Options']['bidscoin']['bidsignore'] and run['bids']['suffix'] != 'physio':
+            niifile = list(jsonfile.parent.glob(jsonfile.stem + '.nii*'))       # Find the corresponding nifti file (there should be only one, let's not make assumptions about the .gz extension)
+            if niifile and datatype not in bidsmap['Options']['bidscoin']['bidsignore'] and not run['bids']['suffix'] in bids.get_derivatives():
                 with jsonfile.open('r') as json_fid:
                     data = json.load(json_fid)
                 if 'AcquisitionTime' not in data or not data['AcquisitionTime']:
@@ -259,7 +265,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                 except:
                     LOGGER.warning(f"Could not parse the acquisition time from: '{data['AcquisitionTime']}' in {sourcefile}")
                     acq_time = dateutil.parser.parse('00:00:00')
-                scanpath = list(jsonfile.parent.glob(jsonfile.stem + '.nii*'))[0].relative_to(bidsses)  # Find the corresponding nifti file (there should be only one, let's not make assumptions about the .gz extension)
+                scanpath = niifile[0].relative_to(bidsses)
                 scans_table.loc[scanpath.as_posix(), 'acq_time'] = '1925-01-01T' + acq_time.strftime('%H:%M:%S')
 
     # Write the scans_table to disk
@@ -267,7 +273,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
     scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
-    # Add IntendedFor and TE1+TE2 meta-data the fieldmap json-files. This has been postponed untill all datatypes have been processed (i.e. so that all target images are indeed on disk)
+    # Add IntendedFor and TE1+TE2 meta-data to the fieldmap json-files. This has been postponed untill all datatypes have been processed (i.e. so that all target images are indeed on disk)
     if bidsmap[dataformat]['fmap'] is not None:
         for fieldmap in bidsmap[dataformat]['fmap']:
             bidsname    = bids.get_bidsname(subid, sesid, 'fmap', fieldmap)
@@ -553,7 +559,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
             LOGGER.info(f"Coining session: {session}")
 
-            # Update / append the sourde data mapping
+            # Update / append the source data mapping
             if dataformat in ('DICOM', 'PAR'):
                 coin_data2bids(dataformat, session, bidsmap, bidsfolder, personals, subprefix, sesprefix)
 
