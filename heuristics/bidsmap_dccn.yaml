@@ -83,7 +83,7 @@ DICOM:
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: '*tse*vfl*'
-      ImageType: 'NORM'           # NB: The non-NORM image is saved in 'extra_data'
+      ImageType: NORM             # NB: The non-NORM image is saved in 'extra_data'
       SequenceVariant: "['SK', 'SP']"
       ScanningSequence: SE
     bids:
@@ -144,7 +144,7 @@ DICOM:
       <<: *anat_dicomattr
       SeriesDescription: ['*T1map*', '*T1Map*', '*t1map*', '*t1Map*']
     bids: &anat_dicoment_group2   # See: schema/datatypes/anat.yaml
-      acq: <SeriesDescription>
+      acq: <ProtocolName>
       ce: ~
       rec: ~
       run: <<1>>
@@ -443,6 +443,11 @@ DICOM:
       run: <<1>>
       suffix: physio
   - provenance: ~
+    attributes:
+      <<: *func_dicomattr
+      SeriesDescription: ['*fmri*Physio*', '*fMRI*Physio*', '*FMRI*Physio*', '*task*Physio*', '*Task*Physio*', '*bold*Physio*', '*BOLD*Physio*']
+    bids: *func_dicoment_group4
+  - provenance: ~
     attributes:                   # Then catch the bold runs themselves
       <<: *func_dicomattr
       ProtocolName: ['*fmri*', '*fMRI*', '*FMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
@@ -573,6 +578,11 @@ DICOM:
       run: <<1>>
       suffix: physio
   - provenance: ~
+    attributes:
+      <<: *dwi_dicomattr
+      SeriesDescription: ['*dwi*Physio*', '*DWI*Physio*', '*diffusion*Physio*', '*DIFFUSION*Physio*', '*dti*Physio*', '*DTI*Physio*']
+    bids: *dwi_dicoment_group3
+  - provenance: ~
     attributes:                   # Then catch the normal DWI runs
       <<: *dwi_dicomattr
       ProtocolName: ['*dwi*', '*DWI*', '*diffusion*', '*DIFFUSION*', '*dti*', '*DTI*']
@@ -608,7 +618,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*field_map*', '*B0map*', '*b0map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*FieldMap*','*field_map*', '*B0map*', '*b0map*']
       EchoNumbers: 2
       ImageType: P
     bids:
@@ -617,7 +627,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*field_map*', '*B0map*', '*b0map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*FieldMap*','*field_map*', '*B0map*', '*b0map*']
       EchoNumbers: 1
       ImageType: M
     bids:
@@ -626,7 +636,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*field_map*', '*B0map*', '*b0map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*FieldMap*','*field_map*', '*B0map*', '*b0map*']
       EchoNumbers: 2
       ImageType: M
     bids:
@@ -635,7 +645,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*field_map*', '*B0map*', '*b0map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*FieldMap*','*field_map*', '*B0map*', '*b0map*']
       EchoNumbers: 1
       ImageType: P
     bids:
@@ -644,7 +654,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*field_map*', '*B0map*', '*b0map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*FieldMap*','*field_map*', '*B0map*', '*b0map*']
       EchoNumbers: 2
       ImageType: P
     bids:
@@ -653,7 +663,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*field_map*', '*B0map*', '*b0map*']
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*FieldMap*','*field_map*', '*B0map*', '*b0map*']
     bids:
       <<: *fmap_dicoment_group1
       suffix: fieldmap
@@ -1362,7 +1372,7 @@ PAR:
     attributes: &fmap_parattr
       series_type: ~
       exam_name: ~
-      protocol_name: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*field_map*', '*B0map*', '*b0map*']
+      protocol_name: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*FieldMap*','*field_map*', '*B0map*', '*b0map*']
       tech: ~
       diffusion: ~
       fov: ~
