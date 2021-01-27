@@ -72,7 +72,7 @@ DICOM:
       MRAcquisitionType: 3D
     bids: *anat_dicoment_group1
   - provenance: ~
-    attributes
+    attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*t2w*', '*T2w*', '*T2W*', '*T2*']
       SequenceVariant: "['SK', 'SP']"
@@ -80,7 +80,7 @@ DICOM:
       <<: *anat_dicoment_group1
       suffix: T2w
   - provenance: ~
-    attributes
+    attributes:
       <<: *anat_dicomattr
       SeriesDescription: '*tse*vfl*'
       ImageType: 'NORM'           # NB: The non-NORM image is saved in 'extra_data'
