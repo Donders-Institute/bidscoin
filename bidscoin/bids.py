@@ -1125,11 +1125,11 @@ def check_run(datatype: str, run_item: dict) -> bool:
 
     :param datatype:        The datatype that is checked, e.g. 'anat'
     :param run_item:        The run (listitem) with bids entities that are checked against missing values & invalid keys
-    :return:                False if an inconsistency was found, otherwise True
+    :return:                True if all entities are bids-valid, otherwise False
     """
 
-    run_ok = True
-    found  = False
+    run_found = False
+    run_ok    = True
 
     # Read the entities from the datatype file
     datatypefile = schema_folder/'datatypes'/f"{datatype}.yaml"
@@ -1141,20 +1141,20 @@ def check_run(datatype: str, run_item: dict) -> bool:
         groups = yaml.load(stream)
     for group in groups:
         if run_item['bids']['suffix'] in group['suffixes']:
+            run_found = True
             # Check if all the entities are ok
-            found = True
             for entity in group['entities']:
                 if entity in ('sub', 'ses'): continue
                 if group['entities'][entity]=='required' and not run_item['bids'].get(entity):
-                    logger.info(f'Run entity "{entity}" is required for {datatype}/*_{run_item["bids"]["suffix"]}')
+                    logger.info(f'BIDS entity "{entity}" is required for {datatype}/*_{run_item["bids"]["suffix"]}')
                     run_ok = False
             for entity in run_item['bids']:
                 if entity in ('suffix', 'IntendedFor'): continue
                 if entity not in group['entities'] and run_item["bids"][entity]:
-                    logger.info(f'Run entity "{entity}"-"{run_item["bids"][entity]}" is not allowed according to the BIDS standard (clear "{run_item["bids"][entity]})" to resolve this issue)')
+                    logger.info(f'BIDS entity "{entity}"-"{run_item["bids"][entity]}" is not allowed according to the BIDS standard (clear "{run_item["bids"][entity]})" to resolve this issue)')
                     run_ok = False
 
-    return found and run_ok
+    return run_found and run_ok
 
 
 def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, datatypes: tuple = (ignoredatatype,) + bidsdatatypes + (unknowndatatype,)) -> Tuple[dict, str, Union[int, None]]:
