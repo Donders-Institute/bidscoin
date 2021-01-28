@@ -1135,7 +1135,7 @@ def check_run(datatype: str, run_item: dict) -> bool:
     datatypefile = schema_folder/'datatypes'/f"{datatype}.yaml"
     if not datatypefile.is_file():
         if datatype in bidsdatatypes:
-            logger.warning(f"Could not find {datatypefile}")
+            logger.warning(f"Could not find {datatypefile} to validate the {run_item['provenance']} run")
         return True
     with datatypefile.open('r') as stream:
         groups = yaml.load(stream)
