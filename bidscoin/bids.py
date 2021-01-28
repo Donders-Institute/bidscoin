@@ -1125,7 +1125,7 @@ def check_run(datatype: str, run_item: dict) -> bool:
 
     :param datatype:        The datatype that is checked, e.g. 'anat'
     :param run_item:        The run (listitem) with bids entities that are checked against missing values & invalid keys
-    :return:                True if all entities are bids-valid, otherwise False
+    :return:                True if all entities are bids-valid or if they cannot be checked, otherwise False
     """
 
     run_found = False
