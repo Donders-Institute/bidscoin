@@ -121,7 +121,7 @@ flip:
     denotes the number/index (in the form of a nonnegative integer), not the `FlipAngle`
     value which needs to be stored in the field `FlipAngle` of the separate JSON file.
   format: index
-inv:
+inversion:
   name: Inversion Time
   entity: inv
   description: |
@@ -132,7 +132,7 @@ inv:
     denotes the number/index (in the form of a nonnegative integer), not the `InversionTime`
     value which needs to be stored in the field `InversionTime` of the separate JSON file.
   format: index
-mt:
+mtransfer:
   name: Magnetization Transfer
   entity: mt
   description: |
@@ -207,12 +207,13 @@ split:
     convention.
 
     Instead of a simple renaming, files should be read in and saved under their
-    new names with dedicated tools like MNE, which will ensure that not only
-    the file names, but also the internal file pointers will be updated.
+    new names with dedicated tools like [MNE-Python](https://mne.tools/),
+    which will ensure that not only the file names, but also the internal file
+    pointers will be updated.
     It is RECOMMENDED that .fif files with multiple parts use the
     `split-<index>` entity to indicate each part.
   format: index
-res:
+resolution:
   name: Resolution
   entity: res
   description: |
@@ -222,7 +223,7 @@ res:
 
     This entity is only applicable to derivative data.
   format: label
-den:
+density:
   name: Density
   entity: den
   description: |
@@ -242,7 +243,7 @@ label:
 
     This entity is only applicable to derivative data.
   format: label
-desc:
+description:
   name: Description
   entity: desc
   description: |

@@ -1132,27 +1132,33 @@ def check_run(datatype: str, run_item: dict) -> bool:
     run_ok    = True
 
     # Read the entities from the datatype file
+    entityfile   = schema_folder/'entities.yaml'
     datatypefile = schema_folder/'datatypes'/f"{datatype}.yaml"
     if not datatypefile.is_file():
         if datatype in bidsdatatypes:
             logger.warning(f"Could not find {datatypefile} to validate the {run_item['provenance']} run")
         return True
+    with entityfile.open('r') as stream:
+        entities = yaml.load(stream)
     with datatypefile.open('r') as stream:
         groups = yaml.load(stream)
     for group in groups:
         if run_item['bids']['suffix'] in group['suffixes']:
             run_found = True
             # Check if all the entities are ok
-            for entity in group['entities']:
-                if entity in ('sub', 'ses'): continue
-                if group['entities'][entity]=='required' and not run_item['bids'].get(entity):
-                    logger.info(f'BIDS entity "{entity}" is required for {datatype}/*_{run_item["bids"]["suffix"]}')
+            for entityname in group['entities']:
+                key = entities[entityname]['entity']
+                if key in ('sub', 'ses'): continue
+                if group['entities'][entityname]=='required' and not run_item['bids'].get(key):
+                    logger.info(f'BIDS entity "{key}" is required for {datatype}/*_{run_item["bids"]["suffix"]}')
                     run_ok = False
-            for entity in run_item['bids']:
-                if entity in ('suffix', 'IntendedFor'): continue
-                if entity not in group['entities'] and run_item["bids"][entity]:
-                    logger.info(f'BIDS entity "{entity}"-"{run_item["bids"][entity]}" is not allowed according to the BIDS standard (clear "{run_item["bids"][entity]})" to resolve this issue)')
-                    run_ok = False
+            for key in run_item['bids']:
+                if key in ('suffix', 'IntendedFor'): continue
+                for entityname in entities:
+                    if entities[entityname]['entity']==key:
+                        if entityname not in group['entities'] and run_item["bids"][key]:
+                            logger.info(f'BIDS entity "{key}"-"{run_item["bids"][key]}" is not allowed according to the BIDS standard (clear "{run_item["bids"][key]})" to resolve this issue)')
+                            run_ok = False
 
     return run_found and run_ok
 
@@ -1443,11 +1449,11 @@ def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str
     return bidsname
 
 
-def get_bidshelp(entity: str) -> str:
+def get_bidshelp(key: str) -> str:
     """
     Reads the meta-data of a matching entity in the heuristics/entities.yaml file
 
-    :param entity:
+    :param key:
     :return:
     """
 
@@ -1455,9 +1461,9 @@ def get_bidshelp(entity: str) -> str:
     yamlfile = schema_folder/'entities.yaml'
     with yamlfile.open('r') as stream:
         entities = yaml.load(stream)
-    for item in entities:
-        if entities[item]['entity'] == entity:
-            return f"{entities[item]['name']}\n{entities[item]['description']}"
+    for entityname in entities:
+        if entities[entityname]['entity'] == key:
+            return f"{entities[entityname]['name']}\n{entities[entityname]['description']}"
     return ''
 
 
@@ -1508,9 +1514,9 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str= '') -
     if bidskey == 'suffix':
         oldvalue = bidsname.split('_')[-1]
     else:
-        for entity in bidsname.split('_'):
-            if '-' in entity:
-                key, value = entity.split('-', 1)
+        for keyval in bidsname.split('_'):
+            if '-' in keyval:
+                key, value = keyval.split('-', 1)
                 if key==bidskey:
                     oldvalue = value
                 if key=='acq':
