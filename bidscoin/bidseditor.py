@@ -96,6 +96,8 @@ class myWidgetItem(QTableWidgetItem):
         """A QTableWidgetItem that is editable or not"""
         super().__init__()
 
+        if isinstance(value, int):
+            value = str(value)
         self.setText(value)
         self.setEditable(iseditable)
 
