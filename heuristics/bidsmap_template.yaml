@@ -258,7 +258,7 @@ DICOM:
       flip: ~
       inv: ~
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
-      suffix: MPRAGE
+      suffix: MP2RAGE
   - provenance: ~
     attributes: *anat_dicomattr
     bids: &anat_dicoment_group8         # See: schema/datatypes/anat.yaml
@@ -874,7 +874,7 @@ PAR:
       flip: ~
       inv: ~
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
-      suffix: MPRAGE
+      suffix: MP2RAGE
   - provenance: ~
     attributes: *anat_parattr
     bids: &anat_parent_group8           # See: schema/datatypes/anat.yaml
