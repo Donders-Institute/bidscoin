@@ -115,7 +115,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
         LOGGER.info(f"Processing: {source}")
 
         # Create the BIDS session/datatype output folder
-        if run['bids']['suffix'] in bids.get_derivatives():
+        if run['bids']['suffix'] in bids.get_derivatives(datatype):
             outfolder = bidsfolder/'derivatives'/manufacturer.replace(' ','')/subid/sesid/datatype
         else:
             outfolder = bidsses/datatype
@@ -253,7 +253,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
 
             # Parse the acquisition time from the json file or else from the source header (NB: assuming the source file represents the first acquisition)
             niifile = list(jsonfile.parent.glob(jsonfile.stem + '.nii*'))       # Find the corresponding nifti file (there should be only one, let's not make assumptions about the .gz extension)
-            if niifile and datatype not in bidsmap['Options']['bidscoin']['bidsignore'] and not run['bids']['suffix'] in bids.get_derivatives():
+            if niifile and datatype not in bidsmap['Options']['bidscoin']['bidsignore'] and not run['bids']['suffix'] in bids.get_derivatives(datatype):
                 with jsonfile.open('r') as json_fid:
                     data = json.load(json_fid)
                 if 'AcquisitionTime' not in data or not data['AcquisitionTime']:
