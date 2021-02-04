@@ -6,7 +6,8 @@ Sorts and / or renames DICOM files into local subdirectories with a (3-digit) Se
 import re
 import logging
 from pathlib import Path
-from pydicom.filereader import read_dicomdir
+import pydicom
+import uuid
 try:
     from bidscoin import bids
 except ImportError:
@@ -105,9 +106,11 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
         else:
             newfilename = pathname/filename
         if newfilename.is_file():
-            LOGGER.warning(f"File already exists, cannot safely rename {dicomfile} -> {newfilename}")
-        elif not dryrun:
-            dicomfile.replace(newfilename)
+            LOGGER.warning(f"File already exists: {dicomfile} -> {newfilename}")
+            newfilename = newfilename.with_name(newfilename.stem + str(uuid.uuid4()) + newfilename.suffix)
+            LOGGER.info("Using new file-name: {dicomfile} -> {newfilename}")
+        if not dryrun:
+          dicomfile.replace(newfilename)
 
 
 def sortsessions(session: Path, subprefix: str='', sesprefix: str='', dicomfield: str='SeriesDescription', rename: bool=False, ext: str='', nosort: bool=False, pattern: str='.*\.(IMA|dcm)$', dryrun: bool=False) -> None:
@@ -146,7 +149,7 @@ def sortsessions(session: Path, subprefix: str='', sesprefix: str='', dicomfield
     # Use the DICOMDIR file if it is there
     if (session/'DICOMDIR').is_file():
 
-        dicomdir = read_dicomdir(str(session/'DICOMDIR'))
+        dicomdir = pydicom.dcmread(str(session/'DICOMDIR'))
 
         sessionfolder = session
         for patient in dicomdir.patient_records:
