@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Creates a bidsmap.yaml YAML file in the bidsfolder/code/bidscoin that maps the information
 from all raw source data to the BIDS labels. You can check and edit the bidsmap file with

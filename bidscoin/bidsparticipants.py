@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 (Re)scans data sets in the source folder for subject meta data to populate the participants.tsv file in the bids
 directory (e.g. after you run bidscoiner.py and managed data in the bids folder).

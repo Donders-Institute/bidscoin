@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Converts ("coins") datasets in the sourcefolder to nifti / json / tsv datasets in the
 bidsfolder according to the BIDS standard. Check and edit the bidsmap.yaml file to

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 This tool launches a graphical user interface for editing the bidsmap.yaml file
 that is e.g. produced by the bidsmapper or by this bidseditor itself. The user can

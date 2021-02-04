@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Reads and plots active (i.e. non-zero) signals from SIEMENS advanced physiological log / DICOM files
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Maps out the values of a dicom field of all subjects in the sourcefolder, saves
 the result in a mapper-file and, optionally, uses the dicom values to rename
