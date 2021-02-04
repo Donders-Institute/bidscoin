@@ -9,7 +9,7 @@ launches step 1b, so in it's simplest form, all you need to do to convert your r
     $ bidsmapper sourcefolder bidsfolder
     $ bidscoiner sourcefolder bidsfolder
 
-If you add new subjects all you need to do is re-run the ``bidscoiner`` -- unless the scan protocol was changed, then you also beed to re-run the ``bidsmapper``.
+If you add new subjects all you need to do is re-run the ``bidscoiner`` -- unless the scan protocol was changed, then you also need to first re-run the ``bidsmapper``.
 
 Step 1a: Running the bidsmapper
 -------------------------------
