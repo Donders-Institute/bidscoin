@@ -30,16 +30,12 @@ except ImportError:
 
 LOGGER = logging.getLogger('bidscoin')
 
-ROW_HEIGHT = 22
+ROW_HEIGHT       = 22
+ICON_FILENAME    = Path(__file__).parents[1]/'docs'/'_static'/'bidscoin.ico'
 
-ICON_FILENAME = Path(__file__).parent/'icons'/'bidscoin.ico'
-
-MAIN_HELP_URL = 'https://github.com/Donders-Institute/bidscoin/blob/master/README.md'
-
+MAIN_HELP_URL    = f"https://bidscoin.readthedocs.io/en/{bids.version()}"
 HELP_URL_DEFAULT = f"https://bids-specification.readthedocs.io/en/v{bids.bidsversion()}"
-HELP_URL_DEFAULT = 'https://bids-specification.readthedocs.io/en/latest'
-
-HELP_URLS = {
+HELP_URLS        = {
     'anat': f"{HELP_URL_DEFAULT}/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#anatomy-imaging-data",
     'dwi' : f"{HELP_URL_DEFAULT}/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#diffusion-imaging-data",
     'fmap': f"{HELP_URL_DEFAULT}/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#fieldmap-data",
@@ -53,12 +49,12 @@ HELP_URLS = {
     bids.ignoredatatype : HELP_URL_DEFAULT
 }
 
-OPTIONS_TOOLTIP_BIDSCOIN = """BIDScoin
+TOOLTIP_BIDSCOIN = """BIDScoin
 version:    should correspond with the version in ../bidscoin/version.txt
 bidsignore: Semicolon-separated list of entries that are added to the .bidsignore file
             (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv"""
 
-OPTIONS_TOOLTIP_DCM2NIIX = """dcm2niix
+TOOLTIP_DCM2NIIX = """dcm2niix
 path: Command to set the path to dcm2niix, e.g.:
       module add dcm2niix/1.0.20180622; (note the semi-colon at the end)
       PATH=/opt/dcm2niix/bin:$PATH; (note the semi-colon at the end)
@@ -476,9 +472,9 @@ class Ui_MainWindow(MainWindow):
         for tool, parameters in bidsmap_options.items():
             # Set the tools
             if tool == 'BIDScoin':
-                tooltip_text = OPTIONS_TOOLTIP_BIDSCOIN
+                tooltip_text = TOOLTIP_BIDSCOIN
             elif tool == 'dcm2niix':
-                tooltip_text = OPTIONS_TOOLTIP_DCM2NIIX
+                tooltip_text = TOOLTIP_DCM2NIIX
             else:
                 tooltip_text = tool
             tool_list.append({
