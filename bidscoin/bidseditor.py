@@ -977,6 +977,7 @@ class EditDialog(QDialog):
         allowed_suffixes = {}
         for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
             runs = self.template_bidsmap.get(self.dataformat, {}).get(datatype, [])
+            if not runs: continue
             for run in runs:
                 suffix = run['bids'].get('suffix')
                 if suffix and suffix not in allowed_suffixes.get(datatype, []):

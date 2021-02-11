@@ -875,7 +875,10 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
     if not dataformat:
         dataformat = get_dataformat(sourcefile)
 
-    for index, run in enumerate(bidsmap.get(dataformat, {}).get(datatype, [])):
+    runs = bidsmap.get(dataformat, {}).get(datatype, [])
+    if not runs:
+        runs = []
+    for index, run in enumerate(runs):
         if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
             run_ = dict(provenance=str(sourcefile.resolve()), attributes={}, bids={})
@@ -1087,7 +1090,7 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, mat
             if exist_run(bidsmap, dataformat, datatype, run_item, matchbidslabels):
                 return True
 
-    if not bidsmap.get(dataformat).get(datatype):
+    if not bidsmap.get(dataformat, {}).get(datatype):
         return False
 
     for run in bidsmap[dataformat][datatype]:
@@ -1180,7 +1183,10 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, datatypes
     run_ = dict(provenance='', attributes={}, bids={})
     for datatype in datatypes:
 
-        for index, run in enumerate(bidsmap.get(dataformat, {}).get(datatype, [])):
+        runs = bidsmap.get(dataformat, {}).get(datatype, [])
+        if not runs:
+            runs = []
+        for index, run in enumerate(runs):
 
             run_  = dict(provenance='', attributes={}, bids={})                                             # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
             match = any([run['attributes'][attrkey] is not None for attrkey in run['attributes']])          # Normally match==True, but make match==False if all attributes are empty
