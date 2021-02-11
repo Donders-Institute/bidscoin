@@ -597,9 +597,7 @@ class Ui_MainWindow(MainWindow):
         idx = 0
         samples_table.setSortingEnabled(False)
         for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
-            runs = self.output_bidsmap.get(self.dataformat).get(datatype)
-            if not runs:
-                continue
+            runs = self.output_bidsmap.get(self.dataformat, {}).get(datatype, [])
             for run in runs:
                 provenance = Path(run['provenance'])
                 ordered_file_index = self.ordered_file_index[provenance]
@@ -979,7 +977,7 @@ class EditDialog(QDialog):
             runs = self.template_bidsmap.get(self.dataformat, {}).get(datatype, [])
             for run in runs:
                 suffix = run['bids'].get('suffix')
-                if suffix and suffix not in allowed_suffixes.get(datatype,[]):
+                if suffix and suffix not in allowed_suffixes.get(datatype, []):
                     if datatype not in allowed_suffixes:
                         allowed_suffixes[datatype] = []
                     allowed_suffixes[datatype].append(suffix)
@@ -1120,7 +1118,7 @@ class EditDialog(QDialog):
             key = row[0]['value']
             if self.target_datatype in bids.bidsdatatypes and key=='suffix':
                 table.setItem(i, 0, myWidgetItem('suffix', iseditable=False))
-                suffixes = self.allowed_suffixes.get(self.target_datatype,[''])
+                suffixes = self.allowed_suffixes.get(self.target_datatype, [''])
                 suffix_dropdown = self.suffix_dropdown = QComboBox()
                 suffix_dropdown.addItems(suffixes)
                 suffix_dropdown.setCurrentIndex(suffix_dropdown.findText(self.target_run['bids']['suffix']))
