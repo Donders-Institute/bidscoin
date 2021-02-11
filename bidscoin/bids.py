@@ -877,7 +877,7 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
     if not dataformat:
         dataformat = get_dataformat(sourcefile)
 
-    for index, run in enumerate(bidsmap.get(dataformat).get(datatype,[])):
+    for index, run in enumerate(bidsmap.get(dataformat, {}).get(datatype, [])):
         if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
             run_ = dict(provenance=str(sourcefile.resolve()), attributes={}, bids={})
@@ -1182,9 +1182,7 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, datatypes
     run_ = dict(provenance='', attributes={}, bids={})
     for datatype in datatypes:
 
-        if bidsmap.get(dataformat).get(datatype) is None: continue
-
-        for index, run in enumerate(bidsmap[dataformat][datatype]):
+        for index, run in enumerate(bidsmap.get(dataformat, {}).get(datatype, [])):
 
             run_  = dict(provenance='', attributes={}, bids={})                                             # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
             match = any([run['attributes'][attrkey] is not None for attrkey in run['attributes']])          # Normally match==True, but make match==False if all attributes are empty
