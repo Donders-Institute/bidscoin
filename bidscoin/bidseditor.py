@@ -598,6 +598,8 @@ class Ui_MainWindow(MainWindow):
         samples_table.setSortingEnabled(False)
         for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
             runs = self.output_bidsmap.get(self.dataformat, {}).get(datatype, [])
+
+            if not runs: continue
             for run in runs:
                 provenance = Path(run['provenance'])
                 ordered_file_index = self.ordered_file_index[provenance]
