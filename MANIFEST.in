@@ -1,5 +1,4 @@
-include version.txt
-include bidsversion.txt
-include requirements.txt
-include LICENSE.txt
+global-include *.yaml
+include *.txt
+include icons/brain.ico
 global-exclude *.pyc
