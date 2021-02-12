@@ -211,7 +211,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     gui = interactive
     if gui:
         app = QApplication(sys.argv)
-        app.setApplicationName('BIDS editor')
+        app.setApplicationName(f"{bidsmapfile} - BIDS editor {bids.version()}")
         mainwin = bidseditor.MainWindow()
         gui = bidseditor.Ui_MainWindow()
         gui.interactive = interactive
