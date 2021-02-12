@@ -31,7 +31,7 @@ except ImportError:
 LOGGER = logging.getLogger('bidscoin')
 
 ROW_HEIGHT       = 22
-ICON_FILENAME    = Path(__file__).parents[1]/'docs'/'_static'/'bidscoin.ico'
+ICON_FILENAME    = Path(__file__).parent/'bidscoin.ico'
 
 MAIN_HELP_URL    = f"https://bidscoin.readthedocs.io/en/{bids.version()}"
 HELP_URL_DEFAULT = f"https://bids-specification.readthedocs.io/en/v{bids.bidsversion()}"

@@ -39,8 +39,8 @@ ignoredatatype  = 'leave_out'
 unknowndatatype = 'extra_data'
 bidskeys        = ('task', 'acq', 'inv', 'mt', 'flip', 'ce', 'rec', 'dir', 'run', 'echo', 'mod', 'proc', 'part', 'suffix', 'IntendedFor') # This is not really something from BIDS, but these are the BIDS-keys used in the bidsmap
 
-schema_folder     = Path(__file__).parents[1]/'schema'
-heuristics_folder = Path(__file__).parents[1]/'heuristics'
+schema_folder     = Path(__file__).parent/'schema'
+heuristics_folder = Path(__file__).parent/'heuristics'
 bidsmap_template  = heuristics_folder/'bidsmap_template.yaml'
 
 
@@ -51,7 +51,7 @@ def bidsversion() -> str:
     :return:    The BIDS version number
     """
 
-    with (Path(__file__).parent.parent/'bidsversion.txt').open('r') as fid:
+    with (Path(__file__).parent/'bidsversion.txt').open('r') as fid:
         value = fid.read().strip()
 
     return str(value)
@@ -64,7 +64,7 @@ def version() -> str:
     :return:    The BIDSCOIN version number
     """
 
-    with (Path(__file__).parent.parent/'version.txt').open('r') as fid:
+    with (Path(__file__).parent/'version.txt').open('r') as fid:
         value = fid.read().strip()
 
     return str(value)
