@@ -217,9 +217,9 @@ def test_tooloptions(tool: str, opts: dict) -> bool:
     if tool == 'dcm2niix':
         command = f"{opts['path']}dcm2niix -h"
     elif tool == 'bidsmapper':
-        command = f"{Path(__file__).parent/'bidsmapper.py'} -v"
+        command = 'bidsmapper -v'
     elif tool in ('bidscoin', 'bidscoiner'):
-        command = f"{Path(__file__).parent/'bidscoiner.py'} -v"
+        command = 'bidscoiner.py -v'
     else:
         logger.warning(f"Testing of '{tool}' not supported")
         return None
