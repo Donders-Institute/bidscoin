@@ -1,4 +1,4 @@
-global-include *.yaml
-include *.txt
+include ../*.txt
 include icons/brain.ico
-global-exclude *.pyc
+global-include *.yaml
+global-exclude *.py[cod]
