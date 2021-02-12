@@ -219,7 +219,7 @@ def test_tooloptions(tool: str, opts: dict) -> bool:
     elif tool == 'bidsmapper':
         command = 'bidsmapper -v'
     elif tool in ('bidscoin', 'bidscoiner'):
-        command = 'bidscoiner.py -v'
+        command = 'bidscoiner -v'
     else:
         logger.warning(f"Testing of '{tool}' not supported")
         return None

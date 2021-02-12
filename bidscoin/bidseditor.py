@@ -1354,7 +1354,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', dataf
 
     # Start the Qt-application
     app = QApplication(sys.argv)
-    app.setApplicationName(f'{bidsmapfile} - BIDS editor')
+    app.setApplicationName(f"{bidsmapfile} - BIDS editor {bids.version()}")
     mainwin = MainWindow()
     gui = Ui_MainWindow()
     gui.setupUi(mainwin, bidsfolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap, dataformat, subprefix=subprefix, sesprefix=sesprefix)
