@@ -1,4 +1,0 @@
-include ../*.txt
-include icons/brain.ico
-global-include *.yaml
-global-exclude *.py[cod]
