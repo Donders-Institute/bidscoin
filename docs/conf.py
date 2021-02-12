@@ -24,7 +24,7 @@ author = 'Marcel Zwiers'
 
 # The full version, including alpha/beta/rc tags
 # Read the version from file
-with open(Path(__file__).parent/'version.txt') as fid:
+with open(Path(__file__).parents[1]/'bidscoin'/'version.txt') as fid:
     release = fid.read().strip()
 
 
