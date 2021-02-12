@@ -19,12 +19,12 @@ from pathlib import Path
 # -- Project information -----------------------------------------------------
 
 project = 'BIDScoin'
-copyright = '2020, Marcel Zwiers'
+copyright = '2021, Marcel Zwiers'
 author = 'Marcel Zwiers'
 
 # The full version, including alpha/beta/rc tags
 # Read the version from file
-with open(Path(__file__).parent.parent/'version.txt') as fid:
+with open(Path(__file__).parent/'version.txt') as fid:
     release = fid.read().strip()
 
 
