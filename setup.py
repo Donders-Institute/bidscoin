@@ -2,7 +2,7 @@ from pathlib import Path
 from setuptools import setup, find_packages
 
 # Read the version from file
-with (Path(__file__).parent/'version.txt').open('r') as fid:
+with (Path(__file__).parent/'bidscoin'/'version.txt').open('r') as fid:
     version = fid.read().strip()
 
 # Read the contents of the README file
@@ -20,8 +20,7 @@ setup(name                           = 'bidscoin',          # Required
       python_requires                = '>=3.6',
       setup_requires                 = ["pytest-runner"],
       tests_require                  = ["pytest", "pytest-cov", "coverage"],
-      package_data                   = {'bidscoin': ['../*version.txt', 'bidscoin.ico'],
-                                        '': ['*.yaml']},
+      package_data                   = {'bidscoin': ['../*version.txt', 'bidscoin.ico', '*.yaml']},
       entry_points                   = {'console_scripts': ['bidseditor       = bidscoin.bidseditor:main',
                                                             'bidstrainer      = bidscoin.bidstrainer:main',
                                                             'bidsmapper       = bidscoin.bidsmapper:main',
