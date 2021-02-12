@@ -160,9 +160,9 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
             if '-x y' in bidsmap['Options']['dcm2niix']['args']:
                 for dcm2niixfile in sorted(outfolder.glob(bidsname + '*_Crop_*')):                              # e.g. *_Crop_1.nii.gz
                     ext         = ''.join(dcm2niixfile.suffixes)
-                    newbidsname = str(dcm2niixfile).rsplit(ext,1)[0].rsplit('_Crop_',1)[0] + ext
-                    LOGGER.info(f"Found dcm2niix _Crop_ suffix, replacing original file\n{dcm2niixfile} ->\n{newbidsname}")
-                    dcm2niixfile.replace(newbidsname)
+                    newbidsfile = str(dcm2niixfile).rsplit(ext,1)[0].rsplit('_Crop_',1)[0] + ext
+                    LOGGER.info(f"Found dcm2niix _Crop_ suffix, replacing original file\n{dcm2niixfile} ->\n{newbidsfile}")
+                    dcm2niixfile.replace(newbidsfile)
 
             # Rename all files ending with _c%d, _e%d and _ph (and any combination of these) that are added by dcm2niix for multi-coil data, multi-echo data and phase data
             # See: https://github.com/rordenlab/dcm2niix/blob/master/FILENAMING.md
@@ -223,11 +223,11 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     newbidsname = str(Path(basepath).name)
                     if runindex.startswith('<<') and runindex.endswith('>>'):
                         newbidsname = bids.increment_runindex(outfolder, newbidsname, ext)                      # Update the runindex now that the acq-label has changed
-                    newbidsname = (outfolder/newbidsname).with_suffix(ext)
-                    LOGGER.info(f"Found dcm2niix {dcm2niisuffix} suffix, renaming\n{dcm2niixfile} ->\n{newbidsname}")
-                    if newbidsname.is_file():
-                        LOGGER.warning(f"Overwriting existing {newbidsname} file -- check your results carefully!")
-                    dcm2niixfile.replace(newbidsname)
+                    newbidsfile = (outfolder/newbidsname).with_suffix(ext)
+                    LOGGER.info(f"Found dcm2niix {dcm2niisuffix} suffix, renaming\n{dcm2niixfile} ->\n{newbidsfile}")
+                    if newbidsfile.is_file():
+                        LOGGER.warning(f"Overwriting existing {newbidsfile} file -- check your results carefully!")
+                    dcm2niixfile.replace(newbidsfile)
                     if ext == '.json':
                         jsonfiles.append((outfolder/newbidsname).with_suffix('.json'))
 
