@@ -32,12 +32,12 @@ BIDScoin functionality
 -  [x] Multi-coil data\*
 -  [x] PET data\*
 -  [ ] Stimulus / behavioural logfiles
--  [ ] Physiological data
+-  [x] Physiological data\*
 -  [x] Plug-ins
 -  [x] Defacing
 -  [x] Multi-echo combination
 
-   ``* = Experimental support for PAR / REC source data``
+   ``* = DICOM source data (tested for Siemens)``
 
 ::
 
