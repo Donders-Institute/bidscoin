@@ -58,7 +58,7 @@ DICOM:
       EchoTime: ~
       RepetitionTime: ~
       PhaseEncodingDirection: ~
-    bids: &anat_dicoment_group1         # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_nonparametric         # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
@@ -68,46 +68,46 @@ DICOM:
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       suffix: T2w
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       suffix: PDw
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       suffix: T2starw
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       suffix: FLAIR
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       suffix: inplaneT1
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       suffix: inplaneT2
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       suffix: PDT2
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       suffix: angio
   - provenance: ~
     attributes: *anat_dicomattr
-    bids: &anat_dicoment_group2         # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_parametric         # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
@@ -116,96 +116,86 @@ DICOM:
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: T2map
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: T2starmap
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: R1map
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: R2map
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: R2starmap
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: PDmap
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: MTRmap
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: MTsat
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: UNIT1
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: T1rho
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: MWFmap
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: MTVmap
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: PDT2map
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: Chimap
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group2
-      suffix: TB1map
-  - provenance: ~
-    attributes: *anat_dicomattr
-    bids:
-      <<: *anat_dicoment_group2
-      suffix: RB1map
-  - provenance: ~
-    attributes: *anat_dicomattr
-    bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: S0map
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: M0map
   - provenance: ~
     attributes: *anat_dicomattr
-    bids: &anat_dicoment_group3         # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_defacemask         # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
@@ -214,7 +204,7 @@ DICOM:
       suffix: defacemask
   - provenance: ~
     attributes: *anat_dicomattr
-    bids: &anat_dicoment_group4         # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_multiecho         # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
@@ -225,11 +215,11 @@ DICOM:
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group4
+      <<: *anat_dicoment_multiecho
       suffix: MEGRE
   - provenance: ~
     attributes: *anat_dicomattr
-    bids: &anat_dicoment_group5         # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_multiflip         # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
@@ -239,7 +229,7 @@ DICOM:
       suffix: VFA
   - provenance: ~
     attributes: *anat_dicomattr
-    bids: &anat_dicoment_group6         # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_multiinv         # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
@@ -249,7 +239,7 @@ DICOM:
       suffix: IRT1
   - provenance: ~
     attributes: *anat_dicomattr
-    bids: &anat_dicoment_group7         # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_mp2rage         # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
@@ -261,7 +251,7 @@ DICOM:
       suffix: MP2RAGE
   - provenance: ~
     attributes: *anat_dicomattr
-    bids: &anat_dicoment_group8         # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_vfamt         # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
@@ -274,11 +264,11 @@ DICOM:
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
-      <<: *anat_dicoment_group8
+      <<: *anat_dicoment_vfamt
       suffix: MTS
   - provenance: ~
     attributes: *anat_dicomattr
-    bids: &anat_dicoment_group9         # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_mtr         # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
@@ -522,6 +512,24 @@ DICOM:
       run: <<1>>
       suffix: TB1EPI
       IntendedFor: ~
+  - provenance: ~
+    attributes:
+      <<: *fmap_dicomattr
+      SeriesDescription: ['*b1map*', '*B1map*']
+      ImageType: 'FLIP ANGLE MAP'
+    bids: &fmap_dicoment_parametric
+      acq: <SeriesDescription>
+      ce: ~
+      rec: ~
+      run: <<1>>
+      suffix: TB1map
+  - provenance: ~
+    attributes:
+      <<: *fmap_dicomattr
+      SeriesDescription: ['*b1map*', '*B1map*']
+    bids:
+      <<: *fmap_dicoment_parametric
+      suffix: RB1map
 
   eeg:        # ----------------------- All EEG data ---------------------------
   - provenance: ~
@@ -799,16 +807,6 @@ PAR:
     bids:
       <<: *anat_parent_group2
       suffix: Chimap
-  - provenance: ~
-    attributes: *anat_parattr
-    bids:
-      <<: *anat_parent_group2
-      suffix: TB1map
-  - provenance: ~
-    attributes: *anat_parattr
-    bids:
-      <<: *anat_parent_group2
-      suffix: RB1map
   - provenance: ~
     attributes: *anat_parattr
     bids:
@@ -1134,6 +1132,19 @@ PAR:
       run: <<1>>
       suffix: TB1EPI
       IntendedFor: ~
+  - provenance: ~
+    attributes: *fmap_parattr
+    bids: &fmap_parent_parametric
+      acq: <protocol_name>
+      ce: ~
+      rec: ~
+      run: <<1>>
+      suffix: TB1map
+  - provenance: ~
+    attributes: *fmap_parattr
+    bids:
+      <<: *fmap_parent_parametric
+      suffix: RB1map
 
   eeg: ~      # ----------------------- All EEG data ---------------------------
 

@@ -251,21 +251,6 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['*b1map*', '*B1map*']
-      ImageType: 'FLIP ANGLE MAP'
-    bids:
-      <<: *anat_dicoment_group2
-      suffix: TB1map
-  - provenance: ~
-    attributes:
-      <<: *anat_dicomattr
-      SeriesDescription: ['*b1map*', '*B1map*']
-    bids:
-      <<: *anat_dicoment_group2
-      suffix: RB1map
-  - provenance: ~
-    attributes:
-      <<: *anat_dicomattr
       SeriesDescription: ['*S0Map*', '*Somap*', '*s0map*']
     bids:
       <<: *anat_dicoment_group2
@@ -707,6 +692,24 @@ DICOM:
       run: <<1>>
       suffix: TB1EPI
       IntendedFor: ~
+  - provenance: ~
+    attributes:
+      <<: *fmap_dicomattr
+      SeriesDescription: ['*b1map*', '*B1map*']
+      ImageType: 'FLIP ANGLE MAP'
+    bids: &fmap_dicoment_parametric
+      acq: <SeriesDescription>
+      ce: ~
+      rec: ~
+      run: <<1>>
+      suffix: TB1map
+  - provenance: ~
+    attributes:
+      <<: *fmap_dicomattr
+      SeriesDescription: ['*b1map*', '*B1map*']
+    bids:
+      <<: *fmap_dicoment_parametric
+      suffix: RB1map
 
   eeg:  # ----------------------- All EEG data ---------------------------
   - provenance: ~
@@ -1076,20 +1079,6 @@ PAR:
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['*b1map*', '*B1map*']
-    bids:
-      <<: *anat_parent_group2
-      suffix: TB1map
-  - provenance: ~
-    attributes:
-      <<: *anat_parattr
-      protocol_name: ['*b1map*', '*B1map*']
-    bids:
-      <<: *anat_parent_group2
-      suffix: RB1map
-  - provenance: ~
-    attributes:
-      <<: *anat_parattr
       protocol_name: ['*S0Map*', '*Somap*', '*s0map*']
     bids:
       <<: *anat_parent_group2
@@ -1455,6 +1444,19 @@ PAR:
       run: <<1>>
       suffix: TB1EPI
       IntendedFor: ~
+  - provenance: ~
+    attributes: *fmap_parattr
+    bids: &fmap_parent_parametric
+      acq: <protocol_name>
+      ce: ~
+      rec: ~
+      run: <<1>>
+      suffix: TB1map
+  - provenance: ~
+    attributes: *fmap_parattr
+    bids:
+      <<: *fmap_parent_parametric
+      suffix: RB1map
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance: ~
