@@ -1276,180 +1276,37 @@ def get_derivatives(datatype: str) -> list:
         return []
 
 
-def get_bidsname(subid: str, sesid: str, datatype: str, run: dict, runindex: str= '', subprefix: str= 'sub-', sesprefix: str= 'ses-') -> str:
+def get_bidsname(subid: str, sesid: str, run: dict, subprefix: str= 'sub-', sesprefix: str= 'ses-') -> str:
     """
     Composes a filename as it should be according to the BIDS standard using the BIDS keys in run
 
     :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001'). Can be left empty
     :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01'). Can be left empty
-    :param datatype:    The bids datatype (choose from bids.bidsdatatypes)
     :param run:         The run mapping with the BIDS key-value pairs
-    :param runindex:    The optional runindex label (e.g. 'run-01'). Can be left ''
     :param subprefix:   The optional subprefix (e.g. 'sub-'). Used to parse the sub-value from the provenance as default subid
     :param sesprefix:   The optional sesprefix (e.g. 'ses-'). If it is found in the provenance then a default sesid will be set
     :return:            The composed BIDS file-name (without file-extension)
     """
 
-    assert datatype in bidsdatatypes + (unknowndatatype, ignoredatatype)
-
     # Try to update the sub/ses-ids
     if run['provenance']:
         subid, sesid = get_subid_sesid(Path(run['provenance']), subid, sesid, subprefix, sesprefix)
+    if not subid.startswith('sub-'):
+        subid = f"sub-{subid}"
+    if sesid and not sesid.startswith('ses-'):
+        sesid = f"ses-{sesid}"
 
-    # Validate and do some checks to allow for dragging the run entries between the different datatype-sections
-    run = copy.deepcopy(run)                # Avoid side effects when changing run
+    # Compose the bidsname
+    bidsname = f"{subid}{add_prefix('_', sesid)}"
     for bidskey in bidskeys:
-        bidsvalue = run['bids'].get(bidskey, '')
+        bidsvalue = run['bids'].get(bidskey)
         if isinstance(bidsvalue, list):
             bidsvalue = bidsvalue[bidsvalue[-1]]    # Get the selected item
         else:
             bidsvalue = cleanup_value(get_dynamic_value(bidsvalue, Path(run['provenance'])))
-        run['bids'][bidskey] = bidsvalue
-
-    # Use the clean-up runindex
-    if not runindex:
-        runindex = run['bids']['run']
-
-    # Compose the BIDS filename (-> switch statement)
-    if datatype == 'anat':
-
-        # bidsname: sub-<label>[_ses-<label>][_acq-<label>][_ce-<label>][_rec-<label>][_run-<index>][_part-<label>]_<modality_label>
-        bidsname = '{sub}{_ses}{_acq}{_inv}{_ce}{_rec}{_run}{_mod}{_part}_{suffix}'.format(
-            sub     = subid,
-            _ses    = add_prefix('_', sesid),
-            _acq    = add_prefix('_acq-',  run['bids']['acq']),
-            _inv    = add_prefix('_inv-',  run['bids']['inv']),
-            _ce     = add_prefix('_ce-',   run['bids']['ce']),
-            _rec    = add_prefix('_rec-',  run['bids']['rec']),
-            _run    = add_prefix('_run-',  runindex),
-            _mod    = add_prefix('_mod-',  run['bids']['mod']),
-            _part   = add_prefix('_part-', run['bids']['part']),
-            suffix  = run['bids']['suffix'])
-
-    elif datatype == 'func':
-
-        # bidsname: sub-<label>[_ses-<label>]_task-<label>[_acq-<label>][_ce-<label>][_dir-<label>][_rec-<label>][_run-<index>][_echo-<index>]_<contrast_label>.nii[.gz]
-        bidsname = '{sub}{_ses}_{task}{_acq}{_ce}{_dir}{_rec}{_run}{_echo}_{suffix}'.format(
-            sub     = subid,
-            _ses    = add_prefix('_', sesid),
-            task    = f"task-{run['bids']['task']}",
-            _acq    = add_prefix('_acq-',  run['bids']['acq']),
-            _ce     = add_prefix('_ce-',   run['bids']['ce']),
-            _dir    = add_prefix('_dir-',  run['bids']['dir']),
-            _rec    = add_prefix('_rec-',  run['bids']['rec']),
-            _run    = add_prefix('_run-',  runindex),
-            _echo   = add_prefix('_echo-', run['bids']['echo']),
-            suffix  = run['bids']['suffix'])
-
-    elif datatype == 'perf':
-
-        # bidsname: sub-<label>[_ses-<label>][_acq-<label>][_rec-<label>][_dir-<label>][_run-<index>]_<perf_label>.nii[.gz]
-        bidsname = '{sub}{_ses}{_acq}{_rec}{_dir}{_run}_{suffix}'.format(
-            sub     = subid,
-            _ses    = add_prefix('_', sesid),
-            _acq    = add_prefix('_acq-',  run['bids']['acq']),
-            _rec    = add_prefix('_rec-',  run['bids']['rec']),
-            _dir    = add_prefix('_dir-',  run['bids']['dir']),
-            _run    = add_prefix('_run-',  runindex),
-            suffix  = run['bids']['suffix'])
-
-    elif datatype == 'dwi':
-
-        # bidsname: sub-<label>[_ses-<label>][_acq-<label>][_dir-<label>][_run-<index>]_dwi.nii[.gz]
-        bidsname = '{sub}{_ses}{_acq}{_dir}{_run}_{suffix}'.format(
-            sub     = subid,
-            _ses    = add_prefix('_', sesid),
-            _acq    = add_prefix('_acq-', run['bids']['acq']),
-            _dir    = add_prefix('_dir-', run['bids']['dir']),
-            _run    = add_prefix('_run-', runindex),
-            suffix  = run['bids']['suffix'])
-
-    elif datatype == 'fmap':
-
-        # TODO: add more fieldmap logic?
-
-        # bidsname: sub-<label>[_ses-<label>][_acq-<label>][_ce-<label>]_dir-<label>[_run-<index>]_epi.nii[.gz]
-        bidsname = '{sub}{_ses}{_acq}{_ce}{_dir}{_run}_{suffix}'.format(
-            sub     = subid,
-            _ses    = add_prefix('_', sesid),
-            _acq    = add_prefix('_acq-', run['bids']['acq']),
-            _ce     = add_prefix('_ce-',  run['bids']['ce']),
-            _dir    = add_prefix('_dir-', run['bids']['dir']),
-            _run    = add_prefix('_run-', runindex),
-            suffix  = run['bids']['suffix'])
-
-    elif datatype == 'meg':
-
-        # bidsname: sub-<label>[_ses-<label>]_task-<label>[_acq-<label>][_run-<index>][_proc-<label>]_meg.<manufacturer_specific_extension>
-        bidsname = '{sub}{_ses}_{task}{_acq}{_proc}{_run}_{suffix}'.format(
-            sub     = subid,
-            _ses    = add_prefix('_', sesid),
-            task    = f"task-{run['bids']['task']}",
-            _acq    = add_prefix('_acq-', run['bids']['acq']),
-            _proc   = add_prefix('_proc-', run['bids']['proc']),
-            _run    = add_prefix('_run-', runindex),
-            suffix  = run['bids']['suffix'])
-
-    elif datatype == 'eeg':
-        # bidsname: sub-<label>[_ses-<label>]_task-<label>[_acq-<label>][_run-<index>]_eeg.<manufacturer_specific_extension>
-        bidsname = '{sub}{_ses}_{task}{_acq}{_run}_{suffix}'.format(
-            sub     = subid,
-            _ses    = add_prefix('_', sesid),
-            task    = f"task-{run['bids']['task']}",
-            _acq    = add_prefix('_acq-', run['bids']['acq']),
-            _run    = add_prefix('_run-', runindex),
-            suffix  = run['bids']['suffix'])
-
-    elif datatype == 'ieeg':
-        # bidsname: sub-<label>[_ses-<label>]_task-<label>[_acq-<label>][_run-<index>]_ieeg.<manufacturer_specific_extension>
-        bidsname = '{sub}{_ses}_{task}{_acq}{_run}_{suffix}'.format(
-            sub     = subid,
-            _ses    = add_prefix('_', sesid),
-            task    = f"task-{run['bids']['task']}",
-            _acq    = add_prefix('_acq-', run['bids']['acq']),
-            _run    = add_prefix('_run-', runindex),
-            suffix  = run['bids']['suffix'])
-
-    elif datatype == 'beh':
-
-        # bidsname: sub-<label>[_ses-<label>]_task-<task_name>_suffix
-        bidsname = '{sub}{_ses}_{task}_{suffix}'.format(
-            sub     = subid,
-            _ses    = add_prefix('_', sesid),
-            task    = f"task-{run['bids']['task']}",
-            suffix  = run['bids']['suffix'])
-
-    elif datatype == 'pet':
-
-        # bidsname: sub-<label>[_ses-<label>][_task-<task_label>][_acq-<label>][_rec-<label>][_run-<index>]_suffix
-        bidsname = '{sub}{_ses}{_task}{_acq}{_rec}{_run}_{suffix}'.format(
-            sub     = subid,
-            _ses    = add_prefix('_', sesid),
-            _task   = add_prefix('_task-', run['bids']['task']),
-            _acq    = add_prefix('_acq-',  run['bids']['acq']),
-            _rec    = add_prefix('_rec-',  run['bids']['rec']),
-            _run    = add_prefix('_run-',  runindex),
-            suffix  = run['bids']['suffix'])
-
-    elif datatype == unknowndatatype or datatype == ignoredatatype:
-
-        # bidsname: sub-<label>[_ses-<label>]_acq-<label>[..][_suffix]
-        bidsname = '{sub}{_ses}{_task}_{acq}{_ce}{_rec}{_dir}{_run}{_echo}{_mod}{_suffix}'.format(
-            sub     = subid,
-            _ses    = add_prefix('_', sesid),
-            _task   = add_prefix('_task-', run['bids']['task']),
-            acq     = f"acq-{run['bids']['acq']}",
-            _ce     = add_prefix('_ce-',   run['bids']['ce']),
-            _rec    = add_prefix('_rec-',  run['bids']['rec']),
-            _dir    = add_prefix('_dir-',  run['bids']['dir']),
-            _run    = add_prefix('_run-',  runindex),
-            _echo   = add_prefix('_echo-', run['bids']['echo']),
-            _mod    = add_prefix('_mod-',  run['bids']['mod']),
-            _suffix = add_prefix('_',      run['bids']['suffix']))
-
-    else:
-        logger.exception(f'Critical error: datatype "{datatype}" not implemented, please inform the developers about this error')
-        raise ValueError()
+        if bidsvalue and bidskey not in ('suffix','IntendedFor'):
+            bidsname = f"{bidsname}_{bidskey}-{bidsvalue}"
+    bidsname = f"{bidsname}{add_prefix('_', run['bids']['suffix'])}"
 
     return bidsname
 

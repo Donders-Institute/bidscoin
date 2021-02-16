@@ -604,7 +604,7 @@ class Ui_MainWindow(MainWindow):
                 provenance = Path(run['provenance'])
                 ordered_file_index = self.ordered_file_index[provenance]
                 bidsname = bids.get_bidsname(output_bidsmap[self.dataformat]['subject'], output_bidsmap[self.dataformat]['session'],
-                                             datatype, run, '', self.subprefix, self.sesprefix)
+                                             run, self.subprefix, self.sesprefix)
                 subid, sesid = bids.get_subid_sesid(provenance)
                 session = self.bidsfolder/subid/sesid
 
@@ -1165,7 +1165,7 @@ class EditDialog(QDialog):
     def refresh_bidsname(self):
         """Updates the bidsname with the current (edited) bids values"""
         bidsname = (Path(self.target_datatype)/bids.get_bidsname(self.target_bidsmap[self.dataformat]['subject'], self.target_bidsmap[self.dataformat]['session'],
-                                                                 self.target_datatype, self.target_run, '', self.subprefix, self.sesprefix)).with_suffix('.*')
+                                                                 self.target_run, self.subprefix, self.sesprefix)).with_suffix('.*')
 
         font = self.view_bids_name.font()
         if self.target_datatype==bids.unknowndatatype:

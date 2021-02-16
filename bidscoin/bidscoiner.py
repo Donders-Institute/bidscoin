@@ -122,7 +122,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        bidsname  = bids.get_bidsname(subid, sesid, datatype, run)
+        bidsname  = bids.get_bidsname(subid, sesid, run)
         runindex  = run['bids'].get('run', '')
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(outfolder, bidsname)
@@ -287,7 +287,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
     # Add IntendedFor and TE1+TE2 meta-data to the fieldmap json-files. This has been postponed untill all datatypes have been processed (i.e. so that all target images are indeed on disk)
     if bidsmap[dataformat]['fmap'] is not None:
         for fieldmap in bidsmap[dataformat]['fmap']:
-            bidsname    = bids.get_bidsname(subid, sesid, 'fmap', fieldmap)
+            bidsname    = bids.get_bidsname(subid, sesid, fieldmap)
             niifiles    = []
             intendedfor = fieldmap['bids']['IntendedFor']
 
