@@ -1228,7 +1228,7 @@ def get_subid_sesid(sourcefile: Path, subid: str= '<<SourceFilePath>>', sesid: s
     """
     Extract the cleaned-up subid and sesid from the pathname if subid/sesid == '<<SourceFilePath>>', or from the dicom header
 
-    :param sourcefile: The full pathname of the file. If it is a DICOM file, the sub/ses values are read from the DICOM field
+    :param sourcefile: The full pathname of the file. If it is a DICOM file, the sub/ses values are read from the DICOM field if subid/sesid=='<<SourceFilePath>>'
     :param subid:      The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001') or DICOM field. Can be left empty
     :param sesid:      The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01') or DICOM field
     :param subprefix:  The optional subprefix (e.g. 'sub-'). Used to parse the sub-value from the provenance as default subid
