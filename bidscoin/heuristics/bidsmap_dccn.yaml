@@ -421,8 +421,8 @@ DICOM:
       ProtocolName: ['*fmri*', '*fMRI*', '*FMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
       ImageType: PHYSIO
     bids: &func_dicoment_timeseries     # See: schema/datatypes/func.yaml
-      task: <SeriesDescription>
-      acq: <ProtocolName>
+      task: <ProtocolName>
+      acq: ~
       ce: ~
       dir: ~
       rec: ~
@@ -747,6 +747,7 @@ DICOM:
       rec: ~
       run: <<1>>
       suffix: TB1map
+      IntendedFor: ~
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
@@ -1540,6 +1541,7 @@ PAR:
       rec: ~
       run: <<1>>
       suffix: TB1map
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
     bids:

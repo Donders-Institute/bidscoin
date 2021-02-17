@@ -567,6 +567,7 @@ DICOM:
       rec: ~
       run: <<1>>
       suffix: TB1map
+      IntendedFor: ~
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
@@ -1228,6 +1229,7 @@ PAR:
       rec: ~
       run: <<1>>
       suffix: TB1map
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
     bids:
