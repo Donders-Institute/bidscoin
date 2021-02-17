@@ -58,7 +58,7 @@ DICOM:
       EchoTime: ~
       RepetitionTime: ~
       PhaseEncodingDirection: ~
-    bids: &anat_dicoment_group1   # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_nonparametric  # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
@@ -70,38 +70,38 @@ DICOM:
       <<: *anat_dicomattr
       SeriesDescription: ['*mprage*', '*MPRAGE*', '*MPRage*', '*t1w*', '*T1W*', '*T1w*', '*T1*']
       MRAcquisitionType: 3D
-    bids: *anat_dicoment_group1
+    bids: *anat_dicoment_nonparametric
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*t2w*', '*T2w*', '*T2W*', '*T2*']
       SequenceVariant: "['SK', 'SP']"
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       suffix: T2w
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: '*tse*vfl*'
-      ImageType: NORM             # NB: The non-NORM image is saved in 'extra_data'
+      ImageType: NORM                   # NB: The non-NORM image is saved in 'extra_data'
       SequenceVariant: "['SK', 'SP']"
       ScanningSequence: SE
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       suffix: T2w
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*PDw*', '*pdw*']
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       suffix: PDw
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*t2star*', '*T2star*', '*T2STAR*', '*T2Star*']
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       suffix: T2starw
   - provenance: ~
     attributes:
@@ -109,41 +109,41 @@ DICOM:
       ScanningSequence: "['SE', 'IR']"
       SeriesDescription: ['*FLAIR*', '*flair*']
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       suffix: FLAIR
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*InplaneT1*', '*inplaneT1*']
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       suffix: inplaneT1
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*InplaneT2*', '*inplaneT2*']
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       suffix: inplaneT2
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*PDT2*', '*PDt2*']
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       suffix: PDT2
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*angio*', '*Angio*', '*ANGIO*']
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       suffix: angio
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*T1map*', '*T1Map*', '*t1map*', '*t1Map*']
-    bids: &anat_dicoment_group2   # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_parametric     # See: schema/datatypes/anat.yaml
       acq: <ProtocolName>
       ce: ~
       rec: ~
@@ -154,56 +154,56 @@ DICOM:
       <<: *anat_dicomattr
       SeriesDescription: ['*T2map*', '*T2Map*', '*t2map*']
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: T2map
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*T2starmap*', '*T2StarMap*', '*t2starmap*']
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: T2starmap
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*R1map*', '*R1Map*', '*r1map*']
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: R1map
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*R2map*', '*R2Map*', '*r2map*']
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: R2map
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*R2starmap*', '*R2StarMap*', '*r2starmap*']
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: R2starmap
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*PDMap*', '*PDmap*']
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: PDmap
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*MTRMap*', '*MTRmap*']
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: MTRmap
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*MTSat*', '*MTsat*']
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: MTsat
   - provenance: ~
     attributes:
@@ -211,60 +211,60 @@ DICOM:
       SeriesDescription: ['*mp2rage*UNI*', '*MP2RAGE*UNI*', '*MP2Rage*UNI*', '*mp2rage*uni*', '*MP2RAGE*uni*', '*MP2Rage*uni*']
       MRAcquisitionType: 3D
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: UNIT1
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*T1rho*', '*T1Rho*', '*t1rho*', '*t1Rho*']
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: T1rho
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*MWFMap*', '*MWFmap*', '*mwfmap*']
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: MWFmap
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*MTVMap*', '*MTVmap*', '*mtvmap*']
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: MTVmap
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*PDT2Map*', '*PDT2map*', '*mwfmap*']
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: PDT2map
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*ChiMap*', '*Chimap*', '*chimap*']
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: Chimap
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*S0Map*', '*Somap*', '*s0map*']
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: S0map
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*M0Map*', '*Momap*', '*m0map*']
     bids:
-      <<: *anat_dicoment_group2
+      <<: *anat_dicoment_parametric
       suffix: M0map
   - provenance: ~
     attributes: *anat_dicomattr
-    bids: &anat_dicoment_group3   # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_defacemask     # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
@@ -275,7 +275,7 @@ DICOM:
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*MESE*', '*mese*']
-    bids: &anat_dicoment_group4   # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_multiecho      # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
@@ -288,13 +288,13 @@ DICOM:
       <<: *anat_dicomattr
       SeriesDescription: ['*MEGRE*', '*megre*']
     bids:
-      <<: *anat_dicoment_group4
+      <<: *anat_dicoment_multiecho
       suffix: MEGRE
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*VFA*', '*vfa*']
-    bids: &anat_dicoment_group5   # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_multiflip      # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
@@ -306,7 +306,7 @@ DICOM:
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*IRT1*', '*irt1*']
-    bids: &anat_dicoment_group6   # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_multiinv       # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
@@ -319,7 +319,7 @@ DICOM:
       <<: *anat_dicomattr
       SeriesDescription: ['*mp2rage*INV1*', '*MP2RAGE*INV1*', '*MP2Rage*INV1*', '*mp2rage*inv1*', '*MP2RAGE*inv1*', '*MP2Rage*inv1*']
       MRAcquisitionType: 3D
-    bids: &anat_dicoment_group7   # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_mp2rage        # See: schema/datatypes/anat.yaml
       acq: <ProtocolName>
       ce: ~
       rec: ~
@@ -335,13 +335,13 @@ DICOM:
       SeriesDescription: ['*mp2rage*INV2*', '*MP2RAGE*INV2*', '*MP2Rage*INV2*', '*mp2rage*inv2*', '*MP2RAGE*inv2*', '*MP2Rage*inv2*']
       MRAcquisitionType: 3D
     bids:
-      <<: *anat_dicoment_group7
+      <<: *anat_dicoment_mp2rage
       inv: 2
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*MPM*', '*mpm*']
-    bids: &anat_dicoment_group8   # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_vfamt          # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
@@ -356,13 +356,13 @@ DICOM:
       <<: *anat_dicomattr
       SeriesDescription: ['*MTS*', '*mts*']
     bids:
-      <<: *anat_dicoment_group8
+      <<: *anat_dicoment_vfamt
       suffix: MTS
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*MTR*', '*mtr*']
-    bids: &anat_dicoment_group9   # See: schema/datatypes/anat.yaml
+    bids: &anat_dicoment_mtr            # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
@@ -388,8 +388,8 @@ DICOM:
       EchoTime: ~
       RepetitionTime: ~
       PhaseEncodingDirection: ~
-    bids: &func_dicoment_group1   # See: schema/datatypes/func.yaml
-      task: <ProtocolName>        # More consistent between SBREF and PHYSIO files
+    bids: &func_dicoment_func           # See: schema/datatypes/func.yaml
+      task: <ProtocolName>              # More consistent between SBREF and PHYSIO files
       acq: ~
       ce: ~
       dir: ~
@@ -399,12 +399,12 @@ DICOM:
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       suffix: bold
   - provenance: ~
-    attributes:                   # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
+    attributes:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
       <<: *func_dicomattr
       ProtocolName: ['*fmri*', '*fMRI*', '*FMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
       SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
     bids:
-      <<: *func_dicoment_group1
+      <<: *func_dicoment_func
       suffix: sbref
   - provenance: ~
     attributes:
@@ -413,16 +413,18 @@ DICOM:
       ScanningSequence: EP
       SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
     bids:
-      <<: *func_dicoment_group1
+      <<: *func_dicoment_func
       suffix: sbref
   - provenance: ~
-    attributes:                   # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
+    attributes:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
       <<: *func_dicomattr
       ProtocolName: ['*fmri*', '*fMRI*', '*FMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
       ImageType: PHYSIO
-    bids: &func_dicoment_group4   # See: schema/datatypes/func.yaml
+    bids: &func_dicoment_timeseries     # See: schema/datatypes/func.yaml
       task: <SeriesDescription>
       acq: <ProtocolName>
+      ce: ~
+      dir: ~
       rec: ~
       recording: ~
       run: <<1>>
@@ -431,40 +433,39 @@ DICOM:
     attributes:
       <<: *func_dicomattr
       SeriesDescription: ['*fmri*Physio*', '*fMRI*Physio*', '*FMRI*Physio*', '*task*Physio*', '*Task*Physio*', '*bold*Physio*', '*BOLD*Physio*']
-    bids: *func_dicoment_group4
+    bids: *func_dicoment_timeseries
   - provenance: ~
-    attributes:                   # Then catch the bold runs themselves
+    attributes:                         # Then catch the bold runs themselves
       <<: *func_dicomattr
       ProtocolName: ['*fmri*', '*fMRI*', '*FMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
-    bids: *func_dicoment_group1
+    bids: *func_dicoment_func
   - provenance: ~
     attributes:
       <<: *func_dicomattr
       ProtocolName: '*cmrr_*_m*_TR*'
       ScanningSequence: EP
-    bids: *func_dicoment_group1
+    bids: *func_dicoment_func
   - provenance: ~
     attributes:
       <<: *func_dicomattr
       ProtocolName: ['*CBV*', '*CerebralBloodVolume*']
     bids:
-      <<: *func_dicoment_group1
+      <<: *func_dicoment_func
       suffix: cbv
   - provenance: ~
     attributes: *func_dicomattr
-    bids: &func_dicoment_group3   # See: schema/datatypes/func.yaml
-      task: <ProtocolName>        # More consistent between SBREF and PHYSIO files
+    bids: &func_dicoment_events         # See: schema/datatypes/func.yaml
+      task: <ProtocolName>              # More consistent between SBREF and PHYSIO files
       acq: ~
       ce: ~
       dir: ~
       rec: ~
       run: <<1>>
-      echo: <EchoNumbers>
       suffix: events
   - provenance: ~
     attributes: *func_dicomattr
     bids:
-      <<: *func_dicoment_group4
+      <<: *func_dicoment_timeseries
       suffix: stim
 
   perf:       # ----------------------- All perfusion runs ---------------------
@@ -484,7 +485,7 @@ DICOM:
       EchoTime: ~
       RepetitionTime: ~
       PhaseEncodingDirection: ~
-    bids: &perf_dicoment_group1   # See: schema/datatypes/perf.yaml
+    bids: &perf_dicoment_group1         # See: schema/datatypes/perf.yaml
       acq: <ProtocolName>
       rec: <SeriesDescription>
       dir: ~
@@ -504,7 +505,7 @@ DICOM:
       suffix: m0scan
   - provenance: ~
     attributes: *perf_dicomattr
-    bids: &perf_dicoment_group2   # See: schema/datatypes/perf.yaml
+    bids: &perf_dicoment_group2         # See: schema/datatypes/perf.yaml
       acq: <ProtocolName>
       rec: <SeriesDescription>
       dir: ~
@@ -512,7 +513,7 @@ DICOM:
       suffix: aslcontext
   - provenance: ~
     attributes: *perf_dicomattr
-    bids: &perf_dicoment_group3   # See: schema/datatypes/perf.yaml
+    bids: &perf_dicoment_group3         # See: schema/datatypes/perf.yaml
       acq: <ProtocolName>
       rec: <SeriesDescription>
       run: <<1>>
@@ -535,29 +536,29 @@ DICOM:
       EchoTime: ~
       RepetitionTime: ~
       PhaseEncodingDirection: ~
-    bids: &dwi_dicoment_group1    # See: schema/datatypes/dwi.yaml
-      acq: <ProtocolName>         # More consistent between SBREF and PHYSIO files
+    bids: &dwi_dicoment_DWI             # See: schema/datatypes/dwi.yaml
+      acq: <ProtocolName>               # More consistent between SBREF and PHYSIO files
       dir: ~
       run: <<1>>
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       suffix: dwi
   - provenance: ~
-    attributes:                   # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
+    attributes:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
       <<:  *dwi_dicomattr
       ProtocolName: ['*dwi*', '*DWI*', '*diffusion*', '*DIFFUSION*', '*dti*', '*DTI*']
       SeriesDescription: ['*sbref*', '*SBRef*', '*SBREF*']
-    bids: &dwi_dicoment_group2    # See: schema/datatypes/dwi.yaml
+    bids: &dwi_dicoment_sbref           # See: schema/datatypes/dwi.yaml
       acq: <SeriesDescription>
       dir: ~
       run: <<1>>
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       suffix: sbref
   - provenance: ~
-    attributes:                   # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
+    attributes:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
       <<: *dwi_dicomattr
       ProtocolName: ['*dwi*', '*DWI*', '*diffusion*', '*DIFFUSION*', '*dti*', '*DTI*']
       ImageType: PHYSIO
-    bids: &dwi_dicoment_group3    # Not (yet) in: schema/datatypes/dwi.yaml
+    bids: &dwi_dicoment_physio          # Not (yet) in: schema/datatypes/dwi.yaml
       acq: <SeriesDescription>
       dir: ~
       run: <<1>>
@@ -566,17 +567,17 @@ DICOM:
     attributes:
       <<: *dwi_dicomattr
       SeriesDescription: ['*dwi*Physio*', '*DWI*Physio*', '*diffusion*Physio*', '*DIFFUSION*Physio*', '*dti*Physio*', '*DTI*Physio*']
-    bids: *dwi_dicoment_group3
+    bids: *dwi_dicoment_physio
   - provenance: ~
-    attributes:                   # Then catch the normal DWI runs
+    attributes:                         # Then catch the normal DWI runs
       <<: *dwi_dicomattr
       ProtocolName: ['*dwi*', '*DWI*', '*diffusion*', '*DIFFUSION*', '*dti*', '*DTI*']
-    bids: *dwi_dicoment_group1
+    bids: *dwi_dicoment_DWI
   - provenance: ~
     attributes:
       <<: *dwi_dicomattr
       ImageType: DIFFUSION
-    bids: *dwi_dicoment_group1
+    bids: *dwi_dicoment_DWI
 
   fmap:       # ----------------------- All fieldmap runs ----------------------
   - provenance: ~
@@ -595,7 +596,7 @@ DICOM:
       EchoTime: ~
       RepetitionTime: ~
       PhaseEncodingDirection: ~
-    bids: &fmap_dicoment_group1   # See: schema/datatypes/fmap.yaml
+    bids: &fmap_dicoment_fieldmaps      # See: schema/datatypes/fmap.yaml
       acq: <SeriesDescription>
       run: <<1>>
       suffix: magnitude
@@ -607,7 +608,7 @@ DICOM:
       EchoNumbers: 2
       ImageType: P
     bids:
-      <<: *fmap_dicoment_group1
+      <<: *fmap_dicoment_fieldmaps
       suffix: phasediff
   - provenance: ~
     attributes:
@@ -616,7 +617,7 @@ DICOM:
       EchoNumbers: 1
       ImageType: M
     bids:
-      <<: *fmap_dicoment_group1
+      <<: *fmap_dicoment_fieldmaps
       suffix: magnitude1
   - provenance: ~
     attributes:
@@ -625,7 +626,7 @@ DICOM:
       EchoNumbers: 2
       ImageType: M
     bids:
-      <<: *fmap_dicoment_group1
+      <<: *fmap_dicoment_fieldmaps
       suffix: magnitude2
   - provenance: ~
     attributes:
@@ -634,7 +635,7 @@ DICOM:
       EchoNumbers: 1
       ImageType: P
     bids:
-      <<: *fmap_dicoment_group1
+      <<: *fmap_dicoment_fieldmaps
       suffix: phase1
   - provenance: ~
     attributes:
@@ -643,22 +644,22 @@ DICOM:
       EchoNumbers: 2
       ImageType: P
     bids:
-      <<: *fmap_dicoment_group1
+      <<: *fmap_dicoment_fieldmaps
       suffix: phase2
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
       SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*FieldMap*','*field_map*', '*B0map*', '*b0map*']
     bids:
-      <<: *fmap_dicoment_group1
+      <<: *fmap_dicoment_fieldmaps
       suffix: fieldmap
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: ['*inverted*', '*pepolar*', '*_inv']
       ScanningSequence: EP
-    bids: &fmap_dicoment_group2   # See: schema/datatypes/fmap.yaml
-      acq: <ProtocolName>         # More consistent between SBREF and PHYSIO files
+    bids: &fmap_dicoment_PEPolar        # See: schema/datatypes/fmap.yaml
+      acq: <ProtocolName>               # More consistent between SBREF and PHYSIO files
       ce: ~
       dir: ~
       run: <<1>>
@@ -667,30 +668,73 @@ DICOM:
   - provenance: ~
     attributes: *fmap_dicomattr
     bids:
-      <<: *fmap_dicoment_group2
+      <<: *fmap_dicoment_PEPolar
       suffix: m0scan
   - provenance: ~
     attributes: *fmap_dicomattr
-    bids: &fmap_dicoment_group3   # See: schema/datatypes/fmap.yaml
+    bids: &fmap_dicoment_TB1DAM         # See: schema/datatypes/fmap.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
       flip: ~
+      inv: ~
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       run: <<1>>
       suffix: TB1DAM
       IntendedFor: ~
   - provenance: ~
     attributes: *fmap_dicomattr
-    bids: &fmap_dicoment_group4   # See: schema/datatypes/fmap.yaml
+    bids: &fmap_dicoment_TB1EPI         # See: schema/datatypes/fmap.yaml
       acq: <SeriesDescription>
       ce: ~
       rec: ~
       flip: ~
       echo: ~
+      inv: ~
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       run: <<1>>
       suffix: TB1EPI
+      IntendedFor: ~
+  - provenance: ~
+    attributes: *fmap_dicomattr
+    bids: &fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      acq: <SeriesDescription>
+      ce: ~
+      rec: ~
+      flip: ~
+      echo: ~
+      inv: ~
+      part: ['', 'mag', 'phase', 'real', 'imag', 0]
+      run: <<1>>
+      suffix: TB1AFI
+      IntendedFor: ~
+  - provenance: ~
+    attributes: *fmap_dicomattr
+    bids:
+      <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      suffix: TB1TFL
+  - provenance: ~
+    attributes: *fmap_dicomattr
+    bids:
+      <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      suffix: TB1RFM
+  - provenance: ~
+    attributes: *fmap_dicomattr
+    bids:
+      <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      suffix: RB1COR
+  - provenance: ~
+    attributes: *fmap_dicomattr
+    bids: &fmap_dicoment_TB1SRGE        # See: schema/datatypes/fmap.yaml
+      acq: <SeriesDescription>
+      ce: ~
+      rec: ~
+      flip: ~
+      echo: ~
+      inv: ~
+      part: ['', 'mag', 'phase', 'real', 'imag', 0]
+      run: <<1>>
+      suffix: TB1SRGE
       IntendedFor: ~
   - provenance: ~
     attributes:
@@ -717,7 +761,7 @@ DICOM:
       Modality: EEG
       ProtocolName: ~
       SeriesDescription: ~
-    bids:                         # See: schema/datatypes/eeg.yaml
+    bids:                               # See: schema/datatypes/eeg.yaml
       acq: <ProtocolName>
       task: <SeriesDescription>
       run: <<1>>
@@ -729,7 +773,7 @@ DICOM:
       Modality: EEG
       ProtocolName: ~
       SeriesDescription: ~
-    bids:                         # See: schema/datatypes/ieeg.yaml
+    bids:                               # See: schema/datatypes/ieeg.yaml
       acq: <ProtocolName>
       task: <SeriesDescription>
       run: <<1>>
@@ -741,7 +785,7 @@ DICOM:
       Modality: ~
       ProtocolName: ~
       SeriesDescription: ~
-    bids: &beh_dicoment_group1    # See: schema/datatypes/beh.yaml
+    bids: &beh_dicoment_group1          # See: schema/datatypes/beh.yaml
       task: <SeriesDescription>
       acq: ~
       recording: ~
@@ -754,7 +798,7 @@ DICOM:
       suffix: stim
   - provenance: ~
     attributes: *beh_dicomattr
-    bids: &beh_dicoment_group2    # See: schema/datatypes/beh.yaml
+    bids: &beh_dicoment_group2          # See: schema/datatypes/beh.yaml
       task: <SeriesDescription>
       acq: ~
       run: ~
@@ -816,14 +860,14 @@ DICOM:
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: '*tse*vfl*'
-      ImageType: ~                # Make an exception for this non-NORM TSE T2w-image (i.e. ['ORIGINAL', 'PRIMARY', 'M', 'ND'], the filtered 'NORM' version is saved in 'anat')
+      ImageType: ~                      # Make an exception for this non-NORM TSE T2w-image (i.e. ['ORIGINAL', 'PRIMARY', 'M', 'ND'], the filtered 'NORM' version is saved in 'anat')
       SequenceVariant: "['SK', 'SP']"
       ScanningSequence: SE
     bids:
-      <<: *anat_dicoment_group1
+      <<: *anat_dicoment_nonparametric
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       suffix: T2w
-  - provenance: ~                 # The last item, taken if nothing else matches
+  - provenance: ~                       # The last item, taken if nothing else matches
     attributes:
       <<: *extra_data_attributes_dicom
     bids:
@@ -871,7 +915,7 @@ DICOM:
     attributes:
       <<: *leaveout_attributes_dicom
       ImageType: DERIVED
-      MRAcquisitionType: 2D       # Make an exception for DERIVED 3D MP2RAGE UNI-images
+      MRAcquisitionType: 2D             # Make an exception for DERIVED 3D MP2RAGE UNI-images
     bids:
       <<: *leaveout_bids_dicom
       rec: DERIVED
@@ -899,7 +943,7 @@ PAR:
       max_echoes: ~
       repetition_time: ~
       prep_direction: ~
-    bids: &anat_parent_group1     # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_nonparametric    # See: schema/datatypes/anat.yaml
       acq: <protocol_name>
       ce: ~
       rec: <exam_name>
@@ -910,68 +954,68 @@ PAR:
     attributes:
       <<: *anat_parattr
       protocol_name: ['*t1w*', '*T1w*', '*T1W*', '*T1*', '3DTFE']
-    bids: *anat_parent_group1
+    bids: *anat_parent_nonparametric
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*t2w*', '*T2w*', '*T2W*', '*T2*']
     bids:
-      <<: *anat_parent_group1
+      <<: *anat_parent_nonparametric
       suffix: T2w
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*PDw*', '*pdw*']
     bids:
-      <<: *anat_parent_group1
+      <<: *anat_parent_nonparametric
       suffix: PDw
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*t2star*', '*T2star*', '*T2STAR*']
     bids:
-      <<: *anat_parent_group1
+      <<: *anat_parent_nonparametric
       suffix: T2starw
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*FLAIR*', '*flair*']
     bids:
-      <<: *anat_parent_group1
+      <<: *anat_parent_nonparametric
       suffix: FLAIR
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*inplaneT1*', '*InplaneT1*']
     bids:
-      <<: *anat_parent_group1
+      <<: *anat_parent_nonparametric
       suffix: inplaneT1
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*inplaneT2*', '*InplaneT2*']
     bids:
-      <<: *anat_parent_group1
+      <<: *anat_parent_nonparametric
       suffix: inplaneT2
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*PDT2*', '*PDt2*']
     bids:
-      <<: *anat_parent_group1
+      <<: *anat_parent_nonparametric
       suffix: PDT2
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*angio*', '*Angio*', '*ANGIO*']
     bids:
-      <<: *anat_parent_group1
+      <<: *anat_parent_nonparametric
       suffix: angio
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*T1map*', '*T1Map*', '*t1map*']
-    bids: &anat_parent_group2   # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_parametric       # See: schema/datatypes/anat.yaml
       acq: <protocol_name>
       ce: ~
       rec: <exam_name>
@@ -982,56 +1026,56 @@ PAR:
       <<: *anat_parattr
       protocol_name: ['*T2map*', '*T2Map*', '*t2map*']
     bids:
-      <<: *anat_parent_group2
+      <<: *anat_parent_parametric
       suffix: T2map
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*T2starmap*', '*T2StarMap*', '*t2starmap*']
     bids:
-      <<: *anat_parent_group2
+      <<: *anat_parent_parametric
       suffix: T2starmap
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*R1map*', '*R1Map*', '*r1map*']
     bids:
-      <<: *anat_parent_group2
+      <<: *anat_parent_parametric
       suffix: R1map
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*R2map*', '*R2Map*', '*r2map*']
     bids:
-      <<: *anat_parent_group2
+      <<: *anat_parent_parametric
       suffix: R2map
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*R2starmap*', '*R2StarMap*', '*r2starmap*']
     bids:
-      <<: *anat_parent_group2
+      <<: *anat_parent_parametric
       suffix: R2starmap
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*PDmap*', '*PDMap*']
     bids:
-      <<: *anat_parent_group2
+      <<: *anat_parent_parametric
       suffix: PDmap
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*MTRmap*', '*MTRMap*']
     bids:
-      <<: *anat_parent_group2
+      <<: *anat_parent_parametric
       suffix: MTRmap
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*MTSat*', '*MTsat*']
     bids:
-      <<: *anat_parent_group2
+      <<: *anat_parent_parametric
       suffix: MTsat
   - provenance: ~
     attributes:
@@ -1039,60 +1083,60 @@ PAR:
       protocol_name: ['*3DTFE*UNI*', '*3DTFE*uni*', '*3dtfe*uni*']
       MRAcquisitionType: 3D
     bids:
-      <<: *anat_parent_group2
+      <<: *anat_parent_parametric
       suffix: UNIT1
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*T1rho*', '*T1Rho*', '*t1rho*', '*t1Rho*']
     bids:
-      <<: *anat_parent_group2
+      <<: *anat_parent_parametric
       suffix: T1rho
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*MWFMap*', '*MWFmap*', '*mwfmap*']
     bids:
-      <<: *anat_parent_group2
+      <<: *anat_parent_parametric
       suffix: MWFmap
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*MTVMap*', '*MTVmap*', '*mtvmap*']
     bids:
-      <<: *anat_parent_group2
+      <<: *anat_parent_parametric
       suffix: MTVmap
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*PDT2Map*', '*PDT2map*', '*pdt2map*']
     bids:
-      <<: *anat_parent_group2
+      <<: *anat_parent_parametric
       suffix: PDT2map
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*ChiMap*', '*Chimap*', '*chimap*']
     bids:
-      <<: *anat_parent_group2
+      <<: *anat_parent_parametric
       suffix: Chimap
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*S0Map*', '*Somap*', '*s0map*']
     bids:
-      <<: *anat_parent_group2
+      <<: *anat_parent_parametric
       suffix: S0map
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*M0Map*', '*Momap*', '*m0map*']
     bids:
-      <<: *anat_parent_group2
+      <<: *anat_parent_parametric
       suffix: M0map
   - provenance: ~
     attributes: *anat_parattr
-    bids: &anat_parent_group3   # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_defacemask       # See: schema/datatypes/anat.yaml
       acq: <protocol_name>
       ce: ~
       rec: <exam_name>
@@ -1103,7 +1147,7 @@ PAR:
     attributes:
       <<: *anat_parattr
       protocol_name: ['*MESE*', '*mese*']
-    bids: &anat_parent_group4   # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_multiecho        # See: schema/datatypes/anat.yaml
       acq: <protocol_name>
       ce: ~
       rec: <exam_name>
@@ -1116,13 +1160,13 @@ PAR:
       <<: *anat_parattr
       protocol_name: ['*MEGRE*', '*megre*']
     bids:
-      <<: *anat_parent_group4
+      <<: *anat_parent_multiecho
       suffix: MEGRE
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*VFA*', '*vfa*']
-    bids: &anat_parent_group5   # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_multiflip        # See: schema/datatypes/anat.yaml
       acq: <protocol_name>
       ce: ~
       rec: <exam_name>
@@ -1134,7 +1178,7 @@ PAR:
     attributes:
       <<: *anat_parattr
       protocol_name: ['*IRT1*', '*irt1*']
-    bids: &anat_parent_group6   # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_multiinv         # See: schema/datatypes/anat.yaml
       acq: <protocol_name>
       ce: ~
       rec: <exam_name>
@@ -1146,7 +1190,7 @@ PAR:
     attributes:
       <<: *anat_parattr
       protocol_name: ['*3DTFE*INV1*', '*3DTFE*inv1*', '*3dtfe*inv1*']
-    bids: &anat_parent_group7   # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_mp2rage          # See: schema/datatypes/anat.yaml
       acq: <protocol_name>
       ce: ~
       rec: <exam_name>
@@ -1161,13 +1205,13 @@ PAR:
       <<: *anat_parattr
       protocol_name: ['*3DTFE*INV2*', '*3DTFE*inv2*', '*3dtfe*inv2*']
     bids:
-      <<: *anat_parent_group7
+      <<: *anat_parent_mp2rage
       inv: 2
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*MPM*', '*mpm*']
-    bids: &anat_parent_group8   # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_vfamt            # See: schema/datatypes/anat.yaml
       acq: <protocol_name>
       ce: ~
       rec: <exam_name>
@@ -1182,13 +1226,13 @@ PAR:
       <<: *anat_parattr
       protocol_name: ['*MTS*', '*mts*']
     bids:
-      <<: *anat_parent_group8
+      <<: *anat_parent_vfamt
       suffix: MTS
   - provenance: ~
     attributes:
       <<: *anat_parattr
       protocol_name: ['*MTR*', '*mtr*']
-    bids: &anat_parent_group9   # See: schema/datatypes/anat.yaml
+    bids: &anat_parent_mtr              # See: schema/datatypes/anat.yaml
       acq: <protocol_name>
       ce: ~
       rec: <exam_name>
@@ -1213,7 +1257,7 @@ PAR:
       max_echoes: ~
       repetition_time: ~
       prep_direction: ~
-    bids: &func_parent_group1     # See: schema/datatypes/func.yaml
+    bids: &func_parent_func             # See: schema/datatypes/func.yaml
       task: <exam_name>
       acq: <protocol_name>
       ce: ~
@@ -1224,40 +1268,41 @@ PAR:
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       suffix: bold
   - provenance: ~
-    attributes:                   # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
+    attributes:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
       <<: *func_parattr
       protocol_name: ['*fMRI*SBREF*', '*fMRI*sbref*', '*fMRI*SBRef*']
     bids:
-      <<: *func_parent_group1
+      <<: *func_parent_func
       suffix: sbref
   - provenance: ~
-    attributes:                   # Then catch the bold runs themselves
+    attributes:                         # Then catch the bold runs themselves
       <<: *func_parattr
       protocol_name: ['*fmri*', '*fMRI*', '*FMRI*', '*task*', '*Task*', '*bold*', '*BOLD*']
-    bids: *func_parent_group1
+    bids: *func_parent_func
   - provenance: ~
     attributes:
       <<: *func_parattr
       protocol_name: ['*CBV*', '*CerebralBloodVolume*']
     bids:
-      <<: *func_parent_group1
+      <<: *func_parent_func
       suffix: cbv
   - provenance: ~
     attributes: *func_parattr
-    bids: &func_parent_group3   # See: schema/datatypes/func.yaml
+    bids: &func_parent_events           # See: schema/datatypes/func.yaml
       task: <exam_name>
       acq: <protocol_name>
       ce: ~
       dir: ~
       rec: ~
       run: <<1>>
-      echo: ~
       suffix: events
   - provenance: ~
     attributes: *func_parattr
-    bids: &func_parent_group4   # See: schema/datatypes/func.yaml
+    bids: &func_parent_timeseries       # See: schema/datatypes/func.yaml
       task: <exam_name>
       acq: <protocol_name>
+      ce: ~
+      dir: ~
       rec: ~
       recording: ~
       run: <<1>>
@@ -1265,7 +1310,7 @@ PAR:
   - provenance: ~
     attributes: *func_parattr
     bids:
-      <<: *func_parent_group4
+      <<: *func_parent_timeseries
       suffix: stim
 
   perf:       # ----------------------- All perfusion runs ---------------------
@@ -1284,7 +1329,7 @@ PAR:
       max_echoes: ~
       repetition_time: ~
       prep_direction: ~
-    bids: &perf_parent_group1   # See: schema/datatypes/perf.yaml
+    bids: &perf_parent_group1           # See: schema/datatypes/perf.yaml
       acq: <protocol_name>
       rec: <exam_name>
       dir: ~
@@ -1304,7 +1349,7 @@ PAR:
       suffix: m0scan
   - provenance: ~
     attributes: *perf_parattr
-    bids: &perf_parent_group2   # See: schema/datatypes/perf.yaml
+    bids: &perf_parent_group2           # See: schema/datatypes/perf.yaml
       acq: <protocol_name>
       rec: <exam_name>
       dir: ~
@@ -1312,7 +1357,7 @@ PAR:
       suffix: aslcontext
   - provenance: ~
     attributes: *perf_parattr
-    bids: &perf_parent_group3   # See: schema/datatypes/perf.yaml
+    bids: &perf_parent_group3           # See: schema/datatypes/perf.yaml
       acq: <protocol_name>
       rec: <exam_name>
       run: <<1>>
@@ -1334,27 +1379,27 @@ PAR:
       max_echoes: ~
       repetition_time: ~
       prep_direction: ~
-    bids: &dwi_parent_group1      # See: schema/datatypes/dwi.yaml
+    bids: &dwi_parent_DWI               # See: schema/datatypes/dwi.yaml
       acq: <protocol_name>
       dir: ~
       run: <<1>>
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       suffix: dwi
   - provenance: ~
-    attributes:                   # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
+    attributes:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
       <<:  *dwi_parattr
       protocol_name: ['*dwi*SBREF*', '*DWI*SBREF*', '*diffusion*SBREF*', '*DIFFUSION*SBREF*', '*dti*SBREF*', '*DTI*']
-    bids: &dwi_parent_group2      # See: schema/datatypes/dwi.yaml
+    bids: &dwi_parent_sbref             # See: schema/datatypes/dwi.yaml
       acq: <protocol_name>
       dir: ~
       run: <<1>>
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       suffix: sbref
-  - provenance: ~                 # Then catch the normal DWI runs
+  - provenance: ~                       # Then catch the normal DWI runs
     attributes:
       <<: *dwi_parattr
       diffusion: 1
-    bids: *dwi_parent_group1
+    bids: *dwi_parent_DWI
 
   fmap:       # ----------------------- All fieldmap runs ----------------------
   - provenance: ~
@@ -1372,7 +1417,7 @@ PAR:
       max_echoes: ~
       repetition_time: ~
       prep_direction: ~
-    bids: &fmap_parent_group1     # See: schema/datatypes/fmap.yaml
+    bids: &fmap_parent_fieldmaps        # See: schema/datatypes/fmap.yaml
       acq: <protocol_name>
       run: <<1>>
       suffix: magnitude
@@ -1380,36 +1425,36 @@ PAR:
   - provenance: ~
     attributes: *fmap_parattr
     bids:
-      <<: *fmap_parent_group1
+      <<: *fmap_parent_fieldmaps
       suffix: phasediff
   - provenance: ~
     attributes: *fmap_parattr
     bids:
-      <<: *fmap_parent_group1
+      <<: *fmap_parent_fieldmaps
       suffix: magnitude1
   - provenance: ~
     attributes: *fmap_parattr
     bids:
-      <<: *fmap_parent_group1
+      <<: *fmap_parent_fieldmaps
       suffix: magnitude2
   - provenance: ~
     attributes: *fmap_parattr
     bids:
-      <<: *fmap_parent_group1
+      <<: *fmap_parent_fieldmaps
       suffix: phase1
   - provenance: ~
     attributes: *fmap_parattr
     bids:
-      <<: *fmap_parent_group1
+      <<: *fmap_parent_fieldmaps
       suffix: phase2
   - provenance: ~
     attributes: *fmap_parattr
     bids:
-      <<: *fmap_parent_group1
+      <<: *fmap_parent_fieldmaps
       suffix: fieldmap
   - provenance: ~
     attributes: *fmap_parattr
-    bids: &fmap_parent_group2     # See: schema/datatypes/fmap.yaml
+    bids: &fmap_parent_PEPolar          # See: schema/datatypes/fmap.yaml
       acq: <protocol_name>
       ce: ~
       dir: ~
@@ -1419,30 +1464,73 @@ PAR:
   - provenance: ~
     attributes: *fmap_parattr
     bids:
-      <<: *fmap_parent_group2
+      <<: *fmap_parent_PEPolar
       suffix: m0scan
   - provenance: ~
     attributes: *fmap_parattr
-    bids: &fmap_parent_group3     # See: schema/datatypes/fmap.yaml
+    bids: &fmap_parent_TB1DAM           # See: schema/datatypes/fmap.yaml
       acq: <protocol_name>
       ce: ~
       rec: ~
       flip: ~
+      inv: ~
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       run: <<1>>
       suffix: TB1DAM
       IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
-    bids: &fmap_parent_group4     # See: schema/datatypes/fmap.yaml
+    bids: &fmap_parent_TB1EPI           # See: schema/datatypes/fmap.yaml
       acq: <protocol_name>
       ce: ~
       rec: ~
       flip: ~
       echo: ~
+      inv: ~
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       run: <<1>>
       suffix: TB1EPI
+      IntendedFor: ~
+  - provenance: ~
+    attributes: *fmap_parattr
+    bids: &fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
+      acq: <protocol_name>
+      ce: ~
+      rec: ~
+      flip: ~
+      echo: ~
+      inv: ~
+      part: ['', 'mag', 'phase', 'real', 'imag', 0]
+      run: <<1>>
+      suffix: TB1AFI
+      IntendedFor: ~
+  - provenance: ~
+    attributes: *fmap_parattr
+    bids:
+      <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
+      suffix: TB1TFL
+  - provenance: ~
+    attributes: *fmap_parattr
+    bids:
+      <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
+      suffix: TB1RFM
+  - provenance: ~
+    attributes: *fmap_parattr
+    bids:
+      <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
+      suffix: RB1COR
+  - provenance: ~
+    attributes: *fmap_parattr
+    bids: &fmap_parent_TB1SRGE          # See: schema/datatypes/fmap.yaml
+      acq: <protocol_name>
+      ce: ~
+      rec: ~
+      flip: ~
+      echo: ~
+      inv: ~
+      part: ['', 'mag', 'phase', 'real', 'imag', 0]
+      run: <<1>>
+      suffix: TB1SRGE
       IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
