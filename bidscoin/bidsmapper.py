@@ -242,7 +242,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         for session in sessions:
 
             # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-            session, unpacked = bids.unpack(session, subprefix, sesprefix, '*')
+            session, unpacked = bids.unpack(session, subprefix, sesprefix)
             if unpacked:
                 store = dict(source=unpacked, target=bidscoinfolder/'provenance')
             elif store:
