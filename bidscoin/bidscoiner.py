@@ -177,14 +177,17 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     # Phase data may be stored in the magnitude data source (e.g. Philips fieldmaps)
                     if basesuffix=='magnitude' and 'ph' in dcm2niixfile.name.rsplit(ext)[0].split('_'):
                         if len(dcm2niixfiles)==4:                                                               # One magnitude + one phasediff image
-                            basepath = basepath.replace('_magnitude', '_phasediff')
-                        elif len(dcm2niixfiles) in (6, 8):                                                      # One or two magnitude + two phase images
+                            basepath = basepath.replace('_magnitude_ph', '_phasediff')
+                        elif len(dcm2niixfiles)==6:                                                             # One magnitude + two phase images
                             if not index:
-                                basepath = basepath.replace('_magnitude', '_phase1')
+                                basepath = basepath.replace('_magnitude_ph', '_phase1')
                             elif index=='a':
-                                basepath = basepath.replace('_magnitude', '_phase2')
+                                basepath = basepath.replace('_magnitude_ph', '_phase2')
                             else:
                                 LOGGER.warning(f"Unknown fieldmap {dcm2niixfile}")
+                        elif len(dcm2niixfiles)==8:                                                             # Two magnitude + two phase images
+                            basepath = basepath.replace('_magnitude_e1_ph', '_phase1')
+                            basepath = basepath.replace('_magnitude_e2_ph', '_phase2')
                         else:
                             LOGGER.warning(f"Unknown fieldmap {dcm2niixfile}")
 
