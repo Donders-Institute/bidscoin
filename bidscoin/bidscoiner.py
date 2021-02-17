@@ -176,9 +176,9 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
 
                     # Phase data may be stored in the magnitude data source (e.g. Philips fieldmaps)
                     if basesuffix=='magnitude' and 'ph' in dcm2niixfile.name.rsplit(ext)[0].split('_'):
-                        if len(dcm2niixfiles)==2:                                                               # One magnitude + one phasediff image
+                        if len(dcm2niixfiles)==4:                                                               # One magnitude + one phasediff image
                             basepath = basepath.replace('_magnitude', '_phasediff')
-                        elif len(dcm2niixfiles)==3:                                                             # One magnitude + two phase images
+                        elif len(dcm2niixfiles) in (6, 8):                                                      # One or two magnitude + two phase images
                             if not index:
                                 basepath = basepath.replace('_magnitude', '_phase1')
                             elif index=='a':
@@ -547,8 +547,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         for session in sessions:
 
             # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-            bidssession       = bidsfolder/session.relative_to(rawfolder)               # Append the sub-*/ses-* subdirectories from the rawfolder to the bidsfolder
-            session, unpacked = bids.unpack(session, subprefix, sesprefix, '*')
+            session, unpacked = bids.unpack(session, subprefix, sesprefix)
 
             # See what dataformat we have
             dataformat = bids.get_dataformat(session)
@@ -558,6 +557,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
             # Check if we should skip the session-folder
             if not force:
+                subid, sesid = bids.get_subid_sesid(session/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
+                bidssession  = bidsfolder/subid/sesid
                 if not bidsmap[dataformat]['session']:
                     bidssession = bidssession.parent
                 datatypes = []
