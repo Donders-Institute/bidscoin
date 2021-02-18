@@ -1354,7 +1354,7 @@ def get_dynamic_value(bidsvalue: str, sourcefile: Path) -> str:
     return bidsvalue
 
 
-def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str= '') -> Union[Path, str]:
+def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') -> Union[Path, str]:
     """
     Sets the bidslabel, i.e. '*_bidskey-*_' is replaced with '*_bidskey-bidsvalue_'. If the key is not in the bidsname
     then the newvalue is appended to the acquisition label. If newvalue is empty (= default), then the parsed existing
@@ -1396,13 +1396,13 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str= '') -
                 bidsname = '_'.join(keyval)
             bidskey  = 'acq'
             oldvalue = acqvalue
-            newvalue = acqvalue + newvalue
+            newvalue = f"{acqvalue}{newvalue}"
 
         # Return the updated bidsfile
         if bidskey == 'suffix':
-            newbidsfile = (bidspath/(bidsname.replace(f'_{oldvalue}', f'_{newvalue}'))).with_suffix(bidsext)
+            newbidsfile = (bidspath/(bidsname.replace(f"_{oldvalue}", f"_{newvalue}"))).with_suffix(bidsext)
         else:
-            newbidsfile = (bidspath/(bidsname.replace(f'{bidskey}-{oldvalue}', f'{bidskey}-{newvalue}'))).with_suffix(bidsext)
+            newbidsfile = (bidspath/(bidsname.replace(f"{bidskey}-{oldvalue}", f"{bidskey}-{newvalue}"))).with_suffix(bidsext)
         if isinstance(bidsfile, str):
             newbidsfile = str(newbidsfile)
         return newbidsfile
