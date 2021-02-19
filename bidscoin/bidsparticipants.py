@@ -34,6 +34,10 @@ def scanparticipant(dataformat: str, session: Path, personals: dict, subid: str,
     :return:            True if successful
     """
 
+    # Only take data from the first session -> BIDS specification
+    if sesid and 'session_id' in personals:
+        return True
+
     # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
     sourcefile = Path()
     if dataformat=='DICOM':
@@ -60,10 +64,7 @@ def scanparticipant(dataformat: str, session: Path, personals: dict, subid: str,
     if dataformat=='DICOM' and sourcefile.name:
         personals['participant_id'] = subid
         if sesid:
-            if 'session_id' not in personals:
-                personals['session_id'] = sesid
-            else:
-                return False                                        # Only from the first session -> BIDS specification
+            personals['session_id'] = sesid
         age = bids.get_dicomfield('PatientAge', sourcefile)         # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
         if age.endswith('D'):
             personals['age'] = str(int(float(age.rstrip('D'))/365.2524))
@@ -149,7 +150,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, subprefix: str=
         for session in sessions:
 
             # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-            session, unpacked = bids.unpack(session, subprefix, sesprefix, '*')
+            session, unpacked = bids.unpack(session, subprefix, sesprefix)
 
             LOGGER.info(f"Scanning session: {session}")
 

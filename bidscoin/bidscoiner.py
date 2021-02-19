@@ -367,7 +367,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
             if 'session_id' not in personals:
                 personals['session_id'] = sesid
             else:
-                return                                              # Only from the first session -> BIDS specification
+                return                                              # Only take data from the first session -> BIDS specification
         age = bids.get_dicomfield('PatientAge', sourcefile)         # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
         if age.endswith('D'):
             personals['age'] = str(int(float(age.rstrip('D'))/365.2524))
