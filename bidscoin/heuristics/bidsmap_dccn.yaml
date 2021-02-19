@@ -656,6 +656,13 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
+      SeriesDescription: ['*fmap*', '*fieldmap*', '*Fieldmap*', '*FieldMap*','*field_map*', '*B0map*', '*b0map*']
+    bids:
+      <<: *fmap_dicoment_fieldmaps
+      suffix: magnitude
+  - provenance: ~
+    attributes:
+      <<: *fmap_dicomattr
       ProtocolName: ['*inverted*', '*pepolar*', '*_inv']
       ScanningSequence: EP
     bids: &fmap_dicoment_PEPolar        # See: schema/datatypes/fmap.yaml
@@ -1427,17 +1434,12 @@ PAR:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
-      suffix: phasediff
-  - provenance: ~
-    attributes: *fmap_parattr
-    bids:
-      <<: *fmap_parent_fieldmaps
-      suffix: magnitude
-  - provenance: ~
-    attributes: *fmap_parattr
-    bids:
-      <<: *fmap_parent_fieldmaps
       suffix: magnitude2
+  - provenance: ~
+    attributes: *fmap_parattr
+    bids:
+      <<: *fmap_parent_fieldmaps
+      suffix: phasediff
   - provenance: ~
     attributes: *fmap_parattr
     bids:
@@ -1453,6 +1455,11 @@ PAR:
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: fieldmap
+  - provenance: ~
+    attributes: *fmap_parattr
+    bids:
+      <<: *fmap_parent_fieldmaps
+      suffix: magnitude
   - provenance: ~
     attributes: *fmap_parattr
     bids: &fmap_parent_PEPolar          # See: schema/datatypes/fmap.yaml
