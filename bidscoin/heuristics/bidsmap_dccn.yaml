@@ -455,7 +455,7 @@ DICOM:
   - provenance: ~
     attributes: *func_dicomattr
     bids: &func_dicoment_events         # See: schema/datatypes/func.yaml
-      task: <ProtocolName>              # More consistent between SBREF and PHYSIO files
+      task: <SeriesDescription>         # NB: <ProtocolName> is consistent between SBREF and PHYSIO files but causes name clashes
       acq: ~
       ce: ~
       dir: ~
@@ -666,9 +666,9 @@ DICOM:
       ProtocolName: ['*inverted*', '*pepolar*', '*_inv']
       ScanningSequence: EP
     bids: &fmap_dicoment_PEPolar        # See: schema/datatypes/fmap.yaml
-      acq: <ProtocolName>               # More consistent between SBREF and PHYSIO files
+      acq: <SeriesDescription>          # NB: <ProtocolName> is consistent between SBREF and PHYSIO files but causes name clashes
       ce: ~
-      dir: ~
+      dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
       suffix: epi
       IntendedFor: ~
