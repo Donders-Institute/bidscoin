@@ -70,7 +70,7 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: boo
             series = ''
             dcmval = ''
         else:
-            series = series[0]                                                                          # TODO: loop over series?
+            series = series[0]                  # NB: Assumes the first folder contains a dicom file and that all folders give the same info
             dcmval = ''
             for dcmfield in dicomfield:
                 dcmval = dcmval + '/' + str(bids.get_dicomfield(dcmfield, bids.get_dicomfile(series)))

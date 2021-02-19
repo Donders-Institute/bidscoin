@@ -46,7 +46,7 @@ def built_dicommap(dicomfile: Path, bidsmap: dict, template: dict) -> dict:
         raise ValueError("Don't know what to do with this bidsdatatype directory name: {}\n{}".format(datatype, dicomfile))
 
     # Get bids-labels from the matching run in the template
-    run = bids.get_run(template, 'DICOM', datatype, suffix, dicomfile)      # TODO: check if the dicomfile argument is not broken
+    run = bids.get_run(template, 'DICOM', datatype, suffix, dicomfile)
     if run.get('attributes'):
         raise ValueError(f"Oops, this should not happen! BIDS datatype '{datatype}' or one of the bidslabels is not accounted for in the code\n{dicomfile}")
 
@@ -71,8 +71,6 @@ def built_parmap(parfile: Path, bidsmap: dict, heuristics: dict) -> dict:
     if not parfile or not heuristics['PAR']:
         return bidsmap
 
-    # TODO: Loop through all bidsdatatypes and series
-
     return bidsmap
 
 
@@ -89,8 +87,6 @@ def built_p7map(p7file: Path, bidsmap: dict, heuristics: dict) -> dict:
     # Input checks
     if not p7file or not heuristics['P7']:
         return bidsmap
-
-    # TODO: Loop through all bidsdatatypes and series
 
     return bidsmap
 
@@ -109,8 +105,6 @@ def built_niftimap(niftifile: Path, bidsmap: dict, heuristics: dict) -> dict:
     if not niftifile or not heuristics['Nifti']:
         return bidsmap
 
-    # TODO: Loop through all bidsdatatypes and series
-
     return bidsmap
 
 
@@ -127,8 +121,6 @@ def built_filesystemmap(seriesfolder: Path, bidsmap: dict, heuristics: dict) -> 
     # Input checks
     if not seriesfolder or not heuristics['FileSystem']:
         return bidsmap
-
-    # TODO: Loop through all bidsdatatypes and series
 
     return bidsmap
 

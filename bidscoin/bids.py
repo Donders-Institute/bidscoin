@@ -323,7 +323,6 @@ def is_p7file(file: Path) -> bool:
     :return:        Returns true if a file is a GE P7-file
     """
 
-    # TODO: Returns true if filetype is P7.
     pass
 
 
@@ -1113,7 +1112,7 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, mat
                 if not match:
                     break                                   # There is no point in searching further within the run_item now that we've found a mismatch
 
-        # Stop searching if we found a matching run_item (i.e. which is the case if match is still True after all run tests). TODO: maybe count how many instances, could perhaps be useful info
+        # Stop searching if we found a matching run_item (i.e. which is the case if match is still True after all run tests)
         if match:
             return True
 
@@ -1211,7 +1210,7 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, datatypes
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 run_ = strip_suffix(run_)
 
-            # Stop searching the bidsmap if we have a match. TODO: check if there are more matches (i.e. conflicts)
+            # Stop searching the bidsmap if we have a match
             if match:
                 run_['provenance'] = str(sourcefile.resolve())
 

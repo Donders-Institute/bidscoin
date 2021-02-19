@@ -109,8 +109,6 @@ def build_niftimap(session: Path, bidsmap_new: dict, bidsmap_old: dict) -> dict:
     if not session or not bidsmap_old['Nifti']:
         return bidsmap_new
 
-    # TODO: Loop through all bidsdatatypes and runs
-
     return bidsmap_new
 
 
@@ -127,8 +125,6 @@ def build_filesystemmap(session: Path, bidsmap_new: dict, bidsmap_old: dict) -> 
     # Input checks
     if not session or not bidsmap_old['FileSystem']:
         return bidsmap_new
-
-    # TODO: Loop through all bidsdatatypes and runs
 
     return bidsmap_new
 

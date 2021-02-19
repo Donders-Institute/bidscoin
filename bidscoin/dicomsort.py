@@ -158,7 +158,7 @@ def sortsessions(session: Path, subprefix: str='', sesprefix: str='', dicomfield
 
             for n, study in enumerate(patient.children, 1):                                    # TODO: Check order
                 if len(patient.children) > 1:
-                    sessionfolder = session/f"ses-{n:02}{cleanup(study.StudyDescription)}"     # TODO: Leave out StudyDescrtiption? Include PatientName/StudiesDescription?
+                    sessionfolder = session/f"ses-{n:02}{cleanup(study.StudyDescription)}"     # TODO: Leave out StudyDescription? Include PatientName/StudiesDescription?
                     LOGGER.warning(f"The session index-number '{n:02}' is not necessarily meaningful: {sessionfolder}")
 
                 dicomfiles = [session.joinpath(*image.ReferencedFileID) for series in study.children for image in series.children]
