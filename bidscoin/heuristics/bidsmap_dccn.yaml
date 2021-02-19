@@ -599,7 +599,7 @@ DICOM:
     bids: &fmap_dicoment_fieldmaps      # See: schema/datatypes/fmap.yaml
       acq: <SeriesDescription>
       run: <<1>>
-      suffix: magnitude
+      suffix: magnitude1
       IntendedFor: ~
   - provenance: ~
     attributes:
@@ -1421,7 +1421,7 @@ PAR:
     bids: &fmap_parent_fieldmaps        # See: schema/datatypes/fmap.yaml
       acq: <protocol_name>
       run: <<1>>
-      suffix: magnitude
+      suffix: magnitude1
       IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
@@ -1432,7 +1432,7 @@ PAR:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
-      suffix: magnitude1
+      suffix: magnitude
   - provenance: ~
     attributes: *fmap_parattr
     bids:
