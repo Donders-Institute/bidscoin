@@ -1269,8 +1269,8 @@ def get_derivatives(datatype: str) -> list:
 
     if datatype == 'anat':
         with (schema_folder/'datatypes'/'anat.yaml').open('r') as stream:
-            groups      = yaml.load(stream)
-            return groups[1]['suffixes']            # The qMRI data (maps)
+            groups = yaml.load(stream)
+        return groups[1]['suffixes']            # The qMRI data (maps)
     else:
         return []
 

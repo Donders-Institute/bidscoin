@@ -976,13 +976,12 @@ class EditDialog(QDialog):
         """Derive the possible suffixes for each datatype from the template. """
         allowed_suffixes = {}
         for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
+            allowed_suffixes[datatype] = []
             runs = self.template_bidsmap.get(self.dataformat, {}).get(datatype, [])
             if not runs: continue
             for run in runs:
                 suffix = run['bids'].get('suffix')
                 if suffix and suffix not in allowed_suffixes.get(datatype, []):
-                    if datatype not in allowed_suffixes:
-                        allowed_suffixes[datatype] = []
                     allowed_suffixes[datatype].append(suffix)
 
         self.allowed_suffixes = allowed_suffixes
