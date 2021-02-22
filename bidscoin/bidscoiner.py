@@ -164,7 +164,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     LOGGER.info(f"Found dcm2niix _Crop_ postfix, replacing original file\n{dcm2niixfile} ->\n{newbidsfile}")
                     dcm2niixfile.replace(newbidsfile)
 
-            # Rename all files that got an additional postfixes added by dcm2niix. See: https://github.com/rordenlab/dcm2niix/blob/master/FILENAMING.md. NB: We can't rely on the bids-entity info here because manufacturers can e.g. put multiple echos in one series / run-folder
+            # Rename all files that got additional postfixes from dcm2niix. See: https://github.com/rordenlab/dcm2niix/blob/master/FILENAMING.md
             dcm2niixpostfixes = ('_c', '_i', '_Eq', '_real', '_imaginary', '_MoCo', '_t', '_Tilt', '_e', '_ph')
             dcm2niixfiles     = sorted(set([dcm2niixfile for dcm2niixpostfix in dcm2niixpostfixes for dcm2niixfile in outfolder.glob(f"{bidsname}*{dcm2niixpostfix}*")]))
             for dcm2niixfile in dcm2niixfiles:
@@ -173,7 +173,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                 newbidsname = dcm2niixfile.name                                                                 # Strip the additional postfixes and assign them to bids entities in the for-loop below
                 for postfix in postfixes:                                                                       # dcm2niix postfixes _c%d, _e%d and _ph (and any combination of these in that order) are for multi-coil data, multi-echo data and phase data
 
-                    # Patch the echo entity in the newbidsname with the dcm2niix echo info
+                    # Patch the echo entity in the newbidsname with the dcm2niix echo info                      # NB: We can't rely on the bids-entity info here because manufacturers can e.g. put multiple echos in one series / run-folder
                     if postfix[0]=='e' and bids.get_bidsvalue(newbidsname, 'echo'):                             # NB: Check if postfix[0]=='e' uniquely refers to the right dcm2niixpostfix
                         echonr = f"_{postfix}"                                                                  # E.g. echonr='_e1' or echonr='_pha'
                         for dcm2niixpostfix in dcm2niixpostfixes:
@@ -194,10 +194,12 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                         newbidsname = newbidsname.replace('_magnitude1_e1',  '_magnitude1')
                         newbidsname = newbidsname.replace('_magnitude2_e1',  '_magnitude1')                     # This can happen when the e2 image is stored in the same directory as the e1 image, but with the e2 listed first
                         newbidsname = newbidsname.replace('_magnitude1_e2',  '_magnitude2')
-                        newbidsname = newbidsname.replace('_magnitude1_ph',  '_phasediff')                      # TODO: Check if this should be '_phase1' (two magnitude + 2 phase images))???
+                        if len(dcm2niixfiles) == 8:
+                            newbidsname = newbidsname.replace('_magnitude1_ph',  '_phase1')                     # Two magnitude + 2 phase images in one folder / datasource
+                        else:
+                            newbidsname = newbidsname.replace('_magnitude1_ph',  '_phasediff')                  # One or two magnitude + 1 phasediff image
                         newbidsname = newbidsname.replace('_magnitude1a',    '_magnitude2')
                         newbidsname = newbidsname.replace('_magnitude1_pha', '_phase2')
-                        newbidsname = newbidsname.replace('_magnitude1_ph',  '_phase1')
                         newbidsname = newbidsname.replace('_magnitude2_e2',  '_magnitude2')
                         newbidsname = newbidsname.replace('_magnitude2_ph',  '_phase2')
                         newbidsname = newbidsname.replace('_phase1_e1',      '_phase1')
