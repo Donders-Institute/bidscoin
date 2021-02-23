@@ -670,6 +670,8 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
     # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
     if isinstance(value, int):
         return value
+    elif value is None:
+        return ''
     else:
         return str(value)               # If it's a MultiValue type then flatten it
 
@@ -722,6 +724,8 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
     # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
     if isinstance(value, int):
         return value
+    elif value is None:
+        return ''
     else:
         return str(value)               # If it's a MultiValue type then flatten it
 
