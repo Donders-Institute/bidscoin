@@ -42,6 +42,8 @@ bidskeys        = ('task', 'acq', 'inv', 'mt', 'flip', 'ce', 'rec', 'recording',
 schema_folder     = Path(__file__).parent/'schema'
 heuristics_folder = Path(__file__).parent/'heuristics'
 bidsmap_template  = heuristics_folder/'bidsmap_template.yaml'
+with (schema_folder/'entities.yaml').open('r') as stream:
+    entities = yaml.load(stream)
 
 
 def bidsversion() -> str:
@@ -1132,14 +1134,11 @@ def check_run(datatype: str, run_item: dict) -> bool:
     run_ok    = True
 
     # Read the entities from the datatype file
-    entityfile   = schema_folder/'entities.yaml'
     datatypefile = schema_folder/'datatypes'/f"{datatype}.yaml"
     if not datatypefile.is_file():
         if datatype in bidsdatatypes:
             logger.warning(f"Could not find {datatypefile} to validate the {run_item['provenance']} run")
         return True
-    with entityfile.open('r') as stream:
-        entities = yaml.load(stream)
     with datatypefile.open('r') as stream:
         groups = yaml.load(stream)
     for group in groups:
@@ -1319,9 +1318,6 @@ def get_bidshelp(key: str) -> str:
     """
 
     # Read the heuristics from the bidsmap file
-    yamlfile = schema_folder/'entities.yaml'
-    with yamlfile.open('r') as stream:
-        entities = yaml.load(stream)
     for entityname in entities:
         if entities[entityname]['entity'] == key:
             return f"{entities[entityname]['name']}\n{entities[entityname]['description']}"
