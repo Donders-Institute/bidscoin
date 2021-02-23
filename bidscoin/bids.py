@@ -1176,12 +1176,12 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
             for entityname in group['entities']:
                 entitykey = entities[entityname]['entity']
                 if entitykey in ('sub', 'ses'): continue
-                if group['entities'][entityname]=='required' and not run['bids'].get(entitykey):
-                    logger.info(f'BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
-                    run_valsok = False
                 if validate and entitykey not in run['bids']:
                     logger.warning(f'Invalid bidsmap: BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
                     run_keysok = False
+                elif group['entities'][entityname]=='required' and not run['bids'].get(entitykey):
+                    logger.info(f'BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
+                    run_valsok = False
 
             # Check if all the bids-keys are present in the schema file
             entitykeys = [entities[entityname]['entity'] for entityname in group['entities']]
