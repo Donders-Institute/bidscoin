@@ -1095,24 +1095,24 @@ def match_attribute(longvalue, values) -> bool:
     return False
 
 
-def exist_run(bidsmap: dict, dataformat: str, datatype: str, run: dict, matchbidslabels: bool=False) -> bool:
+def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, matchbidslabels: bool=False) -> bool:
     """
     Checks if there is already an entry in runlist with the same attributes and, optionally, bids values as in the input run
 
     :param bidsmap:         Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param dataformat:      The information source in the bidsmap that is used, e.g. 'DICOM'
     :param datatype:        The datatype in the source that is used, e.g. 'anat'. Empty values will search through all datatypes
-    :param run:             The run (listitem) that is searched for in the datatype
+    :param run_item:        The run (listitem) that is searched for in the datatype
     :param matchbidslabels: If True, also matches the BIDS-keys, otherwise only run['attributes']
     :return:                True if the run exists in runlist
     """
 
     if not dataformat:
-        dataformat = get_dataformat(run['provenance'])
+        dataformat = get_dataformat(run_item['provenance'])
 
     if not datatype:
         for datatype in bidsdatatypes + (unknowndatatype, ignoredatatype):
-            if exist_run(bidsmap, dataformat, datatype, run, matchbidslabels):
+            if exist_run(bidsmap, dataformat, datatype, run_item, matchbidslabels):
                 return True
 
     if not bidsmap.get(dataformat, {}).get(datatype):
@@ -1121,24 +1121,24 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run: dict, matchbid
     for run in bidsmap[dataformat][datatype]:
 
         # Begin with match = False only if all attributes are empty
-        match = any([run['attributes'][key] is not None for key in run['attributes']])
+        match = any([run_item['attributes'][key] is not None for key in run_item['attributes']])
 
-        # Search for a case where all run items match with the run items
-        for itemkey, itemvalue in run['attributes'].items():
+        # Search for a case where all run_item items match with the run_item items
+        for itemkey, itemvalue in run_item['attributes'].items():
             value = run['attributes'].get(itemkey, None)    # Matching bids-labels which exist in one datatype but not in the other -> None
             match = match and match_attribute(itemvalue, value)
             if not match:
-                break                                       # There is no point in searching further within the run now that we've found a mismatch
+                break                                       # There is no point in searching further within the run_item now that we've found a mismatch
 
         # See if the bidskeys also all match. This is probably not very useful, but maybe one day...
         if matchbidslabels and match:
-            for itemkey, itemvalue in run['bids'].items():
+            for itemkey, itemvalue in run_item['bids'].items():
                 value = run['bids'].get(itemkey, None)      # Matching bids-labels which exist in one datatype but not in the other -> None
                 match = match and value==itemvalue
                 if not match:
-                    break                                   # There is no point in searching further within the run now that we've found a mismatch
+                    break                                   # There is no point in searching further within the run_item now that we've found a mismatch
 
-        # Stop searching if we found a matching run (i.e. which is the case if match is still True after all run tests)
+        # Stop searching if we found a matching run_item (i.e. which is the case if match is still True after all run tests)
         if match:
             return True
 
