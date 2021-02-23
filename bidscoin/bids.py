@@ -542,7 +542,7 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
 
     # Validate the bidsmap entries
     if not check_bidsmap(bidsmap, False):
-        logger.warning('Bidsmap values are valid according to the BIDS specification')
+        logger.warning('Bidsmap values are invalid according to the BIDS specification')
 
     logger.info(f"Writing bidsmap to: {filename}")
     filename.parent.mkdir(parents=True, exist_ok=True)
