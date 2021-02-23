@@ -669,7 +669,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
     # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
     if isinstance(value, int):
-        return value
+        return int(value)
     elif value is None:
         return ''
     else:
@@ -723,7 +723,7 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
 
     # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
     if isinstance(value, int):
-        return value
+        return int(value)
     elif value is None:
         return ''
     else:
@@ -737,7 +737,6 @@ def get_dataformat(source: Path) -> str:
     :param source:  The full pathname of a (e.g. DICOM or PAR/XML) session directory or of a source file
     :return:        'DICOM' if sourcefile is a DICOM-file or 'PAR' when it is a PAR/XML file
     """
-
 
     # If source is a session directory, get a sourcefile
     try:
