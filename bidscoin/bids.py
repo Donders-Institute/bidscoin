@@ -7,7 +7,6 @@ https://github.com/dangom/dac2bids/blob/master/dac2bids.py
 @author: Marcel Zwiers
 """
 
-import copy
 import inspect
 import ast
 import re
@@ -1296,14 +1295,14 @@ def get_bidsname(subid: str, sesid: str, run: dict, subprefix: str= 'sub-', sesp
 
     # Compose the bidsname
     bidsname = f"{subid}{add_prefix('_', sesid)}"
-    for bidskey in bidskeys:
-        bidsvalue = run['bids'].get(bidskey)
+    for entity in entities:
+        bidsvalue = run['bids'].get(entities[entity]['entity'])
         if isinstance(bidsvalue, list):
             bidsvalue = bidsvalue[bidsvalue[-1]]    # Get the selected item
         else:
             bidsvalue = cleanup_value(get_dynamic_value(bidsvalue, Path(run['provenance'])))
-        if bidsvalue and bidskey not in ('suffix','IntendedFor'):
-            bidsname = f"{bidsname}_{bidskey}-{bidsvalue}"
+        if bidsvalue:
+            bidsname = f"{bidsname}_{entities[entity]['entity']}-{bidsvalue}"
     bidsname = f"{bidsname}{add_prefix('_', run['bids']['suffix'])}"
 
     return bidsname
