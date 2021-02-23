@@ -540,9 +540,6 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
     :return:
     """
 
-    # Validate the bidsmap entries
-    check_bidsmap(bidsmap)
-
     logger.info(f"Writing bidsmap to: {filename}")
     filename.parent.mkdir(parents=True, exist_ok=True)
     with filename.open('w') as stream:
