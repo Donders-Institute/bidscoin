@@ -573,12 +573,12 @@ def check_bidsmap(bidsmap: dict, validate: bool=True) -> bool:
 
     # Check all the runs in the bidsmap
     for dataformat in bidsmap:
-        if dataformat in ('Options','PlugIns'):
-            continue
+        if dataformat in ('Options','PlugIns'):   continue            # TODO
+        if not bidsmap[dataformat]:               continue
         for datatype in bidsmap[dataformat]:
-            if bidsmap[dataformat][datatype]:
-                for run in bidsmap[dataformat][datatype]:
-                    valid = valid and check_run(datatype, run, validate)
+            if not bidsmap[dataformat][datatype]: continue
+            for run in bidsmap[dataformat][datatype]:
+                valid = valid and check_run(datatype, run, validate)
 
     return valid
 
