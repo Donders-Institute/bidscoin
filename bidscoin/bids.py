@@ -1193,7 +1193,6 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
                 if bidskey not in entitykeys:
                     if validate:
                         logger.warning(f'Invalid bidsmap: BIDS entity "{bidskey}"-"{run["bids"][bidskey]}" is not allowed according to the BIDS standard')
-                        run_valsok = False
                         run_keysok = False
                     elif run["bids"][bidskey]:
                         logger.info(f'BIDS entity "{bidskey}"-"{run["bids"][bidskey]}" is not allowed according to the BIDS standard (clear "{run["bids"][bidskey]})" to resolve this issue)')
