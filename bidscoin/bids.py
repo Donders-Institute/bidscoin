@@ -33,10 +33,10 @@ yaml = YAML()
 
 logger = logging.getLogger('bidscoin')
 
-bidsdatatypes   = ('fmap', 'anat', 'func', 'perf', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')           # NB: get_matching_run() uses this order to search for a match
+bidsdatatypes   = ('fmap', 'anat', 'func', 'perf', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')           # NB: get_matching_run() uses this order to search for a match. TODO: sync with the modalities.yaml schema
 ignoredatatype  = 'leave_out'
 unknowndatatype = 'extra_data'
-bidskeys        = ('task', 'acq', 'inv', 'mt', 'flip', 'ce', 'rec', 'recording', 'dir', 'run', 'echo', 'mod', 'proc', 'part', 'suffix', 'IntendedFor') # This is not really something from BIDS, but these are the BIDS-keys used in the bidsmap
+bidskeys        = ('task', 'acq', 'inv', 'mt', 'flip', 'ce', 'rec', 'recording', 'dir', 'run', 'echo', 'mod', 'proc', 'part', 'suffix', 'IntendedFor') # This is not really something from BIDS, but these are the BIDS-keys used in the bidsmap. TODO: sync with the entities.yaml schema
 
 schema_folder     = Path(__file__).parent/'schema'
 heuristics_folder = Path(__file__).parent/'heuristics'
@@ -519,9 +519,11 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: bool=True) -> Tupl
         bidsmapversion = bidsmap['Options']['version']
     else:
         bidsmapversion = 'Unknown'
-
     if bidsmapversion != version() and report:
         logger.warning(f'BIDScoiner version conflict: {yamlfile} was created using version {bidsmapversion}, but this is version {version()}')
+
+    # Validate the bidsmap entries
+    check_bidsmap(bidsmap)
 
     # Make sure we get a proper list of plugins
     bidsmap['PlugIns'] = [plugin for plugin in bidsmap.get('PlugIns', []) if plugin]
@@ -537,6 +539,9 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
     :param bidsmap:         Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :return:
     """
+
+    # Validate the bidsmap entries
+    check_bidsmap(bidsmap)
 
     logger.info(f"Writing bidsmap to: {filename}")
     filename.parent.mkdir(parents=True, exist_ok=True)
@@ -554,6 +559,26 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
             load_bidsmap(filename, report=False)
         except:
             logger.exception(f'The saved output bidsmap does not seem to be valid YAML, please check {filename}, e.g. by way of an online yaml validator, such as https://yamlchecker.com/')
+
+
+def check_bidsmap(bidsmap: dict) -> bool:
+    """
+
+    :param bidsmap:
+    :return:
+    """
+
+    valid = True
+
+    # Check all the runs in the bidsmap
+    for dataformat in bidsmap:
+        if dataformat in ('DICOM','PAR'):
+            for datatype in bidsmap[dataformat]:
+                if bidsmap[dataformat][datatype]:
+                    for run in bidsmap[dataformat][datatype]:
+                        valid = valid and check_run(datatype, run, True)
+
+    return valid
 
 
 def parse_x_protocol(pattern: str, dicomfile: Path) -> str:
@@ -1070,24 +1095,24 @@ def match_attribute(longvalue, values) -> bool:
     return False
 
 
-def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, matchbidslabels: bool=False) -> bool:
+def exist_run(bidsmap: dict, dataformat: str, datatype: str, run: dict, matchbidslabels: bool=False) -> bool:
     """
     Checks if there is already an entry in runlist with the same attributes and, optionally, bids values as in the input run
 
     :param bidsmap:         Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param dataformat:      The information source in the bidsmap that is used, e.g. 'DICOM'
     :param datatype:        The datatype in the source that is used, e.g. 'anat'. Empty values will search through all datatypes
-    :param run_item:        The run (listitem) that is searched for in the datatype
+    :param run:             The run (listitem) that is searched for in the datatype
     :param matchbidslabels: If True, also matches the BIDS-keys, otherwise only run['attributes']
     :return:                True if the run exists in runlist
     """
 
     if not dataformat:
-        dataformat = get_dataformat(run_item['provenance'])
+        dataformat = get_dataformat(run['provenance'])
 
     if not datatype:
         for datatype in bidsdatatypes + (unknowndatatype, ignoredatatype):
-            if exist_run(bidsmap, dataformat, datatype, run_item, matchbidslabels):
+            if exist_run(bidsmap, dataformat, datatype, run, matchbidslabels):
                 return True
 
     if not bidsmap.get(dataformat, {}).get(datatype):
@@ -1096,69 +1121,81 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, mat
     for run in bidsmap[dataformat][datatype]:
 
         # Begin with match = False only if all attributes are empty
-        match = any([run_item['attributes'][key] is not None for key in run_item['attributes']])
+        match = any([run['attributes'][key] is not None for key in run['attributes']])
 
-        # Search for a case where all run_item items match with the run_item items
-        for itemkey, itemvalue in run_item['attributes'].items():
+        # Search for a case where all run items match with the run items
+        for itemkey, itemvalue in run['attributes'].items():
             value = run['attributes'].get(itemkey, None)    # Matching bids-labels which exist in one datatype but not in the other -> None
             match = match and match_attribute(itemvalue, value)
             if not match:
-                break                                       # There is no point in searching further within the run_item now that we've found a mismatch
+                break                                       # There is no point in searching further within the run now that we've found a mismatch
 
         # See if the bidskeys also all match. This is probably not very useful, but maybe one day...
         if matchbidslabels and match:
-            for itemkey, itemvalue in run_item['bids'].items():
+            for itemkey, itemvalue in run['bids'].items():
                 value = run['bids'].get(itemkey, None)      # Matching bids-labels which exist in one datatype but not in the other -> None
                 match = match and value==itemvalue
                 if not match:
-                    break                                   # There is no point in searching further within the run_item now that we've found a mismatch
+                    break                                   # There is no point in searching further within the run now that we've found a mismatch
 
-        # Stop searching if we found a matching run_item (i.e. which is the case if match is still True after all run tests)
+        # Stop searching if we found a matching run (i.e. which is the case if match is still True after all run tests)
         if match:
             return True
 
     return False
 
 
-def check_run(datatype: str, run_item: dict) -> bool:
+def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
     """
     Check run for required and optional entitities using the BIDS schema files
 
-    :param datatype:        The datatype that is checked, e.g. 'anat'
-    :param run_item:        The run (listitem) with bids entities that are checked against missing values & invalid keys
-    :return:                True if all entities are bids-valid or if they cannot be checked, otherwise False
+    :param datatype:    The datatype that is checked, e.g. 'anat'
+    :param run:         The run (listitem) with bids entities that are checked against missing values & invalid keys
+    :param validate:    Validate if all bids-keys are there according to the schema file
+    :return:            True if all entities are bids-valid or if they cannot be checked, otherwise False
     """
 
-    run_found = False
-    run_ok    = True
+    run_found  = False
+    run_valsok = True
+    run_keysok = True
 
     # Read the entities from the datatype file
     datatypefile = schema_folder/'datatypes'/f"{datatype}.yaml"
     if not datatypefile.is_file():
         if datatype in bidsdatatypes:
-            logger.warning(f"Could not find {datatypefile} to validate the {run_item['provenance']} run")
+            logger.warning(f"Could not find {datatypefile} to validate the {run['provenance']} run")
         return True
     with datatypefile.open('r') as stream:
         groups = yaml.load(stream)
     for group in groups:
-        if run_item['bids']['suffix'] in group['suffixes']:
+        if run['bids']['suffix'] in group['suffixes']:
             run_found = True
-            # Check if all the entities are ok
-            for entityname in group['entities']:
-                key = entities[entityname]['entity']
-                if key in ('sub', 'ses'): continue
-                if group['entities'][entityname]=='required' and not run_item['bids'].get(key):
-                    logger.info(f'BIDS entity "{key}" is required for {datatype}/*_{run_item["bids"]["suffix"]}')
-                    run_ok = False
-            for key in run_item['bids']:
-                if key in ('suffix', 'IntendedFor'): continue
-                for entityname in entities:
-                    if entities[entityname]['entity']==key:
-                        if entityname not in group['entities'] and run_item["bids"][key]:
-                            logger.info(f'BIDS entity "{key}"-"{run_item["bids"][key]}" is not allowed according to the BIDS standard (clear "{run_item["bids"][key]})" to resolve this issue)')
-                            run_ok = False
 
-    return run_found and run_ok
+            # Check if all expected entity-keys are present in the run and if they are properly filled
+            for entityname in group['entities']:
+                entitykey = entities[entityname]['entity']
+                if entitykey in ('sub', 'ses'): continue
+                if group['entities'][entityname]=='required' and not run['bids'].get(entitykey):
+                    logger.info(f'BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
+                    run_valsok = False
+                if validate and entitykey not in run['bids']:
+                    logger.warning(f'Invalid bidsmap: BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
+                    run_keysok = False
+
+            # Check if all the bids-keys are present in the schema file
+            entitykeys = [entities[entityname]['entity'] for entityname in group['entities']]
+            for bidskey in run['bids']:
+                if bidskey in ('suffix', 'IntendedFor'): continue
+                if bidskey not in entitykeys:
+                    if validate:
+                        logger.warning(f'Invalid bidsmap: BIDS entity "{bidskey}"-"{run["bids"][bidskey]}" is not allowed according to the BIDS standard')
+                        run_valsok = False
+                        run_keysok = False
+                    elif run["bids"][bidskey]:
+                        logger.info(f'BIDS entity "{bidskey}"-"{run["bids"][bidskey]}" is not allowed according to the BIDS standard (clear "{run["bids"][bidskey]})" to resolve this issue)')
+                        run_valsok = False
+
+    return run_found and run_valsok and run_keysok
 
 
 def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, datatypes: tuple = (ignoredatatype,) + bidsdatatypes + (unknowndatatype,)) -> Tuple[dict, str, Union[int, None]]:
