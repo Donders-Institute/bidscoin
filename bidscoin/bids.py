@@ -1202,14 +1202,13 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
     return run_found and run_valsok and run_keysok
 
 
-def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, datatypes: tuple = (ignoredatatype,) + bidsdatatypes + (unknowndatatype,)) -> Tuple[dict, str, Union[int, None]]:
+def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[dict, str, Union[int, None]]:
     """
     Find the first run in the bidsmap with dicom attributes that match with the dicom file. Then update the (dynamic) bids values (values are cleaned-up to be BIDS-valid)
 
     :param sourcefile:  The full pathname of the source dicom-file or PAR/XML file
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS keys and attributes, etc
     :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
-    :param datatypes:   The datatypes in which a matching run is searched for. Default = (ignoredatatype,) + bidsdatatypes + (unknowndatatype,)
     :return:            (run, datatype, index) The matching and filled-in / cleaned run item, datatype and list index as in run = bidsmap[DICOM][datatype][index]
                         datatype = bids.unknowndatatype and index = None if there is no match, the run is still populated with info from the dicom-file
     """
@@ -1219,7 +1218,7 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str, datatypes
 
     # Loop through all bidsdatatypes and runs; all info goes into run_
     run_ = dict(provenance='', attributes={}, bids={})
-    for datatype in datatypes:
+    for datatype in (ignoredatatype,) + bidsdatatypes + (unknowndatatype,):                                 # The datatypes in which a matching run is searched for
 
         runs = bidsmap.get(dataformat, {}).get(datatype, [])
         if not runs:
