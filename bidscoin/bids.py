@@ -523,7 +523,11 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: bool=True) -> Tupl
         logger.warning(f'BIDScoiner version conflict: {yamlfile} was created using version {bidsmapversion}, but this is version {version()}')
 
     # Validate the bidsmap entries
-    check_bidsmap(bidsmap)
+    if not report or yamlfile.parent==heuristics_folder:
+        validate = None
+    else:
+        validate = False
+    check_bidsmap(bidsmap, validate)
 
     # Make sure we get a proper list of plugins
     bidsmap['PlugIns'] = [plugin for plugin in bidsmap.get('PlugIns', []) if plugin]
@@ -576,9 +580,9 @@ def check_bidsmap(bidsmap: dict, validate: bool=True) -> bool:
         if dataformat in ('Options','PlugIns'):   continue            # TODO
         if not bidsmap[dataformat]:               continue
         for datatype in bidsmap[dataformat]:
-            if not bidsmap[dataformat][datatype]: continue
+            if not isinstance(bidsmap[dataformat][datatype], list): continue
             for run in bidsmap[dataformat][datatype]:
-                valid = valid and check_run(datatype, run, validate)
+                valid = check_run(datatype, run, validate) and valid
 
     return valid
 
@@ -1184,7 +1188,8 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
                     logger.warning(f'Invalid bidsmap: BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
                     run_keysok = False
                 elif group['entities'][entityname]=='required' and not bidsvalue:
-                    logger.info(f'BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
+                    if validate is not None:
+                        logger.info(f'BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
                     run_valsok = False
 
             # Check if all the bids-keys are present in the schema file
