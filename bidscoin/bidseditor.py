@@ -1175,7 +1175,7 @@ class EditDialog(QDialog):
             self.view_bids_name.setToolTip("Gray / Strike-out: This imaging data type will be ignored and not converted BIDS. Click 'OK' if you want your BIDS output data to look like this")
             self.view_bids_name.setTextColor(QtGui.QColor('gray'))
             font.setStrikeOut(True)
-        elif not bids.check_run(self.target_datatype, self.target_run):
+        elif not bids.check_run(self.target_datatype, self.target_run, validate=None):
             self.view_bids_name.setToolTip(f"Red: This name is not valid according to the BIDS standard")
             self.view_bids_name.setTextColor(QtGui.QColor('red'))
             font.setStrikeOut(False)
