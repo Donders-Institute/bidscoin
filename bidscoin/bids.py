@@ -1175,11 +1175,14 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
             # Check if all expected entity-keys are present in the run and if they are properly filled
             for entityname in group['entities']:
                 entitykey = entities[entityname]['entity']
+                bidsvalue = run['bids'].get(entitykey)
+                if isinstance(bidsvalue, list):
+                    bidsvalue = bidsvalue[bidsvalue[-1]]  # Get the selected item
                 if entitykey in ('sub', 'ses'): continue
                 if validate and entitykey not in run['bids']:
                     logger.warning(f'Invalid bidsmap: BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
                     run_keysok = False
-                elif group['entities'][entityname]=='required' and not run['bids'].get(entitykey):
+                elif group['entities'][entityname]=='required' and not bidsvalue:
                     logger.info(f'BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
                     run_valsok = False
 
