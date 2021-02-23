@@ -325,7 +325,7 @@ class Ui_MainWindow(MainWindow):
         # Parse the sourcefolder from the bidsmap provenance info
         sourcefolder = Path('/').resolve()
         for provenance in bids.dir_bidsmap(self.input_bidsmap, self.dataformat):
-            sourcefolder = Path(provenance.parents[3])
+            sourcefolder = Path(provenance.parents[min(3, len(provenance.parents)-1)])
             break
 
         label = QLabel(str(sourcefolder))
