@@ -1168,7 +1168,7 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
     # Read the entities from the datatype file
     datatypefile = schema_folder/'datatypes'/f"{datatype}.yaml"
     if not datatypefile.is_file():
-        if datatype in bidsdatatypes:
+        if validate and datatype in bidsdatatypes:
             logger.info(f"Could not find {datatypefile} to validate the {run['provenance']} run")
         return True
     with datatypefile.open('r') as stream:
