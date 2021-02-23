@@ -607,7 +607,7 @@ def parse_x_protocol(pattern: str, dicomfile: Path) -> str:
                 return match.group(1).decode('utf-8')
 
     logger.warning(f"Pattern: '{regexp.encode('unicode_escape').decode()}' not found in: {dicomfile}")
-    return None
+    return ''
 
 
 # Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) _DICOMDICT_CACHE optimization
@@ -629,11 +629,11 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
     if not dicomfile.is_file():
         logger.warning(f"{dicomfile} not found")
-        value = None
+        value = ''
 
     elif not is_dicomfile(dicomfile):
         logger.warning(f"{dicomfile} is not a DICOM file, cannot read {tagname}")
-        value = None
+        value = ''
 
     else:
         try:
@@ -646,7 +646,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
             else:
                 dicomdata = _DICOMDICT_CACHE
 
-            value = dicomdata.get(tagname)
+            value = dicomdata.get(tagname, '')
 
             # Try a recursive search
             if not value:
@@ -657,7 +657,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
         except OSError:
             logger.warning(f'Cannot read {tagname} from {dicomfile}')
-            value = None
+            value = ''
 
         except Exception:
             try:
@@ -665,20 +665,13 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
             except Exception:
                 logger.warning(f'Could not parse {tagname} from {dicomfile}')
-                value = None
+                value = ''
 
     # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
-    if value is None:
-        return ''
-
-    elif isinstance(value, int):
-        return int(value)
-
-    elif not isinstance(value, str):    # Assume it's a MultiValue type and flatten it
-        return str(value)
-
+    if isinstance(value, int):
+        return value
     else:
-        return str(value)
+        return str(value)               # If it's a MultiValue type then flatten it
 
 
 # Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) _PARDICT_CACHE optimization
@@ -700,11 +693,11 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
 
     if not parfile.is_file():
         logger.warning(f"{parfile} not found")
-        value = None
+        value = ''
 
     elif not is_parfile(parfile):
         logger.warning(f"{parfile} is not a PAR/XML file, cannot read {tagname}")
-        value = None
+        value = ''
 
     else:
         try:
@@ -716,28 +709,21 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
                 _PARFILE_CACHE = parfile
             else:
                 pardict = _PARDICT_CACHE
-            value = pardict[0].get(tagname)
+            value = pardict[0].get(tagname, '')
 
         except OSError:
             logger.warning(f'Cannot read {tagname} from {parfile}')
-            value = None
+            value = ''
 
         except Exception:
             logger.warning(f'Could not parse {tagname} from {parfile}')
-            value = None
+            value = ''
 
     # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
-    if value is None:
-        return ''
-
-    elif isinstance(value, int):
-        return int(value)
-
-    elif not isinstance(value, str):  # Assume it's a MultiValue type and flatten it
-        return str(value)
-
+    if isinstance(value, int):
+        return value
     else:
-        return str(value)
+        return str(value)               # If it's a MultiValue type then flatten it
 
 
 def get_dataformat(source: Path) -> str:
