@@ -540,6 +540,10 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
     :return:
     """
 
+    # Validate the bidsmap entries
+    if not check_bidsmap(bidsmap, False):
+        logger.warning('Bidsmap values are valid according to the BIDS specification')
+
     logger.info(f"Writing bidsmap to: {filename}")
     filename.parent.mkdir(parents=True, exist_ok=True)
     with filename.open('w') as stream:
@@ -558,7 +562,7 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
             logger.exception(f'The saved output bidsmap does not seem to be valid YAML, please check {filename}, e.g. by way of an online yaml validator, such as https://yamlchecker.com/')
 
 
-def check_bidsmap(bidsmap: dict) -> bool:
+def check_bidsmap(bidsmap: dict, validate: bool=True) -> bool:
     """
 
     :param bidsmap:
@@ -573,7 +577,7 @@ def check_bidsmap(bidsmap: dict) -> bool:
             for datatype in bidsmap[dataformat]:
                 if bidsmap[dataformat][datatype]:
                     for run in bidsmap[dataformat][datatype]:
-                        valid = valid and check_run(datatype, run, True)
+                        valid = valid and check_run(datatype, run, validate)
 
     return valid
 
