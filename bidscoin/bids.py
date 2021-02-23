@@ -523,11 +523,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: bool=True) -> Tupl
         logger.warning(f'BIDScoiner version conflict: {yamlfile} was created using version {bidsmapversion}, but this is version {version()}')
 
     # Validate the bidsmap entries
-    if not report or yamlfile.parent==heuristics_folder:
-        validate = None
-    else:
-        validate = False
-    check_bidsmap(bidsmap, validate)
+    check_bidsmap(bidsmap, report)
 
     # Make sure we get a proper list of plugins
     bidsmap['PlugIns'] = [plugin for plugin in bidsmap.get('PlugIns', []) if plugin]
@@ -555,13 +551,13 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
 
     # See if we can reload it, i.e. whether it is valid yaml...
     try:
-        load_bidsmap(filename, report=False)
+        load_bidsmap(filename, report=None)
     except:
         # Just trying again seems to help? :-)
         with filename.open('w') as stream:
             yaml.dump(bidsmap, stream)
         try:
-            load_bidsmap(filename, report=False)
+            load_bidsmap(filename, report=None)
         except:
             logger.exception(f'The saved output bidsmap does not seem to be valid YAML, please check {filename}, e.g. by way of an online yaml validator, such as https://yamlchecker.com/')
 
@@ -1188,7 +1184,7 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
                     logger.warning(f'Invalid bidsmap: BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
                     run_keysok = False
                 elif group['entities'][entityname]=='required' and not bidsvalue:
-                    if validate is not None:
+                    if validate is False:
                         logger.info(f'BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
                     run_valsok = False
 
