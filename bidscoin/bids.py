@@ -41,8 +41,8 @@ bidskeys        = ('task', 'acq', 'inv', 'mt', 'flip', 'ce', 'rec', 'recording',
 schema_folder     = Path(__file__).parent/'schema'
 heuristics_folder = Path(__file__).parent/'heuristics'
 bidsmap_template  = heuristics_folder/'bidsmap_template.yaml'
-with (schema_folder/'entities.yaml').open('r') as stream:
-    entities = yaml.load(stream)
+with (schema_folder/'entities.yaml').open('r') as yamlstream:
+    entities = yaml.load(yamlstream)
 
 
 def bidsversion() -> str:
@@ -470,7 +470,7 @@ def get_niftifile(folder: Path) -> Path:
     return Path()
 
 
-def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: bool=True) -> Tuple[dict, Path]:
+def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=True) -> Tuple[dict, Path]:
     """
     Read the mapping heuristics from the bidsmap yaml-file. If yamlfile is not fullpath, then 'folder' is first searched before
     the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, them 'bidsmap_template.yaml'. So fullpath
