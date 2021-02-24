@@ -522,6 +522,17 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
     if bidsmapversion != version() and report:
         logger.warning(f'BIDScoiner version conflict: {yamlfile} was created using version {bidsmapversion}, but this is version {version()}')
 
+    # Add a unique identifier for runs without provenance info
+    for dataformat in bidsmap:
+        if dataformat in ('Options','PlugIns'):   continue
+        if not bidsmap[dataformat]:               continue
+        for datatype in bidsmap[dataformat]:
+            if not isinstance(bidsmap[dataformat][datatype], list): continue
+            for run in bidsmap[dataformat][datatype]:
+                if not run['provenance']:
+                    logger.info(f'No provenance info found for {datatype}/*_{run["bids"]["suffix"]}')
+                    run['provenance'] = f"sub-provenance/ses-stub/id_{next(tempfile._get_candidate_names())}"
+
     # Validate the bidsmap entries
     check_bidsmap(bidsmap, report)
 
