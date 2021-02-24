@@ -1,9 +1,9 @@
 """
-Reads PHYSIO data and writes it to a BIDS compliant tsv-file
+Module with helper functions to read and write PHYSIO data to a BIDS compliant tsv-file
+
+@author: Marcel Zwiers
 """
 
-
-import re
 import pandas as pd
 import json
 import struct
