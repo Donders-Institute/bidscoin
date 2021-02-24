@@ -528,10 +528,10 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
         if not bidsmap[dataformat]:               continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue
-            for run in bidsmap[dataformat][datatype]:
+            for index, run in enumerate(bidsmap[dataformat][datatype]):
                 if not run['provenance']:
                     logger.info(f'No provenance info found for {datatype}/*_{run["bids"]["suffix"]}')
-                    run['provenance'] = f"sub-provenance/ses-stub/{dataformat}_{datatype}_id{next(tempfile._get_candidate_names())}"
+                    run['provenance'] = f"sub-provenance/ses-stub/{dataformat}_{datatype}_id{index:05}"
 
     # Validate the bidsmap entries
     check_bidsmap(bidsmap, report)
