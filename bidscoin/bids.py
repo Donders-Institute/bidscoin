@@ -41,8 +41,8 @@ bidskeys        = ('task', 'acq', 'inv', 'mt', 'flip', 'ce', 'rec', 'recording',
 schema_folder     = Path(__file__).parent/'schema'
 heuristics_folder = Path(__file__).parent/'heuristics'
 bidsmap_template  = heuristics_folder/'bidsmap_template.yaml'
-with (schema_folder/'entities.yaml').open('r') as yamlstream:
-    entities = yaml.load(yamlstream)
+with (schema_folder/'entities.yaml').open('r') as _stream:
+    entities = yaml.load(_stream)
 
 
 def bidsversion() -> str:
