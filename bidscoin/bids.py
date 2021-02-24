@@ -280,7 +280,10 @@ def is_dicomfile(file: Path) -> bool:
                 return True
             else:
                 logger.debug(f"Reading non-standard DICOM file: {file}")
-                dicomdata = pydicom.dcmread(file)       # The DICM tag may be missing for anonymized DICOM files
+                if file.suffix.lower() in ('.ima','.dcm',''):
+                    dicomdata = pydicom.dcmread(file, force=True)       # The DICM tag may be missing for anonymized DICOM files
+                else:
+                    dicomdata = pydicom.dcmread(file)                   # Avoid memory problems when reading a very large (e.g. EEG) source file
                 return 'Modality' in dicomdata
     else:
         return False
