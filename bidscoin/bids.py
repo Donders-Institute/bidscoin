@@ -564,6 +564,7 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
 
 def check_bidsmap(bidsmap: dict, validate: bool=True) -> bool:
     """
+    Check the bidsmap for required and optional entitities using the BIDS schema files
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param validate:    Validate if all bids-keys and values are present according to the BIDS schema specifications
