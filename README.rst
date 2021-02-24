@@ -53,7 +53,7 @@ Note:
 
    **Issues can be reported at** `Github <https://github.com/Donders-Institute/bidscoin/issues>`__
 
-.. |PyPI version| image:: https://img.shields.io/pypi/v/bidscoin
+.. |PyPI version| image:: https://img.shields.io/pypi/v/bidscoin?color=green
    :target: https://pypi.org/project/bidscoin
 .. |PyPI - Python Version| image:: https://img.shields.io/pypi/pyversions/bidscoin.svg
 .. |GPLv3| image:: https://img.shields.io/badge/License-GPLv3-blue.svg
