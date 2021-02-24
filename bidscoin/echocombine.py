@@ -71,7 +71,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
             for match in sorted([match for match in session.rglob(pattern) if '.nii' in match.suffixes]):
 
                 # Check if it is normal/BIDS multi-echo data
-                input     = match.parent.name
+                datatype  = match.parent.name
                 echonr    = bids.get_bidsvalue(match, 'echo')
                 mepattern = bids.get_bidsvalue(match, 'echo', '*')
                 echos     = sorted(match.parent.glob(mepattern.name))
@@ -86,9 +86,9 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 # Construct the combined-echo output filename and check if that file already exists
                 cename = match.name.replace(f"_echo-{echonr}", '')
                 if not output:
-                    cefile = session/input/cename
+                    cefile = session/datatype/cename
                 elif output == 'derivatives':
-                    cefile = bidsdir/'derivatives'/'multiecho'/sub_id/ses_id/input/cename
+                    cefile = bidsdir/'derivatives'/'multiecho'/sub_id/ses_id/datatype/cename
                 else:
                     cefile = session/output/cename
                 cefile.parent.mkdir(parents=True, exist_ok=True)
@@ -106,7 +106,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                         newecho.parent.mkdir(parents=True, exist_ok=True)
                         echo.replace(newecho)
                         echo.with_suffix('').with_suffix('.json').replace(newecho.with_suffix('').with_suffix('.json'))
-                elif output == input:
+                elif output == datatype:
                     for echo in echos:
                         LOGGER.info(f"Removing original echo image: {echo}")
                         echo.unlink()
@@ -131,7 +131,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                                 LOGGER.info(f"Updating 'IntendedFor' to {cefile_rel} in {fmap}")
                                 if not output:
                                     intendedfor = [file for file in intendedfor if not file in echos_rel] + [cefile_rel] + [newecho for newecho in newechos_rel]
-                                elif output == input:
+                                elif output == datatype:
                                     intendedfor = [file for file in intendedfor if not file in echos_rel] + [cefile_rel]
                                 else:
                                     intendedfor = intendedfor + [cefile_rel]
@@ -158,7 +158,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                             LOGGER.info(f"Updating {echo} -> {newecho} in {scans_tsv}")
                             scans_table.loc[newecho] = scans_table.loc[echo]
                             scans_table.drop(echo, inplace=True)
-                        elif output == input:
+                        elif output == datatype:
                             LOGGER.info(f"Removing {echo} from {scans_tsv}")
                             scans_table.drop(echo, inplace=True)
 
