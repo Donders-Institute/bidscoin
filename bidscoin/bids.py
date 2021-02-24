@@ -522,6 +522,9 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
     if bidsmapversion != version() and report:
         logger.warning(f'BIDScoiner version conflict: {yamlfile} was created using version {bidsmapversion}, but this is version {version()}')
 
+    # Validate the bidsmap entries
+    check_bidsmap(bidsmap, report)
+
     # Add a unique identifier for runs without provenance info
     for dataformat in bidsmap:
         if dataformat in ('Options','PlugIns'):   continue
@@ -530,11 +533,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
             if not isinstance(bidsmap[dataformat][datatype], list): continue
             for index, run in enumerate(bidsmap[dataformat][datatype]):
                 if not run['provenance']:
-                    logger.info(f'No provenance info found for {datatype}/*_{run["bids"]["suffix"]}')
                     run['provenance'] = f"sub-provenance/ses-stub/{dataformat}_{datatype}_id{index:05}"
-
-    # Validate the bidsmap entries
-    check_bidsmap(bidsmap, report)
 
     # Make sure we get a proper list of plugins
     bidsmap['PlugIns'] = [plugin for plugin in bidsmap.get('PlugIns', []) if plugin]
