@@ -206,13 +206,13 @@ def import_plugin(plugin: Path) -> util.module_from_spec:
         return None
 
 
-def test_tooloptions(tool: str, opts: dict) -> bool:
+def test_tooloptions(tool: str, opts: dict) -> Union[bool, None]:
     """
     Performs tests of the user tool parameters set in bidsmap['Options']
 
     :param tool:    Name of the tool that is being tested in bidsmap['Options']
     :param opts:    The editable options belonging to the tool
-    :return:        True if the tool generated the expected result, False if there was a tool error
+    :return:        True if the tool generated the expected result, False if there was a tool error, None if not tested
     """
 
     if tool == 'dcm2niix':
