@@ -1172,10 +1172,10 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
                 if isinstance(bidsvalue, list):
                     bidsvalue = bidsvalue[bidsvalue[-1]]  # Get the selected item
                 if isinstance(bidsvalue, str) and not (bidsvalue.startswith('<') and bidsvalue.endswith('>')) and bidsvalue != cleanup_value(bidsvalue):
-                    logger.warning(f'Invalid {entitykey} value: "{bidsvalue}" for {datatype}/*_{run["bids"]["suffix"]}')
+                    logger.warning(f'Invalid {entitykey} value: "{bidsvalue}" for {run["provenance"]} -> {datatype}/*_{run["bids"]["suffix"]}')
                 if entitykey in ('sub', 'ses'): continue
                 if validate and entitykey not in run['bids']:
-                    logger.warning(f'Invalid bidsmap: BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
+                    logger.warning(f'Invalid bidsmap: BIDS entity "{entitykey}" is required for {run["provenance"]} -> {datatype}/*_{run["bids"]["suffix"]}')
                     run_keysok = False
                 elif group['entities'][entityname]=='required' and not bidsvalue:
                     if validate is False:
@@ -1188,7 +1188,7 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
                 if bidskey in ('suffix', 'IntendedFor'): continue
                 if bidskey not in entitykeys:
                     if validate:
-                        logger.warning(f'Invalid bidsmap: BIDS entity "{bidskey}"-"{run["bids"][bidskey]}" is not allowed according to the BIDS standard')
+                        logger.warning(f'Invalid bidsmap: BIDS entity {run["provenance"]} -> "{bidskey}"-"{run["bids"][bidskey]}" is not allowed according to the BIDS standard')
                         run_keysok = False
                     elif run["bids"][bidskey]:
                         if validate is False:

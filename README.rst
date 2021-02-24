@@ -27,12 +27,12 @@ BIDScoin functionality
 -  [x] PAR / REC source data (Philips)
 -  [ ] P7 source data (GE)
 -  [ ] Nifti source data
+-  [x] Physiological source data\*
 -  [x] Fieldmaps\*
 -  [x] Multi-echo data\*
 -  [x] Multi-coil data\*
 -  [x] PET data\*
 -  [ ] Stimulus / behavioural logfiles
--  [x] Physiological data\*
 -  [x] Plug-ins
 -  [x] Defacing
 -  [x] Multi-echo combination
