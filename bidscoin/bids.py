@@ -535,8 +535,8 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
     """
     Save the BIDSmap as a YAML text file
 
-    :param filename:
-    :param bidsmap:         Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param filename:    Full pathname of the bidsmap file
+    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :return:
     """
 
@@ -565,7 +565,8 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
 def check_bidsmap(bidsmap: dict, validate: bool=True) -> bool:
     """
 
-    :param bidsmap:
+    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param validate:    Validate if all bids-keys and values are present according to the BIDS schema specifications
     :return:
     """
 
@@ -1142,7 +1143,7 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
 
     :param datatype:    The datatype that is checked, e.g. 'anat'
     :param run:         The run (listitem) with bids entities that are checked against missing values & invalid keys
-    :param validate:    Validate if all bids-keys are there according to the schema file
+    :param validate:    Validate if all bids-keys and values are present according to the BIDS schema specifications
     :return:            True if all entities are bids-valid or if they cannot be checked, otherwise False
     """
 
@@ -1168,6 +1169,8 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
                 bidsvalue = run['bids'].get(entitykey)
                 if isinstance(bidsvalue, list):
                     bidsvalue = bidsvalue[bidsvalue[-1]]  # Get the selected item
+                if bidsvalue != cleanup_value(bidsvalue):
+                    logger.warning(f'Invalid {entitykey} value: "{bidsvalue}" for {datatype}/*_{run["bids"]["suffix"]}')
                 if entitykey in ('sub', 'ses'): continue
                 if validate and entitykey not in run['bids']:
                     logger.warning(f'Invalid bidsmap: BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
