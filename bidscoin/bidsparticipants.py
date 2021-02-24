@@ -7,10 +7,8 @@ Provenance information, warnings and error messages are stored in the
 bidsfolder/code/bidscoin/bidsparticipants.log file.
 """
 
-import re
 import pandas as pd
 import json
-import dateutil.parser
 import logging
 import shutil
 from pathlib import Path
@@ -27,6 +25,7 @@ def scanparticipant(dataformat: str, session: Path, personals: dict, subid: str,
     Converts the session source-files into BIDS-valid nifti-files in the corresponding bidsfolder and
     extracts personals (e.g. Age, Sex) from the source header
 
+    :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
     :param session:     The full-path name of the subject/session source file/folder
     :param personals:   The dictionary with the personal information
     :param subid:       The subject-id from the bids-folder
