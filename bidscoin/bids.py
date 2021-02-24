@@ -533,7 +533,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
             if not isinstance(bidsmap[dataformat][datatype], list): continue
             for index, run in enumerate(bidsmap[dataformat][datatype]):
                 if not run['provenance']:
-                    run['provenance'] = f"sub-provenance/ses-stub/{dataformat}_{datatype}_id{index+1:05}"
+                    run['provenance'] = f"sub-provenance/ses-stub/{dataformat}_{datatype}_id{index+1:03}"
 
     # Make sure we get a proper list of plugins
     bidsmap['PlugIns'] = [plugin for plugin in bidsmap.get('PlugIns', []) if plugin]
