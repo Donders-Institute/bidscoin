@@ -1169,7 +1169,7 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
                 bidsvalue = run['bids'].get(entitykey)
                 if isinstance(bidsvalue, list):
                     bidsvalue = bidsvalue[bidsvalue[-1]]  # Get the selected item
-                if bidsvalue != cleanup_value(bidsvalue):
+                if isinstance(bidsvalue, str) and not (bidsvalue.startswith('<') and bidsvalue.endswith('>')) and bidsvalue != cleanup_value(bidsvalue):
                     logger.warning(f'Invalid {entitykey} value: "{bidsvalue}" for {datatype}/*_{run["bids"]["suffix"]}')
                 if entitykey in ('sub', 'ses'): continue
                 if validate and entitykey not in run['bids']:
