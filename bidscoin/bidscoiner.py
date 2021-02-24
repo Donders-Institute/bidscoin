@@ -128,10 +128,6 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
             bidsname = bids.increment_runindex(outfolder, bidsname)
         jsonfiles = [(outfolder/bidsname).with_suffix('.json')]      # List -> Collect the associated json-files (for updating them later) -- possibly > 1
 
-        # Check if the run is valid according to the BIDS standard
-        if not bids.check_run(datatype, run):
-            LOGGER.warning(f"{outfolder/bidsname}.* is not valid according to the BIDS standard")
-
         # Check if file already exists (-> e.g. when a static runindex is used)
         if (outfolder/bidsname).with_suffix('.json').is_file():
             LOGGER.warning(f"{outfolder/bidsname}.* already exists and will be deleted -- check your results carefully!")
