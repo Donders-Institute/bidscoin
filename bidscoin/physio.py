@@ -1,7 +1,8 @@
 """
 Module with helper functions to read and write PHYSIO data to a BIDS compliant tsv-file
 
-Some functions have been derived from code on https://github.com/CMRR-C2P/MB
+Some functions in this module have been derived from the matlab code on (and pushed back to):
+https://github.com/CMRR-C2P/MB
 
 @author: Marcel Zwiers
 """
