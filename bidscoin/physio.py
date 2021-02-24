@@ -1,6 +1,8 @@
 """
 Module with helper functions to read and write PHYSIO data to a BIDS compliant tsv-file
 
+Some functions have been derived from code on https://github.com/CMRR-C2P/MB
+
 @author: Marcel Zwiers
 """
 
@@ -185,8 +187,6 @@ def readphysio(fn: Union[str,Path]) -> dict:
     physio['PULS']:     [length = nr of samples]   PULS signal on this channel
     physio['EXT1']:     [length = nr of samples]   True if EXT/EXT1 signal detected; False if not
     physio['EXT2']:     [length = nr of samples]   True if EXT2 signal detected; False if not
-
-    This function has been derived from the readCMRRPhysio.m function of https://github.com/CMRR-C2P/MB
 
     :param fn:  Either the fullpath of the DICOM file or the basename of the PHYSIO logfiles (fullpath without suffix and file extension, e.g. 'foo/bar/Physio_DATE_TIME_UUID')
     :return:    The active (non-zero) physio traces for ECG1, ECG2, ECG3, ECG4, RESP, PULS, EXT1 and EXT2 signals
