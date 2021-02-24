@@ -1164,6 +1164,10 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
     run_valsok = True
     run_keysok = True
 
+    # Check if we have provenance info
+    if validate and not run['provenance']:
+        logger.info(f'No provenance info found for {datatype}/*_{run["bids"]["suffix"]}')
+
     # Read the entities from the datatype file
     datatypefile = schema_folder/'datatypes'/f"{datatype}.yaml"
     if not datatypefile.is_file():
