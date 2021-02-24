@@ -148,7 +148,7 @@ def run_command(command: str) -> bool:
     """
     Runs a command in a shell using subprocess.run(command, ..)
 
-    :param command: the command that is executed
+    :param command: The command that is executed
     :return:        True if the were no errors, False otherwise
     """
 
@@ -568,7 +568,7 @@ def check_bidsmap(bidsmap: dict, validate: bool=True) -> bool:
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param validate:    Validate if all bids-keys and values are present according to the BIDS schema specifications
-    :return:
+    :return:            True if the bidsmap is valid, otherwise False
     """
 
     valid = True
@@ -777,7 +777,8 @@ def get_sourcefield(tagname: str, sourcefile: Path=Path(), dataformat: str='') -
     :param tagname:     Name of the field in the sourcefile
     :param sourcefile:  The full pathname of the (e.g. DICOM or PAR/XML) sourcefile
     :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
-    :return:
+    :return:            Extracted tag-values from the sourcefile
+
     """
 
     if not dataformat:
@@ -995,7 +996,7 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, provenance: Path, target
     :param run:                 The run item that is being moved
     :param dataformat:          The name of the dataformat, e.g. 'DICOM'
     :param clean:               A boolean that is passed to bids.append_run (telling it to clean-up commentedMap fields)
-    :return:
+    :return:                    The updated bidsmap
     """
 
     if not dataformat:
@@ -1097,7 +1098,7 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, mat
     :param datatype:        The datatype in the source that is used, e.g. 'anat'. Empty values will search through all datatypes
     :param run_item:        The run (listitem) that is searched for in the datatype
     :param matchbidslabels: If True, also matches the BIDS-keys, otherwise only run['attributes']
-    :return:                True if the run exists in runlist
+    :return:                True if the run exists in runlist, otherwise False
     """
 
     if not dataformat:
@@ -1145,7 +1146,7 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
     :param datatype:    The datatype that is checked, e.g. 'anat'
     :param run:         The run (listitem) with bids entities that are checked against missing values & invalid keys
     :param validate:    Validate if all bids-keys and values are present according to the BIDS schema specifications
-    :return:            True if all entities are bids-valid or if they cannot be checked, otherwise False
+    :return:            True if the run entities are bids-valid or if they cannot be checked, otherwise False
     """
 
     run_found  = False
@@ -1343,17 +1344,17 @@ def get_bidsname(subid: str, sesid: str, run: dict, subprefix: str= 'sub-', sesp
     return bidsname
 
 
-def get_bidshelp(key: str) -> str:
+def get_bidshelp(bidskey: str) -> str:
     """
     Reads the meta-data of a matching entity in the heuristics/entities.yaml file
 
-    :param key:
-    :return:
+    :param bidskey: The bids key for which the help text is obtained
+    :return:        The obtained help text
     """
 
     # Read the heuristics from the bidsmap file
     for entityname in entities:
-        if entities[entityname]['entity'] == key:
+        if entities[entityname]['entity'] == bidskey:
             return f"{entities[entityname]['name']}\n{entities[entityname]['description']}"
     return ''
 
