@@ -206,7 +206,7 @@ class Ui_MainWindow(MainWindow):
         tabwidget.setTabText(2, 'BIDS map')
         tabwidget.setCurrentIndex(selected_tab_index)
 
-        # Set-up the buttons
+        # Set-up the buttons. TODO: Add validate bidsmap button
         buttonBox = QDialogButtonBox()
         buttonBox.setStandardButtons(QDialogButtonBox.Save | QDialogButtonBox.Reset | QDialogButtonBox.Help)
         buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
