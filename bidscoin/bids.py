@@ -280,10 +280,10 @@ def is_dicomfile(file: Path) -> bool:
                 return True
             else:
                 logger.debug(f"Reading non-standard DICOM file: {file}")
-                if file.suffix.lower() in ('.ima','.dcm',''):
+                if file.suffix.lower() in ('.ima','.dcm',''):           # Avoid memory problems when reading a very large (e.g. EEG) source file
                     dicomdata = pydicom.dcmread(file, force=True)       # The DICM tag may be missing for anonymized DICOM files
-                else:
-                    dicomdata = pydicom.dcmread(file)                   # Avoid memory problems when reading a very large (e.g. EEG) source file
+                # else:
+                #     dicomdata = pydicom.dcmread(file)                 # NB: Raises an error for non-DICOM files
                 return 'Modality' in dicomdata
     else:
         return False
@@ -1168,7 +1168,8 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
 
     # Check if we have provenance info
     if validate and not run['provenance']:
-        logger.info(f'No provenance info found for {datatype}/*_{run["bids"]["suffix"]}')
+        pass    # TODO: avoid this whn reading templates
+        # logger.info(f'No provenance info found for {datatype}/*_{run["bids"]["suffix"]}')
 
     # Read the entities from the datatype file
     datatypefile = schema_folder/'datatypes'/f"{datatype}.yaml"
