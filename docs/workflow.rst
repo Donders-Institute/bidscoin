@@ -137,6 +137,13 @@ The user can click the ``Edit`` button for each list item to open a new edit win
 
 Finally, if all BIDS output names in the main window are fine, the user can click on the ``Save`` button and proceed with running the bidscoiner tool. Note that the bidsmapper and bidseditor don't do anything except reading from and writing to the ``bidsmap.yaml`` file.
 
+Fieldmaps
+^^^^^^^^^
+
+Select 'magnitude1' if you have 'magnitude1' and 'magnitude2' data in one series-folder (this is what Siemens does) -- the bidscoiner will automatically pick up the 'magnitude2' data during runtime. The same holds for 'phase1' and 'phase2' data. See the BIDS specification for more details on fieldmap suffixes.
+
+You can use the special `IntendedFor` field to indicate for which runs (DICOM series) a fieldmap was intended. The dynamic label of the `IntendedFor` field can be a list of string patterns that is used to include all runs in a session that have that string pattern in their BIDS file name. Example: use `<<task>>` to include all functional runs or `<<Stop*Go><Reward>>` to include "Stop1Go"-, "Stop2Go"- and "Reward"-runs. NB: The fieldmap might not be used at all if this field is left empty!
+
 Step 2: Running the bidscoiner
 ------------------------------
 

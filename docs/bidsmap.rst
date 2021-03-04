@@ -25,8 +25,8 @@ A bidsmap can either be a template bidsmap or a study bidsmap. The difference be
 
    Creation and application of a study bidsmap
 
-Special features & editing tips
--------------------------------
+Special features
+----------------
 
 Source attributes
 ^^^^^^^^^^^^^^^^^
@@ -46,10 +46,3 @@ BIDS labels can be static, in which case the label is just a normal string, or d
 BIDS label menus
 ^^^^^^^^^^^^^^^^
 A BIDS label can be a list of label options, with the last list item being the (zero-based) list index that selects the current label. For instance the list ``['mag', 'phase', 'real', 'imag', 1]`` would select ``phase`` as a label. The list index can be set in the bidseditor via a drop-down menu.
-
-Fieldmaps
----------
-
-Select 'magnitude1' if you have 'magnitude1' and 'magnitude2' data in one series-folder (this is what Siemens does) -- the bidscoiner will automatically pick up the 'magnitude2' data during runtime. The same holds for 'phase1' and 'phase2' data. See the BIDS specification for more details on fieldmap suffixes
-
-You can use the `IntendedFor` field to indicate for which runs (DICOM series) a fieldmap was intended. The dynamic label of the `IntendedFor` field can be a list of string patterns that is used to include all runs in a session that have that string pattern in their BIDS file name. Example: use `<<task>>` to include all functional runs or `<<Stop*Go><Reward>>` to include "Stop1Go"-, "Stop2Go"- and "Reward"-runs. NB: The fieldmap might not be used at all if this field is left empty!
