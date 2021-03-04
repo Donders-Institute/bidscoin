@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 """
-Creates a bidsmap.yaml YAML file in the bidsfolder/code/bidscoin that maps the information
-from all raw source data to the BIDS labels. You can check and edit the bidsmap file with
-the bidseditor (but also with any text-editor) before passing it to the bidscoiner. See the
-bidseditor help for more information and useful tips for running the bidsmapper in interactive
-mode (which is the default).
-
-N.B.: Institute users may want to use a site-customized template bidsmap (see the
---template option). The bidsmap_dccn template from the Donders Institute can serve as
-an example (or may even mostly work for other institutes out of the box).
+Creates a bidsmap.yaml YAML file in the bidsfolder/code/bidscoin that maps the
+information from all raw source data to the BIDS labels. You can check and edit
+the bidsmap file with the bidseditor (but also with any text-editor) before
+passing it to the bidscoiner. See the bidseditor help for more information and
+useful tips for running the bidsmapper in interactive mode (the default).
 """
 
 # Global imports (plugin modules may be imported when needed)
@@ -335,7 +331,7 @@ def main():
     parser.add_argument('-t','--template',    help='The bidsmap template with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap_template.yaml', default='bidsmap_template.yaml')
     parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
-    parser.add_argument('-s','--store',       help="Flag to store the provenance data samples in the bidsfolder/'code'/'provenance' folder", action='store_true')
+    parser.add_argument('-s','--store',       help="Flag to store provenance data samples in the bidsfolder/'code'/'provenance' folder", action='store_true')
     parser.add_argument('-i','--interactive', help='{0}: The sourcefolder is scanned for different kinds of scans without any user interaction. {1}: The sourcefolder is scanned for different kinds of scans and, when finished, the resulting bidsmap is opened using the bidseditor. {2}: As {1}, except that already during scanning the user is asked for help if a new and unknown run is encountered. This option is most useful when re-running the bidsmapper (e.g. when the scan protocol was changed since last running the bidsmapper). Default: 1', type=int, choices=[0,1,2], default=1)
     parser.add_argument('-v','--version',     help='Show the BIDS and BIDScoin version', action='version', version=f'BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version()}')
     args = parser.parse_args()

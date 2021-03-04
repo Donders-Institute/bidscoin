@@ -7,6 +7,7 @@
    installation
    preparation
    workflow
+   bidsmap
    finalizing
    options
    advanced

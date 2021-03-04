@@ -1,15 +1,20 @@
 The BIDScoin workflow
 =====================
 
-Having an organized source data folder, the actual data-set conversion to BIDS is performed by the `(1a) <#step-1a-running-the-bidsmapper>`__ the ``bidsmapper``, `(1b) <#step-1b-running-the-bidseditor>`__ the ``bidseditor`` and `(2) <#step-2-running-the-bidscoiner>`__ the ``bidscoiner`` command-line tools. The ``bidsmapper`` makes a map of the different kind of datatypes in your source dataset, with the ``bidseditor`` you can edit this map, and the ``bidscoiner`` does the actual work to convert the source data into BIDS. By default (but see the ``-i`` option of the bidsmapper below), step 1a automatically
-launches step 1b, so in it's simplest form, all you need to do to convert your raw source data into BIDS is to run two simple commands, e.g.:
+With a sufficiently `organized source data folder <preparation.html>`__, the data conversion to BIDS can be performed by running the `(1a) <#step-1a-running-the-bidsmapper>`__ the ``bidsmapper``, `(1b) <#step-1b-running-the-bidseditor>`__ the ``bidseditor`` and `(2) <#step-2-running-the-bidscoiner>`__ the ``bidscoiner`` command-line tools. The ``bidsmapper`` starts by making a map of the different kind of datatypes (scans) in your source dataset, which you can then edit with the ``bidseditor``. The ``bidscoiner`` reads this so-called study bidsmap, which tells it how exactly to convert the source data into BIDS.
+
+.. figure:: ./_static/bidsmap_flow.png
+
+   Creation and application of a study bidsmap
+
+By default (but see the ``-i`` option of the bidsmapper below), step 1a automatically launches step 1b, so in it's simplest form, all you need to do to convert your raw source data into BIDS is to run two simple commands, e.g.:
 
 .. code-block:: console
 
     $ bidsmapper sourcefolder bidsfolder
     $ bidscoiner sourcefolder bidsfolder
 
-If you add new subjects all you need to do is re-run the ``bidscoiner`` -- unless the scan protocol was changed, then you also need to first re-run the ``bidsmapper``.
+If you add new subjects all you need to do is re-run the ``bidscoiner`` -- unless the scan protocol was changed, then you also need to first re-run the ``bidsmapper`` to add the new samples to the study bidsmap.
 
 Step 1a: Running the bidsmapper
 -------------------------------
@@ -20,15 +25,11 @@ Step 1a: Running the bidsmapper
                       [-m SESPREFIX] [-i {0,1,2}] [-v]
                       sourcefolder bidsfolder
 
-    Creates a bidsmap.yaml YAML file in the bidsfolder/code/bidscoin that maps the information
-    from all raw source data to the BIDS labels. You can check and edit the bidsmap file with
-    the bidseditor (but also with any text-editor) before passing it to the bidscoiner. See the
-    bidseditor help for more information and useful tips for running the bidsmapper in interactive
-    mode (which is the default).
-
-    N.B.: Institute users may want to use a site-customized template bidsmap (see the
-    --template option). The bidsmap_dccn template from the Donders Institute can serve as
-    an example (or may even mostly work for other institutes out of the box).
+    Creates a bidsmap.yaml YAML file in the bidsfolder/code/bidscoin that maps the
+    information from all raw source data to the BIDS labels. You can check and edit
+    the bidsmap file with the bidseditor (but also with any text-editor) before
+    passing it to the bidscoiner. See the bidseditor help for more information and
+    useful tips for running the bidsmapper in interactive mode (the default).
 
     positional arguments:
       sourcefolder          The study root folder containing the raw data in
@@ -75,10 +76,10 @@ Step 1a: Running the bidsmapper
       bidsmapper /project/foo/raw /project/foo/bids
       bidsmapper /project/foo/raw /project/foo/bids -t bidsmap_dccn
 
-The bidsmapper will scan your ``sourcefolder`` to look for different runs (scan-types) to create a mapping for each run to a bids output name (a.k.a. the 'bidsmap'). By default (but see the ``-i`` option above), when finished the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__, as described in the next section (but step 1b can also always be run separately by directly running the bidseditor).
+After the source data has been scanned, the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__. For a fully automated workflow users can skip this interactive step using the ``-i`` option (see above).
 
 .. tip::
-   Use the ``-t bidsmap_dccn`` option and see if it works for you. If not, consider `adapting it to your needs <advanced.html#site-specific-customized-template>`__.
+   Use the ``-t bidsmap_dccn`` option and see if this site-customized bidsmap template works for you. If not, consider `adapting it to your needs <advanced.html#site-specific-customized-template>`__ so that the bidsmapper can recognize more of your scans and map them to BIDS the way you prefer.
 
 Step 1b: Running the bidseditor
 -------------------------------
@@ -90,11 +91,10 @@ Step 1b: Running the bidseditor
                       bidsfolder
 
     This tool launches a graphical user interface for editing the bidsmap.yaml file
-    that is e.g. produced by the bidsmapper or by this bidseditor itself. The user can
-    fill in or change the BIDS labels for entries that are unidentified or sub-optimal,
-    such that meaningful BIDS output names will be generated from these labels. The saved
-    bidsmap.yaml output file can be used for converting the source data to BIDS using
-    the bidscoiner.
+    that is produced by the bidsmapper. The user can fill in or change the BIDS labels
+    for entries that are unidentified or sub-optimal, such that meaningful and nicely
+    readable BIDS output names will be generated. The saved bidsmap.yaml output file
+    will be used by the bidscoiner to actually convert the source data to BIDS.
 
     positional arguments:
       bidsfolder        The destination folder with the (future) bids data
@@ -127,62 +127,15 @@ Step 1b: Running the bidseditor
       bidseditor /project/foo/bids -t bidsmap_dccn.yaml
       bidseditor /project/foo/bids -b my/custom/bidsmap.yaml
 
-    Here are a few tips & tricks:
-    -----------------------------
-
-    DICOM Attributes
-      An (DICOM) attribute label can also be a list, in which case the BIDS labels / mapping
-      are applied if a (DICOM) attribute value is in this list. If the attribute value is
-      empty it is not used to identify the run. Wildcards can also be given, either as a single
-      '*', or enclosed by '*'. Examples:
-           SequenceName: '*'
-           SequenceName: '*epfid*'
-           SequenceName: ['epfid2d1rs', 'fm2d2r']
-           SequenceName: ['*epfid*', 'fm2d2r']
-       NB: Editing the DICOM attributes is normally not necessary and adviced against
-
-    Dynamic BIDS labels
-      The BIDS labels can be static, in which case the label is just a normal string, or dynamic,
-      when the string is enclosed with pointy brackets like `<attribute>`,
-      `<attribute1><attribute2>` or `<<attribute1><attribute2>>`. In case of single enclosed
-      pointy brackets the label will be replaced during bidsmapper, bidseditor and bidscoiner
-      runtime by the value of the (DICOM) attribute with that name. In case of double enclosed
-      pointy brackets, the label will be updated for each subject/session during bidscoiner
-      runtime. For instance, the `run` label `<<1>>` in the bids name will be replaced with
-      `1` or increased to `2` if a file with runindex `1` already exists in that directory.
-
-    Fieldmaps: suffix
-      Select 'magnitude1' if you have 'magnitude1' and 'magnitude2' data in one series-folder
-      (this is what Siemens does) -- the bidscoiner will automatically pick up the 'magnitude2'
-      data during runtime. The same holds for 'phase1' and 'phase2' data. See the BIDS
-      specification for more details on fieldmap suffixes
-
-    Fieldmaps: IntendedFor
-      You can use the `IntendedFor` field to indicate for which runs (DICOM series) a fieldmap
-      was intended. The dynamic label of the `IntendedFor` field can be a list of string patterns
-      that is used to include all runs in a session that have that string pattern in their BIDS
-      file name. Example: use `<<task>>` to include all functional runs or `<<Stop*Go><Reward>>`
-      to include "Stop1Go"-, "Stop2Go"- and "Reward"-runs.
-      NB: The fieldmap might not be used at all if this field is left empty!
-
-    Manual editing / inspection of the bidsmap
-      You `can of course also directly edit or inspect the `bidsmap.yaml` file yourself with any
-      text editor. For instance to merge a set of runs that by adding a '*' wildcard to a DICOM
-      attribute in one run item and then remove the other runs in the set. See ./docs/bidsmap.md
-      and ./heuristics/bidsmap_dccn.yaml for more information.
-
 As shown below, the main window of the bidseditor opens with the ``BIDS map`` tab that contains a list of ``input samples`` that uniquely represents all the different files that are present in the source folder, together with the associated ``BIDS output name``. The path in the ``BIDS output name`` is shown in red if the modality is not part of the BIDS standard, striked-out gray when the runs will be ignored in the conversion to BIDS, otherwise it is colored green. Double clicking the sample (DICOM) filename opens an inspection window with the full header information (double clicking sample filenames works throughout the GUI).
 
 \ |Bidseditor main window|\
 
-The user can click the ``Edit`` button for each list item to open a new edit window, as show below. In this interface, the right BIDS ``Modality`` (drop down menu) and the ``suffix`` label (drop down menu) can set correctly, after which the associated BIDS ``Labels`` can be edited (double click black items). As a result, the new BIDS ``Output name`` is then shown in the bottom text field. This is how the BIDS output data will look like and, if this looks all fine, the user can store this mapping to the bidsmap and return to the main window by clicking the ``OK`` button.
+The user can click the ``Edit`` button for each list item to open a new edit window, as show below. In this interface, the right BIDS ``Modality`` (drop down menu) and the ``suffix`` label (drop down menu) can set correctly, after which the associated BIDS ``Labels`` can be edited (double click black items). As a result, the new BIDS ``Output name`` is then shown in the bottom text field. This is a preview of the BIDS output data, if that looks satisfactory (NB: green text indicates that  BIDS valid), the user can store this mapping to the bidsmap and return to the main window by clicking the ``OK`` button. See `The bidsmap explained <bidsmap.html#special-features--editing-tips>`__ for editing tips and explanation of the special bidsmap feautures.
 
 \ |Bidseditor edit window|\
 
-.. tip::
-   Use the ``Export`` button to append new or unknown run items to your `template bidsmap <advanced.html#site-specific-customized-template>`__ for usage in other studies
-
-Finally, if all BIDS output names in the main window are fine, the user can click on the ``Save`` button and proceed with running the bidscoiner tool.
+Finally, if all BIDS output names in the main window are fine, the user can click on the ``Save`` button and proceed with running the bidscoiner tool. Note that the bidsmapper and bidseditor don't do anything except reading from and writing to the ``bidsmap.yaml`` file.
 
 Step 2: Running the bidscoiner
 ------------------------------
@@ -250,4 +203,3 @@ Step 2: Running the bidscoiner
 
 .. |Bidseditor main window| image:: ./_static/bidseditor_main.png
 .. |Bidseditor edit window| image:: ./_static/bidseditor_edit.png
-

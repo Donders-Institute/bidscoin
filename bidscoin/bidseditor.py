@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
 This tool launches a graphical user interface for editing the bidsmap.yaml file
-that is e.g. produced by the bidsmapper or by this bidseditor itself. The user can
-fill in or change the BIDS labels for entries that are unidentified or sub-optimal,
-such that meaningful BIDS output names will be generated from these labels. The saved
-bidsmap.yaml output file can be used for converting the source data to BIDS using
-the bidscoiner.
+that is produced by the bidsmapper. The user can fill in or change the BIDS labels
+for entries that are unidentified or sub-optimal, such that meaningful and nicely
+readable BIDS output names will be generated. The saved bidsmap.yaml output file
+will be used by the bidscoiner to actually convert the source data to BIDS.
 """
 
 import sys
@@ -1393,8 +1392,8 @@ def main():
                                             NB: Editing the DICOM attributes is normally not necessary and adviced against
 
                                          Dynamic BIDS labels
-                                           The BIDS labels can be static, in which case the label is just a normal string, or dynamic,
-                                           when the string is enclosed with pointy brackets like `<attribute>`,
+                                           The BIDS labels can be static, in which case the label is just a normal string, or
+                                           dynamic, when the string is enclosed with pointy brackets like `<attribute>`,
                                            `<attribute1><attribute2>` or `<<attribute1><attribute2>>`. In case of single enclosed
                                            pointy brackets the label will be replaced during bidsmapper, bidseditor and bidscoiner
                                            runtime by the value of the (DICOM) attribute with that name. In case of double enclosed

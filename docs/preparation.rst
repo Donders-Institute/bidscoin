@@ -4,7 +4,7 @@ Data preparation
 Required source data structure
 ------------------------------
 
-BIDScoin requires that the source data input folder is organized according to a ``sub-identifier/[ses-identifier]/sessiondata`` structure (NB: the ``ses-identifier`` subfolder is optional). The ``sessiondata`` can have various formats, as shown in the following examples:
+BIDScoin requires that the source data input folder is organized according to a ``sub-identifier/[ses-identifier]/data`` structure (the ``ses-identifier`` subfolder is optional). The ``data`` folder can have various formats, as shown in the following examples:
 
 1. **A 'seriesfolder' organization**. A series folder contains a single data type and are typically acquired in a single run -- a.k.a 'Series' in DICOM speak. This is how users receive their data from the (Siemens) scanners at the `DCCN <https://www.ru.nl/donders/>`__::
 
@@ -39,7 +39,7 @@ BIDScoin requires that the source data input folder is organized according to a 
     |       [..]
     [..]
 
-2. **A 'DICOMDIR' organization**. A DICOMDIR is dictionary-file that indicates the various places where all the DICOM files are stored of each DICOM Series. This is how data is often exported in clinical settings::
+2. **A 'DICOMDIR' organization**. A DICOMDIR is dictionary-file that indicates the various places where all the various DICOM files are stored. DICOMDIRs are often used in clinical settings and may look like::
 
     sourcedata
     |-- sub-001
@@ -65,7 +65,7 @@ BIDScoin requires that the source data input folder is organized according to a 
     |   [..]
     [..]
 
-3. **A flat DICOM organization**. In a flat DICOM organization all the DICOM files of all the different Series are simply put in one large directory. This is how data is sometimes exported in clinical settings::
+3. **A flat DICOM organization**. In a flat DICOM organization all the DICOM files of all the different Series are simply put in one large directory. This organization is sometimes used when exporting data in clinical settings::
 
     sourcedata
     |-- sub-001
@@ -83,7 +83,7 @@ BIDScoin requires that the source data input folder is organized according to a 
     |       [..]
     [..]
 
-4. **A PAR/REC organization**. All PAR/REC(/XML) files of all the different Series are put in one directory. This is how users often export their data from Philips scanners in research settings::
+4. **A PAR/REC organization**. All PAR/REC(/XML) files of all the different Series are put in one directory. This organization is how users often export their data from Philips scanners in research settings::
 
     sourcedata
     |-- sub-001
@@ -108,7 +108,7 @@ BIDScoin requires that the source data input folder is organized according to a 
     [..]
 
 .. note::
-   You can store the ``sessiondata`` in any of the above data organizations as zipped (``.zip``) or tarzipped (e.g. ``.tar.gz``) archive files. BIDScoin `workflow tools <workflow.html>`_ will unpack/unzip those archive files in a temporary folder and will process the ``sessiondata`` from there. The BIDScoin tools will run `dicomsort <#dicomsort>`__ in a temporary folder for flat/DICOMDIR data to sort them in seriesfolders. BIDScoin tools that work from a temporary folder has the downsde of getting a speed penalty. Also note that privacy-sensitive data samples will then be stored in ``[bidsfolder]/code/bidscoin/provenance``.
+   You can store your session data in any of the above data organizations as zipped (``.zip``) or tarzipped (e.g. ``.tar.gz``) archive files. BIDScoin `workflow tools <workflow.html>`_ will unpack/unzip those archive files in a temporary folder and will process your session`` data`` from there. The BIDScoin tools will run `dicomsort <#dicomsort>`__ in a temporary folder for flat/DICOMDIR data to sort them in seriesfolders. BIDScoin tools that work from a temporary folder has the downsde of getting a speed penalty. Also note that privacy-sensitive data samples will then be stored in ``[bidsfolder]/code/bidscoin/provenance``.
 
 Data management utilities
 -------------------------
@@ -116,7 +116,7 @@ Data management utilities
 dicomsort
 ^^^^^^^^^
 
-The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-organized files (see `above <#required-source-data-structure>`__) into a 'seriesfolder' organization (see above). This can be useful to organise your source data in a more convenient and human readable way, as DICOMDIR or flat DICOM directories can often be hard to comprehend. The BIDScoin tools will run ``dicomsort`` in a temporary folder if your data is not already organised in series-folders, so in principle you don't really need to run it yourself. Running ``dicomsort`` beforehand does, however, give you more flexibility in handling special cases that are not handled properly and it can also give you a speed benefit.
+The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-organized files (see `above <#required-source-data-structure>`__) into a 'seriesfolder' organization. This can be useful to organise your source data in a more convenient and human readable way, as DICOMDIR or flat DICOM directories can often be hard to comprehend. The BIDScoin tools will run ``dicomsort`` in a temporary folder if your data is not already organised in series-folders, so in principle you don't really need to run it yourself. Running ``dicomsort`` beforehand does, however, give you more flexibility in handling special cases that are not handled properly and it can also give you a speed benefit.
 
 ::
 
@@ -191,38 +191,38 @@ Another command-line utility that can be helpful in organizing your source data 
 
     positional arguments:
       sourcefolder          The source folder with the raw data in
-                        sub-#/ses-#/series organisation
+                            sub-#/ses-#/series organisation
 
     optional arguments:
       -h, --help            show this help message and exit
       -s SESSIONS [SESSIONS ...], --sessions SESSIONS [SESSIONS ...]
-                        Space separated list of selected sub-#/ses-# names /
-                        folders to be processed. Otherwise all sessions in the
-                        bidsfolder will be selected (default: None)
+                            Space separated list of selected sub-#/ses-# names /
+                            folders to be processed. Otherwise all sessions in the
+                            bidsfolder will be selected (default: None)
       -d DICOMFIELD [DICOMFIELD ...], --dicomfield DICOMFIELD [DICOMFIELD ...]
-                        The name of the dicomfield that is mapped / used to
-                        rename the subid/sesid foldernames (default:
-                        ['PatientComments'])
+                            The name of the dicomfield that is mapped / used to
+                            rename the subid/sesid foldernames (default:
+                            ['PatientComments'])
       -w WILDCARD, --wildcard WILDCARD
-                        The Unix style pathname pattern expansion that is used
-                        to select the series from which the dicomfield is
-                        being mapped (can contain wildcards) (default: *)
+                            The Unix style pathname pattern expansion that is used
+                            to select the series from which the dicomfield is
+                            being mapped (can contain wildcards) (default: *)
       -o OUTFOLDER, --outfolder OUTFOLDER
-                        The mapper-file is normally saved in sourcefolder or,
-                        when using this option, in outfolder (default: None)
+                            The mapper-file is normally saved in sourcefolder or,
+                            when using this option, in outfolder (default: None)
       -r, --rename          If this flag is given sub-subid/ses-sesid directories
-                        in the sourcefolder will be renamed to sub-dcmval/ses-
-                        dcmval (default: False)
+                            in the sourcefolder will be renamed to sub-dcmval/ses-
+                            dcmval (default: False)
       -n SUBPREFIX, --subprefix SUBPREFIX
-                        The prefix common for all the source subject-folders
-                        (default: sub-)
+                            The prefix common for all the source subject-folders
+                            (default: sub-)
       -m SESPREFIX, --sesprefix SESPREFIX
-                        The prefix common for all the source session-folders
-                        (default: ses-)
+                            The prefix common for all the source session-folders
+                            (default: ses-)
       --dryrun              Add this flag to dryrun (test) the mapping or renaming
-                        of the sub-subid/ses-sesid directories (i.e. nothing
-                        is stored on disk and directory names are not actually
-                        changed)) (default: False)
+                            of the sub-subid/ses-sesid directories (i.e. nothing
+                            is stored on disk and directory names are not actually
+                            changed)) (default: False)
 
     examples:
       rawmapper /project/3022026.01/raw/

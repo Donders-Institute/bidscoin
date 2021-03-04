@@ -4,21 +4,15 @@ Advanced usage
 Site specific / customized template
 -----------------------------------
 
-If you want to convert many studies with similar acquisition protocols then you **may** consider (NB: this is in no way necessary) creating your own customized bidsmap template. This template can then be passed to the `bidsmapper <workflow.html#step-1b-running-the-bidsmapper>`__ tool (instead of the default ``[path_to_bidscoin]/heuristics/bidsmap_template.yaml`` template) to automatically identify the different scans in your (future) studies and map these to the correct BIDS modalities.
-
-Generally speaking, a bidsmap file contains a collection of key-value dictionaries that define unique mappings between different types (runs) of source data onto BIDS outcome data. As illustrated in the figure below, each run item in the bidsmap has a ``provenance`` key-value pair to store the pathname of a representative data sample of that run. Each run item also contains a source data ``attributes`` object, i.e. a key-value dictionary with keys and values that are extracted from the provenance data sample, as well as a ``bids`` object, i.e. a key-value dictionary that determines the filename of the BIDS output file. The different key-value pairs in the ``attributes`` dictionary represent properties of the source data and should uniquely identify the different runs in a session. But these attrribute-values should not vary between sessions, making the length of the bidsmap only dependent on the acquisition protocol and not on the number of subjects and sessions in the data collection. The difference between a bidsmap template and the study bidsmap that comes out of the ``bidsmapper`` is that the template contains / defines the key-values that will be used by the bidsmapper and that the template contains all possible runs. The study bidsmap contains only runs that were encountered in the study, with key-values that are specific for that study. A bidsmap has different sections for different source data modalities, i.e.  ``DICOM``, ``PAR``, ``P7``, ``Nifti``, ``FileSystem``, as well as a section for the BIDScoin ``Options``. Within each source data section there sub-sections for the different BIDS modalities, i.e. for ``anat``, ``func``, ``dwi``, ``fmap``, ``pet``, ``beh`` and ``extra_data``, and for the ``participant_label`` and ``session_label``. It is important to note that BIDScoin tools, given a data sample, will go through the bidsmap (from top to bottom) until they come across a run with attribute values that match the attribute values of the data sample (NB: empty values are ignored). At that point a bidsmapping is made, i.e. the bids values will be taken to contruct a BIDS output filename.
-
-.. figure:: ./_static/bidsmap_sample.png
-
-   A snippet of a study bidsmap, showing a ``DICOM`` section with a few run items in the ``anat`` subsection
+ The run-items in the default template bidsmap (named ``bidsmap_template.yaml``) have empty / non-matching source attributes, and therefore the ``bidsmapper`` will not make any guesses about BIDS datatypes and run-items. As a result, it will classify all runs as ``extra_data``, leaving all the subsequent ``bidseditor`` decision making to the user. One alternative is to use the much more intelligent ``bidsmap_dccn.yaml`` template bidsmap. This bidsmap may work much better but it may also make wrong suggestions, since it is tailored to the MR acquisitions at the Donders Institute. To improve that and to have BIDScoin convert your studies in a better way, you **may** consider creating and using your own customized template bidsmap.
 
 .. tip::
-   To create your own template bidsmap you can best first make a copy of the default template (``[path_to_bidscoin]/heuristics/bidsmap_template.yaml``) or of the DCCN example template (``[path_to_bidscoin]/heuristics/bidsmap_dccn.yaml``) and customize that bidsmap to your needs
+   To create your own template bidsmap you can probably best make a copy of the DCCN template (``[path_to_bidscoin]/heuristics/bidsmap_dccn.yaml``) as a starting point and adapt it to your needs. If you want to use different source attributes to improve run identifications, then beware that the attribute values should not vary between different repeats of the data acquision. Otherwise the number of run-items in the bidsmap will not be a shortlist of the different acquisition protocols in your study, but will become a lengthy list that is proportional to the number of subjects and sessions.
 
-Editing the template:
-^^^^^^^^^^^^^^^^^^^^^
+Editing the template
+^^^^^^^^^^^^^^^^^^^^
 
-1. **Using the bidseditor**. This is the easiest way to create a bidsmap template since it uses only a GUI and doesn't require in-depth knowledge of bidsmaps and YAML files. If you have a run item in your study that you would like to be automatically mapped in other / future studies you can simply append that run to the standard or to a custom template bidsmap by editting it to your needs and click the ``Export`` button (see below). With the GUI you can still use advanced features, such as `Unix shell-style wildcards <https://docs.python.org/3/library/fnmatch.html>`__ in the values of the source attributes (see left panel), or such as using lists of attribute values (of which either one can match), or simply empty field to ignore the item. The main limitation of using the GUI is that the run items are always appended to a bidsmap template, meaning that they are last in line and will be used only if no other item in the template matches. It also means that like this you cannot edit the already existing run items in the bidsmap. Another (smaller) limitation is that with the GUI you cannot make usage of YAML anchors and references. Both limitations are overcome when directly editting the template bidsmap yourself using a text editor (see next point).
+1. **Using the bidseditor**. This is the easiest way to create a bidsmap template since it uses only a GUI and doesn't require in-depth knowledge of bidsmaps and YAML files. If you have a run item in your study that you would like to be automatically mapped in other / future studies you can simply append that run to the standard or to a custom template bidsmap by editing it to your needs and click the ``Export`` button (see below). Note that you should first empty the source attribute values (e.g. ``EchoTime``) that vary across repeats of the same run. With the GUI you can still use advanced features, such as `Unix shell-style wildcards <https://docs.python.org/3/library/fnmatch.html>`__ in the values of the source attributes (see left panel), or such as using lists of attribute values (of which either one can match), or simply empty field to ignore the item. The main limitation of using the GUI is that the run items are always appended to a bidsmap template, meaning that they are last in line and will be used only if no other item in the template matches. It also means that like this you cannot edit the already existing run items in the bidsmap. Another (smaller) limitation is that with the GUI you cannot make usage of YAML anchors and references, yielding a less clearly formatted bidsmap that is harder to maintain. Both limitations are overcome when directly editing the template bidsmap yourself using a text editor (see next point).
 
 .. figure:: ./_static/bidseditor_edit.png
 
@@ -29,8 +23,8 @@ Editing the template:
 .. code-block:: yaml
 
    anat:       # ----------------------- All anatomical runs --------------------
-   - provenance: ~                 # The first run item with empty attributes will not match anything but will be used when changing modality in the bidseditor GUI -> suffix = T1w
-     attributes: &anatattributes_dicom
+   - provenance: ~                       # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+     attributes: &anat_dicomattr
        Modality: ~
        ProtocolName: ~
        SeriesDescription: ~
@@ -45,21 +39,27 @@ Editing the template:
        EchoTime: ~
        RepetitionTime: ~
        PhaseEncodingDirection: ~
-     bids: &anatbids_dicom
-       acq: <SeriesDescription>    # A dynamic label which will be replaced during bidscoiner runtime with the DICOM attribute value
+     bids: &anat_dicoment_nonparametric  # See: schema/datatypes/anat.yaml
+       acq: <SeriesDescription>
        ce: ~
        rec: ~
-       run: <<1>>                  # A dynamic label that will be increased during bidscoiner runtime. NB: changing this value may lead to collisions / overwriting of BIDS data
-       mod: ~
+       run: <<1>>
+       part: ['', 'mag', 'phase', 'real', 'imag', 0]
        suffix: T1w
-   - provenance: ~                 # The second run item with non-empty attributes ('SeriesDescription' and 'MRAcquisitionType') will match any run with these attribute values
+   - provenance: ~
      attributes:
-       <<: *anatattributes_dicom
-       SeriesDescription: ['*mprage*', '*MPRAGE*', '*MPRage*', '*t1w*', '*T1w*', '*T1W*']
+       <<: *anat_dicomattr
+       SeriesDescription: ['*mprage*', '*MPRAGE*', '*MPRage*', '*t1w*', '*T1W*', '*T1w*', '*T1*']
        MRAcquisitionType: 3D
+     bids: *anat_dicoment_nonparametric
+   - provenance: ~
+     attributes:
+       <<: *anat_dicomattr
+       SeriesDescription: ['*t2w*', '*T2w*', '*T2W*', '*T2*']
+       SequenceVariant: "['SK', 'SP']"
      bids:
-       <<: *anatbids_dicom
-       suffix: T1w
+       <<: *anat_dicoment_nonparametric
+       suffix: T2w
 
 *Snippet from the ``bidsmap_dccn.yaml`` template*, showing a ``DICOM`` section with the first two run items in the ``anat`` subsection
 
