@@ -131,7 +131,7 @@ As shown below, the main window of the bidseditor opens with the ``BIDS map`` ta
 
 \ |Bidseditor main window|\
 
-The user can click the ``Edit`` button for each list item to open a new edit window, as show below. In this interface, the right BIDS ``Modality`` (drop down menu) and the ``suffix`` label (drop down menu) can set correctly, after which the associated BIDS ``Labels`` can be edited (double click black items). As a result, the new BIDS ``Output name`` is then shown in the bottom text field. This is a preview of the BIDS output data, if that looks satisfactory (NB: green text indicates that  BIDS valid), the user can store this mapping to the bidsmap and return to the main window by clicking the ``OK`` button. See `The bidsmap explained <bidsmap.html#special-features--editing-tips>`__ for editing tips and explanation of the special bidsmap feautures.
+The user can click the ``Edit`` button for each list item to open a new edit window, as show below. In this interface, the right BIDS ``Modality`` (drop down menu) and the ``suffix`` label (drop down menu) can set correctly, after which the associated BIDS ``Labels`` can be edited (double click black items). As a result, the new BIDS ``Output name`` is then shown in the bottom text field. This is a preview of the BIDS output data, if that looks satisfactory (NB: green text indicates that  BIDS valid), the user can store this mapping to the bidsmap and return to the main window by clicking the ``OK`` button. Editing the source attributes of a study bidsmap is usually not necessary and adviced against. See `The bidsmap explained <bidsmap.html#special-features>`__ for more explanation about the special bidsmap feautures.
 
 \ |Bidseditor edit window|\
 

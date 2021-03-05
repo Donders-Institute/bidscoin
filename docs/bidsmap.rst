@@ -19,30 +19,21 @@ A bidsmap has a BIDScoin ``Options`` and a ``PlugIns`` section, followed by sour
 From template to study
 ----------------------
 
-A bidsmap can either be a template bidsmap or a study bidsmap. The difference between them is that a template bidsmap is a comprehensive set of pre-defined run items and serves as an input for the bidsmapper to automatically make a first version of a study bidsmap. The study bidsmap is thus derived from the template bidsmap and contains only those run items that are present in the data. The study bidsmap can be interactively corrected or enriched with knowledge that is specific to a study and that cannot be extracted from the data (e.g. set the func ``task`` label). A user normally doesn't have to interact with the template bidsmap, but it is sure possible to `create your own <advanced.html#site-specific-customized-template>`__.
+A bidsmap can either be a template bidsmap or a study bidsmap. The difference between them is that a template bidsmap is a comprehensive set of pre-defined run items and serves as an input for the bidsmapper to automatically make a first version of a study bidsmap. The study bidsmap is thus derived from the template bidsmap and contains only those run items that are present in the data. The study bidsmap can be interactively edited with knowledge that is specific to a study and that cannot be extracted from the data (e.g. set a ``task`` value to "rest"). A user normally doesn't have to interact with the template bidsmap, but it is sure possible to `create your own <advanced.html#site-specific-customized-template>`__.
 
 .. figure:: ./_static/bidsmap_flow.png
 
    Creation and application of a study bidsmap
 
-Special features
-----------------
+Special bidsmap features
+------------------------
 
-Source attributes
-^^^^^^^^^^^^^^^^^
-An (DICOM) attribute label can also be a list, in which case the BIDS labels / mapping are applied if a (DICOM) attribute value is in this list. If the attribute value is empty it is not used to identify the run. Wildcards can also be given, either as a single '*', or enclosed by '*'. Examples:
+* **Source attribute wildcards**. Source attribute values can contain `Unix shell-style <https://docs.python.org/3/library/fnmatch.html>`__ ``*`` wildcards to facilitate more liberal run matching. For instance you can use ``SeriesDescription: '*MPRAGE*'`` to match all MPRAGE DICOM series as they come from your MRI scanner.
 
-:SequenceName: '*'
-:SequenceName: '\*epfid\*'
-:SequenceName: ['epfid2d1rs', 'fm2d2r']
-:SequenceName: ['\*epfid\*', 'fm2d2r']
+* **Source attribute list**. Instead of a normal string, a source attribute value can also be a list of strings, in which case a match is positive if any of the list items matches with the source attribute of the run. For instance ``SequenceName: ['\*epfid\*', 'fm2d2r']`` will liberally match all DICOM sequences with that have ``epfid`` in their ``SequenceName`` and it will strictly match on ``fm2d2r``.
 
-NB: Editing the source attributes of a study bidsmap is usually not necessary and adviced against
+* **Dynamic bids value**. Bids values can be static, in which case the value is just a normal string, or dynamic, when the string is enclosed with pointy brackets. In case of single pointy brackets the bids value will be replaced during ``bidsmapper``, ``bidseditor`` and ``bidscoiner`` runtime by the value of the source attribute. For instance ``acq: <MRAcquisitionType><SeriesDescription>`` will be replaced by ``acq: 3DMPRAGE``. In case of double enclosed pointy brackets, the value will be updated only during ``bidscoiner``` runtime -- this is useful for bids values that are subject/session dependent. For instance ``run: <<1>>`` will be replaced with ``run: 1`` or e.g. increased to ``run: 2`` if a file with that bidsname already exists.
 
-Dynamic BIDS labels
-^^^^^^^^^^^^^^^^^^^
-BIDS labels can be static, in which case the label is just a normal string, or dynamic, when the string is enclosed with pointy brackets like `<attribute>`, `<attribute1><attribute2>` or `<<attribute1><attribute2>>`. In case of single enclosed pointy brackets the label will be replaced during bidsmapper, bidseditor and bidscoiner runtime by the value of the (DICOM) attribute with that name. In case of double enclosed pointy brackets, the label will be updated for each subject/session during bidscoiner runtime. For instance, the `run` label `<<1>>` in the bids name will be replaced with `1` or increased to `2` if a file with runindex `1` already exists in that directory.
+* **Bids value list**. Instead of a normal string, a bids value can also be a list of strings, with the last list item being the (zero-based) list index that selects the final bids value. For instance the list ``['mag', 'phase', 'real', 'imag', 1]`` would select ``phase`` as a value. A bids value list is made visible in the bidseditor as a drop-down menu.
 
-BIDS label menus
-^^^^^^^^^^^^^^^^
-A BIDS label can be a list of label options, with the last list item being the (zero-based) list index that selects the current label. For instance the list ``['mag', 'phase', 'real', 'imag', 1]`` would select ``phase`` as a label. The list index can be set in the bidseditor via a drop-down menu.
+The special bidsmap features are most useful when added to template bidsmaps.
