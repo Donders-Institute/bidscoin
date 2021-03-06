@@ -140,9 +140,9 @@ Finally, if all BIDS output names in the main window are fine, the user can clic
 Fieldmaps
 ^^^^^^^^^
 
-Select 'magnitude1' if you have 'magnitude1' and 'magnitude2' data in one series-folder (this is what Siemens does) -- the bidscoiner will automatically pick up the 'magnitude2' data during runtime. The same holds for 'phase1' and 'phase2' data. See the BIDS specification for more details on fieldmap suffixes.
+The way fieldmaps are acquired and stored varies considerably between sequences and manufacturers, and may therefore require special treatment. For instance, it could be that you have ``magnitude1`` and ``magnitude2`` data in one series-folder (which is what Siemens can do). In that case you should select the ``magnitude1`` suffix and let bidscoiner automatically pick up the other magnitude image during runtime. The same holds for ``phase1`` and ``phase2`` data. The suffix ``magnitude`` can be selected for sequences that save fielmaps directly. See the `BIDS specification <https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#fieldmap-data>`__ for more details on fieldmap suffixes.
 
-You can use the special `IntendedFor` field to indicate for which runs (DICOM series) a fieldmap was intended. The dynamic label of the `IntendedFor` field can be a list of string patterns that is used to include all runs in a session that have that string pattern in their BIDS file name. Example: use `<<task>>` to include all functional runs or `<<Stop*Go><Reward>>` to include "Stop1Go"-, "Stop2Go"- and "Reward"-runs. NB: The fieldmap might not be used at all if this field is left empty!
+Another special feature of fieldmaps is that they are typically acquired to be applied to specific other scans from the same session. If this is the case then you should indicate this in the ``IntendedFor`` field, either using a single search string or multiple `dynamic strings <bidsmap.html#special-features>`__ to select the runs that have that string pattern in their BIDS file name. For instance you can use ``task`` to select all functional runs or use ``<<Stop*Go><Reward>>`` to select "Stop1Go"-, "Stop2Go"- and "Reward"-runs. NB: bidsapps may not use the fieldmap at all if this field is left empty!
 
 Step 2: Running the bidscoiner
 ------------------------------
