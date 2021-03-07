@@ -159,7 +159,10 @@ Step 2: Running the bidscoiner
     bidscoiner after all data is collected, or run / re-run it whenever new data has
     been added to the source folder (presuming the scan protocol hasn't changed). If you
     delete a (subject/) session folder from the bidsfolder, it will be re-created from the
-    sourcefolder the next time you run the bidscoiner.
+    sourcefolder the next time you run the bidscoiner. Image tags indicating properties
+    such as echo-number or complex data can be appended to the "acq" value if the BIDS
+    datatype does not provide for this (e.g. "sub-01_acq-MEMPRAGE_T1w.nii" becomes
+    "sub-01_acq-MEMPRAGEe1_T1w.nii")
 
     Provenance information, warnings and error messages are stored in the
     bidsfolder/code/bidscoin/bidscoiner.log file.
