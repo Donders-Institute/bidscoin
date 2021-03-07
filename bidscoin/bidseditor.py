@@ -5,6 +5,8 @@ that is produced by the bidsmapper. The user can fill in or change the BIDS labe
 for entries that are unidentified or sub-optimal, such that meaningful and nicely
 readable BIDS output names will be generated. The saved bidsmap.yaml output file
 will be used by the bidscoiner to actually convert the source data to BIDS.
+
+You can hoover with your mouse over items to get help text (pop-up tooltips).
 """
 
 import sys

@@ -96,6 +96,8 @@ Step 1b: Running the bidseditor
     readable BIDS output names will be generated. The saved bidsmap.yaml output file
     will be used by the bidscoiner to actually convert the source data to BIDS.
 
+    You can hoover with your mouse over items to get help text (pop-up tooltips).
+
     positional arguments:
       bidsfolder        The destination folder with the (future) bids data
 
