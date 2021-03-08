@@ -46,7 +46,7 @@ Let's begin with inspecting this new raw data collection:
    $ bidsmapper raw bids
 
 - In the GUI that appears, edit the task and acquisition labels of the functional scans into something more readable, e.g. ``task-Reward`` for the ``acq-mb8`` scans and "task-Stop" for the ``acq-mb3me3 scans``. Also make the name of the T1 scan more user friendly, e.g. by naming the aquisition label simply ``acq-mprage``.
-- Add a search pattern to the ``IntendedFor`` field such that it will select your fMRI runs correctly (see the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ ``fieldmap`` section for more details)
+- Add a search pattern to the ``IntendedFor`` field such that the first fieldmap will select your ``Reward`` runs and the second fieldmap your ``Stop`` runs (see the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ ``fieldmap`` section for more details)
 - Since for this dataset we only have one session per subject, remove the session label (and note how the output names simplify, omitting the session subfolders and labels)
 - When all done, go to the ``Options`` tab and change the ``dcm2niix`` settings to get non-zipped nifti output data (i.e. ``*.nii`` instead of ``*.nii.gz``). Test the tool to see if it can run and, as a final step, save your bidsmap. You can always go back later to change any of your edits by running the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ command line tool directly. Try that.
 
@@ -57,13 +57,13 @@ Let's begin with inspecting this new raw data collection:
    $ bidscoiner raw bids
 
 - Check your ``bids/code/bidscoin/bidscoiner.log`` (the complete terminal output) and ``bids/code/bidscoin/bidscoiner.errors`` (the summary that is also printed at the end) files for any errors or warnings. You shouldn't have any :-)
-- Compare the results in your ``bids/sub-*`` subject folders with the in ``bids_ref`` reference result. Are the file and foldernames the same (don't worry about the multi-echo images and the ``extra_data`` images, they are combined/generated as described below)? Also check the json sidecar files of the fieldmaps. Do they have the right ``"``EchoTime`` and ``IntendedFor`` fields?
-- What happens if you re-run the `bidscoiner <workflow.html#step-2-running-the-bidscoiner>`__ command? Are the same subjects processed again? Re-run ``sub-001``.
+- Compare the results in your ``bids/sub-*`` subject folders with the in ``bids_ref`` reference result. Are the file and foldernames the same (don't worry about the multi-echo images and the ``extra_data`` images, they are combined/generated as described below)? Also check the json sidecar files of the fieldmaps. Do they have the right ``EchoTime`` and ``IntendedFor`` fields?
+- What happens if you re-run the ``bidscoiner`` command? Are the same subjects processed again? Re-run ``sub-001``.
 
 4. **Finishing up.** Now that you have converted the data to BIDS, you still need to do some manual work to make it fully ready for data analysis and sharing
 
-- Combine the echos using the `echocombine <finalizing.html#multi-echo-combination>`__ tool, such that the individual echo images are replaced by the ech-combined image
-- Deface the anatomical scans using the `echocombine <finalizing.html#multi-echo-combination>`__ tool. This will take a while, but will obviously not work well for our phantom dataset. Therefore store the 'defaced' output in the ``extra_data`` folder (instead of e.g. overwriting the existing images)
+- Combine the echos using the `echocombine <finalizing.html#multi-echo-combination>`__ tool, such that the individual echo images are replaced by the echo-combined image
+- Deface the anatomical scans using the `echocombine <finalizing.html#multi-echo-combination>`__ tool. This will take a while, but will obviously not work well for our phantom dataset. Therefore store the 'defaced' output in the ``derivatives`` folder (instead of e.g. overwriting the existing images)
 - Inspect the ``bids/participants.tsv`` file and decide if it is ok.
 - Update the ``dataset_description.json`` and ``README`` files in your ``bids`` folder
 - As a final step, run the `bids-validator <https://bids-standard.github.io/bids-validator/>`__ on your ``~/bids_tutorial`` folder. Are you completely ready now to share this dataset?

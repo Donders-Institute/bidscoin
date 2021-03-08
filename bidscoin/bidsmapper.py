@@ -292,8 +292,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         if not dataformat:
             dataformat = 'DICOM'
             QMessageBox.information(mainwin, 'BIDS mapping workflow',
-                                    'Could not determine the dataformat of the source\n'
-                                   f'data, defaulting to: {dataformat}\n'
+                                    'Could not determine the dataformat of the last\n'
+                                   f'source data run, defaulting to: {dataformat}\n'
                                     'You can try running the bidseditor tool yourself if\n'
                                     'this is not correct')
         QMessageBox.information(mainwin, 'BIDS mapping workflow',
