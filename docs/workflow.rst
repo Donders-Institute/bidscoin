@@ -79,7 +79,7 @@ Step 1a: Running the bidsmapper
 After the source data has been scanned, the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__. For a fully automated workflow users can skip this interactive step using the ``-i`` option (see above).
 
 .. tip::
-   If the default ``-t bidsmap_dccn`` option is not working well for you, consider `adapting it to your needs <advanced.html#site-specific-customized-template>`__ so that the bidsmapper can recognize more of your scans and map them to BIDS the way you prefer.
+   The default template bidsmap (``-t bidsmap_dccn``) is customized for acquisitions at the DCCN. If this bidsmap is not working well for you, consider `adapting it to your needs <advanced.html#site-specific-customized-template>`__ so that the bidsmapper can recognize more of your scans and map them to BIDS the way you prefer.
 
 Step 1b: Running the bidseditor
 -------------------------------
