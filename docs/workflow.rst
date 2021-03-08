@@ -50,7 +50,7 @@ Step 1a: Running the bidsmapper
                             could be provided by your institute). If the bidsmap
                             filename is relative (i.e. no "/" in the name) then it
                             is assumed to be located in bidsfolder/code/bidscoin.
-                            Default: bidsmap_template.yaml
+                            Default: bidsmap_dccn.yaml
       -n SUBPREFIX, --subprefix SUBPREFIX
                             The prefix common for all the source subject-folders.
                             Default: 'sub-'
@@ -74,12 +74,12 @@ Step 1a: Running the bidsmapper
 
     examples:
       bidsmapper /project/foo/raw /project/foo/bids
-      bidsmapper /project/foo/raw /project/foo/bids -t bidsmap_dccn
+      bidsmapper /project/foo/raw /project/foo/bids -t bidsmap_template
 
 After the source data has been scanned, the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__. For a fully automated workflow users can skip this interactive step using the ``-i`` option (see above).
 
 .. tip::
-   Use the ``-t bidsmap_dccn`` option and see if this site-customized bidsmap template works for you. If not, consider `adapting it to your needs <advanced.html#site-specific-customized-template>`__ so that the bidsmapper can recognize more of your scans and map them to BIDS the way you prefer.
+   If the default ``-t bidsmap_dccn`` option is not working well for you, consider `adapting it to your needs <advanced.html#site-specific-customized-template>`__ so that the bidsmapper can recognize more of your scans and map them to BIDS the way you prefer.
 
 Step 1b: Running the bidseditor
 -------------------------------
@@ -113,7 +113,7 @@ Step 1b: Running the bidseditor
                         could be provided by your institute). If the bidsmap
                         filename is relative (i.e. no "/" in the name) then it
                         is assumed to be located in bidsfolder/code/bidscoin.
-                        Default: bidsmap_template.yaml
+                        Default: bidsmap_dccn.yaml
       -d DATAFORMAT, --dataformat DATAFORMAT
                         The format of the source data, e.g. DICOM or PAR.
                         Default: DICOM
@@ -126,7 +126,7 @@ Step 1b: Running the bidseditor
 
     examples:
       bidseditor /project/foo/bids
-      bidseditor /project/foo/bids -t bidsmap_dccn.yaml
+      bidseditor /project/foo/bids -t bidsmap_template.yaml
       bidseditor /project/foo/bids -b my/custom/bidsmap.yaml
 
 As shown below, the main window of the bidseditor opens with the ``BIDS map`` tab that contains a list of ``input samples`` that uniquely represents all the different files that are present in the source folder, together with the associated ``BIDS output name``. The path in the ``BIDS output name`` is shown in red if the modality is not part of the BIDS standard, striked-out gray when the runs will be ignored in the conversion to BIDS, otherwise it is colored green. Double clicking the sample (DICOM) filename opens an inspection window with the full header information (double clicking sample filenames works throughout the GUI).
