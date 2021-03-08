@@ -8,7 +8,7 @@ license = 'GPL3'
 url = 'https://github.com/Donders-Institute/bidscoin'
 
 [requires]
-python_version = ['3.6', '3.7', '3.8', '3.9']
+python_version = ['3.8', '3.9']
 
 [build-system]
 requires = ['setuptools', 'wheel']

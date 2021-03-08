@@ -17,7 +17,7 @@ setup(name                           = 'bidscoin',          # Required
       version                        = version,             # Required
       packages                       = find_packages(),     # Required
       install_requires               = requirements,
-      python_requires                = '>=3.6',
+      python_requires                = '>=3.8',
       setup_requires                 = ["pytest-runner"],
       tests_require                  = ["pytest", "pytest-cov", "coverage"],
       package_data                   = {'': ['*version.txt', 'bidscoin.ico', '*.yaml']},
