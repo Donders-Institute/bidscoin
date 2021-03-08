@@ -610,7 +610,6 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                                               Description  = 'Description of the the column',
                                               Levels       = dict(Key='Value (This is for categorical variables: a dictionary of possible values (keys) and their descriptions (values))'),
                                               Units        = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is RECOMMENDED',
-                                              TermURL      = 'URL pointing to a formal definition of this type of data in an ontology available on the web')
             participants_table.loc[personals['participant_id'], key] = personals[key]
 
     # Write the collected data to the participant files
