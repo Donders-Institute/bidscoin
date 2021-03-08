@@ -290,21 +290,23 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     bidsmapfile = bidscoinfolder/'bidsmap.yaml'
     if gui:
         if not dataformat:
+            dataformat = 'DICOM'
             QMessageBox.information(mainwin, 'BIDS mapping workflow',
-                                    'Could not determine the dataformat of the source data.\n'
-                                    'You can try running the bidseditor tool yourself')
-        else:
-            QMessageBox.information(mainwin, 'BIDS mapping workflow',
-                                    f"The bidsmapper has finished scanning {rawfolder}\n\n"
-                                    f"Please carefully check all the different BIDS output names "
-                                    f"and BIDScoin options and (re)edit them to your needs.\n\n"
-                                    f"You can always redo this step later by re-running the "
-                                    f"bidsmapper or by just running the bidseditor tool")
+                                    'Could not determine the dataformat of the source data,\n'
+                                   f'defaulting to: {dataformat}\n'
+                                    'You can try running the bidseditor tool yourself if\n'
+                                    'this is not correct')
+        QMessageBox.information(mainwin, 'BIDS mapping workflow',
+                                f"The bidsmapper has finished scanning {rawfolder}\n\n"
+                                f"Please carefully check all the different BIDS output names "
+                                f"and BIDScoin options and (re)edit them to your needs.\n\n"
+                                f"You can always redo this step later by re-running the "
+                                f"bidsmapper or by just running the bidseditor tool")
 
-            LOGGER.info('Opening the bidseditor')
-            gui.setupUi(mainwin, bidsfolder, bidsmapfile, bidsmap_new, copy.deepcopy(bidsmap_new), template, dataformat, subprefix=subprefix, sesprefix=sesprefix)
-            mainwin.show()
-            app.exec()
+        LOGGER.info('Opening the bidseditor')
+        gui.setupUi(mainwin, bidsfolder, bidsmapfile, bidsmap_new, copy.deepcopy(bidsmap_new), template, dataformat, subprefix=subprefix, sesprefix=sesprefix)
+        mainwin.show()
+        app.exec()
     else:
         # Save the bidsmap in the bidscoinfolder
         bids.save_bidsmap(bidsmapfile, bidsmap_new)
