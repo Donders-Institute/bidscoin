@@ -950,7 +950,7 @@ class EditDialog(QDialog):
         buttonBox.button(QDialogButtonBox.Reset).setToolTip('Reset the edits you made')
         buttonBox.button(QDialogButtonBox.Ok).setToolTip('Apply the edits you made and close this window')
         buttonBox.button(QDialogButtonBox.Cancel).setToolTip('Discard the edits you made and close this window')
-        buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
+        buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDS specification for more info')
         buttonBox.accepted.connect(self.accept_run)
         buttonBox.rejected.connect(partial(self.reject, False))
         buttonBox.helpRequested.connect(self.get_help)
