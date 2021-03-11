@@ -897,7 +897,7 @@ class EditDialog(QDialog):
 
         # Set-up the BIDS table
         self.bids_label = QLabel()
-        self.bids_label.setText('Labels')
+        self.bids_label.setText('Entities')
         self.bids_table = self.set_table(data_bids, minimum=False)
         self.bids_table.setToolTip(f"The BIDS value that is used to construct the BIDS output name. You can freely change the value to be more meaningful and readable")
         self.bids_table.cellChanged.connect(self.bids_cell_changed)
