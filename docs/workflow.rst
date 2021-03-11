@@ -1,7 +1,7 @@
 The BIDScoin workflow
 =====================
 
-With a sufficiently `organized source data folder <preparation.html>`__, the data conversion to BIDS can be performed by running the `(1a) <#step-1a-running-the-bidsmapper>`__ the ``bidsmapper``, `(1b) <#step-1b-running-the-bidseditor>`__ the ``bidseditor`` and `(2) <#step-2-running-the-bidscoiner>`__ the ``bidscoiner`` command-line tools. The ``bidsmapper`` starts by making a map of the different kind of datatypes (scans) in your source dataset, which you can then edit with the ``bidseditor``. The ``bidscoiner`` reads this so-called study bidsmap, which tells it how exactly to convert the source data into BIDS.
+With a sufficiently `organized source data folder <preparation.html>`__, the data conversion to BIDS can be performed by running the `(1a) <#step-1a-running-the-bidsmapper>`__ the ``bidsmapper``, `(1b) <#step-1b-running-the-bidseditor>`__ the ``bidseditor`` and `(2) <#step-2-running-the-bidscoiner>`__ the ``bidscoiner`` command-line tools. The ``bidsmapper`` starts by making a map of the different kind of datatypes (scans) in your source dataset, which you can then edit with the ``bidseditor``. The ``bidscoiner`` reads this so-called study bidsmap, which tells it how exactly to convert ("coin") the source data into BIDS.
 
 .. figure:: ./_static/bidsmap_flow.png
 
