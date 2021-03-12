@@ -10,7 +10,7 @@ The bidseditor
 
 .. figure:: ./_static/bidseditor_edit.png
 
-   The edit window for customizing the individual bidsmap items (runs)
+   The edit window for customizing an individual bidsmap item (run)
 
 .. figure:: ./_static/bidseditor_options.png
    :scale: 60%
