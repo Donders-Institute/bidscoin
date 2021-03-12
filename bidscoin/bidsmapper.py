@@ -182,8 +182,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                 f" template={templatefile} subprefix={subprefix} sesprefix={sesprefix} store={store} interactive={interactive}")
 
     # Get the heuristics for filling the new bidsmap
-    bidsmap_old, _ = bids.load_bidsmap(bidsmapfile,  bidscoinfolder)
-    template, _    = bids.load_bidsmap(templatefile, bidscoinfolder)
+    bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile,  bidscoinfolder)
+    template, _              = bids.load_bidsmap(templatefile, bidscoinfolder)
 
     # Create the new bidsmap as a copy / bidsmap skeleton with no datatype entries (i.e. bidsmap with empty lists)
     if bidsmap_old:
@@ -198,6 +198,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     # Start with an empty skeleton if we didn't have an old bidsmap
     if not bidsmap_old:
         bidsmap_old = copy.deepcopy(bidsmap_new)
+        bidsmapfile = bidscoinfolder/'bidsmap.yaml'
 
     # Start the Qt-application
     gui = interactive
@@ -287,7 +288,6 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         LOGGER.warning('Could not determine the dataformat of the source data')
 
     # (Re)launch the bidseditor UI_MainWindow
-    bidsmapfile = bidscoinfolder/'bidsmap.yaml'
     if gui:
         if not dataformat:
             dataformat = 'DICOM'
