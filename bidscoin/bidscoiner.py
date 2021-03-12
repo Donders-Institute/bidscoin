@@ -185,7 +185,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
 
                     # Patch the phase entity in the newbidsname with the dcm2niix mag/phase info
                     if bids.get_bidsvalue(newbidsname, 'part'):                                                 # e.g. part: ['', 'mag', 'phase', 'real', 'imag', 0]
-                        if postfix[0:2]=='ph':
+                        if postfix=='ph':
                             newbidsname = bids.get_bidsvalue(newbidsname, 'part', 'phase')
                         if postfix=='real':
                             newbidsname = bids.get_bidsvalue(newbidsname, 'part', 'real')
