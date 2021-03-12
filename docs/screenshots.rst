@@ -6,14 +6,13 @@ The bidseditor
 
 .. figure:: ./_static/bidseditor_main.png
 
-   The main window with the bidsmap overview
+   The main window with an overview of all the bidsmap items (runs)
 
 .. figure:: ./_static/bidseditor_edit.png
 
-   The edit window for customizing the individual bidsmap entries
+   The edit window for customizing the individual bidsmap items (runs)
 
 .. figure:: ./_static/bidseditor_options.png
    :scale: 60%
 
    The options window with BIDScoin settings
-
