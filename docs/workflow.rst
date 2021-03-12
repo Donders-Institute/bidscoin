@@ -139,7 +139,7 @@ The user can click the ``Edit`` button for each list item to open a new edit win
 
 .. figure:: ./_static/bidseditor_edit.png
 
-   The edit window for customizing an individual bidsmap run item, showing the ``acq`` value being set to ``phantom``
+   The edit window for customizing a bidsmap run item, showing the ``acq`` value being set to ``phantom``
 
 Finally, if all BIDS output names in the main window are fine, the user can click on the ``Save`` button and proceed with running the bidscoiner tool. Note that the bidsmapper and bidseditor don't do anything except reading from and writing to the ``bidsmap.yaml`` file.
 
