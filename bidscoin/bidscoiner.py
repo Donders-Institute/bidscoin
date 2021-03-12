@@ -183,6 +183,15 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                             echonr = 1
                         newbidsname = bids.get_bidsvalue(newbidsname, 'echo', str(echonr))                      # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
 
+                    # Patch the phase entity in the newbidsname with the dcm2niix mag/phase info
+                    if bids.get_bidsvalue(newbidsname, 'part'):                                                 # e.g. part: ['', 'mag', 'phase', 'real', 'imag', 0]
+                        if postfix[0:2]=='ph':
+                            newbidsname = bids.get_bidsvalue(newbidsname, 'part', 'phase')
+                        if postfix=='real':
+                            newbidsname = bids.get_bidsvalue(newbidsname, 'part', 'real')
+                        if postfix=='imaginary':
+                            newbidsname = bids.get_bidsvalue(newbidsname, 'part', 'imag')
+
                     # Patch fieldmap images (NB: datatype=='fmap' is too broad, see the fmap.yaml file)
                     elif run['bids']['suffix'] in ('magnitude','magnitude1','magnitude2','phase1','phase2','phasediff','fieldmap'):
                         if len(dcm2niixfiles) not in (0, 2, 4, 6, 8):                                           # Phase / echo data may be stored in the same data source / run folder
