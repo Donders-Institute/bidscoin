@@ -6,11 +6,11 @@ The bidseditor
 
 .. figure:: ./_static/bidseditor_main.png
 
-   The main window with an overview of all the bidsmap items (runs)
+   The main window with an overview of all the bidsmap run items
 
 .. figure:: ./_static/bidseditor_edit.png
 
-   The edit window for customizing an individual bidsmap item (run)
+   The edit window for customizing an individual bidsmap run item, showing the ``acq`` value being set to ``phantom``
 
 .. figure:: ./_static/bidseditor_options.png
    :scale: 60%

@@ -133,13 +133,13 @@ As shown below, the main window of the bidseditor opens with the ``BIDS map`` ta
 
 .. figure:: ./_static/bidseditor_main.png
 
-   The main window with an overview of all the bidsmap items (runs)
+   The main window with an overview of all the bidsmap run items
 
 The user can click the ``Edit`` button for each list item to open a new edit window, as show below. In this interface, the right BIDS ``Modality`` (drop down menu) and the ``suffix`` label (drop down menu) can set correctly, after which the associated BIDS ``Entities`` can be edited (double click black items). As a result, the new BIDS ``Output name`` is then shown in the bottom text field (green text indicates that the name is BIDS valid). This is a preview of the BIDS output data, if that looks satisfactory, the user can store this mapping to the bidsmap and return to the main window by clicking the ``OK`` button. Editing the source attributes of a study bidsmap is usually not necessary and adviced against. See `The bidsmap explained <bidsmap.html#special-features>`__ for more explanation about the special bidsmap feautures.
 
 .. figure:: ./_static/bidseditor_edit.png
 
-   The edit window for customizing an individual bidsmap item (run)
+   The edit window for customizing an individual bidsmap run item, showing the ``acq`` value being set to ``phantom``
 
 Finally, if all BIDS output names in the main window are fine, the user can click on the ``Save`` button and proceed with running the bidscoiner tool. Note that the bidsmapper and bidseditor don't do anything except reading from and writing to the ``bidsmap.yaml`` file.
 
