@@ -4,7 +4,7 @@ Advanced usage
 Site specific / customized template
 -----------------------------------
 
- The run-items in the default template bidsmap (named ``bidsmap_template.yaml``) have empty / non-matching source attributes, and therefore the ``bidsmapper`` will not make any guesses about BIDS datatypes and run-items. As a result, it will classify all runs as ``extra_data``, leaving all the subsequent ``bidseditor`` decision making to the user. One alternative is to use the much more intelligent ``bidsmap_dccn.yaml`` template bidsmap. This bidsmap may work much better but it may also make wrong suggestions, since it is tailored to the MR acquisitions at the Donders Institute. To improve that and to have BIDScoin convert your studies in a better way, you **may** consider creating and using your own customized template bidsmap.
+ The run-items in the default template bidsmap (named ``bidsmap_template.yaml``) have empty / non-matching source attributes, and therefore the bidsmapper will not make any guesses about BIDS datatypes and run-items. As a result, it will classify all runs as ``extra_data``, leaving all the subsequent bidseditor decision making to the user. One alternative is to use the much more intelligent ``bidsmap_dccn.yaml`` template bidsmap. This bidsmap may work much better but it may also make wrong suggestions, since it is tailored to the MR acquisitions at the Donders Institute. To improve that and to have BIDScoin convert your studies in a better way, you **may** consider creating and using your own customized template bidsmap.
 
 .. tip::
    To create your own template bidsmap you can probably best make a copy of the DCCN template (``[path_to_bidscoin]/heuristics/bidsmap_dccn.yaml``) as a starting point and adapt it to your needs. If you want to use different source attributes to improve run identifications, then beware that the attribute values should not vary between different repeats of the data acquision. Otherwise the number of run-items in the bidsmap will not be a shortlist of the different acquisition protocols in your study, but will become a lengthy list that is proportional to the number of subjects and sessions.
@@ -66,7 +66,7 @@ Editing the template
 Plugins
 -------
 
-BIDScoin has the option to import plugins to further automate / complete the conversion from source data to BIDS. The plugin takes is called each time the BIDScoin tool has finished processing a run or session, with arguments containing information about the run or session, as shown in the plugin example code below. The functions in the plugin module should be named ``bidsmapper_plugin`` to be called by ``bidsmapper`` and ``bidscoiner_plugin`` to be called by ``bidscoiner``.
+BIDScoin has the option to import plugins to further automate / complete the conversion from source data to BIDS. The plugin takes is called each time the BIDScoin tool has finished processing a run or session, with arguments containing information about the run or session, as shown in the plugin example code below. The functions in the plugin module should be named ``bidsmapper_plugin`` to be called by bidsmapper and ``bidscoiner_plugin`` to be called by bidscoiner.
 
 .. code-block:: python3
 

@@ -1,7 +1,7 @@
 The BIDScoin workflow
 =====================
 
-With a sufficiently `organized source data folder <preparation.html>`__, the data conversion to BIDS can be performed by running the `(1a) <#step-1a-running-the-bidsmapper>`__ the ``bidsmapper``, `(1b) <#step-1b-running-the-bidseditor>`__ the ``bidseditor`` and `(2) <#step-2-running-the-bidscoiner>`__ the ``bidscoiner`` command-line tools. The ``bidsmapper`` starts by making a map of the different kind of datatypes (scans) in your source dataset, which you can then edit with the ``bidseditor``. The ``bidscoiner`` reads this so-called study bidsmap, which tells it how exactly to convert ("coin") the source data into a BIDS data repository.
+With a sufficiently `organized source data folder <preparation.html>`__, the data conversion to BIDS can be performed by running the `(1a) <#step-1a-running-the-bidsmapper>`__ the ``bidsmapper``, `(1b) <#step-1b-running-the-bidseditor>`__ the ``bidseditor`` and `(2) <#step-2-running-the-bidscoiner>`__ the ``bidscoiner`` command-line tools. The bidsmapper starts by making a map of the different kind of datatypes (scans) in your source dataset, which you can then edit with the bidseditor. The bidscoiner reads this so-called study bidsmap, which tells it how exactly to convert ("coin") the source data into a BIDS data repository.
 
 .. figure:: ./_static/bidsmap_flow.png
 
@@ -14,7 +14,7 @@ By default (but see the ``-i`` option of the bidsmapper below), step 1a automati
     $ bidsmapper sourcefolder bidsfolder
     $ bidscoiner sourcefolder bidsfolder
 
-If you add new subjects all you need to do is re-run the ``bidscoiner`` -- unless the scan protocol was changed, then you also need to first re-run the ``bidsmapper`` to add the new samples to the study bidsmap.
+If you add new subjects all you need to do is re-run the bidscoiner -- unless the scan protocol was changed, then you also need to first re-run the bidsmapper to add the new samples to the study bidsmap.
 
 Step 1a: Running the bidsmapper
 -------------------------------
@@ -133,7 +133,7 @@ As shown below, the main window of the bidseditor opens with the ``BIDS map`` ta
 
 \ |Bidseditor main window|\
 
-The user can click the ``Edit`` button for each list item to open a new edit window, as show below. In this interface, the right BIDS ``Modality`` (drop down menu) and the ``suffix`` label (drop down menu) can set correctly, after which the associated BIDS ``Labels`` can be edited (double click black items). As a result, the new BIDS ``Output name`` is then shown in the bottom text field. This is a preview of the BIDS output data, if that looks satisfactory (NB: green text indicates that  BIDS valid), the user can store this mapping to the bidsmap and return to the main window by clicking the ``OK`` button. Editing the source attributes of a study bidsmap is usually not necessary and adviced against. See `The bidsmap explained <bidsmap.html#special-features>`__ for more explanation about the special bidsmap feautures.
+The user can click the ``Edit`` button for each list item to open a new edit window, as show below. In this interface, the right BIDS ``Modality`` (drop down menu) and the ``suffix`` label (drop down menu) can set correctly, after which the associated BIDS ``Entities`` can be edited (double click black items). As a result, the new BIDS ``Output name`` is then shown in the bottom text field (green text indicates that the name is BIDS valid). This is a preview of the BIDS output data, if that looks satisfactory, the user can store this mapping to the bidsmap and return to the main window by clicking the ``OK`` button. Editing the source attributes of a study bidsmap is usually not necessary and adviced against. See `The bidsmap explained <bidsmap.html#special-features>`__ for more explanation about the special bidsmap feautures.
 
 \ |Bidseditor edit window|\
 

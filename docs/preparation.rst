@@ -116,7 +116,7 @@ Data management utilities
 dicomsort
 ^^^^^^^^^
 
-The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-organized files (see `above <#required-source-data-structure>`__) into a 'seriesfolder' organization. This can be useful to organise your source data in a more convenient and human readable way, as DICOMDIR or flat DICOM directories can often be hard to comprehend. The BIDScoin tools will run ``dicomsort`` in a temporary folder if your data is not already organised in series-folders, so in principle you don't really need to run it yourself. Running ``dicomsort`` beforehand does, however, give you more flexibility in handling special cases that are not handled properly and it can also give you a speed benefit.
+The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-organized files (see `above <#required-source-data-structure>`__) into a 'seriesfolder' organization. This can be useful to organise your source data in a more convenient and human readable way, as DICOMDIR or flat DICOM directories can often be hard to comprehend. The BIDScoin tools will run icomsort in a temporary folder if your data is not already organised in series-folders, so in principle you don't really need to run it yourself. Running dicomsort beforehand does, however, give you more flexibility in handling special cases that are not handled properly and it can also give you a speed benefit.
 
 ::
 
