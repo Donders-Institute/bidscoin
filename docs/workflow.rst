@@ -131,11 +131,15 @@ Step 1b: Running the bidseditor
 
 As shown below, the main window of the bidseditor opens with the ``BIDS map`` tab that contains a list of ``input samples`` that uniquely represents all the different files that are present in the source folder, together with the associated ``BIDS output name``. The path in the ``BIDS output name`` is shown in red if the modality is not part of the BIDS standard, striked-out gray when the runs will be ignored in the conversion to BIDS, otherwise it is colored green. Double clicking the sample (DICOM) filename opens an inspection window with the full header information (double clicking sample filenames works throughout the GUI).
 
-\ |Bidseditor main window|\
+.. figure:: ./_static/bidseditor_main.png
+
+   The main window with an overview of all the bidsmap items (runs)
 
 The user can click the ``Edit`` button for each list item to open a new edit window, as show below. In this interface, the right BIDS ``Modality`` (drop down menu) and the ``suffix`` label (drop down menu) can set correctly, after which the associated BIDS ``Entities`` can be edited (double click black items). As a result, the new BIDS ``Output name`` is then shown in the bottom text field (green text indicates that the name is BIDS valid). This is a preview of the BIDS output data, if that looks satisfactory, the user can store this mapping to the bidsmap and return to the main window by clicking the ``OK`` button. Editing the source attributes of a study bidsmap is usually not necessary and adviced against. See `The bidsmap explained <bidsmap.html#special-features>`__ for more explanation about the special bidsmap feautures.
 
-\ |Bidseditor edit window|\
+.. figure:: ./_static/bidseditor_edit.png
+
+   The edit window for customizing the individual bidsmap items (runs)
 
 Finally, if all BIDS output names in the main window are fine, the user can click on the ``Save`` button and proceed with running the bidscoiner tool. Note that the bidsmapper and bidseditor don't do anything except reading from and writing to the ``bidsmap.yaml`` file.
 
@@ -212,6 +216,3 @@ Step 2: Running the bidscoiner
 
 .. note::
    The provenance of the produced BIDS data-sets is stored in the ``[bidsfolder]/code/bidscoin/bidscoiner.log`` file. This file is also very useful for debugging / tracking down bidscoin issues.
-
-.. |Bidseditor main window| image:: ./_static/bidseditor_main.png
-.. |Bidseditor edit window| image:: ./_static/bidseditor_edit.png
