@@ -216,7 +216,7 @@ def test_tooloptions(tool: str, opts: dict) -> Union[bool, None]:
     """
 
     if tool == 'dcm2niix':
-        command = f"{opts['path']}dcm2niix -h"
+        command = f"{opts['path']}dcm2niix -u"
     elif tool == 'bidsmapper':
         command = 'bidsmapper -v'
     elif tool in ('bidscoin', 'bidscoiner'):
