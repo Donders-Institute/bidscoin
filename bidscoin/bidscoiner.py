@@ -173,7 +173,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                 for postfix in postfixes:                                                                       # dcm2niix postfixes _c%d, _e%d and _ph (and any combination of these in that order) are for multi-coil data, multi-echo data and phase data
 
                     # Patch the echo entity in the newbidsname with the dcm2niix echo info                      # NB: We can't rely on the bids-entity info here because manufacturers can e.g. put multiple echos in one series / run-folder
-                    if postfix[0]=='e' and bids.get_bidsvalue(newbidsname, 'echo'):                             # NB: Check if postfix[0]=='e' uniquely refers to the right dcm2niixpostfix
+                    if bids.get_bidsvalue(newbidsname, 'echo') and postfix[0]=='e':                             # NB: Check if postfix[0]=='e' uniquely refers to the right dcm2niixpostfix
                         echonr = f"_{postfix}"                                                                  # E.g. echonr='_e1' or echonr='_pha'
                         for dcm2niixpostfix in dcm2niixpostfixes:
                             echonr = echonr.replace(dcm2niixpostfix,'')                                         # Strip the dcm2niixpostfix to keep the echonr info. E.g. [echonr='_e1' or echonr='_pha'] -> [echonr='1' or echonr='a']
@@ -186,7 +186,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     # Patch the phase entity in the newbidsname with the dcm2niix mag/phase info
                     if bids.get_bidsvalue(newbidsname, 'part'):                                                 # e.g. part: ['', 'mag', 'phase', 'real', 'imag', 0]
                         if postfix=='ph':
-                            newbidsname = bids.get_bidsvalue(newbidsname, 'part', 'phase')
+                            newbidsname = bids.get_bidsvalue(newbidsname, 'part', 'phase')                      # TODO: Check & inform the user about this?
                         if postfix=='real':
                             newbidsname = bids.get_bidsvalue(newbidsname, 'part', 'real')
                         if postfix=='imaginary':

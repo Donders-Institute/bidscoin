@@ -716,14 +716,41 @@ DICOM:
       suffix: TB1AFI
       IntendedFor: ~
   - provenance: ~
-    attributes: *fmap_dicomattr
+    attributes:
+      <<: *fmap_dicomattr
+      SeriesDescription: ['*b1map*', '*B1map*']
+      SequenceName: '*tfl*'
+      ImageType: 'FLIP ANGLE MAP'
     bids:
-      <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml & https://bids-specification.readthedocs.io/en/stable/99-appendices/11-qmri.html#tb1tfl-and-tb1rfm-specific-notes
+      acq: famp
       suffix: TB1TFL
   - provenance: ~
-    attributes: *fmap_dicomattr
+    attributes:
+      <<: *fmap_dicomattr
+      SeriesDescription: ['*b1map*', '*B1map*']
+      SequenceName: '*tfl*'
+      ImageType: M
     bids:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      acq: anat
+      suffix: TB1TFL
+  - provenance: ~
+    attributes:
+      <<: *fmap_dicomattr
+      SeriesDescription: ['*rf*map*', '*RF*map*']
+      ImageType: M
+    bids:
+      <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      acq: anat
+      suffix: TB1RFM
+  - provenance: ~
+    attributes:
+      <<: *fmap_dicomattr
+      SeriesDescription: ['*rf*map*', '*RF*map*']
+    bids:
+      <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      acq: famp
       suffix: TB1RFM
   - provenance: ~
     attributes: *fmap_dicomattr
