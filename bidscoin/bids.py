@@ -808,9 +808,9 @@ def add_prefix(prefix: str, tag: str) -> str:
     """
     Simple function to account for optional BIDS tags in the bids file names, i.e. it prefixes 'prefix' only when tag is not empty
 
-    :param prefix:  The prefix (e.g. '_sub-')
-    :param tag:     The tag (e.g. 'control01')
-    :return:        The tag with the leading prefix (e.g. '_sub-control01') or just the empty tag ''
+    :param prefix:  The prefix (e.g. '_ses-')
+    :param tag:     The tag (e.g. 'medication')
+    :return:        The tag with the leading prefix (e.g. '_ses-medication') or just the empty tag ''
     """
 
     if tag:
@@ -1327,25 +1327,21 @@ def get_derivatives(datatype: str) -> list:
         return []
 
 
-def get_bidsname(subid: str, sesid: str, run: dict, subprefix: str= 'sub-', sesprefix: str= 'ses-') -> str:
+def get_bidsname(subid: str, sesid: str, run: dict) -> str:
     """
     Composes a filename as it should be according to the BIDS standard using the BIDS keys in run
 
-    :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001'). Can be left empty
+    :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001')
     :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01'). Can be left empty
     :param run:         The run mapping with the BIDS key-value pairs
-    :param subprefix:   The optional subprefix (e.g. 'sub-'). Used to parse the sub-value from the provenance as default subid
-    :param sesprefix:   The optional sesprefix (e.g. 'ses-'). If it is found in the provenance then a default sesid will be set
     :return:            The composed BIDS file-name (without file-extension)
     """
 
     # Try to update the sub/ses-ids
-    if run['provenance']:
-        subid, sesid = get_subid_sesid(Path(run['provenance']), subid, sesid, subprefix, sesprefix)
     if not subid.startswith('sub-'):
-        subid = f"sub-{subid}"
+        subid = f"sub-{cleanup_value(subid)}"
     if sesid and not sesid.startswith('ses-'):
-        sesid = f"ses-{sesid}"
+        sesid = f"ses-{cleanup_value(sesid)}"
 
     # Compose the bidsname
     bidsname = f"{subid}{add_prefix('_', sesid)}"
@@ -1354,9 +1350,9 @@ def get_bidsname(subid: str, sesid: str, run: dict, subprefix: str= 'sub-', sesp
         if isinstance(bidsvalue, list):
             bidsvalue = bidsvalue[bidsvalue[-1]]    # Get the selected item
         else:
-            bidsvalue = cleanup_value(get_dynamic_value(bidsvalue, Path(run['provenance'])))
+            bidsvalue = get_dynamic_value(bidsvalue, Path(run['provenance']))
         if bidsvalue:
-            bidsname = f"{bidsname}_{entities[entity]['entity']}-{bidsvalue}"
+            bidsname = f"{bidsname}_{entities[entity]['entity']}-{cleanup_value(bidsvalue)}"
     bidsname = f"{bidsname}{add_prefix('_', run['bids']['suffix'])}"
 
     return bidsname

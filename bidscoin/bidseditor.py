@@ -602,14 +602,16 @@ class Ui_MainWindow(MainWindow):
 
             if not runs: continue
             for run in runs:
-                provenance = Path(run['provenance'])
-                ordered_file_index = self.ordered_file_index[provenance]
-                bidsname = bids.get_bidsname(output_bidsmap[self.dataformat]['subject'], output_bidsmap[self.dataformat]['session'],
-                                             run, self.subprefix, self.sesprefix)
-                subid, sesid = bids.get_subid_sesid(provenance)
-                session = self.bidsfolder/subid/sesid
+                provenance   = Path(run['provenance'])
+                subid, sesid = bids.get_subid_sesid(provenance,
+                                                    output_bidsmap[self.dataformat]['subject'],
+                                                    output_bidsmap[self.dataformat]['session'],
+                                                    self.subprefix, self.sesprefix)
+                bidsname     = bids.get_bidsname(subid, sesid, run)
+                session      = self.bidsfolder/subid/sesid
+                row_index    = self.ordered_file_index[provenance]
 
-                samples_table.setItem(idx, 0, QTableWidgetItem(f"{ordered_file_index+1:03d}"))
+                samples_table.setItem(idx, 0, QTableWidgetItem(f"{row_index+1:03d}"))
                 samples_table.setItem(idx, 1, QTableWidgetItem(provenance.name))
                 samples_table.setItem(idx, 2, QTableWidgetItem(datatype))                           # Hidden column
                 samples_table.setItem(idx, 3, QTableWidgetItem(str(Path(datatype)/bidsname) + '.*'))
@@ -853,13 +855,15 @@ class EditDialog(QDialog):
         self.source_bidsmap   = bidsmap
         self.target_bidsmap   = copy.deepcopy(bidsmap)
         self.template_bidsmap = template_bidsmap
-        self.subprefix        = subprefix
-        self.sesprefix        = sesprefix
         for run in bidsmap[self.dataformat][datatype]:
             if run['provenance'] == str(provenance):
                 self.source_run = run
         self.target_run = copy.deepcopy(self.source_run)
         self.get_allowed_suffixes()
+        self.subid, self.sesid = bids.get_subid_sesid(Path(self.source_run['provenance']),
+                                                      bidsmap[dataformat]['subject'],
+                                                      bidsmap[dataformat]['session'],
+                                                      subprefix, sesprefix)
 
         # Set-up the window
         icon = QtGui.QIcon()
@@ -1164,8 +1168,7 @@ class EditDialog(QDialog):
 
     def refresh_bidsname(self):
         """Updates the bidsname with the current (edited) bids values"""
-        bidsname = (Path(self.target_datatype)/bids.get_bidsname(self.target_bidsmap[self.dataformat]['subject'], self.target_bidsmap[self.dataformat]['session'],
-                                                                 self.target_run, self.subprefix, self.sesprefix)).with_suffix('.*')
+        bidsname = (Path(self.target_datatype)/bids.get_bidsname(self.subid, self.sesid, self.target_run)).with_suffix('.*')
 
         font = self.view_bids_name.font()
         if self.target_datatype==bids.unknowndatatype:
