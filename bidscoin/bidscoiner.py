@@ -184,7 +184,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                         newbidsname = bids.get_bidsvalue(newbidsname, 'echo', str(echonr))                      # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
 
                     # Patch the phase entity in the newbidsname with the dcm2niix mag/phase info
-                    if bids.get_bidsvalue(newbidsname, 'part'):                                                 # e.g. part: ['', 'mag', 'phase', 'real', 'imag', 0]
+                    elif 'part' in run['bids'] and postfix in ('ph','real','imaginary'):                        # e.g. part: ['', 'mag', 'phase', 'real', 'imag', 0]
                         if postfix=='ph':
                             newbidsname = bids.get_bidsvalue(newbidsname, 'part', 'phase')                      # TODO: Check & inform the user about this?
                         if postfix=='real':
