@@ -971,9 +971,7 @@ def append_run(bidsmap: dict, dataformat: str, datatype: str, run: dict, clean: 
 
     # Copy the values from the run to an empty dict
     if clean:
-        run_ = dict(provenance='', attributes={}, bids={})
-
-        run_['provenance'] = run['provenance']
+        run_ = dict(provenance=run['provenance'], attributes={}, bids={})
 
         for key, value in run['attributes'].items():
             run_['attributes'][key] = value
@@ -1230,8 +1228,8 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
     if not dataformat:
         dataformat = get_dataformat(sourcefile)
 
-    # Loop through all bidsdatatypes and runs; all info goes into run_
-    run_ = dict(provenance='', attributes={}, bids={})
+    # Loop through all bidsdatatypes and runs; all info goes cleanly into run_ (to avoid formatting problem of the CommentedMap)
+    run_ = dict(provenance=str(sourcefile.resolve()), attributes={}, bids={})
     for datatype in (ignoredatatype,) + bidsdatatypes + (unknowndatatype,):                                 # The datatypes in which a matching run is searched for
 
         runs = bidsmap.get(dataformat, {}).get(datatype, [])
@@ -1239,10 +1237,10 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
             runs = []
         for index, run in enumerate(runs):
 
-            run_  = dict(provenance='', attributes={}, bids={})                                             # The CommentedMap API is not guaranteed for the future so keep this line as an alternative
             match = any([run['attributes'][attrkey] is not None for attrkey in run['attributes']])          # Normally match==True, but make match==False if all attributes are empty
 
             # Try to see if the sourcefile matches all of the attributes and fill all of them
+            run_['attributes'] = {}
             for attrkey, attrvalue in run['attributes'].items():
 
                 # Check if the attribute value matches with the info from the sourcefile
@@ -1254,6 +1252,7 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
                 run_['attributes'][attrkey] = sourcevalue
 
             # Try to fill the bids-labels
+            run_['bids'] = {}
             for bidskey, bidsvalue in run['bids'].items():
 
                 # Replace the dynamic bids values
@@ -1264,14 +1263,10 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
 
             # Stop searching the bidsmap if we have a match
             if match:
-                run_['provenance'] = str(sourcefile.resolve())
-
                 return run_, datatype, index
 
     # We don't have a match (all tests failed, so datatype should be the *last* one, i.e. unknowndatatype)
     logger.debug(f"Could not find a matching run in the bidsmap for {sourcefile} -> {datatype}")
-    run_['provenance'] = str(sourcefile.resolve())
-
     return run_, datatype, None
 
 
@@ -1454,6 +1449,45 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') ->
     # Or just return the parsed old bidsvalue
     else:
         return oldvalue
+
+
+def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') -> Union[Path, str]:
+    """
+    Inserts or replaces the bids key-label pair into the bidsfile
+
+    :param bidsfile:    The bidsname (e.g. as returned from get_bidsname or fullpath)
+    :param bidskey:     The name of the new bidskey, e.g. 'echo' or 'suffix'
+    :param newvalue:    The value of the new bidskey
+    :return:            The bidsname with the new bids key-value pair
+    """
+
+    bidspath = Path(bidsfile).parent
+    bidsname = Path(bidsfile).with_suffix('').stem
+    bidsext  = ''.join(Path(bidsfile).suffixes)
+
+    run   = dict(provenance='', attributes={}, bids={})
+    sesid = ''
+    # Parse the key-value pairs
+    for keyval in bidsname.split('_'):
+        if '-' in keyval:
+            key, val = keyval.split('-', 1)
+            if key=='sub':
+                subid = keyval
+            elif key=='ses':
+                sesid = keyval
+            else:
+                run['bids'][key] = val
+        else:
+            run['bids']['suffix'] = keyval
+
+    # Insert the key-value pair
+    run['bids'][bidskey] = newvalue
+
+    newbidsfile = (bidspath/get_bidsname(subid, sesid, run)).with_suffix(bidsext)
+
+    if isinstance(bidsfile, str):
+        newbidsfile = str(newbidsfile)
+    return newbidsfile
 
 
 def increment_runindex(bidsfolder: Path, bidsname: str, ext: str='.*') -> Union[Path, str]:

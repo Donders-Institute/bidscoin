@@ -173,24 +173,22 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                 for postfix in postfixes:                                                                       # dcm2niix postfixes _c%d, _e%d and _ph (and any combination of these in that order) are for multi-coil data, multi-echo data and phase data
 
                     # Patch the echo entity in the newbidsname with the dcm2niix echo info                      # NB: We can't rely on the bids-entity info here because manufacturers can e.g. put multiple echos in one series / run-folder
-                    if bids.get_bidsvalue(newbidsname, 'echo') and postfix[0]=='e':                             # NB: Check if postfix[0]=='e' uniquely refers to the right dcm2niixpostfix
-                        echonr = f"_{postfix}"                                                                  # E.g. echonr='_e1' or echonr='_pha'
-                        for dcm2niixpostfix in dcm2niixpostfixes:
-                            echonr = echonr.replace(dcm2niixpostfix,'')                                         # Strip the dcm2niixpostfix to keep the echonr info. E.g. [echonr='_e1' or echonr='_pha'] -> [echonr='1' or echonr='a']
+                    if 'echo' in run['bids'] and postfix.startswith(('e','ph')):
+                        echonr = f"_{postfix}".replace('_e','').replace('_ph','')                               # E.g. postfix='e1' or postfix='pha'
                         if echonr.isalpha():
                             echonr = ord(echonr) - 95                                                           # dcm2niix adds an alphabetically ordered character if it outputs more than one image with the same name. Convert character to echo-number: '' -> 1, 'a'->2, etc
                         elif not echonr:
                             echonr = 1
-                        newbidsname = bids.get_bidsvalue(newbidsname, 'echo', str(echonr))                      # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
+                        newbidsname = bids.insert_bidskeyval(newbidsname, 'echo', str(echonr))                  # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
 
                     # Patch the phase entity in the newbidsname with the dcm2niix mag/phase info
                     elif 'part' in run['bids'] and postfix in ('ph','real','imaginary'):                        # e.g. part: ['', 'mag', 'phase', 'real', 'imag', 0]
                         if postfix=='ph':
-                            newbidsname = bids.get_bidsvalue(newbidsname, 'part', 'phase')                      # TODO: Check & inform the user about this?
+                            newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'phase')
                         if postfix=='real':
-                            newbidsname = bids.get_bidsvalue(newbidsname, 'part', 'real')
+                            newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'real')
                         if postfix=='imaginary':
-                            newbidsname = bids.get_bidsvalue(newbidsname, 'part', 'imag')
+                            newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'imag')
 
                     # Patch fieldmap images (NB: datatype=='fmap' is too broad, see the fmap.yaml file)
                     elif run['bids']['suffix'] in ('magnitude','magnitude1','magnitude2','phase1','phase2','phasediff','fieldmap'):
@@ -292,7 +290,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
     scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
-    # Add IntendedFor and TE1+TE2 meta-data to the fieldmap json-files. This has been postponed untill all datatypes have been processed (i.e. so that all target images are indeed on disk)
+    # Add IntendedFor and TE1+TE2 meta-data to the fieldmap json-files. This has been postponed until all datatypes have been processed (i.e. so that all target images are indeed on disk)
     if bidsmap[dataformat]['fmap'] is not None:
         for fieldmap in bidsmap[dataformat]['fmap']:
             bidsname    = bids.get_bidsname(subid, sesid, fieldmap)
@@ -311,17 +309,17 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
             else:
                 intendedfor = []
 
-            # Get the set of json-files (account for multiple runs in one data source and dcm2niix postfixes inserted into the acquisition label)
+            # Get the set of json-files (account for multiple images in one run and dcm2niix postfixes inserted into the acquisition label)
             jsonfiles = []
             acqlabel  = bids.get_bidsvalue(bidsname, 'acq')
-            patterns  = (bidsname.replace('_run-1_',     '_run-[0-9]*_').
+            patterns  = (bidsname.replace('_run-1_',     '_run-[0-9]*_').       # Catch all magnitude and
                                   replace('_magnitude1', '_magnitude*').
                                   replace('_magnitude2', '_magnitude*').
                                   replace('_phase1',     '_phase*').
                                   replace('_phase2',     '_phase*'),
                          bidsname.replace('_run-1_',     '_run-[0-9]*_').
                                   replace('_magnitude1', '_phase*').
-                                  replace('_magnitude2', '_phase*'))
+                                  replace('_magnitude2', '_phase*'))            # TODO: include the new BIDS v1.5 fieldmaps
             for pattern in patterns:
                 jsonfiles.extend((bidsses/'fmap').glob(pattern  + '.json'))
                 if acqlabel:
