@@ -193,7 +193,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     # Patch fieldmap images (NB: datatype=='fmap' is too broad, see the fmap.yaml file)
                     elif run['bids']['suffix'] in ('magnitude','magnitude1','magnitude2','phase1','phase2','phasediff','fieldmap'):
                         if len(dcm2niixfiles) not in (0, 1, 2, 4, 6, 8):                                        # Phase / echo data may be stored in the same data source / run folder
-                            LOGGER.warning(f"Unknown fieldmap {outfolder/bidsname} for '{postfix}'")
+                            LOGGER.debug(f"Unknown fieldmap {outfolder/bidsname} for '{postfix}'")
                         newbidsname = newbidsname.replace('_fieldmap_ph',    '_fieldmap')
                         newbidsname = newbidsname.replace('_magnitude_e1',   '_magnitude')
                         newbidsname = newbidsname.replace('_magnitude_ph',   '_fieldmap')
