@@ -223,7 +223,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     newbidsname = newbidsname.replace(f"_{postfix}_",'_')                                       # If it is not last
                     newbidsname = newbidsname.replace(f"_{postfix}.",'.')                                       # If it is last
 
-                # Save the file with a new name
+                # Save the nifti file with a new name
                 if runindex.startswith('<<') and runindex.endswith('>>'):
                     newbidsname = bids.increment_runindex(outfolder, newbidsname, '')                           # Update the runindex now that the acq-label has changed
                 newbidsfile = outfolder/newbidsname
@@ -243,7 +243,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     if newjsonfile not in jsonfiles:
                         jsonfiles.append(newjsonfile)
                 for oldfile in outfolder.glob(dcm2niixfile.with_suffix('').with_suffix('.*').name):
-                    oldfile.replace(newjsonfile.with_suffix(oldfile.suffix))
+                    oldfile.replace(newjsonfile.with_suffix(''.join(oldfile.suffixes)))
 
         # Loop over and adapt all the newly produced json files and write to the scans.tsv file (NB: assumes every nifti-file comes with a json-file)
         for jsonfile in sorted(set(jsonfiles)):
