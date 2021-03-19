@@ -165,7 +165,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
 
             # Rename all files that got additional postfixes from dcm2niix. See: https://github.com/rordenlab/dcm2niix/blob/master/FILENAMING.md
             dcm2niixpostfixes = ('_c', '_i', '_Eq', '_real', '_imaginary', '_MoCo', '_t', '_Tilt', '_e', '_ph')
-            dcm2niixfiles     = sorted(set([dcm2niixfile for dcm2niixpostfix in dcm2niixpostfixes for dcm2niixfile in outfolder.glob(f"{bidsname}*{dcm2niixpostfix}*")]))
+            dcm2niixfiles     = sorted(set([dcm2niixfile for dcm2niixpostfix in dcm2niixpostfixes for dcm2niixfile in outfolder.glob(f"{bidsname}*{dcm2niixpostfix}*.nii*")]))
             for dcm2niixfile in dcm2niixfiles:
                 ext         = ''.join(dcm2niixfile.suffixes)
                 postfixes   = str(dcm2niixfile).split(bidsname)[1].rsplit(ext)[0].split('_')[1:]
@@ -227,15 +227,17 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                 if runindex.startswith('<<') and runindex.endswith('>>'):
                     newbidsname = bids.increment_runindex(outfolder, newbidsname, '')                           # Update the runindex now that the acq-label has changed
                 newbidsfile = outfolder/newbidsname
+                newjsonfile = newbidsfile.with_suffix('').with_suffix('.json')
+                oldjsonfile = dcm2niixfile.with_suffix('.json')
                 LOGGER.info(f"Found dcm2niix {postfixes} postfixes, renaming\n{dcm2niixfile} ->\n{newbidsfile}")
                 if newbidsfile.is_file():
                     LOGGER.warning(f"Overwriting existing {newbidsfile} file -- check your results carefully!")
                 dcm2niixfile.replace(newbidsfile)
-                if ext == '.json':
-                    oldjsonfile = (outfolder/bidsname).with_suffix('.json')
-                    if oldjsonfile in jsonfiles and not oldjsonfile.is_file():
-                        jsonfiles.remove((outfolder/bidsname).with_suffix('.json'))
-                    jsonfiles.append(newbidsfile)
+                oldjsonfile.replace(newjsonfile)
+                if newjsonfile not in jsonfiles:
+                    jsonfiles.append(newjsonfile)
+                if oldjsonfile in jsonfiles:
+                    jsonfiles.remove(oldjsonfile)
 
         # Loop over and adapt all the newly produced json files and write to the scans.tsv file (every nifti-file comes with a json-file)
         for jsonfile in sorted(set(jsonfiles)):
