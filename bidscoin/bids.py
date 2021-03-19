@@ -1463,9 +1463,9 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str=''
     bidsname = Path(bidsfile).with_suffix('').stem
     bidsext  = ''.join(Path(bidsfile).suffixes)
 
-    run   = dict(provenance='', attributes={}, bids={})
+    # Parse the key-value pairs and store all the run info
+    run   = dict(provenance='', attributes={}, bids={'suffix':''})
     sesid = ''
-    # Parse the key-value pairs and store all the info
     for keyval in bidsname.split('_'):
         if '-' in keyval:
             key, val = keyval.split('-', 1)
@@ -1476,11 +1476,19 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str=''
             else:
                 run['bids'][key] = val
         else:
-            run['bids']['suffix'] = keyval
+            run['bids']['suffix'] = f"{run['bids']['suffix']}_{keyval}"     # account for multiple suffixes (e.g. from dcm2niix)
+    if run['bids']['suffix'].startswith('_'):
+        run['bids']['suffix'] = run['bids']['suffix'][1:]
 
-    # Insert the key-value pair
-    run['bids'][bidskey] = newvalue
+    # Insert the key-value pair in the run
+    if bidskey=='sub':
+        subid = newvalue
+    elif bidskey=='ses':
+        sesid = newvalue
+    else:
+        run['bids'][bidskey] = newvalue
 
+    # Compose the new filename
     newbidsfile = (bidspath/get_bidsname(subid, sesid, run)).with_suffix(bidsext)
 
     if isinstance(bidsfile, str):
