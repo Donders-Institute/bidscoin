@@ -228,7 +228,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     newbidsname = bids.increment_runindex(outfolder, newbidsname, '')                           # Update the runindex now that the acq-label has changed
                 newbidsfile = outfolder/newbidsname
                 newjsonfile = newbidsfile.with_suffix('').with_suffix('.json')
-                oldjsonfile = dcm2niixfile.with_suffix('.json')
+                oldjsonfile = dcm2niixfile.with_suffix('').with_suffix('.json')
                 LOGGER.info(f"Found dcm2niix {postfixes} postfixes, renaming\n{dcm2niixfile} ->\n{newbidsfile}")
                 if newbidsfile.is_file():
                     LOGGER.warning(f"Overwriting existing {newbidsfile} file -- check your results carefully!")
