@@ -237,10 +237,10 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     LOGGER.warning(f"Unexpected file conversion result: {oldjsonfile} not found")
                 else:
                     oldjsonfile.replace(newjsonfile)
-                    if newjsonfile not in jsonfiles:
-                        jsonfiles.append(newjsonfile)
                     if oldjsonfile in jsonfiles:
                         jsonfiles.remove(oldjsonfile)
+                    if newjsonfile not in jsonfiles:
+                        jsonfiles.append(newjsonfile)
 
         # Loop over and adapt all the newly produced json files and write to the scans.tsv file (NB: assumes every nifti-file comes with a json-file)
         for jsonfile in sorted(set(jsonfiles)):
