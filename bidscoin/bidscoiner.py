@@ -227,12 +227,14 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                 if runindex.startswith('<<') and runindex.endswith('>>'):
                     newbidsname = bids.increment_runindex(outfolder, newbidsname, '')                           # Update the runindex now that the acq-label has changed
                 newbidsfile = outfolder/newbidsname
-                newjsonfile = newbidsfile.with_suffix('').with_suffix('.json')
-                oldjsonfile = dcm2niixfile.with_suffix('').with_suffix('.json')
                 LOGGER.info(f"Found dcm2niix {postfixes} postfixes, renaming\n{dcm2niixfile} ->\n{newbidsfile}")
                 if newbidsfile.is_file():
                     LOGGER.warning(f"Overwriting existing {newbidsfile} file -- check your results carefully!")
                 dcm2niixfile.replace(newbidsfile)
+
+                # Rename all associated files (i.e. the json-, bval- and bvec-files)
+                oldjsonfile = dcm2niixfile.with_suffix('').with_suffix('.json')
+                newjsonfile = newbidsfile.with_suffix('').with_suffix('.json')
                 if not oldjsonfile.is_file():
                     LOGGER.warning(f"Unexpected file conversion result: {oldjsonfile} not found")
                 else:
@@ -240,8 +242,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                         jsonfiles.remove(oldjsonfile)
                     if newjsonfile not in jsonfiles:
                         jsonfiles.append(newjsonfile)
-                # Rename all associated files (i.e. the json-, bval- and bvec-files)
-                for oldfile in dcm2niixfile.with_suffix('').with_suffix('*'):
+                for oldfile in dcm2niixfile.with_suffix('').with_suffix('.*'):
                     oldjsonfile.replace(newjsonfile.with_suffix(oldfile.suffix))
 
         # Loop over and adapt all the newly produced json files and write to the scans.tsv file (NB: assumes every nifti-file comes with a json-file)
