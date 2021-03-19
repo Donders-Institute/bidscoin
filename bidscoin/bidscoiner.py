@@ -245,8 +245,16 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                 LOGGER.error(f"Unexpected file conversion result: {jsonfile} not found")
                 continue
 
+            # Add the IntendedFor search data to the json-file (updated the after all data is converted)
+            if datatype == 'fmap':
+                with jsonfile.open('r') as json_fid:
+                    data = json.load(json_fid)
+                data['IntendedFor'] = run['bids']['IntendedFor']
+                with jsonfile.open('w') as json_fid:
+                    json.dump(data, json_fid, indent=4)
+
             # Add a dummy b0 bval- and bvec-file for any file without a bval/bvec file (e.g. sbref, b0 scans)
-            if datatype == 'dwi':
+            elif datatype == 'dwi':
                 bvecfile = jsonfile.with_suffix('.bvec')
                 bvalfile = jsonfile.with_suffix('.bval')
                 if not bvecfile.is_file():
@@ -290,83 +298,63 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
     scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
-    # Add IntendedFor and TE1+TE2 meta-data to the fieldmap json-files. This has been postponed until all datatypes have been processed (i.e. so that all target images are indeed on disk)
-    if bidsmap[dataformat]['fmap'] is not None:
-        for fieldmap in bidsmap[dataformat]['fmap']:
-            bidsname    = bids.get_bidsname(subid, sesid, fieldmap)
-            niifiles    = []
-            intendedfor = fieldmap['bids']['IntendedFor']
+    # Add IntendedFor search results and TE1+TE2 meta-data to the fieldmap json-files. This has been postponed until all datatypes have been processed (i.e. so that all target images are indeed on disk)
+    if (bidsses/'fmap').is_dir():
+
+        # Go over all json-files (to account for multiple images in one run and dcm2niix postfixes inserted into the bids labels) and save the meta-data
+        jsonfiles = sorted((bidsses/'fmap').glob('sub-*.json'))
+        for jsonfile in jsonfiles:
+
+            # Load the existing meta-data
+            with jsonfile.open('r') as json_fid:
+                jsondata = json.load(json_fid)
 
             # Search for the imaging files that match the IntendedFor search criteria
+            niifiles    = []
+            intendedfor = jsondata['IntendedFor']
+            del jsondata['IntendedFor']
             if intendedfor:
+                # Search with multiple patterns in all runs and store the relative path to the subject folder
                 if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
                     intendedfor = intendedfor[2:-2].split('><')
                 elif not isinstance(intendedfor, list):
                     intendedfor = [intendedfor]
                 for selector in intendedfor:
-                    niifiles.extend([Path(niifile).relative_to(bidsfolder/subid)
-                                     for niifile in sorted(bidsses.rglob(f"*{selector}*.nii*")) if selector])       # Search in all runs using a relative path to the subject folder
-            else:
-                intendedfor = []
-
-            # Get the set of json-files (account for multiple images in one run and dcm2niix postfixes inserted into the acquisition label)
-            jsonfiles = []
-            acqlabel  = bids.get_bidsvalue(bidsname, 'acq')
-            patterns  = (bidsname.replace('_run-1_',     '_run-[0-9]*_').       # Catch all magnitude and
-                                  replace('_magnitude1', '_magnitude*').
-                                  replace('_magnitude2', '_magnitude*').
-                                  replace('_phase1',     '_phase*').
-                                  replace('_phase2',     '_phase*'),
-                         bidsname.replace('_run-1_',     '_run-[0-9]*_').
-                                  replace('_magnitude1', '_phase*').
-                                  replace('_magnitude2', '_phase*'))            # TODO: include the new BIDS v1.5 fieldmaps
-            for pattern in patterns:
-                jsonfiles.extend((bidsses/'fmap').glob(pattern  + '.json'))
-                if acqlabel:
-                    cepattern = bids.get_bidsvalue(pattern, 'acq', acqlabel + '[CE][0-9]*')
-                    jsonfiles.extend(list((bidsses/'fmap').glob(cepattern + '.json')))
-
-            # Save the meta-data in the jsonfiles
-            for jsonfile in sorted(set(jsonfiles)):
+                    niifiles.extend([Path(niifile).relative_to(bidsfolder/subid) for niifile in sorted(bidsses.rglob(f"*{selector}*.nii*")) if selector])
 
                 # Add the IntendedFor data
-                with jsonfile.open('r') as json_fid:
-                    data = json.load(json_fid)
-                if 'IntendedFor' not in data:
-                    if niifiles:
-                        LOGGER.info(f"Adding IntendedFor to: {jsonfile}")
-                    elif intendedfor:
-                        LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the search for {intendedfor} gave no results")
-                    else:
-                        LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the IntendedFor value of the bidsmap entry was empty")
-                    data['IntendedFor'] = [niifile.as_posix() for niifile in niifiles]      # The path needs to use forward slashes instead of backward slashes
-                    with jsonfile.open('w') as json_fid:
-                        json.dump(data, json_fid, indent=4)
+                if niifiles:
+                    LOGGER.info(f"Adding IntendedFor to: {jsonfile}")
+                    jsondata['IntendedFor'] = [niifile.as_posix() for niifile in niifiles]  # The path needs to use forward slashes instead of backward slashes
+                elif intendedfor:
+                    LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the search for {intendedfor} gave no results")
+                else:
+                    LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the IntendedFor value of the bidsmap entry was empty")
 
-                # Extract the echo times from magnitude1 and magnitude2 and add them to the phasediff json-file
-                if jsonfile.name.endswith('phasediff.json'):
-                    json_magnitude = [None, None]
-                    TE             = [None, None]
-                    for n in (0,1):
-                        json_magnitude[n] = jsonfile.parent/jsonfile.name.replace('_phasediff', f"_magnitude{n+1}")
-                        if not json_magnitude[n].is_file():
-                            LOGGER.error(f"Could not find expected magnitude{n+1} image associated with: {jsonfile}")
-                        else:
-                            with json_magnitude[n].open('r') as json_fid:
-                                data = json.load(json_fid)
-                            TE[n] = data['EchoTime']
-                    if None in TE:
-                        LOGGER.error(f"Cannot find and add valid EchoTime1={TE[0]} and EchoTime2={TE[1]} data to: {jsonfile}")
-                    elif TE[0] > TE[1]:
-                        LOGGER.error(f"Found invalid EchoTime1={TE[0]} > EchoTime2={TE[1]} for: {jsonfile}")
+            # Extract the echo times from magnitude1 and magnitude2 and add them to the phasediff json-file
+            if jsonfile.name.endswith('phasediff.json'):
+                json_magnitude = [None, None]
+                TE             = [None, None]
+                for n in (0,1):
+                    json_magnitude[n] = jsonfile.parent/jsonfile.name.replace('_phasediff', f"_magnitude{n+1}")
+                    if not json_magnitude[n].is_file():
+                        LOGGER.error(f"Could not find expected magnitude{n+1} image associated with: {jsonfile}")
                     else:
-                        with jsonfile.open('r') as json_fid:
+                        with json_magnitude[n].open('r') as json_fid:
                             data = json.load(json_fid)
-                        data['EchoTime1'] = TE[0]
-                        data['EchoTime2'] = TE[1]
-                        LOGGER.info(f"Adding EchoTime1: {TE[0]} and EchoTime2: {TE[1]} to {jsonfile}")
-                        with jsonfile.open('w') as json_fid:
-                            json.dump(data, json_fid, indent=4)
+                        TE[n] = data['EchoTime']
+                if None in TE:
+                    LOGGER.error(f"Cannot find and add valid EchoTime1={TE[0]} and EchoTime2={TE[1]} data to: {jsonfile}")
+                elif TE[0] > TE[1]:
+                    LOGGER.error(f"Found invalid EchoTime1={TE[0]} > EchoTime2={TE[1]} for: {jsonfile}")
+                else:
+                    jsondata['EchoTime1'] = TE[0]
+                    jsondata['EchoTime2'] = TE[1]
+                    LOGGER.info(f"Adding EchoTime1: {TE[0]} and EchoTime2: {TE[1]} to {jsonfile}")
+
+            # Save the collected meta-data to disk
+            with jsonfile.open('w') as json_fid:
+                json.dump(jsondata, json_fid, indent=4)
 
     # Collect personal data from a source header (PAR/XML does not contain personal info)
     if dataformat=='DICOM' and sourcefile.name:

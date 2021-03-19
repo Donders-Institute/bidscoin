@@ -1324,7 +1324,8 @@ def get_derivatives(datatype: str) -> list:
 
 def get_bidsname(subid: str, sesid: str, run: dict) -> str:
     """
-    Composes a filename as it should be according to the BIDS standard using the BIDS keys in run
+    Composes a filename as it should be according to the BIDS standard using the BIDS keys in run. The bids values are
+    dynamically updated and cleaned, and invalid bids keys are ignored
 
     :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001')
     :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01'). Can be left empty
@@ -1426,13 +1427,10 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') ->
     # Replace the existing bidsvalue with the new value or append the newvalue to the acquisition value
     if newvalue:
         if f'_{bidskey}-' not in bidsname + 'suffix':
-            if '_acq-' not in bidsname:         # Insert the 'acq' key right after the sub/ses key-value pairs
-                keyval = bidsname.split('_')
-                if get_bidsvalue(bidsname, 'ses'):
-                    keyval.insert(2, 'acq-')
-                else:
-                    keyval.insert(1, 'acq-')
-                bidsname = '_'.join(keyval)
+            if '_acq-' not in bidsname:         # Insert the 'acq' key right after task, ses or sub key-value pair (i.e. order as in entities.yaml)
+                keyvals  = bidsname.split('_')
+                keyvals.insert(1 + ('_ses-' in bidsname) + ('_task-' in bidsname), 'acq-')
+                bidsname = '_'.join(keyvals)
             bidskey  = 'acq'
             oldvalue = acqvalue
             newvalue = f"{acqvalue}{newvalue}"
@@ -1467,7 +1465,7 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str=''
 
     run   = dict(provenance='', attributes={}, bids={})
     sesid = ''
-    # Parse the key-value pairs
+    # Parse the key-value pairs and store all the info
     for keyval in bidsname.split('_'):
         if '-' in keyval:
             key, val = keyval.split('-', 1)
