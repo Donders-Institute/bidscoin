@@ -1126,11 +1126,11 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, mat
     for run in bidsmap[dataformat][datatype]:
 
         # Begin with match = False only if all attributes are empty
-        match = any([run_item['attributes'][key] is not None for key in run_item['attributes']])
+        match = any([run_item['attributes'][key] not in [None,''] for key in run_item['attributes']])
 
         # Search for a case where all run_item items match with the run_item items
         for itemkey, itemvalue in run_item['attributes'].items():
-            value = run['attributes'].get(itemkey, None)    # Matching bids-labels which exist in one datatype but not in the other -> None
+            value = run['attributes'].get(itemkey)          # Matching bids-labels which exist in one datatype but not in the other -> None
             match = match and match_attribute(itemvalue, value)
             if not match:
                 break                                       # There is no point in searching further within the run_item now that we've found a mismatch
@@ -1138,7 +1138,7 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, mat
         # See if the bidskeys also all match. This is probably not very useful, but maybe one day...
         if matchbidslabels and match:
             for itemkey, itemvalue in run_item['bids'].items():
-                value = run['bids'].get(itemkey, None)      # Matching bids-labels which exist in one datatype but not in the other -> None
+                value = run['bids'].get(itemkey)            # Matching bids-labels which exist in one datatype but not in the other -> None
                 match = match and value==itemvalue
                 if not match:
                     break                                   # There is no point in searching further within the run_item now that we've found a mismatch
@@ -1237,7 +1237,7 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
             runs = []
         for index, run in enumerate(runs):
 
-            match = any([run['attributes'][attrkey] is not None for attrkey in run['attributes']])          # Normally match==True, but make match==False if all attributes are empty
+            match = any([run['attributes'][attrkey] not in [None,''] for attrkey in run['attributes']])     # Normally match==True, but make match==False if all attributes are empty
 
             # Try to see if the sourcefile matches all of the attributes and fill all of them
             run_['attributes'] = {}
