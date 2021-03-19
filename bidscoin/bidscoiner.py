@@ -242,7 +242,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                         jsonfiles.remove(oldjsonfile)
                     if newjsonfile not in jsonfiles:
                         jsonfiles.append(newjsonfile)
-                for oldfile in dcm2niixfile.with_suffix('').with_suffix('.*'):
+                for oldfile in outfolder.glob(dcm2niixfile.with_suffix('').with_suffix('.*').name):
                     oldjsonfile.replace(newjsonfile.with_suffix(oldfile.suffix))
 
         # Loop over and adapt all the newly produced json files and write to the scans.tsv file (NB: assumes every nifti-file comes with a json-file)
