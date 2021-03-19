@@ -233,21 +233,19 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                 if newbidsfile.is_file():
                     LOGGER.warning(f"Overwriting existing {newbidsfile} file -- check your results carefully!")
                 dcm2niixfile.replace(newbidsfile)
-                oldjsonfile.replace(newjsonfile)
-                if newjsonfile not in jsonfiles:
-                    jsonfiles.append(newjsonfile)
-                if oldjsonfile in jsonfiles:
-                    jsonfiles.remove(oldjsonfile)
+                if not oldjsonfile.is_file():
+                    LOGGER.warning(f"Unexpected file conversion result: {oldjsonfile} not found")
+                else:
+                    oldjsonfile.replace(newjsonfile)
+                    if newjsonfile not in jsonfiles:
+                        jsonfiles.append(newjsonfile)
+                    if oldjsonfile in jsonfiles:
+                        jsonfiles.remove(oldjsonfile)
 
-        # Loop over and adapt all the newly produced json files and write to the scans.tsv file (every nifti-file comes with a json-file)
+        # Loop over and adapt all the newly produced json files and write to the scans.tsv file (NB: assumes every nifti-file comes with a json-file)
         for jsonfile in sorted(set(jsonfiles)):
 
-            # Check if dcm2niix behaved as expected
-            if not jsonfile.is_file():
-                LOGGER.error(f"Unexpected file conversion result: {jsonfile} not found")
-                continue
-
-            # Add the IntendedFor search data to the json-file (updated the after all data is converted)
+            # Add the IntendedFor search data to the json-file (to be updated only after all session data is converted)
             if datatype == 'fmap':
                 with jsonfile.open('r') as json_fid:
                     data = json.load(json_fid)
