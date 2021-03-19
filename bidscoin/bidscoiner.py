@@ -249,7 +249,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
             if datatype == 'fmap':
                 with jsonfile.open('r') as json_fid:
                     data = json.load(json_fid)
-                data['IntendedFor'] = run['bids']['IntendedFor']
+                data['IntendedFor'] = run['bids'].get('IntendedFor')
                 with jsonfile.open('w') as json_fid:
                     json.dump(data, json_fid, indent=4)
 
@@ -311,8 +311,8 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
 
             # Search for the imaging files that match the IntendedFor search criteria
             niifiles    = []
-            intendedfor = jsondata['IntendedFor']
-            del jsondata['IntendedFor']
+            intendedfor = jsondata.get('IntendedFor')
+            jsondata.pop('IntendedFor', None)
             if intendedfor:
                 # Search with multiple patterns in all runs and store the relative path to the subject folder
                 if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
