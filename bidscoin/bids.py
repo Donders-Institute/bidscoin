@@ -1451,7 +1451,7 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') ->
 
 def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') -> Union[Path, str]:
     """
-    Inserts or replaces the bids key-label pair into the bidsfile
+    Inserts or replaces the bids key-label pair into the bidsfile. All invalid keys are removed from the name
 
     :param bidsfile:    The bidsname (e.g. as returned from get_bidsname or fullpath)
     :param bidskey:     The name of the new bidskey, e.g. 'echo' or 'suffix'
