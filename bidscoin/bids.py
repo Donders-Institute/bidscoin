@@ -60,7 +60,7 @@ def bidsversion() -> str:
     return str(value)
 
 
-def version(check: bool=False) -> str:
+def version(check: bool=False) -> Union[str, Tuple]:
     """
     Reads the BIDSCOIN version from the VERSION.TXT file and from pypi
 
@@ -73,13 +73,16 @@ def version(check: bool=False) -> str:
 
     # Check pypi for the latest version number
     if check:
-        stream = urllib.request.urlopen('https://pypi.org/pypi/bidscoin/json').read()
+        try:
+            stream = urllib.request.urlopen('https://pypi.org/pypi/bidscoin/json').read()
+        except urllib.error.HTTPError as exception:
+            return currentversion, "(Could not check for new BIDScoin versions)"
         data = json.loads(stream)
         pypiversion = data['info']['version']
         if currentversion != pypiversion:
-            print(f"NB: You are not using the latest BIDScoin version {pypiversion}")
+            return currentversion, f"NB: You are not using the latest BIDScoin version {pypiversion}"
         else:
-            print(f"You are using the latest BIDScoin version {pypiversion}")
+            return currentversion, "Your BIDScoin version is up-to-date :-)"
 
     return currentversion
 

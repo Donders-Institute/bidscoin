@@ -640,7 +640,7 @@ def main():
     parser.add_argument('-b','--bidsmap',           help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
     parser.add_argument('-n','--subprefix',         help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',         help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
-    parser.add_argument('-v','--version',           help='Show the BIDS and BIDScoin version', action='version', version=f"BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version(True)}")
+    parser.add_argument('-v','--version',           help='Show the BIDS and BIDScoin version', action='version', version=f"BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version()}")
     args = parser.parse_args()
 
     bidscoiner(rawfolder    = args.sourcefolder,
