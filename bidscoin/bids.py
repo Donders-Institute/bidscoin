@@ -13,6 +13,8 @@ import re
 import logging
 import coloredlogs
 import subprocess
+import urllib.request
+import json
 import nibabel
 import tempfile
 import tarfile
@@ -58,17 +60,28 @@ def bidsversion() -> str:
     return str(value)
 
 
-def version() -> str:
+def version(check: bool=False) -> str:
     """
-    Reads the BIDSCOIN version from the VERSION.TXT file
+    Reads the BIDSCOIN version from the VERSION.TXT file and from pypi
 
-    :return:    The BIDSCOIN version number
+    :param check:   Check if the current version is up-to-date
+    :return:        The current version number
     """
 
     with (Path(__file__).parent/'version.txt').open('r') as fid:
-        value = fid.read().strip()
+        currentversion = str(fid.read().strip())
 
-    return str(value)
+    # Check pypi for the latest version number
+    if check:
+        stream = urllib.request.urlopen('https://pypi.org/pypi/bidscoin/json').read()
+        data = json.loads(stream)
+        pypiversion = data['info']['version']
+        if currentversion != pypiversion:
+            print(f"NB: You are not using the latest BIDScoin version {pypiversion}")
+        else:
+            print(f"You are using the latest BIDScoin version {pypiversion}")
+
+    return currentversion
 
 
 def setup_logging(log_file: Path=Path(), debug: bool=False) -> logging.Logger:

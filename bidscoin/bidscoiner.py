@@ -242,7 +242,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                         jsonfiles.remove(oldjsonfile)
                     if newjsonfile not in jsonfiles:
                         jsonfiles.append(newjsonfile)
-                for oldfile in outfolder.glob(dcm2niixfile.with_suffix('').with_suffix('.*').name):
+                for oldfile in outfolder.glob(dcm2niixfile.with_suffix('').stem + '.*'):
                     oldfile.replace(newjsonfile.with_suffix(''.join(oldfile.suffixes)))
 
         # Loop over and adapt all the newly produced json files and write to the scans.tsv file (NB: assumes every nifti-file comes with a json-file)
@@ -303,10 +303,7 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
 
     # Add IntendedFor search results and TE1+TE2 meta-data to the fieldmap json-files. This has been postponed until all datatypes have been processed (i.e. so that all target images are indeed on disk)
     if (bidsses/'fmap').is_dir():
-
-        # Go over all json-files (to account for multiple images in one run and dcm2niix postfixes inserted into the bids labels) and save the meta-data
-        jsonfiles = sorted((bidsses/'fmap').glob('sub-*.json'))
-        for jsonfile in jsonfiles:
+        for jsonfile in sorted((bidsses/'fmap').glob('sub-*.json')):
 
             # Load the existing meta-data
             with jsonfile.open('r') as json_fid:
@@ -643,7 +640,7 @@ def main():
     parser.add_argument('-b','--bidsmap',           help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
     parser.add_argument('-n','--subprefix',         help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',         help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
-    parser.add_argument('-v','--version',           help='Show the BIDS and BIDScoin version', action='version', version=f"BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version()}")
+    parser.add_argument('-v','--version',           help='Show the BIDS and BIDScoin version', action='version', version=f"BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version(True)}")
     args = parser.parse_args()
 
     bidscoiner(rawfolder    = args.sourcefolder,
