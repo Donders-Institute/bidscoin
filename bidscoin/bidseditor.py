@@ -584,19 +584,23 @@ class Ui_MainWindow(MainWindow):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
 
         self.output_bidsmap = output_bidsmap  # input main window / output from edit window -> output main window
-        subses_table        = self.subses_table
-        samples_table       = self.samples_table
 
+        # Update the subject / session table
         subitem = myWidgetItem('subject', iseditable=False)
         subitem.setToolTip(bids.get_bidshelp('sub'))
         sesitem = myWidgetItem('session', iseditable=False)
         sesitem.setToolTip(bids.get_bidshelp('ses'))
+        subses_table = self.subses_table
         subses_table.setItem(0, 0, subitem)
         subses_table.setItem(1, 0, sesitem)
         subses_table.setItem(0, 1, myWidgetItem(self.output_bidsmap[self.dataformat]['subject']))
         subses_table.setItem(1, 1, myWidgetItem(self.output_bidsmap[self.dataformat]['session']))
 
+        # Update the run samples table
         idx = 0
+        samples_table = self.samples_table
+        samples_table.clearContents()
+        samples_table.blockSignals(True)
         samples_table.setSortingEnabled(False)
         for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
             runs = self.output_bidsmap.get(self.dataformat, {}).get(datatype, [])
@@ -655,6 +659,7 @@ class Ui_MainWindow(MainWindow):
                 idx += 1
 
         samples_table.setSortingEnabled(True)
+        samples_table.blockSignals(False)
 
     def set_tab_bidsmap(self):
         """Set the SOURCE file sample listing tab.  """
