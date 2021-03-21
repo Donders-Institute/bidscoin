@@ -80,7 +80,7 @@ def version(check: bool=False) -> Union[str, Tuple]:
             print(f"Checking BIDScoin version on https://pypi.org/pypi/bidscoin failed:\n{pypierror}")
             return localversion, "(Could not check for new BIDScoin versions)"
         if localversion != pypiversion:
-            return localversion, f"NB: You are not using the latest BIDScoin version: {localversion} -> {pypiversion}"
+            return localversion, f"NB: Your BIDScoin version is NOT up-to-date: {localversion} -> {pypiversion}"
         else:
             return localversion, "Your BIDScoin version is up-to-date :-)"
 
