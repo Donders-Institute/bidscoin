@@ -70,7 +70,7 @@ Step 1a: Running the bidsmapper
                             useful when re-running the bidsmapper (e.g. when the
                             scan protocol was changed since last running the
                             bidsmapper). Default: 1
-      -v, --version         Show the BIDS and BIDScoin version
+      -v, --version         Show the installed version and check for updates
 
     examples:
       bidsmapper /project/foo/raw /project/foo/bids
@@ -205,7 +205,7 @@ Step 2: Running the bidscoiner
       -m SESPREFIX, --sesprefix SESPREFIX
                             The prefix common for all the source session-folders.
                             Default: 'ses-'
-      -v, --version         Show the BIDS and BIDScoin version
+      -v, --version         Show the installed version and check for updates
 
     examples:
       bidscoiner /project/foo/raw /project/foo/bids

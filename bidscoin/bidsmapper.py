@@ -23,6 +23,8 @@ except ImportError:
 
 LOGGER = logging.getLogger('bidscoin')
 
+localversion, versionmessage = bids.version(check=True)
+
 
 def build_bidsmap(dataformat: str, sourcefile: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict, gui: object) -> dict:
     """
@@ -204,7 +206,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     gui = interactive
     if gui:
         app = QApplication(sys.argv)
-        app.setApplicationName(f"{bidsmapfile} - BIDS editor {bids.version()}")
+        app.setApplicationName(f"{bidsmapfile} - BIDS editor {localversion}")
         mainwin = bidseditor.MainWindow()
         gui = bidseditor.Ui_MainWindow()
         gui.interactive = interactive
@@ -302,7 +304,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                                 f"and BIDScoin options and (re)edit them to your needs.\n\n"
                                 f"You can always redo this step later by re-running the "
                                 f"bidsmapper or by just running the bidseditor tool\n\n"
-                                f"{bids.version(check=True)[1]}")
+                                f"{versionmessage}")
 
         LOGGER.info('Opening the bidseditor')
         gui.setupUi(mainwin, bidsfolder, bidsmapfile, bidsmap_new, copy.deepcopy(bidsmap_new), template, dataformat, subprefix=subprefix, sesprefix=sesprefix)
@@ -336,7 +338,7 @@ def main():
     parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     parser.add_argument('-s','--store',       help="Flag to store provenance data samples in the bidsfolder/'code'/'provenance' folder", action='store_true')
     parser.add_argument('-i','--interactive', help='{0}: The sourcefolder is scanned for different kinds of scans without any user interaction. {1}: The sourcefolder is scanned for different kinds of scans and, when finished, the resulting bidsmap is opened using the bidseditor. {2}: As {1}, except that already during scanning the user is asked for help if a new and unknown run is encountered. This option is most useful when re-running the bidsmapper (e.g. when the scan protocol was changed since last running the bidsmapper). Default: 1', type=int, choices=[0,1,2], default=1)
-    parser.add_argument('-v','--version',     help='Show the BIDS and BIDScoin version', action='version', version=f'BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version()}')
+    parser.add_argument('-v','--version',     help='Show the installed version and check for updates', action='version', version=f'BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}')
     args = parser.parse_args()
 
     bidsmapper(rawfolder    = args.sourcefolder,

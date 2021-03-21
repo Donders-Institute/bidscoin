@@ -30,6 +30,8 @@ except ImportError:
 
 LOGGER = logging.getLogger('bidscoin')
 
+localversion, versionmessage = bids.version(check=True)
+
 
 def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, subprefix: str, sesprefix: str) -> None:
     """
@@ -454,7 +456,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     # Start logging
     bids.setup_logging(bidsfolder/'code'/'bidscoin'/'bidscoiner.log')
     LOGGER.info('')
-    LOGGER.info(f"-------------- START BIDScoiner {bids.version()}: BIDS {bids.bidsversion()} ------------")
+    LOGGER.info(f"-------------- START BIDScoiner {localversion}: BIDS {bids.bidsversion()} ------------")
     LOGGER.info(f">>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} subjects={subjects} force={force}"
                 f" participants={participants} bidsmap={bidsmapfile} subprefix={subprefix} sesprefix={sesprefix}")
 
@@ -485,7 +487,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         LOGGER.info(f"Creating README file: {readme_file}")
         with open(readme_file, 'w') as fid:
             fid.write(f"A free form text ( README ) describing the dataset in more details that SHOULD be provided\n\n"
-                      f"The raw BIDS data was created using BIDScoin {bids.version()}\n"
+                      f"The raw BIDS data was created using BIDScoin {localversion}\n"
                       f"All provenance information and settings can be found in ./code/bidscoin\n"
                       f"For more information see: https://github.com/Donders-Institute/bidscoin")
 
@@ -640,7 +642,7 @@ def main():
     parser.add_argument('-b','--bidsmap',           help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
     parser.add_argument('-n','--subprefix',         help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',         help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
-    parser.add_argument('-v','--version',           help='Show the BIDS and BIDScoin version', action='version', version=f"BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version()}")
+    parser.add_argument('-v','--version',           help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
     args = parser.parse_args()
 
     bidscoiner(rawfolder    = args.sourcefolder,
