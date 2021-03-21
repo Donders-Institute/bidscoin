@@ -229,7 +229,8 @@ class Ui_MainWindow(MainWindow):
 
         # Restore the samples_table stretching after the main window has been sized / current tabindex has been set (otherwise the main window can become too narrow)
         header = self.samples_table.horizontalHeader()
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.Interactive)
+        header.setSectionResizeMode(3, QHeaderView.Stretch)
 
         if not reload:
             self.setObjectName('MainWindow')
@@ -708,9 +709,9 @@ class Ui_MainWindow(MainWindow):
         samples_table.itemDoubleClicked.connect(self.inspect_sourcefile)
         header = samples_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)    # Temporarily set it to ResizeToContents to have Qt set the right window width -> set to Stretch in setupUI -> not reload
+        header.setSectionResizeMode(1, QHeaderView.Stretch)             # Temporarily set it to Stretch to have Qt set the right window width -> set to Stretch in setupUI -> not reload
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QHeaderView.Stretch)
+        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
 
         self.update_subses_and_samples(self.output_bidsmap)
