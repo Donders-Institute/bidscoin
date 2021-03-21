@@ -290,8 +290,8 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
                     data['AcquisitionTime'] = bids.get_sourcefield('exam_date', sourcefile)             # PAR/XML
                 try:
                     acq_time = dateutil.parser.parse(data['AcquisitionTime'])
-                except Exception:
-                    LOGGER.warning(f"Could not parse the acquisition time from: '{data['AcquisitionTime']}' in {sourcefile}")
+                except Exception as jsonerror:
+                    LOGGER.warning(f"Could not parse the acquisition time from: '{data['AcquisitionTime']}' in {sourcefile}\n{jsonerror}")
                     acq_time = dateutil.parser.parse('00:00:00')
                 scanpath = niifile[0].relative_to(bidsses)
                 scans_table.loc[scanpath.as_posix(), 'acq_time'] = '1925-01-01T' + acq_time.strftime('%H:%M:%S')

@@ -216,8 +216,8 @@ def import_plugin(plugin: Path) -> util.module_from_spec:
 
         return module
 
-    except Exception:
-        logger.exception(f"Could not import '{plugin}'")
+    except Exception as pluginerror:
+        logger.exception(f"Could not import '{plugin}: {pluginerror}'")
 
         return None
 
@@ -581,14 +581,14 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
     # See if we can reload it, i.e. whether it is valid yaml...
     try:
         load_bidsmap(filename, report=None)
-    except Exception:
+    except Exception as bidsmaperror:
         # Just trying again seems to help? :-)
         with filename.open('w') as stream:
             yaml.dump(bidsmap, stream)
         try:
             load_bidsmap(filename, report=None)
-        except Exception:
-            logger.exception(f'The saved output bidsmap does not seem to be valid YAML, please check {filename}, e.g. by way of an online yaml validator, such as https://yamlchecker.com/')
+        except Exception as bidsmaperror:
+            logger.exception(f'{bidsmaperror}\nThe saved output bidsmap does not seem to be valid YAML, please check {filename}, e.g. by way of an online yaml validator, such as https://yamlchecker.com/')
 
 
 def check_bidsmap(bidsmap: dict, validate: bool=True) -> bool:
@@ -690,12 +690,12 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
             logger.warning(f'Cannot read {tagname} from {dicomfile}')
             value = ''
 
-        except Exception:
+        except Exception as dicomerror:
             try:
                 value = parse_x_protocol(tagname, dicomfile)
 
-            except Exception:
-                logger.warning(f'Could not parse {tagname} from {dicomfile}')
+            except Exception as dicomerror:
+                logger.warning(f'Could not parse {tagname} from {dicomfile}\n{dicomerror}')
                 value = ''
 
     # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
@@ -748,8 +748,8 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
             logger.warning(f'Cannot read {tagname} from {parfile}')
             value = ''
 
-        except Exception:
-            logger.warning(f'Could not parse {tagname} from {parfile}')
+        except Exception as parerror:
+            logger.warning(f'Could not parse {tagname} from {parfile}\n{parerror}')
             value = ''
 
     # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
@@ -1091,8 +1091,8 @@ def match_attribute(longvalue, values) -> bool:
                 string = ast.literal_eval(string)
                 if not isinstance(string, list):
                     logger.error(f"Attribute value '{string}' is not a list")
-            except Exception:
-                logger.error(f"Could not interpret attribute value '{string}'")
+            except Exception as dicomerror:
+                logger.error(f"Could not interpret attribute value '{string}'\n{dicomerror}")
         return string
 
     longvalue = cast2list(longvalue)
