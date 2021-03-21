@@ -593,17 +593,17 @@ class Ui_MainWindow(MainWindow):
         subses_table = self.subses_table
         subses_table.setItem(0, 0, subitem)
         subses_table.setItem(1, 0, sesitem)
-        subses_table.setItem(0, 1, myWidgetItem(self.output_bidsmap[self.dataformat]['subject']))
-        subses_table.setItem(1, 1, myWidgetItem(self.output_bidsmap[self.dataformat]['session']))
+        subses_table.setItem(0, 1, myWidgetItem(output_bidsmap[self.dataformat]['subject']))
+        subses_table.setItem(1, 1, myWidgetItem(output_bidsmap[self.dataformat]['session']))
 
         # Update the run samples table
         idx = 0
         samples_table = self.samples_table
-        samples_table.clearContents()
         samples_table.blockSignals(True)
+        samples_table.clearContents()
         samples_table.setSortingEnabled(False)
         for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
-            runs = self.output_bidsmap.get(self.dataformat, {}).get(datatype, [])
+            runs = output_bidsmap.get(self.dataformat, {}).get(datatype, [])
 
             if not runs: continue
             for run in runs:
@@ -703,15 +703,15 @@ class Ui_MainWindow(MainWindow):
         samples_table.setHorizontalHeaderLabels(['', f'{self.dataformat} input', 'BIDS data type', 'BIDS output', 'Action', 'Provenance'])
         samples_table.setSortingEnabled(True)
         samples_table.sortByColumn(0, QtCore.Qt.AscendingOrder)
+        samples_table.setColumnHidden(2, True)
+        samples_table.setColumnHidden(5, True)
+        samples_table.itemDoubleClicked.connect(self.inspect_sourcefile)
         header = samples_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)    # Temporarily set it to ResizeToContents to have Qt set the right window width -> set to Stretch in setupUI -> not reload
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
-        samples_table.setColumnHidden(2, True)
-        samples_table.setColumnHidden(5, True)
-        samples_table.itemDoubleClicked.connect(self.inspect_sourcefile)
 
         self.update_subses_and_samples(self.output_bidsmap)
 
