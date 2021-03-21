@@ -1166,6 +1166,7 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, mat
     return False
 
 
+_DATATYPE_CACHE = {}
 def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
     """
     Check run for required and optional entitities using the BIDS schema files
@@ -1176,29 +1177,36 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
     :return:            True if the run entities are bids-valid or if they cannot be checked, otherwise False
     """
 
+
+    global _DATATYPE_CACHE
+
     run_found  = False
     run_valsok = True
     run_keysok = True
 
     # Check if we have provenance info
     if validate and not run['provenance']:
-        pass    # TODO: avoid this whn reading templates
+        pass    # TODO: avoid this when reading templates
         # logger.info(f'No provenance info found for {datatype}/*_{run["bids"]["suffix"]}')
 
     # Read the entities from the datatype file
-    datatypefile = schema_folder/'datatypes'/f"{datatype}.yaml"
-    if not datatypefile.is_file():
-        if validate and datatype in bidsdatatypes:
-            logger.info(f"Could not find {datatypefile} to validate the {run['provenance']} run")
-        return True
-    with datatypefile.open('r') as stream:
-        groups = yaml.load(stream)
-    for group in groups:
-        if run['bids']['suffix'] in group['suffixes']:
+    if datatype not in _DATATYPE_CACHE:
+        datatypefile = schema_folder/'datatypes'/f"{datatype}.yaml"
+        if not datatypefile.is_file():
+            if validate and datatype in bidsdatatypes:
+                logger.info(f"Could not find {datatypefile} to validate the {run['provenance']} run")
+            return True
+        with datatypefile.open('r') as stream:
+            typegroups = yaml.load(stream)
+        _DATATYPE_CACHE[datatype] = typegroups
+    else:
+        typegroups = _DATATYPE_CACHE[datatype]
+    for typegroup in typegroups:
+        if run['bids']['suffix'] in typegroup['suffixes']:
             run_found = True
 
             # Check if all expected entity-keys are present in the run and if they are properly filled
-            for entityname in group['entities']:
+            for entityname in typegroup['entities']:
                 entitykey = entities[entityname]['entity']
                 bidsvalue = run['bids'].get(entitykey)
                 if isinstance(bidsvalue, list):
@@ -1209,13 +1217,13 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
                 if validate and entitykey not in run['bids']:
                     logger.warning(f'Invalid bidsmap: BIDS entity "{entitykey}" is required for {run["provenance"]} -> {datatype}/*_{run["bids"]["suffix"]}')
                     run_keysok = False
-                elif group['entities'][entityname]=='required' and not bidsvalue:
+                elif typegroup['entities'][entityname]=='required' and not bidsvalue:
                     if validate is False:
                         logger.info(f'BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
                     run_valsok = False
 
             # Check if all the bids-keys are present in the schema file
-            entitykeys = [entities[entityname]['entity'] for entityname in group['entities']]
+            entitykeys = [entities[entityname]['entity'] for entityname in typegroup['entities']]
             for bidskey in run['bids']:
                 if bidskey in ('suffix', 'IntendedFor'): continue
                 if bidskey not in entitykeys:
@@ -1332,8 +1340,8 @@ def get_derivatives(datatype: str) -> list:
 
     if datatype == 'anat':
         with (schema_folder/'datatypes'/'anat.yaml').open('r') as stream:
-            groups = yaml.load(stream)
-        return groups[1]['suffixes']            # The qMRI data (maps)
+            typegroups = yaml.load(stream)
+        return typegroups[1]['suffixes']            # The qMRI data (maps)
     else:
         return []
 
