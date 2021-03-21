@@ -582,6 +582,7 @@ class Ui_MainWindow(MainWindow):
 
     def update_subses_and_samples(self, output_bidsmap):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
+
         self.output_bidsmap = output_bidsmap  # input main window / output from edit window -> output main window
         subses_table        = self.subses_table
         samples_table       = self.samples_table
