@@ -65,11 +65,11 @@ def version(check: bool=False) -> Union[str, Tuple]:
     Reads the BIDSCOIN version from the VERSION.TXT file and from pypi
 
     :param check:   Check if the current version is up-to-date
-    :return:        The current version number
+    :return:        The version number or (version number, checking message) if check=True
     """
 
     with (Path(__file__).parent/'version.txt').open('r') as fid:
-        currentversion = str(fid.read().strip())
+        localversion = str(fid.read().strip())
 
     # Check pypi for the latest version number
     if check:
@@ -77,14 +77,14 @@ def version(check: bool=False) -> Union[str, Tuple]:
             stream      = urllib.request.urlopen('https://pypi.org/pypi/bidscoin/json').read()
             pypiversion = json.loads(stream)['info']['version']
         except Exception as pypierror:
-            print(f"Checking BIDScoin version on https://pypi.org/pypi/bidscoin:\n{pypierror}")
-            return currentversion, "(Could not check for new BIDScoin versions)"
-        if currentversion != pypiversion:
-            return currentversion, f"NB: You are not using the latest BIDScoin version: {currentversion} -> {pypiversion}"
+            print(f"Checking BIDScoin version on https://pypi.org/pypi/bidscoin failed:\n{pypierror}")
+            return localversion, "(Could not check for new BIDScoin versions)"
+        if localversion != pypiversion:
+            return localversion, f"NB: You are not using the latest BIDScoin version: {localversion} -> {pypiversion}"
         else:
-            return currentversion, "Your BIDScoin version is up-to-date :-)"
+            return localversion, "Your BIDScoin version is up-to-date :-)"
 
-    return currentversion
+    return localversion
 
 
 def setup_logging(log_file: Path=Path(), debug: bool=False) -> logging.Logger:
