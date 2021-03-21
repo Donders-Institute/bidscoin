@@ -1343,7 +1343,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', dataf
     :return:
     """
 
-    bidsfolder   = Path(bidsfolder)
+    bidsfolder   = Path(bidsfolder).resolve()
     bidsmapfile  = Path(bidsmapfile)
     templatefile = Path(templatefile)
 
