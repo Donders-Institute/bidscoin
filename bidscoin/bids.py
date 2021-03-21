@@ -1338,6 +1338,8 @@ def get_derivatives(datatype: str) -> list:
     Retrieves a list of suffixes that are stored in the derivatives folder (e.g. the qMRI maps). TODO: Replace with a more systematic / documented method
     """
 
+    global _DATATYPE_CACHE
+
     if datatype == 'anat':
         if datatype not in _DATATYPE_CACHE:
             with (schema_folder/'datatypes'/'anat.yaml').open('r') as stream:
