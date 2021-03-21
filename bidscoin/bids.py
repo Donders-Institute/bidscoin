@@ -76,7 +76,8 @@ def version(check: bool=False) -> Union[str, Tuple]:
         try:
             stream      = urllib.request.urlopen('https://pypi.org/pypi/bidscoin/json').read()
             pypiversion = json.loads(stream)['info']['version']
-        except:
+        except Exception as pypierror:
+            print(f"Checking BIDScoin version on https://pypi.org/pypi/bidscoin:\n{pypierror}")
             return currentversion, "(Could not check for new BIDScoin versions)"
         if currentversion != pypiversion:
             return currentversion, f"NB: You are not using the latest BIDScoin version: {currentversion} -> {pypiversion}"
@@ -580,13 +581,13 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
     # See if we can reload it, i.e. whether it is valid yaml...
     try:
         load_bidsmap(filename, report=None)
-    except:
+    except Exception:
         # Just trying again seems to help? :-)
         with filename.open('w') as stream:
             yaml.dump(bidsmap, stream)
         try:
             load_bidsmap(filename, report=None)
-        except:
+        except Exception:
             logger.exception(f'The saved output bidsmap does not seem to be valid YAML, please check {filename}, e.g. by way of an online yaml validator, such as https://yamlchecker.com/')
 
 
@@ -1090,7 +1091,7 @@ def match_attribute(longvalue, values) -> bool:
                 string = ast.literal_eval(string)
                 if not isinstance(string, list):
                     logger.error(f"Attribute value '{string}' is not a list")
-            except:
+            except Exception:
                 logger.error(f"Could not interpret attribute value '{string}'")
         return string
 
