@@ -600,8 +600,8 @@ class Ui_MainWindow(MainWindow):
         idx = 0
         samples_table = self.samples_table
         samples_table.blockSignals(True)
-        samples_table.clearContents()
         samples_table.setSortingEnabled(False)
+        samples_table.clearContents()
         for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
             runs = output_bidsmap.get(self.dataformat, {}).get(datatype, [])
 
@@ -710,7 +710,7 @@ class Ui_MainWindow(MainWindow):
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)    # Temporarily set it to ResizeToContents to have Qt set the right window width -> set to Stretch in setupUI -> not reload
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.Stretch)
         header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
 
         self.update_subses_and_samples(self.output_bidsmap)

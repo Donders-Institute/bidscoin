@@ -1410,7 +1410,7 @@ def get_dynamic_value(bidsvalue: str, sourcefile: Path) -> str:
     """
 
     # Intelligent filling of the value is done runtime by bidscoiner
-    if not bidsvalue or not isinstance(bidsvalue, str) or bidsvalue.startswith('<<') and bidsvalue.endswith('>>'):
+    if not bidsvalue or not isinstance(bidsvalue, str) or (bidsvalue.startswith('<<') and bidsvalue.endswith('>>')):
         return bidsvalue
 
     # Fill any bids-key with the <annotated> dicom attribute(s)
