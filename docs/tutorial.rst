@@ -9,7 +9,7 @@ A good starting point to learn more about BIDS and BIDScoin is to watch `this pr
 BIDScoin tutorial
 -----------------
 
-1. **Preparation.** Activate the bidscoin environment and create a tutorial playground folder in your home directory by executing these bash commands (users from outside the DCCN may have to adapt the first two commands to their environment):
+1. **Data preparation.** Activate the bidscoin environment and create a tutorial playground folder in your home directory by executing these bash commands (users from outside the DCCN may have to adapt the first two commands to their environment):
 
 .. code-block:: console
 
