@@ -1,7 +1,7 @@
 Options
 =======
 
-BIDScoin has different options and settings (see below) that can be adjusted per study bidsmap. You can best use a text editor to edit your `template bidsmap <>`_ if you want to adjust the default)
+BIDScoin has different options and settings (see below) that can be adjusted per study bidsmap. You can best use a text editor to edit your `template bidsmap <bidsmap.html>`__ if you want to adjust the default)
 
 .. figure:: ./_static/bidseditor_options.png
    :scale: 75%
@@ -21,7 +21,7 @@ dcm2niix
 
 The nifti- and json-files are generated with `dcm2niix <https://github.com/rordenlab/dcm2niix>`__. Here you can adjust how dcm2niix is used:
 
-- ``path``: Command to set the path to dcm2niix, e.g.:
+- ``path``: Command to set the path to dcm2niix (if it is not already on there), e.g.:
 
   - ``module add dcm2niix/1.0.20180622;`` (note the semi-colon at the end)
   - ``PATH=/opt/dcm2niix/bin:$PATH;`` (note the semi-colon at the end)

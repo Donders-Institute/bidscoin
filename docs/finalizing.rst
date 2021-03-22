@@ -1,11 +1,11 @@
 Finishing up
 ============
 
-After a successful run of bidscoiner, the work to convert your data in a fully compliant BIDS dataset is unfortunately not yet fully over and, depending on the complexity of your data-set, additional tools may need to be run and meta-data may need to be entered manually (not everything can be automated).
+After a successful run of bidscoiner, the work to convert your data in a fully compliant BIDS dataset is typically not fully over and, depending on the complexity of your data-set, additional tools may need to be run to post-process (e.g. deface) your data or convert datatypes not supported by BIDScoin (e.g. EEG data).
 
 Adding meta-data
 ----------------
-For instance, you should update the content of the ``dataset_description.json`` and ``README`` files in your bids folder and you may need to provide e.g. additional ``*_scans.tsv``,\ ``*_sessions.tsv`` or ``participants.json`` files (see the `BIDS specification <http://bids.neuroimaging.io/bids_spec.pdf>`__ for more information). Moreover, if you have behavioural log-files you will find that BIDScoin does not (yet) `support <index.html#bidscoin-functionality>`__ converting these into BIDS compliant ``*_events.tsv/json`` files (advanced users are encouraged to use the bidscoiner `plug-in <advanced.html#plugins>`__ possibility and write their own log-file parser).
+To make your dataset reproducable and shareable, you should add all meta-data that is not stored in the source data in the modality agnostic BIDS files (BIDScoin saves stub versions of them). For instance, you should update the content of the ``dataset_description.json`` and ``README`` files in your bids folder and you may need to provide e.g. additional ``*_sessions.tsv`` or ``participants.json`` files (see the `BIDS specification <http://bids.neuroimaging.io/bids_spec.pdf>`__ for more information). Moreover, if you have behavioural log-files you will find that BIDScoin does not (yet) `support <index.html#bidscoin-functionality>`__ converting these into BIDS compliant ``*_events.tsv/json`` files (advanced users are encouraged to use the bidscoiner `plug-in <advanced.html#plugins>`__ possibility and write their own log-file parser).
 
 Data sharing utilities
 ----------------------
