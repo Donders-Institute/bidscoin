@@ -4,12 +4,12 @@ Installation
 BIDScoin can be installed and should work on Linux, MS Windows and on OS-X computers (this latter option has not been tested) that satisfy the system requirements:
 
 -  dcm2niix
--  python 3.6 or higher
+-  python 3.8 or higher
 
 Dcm2niix installation
 ---------------------
 
-BIDScoin relies on dcm2niix to convert DICOM and PAR/REC files to nifti. Please download and install `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ yourself according to the instructions. When done, make sure that the path to the dcm2niix binary / executable is set correctly in the BIDScoin `Options`_ in the ``[path_to_bidscoin]/heuristics/bidsmap_template.yaml`` file or in the `Site specific / customized template <advanced.html#site-specific-customized-template>`__ file.
+BIDScoin relies on dcm2niix to convert DICOM and PAR/REC files to nifti. Please download and install `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ yourself according to the instructions. When done, make sure that the path to the dcm2niix binary / executable is set correctly in the `Options`_ section in your bidsmap or, for once and for all, in your `Site specific / customized template <advanced.html#site-specific-customized-template>`__ bidsmap.
 
 Python 3 installation
 ---------------------
@@ -19,7 +19,7 @@ BIDScoin is a python package and therefore a python interpreter needs to be pres
 BIDScoin installation
 ---------------------
 
-To install BIDScoin on your system run the following command in a command-terminal (institute users may want to activate a `virtual`_ / `conda`_ python environment first):
+To install BIDScoin on your system run the following command in a command-terminal (institute users may want to create and activate a `virtual`_ / `conda`_ python environment first):
 
 .. code-block:: console
 
@@ -54,4 +54,3 @@ Run the pip command as before with the additional ``--upgrade`` option:
 .. _virtual: https://docs.python.org/3.6/tutorial/venv.html
 .. _conda: https://conda.io/docs/user-guide/tasks/manage-environments.html
 .. _download: https://github.com/Donders-Institute/bidscoin
-

@@ -1,7 +1,7 @@
 Options
 =======
 
-BIDScoin has different options and settings (see below) that can be adjusted per study bidsmap. You can use a text editor to edit the bidsmap template ``[path_to_bidscoin]/heuristics/bidsmap_template.yaml`` if you want to adjust the default)
+BIDScoin has different options and settings (see below) that can be adjusted per study bidsmap. You can best use a text editor to edit your `template bidsmap <>`_ if you want to adjust the default)
 
 .. figure:: ./_static/bidseditor_options.png
    :scale: 75%
@@ -37,4 +37,3 @@ Plugins
 -------
 
 BIDScoin provides the possibility for researchers to write custom python functions that will be executed at bidsmapper and bidscoiner runtime. To use this functionality, enter the name of the module (default location is the plugins-folder; otherwise the full path must be provided) in the bidsmap dictionary file to import the plugin functions. See `advanced usage <advanced.html#plugins>`__ for more details.
-
