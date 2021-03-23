@@ -202,7 +202,7 @@ class Ui_MainWindow(MainWindow):
         self.set_tab_bidsmap()
         self.set_tab_options()
         self.set_tab_file_browser()
-        tabwidget.setTabText(0, 'BIDS map')
+        tabwidget.setTabText(0, 'BIDS mapping')
         tabwidget.setTabText(1, 'Options')
         tabwidget.setTabText(2, 'Data browser')
         tabwidget.setCurrentIndex(selected_tab_index)
