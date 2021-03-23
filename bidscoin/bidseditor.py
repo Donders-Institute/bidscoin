@@ -177,7 +177,7 @@ class MainWindow(QMainWindow):
 class Ui_MainWindow(MainWindow):
 
     def setupUi(self, MainWindow, bidsfolder, bidsmap_filename, input_bidsmap, output_bidsmap, template_bidsmap,
-                dataformat, selected_tab_index=2, subprefix='sub-', sesprefix='ses-', reload: bool=False):
+                dataformat, selected_tab_index=0, subprefix='sub-', sesprefix='ses-', reload: bool=False):
 
         # Set the input data
         self.MainWindow       = MainWindow
@@ -199,12 +199,12 @@ class Ui_MainWindow(MainWindow):
         tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
         tabwidget.setObjectName('tabwidget')
 
-        self.set_tab_file_browser()
-        self.set_tab_options()
         self.set_tab_bidsmap()
-        tabwidget.setTabText(0, 'File browser')
+        self.set_tab_options()
+        self.set_tab_file_browser()
+        tabwidget.setTabText(0, 'BIDS map')
         tabwidget.setTabText(1, 'Options')
-        tabwidget.setTabText(2, 'BIDS map')
+        tabwidget.setTabText(2, 'File browser')
         tabwidget.setCurrentIndex(selected_tab_index)
 
         # Set-up the buttons. TODO: Add validate bidsmap button
@@ -350,11 +350,11 @@ class Ui_MainWindow(MainWindow):
         layout = QVBoxLayout()
         layout.addWidget(label)
         layout.addWidget(tree)
-        tab1 = QtWidgets.QWidget()
-        tab1.setObjectName('filebrowser')
-        tab1.setLayout(layout)
+        tab = QtWidgets.QWidget()
+        tab.setObjectName('filebrowser')
+        tab.setLayout(layout)
 
-        self.tabwidget.addTab(tab1, '')
+        self.tabwidget.addTab(tab, '')
 
     def subses_cell_was_changed(self, row: int, column:int):
         """Subject or session value has been changed in subject-session table. """
@@ -575,11 +575,11 @@ class Ui_MainWindow(MainWindow):
         layout.addWidget(plugin_table)
         layout.addStretch(1)
 
-        tab2 = QtWidgets.QWidget()
-        tab2.setObjectName('Options')
-        tab2.setLayout(layout)
+        tab = QtWidgets.QWidget()
+        tab.setObjectName('Options')
+        tab.setLayout(layout)
 
-        self.tabwidget.addTab(tab2, '')
+        self.tabwidget.addTab(tab, '')
 
     def update_subses_and_samples(self, output_bidsmap):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
@@ -721,11 +721,11 @@ class Ui_MainWindow(MainWindow):
         layout.addWidget(subses_table)
         layout.addWidget(label)
         layout.addWidget(samples_table)
-        tab3 = QtWidgets.QWidget()
-        tab3.setObjectName('BIDSmapping')
-        tab3.setLayout(layout)
+        tab = QtWidgets.QWidget()
+        tab.setObjectName('BIDSmapping')
+        tab.setLayout(layout)
 
-        self.tabwidget.addTab(tab3, '')
+        self.tabwidget.addTab(tab, '')
 
     def get_help(self):
         """Get online help. """
