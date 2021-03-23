@@ -671,8 +671,8 @@ class Ui_MainWindow(MainWindow):
 
         self.subses_table = myQTableWidget()
         subses_table = self.subses_table
-        subses_table.setToolTip(f"Use <<SourceFilePath>> to parse the subject and (optional) session label from the pathname\n"
-                                f"Use <Your{self.dataformat}FieldName> (e.g. <PatientID>) to extract the subject and (optional) session label from the {self.dataformat} header")
+        subses_table.setToolTip(f"Use '<<SourceFilePath>>' to parse the subject and (optional) session label from the pathname\n"
+                                f"Use a dynamic {self.dataformat} attribute (e.g. '<PatientID>') to extract the subject and (optional) session label from the {self.dataformat} header")
         subses_table.setMouseTracking(True)
         subses_table.setRowCount(2)
         subses_table.setColumnCount(2)
@@ -802,8 +802,7 @@ class Ui_MainWindow(MainWindow):
     def show_about(self):
         """Shows a pop-up window with the BIDScoin version"""
         version, message = bids.version(check=True)
-        about            = f"BIDS editor {version}\n\n{message}"
-        QMessageBox.about(self.MainWindow, 'About', about)
+        QMessageBox.about(self.MainWindow, 'About', f"BIDS editor {version}\n\n{message}")
 
     def open_edit_dialog(self, provenance: Path, datatype: str, modal=False):
         """Check for open edit window, find the right datatype index and open the edit window"""
