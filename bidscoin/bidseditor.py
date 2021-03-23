@@ -801,7 +801,8 @@ class Ui_MainWindow(MainWindow):
 
     def show_about(self):
         """Shows a pop-up window with the BIDScoin version"""
-        about = f"BIDS editor\n{bids.version()}"
+        version, message = bids.version(check=True)
+        about            = f"BIDS editor {version}\n\n{message}"
         QMessageBox.about(self.MainWindow, 'About', about)
 
     def open_edit_dialog(self, provenance: Path, datatype: str, modal=False):
