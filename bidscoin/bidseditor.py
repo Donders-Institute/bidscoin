@@ -212,13 +212,10 @@ class Ui_MainWindow(MainWindow):
         buttonBox.setStandardButtons(QDialogButtonBox.Save | QDialogButtonBox.Reset | QDialogButtonBox.Help)
         buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
         buttonBox.button(QDialogButtonBox.Save).setToolTip('Save the Options and BIDS-map to disk if you are satisfied with all the BIDS output names')
-        # buttonBox.button(QDialogButtonBox.Save).setToolTip('*: The bidsmap has not been saved yet. Save the Options and BIDS-map to disk if you are satisfied with all the BIDS output names') TODO: This works to some extent but find a proper way to inform the user about unsaved changes
-        buttonBox.button(QDialogButtonBox.Save).setText(buttonBox.button(QDialogButtonBox.Save).text() + '*')
         buttonBox.button(QDialogButtonBox.Reset).setToolTip('Reload the options and BIDS-map from disk')
         buttonBox.helpRequested.connect(self.get_help)
         buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reload)
         buttonBox.button(QDialogButtonBox.Save).clicked.connect(self.save_bidsmap_to_file)
-        self.buttonBox = buttonBox
 
         # Set-up the main layout
         centralwidget = QtWidgets.QWidget(self.MainWindow)
@@ -784,9 +781,6 @@ class Ui_MainWindow(MainWindow):
                         'YAML Files (*.yaml *.yml);;All Files (*)')
         if filename:
             bids.save_bidsmap(Path(filename), self.output_bidsmap)
-            saveButton = self.buttonBox.button(QDialogButtonBox.Save)
-            saveButton.setText(saveButton.text().replace('*',''))
-            saveButton.setToolTip('Save the Options and BIDS-map to disk if you are satisfied with all the BIDS output names')
             QtCore.QCoreApplication.setApplicationName(f"{filename} - BIDS editor")
 
     def handle_edit_button_clicked(self):
