@@ -324,13 +324,8 @@ class Ui_MainWindow(MainWindow):
 
     def set_tab_file_browser(self):
         """Set the raw data folder inspector tab. """
-        # Parse the sourcefolder from the bidsmap provenance info
-        sourcefolder = Path('/').resolve()
-        for provenance in bids.dir_bidsmap(self.input_bidsmap, self.dataformat):
-            sourcefolder = Path(provenance.parents[min(3, len(provenance.parents)-1)])
-            break
 
-        label = QLabel(str(sourcefolder))
+        label = QLabel(str(self.bidsfolder))
         label.setWordWrap(True)
 
         self.model = QFileSystemModel()
@@ -343,7 +338,7 @@ class Ui_MainWindow(MainWindow):
         tree.setIndentation(20)
         tree.sortByColumn(0, QtCore.Qt.AscendingOrder)
         tree.setSortingEnabled(True)
-        tree.setRootIndex(model.index(str(sourcefolder)))
+        tree.setRootIndex(model.index(str(self.bidsfolder)))
         tree.doubleClicked.connect(self.on_double_clicked)
         tree.header().resizeSection(0, 800)
 
