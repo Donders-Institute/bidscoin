@@ -207,7 +207,7 @@ class Ui_MainWindow(MainWindow):
         tabwidget.setTabText(2, 'Data browser')
         tabwidget.setCurrentIndex(selected_tab_index)
 
-        # Set-up the buttons. TODO: Add validate bidsmap button
+        # Set-up the buttons
         buttonBox = QDialogButtonBox()
         buttonBox.setStandardButtons(QDialogButtonBox.Save | QDialogButtonBox.Reset | QDialogButtonBox.Help)
         buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
@@ -646,8 +646,16 @@ class Ui_MainWindow(MainWindow):
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('green'))
                         samples_table.item(idx, 3).setToolTip(f"Green: This '{datatype}' imaging data type is part of BIDS")
 
-                edit_button = QPushButton('Edit')
-                edit_button.setToolTip('Click to see more details and edit the BIDS output name')
+                loglevel = LOGGER.level
+                LOGGER.setLevel('WARNING')
+                validrun = bids.check_run(datatype, run, validate=False)
+                LOGGER.setLevel(loglevel)
+                if validrun:
+                    edit_button = QPushButton('Edit')
+                    edit_button.setToolTip('Click to see more details and edit the BIDS output name')
+                else:
+                    edit_button = QPushButton('Edit*')
+                    edit_button.setToolTip('* = Contains invalid / missing values! Click to see more details and edit the BIDS output name')
                 edit_button.clicked.connect(self.handle_edit_button_clicked)
                 edit_button.setCheckable(not sys.platform.startswith('darwin'))
                 edit_button.setAutoExclusive(True)
