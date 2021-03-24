@@ -312,9 +312,9 @@ class Ui_MainWindow(MainWindow):
             sourcefile = Path(cell.text())
             if bids.is_dicomfile(sourcefile):
                 sourcedata = pydicom.dcmread(sourcefile, force=True)
-            elif bids.is_parfile(sourcefile):
-                with open(sourcefile, 'r') as parfid:
-                    sourcedata = parfid.read()
+            elif bids.is_parfile(sourcefile) or sourcefile.suffix in {'.yaml','.json','.tsv','.csv','.txt','.log','.errors'}:
+                with open(sourcefile, 'r') as sourcefid:
+                    sourcedata = sourcefid.read()
             else:
                 LOGGER.warning(f"Could not read {self.dataformat} file: {sourcefile}")
                 return
@@ -797,9 +797,9 @@ class Ui_MainWindow(MainWindow):
         sourcefile = Path(self.model.fileInfo(index).absoluteFilePath())
         if bids.is_dicomfile(sourcefile):
             sourcedata = pydicom.dcmread(sourcefile, force=True)
-        elif bids.is_parfile(sourcefile):
-            with open(sourcefile, 'r') as parfid:
-                sourcedata = parfid.read()
+        elif bids.is_parfile(sourcefile) or sourcefile.suffix in {'.yaml','.json','.tsv','.csv','.txt','.log','.errors'}:
+            with open(sourcefile, 'r') as sourcefid:
+                sourcedata = sourcefid.read()
         else:
             LOGGER.warning(f"Could not read {self.dataformat} file: {sourcefile}")
             return
@@ -1076,9 +1076,9 @@ class EditDialog(QDialog):
             sourcefile = Path(self.target_run['provenance'])
             if bids.is_dicomfile(sourcefile):
                 sourcedata = pydicom.dcmread(sourcefile, force=True)
-            elif bids.is_parfile(sourcefile):
-                with open(sourcefile, 'r') as parfid:
-                    sourcedata = parfid.read()
+            elif bids.is_parfile(sourcefile) or sourcefile.suffix in {'.yaml', '.json', '.tsv', '.csv', '.txt','.log', '.errors'}:
+                with open(sourcefile, 'r') as sourcefid:
+                    sourcedata = sourcefid.read()
             else:
                 LOGGER.warning(f"Could not read {self.dataformat} file: {sourcefile}")
                 return
