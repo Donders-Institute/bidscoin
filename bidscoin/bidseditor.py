@@ -647,7 +647,7 @@ class Ui_MainWindow(MainWindow):
                         samples_table.item(idx, 3).setToolTip(f"Green: This '{datatype}' imaging data type is part of BIDS")
 
                 loglevel = LOGGER.level
-                LOGGER.setLevel('WARNING')
+                LOGGER.setLevel('ERROR')
                 validrun = bids.check_run(datatype, run, validate=False)
                 LOGGER.setLevel(loglevel)
                 if validrun:
@@ -655,7 +655,7 @@ class Ui_MainWindow(MainWindow):
                     edit_button.setToolTip('Click to see more details and edit the BIDS output name')
                 else:
                     edit_button = QPushButton('Edit*')
-                    edit_button.setToolTip('* = Contains invalid / missing values! Click to see more details and edit the BIDS output name')
+                    edit_button.setToolTip('*: Contains invalid / missing values! Click to see more details and edit the BIDS output name')
                 edit_button.clicked.connect(self.handle_edit_button_clicked)
                 edit_button.setCheckable(not sys.platform.startswith('darwin'))
                 edit_button.setAutoExclusive(True)
