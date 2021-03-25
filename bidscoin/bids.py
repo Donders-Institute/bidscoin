@@ -514,8 +514,12 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue
             for index, run in enumerate(bidsmap[dataformat][datatype]):
-                if not run['provenance']:
+                if not run.get('provenance'):
                     run['provenance'] = f"sub-unknown/ses-unknown/{dataformat}_{datatype}_id{index+1:03}"
+                if not run.get('filesystem'):
+                    run['filesystem'] = dict(path='', name='', size=None)
+                if not run.get('attributes'):
+                    run['attributes'] = {}
 
     # Make sure we get a proper list of plugins
     bidsmap['PlugIns'] = [plugin for plugin in bidsmap.get('PlugIns', []) if plugin]
@@ -764,7 +768,7 @@ def get_dataformat(source: Path) -> str:
 
 def get_sourcefield(tagname: str, sourcefile: Path=Path(), dataformat: str='') -> Union[str, int]:
     """
-    Wrapper around get_dicomfield and get_parfield
+    Wraps around get_dicomfield and get_parfield or gets filesystem property
 
     :param tagname:     Name of the field in the sourcefile
     :param sourcefile:  The full pathname of the (e.g. DICOM or PAR/XML) sourcefile
@@ -781,6 +785,14 @@ def get_sourcefield(tagname: str, sourcefile: Path=Path(), dataformat: str='') -
 
     if dataformat=='PAR':
         return get_parfield(tagname, sourcefile)
+
+    if dataformat=='FileSystem':
+        if tagname == 'path':
+            return str(sourcefile.parent)
+        if tagname == 'name':
+            return sourcefile.name
+        if tagname == 'size':
+            return sourcefile.stat().st_size
 
 
 def add_prefix(prefix: str, tag: str) -> str:
@@ -892,7 +904,10 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
     for index, run in enumerate(runs):
         if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
-            run_ = dict(provenance=str(sourcefile.resolve()), attributes={}, bids={})
+            run_ = dict(provenance=str(sourcefile.resolve()), filesystem={}, attributes={}, bids={})
+
+            for filekey, filevalue in run['filesystem'].items():
+                run_['filesystem'][filekey] = filevalue
 
             for attrkey, attrvalue in run['attributes'].items():
                 if sourcefile.name:
@@ -909,7 +924,7 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
             return run_
 
     logger.warning(f"'{datatype}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{dataformat}']")
-    return dict(provenance=str(sourcefile.resolve()), attributes={}, bids={})
+    return dict(provenance=str(sourcefile.resolve()), filesystem={}, attributes={}, bids={})
 
 
 def delete_run(bidsmap: dict, dataformat: str, datatype: str, provenance: Path) -> dict:
@@ -950,12 +965,11 @@ def append_run(bidsmap: dict, dataformat: str, datatype: str, run: dict, clean: 
 
     # Copy the values from the run to an empty dict
     if clean:
-        run_ = dict(provenance=run['provenance'], attributes={}, bids={})
+        run_ = dict(provenance=run['provenance'], filesystem={}, attributes={}, bids={})
 
-        for key, value in run['attributes'].items():
-            run_['attributes'][key] = value
-        for key, value in run['bids'].items():
-            run_['bids'][key] = value
+        for matching in ('filesystem', 'attributes', 'bids'):
+            for key, value in run[matching].items():
+                run_[matching][key] = value
 
         run = run_
 
@@ -1105,14 +1119,15 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, mat
     for run in bidsmap[dataformat][datatype]:
 
         # Begin with match = False only if all attributes are empty
-        match = any([run_item['attributes'][key] not in [None,''] for key in run_item['attributes']])
+        match = any([run[matching][attrkey] not in [None,''] for matching in ('filesystem','attributes') for attrkey in run[matching]])  # Normally match==True, but make match==False if all attributes are empty
 
         # Search for a case where all run_item items match with the run_item items
-        for itemkey, itemvalue in run_item['attributes'].items():
-            value = run['attributes'].get(itemkey)          # Matching bids-labels which exist in one datatype but not in the other -> None
-            match = match and match_attribute(itemvalue, value)
-            if not match:
-                break                                       # There is no point in searching further within the run_item now that we've found a mismatch
+        for matching in ('filesystem', 'attributes'):
+            for itemkey, itemvalue in run_item[matching].items():
+                value = run[matching].get(itemkey)          # Matching bids-labels which exist in one datatype but not in the other -> None
+                match = match and match_attribute(itemvalue, value)
+                if not match:
+                    break                                   # There is no point in searching further within the run_item now that we've found a mismatch
 
         # See if the bidskeys also all match. This is probably not very useful, but maybe one day...
         if matchbidslabels and match:
@@ -1216,7 +1231,7 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
         dataformat = get_dataformat(sourcefile)
 
     # Loop through all bidsdatatypes and runs; all info goes cleanly into run_ (to avoid formatting problem of the CommentedMap)
-    run_ = dict(provenance=str(sourcefile.resolve()), attributes={}, bids={})
+    run_ = dict(provenance=str(sourcefile.resolve()), filesystem={}, attributes={}, bids={})
     for datatype in (ignoredatatype,) + bidsdatatypes + (unknowndatatype,):                                 # The datatypes in which a matching run is searched for
 
         runs = bidsmap.get(dataformat, {}).get(datatype, [])
@@ -1224,7 +1239,19 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
             runs = []
         for index, run in enumerate(runs):
 
-            match = any([run['attributes'][attrkey] not in [None,''] for attrkey in run['attributes']])     # Normally match==True, but make match==False if all attributes are empty
+            match = any([run[matching][attrkey] not in [None,''] for matching in ('filesystem','attributes') for attrkey in run[matching]])     # Normally match==True, but make match==False if all attributes are empty
+
+            # Try to see if the sourcefile matches all of the filesystem properties
+            run_['filesystem'] = {}
+            for filekey, filevalue in run['filesystem'].items():
+
+                # Check if the attribute value matches with the info from the sourcefile
+                if filevalue:
+                    sourcevalue = get_sourcefield(filekey, sourcefile, 'FileSystem')
+                    match       = match and match_attribute(sourcevalue, filevalue)
+
+                # Don not fill the empty attribute with the info from the sourcefile but keep the matching expression
+                run_['filesystem'][filekey] = filevalue
 
             # Try to see if the sourcefile matches all of the attributes and fill all of them
             run_['attributes'] = {}
@@ -1457,7 +1484,7 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str=''
     bidsext  = ''.join(Path(bidsfile).suffixes)
 
     # Parse the key-value pairs and store all the run info
-    run   = dict(provenance='', attributes={}, bids={'suffix':''})
+    run   = dict(provenance='', filesystem={}, attributes={}, bids={'suffix':''})
     sesid = ''
     for keyval in bidsname.split('_'):
         if '-' in keyval:
