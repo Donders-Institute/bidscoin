@@ -312,7 +312,7 @@ class Ui_MainWindow(MainWindow):
             sourcefile = Path(cell.text())
             if bids.is_dicomfile(sourcefile):
                 sourcedata = pydicom.dcmread(sourcefile, force=True)
-            elif bids.is_parfile(sourcefile) or sourcefile.suffix in {'.yaml','.json','.tsv','.csv','.txt','.log','.errors'}:
+            elif bids.is_parfile(sourcefile):
                 with open(sourcefile, 'r') as sourcefid:
                     sourcedata = sourcefid.read()
             else:
@@ -791,16 +791,16 @@ class Ui_MainWindow(MainWindow):
 
     def on_double_clicked(self, index: int):
         """Opens the inspect window when a source file in the file-tree tab is double-clicked"""
-        sourcefile = Path(self.model.fileInfo(index).absoluteFilePath())
-        if bids.is_dicomfile(sourcefile):
-            sourcedata = pydicom.dcmread(sourcefile, force=True)
-        elif bids.is_parfile(sourcefile) or sourcefile.suffix in {'.yaml','.json','.tsv','.csv','.txt','.log','.errors'}:
-            with open(sourcefile, 'r') as sourcefid:
+        datafile = Path(self.model.fileInfo(index).absoluteFilePath())
+        if bids.is_dicomfile(datafile):
+            sourcedata = pydicom.dcmread(datafile, force=True)
+        elif bids.is_parfile(datafile) or datafile.suffix in {'.yaml','.json','.tsv','.csv','.txt','.log','.errors'} or datafile.name=='README':
+            with open(datafile, 'r') as sourcefid:
                 sourcedata = sourcefid.read()
         else:
-            LOGGER.warning(f"Could not read {self.dataformat} file: {sourcefile}")
+            LOGGER.warning(f"Could not read {self.dataformat} file: {datafile}")
             return
-        self.popup = InspectWindow(sourcefile, sourcedata, self.dataformat)
+        self.popup = InspectWindow(datafile, sourcedata, self.dataformat)
         self.popup.show()
         self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
 
@@ -1073,7 +1073,7 @@ class EditDialog(QDialog):
             sourcefile = Path(self.target_run['provenance'])
             if bids.is_dicomfile(sourcefile):
                 sourcedata = pydicom.dcmread(sourcefile, force=True)
-            elif bids.is_parfile(sourcefile) or sourcefile.suffix in {'.yaml', '.json', '.tsv', '.csv', '.txt','.log', '.errors'}:
+            elif bids.is_parfile(sourcefile):
                 with open(sourcefile, 'r') as sourcefid:
                     sourcedata = sourcefid.read()
             else:
