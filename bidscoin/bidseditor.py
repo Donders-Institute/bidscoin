@@ -123,19 +123,9 @@ class InspectWindow(QDialog):
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(str(ICON_FILENAME)), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
-        self.setWindowTitle(f"Inspect {dataformat} file")
+        self.setWindowTitle(str(filename))
 
         layout = QVBoxLayout(self)
-
-        label_path = QLabel(f"Path: {filename.parent}")
-        label_path.setWordWrap(True)
-        label_path.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-        layout.addWidget(label_path)
-
-        label = QLabel(f"Filename: {filename.name}")
-        label.setWordWrap(True)
-        label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-        layout.addWidget(label)
 
         text        = str(sourcedict)
         textBrowser = QTextBrowser(self)
@@ -1009,6 +999,7 @@ class EditDialog(QDialog):
 
         :return: (data_provenance, data_source, data_bids)
         """
+
         data_provenance = [
             [
                 {
@@ -1028,6 +1019,16 @@ class EditDialog(QDialog):
                 {
                     'value': Path(self.target_run['provenance']).name,
                     'iseditable': True
+                },
+            ],
+            [
+                {
+                    'value': 'size',
+                    'iseditable': False
+                },
+                {
+                    'value': format_bytes(Path(self.target_run['provenance']).stat().st_size),
+                    'iseditable': False
                 },
             ]
         ]
@@ -1333,6 +1334,24 @@ class EditDialog(QDialog):
             bidsmap    = bids.append_run(bidsmap, self.dataformat, self.target_datatype, self.target_run)
             bids.save_bidsmap(yamlfile, bidsmap)
             QMessageBox.information(self, 'Edit BIDS mapping', f"Successfully exported:\n\nbidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}")
+
+
+def format_bytes(size):
+    """
+    Converts bytes into a human-readable B, KB, MG, GB, TB format
+
+    :param size:    size in bytes
+    :return:        Human-friedly string
+    """
+
+    power = 2**10       # 2**10 = 1024
+    label = {0:'', 1:'k', 2:'M', 3:'G', 4:'T'}
+    n = 0
+    while size > power and n < len(label):
+        size /= power
+        n += 1
+
+    return f"{size:.2f} {label[n]}B"
 
 
 def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', dataformat: str='DICOM', subprefix='sub-', sesprefix='ses-'):
