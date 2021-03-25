@@ -708,11 +708,11 @@ PAR:
 # --------------------------------------------------------------------------------
 # PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
-  session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+  subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A PAR attribute can also be used as subject-label instead, e.g. <patient_name>
+  session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A PAR attribute can also be used as session-label instead, e.g. <examination_name>
 
   anat:       # ----------------------- All anatomical runs --------------------
-  - provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+  - provenance: ~                 # The fullpath name of the PAR file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     attributes: &anat_parattr
       series_type: ~
       exam_name: ~
@@ -1303,11 +1303,11 @@ FileSystem: ~
 # to the BIDS labels; Special substitutions can be performed using python's
 # Format Specification Mini-Language)
 # --------------------------------------------------------------------------------
-#  subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
-#  session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+#  subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime
+#  session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime
 #
 #  anat:       # ----------------------- All anatomical runs --------------------
-#  - provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+#  - provenance: ~                 # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
 #    attributes: &anat_fileattr
 #      path: ~
 #      name: ~
