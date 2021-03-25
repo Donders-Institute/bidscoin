@@ -382,19 +382,6 @@ def coin_data2bids(dataformat: str, session: Path, bidsmap: dict, bidsfolder: Pa
         personals['weight']  = bids.get_dicomfield('PatientWeight', sourcefile)
 
 
-def coin_filesystem(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict) -> None:
-    """
-
-    :param session:     The full-path name of the subject/session source folder
-    :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
-    :param bidsfolder:  The full-path name of the BIDS root-folder
-    :param personals:   The dictionary with the personal information
-    :return:            Nothing
-    """
-
-    pass
-
-
 def coin_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict) -> None:
     """
     Run the plugin coiner to cast the run into the bids folder
@@ -557,10 +544,6 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             # Update / append the source data mapping
             if dataformat in ('DICOM', 'PAR'):
                 coin_data2bids(dataformat, session, bidsmap, bidsfolder, personals, subprefix, sesprefix)
-
-            # Update / append the file-system mapping
-            if dataformat=='FileSystem':
-                coin_filesystem(session, bidsmap, bidsfolder, personals)
 
             # Update / append the plugin mapping
             if bidsmap['PlugIns']:

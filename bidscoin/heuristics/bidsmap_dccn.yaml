@@ -43,6 +43,10 @@ DICOM:
 
   anat:       # ----------------------- All anatomical runs --------------------
   - provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    filesystem: &anat_fileattr
+      path: ~
+      name: ~
+      size: ~
     attributes: &anat_dicomattr
       Modality: ~
       ProtocolName: ~
@@ -66,6 +70,7 @@ DICOM:
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       suffix: T1w
   - provenance: ~
+    filesystem: *anat_fileattr
     attributes:
       <<: *anat_dicomattr
       SeriesDescription: ['*mprage*', '*MPRAGE*', '*MPRage*', '*t1w*', '*T1W*', '*T1w*', '*T1*']

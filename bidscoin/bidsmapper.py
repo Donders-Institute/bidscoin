@@ -93,23 +93,6 @@ def build_bidsmap(dataformat: str, sourcefile: Path, bidsmap_new: dict, bidsmap_
     return bidsmap_new
 
 
-def build_filesystemmap(session: Path, bidsmap_new: dict, bidsmap_old: dict) -> dict:
-    """
-    All the logic to map filesystem-info onto bids labels go into this function
-
-    :param session:     The full-path name of the source folder
-    :param bidsmap_new: The bidsmap that we are building
-    :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:            The bidsmap with new entries in it
-    """
-
-    # Input checks
-    if not session or not bidsmap_old['FileSystem']:
-        return bidsmap_new
-
-    return bidsmap_new
-
-
 def build_pluginmap(session: Path, bidsmap_new: dict, bidsmap_old: dict) -> dict:
     """
     Call the plugin to map info onto bids labels
@@ -249,10 +232,6 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             # Update the bidsmap with the info from the source files
             for sourcefile in sourcefiles:
                 bidsmap_new = build_bidsmap(dataformat, sourcefile, bidsmap_new, bidsmap_old, template, store, gui)
-
-            # Update / append the file-system mapping
-            if dataformat=='FileSystem':
-                bidsmap_new = build_filesystemmap(session, bidsmap_new, bidsmap_old)
 
             # Update / append the plugin mapping
             if bidsmap_old['PlugIns']:

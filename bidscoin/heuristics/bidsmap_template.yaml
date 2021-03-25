@@ -43,6 +43,10 @@ DICOM:
 
   anat:       # ----------------------- All anatomical runs --------------------
   - provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    filesystem: &anat_fileattr
+      path: ~
+      name: ~
+      size: ~
     attributes: &anat_dicomattr
       Modality: ~
       ProtocolName: ~
@@ -66,6 +70,7 @@ DICOM:
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       suffix: T1w
   - provenance: ~
+    filesystem: *anat_fileattr
     attributes: *anat_dicomattr
     bids:
       <<: *anat_dicoment_nonparametric
@@ -1295,28 +1300,3 @@ PAR:
       acq: <protocol_name><exam_name>
       rec: <tech>
       suffix: <series_type>
-
-
-FileSystem: ~
-# --------------------------------------------------------------------------------
-# File system key-value heuristics (these file- and foldernames will be mapped
-# to the BIDS labels; Special substitutions can be performed using python's
-# Format Specification Mini-Language)
-# --------------------------------------------------------------------------------
-#  subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime
-#  session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime
-#
-#  anat:       # ----------------------- All anatomical runs --------------------
-#  - provenance: ~                 # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
-#    attributes: &anat_fileattr
-#      path: ~
-#      name: ~
-#      ext: ~
-#    bids: &anat_fileent_nonparametric    # See: schema/datatypes/anat.yaml
-#      acq: ~
-#      ce: ~
-#      rec: ~
-#      run: <<1>>
-#      part: ['', 'mag', 'phase', 'real', 'imag', 0]
-#      suffix: T1w
-# etc
