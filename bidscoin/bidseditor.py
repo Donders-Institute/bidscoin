@@ -325,7 +325,8 @@ class Ui_MainWindow(MainWindow):
     def set_tab_file_browser(self):
         """Set the raw data folder inspector tab. """
 
-        label = QLabel(str(self.bidsfolder))
+        rootfolder = str(self.bidsfolder.parent)
+        label = QLabel(rootfolder)
         label.setWordWrap(True)
 
         self.model = QFileSystemModel()
@@ -338,7 +339,8 @@ class Ui_MainWindow(MainWindow):
         tree.setIndentation(20)
         tree.sortByColumn(0, QtCore.Qt.AscendingOrder)
         tree.setSortingEnabled(True)
-        tree.setRootIndex(model.index(str(self.bidsfolder)))
+        tree.setRootIndex(model.index(rootfolder))
+        tree.setExpanded(model.index(str(self.bidsfolder)), True)
         tree.doubleClicked.connect(self.on_double_clicked)
         tree.header().resizeSection(0, 800)
 
