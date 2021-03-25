@@ -117,7 +117,7 @@ class myWidgetItem(QTableWidgetItem):
 
 class InspectWindow(QDialog):
 
-    def __init__(self, filename: Path, sourcedict, dataformat: str):
+    def __init__(self, filename: Path, sourcedict):
         super().__init__()
 
         icon = QtGui.QIcon()
@@ -201,8 +201,8 @@ class Ui_MainWindow(MainWindow):
         buttonBox = QDialogButtonBox(self)
         buttonBox.setStandardButtons(QDialogButtonBox.Save | QDialogButtonBox.Reset | QDialogButtonBox.Help)
         buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
-        buttonBox.button(QDialogButtonBox.Save).setToolTip('Save the Options and BIDS-map to disk if you are satisfied with all the BIDS output names')
-        buttonBox.button(QDialogButtonBox.Reset).setToolTip('Reload the options and BIDS-map from disk')
+        buttonBox.button(QDialogButtonBox.Save).setToolTip('Save the Options and BIDSmap to disk if you are satisfied with all the BIDS output names')
+        buttonBox.button(QDialogButtonBox.Reset).setToolTip('Reload the Options and BIDSmap from disk')
         buttonBox.helpRequested.connect(self.get_help)
         buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reload)
         buttonBox.button(QDialogButtonBox.Save).clicked.connect(self.save_bidsmap_to_file)
@@ -248,14 +248,14 @@ class Ui_MainWindow(MainWindow):
         # Set the file menu actions
         actionReload = QAction(self.MainWindow)
         actionReload.setText('Reset')
-        actionReload.setStatusTip('Reload the BIDS-map from disk')
+        actionReload.setStatusTip('Reload the BIDSmap from disk')
         actionReload.setShortcut('Ctrl+R')
         actionReload.triggered.connect(self.reload)
         menuFile.addAction(actionReload)
 
         actionSave = QAction(self.MainWindow)
         actionSave.setText('Save')
-        actionSave.setStatusTip('Save the BIDS-map to disk')
+        actionSave.setStatusTip('Save the BIDSmap to disk')
         actionSave.setShortcut('Ctrl+S')
         actionSave.triggered.connect(self.save_bidsmap_to_file)
         menuFile.addAction(actionSave)
@@ -308,7 +308,7 @@ class Ui_MainWindow(MainWindow):
             else:
                 LOGGER.warning(f"Could not read {self.dataformat} file: {sourcefile}")
                 return
-            self.popup = InspectWindow(sourcefile, sourcedata, self.dataformat)
+            self.popup = InspectWindow(sourcefile, sourcedata)
             self.popup.show()
             self.popup.scrollbar.setValue(0)     # This can only be done after self.popup.show()
 
@@ -735,6 +735,10 @@ class Ui_MainWindow(MainWindow):
         if self.has_edit_dialog_open:
             self.dialog_edit.reject(confirm=False)
 
+        if not self.bidsmap_filename.is_file():
+            LOGGER.info('Could not reload the bidsmap')
+            QMessageBox.warning(self.MainWindow, 'Reset', f"Could not find and reload the bidsmap file:\n{self.bidsmap_filename}")
+            return
         LOGGER.info('User reloads the bidsmap')
         current_tab_index = self.tabwidget.currentIndex()
         self.output_bidsmap, _ = bids.load_bidsmap(self.bidsmap_filename)
@@ -790,7 +794,7 @@ class Ui_MainWindow(MainWindow):
         else:
             LOGGER.warning(f"Could not read {self.dataformat} file: {datafile}")
             return
-        self.popup = InspectWindow(datafile, sourcedata, self.dataformat)
+        self.popup = InspectWindow(datafile, sourcedata)
         self.popup.show()
         self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
 
@@ -1080,7 +1084,7 @@ class EditDialog(QDialog):
             else:
                 LOGGER.warning(f"Could not read {self.dataformat} file: {sourcefile}")
                 return
-            self.popup = InspectWindow(sourcefile, sourcedata, self.dataformat)
+            self.popup = InspectWindow(sourcefile, sourcedata)
             self.popup.show()
             self.popup.scrollbar.setValue(0)     # This can only be done after self.popup.show()
 
