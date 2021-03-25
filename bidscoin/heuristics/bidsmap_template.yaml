@@ -1297,18 +1297,6 @@ PAR:
       suffix: <series_type>
 
 
-P7: ~
-# --------------------------------------------------------------------------------
-# P*.7 key-value heuristics (GE fields that are mapped to the BIDS labels)
-# --------------------------------------------------------------------------------
-
-
-Nifti: ~
-# --------------------------------------------------------------------------------
-# Nifti key-value heuristics (Nifti fields that are mapped to the BIDS labels)
-# --------------------------------------------------------------------------------
-
-
 FileSystem: ~
 # --------------------------------------------------------------------------------
 # File system key-value heuristics (these file- and foldernames will be mapped
