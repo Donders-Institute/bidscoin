@@ -93,23 +93,6 @@ def build_bidsmap(dataformat: str, sourcefile: Path, bidsmap_new: dict, bidsmap_
     return bidsmap_new
 
 
-def build_niftimap(session: Path, bidsmap_new: dict, bidsmap_old: dict) -> dict:
-    """
-    All the logic to map nifti-info onto bids labels go into this function
-
-    :param session:     The full-path name of the source folder containing nifti-files
-    :param bidsmap_new: The bidsmap that we are building
-    :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:            The bidsmap with new entries in it
-    """
-
-    # Input checks
-    if not session or not bidsmap_old['Nifti']:
-        return bidsmap_new
-
-    return bidsmap_new
-
-
 def build_filesystemmap(session: Path, bidsmap_new: dict, bidsmap_old: dict) -> dict:
     """
     All the logic to map filesystem-info onto bids labels go into this function
@@ -192,7 +175,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         bidsmap_new = copy.deepcopy(bidsmap_old)
     else:
         bidsmap_new = copy.deepcopy(template)
-    for logic in ('DICOM', 'PAR', 'P7', 'Nifti', 'FileSystem'):
+    for logic in ('DICOM', 'PAR', 'FileSystem'):
         for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
             if bidsmap_new.get(logic) and datatype in bidsmap_new[logic]:
                 bidsmap_new[logic][datatype] = None
@@ -263,16 +246,9 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             if dataformat=='PAR':
                 sourcefiles = bids.get_parfiles(session)
 
-            if dataformat=='P7':
-                sourcefiles = bids.get_p7file(session)
-
             # Update the bidsmap with the info from the source files
             for sourcefile in sourcefiles:
                 bidsmap_new = build_bidsmap(dataformat, sourcefile, bidsmap_new, bidsmap_old, template, store, gui)
-
-            # Update / append the nifti mapping
-            if dataformat=='Nifti':
-                bidsmap_new = build_niftimap(session, bidsmap_new, bidsmap_old)
 
             # Update / append the file-system mapping
             if dataformat=='FileSystem':

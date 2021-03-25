@@ -333,19 +333,6 @@ def is_parfile(file: Path) -> bool:
         return False
 
 
-def is_p7file(file: Path) -> bool:
-    """
-    Checks whether a file is a GE P*.7 file
-
-    WIP!!!!!!
-
-    :param file:    The full pathname of the file
-    :return:        Returns true if a file is a GE P7-file
-    """
-
-    pass
-
-
 def is_niftifile(file: Path) -> bool:
     """
     Checks whether a file is a nifti file
@@ -463,30 +450,6 @@ def get_parfiles(folder: Path) -> List[Path]:
             parfiles.append(file)
 
     return parfiles
-
-
-def get_p7file(folder: Path) -> Path:
-    """
-    Gets a GE P*.7-file from the folder
-
-    :param folder:  The full pathname of the folder
-    :return:        The filename of the first P7-file in the folder.
-    """
-
-    pass
-    return Path()
-
-
-def get_niftifile(folder: Path) -> Path:
-    """
-    Gets a nifti-file from the folder
-
-    :param folder:  The full pathname of the folder
-    :return:        The filename of the first nifti-file in the folder.
-    """
-
-    pass
-    return Path()
 
 
 def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=True) -> Tuple[dict, Path]:
