@@ -19,7 +19,6 @@ import nibabel
 import tempfile
 import tarfile
 import zipfile
-import fnmatch
 import pydicom
 from pydicom.fileset import FileSet
 from distutils.dir_util import copy_tree
@@ -1034,7 +1033,7 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, provenance: Path, target
 
 def match_attribute(longvalue, values) -> bool:
     """
-    Compare the value items with / without *wildcard* with the longvalue string. If both longvalue
+    Match the value items with the longvalue string using regexp. If both longvalue
     and values are a list then they are directly compared as is
 
     Examples:
@@ -1057,7 +1056,7 @@ def match_attribute(longvalue, values) -> bool:
     if not longvalue or not values:
         return False
 
-    # Make sure we start with string types
+    # Make sure we start with proper string types
     longvalue = str(longvalue)
     values    = str(values)
 
@@ -1087,7 +1086,8 @@ def match_attribute(longvalue, values) -> bool:
     if not isinstance(longvalue, list):
         longvalue = [longvalue]
     for value in values:
-        if any([fnmatch.fnmatchcase(str(item), str(value)) for item in longvalue]):
+        rawvalue = str(value).encode('unicode-escape').decode()
+        if any([re.fullmatch(rawvalue, str(item)) is not None for item in longvalue]):
             return True
 
     return False

@@ -563,7 +563,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['*b1map*', '*B1map*']
+      SeriesDescription: ~
       ImageType: 'FLIP ANGLE MAP'
     bids: &fmap_dicoment_parametric
       acq: <SeriesDescription>
@@ -575,7 +575,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['*b1map*', '*B1map*']
+      SeriesDescription: ~
     bids:
       <<: *fmap_dicoment_parametric
       suffix: RB1map
