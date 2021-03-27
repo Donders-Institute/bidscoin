@@ -43,7 +43,7 @@ DICOM:
 
   anat:       # ----------------------- All anatomical runs --------------------
   - provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
-    filesystem: &anat_fileattr    # This is an (stub) example of filesystem matching (could be added to any run-item)
+    filesystem: &fileattr         # This is an (stub) example of filesystem matching (could be added to any run-item)
       path: ~                     # E.g. .*Parkinson.* or ['.*phantom.*', '.*bottle.*']
       name: ~                     # E.g. .*fmap.* or ['.*fieldmap.*', '.*fmap.*']
       size: ~                     # E.g. 245870 or [245869, 245870, 245871]
@@ -72,81 +72,81 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*mprage.*', '.*MPRAGE.*', '.*MPRage.*', '.*t1w.*', '.*T1W.*', '.*T1w.*', '.*T1.*']
-      MRAcquisitionType: 3D
+      ProtocolName: '(?i).*(MPRAGE|T1w).*'
+      MRAcquisitionType: '3D'
     bids: *anat_dicoment_nonparametric
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*t2w.*', '.*T2w.*', '.*T2W.*', '.*T2.*']
-      SequenceVariant: "['SK', 'SP']"
+      ProtocolName: '(?i).*T2w.*'
+      SequenceVariant: '[''SK'', ''SP'']'
     bids:
       <<: *anat_dicoment_nonparametric
       suffix: T2w
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: '.*tse.*vfl.*'
-      ImageType: NORM                   # NB: The non-NORM image is saved in 'extra_data'
-      SequenceVariant: "['SK', 'SP']"
-      ScanningSequence: SE
+      ProtocolName: '(?i).*TSE.*vfl.*'
+      ImageType: '.*''NORM''.*'                 # NB: The non-NORM image is saved in 'extra_data'
+      SequenceVariant: '[''SK'', ''SP'']'
+      ScanningSequence: 'SE'
     bids:
       <<: *anat_dicoment_nonparametric
       suffix: T2w
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*PDw.*', '.*pdw.*']
+      ProtocolName: '.*PDw.*'
     bids:
       <<: *anat_dicoment_nonparametric
       suffix: PDw
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*t2star.*', '.*T2star.*', '.*T2STAR.*', '.*T2Star.*']
+      ProtocolName: '(?i).*T2star.*'
     bids:
       <<: *anat_dicoment_nonparametric
       suffix: T2starw
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      ScanningSequence: "['SE', 'IR']"
-      SeriesDescription: ['.*FLAIR.*', '.*flair.*']
+      ProtocolName: '(?i).*FLAIR.*'
+      ScanningSequence: '.*''?IR''?.*'
     bids:
       <<: *anat_dicoment_nonparametric
       suffix: FLAIR
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*InplaneT1.*', '.*inplaneT1.*']
+      ProtocolName: '(?i).*Inplane.?T1.*'
     bids:
       <<: *anat_dicoment_nonparametric
       suffix: inplaneT1
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*InplaneT2.*', '.*inplaneT2.*']
+      ProtocolName: '(?i).*Inplane.?T2.*'
     bids:
       <<: *anat_dicoment_nonparametric
       suffix: inplaneT2
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*PDT2.*', '.*PDt2.*']
+      ProtocolName: '.*PDT2.*'
     bids:
       <<: *anat_dicoment_nonparametric
       suffix: PDT2
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*angio.*', '.*Angio.*', '.*ANGIO.*']
+      ProtocolName: '(?i).*ANGIO.*'
     bids:
       <<: *anat_dicoment_nonparametric
       suffix: angio
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*T1map.*', '.*T1Map.*', '.*t1map.*', '.*t1Map.*']
+      ProtocolName: '(?i).*T1.?map.*'
     bids: &anat_dicoment_parametric     # See: schema/datatypes/anat.yaml
       acq: <ProtocolName>
       ce: ~
@@ -156,113 +156,114 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*T2map.*', '.*T2Map.*', '.*t2map.*']
+      ProtocolName: '(?i).*T2.?map.*'
     bids:
       <<: *anat_dicoment_parametric
       suffix: T2map
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*T2starmap.*', '.*T2StarMap.*', '.*t2starmap.*']
+      ProtocolName: '(?i).*T2star.?map.*'
     bids:
       <<: *anat_dicoment_parametric
       suffix: T2starmap
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*R1map.*', '.*R1Map.*', '.*r1map.*']
+      ProtocolName: '(?i).*R1.?map.*'
     bids:
       <<: *anat_dicoment_parametric
       suffix: R1map
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*R2map.*', '.*R2Map.*', '.*r2map.*']
+      ProtocolName: '(?i).*R2.?map.*'
     bids:
       <<: *anat_dicoment_parametric
       suffix: R2map
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*R2starmap.*', '.*R2StarMap.*', '.*r2starmap.*']
+      ProtocolName: '(?i).*R2star.?map.*'
     bids:
       <<: *anat_dicoment_parametric
       suffix: R2starmap
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*PDMap.*', '.*PDmap.*']
+      ProtocolName: '(?i).*PD.?map.*'
     bids:
       <<: *anat_dicoment_parametric
       suffix: PDmap
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*MTRMap.*', '.*MTRmap.*']
+      ProtocolName: '(?i).*MTR.?map.*'
     bids:
       <<: *anat_dicoment_parametric
       suffix: MTRmap
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*MTSat.*', '.*MTsat.*']
+      ProtocolName: '(?i).*MT.?sat.*'
     bids:
       <<: *anat_dicoment_parametric
       suffix: MTsat
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*mp2rage.*UNI.*', '.*MP2RAGE.*UNI.*', '.*MP2Rage.*UNI.*', '.*mp2rage.*uni.*', '.*MP2RAGE.*uni.*', '.*MP2Rage.*uni.*']
-      MRAcquisitionType: 3D
+      ProtocolName: '(?i).*MP2RAGE.*'
+      SeriesDescription: '(?i).*UNI.*'
+      MRAcquisitionType: '3D'
     bids:
       <<: *anat_dicoment_parametric
       suffix: UNIT1
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*T1rho.*', '.*T1Rho.*', '.*t1rho.*', '.*t1Rho.*']
+      ProtocolName: '(?i).*T1rho.*'
     bids:
       <<: *anat_dicoment_parametric
       suffix: T1rho
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*MWFMap.*', '.*MWFmap.*', '.*mwfmap.*']
+      ProtocolName: '(?i).*MWF.?map.*'
     bids:
       <<: *anat_dicoment_parametric
       suffix: MWFmap
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*MTVMap.*', '.*MTVmap.*', '.*mtvmap.*']
+      ProtocolName: '(?i).*MTV.?map.*'
     bids:
       <<: *anat_dicoment_parametric
       suffix: MTVmap
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*PDT2Map.*', '.*PDT2map.*', '.*mwfmap.*']
+      ProtocolName: '(?i).*PDT2.?map.*'
     bids:
       <<: *anat_dicoment_parametric
       suffix: PDT2map
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*ChiMap.*', '.*Chimap.*', '.*chimap.*']
+      ProtocolName: '(?i).*Chi.?map.*'
     bids:
       <<: *anat_dicoment_parametric
       suffix: Chimap
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*S0Map.*', '.*Somap.*', '.*s0map.*']
+      ProtocolName: '(?i).*S0.?map.*'
     bids:
       <<: *anat_dicoment_parametric
       suffix: S0map
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*M0Map.*', '.*Momap.*', '.*m0map.*']
+      ProtocolName: '(?i).*M0.?map.*'
     bids:
       <<: *anat_dicoment_parametric
       suffix: M0map
@@ -278,7 +279,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*MESE.*', '.*mese.*']
+      ProtocolName: '(?i).*ME.?SE.*'
     bids: &anat_dicoment_multiecho      # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
@@ -290,14 +291,14 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*MEGRE.*', '.*megre.*']
+      ProtocolName: '(?i).*ME.?GRE.*'
     bids:
       <<: *anat_dicoment_multiecho
       suffix: MEGRE
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*VFA.*', '.*vfa.*']
+      ProtocolName: '(?i).*VFA.*'
     bids: &anat_dicoment_multiflip      # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
@@ -309,7 +310,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*IRT1.*', '.*irt1.*']
+      ProtocolName: '(?i).*IR.?T1.*'
     bids: &anat_dicoment_multiinv       # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
@@ -321,8 +322,9 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*mp2rage.*INV1.*', '.*MP2RAGE.*INV1.*', '.*MP2Rage.*INV1.*', '.*mp2rage.*inv1.*', '.*MP2RAGE.*inv1.*', '.*MP2Rage.*inv1.*']
-      MRAcquisitionType: 3D
+      ProtocolName: '(?i).*MP2RAGE.*'
+      SeriesDescription: '(?i).*INV1.*'
+      MRAcquisitionType: '3D'
     bids: &anat_dicoment_mp2rage        # See: schema/datatypes/anat.yaml
       acq: <ProtocolName>
       ce: ~
@@ -336,15 +338,16 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*mp2rage.*INV2.*', '.*MP2RAGE.*INV2.*', '.*MP2Rage.*INV2.*', '.*mp2rage.*inv2.*', '.*MP2RAGE.*inv2.*', '.*MP2Rage.*inv2.*']
-      MRAcquisitionType: 3D
+      ProtocolName: '(?i).*MP2RAGE.*'
+      SeriesDescription: '(?i).*INV2.*'
+      MRAcquisitionType: '3D'
     bids:
       <<: *anat_dicoment_mp2rage
       inv: 2
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*MPM.*', '.*mpm.*']
+      ProtocolName: '(?i).*MPM.*'
     bids: &anat_dicoment_vfamt          # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
@@ -358,14 +361,14 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*MTS.*', '.*mts.*']
+      ProtocolName: '(?i).*MTS.*'
     bids:
       <<: *anat_dicoment_vfamt
       suffix: MTS
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: ['.*MTR.*', '.*mtr.*']
+      ProtocolName: '(?i).*MTR.*'
     bids: &anat_dicoment_mtr            # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce: ~
@@ -405,25 +408,15 @@ DICOM:
   - provenance: ~
     attributes:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
       <<: *func_dicomattr
-      ProtocolName: ['.*fmri.*', '.*fMRI.*', '.*FMRI.*', '.*task.*', '.*Task.*', '.*bold.*', '.*BOLD.*']
-      SeriesDescription: ['.*sbref.*', '.*SBRef.*', '.*SBREF.*']
-    bids:
-      <<: *func_dicoment_func
-      suffix: sbref
-  - provenance: ~
-    attributes:
-      <<: *func_dicomattr
-      ProtocolName: '.*cmrr_.*_m.*_TR.*'
-      ScanningSequence: EP
-      SeriesDescription: ['.*sbref.*', '.*SBRef.*', '.*SBREF.*']
+      SeriesDescription: '(?i).*((f|functional).?MRI|task|BOLD|CMRR.*_TR).*SBREF.*'
     bids:
       <<: *func_dicoment_func
       suffix: sbref
   - provenance: ~
     attributes:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
       <<: *func_dicomattr
-      ProtocolName: ['.*fmri.*', '.*fMRI.*', '.*FMRI.*', '.*task.*', '.*Task.*', '.*bold.*', '.*BOLD.*']
-      ImageType: PHYSIO
+      ProtocolName: '(?i).*((f|functional).?MRI|task|BOLD|CMRR.*_TR).*'
+      ImageType: '.*''PHYSIO''.*'
     bids: &func_dicoment_timeseries     # See: schema/datatypes/func.yaml
       task: <ProtocolName>
       acq: ~
@@ -436,23 +429,17 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *func_dicomattr
-      SeriesDescription: ['.*fmri.*Physio.*', '.*fMRI.*Physio.*', '.*FMRI.*Physio.*', '.*task.*Physio.*', '.*Task.*Physio.*', '.*bold.*Physio.*', '.*BOLD.*Physio.*']
+      SeriesDescription: '(?i).*((f|functional).?MRI|task|BOLD|CMRR.*_TR).*PHYSIO.*'
     bids: *func_dicoment_timeseries
   - provenance: ~
     attributes:                         # Then catch the bold runs themselves
       <<: *func_dicomattr
-      ProtocolName: ['.*fmri.*', '.*fMRI.*', '.*FMRI.*', '.*task.*', '.*Task.*', '.*bold.*', '.*BOLD.*']
+      ProtocolName: '(?i).*((f|functional).?MRI|task|BOLD|CMRR.*_TR).*'
     bids: *func_dicoment_func
   - provenance: ~
     attributes:
       <<: *func_dicomattr
-      ProtocolName: '.*cmrr_.*_m.*_TR.*'
-      ScanningSequence: EP
-    bids: *func_dicoment_func
-  - provenance: ~
-    attributes:
-      <<: *func_dicomattr
-      ProtocolName: ['.*CBV.*', '.*CerebralBloodVolume.*']
+      ProtocolName: '(?i).*(CBV|CerebralBloodVolume).*'
     bids:
       <<: *func_dicoment_func
       suffix: cbv
@@ -498,12 +485,12 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *perf_dicomattr
-      ProtocolName: [ '.*ASL.*', '.*Perfusion.*', '.*perfusion.*' ]
+      ProtocolName: '(?i).*(ASL|Perfusion).*'
     bids: *perf_dicoment_group1
   - provenance: ~
     attributes:
       <<: *perf_dicomattr
-      ProtocolName: ['.*M0Scan.*', '.*m0scan.*']
+      ProtocolName: '(?i).*M0.?scan.*'
     bids:
       <<: *perf_dicoment_group1
       suffix: m0scan
@@ -549,8 +536,7 @@ DICOM:
   - provenance: ~
     attributes:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
       <<: *dwi_dicomattr
-      ProtocolName: ['.*dwi.*', '.*DWI.*', '.*diffusion.*', '.*DIFFUSION.*', '.*dti.*', '.*DTI.*']
-      SeriesDescription: ['.*sbref.*', '.*SBRef.*', '.*SBREF.*']
+      SeriesDescription: '(?i).*(DWI|diffusion|DTI).*SBREF.*'
     bids: &dwi_dicoment_sbref           # See: schema/datatypes/dwi.yaml
       acq: <SeriesDescription>
       dir: ~
@@ -560,8 +546,8 @@ DICOM:
   - provenance: ~
     attributes:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
       <<: *dwi_dicomattr
-      ProtocolName: ['.*dwi.*', '.*DWI.*', '.*diffusion.*', '.*DIFFUSION.*', '.*dti.*', '.*DTI.*']
-      ImageType: PHYSIO
+      ProtocolName: '(?i).*(DWI|diffusion|DTI).*'
+      ImageType: '.*''PHYSIO''.*'
     bids: &dwi_dicoment_physio          # Not (yet) in: schema/datatypes/dwi.yaml
       acq: <SeriesDescription>
       dir: ~
@@ -570,17 +556,17 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *dwi_dicomattr
-      SeriesDescription: ['.*dwi.*Physio.*', '.*DWI.*Physio.*', '.*diffusion.*Physio.*', '.*DIFFUSION.*Physio.*', '.*dti.*Physio.*', '.*DTI.*Physio.*']
+      SeriesDescription: '(?i).*(DWI|diffusion|DTI).*PHYSIO.*'
     bids: *dwi_dicoment_physio
   - provenance: ~
     attributes:                         # Then catch the normal DWI runs
       <<: *dwi_dicomattr
-      ProtocolName: ['.*dwi.*', '.*DWI.*', '.*diffusion.*', '.*DIFFUSION.*', '.*dti.*', '.*DTI.*']
+      ProtocolName: '(?i).*(DWI|diffusion|DTI).*'
     bids: *dwi_dicoment_DWI
   - provenance: ~
     attributes:
       <<: *dwi_dicomattr
-      ImageType: DIFFUSION
+      ImageType: '.*''DIFFUSION''.*'
     bids: *dwi_dicoment_DWI
 
   fmap:       # ----------------------- All fieldmap runs ----------------------
@@ -608,67 +594,67 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['.*fmap.*', '.*fieldmap.*', '.*Fieldmap.*', '.*FieldMap.*','.*field_map.*', '.*B0map.*', '.*b0map.*']
-      EchoNumbers: 2
-      ImageType: P
+      ProtocolName: '(?i).*(fmap|field.?map|B0.?map).*'
+      EchoNumbers: '2'
+      ImageType: '.*''P''.*'
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: phasediff
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['.*fmap.*', '.*fieldmap.*', '.*Fieldmap.*', '.*FieldMap.*','.*field_map.*', '.*B0map.*', '.*b0map.*']
-      EchoNumbers: 1
-      ImageType: M
+      ProtocolName: '(?i).*(fmap|field.?map|B0.?map).*'
+      EchoNumbers: '1'
+      ImageType: '.*''M''.*'
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: magnitude1
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['.*fmap.*', '.*fieldmap.*', '.*Fieldmap.*', '.*FieldMap.*','.*field_map.*', '.*B0map.*', '.*b0map.*']
-      EchoNumbers: 2
-      ImageType: M
+      ProtocolName: '(?i).*(fmap|field.?map|B0.?map).*'
+      EchoNumbers: '2'
+      ImageType: '.*''M''.*'
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: magnitude2
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['.*fmap.*', '.*fieldmap.*', '.*Fieldmap.*', '.*FieldMap.*','.*field_map.*', '.*B0map.*', '.*b0map.*']
-      EchoNumbers: 1
-      ImageType: P
+      ProtocolName: '(?i).*(fmap|field.?map|B0.?map).*'
+      EchoNumbers: '1'
+      ImageType: '.*''P''.*'
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: phase1
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['.*fmap.*', '.*fieldmap.*', '.*Fieldmap.*', '.*FieldMap.*','.*field_map.*', '.*B0map.*', '.*b0map.*']
-      EchoNumbers: 2
-      ImageType: P
+      ProtocolName: '(?i).*(fmap|field.?map|B0.?map).*'
+      EchoNumbers: '2'
+      ImageType: '.*''P''.*'
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: phase2
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['.*fmap.*', '.*fieldmap.*', '.*Fieldmap.*', '.*FieldMap.*','.*field_map.*', '.*B0map.*', '.*b0map.*']
+      ProtocolName: '(?i).*(fmap|field.?map|B0.?map).*'
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: fieldmap
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['.*fmap.*', '.*fieldmap.*', '.*Fieldmap.*', '.*FieldMap.*','.*field_map.*', '.*B0map.*', '.*b0map.*']
+      ProtocolName: '(?i).*(fmap|field.?map|B0.?map).*'
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: magnitude
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      ProtocolName: ['.*inverted.*', '.*pepolar.*', '.*_inv']
-      ScanningSequence: EP
+      ProtocolName: '(?i).*(inverted|pepolar|_inv).*'
+      ScanningSequence: 'EP'
     bids: &fmap_dicoment_PEPolar        # See: schema/datatypes/fmap.yaml
       acq: <SeriesDescription>          # NB: <ProtocolName> is consistent between SBREF and PHYSIO files but causes name clashes
       ce: ~
@@ -722,9 +708,9 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['.*b1map.*', '.*B1map.*']
+      ProtocolName: '(?i).*B1.?map.*'
       SequenceName: '.*tfl.*'
-      ImageType: 'FLIP ANGLE MAP'
+      ImageType: '.*FLIP ANGLE MAP.*'
     bids:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml & https://bids-specification.readthedocs.io/en/stable/99-appendices/11-qmri.html#tb1tfl-and-tb1rfm-specific-notes
       acq: famp
@@ -732,9 +718,9 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['.*b1map.*', '.*B1map.*']
+      ProtocolName: '(?i).*B1map.*'
       SequenceName: '.*tfl.*'
-      ImageType: M
+      ImageType: '.*''M''.*'
     bids:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
       acq: anat
@@ -742,8 +728,8 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['.*rf.*map.*', '.*RF.*map.*']
-      ImageType: M
+      ProtocolName: '(?i).*RF.?map.*'
+      ImageType: '.*''M''.*'
     bids:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
       acq: anat
@@ -751,7 +737,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['.*rf.*map.*', '.*RF.*map.*']
+      ProtocolName: '(?i).*RF.?map.*'
     bids:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
       acq: famp
@@ -777,8 +763,8 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['.*b1map.*', '.*B1map.*']
-      ImageType: 'FLIP ANGLE MAP'
+      ProtocolName: '(?i).*B1.?map.*'
+      ImageType: '.*FLIP ANGLE MAP.*'
     bids: &fmap_dicoment_parametric
       acq: <SeriesDescription>
       ce: ~
@@ -789,7 +775,7 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *fmap_dicomattr
-      SeriesDescription: ['.*b1map.*', '.*B1map.*']
+      ProtocolName: '(?i).*B1.?map.*'
     bids:
       <<: *fmap_dicoment_parametric
       suffix: RB1map
@@ -797,7 +783,7 @@ DICOM:
   eeg:  # ----------------------- All EEG data ---------------------------
   - provenance: ~
     attributes:
-      Modality: EEG
+      Modality: 'EEG'
       ProtocolName: ~
       SeriesDescription: ~
     bids:                               # See: schema/datatypes/eeg.yaml
@@ -809,7 +795,7 @@ DICOM:
   ieeg:       # ----------------------- All iEEG data --------------------------
   - provenance: ~
     attributes:
-      Modality: EEG
+      Modality: 'EEG'
       ProtocolName: ~
       SeriesDescription: ~
     bids:                               # See: schema/datatypes/ieeg.yaml
@@ -851,7 +837,7 @@ DICOM:
   pet:        # ----------------------- All PET runs ---------------------------
   - provenance: ~
     attributes: &pet_dicomattr
-      Modality: PT
+      Modality: 'PT'
       SeriesDescription: ~
       Radiopharmaceutical: ~
       ImageType: ~
@@ -898,10 +884,10 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
-      SeriesDescription: '.*tse.*vfl.*'
+      ProtocolName: '(?i).*TSE.*vfl.*'
       ImageType: ~                      # Make an exception for this non-NORM TSE T2w-image (i.e. ['ORIGINAL', 'PRIMARY', 'M', 'ND'], the filtered 'NORM' version is saved in 'anat')
-      SequenceVariant: "['SK', 'SP']"
-      ScanningSequence: SE
+      SequenceVariant: '.*''SK'', ''SP''.*'
+      ScanningSequence: 'SE'
     bids:
       <<: *anat_dicoment_nonparametric
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
@@ -948,13 +934,13 @@ DICOM:
   - provenance: ~
     attributes:
       <<: *leaveout_attributes_dicom
-      ProtocolName: ['.*Scout.*', '.*scout.*', '.*localizer.*', '.*Localizer.*', 't2_haste_sag_ipat2']
+      ProtocolName: '(?i).*(Scout|localizer|t2_haste_sag_ipat2).*'
     bids: *leaveout_bids_dicom
   - provenance: ~
     attributes:
       <<: *leaveout_attributes_dicom
-      ImageType: DERIVED
-      MRAcquisitionType: 2D             # Make an exception for DERIVED 3D MP2RAGE UNI-images
+      ImageType: '.*''DERIVED''.*'
+      ProtocolName: '(?i)((?!MP2RAGE).)*'   # Make an exception for DERIVED 3D MP2RAGE UNI-images
     bids:
       <<: *leaveout_bids_dicom
       rec: DERIVED
@@ -992,68 +978,68 @@ PAR:
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*t1w.*', '.*T1w.*', '.*T1W.*', '.*T1.*', '3DTFE']
+      protocol_name: '(?i).*(3DTFE|T1w).*'
     bids: *anat_parent_nonparametric
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*t2w.*', '.*T2w.*', '.*T2W.*', '.*T2.*']
+      protocol_name: '(?i).*T2w.*'
     bids:
       <<: *anat_parent_nonparametric
       suffix: T2w
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*PDw.*', '.*pdw.*']
+      protocol_name: '(?i).*PDw.*'
     bids:
       <<: *anat_parent_nonparametric
       suffix: PDw
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*t2star.*', '.*T2star.*', '.*T2STAR.*']
+      protocol_name: '(?i).*T2star.*'
     bids:
       <<: *anat_parent_nonparametric
       suffix: T2starw
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*FLAIR.*', '.*flair.*']
+      protocol_name: '(?i).*FLAIR.*'
     bids:
       <<: *anat_parent_nonparametric
       suffix: FLAIR
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*inplaneT1.*', '.*InplaneT1.*']
+      protocol_name: '(?i).*Inplane.?T1.*'
     bids:
       <<: *anat_parent_nonparametric
       suffix: inplaneT1
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*inplaneT2.*', '.*InplaneT2.*']
+      protocol_name: '(?i).*Inplane.?T2.*'
     bids:
       <<: *anat_parent_nonparametric
       suffix: inplaneT2
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*PDT2.*', '.*PDt2.*']
+      protocol_name: '(?i).*PDT2.*'
     bids:
       <<: *anat_parent_nonparametric
       suffix: PDT2
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*angio.*', '.*Angio.*', '.*ANGIO.*']
+      protocol_name: '(?i).*ANGIO.*'
     bids:
       <<: *anat_parent_nonparametric
       suffix: angio
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*T1map.*', '.*T1Map.*', '.*t1map.*']
+      protocol_name: '(?i).*T1.?map.*'
     bids: &anat_parent_parametric       # See: schema/datatypes/anat.yaml
       acq: <protocol_name>
       ce: ~
@@ -1063,63 +1049,63 @@ PAR:
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*T2map.*', '.*T2Map.*', '.*t2map.*']
+      protocol_name: '(?i).*T2.?map.*'
     bids:
       <<: *anat_parent_parametric
       suffix: T2map
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*T2starmap.*', '.*T2StarMap.*', '.*t2starmap.*']
+      protocol_name: '(?i).*T2star.?map.*'
     bids:
       <<: *anat_parent_parametric
       suffix: T2starmap
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*R1map.*', '.*R1Map.*', '.*r1map.*']
+      protocol_name: '(?i).*R1.?map.*'
     bids:
       <<: *anat_parent_parametric
       suffix: R1map
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*R2map.*', '.*R2Map.*', '.*r2map.*']
+      protocol_name: '(?i).*R2.?map.*'
     bids:
       <<: *anat_parent_parametric
       suffix: R2map
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*R2starmap.*', '.*R2StarMap.*', '.*r2starmap.*']
+      protocol_name: '(?i).*R2star.?map.*'
     bids:
       <<: *anat_parent_parametric
       suffix: R2starmap
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*PDmap.*', '.*PDMap.*']
+      protocol_name: '(?i).*PD.?map.*'
     bids:
       <<: *anat_parent_parametric
       suffix: PDmap
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*MTRmap.*', '.*MTRMap.*']
+      protocol_name: '(?i).*MTR.?map.*'
     bids:
       <<: *anat_parent_parametric
       suffix: MTRmap
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*MTSat.*', '.*MTsat.*']
+      protocol_name: '(?i).*MT.?sat.*'
     bids:
       <<: *anat_parent_parametric
       suffix: MTsat
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*3DTFE.*UNI.*', '.*3DTFE.*uni.*', '.*3dtfe.*uni.*']
+      protocol_name: '(?i).*3DTFE.*UNI.*'
       MRAcquisitionType: 3D
     bids:
       <<: *anat_parent_parametric
@@ -1127,49 +1113,49 @@ PAR:
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*T1rho.*', '.*T1Rho.*', '.*t1rho.*', '.*t1Rho.*']
+      protocol_name: '(?i).*T1rho.*'
     bids:
       <<: *anat_parent_parametric
       suffix: T1rho
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*MWFMap.*', '.*MWFmap.*', '.*mwfmap.*']
+      protocol_name: '(?i).*MWF.?map.*'
     bids:
       <<: *anat_parent_parametric
       suffix: MWFmap
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*MTVMap.*', '.*MTVmap.*', '.*mtvmap.*']
+      protocol_name: '(?i).*MTV.?map.*'
     bids:
       <<: *anat_parent_parametric
       suffix: MTVmap
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*PDT2Map.*', '.*PDT2map.*', '.*pdt2map.*']
+      protocol_name: '(?i).*PDT2.?map.*'
     bids:
       <<: *anat_parent_parametric
       suffix: PDT2map
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*ChiMap.*', '.*Chimap.*', '.*chimap.*']
+      protocol_name: '(?i).*Chi.?map.*'
     bids:
       <<: *anat_parent_parametric
       suffix: Chimap
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*S0Map.*', '.*Somap.*', '.*s0map.*']
+      protocol_name: '(?i).*S0.?map.*'
     bids:
       <<: *anat_parent_parametric
       suffix: S0map
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*M0Map.*', '.*Momap.*', '.*m0map.*']
+      protocol_name: '(?i).*M0.?map.*'
     bids:
       <<: *anat_parent_parametric
       suffix: M0map
@@ -1185,7 +1171,7 @@ PAR:
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*MESE.*', '.*mese.*']
+      protocol_name: '(?i).*ME.?SE.*'
     bids: &anat_parent_multiecho        # See: schema/datatypes/anat.yaml
       acq: <protocol_name>
       ce: ~
@@ -1197,14 +1183,14 @@ PAR:
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*MEGRE.*', '.*megre.*']
+      protocol_name: '(?i).*ME.?GRE.*'
     bids:
       <<: *anat_parent_multiecho
       suffix: MEGRE
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*VFA.*', '.*vfa.*']
+      protocol_name: '(?i).*VFA.*'
     bids: &anat_parent_multiflip        # See: schema/datatypes/anat.yaml
       acq: <protocol_name>
       ce: ~
@@ -1216,7 +1202,7 @@ PAR:
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*IRT1.*', '.*irt1.*']
+      protocol_name: '(?i).*IR.?T1.*'
     bids: &anat_parent_multiinv         # See: schema/datatypes/anat.yaml
       acq: <protocol_name>
       ce: ~
@@ -1228,7 +1214,7 @@ PAR:
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*3DTFE.*INV1.*', '.*3DTFE.*inv1.*', '.*3dtfe.*inv1.*']
+      protocol_name: '(?i).*3DTFE.*INV1.*'
     bids: &anat_parent_mp2rage          # See: schema/datatypes/anat.yaml
       acq: <protocol_name>
       ce: ~
@@ -1242,14 +1228,14 @@ PAR:
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*3DTFE.*INV2.*', '.*3DTFE.*inv2.*', '.*3dtfe.*inv2.*']
+      protocol_name: '(?i).*3DTFE.*INV2.*'
     bids:
       <<: *anat_parent_mp2rage
       inv: 2
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*MPM.*', '.*mpm.*']
+      protocol_name: '(?i).*MPM.*'
     bids: &anat_parent_vfamt            # See: schema/datatypes/anat.yaml
       acq: <protocol_name>
       ce: ~
@@ -1263,14 +1249,14 @@ PAR:
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*MTS.*', '.*mts.*']
+      protocol_name: '(?i).*MTS.*'
     bids:
       <<: *anat_parent_vfamt
       suffix: MTS
   - provenance: ~
     attributes:
       <<: *anat_parattr
-      protocol_name: ['.*MTR.*', '.*mtr.*']
+      protocol_name: '(?i).*MTR.*'
     bids: &anat_parent_mtr              # See: schema/datatypes/anat.yaml
       acq: <protocol_name>
       ce: ~
@@ -1309,19 +1295,19 @@ PAR:
   - provenance: ~
     attributes:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
       <<: *func_parattr
-      protocol_name: ['.*fMRI.*SBREF.*', '.*fMRI.*sbref.*', '.*fMRI.*SBRef.*']
+      protocol_name: '(?i).*((f|functional).?MRI|task|BOLD).*SBREF.*'
     bids:
       <<: *func_parent_func
       suffix: sbref
   - provenance: ~
     attributes:                         # Then catch the bold runs themselves
       <<: *func_parattr
-      protocol_name: ['.*fmri.*', '.*fMRI.*', '.*FMRI.*', '.*task.*', '.*Task.*', '.*bold.*', '.*BOLD.*']
+      protocol_name: '(?i).*((f|functional).?MRI|task|BOLD).*'
     bids: *func_parent_func
   - provenance: ~
     attributes:
       <<: *func_parattr
-      protocol_name: ['.*CBV.*', '.*CerebralBloodVolume.*']
+      protocol_name: '(?i).*(CBV|CerebralBloodVolume).*'
     bids:
       <<: *func_parent_func
       suffix: cbv
@@ -1377,12 +1363,12 @@ PAR:
   - provenance: ~
     attributes:
       <<: *perf_parattr
-      protocol_name: [ '.*ASL.*', '.*Perfusion.*', '.*perfusion.*' ]
+      protocol_name: '(?i).*(ASL|Perfusion).*'
     bids: *perf_parent_group1
   - provenance: ~
     attributes:
       <<: *perf_parattr
-      protocol_name: ['.*M0Scan.*', '.*m0scan.*']
+      protocol_name: '(?i).*M0.?scan.*'
     bids:
       <<: *perf_parent_group1
       suffix: m0scan
@@ -1427,7 +1413,7 @@ PAR:
   - provenance: ~
     attributes:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
       <<: *dwi_parattr
-      protocol_name: ['.*dwi.*SBREF.*', '.*DWI.*SBREF.*', '.*diffusion.*SBREF.*', '.*DIFFUSION.*SBREF.*', '.*dti.*SBREF.*', '.*DTI.*']
+      protocol_name: '(?i).*(DWI|diffusion|DTI).*SBREF.*'
     bids: &dwi_parent_sbref             # See: schema/datatypes/dwi.yaml
       acq: <protocol_name>
       dir: ~
@@ -1437,7 +1423,7 @@ PAR:
   - provenance: ~                       # Then catch the normal DWI runs
     attributes:
       <<: *dwi_parattr
-      diffusion: 1
+      diffusion: '1'
     bids: *dwi_parent_DWI
 
   fmap:       # ----------------------- All fieldmap runs ----------------------
@@ -1445,7 +1431,7 @@ PAR:
     attributes: &fmap_parattr
       series_type: ~
       exam_name: ~
-      protocol_name: ['.*fmap.*', '.*fieldmap.*', '.*Fieldmap.*', '.*FieldMap.*','.*field_map.*', '.*B0map.*', '.*b0map.*']
+      protocol_name: '(?i).*(fmap|field.?map|B0.?map).*'
       tech: ~
       diffusion: ~
       fov: ~
@@ -1620,7 +1606,7 @@ PAR:
     attributes:
       series_type: ~
       exam_name: ~
-      protocol_name: ['.*Scout.*', '.*scout.*', '.*localizer.*', '.*Localizer.*']
+      protocol_name: '(?i).*(Scout|localizer).*'
       tech: ~
       diffusion: ~
       fov: ~

@@ -1031,7 +1031,7 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, provenance: Path, target
     return bidsmap
 
 
-def match_attribute(longvalue, values) -> bool:
+def match_attribute(longvalue, pattern) -> bool:
     """
     Match the value items with the longvalue string using regexp. If both longvalue
     and values are a list then they are directly compared as is
@@ -1044,53 +1044,26 @@ def match_attribute(longvalue, values) -> bool:
         match_attribute('T1_MPRAGE', '['*T1w*', '*MPRAGE*']') -> True
 
     :param longvalue:   The long string that is being searched in (e.g. a DICOM attribute)
-    :param values:      Either a list with search items or a string that is matched one-to-one
+    :param pattern:     Either a list with search items or a string that is matched one-to-one
     :return:            True if a match is found or both longvalue and values are identical or
                         empty / None. False otherwise
     """
 
-    # Consider it a match if both longvalue and values are identical or empty / None
-    if longvalue==values or (not longvalue and not values):
+    # Consider it a match if both longvalue and value are identical or empty / None
+    if longvalue==pattern or (not longvalue and not pattern):
         return True
 
-    if not longvalue or not values:
+    if not longvalue or not pattern:
         return False
 
     # Make sure we start with proper string types
     longvalue = str(longvalue)
-    values    = str(values)
-
-    # Interpret attribute lists as lists
-    def cast2list(string: str):
-        if string.startswith('[') and string.endswith(']'):
-            try:
-                string = ast.literal_eval(string)
-                if not isinstance(string, list):
-                    logger.error(f"Attribute value '{string}' is not a list")
-            except Exception as dicomerror:
-                logger.error(f"Could not interpret attribute value '{string}'\n{dicomerror}")
-        return string
-
-    longvalue = cast2list(longvalue)
-    values    = cast2list(values)
-
-    # Account for lists in the template (to combine similar mappings)
-    if not isinstance(values, list):
-        values = [values]
-
-    # If they are both lists, compare them as they are
-    elif isinstance(longvalue, list):
-        return str(longvalue)==str(values)
+    pattern   = str(pattern).encode('unicode-escape').decode()
 
     # Compare the value items (with / without wildcard) with the longvalue string items
-    if not isinstance(longvalue, list):
-        longvalue = [longvalue]
-    for value in values:
-        rawvalue = str(value).encode('unicode-escape').decode()
-        if any([re.fullmatch(rawvalue, str(item)) is not None for item in longvalue]):
-            return True
+    match = re.fullmatch(pattern, longvalue)
 
-    return False
+    return match is not None
 
 
 def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, matchbidslabels: bool=False) -> bool:
