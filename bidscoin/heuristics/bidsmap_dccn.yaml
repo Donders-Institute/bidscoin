@@ -9,9 +9,7 @@
 # 2) (Institute) users may create their own bidsmap_[template].yaml or
 #    bidsmap_[sample].yaml file
 #
-# For more information, see:
-# https://github.com/Donders-Institute/bidscoin
-# https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html
+# For more information, see: https://bidscoin.readthedocs.io
 # --------------------------------------------------------------------------------
 
 
