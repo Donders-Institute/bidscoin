@@ -784,15 +784,15 @@ class Ui_MainWindow(MainWindow):
         self.open_edit_dialog(provenance, datatype)
 
     def on_double_clicked(self, index: int):
-        """Opens the inspect window when a source file in the file-tree tab is double-clicked"""
+        """Opens the inspect window when a data file in the file-tree tab is double-clicked"""
         datafile = Path(self.model.fileInfo(index).absoluteFilePath())
         if bids.is_dicomfile(datafile):
             sourcedata = pydicom.dcmread(datafile, force=True)
-        elif bids.is_parfile(datafile) or datafile.suffix in {'.yaml','.json','.tsv','.csv','.txt','.log','.errors'} or datafile.name=='README':
+        elif bids.is_parfile(datafile):
             with open(datafile, 'r') as sourcefid:
                 sourcedata = sourcefid.read()
         else:
-            LOGGER.warning(f"Could not read {self.dataformat} file: {datafile}")
+            QtGui.QDesktopServices.openUrl(QtCore.QUrl(str(datafile)))
             return
         self.popup = InspectWindow(datafile, sourcedata)
         self.popup.show()
