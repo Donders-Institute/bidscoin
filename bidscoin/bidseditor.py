@@ -793,13 +793,8 @@ class Ui_MainWindow(MainWindow):
         elif bids.is_parfile(datafile):
             with open(datafile, 'r') as sourcefid:
                 sourcedata = sourcefid.read()
-        elif sys.platform != 'qwin32':
-            QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(datafile)))
-            return
-        elif datafile.suffix in {'.yaml','.json','.tsv','.csv','.txt','.log','.errors'} or datafile.name=='README':
-            with open(datafile, 'r') as sourcefid:
-                sourcedata = sourcefid.read()
         else:
+            QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(datafile)))
             return
         self.popup = InspectWindow(datafile, sourcedata)
         self.popup.show()
