@@ -792,7 +792,8 @@ class Ui_MainWindow(MainWindow):
             with open(datafile, 'r') as sourcefid:
                 sourcedata = sourcefid.read()
         else:
-            QtGui.QDesktopServices.openUrl(QtCore.QUrl(str(datafile)))
+            if datafile.is_file():
+                QtGui.QDesktopServices.openUrl(QtCore.QUrl(str(datafile)))
             return
         self.popup = InspectWindow(datafile, sourcedata)
         self.popup.show()
