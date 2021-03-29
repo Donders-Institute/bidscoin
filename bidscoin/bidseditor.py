@@ -786,14 +786,20 @@ class Ui_MainWindow(MainWindow):
     def on_double_clicked(self, index: int):
         """Opens the inspect window when a data file in the file-tree tab is double-clicked"""
         datafile = Path(self.model.fileInfo(index).absoluteFilePath())
-        if bids.is_dicomfile(datafile):
+        if not datafile.is_file():
+            return
+        elif bids.is_dicomfile(datafile):
             sourcedata = pydicom.dcmread(datafile, force=True)
         elif bids.is_parfile(datafile):
             with open(datafile, 'r') as sourcefid:
                 sourcedata = sourcefid.read()
+        elif sys.platform != 'win32':
+            QtGui.QDesktopServices.openUrl(QtCore.QUrl(str(datafile)))
+            return
+        elif datafile.suffix in {'.yaml','.json','.tsv','.csv','.txt','.log','.errors'} or datafile.name=='README':
+            with open(datafile, 'r') as sourcefid:
+                sourcedata = sourcefid.read()
         else:
-            if datafile.is_file():
-                QtGui.QDesktopServices.openUrl(QtCore.QUrl(str(datafile)))
             return
         self.popup = InspectWindow(datafile, sourcedata)
         self.popup.show()
