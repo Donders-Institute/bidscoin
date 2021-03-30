@@ -11,7 +11,7 @@ import physio as ph
 import logging, coloredlogs
 
 # Set-up logging
-LOGGER = logging.getLogger('physio2tsv')
+LOGGER = logging.getLogger(__name__)
 if not LOGGER.handlers:
     coloredlogs.install(fmt='%(asctime)s - %(name)s - %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
