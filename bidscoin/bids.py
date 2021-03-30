@@ -31,7 +31,7 @@ except ImportError:
 from ruamel.yaml import YAML
 yaml = YAML()
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 bidsdatatypes   = ('fmap', 'anat', 'func', 'perf', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')           # NB: get_matching_run() uses this order to search for a match. TODO: sync with the modalities.yaml schema
 ignoredatatype  = 'leave_out'
@@ -197,7 +197,7 @@ def import_plugin(plugin: Path) -> util.module_from_spec:
 
     # Load the plugin-module
     try:
-        spec   = util.spec_from_file_location('bidscoin_plugin', plugin)
+        spec   = util.spec_from_file_location(plugin.stem, plugin)
         module = util.module_from_spec(spec)
         spec.loader.exec_module(module)
 

@@ -29,7 +29,7 @@ try:
 except ImportError:
     import bids             # This should work if bidscoin was not pip-installed
 
-LOGGER = logging.getLogger('bidscoin')
+LOGGER = logging.getLogger()
 
 ROW_HEIGHT       = 22
 ICON_FILENAME    = Path(__file__).parent/'bidscoin.ico'

@@ -14,7 +14,7 @@ except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
     import physio
 
-LOGGER = logging.getLogger(Path(__file__).stem)
+LOGGER = logging.getLogger(__name__)
 
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, subprefix: str, sesprefix: str) -> None:
@@ -33,9 +33,6 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
 
     # See what dataformat we have
     dataformat = bids.get_dataformat(session)
-    if not dataformat:
-        LOGGER.info(f"Skipping unknown session: {session}")
-        return
 
     # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
     if dataformat=='DICOM':
@@ -54,10 +51,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
             sourcefile = sources[0]
 
     else:
-        return
-
-    if not sources:
-        LOGGER.info(f"No data found for: {session}")
+        LOGGER.info(f"Session {session} cannot be processed by {__name__}")
         return
 
     subid, sesid = bids.get_subid_sesid(sourcefile,

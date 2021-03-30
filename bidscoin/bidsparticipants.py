@@ -17,7 +17,7 @@ try:
 except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
 
-LOGGER = logging.getLogger('bidscoin')
+LOGGER = logging.getLogger(__name__)
 
 
 def scanparticipant(dataformat: str, session: Path, personals: dict, subid: str, sesid: str) -> bool:

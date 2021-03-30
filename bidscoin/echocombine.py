@@ -16,7 +16,7 @@ try:
 except ImportError:
     import bids             # This should work if bidscoin was not pip-installed
 
-LOGGER = logging.getLogger('bidscoin')
+LOGGER = logging.getLogger()
 
 
 def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorithm: str, weights: list, force: bool=False):

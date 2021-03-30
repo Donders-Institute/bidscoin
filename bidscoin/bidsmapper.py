@@ -21,7 +21,7 @@ except ImportError:
     import bids, bidseditor         # This should work if bidscoin was not pip-installed
 
 
-LOGGER = logging.getLogger('bidscoin')
+LOGGER = logging.getLogger()
 
 localversion, versionmessage = bids.version(check=True)
 

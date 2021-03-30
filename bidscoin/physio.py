@@ -22,7 +22,7 @@ LOGVERSION = 'EJA_1'                # This is the file format this function expe
 FREQ       = 1 / 2.5E-3             # Sampling frequency (the unit of SIEMENS ticks is 2.5 ms)
 
 # Set-up logging
-LOGGER = logging.getLogger(Path(__file__).stem)
+LOGGER = logging.getLogger(__name__)
 
 
 def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, expectedsamples: int=0) -> tuple:

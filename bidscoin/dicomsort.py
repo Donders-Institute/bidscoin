@@ -15,7 +15,7 @@ try:
 except ImportError:
     import bids         # This should work if bidscoin was not pip-installed
 
-LOGGER = logging.getLogger('bidscoin')
+LOGGER = logging.getLogger(__name__)
 
 
 def cleanup(name: str) -> str:

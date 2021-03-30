@@ -66,7 +66,7 @@ Before sharing or pre-processing their images, users may want to combine the sep
 Defacing
 ^^^^^^^^
 
-Before sharing or pre-processing their images, users may want to deface their anatomical MRI acquisitions as to protect the privacy of their subjects. The ``deface``-tool is a wrapper around ``pydeface`` that writes BIDS valid output.
+Before sharing or pre-processing their images, users may want to deface their anatomical MRI acquisitions as to protect the privacy of their subjects. The ``deface``-tool is a wrapper around `pydeface <https://github.com/poldracklab/pydeface>`__ that writes BIDS valid output. NB: pydeface requires FSL to be installed on the system.
 
 ::
 
@@ -119,4 +119,3 @@ BIDS validation
 ---------------
 
 If all of the above work is done, you can (and should) run the web-based `bidsvalidator <https://bids-standard.github.io/bids-validator/>`__ to check for inconsistencies or missing files in your bids data-set (NB: the bidsvalidator also exists as a `command-line tool <https://github.com/bids-standard/bids-validator>`__).
-

@@ -4,22 +4,25 @@ The bidsmap explained
 Structure and content
 ---------------------
 
-Generally speaking, a bidsmap contains a collection of key-value dictionaries that define how different source data runs (e.g. a T1w- or a T2w-scan) should map onto BIDS filenames. As illustrated in the figure below (but see also the screenshot of the `edit window <screenshots.html>`__), a run-item consists of ``provenance``, ``attributes`` and ``bids`` key-value dictionaries:
+Generally speaking, a bidsmap is a collection of run-items that define how different source data runs (e.g. a T1w- or a T2w-scan) should map onto BIDS filenames. As illustrated in the figure below (but see also the screenshot of the `edit window <screenshots.html>`__), a run-item consists of ``provenance``, ``attributes``, ``filesystem`` and ``bids`` key-value dictionaries:
 
- - The provenance item contains the pathname of a source data sample that is representative for this run.
- - The attributes dictionary contains keys and values that are properties of the source data and that are (pre-) selected to uniquely identify a run item. A source data sample is positively identified only if all specified (non-empty) values match.
- - The bids dictionary contains key-value pairs that are used to construct the associated BIDS output filename.
+ - The provenance item contains the pathname of a source data sample that is representative for the run-item.
+ - The attributes dictionary contains keys and values that are properties of the source data itself that can identify a run-item.
+ - The filesystem dictionary contains keys and values that are properties of the file system that can identify a run-item.
+ - The bids dictionary contains key-value pairs that are used to construct the associated BIDS output filename of a run-item.
 
 .. figure:: ./_static/bidsmap_sample.png
 
-   A snippet of a study ``bidsmap.yaml`` file, showing a ``DICOM`` section with a few run items in the ``anat`` subsection
+   A snippet of a study ``bidsmap.yaml`` file, showing a ``DICOM`` section with a few run-items in the ``anat`` subsection
 
-A bidsmap has a BIDScoin ``Options`` and a ``PlugIns`` section, followed by source modality sections (e.g. ``DICOM``, ``PAR``, ``P7``, ``Nifti``, ``FileSystem``). Within a source modality section there sub-sections for the ``participant_label`` and ``session_label``, and for the BIDS datatypes (``anat``, ``func``, ``dwi``, ``fmap``, ``pet``, ``beh``) plus the additional ``extra_data`` datatype. BIDScoin tools will go through the list of run items of a datatype from top to bottom until they come across an item that matches with the data sample at hand. At that point a bidsmapping is established.
+The collection of run-items is hierarchically organised in ``DICOM`` and ``PAR`` source modality sections, which in turn contain subsections for the  ``anat``, ``func``, ``dwi``, ``fmap``, ``pet``, ``beh`` and ``extra_data`` datatypes as well as a ``participant_label`` and ``session_label`` subsection. The latter two are common to all run-items and contain key-value pairs that identify the subject and session labels. Next to the two source modality sections there is a general ``Options`` and a ``PlugIns`` section, that accommodate customized BIDScoin settings and tweaks.
+
+BIDScoin tools are processing source data, they will take a data sample and go through the list of run-items until they come across a run-item that matches with the data sample at hand. At that point a bidsmapping is established and the bidsname can be derived.
 
 From template to study
 ----------------------
 
-A bidsmap can either be a template bidsmap or a study bidsmap. The difference between them is that a template bidsmap is a comprehensive set of pre-defined run items and serves as an input for the bidsmapper to automatically make a first version of a study bidsmap. The study bidsmap is thus derived from the template bidsmap and contains only those run items that are present in the data. The study bidsmap can be interactively edited with knowledge that is specific to a study and that cannot be extracted from the data (e.g. set a ``task`` value to "rest"). A user normally doesn't have to interact with the template bidsmap, but it is sure possible to `create your own <advanced.html#site-specific-customized-template>`__.
+A bidsmap can either be a template bidsmap or a study bidsmap. The difference between them is that a template bidsmap is a comprehensive set of pre-defined run-items and serves as an input for the bidsmapper to automatically make a first version of a study bidsmap. The study bidsmap is thus derived from the template bidsmap and contains only those run-items that are present in the data. The study bidsmap can be interactively edited with knowledge that is specific to a study and that cannot be extracted from the data (e.g. set a ``task`` value to "rest"). A user normally doesn't have to interact with the template bidsmap, but it is sure possible to `create your own <advanced.html#site-specific-customized-template>`__.
 
 .. figure:: ./_static/bidsmap_flow.png
 
@@ -28,7 +31,7 @@ A bidsmap can either be a template bidsmap or a study bidsmap. The difference be
 Special bidsmap features
 ------------------------
 
-* **Source attribute wildcards**. Source attribute values can contain `Unix shell-style <https://docs.python.org/3/library/fnmatch.html>`__ ``*`` wildcards to facilitate more liberal run matching. For instance you can use ``SeriesDescription: '*MPRAGE*'`` to match all MPRAGE DICOM series as they come from your MRI scanner.
+* **Source attribute matching patterns**. Source attribute values can contain `Unix shell-style <https://docs.python.org/3/library/fnmatch.html>`__ ``*`` wildcards to facilitate more liberal run matching. For instance you can use ``SeriesDescription: '*MPRAGE*'`` to match all MPRAGE DICOM series as they come from your MRI scanner.
 
 * **Source attribute list**. Instead of a normal string, a source attribute value can also be a list of strings, in which case a match is positive if any of the list items matches with the source attribute of the run. For instance ``SequenceName: ['\*epfid\*', 'fm2d2r']`` will liberally match all DICOM sequences with that have ``epfid`` in their ``SequenceName`` and it will strictly match on ``fm2d2r``.
 
