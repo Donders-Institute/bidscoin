@@ -8,7 +8,6 @@ https://github.com/dangom/dac2bids/blob/master/dac2bids.py
 """
 
 import inspect
-import ast
 import re
 import logging
 import coloredlogs
@@ -32,7 +31,7 @@ except ImportError:
 from ruamel.yaml import YAML
 yaml = YAML()
 
-logger = logging.getLogger('bidscoin')
+logger = logging.getLogger()
 
 bidsdatatypes   = ('fmap', 'anat', 'func', 'perf', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')           # NB: get_matching_run() uses this order to search for a match. TODO: sync with the modalities.yaml schema
 ignoredatatype  = 'leave_out'
@@ -98,7 +97,7 @@ def setup_logging(log_file: Path=Path(), debug: bool=False) -> logging.Logger:
     # debug = True
 
     # Set the format and logging level
-    fmt       = '%(asctime)s - %(name)s - %(levelname)s %(message)s'
+    fmt       = '%(asctime)s - %(levelname)s %(message)s'
     datefmt   = '%Y-%m-%d %H:%M:%S'
     formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
     if debug:
