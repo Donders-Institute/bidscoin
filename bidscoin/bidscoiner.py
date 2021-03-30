@@ -31,32 +31,6 @@ LOGGER = logging.getLogger()
 localversion, versionmessage = bids.version(check=True)
 
 
-def coin_plugins(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, subprefix: str, sesprefix: str) -> None:
-    """
-    Run the plugin coiner to cast the run into the bids folder
-
-    :param session:     The full-path name of the subject/session source folder
-    :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
-    :param bidsfolder:  The full-path name of the BIDS root-folder
-    :param personals:   The dictionary with the personal information
-    :param subprefix:   The prefix common for all source subject-folders
-    :param sesprefix:   The prefix common for all source session-folders
-    :return:            Nothing
-    """
-
-    # Input checks
-    if not bidsmap['PlugIns']:
-        return
-
-    for plugin in bidsmap['PlugIns']:
-
-        # Load and run the plugin-module
-        module = bids.import_plugin(plugin)
-        if 'bidscoiner_plugin' in dir(module):
-            LOGGER.debug(f"Running: {plugin}.bidscoiner_plugin({session}, bidsmap, {bidsfolder}, personals, {subprefix}, {sesprefix})")
-            module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals, subprefix, sesprefix)
-
-
 def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=False, participants: bool=False, bidsmapfile: str='bidsmap.yaml', subprefix: str='sub-', sesprefix: str='ses-') -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder and uses the
@@ -120,6 +94,11 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     bidsmap, _ = bids.load_bidsmap(bidsmapfile, bidsfolder/'code'/'bidscoin')
     if not bidsmap:
         LOGGER.error(f"No bidsmap file found in {bidsfolder}. Please run the bidsmapper first and / or use the correct bidsfolder")
+        return
+    if not bidsmap['PlugIns']:
+        LOGGER.info(f"No plugins found in {bidsmap}, nothing to do")
+        LOGGER.info('-------------- FINISHED! ------------')
+        LOGGER.info('')
         return
 
     # Save options to the .bidsignore file
@@ -192,8 +171,11 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
             LOGGER.info(f"Coining session: {session}")
 
-            # Perform the plugin source data mappings
-            coin_plugins(session, bidsmap, bidsfolder, personals, subprefix, sesprefix)
+            # Load and run the bidscoiner data conversion plugins
+            for plugin in bidsmap['PlugIns']:
+                module = bids.import_plugin(plugin)
+                if 'bidscoiner_plugin' in dir(module):
+                    module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals, subprefix, sesprefix)
 
             # Clean-up the temporary unpacked data
             if unpacked:
