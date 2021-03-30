@@ -91,7 +91,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                       f"For more information see: https://github.com/Donders-Institute/bidscoin")
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
-    bidsmap, _ = bids.load_bidsmap(bidsmapfile, bidsfolder/'code'/'bidscoin')
+    bidsmap, _  = bids.load_bidsmap(bidsmapfile, bidsfolder/'code'/'bidscoin')
+    dataformats = [dataformat for dataformat in bidsmap if dataformat not in ('Options','PlugIns')]
     if not bidsmap:
         LOGGER.error(f"No bidsmap file found in {bidsfolder}. Please run the bidsmapper first and / or use the correct bidsfolder")
         return
@@ -149,24 +150,19 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
             session, unpacked = bids.unpack(session, subprefix, sesprefix)
 
-            # See what dataformat we have
-            dataformat = bids.get_dataformat(session)
-            if not dataformat:
-                LOGGER.info(f"Skipping unknown session: {session}")
-                continue
-
             # Check if we should skip the session-folder
             if not force:
                 subid, sesid = bids.get_subid_sesid(session/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
                 bidssession  = bidsfolder/subid/sesid
-                if not bidsmap[dataformat]['session']:
-                    bidssession = bidssession.parent
-                datatypes = []
-                for datatype in bids.lsdirs(bidssession):                               # See what datatypes we already have in the bids session-folder
-                    if datatype.glob('*') and bidsmap[dataformat].get(datatype.name):   # See if we are going to add data for this datatype
-                        datatypes.append(datatype.name)
+                datatypes    = []
+                for dataformat in dataformats:
+                    if not bidsmap[dataformat]['session']:
+                        bidssession = bidssession.parent
+                    for datatype in bids.lsdirs(bidssession):                               # See what datatypes we already have in the bids session-folder
+                        if datatype.glob('*') and bidsmap[dataformat].get(datatype.name):   # See if we are going to add data for this datatype
+                            datatypes.append(datatype.name)
                 if datatypes:
-                    LOGGER.info(f"Skipping processed session: {bidssession} already has {datatypes} data (use the -f option to overrule)")
+                    LOGGER.info(f"Skipping processed session: {bidssession} already has {datatypes} data (you can carefully use the -f option to overrule)")
                     continue
 
             LOGGER.info(f"Coining session: {session}")
