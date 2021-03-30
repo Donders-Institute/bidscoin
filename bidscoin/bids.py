@@ -197,7 +197,7 @@ def import_plugin(plugin: Path) -> util.module_from_spec:
 
     # Load the plugin-module
     try:
-        spec   = util.spec_from_file_location(plugin.stem, plugin)
+        spec   = util.spec_from_file_location('bidscoin.plugin.' + plugin.stem, plugin)
         module = util.module_from_spec(spec)
         spec.loader.exec_module(module)
 
