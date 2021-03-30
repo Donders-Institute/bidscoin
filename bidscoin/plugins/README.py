@@ -26,7 +26,7 @@ def bidsmapper_plugin(seriesfolder: Path, bidsmap: dict, bidsmap_template: dict)
     return bidsmap
 
 
-def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict) -> None:
+def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, subprefix: str, sesprefix: str) -> None:
     """
     The plugin to cast the series into the bids folder
 
@@ -34,6 +34,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
     :param bidsfolder:  The full-path name of the BIDS root-folder
     :param personals:   The dictionary with the personal information
+    :param subprefix:   The prefix common for all source subject-folders
+    :param sesprefix:   The prefix common for all source session-folders
     :return:            Nothing
     """
 
