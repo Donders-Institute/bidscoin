@@ -155,8 +155,8 @@ def main():
     parser.add_argument('-s','--store',       help="Flag to store provenance data samples in the bidsfolder/'code'/'provenance' folder", action='store_true')
     parser.add_argument('-e','--edit',        help='Boolean to launch the bidseditor to interactively tweak the automatically generated bidsmap (recommended). Otherwise the bidsmap is saved to disk as it is', type=bool, default=True)
     parser.add_argument('-v','--version',     help='Show the installed version and check for updates', action='version', version=f'BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}')
-
     args = parser.parse_args()
+
     bidsmapper(rawfolder    = args.sourcefolder,
                bidsfolder   = args.bidsfolder,
                bidsmapfile  = args.bidsmap,
