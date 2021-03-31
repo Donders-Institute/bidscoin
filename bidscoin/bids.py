@@ -869,7 +869,7 @@ def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
 
     provenance = []
     for datatype in bidsdatatypes + (unknowndatatype, ignoredatatype):
-        if datatype in bidsmap.get(dataformat) and bidsmap[dataformat][datatype]:
+        if bidsmap.get(dataformat) and bidsmap[dataformat].get(datatype):
             for run in bidsmap[dataformat][datatype]:
                 if not run['provenance']:
                     LOGGER.warning(f'The bidsmap run {datatype} run does not contain provenance data')
