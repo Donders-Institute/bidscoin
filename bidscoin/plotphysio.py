@@ -13,7 +13,7 @@ import logging, coloredlogs
 # Set-up logging
 LOGGER = logging.getLogger(__name__)
 if not LOGGER.handlers:
-    coloredlogs.install(fmt='%(asctime)s - %(name)s - %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    coloredlogs.install(fmt='%(asctime)s - %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 
 def main():

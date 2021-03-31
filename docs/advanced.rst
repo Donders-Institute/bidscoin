@@ -73,7 +73,7 @@ BIDScoin has the option to import plugins to further automate / complete the con
    import logging
    from pathlib import Path
 
-   LOGGER = logging.getLogger(f'bidscoin.{Path(__file__).stem}')
+   LOGGER = logging.getLogger(__name__)
 
 
    def bidsmapper_plugin(seriesfolder: Path, bidsmap: dict, bidsmap_template: dict) -> dict:
