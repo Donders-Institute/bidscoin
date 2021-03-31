@@ -1354,14 +1354,13 @@ def format_bytes(size):
     return f"{size:.2f} {label[n]}B"
 
 
-def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', dataformat: str='DICOM', subprefix='sub-', sesprefix='ses-'):
+def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', subprefix='sub-', sesprefix='ses-'):
     """
     Collects input and launches the bidseditor GUI
 
     :param bidsfolder:
     :param bidsmapfile:
     :param templatefile:
-    :param dataformat:
     :param subprefix:
     :param sesprefix:
     :return:
@@ -1376,7 +1375,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', dataf
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSeditor ------------')
     LOGGER.info(f">>> bidseditor bidsfolder={bidsfolder} bidsmap={bidsmapfile} template={templatefile}"
-                f"dataformat={dataformat} subprefix={subprefix} sesprefix={sesprefix}")
+                f"subprefix={subprefix} sesprefix={sesprefix}")
 
     # Obtain the initial bidsmap info
     template_bidsmap, templatefile = bids.load_bidsmap(templatefile, bidsfolder/'code'/'bidscoin')
@@ -1416,7 +1415,6 @@ def main():
     parser.add_argument('bidsfolder',           help='The destination folder with the (future) bids data')
     parser.add_argument('-b','--bidsmap',       help='The bidsmap YAML-file with the study heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
     parser.add_argument('-t','--template',      help='The bidsmap template with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap_dccn.yaml', default='bidsmap_dccn.yaml')
-    parser.add_argument('-d','--dataformat',    help='The format of the source data, e.g. DICOM or PAR. Default: DICOM', default='DICOM')
     parser.add_argument('-n','--subprefix',     help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',     help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     args = parser.parse_args()
@@ -1424,7 +1422,6 @@ def main():
     bidseditor(bidsfolder   = args.bidsfolder,
                bidsmapfile  = args.bidsmap,
                templatefile = args.template,
-               dataformat   = args.dataformat,
                subprefix    = args.subprefix,
                sesprefix    = args.sesprefix)
 
