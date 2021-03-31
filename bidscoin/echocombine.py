@@ -16,8 +16,6 @@ try:
 except ImportError:
     import bids             # This should work if bidscoin was not pip-installed
 
-LOGGER = logging.getLogger(f"bidscoin.{Path(__file__).stem}")
-
 
 def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorithm: str, weights: list, force: bool=False):
     """
@@ -208,4 +206,8 @@ def main():
 
 
 if __name__ == '__main__':
+    LOGGER = logging.getLogger(f"bidscoin.{Path(__file__).stem}")
     main()
+
+else:
+    LOGGER = logging.getLogger(__name__)

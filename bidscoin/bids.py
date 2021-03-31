@@ -94,8 +94,6 @@ def setup_logging(log_file: Path=Path(), debug: bool=False):
     :return:
      """
 
-    # debug = True
-
     # Get the root logger
     logger = logging.getLogger()
 
