@@ -210,6 +210,7 @@ class Ui_MainWindow(MainWindow):
         top_layout = QtWidgets.QVBoxLayout(centralwidget)
         top_layout.addWidget(tabwidget)
         top_layout.addWidget(buttonBox)
+        tabwidget.setCurrentIndex(0)
 
         self.MainWindow.setCentralWidget(centralwidget)
 
@@ -712,6 +713,7 @@ class Ui_MainWindow(MainWindow):
         tab.setObjectName(dataformat)
         tab.setLayout(layout)
         self.tabwidget.addTab(tab, f"{dataformat} mappings")
+        self.tabwidget.setCurrentWidget(tab)
 
         self.update_subses_and_samples(self.output_bidsmap)
 
