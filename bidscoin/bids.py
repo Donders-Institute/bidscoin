@@ -201,13 +201,11 @@ def import_plugin(plugin: Path) -> util.module_from_spec:
         module = util.module_from_spec(spec)
         spec.loader.exec_module(module)
 
-        # bidsmapper -> module.bidsmapper_plugin(runfolder, bidsmap_new, bidsmap_old)
         if 'bidsmapper_plugin' not in dir(module):
-            LOGGER.info(f"Could not find bidscoiner_plugin() in {plugin}")
+            LOGGER.debug(f"Could not find bidsmapper_plugin() in {plugin}")
 
-        # bidscoiner -> module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals)
         if 'bidscoiner_plugin' not in dir(module):
-            LOGGER.info(f"Could not find bidscoiner_plugin() in {plugin}")
+            LOGGER.debug(f"Could not find bidscoiner_plugin() in {plugin}")
 
         if 'bidsmapper_plugin' not in dir(module) and 'bidscoiner_plugin' not in dir(module):
             LOGGER.warning(f"{plugin} can (and will) not perform any operation")
