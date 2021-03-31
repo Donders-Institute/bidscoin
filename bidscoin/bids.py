@@ -923,7 +923,7 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
     return dict(provenance=str(sourcefile.resolve()), filesystem={}, attributes={}, bids={})
 
 
-def delete_run(bidsmap: dict, dataformat: str, datatype: str, provenance: Path) -> dict:
+def delete_run(bidsmap: dict, dataformat: str, datatype: str, provenance: Path) -> None:
     """
     Delete a run from the BIDS map
 
@@ -931,7 +931,7 @@ def delete_run(bidsmap: dict, dataformat: str, datatype: str, provenance: Path) 
     :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
     :param datatype:    The datatype that is used, e.g. 'anat'
     :param provenance:  The unique provance that is use to identify the run
-    :return:            The new bidsmap
+    :return:
     """
 
     if not dataformat:
@@ -941,10 +941,8 @@ def delete_run(bidsmap: dict, dataformat: str, datatype: str, provenance: Path) 
         if run['provenance'] == str(provenance):
             del bidsmap[dataformat][datatype][index]
 
-    return bidsmap
 
-
-def append_run(bidsmap: dict, dataformat: str, datatype: str, run: dict, clean: bool=True) -> dict:
+def append_run(bidsmap: dict, dataformat: str, datatype: str, run: dict, clean: bool=True) -> None:
     """
     Append a run to the BIDS map
 
@@ -953,7 +951,7 @@ def append_run(bidsmap: dict, dataformat: str, datatype: str, run: dict, clean: 
     :param datatype:    The datatype that is used, e.g. 'anat'
     :param run:         The run (listitem) that is appended to the datatype
     :param clean:       A boolean to clean-up commentedMap fields
-    :return:            The new bidsmap
+    :return:
     """
 
     if not dataformat:
@@ -976,10 +974,8 @@ def append_run(bidsmap: dict, dataformat: str, datatype: str, run: dict, clean: 
     else:
         bidsmap[dataformat][datatype].append(run)
 
-    return bidsmap
 
-
-def update_bidsmap(bidsmap: dict, source_datatype: str, provenance: Path, target_datatype: str, run: dict, dataformat: str, clean: bool=True) -> dict:
+def update_bidsmap(bidsmap: dict, source_datatype: str, provenance: Path, target_datatype: str, run: dict, dataformat: str, clean: bool=True) -> None:
     """
     Update the BIDS map if the datatype changes:
     1. Remove the source run from the source datatype section
@@ -996,7 +992,7 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, provenance: Path, target
     :param run:                 The run item that is being moved
     :param dataformat:          The name of the dataformat, e.g. 'DICOM'
     :param clean:               A boolean that is passed to bids.append_run (telling it to clean-up commentedMap fields)
-    :return:                    The updated bidsmap
+    :return:
     """
 
     if not dataformat:
@@ -1010,10 +1006,10 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, provenance: Path, target
             LOGGER.warning(f'That run from {source_datatype} already exists in {target_datatype}...')
 
         # Delete the source run
-        bidsmap = delete_run(bidsmap, dataformat, source_datatype, provenance)
+        delete_run(bidsmap, dataformat, source_datatype, provenance)
 
         # Append the (cleaned-up) target run
-        bidsmap = append_run(bidsmap, dataformat, target_datatype, run, clean)
+        append_run(bidsmap, dataformat, target_datatype, run, clean)
 
     else:
         for index, run_ in enumerate(bidsmap[dataformat][target_datatype]):
@@ -1024,8 +1020,6 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, provenance: Path, target
     num_runs_out = len(dir_bidsmap(bidsmap, dataformat))
     if num_runs_out != num_runs_in:
         LOGGER.exception(f"Number of runs in bidsmap['{dataformat}'] changed unexpectedly: {num_runs_in} -> {num_runs_out}")
-
-    return bidsmap
 
 
 def match_attribute(longvalue, pattern) -> bool:

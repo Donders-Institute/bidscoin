@@ -1219,12 +1219,7 @@ class EditDialog(QDialog):
         self.target_run = bids.get_run(self.template_bidsmap, self.dataformat, self.target_datatype, suffix_idx, Path(self.target_run['provenance']))
 
         # Insert the new target_run in our target_bidsmap
-        self.target_bidsmap = bids.update_bidsmap(self.target_bidsmap,
-                                                  self.current_datatype,
-                                                  Path(self.target_run['provenance']),
-                                                  self.target_datatype,
-                                                  self.target_run,
-                                                  self.dataformat)
+        bids.update_bidsmap(self.target_bidsmap, self.current_datatype, Path(self.target_run['provenance']), self.target_datatype, self.target_run, self.dataformat)
 
         # Now that we have updated the bidsmap, we can also update the current_datatype
         self.current_datatype = self.target_datatype
@@ -1316,12 +1311,7 @@ class EditDialog(QDialog):
             LOGGER.warning(f"'IntendedFor' fieldmap value was not set")
 
         LOGGER.info(f'User has approved the edit')
-        self.target_bidsmap = bids.update_bidsmap(self.target_bidsmap,
-                                                  self.current_datatype,
-                                                  self.target_run['provenance'],
-                                                  self.target_datatype,
-                                                  self.target_run,
-                                                  self.dataformat)
+        bids.update_bidsmap(self.target_bidsmap, self.current_datatype, self.target_run['provenance'], self.target_datatype, self.target_run, self.dataformat)
 
         self.done_edit.emit(self.target_bidsmap)
         self.done(1)
@@ -1334,7 +1324,7 @@ class EditDialog(QDialog):
             LOGGER.info(f'Exporting run item: bidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}')
             yamlfile   = Path(yamlfile)
             bidsmap, _ = bids.load_bidsmap(yamlfile, Path(), False)
-            bidsmap    = bids.append_run(bidsmap, self.dataformat, self.target_datatype, self.target_run)
+            bids.append_run(bidsmap, self.dataformat, self.target_datatype, self.target_run)
             bids.save_bidsmap(yamlfile, bidsmap)
             QMessageBox.information(self, 'Edit BIDS mapping', f"Successfully exported:\n\nbidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}")
 
