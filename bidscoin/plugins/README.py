@@ -12,18 +12,20 @@ from pathlib import Path
 LOGGER = logging.getLogger(__name__)
 
 
-def bidsmapper_plugin(seriesfolder: Path, bidsmap: dict, bidsmap_template: dict) -> dict:
+def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
     """
-    The plugin to map info onto bids labels
+    All the logic to map the Philips PAR/XML fields onto bids labels go into this function
 
-    :param seriesfolder:        The full-path name of the raw-data series folder
-    :param bidsmap:             The study bidsmap
-    :param bidsmap_template:    Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
-    :return:                    The study bidsmap with new entries in it
+    :param session:     The full-path name of the subject/session raw data source folder
+    :param bidsmap_new: The study bidsmap that we are building
+    :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param template:    The template bidsmap with the default heuristics
+    :param store:       The paths of the source- and target-folder
+    :return:
     """
 
-    LOGGER.debug(f'This is a bidsmapper demo-plugin working on: {seriesfolder}')
-    return bidsmap
+    LOGGER.debug(f'This is a bidsmapper demo-plugin working on: {session}')
+    return
 
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, subprefix: str, sesprefix: str) -> None:
