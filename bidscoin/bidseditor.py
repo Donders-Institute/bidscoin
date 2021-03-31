@@ -166,7 +166,7 @@ class MainWindow(QMainWindow):
 class Ui_MainWindow(MainWindow):
 
     def setupUi(self, MainWindow, bidsfolder, bidsmap_filename, input_bidsmap, output_bidsmap, template_bidsmap,
-                dataformat, selected_tab_index=0, subprefix='sub-', sesprefix='ses-', reload: bool=False):
+                subprefix='sub-', sesprefix='ses-', reload: bool=False):
 
         # Set the input data
         self.MainWindow       = MainWindow
@@ -175,9 +175,9 @@ class Ui_MainWindow(MainWindow):
         self.input_bidsmap    = input_bidsmap
         self.output_bidsmap   = output_bidsmap
         self.template_bidsmap = template_bidsmap
-        self.dataformat       = dataformat
         self.subprefix        = subprefix
         self.sesprefix        = sesprefix
+        self.dataformats      = [dataformat for dataformat in input_bidsmap if dataformat not in ('Options', 'PlugIns') and bids.dir_bidsmap(input_bidsmap, dataformat)]
 
         self.has_edit_dialog_open = None
 
@@ -186,15 +186,14 @@ class Ui_MainWindow(MainWindow):
         tabwidget = self.tabwidget
         tabwidget.setTabPosition(QtWidgets.QTabWidget.North)
         tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
-        tabwidget.setObjectName('tabwidget')
 
-        self.set_tab_bidsmap()
+        self.subses_table       = {}
+        self.samples_table      = {}
+        self.ordered_file_index = {}
+        for dataformat in self.dataformats:
+            self.set_tab_bidsmap(dataformat)
         self.set_tab_options()
         self.set_tab_file_browser()
-        tabwidget.setTabText(0, 'BIDS mappings')
-        tabwidget.setTabText(1, 'Options')
-        tabwidget.setTabText(2, 'Data browser')
-        tabwidget.setCurrentIndex(selected_tab_index)
 
         # Set-up the buttons
         buttonBox = QDialogButtonBox(self)
@@ -208,8 +207,6 @@ class Ui_MainWindow(MainWindow):
 
         # Set-up the main layout
         centralwidget = QtWidgets.QWidget(self.MainWindow)
-        centralwidget.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
-        centralwidget.setObjectName('centralwidget')
         top_layout = QtWidgets.QVBoxLayout(centralwidget)
         top_layout.addWidget(tabwidget)
         top_layout.addWidget(buttonBox)
@@ -217,12 +214,11 @@ class Ui_MainWindow(MainWindow):
         self.MainWindow.setCentralWidget(centralwidget)
 
         # Restore the samples_table stretching after the main window has been sized / current tabindex has been set (otherwise the main window can become too narrow)
-        header = self.samples_table.horizontalHeader()
-        header.setSectionResizeMode(1, QHeaderView.Interactive)
-        header.setSectionResizeMode(3, QHeaderView.Stretch)
+        for dataformat in self.dataformats:
+            header = self.samples_table[dataformat].horizontalHeader()
+            header.setSectionResizeMode(1, QHeaderView.Interactive)
 
         if not reload:
-            self.setObjectName('MainWindow')
 
             self.set_menu_and_status_bar()
 
@@ -289,15 +285,15 @@ class Ui_MainWindow(MainWindow):
 
         # Set the statusbar
         statusbar = QtWidgets.QStatusBar(self.MainWindow)
-        statusbar.setObjectName('statusbar')
         statusbar.setStatusTip('Statusbar')
         self.MainWindow.setStatusBar(statusbar)
 
     def inspect_sourcefile(self, item):
         """When double clicked, show popup window. """
         if item.column() == 1:
-            row  = item.row()
-            cell = self.samples_table.item(row, 5)
+            dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
+            row        = item.row()
+            cell       = self.samples_table[dataformat].item(row, 5)
             sourcefile = Path(cell.text())
             if bids.is_dicomfile(sourcefile):
                 sourcedata = pydicom.dcmread(sourcefile, force=True)
@@ -305,7 +301,7 @@ class Ui_MainWindow(MainWindow):
                 with open(sourcefile, 'r') as sourcefid:
                     sourcedata = sourcefid.read()
             else:
-                LOGGER.warning(f"Could not read {self.dataformat} file: {sourcefile}")
+                LOGGER.warning(f"Could not read: {sourcefile}")
                 return
             self.popup = InspectWindow(sourcefile, sourcedata)
             self.popup.show()
@@ -337,22 +333,22 @@ class Ui_MainWindow(MainWindow):
         layout.addWidget(label)
         layout.addWidget(tree)
         tab = QtWidgets.QWidget()
-        tab.setObjectName('filebrowser')
         tab.setLayout(layout)
 
-        self.tabwidget.addTab(tab, '')
+        self.tabwidget.addTab(tab, 'Data browser')
 
     def subses_cell_was_changed(self, row: int, column:int):
         """Subject or session value has been changed in subject-session table. """
+        dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
         if column == 1:
-            key = self.subses_table.item(row, 0).text()
-            value = self.subses_table.item(row, 1).text()
-            oldvalue = self.output_bidsmap[self.dataformat][key]
+            key = self.subses_table[dataformat].item(row, 0).text()
+            value = self.subses_table[dataformat].item(row, 1).text()
+            oldvalue = self.output_bidsmap[dataformat][key]
 
             # Only if cell was actually clicked, update
             if key and value!=oldvalue:
-                LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}'")
-                self.output_bidsmap[self.dataformat][key] = value
+                LOGGER.warning(f"Expert usage: User has set {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
+                self.output_bidsmap[dataformat][key] = value
                 self.update_subses_and_samples(self.output_bidsmap)
 
     def tool_cell_was_changed(self, tool: str, idx: int, row: int, column: int):
@@ -365,7 +361,7 @@ class Ui_MainWindow(MainWindow):
 
             # Only if cell was actually clicked, update
             if key and value!=oldvalue:
-                LOGGER.info(f"User has set {self.dataformat}['Options']['{key}'] from '{oldvalue}' to '{value}'")
+                LOGGER.info(f"User has set ['Options']['{tool}']['{key}'] from '{oldvalue}' to '{value}'")
                 self.output_bidsmap['Options'][tool][key] = value
 
     def handle_click_test_plugin(self, plugin: str):
@@ -562,13 +558,14 @@ class Ui_MainWindow(MainWindow):
         layout.addStretch(1)
 
         tab = QtWidgets.QWidget()
-        tab.setObjectName('Options')
         tab.setLayout(layout)
 
-        self.tabwidget.addTab(tab, '')
+        self.tabwidget.addTab(tab, 'Options')
 
     def update_subses_and_samples(self, output_bidsmap):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
+
+        dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
 
         self.output_bidsmap = output_bidsmap  # input main window / output from edit window -> output main window
 
@@ -577,31 +574,31 @@ class Ui_MainWindow(MainWindow):
         subitem.setToolTip(bids.get_bidshelp('sub'))
         sesitem = myWidgetItem('session', iseditable=False)
         sesitem.setToolTip(bids.get_bidshelp('ses'))
-        subses_table = self.subses_table
+        subses_table = self.subses_table[dataformat]
         subses_table.setItem(0, 0, subitem)
         subses_table.setItem(1, 0, sesitem)
-        subses_table.setItem(0, 1, myWidgetItem(output_bidsmap[self.dataformat]['subject']))
-        subses_table.setItem(1, 1, myWidgetItem(output_bidsmap[self.dataformat]['session']))
+        subses_table.setItem(0, 1, myWidgetItem(output_bidsmap[dataformat]['subject']))
+        subses_table.setItem(1, 1, myWidgetItem(output_bidsmap[dataformat]['session']))
 
         # Update the run samples table
         idx = 0
-        samples_table = self.samples_table
+        samples_table = self.samples_table[dataformat]
         samples_table.blockSignals(True)
         samples_table.setSortingEnabled(False)
         samples_table.clearContents()
         for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
-            runs = output_bidsmap.get(self.dataformat, {}).get(datatype, [])
+            runs = output_bidsmap.get(dataformat, {}).get(datatype, [])
 
             if not runs: continue
             for run in runs:
                 provenance   = Path(run['provenance'])
                 subid, sesid = bids.get_subid_sesid(provenance,
-                                                    output_bidsmap[self.dataformat]['subject'],
-                                                    output_bidsmap[self.dataformat]['session'],
+                                                    output_bidsmap[dataformat]['subject'],
+                                                    output_bidsmap[dataformat]['session'],
                                                     self.subprefix, self.sesprefix)
                 bidsname     = bids.get_bidsname(subid, sesid, run)
                 session      = self.bidsfolder/subid/sesid
-                row_index    = self.ordered_file_index[provenance]
+                row_index    = self.ordered_file_index[dataformat][provenance]
 
                 samples_table.setItem(idx, 0, QTableWidgetItem(f"{row_index+1:03d}"))
                 samples_table.setItem(idx, 1, QTableWidgetItem(provenance.name))
@@ -656,17 +653,16 @@ class Ui_MainWindow(MainWindow):
         samples_table.setSortingEnabled(True)
         samples_table.blockSignals(False)
 
-    def set_tab_bidsmap(self):
+    def set_tab_bidsmap(self, dataformat):
         """Set the SOURCE file sample listing tab.  """
 
         # Set the Participant labels table
         subses_label = QLabel('Participant labels')
         subses_label.setToolTip('Subject/session mapping')
 
-        self.subses_table = myQTableWidget()
-        subses_table = self.subses_table
+        subses_table = myQTableWidget()
         subses_table.setToolTip(f"Use '<<SourceFilePath>>' to parse the subject and (optional) session label from the pathname\n"
-                                f"Use a dynamic {self.dataformat} attribute (e.g. '<PatientID>') to extract the subject and (optional) session label from the {self.dataformat} header")
+                                f"Use a dynamic {dataformat} attribute (e.g. '<PatientID>') to extract the subject and (optional) session label from the {dataformat} header")
         subses_table.setMouseTracking(True)
         subses_table.setRowCount(2)
         subses_table.setColumnCount(2)
@@ -675,40 +671,37 @@ class Ui_MainWindow(MainWindow):
         horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
         subses_table.cellChanged.connect(self.subses_cell_was_changed)
+        self.subses_table[dataformat] = subses_table
 
         # Set the BIDSmap table
-        provenance = bids.dir_bidsmap(self.input_bidsmap, self.dataformat)
+        provenance = bids.dir_bidsmap(self.input_bidsmap, dataformat)
         ordered_file_index = {}                                         # The mapping between the ordered provenance and an increasing file-index
         num_files = 0
         for file_index, file_name in enumerate(provenance):
             ordered_file_index[file_name] = file_index
             num_files = file_index + 1
 
-        self.ordered_file_index = ordered_file_index
+        self.ordered_file_index[dataformat] = ordered_file_index
 
         label = QLabel('Data samples')
         label.setToolTip('List of unique source-data samples')
 
-        self.samples_table = myQTableWidget(minimum=False)
-        samples_table = self.samples_table
+        samples_table = myQTableWidget(minimum=False)
         samples_table.setMouseTracking(True)
         samples_table.setShowGrid(True)
         samples_table.setColumnCount(6)
         samples_table.setRowCount(num_files)
-        samples_table.setHorizontalHeaderLabels(['', f'{self.dataformat} input', 'BIDS data type', 'BIDS output', 'Action', 'Provenance'])
+        samples_table.setHorizontalHeaderLabels(['', f'{dataformat} input', 'BIDS data type', 'BIDS output', 'Action', 'Provenance'])
         samples_table.setSortingEnabled(True)
         samples_table.sortByColumn(0, QtCore.Qt.AscendingOrder)
         samples_table.setColumnHidden(2, True)
         samples_table.setColumnHidden(5, True)
         samples_table.itemDoubleClicked.connect(self.inspect_sourcefile)
         header = samples_table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)             # Temporarily set it to Stretch to have Qt set the right window width -> set to Stretch in setupUI -> not reload
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
-
-        self.update_subses_and_samples(self.output_bidsmap)
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.Stretch)                 # Temporarily set it to Stretch to have Qt set the right window width -> set to Interactive in setupUI -> not reload
+        header.setSectionResizeMode(3, QHeaderView.Stretch)
+        self.samples_table[dataformat] = samples_table
 
         layout = QVBoxLayout()
         layout.addWidget(subses_label)
@@ -716,10 +709,11 @@ class Ui_MainWindow(MainWindow):
         layout.addWidget(label)
         layout.addWidget(samples_table)
         tab = QtWidgets.QWidget()
-        tab.setObjectName('BIDSmapping')
+        tab.setObjectName(dataformat)
         tab.setLayout(layout)
+        self.tabwidget.addTab(tab, f"{dataformat} mappings")
 
-        self.tabwidget.addTab(tab, '')
+        self.update_subses_and_samples(self.output_bidsmap)
 
     def get_help(self):
         """Get online help. """
@@ -739,7 +733,6 @@ class Ui_MainWindow(MainWindow):
             QMessageBox.warning(self.MainWindow, 'Reset', f"Could not find and reload the bidsmap file:\n{self.bidsmap_filename}")
             return
         LOGGER.info('User reloads the bidsmap')
-        current_tab_index = self.tabwidget.currentIndex()
         self.output_bidsmap, _ = bids.load_bidsmap(self.bidsmap_filename)
         self.setupUi(self.MainWindow,
                      self.bidsfolder,
@@ -747,8 +740,6 @@ class Ui_MainWindow(MainWindow):
                      self.input_bidsmap,
                      self.output_bidsmap,
                      self.template_bidsmap,
-                     self.dataformat,
-                     selected_tab_index=current_tab_index,
                      reload=True)
 
         # Start with a fresh errorlog
@@ -761,10 +752,11 @@ class Ui_MainWindow(MainWindow):
 
     def save_bidsmap_to_file(self):
         """Check and save the BIDSmap to file. """
-        if self.output_bidsmap[self.dataformat].get('fmap'):
-            for run in self.output_bidsmap[self.dataformat]['fmap']:
-                if not run['bids']['IntendedFor']:
-                    LOGGER.warning(f"IntendedFor fieldmap value is empty for {run['provenance']}")
+        for dataformat in self.dataformats:
+            if self.output_bidsmap[dataformat].get('fmap'):
+                for run in self.output_bidsmap[dataformat]['fmap']:
+                    if not run['bids']['IntendedFor']:
+                        LOGGER.warning(f"IntendedFor fieldmap value is empty for {dataformat} run-item: {run['provenance']}")
 
         filename, _ = QFileDialog.getSaveFileName(self.MainWindow, 'Save File',
                         str(self.bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'),
@@ -775,10 +767,12 @@ class Ui_MainWindow(MainWindow):
 
     def handle_edit_button_clicked(self):
         """Make sure that index map has been updated. """
-        button     = self.MainWindow.focusWidget()
-        rowindex   = self.samples_table.indexAt(button.pos()).row()
-        datatype   = self.samples_table.item(rowindex, 2).text()
-        provenance = Path(self.samples_table.item(rowindex, 5).text())
+        dataformat    = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
+        samples_table = self.samples_table[dataformat]
+        button        = self.MainWindow.focusWidget()
+        rowindex      = samples_table.indexAt(button.pos()).row()
+        datatype      = samples_table.item(rowindex, 2).text()
+        provenance    = Path(samples_table.item(rowindex, 5).text())
 
         self.open_edit_dialog(provenance, datatype)
 
@@ -809,10 +803,11 @@ class Ui_MainWindow(MainWindow):
 
         if not self.has_edit_dialog_open:
             # Find the source index of the run in the list of runs (using the provenance) and open the edit window
-            for run in self.output_bidsmap[self.dataformat][datatype]:
+            dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
+            for run in self.output_bidsmap[dataformat][datatype]:
                 if run['provenance']==str(provenance):
                     LOGGER.info(f'User is editing {provenance}')
-                    self.dialog_edit = EditDialog(self.dataformat, provenance, datatype, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
+                    self.dialog_edit = EditDialog(dataformat, provenance, datatype, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
                     if provenance.name:
                         self.has_edit_dialog_open = str(provenance)
                     else:
@@ -1396,7 +1391,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', dataf
     app.setApplicationName(f"{bidsmapfile} - BIDS editor {bids.version()}")
     mainwin = MainWindow()
     gui = Ui_MainWindow()
-    gui.setupUi(mainwin, bidsfolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap, dataformat, subprefix=subprefix, sesprefix=sesprefix)
+    gui.setupUi(mainwin, bidsfolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap, subprefix=subprefix, sesprefix=sesprefix)
     mainwin.show()
     app.exec()
 

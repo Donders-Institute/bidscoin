@@ -188,8 +188,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                                     f"bidseditor) that you can then (re)edit to your needs")
 
     # Loop over all subjects and sessions and built up the bidsmap entries
-    dataformat = ''
-    subjects   = bids.lsdirs(rawfolder, subprefix + '*')
+    subjects = bids.lsdirs(rawfolder, subprefix + '*')
     if not subjects:
         LOGGER.warning(f'No subjects found in: {rawfolder/subprefix}*')
         gui = None
@@ -239,18 +238,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             if unpacked:
                 shutil.rmtree(session)
 
-    if not dataformat:
-        LOGGER.warning('Could not determine the dataformat of the source data')
-
     # (Re)launch the bidseditor UI_MainWindow
     if gui:
-        if not dataformat:
-            dataformat = 'DICOM'
-            QMessageBox.information(mainwin, 'BIDS mapping workflow',
-                                    'Could not determine the dataformat of the last\n'
-                                   f'source data run, defaulting to: {dataformat}\n'
-                                    'You can try running the bidseditor tool yourself if\n'
-                                    'this is not correct')
         QMessageBox.information(mainwin, 'BIDS mapping workflow',
                                 f"The bidsmapper has finished scanning {rawfolder}\n\n"
                                 f"Please carefully check all the different BIDS output names "
@@ -260,7 +249,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                                 f"{versionmessage}")
 
         LOGGER.info('Opening the bidseditor')
-        gui.setupUi(mainwin, bidsfolder, bidsmapfile, bidsmap_new, copy.deepcopy(bidsmap_new), template, dataformat, subprefix=subprefix, sesprefix=sesprefix)
+        gui.setupUi(mainwin, bidsfolder, bidsmapfile, bidsmap_new, copy.deepcopy(bidsmap_new), template, subprefix=subprefix, sesprefix=sesprefix)
         mainwin.show()
         app.exec()
     else:
