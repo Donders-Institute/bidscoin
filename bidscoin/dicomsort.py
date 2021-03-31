@@ -134,7 +134,7 @@ def sortsessions(session: Path, subprefix: str='', sesprefix: str='', dicomfield
     session = Path(session)
 
     # Start logging
-    bids.setup_logging(LOGGER)
+    bids.setup_logging()
 
     # Do a recursive call if subprefix is given
     if subprefix:

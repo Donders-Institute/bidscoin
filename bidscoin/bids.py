@@ -85,7 +85,7 @@ def version(check: bool=False) -> Union[str, Tuple]:
     return localversion
 
 
-def setup_logging(logger, log_file: Path=Path(), debug: bool=False):
+def setup_logging(log_file: Path=Path(), debug: bool=False):
     """
     Setup the logging
 
@@ -95,6 +95,9 @@ def setup_logging(logger, log_file: Path=Path(), debug: bool=False):
      """
 
     # debug = True
+
+    # Get the root logger
+    logger = logging.getLogger()
 
     # Set the format and logging level
     fmt       = '%(asctime)s - %(levelname)s %(message)s'

@@ -21,7 +21,7 @@ except ImportError:
     import bids, bidseditor         # This should work if bidscoin was not pip-installed
 
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger(f"bidscoin.{Path(__file__).stem}")
 
 localversion, versionmessage = bids.version(check=True)
 
@@ -143,7 +143,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     bidscoinfolder = bidsfolder/'code'/'bidscoin'
 
     # Start logging
-    bids.setup_logging(LOGGER, bidscoinfolder/'bidsmapper.log')
+    bids.setup_logging(bidscoinfolder/'bidsmapper.log')
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSmapper ------------')
     LOGGER.info(f">>> bidsmapper sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmapfile} "

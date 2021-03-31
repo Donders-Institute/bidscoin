@@ -29,7 +29,7 @@ try:
 except ImportError:
     import bids             # This should work if bidscoin was not pip-installed
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger(f"bidscoin.{Path(__file__).stem}")
 
 ROW_HEIGHT       = 22
 ICON_FILENAME    = Path(__file__).parent/'bidscoin.ico'
@@ -1378,7 +1378,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', dataf
     templatefile = Path(templatefile)
 
     # Start logging
-    bids.setup_logging(LOGGER, bidsfolder/'code'/'bidscoin'/'bidseditor.log')
+    bids.setup_logging(bidsfolder/'code'/'bidscoin'/'bidseditor.log')
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSeditor ------------')
     LOGGER.info(f">>> bidseditor bidsfolder={bidsfolder} bidsmap={bidsmapfile} template={templatefile}"

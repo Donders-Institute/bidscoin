@@ -19,7 +19,7 @@ try:
 except ImportError:
     import bids             # This should work if bidscoin was not pip-installed
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger(f"bidscoin.{Path(__file__).stem}")
 
 
 def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: bool, nativespec: str, kwargs: dict):
@@ -39,7 +39,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
     bidsdir = Path(bidsdir).resolve()
 
     # Start logging
-    bids.setup_logging(LOGGER, bidsdir/'code'/'bidscoin'/'deface.log')
+    bids.setup_logging(bidsdir/'code'/'bidscoin'/'deface.log')
     LOGGER.info('')
     LOGGER.info('------------ START deface ------------')
     LOGGER.info(f">>> deface bidsfolder={bidsdir} pattern={pattern} subjects={subjects} output={output}"

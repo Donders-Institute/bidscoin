@@ -16,7 +16,7 @@ try:
 except ImportError:
     import bids             # This should work if bidscoin was not pip-installed
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger(f"bidscoin.{Path(__file__).stem}")
 
 
 def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorithm: str, weights: list, force: bool=False):
@@ -36,7 +36,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
     bidsdir = Path(bidsdir).resolve()
 
     # Start logging
-    bids.setup_logging(LOGGER, bidsdir/'code'/'bidscoin'/'echocombine.log')
+    bids.setup_logging(bidsdir/'code'/'bidscoin'/'echocombine.log')
     LOGGER.info('')
     LOGGER.info(f"--------- START echocombine ---------")
     LOGGER.info(f">>> echocombine bidsfolder={bidsdir} pattern={pattern} subjects={subjects} output={output}"
@@ -97,7 +97,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                     continue
 
                 # Combine the multi-echo images
-                me.me_combine(mepattern, cefile, algorithm, weights, saveweights=False, logger=LOGGER.name)
+                me.me_combine(mepattern, cefile, algorithm, weights, saveweights=False)
 
                 # (Re)move the original multi-echo images
                 if not output:
