@@ -143,7 +143,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     bidscoinfolder = bidsfolder/'code'/'bidscoin'
 
     # Start logging
-    bids.setup_logging(bidscoinfolder/'bidsmapper.log')
+    bids.setup_logging(LOGGER, bidscoinfolder/'bidsmapper.log')
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSmapper ------------')
     LOGGER.info(f">>> bidsmapper sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmapfile} "

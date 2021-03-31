@@ -53,7 +53,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     bidsmapfile = Path(bidsmapfile)
 
     # Start logging
-    bids.setup_logging(bidsfolder/'code'/'bidscoin'/'bidscoiner.log')
+    bids.setup_logging(LOGGER, bidsfolder/'code'/'bidscoin'/'bidscoiner.log')
     LOGGER.info('')
     LOGGER.info(f"-------------- START BIDScoiner {localversion}: BIDS {bids.bidsversion()} ------------")
     LOGGER.info(f">>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} subjects={subjects} force={force}"

@@ -101,9 +101,9 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, subprefix: str=
 
     # Start logging
     if dryrun:
-        bids.setup_logging()
+        bids.setup_logging(LOGGER)
     else:
-        bids.setup_logging(bidsfolder/'code'/'bidscoin'/'bidsparticipants.log')
+        bids.setup_logging(LOGGER, bidsfolder/'code'/'bidscoin'/'bidsparticipants.log')
     LOGGER.info('')
     LOGGER.info(f"-------------- START bidsparticipants {bids.version()} ------------")
     LOGGER.info(f">>> bidsparticipants sourcefolder={rawfolder} bidsfolder={bidsfolder} subprefix={subprefix} sesprefix={sesprefix}")

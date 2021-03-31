@@ -1378,7 +1378,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', dataf
     templatefile = Path(templatefile)
 
     # Start logging
-    bids.setup_logging(bidsfolder/'code'/'bidscoin'/'bidseditor.log')
+    bids.setup_logging(LOGGER, bidsfolder/'code'/'bidscoin'/'bidseditor.log')
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSeditor ------------')
     LOGGER.info(f">>> bidseditor bidsfolder={bidsfolder} bidsmap={bidsmapfile} template={templatefile}"

@@ -31,7 +31,7 @@ except ImportError:
 from ruamel.yaml import YAML
 yaml = YAML()
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 bidsdatatypes   = ('fmap', 'anat', 'func', 'perf', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')           # NB: get_matching_run() uses this order to search for a match. TODO: sync with the modalities.yaml schema
 ignoredatatype  = 'leave_out'
@@ -85,13 +85,13 @@ def version(check: bool=False) -> Union[str, Tuple]:
     return localversion
 
 
-def setup_logging(log_file: Path=Path(), debug: bool=False) -> logging.Logger:
+def setup_logging(logger, log_file: Path=Path(), debug: bool=False):
     """
     Setup the logging
 
     :param log_file:    Name of the logfile
     :param debug:       Set log level to DEBUG if debug==True
-    :return:            Logger object
+    :return:
      """
 
     # debug = True
@@ -109,7 +109,7 @@ def setup_logging(log_file: Path=Path(), debug: bool=False) -> logging.Logger:
     coloredlogs.install(level=logger.level, fmt=fmt, datefmt=datefmt)
 
     if not log_file.name:
-        return logger
+        return
 
     # Set & add the log filehandler
     log_file.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
@@ -127,8 +127,6 @@ def setup_logging(log_file: Path=Path(), debug: bool=False) -> logging.Logger:
     errorhandler.set_name('errorhandler')
     logger.addHandler(errorhandler)
 
-    return logger
-
 
 def reporterrors() -> None:
     """
@@ -137,24 +135,24 @@ def reporterrors() -> None:
     :return:
     """
 
-    for filehandler in logger.handlers:
+    for filehandler in LOGGER.handlers:
         if filehandler.name == 'errorhandler':
 
             errorfile = Path(filehandler.baseFilename)
             if errorfile.stat().st_size:
                 with errorfile.open('r') as fid:
                     errors = fid.read()
-                logger.info(f"The following BIDScoin errors and warnings were reported:\n\n{40*'>'}\n{errors}{40*'<'}\n")
+                LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errors}{40 * '<'}\n")
 
             else:
-                logger.info(f'No BIDScoin errors or warnings were reported')
-                logger.info('')
+                LOGGER.info(f'No BIDScoin errors or warnings were reported')
+                LOGGER.info('')
 
         elif filehandler.name == 'loghandler':
             logfile = Path(filehandler.baseFilename)
 
     if 'logfile' in locals():
-        logger.info(f"For the complete log see: {logfile}\n"
+        LOGGER.info(f"For the complete log see: {logfile}\n"
                     f"NB: Files in {logfile.parent} may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
 
 
@@ -166,13 +164,13 @@ def run_command(command: str) -> bool:
     :return:        True if the were no errors, False otherwise
     """
 
-    logger.info(f"Running: {command}")
+    LOGGER.info(f"Running: {command}")
     process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)          # TODO: investigate shell=False and capture_output=True for python 3.7
-    logger.info(f"Output:\n{process.stdout.decode('utf-8')}")
+    LOGGER.info(f"Output:\n{process.stdout.decode('utf-8')}")
 
     if process.stderr.decode('utf-8') or process.returncode!=0:
-        logger.exception(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stderr.decode('utf-8')}")
-        logger.debug(f"{process.stdout.decode('utf-8')}")
+        LOGGER.exception(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stderr.decode('utf-8')}")
+        LOGGER.debug(f"{process.stdout.decode('utf-8')}")
         return False
 
     return True
@@ -192,7 +190,7 @@ def import_plugin(plugin: Path) -> util.module_from_spec:
 
     # See if we can find the plug-in
     if not plugin.is_file():
-        logger.error(f"Could not find plugin: '{plugin}'")
+        LOGGER.error(f"Could not find plugin: '{plugin}'")
         return None
 
     # Load the plugin-module
@@ -203,19 +201,19 @@ def import_plugin(plugin: Path) -> util.module_from_spec:
 
         # bidsmapper -> module.bidsmapper_plugin(runfolder, bidsmap_new, bidsmap_old)
         if 'bidsmapper_plugin' not in dir(module):
-            logger.info(f"Could not find bidscoiner_plugin() in {plugin}")
+            LOGGER.info(f"Could not find bidscoiner_plugin() in {plugin}")
 
         # bidscoiner -> module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals)
         if 'bidscoiner_plugin' not in dir(module):
-            logger.info(f"Could not find bidscoiner_plugin() in {plugin}")
+            LOGGER.info(f"Could not find bidscoiner_plugin() in {plugin}")
 
         if 'bidsmapper_plugin' not in dir(module) and 'bidscoiner_plugin' not in dir(module):
-            logger.warning(f"{plugin} can (and will) not perform any operation")
+            LOGGER.warning(f"{plugin} can (and will) not perform any operation")
 
         return module
 
     except Exception as pluginerror:
-        logger.exception(f"Could not import '{plugin}: {pluginerror}'")
+        LOGGER.exception(f"Could not import '{plugin}: {pluginerror}'")
 
         return None
 
@@ -236,10 +234,10 @@ def test_tooloptions(tool: str, opts: dict) -> Union[bool, None]:
     elif tool in ('bidscoin', 'bidscoiner'):
         command = 'bidscoiner -v'
     else:
-        logger.warning(f"Testing of '{tool}' not supported")
+        LOGGER.warning(f"Testing of '{tool}' not supported")
         return None
 
-    logger.info(f"Testing: '{tool}'")
+    LOGGER.info(f"Testing: '{tool}'")
 
     return run_command(command)
 
@@ -253,12 +251,12 @@ def test_plugins(plugin: Path) -> bool:
                     was a plug-in error, None if this function has an implementation error
     """
 
-    logger.info(f"Testing: '{plugin}' plugin")
+    LOGGER.info(f"Testing: '{plugin}' plugin")
 
     module = import_plugin(plugin)
     if inspect.ismodule(module):
         methods = [method for method in dir(module) if not method.startswith('_')]
-        logger.info(f"Result:\n{module.__doc__}\n{plugin} attributes and methods:\n{methods}\n")
+        LOGGER.info(f"Result:\n{module.__doc__}\n{plugin} attributes and methods:\n{methods}\n")
         return True
 
     else:
@@ -287,12 +285,12 @@ def is_dicomfile(file: Path) -> bool:
 
     if file.is_file():
         if file.stem.startswith('.'):
-            logger.warning(f'File is hidden: {file}')
+            LOGGER.warning(f'File is hidden: {file}')
         with file.open('rb') as dicomfile:
             dicomfile.seek(0x80, 1)
             if dicomfile.read(4) == b'DICM':
                 return True
-        logger.debug(f"Reading non-standard DICOM file: {file}")
+        LOGGER.debug(f"Reading non-standard DICOM file: {file}")
         if file.suffix.lower() in ('.ima','.dcm','.dicm','.dicom',''):           # Avoid memory problems when reading a very large (e.g. EEG) source file
             dicomdata = pydicom.dcmread(file, force=True)       # The DICM tag may be missing for anonymized DICOM files
             return 'Modality' in dicomdata
@@ -378,12 +376,12 @@ def unpack(sourcefolder: Path, subprefix: str='sub-', sesprefix: str='ses-', wil
         worksubses.mkdir(parents=True, exist_ok=True)
 
         # Copy everything over to the workfolder
-        logger.info(f"Making temporary copy: {sourcefolder} -> {worksubses}")
+        LOGGER.info(f"Making temporary copy: {sourcefolder} -> {worksubses}")
         copy_tree(str(sourcefolder), str(worksubses))     # Older python versions don't support PathLib
 
         # Unpack the zip/tarballed files in the temporary folder
         for packedfile in [worksubses/packedfile.name for packedfile in packedfiles]:
-            logger.info(f"Unpacking: {packedfile.name} -> {worksubses}")
+            LOGGER.info(f"Unpacking: {packedfile.name} -> {worksubses}")
             ext = packedfile.suffixes
             if ext[-1] == '.zip':
                 with zipfile.ZipFile(packedfile, 'r') as zip_fid:
@@ -423,7 +421,7 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
     idx = 0
     for file in files:
         if file.stem.startswith('.'):
-            logger.warning(f'Ignoring hidden file: {file}')
+            LOGGER.warning(f'Ignoring hidden file: {file}')
             continue
         if is_dicomfile(file):
             if idx == index:
@@ -483,10 +481,10 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
 
     if not yamlfile.is_file():
         if report:
-            logger.info(f"No existing bidsmap file found: {yamlfile}")
+            LOGGER.info(f"No existing bidsmap file found: {yamlfile}")
         return dict(), yamlfile
     elif report:
-        logger.info(f"Reading: {yamlfile}")
+        LOGGER.info(f"Reading: {yamlfile}")
 
     # Read the heuristics from the bidsmap file
     with yamlfile.open('r') as stream:
@@ -500,7 +498,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
     else:
         bidsmapversion = 'Unknown'
     if bidsmapversion != version() and report:
-        logger.warning(f'BIDScoiner version conflict: {yamlfile} was created using version {bidsmapversion}, but this is version {version()}')
+        LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created using version {bidsmapversion}, but this is version {version()}')
 
     # Validate the bidsmap entries
     check_bidsmap(bidsmap, report)
@@ -536,9 +534,9 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
 
     # Validate the bidsmap entries
     if not check_bidsmap(bidsmap, False):
-        logger.warning('Bidsmap values are invalid according to the BIDS specification')
+        LOGGER.warning('Bidsmap values are invalid according to the BIDS specification')
 
-    logger.info(f"Writing bidsmap to: {filename}")
+    LOGGER.info(f"Writing bidsmap to: {filename}")
     filename.parent.mkdir(parents=True, exist_ok=True)
     with filename.open('w') as stream:
         yaml.dump(bidsmap, stream)
@@ -553,7 +551,7 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
         try:
             load_bidsmap(filename, report=None)
         except Exception as bidsmaperror:
-            logger.exception(f'{bidsmaperror}\nThe saved output bidsmap does not seem to be valid YAML, please check {filename}, e.g. by way of an online yaml validator, such as https://yamlchecker.com/')
+            LOGGER.exception(f'{bidsmaperror}\nThe saved output bidsmap does not seem to be valid YAML, please check {filename}, e.g. by way of an online yaml validator, such as https://yamlchecker.com/')
 
 
 def check_bidsmap(bidsmap: dict, validate: bool=True) -> bool:
@@ -591,7 +589,7 @@ def parse_x_protocol(pattern: str, dicomfile: Path) -> str:
     """
 
     if not is_dicomfile_siemens(dicomfile):
-        logger.warning(f"Parsing {pattern} may fail because {dicomfile} does not seem to be a Siemens DICOM file")
+        LOGGER.warning(f"Parsing {pattern} may fail because {dicomfile} does not seem to be a Siemens DICOM file")
 
     regexp = '^' + pattern + '\t = \t(.*)\n'
     regex  = re.compile(regexp.encode('utf-8'))
@@ -602,7 +600,7 @@ def parse_x_protocol(pattern: str, dicomfile: Path) -> str:
             if match:
                 return match.group(1).decode('utf-8')
 
-    logger.warning(f"Pattern: '{regexp.encode('unicode_escape').decode()}' not found in: {dicomfile}")
+    LOGGER.warning(f"Pattern: '{regexp.encode('unicode_escape').decode()}' not found in: {dicomfile}")
     return ''
 
 
@@ -624,11 +622,11 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
         return ''
 
     if not dicomfile.is_file():
-        logger.warning(f"{dicomfile} not found")
+        LOGGER.warning(f"{dicomfile} not found")
         value = ''
 
     elif not is_dicomfile(dicomfile):
-        logger.warning(f"{dicomfile} is not a DICOM file, cannot read {tagname}")
+        LOGGER.warning(f"{dicomfile} is not a DICOM file, cannot read {tagname}")
         value = ''
 
     else:
@@ -652,7 +650,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                         continue
 
         except OSError:
-            logger.warning(f'Cannot read {tagname} from {dicomfile}')
+            LOGGER.warning(f'Cannot read {tagname} from {dicomfile}')
             value = ''
 
         except Exception as dicomerror:
@@ -660,7 +658,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                 value = parse_x_protocol(tagname, dicomfile)
 
             except Exception as dicomerror:
-                logger.warning(f'Could not parse {tagname} from {dicomfile}\n{dicomerror}')
+                LOGGER.warning(f'Could not parse {tagname} from {dicomfile}\n{dicomerror}')
                 value = ''
 
     # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
@@ -690,11 +688,11 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
         return ''
 
     if not parfile.is_file():
-        logger.warning(f"{parfile} not found")
+        LOGGER.warning(f"{parfile} not found")
         value = ''
 
     elif not is_parfile(parfile):
-        logger.warning(f"{parfile} is not a PAR/XML file, cannot read {tagname}")
+        LOGGER.warning(f"{parfile} is not a PAR/XML file, cannot read {tagname}")
         value = ''
 
     else:
@@ -710,11 +708,11 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
             value = pardict[0].get(tagname, '')
 
         except OSError:
-            logger.warning(f'Cannot read {tagname} from {parfile}')
+            LOGGER.warning(f'Cannot read {tagname} from {parfile}')
             value = ''
 
         except Exception as parerror:
-            logger.warning(f'Could not parse {tagname} from {parfile}\n{parerror}')
+            LOGGER.warning(f'Could not parse {tagname} from {parfile}\n{parerror}')
             value = ''
 
     # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
@@ -758,9 +756,9 @@ def get_dataformat(source: Path) -> str:
             return 'PAR'
 
     except OSError as nosource:
-        logger.warning(nosource)
+        LOGGER.warning(nosource)
 
-    logger.warning(f"Cannot determine the dataformat of: {source}")
+    LOGGER.warning(f"Cannot determine the dataformat of: {source}")
     return ''
 
 
@@ -872,7 +870,7 @@ def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
         if datatype in bidsmap[dataformat] and bidsmap[dataformat][datatype]:
             for run in bidsmap[dataformat][datatype]:
                 if not run['provenance']:
-                    logger.warning(f'The bidsmap run {datatype} run does not contain provenance data')
+                    LOGGER.warning(f'The bidsmap run {datatype} run does not contain provenance data')
                 else:
                     provenance.append(Path(run['provenance']))
 
@@ -921,7 +919,7 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
 
             return run_
 
-    logger.warning(f"'{datatype}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{dataformat}']")
+    LOGGER.warning(f"'{datatype}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{dataformat}']")
     return dict(provenance=str(sourcefile.resolve()), filesystem={}, attributes={}, bids={})
 
 
@@ -1009,7 +1007,7 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, provenance: Path, target
     # Warn the user if the target run already exists when the run is moved to another datatype
     if source_datatype != target_datatype:
         if exist_run(bidsmap, dataformat, target_datatype, run):
-            logger.warning(f'That run from {source_datatype} already exists in {target_datatype}...')
+            LOGGER.warning(f'That run from {source_datatype} already exists in {target_datatype}...')
 
         # Delete the source run
         bidsmap = delete_run(bidsmap, dataformat, source_datatype, provenance)
@@ -1025,7 +1023,7 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, provenance: Path, target
 
     num_runs_out = len(dir_bidsmap(bidsmap, dataformat))
     if num_runs_out != num_runs_in:
-        logger.exception(f"Number of runs in bidsmap['{dataformat}'] changed unexpectedly: {num_runs_in} -> {num_runs_out}")
+        LOGGER.exception(f"Number of runs in bidsmap['{dataformat}'] changed unexpectedly: {num_runs_in} -> {num_runs_out}")
 
     return bidsmap
 
@@ -1144,7 +1142,7 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
         datatypefile = schema_folder/'datatypes'/f"{datatype}.yaml"
         if not datatypefile.is_file():
             if validate and datatype in bidsdatatypes:
-                logger.info(f"Could not find {datatypefile} to validate the {run['provenance']} run")
+                LOGGER.info(f"Could not find {datatypefile} to validate the {run['provenance']} run")
             return True
         with datatypefile.open('r') as stream:
             typegroups = yaml.load(stream)
@@ -1162,14 +1160,14 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
                 if isinstance(bidsvalue, list):
                     bidsvalue = bidsvalue[bidsvalue[-1]]    # Get the selected item
                 if isinstance(bidsvalue, str) and not (bidsvalue.startswith('<') and bidsvalue.endswith('>')) and bidsvalue != cleanup_value(bidsvalue):
-                    logger.warning(f'Invalid {entitykey} value: "{bidsvalue}" for {run["provenance"]} -> {datatype}/*_{run["bids"]["suffix"]}')
+                    LOGGER.warning(f'Invalid {entitykey} value: "{bidsvalue}" for {run["provenance"]} -> {datatype}/*_{run["bids"]["suffix"]}')
                 if entitykey in ('sub', 'ses'): continue
                 if validate and entitykey not in run['bids']:
-                    logger.warning(f'Invalid bidsmap: BIDS entity "{entitykey}" is absent for {run["provenance"]} -> {datatype}/*_{run["bids"]["suffix"]}')
+                    LOGGER.warning(f'Invalid bidsmap: BIDS entity "{entitykey}" is absent for {run["provenance"]} -> {datatype}/*_{run["bids"]["suffix"]}')
                     run_keysok = False
                 elif typegroup['entities'][entityname]=='required' and not bidsvalue:
                     if validate is False:                   # Do not inform the user about empty template values
-                        logger.info(f'BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
+                        LOGGER.info(f'BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
                     run_valsok = False
 
             # Check if all the bids-keys are present in the schema file
@@ -1178,11 +1176,11 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
                 if bidskey in ('suffix', 'IntendedFor'): continue
                 if bidskey not in entitykeys:
                     if validate:
-                        logger.warning(f'Invalid bidsmap: BIDS entity {run["provenance"]} -> "{bidskey}"-"{run["bids"][bidskey]}" is not allowed according to the BIDS standard')
+                        LOGGER.warning(f'Invalid bidsmap: BIDS entity {run["provenance"]} -> "{bidskey}"-"{run["bids"][bidskey]}" is not allowed according to the BIDS standard')
                         run_keysok = False
                     elif run["bids"][bidskey]:
                         if validate is False:
-                            logger.info(f'BIDS entity "{bidskey}"-"{run["bids"][bidskey]}" is not allowed according to the BIDS standard (clear "{run["bids"][bidskey]})" to resolve this issue)')
+                            LOGGER.info(f'BIDS entity "{bidskey}"-"{run["bids"][bidskey]}" is not allowed according to the BIDS standard (clear "{run["bids"][bidskey]})" to resolve this issue)')
                         run_valsok = False
 
     return run_found and run_valsok and run_keysok
@@ -1252,7 +1250,7 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
                 return run_, datatype, index
 
     # We don't have a match (all tests failed, so datatype should be the *last* one, i.e. unknowndatatype)
-    logger.debug(f"Could not find a matching run in the bidsmap for {sourcefile} -> {datatype}")
+    LOGGER.debug(f"Could not find a matching run in the bidsmap for {sourcefile} -> {datatype}")
     return run_, datatype, None
 
 
@@ -1270,7 +1268,7 @@ def get_subid_sesid(sourcefile: Path, subid: str= '<<SourceFilePath>>', sesid: s
 
     # Input checking
     if subprefix not in str(sourcefile):
-        logger.warning(f"Could not parse sub/ses-id information from '{sourcefile}': no '{subprefix}' label in its path")
+        LOGGER.warning(f"Could not parse sub/ses-id information from '{sourcefile}': no '{subprefix}' label in its path")
         return '', ''
 
     # Add default value for subid and sesid (e.g. for the bidseditor)
