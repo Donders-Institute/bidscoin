@@ -317,7 +317,7 @@ class Ui_MainWindow(MainWindow):
 
         self.model = QFileSystemModel()
         model = self.model
-        model.setRootPath('')
+        model.setRootPath(rootfolder)
         model.setFilter(QtCore.QDir.NoDotAndDotDot | QtCore.QDir.AllDirs | QtCore.QDir.Files)
         tree = QTreeView()
         tree.setModel(model)
@@ -710,7 +710,7 @@ class Ui_MainWindow(MainWindow):
         layout.addWidget(label)
         layout.addWidget(samples_table)
         tab = QtWidgets.QWidget()
-        tab.setObjectName(dataformat)
+        tab.setObjectName(dataformat)                                       # NB: Serves to identify the dataformat for the tables in a tab
         tab.setLayout(layout)
         self.tabwidget.addTab(tab, f"{dataformat} mappings")
         self.tabwidget.setCurrentWidget(tab)
