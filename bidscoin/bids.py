@@ -137,7 +137,7 @@ def reporterrors() -> None:
     :return:
     """
 
-    for filehandler in LOGGER.handlers:
+    for filehandler in logging.getLogger().handlers:
         if filehandler.name == 'errorhandler':
 
             errorfile = Path(filehandler.baseFilename)
