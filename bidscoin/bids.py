@@ -137,6 +137,7 @@ def reporterrors() -> None:
     :return:
     """
 
+    # Find the filehandlers and report the errors and warnings
     for filehandler in logging.getLogger().handlers:
         if filehandler.name == 'errorhandler':
 
@@ -153,6 +154,7 @@ def reporterrors() -> None:
         elif filehandler.name == 'loghandler':
             logfile = Path(filehandler.baseFilename)
 
+    # Final message
     if 'logfile' in locals():
         LOGGER.info(f"For the complete log see: {logfile}\n"
                     f"NB: Files in {logfile.parent} may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
@@ -220,7 +222,7 @@ def import_plugin(plugin: Path) -> util.module_from_spec:
 
 def test_tooloptions(tool: str, opts: dict) -> Union[bool, None]:
     """
-    Performs tests of the user tool parameters set in bidsmap['Options']
+    Performs shell tests of the user tool parameters set in bidsmap['Options']
 
     :param tool:    Name of the tool that is being tested in bidsmap['Options']
     :param opts:    The editable options belonging to the tool
@@ -244,7 +246,7 @@ def test_tooloptions(tool: str, opts: dict) -> Union[bool, None]:
 
 def test_plugins(plugin: Path) -> bool:
     """
-    Performs tests of the plug-ins in bidsmap['PlugIns']
+    Performs import tests of the plug-ins in bidsmap['PlugIns']
 
     :param plugin:  The name of the plugin that is being tested (-> bidsmap['Plugins'])
     :return:        True if the plugin generated the expected result, False if there

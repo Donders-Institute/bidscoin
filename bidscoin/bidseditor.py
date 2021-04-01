@@ -372,11 +372,12 @@ class Ui_MainWindow(MainWindow):
         :param plugin:    Name of the plugin that is being tested in bidsmap['PlugIns']
          """
         if bids.test_plugins(Path(plugin)):
-            result = 'Passed'
+            QMessageBox.information(self.MainWindow, 'Plugin test', f"Import of {plugin}: Passed\n"
+                                                                     'See terminal output for more info')
         else:
             result = 'Failed'
-        QMessageBox.information(self.MainWindow, 'Test', f"Test {plugin}: {result}\n"
-                                                         f"See terminal output for more info")
+            QMessageBox.warning(self.MainWindow, 'Plugin test', f"Import of {plugin}: Failed\n"
+                                                                 'See terminal output for more info')
 
     def handle_click_test_tool(self, tool: str):
         """Test the bidsmap tool and show the result in a pop-up window
@@ -384,11 +385,11 @@ class Ui_MainWindow(MainWindow):
         :param tool:    Name of the tool that is being tested in bidsmap['Options']
          """
         if bids.test_tooloptions(tool, self.output_bidsmap['Options'][tool]):
-            result = 'Passed'
+            QMessageBox.information(self.MainWindow, 'Tool test', f"Execution of {tool}: Passed\n"
+                                                                   'See terminal output for more info')
         else:
-            result = 'Failed'
-        QMessageBox.information(self.MainWindow, 'Test', f"Test {tool}: {result}\n"
-                                                         f"See terminal output for more info")
+            QMessageBox.warning(self.MainWindow, 'Tool test', f"Execution of {tool}: Failed\n"
+                                                               'See terminal output for more info')
 
     def handle_click_plugin_add(self):
         """Add a plugin by letting the user select a plugin-file"""
@@ -436,7 +437,7 @@ class Ui_MainWindow(MainWindow):
                 elif j==2:                  # Add the test-button cell
                     test_button = QPushButton('Test')
                     test_button.clicked.connect(partial(self.handle_click_test_plugin, plugin))
-                    test_button.setToolTip(f"Click to test {plugin}")
+                    test_button.setToolTip(f"Click to test the {plugin} plugin")
                     plugintable.setCellWidget(i, j, test_button)
 
         # Append the Add-button cell
@@ -527,7 +528,7 @@ class Ui_MainWindow(MainWindow):
             # Add the test-button cell
             test_button = QPushButton('Test')
             test_button.clicked.connect(partial(self.handle_click_test_tool, tool))
-            test_button.setToolTip(f'Click to test the {tool} options')
+            test_button.setToolTip(f'Click to test the {tool} installation')
             tool_table.setCellWidget(0, num_cols-1, test_button)
 
             tool_table.cellChanged.connect(partial(self.tool_cell_was_changed, tool, n))

@@ -3,7 +3,7 @@ This function contains placeholder code demonstrating the bidscoin plugin API, b
 bidscoiner.py. Enter the name of this module (default location is the plugins-folder; otherwise the full path
 must be provided) in the bidsmap dictionary file to import the plugin functions in this module, e.g. "README.py"
 or "myplugin.py". The functions in this module should be named "bidsmapper_plugin" for bidsmapper.py and
-"bidscoiner_plugin" for bidscoiner.py. See the code for the (positional) input arguments of the plugin-functions.
+"bidscoiner_plugin" for bidscoiner.py
 """
 
 import logging
