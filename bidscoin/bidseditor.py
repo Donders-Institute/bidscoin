@@ -821,7 +821,8 @@ class Ui_MainWindow(MainWindow):
                         self.dialog_edit.exec()
                     else:
                         self.dialog_edit.show()
-                    break
+                    return
+            LOGGER.exception(f"Could not find {provenance} run-item")
 
         else:
             # Ask the user if he wants to save his results first before opening a new edit window
