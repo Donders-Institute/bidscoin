@@ -25,7 +25,7 @@ except ImportError:
 localversion, versionmessage = bids.version(check=True)
 
 
-def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, subprefix: str='sub-', sesprefix: str='ses-', store: bool=False, edit: bool=True) -> None:
+def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, subprefix: str='sub-', sesprefix: str='ses-', store: bool=False, noedit: bool=False) -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder
     and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code/bidscoin.
@@ -38,7 +38,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     :param subprefix:       The prefix common for all source subject-folders
     :param sesprefix:       The prefix common for all source session-folders
     :param store:           If True, the provenance samples will be stored
-    :param edit:            The bidseditor will be launched if True
+    :param noedit:          The bidseditor will not be launched if True
     :return:
     """
 
@@ -54,7 +54,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSmapper ------------')
     LOGGER.info(f">>> bidsmapper sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmapfile} "
-                f" template={templatefile} subprefix={subprefix} sesprefix={sesprefix} store={store} edit={edit}")
+                f" template={templatefile} subprefix={subprefix} sesprefix={sesprefix} store={store} automatic={noedit}")
 
     # Get the heuristics for filling the new bidsmap
     bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile,  bidscoinfolder)
@@ -107,8 +107,11 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             if unpacked:
                 shutil.rmtree(session)
 
-    # Launch the bidseditor UI_MainWindow
-    if edit:
+    # Save the new study bidsmap in the bidscoinfolder or launch the bidseditor UI_MainWindow
+    if noedit:
+        bids.save_bidsmap(bidsmapfile, bidsmap_new)
+
+    else:
         LOGGER.info('Opening the bidseditor')
         app = QApplication(sys.argv)
         app.setApplicationName(f"{bidsmapfile} - BIDS editor {localversion}")
@@ -126,10 +129,6 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         gui.setupUi(mainwin, bidsfolder, bidsmapfile, bidsmap_new, copy.deepcopy(bidsmap_new), template, subprefix=subprefix, sesprefix=sesprefix)
         mainwin.show()
         app.exec()
-
-    else:
-        # Save the bidsmap in the bidscoinfolder
-        bids.save_bidsmap(bidsmapfile, bidsmap_new)
 
     LOGGER.info('-------------- FINISHED! -------------------')
     LOGGER.info('')
@@ -153,7 +152,7 @@ def main():
     parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     parser.add_argument('-s','--store',       help="Flag to store provenance data samples in the bidsfolder/'code'/'provenance' folder", action='store_true')
-    parser.add_argument('-e','--edit',        help='Boolean to launch the bidseditor to interactively tweak the automatically generated bidsmap (recommended). Otherwise the bidsmap is saved to disk as it is', type=bool, default=True)
+    parser.add_argument('-a','--automatic',   help="Flag to save the automatically generated bidsmap to disk and don't interactively tweak it with the bidseditor", action='store_true')
     parser.add_argument('-v','--version',     help='Show the installed version and check for updates', action='version', version=f'BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}')
     args = parser.parse_args()
 
@@ -164,7 +163,7 @@ def main():
                subprefix    = args.subprefix,
                sesprefix    = args.sesprefix,
                store        = args.store,
-               edit         = args.edit)
+               noedit       = args.automatic)
 
 
 if __name__ == "__main__":
