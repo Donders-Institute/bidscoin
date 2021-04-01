@@ -728,10 +728,12 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
 
 def get_dataformat(source: Path) -> str:
     """
-    TODO: replace sourcefile with a class as soon as Pathlib supports subclassing
+    Wrapper to get the dataformat of a source file or folder
 
     :param source:  The full pathname of a (e.g. DICOM or PAR/XML) session directory or of a source file
     :return:        'DICOM' if sourcefile is a DICOM-file or 'PAR' when it is a PAR/XML file
+
+    TODO: replace with a dataformat class
     """
 
     # If source is a session directory, get a sourcefile
@@ -773,6 +775,7 @@ def get_sourcefield(tagname: str, sourcefile: Path=Path(), dataformat: str='') -
     :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
     :return:            Extracted tag-values from the sourcefile
 
+    TODO: replace with a dataformat class
     """
 
     if not dataformat:

@@ -2,7 +2,9 @@
 # This is a bidsmap YAML file with the key-value mappings for the different BIDS
 # datatypes (anat, func, dwi, etc). The datatype attributes are the keys that map
 # onto the BIDS labels. The bidsmap data-structure should be 5 levels deep:
-# dict > dict > list > dict > dict
+#
+# dict       : dict     : list     : dict        : dict
+# dataformat : datatype : run-item : bidsmapping : mapping-data
 #
 # NB:
 # 1) Edit the bidsmap file to your needs before feeding it to bidscoiner.py
