@@ -270,11 +270,11 @@ def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
     Gets all directories in a folder, ignores files
 
     :param folder:      The full pathname of the folder
-    :param wildcard:    Simple (glob.glob) shell-style wildcards. Foldernames starting with a dot are special cases that are not matched by '*' and '?' patterns.") wildcard
+    :param wildcard:    Simple (glob.glob) shell-style wildcards. Foldernames starting with a dot are considered hidden and will be skipped"
     :return:            A list with all directories in the folder
     """
 
-    return [fname for fname in sorted(folder.glob(wildcard)) if fname.is_dir()]
+    return [fname for fname in sorted(folder.glob(wildcard)) if fname.is_dir() and not fname.name.startswith('.')]
 
 
 def is_dicomfile(file: Path) -> bool:
