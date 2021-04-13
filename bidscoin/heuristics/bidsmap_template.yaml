@@ -649,10 +649,21 @@ DICOM:
       Columns: ~
     bids: &pet_dicoment_group1
       task: <SeriesDescription>
-      acq: <Radiopharmaceutical>
+      trc: <Radiopharmaceutical>
       rec: ['', 'acdyn', 'acstat', 'nacdyn', 'nacstat', 0]
       run: <<1>>
       suffix: pet
+  - provenance: ~
+    attributes: *pet_dicomattr
+    bids:
+      <<: *pet_dicoment_group1
+      suffix: events
+  - provenance: ~
+    attributes: *pet_dicomattr
+    bids:
+      <<: *pet_dicoment_group1
+      recording: ~
+      suffix: blood
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance: ~
