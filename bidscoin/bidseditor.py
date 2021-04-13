@@ -600,7 +600,10 @@ class Ui_MainWindow(MainWindow):
                                                     output_bidsmap[dataformat]['session'],
                                                     self.subprefix, self.sesprefix)
                 bidsname     = bids.get_bidsname(subid, sesid, run)
-                session      = self.bidsfolder/subid/sesid
+                if run['bids']['suffix'] in bids.get_derivatives(datatype):
+                    session  = self.bidsfolder/'derivatives'/'[manufacturer]'/subid/sesid
+                else:
+                    session  = self.bidsfolder/subid/sesid
                 row_index    = self.ordered_file_index[dataformat][provenance]
 
                 samples_table.setItem(idx, 0, QTableWidgetItem(f"{row_index+1:03d}"))
