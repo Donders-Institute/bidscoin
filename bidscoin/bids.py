@@ -1348,6 +1348,14 @@ def get_derivatives(datatype: str) -> list:
         else:
             typegroups = _DATATYPE_CACHE[datatype]
         return typegroups[1]['suffixes']            # The qMRI data (maps)
+    elif datatype == 'fmap':
+        if datatype not in _DATATYPE_CACHE:
+            with (schema_folder/'datatypes'/'fmap.yaml').open('r') as stream:
+                typegroups = yaml.load(stream)
+            _DATATYPE_CACHE[datatype] = typegroups
+        else:
+            typegroups = _DATATYPE_CACHE[datatype]
+        return [suffix for n,typegroup in enumerate(typegroups) for suffix in typegroup['suffixes'] if n>1]            # The non-standard fmaps (file collections)
     else:
         return []
 
