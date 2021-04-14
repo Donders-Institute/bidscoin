@@ -36,7 +36,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
 
     # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
     sourcefile   = Path()
-    manufacturer = 'unknown'
+    manufacturer = 'UNKNOWN'
     if dataformat=='DICOM':
         sources = bids.lsdirs(session)
         for source in sources:
