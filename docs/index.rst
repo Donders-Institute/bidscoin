@@ -1,6 +1,6 @@
 .. include:: ../README.rst
 
-.. include:: ../CHANGELOG.md
+.. mdinclude:: ../CHANGELOG.md
 
 .. toctree::
    :maxdepth: 3
