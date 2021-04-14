@@ -35,20 +35,27 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
     dataformat = bids.get_dataformat(session)
 
     # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
+    sourcefile   = Path()
+    manufacturer = 'unknown'
     if dataformat=='DICOM':
-        sourcefile = Path()
-        sources    = bids.lsdirs(session)
+        sources = bids.lsdirs(session)
         for source in sources:
-            sourcefile   = bids.get_dicomfile(source)
-            manufacturer = bids.get_dicomfield('Manufacturer', sourcefile)
+            sourcefile = bids.get_dicomfile(source)
             if sourcefile.name:
+                manufacturer = bids.get_dicomfield('Manufacturer', sourcefile)
                 break
+        if not sourcefile.name:
+            LOGGER.info(f"No data found in: {session}")
+            return
 
     elif dataformat=='PAR':
         sources = bids.get_parfiles(session)
-        manufacturer = 'Philips Medical Systems'
         if sources:
-            sourcefile = sources[0]
+            sourcefile   = sources[0]
+            manufacturer = 'Philips Medical Systems'
+        else:
+            LOGGER.info(f"No data found in: {session}")
+            return
 
     else:
         LOGGER.info(f"Session {session} cannot be processed by {__name__}")
