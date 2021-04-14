@@ -265,7 +265,22 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                 with jsonfile.open('r') as json_fid:
                     data = json.load(json_fid)
                 if not 'TaskName' in data:
-                    LOGGER.info(f"Adding TaskName to: {jsonfile}")
+                    LOGGER.info(f"Adding 'TaskName: {run['bids']['task']}' to: {jsonfile}")
+                    data['TaskName'] = run['bids']['task']
+                    with jsonfile.open('w') as json_fid:
+                        json.dump(data, json_fid, indent=4)
+
+            # Add the TracerName and TaskName to the pet json-file
+            elif datatype == 'pet':
+                with jsonfile.open('r') as json_fid:
+                    data = json.load(json_fid)
+                if not 'TracerName' in data:
+                    LOGGER.info(f"Adding 'TracerName: {run['bids']['trc']}' to: {jsonfile}")
+                    data['TracerName'] = run['bids']['trc']
+                    with jsonfile.open('w') as json_fid:
+                        json.dump(data, json_fid, indent=4)
+                if not 'TaskName' in data:
+                    LOGGER.info(f"Adding 'TaskName: {run['bids']['task']}' to: {jsonfile}")
                     data['TaskName'] = run['bids']['task']
                     with jsonfile.open('w') as json_fid:
                         json.dump(data, json_fid, indent=4)
