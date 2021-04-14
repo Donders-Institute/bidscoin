@@ -1181,6 +1181,8 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
                         if validate is False:
                             LOGGER.info(f'BIDS entity "{bidskey}"-"{run["bids"][bidskey]}" is not allowed according to the BIDS standard (clear "{run["bids"][bidskey]})" to resolve this issue)')
                         run_valsok = False
+                if bidskey not in bidskeys:
+                    LOGGER.error(f'Invalid bidsmap: BIDS entity {run["provenance"]} -> "{bidskey}"-"{run["bids"][bidskey]}" is not part of BIDScoin')
 
     return run_found and run_valsok and run_keysok
 
