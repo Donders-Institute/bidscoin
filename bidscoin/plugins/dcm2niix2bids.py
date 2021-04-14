@@ -118,7 +118,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
         # Check if file already exists (-> e.g. when a static runindex is used)
         if (outfolder/bidsname).with_suffix('.json').is_file():
             LOGGER.warning(f"{outfolder/bidsname}.* already exists and will be deleted -- check your results carefully!")
-            for ext in ('.nii.gz', '.nii', '.json', '.bval', '.bvec', 'tsv.gz'):
+            for ext in ('.nii.gz', '.nii', '.json', '.bval', '.bvec', '.tsv.gz'):
                 (outfolder/bidsname).with_suffix(ext).unlink(missing_ok=True)
 
         # Convert physiological log files (dcm2niix can't handle these)
