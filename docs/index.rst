@@ -13,4 +13,4 @@
    advanced
    screenshots
    tutorial
-
+   changelog
