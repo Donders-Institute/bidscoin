@@ -1,7 +1,5 @@
 .. include:: ../README.rst
 
-.. mdinclude:: ../CHANGELOG.md
-
 .. toctree::
    :maxdepth: 3
    :hidden:
