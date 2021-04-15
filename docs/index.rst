@@ -1,7 +1,5 @@
 .. include:: ../README.rst
 
-.. include:: ../CHANGELOG.md
-
 .. toctree::
    :maxdepth: 3
    :hidden:
@@ -15,4 +13,4 @@
    advanced
    screenshots
    tutorial
-   changelog
+   ../changelog
