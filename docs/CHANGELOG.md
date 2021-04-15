@@ -16,13 +16,13 @@ All notable changes to this project will be documented in this file. The format 
 - Moved the bidsmapping and bidscoining functionality to plugins (changed API)
 - Re-introduced skipping hidden folders (hidden files are also skipped)
 
+### Removed
+- P7 / nifti mapping
+
 ## [3.5.3] - 2021-04-13
 
 ### Fixed
 - Save non-standard fieldmaps in the derivative folder
-
-### Removed
-- P7 / nifti mapping
     
 ## [3.5.2] - 2021-03-21
 
