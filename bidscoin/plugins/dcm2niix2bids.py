@@ -279,11 +279,6 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                     data['TracerName'] = run['bids']['trc']
                     with jsonfile.open('w') as json_fid:
                         json.dump(data, json_fid, indent=4)
-                if not 'TaskName' in data:
-                    LOGGER.info(f"Adding 'TaskName: {run['bids']['task']}' to: {jsonfile}")
-                    data['TaskName'] = run['bids']['task']
-                    with jsonfile.open('w') as json_fid:
-                        json.dump(data, json_fid, indent=4)
 
             # Parse the acquisition time from the json file or else from the source header (NB: assuming the source file represents the first acquisition)
             niifile = list(jsonfile.parent.glob(jsonfile.stem + '.nii*'))       # Find the corresponding nifti file (there should be only one, let's not make assumptions about the .gz extension)
