@@ -32,7 +32,6 @@ with open(Path(__file__).parents[1]/'bidscoin'/'version.txt') as fid:
 extensions     = ['recommonmark']
 source_suffix  = {'.rst': 'restructuredtext',
                   '.md': 'markdown'}
-source_parsers = {'.md': 'recommonmark.parser.CommonMarkParser'}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
