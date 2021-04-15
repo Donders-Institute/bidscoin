@@ -212,7 +212,7 @@ class Ui_MainWindow(MainWindow):
         top_layout.addWidget(buttonBox)
         tabwidget.setCurrentIndex(0)
 
-        self.MainWindow.setCentralWidget(centralwidget)
+        MainWindow.setCentralWidget(centralwidget)
 
         # Restore the samples_table stretching after the main window has been sized / current tabindex has been set (otherwise the main window can become too narrow)
         for dataformat in self.dataformats:
@@ -224,11 +224,11 @@ class Ui_MainWindow(MainWindow):
             self.set_menu_and_status_bar()
 
             # Center the main window to the center point of screen
-            self.MainWindow.adjustSize()
+            MainWindow.adjustSize()
             cp = QDesktopWidget().availableGeometry().center()
-            qr = self.MainWindow.frameGeometry()
+            qr = MainWindow.frameGeometry()
             qr.moveCenter(cp)
-            self.MainWindow.move(qr.topLeft())            # Top left of rectangle becomes top left of window centering it
+            MainWindow.move(qr.topLeft())            # Top left of rectangle becomes top left of window centering it
 
     def set_menu_and_status_bar(self):
         # Set the menus

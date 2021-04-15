@@ -174,7 +174,6 @@ def run_command(command: str) -> bool:
 
     if process.stderr.decode('utf-8') or process.returncode!=0:
         LOGGER.exception(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stderr.decode('utf-8')}")
-        LOGGER.debug(f"{process.stdout.decode('utf-8')}")
         return False
 
     return True

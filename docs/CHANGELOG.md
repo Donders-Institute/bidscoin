@@ -1,24 +1,27 @@
 # Changelog
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
-
+    
 ## [Unreleased]
+
+Making BIDScoin more powerful and generic...
 
 ### Added
 - Support for BIDS v1.6
 - Added separate tabs for DICOM and PAR to edit all the mappings of mixed datasets
-- Added matching on the filesystem properties
+- Added matching on the filesystem properties, i.e. on the pathname, filename and filesize
 - Allow the user to edit json, yaml and other non-DICOM or PAR-files in the data browser
 - User feedback in the GUI for new BIDS compliancy checks
 
 ### Changed
 - Using regular expressions instead of fnmatch to match attribute values
-- Moved the bidsmapping and bidscoining functionality to plugins (changed API)
+- Moved the bidsmapping and bidscoining functionality to stand-alone plugins (changed API)
 - Re-introduced skipping hidden folders (hidden files are also skipped)
 
 ### Removed
-- P7 / nifti mapping
-
+- P7 and nifti support (it was never implemented anyhow)
+- Option to edit new mappings on-the-fly in the bidsmapper (`-i 2`)
+    
 ## [3.5.3] - 2021-04-13
 
 ### Fixed
@@ -32,7 +35,7 @@ All notable changes to this project will be documented in this file. The format 
 ## [3.5.1] - 2021-03-21
 
 ### Added
-- Improved BIDScoin version information
+- BIDScoin version update checks
 
 ### Fixed
 - Speed optimizations
@@ -44,11 +47,11 @@ All notable changes to this project will be documented in this file. The format 
 A significant rewrite and evolution of BIDScoin!
 
 ### Added
-- Support for BIDS 1.5
+- Support for BIDS v1.5
 - Support for Siemens advanced physiological logging data
 - Improved GUI help tooltips and user feedback
 - Improved feedback and control for invalid bidsnames
-- Validation of the template bidsmap against BIDS schema
+- Validation of run-items and bidsmaps against the BIDS schema
 
 ### Fixed
 - Simplified and improved (hopefully) handling of fieldmaps
