@@ -9,12 +9,12 @@ Making BIDScoin more powerful and generic...
 ### Added
 - Support for BIDS v1.6
 - Added separate tabs for DICOM and PAR to edit all the mappings of mixed datasets
-- Added matching on the filesystem properties, i.e. on the pathname, filename and filesize
-- Allow the user to edit json, yaml and other non-DICOM or PAR-files in the data browser
+- Added run-item matching on filesystem properties, i.e. on the pathname, filename and filesize
+- Allow the user to edit json, yaml, tsv and other non-DICOM / non-PAR files in the data browser
 - User feedback in the GUI for new BIDS compliancy checks
 
 ### Changed
-- Using regular expressions instead of fnmatch to match attribute values
+- Using regular expressions instead of fnmatch to match (template bidsmap) attribute values
 - Moved the bidsmapping and bidscoining functionality to stand-alone plugins (changed API)
 - Re-introduced skipping hidden folders (hidden files are also skipped)
 
@@ -52,6 +52,9 @@ A significant rewrite and evolution of BIDScoin!
 - Improved GUI help tooltips and user feedback
 - Improved feedback and control for invalid bidsnames
 - Validation of run-items and bidsmaps against the BIDS schema
+
+### Changed
+- Use the dccn template bidsmap as the default
 
 ### Fixed
 - Simplified and improved (hopefully) handling of fieldmaps
@@ -101,6 +104,7 @@ A significant rewrite and evolution of BIDScoin!
 
 ### Added
 - A 'provenance store' in the `bidsmapper` to fix a bug (#56 ) and allow for moving the bids-folder around
+- Support for zipped/tarred DICOM directories
     
 ## [3.0] - 2020-04-01
 
