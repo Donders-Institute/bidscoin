@@ -1,4 +1,4 @@
 Changes
 =======
 
-.. mdinclude:: ../CHANGELOG.md
+.. include:: ../CHANGELOG.md
