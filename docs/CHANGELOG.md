@@ -41,6 +41,8 @@ All notable changes to this project will be documented in this file. The format 
     
 ## [3.5] - 2021-03-08
 
+A significant rewrite and evolution of BIDScoin!
+
 ### Added
 - Support for BIDS 1.5
 - Support for Siemens advanced physiological logging data
