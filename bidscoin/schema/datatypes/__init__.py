@@ -1,1 +1,1 @@
-name = "bidscoin"
+name = "bids-specification"
