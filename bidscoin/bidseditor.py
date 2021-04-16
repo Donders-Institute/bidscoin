@@ -762,7 +762,7 @@ class Ui_MainWindow(MainWindow):
         for dataformat in self.dataformats:
             if self.output_bidsmap[dataformat].get('fmap'):
                 for run in self.output_bidsmap[dataformat]['fmap']:
-                    if not run['bids']['IntendedFor']:
+                    if not run['meta'].get('IntendedFor'):
                         LOGGER.warning(f"IntendedFor fieldmap value is empty for {dataformat} run-item: {run['provenance']}")
 
         filename, _ = QFileDialog.getSaveFileName(self.MainWindow, 'Save File',
@@ -883,7 +883,7 @@ class EditDialog(QDialog):
         self.setWindowTitle('Edit BIDS mapping')
 
         # Get data for the tables
-        data_provenance, data_source, data_bids = self.get_editwin_data()
+        data_provenance, data_attributes, data_bids, data_meta = self.get_editwin_data()
 
         # Set-up the provenance table
         self.provenance_label = QLabel()
@@ -893,16 +893,16 @@ class EditDialog(QDialog):
         self.provenance_table.setToolTip(f"The {self.dataformat} source file from which the attributes were taken (Copy: Ctrl+C)")
         self.provenance_table.cellDoubleClicked.connect(self.inspect_sourcefile)
 
-        # Set-up the source table
-        self.source_label = QLabel()
-        self.source_label.setText('Attributes')
-        self.source_table = self.set_table(data_source, minimum=False)
-        self.source_table.cellChanged.connect(self.source_cell_changed)
-        self.source_table.setToolTip(f"The {self.dataformat} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using '*string*' wildcards, see documentation), only change these if you know what you are doing!")
+        # Set-up the attributes table
+        self.attributes_label = QLabel()
+        self.attributes_label.setText('Attributes')
+        self.attributes_table = self.set_table(data_attributes, minimum=False)
+        self.attributes_table.cellChanged.connect(self.attributes_cell_changed)
+        self.attributes_table.setToolTip(f"The {self.dataformat} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using '*string*' wildcards, see documentation), only change these if you know what you are doing!")
 
         # Set-up the datatype dropdown menu
-        self.label_dropdown = QLabel()
-        self.label_dropdown.setText('Data type')
+        self.datatype_label = QLabel()
+        self.datatype_label.setText('Data type')
         self.datatype_dropdown = QComboBox()
         self.datatype_dropdown.addItems(bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype))
         self.datatype_dropdown.setCurrentIndex(self.datatype_dropdown.findText(self.target_datatype))
@@ -916,13 +916,20 @@ class EditDialog(QDialog):
         self.bids_table.setToolTip(f"The BIDS value that is used to construct the BIDS output name. You can freely change the value to be more meaningful and readable")
         self.bids_table.cellChanged.connect(self.bids_cell_changed)
 
+        # Set-up the meta table
+        self.meta_label = QLabel()
+        self.meta_label.setText('Meta data')
+        self.meta_table = self.set_table(data_meta, minimum=False)
+        self.meta_table.cellChanged.connect(self.meta_cell_changed)
+        self.meta_table.setToolTip(f"The meta key-value data that is added to the json sidecar file")
+
         # Set-up non-editable BIDS output name section
-        self.label_bids_name = QLabel()
-        self.label_bids_name.setText('Output name')
-        self.view_bids_name = QTextBrowser()
-        self.view_bids_name.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.view_bids_name.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.view_bids_name.setMinimumHeight(ROW_HEIGHT + 2)
+        self.bidsname_label = QLabel()
+        self.bidsname_label.setText('Output name')
+        self.bidsname_textbox = QTextBrowser()
+        self.bidsname_textbox.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.bidsname_textbox.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.bidsname_textbox.setMinimumHeight(ROW_HEIGHT + 2)
         self.refresh_bidsname()
 
         # Group the tables in boxes
@@ -934,19 +941,21 @@ class EditDialog(QDialog):
         layout1 = QVBoxLayout()
         layout1.addWidget(self.provenance_label)
         layout1.addWidget(self.provenance_table)
-        layout1.addWidget(self.source_label)
-        layout1.addWidget(self.source_table)
+        layout1.addWidget(self.attributes_label)
+        layout1.addWidget(self.attributes_table)
         groupbox1.setLayout(layout1)
 
         groupbox2 = QGroupBox('BIDS output')
         groupbox2.setSizePolicy(sizepolicy)
         layout2 = QVBoxLayout()
-        layout2.addWidget(self.label_dropdown)
+        layout2.addWidget(self.datatype_label)
         layout2.addWidget(self.datatype_dropdown)
         layout2.addWidget(self.bids_label)
         layout2.addWidget(self.bids_table)
-        layout2.addWidget(self.label_bids_name)
-        layout2.addWidget(self.view_bids_name)
+        layout2.addWidget(self.meta_label)
+        layout2.addWidget(self.meta_table)
+        layout2.addWidget(self.bidsname_label)
+        layout2.addWidget(self.bidsname_textbox)
         groupbox2.setLayout(layout2)
 
         # Add the boxes to the layout
@@ -1005,7 +1014,7 @@ class EditDialog(QDialog):
         """
         Derive the tabular data from the target_run, needed to render the edit window.
 
-        :return: (data_provenance, data_source, data_bids)
+        :return: (data_provenance, data_attributes, data_bids, data_meta)
         """
 
         data_provenance = [
@@ -1041,9 +1050,9 @@ class EditDialog(QDialog):
             ]
         ]
 
-        data_source = []
+        data_attributes = []
         for key, value in self.target_run['attributes'].items():
-            data_source.append([
+            data_attributes.append([
                 {
                     'value': key,
                     'iseditable': False
@@ -1055,26 +1064,39 @@ class EditDialog(QDialog):
             ])
 
         data_bids = []
-        for bidskey in bids.bidskeys:       # Using bidskeys imposes a desired order
-            if bidskey in self.target_run['bids']:
-                bidsvalue = self.target_run['bids'].get(bidskey, '')
-                if (self.target_datatype in bids.bidsdatatypes and bidskey=='suffix') or isinstance(bidsvalue, list):
+        for key in [bids.entities[entity]['entity'] for entity in bids.entities if entity not in ('subject','session')] + ['suffix']:   # Impose the BIDS-specified order + suffix
+            if key in self.target_run['bids']:
+                value = self.target_run['bids'].get(key, '')
+                if (self.target_datatype in bids.bidsdatatypes and key=='suffix') or isinstance(value, list):
                     iseditable = False
                 else:
                     iseditable = True
 
                 data_bids.append([
                     {
-                        'value': bidskey,
+                        'value': key,
                         'iseditable': False
                     },
                     {
-                        'value': bidsvalue,
+                        'value': value,
                         'iseditable': iseditable
                     }
                 ])
 
-        return data_provenance, data_source, data_bids
+        data_meta = []
+        for key, value in self.target_run['meta'].items():
+            data_meta.append([
+                {
+                    'value': key,
+                    'iseditable': True
+                },
+                {
+                    'value': str(value),
+                    'iseditable': True
+                }
+            ])
+
+        return data_provenance, data_attributes, data_bids, data_meta
 
     def inspect_sourcefile(self, row: int=None, column: int=None):
         """When double clicked, show popup window. """
@@ -1092,11 +1114,11 @@ class EditDialog(QDialog):
             self.popup.show()
             self.popup.scrollbar.setValue(0)     # This can only be done after self.popup.show()
 
-    def source_cell_changed(self, row: int, column: int):
+    def attributes_cell_changed(self, row: int, column: int):
         """Source attribute value has been changed. """
         if column == 1:
-            key      = self.source_table.item(row, 0).text()
-            value    = self.source_table.item(row, 1).text()
+            key      = self.attributes_table.item(row, 0).text()
+            value    = self.attributes_table.item(row, 1).text()
             oldvalue = self.target_run['attributes'].get(key)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
@@ -1129,6 +1151,18 @@ class EditDialog(QDialog):
                 self.target_run['bids'][key] = value
                 self.refresh_bidsname()
 
+    def meta_cell_changed(self, row: int, column: int):
+        """Source meta value has been changed. """
+        if column == 1:
+            key      = self.meta_table.item(row, 0).text()
+            value    = self.meta_table.item(row, 1).text()
+            oldvalue = self.target_run['meta'].get(key)
+
+            # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
+            if key and value!=oldvalue:
+                LOGGER.info(f"User has set meta['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                self.target_run['meta'][key] = value
+
     def fill_table(self, table, data):
         """Fill the table with data"""
 
@@ -1136,11 +1170,8 @@ class EditDialog(QDialog):
         table.clearContents()
         table.setRowCount(len(data))
 
-        # Check if data == data_bids (not very beautiful, but hey, most of us aren't ;-))
-        bidstable = False
-        for i, row in enumerate(data):
-            if 'suffix' in row[0]['value']:
-                bidstable = True
+        # Check if data == data_bids from the suffix (not very beautiful, but hey, most of us aren't ;-))
+        bidstable = 'suffix' in [row[0]['value'] for row in data]
 
         for i, row in enumerate(data):
             key = row[0]['value']
@@ -1191,26 +1222,26 @@ class EditDialog(QDialog):
         """Updates the bidsname with the current (edited) bids values"""
         bidsname = (Path(self.target_datatype)/bids.get_bidsname(self.subid, self.sesid, self.target_run)).with_suffix('.*')
 
-        font = self.view_bids_name.font()
+        font = self.bidsname_textbox.font()
         if self.target_datatype==bids.unknowndatatype:
-            self.view_bids_name.setToolTip(f"Red: This imaging data type is not part of BIDS but will be converted to a BIDS-like entry in the '{bids.unknowndatatype}' folder. Click 'OK' if you want your BIDS output data to look like this")
-            self.view_bids_name.setTextColor(QtGui.QColor('red'))
+            self.bidsname_textbox.setToolTip(f"Red: This imaging data type is not part of BIDS but will be converted to a BIDS-like entry in the '{bids.unknowndatatype}' folder. Click 'OK' if you want your BIDS output data to look like this")
+            self.bidsname_textbox.setTextColor(QtGui.QColor('red'))
             font.setStrikeOut(False)
         elif self.target_datatype == bids.ignoredatatype:
-            self.view_bids_name.setToolTip("Gray / Strike-out: This imaging data type will be ignored and not converted BIDS. Click 'OK' if you want your BIDS output data to look like this")
-            self.view_bids_name.setTextColor(QtGui.QColor('gray'))
+            self.bidsname_textbox.setToolTip("Gray / Strike-out: This imaging data type will be ignored and not converted BIDS. Click 'OK' if you want your BIDS output data to look like this")
+            self.bidsname_textbox.setTextColor(QtGui.QColor('gray'))
             font.setStrikeOut(True)
         elif not bids.check_run(self.target_datatype, self.target_run):
-            self.view_bids_name.setToolTip(f"Red: This name is not valid according to the BIDS standard")
-            self.view_bids_name.setTextColor(QtGui.QColor('red'))
+            self.bidsname_textbox.setToolTip(f"Red: This name is not valid according to the BIDS standard")
+            self.bidsname_textbox.setTextColor(QtGui.QColor('red'))
             font.setStrikeOut(False)
         else:
-            self.view_bids_name.setToolTip(f"Green: This '{self.target_datatype}' imaging data type is part of BIDS. Click 'OK' if you want your BIDS output data to look like this")
-            self.view_bids_name.setTextColor(QtGui.QColor('green'))
+            self.bidsname_textbox.setToolTip(f"Green: This '{self.target_datatype}' imaging data type is part of BIDS. Click 'OK' if you want your BIDS output data to look like this")
+            self.bidsname_textbox.setTextColor(QtGui.QColor('green'))
             font.setStrikeOut(False)
-        self.view_bids_name.setFont(font)
-        self.view_bids_name.clear()
-        self.view_bids_name.textCursor().insertText(str(bidsname))
+        self.bidsname_textbox.setFont(font)
+        self.bidsname_textbox.clear()
+        self.bidsname_textbox.textCursor().insertText(str(bidsname))
 
     def change_run(self, suffix_idx):
         """
@@ -1247,11 +1278,12 @@ class EditDialog(QDialog):
             self.datatype_dropdown.setCurrentIndex(self.datatype_dropdown.findText(self.target_datatype))
 
         # Refresh the source attributes and BIDS values with data from the target_run
-        _, data_source, data_bids = self.get_editwin_data()
+        _, data_attributes, data_bids, data_meta = self.get_editwin_data()
 
         # Refresh the existing tables
-        self.fill_table(self.source_table, data_source)
+        self.fill_table(self.attributes_table, data_attributes)
         self.fill_table(self.bids_table, data_bids)
+        self.fill_table(self.meta_table, data_meta)
 
         # Refresh the BIDS output name
         self.refresh_bidsname()
@@ -1305,9 +1337,9 @@ class EditDialog(QDialog):
                                           QMessageBox.Yes | QMessageBox.No | QMessageBox.Yes)
             if answer == QMessageBox.Yes:
                 return
-            LOGGER.warning(f'The "{self.view_bids_name.toPlainText()}" run is not valid according to the BIDS standard")')
+            LOGGER.warning(f'The "{self.bidsname_textbox.toPlainText()}" run is not valid according to the BIDS standard")')
 
-        if self.target_datatype=='fmap' and not self.target_run['bids']['IntendedFor']:
+        if self.target_datatype=='fmap' and not self.target_run['meta'].get('IntendedFor'):
             answer = QMessageBox.question(self, 'Edit BIDS mapping', "The 'IntendedFor' bids-label was not set, which can make that your fieldmap won't be used when "
                                                                      "pre-processing / analyzing the associated imaging data (e.g. fMRI data). Do you want to go back "
                                                                      "and set this label?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Yes)

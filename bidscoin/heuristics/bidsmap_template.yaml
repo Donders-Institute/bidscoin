@@ -451,37 +451,50 @@ DICOM:
       acq: <SeriesDescription>
       run: <<1>>
       suffix: phasediff
+    meta:
       IntendedFor: ~
   - provenance: ~
     attributes: *fmap_dicomattr
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: phase1
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_dicomattr
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: phase2
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_dicomattr
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: magnitude1
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_dicomattr
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: magnitude2
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_dicomattr
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: magnitude
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_dicomattr
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: fieldmap
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_PEPolar        # See: schema/datatypes/fmap.yaml
@@ -490,12 +503,15 @@ DICOM:
       dir: ~
       run: <<1>>
       suffix: epi
+    meta:
       IntendedFor: ~
   - provenance: ~
     attributes: *fmap_dicomattr
     bids:
       <<: *fmap_dicoment_PEPolar
       suffix: m0scan
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_TB1DAM         # See: schema/datatypes/fmap.yaml
@@ -507,6 +523,7 @@ DICOM:
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       run: <<1>>
       suffix: TB1DAM
+    meta:
       IntendedFor: ~
   - provenance: ~
     attributes: *fmap_dicomattr
@@ -520,6 +537,7 @@ DICOM:
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       run: <<1>>
       suffix: TB1EPI
+    meta:
       IntendedFor: ~
   - provenance: ~
     attributes: *fmap_dicomattr
@@ -533,22 +551,29 @@ DICOM:
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       run: <<1>>
       suffix: TB1AFI
+    meta:
       IntendedFor: ~
   - provenance: ~
     attributes: *fmap_dicomattr
     bids:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
       suffix: TB1TFL
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_dicomattr
     bids:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
       suffix: TB1RFM
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_dicomattr
     bids:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
       suffix: RB1COR
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_TB1SRGE        # See: schema/datatypes/fmap.yaml
@@ -561,6 +586,7 @@ DICOM:
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       run: <<1>>
       suffix: TB1SRGE
+    meta:
       IntendedFor: ~
   - provenance: ~
     attributes:
@@ -573,6 +599,7 @@ DICOM:
       rec: ~
       run: <<1>>
       suffix: TB1map
+    meta:
       IntendedFor: ~
   - provenance: ~
     attributes:
@@ -581,6 +608,8 @@ DICOM:
     bids:
       <<: *fmap_dicoment_parametric
       suffix: RB1map
+    meta:
+      IntendedFor: ~
 
   eeg:        # ----------------------- All EEG data ---------------------------
   - provenance: ~
@@ -1127,37 +1156,50 @@ PAR:
       acq: <protocol_name>
       run: <<1>>
       suffix: phasediff
+    meta:
       IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: phase1
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: phase2
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: magnitude1
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: magnitude2
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: magnitude
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: fieldmap
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
     bids: &fmap_parent_PEPolar          # See: schema/datatypes/fmap.yaml
@@ -1166,12 +1208,15 @@ PAR:
       dir: ~
       run: <<1>>
       suffix: epi
+    meta:
       IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_PEPolar
       suffix: m0scan
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
     bids: &fmap_parent_TB1DAM           # See: schema/datatypes/fmap.yaml
@@ -1183,6 +1228,7 @@ PAR:
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       run: <<1>>
       suffix: TB1DAM
+    meta:
       IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
@@ -1196,6 +1242,7 @@ PAR:
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       run: <<1>>
       suffix: TB1EPI
+    meta:
       IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
@@ -1209,22 +1256,29 @@ PAR:
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       run: <<1>>
       suffix: TB1AFI
+    meta:
       IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
       suffix: TB1TFL
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
       suffix: TB1RFM
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
       suffix: RB1COR
+    meta:
+      IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
     bids: &fmap_parent_TB1SRGE          # See: schema/datatypes/fmap.yaml
@@ -1237,6 +1291,7 @@ PAR:
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       run: <<1>>
       suffix: TB1SRGE
+    meta:
       IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
@@ -1246,12 +1301,15 @@ PAR:
       rec: ~
       run: <<1>>
       suffix: TB1map
+    meta:
       IntendedFor: ~
   - provenance: ~
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_parametric
       suffix: RB1map
+    meta:
+      IntendedFor: ~
 
   eeg: ~      # ----------------------- All EEG data ---------------------------
 

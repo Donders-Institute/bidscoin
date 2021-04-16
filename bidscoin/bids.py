@@ -36,7 +36,6 @@ LOGGER = logging.getLogger(__name__)
 bidsdatatypes   = ('fmap', 'anat', 'func', 'perf', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')           # NB: get_matching_run() uses this order to search for a match. TODO: sync with the modalities.yaml schema
 ignoredatatype  = 'leave_out'
 unknowndatatype = 'extra_data'
-bidskeys        = ('task', 'acq', 'inv', 'mt', 'flip', 'ce', 'trc', 'rec', 'recording', 'dir', 'run', 'echo', 'mod', 'proc', 'part', 'suffix', 'IntendedFor') # This is not really something from BIDS, but these are the BIDS-keys used in the bidsmap. TODO: sync with the entities.yaml schema
 
 schema_folder     = Path(__file__).parent/'schema'
 heuristics_folder = Path(__file__).parent/'heuristics'
@@ -505,18 +504,18 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
     check_bidsmap(bidsmap, report)
 
     # Add a unique identifier for runs without provenance info
+    run_ = get_run_()
     for dataformat in bidsmap:
         if dataformat in ('Options','PlugIns'):   continue
         if not bidsmap[dataformat]:               continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue
             for index, run in enumerate(bidsmap[dataformat][datatype]):
+                for key, val in run_.items():
+                    if key not in run:
+                        run[key] = val
                 if not run.get('provenance'):
                     run['provenance'] = f"sub-unknown/ses-unknown/{dataformat}_{datatype}_id{index+1:03}"
-                if not run.get('filesystem'):
-                    run['filesystem'] = dict(path='', name='', size=None)
-                if not run.get('attributes'):
-                    run['attributes'] = {}
 
     # Make sure we get a proper list of plugins
     bidsmap['PlugIns'] = [plugin for plugin in bidsmap.get('PlugIns', []) if plugin]
@@ -777,6 +776,9 @@ def get_sourcefield(tagname: str, sourcefile: Path=Path(), dataformat: str='') -
     TODO: replace with a dataformat class
     """
 
+    if not sourcefile.name:
+        return
+
     if not dataformat:
         dataformat = get_dataformat(sourcefile)
 
@@ -883,6 +885,17 @@ def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
     return provenance
 
 
+def get_run_(provenance: str='') -> dict:
+    """
+    Get an empty run-item with the proper structure and provenance info
+
+    :param provenance:  The unique provance that is use to identify the run
+    :return:            The empty run
+    """
+
+    return dict(provenance=provenance, filesystem={'path':'', 'name':'', 'size':None}, attributes={}, bids={}, meta={})
+
+
 def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int, str], sourcefile: Path=Path()) -> dict:
     """
     Find the (first) run in bidsmap[dataformat][bidsdatatype] with run['bids']['suffix_idx'] == suffix_idx
@@ -904,7 +917,7 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
     for index, run in enumerate(runs):
         if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
-            run_ = dict(provenance=str(sourcefile.resolve()), filesystem={}, attributes={}, bids={})
+            run_ = get_run_(str(sourcefile.resolve()))
 
             for filekey, filevalue in run['filesystem'].items():
                 run_['filesystem'][filekey] = filevalue
@@ -916,15 +929,15 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
                     run_['attributes'][attrkey] = attrvalue
 
             for bidskey, bidsvalue in run['bids'].items():
-                if sourcefile.name:
-                    run_['bids'][bidskey] = get_dynamic_value(bidsvalue, sourcefile)
-                else:
-                    run_['bids'][bidskey] = bidsvalue
+                run_['bids'][bidskey] = get_dynamic_value(bidsvalue, sourcefile)
+
+            for metakey, metavalue in run['meta'].items():
+                run_['meta'][metakey] = get_dynamic_value(metavalue, sourcefile, cleanup=False)
 
             return run_
 
     LOGGER.warning(f"'{datatype}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{dataformat}']")
-    return dict(provenance=str(sourcefile.resolve()), filesystem={}, attributes={}, bids={})
+    return get_run_(str(sourcefile.resolve()))
 
 
 def delete_run(bidsmap: dict, dataformat: str, datatype: str, provenance: Path) -> None:
@@ -963,11 +976,12 @@ def append_run(bidsmap: dict, dataformat: str, datatype: str, run: dict, clean: 
 
     # Copy the values from the run to an empty dict
     if clean:
-        run_ = dict(provenance=run['provenance'], filesystem={}, attributes={}, bids={})
+        run_ = get_run_(run['provenance'])
 
-        for matching in ('filesystem', 'attributes', 'bids'):
-            for key, value in run[matching].items():
-                run_[matching][key] = value
+        for item in run_.keys():
+            if item == 'provenance': continue
+            for key, value in run[item].items():
+                run_[item][key] = value
 
         run = run_
 
@@ -1147,6 +1161,10 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
         _DATATYPE_CACHE[datatype] = typegroups
     else:
         typegroups = _DATATYPE_CACHE[datatype]
+
+    # Use the suffix to find the right typegroup
+    if validate and 'suffix' not in run['bids']:
+        LOGGER.warning(f'Invalid bidsmap: BIDS entity "suffix" is absent for {run["provenance"]} -> {datatype}')
     for typegroup in typegroups:
         if run['bids']['suffix'] in typegroup['suffixes']:
             run_found = True
@@ -1171,8 +1189,7 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
             # Check if all the bids-keys are present in the schema file
             entitykeys = [entities[entityname]['entity'] for entityname in typegroup['entities']]
             for bidskey in run['bids']:
-                if bidskey in ('suffix', 'IntendedFor'): continue
-                if bidskey not in entitykeys:
+                if bidskey not in entitykeys + ['suffix']:
                     if validate:
                         LOGGER.warning(f'Invalid bidsmap: BIDS entity {run["provenance"]} -> "{bidskey}"-"{run["bids"][bidskey]}" is not allowed according to the BIDS standard')
                         run_keysok = False
@@ -1180,8 +1197,6 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
                         if validate is False:
                             LOGGER.info(f'BIDS entity "{bidskey}"-"{run["bids"][bidskey]}" is not allowed according to the BIDS standard (clear "{run["bids"][bidskey]})" to resolve this issue)')
                         run_valsok = False
-                if bidskey not in bidskeys:
-                    LOGGER.error(f'Invalid bidsmap: BIDS entity {run["provenance"]} -> "{bidskey}"-"{run["bids"][bidskey]}" is not part of BIDScoin')
 
     return run_found and run_valsok and run_keysok
 
@@ -1201,7 +1216,7 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
         dataformat = get_dataformat(sourcefile)
 
     # Loop through all bidsdatatypes and runs; all info goes cleanly into run_ (to avoid formatting problem of the CommentedMap)
-    run_ = dict(provenance=str(sourcefile.resolve()), filesystem={}, attributes={}, bids={})
+    run_ = get_run_(str(sourcefile.resolve()))
     for datatype in (ignoredatatype,) + bidsdatatypes + (unknowndatatype,):                                 # The datatypes in which a matching run is searched for
 
         runs = bidsmap.get(dataformat, {}).get(datatype, [])
@@ -1244,6 +1259,13 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
 
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 run_ = strip_suffix(run_)
+
+            # Try to fill the meta-data
+            run_['meta'] = {}
+            for bidskey, metavalue in run['meta'].items():
+
+                # Replace the dynamic bids values
+                run_['meta'][bidskey] = get_dynamic_value(metavalue, sourcefile, cleanup=False)
 
             # Stop searching the bidsmap if we have a match
             if match:
@@ -1337,17 +1359,17 @@ def get_bidsname(subid: str, sesid: str, run: dict) -> str:
     if sesid and not sesid.startswith('ses-'):
         sesid = f"ses-{cleanup_value(sesid)}"
 
-    # Compose the bidsname
-    bidsname = f"{subid}{add_prefix('_', sesid)}"
-    for entity in entities:
-        bidsvalue = run['bids'].get(entities[entity]['entity'])
+    # Compose a bidsname from valid BIDS entities only
+    bidsname = f"{subid}{add_prefix('_', sesid)}"                               # Start with the subject/session identifier
+    for entitykey in [entities[entity]['entity'] for entity in entities]:
+        bidsvalue = run['bids'].get(entitykey)                                  # Get the entity data from the run
         if isinstance(bidsvalue, list):
-            bidsvalue = bidsvalue[bidsvalue[-1]]    # Get the selected item
+            bidsvalue = bidsvalue[bidsvalue[-1]]                                # Get the selected item
         else:
             bidsvalue = get_dynamic_value(bidsvalue, Path(run['provenance']))
         if bidsvalue:
-            bidsname = f"{bidsname}_{entities[entity]['entity']}-{cleanup_value(bidsvalue)}"
-    bidsname = f"{bidsname}{add_prefix('_', run['bids']['suffix'])}"
+            bidsname = f"{bidsname}_{entitykey}-{cleanup_value(bidsvalue)}"     # Append the key-value data to the bidsname
+    bidsname = f"{bidsname}{add_prefix('_', run['bids']['suffix'])}"            # And end with the suffix
 
     return bidsname
 
@@ -1367,13 +1389,14 @@ def get_bidshelp(bidskey: str) -> str:
     return ''
 
 
-def get_dynamic_value(bidsvalue: str, sourcefile: Path) -> str:
+def get_dynamic_value(bidsvalue: str, sourcefile: Path, cleanup: bool=True) -> str:
     """
     Replaces (dynamic) bidsvalues with (DICOM) run attributes when they start with '<' and end with '>',
     but not with '<<' and '>>'
 
     :param bidsvalue:   The value from the BIDS key-value pair
     :param sourcefile:  The source (e.g. DICOM or PAR/XML) file from which the attribute is read
+    :param cleanup:     Removes non-BIDS-compliant characters
     :return:            Updated bidsvalue (if possible, otherwise the original bidsvalue is returned)
     """
 
@@ -1386,7 +1409,7 @@ def get_dynamic_value(bidsvalue: str, sourcefile: Path) -> str:
         sourcevalue = ''.join([str(get_sourcefield(value, sourcefile)) for value in bidsvalue[1:-1].split('><')])
         if not sourcevalue:
             return bidsvalue
-        else:
+        elif cleanup:
             bidsvalue = cleanup_value(str(sourcevalue))
 
     return bidsvalue
@@ -1462,7 +1485,7 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str=''
     bidsext  = ''.join(Path(bidsfile).suffixes)
 
     # Parse the key-value pairs and store all the run info
-    run   = dict(provenance='', filesystem={}, attributes={}, bids={'suffix':''})
+    run   = get_run_()
     sesid = ''
     for keyval in bidsname.split('_'):
         if '-' in keyval:
@@ -1475,7 +1498,7 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str=''
                 run['bids'][key] = val
         else:
             run['bids']['suffix'] = f"{run['bids']['suffix']}_{keyval}"     # account for multiple suffixes (e.g. from dcm2niix)
-    if run['bids']['suffix'].startswith('_'):
+    if run['bids'].get('suffix','').startswith('_'):
         run['bids']['suffix'] = run['bids']['suffix'][1:]
 
     # Insert the key-value pair in the run
