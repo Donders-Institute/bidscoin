@@ -239,16 +239,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
         # Loop over and adapt all the newly produced json files and write to the scans.tsv file (NB: assumes every nifti-file comes with a json-file)
         for jsonfile in sorted(set(jsonfiles)):
 
-            # Add the IntendedFor search data to the json-file (to be updated only after all session data is converted)
-            if datatype == 'fmap':
-                with jsonfile.open('r') as json_fid:
-                    data = json.load(json_fid)
-                data['IntendedFor'] = run['bids'].get('IntendedFor')
-                with jsonfile.open('w') as json_fid:
-                    json.dump(data, json_fid, indent=4)
-
             # Add a dummy b0 bval- and bvec-file for any file without a bval/bvec file (e.g. sbref, b0 scans)
-            elif datatype == 'dwi':
+            if datatype == 'dwi':
                 bvecfile = jsonfile.with_suffix('.bvec')
                 bvalfile = jsonfile.with_suffix('.bval')
                 if not bvecfile.is_file():
@@ -260,39 +252,39 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                     with bvalfile.open('w') as bval_fid:
                         bval_fid.write('0\n')
 
-            # Add the TaskName to the func json-file
-            elif datatype == 'func':
-                with jsonfile.open('r') as json_fid:
-                    data = json.load(json_fid)
-                if not 'TaskName' in data:
-                    LOGGER.info(f"Adding 'TaskName: {run['bids']['task']}' to: {jsonfile}")
-                    data['TaskName'] = run['bids']['task']
-                    with jsonfile.open('w') as json_fid:
-                        json.dump(data, json_fid, indent=4)
+            # Load the json meta-data
+            with jsonfile.open('r') as json_fid:
+                jsondata = json.load(json_fid)
 
-            # Add the TracerName and TaskName to the pet json-file
-            elif datatype == 'pet':
-                with jsonfile.open('r') as json_fid:
-                    data = json.load(json_fid)
-                if not 'TracerName' in data:
-                    LOGGER.info(f"Adding 'TracerName: {run['bids']['trc']}' to: {jsonfile}")
-                    data['TracerName'] = run['bids']['trc']
-                    with jsonfile.open('w') as json_fid:
-                        json.dump(data, json_fid, indent=4)
+            # Add the TaskName to the meta-data
+            if datatype=='func' and 'TaskName' not in jsondata:
+                LOGGER.info(f"Adding 'TaskName: {run['bids']['task']}' to: {jsonfile}")
+                jsondata['TaskName'] = run['bids']['task']
+
+            # Add the TracerName and TaskName to the meta-data
+            elif datatype=='pet' and 'TracerName' not in jsondata:
+                LOGGER.info(f"Adding 'TracerName: {run['bids']['trc']}' to: {jsonfile}")
+                jsondata['TracerName'] = run['bids']['trc']
+
+            # Add all the meta data to the json-file
+            for metakey, metaval in run['meta'].items():
+                jsondata[metakey] = metaval
+            with jsonfile.open('w') as json_fid:
+                json.dump(jsondata, json_fid, indent=4)
 
             # Parse the acquisition time from the json file or else from the source header (NB: assuming the source file represents the first acquisition)
             niifile = list(jsonfile.parent.glob(jsonfile.stem + '.nii*'))       # Find the corresponding nifti file (there should be only one, let's not make assumptions about the .gz extension)
-            if niifile and datatype not in bidsmap['Options']['bidscoin']['bidsignore'] and not run['bids']['suffix'] in bids.get_derivatives(datatype):
-                with jsonfile.open('r') as json_fid:
-                    data = json.load(json_fid)
-                if 'AcquisitionTime' not in data or not data['AcquisitionTime']:
-                    data['AcquisitionTime'] = bids.get_sourcefield('AcquisitionTime', sourcefile)       # DICOM
-                if not data['AcquisitionTime']:
-                    data['AcquisitionTime'] = bids.get_sourcefield('exam_date', sourcefile)             # PAR/XML
+            if not niifile:
+                LOGGER.exception(f"No nifti-file found with {jsonfile} when updating {scans_tsv}")
+            elif datatype not in bidsmap['Options']['bidscoin']['bidsignore'] and not run['bids']['suffix'] in bids.get_derivatives(datatype):
+                if 'AcquisitionTime' not in jsondata or not jsondata['AcquisitionTime']:
+                    jsondata['AcquisitionTime'] = bids.get_sourcefield('AcquisitionTime', sourcefile)       # DICOM
+                if not jsondata['AcquisitionTime']:
+                    jsondata['AcquisitionTime'] = bids.get_sourcefield('exam_date', sourcefile)             # PAR/XML
                 try:
-                    acq_time = dateutil.parser.parse(data['AcquisitionTime'])
+                    acq_time = dateutil.parser.parse(jsondata['AcquisitionTime'])
                 except Exception as jsonerror:
-                    LOGGER.warning(f"Could not parse the acquisition time from: '{data['AcquisitionTime']}' in {sourcefile}\n{jsonerror}")
+                    LOGGER.warning(f"Could not parse the acquisition time from: '{jsondata['AcquisitionTime']}' in {sourcefile}\n{jsonerror}")
                     acq_time = dateutil.parser.parse('00:00:00')
                 scanpath = niifile[0].relative_to(bidsses)
                 scans_table.loc[scanpath.as_posix(), 'acq_time'] = '1925-01-01T' + acq_time.strftime('%H:%M:%S')

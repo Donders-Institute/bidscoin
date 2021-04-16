@@ -12,10 +12,12 @@ Making BIDScoin more powerful and generic...
 - Added run-item matching on filesystem properties, i.e. on the pathname, filename and filesize
 - Allow the user to edit json, yaml, tsv and other non-DICOM / non-PAR files in the data browser
 - User feedback in the GUI for new BIDS compliancy checks
+- Add a meta data dictionary that users can edit in the bidseditor
 
 ### Changed
 - Using regular expressions instead of fnmatch to match (template bidsmap) attribute values
 - Moved the bidsmapping and bidscoining functionality to stand-alone plugins (changed API)
+- Move IntendedFor field over to the meta data dictionary
 - Re-introduced skipping hidden folders (hidden files are also skipped)
 
 ### Removed
