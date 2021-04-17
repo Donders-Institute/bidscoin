@@ -33,13 +33,21 @@ yaml = YAML()
 
 LOGGER = logging.getLogger(__name__)
 
-bidsdatatypes   = ('fmap', 'anat', 'func', 'perf', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')           # NB: get_matching_run() uses this order to search for a match. TODO: sync with the modalities.yaml schema
-ignoredatatype  = 'leave_out'
-unknowndatatype = 'extra_data'
+# Define BIDScoin datatypes
+bidscoindatatypes = ('fmap', 'anat', 'func', 'perf', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')           # NB: get_matching_run() uses this order to search for a match. TODO: sync with the modalities.yaml schema
+ignoredatatype    = 'leave_out'
+unknowndatatype   = 'extra_data'
 
+# Define the default paths
 schema_folder     = Path(__file__).parent/'schema'
 heuristics_folder = Path(__file__).parent/'heuristics'
 bidsmap_template  = heuristics_folder/'bidsmap_template.yaml'
+
+# Read the BIDS schema datatypes and entities
+bidsdatatypes = {}
+for _datatypefile in (schema_folder/'datatypes').glob('*.yaml'):
+    with _datatypefile.open('r') as stream:
+        bidsdatatypes[_datatypefile.stem] = yaml.load(stream)
 with (schema_folder/'entities.yaml').open('r') as _stream:
     entities = yaml.load(_stream)
 
@@ -872,7 +880,7 @@ def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
     """
 
     provenance = []
-    for datatype in bidsdatatypes + (unknowndatatype, ignoredatatype):
+    for datatype in bidscoindatatypes + (unknowndatatype, ignoredatatype):
         if bidsmap.get(dataformat) and bidsmap[dataformat].get(datatype):
             for run in bidsmap[dataformat][datatype]:
                 if not run['provenance']:
@@ -1091,7 +1099,7 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, mat
         dataformat = get_dataformat(run_item['provenance'])
 
     if not datatype:
-        for datatype in bidsdatatypes + (unknowndatatype, ignoredatatype):
+        for datatype in bidscoindatatypes + (unknowndatatype, ignoredatatype):
             if exist_run(bidsmap, dataformat, datatype, run_item, matchbidslabels):
                 return True
 
@@ -1126,7 +1134,6 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, mat
     return False
 
 
-_DATATYPE_CACHE = {}
 def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
     """
     Check run for required and optional entitities using the BIDS schema files
@@ -1137,9 +1144,6 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
     :return:            True if the run entities are bids-valid or if they cannot be checked, otherwise False
     """
 
-
-    global _DATATYPE_CACHE
-
     run_found  = False
     run_valsok = True
     run_keysok = True
@@ -1149,23 +1153,11 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
         pass    # TODO: avoid this when reading templates
         # logger.info(f'No provenance info found for {datatype}/*_{run["bids"]["suffix"]}')
 
-    # Read the entities from the datatype file
-    if datatype not in _DATATYPE_CACHE:
-        datatypefile = schema_folder/'datatypes'/f"{datatype}.yaml"
-        if not datatypefile.is_file():
-            if validate and datatype in bidsdatatypes:
-                LOGGER.info(f"Could not find {datatypefile} to validate the {run['provenance']} run")
-            return True
-        with datatypefile.open('r') as stream:
-            typegroups = yaml.load(stream)
-        _DATATYPE_CACHE[datatype] = typegroups
-    else:
-        typegroups = _DATATYPE_CACHE[datatype]
-
     # Use the suffix to find the right typegroup
     if validate and 'suffix' not in run['bids']:
         LOGGER.warning(f'Invalid bidsmap: BIDS entity "suffix" is absent for {run["provenance"]} -> {datatype}')
-    for typegroup in typegroups:
+    if datatype not in bidsdatatypes: return True
+    for typegroup in bidsdatatypes[datatype]:
         if run['bids']['suffix'] in typegroup['suffixes']:
             run_found = True
 
@@ -1215,9 +1207,9 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
     if not dataformat:
         dataformat = get_dataformat(sourcefile)
 
-    # Loop through all bidsdatatypes and runs; all info goes cleanly into run_ (to avoid formatting problem of the CommentedMap)
+    # Loop through all bidscoindatatypes and runs; all info goes cleanly into run_ (to avoid formatting problem of the CommentedMap)
     run_ = get_run_(str(sourcefile.resolve()))
-    for datatype in (ignoredatatype,) + bidsdatatypes + (unknowndatatype,):                                 # The datatypes in which a matching run is searched for
+    for datatype in (ignoredatatype,) + bidscoindatatypes + (unknowndatatype,):                                 # The datatypes in which a matching run is searched for
 
         runs = bidsmap.get(dataformat, {}).get(datatype, [])
         if not runs:
@@ -1320,29 +1312,15 @@ def get_derivatives(datatype: str) -> list:
     Retrieves a list of suffixes that are stored in the derivatives folder (e.g. the qMRI maps). TODO: Replace with a more systematic / documented method
     """
 
-    global _DATATYPE_CACHE
-
     if datatype == 'anat':
-        if datatype not in _DATATYPE_CACHE:
-            with (schema_folder/'datatypes'/'anat.yaml').open('r') as stream:
-                typegroups = yaml.load(stream)
-            _DATATYPE_CACHE[datatype] = typegroups
-        else:
-            typegroups = _DATATYPE_CACHE[datatype]
-        return typegroups[1]['suffixes']            # The qMRI data (maps)
+        return bidsdatatypes[datatype][1]['suffixes']            # The qMRI data (maps)
     elif datatype == 'fmap':
-        if datatype not in _DATATYPE_CACHE:
-            with (schema_folder/'datatypes'/'fmap.yaml').open('r') as stream:
-                typegroups = yaml.load(stream)
-            _DATATYPE_CACHE[datatype] = typegroups
-        else:
-            typegroups = _DATATYPE_CACHE[datatype]
-        return [suffix for n,typegroup in enumerate(typegroups) for suffix in typegroup['suffixes'] if n>1]            # The non-standard fmaps (file collections)
+        return [suffix for n,typegroup in enumerate(bidsdatatypes[datatype]) for suffix in typegroup['suffixes'] if n>1]            # The non-standard fmaps (file collections)
     else:
         return []
 
 
-def get_bidsname(subid: str, sesid: str, run: dict) -> str:
+def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False) -> str:
     """
     Composes a filename as it should be according to the BIDS standard using the BIDS keys in run. The bids values are
     dynamically updated and cleaned, and invalid bids keys are ignored
@@ -1350,6 +1328,7 @@ def get_bidsname(subid: str, sesid: str, run: dict) -> str:
     :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001')
     :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01'). Can be left empty
     :param run:         The run mapping with the BIDS key-value pairs
+    :param runtime:     Replaces <<dynamic>> bidsvalues if True
     :return:            The composed BIDS file-name (without file-extension)
     """
 
@@ -1366,7 +1345,7 @@ def get_bidsname(subid: str, sesid: str, run: dict) -> str:
         if isinstance(bidsvalue, list):
             bidsvalue = bidsvalue[bidsvalue[-1]]                                # Get the selected item
         else:
-            bidsvalue = get_dynamic_value(bidsvalue, Path(run['provenance']))
+            bidsvalue = get_dynamic_value(bidsvalue, Path(run['provenance']), runtime)
         if bidsvalue:
             bidsname = f"{bidsname}_{entitykey}-{cleanup_value(bidsvalue)}"     # Append the key-value data to the bidsname
     bidsname = f"{bidsname}{add_prefix('_', run['bids']['suffix'])}"            # And end with the suffix
@@ -1389,28 +1368,36 @@ def get_bidshelp(bidskey: str) -> str:
     return ''
 
 
-def get_dynamic_value(bidsvalue: str, sourcefile: Path, cleanup: bool=True) -> str:
+def get_dynamic_value(bidsvalue: str, sourcefile: Path, cleanup: bool=True, runtime: bool=False) -> str:
     """
     Replaces (dynamic) bidsvalues with (DICOM) run attributes when they start with '<' and end with '>',
-    but not with '<<' and '>>'
+    but not with '<<' and '>>' unless runtime = True
 
     :param bidsvalue:   The value from the BIDS key-value pair
     :param sourcefile:  The source (e.g. DICOM or PAR/XML) file from which the attribute is read
     :param cleanup:     Removes non-BIDS-compliant characters
+    :param runtime:     Replaces <<dynamic>> bidsvalues if True
     :return:            Updated bidsvalue (if possible, otherwise the original bidsvalue is returned)
     """
 
-    # Intelligent filling of the value is done runtime by bidscoiner
-    if not bidsvalue or not isinstance(bidsvalue, str) or (bidsvalue.startswith('<<') and bidsvalue.endswith('>>')):
+    # Input checks
+    if not bidsvalue or not isinstance(bidsvalue, str):
         return bidsvalue
+
+    # Intelligent filling of the value is done runtime by bidscoiner
+    if bidsvalue.startswith('<<') and bidsvalue.endswith('>>'):
+        if runtime:
+            bidsvalue = bidsvalue[1:-1]
+        else:
+            return bidsvalue
 
     # Fill any bids-key with the <annotated> dicom attribute(s)
     if bidsvalue.startswith('<') and bidsvalue.endswith('>') and sourcefile.name:
         sourcevalue = ''.join([str(get_sourcefield(value, sourcefile)) for value in bidsvalue[1:-1].split('><')])
-        if not sourcevalue:
-            return bidsvalue
-        elif cleanup:
-            bidsvalue = cleanup_value(str(sourcevalue))
+        if sourcevalue:
+            bidsvalue = sourcevalue
+            if cleanup:
+                bidsvalue = cleanup_value(bidsvalue)
 
     return bidsvalue
 
@@ -1497,7 +1484,7 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str=''
             else:
                 run['bids'][key] = val
         else:
-            run['bids']['suffix'] = f"{run['bids']['suffix']}_{keyval}"     # account for multiple suffixes (e.g. from dcm2niix)
+            run['bids']['suffix'] = f"{run['bids'].get('suffix','')}_{keyval}"     # account for multiple suffixes (e.g. _bold_e1_ph from dcm2niix)
     if run['bids'].get('suffix','').startswith('_'):
         run['bids']['suffix'] = run['bids']['suffix'][1:]
 

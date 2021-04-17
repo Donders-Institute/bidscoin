@@ -589,7 +589,7 @@ class Ui_MainWindow(MainWindow):
         samples_table.blockSignals(True)
         samples_table.setSortingEnabled(False)
         samples_table.clearContents()
-        for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
+        for datatype in bids.bidscoindatatypes + (bids.unknowndatatype, bids.ignoredatatype):
             runs = output_bidsmap.get(dataformat, {}).get(datatype, [])
 
             if not runs: continue
@@ -904,7 +904,7 @@ class EditDialog(QDialog):
         self.datatype_label = QLabel()
         self.datatype_label.setText('Data type')
         self.datatype_dropdown = QComboBox()
-        self.datatype_dropdown.addItems(bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype))
+        self.datatype_dropdown.addItems(bids.bidscoindatatypes + (bids.unknowndatatype, bids.ignoredatatype))
         self.datatype_dropdown.setCurrentIndex(self.datatype_dropdown.findText(self.target_datatype))
         self.datatype_dropdown.currentIndexChanged.connect(self.datatype_dropdown_change)
         self.datatype_dropdown.setToolTip('The BIDS data type. First make sure this one is correct, then choose the right suffix')
@@ -952,10 +952,10 @@ class EditDialog(QDialog):
         layout2.addWidget(self.datatype_dropdown)
         layout2.addWidget(self.bids_label)
         layout2.addWidget(self.bids_table)
-        layout2.addWidget(self.meta_label)
-        layout2.addWidget(self.meta_table)
         layout2.addWidget(self.bidsname_label)
         layout2.addWidget(self.bidsname_textbox)
+        layout2.addWidget(self.meta_label)
+        layout2.addWidget(self.meta_table)
         groupbox2.setLayout(layout2)
 
         # Add the boxes to the layout
@@ -999,7 +999,7 @@ class EditDialog(QDialog):
     def get_allowed_suffixes(self):
         """Derive the possible suffixes for each datatype from the template. """
         allowed_suffixes = {}
-        for datatype in bids.bidsdatatypes + (bids.unknowndatatype, bids.ignoredatatype):
+        for datatype in bids.bidscoindatatypes + (bids.unknowndatatype, bids.ignoredatatype):
             allowed_suffixes[datatype] = []
             runs = self.template_bidsmap.get(self.dataformat, {}).get(datatype, [])
             if not runs: continue
@@ -1067,7 +1067,7 @@ class EditDialog(QDialog):
         for key in [bids.entities[entity]['entity'] for entity in bids.entities if entity not in ('subject','session')] + ['suffix']:   # Impose the BIDS-specified order + suffix
             if key in self.target_run['bids']:
                 value = self.target_run['bids'].get(key, '')
-                if (self.target_datatype in bids.bidsdatatypes and key=='suffix') or isinstance(value, list):
+                if (self.target_datatype in bids.bidscoindatatypes and key=='suffix') or isinstance(value, list):
                     iseditable = False
                 else:
                     iseditable = True
@@ -1175,7 +1175,7 @@ class EditDialog(QDialog):
 
         for i, row in enumerate(data):
             key = row[0]['value']
-            if self.target_datatype in bids.bidsdatatypes and key=='suffix':
+            if self.target_datatype in bids.bidscoindatatypes and key=='suffix':
                 table.setItem(i, 0, myWidgetItem('suffix', iseditable=False))
                 suffixes = self.allowed_suffixes.get(self.target_datatype, [''])
                 suffix_dropdown = self.suffix_dropdown = QComboBox()

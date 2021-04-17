@@ -175,7 +175,7 @@ def main():
                         help="Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T1w*'")
     parser.add_argument('-p','--participant_label', type=str, nargs='+',
                         help='Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed')
-    parser.add_argument('-o','--output', type=str, choices=bids.bidsdatatypes + (bids.unknowndatatype, 'derivatives'),
+    parser.add_argument('-o','--output', type=str, choices=bids.bidscoindatatypes + (bids.unknowndatatype, 'derivatives'),
                         help=f"A string that determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images")
     parser.add_argument('-c','--cluster', action='store_true',
                         help='Flag to submit the deface jobs to the high-performance compute (HPC) cluster')
