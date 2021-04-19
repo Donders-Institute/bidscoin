@@ -1157,6 +1157,10 @@ class EditDialog(QDialog):
         value    = self.meta_table.item(row, 1).text()
         oldvalue = self.target_run['meta'].get(key)
         if value != oldvalue:
+            # Replace the (dynamic) value
+            if isinstance(value, str) and not (value.startswith('<<') and value.endswith('>>')):
+                value = bids.get_dynamic_value(value, Path(self.target_run['provenance']), cleanup=False)
+                self.meta_table.item(row, 1).setText(value)
             LOGGER.info(f"User has set meta['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
 
         # Read all the meta-data from the table
