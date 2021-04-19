@@ -885,7 +885,7 @@ DICOM:
       Columns: ~
     bids: &pet_dicoment_group1
       task: <SeriesDescription>
-      trc: <<Radiopharmaceutical>>
+      trc: <Radiopharmaceutical>
       rec: ['', 'acdyn', 'acstat', 'nacdyn', 'nacstat', 0]
       run: <<1>>
       suffix: pet

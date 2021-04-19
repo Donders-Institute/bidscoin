@@ -926,7 +926,7 @@ class EditDialog(QDialog):
 
         # Set-up non-editable BIDS output name section
         self.bidsname_label = QLabel()
-        self.bidsname_label.setText('Output name')
+        self.bidsname_label.setText('Data filename')
         self.bidsname_textbox = QTextBrowser()
         self.bidsname_textbox.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.bidsname_textbox.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
