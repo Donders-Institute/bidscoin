@@ -653,9 +653,9 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
             # Try a recursive search
             if not value:
                 for elem in dicomdata.iterall():
-                    if elem.name==tagname:
+                    if tagname in (elem.name, elem.keyword):
                         value = elem.value
-                        continue
+                        break
 
         except OSError:
             LOGGER.warning(f'Cannot read {tagname} from {dicomfile}')
