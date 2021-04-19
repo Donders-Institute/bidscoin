@@ -920,8 +920,9 @@ class EditDialog(QDialog):
         self.meta_label = QLabel()
         self.meta_label.setText('Meta data')
         self.meta_table = self.set_table(data_meta, 'meta', minimum=False)
+        self.meta_table.setShowGrid(True)
         self.meta_table.cellChanged.connect(self.meta_cell_changed)
-        self.meta_table.setToolTip(f"The meta key-value data that is added to the json sidecar file")
+        self.meta_table.setToolTip(f"Enter key-value data that will be appended to the json sidecar file")
 
         # Set-up non-editable BIDS output name section
         self.bidsname_label = QLabel()
@@ -1158,7 +1159,7 @@ class EditDialog(QDialog):
         oldvalue = self.target_run['meta'].get(key)
         if value != oldvalue:
             # Replace the (dynamic) value
-            if isinstance(value, str) and not (value.startswith('<<') and value.endswith('>>')):
+            if not (value.startswith('<<') and value.endswith('>>')):
                 value = bids.get_dynamic_value(value, Path(self.target_run['provenance']), cleanup=False)
                 self.meta_table.item(row, 1).setText(value)
             LOGGER.info(f"User has set meta['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
@@ -1227,6 +1228,7 @@ class EditDialog(QDialog):
         table = myQTableWidget(minimum=minimum)
         table.setColumnCount(2)                         # Always two columns (i.e. key, value)
         table.setObjectName(name)                       # NB: Serves to identify the tables in fill_table()
+        table.setHorizontalHeaderLabels(('key', 'value'))
         horizontal_header = table.horizontalHeader()
         horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
