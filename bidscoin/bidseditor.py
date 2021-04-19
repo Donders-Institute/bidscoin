@@ -888,7 +888,7 @@ class EditDialog(QDialog):
         # Set-up the provenance table
         self.provenance_label = QLabel()
         self.provenance_label.setText('Provenance')
-        self.provenance_table = self.set_table(data_provenance)
+        self.provenance_table = self.set_table(data_provenance, 'provenance')
         self.provenance_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.provenance_table.setToolTip(f"The {self.dataformat} source file from which the attributes were taken (Copy: Ctrl+C)")
         self.provenance_table.cellDoubleClicked.connect(self.inspect_sourcefile)
@@ -896,7 +896,7 @@ class EditDialog(QDialog):
         # Set-up the attributes table
         self.attributes_label = QLabel()
         self.attributes_label.setText('Attributes')
-        self.attributes_table = self.set_table(data_attributes, minimum=False)
+        self.attributes_table = self.set_table(data_attributes, 'attributes', minimum=False)
         self.attributes_table.cellChanged.connect(self.attributes_cell_changed)
         self.attributes_table.setToolTip(f"The {self.dataformat} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using '*string*' wildcards, see documentation), only change these if you know what you are doing!")
 
@@ -912,14 +912,14 @@ class EditDialog(QDialog):
         # Set-up the BIDS table
         self.bids_label = QLabel()
         self.bids_label.setText('Entities')
-        self.bids_table = self.set_table(data_bids, minimum=False)
+        self.bids_table = self.set_table(data_bids, 'bids', minimum=False)
         self.bids_table.setToolTip(f"The BIDS value that is used to construct the BIDS output name. You can freely change the value to be more meaningful and readable")
         self.bids_table.cellChanged.connect(self.bids_cell_changed)
 
         # Set-up the meta table
         self.meta_label = QLabel()
         self.meta_label.setText('Meta data')
-        self.meta_table = self.set_table(data_meta, minimum=False)
+        self.meta_table = self.set_table(data_meta, 'meta', minimum=False)
         self.meta_table.cellChanged.connect(self.meta_cell_changed)
         self.meta_table.setToolTip(f"The meta key-value data that is added to the json sidecar file")
 
@@ -1153,29 +1153,42 @@ class EditDialog(QDialog):
 
     def meta_cell_changed(self, row: int, column: int):
         """Source meta value has been changed. """
-        if column == 1:
-            key      = self.meta_table.item(row, 0).text()
-            value    = self.meta_table.item(row, 1).text()
-            oldvalue = self.target_run['meta'].get(key)
+        key      = self.meta_table.item(row, 0).text()
+        value    = self.meta_table.item(row, 1).text()
+        oldvalue = self.target_run['meta'].get(key)
+        if value != oldvalue:
+            LOGGER.info(f"User has set meta['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
 
-            # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
-            if key and value!=oldvalue:
-                LOGGER.info(f"User has set meta['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
-                self.target_run['meta'][key] = value
+        # Read all the meta-data from the table
+        self.target_run['meta'] = {}
+        for n in range(self.meta_table.rowCount()):
+            _key   = self.meta_table.item(n, 0).text()
+            _value = self.meta_table.item(n, 1).text()
+            if _key and not _key.isspace():
+                self.target_run['meta'][_key] = _value
+            elif _value:
+                QMessageBox.warning(self, 'Input error', f"Please enter a key-name (left cell) for the '{_value}' value in row {n+1}")
+
+        # Refresh the table if needed, i.e. delete empty rows or add a new row if a key is defined on the last row
+        if (not key and not value) or (key and not key.isspace() and row + 1 == self.meta_table.rowCount()):
+            _, _, _, data_meta = self.get_editwin_data()
+            self.fill_table(self.meta_table, data_meta)
 
     def fill_table(self, table, data):
         """Fill the table with data"""
 
         table.blockSignals(True)
         table.clearContents()
-        table.setRowCount(len(data))
+        if table.objectName()=='meta':
+            addrow = [[{'value':'', 'iseditable': True}, {'value':'', 'iseditable': True}]]
+            table.setRowCount(len(data)+1)
+        else:
+            addrow = []
+            table.setRowCount(len(data))
 
-        # Check if data == data_bids from the suffix (not very beautiful, but hey, most of us aren't ;-))
-        bidstable = 'suffix' in [row[0]['value'] for row in data]
-
-        for i, row in enumerate(data):
+        for i, row in enumerate(data + addrow):
             key = row[0]['value']
-            if self.target_datatype in bids.bidscoindatatypes and key=='suffix':
+            if table.objectName()=='bids' and key=='suffix' and self.target_datatype in bids.bidscoindatatypes:
                 table.setItem(i, 0, myWidgetItem('suffix', iseditable=False))
                 suffixes = self.allowed_suffixes.get(self.target_datatype, [''])
                 suffix_dropdown = self.suffix_dropdown = QComboBox()
@@ -1189,7 +1202,7 @@ class EditDialog(QDialog):
                 value = item.get('value', '')
                 if value == 'None':
                     value = ''
-                if bidstable and isinstance(value, list):
+                if table.objectName()=='bids' and isinstance(value, list):
                     value_dropdown = QComboBox()
                     value_dropdown.addItems(value[0:-1])
                     value_dropdown.setCurrentIndex(value[-1])
@@ -1199,16 +1212,17 @@ class EditDialog(QDialog):
                     table.setCellWidget(i, j, value_dropdown)
                 else:
                     value_item = myWidgetItem(value, iseditable=item['iseditable'])
-                    if bidstable and j == 0:
+                    if table.objectName()=='bids' and j==0:
                         value_item.setToolTip(bids.get_bidshelp(key))
                     table.setItem(i, j, value_item)
 
         table.blockSignals(False)
 
-    def set_table(self, data, minimum: bool=True) -> QTableWidget:
+    def set_table(self, data, name, minimum: bool=True) -> QTableWidget:
         """Return a table widget from the data. """
         table = myQTableWidget(minimum=minimum)
-        table.setColumnCount(2) # Always two columns (i.e. key, value)
+        table.setColumnCount(2)                         # Always two columns (i.e. key, value)
+        table.setObjectName(name)                       # NB: Serves to identify the tables in fill_table()
         horizontal_header = table.horizontalHeader()
         horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
