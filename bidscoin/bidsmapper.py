@@ -25,7 +25,7 @@ except ImportError:
 localversion, versionmessage = bids.version(check=True)
 
 
-def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, subprefix: str='sub-', sesprefix: str='ses-', store: bool=False, noedit: bool=False) -> None:
+def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, subprefix: str='sub-', sesprefix: str='ses-', store: bool=False, noedit: bool=False, force: bool=False) -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder
     and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code/bidscoin.
@@ -39,6 +39,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     :param sesprefix:       The prefix common for all source session-folders
     :param store:           If True, the provenance samples will be stored
     :param noedit:          The bidseditor will not be launched if True
+    :param force:           If True, the previous bidsmap and logfiles will be deleted
     :return:
     """
 
@@ -50,6 +51,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     bidscoinfolder = bidsfolder/'code'/'bidscoin'
 
     # Start logging
+    if force:
+        (bidscoinfolder/'bidsmapper.log').unlink(missing_ok=True)
     bids.setup_logging(bidscoinfolder/'bidsmapper.log')
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSmapper ------------')
@@ -61,6 +64,9 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     template, _              = bids.load_bidsmap(templatefile, bidscoinfolder)
 
     # Create the new bidsmap as a copy / bidsmap skeleton with no datatype entries (i.e. bidsmap with empty lists)
+    if force:
+        bidsmapfile.unlink(missing_ok=True)
+        bidsmap_old = dict()
     if bidsmap_old:
         bidsmap_new = copy.deepcopy(bidsmap_old)
     else:
@@ -153,6 +159,7 @@ def main():
     parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     parser.add_argument('-s','--store',       help="Flag to store provenance data samples in the bidsfolder/'code'/'provenance' folder", action='store_true')
     parser.add_argument('-a','--automated',   help="Flag to save the automatically generated bidsmap to disk and without interactively tweaking it with the bidseditor", action='store_true')
+    parser.add_argument('-f','--force',       help='Flag to dicard previous bidsmap and logfiles', action='store_true')
     parser.add_argument('-v','--version',     help='Show the installed version and check for updates', action='version', version=f'BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}')
     args = parser.parse_args()
 
@@ -163,7 +170,8 @@ def main():
                subprefix    = args.subprefix,
                sesprefix    = args.sesprefix,
                store        = args.store,
-               noedit       = args.automated)
+               noedit       = args.automated,
+               force        = args.force)
 
 
 if __name__ == "__main__":
