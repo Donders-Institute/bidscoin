@@ -1195,9 +1195,9 @@ class EditDialog(QDialog):
         table.blockSignals(True)
         table.clearContents()
         addrow = []
-        if table.objectName()=='meta' and (not data or data[-1][-1]['value']):
+        if table.objectName() == 'meta':
             addrow = [[{'value':'', 'iseditable': True}, {'value':'', 'iseditable': True}]]
-        table.setRowCount(len(data)+len(addrow))
+        table.setRowCount(len(data + addrow))
 
         for i, row in enumerate(data + addrow):
             key = row[0]['value']
