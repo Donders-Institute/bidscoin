@@ -127,7 +127,7 @@ class InspectWindow(QDialog):
             with open(filename, 'r') as sourcefid:
                 text = str(sourcefid.read())
         else:
-            LOGGER.warning(f"Could not read: {filename}")
+            LOGGER.info(f"Could not read: {filename}")
             return
 
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
