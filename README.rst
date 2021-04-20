@@ -8,6 +8,10 @@ BIDScoin: Coin your imaging data to BIDS
    :alt: Full documentation: https://bidscoin.readthedocs.io
    :target: https://bidscoin.readthedocs.io
 
+.. raw:: html
+
+   <img name="bidscoin-logo" src="./bidscoin/bidscoin_logo.png.test" height="340px" align="right" alt=" " src="https://bidscoin.readthedocs.io">
+
 |PyPI version| |BIDS| |PyPI - Python Version| |GPLv3| |RTD|
 
 BIDScoin is a user friendly `open-source <https://github.com/Donders-Institute/bidscoin>`__ python toolkit that converts ("coins") source-level (raw) neuroimaging data-sets to `nifti <https://nifti.nimh.nih.gov/>`__ / `json <https://www.json.org/>`__ / `tsv <https://en.wikipedia.org/wiki/Tab-separated_values>`__ data-sets that are organized following the Brain Imaging Data Structure, a.k.a. the `BIDS <http://bids.neuroimaging.io>`__ standard. Rather then depending on complex or ambiguous programmatic logic for the identification of imaging modalities, BIDScoin uses a mapping approach to identify and convert the raw source data into BIDS data. Different runs of source data are identified by reading information from MRI header files (DICOM or PAR/REC; e.g. ``ProtocolName``) and the mapping information about how these runs should be converted to BIDS can be specified a priori as well as interactively by the researcher -- bringing in the missing knowledge that often exists only in his or her head!
