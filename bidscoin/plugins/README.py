@@ -14,7 +14,8 @@ LOGGER = logging.getLogger(__name__)
 
 def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
     """
-    All the logic to map the Philips PAR/XML fields onto bids labels go into this function
+    All the logic to map the Philips PAR/XML fields onto bids labels go into this plugin function. The function is
+    expecte to update / append new runs to the bidsmap_new data structure
 
     :param session:     The full-path name of the subject/session raw data source folder
     :param bidsmap_new: The study bidsmap that we are building
@@ -30,7 +31,8 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, subprefix: str, sesprefix: str) -> None:
     """
-    The plugin to cast the series into the bids folder
+    The plugin to convert the runs in the source folder and save them in the bids folder. Each saved datafile should be
+    accompanied with a json sidecar file
 
     :param session:     The full-path name of the subject/session raw data source folder
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
