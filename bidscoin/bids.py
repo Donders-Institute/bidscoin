@@ -1157,7 +1157,7 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
 
     # Use the suffix to find the right typegroup
     if validate and 'suffix' not in run['bids']:
-        LOGGER.warning(f'Invalid bidsmap: BIDS entity "suffix" is absent for {run["provenance"]} -> {datatype}')
+        LOGGER.warning(f'Invalid bidsmap: BIDS {datatype} entity "suffix" is absent for {run["provenance"]} -> {datatype}')
     if datatype not in bidsdatatypes: return True
     for typegroup in bidsdatatypes[datatype]:
         if run['bids']['suffix'] in typegroup['suffixes']:
