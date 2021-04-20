@@ -1300,7 +1300,7 @@ def get_derivatives(datatype: str) -> list:
     """
 
     if datatype == 'anat':
-        return bidsdatatypes[datatype][1]['suffixes']            # The qMRI data (maps)
+        return [suffix for suffix in bidsdatatypes[datatype][1]['suffixes'] if suffix not in ('UNIT1',)]                            # The qMRI data (maps)
     elif datatype == 'fmap':
         return [suffix for n,typegroup in enumerate(bidsdatatypes[datatype]) for suffix in typegroup['suffixes'] if n>1]            # The non-standard fmaps (file collections)
     else:
