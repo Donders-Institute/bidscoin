@@ -1185,11 +1185,11 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
             for bidskey in run['bids']:
                 if bidskey not in entitykeys + ['suffix']:
                     if validate:
-                        LOGGER.warning(f'Invalid bidsmap: BIDS entity {run["provenance"]} -> "{bidskey}"-"{run["bids"][bidskey]}" is not allowed according to the BIDS standard')
+                        LOGGER.warning(f'Invalid bidsmap: BIDS {datatype} entity {run["provenance"]} -> "{bidskey}: {run["bids"][bidskey]}" is not allowed according to the BIDS standard')
                         run_keysok = False
                     elif run["bids"][bidskey]:
                         if validate is False:
-                            LOGGER.info(f'BIDS entity "{bidskey}"-"{run["bids"][bidskey]}" is not allowed according to the BIDS standard (clear "{run["bids"][bidskey]})" to resolve this issue)')
+                            LOGGER.info(f'BIDS {datatype} entity "{bidskey}: {run["bids"][bidskey]}" is not allowed according to the BIDS standard (clear "{run["bids"][bidskey]})" to resolve this issue)')
                         run_valsok = False
 
     return run_found and run_valsok and run_keysok
