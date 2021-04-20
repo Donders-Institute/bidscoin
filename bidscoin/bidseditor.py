@@ -298,12 +298,10 @@ class Ui_MainWindow(MainWindow):
         """When double clicked, show popup window. """
         if item.column() == 1:
             dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
-            sourcecell = self.samples_table[dataformat].item(item.row(), 5)
-            sourcefile = Path(sourcecell.text())
-            if sourcefile.is_file():
-                self.popup = InspectWindow(sourcefile)
-                self.popup.show()
-                self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
+            sourcefile = self.samples_table[dataformat].item(item.row(), 5)
+            self.popup = InspectWindow(Path(sourcefile.text()))
+            self.popup.show()
+            self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
 
     def set_tab_file_browser(self):
         """Set the raw data folder inspector tab. """
@@ -786,9 +784,10 @@ class Ui_MainWindow(MainWindow):
         if not (bids.is_dicomfile(datafile) or bids.is_parfile(datafile)):
             QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(datafile)))
             return
-        self.popup = InspectWindow(datafile)
-        self.popup.show()
-        self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
+        elif datafile.is_file():
+            self.popup = InspectWindow(datafile)
+            self.popup.show()
+            self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
 
     def show_about(self):
         """Shows a pop-up window with the BIDScoin version"""
