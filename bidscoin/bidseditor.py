@@ -54,7 +54,7 @@ HELP_URLS        = {
 TOOLTIP_BIDSCOIN = """BIDScoin
 version:    should correspond with the version in ../bidscoin/version.txt
 bidsignore: Semicolon-separated list of entries that are added to the .bidsignore file
-            (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv"""
+            (for more info, see BIDS specifications), e.g. extra_data/;myfile.txt;yourfile.csv"""
 
 TOOLTIP_DCM2NIIX = """dcm2niix
 path: Command to set the path to dcm2niix, e.g.:
@@ -1059,6 +1059,8 @@ class EditDialog(QDialog):
 
         data_attributes = []
         for key, value in self.target_run['attributes'].items():
+            if value is None:
+                value = ''
             data_attributes.append([
                 {
                     'value': key,
@@ -1085,13 +1087,15 @@ class EditDialog(QDialog):
                         'iseditable': False
                     },
                     {
-                        'value': value,
+                        'value': str(value),
                         'iseditable': iseditable
                     }
                 ])
 
         data_meta = []
         for key, value in self.target_run['meta'].items():
+            if value is None:
+                value = ''
             data_meta.append([
                 {
                     'value': key,
@@ -1190,12 +1194,10 @@ class EditDialog(QDialog):
 
         table.blockSignals(True)
         table.clearContents()
-        if table.objectName()=='meta':
+        addrow = []
+        if table.objectName()=='meta' and (not data or data[-1][-1]['value']):
             addrow = [[{'value':'', 'iseditable': True}, {'value':'', 'iseditable': True}]]
-            table.setRowCount(len(data)+1)
-        else:
-            addrow = []
-            table.setRowCount(len(data))
+        table.setRowCount(len(data)+len(addrow))
 
         for i, row in enumerate(data + addrow):
             key = row[0]['value']
