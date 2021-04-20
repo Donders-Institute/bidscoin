@@ -266,17 +266,17 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
 
             # Add the TaskName to the meta-data
             if datatype=='func' and 'TaskName' not in jsondata:
-                LOGGER.info(f"Adding 'TaskName: {run['bids']['task']}' to: {jsonfile}")
                 jsondata['TaskName'] = run['bids']['task']
 
             # Add the TracerName and TaskName to the meta-data
             elif datatype=='pet' and 'TracerName' not in jsondata:
-                LOGGER.info(f"Adding 'TracerName: {run['bids']['trc']}' to: {jsonfile}")
                 jsondata['TracerName'] = run['bids']['trc']
 
             # Add all the meta data to the json-file
             for metakey, metaval in run['meta'].items():
-                jsondata[metakey] = bids.get_dynamic_value(metaval, sourcefile, cleanup=False, runtime=True)
+                metaval = bids.get_dynamic_value(metaval, sourcefile, cleanup=False, runtime=True)
+                LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
+                jsondata[metakey] = metaval
             with jsonfile.open('w') as json_fid:
                 json.dump(jsondata, json_fid, indent=4)
 
