@@ -450,11 +450,9 @@ class Ui_MainWindow(MainWindow):
         """Set the options tab.  """
 
         # Create the tool tables
-        bidsmap_options = self.output_bidsmap['Options']
-
         tool_list = []
         tool_options = {}
-        for tool, parameters in bidsmap_options.items():
+        for tool, parameters in self.output_bidsmap['Options'].items():
             # Set the tools
             if tool == 'BIDScoin':
                 tooltip_text = TOOLTIP_BIDSCOIN
@@ -469,6 +467,8 @@ class Ui_MainWindow(MainWindow):
             # Store the options for each tool
             tool_options[tool] = []
             for key, value in parameters.items():
+                if value is None:
+                    value = ''
                 tool_options[tool].append([
                     {
                         'value': tool,
@@ -491,11 +491,11 @@ class Ui_MainWindow(MainWindow):
         self.tables_options = []
 
         for n, tool_item in enumerate(tool_list):
-            tool = tool_item['tool']
+            tool         = tool_item['tool']
             tooltip_text = tool_item['tooltip_text']
-            data = tool_options[tool]
-            num_rows = len(data)
-            num_cols = len(data[0]) + 1     # Always three columns (i.e. tool, key, value) + test-button
+            data         = tool_options[tool]
+            num_rows     = len(data)
+            num_cols     = len(data[0]) + 1     # Always three columns (i.e. tool, key, value) + test-button
 
             label = QLabel(tool)
             label.setToolTip(tooltip_text)
@@ -515,7 +515,7 @@ class Ui_MainWindow(MainWindow):
             for i, row in enumerate(data):
                 for j, item in enumerate(row):
                     value = item.get('value', '')
-                    if value == 'None':
+                    if value is None:
                         value = ''
                     iseditable = item.get('iseditable', False)
                     tooltip_text = item.get('tooltip_text')
@@ -1075,7 +1075,9 @@ class EditDialog(QDialog):
         data_bids = []
         for key in [bids.entities[entity]['entity'] for entity in bids.entities if entity not in ('subject','session')] + ['suffix']:   # Impose the BIDS-specified order + suffix
             if key in self.target_run['bids']:
-                value = self.target_run['bids'].get(key, '')
+                value = self.target_run['bids'].get(key,'')
+                if value is None:
+                    value = ''
                 if (self.target_datatype in bids.bidscoindatatypes and key=='suffix') or isinstance(value, list):
                     iseditable = False
                 else:
@@ -1087,7 +1089,7 @@ class EditDialog(QDialog):
                         'iseditable': False
                     },
                     {
-                        'value': str(value),
+                        'value': value,                     # NB: This can be a (menu) list
                         'iseditable': iseditable
                     }
                 ])
@@ -1213,8 +1215,6 @@ class EditDialog(QDialog):
                 continue
             for j, item in enumerate(row):
                 value = item.get('value', '')
-                if value == 'None':
-                    value = ''
                 if table.objectName()=='bids' and isinstance(value, list):
                     value_dropdown = QComboBox()
                     value_dropdown.addItems(value[0:-1])
