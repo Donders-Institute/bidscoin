@@ -31,7 +31,9 @@ except ImportError:
 
 
 ROW_HEIGHT       = 22
-ICON_FILENAME    = Path(__file__).parent/'bidscoin.ico'
+BIDSCOIN_LOGO    = Path(__file__).parent/'bidscoin_logo.png'
+BIDSCOIN_ICON    = Path(__file__).parent/'bidscoin.ico'
+RIGHTARROW       = Path(__file__).parent/'rightarrow.png'
 
 MAIN_HELP_URL    = f"https://bidscoin.readthedocs.io/en/{bids.version()}"
 HELP_URL_DEFAULT = f"https://bids-specification.readthedocs.io/en/v{bids.bidsversion()}"
@@ -119,9 +121,7 @@ class InspectWindow(QDialog):
     def __init__(self, filename: Path, sourcedict):
         super().__init__()
 
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(str(ICON_FILENAME)), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.setWindowIcon(icon)
+        self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
         self.setWindowTitle(str(filename))
 
         layout = QVBoxLayout(self)
@@ -154,9 +154,7 @@ class MainWindow(QMainWindow):
         actionQuit = QAction('Quit', self)
         actionQuit.triggered.connect(self.closeEvent)
 
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(str(ICON_FILENAME)), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.setWindowIcon(icon)
+        self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
 
     def closeEvent(self, event):
         """Handle exit. """
@@ -803,7 +801,12 @@ class Ui_MainWindow(MainWindow):
     def show_about(self):
         """Shows a pop-up window with the BIDScoin version"""
         version, message = bids.version(check=True)
-        QMessageBox.about(self.MainWindow, 'About', f"BIDS editor {version}\n\n{message}")
+        # QMessageBox.about(self.MainWindow, 'About', f"BIDS editor {version}\n\n{message}")    # Has an ugly / small image
+        messagebox = QMessageBox(self.MainWindow)
+        messagebox.setText(f"\n\nBIDS editor {version}\n\n{message}")
+        messagebox.setWindowTitle('About')
+        messagebox.setIconPixmap(QtGui.QPixmap(str(BIDSCOIN_LOGO)).scaled(150, 150, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
+        messagebox.show()
 
     def open_edit_dialog(self, provenance: Path, datatype: str, modal=False):
         """Check for open edit window, find the right datatype index and open the edit window"""
@@ -876,9 +879,7 @@ class EditDialog(QDialog):
                                                       subprefix, sesprefix)
 
         # Set-up the window
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(str(ICON_FILENAME)), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.setWindowIcon(icon)
+        self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMaximizeButtonHint)
         self.setWindowTitle('Edit BIDS mapping')
 
@@ -913,7 +914,7 @@ class EditDialog(QDialog):
         self.bids_label = QLabel()
         self.bids_label.setText('Entities')
         self.bids_table = self.set_table(data_bids, 'bids', minimum=False)
-        self.bids_table.setToolTip(f"The BIDS value that is used to construct the BIDS output name. You can freely change the value to be more meaningful and readable")
+        self.bids_table.setToolTip(f"The BIDS entities that are used to construct the BIDS output filename. You are encouraged to change their default values to be more meaningful and readable")
         self.bids_table.cellChanged.connect(self.bids_cell_changed)
 
         # Set-up the meta table
@@ -922,7 +923,7 @@ class EditDialog(QDialog):
         self.meta_table = self.set_table(data_meta, 'meta', minimum=False)
         self.meta_table.setShowGrid(True)
         self.meta_table.cellChanged.connect(self.meta_cell_changed)
-        self.meta_table.setToolTip(f"Enter key-value data that will be appended to the json sidecar file")
+        self.meta_table.setToolTip(f"Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
 
         # Set-up non-editable BIDS output name section
         self.bidsname_label = QLabel()
@@ -951,7 +952,7 @@ class EditDialog(QDialog):
         layout2 = QVBoxLayout()
         layout2.addWidget(self.datatype_label)
         layout2.addWidget(self.datatype_dropdown)
-        layout2.addWidget(self.bids_label)
+        # layout2.addWidget(self.bids_label)
         layout2.addWidget(self.bids_table)
         layout2.addWidget(self.bidsname_label)
         layout2.addWidget(self.bidsname_textbox)
@@ -959,9 +960,14 @@ class EditDialog(QDialog):
         layout2.addWidget(self.meta_table)
         groupbox2.setLayout(layout2)
 
+        # Add a box1 -> box2 arrow
+        arrow = QLabel()
+        arrow.setPixmap(QtGui.QPixmap(str(RIGHTARROW)).scaled(30, 30, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
+
         # Add the boxes to the layout
         layout_tables = QHBoxLayout()
         layout_tables.addWidget(groupbox1)
+        layout_tables.addWidget(arrow)
         layout_tables.addWidget(groupbox2)
 
         # Set-up buttons
