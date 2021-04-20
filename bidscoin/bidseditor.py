@@ -298,10 +298,12 @@ class Ui_MainWindow(MainWindow):
         """When double clicked, show popup window. """
         if item.column() == 1:
             dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
-            sourcefile = self.samples_table[dataformat].item(item.row(), 5)
-            self.popup = InspectWindow(Path(sourcefile.text()))
-            self.popup.show()
-            self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
+            sourcecell = self.samples_table[dataformat].item(item.row(), 5)
+            sourcefile = Path(sourcecell.text())
+            if sourcefile.is_file():
+                self.popup = InspectWindow(sourcefile)
+                self.popup.show()
+                self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
 
     def set_tab_file_browser(self):
         """Set the raw data folder inspector tab. """
