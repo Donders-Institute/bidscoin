@@ -118,15 +118,23 @@ class myWidgetItem(QTableWidgetItem):
 
 class InspectWindow(QDialog):
 
-    def __init__(self, filename: Path, sourcedict):
+    def __init__(self, filename: Path):
         super().__init__()
+
+        if bids.is_dicomfile(filename):
+            text = str(pydicom.dcmread(filename, force=True))
+        elif bids.is_parfile(filename):
+            with open(filename, 'r') as sourcefid:
+                text = str(sourcefid.read())
+        else:
+            LOGGER.warning(f"Could not read: {filename}")
+            return
 
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
         self.setWindowTitle(str(filename))
 
         layout = QVBoxLayout(self)
 
-        text        = str(sourcedict)
         textBrowser = QTextBrowser(self)
         textBrowser.setFont(QtGui.QFont("Courier New"))
         textBrowser.insertPlainText(text)
@@ -137,14 +145,13 @@ class InspectWindow(QDialog):
         buttonBox = QDialogButtonBox(self)
         buttonBox.setStandardButtons(QDialogButtonBox.Ok)
         buttonBox.button(QDialogButtonBox.Ok).setToolTip('Close this window')
+        buttonBox.accepted.connect(self.close)
         layout.addWidget(buttonBox)
 
-        # Set the width to the width of the text
+        # Set the layout-width to the width of the text
         fontMetrics = QtGui.QFontMetrics(textBrowser.font())
         textwidth   = fontMetrics.size(0, text).width()
         self.resize(min(textwidth + 70, 1200), self.height())
-
-        buttonBox.accepted.connect(self.close)
 
 
 class MainWindow(QMainWindow):
@@ -291,20 +298,10 @@ class Ui_MainWindow(MainWindow):
         """When double clicked, show popup window. """
         if item.column() == 1:
             dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
-            row        = item.row()
-            cell       = self.samples_table[dataformat].item(row, 5)
-            sourcefile = Path(cell.text())
-            if bids.is_dicomfile(sourcefile):
-                sourcedata = pydicom.dcmread(sourcefile, force=True)
-            elif bids.is_parfile(sourcefile):
-                with open(sourcefile, 'r') as sourcefid:
-                    sourcedata = sourcefid.read()
-            else:
-                LOGGER.warning(f"Could not read: {sourcefile}")
-                return
-            self.popup = InspectWindow(sourcefile, sourcedata)
+            sourcefile = self.samples_table[dataformat].item(item.row(), 5)
+            self.popup = InspectWindow(Path(sourcefile.text()))
             self.popup.show()
-            self.popup.scrollbar.setValue(0)     # This can only be done after self.popup.show()
+            self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
 
     def set_tab_file_browser(self):
         """Set the raw data folder inspector tab. """
@@ -784,17 +781,10 @@ class Ui_MainWindow(MainWindow):
     def on_double_clicked(self, index: int):
         """Opens the inspect window when a data file in the file-tree tab is double-clicked"""
         datafile = Path(self.model.fileInfo(index).absoluteFilePath())
-        if not datafile.is_file():
-            return
-        elif bids.is_dicomfile(datafile):
-            sourcedata = pydicom.dcmread(datafile, force=True)
-        elif bids.is_parfile(datafile):
-            with open(datafile, 'r') as sourcefid:
-                sourcedata = sourcefid.read()
-        else:
+        if not (bids.is_dicomfile(datafile) or bids.is_parfile(datafile)):
             QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(datafile)))
             return
-        self.popup = InspectWindow(datafile, sourcedata)
+        self.popup = InspectWindow(datafile)
         self.popup.show()
         self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
 
@@ -1114,18 +1104,9 @@ class EditDialog(QDialog):
     def inspect_sourcefile(self, row: int=None, column: int=None):
         """When double clicked, show popup window. """
         if row == 1 and column == 1:
-            sourcefile = Path(self.target_run['provenance'])
-            if bids.is_dicomfile(sourcefile):
-                sourcedata = pydicom.dcmread(sourcefile, force=True)
-            elif bids.is_parfile(sourcefile):
-                with open(sourcefile, 'r') as sourcefid:
-                    sourcedata = sourcefid.read()
-            else:
-                LOGGER.warning(f"Could not read {self.dataformat} file: {sourcefile}")
-                return
-            self.popup = InspectWindow(sourcefile, sourcedata)
+            self.popup = InspectWindow(Path(self.target_run['provenance']))
             self.popup.show()
-            self.popup.scrollbar.setValue(0)     # This can only be done after self.popup.show()
+            self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
 
     def attributes_cell_changed(self, row: int, column: int):
         """Source attribute value has been changed. """

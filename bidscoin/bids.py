@@ -337,21 +337,6 @@ def is_parfile(file: Path) -> bool:
         return False
 
 
-def is_niftifile(file: Path) -> bool:
-    """
-    Checks whether a file is a nifti file
-
-    :param file:    The full pathname of the file
-    :return:        Returns true if a file is a nifti-file
-    """
-
-    # TODO: Implement a proper check, e.g. using nibabel
-    if file.is_file() and file.suffix in ('.nii', '.nii.gz', '.img', '.hdr'):
-        return True
-    else:
-        return False
-
-
 def unpack(sourcefolder: Path, subprefix: str='sub-', sesprefix: str='ses-', wildcard: str='*', workfolder: Path='') -> (Path, bool):
     """
     Unpacks and sorts DICOM files in sourcefolder to a temporary folder if sourcefolder contains a DICOMDIR file or .tar.gz, .gz or .zip files
