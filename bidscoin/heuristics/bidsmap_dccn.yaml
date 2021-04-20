@@ -408,6 +408,8 @@ DICOM:
       echo: <EchoNumbers>
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       suffix: bold
+    meta:
+      TaskName: <ProtocolName>
   - provenance: ~
     attributes:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
       <<: *func_dicomattr
@@ -415,6 +417,8 @@ DICOM:
     bids:
       <<: *func_dicoment_func
       suffix: sbref
+    meta:
+      TaskName: <ProtocolName>
   - provenance: ~
     attributes:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
       <<: *func_dicomattr
@@ -429,16 +433,22 @@ DICOM:
       recording: ~
       run: <<1>>
       suffix: physio
+    meta:
+      TaskName: <ProtocolName>
   - provenance: ~
     attributes:
       <<: *func_dicomattr
       SeriesDescription: '(?i).*((f|functional).?MRI|task|BOLD|CMRR.*_TR).*PHYSIO.*'
     bids: *func_dicoment_timeseries
+    meta:
+      TaskName: <ProtocolName>
   - provenance: ~
     attributes:                         # Then catch the bold runs themselves
       <<: *func_dicomattr
       ProtocolName: '(?i).*((f|functional).?MRI|task|BOLD|CMRR.*_TR).*'
     bids: *func_dicoment_func
+    meta:
+      TaskName: <ProtocolName>
   - provenance: ~
     attributes:
       <<: *func_dicomattr
@@ -446,6 +456,8 @@ DICOM:
     bids:
       <<: *func_dicoment_func
       suffix: cbv
+    meta:
+      TaskName: <ProtocolName>
   - provenance: ~
     attributes: *func_dicomattr
     bids: &func_dicoment_events         # See: schema/datatypes/func.yaml
@@ -456,11 +468,15 @@ DICOM:
       rec: ~
       run: <<1>>
       suffix: events
+    meta:
+      TaskName: <SeriesDescription>
   - provenance: ~
     attributes: *func_dicomattr
     bids:
       <<: *func_dicoment_timeseries
       suffix: stim
+    meta:
+      TaskName: <ProtocolName>
 
   perf:       # ----------------------- All perfusion runs ---------------------
   - provenance: ~
@@ -1349,6 +1365,8 @@ PAR:
       echo: ~
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       suffix: bold
+    meta:
+      TaskName: <exam_name>
   - provenance: ~
     attributes:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
       <<: *func_parattr
@@ -1356,11 +1374,15 @@ PAR:
     bids:
       <<: *func_parent_func
       suffix: sbref
+    meta:
+      TaskName: <exam_name>
   - provenance: ~
     attributes:                         # Then catch the bold runs themselves
       <<: *func_parattr
       protocol_name: '(?i).*((f|functional).?MRI|task|BOLD).*'
     bids: *func_parent_func
+    meta:
+      TaskName: <exam_name>
   - provenance: ~
     attributes:
       <<: *func_parattr
@@ -1368,6 +1390,8 @@ PAR:
     bids:
       <<: *func_parent_func
       suffix: cbv
+    meta:
+      TaskName: <exam_name>
   - provenance: ~
     attributes: *func_parattr
     bids: &func_parent_events           # See: schema/datatypes/func.yaml
@@ -1378,6 +1402,8 @@ PAR:
       rec: ~
       run: <<1>>
       suffix: events
+    meta:
+      TaskName: <exam_name>
   - provenance: ~
     attributes: *func_parattr
     bids: &func_parent_timeseries       # See: schema/datatypes/func.yaml
@@ -1389,11 +1415,15 @@ PAR:
       recording: ~
       run: <<1>>
       suffix: physio
+    meta:
+      TaskName: <exam_name>
   - provenance: ~
     attributes: *func_parattr
     bids:
       <<: *func_parent_timeseries
       suffix: stim
+    meta:
+      TaskName: <exam_name>
 
   perf:       # ----------------------- All perfusion runs ---------------------
   - provenance: ~

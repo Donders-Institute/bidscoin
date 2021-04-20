@@ -311,16 +311,22 @@ DICOM:
       echo: <EchoNumbers>
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       suffix: bold
+    meta:
+      TaskName: <SeriesDescription>
   - provenance: ~
     attributes: *func_dicomattr
     bids:
       <<: *func_dicoment_func
       suffix: cbv
+    meta:
+      TaskName: <SeriesDescription>
   - provenance: ~
     attributes: *func_dicomattr
     bids:
       <<: *func_dicoment_func
       suffix: sbref
+    meta:
+      TaskName: <SeriesDescription>
   - provenance: ~
     attributes: *func_dicomattr
     bids: &func_dicoment_events         # See: schema/datatypes/func.yaml
@@ -331,6 +337,8 @@ DICOM:
       rec: ~
       run: <<1>>
       suffix: events
+    meta:
+      TaskName: <SeriesDescription>
   - provenance: ~
     attributes: *func_dicomattr
     bids: &func_dicoment_timeseries     # See: schema/datatypes/func.yaml
@@ -342,11 +350,15 @@ DICOM:
       recording: ~
       run: <<1>>
       suffix: physio
+    meta:
+      TaskName: <SeriesDescription>
   - provenance: ~
     attributes: *func_dicomattr
     bids:
       <<: *func_dicoment_timeseries
       suffix: stim
+    meta:
+      TaskName: <SeriesDescription>
 
   perf:       # ----------------------- All perfusion runs ---------------------
   - provenance: ~
@@ -1019,16 +1031,22 @@ PAR:
       echo: ~
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       suffix: bold
+    meta:
+      TaskName: <protocol_name>
   - provenance: ~
     attributes: *func_parattr
     bids:
       <<: *func_parent_func
       suffix: cbv
+    meta:
+      TaskName: <protocol_name>
   - provenance: ~
     attributes: *func_parattr
     bids:
       <<: *func_parent_func
       suffix: sbref
+    meta:
+      TaskName: <protocol_name>
   - provenance: ~
     attributes: *func_parattr
     bids: &func_parent_events           # See: schema/datatypes/func.yaml
@@ -1039,6 +1057,8 @@ PAR:
       rec: ~
       run: <<1>>
       suffix: events
+    meta:
+      TaskName:
   - provenance: ~
     attributes: *func_parattr
     bids: &func_parent_timeseries       # See: schema/datatypes/func.yaml
@@ -1050,11 +1070,15 @@ PAR:
       recording: ~
       run: <<1>>
       suffix: physio
+    meta:
+      TaskName:
   - provenance: ~
     attributes: *func_parattr
     bids:
       <<: *func_parent_timeseries
       suffix: stim
+    meta:
+      TaskName:
 
   perf:       # ----------------------- All perfusion runs ---------------------
   - provenance: ~
