@@ -520,7 +520,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
             if not isinstance(bidsmap[dataformat][datatype], list): continue
             for index, run in enumerate(bidsmap[dataformat][datatype]):
                 for key, val in run_.items():
-                    if key not in run:
+                    if key not in run or not run[key]:
                         run[key] = val
                 if not run.get('provenance'):
                     run['provenance'] = f"sub-unknown/ses-unknown/{dataformat}_{datatype}_id{index+1:03}"
@@ -912,8 +912,9 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
     :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
     :param datatype:    The datatype in which a matching run is searched for (e.g. 'anat')
     :param suffix_idx:  The name of the suffix that is searched for (e.g. 'bold') or the datatype index number
-    :param sourcefile:  The name of the sourcefile. If given, the bidsmap values are read from file
-    :return:            The clean (filled) run item in the bidsmap[dataformat][bidsdatatype] with the matching suffix_idx, otherwise a dict with empty attributes & bids keys
+    :param sourcefile:  The name of the sourcefile. If given, the bidsmap dynamic values are read from file
+    :return:            The clean (filled) run item in the bidsmap[dataformat][bidsdatatype] with the matching suffix_idx,
+                        otherwise a dict with empty attributes & bids keys
     """
 
     if not dataformat:
@@ -925,6 +926,7 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
     for index, run in enumerate(runs):
         if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
+            # Get a clean run (remove comments to avoid overly complicated commentedMaps from ruamel.yaml)
             run_ = get_run_(str(sourcefile.resolve()))
 
             for filekey, filevalue in run['filesystem'].items():

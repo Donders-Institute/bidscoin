@@ -71,7 +71,7 @@ DICOM:
       run: <<1>>
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       suffix: T1w
-    meta: {}                      # This is an optional (stub) entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
+    meta:                         # This is an optional (stub) entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
   - provenance: ~
     attributes: *anat_dicomattr
     bids:
