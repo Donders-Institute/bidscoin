@@ -781,13 +781,12 @@ class Ui_MainWindow(MainWindow):
     def on_double_clicked(self, index: int):
         """Opens the inspect window when a data file in the file-tree tab is double-clicked"""
         datafile = Path(self.model.fileInfo(index).absoluteFilePath())
-        if not (bids.is_dicomfile(datafile) or bids.is_parfile(datafile)):
-            QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(datafile)))
-            return
-        elif datafile.is_file():
+        if bids.is_dicomfile(datafile) or bids.is_parfile(datafile):
             self.popup = InspectWindow(datafile)
             self.popup.show()
             self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
+        elif datafile.is_file():
+            QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(datafile)))
 
     def show_about(self):
         """Shows a pop-up window with the BIDScoin version"""
