@@ -101,7 +101,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             sessions = [subject]
         for session in sessions:
 
-            LOGGER.info(f"Parsing: {session} (subject {n}/{len(subjects)})")
+            LOGGER.info(f"Mapping: {session} (subject {n}/{len(subjects)})")
 
             # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
             session, unpacked = bids.unpack(session, subprefix, sesprefix)
