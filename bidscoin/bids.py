@@ -200,6 +200,7 @@ def import_plugin(plugin: Path, functions: tuple=()) -> util.module_from_spec:
         return None
 
     # Load the plugin-module
+    LOGGER.info(f"Importing the '{plugin}' plugin")
     try:
         spec   = util.spec_from_file_location('bidscoin.plugin.' + plugin.stem, plugin)
         module = util.module_from_spec(spec)
@@ -213,12 +214,12 @@ def import_plugin(plugin: Path, functions: tuple=()) -> util.module_from_spec:
                 functionsfound.append(function)
 
         if functions and not functionsfound:
-            LOGGER.info(f"{plugin} does not contain {functions} functions")
+            LOGGER.info(f"The '{plugin}' plugin does not contain {functions} functions")
         else:
             return module
 
     except Exception as pluginerror:
-        LOGGER.exception(f"Could not import '{plugin}: {pluginerror}'")
+        LOGGER.exception(f"Could not import {plugin}:\n{pluginerror}")
 
 
 def test_tooloptions(tool: str, opts: dict) -> Union[bool, None]:

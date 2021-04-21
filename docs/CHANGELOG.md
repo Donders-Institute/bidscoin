@@ -8,21 +8,21 @@ Making BIDScoin more powerful and generic...
 
 ### Added
 - Support for BIDS v1.6
-- Added separate tabs for DICOM and PAR to edit all the mappings of mixed datasets
-- Added run-item matching on filesystem properties, i.e. on the pathname, filename and filesize
+- Separate tabs for DICOM and PAR to edit all the mappings of mixed datasets in a single bidseditor session
+- Run-item matching on filesystem properties, i.e. on the pathname, filename and filesize. This can be used in conjunction with the (DICOM/PAR) attributes
+- A meta-data dictionary that can be edited with the bidseditor and that will be added to the json sidecar files by the bidscoiner
+- More user feedback in the GUI for new BIDS-compliancy checks on missing or invalid bids data
 - Allow the user to edit json, yaml, tsv and other non-DICOM / non-PAR files in the data browser
-- User feedback in the GUI for new BIDS compliancy checks
-- Add a meta data dictionary that users can edit in the bidseditor
 
 ### Changed
 - Using regular expressions instead of fnmatch to match (template bidsmap) attribute values
-- Moved the bidsmapping and bidscoining functionality to stand-alone plugins (changed API)
-- Move IntendedFor field over to the meta data dictionary
+- Moved the bidsmapping and bidscoining functionality to stand-alone plugins (changed API), making plugins a first-class BIDScoin citizen
+- Move IntendedFor field over to the meta-data dictionary
 - Re-introduced skipping hidden folders (hidden files are also skipped)
 
 ### Removed
 - P7 and nifti support (it was never implemented anyhow)
-- Option to edit new mappings on-the-fly in the bidsmapper (`-i 2`)
+- The option to edit new mappings on-the-fly in the bidsmapper (`-i 2`)
     
 ## [3.5.3] - 2021-04-13
 
