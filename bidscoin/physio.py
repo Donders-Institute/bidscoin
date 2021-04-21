@@ -45,8 +45,7 @@ def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, exp
         lines = fn.decode('UTF-8').splitlines()
     elif isinstance(fn, Path):                          # Otherwise, fn must be a filename
         LOGGER.info(f"Reading physio log-file: {fn}")
-        with fn.open('r') as fid:
-            lines = fid.read().splitlines()
+        lines = fn.read_text().splitlines()
     else:
         LOGGER.error(f"Wrong input {fn}: {type(fn)}"); raise FileNotFoundError(fn)
 

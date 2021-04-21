@@ -84,11 +84,10 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     readme_file = bidsfolder/'README'
     if not readme_file.is_file():
         LOGGER.info(f"Creating README file: {readme_file}")
-        with open(readme_file, 'w') as fid:
-            fid.write(f"A free form text ( README ) describing the dataset in more details that SHOULD be provided\n\n"
-                      f"The raw BIDS data was created using BIDScoin {localversion}\n"
-                      f"All provenance information and settings can be found in ./code/bidscoin\n"
-                      f"For more information see: https://github.com/Donders-Institute/bidscoin")
+        readme_file.write_text(f"A free form text ( README ) describing the dataset in more details that SHOULD be provided\n\n"
+                               f"The raw BIDS data was created using BIDScoin {localversion}\n"
+                               f"All provenance information and settings can be found in ./code/bidscoin\n"
+                               f"For more information see: https://github.com/Donders-Institute/bidscoin")
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
     bidsmap, _  = bids.load_bidsmap(bidsmapfile, bidsfolder/'code'/'bidscoin')
@@ -105,12 +104,16 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         LOGGER.info('')
         return
 
-    # Save options to the .bidsignore file
+    # Append options to the .bidsignore file
     bidsignore_items = [item.strip() for item in bidsmap['Options']['bidscoin']['bidsignore'].split(';')]
-    LOGGER.info(f"Writing {bidsignore_items} entries to {bidsfolder}.bidsignore")
-    with (bidsfolder/'.bidsignore').open('w') as bidsignore:
-        for item in bidsignore_items:
-            bidsignore.write(item + '\n')
+    bidsignore_file  = bidsfolder/'.bidsignore'
+    if bidsignore_items:
+        LOGGER.info(f"Writing {bidsignore_items} entries to {bidsignore_file}")
+        if bidsignore_file.is_file():
+            bidsignore_items.append(bidsignore_file.read_text().splitlines())
+        with bidsignore_file.open('a+') as bidsignore:
+            for item in set(bidsignore_items):
+                bidsignore.write(item + '\n')
 
     # Get the table & dictionary of the subjects that have been processed
     participants_tsv  = bidsfolder/'participants.tsv'

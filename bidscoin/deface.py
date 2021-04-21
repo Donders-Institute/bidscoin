@@ -134,8 +134,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
 
                     # Update the scans.tsv file
                     if (bidsdir/'.bidsignore').is_file():
-                        with (bidsdir/'.bidsignore').open('r') as fid:
-                            bidsignore = fid.read().splitlines()
+                        bidsignore = (bidsdir/'.bidsignore').read_text().splitlines()
                     else:
                         bidsignore = [bids.unknowndatatype + '/']
                     bidsignore.append('derivatives/')

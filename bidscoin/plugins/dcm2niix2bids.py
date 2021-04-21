@@ -258,12 +258,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                 bvalfile = jsonfile.with_suffix('.bval')
                 if not bvecfile.is_file():
                     LOGGER.info(f"Adding dummy bvec file: {bvecfile}")
-                    with bvecfile.open('w') as bvec_fid:
-                        bvec_fid.write('0\n0\n0\n')
+                    bvecfile.write_text('0\n0\n0\n')
                 if not bvalfile.is_file():
                     LOGGER.info(f"Adding dummy bval file: {bvalfile}")
-                    with bvalfile.open('w') as bval_fid:
-                        bval_fid.write('0\n')
+                    bvalfile.write_text('0\n')
 
             # Load the json meta-data
             with jsonfile.open('r') as json_fid:

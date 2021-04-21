@@ -41,11 +41,9 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: boo
     mapperfile = outfolder/f"rawmapper_{'_'.join(dicomfield)}.tsv"
     if not dryrun:
         if rename and not mapperfile.is_file():     # Write the header once
-            with mapperfile.open('w') as fid:
-                fid.write('subid\tsesid\tnewsubid\tnewsesid\n')
-        else:     # Write the header once
-            with mapperfile.open('w') as fid:
-                fid.write('subid\tsesid\tseriesname\t{}\n'.format('\t'.join(dicomfield)))
+            mapperfile.write_text('subid\tsesid\tnewsubid\tnewsesid\n')
+        else:                                       # Write the header once
+            mapperfile.write_text('subid\tsesid\tseriesname\t{}\n'.format('\t'.join(dicomfield)))
 
     # Map the sessions in the sourcefolder
     if not sessions:

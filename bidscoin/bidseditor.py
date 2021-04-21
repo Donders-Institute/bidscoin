@@ -124,8 +124,7 @@ class InspectWindow(QDialog):
         if bids.is_dicomfile(filename):
             text = str(pydicom.dcmread(filename, force=True))
         elif bids.is_parfile(filename):
-            with open(filename, 'r') as sourcefid:
-                text = str(sourcefid.read())
+            text = filename.read_text()
         else:
             text = f"Could not inspect: {filename}"
             LOGGER.info(text)
@@ -793,7 +792,7 @@ class Ui_MainWindow(MainWindow):
     def show_about(self):
         """Shows a pop-up window with the BIDScoin version"""
         version, message = bids.version(check=True)
-        # QMessageBox.about(self.MainWindow, 'About', f"BIDS editor {version}\n\n{message}")    # Has an ugly / small image
+        # QMessageBox.about(self.MainWindow, 'About', f"BIDS editor {version}\n\n{message}")    # Has an ugly / small icon image
         messagebox = QMessageBox(self.MainWindow)
         messagebox.setText(f"\n\nBIDS editor {version}\n\n{message}")
         messagebox.setWindowTitle('About')

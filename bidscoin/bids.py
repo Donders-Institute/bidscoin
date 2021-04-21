@@ -59,10 +59,7 @@ def bidsversion() -> str:
     :return:    The BIDS version number
     """
 
-    with (Path(__file__).parent/'bidsversion.txt').open('r') as fid:
-        value = fid.read().strip()
-
-    return str(value)
+    return (Path(__file__).parent/'bidsversion.txt').read_text().strip()
 
 
 def version(check: bool=False) -> Union[str, Tuple]:
@@ -73,8 +70,7 @@ def version(check: bool=False) -> Union[str, Tuple]:
     :return:        The version number or (version number, checking message) if check=True
     """
 
-    with (Path(__file__).parent/'version.txt').open('r') as fid:
-        localversion = str(fid.read().strip())
+    localversion = (Path(__file__).parent/'version.txt').read_text().strip()
 
     # Check pypi for the latest version number
     if check:
@@ -150,9 +146,7 @@ def reporterrors() -> None:
 
             errorfile = Path(filehandler.baseFilename)
             if errorfile.stat().st_size:
-                with errorfile.open('r') as fid:
-                    errors = fid.read()
-                LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errors}{40 * '<'}\n")
+                LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errorfile.read_text()}{40 * '<'}\n")
 
             else:
                 LOGGER.info(f'No BIDScoin errors or warnings were reported')
