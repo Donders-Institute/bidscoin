@@ -213,7 +213,7 @@ def import_plugin(plugin: Path, functions: tuple=()) -> util.module_from_spec:
                 functionsfound.append(function)
 
         if functions and not functionsfound:
-            LOGGER.warning(f"{plugin} can (and will) not perform {functions} operations")
+            LOGGER.info(f"{plugin} does not contain {functions} functions")
         else:
             return module
 
@@ -487,7 +487,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
     if bidsmapversion != version() and report:
         LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created using version {bidsmapversion}, but this is version {version()}')
 
-    # Add missing items, bids entities and provenance info
+    # Add missing provenance info, run dictionaries and bids entities
     run_ = get_run_()
     for dataformat in bidsmap:
         if dataformat in ('Options','PlugIns'):   continue
@@ -500,7 +500,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
                 if not run.get('provenance'):
                     run['provenance'] = f"sub-unknown/ses-unknown/{dataformat}_{datatype}_id{index+1:03}"
 
-                # Add missing run items (e.g. "meta" or "filesystem")
+                # Add missing run dictionaries (e.g. "meta" or "filesystem")
                 for key, val in run_.items():
                     if key not in run or not run[key]:
                         run[key] = val
@@ -511,6 +511,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
                         for entityname in typegroup['entities']:
                             entitykey = entities[entityname]['entity']
                             if entitykey not in run['bids'] and entitykey not in ('sub','ses'):
+                                LOGGER.debug(f"Adding missing {dataformat}/{datatype} entity key: {entitykey}")
                                 run['bids'][entitykey] = ''
 
     # Make sure we get a proper list of plugins (make sure there are no None's in the list)

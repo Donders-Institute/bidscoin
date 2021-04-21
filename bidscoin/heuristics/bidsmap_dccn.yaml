@@ -834,7 +834,7 @@ DICOM:
     meta:
       IntendedFor: ~
 
-  eeg:  # ----------------------- All EEG data ---------------------------
+  eeg:        # ----------------------- All EEG data ---------------------------
   - provenance: ~
     attributes:
       Modality: 'EEG'

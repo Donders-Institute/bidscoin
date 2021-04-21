@@ -87,13 +87,13 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         readme_file.write_text(f"A free form text ( README ) describing the dataset in more details that SHOULD be provided\n\n"
                                f"The raw BIDS data was created using BIDScoin {localversion}\n"
                                f"All provenance information and settings can be found in ./code/bidscoin\n"
-                               f"For more information see: https://github.com/Donders-Institute/bidscoin")
+                               f"For more information see: https://github.com/Donders-Institute/bidscoin\n")
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
     bidsmap, _  = bids.load_bidsmap(bidsmapfile, bidsfolder/'code'/'bidscoin')
     dataformats = [dataformat for dataformat in bidsmap if dataformat not in ('Options','PlugIns')]
     if not bidsmap:
-        LOGGER.error(f"No bidsmap file found in {bidsfolder}. Please run the bidsmapper first and / or use the correct bidsfolder")
+        LOGGER.error(f"No bidsmap file found in {bidsfolder}. Please run the bidsmapper first and/or use the correct bidsfolder")
         return
 
     # Load the data conversion plugins
@@ -110,8 +110,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     if bidsignore_items:
         LOGGER.info(f"Writing {bidsignore_items} entries to {bidsignore_file}")
         if bidsignore_file.is_file():
-            bidsignore_items.append(bidsignore_file.read_text().splitlines())
-        with bidsignore_file.open('a+') as bidsignore:
+            bidsignore_items += bidsignore_file.read_text().splitlines()
+        with bidsignore_file.open('w') as bidsignore:
             for item in set(bidsignore_items):
                 bidsignore.write(item + '\n')
 
@@ -175,6 +175,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
             # Run the bidscoiner plugins
             for module in plugins:
+                LOGGER.info(f"Executing plugin: {Path(module.__file__).name}")
                 module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals, subprefix, sesprefix)
 
             # Clean-up the temporary unpacked data
