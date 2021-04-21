@@ -487,10 +487,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
     if bidsmapversion != version() and report:
         LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created using version {bidsmapversion}, but this is version {version()}')
 
-    # Validate the bidsmap entries
-    check_bidsmap(bidsmap, report)
-
-    # Add a unique identifier for runs without provenance info
+    # Add missing items, bids entities and provenance info
     run_ = get_run_()
     for dataformat in bidsmap:
         if dataformat in ('Options','PlugIns'):   continue
@@ -498,16 +495,31 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue
             for index, run in enumerate(bidsmap[dataformat][datatype]):
+
+                # Add missing provenance info
+                if not run.get('provenance'):
+                    run['provenance'] = f"sub-unknown/ses-unknown/{dataformat}_{datatype}_id{index+1:03}"
+
+                # Add missing run items (e.g. "meta" or "filesystem")
                 for key, val in run_.items():
                     if key not in run or not run[key]:
                         run[key] = val
-                if not run.get('provenance'):
-                    run['provenance'] = f"sub-unknown/ses-unknown/{dataformat}_{datatype}_id{index+1:03}"
+
+                # Add missing bids entities
+                for typegroup in bidsdatatypes[datatype]:
+                    if run['bids']['suffix'] in typegroup['suffixes']:      # run_found = True
+                        for entityname in typegroup['entities']:
+                            entitykey = entities[entityname]['entity']
+                            if entitykey not in run['bids']:
+                                run['bids'][entitykey] = ''
 
     # Make sure we get a proper list of plugins (make sure there are no None's in the list)
     if not bidsmap.get('PlugIns'):
         bidsmap['PlugIns'] = []
     bidsmap['PlugIns'] = [plugin for plugin in bidsmap.get('PlugIns') if plugin]
+
+    # Validate the bidsmap entries
+    check_bidsmap(bidsmap, report)
 
     return bidsmap, yamlfile
 
