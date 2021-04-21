@@ -15,6 +15,7 @@ import logging
 import sys
 import shutil
 from pathlib import Path
+from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QMessageBox
 try:
     from bidscoin import bids, bidseditor
@@ -123,13 +124,16 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         app.setApplicationName(f"{bidsmapfile} - BIDS editor {localversion}")
         mainwin = bidseditor.MainWindow()
 
-        QMessageBox.information(mainwin, 'BIDS mapping workflow',
-                                f"The bidsmapper has finished scanning {rawfolder}\n\n"
-                                f"Please carefully check all the different BIDS output names "
-                                f"and BIDScoin options and (re)edit them to your needs.\n\n"
-                                f"You can always redo this step later by re-running the "
-                                f"bidsmapper or by just running the bidseditor tool\n\n"
-                                f"{versionmessage}")
+        messagebox = QMessageBox(mainwin)
+        messagebox.setText(f"The bidsmapper has finished scanning {rawfolder}\n\n"
+                           f"Please carefully check all the different BIDS output names "
+                           f"and BIDScoin options and (re)edit them to your needs.\n\n"
+                           f"You can always redo this step later by re-running the "
+                           f"bidsmapper or by just running the bidseditor tool\n\n"
+                           f"{versionmessage}")
+        messagebox.setWindowTitle('About the BIDS mapping workflow')
+        messagebox.setIconPixmap(QtGui.QPixmap(str(bidseditor.BIDSCOIN_LOGO)).scaled(150, 150, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
+        messagebox.show()
 
         gui = bidseditor.Ui_MainWindow()
         gui.setupUi(mainwin, bidsfolder, bidsmapfile, bidsmap_new, copy.deepcopy(bidsmap_new), template, subprefix=subprefix, sesprefix=sesprefix)
