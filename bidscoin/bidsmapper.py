@@ -82,6 +82,14 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         bidsmap_old = copy.deepcopy(bidsmap_new)
         bidsmapfile = bidscoinfolder/'bidsmap.yaml'
 
+    # Load the data scanning plugins
+    plugins = [module for module in (bids.import_plugin(plugin, ('bidsmapper_plugin',)) for plugin in bidsmap_new['PlugIns']) if module]
+    if not plugins:
+        LOGGER.warning(f"No bidsmapper plugins found in {bidsmapfile}, nothing to do")
+        LOGGER.info('-------------- FINISHED! ------------')
+        LOGGER.info('')
+        return
+
     # Loop over all subjects and sessions and built up the bidsmap entries
     subjects = bids.lsdirs(rawfolder, subprefix + '*')
     if not subjects:
@@ -104,11 +112,9 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             else:
                 store = dict()
 
-            # Load and run the bidsmapper data scanning plugins
-            for plugin in bidsmap_new['PlugIns']:
-                module = bids.import_plugin(plugin)
-                if 'bidsmapper_plugin' in dir(module):
-                    module.bidsmapper_plugin(session, bidsmap_new, bidsmap_old, template, store)
+            # Run the bidsmapper plugins
+            for module in plugins:
+                module.bidsmapper_plugin(session, bidsmap_new, bidsmap_old, template, store)
 
             # Clean-up the temporary unpacked data
             if unpacked:

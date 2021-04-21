@@ -69,3 +69,8 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, dataformat, datatype, run)
+
+
+def bidscoiner_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
+    """Stub function that does nothing"""
+    pass

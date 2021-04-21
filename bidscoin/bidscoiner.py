@@ -96,8 +96,11 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     if not bidsmap:
         LOGGER.error(f"No bidsmap file found in {bidsfolder}. Please run the bidsmapper first and / or use the correct bidsfolder")
         return
-    if not bidsmap['PlugIns']:
-        LOGGER.info(f"No plugins found in {bidsmap}, nothing to do")
+
+    # Load the data conversion plugins
+    plugins = [module for module in (bids.import_plugin(plugin, ('bidscoiner_plugin',)) for plugin in bidsmap['PlugIns']) if module]
+    if not plugins:
+        LOGGER.warning(f"No bidscoiner plugins found in {bidsmapfile}, nothing to do")
         LOGGER.info('-------------- FINISHED! ------------')
         LOGGER.info('')
         return
@@ -167,11 +170,9 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
             LOGGER.info(f"Coining session: {session}")
 
-            # Load and run the bidscoiner data conversion plugins
-            for plugin in bidsmap['PlugIns']:
-                module = bids.import_plugin(plugin)
-                if 'bidscoiner_plugin' in dir(module):
-                    module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals, subprefix, sesprefix)
+            # Run the bidscoiner plugins
+            for module in plugins:
+                module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals, subprefix, sesprefix)
 
             # Clean-up the temporary unpacked data
             if unpacked:

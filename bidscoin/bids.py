@@ -186,11 +186,13 @@ def run_command(command: str) -> bool:
     return True
 
 
-def import_plugin(plugin: Path) -> util.module_from_spec:
+def import_plugin(plugin: Path, functions: tuple=()) -> util.module_from_spec:
     """
+    Imports the plugin if it contains any of the specified functions
 
-    :param plugin:  Name of the plugin
-    :return:        plugin-module
+    :param plugin:      Name of the plugin in the bidscoin "plugins" folder or the fullpath name
+    :param functions:   List of functions of which at least one of them should be present in the plugin
+    :return:            The imported plugin-module
     """
 
     # Get the full path to the plugin-module
@@ -209,21 +211,20 @@ def import_plugin(plugin: Path) -> util.module_from_spec:
         module = util.module_from_spec(spec)
         spec.loader.exec_module(module)
 
-        if 'bidsmapper_plugin' not in dir(module):
-            LOGGER.debug(f"Could not find bidsmapper_plugin() in {plugin}")
+        functionsfound = []
+        for function in functions:
+            if function not in dir(module):
+                LOGGER.debug(f"Could not find {function}() in {plugin}")
+            else:
+                functionsfound.append(function)
 
-        if 'bidscoiner_plugin' not in dir(module):
-            LOGGER.debug(f"Could not find bidscoiner_plugin() in {plugin}")
-
-        if 'bidsmapper_plugin' not in dir(module) and 'bidscoiner_plugin' not in dir(module):
-            LOGGER.warning(f"{plugin} can (and will) not perform any operation")
-
-        return module
+        if functions and not functionsfound:
+            LOGGER.warning(f"{plugin} can (and will) not perform {functions} operations")
+        else:
+            return module
 
     except Exception as pluginerror:
         LOGGER.exception(f"Could not import '{plugin}: {pluginerror}'")
-
-        return None
 
 
 def test_tooloptions(tool: str, opts: dict) -> Union[bool, None]:
@@ -261,12 +262,11 @@ def test_plugins(plugin: Path) -> bool:
 
     LOGGER.info(f"Testing: '{plugin}' plugin")
 
-    module = import_plugin(plugin)
+    module = import_plugin(plugin, ('bidsmapper_plugin','bidscoiner_plugin'))
     if inspect.ismodule(module):
         methods = [method for method in dir(module) if not method.startswith('_')]
-        LOGGER.info(f"Result:\n{module.__doc__}\n{plugin} attributes and methods:\n{methods}\n")
+        LOGGER.info(f"{plugin} docstring:\n{module.__doc__}\n{plugin} attributes and methods:\n{methods}\n")
         return True
-
     else:
         return False
 
@@ -510,8 +510,10 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
                 if not run.get('provenance'):
                     run['provenance'] = f"sub-unknown/ses-unknown/{dataformat}_{datatype}_id{index+1:03}"
 
-    # Make sure we get a proper list of plugins
-    bidsmap['PlugIns'] = [plugin for plugin in bidsmap.get('PlugIns', []) if plugin]
+    # Make sure we get a proper list of plugins (make sure there are no None's in the list)
+    if not bidsmap.get('PlugIns'):
+        bidsmap['PlugIns'] = []
+    bidsmap['PlugIns'] = [plugin for plugin in bidsmap.get('PlugIns') if plugin]
 
     return bidsmap, yamlfile
 

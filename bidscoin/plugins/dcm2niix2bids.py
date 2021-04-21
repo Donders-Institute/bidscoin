@@ -17,6 +17,11 @@ except ImportError:
 LOGGER = logging.getLogger(__name__)
 
 
+def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
+    """Stub function that does nothing"""
+    pass
+
+
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, subprefix: str, sesprefix: str) -> None:
     """
     The bidscoiner plugin to convert the session DICOM and PAR/REC source-files into BIDS-valid nifti-files in the
