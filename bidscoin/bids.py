@@ -259,7 +259,7 @@ def test_plugins(plugin: Path) -> bool:
     module = import_plugin(plugin, ('bidsmapper_plugin','bidscoiner_plugin'))
     if inspect.ismodule(module):
         methods = [method for method in dir(module) if not method.startswith('_')]
-        LOGGER.info(f"{plugin} docstring:\n{module.__doc__}\n{plugin} attributes and methods:\n{methods}\n")
+        LOGGER.info(f"\n{plugin} docstring:\n{module.__doc__}\n{plugin} attributes and methods:\n{methods}")
         return True
     else:
         return False
@@ -506,11 +506,11 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
                         run[key] = val
 
                 # Add missing bids entities
-                for typegroup in bidsdatatypes[datatype]:
+                for typegroup in bidsdatatypes.get(datatype,[]):
                     if run['bids']['suffix'] in typegroup['suffixes']:      # run_found = True
                         for entityname in typegroup['entities']:
                             entitykey = entities[entityname]['entity']
-                            if entitykey not in run['bids']:
+                            if entitykey not in run['bids'] and entitykey not in ('sub','ses'):
                                 run['bids'][entitykey] = ''
 
     # Make sure we get a proper list of plugins (make sure there are no None's in the list)
@@ -1160,11 +1160,11 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
             for entityname in typegroup['entities']:
                 entitykey = entities[entityname]['entity']
                 bidsvalue = run['bids'].get(entitykey)
+                if entitykey in ('sub', 'ses'): continue
                 if isinstance(bidsvalue, list):
                     bidsvalue = bidsvalue[bidsvalue[-1]]    # Get the selected item
                 if isinstance(bidsvalue, str) and not (bidsvalue.startswith('<') and bidsvalue.endswith('>')) and bidsvalue != cleanup_value(bidsvalue):
                     LOGGER.warning(f'Invalid {entitykey} value: "{bidsvalue}" for {run["provenance"]} -> {datatype}/*_{run["bids"]["suffix"]}')
-                if entitykey in ('sub', 'ses'): continue
                 if validate and entitykey not in run['bids']:
                     LOGGER.warning(f'Invalid bidsmap: BIDS entity "{entitykey}" is absent for {run["provenance"]} -> {datatype}/*_{run["bids"]["suffix"]}')
                     run_keysok = False
