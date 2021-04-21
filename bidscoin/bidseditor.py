@@ -187,8 +187,7 @@ class Ui_MainWindow(MainWindow):
         self.has_edit_dialog_open = None
 
         # Set-up the tabs
-        self.tabwidget = QtWidgets.QTabWidget()
-        tabwidget = self.tabwidget
+        tabwidget = self.tabwidget = QtWidgets.QTabWidget()
         tabwidget.setTabPosition(QtWidgets.QTabWidget.North)
         tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
 
@@ -201,7 +200,7 @@ class Ui_MainWindow(MainWindow):
         self.set_tab_file_browser()
 
         # Set-up the buttons
-        buttonBox = QDialogButtonBox(self)
+        buttonBox = QDialogButtonBox()
         buttonBox.setStandardButtons(QDialogButtonBox.Save | QDialogButtonBox.Reset | QDialogButtonBox.Help)
         buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
         buttonBox.button(QDialogButtonBox.Save).setToolTip('Save the Options and BIDSmap to disk if you are satisfied with all the BIDS output names')
@@ -211,7 +210,7 @@ class Ui_MainWindow(MainWindow):
         buttonBox.button(QDialogButtonBox.Save).clicked.connect(self.save_bidsmap_to_file)
 
         # Set-up the main layout
-        centralwidget = QtWidgets.QWidget(self.MainWindow)
+        centralwidget = QtWidgets.QWidget()
         top_layout = QtWidgets.QVBoxLayout(centralwidget)
         top_layout.addWidget(tabwidget)
         top_layout.addWidget(buttonBox)
@@ -589,6 +588,13 @@ class Ui_MainWindow(MainWindow):
 
             if not runs: continue
             for run in runs:
+
+                # Check the run
+                loglevel = LOGGER.level
+                LOGGER.setLevel('ERROR')
+                validrun = bids.check_run(datatype, run, validate=False)
+                LOGGER.setLevel(loglevel)
+
                 provenance   = Path(run['provenance'])
                 subid, sesid = bids.get_subid_sesid(provenance,
                                                     output_bidsmap[dataformat]['subject'],
@@ -616,9 +622,9 @@ class Ui_MainWindow(MainWindow):
                 samples_table.item(idx, 3).setStatusTip(str(session) + str(Path('/')))
 
                 if samples_table.item(idx, 3):
-                    if datatype == bids.unknowndatatype:
+                    if not validrun or datatype == bids.unknowndatatype:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('red'))
-                        samples_table.item(idx, 3).setToolTip(f"Red: This imaging data type is not part of BIDS but will be converted to a BIDS-like entry in the '{bids.unknowndatatype}' folder")
+                        samples_table.item(idx, 3).setToolTip(f"Red: This {datatype} data type is not part of BIDS but will be converted to BIDS-like data. You should edit this item or make sure it is in your bidsignore list ([Options] tab)")
                     elif datatype == bids.ignoredatatype:
                         samples_table.item(idx, 1).setForeground(QtGui.QColor('gray'))
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('gray'))
@@ -628,12 +634,8 @@ class Ui_MainWindow(MainWindow):
                         samples_table.item(idx, 3).setToolTip('Gray / Strike-out: This imaging data type will be ignored and not converted BIDS')
                     else:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('green'))
-                        samples_table.item(idx, 3).setToolTip(f"Green: This '{datatype}' imaging data type is part of BIDS")
+                        samples_table.item(idx, 3).setToolTip(f"Green: This '{datatype}' data type is part of BIDS")
 
-                loglevel = LOGGER.level
-                LOGGER.setLevel('ERROR')
-                validrun = bids.check_run(datatype, run, validate=False)
-                LOGGER.setLevel(loglevel)
                 if validrun:
                     edit_button = QPushButton('Edit')
                     edit_button.setToolTip('Click to see more details and edit the BIDS output name')
