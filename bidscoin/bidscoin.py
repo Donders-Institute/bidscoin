@@ -37,7 +37,7 @@ def list_executables(show: bool=False) -> list:
         if script.value.startswith('bidscoin'):
             scripts.append(script.name)
             if show:
-                print(script.name)
+                print(f"- {script.name}")
 
     return scripts
 
@@ -55,7 +55,7 @@ def list_plugins(show: bool=False) -> list:
         if plugin.stem != '__init__':
             plugins.append(plugin)
             if show:
-                print(plugin.stem)
+                print(f"- {plugin.stem}")
 
     return plugins
 
