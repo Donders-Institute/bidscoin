@@ -32,8 +32,8 @@ PlugIns:
 # List of plugins to edit the key-value heuristics / perform additional operations
 # --------------------------------------------------------------------------------
 - README.py                       # Either a fullpath name of the plugin or just the basename when it is in the default bidscoin/plugins folder
-- dcmpar2bidsmap.py
-- dcm2niix2bids.py
+- dcmpar2bidsmap
+- dcm2niix2bids
 
 
 DICOM:
