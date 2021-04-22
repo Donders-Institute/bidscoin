@@ -123,14 +123,14 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
-                                            '  bidscoin -l'
-                                            '  bidscoin -d data/bidscoin_tutorial'
+                                            '  bidscoin -l\n'
+                                            '  bidscoin -d data/bidscoin_tutorial\n'
                                             '  bidscoin -i python/project/my_plugin.py download/handy_plugin.py\n ')
     parser.add_argument('-l', '--list',      help='List all bidscoin executables', action='store_true')
     parser.add_argument('-p', '--plugins',   help='List all installed plugins', action='store_true')
-    parser.add_argument('-i', '--install',   help='Install bidscoin plugins')
-    parser.add_argument('-u', '--uninstall', help='Uninstall bidscoin plugins')
-    parser.add_argument('-d', '--download',  help='Download tutorial data in this directory')
+    parser.add_argument('-i', '--install',   help='A list of bidscoin plugins to install')
+    parser.add_argument('-u', '--uninstall', help='A list of bidscoin plugins to uninstall')
+    parser.add_argument('-d', '--download',  help='Download folder. If given, tutorial MRI data will be downloaded here')
     # parser.add_argument('-t', '--test',      help='Test the bidscoin installation', action='store_true')  # TODO: implement bidscoin tests
     parser.add_argument('-v', '--version',   help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
     args = parser.parse_args()
