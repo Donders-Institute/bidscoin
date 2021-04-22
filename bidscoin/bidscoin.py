@@ -16,6 +16,7 @@ import tarfile
 import urllib.request
 import shutil
 import ssl
+import sys
 from pathlib import Path
 from importlib.metadata import entry_points
 from typing import Tuple
@@ -151,6 +152,9 @@ def main():
     parser.add_argument('-d', '--download',  help='Download folder. If given, tutorial MRI data will be downloaded here')
     # parser.add_argument('-t', '--test',      help='Test the bidscoin installation', action='store_true')  # TODO: implement bidscoin tests
     parser.add_argument('-v', '--version',   help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
+    if len(sys.argv) == 1:
+        parser.print_help()
+        return
     args = parser.parse_args()
 
     list_executables(show=args.list)
@@ -158,6 +162,8 @@ def main():
     uninstall_plugins(plugins=args.uninstall)
     install_plugins(plugins=args.install)
     pulltutorialdata(tutorialfolder=args.download)
+
+    print(len(sys.argv))
 
 if __name__ == "__main__":
     main()
