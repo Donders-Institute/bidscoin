@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-For more documentation see:
+BIDScoin converts and organizes raw MRI data-sets according to the Brain Imaging Data Structure (BIDS)
+
+For more documentation see: https://bidscoin.readthedocs.io
 """
 
 import argparse
@@ -28,6 +30,7 @@ def list_executables(show: bool=False) -> list:
     """
 
     scripts = []
+    print('BIDScoin executables:')
     for script in entry_points()['console_scripts']:
         if script.value.startswith('bidscoin'):
             scripts.append(script.name)
@@ -43,6 +46,7 @@ def list_plugins(show: bool=False) -> list:
     """
 
     plugins = []
+    print('BIDScoin installed plugins:')
     for plugin in (bidscoinfolder/'plugins').glob('*.py'):
         if plugin.stem != '__init__':
             plugins.append(plugin)
