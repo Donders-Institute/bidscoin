@@ -71,13 +71,13 @@ def install_plugins(plugins: Tuple[Path]=()) -> bool:
     for plugin in plugins:
         plugin = Path(plugin)
         print(f"Installing: '{plugin}'")
-        if not bids.import_plugin(plugin, ('bidsmapper_plugin', 'bidscoiner_plugin')):
-            print(f"Import failure, aborting installation of: '{plugin.name}'")
-            return False
         try:
             shutil.copyfile(plugin, bidscoinfolder/'plugins'/plugin.with_suffix('.py').name)
         except IOError as install_failure:
             print(f"{install_failure}\nFailed to install: '{plugin.name}' in '{bidscoinfolder/'plugins'}'")
+            return False
+        if not bids.import_plugin(plugin, ('bidsmapper_plugin', 'bidscoiner_plugin')):
+            print(f"Import failure, please re-install a valid version of '{plugin.name}'")
             return False
 
     return True
