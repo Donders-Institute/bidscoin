@@ -70,6 +70,7 @@ def install_plugins(plugins: Tuple[Path]=()) -> bool:
 
     for plugin in plugins:
         plugin = Path(plugin)
+        bids.import_plugin(plugin, ('bidsmapper_plugin', 'bidscoiner_plugin'))
         try:
             print(f"Installing: '{plugin}'")
             shutil.copyfile(plugin, bidscoinfolder/'plugins'/plugin.with_suffix('.py').name)
