@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """
-BIDScoin converts and organizes raw MRI data-sets according to the Brain Imaging Data Structure (BIDS)
+BIDScoin is a toolkit to convert and organize raw data-sets according to the Brain Imaging Data Structure (BIDS)
+
+The basic workflow is to run these two tools:
+
+  $ bidsmapper sourcefolder bidsfolder        # This produces a study bidsmap and launches a GUI
+  $ bidscoiner sourcefolder bidsfolder        # This converts your data to BIDS according to the study bidsmap
 
 For more documentation see: https://bidscoin.readthedocs.io
 """
@@ -138,8 +143,8 @@ def main():
                                      epilog='examples:\n'
                                             '  bidscoin -l\n'
                                             '  bidscoin -d data/bidscoin_tutorial\n'
-                                            '  bidscoin -i python/project/my_plugin.py download/handy_plugin.py\n ')
-    parser.add_argument('-l', '--list',      help='List all bidscoin executables', action='store_true')
+                                            '  bidscoin -i python/project/my_plugin.py downloads/handy_plugin.py\n ')
+    parser.add_argument('-l', '--list',      help='List all bidscoin tools', action='store_true')
     parser.add_argument('-p', '--plugins',   help='List all installed plugins', action='store_true')
     parser.add_argument('-i', '--install',   help='A list of bidscoin plugins to install', nargs='+')
     parser.add_argument('-u', '--uninstall', help='A list of bidscoin plugins to uninstall', nargs='+')
