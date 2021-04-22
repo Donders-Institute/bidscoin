@@ -29,8 +29,10 @@ def list_executables(show: bool=False) -> list:
     :return:                Nothing
     """
 
+    if show:
+        print('BIDScoin executables:')
+
     scripts = []
-    print('BIDScoin executables:')
     for script in entry_points()['console_scripts']:
         if script.value.startswith('bidscoin'):
             scripts.append(script.name)
@@ -45,8 +47,10 @@ def list_plugins(show: bool=False) -> list:
     :return:                Nothing
     """
 
+    if show:
+        print('BIDScoin installed plugins:')
+
     plugins = []
-    print('BIDScoin installed plugins:')
     for plugin in (bidscoinfolder/'plugins').glob('*.py'):
         if plugin.stem != '__init__':
             plugins.append(plugin)
