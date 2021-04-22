@@ -209,7 +209,9 @@ def import_plugin(plugin: Path, functions: tuple=()) -> util.module_from_spec:
         functionsfound = []
         for function in functions:
             if function not in dir(module):
-                LOGGER.debug(f"Could not find {function}() in {plugin}")
+                LOGGER.debug(f"Could not find '{function}' in the '{plugin}' plugin")
+            elif not callable(getattr(module, function)):
+                LOGGER.error(f"'The {function}' attribute in the '{plugin}' plugin is not callable")
             else:
                 functionsfound.append(function)
 
@@ -1072,7 +1074,7 @@ def match_attribute(longvalue, pattern) -> bool:
 
     # Make sure we start with proper string types
     longvalue = str(longvalue).strip()
-    pattern   = str(pattern).strip().encode('unicode-escape').decode()
+    pattern   = str(pattern).strip().encode('unicode_escape').decode()
 
     # Compare the value items (with / without wildcard) with the longvalue string items
     match = re.fullmatch(pattern, longvalue)
