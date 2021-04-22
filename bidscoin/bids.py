@@ -780,7 +780,7 @@ def get_sourcefield(tagname: str, sourcefile: Path=Path(), dataformat: str='') -
     """
 
     if not sourcefile.name:
-        return
+        return ''
 
     if not dataformat:
         dataformat = get_dataformat(sourcefile)
@@ -1071,8 +1071,8 @@ def match_attribute(longvalue, pattern) -> bool:
         return False
 
     # Make sure we start with proper string types
-    longvalue = str(longvalue)
-    pattern   = str(pattern).encode('unicode-escape').decode()
+    longvalue = str(longvalue).strip()
+    pattern   = str(pattern).strip().encode('unicode-escape').decode()
 
     # Compare the value items (with / without wildcard) with the longvalue string items
     match = re.fullmatch(pattern, longvalue)
