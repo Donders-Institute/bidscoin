@@ -61,9 +61,10 @@ def install_plugins(plugins: Tuple[Path]=()) -> bool:
         return False
 
     for plugin in plugins:
+        plugin = Path(plugin)
         try:
             print(f"Installing: {plugin}")
-            shutil.copyfile(plugin, bidscoinfolder/'plugins'/plugin.name)
+            shutil.copyfile(plugin, bidscoinfolder/'plugins'/plugin.with_suffix('.py').name)
         except IOError as install_failure:
             print(f"Failed to install: {plugin.name} in {bidscoinfolder/'plugins'}, Exciting\n{install_failure}")
             return False
@@ -71,7 +72,7 @@ def install_plugins(plugins: Tuple[Path]=()) -> bool:
     return True
 
 
-def uninstall_plugins(plugins: Tuple[Path]=()) -> bool:
+def uninstall_plugins(plugins: Tuple[str]=()) -> bool:
     """
     :return:                Nothing
     """
@@ -82,9 +83,9 @@ def uninstall_plugins(plugins: Tuple[Path]=()) -> bool:
     for plugin in plugins:
         try:
             print(f"Uninstalling: {plugin}")
-            plugin.unlink()
+            (bidscoinfolder/'plugins'/plugin).with_suffix('.py').unlink()
         except IOError as uninstall_failure:
-            print(f"Failed to uninstall: {plugin.name} in {bidscoinfolder/'plugins'}, Exciting\n{uninstall_failure}")
+            print(f"Failed to uninstall: {plugin} in {bidscoinfolder/'plugins'}, Exciting\n{uninstall_failure}")
             return False
 
     return True
