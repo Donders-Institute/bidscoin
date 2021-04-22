@@ -13,12 +13,14 @@ Making BIDScoin more powerful and generic...
 - A meta-data dictionary that can be edited with the bidseditor and that will be added to the json sidecar files by the bidscoiner
 - More user feedback in the GUI for new BIDS-compliancy checks on missing or invalid bids data
 - Allow the user to edit json, yaml, tsv and other non-DICOM / non-PAR files in the data browser
+- A central 'bidscoin' package function with various utilities, such as listing and installing BIDScoin plugins or executables
 
 ### Changed
 - Using regular expressions instead of fnmatch to match (template bidsmap) attribute values
 - Moved the bidsmapping and bidscoining functionality to stand-alone plugins (changed API), making plugins a first-class BIDScoin citizen
 - Move IntendedFor field over to the meta-data dictionary
 - Re-introduced skipping hidden folders (hidden files are also skipped)
+- Moved the 'pulltutorial' function over to the new 'bidscoin' function
 
 ### Removed
 - P7 and nifti support (it was never implemented anyhow)
