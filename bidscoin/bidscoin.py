@@ -71,10 +71,10 @@ def install_plugins(plugins: Tuple[Path]=()) -> bool:
     for plugin in plugins:
         plugin = Path(plugin)
         try:
-            print(f"Installing: {plugin}")
+            print(f"Installing: '{plugin}'")
             shutil.copyfile(plugin, bidscoinfolder/'plugins'/plugin.with_suffix('.py').name)
         except IOError as install_failure:
-            print(f"Failed to install: {plugin.name} in {bidscoinfolder/'plugins'}, Exciting\n{install_failure}")
+            print(f"Failed to install: '{plugin.name}' in '{bidscoinfolder/'plugins'}', Exciting\n{install_failure}")
             return False
 
     return True
@@ -90,10 +90,10 @@ def uninstall_plugins(plugins: Tuple[str]=()) -> bool:
 
     for plugin in plugins:
         try:
-            print(f"Uninstalling: {plugin}")
+            print(f"Uninstalling: '{plugin}'")
             (bidscoinfolder/'plugins'/plugin).with_suffix('.py').unlink()
         except IOError as uninstall_failure:
-            print(f"Failed to uninstall: {plugin} in {bidscoinfolder/'plugins'}, Exciting\n{uninstall_failure}")
+            print(f"Failed to uninstall: '{plugin}' in '{bidscoinfolder/'plugins'}', Exciting\n{uninstall_failure}")
             return False
 
     return True
@@ -138,8 +138,8 @@ def main():
                                             '  bidscoin -i python/project/my_plugin.py download/handy_plugin.py\n ')
     parser.add_argument('-l', '--list',      help='List all bidscoin executables', action='store_true')
     parser.add_argument('-p', '--plugins',   help='List all installed plugins', action='store_true')
-    parser.add_argument('-i', '--install',   help='A list of bidscoin plugins to install')
-    parser.add_argument('-u', '--uninstall', help='A list of bidscoin plugins to uninstall')
+    parser.add_argument('-i', '--install',   help='A list of bidscoin plugins to install', nargs='+')
+    parser.add_argument('-u', '--uninstall', help='A list of bidscoin plugins to uninstall', nargs='+')
     parser.add_argument('-d', '--download',  help='Download folder. If given, tutorial MRI data will be downloaded here')
     # parser.add_argument('-t', '--test',      help='Test the bidscoin installation', action='store_true')  # TODO: implement bidscoin tests
     parser.add_argument('-v', '--version',   help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
