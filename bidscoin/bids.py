@@ -190,7 +190,7 @@ def import_plugin(plugin: Path, functions: tuple=()) -> util.module_from_spec:
     """
 
     # Get the full path to the plugin-module
-    plugin = Path(plugin)
+    plugin = Path(plugin).with_suffix('.py')
     if len(plugin.parents) == 1:
         plugin = Path(__file__).parent/'plugins'/plugin
 
