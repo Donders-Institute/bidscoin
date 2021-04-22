@@ -61,6 +61,9 @@ def install_plugins(plugins: Tuple[Path]=()) -> bool:
     :return:                Nothing
     """
 
+    if not plugins:
+        return True
+
     for plugin in plugins:
         plugin = Path(plugin)
         try:
@@ -77,6 +80,9 @@ def uninstall_plugins(plugins: Tuple[str]=()) -> bool:
     """
     :return:                Nothing
     """
+
+    if not plugins:
+        return True
 
     for plugin in plugins:
         try:
