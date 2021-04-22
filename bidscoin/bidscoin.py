@@ -47,7 +47,7 @@ def list_plugins(show: bool=False) -> list:
         if plugin.stem != '__init__':
             plugins.append(plugin)
             if show:
-                print(plugin)
+                print(plugin.stem)
 
     return plugins
 
@@ -58,19 +58,36 @@ def install_plugins(plugins: Tuple[Path]=()) -> bool:
     """
 
     if not plugins:
-        return
+        return False
 
     for plugin in plugins:
-        destination = plugin.relative_to(bidscoinfolder/'plugins')
+        try:
+            print(f"Installing: {plugin}")
+            shutil.copyfile(plugin, bidscoinfolder/'plugins'/plugin.name)
+        except IOError as install_failure:
+            print(f"Failed to install: {plugin.name} in {bidscoinfolder/'plugins'}, Exciting\n{install_failure}")
+            return False
+
+    return True
 
 
-def uninstall_plugins(plugins:tuple=()) -> bool:
+def uninstall_plugins(plugins: Tuple[Path]=()) -> bool:
     """
     :return:                Nothing
     """
 
     if not plugins:
-        return
+        return False
+
+    for plugin in plugins:
+        try:
+            print(f"Uninstalling: {plugin}")
+            plugin.unlink()
+        except IOError as uninstall_failure:
+            print(f"Failed to uninstall: {plugin.name} in {bidscoinfolder/'plugins'}, Exciting\n{uninstall_failure}")
+            return False
+
+    return True
 
 
 def pulltutorialdata(tutorialfolder: str) -> None:
