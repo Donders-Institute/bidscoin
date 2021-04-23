@@ -12,9 +12,9 @@ import pandas as pd
 from multiecho import combination as me
 from pathlib import Path
 try:
-    from bidscoin import bids
+    from bidscoin import bidscoin, bids
 except ImportError:
-    import bids             # This should work if bidscoin was not pip-installed
+    import bidscoin, bids             # This should work if bidscoin was not pip-installed
 
 
 def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorithm: str, weights: list, force: bool=False):
@@ -34,7 +34,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
     bidsdir = Path(bidsdir).resolve()
 
     # Start logging
-    bids.setup_logging(bidsdir/'code'/'bidscoin'/'echocombine.log')
+    bidscoin.setup_logging(bidsdir/'code'/'bidscoin'/'echocombine.log')
     LOGGER.info('')
     LOGGER.info(f"--------- START echocombine ---------")
     LOGGER.info(f">>> echocombine bidsfolder={bidsdir} pattern={pattern} subjects={subjects} output={output}"
@@ -45,7 +45,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
 
     # Get the list of subjects
     if not subjects:
-        subjects = bids.lsdirs(bidsdir, 'sub-*')
+        subjects = bidscoin.lsdirs(bidsdir, 'sub-*')
         if not subjects:
             LOGGER.warning(f"No subjects found in: {bidsdir/'sub-*'}")
     else:
@@ -55,7 +55,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
     # Loop over bids subject/session-directories
     for n, subject in enumerate(subjects, 1):
 
-        sessions = bids.lsdirs(subject, 'ses-*')
+        sessions = bidscoin.lsdirs(subject, 'ses-*')
         if not sessions:
             sessions = [subject]
         for session in sessions:

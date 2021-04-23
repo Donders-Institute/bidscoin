@@ -1173,7 +1173,7 @@ class EditDialog(QDialog):
             if key and value != oldvalue:
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
                 if isinstance(value, str) and not (value.startswith('<<') and value.endswith('>>')):
-                    value = bids.cleanup_value(bids.get_dynamic_value(value, Path(self.target_run['provenance'])))
+                    value = bids.cleanup_value(bids.get_dynamicvalue(value, Path(self.target_run['provenance'])))
                     self.bids_table.item(row, 1).setText(value)
                 if key == 'run':
                     LOGGER.warning(f"Expert usage: User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
@@ -1190,7 +1190,7 @@ class EditDialog(QDialog):
         if value != oldvalue:
             # Replace the (dynamic) value
             if not (value.startswith('<<') and value.endswith('>>')):
-                value = bids.get_dynamic_value(value, Path(self.target_run['provenance']), cleanup=False)
+                value = bids.get_dynamicvalue(value, Path(self.target_run['provenance']), cleanup=False)
                 self.meta_table.item(row, 1).setText(value)
             LOGGER.info(f"User has set meta['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
 

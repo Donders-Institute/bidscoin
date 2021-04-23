@@ -702,10 +702,10 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
                     run_['attributes'][attrkey] = attrvalue
 
             for bidskey, bidsvalue in run['bids'].items():
-                run_['bids'][bidskey] = get_dynamic_value(bidsvalue, sourcefile)
+                run_['bids'][bidskey] = get_dynamicvalue(bidsvalue, sourcefile)
 
             for metakey, metavalue in run['meta'].items():
-                run_['meta'][metakey] = get_dynamic_value(metavalue, sourcefile, cleanup=False)
+                run_['meta'][metakey] = get_dynamicvalue(metavalue, sourcefile, cleanup=False)
 
             return run_
 
@@ -1012,7 +1012,7 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
             for bidskey, bidsvalue in run['bids'].items():
 
                 # Replace the dynamic bids values
-                run_['bids'][bidskey] = get_dynamic_value(bidsvalue, sourcefile)
+                run_['bids'][bidskey] = get_dynamicvalue(bidsvalue, sourcefile)
 
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 run_ = strip_suffix(run_)
@@ -1022,7 +1022,7 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
             for bidskey, metavalue in run['meta'].items():
 
                 # Replace the dynamic bids values
-                run_['meta'][bidskey] = get_dynamic_value(metavalue, sourcefile, cleanup=False)
+                run_['meta'][bidskey] = get_dynamicvalue(metavalue, sourcefile, cleanup=False)
 
             # Stop searching the bidsmap if we have a match
             if match:
@@ -1054,7 +1054,7 @@ def get_subid_sesid(sourcefile: Path, subid: str= '<<SourceFilePath>>', sesid: s
     if subid=='<<SourceFilePath>>':
         subid = [part for part in sourcefile.parent.parts if part.startswith(subprefix)][-1]
     else:
-        subid = get_dynamic_value(subid, sourcefile)
+        subid = get_dynamicvalue(subid, sourcefile)
     if sesid=='<<SourceFilePath>>':
         sesid = [part for part in sourcefile.parent.parts if part.startswith(sesprefix)]
         if sesid:
@@ -1062,7 +1062,7 @@ def get_subid_sesid(sourcefile: Path, subid: str= '<<SourceFilePath>>', sesid: s
         else:
             sesid = ''
     else:
-        sesid = get_dynamic_value(sesid, sourcefile)
+        sesid = get_dynamicvalue(sesid, sourcefile)
 
     # Add sub- and ses- prefixes if they are not there
     subid = 'sub-' + cleanup_value(re.sub(f'^{subprefix}', '', subid))
@@ -1110,7 +1110,7 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False) -> str:
         if isinstance(bidsvalue, list):
             bidsvalue = bidsvalue[bidsvalue[-1]]                                # Get the selected item
         else:
-            bidsvalue = get_dynamic_value(bidsvalue, Path(run['provenance']), runtime)
+            bidsvalue = get_dynamicvalue(bidsvalue, Path(run['provenance']), runtime)
         if bidsvalue:
             bidsname = f"{bidsname}_{entitykey}-{cleanup_value(bidsvalue)}"     # Append the key-value data to the bidsname
     bidsname = f"{bidsname}{add_prefix('_', run['bids']['suffix'])}"            # And end with the suffix
@@ -1133,7 +1133,7 @@ def get_bidshelp(bidskey: str) -> str:
     return ''
 
 
-def get_dynamic_value(bidsvalue: str, sourcefile: Path, cleanup: bool=True, runtime: bool=False) -> str:
+def get_dynamicvalue(bidsvalue: str, sourcefile: Path, cleanup: bool=True, runtime: bool=False) -> str:
     """
     Replaces (dynamic) bidsvalues with (DICOM) run attributes when they start with '<' and end with '>',
     but not with '<<' and '>>' unless runtime = True

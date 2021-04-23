@@ -271,7 +271,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
 
             # Add all the meta data to the json-file
             for metakey, metaval in run['meta'].items():
-                metaval = bids.get_dynamic_value(metaval, sourcefile, cleanup=False, runtime=True)
+                metaval = bids.get_dynamicvalue(metaval, sourcefile, cleanup=False, runtime=True)
                 LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
                 jsondata[metakey] = metaval
             with jsonfile.open('w') as json_fid:

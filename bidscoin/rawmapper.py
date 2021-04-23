@@ -11,9 +11,9 @@ import re
 import warnings
 from pathlib import Path
 try:
-    from bidscoin import bids
+    from bidscoin import bidscoin, bids
 except ImportError:
-    import bids         # This should work if bidscoin was not pip-installed
+    import bidscoin, bids         # This should work if bidscoin was not pip-installed
 
 
 def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: bool=False, dicomfield: tuple=('PatientComments',), wildcard: str='*', subprefix: str='sub-', sesprefix: str='ses-', dryrun: bool=False) -> None:
@@ -63,7 +63,7 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: boo
         sesid = sesid.replace('ses-', sesprefix)
 
         # Parse the new subject and session identifiers from the dicomfield
-        series = bids.lsdirs(session, wildcard)
+        series = bidscoin.lsdirs(session, wildcard)
         if not series:
             series = ''
             dcmval = ''
