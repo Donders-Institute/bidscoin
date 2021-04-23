@@ -11,9 +11,9 @@ from pathlib import Path
 import pydicom
 import uuid
 try:
-    from bidscoin import bids
+    from bidscoin import bidscoin, bids
 except ImportError:
-    import bids         # This should work if bidscoin was not pip-installed
+    import bidscoin, bids         # This should work if bidscoin was not pip-installed
 
 LOGGER = logging.getLogger(__name__)
 
@@ -134,14 +134,14 @@ def sortsessions(session: Path, subprefix: str='', sesprefix: str='', dicomfield
     session = Path(session)
 
     # Start logging
-    bids.setup_logging()
+    bidscoin.setup_logging()
 
     # Do a recursive call if subprefix is given
     if subprefix:
 
-        for subfolder in bids.lsdirs(session, subprefix + '*'):
+        for subfolder in bidscoin.lsdirs(session, subprefix + '*'):
             if sesprefix:
-                sessionfolders = bids.lsdirs(subfolder, sesprefix + '*')
+                sessionfolders = bidscoin.lsdirs(subfolder, sesprefix + '*')
             else:
                 sessionfolders = [subfolder]
 

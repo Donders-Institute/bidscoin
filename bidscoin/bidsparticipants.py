@@ -13,9 +13,9 @@ import logging
 import shutil
 from pathlib import Path
 try:
-    from bidscoin import bids
+    from bidscoin import bidscoin, bids
 except ImportError:
-    import bids         # This should work if bidscoin was not pip-installed
+    import bidscoin, bids         # This should work if bidscoin was not pip-installed
 
 
 def scanparticipant(dataformat: str, session: Path, personals: dict, subid: str, sesid: str) -> bool:
@@ -38,7 +38,7 @@ def scanparticipant(dataformat: str, session: Path, personals: dict, subid: str,
     # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
     sourcefile = Path()
     if dataformat=='DICOM':
-        sources = bids.lsdirs(session)
+        sources = bidscoin.lsdirs(session)
         for source in sources:
             sourcefile = bids.get_dicomfile(source)
             if sourcefile.name:
@@ -99,11 +99,11 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, subprefix: str=
 
     # Start logging
     if dryrun:
-        bids.setup_logging()
+        bidscoin.setup_logging()
     else:
-        bids.setup_logging(bidsfolder/'code'/'bidscoin'/'bidsparticipants.log')
+        bidscoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidsparticipants.log')
     LOGGER.info('')
-    LOGGER.info(f"-------------- START bidsparticipants {bids.version()} ------------")
+    LOGGER.info(f"-------------- START bidsparticipants {bidscoin.version()} ------------")
     LOGGER.info(f">>> bidsparticipants sourcefolder={rawfolder} bidsfolder={bidsfolder} subprefix={subprefix} sesprefix={sesprefix}")
 
     # Get the table & dictionary of the subjects that have been processed
@@ -122,7 +122,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, subprefix: str=
         participants_dict = {'participant_id': {'Description': 'Unique participant identifier'}}
 
     # Get the list of subjects
-    subjects = bids.lsdirs(bidsfolder, 'sub-*')
+    subjects = bidscoin.lsdirs(bidsfolder, 'sub-*')
     if not subjects:
         LOGGER.warning(f"No subjects found in: {bidsfolder}")
 
@@ -138,7 +138,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, subprefix: str=
         personals    = dict()
         subid, sesid = bids.get_subid_sesid(subject/'dum.my')
         subject      = rawfolder/subid.replace('sub-',subprefix)     # TODO: This assumes that the subject-ids in the rawfolder did not contain BIDS-invalid characters (such as '_')
-        sessions     = bids.lsdirs(subject, sesprefix + '*')
+        sessions     = bidscoin.lsdirs(subject, sesprefix + '*')
         if not subject.is_dir():
             LOGGER.error(f"Could not find source-folder: {subject}")
             continue
@@ -194,7 +194,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, subprefix: str=
     LOGGER.info('-------------- FINISHED! ------------')
     LOGGER.info('')
 
-    bids.reporterrors()
+    bidscoin.reporterrors()
 
 
 def main():
@@ -214,7 +214,7 @@ def main():
     parser.add_argument('-n','--subprefix', help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix', help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     parser.add_argument('-d','--dryrun',    help='Add this flag to only print the participants info on screen', action='store_true')
-    parser.add_argument('-v','--version',   help='Show the BIDS and BIDScoin version', action='version', version=f"BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{bids.version()}")
+    parser.add_argument('-v','--version',   help='Show the BIDS and BIDScoin version', action='version', version=f"BIDS-version:\t\t{bidscoin.bidsversion()}\nBIDScoin-version:\t{bidscoin.version()}")
     args = parser.parse_args()
 
     bidsparticipants(rawfolder  = args.sourcefolder,

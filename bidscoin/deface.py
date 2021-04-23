@@ -15,9 +15,9 @@ import pydeface.utils as pdu
 import drmaa
 from pathlib import Path
 try:
-    from bidscoin import bids
+    from bidscoin import bidscoin, bids
 except ImportError:
-    import bids             # This should work if bidscoin was not pip-installed
+    import bidscoin, bids             # This should work if bidscoin was not pip-installed
 
 
 def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: bool, nativespec: str, kwargs: dict):
@@ -37,7 +37,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
     bidsdir = Path(bidsdir).resolve()
 
     # Start logging
-    bids.setup_logging(bidsdir/'code'/'bidscoin'/'deface.log')
+    bidscoin.setup_logging(bidsdir/'code'/'bidscoin'/'deface.log')
     LOGGER.info('')
     LOGGER.info('------------ START deface ------------')
     LOGGER.info(f">>> deface bidsfolder={bidsdir} pattern={pattern} subjects={subjects} output={output}"
@@ -45,7 +45,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
 
     # Get the list of subjects
     if not subjects:
-        subjects = bids.lsdirs(bidsdir, 'sub-*')
+        subjects = bidscoin.lsdirs(bidsdir, 'sub-*')
         if not subjects:
             LOGGER.warning(f"No subjects found in: {bidsdir/'sub-*'}")
     else:
@@ -64,7 +64,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
         # Loop over bids subject/session-directories
         for n, subject in enumerate(subjects, 1):
 
-            sessions = bids.lsdirs(subject, 'ses-*')
+            sessions = bidscoin.lsdirs(subject, 'ses-*')
             if not sessions:
                 sessions = [subject]
             for session in sessions:
