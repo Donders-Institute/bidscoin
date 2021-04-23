@@ -18,12 +18,12 @@ from pathlib import Path
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QMessageBox
 try:
-    from bidscoin import bids, bidseditor
+    from bidscoin import bidscoin, bids, bidseditor
 except ImportError:
-    import bids, bidseditor         # This should work if bidscoin was not pip-installed
+    import bidscoin, bids, bidseditor         # This should work if bidscoin was not pip-installed
 
 
-localversion, versionmessage = bids.version(check=True)
+localversion, versionmessage = bidscoin.version(check=True)
 
 
 def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, subprefix: str='sub-', sesprefix: str='ses-', store: bool=False, noedit: bool=False, force: bool=False) -> None:
@@ -54,7 +54,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     # Start logging
     if force:
         (bidscoinfolder/'bidsmapper.log').unlink(missing_ok=True)
-    bids.setup_logging(bidscoinfolder/'bidsmapper.log')
+    bidscoin.setup_logging(bidscoinfolder/'bidsmapper.log')
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSmapper ------------')
     LOGGER.info(f">>> bidsmapper sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmapfile} "
@@ -83,7 +83,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         bidsmapfile = bidscoinfolder/'bidsmap.yaml'
 
     # Load the data scanning plugins
-    plugins = [module for module in (bids.import_plugin(plugin, ('bidsmapper_plugin',)) for plugin in bidsmap_new['PlugIns']) if module]
+    plugins = [module for module in (bidscoin.import_plugin(plugin, ('bidsmapper_plugin',)) for plugin in bidsmap_new['PlugIns']) if module]
     if not plugins:
         LOGGER.warning(f"No bidsmapper plugins found in {bidsmapfile}, nothing to do")
         LOGGER.info('-------------- FINISHED! ------------')
@@ -91,12 +91,12 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         return
 
     # Loop over all subjects and sessions and built up the bidsmap entries
-    subjects = bids.lsdirs(rawfolder, subprefix + '*')
+    subjects = bidscoin.lsdirs(rawfolder, subprefix + '*')
     if not subjects:
         LOGGER.warning(f'No subjects found in: {rawfolder/subprefix}*')
     for n, subject in enumerate(subjects,1):
 
-        sessions = bids.lsdirs(subject, sesprefix + '*')
+        sessions = bidscoin.lsdirs(subject, sesprefix + '*')
         if not sessions:
             sessions = [subject]
         for session in sessions:
@@ -150,7 +150,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     LOGGER.info('-------------- FINISHED! -------------------')
     LOGGER.info('')
 
-    bids.reporterrors()
+    bidscoin.reporterrors()
 
 
 def main():
@@ -171,7 +171,7 @@ def main():
     parser.add_argument('-s','--store',       help="Flag to store provenance data samples in the bidsfolder/'code'/'provenance' folder", action='store_true')
     parser.add_argument('-a','--automated',   help="Flag to save the automatically generated bidsmap to disk and without interactively tweaking it with the bidseditor", action='store_true')
     parser.add_argument('-f','--force',       help='Flag to discard the previous bidsmap and logfile', action='store_true')
-    parser.add_argument('-v','--version',     help='Show the installed version and check for updates', action='version', version=f'BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}')
+    parser.add_argument('-v','--version',     help='Show the installed version and check for updates', action='version', version=f'BIDS-version:\t\t{bidscoin.bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}')
     args = parser.parse_args()
 
     bidsmapper(rawfolder    = args.sourcefolder,
