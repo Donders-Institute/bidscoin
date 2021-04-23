@@ -6,9 +6,9 @@ import logging
 import shutil
 from pathlib import Path
 try:
-    from bidscoin import bids
+    from bidscoin import bidscoin, bids
 except ImportError:
-    import bids         # This should work if bidscoin was not pip-installed
+    import bidscoin, bids         # This should work if bidscoin was not pip-installed
 
 LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
         return
 
     if dataformat=='DICOM':
-        for sourcedir in bids.lsdirs(session):
+        for sourcedir in bidscoin.lsdirs(session):
             sourcefile = bids.get_dicomfile(sourcedir)
             if sourcefile.name:
                 sourcefiles.append(sourcefile)

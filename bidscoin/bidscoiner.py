@@ -24,11 +24,11 @@ import logging
 import shutil
 from pathlib import Path
 try:
-    from bidscoin import bids
+    from bidscoin import bidscoin, bids
 except ImportError:
-    import bids         # This should work if bidscoin was not pip-installed
+    import bidscoin, bids         # This should work if bidscoin was not pip-installed
 
-localversion, versionmessage = bids.version(check=True)
+localversion, versionmessage = bidscoin.version(check=True)
 
 
 def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=False, participants: bool=False, bidsmapfile: str='bidsmap.yaml', subprefix: str='sub-', sesprefix: str='ses-') -> None:
@@ -53,9 +53,9 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     bidsmapfile = Path(bidsmapfile)
 
     # Start logging
-    bids.setup_logging(bidsfolder/'code'/'bidscoin'/'bidscoiner.log')
+    bidscoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidscoiner.log')
     LOGGER.info('')
-    LOGGER.info(f"-------------- START BIDScoiner {localversion}: BIDS {bids.bidsversion()} ------------")
+    LOGGER.info(f"-------------- START BIDScoiner {localversion}: BIDS {bidscoin.bidsversion()} ------------")
     LOGGER.info(f">>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} subjects={subjects} force={force}"
                 f" participants={participants} bidsmap={bidsmapfile} subprefix={subprefix} sesprefix={sesprefix}")
 
@@ -66,7 +66,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     dataset_file = bidsfolder/'dataset_description.json'
     if not dataset_file.is_file():
         dataset_description = {"Name":                  "REQUIRED. Name of the dataset",
-                               "BIDSVersion":           str(bids.bidsversion()),
+                               "BIDSVersion":           str(bidscoin.bidsversion()),
                                "DatasetType":           "raw",
                                "License":               "RECOMMENDED. The license for the dataset. The use of license name abbreviations is RECOMMENDED for specifying a license. The corresponding full license text MAY be specified in an additional LICENSE file",
                                "Authors":               ["OPTIONAL. List of individuals who contributed to the creation/curation of the dataset"],
@@ -97,7 +97,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         return
 
     # Load the data conversion plugins
-    plugins = [module for module in (bids.import_plugin(plugin, ('bidscoiner_plugin',)) for plugin in bidsmap['PlugIns']) if module]
+    plugins = [module for module in (bidscoin.import_plugin(plugin, ('bidscoiner_plugin',)) for plugin in bidsmap['PlugIns']) if module]
     if not plugins:
         LOGGER.warning(f"No bidscoiner plugins found in {bidsmapfile}, nothing to do")
         LOGGER.info('-------------- FINISHED! ------------')
@@ -132,7 +132,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
     # Get the list of subjects
     if not subjects:
-        subjects = bids.lsdirs(rawfolder, subprefix + '*')
+        subjects = bidscoin.lsdirs(rawfolder, subprefix + '*')
         if not subjects:
             LOGGER.warning(f"No subjects found in: {rawfolder/subprefix}*")
     else:
@@ -148,7 +148,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             continue
 
         personals = dict()
-        sessions  = bids.lsdirs(subject, sesprefix + '*')
+        sessions  = bidscoin.lsdirs(subject, sesprefix + '*')
         if not sessions:
             sessions = [subject]
         for session in sessions:
@@ -164,7 +164,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                 for dataformat in dataformats:
                     if not bidsmap[dataformat]['session']:
                         bidssession = bidssession.parent
-                    for datatype in bids.lsdirs(bidssession):                               # See what datatypes we already have in the bids session-folder
+                    for datatype in bidscoin.lsdirs(bidssession):                           # See what datatypes we already have in the bids session-folder
                         if datatype.glob('*') and bidsmap[dataformat].get(datatype.name):   # See if we are going to add data for this datatype
                             datatypes.append(datatype.name)
                 if datatypes:
@@ -210,7 +210,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     LOGGER.info('-------------- FINISHED! ------------')
     LOGGER.info('')
 
-    bids.reporterrors()
+    bidscoin.reporterrors()
 
 
 def main():
@@ -230,7 +230,7 @@ def main():
     parser.add_argument('-b','--bidsmap',           help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
     parser.add_argument('-n','--subprefix',         help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',         help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
-    parser.add_argument('-v','--version',           help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bids.bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
+    parser.add_argument('-v','--version',           help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidscoin.bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
     args = parser.parse_args()
 
     bidscoiner(rawfolder    = args.sourcefolder,

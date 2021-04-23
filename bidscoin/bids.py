@@ -7,27 +7,21 @@ https://github.com/dangom/dac2bids/blob/master/dac2bids.py
 @author: Marcel Zwiers
 """
 
-import inspect
 import re
 import logging
-import coloredlogs
-import subprocess
-import urllib.request
-import json
-import nibabel
 import tempfile
 import tarfile
 import zipfile
-import pydicom
+from pydicom import dcmread
 from pydicom.fileset import FileSet
+from nibabel.parrec import parse_PAR_header
 from distutils.dir_util import copy_tree
 from typing import Union, List, Tuple
 from pathlib import Path
-from importlib import util
 try:
-    from bidscoin import dicomsort
+    from bidscoin import bidscoin, dicomsort
 except ImportError:
-    import dicomsort  # This should work if bidscoin was not pip-installed
+    import bidscoin, dicomsort  # This should work if bidscoin was not pip-installed
 from ruamel.yaml import YAML
 yaml = YAML()
 
@@ -52,234 +46,6 @@ with (schema_folder/'entities.yaml').open('r') as _stream:
     entities = yaml.load(_stream)
 
 
-def bidsversion() -> str:
-    """
-    Reads the BIDS version from the BIDSVERSION.TXT file
-
-    :return:    The BIDS version number
-    """
-
-    return (Path(__file__).parent/'bidsversion.txt').read_text().strip()
-
-
-def version(check: bool=False) -> Union[str, Tuple]:
-    """
-    Reads the BIDSCOIN version from the VERSION.TXT file and from pypi
-
-    :param check:   Check if the current version is up-to-date
-    :return:        The version number or (version number, checking message) if check=True
-    """
-
-    localversion = (Path(__file__).parent/'version.txt').read_text().strip()
-
-    # Check pypi for the latest version number
-    if check:
-        try:
-            stream      = urllib.request.urlopen('https://pypi.org/pypi/bidscoin/json').read()
-            pypiversion = json.loads(stream)['info']['version']
-        except Exception as pypierror:
-            print(f"Checking BIDScoin version on https://pypi.org/pypi/bidscoin failed:\n{pypierror}")
-            return localversion, "(Could not check for new BIDScoin versions)"
-        if localversion != pypiversion:
-            return localversion, f"NB: Your BIDScoin version is NOT up-to-date: {localversion} -> {pypiversion}"
-        else:
-            return localversion, "Your BIDScoin version is up-to-date :-)"
-
-    return localversion
-
-
-def setup_logging(log_file: Path=Path(), debug: bool=False):
-    """
-    Setup the logging
-
-    :param log_file:    Name of the logfile
-    :param debug:       Set log level to DEBUG if debug==True
-    :return:
-     """
-
-    # Get the root logger
-    logger = logging.getLogger()
-
-    # Set the format and logging level
-    if debug:
-        fmt = '%(asctime)s - %(name)s - %(levelname)s | %(message)s'
-        logger.setLevel(logging.DEBUG)
-    else:
-        fmt = '%(asctime)s - %(levelname)s | %(message)s'
-        logger.setLevel(logging.INFO)
-    datefmt   = '%Y-%m-%d %H:%M:%S'
-    formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
-
-    # Set & add the streamhandler and add some color to those boring terminal logs! :-)
-    coloredlogs.install(level=logger.level, fmt=fmt, datefmt=datefmt)
-
-    if not log_file.name:
-        return
-
-    # Set & add the log filehandler
-    log_file.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
-    loghandler = logging.FileHandler(log_file)
-    loghandler.setLevel(logging.DEBUG)
-    loghandler.setFormatter(formatter)
-    loghandler.set_name('loghandler')
-    logger.addHandler(loghandler)
-
-    # Set & add the error / warnings handler
-    error_file = log_file.with_suffix('.errors')            # Derive the name of the error logfile from the normal log_file
-    errorhandler = logging.FileHandler(error_file, mode='w')
-    errorhandler.setLevel(logging.WARNING)
-    errorhandler.setFormatter(formatter)
-    errorhandler.set_name('errorhandler')
-    logger.addHandler(errorhandler)
-
-
-def reporterrors() -> None:
-    """
-    Summarized the warning and errors from the logfile
-
-    :return:
-    """
-
-    # Find the filehandlers and report the errors and warnings
-    for filehandler in logging.getLogger().handlers:
-        if filehandler.name == 'errorhandler':
-
-            errorfile = Path(filehandler.baseFilename)
-            if errorfile.stat().st_size:
-                LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errorfile.read_text()}{40 * '<'}\n")
-
-            else:
-                LOGGER.info(f'No BIDScoin errors or warnings were reported')
-                LOGGER.info('')
-
-        elif filehandler.name == 'loghandler':
-            logfile = Path(filehandler.baseFilename)
-
-    # Final message
-    if 'logfile' in locals():
-        LOGGER.info(f"For the complete log see: {logfile}\n"
-                    f"NB: Files in {logfile.parent} may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
-
-
-def run_command(command: str) -> bool:
-    """
-    Runs a command in a shell using subprocess.run(command, ..)
-
-    :param command: The command that is executed
-    :return:        True if the were no errors, False otherwise
-    """
-
-    LOGGER.info(f"Running: {command}")
-    process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)          # TODO: investigate shell=False and capture_output=True for python 3.7
-    LOGGER.info(f"Output:\n{process.stdout.decode('utf-8')}")
-
-    if process.stderr.decode('utf-8') or process.returncode!=0:
-        LOGGER.exception(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stderr.decode('utf-8')}")
-        return False
-
-    return True
-
-
-def import_plugin(plugin: Path, functions: tuple=()) -> util.module_from_spec:
-    """
-    Imports the plugin if it contains any of the specified functions
-
-    :param plugin:      Name of the plugin in the bidscoin "plugins" folder or the fullpath name
-    :param functions:   List of functions of which at least one of them should be present in the plugin
-    :return:            The imported plugin-module
-    """
-
-    # Get the full path to the plugin-module
-    plugin = Path(plugin).with_suffix('.py')
-    if len(plugin.parents) == 1:
-        plugin = Path(__file__).parent/'plugins'/plugin
-
-    # See if we can find the plug-in
-    if not plugin.is_file():
-        LOGGER.error(f"Could not find plugin: '{plugin}'")
-        return None
-
-    # Load the plugin-module
-    LOGGER.info(f"Importing the '{plugin}' plugin")
-    try:
-        spec   = util.spec_from_file_location('bidscoin.plugin.' + plugin.stem, plugin)
-        module = util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-
-        functionsfound = []
-        for function in functions:
-            if function not in dir(module):
-                LOGGER.debug(f"Could not find '{function}' in the '{plugin}' plugin")
-            elif not callable(getattr(module, function)):
-                LOGGER.error(f"'The {function}' attribute in the '{plugin}' plugin is not callable")
-            else:
-                functionsfound.append(function)
-
-        if functions and not functionsfound:
-            LOGGER.info(f"The '{plugin}' plugin does not contain {functions} functions")
-        else:
-            return module
-
-    except Exception as pluginerror:
-        LOGGER.exception(f"Could not import {plugin}:\n{pluginerror}")
-
-
-def test_tooloptions(tool: str, opts: dict) -> Union[bool, None]:
-    """
-    Performs shell tests of the user tool parameters set in bidsmap['Options']
-
-    :param tool:    Name of the tool that is being tested in bidsmap['Options']
-    :param opts:    The editable options belonging to the tool
-    :return:        True if the tool generated the expected result, False if there was a tool error, None if not tested
-    """
-
-    if tool == 'dcm2niix':
-        command = f"{opts['path']}dcm2niix -u"
-    elif tool == 'bidsmapper':
-        command = 'bidsmapper -v'
-    elif tool in ('bidscoin', 'bidscoiner'):
-        command = 'bidscoiner -v'
-    else:
-        LOGGER.warning(f"Testing of '{tool}' not supported")
-        return None
-
-    LOGGER.info(f"Testing: '{tool}'")
-
-    return run_command(command)
-
-
-def test_plugins(plugin: Path) -> bool:
-    """
-    Performs import tests of the plug-ins in bidsmap['PlugIns']
-
-    :param plugin:  The name of the plugin that is being tested (-> bidsmap['Plugins'])
-    :return:        True if the plugin generated the expected result, False if there
-                    was a plug-in error, None if this function has an implementation error
-    """
-
-    LOGGER.info(f"Testing: '{plugin}' plugin")
-
-    module = import_plugin(plugin, ('bidsmapper_plugin','bidscoiner_plugin'))
-    if inspect.ismodule(module):
-        methods = [method for method in dir(module) if not method.startswith('_')]
-        LOGGER.info(f"\n{plugin} docstring:\n{module.__doc__}\n{plugin} attributes and methods:\n{methods}")
-        return True
-    else:
-        return False
-
-
-def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
-    """
-    Gets all directories in a folder, ignores files
-
-    :param folder:      The full pathname of the folder
-    :param wildcard:    Simple (glob.glob) shell-style wildcards. Foldernames starting with a dot are considered hidden and will be skipped"
-    :return:            A list with all directories in the folder
-    """
-
-    return [fname for fname in sorted(folder.glob(wildcard)) if fname.is_dir() and not fname.name.startswith('.')]
-
-
 def is_dicomfile(file: Path) -> bool:
     """
     Checks whether a file is a DICOM-file. It uses the feature that Dicoms have the string DICM hardcoded at offset 0x80.
@@ -297,10 +63,10 @@ def is_dicomfile(file: Path) -> bool:
                 return True
         LOGGER.debug(f"Reading non-standard DICOM file: {file}")
         if file.suffix.lower() in ('.ima','.dcm','.dicm','.dicom',''):           # Avoid memory problems when reading a very large (e.g. EEG) source file
-            dicomdata = pydicom.dcmread(file, force=True)       # The DICM tag may be missing for anonymized DICOM files
+            dicomdata = dcmread(file, force=True)               # The DICM tag may be missing for anonymized DICOM files
             return 'Modality' in dicomdata
         # else:
-        #     dicomdata = pydicom.dcmread(file)                 # NB: Raises an error for non-DICOM files
+        #     dicomdata = dcmread(file)                         # NB: Raises an error for non-DICOM files
         #     return 'Modality' in dicomdata
 
     return False
@@ -487,8 +253,8 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
         bidsmapversion = bidsmap['Options']['version']
     else:
         bidsmapversion = 'Unknown'
-    if bidsmapversion != version() and report:
-        LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created using version {bidsmapversion}, but this is version {version()}')
+    if bidsmapversion != bidscoin.version() and report:
+        LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created using version {bidsmapversion}, but this is version {bidscoin.version()}')
 
     # Add missing provenance info, run dictionaries and bids entities
     run_ = get_run_()
@@ -637,7 +403,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
     else:
         try:
             if dicomfile != _DICOMFILE_CACHE:
-                dicomdata = pydicom.dcmread(dicomfile, force=True)      # The DICM tag may be missing for anonymized DICOM files
+                dicomdata = dcmread(dicomfile, force=True)          # The DICM tag may be missing for anonymized DICOM files
                 if 'Modality' not in dicomdata:
                     raise ValueError(f'Cannot read {dicomfile}')
                 _DICOMDICT_CACHE = dicomdata
@@ -703,7 +469,7 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
     else:
         try:
             if parfile != _PARFILE_CACHE:
-                pardict = nibabel.parrec.parse_PAR_header(parfile.open('r'))
+                pardict = parse_PAR_header(parfile.open('r'))
                 if 'series_type' not in pardict[0]:
                     raise ValueError(f'Cannot read {parfile}')
                 _PARDICT_CACHE = pardict
@@ -744,7 +510,7 @@ def get_dataformat(source: Path) -> str:
         if source.is_dir():
 
             # Try to see if we can find DICOM files
-            sourcedirs = lsdirs(source)
+            sourcedirs = bidscoin.lsdirs(source)
             for sourcedir in sourcedirs:
                 sourcefile = get_dicomfile(sourcedir)
                 if sourcefile.name:

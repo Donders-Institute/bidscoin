@@ -9,10 +9,9 @@ import pandas as pd
 import json
 from pathlib import Path
 try:
-    from bidscoin import bids, physio
+    from bidscoin import bidscoin, bids, physio
 except ImportError:
-    import bids         # This should work if bidscoin was not pip-installed
-    import physio
+    import bidscoin, bids, physio     # This should work if bidscoin was not pip-installed
 
 LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +37,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
     sourcefile   = Path()
     manufacturer = 'UNKNOWN'
     if dataformat=='DICOM':
-        sources = bids.lsdirs(session)
+        sources = bidscoin.lsdirs(session)
         for source in sources:
             sourcefile = bids.get_dicomfile(source)
             if sourcefile.name:
@@ -143,7 +142,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                 filename  = bidsname,
                 outfolder = outfolder,
                 source    = source)
-            if not bids.run_command(command):
+            if not bidscoin.run_command(command):
                 continue
 
             # Replace uncropped output image with the cropped one
@@ -333,7 +332,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
             # Extract the echo times from magnitude1 and magnitude2 and add them to the phasediff json-file
             if jsonfile.name.endswith('phasediff.json'):
                 json_magnitude = [None, None]
-                TE             = [None, None]
+                echotime       = [None, None]
                 for n in (0,1):
                     json_magnitude[n] = jsonfile.parent/jsonfile.name.replace('_phasediff', f"_magnitude{n+1}")
                     if not json_magnitude[n].is_file():
@@ -341,15 +340,15 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                     else:
                         with json_magnitude[n].open('r') as json_fid:
                             data = json.load(json_fid)
-                        TE[n] = data['EchoTime']
-                if None in TE:
-                    LOGGER.error(f"Cannot find and add valid EchoTime1={TE[0]} and EchoTime2={TE[1]} data to: {jsonfile}")
-                elif TE[0] > TE[1]:
-                    LOGGER.error(f"Found invalid EchoTime1={TE[0]} > EchoTime2={TE[1]} for: {jsonfile}")
+                        echotime[n] = data['EchoTime']
+                if None in echotime:
+                    LOGGER.error(f"Cannot find and add valid EchoTime1={echotime[0]} and EchoTime2={echotime[1]} data to: {jsonfile}")
+                elif echotime[0] > echotime[1]:
+                    LOGGER.error(f"Found invalid EchoTime1={echotime[0]} > EchoTime2={echotime[1]} for: {jsonfile}")
                 else:
-                    jsondata['EchoTime1'] = TE[0]
-                    jsondata['EchoTime2'] = TE[1]
-                    LOGGER.info(f"Adding EchoTime1: {TE[0]} and EchoTime2: {TE[1]} to {jsonfile}")
+                    jsondata['EchoTime1'] = echotime[0]
+                    jsondata['EchoTime2'] = echotime[1]
+                    LOGGER.info(f"Adding EchoTime1: {echotime[0]} and EchoTime2: {echotime[1]} to {jsonfile}")
 
             # Save the collected meta-data to disk
             with jsonfile.open('w') as json_fid:
