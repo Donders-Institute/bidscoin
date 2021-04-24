@@ -310,11 +310,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
             # Search for the imaging files that match the IntendedFor search criteria
             niifiles    = []
             intendedfor = jsondata.get('IntendedFor')
-            jsondata.pop('IntendedFor', None)
             if intendedfor:
                 # Search with multiple patterns in all runs and store the relative path to the subject folder
-                if intendedfor.startswith('<<') and intendedfor.endswith('>>'):
-                    intendedfor = intendedfor[2:-2].split('><')
+                if intendedfor.startswith('<') and intendedfor.endswith('>'):
+                    intendedfor = intendedfor[1:-1].split('><')                 # NB: The outer <> brackets have been stripped of by get_dynamicvalue(runtime=True) above
                 elif not isinstance(intendedfor, list):
                     intendedfor = [intendedfor]
                 for selector in intendedfor:
