@@ -964,8 +964,8 @@ class EditWindow(QDialog):
                     iseditable = False
                 else:
                     iseditable = True
-                data_bids.append([{'value': key,   'iseditable': False},            # NB: This can be a (menu) list
-                                  {'value': value, 'iseditable': iseditable}])
+                data_bids.append([{'value': key,   'iseditable': False},
+                                  {'value': value, 'iseditable': iseditable}])          # NB: This can be a (menu) list
 
         data_meta = []
         for key, value in self.target_run['meta'].items():

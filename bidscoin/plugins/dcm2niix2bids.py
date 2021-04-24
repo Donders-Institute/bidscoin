@@ -278,9 +278,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                 json.dump(jsondata, json_fid, indent=4)
 
             # Parse the acquisition time from the json file or else from the source header (NB: assuming the source file represents the first acquisition)
-            niifile = list(jsonfile.parent.glob(jsonfile.stem + '.nii*'))       # Find the corresponding nifti file (there should be only one, let's not make assumptions about the .gz extension)
-            if not niifile:
-                LOGGER.exception(f"No nifti-file found with {jsonfile} when updating {scans_tsv}")
+            outputfile = [file for file in jsonfile.parent.glob(jsonfile.stem + '.*') if file.suffix in ('.nii','.gz')]     # Find the corresponding nifti/tsv.gz file (there should be only one, let's not make assumptions about the .gz extension)
+            if not outputfile:
+                LOGGER.exception(f"No data-file found with {jsonfile} when updating {scans_tsv}")
             elif datatype not in bidsmap['Options']['bidscoin']['bidsignore'] and not run['bids']['suffix'] in bids.get_derivatives(datatype):
                 if 'AcquisitionTime' not in jsondata or not jsondata['AcquisitionTime']:
                     jsondata['AcquisitionTime'] = bids.get_sourcefield('AcquisitionTime', sourcefile)       # DICOM
@@ -291,7 +291,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                 except Exception as jsonerror:
                     LOGGER.warning(f"Could not parse the acquisition time from: '{jsondata['AcquisitionTime']}' in {sourcefile}\n{jsonerror}")
                     acq_time = dateutil.parser.parse('00:00:00')
-                scanpath = niifile[0].relative_to(bidsses)
+                scanpath = outputfile[0].relative_to(bidsses)
                 scans_table.loc[scanpath.as_posix(), 'acq_time'] = '1925-01-01T' + acq_time.strftime('%H:%M:%S')
 
     # Write the scans_table to disk

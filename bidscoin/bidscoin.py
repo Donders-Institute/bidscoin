@@ -270,7 +270,7 @@ def import_plugin(plugin: Path, functions: tuple=()) -> module_from_spec:
         return None
 
     # Load the plugin-module
-    LOGGER.info(f"Importing the '{plugin}' plugin")
+    LOGGER.info(f"Importing plugin: '{plugin}'")
     try:
         spec   = spec_from_file_location('bidscoin.plugin.' + plugin.stem, plugin)
         module = module_from_spec(spec)
@@ -286,7 +286,7 @@ def import_plugin(plugin: Path, functions: tuple=()) -> module_from_spec:
                 functionsfound.append(function)
 
         if functions and not functionsfound:
-            LOGGER.info(f"The '{plugin}' plugin does not contain {functions} functions")
+            LOGGER.info(f"Plugin '{plugin}' does not contain {functions} functions")
         else:
             return module
 
