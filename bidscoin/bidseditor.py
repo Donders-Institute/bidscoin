@@ -1027,7 +1027,7 @@ class EditWindow(QDialog):
         return data_provenance, data_attributes, data_bids, data_meta
 
     def set_table(self, data, name, minimum: bool=True) -> QTableWidget:
-        """Return a table widget from the data. """
+        """Return a table widget filled with the data. """
         table = MyQTableWidget(minimum=minimum)
         table.setColumnCount(2)                         # Always two columns (i.e. key, value)
         table.setObjectName(name)                       # NB: Serves to identify the tables in fill_table()
@@ -1150,7 +1150,6 @@ class EditWindow(QDialog):
         Resets the edit dialog window with a new target_run from the template bidsmap after a datatype_dropdown_change.
 
         :param suffix_idx: The suffix or index number that will used to extract the run from the template bidsmap
-        :return:
         """
 
         # Get the new target_run
@@ -1256,7 +1255,7 @@ class EditWindow(QDialog):
         self.done(1)
 
     def export_run(self):
-
+        """Export the editted run to a (e.g. template) bidsmap on disk"""
         yamlfile, _ = QFileDialog.getOpenFileName(self, 'Export run item to (template) bidsmap',
                         str(bids.bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if yamlfile:
@@ -1296,6 +1295,7 @@ class EditWindow(QDialog):
 
     @staticmethod
     def spacedwidget(leftwidget):
+        """Place the widget in a QHBoxLayout and add a stretcher next to it. Return the widget as inputwidget.spacedwidget"""
         widget = QtWidgets.QWidget()
         layout = QHBoxLayout()
         layout.addWidget(leftwidget)
@@ -1423,16 +1423,15 @@ class MyWidgetItem(QTableWidgetItem):
             self.setForeground(QtGui.QColor('gray'))
 
 
-def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', subprefix='sub-', sesprefix='ses-'):
+def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', subprefix='sub-', sesprefix='ses-') -> None:
     """
     Collects input and launches the bidseditor GUI
 
-    :param bidsfolder:
-    :param bidsmapfile:
-    :param templatefile:
-    :param subprefix:
-    :param sesprefix:
-    :return:
+    :param bidsfolder:      The name of the BIDS root folder
+    :param bidsmapfile:     The name of the bidsmap YAML-file
+    :param templatefile:    The name of the bidsmap template YAML-file
+    :param subprefix:       The prefix common for all source subject-folders
+    :param sesprefix:       The prefix common for all source session-folders
     """
 
     bidsfolder   = Path(bidsfolder).resolve()
