@@ -940,52 +940,19 @@ class EditWindow(QDialog):
         """
 
         data_provenance = [
-            [
-                {
-                    'value': 'path',
-                    'iseditable': False
-                },
-                {
-                    'value': str(Path(self.target_run['provenance']).parent),
-                    'iseditable': False
-                },
-            ],
-            [
-                {
-                    'value': 'filename',
-                    'iseditable': False
-                },
-                {
-                    'value': Path(self.target_run['provenance']).name,
-                    'iseditable': True
-                },
-            ],
-            [
-                {
-                    'value': 'size',
-                    'iseditable': False
-                },
-                {
-                    'value': self.format_bytes(Path(self.target_run['provenance']).stat().st_size),
-                    'iseditable': False
-                },
-            ]
-        ]
+            [{'value': 'path',                                                                'iseditable': False},
+             {'value': str(Path(self.target_run['provenance']).parent),                       'iseditable': False}],
+            [{'value': 'filename',                                                            'iseditable': False},
+             {'value': Path(self.target_run['provenance']).name,                              'iseditable': True}],  # Make the font black to indicate users can click here
+            [{'value': 'size',                                                                'iseditable': False},
+             {'value': self.format_bytes(Path(self.target_run['provenance']).stat().st_size), 'iseditable': False}]]
 
         data_attributes = []
         for key, value in self.target_run['attributes'].items():
             if value is None:
                 value = ''
-            data_attributes.append([
-                {
-                    'value': key,
-                    'iseditable': False
-                },
-                {
-                    'value': str(value),
-                    'iseditable': True
-                }
-            ])
+            data_attributes.append([{'value': key,        'iseditable': False},
+                                    {'value': str(value), 'iseditable': True}])
 
         data_bids = []
         for key in [bids.entities[entity]['entity'] for entity in bids.entities if entity not in ('subject','session')] + ['suffix']:   # Impose the BIDS-specified order + suffix
@@ -997,32 +964,15 @@ class EditWindow(QDialog):
                     iseditable = False
                 else:
                     iseditable = True
-
-                data_bids.append([
-                    {
-                        'value': key,
-                        'iseditable': False
-                    },
-                    {
-                        'value': value,                     # NB: This can be a (menu) list
-                        'iseditable': iseditable
-                    }
-                ])
+                data_bids.append([{'value': key,   'iseditable': False},            # NB: This can be a (menu) list
+                                  {'value': value, 'iseditable': iseditable}])
 
         data_meta = []
         for key, value in self.target_run['meta'].items():
             if value is None:
                 value = ''
-            data_meta.append([
-                {
-                    'value': key,
-                    'iseditable': True
-                },
-                {
-                    'value': str(value),
-                    'iseditable': True
-                }
-            ])
+            data_meta.append([{'value': key,        'iseditable': True},
+                              {'value': str(value), 'iseditable': True}])
 
         return data_provenance, data_attributes, data_bids, data_meta
 
