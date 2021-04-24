@@ -183,7 +183,7 @@ class UiMainWindow(MainWindow):
         self.sesprefix        = sesprefix
         self.dataformats      = [dataformat for dataformat in input_bidsmap if dataformat not in ('Options', 'PlugIns') and bids.dir_bidsmap(input_bidsmap, dataformat)]
 
-        self.has_edit_dialog_open = None
+        self.has_editwindow_open = None
 
         # Set-up the tabs
         tabwidget = self.tabwidget = QtWidgets.QTabWidget()
@@ -206,7 +206,7 @@ class UiMainWindow(MainWindow):
         buttonbox.button(QDialogButtonBox.Reset).setToolTip('Reload the Options and BIDSmap from disk')
         buttonbox.helpRequested.connect(self.get_help)
         buttonbox.button(QDialogButtonBox.Reset).clicked.connect(self.reload)
-        buttonbox.button(QDialogButtonBox.Save).clicked.connect(self.save_bidsmap_to_file)
+        buttonbox.button(QDialogButtonBox.Save).clicked.connect(self.save_bidsmap)
 
         # Set-up the main layout
         centralwidget = QtWidgets.QWidget()
@@ -256,7 +256,7 @@ class UiMainWindow(MainWindow):
         actionsave.setText('Save')
         actionsave.setStatusTip('Save the BIDSmap to disk')
         actionsave.setShortcut('Ctrl+S')
-        actionsave.triggered.connect(self.save_bidsmap_to_file)
+        actionsave.triggered.connect(self.save_bidsmap)
         menufile.addAction(actionsave)
 
         actionexit = QAction(self.MainWindow)
@@ -322,7 +322,7 @@ class UiMainWindow(MainWindow):
         tree.header().setSectionResizeMode(QHeaderView.ResizeToContents)
         tree.header().setSectionResizeMode(0, QHeaderView.Stretch)
         tree.header().setStretchLastSection(False)
-        tree.doubleClicked.connect(self.on_double_clicked)
+        tree.doubleClicked.connect(self.open_inspectwindow)
 
         layout = QVBoxLayout()
         layout.addWidget(label)
@@ -332,21 +332,21 @@ class UiMainWindow(MainWindow):
 
         self.tabwidget.addTab(tab, 'Data browser')
 
-    def subses_cell_was_changed(self, row: int, column:int):
+    def subsescell2bidsmap(self, row: int, column:int):
         """Subject or session value has been changed in subject-session table. """
         dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
         if column == 1:
-            key = self.subses_table[dataformat].item(row, 0).text()
-            value = self.subses_table[dataformat].item(row, 1).text()
+            key      = self.subses_table[dataformat].item(row, 0).text()
+            value    = self.subses_table[dataformat].item(row, 1).text()
             oldvalue = self.output_bidsmap[dataformat][key]
 
             # Only if cell was actually clicked, update
-            if key and value!=oldvalue:
+            if key and value != oldvalue:
                 LOGGER.warning(f"Expert usage: User has set {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
                 self.output_bidsmap[dataformat][key] = value
                 self.update_subses_and_samples(self.output_bidsmap)
 
-    def tool_cell_was_changed(self, tool: str, idx: int, row: int, column: int):
+    def toolcell2bidsmap(self, tool: str, idx: int, row: int, column: int):
         """Option value has been changed tool options table. """
         if column == 2:
             table = self.tables_options[idx]  # Select the selected table
@@ -359,7 +359,7 @@ class UiMainWindow(MainWindow):
                 LOGGER.info(f"User has set ['Options']['{tool}']['{key}'] from '{oldvalue}' to '{value}'")
                 self.output_bidsmap['Options'][tool][key] = value
 
-    def handle_click_test_plugin(self, plugin: str):
+    def test_plugin(self, plugin: str):
         """Test the bidsmap plugin and show the result in a pop-up window
 
         :param plugin:    Name of the plugin that is being tested in bidsmap['PlugIns']
@@ -371,7 +371,7 @@ class UiMainWindow(MainWindow):
             QMessageBox.warning(self.MainWindow, 'Plugin test', f"Import of {plugin}: Failed\n"
                                                                  'See terminal output for more info')
 
-    def handle_click_test_tool(self, tool: str):
+    def test_tool(self, tool: str):
         """Test the bidsmap tool and show the result in a pop-up window
 
         :param tool:    Name of the tool that is being tested in bidsmap['Options']
@@ -383,14 +383,14 @@ class UiMainWindow(MainWindow):
             QMessageBox.warning(self.MainWindow, 'Tool test', f"Execution of {tool}: Failed\n"
                                                                'See terminal output for more info')
 
-    def handle_click_plugin_add(self):
+    def addedplugin2bidsmap(self):
         """Add a plugin by letting the user select a plugin-file"""
         plugin = QFileDialog.getOpenFileNames(self.MainWindow, 'Select the plugin-file(s)', directory=str(self.bidsfolder/'code'/'bidscoin'), filter='Python files (*.py *.pyc *.pyo);; All files (*)')
         LOGGER.info(f'Added plugins: {plugin[0]}')
         self.output_bidsmap['PlugIns'] += plugin[0]
         self.update_plugintable()
 
-    def plugin_cell_was_changed(self, row: int, column: int):
+    def changedplugin2bidsmap(self, row: int, column: int):
         """Add / edit a plugin or delete if cell is empty"""
         if column==1:
             plugin = self.plugin_table.item(row, column).text()
@@ -428,7 +428,7 @@ class UiMainWindow(MainWindow):
                     plugintable.setItem(i, j, item)
                 elif j==2:                  # Add the test-button cell
                     test_button = QPushButton('Test')
-                    test_button.clicked.connect(partial(self.handle_click_test_plugin, plugin))
+                    test_button.clicked.connect(partial(self.test_plugin, plugin))
                     test_button.setToolTip(f"Click to test the {plugin} plugin")
                     plugintable.setCellWidget(i, j, test_button)
 
@@ -436,9 +436,9 @@ class UiMainWindow(MainWindow):
         add_button = QPushButton('Select')
         add_button.setToolTip('Click to interactively add a plugin')
         plugintable.setCellWidget(num_rows - 1, 2, add_button)
-        add_button.clicked.connect(self.handle_click_plugin_add)
+        add_button.clicked.connect(self.addedplugin2bidsmap)
 
-        plugintable.cellChanged.connect(self.plugin_cell_was_changed)
+        plugintable.cellChanged.connect(self.changedplugin2bidsmap)
 
     def set_tab_options(self):
         """Set the options tab.  """
@@ -519,11 +519,11 @@ class UiMainWindow(MainWindow):
 
             # Add the test-button cell
             test_button = QPushButton('Test')
-            test_button.clicked.connect(partial(self.handle_click_test_tool, tool))
+            test_button.clicked.connect(partial(self.test_tool, tool))
             test_button.setToolTip(f'Click to test the {tool} installation')
             tool_table.setCellWidget(0, num_cols-1, test_button)
 
-            tool_table.cellChanged.connect(partial(self.tool_cell_was_changed, tool, n))
+            tool_table.cellChanged.connect(partial(self.toolcell2bidsmap, tool, n))
 
             labels.append(label)
             self.tables_options.append(tool_table)
@@ -664,10 +664,10 @@ class UiMainWindow(MainWindow):
                 else:
                     edit_button = QPushButton('Edit*')
                     edit_button.setToolTip('*: Contains invalid / missing values! Click to see more details and edit the BIDS output name')
-                edit_button.clicked.connect(self.handle_edit_button_clicked)
+                edit_button.clicked.connect(self.open_editwindow)
                 edit_button.setCheckable(not sys.platform.startswith('darwin'))
                 edit_button.setAutoExclusive(True)
-                if provenance.name and str(provenance)==self.has_edit_dialog_open:    # Highlight the previously opened item
+                if provenance.name and str(provenance)==self.has_editwindow_open:    # Highlight the previously opened item
                     edit_button.setChecked(True)
                 else:
                     edit_button.setChecked(False)
@@ -695,7 +695,7 @@ class UiMainWindow(MainWindow):
         horizontal_header.setVisible(False)
         horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
-        subses_table.cellChanged.connect(self.subses_cell_was_changed)
+        subses_table.cellChanged.connect(self.subsescell2bidsmap)
         self.subses_table[dataformat] = subses_table
 
         # Set the BIDSmap table
@@ -753,8 +753,8 @@ class UiMainWindow(MainWindow):
 
     def reload(self):
         """Reset button: reload the original input BIDS map. """
-        if self.has_edit_dialog_open:
-            self.dialog_edit.reject(confirm=False)
+        if self.has_editwindow_open:
+            self.editwindow.reject(confirm=False)
 
         if not self.bidsmap_filename.is_file():
             LOGGER.info('Could not reload the bidsmap')
@@ -778,7 +778,7 @@ class UiMainWindow(MainWindow):
                 with open(errorfile, 'w'):          # TODO: This works but it is a hack that somehow prefixes a lot of whitespace to the first LOGGER call
                     pass
 
-    def save_bidsmap_to_file(self):
+    def save_bidsmap(self):
         """Check and save the BIDSmap to file. """
         for dataformat in self.dataformats:
             if self.output_bidsmap[dataformat].get('fmap'):
@@ -793,18 +793,42 @@ class UiMainWindow(MainWindow):
             bids.save_bidsmap(Path(filename), self.output_bidsmap)
             QtCore.QCoreApplication.setApplicationName(f"{filename} - BIDS editor")
 
-    def handle_edit_button_clicked(self):
+    def open_editwindow(self, provenance: Path=Path(), datatype: str= ''):
         """Make sure that index map has been updated. """
-        dataformat    = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
-        samples_table = self.samples_table[dataformat]
-        button        = self.MainWindow.focusWidget()
-        rowindex      = samples_table.indexAt(button.pos()).row()
-        datatype      = samples_table.item(rowindex, 2).text()
-        provenance    = Path(samples_table.item(rowindex, 5).text())
+        if not datatype:
+            dataformat    = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
+            samples_table = self.samples_table[dataformat]
+            button        = self.MainWindow.focusWidget()
+            rowindex      = samples_table.indexAt(button.pos()).row()
+            datatype      = samples_table.item(rowindex, 2).text()
+            provenance    = Path(samples_table.item(rowindex, 5).text())
 
-        self.open_edit_dialog(provenance, datatype)
+        # Check for open edit window, find the right datatype index and open the edit window
+        if not self.has_editwindow_open:
+            # Find the source index of the run in the list of runs (using the provenance) and open the edit window
+            dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
+            for run in self.output_bidsmap[dataformat][datatype]:
+                if run['provenance']==str(provenance):
+                    LOGGER.info(f'User is editing {provenance}')
+                    self.editwindow = EditWindow(dataformat, provenance, datatype, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
+                    if provenance.name:
+                        self.has_editwindow_open = str(provenance)
+                    else:
+                        self.has_editwindow_open = True
+                    self.editwindow.done_edit.connect(self.update_subses_and_samples)
+                    self.editwindow.finished.connect(self.release_editwindow)
+                    self.editwindow.show()
+                    return
+            LOGGER.exception(f"Could not find {provenance} run-item")
 
-    def on_double_clicked(self, index: int):
+        else:
+            # Ask the user if he wants to save his results first before opening a new edit window
+            self.editwindow.reject()
+            if self.has_editwindow_open:
+                return
+            self.open_editwindow(provenance, datatype)
+
+    def open_inspectwindow(self, index: int):
         """Opens the inspect window when a data file in the file-tree tab is double-clicked"""
         datafile = Path(self.model.fileInfo(index).absoluteFilePath())
         if bids.is_dicomfile(datafile) or bids.is_parfile(datafile):
@@ -824,50 +848,19 @@ class UiMainWindow(MainWindow):
         messagebox.setIconPixmap(QtGui.QPixmap(str(BIDSCOIN_LOGO)).scaled(150, 150, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
         messagebox.show()
 
-    def open_edit_dialog(self, provenance: Path, datatype: str, modal=False):
-        """Check for open edit window, find the right datatype index and open the edit window"""
-
-        if not self.has_edit_dialog_open:
-            # Find the source index of the run in the list of runs (using the provenance) and open the edit window
-            dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
-            for run in self.output_bidsmap[dataformat][datatype]:
-                if run['provenance']==str(provenance):
-                    LOGGER.info(f'User is editing {provenance}')
-                    self.dialog_edit = EditDialog(dataformat, provenance, datatype, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
-                    if provenance.name:
-                        self.has_edit_dialog_open = str(provenance)
-                    else:
-                        self.has_edit_dialog_open = True
-                    self.dialog_edit.done_edit.connect(self.update_subses_and_samples)
-                    self.dialog_edit.finished.connect(self.release_edit_dialog)
-                    if modal:
-                        self.dialog_edit.exec()
-                    else:
-                        self.dialog_edit.show()
-                    return
-            LOGGER.exception(f"Could not find {provenance} run-item")
-
-        else:
-            # Ask the user if he wants to save his results first before opening a new edit window
-            self.dialog_edit.reject()
-            if self.has_edit_dialog_open:
-                return
-
-            self.open_edit_dialog(provenance, datatype, modal)
-
-    def release_edit_dialog(self):
+    def release_editwindow(self):
         """Allow a new edit window to be opened"""
-        self.has_edit_dialog_open = None
+        self.has_editwindow_open = None
 
     def exit_application(self):
         """Handle exit. """
         self.MainWindow.close()
 
 
-class EditDialog(QDialog):
+class EditWindow(QDialog):
     """
-    EditDialog().result() == 1: done with result, i.e. done_edit -> new bidsmap
-    EditDialog().result() == 2: done without result
+    EditWindow().result() == 1: done with result, i.e. done_edit -> new bidsmap
+    EditWindow().result() == 2: done without result
     """
 
     # Emit the new bidsmap when done (see docstring)
@@ -1012,24 +1005,6 @@ class EditDialog(QDialog):
         finish = QAction(self)
         finish.triggered.connect(self.closeEvent)
 
-    @staticmethod
-    def spacedwidget(leftwidget):
-        widget = QtWidgets.QWidget()
-        layout = QHBoxLayout()
-        layout.addWidget(leftwidget)
-        layout.addStretch()
-        layout.setContentsMargins(0, 0, 0, 0)
-        widget.setLayout(layout)
-        widget.spacedwidget = leftwidget
-        return widget
-
-    def center(self):
-        """Center the edit window. """
-        cp = QDesktopWidget().availableGeometry().center()  # Center point of screen
-        qr = self.frameGeometry()                           # Get the rectangular geometry
-        qr.moveCenter(cp)                                   # Move rectangle's center point to screen's center point
-        self.move(qr.topLeft())                             # Top left of rectangle becomes top left of window centering it
-
     def get_allowed_suffixes(self):
         """Derive the possible suffixes for each datatype from the template. """
         allowed_suffixes = {}
@@ -1138,12 +1113,60 @@ class EditDialog(QDialog):
 
         return data_provenance, data_attributes, data_bids, data_meta
 
-    def inspect_sourcefile(self, row: int=None, column: int=None):
-        """When double clicked, show popup window. """
-        if row == 1 and column == 1:
-            self.popup = InspectWindow(Path(self.target_run['provenance']))
-            self.popup.show()
-            self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
+    def set_table(self, data, name, minimum: bool=True) -> QTableWidget:
+        """Return a table widget from the data. """
+        table = MyQTableWidget(minimum=minimum)
+        table.setColumnCount(2)                         # Always two columns (i.e. key, value)
+        table.setObjectName(name)                       # NB: Serves to identify the tables in fill_table()
+        table.setHorizontalHeaderLabels(('key', 'value'))
+        horizontal_header = table.horizontalHeader()
+        horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
+        horizontal_header.setVisible(False)
+
+        self.fill_table(table, data)
+
+        return table
+
+    def fill_table(self, table, data):
+        """Fill the table with data"""
+
+        table.blockSignals(True)
+        table.clearContents()
+        addrow = []
+        if table.objectName() == 'meta':
+            addrow = [[{'value':'', 'iseditable': True}, {'value':'', 'iseditable': True}]]
+        table.setRowCount(len(data + addrow))
+
+        for i, row in enumerate(data + addrow):
+            key = row[0]['value']
+            if table.objectName()=='bids' and key=='suffix' and self.target_datatype in bids.bidscoindatatypes:
+                table.setItem(i, 0, MyWidgetItem('suffix', iseditable=False))
+                suffixes = self.allowed_suffixes.get(self.target_datatype, [''])
+                suffix_dropdown = self.suffix_dropdown = QComboBox()
+                suffix_dropdown.addItems(suffixes)
+                suffix_dropdown.setCurrentIndex(suffix_dropdown.findText(self.target_run['bids']['suffix']))
+                suffix_dropdown.currentIndexChanged.connect(self.suffix_dropdown_change)
+                suffix_dropdown.setToolTip('The suffix that sets the different run types apart. First make sure the "Data type" dropdown-menu is set correctly before chosing the right suffix here')
+                table.setCellWidget(i, 1, self.spacedwidget(suffix_dropdown))
+                continue
+            for j, item in enumerate(row):
+                value = item.get('value', '')
+                if table.objectName()=='bids' and isinstance(value, list):
+                    value_dropdown = QComboBox()
+                    value_dropdown.addItems(value[0:-1])
+                    value_dropdown.setCurrentIndex(value[-1])
+                    value_dropdown.currentIndexChanged.connect(partial(self.bidscell2run, i, j))
+                    if j == 0:
+                        value_dropdown.setToolTip(bids.get_bidshelp(key))
+                    table.setCellWidget(i, j, self.spacedwidget(value_dropdown))
+                else:
+                    value_item = MyWidgetItem(value, iseditable=item['iseditable'])
+                    if table.objectName()=='bids' and j==0:
+                        value_item.setToolTip(bids.get_bidshelp(key))
+                    table.setItem(i, j, value_item)
+
+        table.blockSignals(False)
 
     def attributescell2run(self, row: int, column: int):
         """Source attribute value has been changed. """
@@ -1209,60 +1232,41 @@ class EditDialog(QDialog):
             _, _, _, data_meta = self.run2data()
             self.fill_table(self.meta_table, data_meta)
 
-    def fill_table(self, table, data):
-        """Fill the table with data"""
+    def change_run(self, suffix_idx):
+        """
+        Resets the edit dialog window with a new target_run from the template bidsmap after a datatype_dropdown_change.
 
-        table.blockSignals(True)
-        table.clearContents()
-        addrow = []
-        if table.objectName() == 'meta':
-            addrow = [[{'value':'', 'iseditable': True}, {'value':'', 'iseditable': True}]]
-        table.setRowCount(len(data + addrow))
+        :param suffix_idx: The suffix or index number that will used to extract the run from the template bidsmap
+        :return:
+        """
 
-        for i, row in enumerate(data + addrow):
-            key = row[0]['value']
-            if table.objectName()=='bids' and key=='suffix' and self.target_datatype in bids.bidscoindatatypes:
-                table.setItem(i, 0, MyWidgetItem('suffix', iseditable=False))
-                suffixes = self.allowed_suffixes.get(self.target_datatype, [''])
-                suffix_dropdown = self.suffix_dropdown = QComboBox()
-                suffix_dropdown.addItems(suffixes)
-                suffix_dropdown.setCurrentIndex(suffix_dropdown.findText(self.target_run['bids']['suffix']))
-                suffix_dropdown.currentIndexChanged.connect(self.suffix_dropdown_change)
-                suffix_dropdown.setToolTip('The suffix that sets the different run types apart. First make sure the "Data type" dropdown-menu is set correctly before chosing the right suffix here')
-                table.setCellWidget(i, 1, self.spacedwidget(suffix_dropdown))
-                continue
-            for j, item in enumerate(row):
-                value = item.get('value', '')
-                if table.objectName()=='bids' and isinstance(value, list):
-                    value_dropdown = QComboBox()
-                    value_dropdown.addItems(value[0:-1])
-                    value_dropdown.setCurrentIndex(value[-1])
-                    value_dropdown.currentIndexChanged.connect(partial(self.bidscell2run, i, j))
-                    if j == 0:
-                        value_dropdown.setToolTip(bids.get_bidshelp(key))
-                    table.setCellWidget(i, j, self.spacedwidget(value_dropdown))
-                else:
-                    value_item = MyWidgetItem(value, iseditable=item['iseditable'])
-                    if table.objectName()=='bids' and j==0:
-                        value_item.setToolTip(bids.get_bidshelp(key))
-                    table.setItem(i, j, value_item)
+        # Get the new target_run
+        self.target_run = bids.get_run(self.template_bidsmap, self.dataformat, self.target_datatype, suffix_idx, Path(self.target_run['provenance']))
 
-        table.blockSignals(False)
+        # Insert the new target_run in our target_bidsmap
+        bids.update_bidsmap(self.target_bidsmap, self.current_datatype, Path(self.target_run['provenance']), self.target_datatype, self.target_run, self.dataformat)
 
-    def set_table(self, data, name, minimum: bool=True) -> QTableWidget:
-        """Return a table widget from the data. """
-        table = MyQTableWidget(minimum=minimum)
-        table.setColumnCount(2)                         # Always two columns (i.e. key, value)
-        table.setObjectName(name)                       # NB: Serves to identify the tables in fill_table()
-        table.setHorizontalHeaderLabels(('key', 'value'))
-        horizontal_header = table.horizontalHeader()
-        horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
-        horizontal_header.setVisible(False)
+        # Now that we have updated the bidsmap, we can also update the current_datatype
+        self.current_datatype = self.target_datatype
 
-        self.fill_table(table, data)
+        # Reset the edit window with the new target_run
+        self.reset(refresh=True)
 
-        return table
+    def datatype_dropdown_change(self):
+        """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
+        self.target_datatype = self.datatype_dropdown.currentText()
+
+        LOGGER.info(f"User has changed the BIDS data type from '{self.current_datatype}' to '{self.target_datatype}' for {self.target_run['provenance']}")
+
+        self.change_run(0)
+
+    def suffix_dropdown_change(self):
+        """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
+        target_suffix = self.suffix_dropdown.currentText()
+
+        LOGGER.info(f"User has changed the BIDS suffix from '{self.target_run['bids']['suffix']}' to '{target_suffix}' for {self.target_run['provenance']}")
+
+        self.change_run(target_suffix)
 
     def refresh_bidsname(self):
         """Updates the bidsname with the current (edited) bids values"""
@@ -1289,26 +1293,6 @@ class EditDialog(QDialog):
         self.bidsname_textbox.clear()
         self.bidsname_textbox.textCursor().insertText(str(bidsname))
 
-    def change_run(self, suffix_idx):
-        """
-        Resets the edit dialog window with a new target_run from the template bidsmap.
-
-        :param suffix_idx: The suffix or index number that will used to extract the run from the template bidsmap
-        :return:
-        """
-
-        # Get the new target_run
-        self.target_run = bids.get_run(self.template_bidsmap, self.dataformat, self.target_datatype, suffix_idx, Path(self.target_run['provenance']))
-
-        # Insert the new target_run in our target_bidsmap
-        bids.update_bidsmap(self.target_bidsmap, self.current_datatype, Path(self.target_run['provenance']), self.target_datatype, self.target_run, self.dataformat)
-
-        # Now that we have updated the bidsmap, we can also update the current_datatype
-        self.current_datatype = self.target_datatype
-
-        # Reset the edit window with the new target_run
-        self.reset(refresh=True)
-
     def reset(self, refresh: bool=False):
         """Resets the edit with the target_run if refresh=True or otherwise with the original source_run (=default)"""
 
@@ -1333,47 +1317,6 @@ class EditDialog(QDialog):
 
         # Refresh the BIDS output name
         self.refresh_bidsname()
-
-    def datatype_dropdown_change(self):
-        """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
-        self.target_datatype = self.datatype_dropdown.currentText()
-
-        LOGGER.info(f"User has changed the BIDS data type from '{self.current_datatype}' to '{self.target_datatype}' for {self.target_run['provenance']}")
-
-        self.change_run(0)
-
-    def suffix_dropdown_change(self):
-        """Update the BIDS values and BIDS output name section when the dropdown selection has been taking place. """
-        target_suffix = self.suffix_dropdown.currentText()
-
-        LOGGER.info(f"User has changed the BIDS suffix from '{self.target_run['bids']['suffix']}' to '{target_suffix}' for {self.target_run['provenance']}")
-
-        self.change_run(target_suffix)
-
-    def get_help(self):
-        """Open web page for help. """
-        help_url = HELP_URLS.get(self.target_datatype, HELP_URL_DEFAULT)
-        webbrowser.open(help_url)
-
-    def reject(self, confirm=True):
-        """Ask if the user really wants to close the window"""
-        if confirm:
-            self.raise_()
-            answer = QMessageBox.question(self, 'Edit BIDS mapping', 'Closing window, do you want to save the changes you made?',
-                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
-            if answer == QMessageBox.Yes:
-                self.accept_run()
-                return
-            if answer == QMessageBox.No:
-                self.done(2)
-                LOGGER.info(f'User has discarded the edit')
-                return
-            if answer == QMessageBox.Cancel:
-                return
-
-        LOGGER.info(f'User has canceled the edit')
-
-        super(EditDialog, self).reject()
 
     def accept_run(self):
         """Save the changes to the target_bidsmap and send it back to the main window: Finished! """
@@ -1410,6 +1353,56 @@ class EditDialog(QDialog):
             bids.append_run(bidsmap, self.dataformat, self.target_datatype, self.target_run)
             bids.save_bidsmap(yamlfile, bidsmap)
             QMessageBox.information(self, 'Edit BIDS mapping', f"Successfully exported:\n\nbidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}")
+
+    def reject(self, confirm=True):
+        """Ask if the user really wants to close the window"""
+        if confirm:
+            self.raise_()
+            answer = QMessageBox.question(self, 'Edit BIDS mapping', 'Closing window, do you want to save the changes you made?',
+                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
+            if answer == QMessageBox.Yes:
+                self.accept_run()
+                return
+            if answer == QMessageBox.No:
+                self.done(2)
+                LOGGER.info(f'User has discarded the edit')
+                return
+            if answer == QMessageBox.Cancel:
+                return
+
+        LOGGER.info(f'User has canceled the edit')
+
+        super(EditWindow, self).reject()
+
+    def inspect_sourcefile(self, row: int=None, column: int=None):
+        """When double clicked, show popup window. """
+        if row == 1 and column == 1:
+            self.popup = InspectWindow(Path(self.target_run['provenance']))
+            self.popup.show()
+            self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
+
+    @staticmethod
+    def spacedwidget(leftwidget):
+        widget = QtWidgets.QWidget()
+        layout = QHBoxLayout()
+        layout.addWidget(leftwidget)
+        layout.addStretch()
+        layout.setContentsMargins(0, 0, 0, 0)
+        widget.setLayout(layout)
+        widget.spacedwidget = leftwidget
+        return widget
+
+    def get_help(self):
+        """Open web page for help. """
+        help_url = HELP_URLS.get(self.target_datatype, HELP_URL_DEFAULT)
+        webbrowser.open(help_url)
+
+    def center(self):
+        """Center the edit window. """
+        cp = QDesktopWidget().availableGeometry().center()  # Center point of screen
+        qr = self.frameGeometry()                           # Get the rectangular geometry
+        qr.moveCenter(cp)                                   # Move rectangle's center point to screen's center point
+        self.move(qr.topLeft())                             # Top left of rectangle becomes top left of window centering it
 
 
 def format_bytes(size):
