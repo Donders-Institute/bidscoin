@@ -966,7 +966,7 @@ class EditWindow(QDialog):
                     'iseditable': False
                 },
                 {
-                    'value': format_bytes(Path(self.target_run['provenance']).stat().st_size),
+                    'value': self.format_bytes(Path(self.target_run['provenance']).stat().st_size),
                     'iseditable': False
                 },
             ]
@@ -1133,12 +1133,12 @@ class EditWindow(QDialog):
         # Read all the meta-data from the table and store it in the target_run
         self.target_run['meta'] = {}
         for n in range(self.meta_table.rowCount()):
-            _key   = self.meta_table.item(n, 0).text()
-            _value = self.meta_table.item(n, 1).text()
-            if _key and not _key.isspace():
-                self.target_run['meta'][_key] = _value
-            elif _value:
-                QMessageBox.warning(self, 'Input error', f"Please enter a key-name (left cell) for the '{_value}' value in row {n+1}")
+            key_   = self.meta_table.item(n, 0).text()
+            value_ = self.meta_table.item(n, 1).text()
+            if key_ and not key_.isspace():
+                self.target_run['meta'][key_] = value_
+            elif value_:
+                QMessageBox.warning(self, 'Input error', f"Please enter a key-name (left cell) for the '{value_}' value in row {n+1}")
 
         # Refresh the table if needed, i.e. delete empty rows or add a new row if a key is defined on the last row
         if (not key and not value) or (key and not key.isspace() and row + 1 == self.meta_table.rowCount()):
@@ -1305,6 +1305,24 @@ class EditWindow(QDialog):
         widget.spacedwidget = leftwidget
         return widget
 
+    @staticmethod
+    def format_bytes(size):
+        """
+        Converts bytes into a human-readable B, KB, MG, GB, TB format
+
+        :param size:    size in bytes
+        :return:        Human-friedly string
+        """
+
+        power = 2**10  # 2**10 = 1024
+        label = {0: '', 1: 'k', 2: 'M', 3: 'G', 4: 'T'}
+        n = 0
+        while size>power and n<len(label):
+            size /= power
+            n += 1
+
+        return f"{size:.2f} {label[n]}B"
+
     def get_help(self):
         """Open web page for help. """
         help_url = HELP_URLS.get(self.target_datatype, HELP_URL_DEFAULT)
@@ -1403,24 +1421,6 @@ class MyWidgetItem(QTableWidgetItem):
         else:
             self.setFlags(QtCore.Qt.ItemIsEnabled)
             self.setForeground(QtGui.QColor('gray'))
-
-
-def format_bytes(size):
-    """
-    Converts bytes into a human-readable B, KB, MG, GB, TB format
-
-    :param size:    size in bytes
-    :return:        Human-friedly string
-    """
-
-    power = 2**10       # 2**10 = 1024
-    label = {0:'', 1:'k', 2:'M', 3:'G', 4:'T'}
-    n = 0
-    while size > power and n < len(label):
-        size /= power
-        n += 1
-
-    return f"{size:.2f} {label[n]}B"
 
 
 def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', subprefix='sub-', sesprefix='ses-'):
