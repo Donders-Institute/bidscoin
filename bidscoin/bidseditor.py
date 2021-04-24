@@ -292,153 +292,68 @@ class UiMainWindow(MainWindow):
         statusbar.setStatusTip('Statusbar')
         self.MainWindow.setStatusBar(statusbar)
 
-    def inspect_sourcefile(self, item):
-        """When double clicked, show popup window. """
-        if item.column() == 1:
-            dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
-            sourcefile = self.samples_table[dataformat].item(item.row(), 5)
-            self.popup = InspectWindow(Path(sourcefile.text()))
-            self.popup.show()
-            self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
+    def set_tab_bidsmap(self, dataformat):
+        """Set the SOURCE file sample listing tab.  """
 
-    def set_tab_file_browser(self):
-        """Set the raw data folder inspector tab. """
+        # Set the Participant labels table
+        subses_label = QLabel('Participant labels')
+        subses_label.setToolTip('Subject/session mapping')
 
-        rootfolder = str(self.bidsfolder.parent)
-        label = QLabel(rootfolder)
-        label.setWordWrap(True)
+        subses_table = MyQTableWidget()
+        subses_table.setToolTip(f"Use '<<SourceFilePath>>' to parse the subject and (optional) session label from the pathname\n"
+                                f"Use a dynamic {dataformat} attribute (e.g. '<PatientID>') to extract the subject and (optional) session label from the {dataformat} header")
+        subses_table.setMouseTracking(True)
+        subses_table.setRowCount(2)
+        subses_table.setColumnCount(2)
+        horizontal_header = subses_table.horizontalHeader()
+        horizontal_header.setVisible(False)
+        horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
+        subses_table.cellChanged.connect(self.subsescell2bidsmap)
+        self.subses_table[dataformat] = subses_table
 
-        self.model = QFileSystemModel()
-        model = self.model
-        model.setRootPath(rootfolder)
-        model.setFilter(QtCore.QDir.NoDotAndDotDot | QtCore.QDir.AllDirs | QtCore.QDir.Files)
-        tree = QTreeView()
-        tree.setModel(model)
-        tree.setRootIndex(model.index(rootfolder))
-        tree.setAnimated(False)
-        tree.setSortingEnabled(True)
-        tree.sortByColumn(0, QtCore.Qt.AscendingOrder)
-        tree.setExpanded(model.index(str(self.bidsfolder)), True)
-        tree.header().setSectionResizeMode(QHeaderView.ResizeToContents)
-        tree.header().setSectionResizeMode(0, QHeaderView.Stretch)
-        tree.header().setStretchLastSection(False)
-        tree.doubleClicked.connect(self.open_inspectwindow)
+        # Set the BIDSmap table
+        provenance = bids.dir_bidsmap(self.input_bidsmap, dataformat)
+        ordered_file_index = {}                                         # The mapping between the ordered provenance and an increasing file-index
+        num_files = 0
+        for file_index, file_name in enumerate(provenance):
+            ordered_file_index[file_name] = file_index
+            num_files = file_index + 1
+
+        self.ordered_file_index[dataformat] = ordered_file_index
+
+        label = QLabel('Data samples')
+        label.setToolTip('List of unique source-data samples')
+
+        samples_table = MyQTableWidget(minimum=False)
+        samples_table.setMouseTracking(True)
+        samples_table.setShowGrid(True)
+        samples_table.setColumnCount(6)
+        samples_table.setRowCount(num_files)
+        samples_table.setHorizontalHeaderLabels(['', f'{dataformat} input', 'BIDS data type', 'BIDS output', 'Action', 'Provenance'])
+        samples_table.setSortingEnabled(True)
+        samples_table.sortByColumn(0, QtCore.Qt.AscendingOrder)
+        samples_table.setColumnHidden(2, True)
+        samples_table.setColumnHidden(5, True)
+        samples_table.itemDoubleClicked.connect(self.inspect_sourcefile)
+        header = samples_table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.Stretch)                 # Temporarily set it to Stretch to have Qt set the right window width -> set to Interactive in setupUI -> not reload
+        header.setSectionResizeMode(3, QHeaderView.Stretch)
+        self.samples_table[dataformat] = samples_table
 
         layout = QVBoxLayout()
+        layout.addWidget(subses_label)
+        layout.addWidget(subses_table)
         layout.addWidget(label)
-        layout.addWidget(tree)
+        layout.addWidget(samples_table)
         tab = QtWidgets.QWidget()
+        tab.setObjectName(dataformat)                                       # NB: Serves to identify the dataformat for the tables in a tab
         tab.setLayout(layout)
+        self.tabwidget.addTab(tab, f"{dataformat} mappings")
+        self.tabwidget.setCurrentWidget(tab)
 
-        self.tabwidget.addTab(tab, 'Data browser')
-
-    def subsescell2bidsmap(self, row: int, column:int):
-        """Subject or session value has been changed in subject-session table. """
-        dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
-        if column == 1:
-            key      = self.subses_table[dataformat].item(row, 0).text()
-            value    = self.subses_table[dataformat].item(row, 1).text()
-            oldvalue = self.output_bidsmap[dataformat][key]
-
-            # Only if cell was actually clicked, update
-            if key and value != oldvalue:
-                LOGGER.warning(f"Expert usage: User has set {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
-                self.output_bidsmap[dataformat][key] = value
-                self.update_subses_and_samples(self.output_bidsmap)
-
-    def toolcell2bidsmap(self, tool: str, idx: int, row: int, column: int):
-        """Option value has been changed tool options table. """
-        if column == 2:
-            table = self.tables_options[idx]  # Select the selected table
-            key = table.item(row, 1).text()
-            value = table.item(row, 2).text()
-            oldvalue = self.output_bidsmap['Options'][tool][key]
-
-            # Only if cell was actually clicked, update
-            if key and value!=oldvalue:
-                LOGGER.info(f"User has set ['Options']['{tool}']['{key}'] from '{oldvalue}' to '{value}'")
-                self.output_bidsmap['Options'][tool][key] = value
-
-    def test_plugin(self, plugin: str):
-        """Test the bidsmap plugin and show the result in a pop-up window
-
-        :param plugin:    Name of the plugin that is being tested in bidsmap['PlugIns']
-         """
-        if bidscoin.test_plugins(Path(plugin)):
-            QMessageBox.information(self.MainWindow, 'Plugin test', f"Import of {plugin}: Passed\n"
-                                                                     'See terminal output for more info')
-        else:
-            QMessageBox.warning(self.MainWindow, 'Plugin test', f"Import of {plugin}: Failed\n"
-                                                                 'See terminal output for more info')
-
-    def test_tool(self, tool: str):
-        """Test the bidsmap tool and show the result in a pop-up window
-
-        :param tool:    Name of the tool that is being tested in bidsmap['Options']
-         """
-        if self.test_tooloptions(tool, self.output_bidsmap['Options'][tool]):
-            QMessageBox.information(self.MainWindow, 'Tool test', f"Execution of {tool}: Passed\n"
-                                                                   'See terminal output for more info')
-        else:
-            QMessageBox.warning(self.MainWindow, 'Tool test', f"Execution of {tool}: Failed\n"
-                                                               'See terminal output for more info')
-
-    def addedplugin2bidsmap(self):
-        """Add a plugin by letting the user select a plugin-file"""
-        plugin = QFileDialog.getOpenFileNames(self.MainWindow, 'Select the plugin-file(s)', directory=str(self.bidsfolder/'code'/'bidscoin'), filter='Python files (*.py *.pyc *.pyo);; All files (*)')
-        LOGGER.info(f'Added plugins: {plugin[0]}')
-        self.output_bidsmap['PlugIns'] += plugin[0]
-        self.update_plugintable()
-
-    def changedplugin2bidsmap(self, row: int, column: int):
-        """Add / edit a plugin or delete if cell is empty"""
-        if column==1:
-            plugin = self.plugin_table.item(row, column).text()
-            if plugin and row == len(self.output_bidsmap['PlugIns']):
-                LOGGER.info(f"Added plugin: '{plugin}'")
-                self.output_bidsmap['PlugIns'].append(plugin)
-            elif plugin:
-                LOGGER.info(f"Edited plugin: '{self.output_bidsmap['PlugIns'][row]}' -> '{plugin}'")
-                self.output_bidsmap['PlugIns'][row] = plugin
-            elif row < len(self.output_bidsmap['PlugIns']):
-                LOGGER.info(f"Deleted plugin: '{self.output_bidsmap['PlugIns'][row]}'")
-                del self.output_bidsmap['PlugIns'][row]
-            else:
-                LOGGER.error(f"Unexpected cell change for {plugin}")
-
-            self.update_plugintable()
-
-    def update_plugintable(self):
-        """Plots an extendable table of plugins from self.output_bidsmap['PlugIns']"""
-        plugins  = self.output_bidsmap['PlugIns']
-        num_rows = len(plugins) + 1
-
-        # Fill the rows of the plugin table
-        plugintable = self.plugin_table
-        plugintable.disconnect()
-        plugintable.setRowCount(num_rows)
-        for i, plugin in enumerate(plugins + ['']):
-            for j in range(3):
-                if j==0:
-                    item = MyWidgetItem('path', iseditable=False)
-                    plugintable.setItem(i, j, item)
-                elif j==1:
-                    item = MyWidgetItem(plugin)
-                    item.setToolTip('Double-click to edit/delete the plugin, which can be the basename of the plugin in the heuristics folder or a custom full pathname')
-                    plugintable.setItem(i, j, item)
-                elif j==2:                  # Add the test-button cell
-                    test_button = QPushButton('Test')
-                    test_button.clicked.connect(partial(self.test_plugin, plugin))
-                    test_button.setToolTip(f"Click to test the {plugin} plugin")
-                    plugintable.setCellWidget(i, j, test_button)
-
-        # Append the Add-button cell
-        add_button = QPushButton('Select')
-        add_button.setToolTip('Click to interactively add a plugin')
-        plugintable.setCellWidget(num_rows - 1, 2, add_button)
-        add_button.clicked.connect(self.addedplugin2bidsmap)
-
-        plugintable.cellChanged.connect(self.changedplugin2bidsmap)
+        self.update_subses_and_samples(self.output_bidsmap)
 
     def set_tab_options(self):
         """Set the options tab.  """
@@ -557,29 +472,36 @@ class UiMainWindow(MainWindow):
 
         self.tabwidget.addTab(tab, 'Options')
 
-    @staticmethod
-    def test_tooloptions(tool: str, opts: dict) -> bool:
-        """
-        Performs shell tests of the user tool parameters set in bidsmap['Options']
+    def set_tab_file_browser(self):
+        """Set the raw data folder inspector tab. """
 
-        :param tool:    Name of the tool that is being tested in bidsmap['Options']
-        :param opts:    The editable options belonging to the tool
-        :return:        True if the tool generated the expected result, False if there was a tool error, None if not tested
-        """
+        rootfolder = str(self.bidsfolder.parent)
+        label = QLabel(rootfolder)
+        label.setWordWrap(True)
 
-        if tool=='dcm2niix':
-            command = f"{opts['path']}dcm2niix -u"
-        elif tool=='bidsmapper':
-            command = 'bidsmapper -v'
-        elif tool in ('bidscoin', 'bidscoiner'):
-            command = 'bidscoiner -v'
-        else:
-            LOGGER.warning(f"Testing of '{tool}' not supported")
-            return True
+        self.model = QFileSystemModel()
+        model = self.model
+        model.setRootPath(rootfolder)
+        model.setFilter(QtCore.QDir.NoDotAndDotDot | QtCore.QDir.AllDirs | QtCore.QDir.Files)
+        tree = QTreeView()
+        tree.setModel(model)
+        tree.setRootIndex(model.index(rootfolder))
+        tree.setAnimated(False)
+        tree.setSortingEnabled(True)
+        tree.sortByColumn(0, QtCore.Qt.AscendingOrder)
+        tree.setExpanded(model.index(str(self.bidsfolder)), True)
+        tree.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        tree.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        tree.header().setStretchLastSection(False)
+        tree.doubleClicked.connect(self.open_inspectwindow)
 
-        LOGGER.info(f"Testing: '{tool}'")
+        layout = QVBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(tree)
+        tab = QtWidgets.QWidget()
+        tab.setLayout(layout)
 
-        return bidscoin.run_command(command)
+        self.tabwidget.addTab(tab, 'Data browser')
 
     def update_subses_and_samples(self, output_bidsmap):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
@@ -678,78 +600,176 @@ class UiMainWindow(MainWindow):
         samples_table.setSortingEnabled(True)
         samples_table.blockSignals(False)
 
-    def set_tab_bidsmap(self, dataformat):
-        """Set the SOURCE file sample listing tab.  """
+    def subsescell2bidsmap(self, row: int, column:int):
+        """Subject or session value has been changed in subject-session table. """
+        dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
+        if column == 1:
+            key      = self.subses_table[dataformat].item(row, 0).text()
+            value    = self.subses_table[dataformat].item(row, 1).text()
+            oldvalue = self.output_bidsmap[dataformat][key]
 
-        # Set the Participant labels table
-        subses_label = QLabel('Participant labels')
-        subses_label.setToolTip('Subject/session mapping')
+            # Only if cell was actually clicked, update
+            if key and value != oldvalue:
+                LOGGER.warning(f"Expert usage: User has set {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
+                self.output_bidsmap[dataformat][key] = value
+                self.update_subses_and_samples(self.output_bidsmap)
 
-        subses_table = MyQTableWidget()
-        subses_table.setToolTip(f"Use '<<SourceFilePath>>' to parse the subject and (optional) session label from the pathname\n"
-                                f"Use a dynamic {dataformat} attribute (e.g. '<PatientID>') to extract the subject and (optional) session label from the {dataformat} header")
-        subses_table.setMouseTracking(True)
-        subses_table.setRowCount(2)
-        subses_table.setColumnCount(2)
-        horizontal_header = subses_table.horizontalHeader()
-        horizontal_header.setVisible(False)
-        horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
-        subses_table.cellChanged.connect(self.subsescell2bidsmap)
-        self.subses_table[dataformat] = subses_table
+    def open_editwindow(self, provenance: Path=Path(), datatype: str= ''):
+        """Make sure that index map has been updated. """
+        if not datatype:
+            dataformat    = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
+            samples_table = self.samples_table[dataformat]
+            button        = self.MainWindow.focusWidget()
+            rowindex      = samples_table.indexAt(button.pos()).row()
+            datatype      = samples_table.item(rowindex, 2).text()
+            provenance    = Path(samples_table.item(rowindex, 5).text())
 
-        # Set the BIDSmap table
-        provenance = bids.dir_bidsmap(self.input_bidsmap, dataformat)
-        ordered_file_index = {}                                         # The mapping between the ordered provenance and an increasing file-index
-        num_files = 0
-        for file_index, file_name in enumerate(provenance):
-            ordered_file_index[file_name] = file_index
-            num_files = file_index + 1
+        # Check for open edit window, find the right datatype index and open the edit window
+        if not self.has_editwindow_open:
+            # Find the source index of the run in the list of runs (using the provenance) and open the edit window
+            dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
+            for run in self.output_bidsmap[dataformat][datatype]:
+                if run['provenance']==str(provenance):
+                    LOGGER.info(f'User is editing {provenance}')
+                    self.editwindow = EditWindow(dataformat, provenance, datatype, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
+                    if provenance.name:
+                        self.has_editwindow_open = str(provenance)
+                    else:
+                        self.has_editwindow_open = True
+                    self.editwindow.done_edit.connect(self.update_subses_and_samples)
+                    self.editwindow.finished.connect(self.release_editwindow)
+                    self.editwindow.show()
+                    return
+            LOGGER.exception(f"Could not find {provenance} run-item")
 
-        self.ordered_file_index[dataformat] = ordered_file_index
+        else:
+            # Ask the user if he wants to save his results first before opening a new edit window
+            self.editwindow.reject()
+            if self.has_editwindow_open:
+                return
+            self.open_editwindow(provenance, datatype)
 
-        label = QLabel('Data samples')
-        label.setToolTip('List of unique source-data samples')
+    def release_editwindow(self):
+        """Allow a new edit window to be opened"""
+        self.has_editwindow_open = None
 
-        samples_table = MyQTableWidget(minimum=False)
-        samples_table.setMouseTracking(True)
-        samples_table.setShowGrid(True)
-        samples_table.setColumnCount(6)
-        samples_table.setRowCount(num_files)
-        samples_table.setHorizontalHeaderLabels(['', f'{dataformat} input', 'BIDS data type', 'BIDS output', 'Action', 'Provenance'])
-        samples_table.setSortingEnabled(True)
-        samples_table.sortByColumn(0, QtCore.Qt.AscendingOrder)
-        samples_table.setColumnHidden(2, True)
-        samples_table.setColumnHidden(5, True)
-        samples_table.itemDoubleClicked.connect(self.inspect_sourcefile)
-        header = samples_table.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)                 # Temporarily set it to Stretch to have Qt set the right window width -> set to Interactive in setupUI -> not reload
-        header.setSectionResizeMode(3, QHeaderView.Stretch)
-        self.samples_table[dataformat] = samples_table
+    def update_plugintable(self):
+        """Plots an extendable table of plugins from self.output_bidsmap['PlugIns']"""
+        plugins  = self.output_bidsmap['PlugIns']
+        num_rows = len(plugins) + 1
 
-        layout = QVBoxLayout()
-        layout.addWidget(subses_label)
-        layout.addWidget(subses_table)
-        layout.addWidget(label)
-        layout.addWidget(samples_table)
-        tab = QtWidgets.QWidget()
-        tab.setObjectName(dataformat)                                       # NB: Serves to identify the dataformat for the tables in a tab
-        tab.setLayout(layout)
-        self.tabwidget.addTab(tab, f"{dataformat} mappings")
-        self.tabwidget.setCurrentWidget(tab)
+        # Fill the rows of the plugin table
+        plugintable = self.plugin_table
+        plugintable.disconnect()
+        plugintable.setRowCount(num_rows)
+        for i, plugin in enumerate(plugins + ['']):
+            for j in range(3):
+                if j==0:
+                    item = MyWidgetItem('path', iseditable=False)
+                    plugintable.setItem(i, j, item)
+                elif j==1:
+                    item = MyWidgetItem(plugin)
+                    item.setToolTip('Double-click to edit/delete the plugin, which can be the basename of the plugin in the heuristics folder or a custom full pathname')
+                    plugintable.setItem(i, j, item)
+                elif j==2:                  # Add the test-button cell
+                    test_button = QPushButton('Test')
+                    test_button.clicked.connect(partial(self.test_plugin, plugin))
+                    test_button.setToolTip(f"Click to test the {plugin} plugin")
+                    plugintable.setCellWidget(i, j, test_button)
 
-        self.update_subses_and_samples(self.output_bidsmap)
+        # Append the Add-button cell
+        add_button = QPushButton('Select')
+        add_button.setToolTip('Click to interactively add a plugin')
+        plugintable.setCellWidget(num_rows - 1, 2, add_button)
+        add_button.clicked.connect(self.addedplugin2bidsmap)
+
+        plugintable.cellChanged.connect(self.changedplugin2bidsmap)
+
+    def addedplugin2bidsmap(self):
+        """Add a plugin by letting the user select a plugin-file"""
+        plugin = QFileDialog.getOpenFileNames(self.MainWindow, 'Select the plugin-file(s)', directory=str(self.bidsfolder/'code'/'bidscoin'), filter='Python files (*.py *.pyc *.pyo);; All files (*)')
+        LOGGER.info(f'Added plugins: {plugin[0]}')
+        self.output_bidsmap['PlugIns'] += plugin[0]
+        self.update_plugintable()
+
+    def changedplugin2bidsmap(self, row: int, column: int):
+        """Add / edit a plugin or delete if cell is empty"""
+        if column==1:
+            plugin = self.plugin_table.item(row, column).text()
+            if plugin and row == len(self.output_bidsmap['PlugIns']):
+                LOGGER.info(f"Added plugin: '{plugin}'")
+                self.output_bidsmap['PlugIns'].append(plugin)
+            elif plugin:
+                LOGGER.info(f"Edited plugin: '{self.output_bidsmap['PlugIns'][row]}' -> '{plugin}'")
+                self.output_bidsmap['PlugIns'][row] = plugin
+            elif row < len(self.output_bidsmap['PlugIns']):
+                LOGGER.info(f"Deleted plugin: '{self.output_bidsmap['PlugIns'][row]}'")
+                del self.output_bidsmap['PlugIns'][row]
+            else:
+                LOGGER.error(f"Unexpected cell change for {plugin}")
+
+            self.update_plugintable()
+
+    def toolcell2bidsmap(self, tool: str, idx: int, row: int, column: int):
+        """Option value has been changed tool options table. """
+        if column == 2:
+            table = self.tables_options[idx]  # Select the selected table
+            key = table.item(row, 1).text()
+            value = table.item(row, 2).text()
+            oldvalue = self.output_bidsmap['Options'][tool][key]
+
+            # Only if cell was actually clicked, update
+            if key and value!=oldvalue:
+                LOGGER.info(f"User has set ['Options']['{tool}']['{key}'] from '{oldvalue}' to '{value}'")
+                self.output_bidsmap['Options'][tool][key] = value
+
+    def test_tool(self, tool: str):
+        """Test the bidsmap tool and show the result in a pop-up window
+
+        :param tool:    Name of the tool that is being tested in bidsmap['Options']
+         """
+        if self.test_tooloptions(tool, self.output_bidsmap['Options'][tool]):
+            QMessageBox.information(self.MainWindow, 'Tool test', f"Execution of {tool}: Passed\n"
+                                                                   'See terminal output for more info')
+        else:
+            QMessageBox.warning(self.MainWindow, 'Tool test', f"Execution of {tool}: Failed\n"
+                                                               'See terminal output for more info')
 
     @staticmethod
-    def get_help():
-        """Get online help. """
-        webbrowser.open(MAIN_HELP_URL)
+    def test_tooloptions(tool: str, opts: dict) -> bool:
+        """
+        Performs shell tests of the user tool parameters set in bidsmap['Options']
 
-    @staticmethod
-    def get_bids_help():
-        """Get online help. """
-        webbrowser.open(HELP_URL_DEFAULT)
+        :param tool:    Name of the tool that is being tested in bidsmap['Options']
+        :param opts:    The editable options belonging to the tool
+        :return:        True if the tool generated the expected result, False if there was a tool error, None if not tested
+        """
+
+        if tool=='dcm2niix':
+            command = f"{opts['path']}dcm2niix -u"
+        elif tool=='bidsmapper':
+            command = 'bidsmapper -v'
+        elif tool in ('bidscoin', 'bidscoiner'):
+            command = 'bidscoiner -v'
+        else:
+            LOGGER.warning(f"Testing of '{tool}' not supported")
+            return True
+
+        LOGGER.info(f"Testing: '{tool}'")
+
+        return bidscoin.run_command(command)
+
+    def test_plugin(self, plugin: str):
+        """Test the bidsmap plugin and show the result in a pop-up window
+
+        :param plugin:    Name of the plugin that is being tested in bidsmap['PlugIns']
+         """
+        if bidscoin.test_plugins(Path(plugin)):
+            QMessageBox.information(self.MainWindow, 'Plugin test', f"Import of {plugin}: Passed\n"
+                                                                     'See terminal output for more info')
+        else:
+            QMessageBox.warning(self.MainWindow, 'Plugin test', f"Import of {plugin}: Failed\n"
+                                                                 'See terminal output for more info')
 
     def reload(self):
         """Reset button: reload the original input BIDS map. """
@@ -793,40 +813,14 @@ class UiMainWindow(MainWindow):
             bids.save_bidsmap(Path(filename), self.output_bidsmap)
             QtCore.QCoreApplication.setApplicationName(f"{filename} - BIDS editor")
 
-    def open_editwindow(self, provenance: Path=Path(), datatype: str= ''):
-        """Make sure that index map has been updated. """
-        if not datatype:
-            dataformat    = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
-            samples_table = self.samples_table[dataformat]
-            button        = self.MainWindow.focusWidget()
-            rowindex      = samples_table.indexAt(button.pos()).row()
-            datatype      = samples_table.item(rowindex, 2).text()
-            provenance    = Path(samples_table.item(rowindex, 5).text())
-
-        # Check for open edit window, find the right datatype index and open the edit window
-        if not self.has_editwindow_open:
-            # Find the source index of the run in the list of runs (using the provenance) and open the edit window
+    def inspect_sourcefile(self, item):
+        """When source file is double clicked in the samples_table, show popup window. """
+        if item.column() == 1:
             dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
-            for run in self.output_bidsmap[dataformat][datatype]:
-                if run['provenance']==str(provenance):
-                    LOGGER.info(f'User is editing {provenance}')
-                    self.editwindow = EditWindow(dataformat, provenance, datatype, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
-                    if provenance.name:
-                        self.has_editwindow_open = str(provenance)
-                    else:
-                        self.has_editwindow_open = True
-                    self.editwindow.done_edit.connect(self.update_subses_and_samples)
-                    self.editwindow.finished.connect(self.release_editwindow)
-                    self.editwindow.show()
-                    return
-            LOGGER.exception(f"Could not find {provenance} run-item")
-
-        else:
-            # Ask the user if he wants to save his results first before opening a new edit window
-            self.editwindow.reject()
-            if self.has_editwindow_open:
-                return
-            self.open_editwindow(provenance, datatype)
+            sourcefile = self.samples_table[dataformat].item(item.row(), 5)
+            self.popup = InspectWindow(Path(sourcefile.text()))
+            self.popup.show()
+            self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
 
     def open_inspectwindow(self, index: int):
         """Opens the inspect window when a data file in the file-tree tab is double-clicked"""
@@ -848,9 +842,15 @@ class UiMainWindow(MainWindow):
         messagebox.setIconPixmap(QtGui.QPixmap(str(BIDSCOIN_LOGO)).scaled(150, 150, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
         messagebox.show()
 
-    def release_editwindow(self):
-        """Allow a new edit window to be opened"""
-        self.has_editwindow_open = None
+    @staticmethod
+    def get_help():
+        """Get online help. """
+        webbrowser.open(MAIN_HELP_URL)
+
+    @staticmethod
+    def get_bids_help():
+        """Get online help. """
+        webbrowser.open(HELP_URL_DEFAULT)
 
     def exit_application(self):
         """Handle exit. """
