@@ -66,93 +66,6 @@ args: Argument string that is passed to dcm2niix. Click [Test] and see the termi
       Tip: SPM users may want to use '-z n', which produces unzipped nifti's"""
 
 
-class MyQTableWidget(QTableWidget):
-
-    def __init__(self, minimum: bool=True):
-        super().__init__()
-
-        self.setAlternatingRowColors(False)
-        self.setShowGrid(False)
-
-        self.verticalHeader().setVisible(False)
-        self.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
-        self.setMinimumHeight(2 * (ROW_HEIGHT + 8))
-        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-
-        self.minimizeheight(minimum)
-
-    def minimizeheight(self, minimum: bool=True):
-        """Set the vertical QSizePolicy to Minimum"""
-
-        self.minimum = minimum
-
-        if minimum:
-            self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        else:
-            self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
-
-class MyWidgetItem(QTableWidgetItem):
-
-    def __init__(self, value: str='', iseditable: bool=True):
-        """A QTableWidgetItem that is editable or not"""
-        super().__init__()
-
-        if isinstance(value, int):
-            value = str(value)
-        self.setText(value)
-        self.seteditable(iseditable)
-
-    def seteditable(self, iseditable: bool=True):
-        """Make the WidgetItem editable"""
-
-        self.iseditable = iseditable
-
-        if iseditable:
-            self.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
-            self.setForeground(QtGui.QColor('black'))
-        else:
-            self.setFlags(QtCore.Qt.ItemIsEnabled)
-            self.setForeground(QtGui.QColor('gray'))
-
-
-class InspectWindow(QDialog):
-
-    def __init__(self, filename: Path):
-        super().__init__()
-
-        if bids.is_dicomfile(filename):
-            text = str(pydicom.dcmread(filename, force=True))
-        elif bids.is_parfile(filename):
-            text = filename.read_text()
-        else:
-            text = f"Could not inspect: {filename}"
-            LOGGER.info(text)
-
-        self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
-        self.setWindowTitle(str(filename))
-
-        layout = QVBoxLayout(self)
-
-        textbrowser = QTextBrowser(self)
-        textbrowser.setFont(QtGui.QFont("Courier New"))
-        textbrowser.insertPlainText(text)
-        textbrowser.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
-        self.scrollbar = textbrowser.verticalScrollBar()        # For setting the slider to the top (can only be done after self.show()
-        layout.addWidget(textbrowser)
-
-        buttonbox = QDialogButtonBox(self)
-        buttonbox.setStandardButtons(QDialogButtonBox.Ok)
-        buttonbox.button(QDialogButtonBox.Ok).setToolTip('Close this window')
-        buttonbox.accepted.connect(self.close)
-        layout.addWidget(buttonbox)
-
-        # Set the layout-width to the width of the text
-        fontmetrics = QtGui.QFontMetrics(textbrowser.font())
-        textwidth   = fontmetrics.size(0, text).width()
-        self.resize(min(textwidth + 70, 1200), self.height())
-
-
 class MainWindow(QMainWindow):
 
     def __init__(self):
@@ -1403,6 +1316,93 @@ class EditWindow(QDialog):
         qr = self.frameGeometry()                           # Get the rectangular geometry
         qr.moveCenter(cp)                                   # Move rectangle's center point to screen's center point
         self.move(qr.topLeft())                             # Top left of rectangle becomes top left of window centering it
+
+
+class InspectWindow(QDialog):
+
+    def __init__(self, filename: Path):
+        super().__init__()
+
+        if bids.is_dicomfile(filename):
+            text = str(pydicom.dcmread(filename, force=True))
+        elif bids.is_parfile(filename):
+            text = filename.read_text()
+        else:
+            text = f"Could not inspect: {filename}"
+            LOGGER.info(text)
+
+        self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
+        self.setWindowTitle(str(filename))
+
+        layout = QVBoxLayout(self)
+
+        textbrowser = QTextBrowser(self)
+        textbrowser.setFont(QtGui.QFont("Courier New"))
+        textbrowser.insertPlainText(text)
+        textbrowser.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
+        self.scrollbar = textbrowser.verticalScrollBar()        # For setting the slider to the top (can only be done after self.show()
+        layout.addWidget(textbrowser)
+
+        buttonbox = QDialogButtonBox(self)
+        buttonbox.setStandardButtons(QDialogButtonBox.Ok)
+        buttonbox.button(QDialogButtonBox.Ok).setToolTip('Close this window')
+        buttonbox.accepted.connect(self.close)
+        layout.addWidget(buttonbox)
+
+        # Set the layout-width to the width of the text
+        fontmetrics = QtGui.QFontMetrics(textbrowser.font())
+        textwidth   = fontmetrics.size(0, text).width()
+        self.resize(min(textwidth + 70, 1200), self.height())
+
+
+class MyQTableWidget(QTableWidget):
+
+    def __init__(self, minimum: bool=True):
+        super().__init__()
+
+        self.setAlternatingRowColors(False)
+        self.setShowGrid(False)
+
+        self.verticalHeader().setVisible(False)
+        self.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
+        self.setMinimumHeight(2 * (ROW_HEIGHT + 8))
+        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+
+        self.minimizeheight(minimum)
+
+    def minimizeheight(self, minimum: bool=True):
+        """Set the vertical QSizePolicy to Minimum"""
+
+        self.minimum = minimum
+
+        if minimum:
+            self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        else:
+            self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+
+class MyWidgetItem(QTableWidgetItem):
+
+    def __init__(self, value: str='', iseditable: bool=True):
+        """A QTableWidgetItem that is editable or not"""
+        super().__init__()
+
+        if isinstance(value, int):
+            value = str(value)
+        self.setText(value)
+        self.seteditable(iseditable)
+
+    def seteditable(self, iseditable: bool=True):
+        """Make the WidgetItem editable"""
+
+        self.iseditable = iseditable
+
+        if iseditable:
+            self.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
+            self.setForeground(QtGui.QColor('black'))
+        else:
+            self.setFlags(QtCore.Qt.ItemIsEnabled)
+            self.setForeground(QtGui.QColor('gray'))
 
 
 def format_bytes(size):

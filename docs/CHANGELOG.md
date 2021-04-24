@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file. The format 
 Making BIDScoin more powerful and generic...
 
 ### Added
-- Support for BIDS v1.6
+- Support for BIDS v1.6.0
 - Separate tabs for DICOM and PAR to edit all the mappings of mixed datasets in a single bidseditor session
 - Run-item matching on filesystem properties, i.e. on the pathname, filename and filesize. This can be used in conjunction with the (DICOM/PAR) attributes
 - A meta-data dictionary that can be edited with the bidseditor and that will be added to the json sidecar files by the bidscoiner
