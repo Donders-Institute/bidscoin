@@ -66,6 +66,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     dataset_file = bidsfolder/'dataset_description.json'
     if not dataset_file.is_file():
         dataset_description = {"Name":                  "REQUIRED. Name of the dataset",
+                               "GeneratedBy":           {"Name": "BIDScoin", "Version": localversion, "CodeURL": "https://github.com/Donders-Institute/bidscoin"},
                                "BIDSVersion":           str(bidscoin.bidsversion()),
                                "DatasetType":           "raw",
                                "License":               "RECOMMENDED. The license for the dataset. The use of license name abbreviations is RECOMMENDED for specifying a license. The corresponding full license text MAY be specified in an additional LICENSE file",

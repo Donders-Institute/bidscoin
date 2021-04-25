@@ -348,17 +348,17 @@ def readphysio(fn: Union[str,Path]) -> dict:
     return physio
 
 
-def physio2tsv(physio: dict, bidsname: Union[str,Path]):
+def physio2tsv(physio: dict, tsvfile: Union[str, Path]):
     """
-    Saves the physiological traces to a BIDS-compliant [bidsname].tsv.nii and a [bidsname].log file
+    Saves the physiological traces to a BIDS-compliant [tsvfile].tsv.nii and a [tsvfile].log file
 
-    :param physio:      Physio data dictionary from readphysio
-    :param bidsname:    Fullpath name of the bids output .tsv.nii/.json file
+    :param physio:  Physio data dictionary from readphysio
+    :param tsvfile: Fullpath name of the bids output .tsv.nii/.json file
     :return:
     """
 
     # Check input
-    bidsname = Path(bidsname).resolve()
+    tsvfile = Path(tsvfile).resolve()
 
     # Set the clock at zero at the start of the MRI acquisition
     starttime = -physio['ACQ'].nonzero()[0][0] / physio['Freq']     # Assumes that the physiological acquisition always starts before the MRI acquisition
@@ -367,15 +367,16 @@ def physio2tsv(physio: dict, bidsname: Union[str,Path]):
     physiotable = pd.DataFrame(columns=[key for key in physio if key not in ('UUID','ScanDate','Freq','SliceMap','ACQ','Meta')])
     for key in physiotable.columns:
         physiotable[key] = physio[key]
-    LOGGER.info(f"Writing physiological traces to: '{bidsname.with_suffix('.tsv.gz')}'")
-    physiotable.to_csv(bidsname.with_suffix('.tsv.gz'), header=False, index=False, sep='\t', compression='infer')
+    LOGGER.info(f"Writing physiological traces to: '{tsvfile.with_suffix('.tsv.gz')}'")
+    physiotable.to_csv(tsvfile.with_suffix('.tsv.gz'), header=False, index=False, sep='\t', compression='infer')
 
     # Write a json side-car file
     physio['Meta']['SamplingFrequency'] = physio['Freq']
     physio['Meta']['StartTime']         = starttime
     physio['Meta']['AcquisitionTime']   = physio['ScanDate']
     physio['Meta']['Columns']           = physiotable.columns.to_list()
-    with bidsname.with_suffix('.json').open('w') as json_fid:
+    physio['Meta']['GeneratedBy']       = {'name':'BIDScoin', 'CodeURL':'https://github.com/Donders-Institute/bidscoin'}
+    with tsvfile.with_suffix('.json').open('w') as json_fid:
         json.dump(physio['Meta'], json_fid, indent=4)
 
 
