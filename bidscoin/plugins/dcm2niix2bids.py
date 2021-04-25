@@ -290,7 +290,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                     acq_time = dateutil.parser.parse(jsondata['AcquisitionTime'])
                 except Exception as jsonerror:
                     LOGGER.warning(f"Could not parse the acquisition time from: {sourcefile}\n{jsonerror}")
-                    acq_time = dateutil.parser.parse('00:00:00')
+                    acq_time = dateutil.parser.parse('0001-01-01T00:00:00')
                 scanpath = outputfile[0].relative_to(bidsses)
                 scans_table.loc[scanpath.as_posix(), 'acq_time'] = '1925-01-01T' + acq_time.strftime('%H:%M:%S')
 
