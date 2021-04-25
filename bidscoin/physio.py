@@ -371,11 +371,12 @@ def physio2tsv(physio: dict, tsvfile: Union[str, Path]):
     physiotable.to_csv(tsvfile.with_suffix('.tsv.gz'), header=False, index=False, sep='\t', compression='infer')
 
     # Write a json side-car file
+    version = (Path(__file__).parent/'version.txt').read_text().strip()
     physio['Meta']['SamplingFrequency'] = physio['Freq']
     physio['Meta']['StartTime']         = starttime
     physio['Meta']['AcquisitionTime']   = physio['ScanDate']
     physio['Meta']['Columns']           = physiotable.columns.to_list()
-    physio['Meta']['GeneratedBy']       = {'name':'BIDScoin', 'CodeURL':'https://github.com/Donders-Institute/bidscoin'}
+    physio['Meta']['GeneratedBy']       = {'name':'BIDScoin', 'Version':version, 'CodeURL':'https://github.com/Donders-Institute/bidscoin'}
     with tsvfile.with_suffix('.json').open('w') as json_fid:
         json.dump(physio['Meta'], json_fid, indent=4)
 
