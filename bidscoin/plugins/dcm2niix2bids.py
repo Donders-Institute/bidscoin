@@ -342,6 +342,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                         with json_magnitude[n].open('r') as json_fid:
                             data = json.load(json_fid)
                         echotime[n] = data['EchoTime']
+                jsondata['EchoTime1'] = jsondata['EchoTime2'] = None
                 if None in echotime:
                     LOGGER.error(f"Cannot find and add valid EchoTime1={echotime[0]} and EchoTime2={echotime[1]} data to: {jsonfile}")
                 elif echotime[0] > echotime[1]:
