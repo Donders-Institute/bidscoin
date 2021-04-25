@@ -288,11 +288,12 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                     jsondata['AcquisitionTime'] = bids.get_sourcefield('exam_date', sourcefile)             # PAR/XML
                 try:
                     acq_time = dateutil.parser.parse(jsondata['AcquisitionTime'])
+                    acq_time = '1925-01-01T' + acq_time.strftime('%H:%M:%S')                                # Privacy protection (see BIDS specification)
                 except Exception as jsonerror:
                     LOGGER.warning(f"Could not parse the acquisition time from: {sourcefile}\n{jsonerror}")
-                    acq_time = dateutil.parser.parse('0001-01-01T00:00:00')
+                    acq_time = 'n/a'
                 scanpath = outputfile[0].relative_to(bidsses)
-                scans_table.loc[scanpath.as_posix(), 'acq_time'] = '1925-01-01T' + acq_time.strftime('%H:%M:%S')
+                scans_table.loc[scanpath.as_posix(), 'acq_time'] = acq_time
 
     # Write the scans_table to disk
     LOGGER.info(f"Writing acquisition time data to: {scans_tsv}")
@@ -325,6 +326,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                     jsondata['IntendedFor'] = [niifile.as_posix() for niifile in niifiles]  # The path needs to use forward slashes instead of backward slashes
                 else:
                     LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the search for {intendedfor} gave no results")
+                    jsondata['IntendedFor'] = ''
             else:
                 LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the IntendedFor value of the bidsmap entry was empty")
 
