@@ -30,6 +30,7 @@ Making BIDScoin more powerful and generic...
 
 ### Fixed
 - Save non-standard fieldmaps in the derivative folder
+- Add 'AcquisitionTime' to physio json-files and add the physio-files to the *_scans.tsv file 
     
 ## [3.5.2] - 2021-03-21
 

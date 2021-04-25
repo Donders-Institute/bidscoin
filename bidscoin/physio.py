@@ -13,6 +13,7 @@ import struct
 import logging
 import numpy as np
 import matplotlib.pyplot as plt
+import dateutil.parser
 from typing import Union
 from pydicom import dcmread, tag
 from pathlib import Path
@@ -33,7 +34,7 @@ def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, exp
     :param logdatatype:     Datatype that is extracted, e.g. 'ECG', 'RESP', 'PULS' or 'EXT'. Additional meta data is extracted if 'ACQUISITION_INFO'
     :param firsttime:       Value from readparsefile('ACQUISITION_INFO', ..) that has to be passed for parsing other logdatatypes
     :param expectedsamples: Number of samples of the parsed traces
-    :return:                traces, UUID[, nrslices, nrvolumes, firsttime, lasttime, nrechoes] ([..] if logdatatype=='ACQUISITION_INFO')
+    :return:                traces, UUID[, scandate, nrslices, nrvolumes, firsttime, lasttime, nrechoes] ([..] if logdatatype=='ACQUISITION_INFO')
     """
 
     # Echoes parameter was not added until R015a, so prefill a default value for compatibility with older data
@@ -93,6 +94,8 @@ def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, exp
                 if logdatatype != 'ACQUISITION_INFO':
                     LOGGER.error(f"Invalid [{varname}] parameter found"); raise ValueError(varname)
                 nrechoes = int(value)
+            if varname == 'ScanDate':
+                scandate = value
 
         else:
 
@@ -161,7 +164,7 @@ def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, exp
 
     if logdatatype == 'ACQUISITION_INFO':
         traces = traces - firsttime
-        return traces, UUID, nrslices, nrvolumes, firsttime, lasttime, nrechoes
+        return traces, UUID, scandate, nrslices, nrvolumes, firsttime, lasttime, nrechoes
     else:
         return traces, UUID
 
@@ -176,6 +179,7 @@ def readphysio(fn: Union[str,Path]) -> dict:
     returns active (i.e. non-zero) physio traces for ECG1, ECG2, ECG3, ECG4, RESP, PULS, EXT/EXT1 and EXT2 signals:
 
     physio['UUID']:     Universally unique identifier string for this measurement
+    physio['ScanDate']: The date/time string of the start of the data acquisition
     physio['Freq']:     Sampling frequency in Hz (= 1/clock-tick; The unit of time is clock-ticks, which normally is 2.5 ms)
     physio['SliceMap']: [2 x Volumes x Slices]     [1:2,:,:] = start & finish time stamp of each volume/slice
     physio['ACQ']:      [length = nr of samples]   True if acquisition is active at this time; False if not
@@ -202,7 +206,7 @@ def readphysio(fn: Union[str,Path]) -> dict:
         LOGGER.info(f"Reading physio DICOM file: {fn}")
         dicomdata    = dcmread(fn, force=True)          # The DICM tag may be missing for anonymized DICOM files
         manufacturer = dicomdata.get('Manufacturer')
-        physiotag    = tag.Tag('7fe1', '1010')
+        physiotag    = tag.Tag(0x7fe1, 0x1010)          # A private Siemens tag
         if manufacturer and manufacturer != 'SIEMENS':
             LOGGER.warning(f"Unsupported manufacturer: '{manufacturer}', this function is designed for SIEMENS advanced physiological logging data")
         if dicomdata.get('ImageType')==['ORIGINAL','PRIMARY','RAWDATA','PHYSIO'] and dicomdata.get(physiotag).private_creator=='SIEMENS CSA NON-IMAGE':
@@ -257,7 +261,7 @@ def readphysio(fn: Union[str,Path]) -> dict:
         LOGGER.error('No data files (ECG/RESP/PULS/EXT) found'); raise FileNotFoundError(fn)
 
     # Read in and/or parse the data
-    slicemap, UUID1, nrslices, nrvolumes, firsttime, lasttime, nrechoes = readparsefile(fnINFO, 'ACQUISITION_INFO')
+    slicemap, UUID1, scandate, nrslices, nrvolumes, firsttime, lasttime, nrechoes = readparsefile(fnINFO, 'ACQUISITION_INFO')
     if lasttime <= firsttime:
         LOGGER.error(f"Last timestamp {lasttime} is not greater than first timestamp {firsttime}, aborting..."); raise ValueError(lasttime)
     actualsamples   = lasttime - firsttime + 1
@@ -303,6 +307,7 @@ def readphysio(fn: Union[str,Path]) -> dict:
     physio['Freq']     = FREQ
     physio['SliceMap'] = slicemap
     physio['ACQ']      = ACQ[:,0]
+    physio['ScanDate'] = dateutil.parser.parse(scandate, fuzzy=True).strftime('%Y-%m-%dT%H:%M:%S')
     if foundECG and ECG.any():
         if sum(ECG[:,0]): physio['ECG1'] = ECG[:,0]
         if sum(ECG[:,1]): physio['ECG2'] = ECG[:,1]
@@ -335,7 +340,7 @@ def physio2tsv(physio: dict, bidsname: Union[str,Path]):
     starttime = -physio['ACQ'].nonzero()[0][0] / physio['Freq']     # Assumes that the physiological acquisition always starts before the MRI acquisition
 
     # Add each trace to a data table and save the table as a BIDS-compliant gzipped tsv file
-    physiotable = pd.DataFrame(columns=[key for key in physio if key not in ('UUID','Freq','SliceMap','ACQ')])
+    physiotable = pd.DataFrame(columns=[key for key in physio if key not in ('UUID','ScanDate','Freq','SliceMap','ACQ')])
     for key in physiotable.columns:
         physiotable[key] = physio[key]
     LOGGER.info(f"Writing physiological traces to: '{bidsname.with_suffix('.tsv.gz')}'")
@@ -345,6 +350,7 @@ def physio2tsv(physio: dict, bidsname: Union[str,Path]):
     with bidsname.with_suffix('.json').open('w') as json_fid:
         json.dump({'SamplingFrequency': physio['Freq'],
                    'StartTime': starttime,
+                   'AcquisitionTime': physio['ScanDate'],
                    'Columns': physiotable.columns.to_list()},
                   json_fid, indent=4)
 
