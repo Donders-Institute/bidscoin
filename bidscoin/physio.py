@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import dateutil.parser
 from typing import Union
-from pydicom import dcmread, tag
+from pydicom import dcmread, tag, multival
 from pathlib import Path
 
 # Defaults
@@ -261,7 +261,10 @@ def readphysio(fn: Union[str,Path]) -> dict:
                     'SeriesDescription',
                     'SeriesNumber',
                     'AcquisitionNumber'):
-            metadata[key] = dicomdata.get(key, '')
+            val = dicomdata.get(key, '')
+            if isinstance(val, multival.MultiValue):
+                val = list(val)
+            metadata[key] = val
 
     # If we don't have an encoded DICOM, check what text log files we have
     else:
