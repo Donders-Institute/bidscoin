@@ -191,12 +191,14 @@ def readphysio(fn: Union[str,Path]) -> dict:
     physio['PULS']:     [length = nr of samples]   PULS signal on this channel
     physio['EXT1']:     [length = nr of samples]   True if EXT/EXT1 signal detected; False if not
     physio['EXT2']:     [length = nr of samples]   True if EXT2 signal detected; False if not
+    physio['Meta']:     Dictionary with additional meta-data from the DICOM header (e.g. 'SeriesNumber')
 
     :param fn:  Either the fullpath of the DICOM file or the basename of the PHYSIO logfiles (fullpath without suffix and file extension, e.g. 'foo/bar/Physio_DATE_TIME_UUID')
     :return:    The active (non-zero) physio traces for ECG1, ECG2, ECG3, ECG4, RESP, PULS, EXT1 and EXT2 signals
     """
 
     foundECG = foundRESP = foundPULS = foundEXT = False
+    metadata = {}
 
     # Check input
     fn = Path(fn).resolve()
@@ -242,6 +244,24 @@ def readphysio(fn: Union[str,Path]) -> dict:
                     foundEXT  = True
         else:
             LOGGER.error(f"{fn} is not a valid DICOM format file"); raise RuntimeError(f"Invalid DICOM: {fn}")
+
+        # Add some (BIDS) meta-data from the DICOM header
+        for key in ('Modality',
+                    'Manufacturer',
+                    'ManufacturersModelName',
+                    'StationName',
+                    'DeviceSerialNumber',
+                    'SoftwareVersions',
+                    'InstitutionName',
+                    'InstitutionAddress',
+                    'PatientPosition',
+                    'BodyPartExamined',
+                    'ImageType',
+                    'ProtocolName',
+                    'SeriesDescription',
+                    'SeriesNumber',
+                    'AcquisitionNumber'):
+            metadata[key] = dicomdata.get(key, '')
 
     # If we don't have an encoded DICOM, check what text log files we have
     else:
@@ -304,10 +324,11 @@ def readphysio(fn: Union[str,Path]) -> dict:
     # Only return active (nonzero) physio traces
     physio             = dict()
     physio['UUID']     = UUID1
+    physio['ScanDate'] = dateutil.parser.parse(scandate, fuzzy=True).strftime('%Y-%m-%dT%H:%M:%S')
     physio['Freq']     = FREQ
     physio['SliceMap'] = slicemap
+    physio['Meta']     = metadata
     physio['ACQ']      = ACQ[:,0]
-    physio['ScanDate'] = dateutil.parser.parse(scandate, fuzzy=True).strftime('%Y-%m-%dT%H:%M:%S')
     if foundECG and ECG.any():
         if sum(ECG[:,0]): physio['ECG1'] = ECG[:,0]
         if sum(ECG[:,1]): physio['ECG2'] = ECG[:,1]
@@ -340,19 +361,19 @@ def physio2tsv(physio: dict, bidsname: Union[str,Path]):
     starttime = -physio['ACQ'].nonzero()[0][0] / physio['Freq']     # Assumes that the physiological acquisition always starts before the MRI acquisition
 
     # Add each trace to a data table and save the table as a BIDS-compliant gzipped tsv file
-    physiotable = pd.DataFrame(columns=[key for key in physio if key not in ('UUID','ScanDate','Freq','SliceMap','ACQ')])
+    physiotable = pd.DataFrame(columns=[key for key in physio if key not in ('UUID','ScanDate','Freq','SliceMap','ACQ','Meta')])
     for key in physiotable.columns:
         physiotable[key] = physio[key]
     LOGGER.info(f"Writing physiological traces to: '{bidsname.with_suffix('.tsv.gz')}'")
     physiotable.to_csv(bidsname.with_suffix('.tsv.gz'), header=False, index=False, sep='\t', compression='infer')
 
     # Write a json side-car file
+    physio['Meta']['SamplingFrequency'] = physio['Freq']
+    physio['Meta']['StartTime']         = starttime
+    physio['Meta']['AcquisitionTime']   = physio['ScanDate']
+    physio['Meta']['Columns']           = physiotable.columns.to_list()
     with bidsname.with_suffix('.json').open('w') as json_fid:
-        json.dump({'SamplingFrequency': physio['Freq'],
-                   'StartTime': starttime,
-                   'AcquisitionTime': physio['ScanDate'],
-                   'Columns': physiotable.columns.to_list()},
-                  json_fid, indent=4)
+        json.dump(physio['Meta'], json_fid, indent=4)
 
 
 def plotphysio(physio:dict, showsamples: int=1000):
