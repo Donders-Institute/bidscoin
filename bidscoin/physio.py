@@ -248,7 +248,7 @@ def readphysio(fn: Union[str,Path]) -> dict:
         # Add some (BIDS) meta-data from the DICOM header
         for key in ('Modality',
                     'Manufacturer',
-                    'ManufacturersModelName',
+                    'ManufacturerModelName',
                     'StationName',
                     'DeviceSerialNumber',
                     'SoftwareVersions',
