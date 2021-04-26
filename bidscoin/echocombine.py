@@ -111,56 +111,58 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                         echo.with_suffix('').with_suffix('.json').unlink()
 
                 # Construct relative path names as they are used in BIDS
-                echos_rel    = [str(echo.relative_to(session)) for echo in echos]
-                newechos_rel = [str(echo.relative_to(session)) for echo in newechos]
-                if output != 'derivatives':
-                    cefile_rel = str(cefile.relative_to(session))
+                oldechos_rel = [str(echo.relative_to(session).as_posix()) for echo in echos]
+                newechos_rel = [str(echo.relative_to(session).as_posix()) for echo in echos + newechos if echo.is_file()]
+                if output != 'derivatives':         # This doesn't work for IntendedFor in BIDS :-(
+                    cefile_rel = str(cefile.relative_to(session).as_posix())
 
                 # Update the IntendedFor fields in the fieldmap sidecar files (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
                 if output != 'derivatives' and (session/'fmap').is_dir():
                     for fmap in (session/'fmap').glob('*.json'):
                         with fmap.open('r') as fmap_fid:
-                            fmap_data = json.load(fmap_fid)
-                        if 'IntendedFor' in fmap_data:
-                            intendedfor = fmap_data['IntendedFor']
-                            if type(intendedfor)==str:
-                                intendedfor = [intendedfor]
-                            if echos_rel[0] in intendedfor:
-                                LOGGER.info(f"Updating 'IntendedFor' to {cefile_rel} in {fmap}")
-                                if not output:
-                                    intendedfor = [file for file in intendedfor if not file in echos_rel] + [cefile_rel] + [newecho for newecho in newechos_rel]
-                                elif output == datatype:
-                                    intendedfor = [file for file in intendedfor if not file in echos_rel] + [cefile_rel]
-                                else:
-                                    intendedfor = intendedfor + [cefile_rel]
-                                fmap_data['IntendedFor'] = intendedfor
-                                with fmap.open('w') as fmap_fid:
-                                    json.dump(fmap_data, fmap_fid, indent=4)
+                            metadata = json.load(fmap_fid)
+                        intendedfor = metadata.get('IntendedFor', [])
+                        if isinstance(intendedfor, str):
+                            intendedfor = [intendedfor]
+                        if oldechos_rel[0] in intendedfor:
+                            LOGGER.info(f"Updating 'IntendedFor' to {cefile_rel} in {fmap}")
+                            metadata['IntendedFor'] = [file for file in intendedfor if file not in oldechos_rel] + newechos_rel + [cefile_rel]
+                            with fmap.open('w') as fmap_fid:
+                                json.dump(metadata, fmap_fid, indent=4)
 
                 # Update the scans.tsv file
                 if (bidsdir/'.bidsignore').is_file():
                     bidsignore = (bidsdir/'.bidsignore').read_text().splitlines()
                 else:
                     bidsignore = [bids.unknowndatatype + '/']
-                bidsignore.append('derivatives/')
                 scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
-                if output+'/' not in bidsignore and scans_tsv.is_file():
+                if scans_tsv.is_file():
 
-                    LOGGER.info(f"Adding {cefile_rel} to {scans_tsv}")
-                    scans_table                 = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
-                    scans_table.loc[cefile_rel] = scans_table.loc[echos_rel[0]]
+                    scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
+                    if oldechos_rel[0] in scans_table.index:
+                        scans_table.loc['oldrow'] = scans_table.loc[oldechos_rel[0]]
+                    elif 'acq_time' in scans_table:
+                        with cefile.with_suffix('').with_suffix('.json').open('r') as fid:
+                            metadata = json.load(fid)
+                        scans_table.loc['oldrow', 'acq_time'] = metadata.get('AcquisitionTime')
+                    else:
+                        scans_table.loc['oldrow'] = None
 
-                    for echo, newecho in zip(echos_rel, newechos_rel):
-                        if not output:
-                            LOGGER.info(f"Updating {echo} -> {newecho} in {scans_tsv}")
-                            scans_table.loc[newecho] = scans_table.loc[echo]
+                    if output+'/' not in bidsignore + ['derivatives/'] and cefile.parent.name in bids.bidsdatatypes:
+                        LOGGER.info(f"Adding '{cefile_rel}' to '{scans_tsv}'")
+                        scans_table.loc[cefile_rel] = scans_table.loc['oldrow']
+
+                    for echo in oldechos_rel + newechos_rel:
+                        if echo in scans_table.index and not (session/echo).is_file():
+                            LOGGER.info(f"Removing '{echo}' from '{scans_tsv}'")
                             scans_table.drop(echo, inplace=True)
-                        elif output == datatype:
-                            LOGGER.info(f"Removing {echo} from {scans_tsv}")
-                            scans_table.drop(echo, inplace=True)
+                        elif echo not in scans_table.index and (session/echo).is_file() and echo.split('/')[0] in bids.bidsdatatypes:
+                            LOGGER.info(f"Adding '{echo}' to '{scans_tsv}'")
+                            scans_table.loc[echo] = scans_table.loc[cefile_rel]         # NB: Assuming that the echo-rows are all identical
 
+                    scans_table.drop('oldrow', inplace=True)
                     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
-                    scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
+                    scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
     LOGGER.info('-------------- FINISHED! -------------')
     LOGGER.info('')
