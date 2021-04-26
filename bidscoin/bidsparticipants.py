@@ -94,8 +94,8 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, subprefix: str=
     """
 
     # Input checking & defaults
-    rawfolder   = Path(rawfolder).resolve()
-    bidsfolder  = Path(bidsfolder).resolve()
+    rawfolder  = Path(rawfolder).resolve()
+    bidsfolder = Path(bidsfolder).resolve()
 
     # Start logging
     if dryrun:

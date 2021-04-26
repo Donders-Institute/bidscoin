@@ -78,16 +78,16 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
                 for match in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
 
                     # Construct the output filename and relative path name (used in BIDS)
-                    match_rel = str(match.relative_to(session))
+                    match_rel = str(match.relative_to(session).as_posix())
                     if not output:
                         outputfile     = match
                         outputfile_rel = match_rel
                     elif output == 'derivatives':
                         outputfile     = bidsdir/'derivatives'/'deface'/sub_id/ses_id/match.parent.name/match.name
-                        outputfile_rel = str(outputfile.relative_to(bidsdir))
+                        outputfile_rel = str(outputfile.relative_to(bidsdir).as_posix())
                     else:
                         outputfile     = session/output/match.name
-                        outputfile_rel = str(outputfile.relative_to(session))
+                        outputfile_rel = str(outputfile.relative_to(session).as_posix())
                     outputfile.parent.mkdir(parents=True, exist_ok=True)
 
                     # Deface the image
