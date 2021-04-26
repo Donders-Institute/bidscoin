@@ -165,6 +165,9 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                     scans_table.drop('oldrow', inplace=True)
                     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
                     scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
+                    for scan in scans_table.index:
+                        if not (session/scan).is_file():
+                            LOGGER.warning(f"Found non-existent file '{scan}' in '{scans_tsv}'")
 
     LOGGER.info('-------------- FINISHED! -------------')
     LOGGER.info('')
