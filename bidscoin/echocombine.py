@@ -73,7 +73,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 echonr    = bids.get_bidsvalue(match, 'echo')
                 mepattern = bids.get_bidsvalue(match, 'echo', '*')
                 echos     = sorted(match.parent.glob(mepattern.name))
-                newechos  = [echo.parents[1] / bids.unknowndatatype / echo.name for echo in echos]
+                newechos  = [echo.parents[1]/bids.unknowndatatype/echo.name for echo in echos]
                 if not echonr:
                     LOGGER.warning(f"No 'echo' key-value pair found in the filename, skipping: {match}")
                     continue

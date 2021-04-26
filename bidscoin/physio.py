@@ -353,7 +353,7 @@ def physio2tsv(physio: dict, tsvfile: Union[str, Path]):
     Saves the physiological traces to a BIDS-compliant [tsvfile].tsv.nii and a [tsvfile].log file
 
     :param physio:  Physio data dictionary from readphysio
-    :param tsvfile: Fullpath name of the bids output .tsv.nii/.json file
+    :param tsvfile: Fullpath name of the (BIDS) output .tsv.gz/.json file
     :return:
     """
 
