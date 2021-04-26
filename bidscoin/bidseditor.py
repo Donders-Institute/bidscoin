@@ -1040,8 +1040,14 @@ class EditWindow(QDialog):
 
             # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
             if key and value!=oldvalue:
-                LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
-                self.target_run['attributes'][key] = value
+                answer = QMessageBox.question(self, f"Edit {self.dataformat} mapping",
+                                              f'It is highly discouraged to change the {self.dataformat} source mapping unless you are an expert user. Do you really want to change "{oldvalue}" to {value}?',
+                                              QMessageBox.Yes | QMessageBox.No | QMessageBox.No)
+                if answer==QMessageBox.Yes:
+                    LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                    self.target_run['attributes'][key] = value
+                else:
+                    self.attributes_table.item(row, 1).setText(oldvalue)
 
     def bidscell2run(self, row: int, column: int):
         """BIDS attribute value has been changed. """
