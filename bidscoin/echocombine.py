@@ -113,7 +113,9 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 # Construct relative path names as they are used in BIDS
                 oldechos_rel = [str(echo.relative_to(session).as_posix()) for echo in echos]
                 newechos_rel = [str(echo.relative_to(session).as_posix()) for echo in echos + newechos if echo.is_file()]
-                if output != 'derivatives':         # This doesn't work for IntendedFor in BIDS :-(
+                if output == 'derivatives':
+                    cefile_rel = ''                 # This doesn't work for IntendedFor in BIDS :-(
+                else:
                     cefile_rel = str(cefile.relative_to(session).as_posix())
 
                 # Update the IntendedFor fields in the fieldmap sidecar files (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
@@ -125,8 +127,8 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                         if isinstance(intendedfor, str):
                             intendedfor = [intendedfor]
                         if oldechos_rel[0] in intendedfor:
-                            LOGGER.info(f"Updating 'IntendedFor' to {cefile_rel} in {fmap}")
-                            metadata['IntendedFor'] = [file for file in intendedfor if file not in oldechos_rel] + newechos_rel + [cefile_rel]
+                            LOGGER.info(f"Updating 'IntendedFor' in {fmap}")
+                            metadata['IntendedFor'] = [file for file in intendedfor if file not in oldechos_rel] + newechos_rel + list(filter(None,[cefile_rel]))
                             with fmap.open('w') as fmap_fid:
                                 json.dump(metadata, fmap_fid, indent=4)
 
@@ -158,7 +160,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                             scans_table.drop(echo, inplace=True)
                         elif echo not in scans_table.index and (session/echo).is_file() and echo.split('/')[0] in bids.bidsdatatypes:
                             LOGGER.info(f"Adding '{echo}' to '{scans_tsv}'")
-                            scans_table.loc[echo] = scans_table.loc[cefile_rel]         # NB: Assuming that the echo-rows are all identical
+                            scans_table.loc[echo] = scans_table.loc['oldrow']       # NB: Assuming that the echo-rows are all identical
 
                     scans_table.drop('oldrow', inplace=True)
                     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
