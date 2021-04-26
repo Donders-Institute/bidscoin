@@ -1040,8 +1040,8 @@ class EditWindow(QDialog):
 
             # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
             if key and value!=oldvalue:
-                answer = QMessageBox.question(self, f"Edit {self.dataformat} mapping",
-                                              f'It is highly discouraged to change the {self.dataformat} source mapping unless you are an expert user. Do you really want to change "{oldvalue}" to {value}?',
+                answer = QMessageBox.question(self, f"Edit {self.dataformat} attributes",
+                                              f'It is highly discouraged to change {self.dataformat} attribute values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
                                               QMessageBox.Yes | QMessageBox.No | QMessageBox.No)
                 if answer==QMessageBox.Yes:
                     LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
@@ -1067,8 +1067,16 @@ class EditWindow(QDialog):
                 if isinstance(value, str) and not (value.startswith('<<') and value.endswith('>>')):
                     value = bids.cleanup_value(bids.get_dynamicvalue(value, Path(self.target_run['provenance'])))
                     self.bids_table.item(row, 1).setText(value)
-                if key == 'run':
-                    LOGGER.warning(f"Expert usage: User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                if key == 'run' and oldvalue.startswith('<<') and oldvalue.endswith('>>'):
+                    answer = QMessageBox.question(self, f"Edit bids entities",
+                                                  f'It is highly discouraged to change the <<dynamic>> run-index unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
+                                                  QMessageBox.Yes | QMessageBox.No | QMessageBox.No)
+                    if answer==QMessageBox.Yes:
+                        LOGGER.warning(f"Expert usage: User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                    else:
+                        value = oldvalue
+                        self.bids_table.item(row, 1).setText(oldvalue)
+                        LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 else:
                     LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 self.target_run['bids'][key] = value
