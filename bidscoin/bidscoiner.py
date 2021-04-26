@@ -64,9 +64,11 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
     # Create a dataset description file if it does not exist
     dataset_file = bidsfolder/'dataset_description.json'
+    generatedby  = [{"Name":"BIDScoin", "Version":localversion, "CodeURL":"https://github.com/Donders-Institute/bidscoin"}]
     if not dataset_file.is_file():
+        LOGGER.info(f"Creating dataset description file: {dataset_file}")
         dataset_description = {"Name":                  "REQUIRED. Name of the dataset",
-                               "GeneratedBy":           {"Name": "BIDScoin", "Version": localversion, "CodeURL": "https://github.com/Donders-Institute/bidscoin"},
+                               "GeneratedBy":           generatedby,
                                "BIDSVersion":           str(bidscoin.bidsversion()),
                                "DatasetType":           "raw",
                                "License":               "RECOMMENDED. The license for the dataset. The use of license name abbreviations is RECOMMENDED for specifying a license. The corresponding full license text MAY be specified in an additional LICENSE file",
@@ -77,9 +79,14 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                                "EthicsApprovals":    	["OPTIONAL. List of ethics committee approvals of the research protocols and/or protocol identifiers"],
                                "ReferencesAndLinks":    ["OPTIONAL. List of references to publication that contain information on the dataset, or links", "https://github.com/Donders-Institute/bidscoin"],
                                "DatasetDOI":            "OPTIONAL. The Document Object Identifier of the dataset (not the corresponding paper)"}
-        LOGGER.info(f"Creating dataset description file: {dataset_file}")
-        with open(dataset_file, 'w') as fid:
-            json.dump(dataset_description, fid, indent=4)
+    else:
+        with dataset_file.open('r') as fid:
+            dataset_description = json.load(fid)
+        if not 'BIDScoin' in [generatedby_['Name'] for generatedby_ in dataset_description.get('GeneratedBy',[])]:
+            LOGGER.info(f"Adding {generatedby} to {dataset_file}")
+            dataset_description['GeneratedBy'] = dataset_description.get('GeneratedBy',[]) + generatedby
+    with dataset_file.open('w') as fid:
+        json.dump(dataset_description, fid, indent=4)
 
     # Create a README file if it does not exist
     readme_file = bidsfolder/'README'
