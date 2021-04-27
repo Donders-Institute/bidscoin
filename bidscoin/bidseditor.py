@@ -811,6 +811,7 @@ class EditWindow(QDialog):
         # Set-up the provenance table
         self.provenance_label = QLabel()
         self.provenance_label.setText('Provenance')
+        self.provenance_label.setToolTip(f"The {self.dataformat} source file from which the attributes were taken (Copy: Ctrl+C)")
         self.provenance_table = self.set_table(data_provenance, 'provenance')
         self.provenance_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.provenance_table.setToolTip(f"The {self.dataformat} source file from which the attributes were taken (Copy: Ctrl+C)")
@@ -819,6 +820,7 @@ class EditWindow(QDialog):
         # Set-up the attributes table
         self.attributes_label = QLabel()
         self.attributes_label.setText('Attributes')
+        self.attributes_label.setToolTip(f"The {self.dataformat} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using '*string*' wildcards, see documentation), only change these if you know what you are doing!")
         self.attributes_table = self.set_table(data_attributes, 'attributes', minimum=False)
         self.attributes_table.cellChanged.connect(self.attributescell2run)
         self.attributes_table.setToolTip(f"The {self.dataformat} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using '*string*' wildcards, see documentation), only change these if you know what you are doing!")
@@ -826,6 +828,7 @@ class EditWindow(QDialog):
         # Set-up the datatype dropdown menu
         self.datatype_label = QLabel()
         self.datatype_label.setText('Data type')
+        self.datatype_label.setToolTip(f"The BIDS data type and entities for constructing the BIDS output filename. You are encouraged to change their default values to be more meaningful and readable")
         self.datatype_dropdown = QComboBox()
         self.datatype_dropdown.addItems(bids.bidscoindatatypes + (bids.unknowndatatype, bids.ignoredatatype))
         self.datatype_dropdown.setCurrentIndex(self.datatype_dropdown.findText(self.target_datatype))
@@ -835,6 +838,7 @@ class EditWindow(QDialog):
         # Set-up the BIDS table
         self.bids_label = QLabel()
         self.bids_label.setText('Entities')
+        self.bids_label.setToolTip(f"The BIDS entities that are used to construct the BIDS output filename. You are encouraged to change their default values to be more meaningful and readable")
         self.bids_table = self.set_table(data_bids, 'bids', minimum=False)
         self.bids_table.setToolTip(f"The BIDS entities that are used to construct the BIDS output filename. You are encouraged to change their default values to be more meaningful and readable")
         self.bids_table.cellChanged.connect(self.bidscell2run)
@@ -842,6 +846,7 @@ class EditWindow(QDialog):
         # Set-up the meta table
         self.meta_label = QLabel()
         self.meta_label.setText('Meta data')
+        self.meta_label.setToolTip(f"Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
         self.meta_table = self.set_table(data_meta, 'meta', minimum=False)
         self.meta_table.setShowGrid(True)
         self.meta_table.cellChanged.connect(self.metacell2run)
@@ -850,6 +855,7 @@ class EditWindow(QDialog):
         # Set-up non-editable BIDS output name section
         self.bidsname_label = QLabel()
         self.bidsname_label.setText('Data filename')
+        self.bidsname_label.setToolTip(f"Preview of the BIDS output name for this data type")
         self.bidsname_textbox = QTextBrowser()
         self.bidsname_textbox.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.bidsname_textbox.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -885,6 +891,7 @@ class EditWindow(QDialog):
         # Add a box1 -> box2 arrow
         arrow = QLabel()
         arrow.setPixmap(QtGui.QPixmap(str(RIGHTARROW)).scaled(30, 30, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
+        arrow.setToolTip(f"BIDScoin maps {self.dataformat} attributes to BIDS data types")
 
         # Add the boxes to the layout
         layout_tables = QHBoxLayout()
