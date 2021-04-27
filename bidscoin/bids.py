@@ -12,8 +12,7 @@ import logging
 import tempfile
 import tarfile
 import zipfile
-from pydicom import dcmread
-from pydicom.fileset import FileSet
+from pydicom import dcmread, fileset, datadict
 from nibabel.parrec import parse_PAR_header
 from distutils.dir_util import copy_tree
 from typing import Union, List, Tuple
@@ -169,7 +168,7 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
     """
 
     if (folder/'DICOMDIR').is_file():
-        dicomdir = FileSet(folder/'DICOMDIR')
+        dicomdir = fileset.FileSet(folder/'DICOMDIR')
         files    = [Path(file.path) for file in dicomdir]
     else:
         files = sorted(folder.iterdir())
@@ -1118,22 +1117,41 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False) -> str:
     return bidsname
 
 
-def get_entityhelp(bidskey: str) -> str:
+def get_attributeshelp(attributeskey: str) -> str:
     """
-    Reads the description of a matching entity=bidskey in the schema/entities.yaml file
+    Reads the description of a matching attributes key in the source dictionary
 
-    :param bidskey: The bids key for which the help text is obtained
-    :return:        The obtained help text
+    TODO: implement PAR/REC support
+
+    :param attributeskey:   The attribute key for which the help text is obtained
+    :return:                The obtained help text
     """
 
-    # Read the heuristics from the bidsmap file
+    # Return the description from the DICOM dictionary or a default text
+    try:
+        return f"{attributeskey}\nThe DICOM '{datadict.dictionary_description(attributeskey)}' attribute"
+
+    except ValueError:
+        return f"{attributeskey}\nA private key"
+
+
+def get_entityhelp(entitykey: str) -> str:
+    """
+    Reads the description of a matching entity=entitykey in the schema/entities.yaml file
+
+    :param entitykey:   The bids key for which the help text is obtained
+    :return:            The obtained help text
+    """
+
+    # Return the description from the entities or a default text
     for entityname in entities:
-        if entities[entityname]['entity'] == bidskey:
+        if entities[entityname]['entity'] == entitykey:
             return f"{entities[entityname]['name']}\n{entities[entityname]['description']}"
-    return ''
+
+    return f"{entitykey}\nA private key"
 
 
-def get_metahelp(metakey):
+def get_metahelp(metakey: str) -> str:
     """
     Reads the description of a matching schema/metadata/metakey.yaml file
 
@@ -1141,13 +1159,14 @@ def get_metahelp(metakey):
     :return:        The obtained help text
     """
 
-    # Read the heuristics from the bidsmap file
+    # Return the description from the metadata file or a default text
     metafile = schema_folder/'metadata'/(metakey + '.yaml')
     if metafile.is_file():
         with metafile.open('r') as stream:
             metadata = yaml.load(stream)
             return f"{metadata['name']}\n{metadata['description']}"
-    return 'The key of the key-value meta data'
+
+    return f"{metakey}\nA private key"
 
 
 def get_dynamicvalue(bidsvalue: str, sourcefile: Path, cleanup: bool=True, runtime: bool=False) -> str:

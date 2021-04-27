@@ -15,7 +15,7 @@ import textwrap
 import logging
 import copy
 import webbrowser
-import pydicom
+from pydicom import dcmread
 from pathlib import Path
 from functools import partial
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -1025,7 +1025,9 @@ class EditWindow(QDialog):
                     table.setCellWidget(i, j, self.spacedwidget(value_dropdown))
                 else:
                     value_item = MyWidgetItem(value, iseditable=item['iseditable'])
-                    if table.objectName()=='bids' and j==0:
+                    if table.objectName()=='attributes' and j==0:
+                        value_item.setToolTip(bids.get_attributeshelp(key))
+                    elif table.objectName()=='bids' and j==0:
                         value_item.setToolTip(bids.get_entityhelp(key))
                     elif table.objectName()=='meta' and j==0:
                         value_item.setToolTip(bids.get_metahelp(key))
@@ -1308,7 +1310,7 @@ class InspectWindow(QDialog):
         super().__init__()
 
         if bids.is_dicomfile(filename):
-            text = str(pydicom.dcmread(filename, force=True))
+            text = str(dcmread(filename, force=True))
         elif bids.is_parfile(filename):
             text = filename.read_text()
         else:
