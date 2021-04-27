@@ -123,7 +123,7 @@ class UiMainWindow(MainWindow):
 
         # Set-up the main layout
         centralwidget = QtWidgets.QWidget()
-        top_layout = QtWidgets.QVBoxLayout(centralwidget)
+        top_layout = QVBoxLayout(centralwidget)
         top_layout.addWidget(tabwidget)
         top_layout.addWidget(buttonbox)
         tabwidget.setCurrentIndex(0)

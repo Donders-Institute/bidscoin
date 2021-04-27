@@ -1164,6 +1164,10 @@ def get_metahelp(metakey: str) -> str:
     if metafile.is_file():
         with metafile.open('r') as stream:
             metadata = yaml.load(stream)
+            if metakey == 'IntendedFor':    # IntendedFor is a special search-pattern field in BIDScoin
+                metadata['description'] += ('\nThese associated files can be dynamically searched for during'
+                                            '\nbidscoiner runtime with glob-style matching patterns such as'
+                                            '\n"<<Reward*_bold><Stop*_epi>>" (see the online documentation)')
             return f"{metadata['name']}\n{metadata['description']}"
 
     return f"{metakey}\nA private key"
