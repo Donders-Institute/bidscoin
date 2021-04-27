@@ -425,9 +425,9 @@ class UiMainWindow(MainWindow):
 
         # Update the subject / session table
         subitem = MyWidgetItem('subject', iseditable=False)
-        subitem.setToolTip(bids.get_bidshelp('sub'))
+        subitem.setToolTip(bids.get_entityhelp('sub'))
         sesitem = MyWidgetItem('session', iseditable=False)
-        sesitem.setToolTip(bids.get_bidshelp('ses'))
+        sesitem.setToolTip(bids.get_entityhelp('ses'))
         subses_table = self.subses_table[dataformat]
         subses_table.setItem(0, 0, subitem)
         subses_table.setItem(1, 0, sesitem)
@@ -1021,12 +1021,14 @@ class EditWindow(QDialog):
                     value_dropdown.setCurrentIndex(value[-1])
                     value_dropdown.currentIndexChanged.connect(partial(self.bidscell2run, i, j))
                     if j == 0:
-                        value_dropdown.setToolTip(bids.get_bidshelp(key))
+                        value_dropdown.setToolTip(bids.get_entityhelp(key))
                     table.setCellWidget(i, j, self.spacedwidget(value_dropdown))
                 else:
                     value_item = MyWidgetItem(value, iseditable=item['iseditable'])
                     if table.objectName()=='bids' and j==0:
-                        value_item.setToolTip(bids.get_bidshelp(key))
+                        value_item.setToolTip(bids.get_entityhelp(key))
+                    elif table.objectName()=='meta' and j==0:
+                        value_item.setToolTip(bids.get_metahelp(key))
                     table.setItem(i, j, value_item)
 
         table.blockSignals(False)

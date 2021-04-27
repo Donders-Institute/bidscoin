@@ -1118,9 +1118,9 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False) -> str:
     return bidsname
 
 
-def get_bidshelp(bidskey: str) -> str:
+def get_entityhelp(bidskey: str) -> str:
     """
-    Reads the meta-data of a matching entity in the heuristics/entities.yaml file
+    Reads the description of a matching entity=bidskey in the schema/entities.yaml file
 
     :param bidskey: The bids key for which the help text is obtained
     :return:        The obtained help text
@@ -1131,6 +1131,23 @@ def get_bidshelp(bidskey: str) -> str:
         if entities[entityname]['entity'] == bidskey:
             return f"{entities[entityname]['name']}\n{entities[entityname]['description']}"
     return ''
+
+
+def get_metahelp(metakey):
+    """
+    Reads the description of a matching schema/metadata/metakey.yaml file
+
+    :param metakey: The meta key for which the help text is obtained
+    :return:        The obtained help text
+    """
+
+    # Read the heuristics from the bidsmap file
+    metafile = schema_folder/'metadata'/(metakey + '.yaml')
+    if metafile.is_file():
+        with metafile.open('r') as stream:
+            metadata = yaml.load(stream)
+            return f"{metadata['name']}\n{metadata['description']}"
+    return 'The key of the key-value meta data'
 
 
 def get_dynamicvalue(bidsvalue: str, sourcefile: Path, cleanup: bool=True, runtime: bool=False) -> str:
