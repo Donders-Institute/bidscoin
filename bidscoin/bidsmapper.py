@@ -130,7 +130,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         app = QApplication(sys.argv)
         app.setApplicationName(f"{bidsmapfile} - BIDS editor {localversion}")
 
-        mainwin = bidseditor.MainWindow(bidsfolder, bidsmapfile, bidsmap_new, copy.deepcopy(bidsmap_new), template, subprefix=subprefix, sesprefix=sesprefix)
+        mainwin = bidseditor.MainWindow(bidsfolder, bidsmapfile, bidsmap_new, template, subprefix=subprefix, sesprefix=sesprefix)
         mainwin.show()
 
         messagebox = QMessageBox(mainwin)

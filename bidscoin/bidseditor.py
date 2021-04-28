@@ -68,11 +68,11 @@ args: Argument string that is passed to dcm2niix. Click [Test] and see the termi
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, bidsfolder, bidsmap_filename, input_bidsmap, output_bidsmap, template_bidsmap,
-                 subprefix='sub-', sesprefix='ses-', reload: bool=False, datasaved: bool=False):
+    def __init__(self, bidsfolder, bidsmap_filename, input_bidsmap, template_bidsmap,
+                 subprefix='sub-', sesprefix='ses-', reset: bool=False, datasaved: bool=False):
 
         # Set-up the main window
-        if not reload:
+        if not reset:
             super().__init__()
             self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
             self.set_menu_and_status_bar()
@@ -82,7 +82,7 @@ class MainWindow(QMainWindow):
         self.bidsfolder       = Path(bidsfolder)
         self.bidsmap_filename = Path(bidsmap_filename)
         self.input_bidsmap    = input_bidsmap
-        self.output_bidsmap   = output_bidsmap
+        self.output_bidsmap   = copy.deepcopy(input_bidsmap)
         self.template_bidsmap = template_bidsmap
         self.subprefix        = subprefix
         self.sesprefix        = sesprefix
@@ -106,9 +106,9 @@ class MainWindow(QMainWindow):
         buttonbox.setStandardButtons(QDialogButtonBox.Save | QDialogButtonBox.Reset | QDialogButtonBox.Help)
         buttonbox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
         buttonbox.button(QDialogButtonBox.Save).setToolTip('Save the Options and BIDSmap to disk if you are satisfied with all the BIDS output names')
-        buttonbox.button(QDialogButtonBox.Reset).setToolTip('Reload the Options and BIDSmap from disk')
+        buttonbox.button(QDialogButtonBox.Reset).setToolTip('Reset the Options and BIDSmap')
         buttonbox.helpRequested.connect(self.get_help)
-        buttonbox.button(QDialogButtonBox.Reset).clicked.connect(self.reload)
+        buttonbox.button(QDialogButtonBox.Reset).clicked.connect(self.reset)
         buttonbox.button(QDialogButtonBox.Save).clicked.connect(self.save_bidsmap)
 
         # Set-up the main layout
@@ -120,8 +120,8 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(centralwidget)
 
-        if not reload:
-            self.datasaved = datasaved          # Do this after updating all the tables (which assigns datasaved = False)
+        if not reset:
+            self.datasaved = datasaved          # Do this after updating all the tables (which assigns datasaved = False). TODO: replace datasaved with a sha1 hash of the yaml stream?
 
             self.adjustSize()                   # Center the main window to the center point of screen
             cp = QDesktopWidget().availableGeometry().center()
@@ -146,12 +146,12 @@ class MainWindow(QMainWindow):
         self.setMenuBar(menubar)
 
         # Set the file menu actions
-        actionreload = QAction(self)
-        actionreload.setText('Reset')
-        actionreload.setStatusTip('Reload the BIDSmap from disk')
-        actionreload.setShortcut('Ctrl+R')
-        actionreload.triggered.connect(self.reload)
-        menufile.addAction(actionreload)
+        actionreset = QAction(self)
+        actionreset.setText('Reset')
+        actionreset.setStatusTip('Reset the BIDSmap')
+        actionreset.setShortcut('Ctrl+R')
+        actionreset.triggered.connect(self.reset)
+        menufile.addAction(actionreset)
 
         actionsave = QAction(self)
         actionsave.setText('Save')
@@ -239,7 +239,7 @@ class MainWindow(QMainWindow):
         samples_table.itemDoubleClicked.connect(self.inspect_sourcefile)
         header = samples_table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)                 # Temporarily set it to Stretch to have Qt set the right window width -> set to Interactive in setupUI -> not reload
+        header.setSectionResizeMode(1, QHeaderView.Stretch)                 # Temporarily set it to Stretch to have Qt set the right window width -> set to Interactive in setupUI -> not reset
         header.setSectionResizeMode(3, QHeaderView.Stretch)
         self.samples_table[dataformat] = samples_table
 
@@ -263,14 +263,16 @@ class MainWindow(QMainWindow):
         tool_list    = []
         tool_options = {}
         for tool, parameters in self.output_bidsmap['Options'].items():
-            # Set the tools
-            if tool == 'BIDScoin':
+
+            # Make a tool list
+            if tool == 'bidscoin':
                 tooltip_text = TOOLTIP_BIDSCOIN
-            elif tool == 'dcm2niix':
+            elif tool == 'dcm2niix2bids':
                 tooltip_text = TOOLTIP_DCM2NIIX
             else:
                 tooltip_text = None
             tool_list.append({'tool': tool, 'tooltip_text': tooltip_text})
+
             # Store the options for each tool
             tool_options[tool] = []
             for key, value in parameters.items():
@@ -637,7 +639,7 @@ class MainWindow(QMainWindow):
         :return:        True if the tool generated the expected result, False if there was a tool error, None if not tested
         """
 
-        if tool=='dcm2niix':
+        if tool=='dcm2niix2bids':
             command = f"{opts['path']}dcm2niix -u"
         elif tool=='bidsmapper':
             command = 'bidsmapper -v'
@@ -663,25 +665,19 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, 'Plugin test', f"Import of {plugin}: Failed\n"
                                                       'See terminal output for more info')
 
-    def reload(self):
-        """Reset button: reload the original input BIDS map. """
+    def reset(self):
+        """Reset button: reset the window with the original input BIDS map. """
         if self.editwindow_isopen:
             self.editwindow.reject(confirm=False)
 
-        if not self.bidsmap_filename.is_file():
-            LOGGER.info('Could not reload the bidsmap')
-            QMessageBox.warning(self, 'Reset', f"Could not find and reload the bidsmap file:\n{self.bidsmap_filename}")
-            return
-        LOGGER.info('User reloads the bidsmap')
-        self.output_bidsmap, _ = bids.load_bidsmap(self.bidsmap_filename)
+        LOGGER.info('User resets the bidsmap')
         self.__init__(self.bidsfolder,
                       self.bidsmap_filename,
                       self.input_bidsmap,
-                      self.output_bidsmap,
                       self.template_bidsmap,
                       self.subprefix,
                       self.sesprefix,
-                      reload=True)
+                      reset=True)
 
         # Start with a fresh errorlog
         for filehandler in LOGGER.handlers:
@@ -749,22 +745,20 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         """Handle exit. """
         if not self.datasaved:
-            answer = QMessageBox.question(self, 'Exit BIDS editor', 'Do you want to save the bidsmap to disk?',
+            answer = QMessageBox.question(self, 'Closing the BIDS editor', 'Do you want to save the bidsmap to disk?',
                                           QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
             if answer == QMessageBox.Yes:
                 self.save_bidsmap()
             if answer == QMessageBox.No:
                 self.datasaved = True
             elif answer == QMessageBox.Cancel:
-                if event:               # User clicks the 'X' or presses alt-F4
+                if event:               # User clicked the 'X'-button or pressed alt-F4 -> drop signal
                     event.ignore()
-                else:                   # User presses alt-X (= menu action) -> close()
-                    pass
                 return
 
-        if event:                       # User clicks the 'X' or presses alt-F4
+        if event:                       # User clicked the 'X'-button or pressed alt-F4 -> normal closeEvent
             super(MainWindow, self).closeEvent(event)
-        else:                           # User presses alt-X (= menu action) -> close()
+        else:                           # User pressed alt-X (= menu action) -> normal close()
             self.close()
         QApplication.quit()             # TODO: Do not use class method but self.something?
 
@@ -1424,7 +1418,6 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', subpr
     # Obtain the initial bidsmap info
     template_bidsmap, templatefile = bids.load_bidsmap(templatefile, bidsfolder/'code'/'bidscoin')
     input_bidsmap, bidsmapfile     = bids.load_bidsmap(bidsmapfile,  bidsfolder/'code'/'bidscoin')
-    output_bidsmap                 = copy.deepcopy(input_bidsmap)
     if not input_bidsmap:
         LOGGER.error(f'No bidsmap file found in {bidsfolder}. Please run the bidsmapper first and / or use the correct bidsfolder')
         return
@@ -1432,7 +1425,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', subpr
     # Start the Qt-application
     app = QApplication(sys.argv)
     app.setApplicationName(f"{bidsmapfile} - BIDS editor {bidscoin.version()}")
-    mainwin = MainWindow(bidsfolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap, subprefix=subprefix, sesprefix=sesprefix, datasaved=True)
+    mainwin = MainWindow(bidsfolder, bidsmapfile, input_bidsmap, template_bidsmap, subprefix=subprefix, sesprefix=sesprefix, datasaved=True)
     mainwin.show()
     app.exec()
 

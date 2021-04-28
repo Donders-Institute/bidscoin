@@ -137,8 +137,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
         # Convert the source-files in the run folder to nifti's in the BIDS-folder
         else:
             command = '{path}dcm2niix {args} -f "{filename}" -o "{outfolder}" "{source}"'.format(
-                path      = bidsmap['Options']['dcm2niix']['path'],
-                args      = bidsmap['Options']['dcm2niix']['args'],
+                path      = bidsmap['Options']['dcm2niix2bids']['path'],
+                args      = bidsmap['Options']['dcm2niix2bids']['args'],
                 filename  = bidsname,
                 outfolder = outfolder,
                 source    = source)
@@ -146,7 +146,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                 continue
 
             # Replace uncropped output image with the cropped one
-            if '-x y' in bidsmap['Options']['dcm2niix']['args']:
+            if '-x y' in bidsmap['Options']['dcm2niix2bids']['args']:
                 for dcm2niixfile in sorted(outfolder.glob(bidsname + '*_Crop_*')):                              # e.g. *_Crop_1.nii.gz
                     ext         = ''.join(dcm2niixfile.suffixes)
                     newbidsfile = str(dcm2niixfile).rsplit(ext,1)[0].rsplit('_Crop_',1)[0] + ext
