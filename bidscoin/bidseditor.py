@@ -121,7 +121,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(centralwidget)
 
         if not reset:
-            self.datasaved = datasaved          # Do this after updating all the tables (which assigns datasaved = False). TODO: replace datasaved with a sha1 hash of the yaml stream?
+            self.datasaved = datasaved          # Do this after updating all the tables (which assigns datasaved = False)
 
             self.adjustSize()                   # Center the main window to the center point of screen
             cp = QDesktopWidget().availableGeometry().center()
@@ -744,17 +744,16 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Handle exit. """
-        if not self.datasaved:
+        if not self.datasaved and str(self.input_bidsmap) != str(self.output_bidsmap):
             answer = QMessageBox.question(self, 'Closing the BIDS editor', 'Do you want to save the bidsmap to disk?',
                                           QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
             if answer == QMessageBox.Yes:
                 self.save_bidsmap()
-            if answer == QMessageBox.No:
-                self.datasaved = True
             elif answer == QMessageBox.Cancel:
                 if event:               # User clicked the 'X'-button or pressed alt-F4 -> drop signal
                     event.ignore()
                 return
+            self.datasaved = True       # Prevent re-entering this if-statement after close() -> closeEvent()
 
         if event:                       # User clicked the 'X'-button or pressed alt-F4 -> normal closeEvent
             super(MainWindow, self).closeEvent(event)
