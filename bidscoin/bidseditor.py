@@ -68,25 +68,17 @@ args: Argument string that is passed to dcm2niix. Click [Test] and see the termi
 
 class MainWindow(QMainWindow):
 
-    def __init__(self):
-        super().__init__()
-        actionquit = QAction('Quit', self)
-        actionquit.triggered.connect(self.closeEvent)
+    def __init__(self, bidsfolder, bidsmap_filename, input_bidsmap, output_bidsmap, template_bidsmap,
+                 subprefix='sub-', sesprefix='ses-', reload: bool=False, datasaved: bool=False):
 
-        self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
-
-    def closeEvent(self, event):
-        """Handle exit. """
-        QApplication.quit()     # TODO: Do not use class method but self.something
-
-
-class UiMainWindow(MainWindow):
-
-    def setupui(self, MainWindow, bidsfolder, bidsmap_filename, input_bidsmap, output_bidsmap, template_bidsmap,
-                subprefix='sub-', sesprefix='ses-', reload: bool=False):
+        # Set-up the main window
+        if not reload:
+            super().__init__()
+            self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
+            self.set_menu_and_status_bar()
+            self.editwindow_isopen = None
 
         # Set the input data
-        self.MainWindow       = MainWindow
         self.bidsfolder       = Path(bidsfolder)
         self.bidsmap_filename = Path(bidsmap_filename)
         self.input_bidsmap    = input_bidsmap
@@ -95,9 +87,6 @@ class UiMainWindow(MainWindow):
         self.subprefix        = subprefix
         self.sesprefix        = sesprefix
         self.dataformats      = [dataformat for dataformat in input_bidsmap if dataformat not in ('Options', 'PlugIns') and bids.dir_bidsmap(input_bidsmap, dataformat)]
-
-        self.has_editwindow_open = None
-        self.datasaved           = False
 
         # Set-up the tabs
         tabwidget = self.tabwidget = QtWidgets.QTabWidget()
@@ -129,82 +118,80 @@ class UiMainWindow(MainWindow):
         top_layout.addWidget(buttonbox)
         tabwidget.setCurrentIndex(0)
 
-        MainWindow.setCentralWidget(centralwidget)
+        self.setCentralWidget(centralwidget)
+
+        if not reload:
+            self.datasaved = datasaved          # Do this after updating all the tables (which assigns datasaved = False)
+
+            self.adjustSize()                   # Center the main window to the center point of screen
+            cp = QDesktopWidget().availableGeometry().center()
+            qr = self.frameGeometry()
+            qr.moveCenter(cp)
+            self.move(qr.topLeft())             # Top left of rectangle becomes top left of window centering it
 
         # Restore the samples_table stretching after the main window has been sized / current tabindex has been set (otherwise the main window can become too narrow)
         for dataformat in self.dataformats:
             header = self.samples_table[dataformat].horizontalHeader()
             header.setSectionResizeMode(1, QHeaderView.Interactive)
 
-        if not reload:
-
-            self.set_menu_and_status_bar()
-
-            # Center the main window to the center point of screen
-            MainWindow.adjustSize()
-            cp = QDesktopWidget().availableGeometry().center()
-            qr = MainWindow.frameGeometry()
-            qr.moveCenter(cp)
-            MainWindow.move(qr.topLeft())            # Top left of rectangle becomes top left of window centering it
-
     def set_menu_and_status_bar(self):
         # Set the menus
-        menubar  = QtWidgets.QMenuBar(self.MainWindow)
+        menubar  = QtWidgets.QMenuBar(self)
         menufile = QtWidgets.QMenu(menubar)
         menufile.setTitle('File')
         menubar.addAction(menufile.menuAction())
         menuhelp = QtWidgets.QMenu(menubar)
         menuhelp.setTitle('Help')
         menubar.addAction(menuhelp.menuAction())
-        self.MainWindow.setMenuBar(menubar)
+        self.setMenuBar(menubar)
 
         # Set the file menu actions
-        actionreload = QAction(self.MainWindow)
+        actionreload = QAction(self)
         actionreload.setText('Reset')
         actionreload.setStatusTip('Reload the BIDSmap from disk')
         actionreload.setShortcut('Ctrl+R')
         actionreload.triggered.connect(self.reload)
         menufile.addAction(actionreload)
 
-        actionsave = QAction(self.MainWindow)
+        actionsave = QAction(self)
         actionsave.setText('Save')
         actionsave.setStatusTip('Save the BIDSmap to disk')
         actionsave.setShortcut('Ctrl+S')
         actionsave.triggered.connect(self.save_bidsmap)
         menufile.addAction(actionsave)
 
-        actionexit = QAction(self.MainWindow)
+        actionexit = QAction(self)
         actionexit.setText('Exit')
         actionexit.setStatusTip('Exit the application')
         actionexit.setShortcut('Ctrl+X')
-        actionexit.triggered.connect(self.exit_application)
+        actionexit.triggered.connect(self.closeEvent)
         menufile.addAction(actionexit)
 
         # Set help menu actions
-        actionhelp = QAction(self.MainWindow)
+        actionhelp = QAction(self)
         actionhelp.setText('Documentation')
         actionhelp.setStatusTip('Go to the online BIDScoin documentation')
         actionhelp.setShortcut('F1')
         actionhelp.triggered.connect(self.get_help)
         menuhelp.addAction(actionhelp)
 
-        actionbidshelp = QAction(self.MainWindow)
+        actionbidshelp = QAction(self)
         actionbidshelp.setText('BIDS specification')
         actionbidshelp.setStatusTip('Go to the online BIDS specification documentation')
         actionbidshelp.setShortcut('F2')
         actionbidshelp.triggered.connect(self.get_bids_help)
         menuhelp.addAction(actionbidshelp)
 
-        actionabout = QAction(self.MainWindow)
+        actionabout = QAction(self)
         actionabout.setText('About BIDScoin')
         actionabout.setStatusTip('Show information about the application')
         actionabout.triggered.connect(self.show_about)
         menuhelp.addAction(actionabout)
 
         # Set the statusbar
-        statusbar = QtWidgets.QStatusBar(self.MainWindow)
+        statusbar = QtWidgets.QStatusBar(self)
         statusbar.setStatusTip('Statusbar')
-        self.MainWindow.setStatusBar(statusbar)
+        self.setStatusBar(statusbar)
 
     def set_tab_bidsmap(self, dataformat):
         """Set the SOURCE file sample listing tab.  """
@@ -273,7 +260,7 @@ class UiMainWindow(MainWindow):
         """Set the options tab.  """
 
         # Create the tool tables
-        tool_list = []
+        tool_list    = []
         tool_options = {}
         for tool, parameters in self.output_bidsmap['Options'].items():
             # Set the tools
@@ -282,33 +269,17 @@ class UiMainWindow(MainWindow):
             elif tool == 'dcm2niix':
                 tooltip_text = TOOLTIP_DCM2NIIX
             else:
-                tooltip_text = tool
-            tool_list.append({
-                'tool': tool,
-                'tooltip_text': tooltip_text
-            })
+                tooltip_text = None
+            tool_list.append({'tool': tool, 'tooltip_text': tooltip_text})
             # Store the options for each tool
             tool_options[tool] = []
             for key, value in parameters.items():
                 if value is None:
                     value = ''
                 tool_options[tool].append([
-                    {
-                        'value': tool,
-                        'iseditable': False,
-                        'tooltip_text': None
-                    },
-                    {
-                        'value': key,
-                        'iseditable': False,
-                        'tooltip_text': tooltip_text
-                    },
-                    {
-                        'value': value,
-                        'iseditable': True,
-                        'tooltip_text': 'Double-click to edit the option'
-                    }
-                ])
+                    {'value': tool,  'iseditable': False, 'tooltip_text': None},
+                    {'value': key,   'iseditable': False, 'tooltip_text': tooltip_text},
+                    {'value': value, 'iseditable': True,  'tooltip_text': 'Double-click to edit the option'}])
 
         labels = []
         self.tables_options = []
@@ -420,6 +391,8 @@ class UiMainWindow(MainWindow):
     def update_subses_and_samples(self, output_bidsmap):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
 
+        self.datasaved = False
+
         dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
 
         self.output_bidsmap = output_bidsmap  # input main window / output from edit window -> output main window
@@ -503,7 +476,7 @@ class UiMainWindow(MainWindow):
                 edit_button.clicked.connect(self.open_editwindow)
                 edit_button.setCheckable(not sys.platform.startswith('darwin'))
                 edit_button.setAutoExclusive(True)
-                if provenance.name and str(provenance)==self.has_editwindow_open:    # Highlight the previously opened item
+                if provenance.name and str(provenance)==self.editwindow_isopen:    # Highlight the previously opened item
                     edit_button.setChecked(True)
                 else:
                     edit_button.setChecked(False)
@@ -533,13 +506,13 @@ class UiMainWindow(MainWindow):
         if not datatype:
             dataformat    = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
             samples_table = self.samples_table[dataformat]
-            button        = self.MainWindow.focusWidget()
+            button        = self.focusWidget()
             rowindex      = samples_table.indexAt(button.pos()).row()
             datatype      = samples_table.item(rowindex, 2).text()
             provenance    = Path(samples_table.item(rowindex, 5).text())
 
         # Check for open edit window, find the right datatype index and open the edit window
-        if not self.has_editwindow_open:
+        if not self.editwindow_isopen:
             # Find the source index of the run in the list of runs (using the provenance) and open the edit window
             dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
             for run in self.output_bidsmap[dataformat][datatype]:
@@ -547,9 +520,9 @@ class UiMainWindow(MainWindow):
                     LOGGER.info(f'User is editing {provenance}')
                     self.editwindow = EditWindow(dataformat, provenance, datatype, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
                     if provenance.name:
-                        self.has_editwindow_open = str(provenance)
+                        self.editwindow_isopen = str(provenance)
                     else:
-                        self.has_editwindow_open = True
+                        self.editwindow_isopen = True
                     self.editwindow.done_edit.connect(self.update_subses_and_samples)
                     self.editwindow.finished.connect(self.release_editwindow)
                     self.editwindow.show()
@@ -559,16 +532,19 @@ class UiMainWindow(MainWindow):
         else:
             # Ask the user if he wants to save his results first before opening a new edit window
             self.editwindow.reject()
-            if self.has_editwindow_open:
+            if self.editwindow_isopen:
                 return
             self.open_editwindow(provenance, datatype)
 
     def release_editwindow(self):
         """Allow a new edit window to be opened"""
-        self.has_editwindow_open = None
+        self.editwindow_isopen = None
 
     def update_plugintable(self):
         """Plots an extendable table of plugins from self.output_bidsmap['PlugIns']"""
+
+        self.datasaved = False
+
         plugins  = self.output_bidsmap['PlugIns']
         num_rows = len(plugins) + 1
 
@@ -601,10 +577,11 @@ class UiMainWindow(MainWindow):
 
     def addedplugin2bidsmap(self):
         """Add a plugin by letting the user select a plugin-file"""
-        plugin = QFileDialog.getOpenFileNames(self.MainWindow, 'Select the plugin-file(s)', directory=str(self.bidsfolder/'code'/'bidscoin'), filter='Python files (*.py *.pyc *.pyo);; All files (*)')
-        LOGGER.info(f'Added plugins: {plugin[0]}')
-        self.output_bidsmap['PlugIns'] += plugin[0]
-        self.update_plugintable()
+        plugin = QFileDialog.getOpenFileNames(self, 'Select the plugin-file(s)', directory=str(self.bidsfolder/'code'/'bidscoin'), filter='Python files (*.py *.pyc *.pyo);; All files (*)')
+        if plugin:
+            LOGGER.info(f'Added plugins: {plugin[0]}')
+            self.output_bidsmap['PlugIns'] += plugin[0]
+            self.update_plugintable()
 
     def changedplugin2bidsmap(self, row: int, column: int):
         """Add / edit a plugin or delete if cell is empty"""
@@ -625,17 +602,18 @@ class UiMainWindow(MainWindow):
             self.update_plugintable()
 
     def toolcell2bidsmap(self, tool: str, idx: int, row: int, column: int):
-        """Option value has been changed tool options table. """
+        """Option value has been changed in the tool options table """
         if column == 2:
-            table = self.tables_options[idx]  # Select the selected table
-            key = table.item(row, 1).text()
-            value = table.item(row, 2).text()
+            table    = self.tables_options[idx]  # Select the selected table
+            key      = table.item(row, 1).text()
+            value    = table.item(row, 2).text()
             oldvalue = self.output_bidsmap['Options'][tool][key]
 
             # Only if cell was actually clicked, update
             if key and value!=oldvalue:
                 LOGGER.info(f"User has set ['Options']['{tool}']['{key}'] from '{oldvalue}' to '{value}'")
                 self.output_bidsmap['Options'][tool][key] = value
+                self.datasaved = False
 
     def test_tool(self, tool: str):
         """Test the bidsmap tool and show the result in a pop-up window
@@ -643,11 +621,11 @@ class UiMainWindow(MainWindow):
         :param tool:    Name of the tool that is being tested in bidsmap['Options']
          """
         if self.test_tooloptions(tool, self.output_bidsmap['Options'][tool]):
-            QMessageBox.information(self.MainWindow, 'Tool test', f"Execution of {tool}: Passed\n"
-                                                                   'See terminal output for more info')
+            QMessageBox.information(self, 'Tool test', f"Execution of {tool}: Passed\n"
+                                                        'See terminal output for more info')
         else:
-            QMessageBox.warning(self.MainWindow, 'Tool test', f"Execution of {tool}: Failed\n"
-                                                               'See terminal output for more info')
+            QMessageBox.warning(self, 'Tool test', f"Execution of {tool}: Failed\n"
+                                                    'See terminal output for more info')
 
     @staticmethod
     def test_tooloptions(tool: str, opts: dict) -> bool:
@@ -679,30 +657,31 @@ class UiMainWindow(MainWindow):
         :param plugin:    Name of the plugin that is being tested in bidsmap['PlugIns']
          """
         if bidscoin.test_plugins(Path(plugin)):
-            QMessageBox.information(self.MainWindow, 'Plugin test', f"Import of {plugin}: Passed\n"
-                                                                     'See terminal output for more info')
+            QMessageBox.information(self, 'Plugin test', f"Import of {plugin}: Passed\n"
+                                                          'See terminal output for more info')
         else:
-            QMessageBox.warning(self.MainWindow, 'Plugin test', f"Import of {plugin}: Failed\n"
-                                                                 'See terminal output for more info')
+            QMessageBox.warning(self, 'Plugin test', f"Import of {plugin}: Failed\n"
+                                                      'See terminal output for more info')
 
     def reload(self):
         """Reset button: reload the original input BIDS map. """
-        if self.has_editwindow_open:
+        if self.editwindow_isopen:
             self.editwindow.reject(confirm=False)
 
         if not self.bidsmap_filename.is_file():
             LOGGER.info('Could not reload the bidsmap')
-            QMessageBox.warning(self.MainWindow, 'Reset', f"Could not find and reload the bidsmap file:\n{self.bidsmap_filename}")
+            QMessageBox.warning(self, 'Reset', f"Could not find and reload the bidsmap file:\n{self.bidsmap_filename}")
             return
         LOGGER.info('User reloads the bidsmap')
         self.output_bidsmap, _ = bids.load_bidsmap(self.bidsmap_filename)
-        self.setupui(self.MainWindow,
-                     self.bidsfolder,
-                     self.bidsmap_filename,
-                     self.input_bidsmap,
-                     self.output_bidsmap,
-                     self.template_bidsmap,
-                     reload=True)
+        self.__init__(self.bidsfolder,
+                      self.bidsmap_filename,
+                      self.input_bidsmap,
+                      self.output_bidsmap,
+                      self.template_bidsmap,
+                      self.subprefix,
+                      self.sesprefix,
+                      reload=True)
 
         # Start with a fresh errorlog
         for filehandler in LOGGER.handlers:
@@ -720,7 +699,7 @@ class UiMainWindow(MainWindow):
                     if not run['meta'].get('IntendedFor'):
                         LOGGER.warning(f"IntendedFor fieldmap value is empty for {dataformat} run-item: {run['provenance']}")
 
-        filename, _ = QFileDialog.getSaveFileName(self.MainWindow, 'Save File',
+        filename, _ = QFileDialog.getSaveFileName(self, 'Save File',
                         str(self.bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'),
                         'YAML Files (*.yaml *.yml);;All Files (*)')
         if filename:
@@ -750,8 +729,8 @@ class UiMainWindow(MainWindow):
     def show_about(self):
         """Shows a pop-up window with the BIDScoin version"""
         version, message = bidscoin.version(check=True)
-        # QMessageBox.about(self.MainWindow, 'About', f"BIDS editor {version}\n\n{message}")    # Has an ugly / small icon image
-        messagebox = QMessageBox(self.MainWindow)
+        # QMessageBox.about(self, 'About', f"BIDS editor {version}\n\n{message}")    # Has an ugly / small icon image
+        messagebox = QMessageBox(self)
         messagebox.setText(f"\n\nBIDS editor {version}\n\n{message}")
         messagebox.setWindowTitle('About')
         messagebox.setIconPixmap(QtGui.QPixmap(str(BIDSCOIN_LOGO)).scaled(150, 150, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
@@ -767,15 +746,27 @@ class UiMainWindow(MainWindow):
         """Get online help. """
         webbrowser.open(HELP_URL_DEFAULT)
 
-    def exit_application(self):
+    def closeEvent(self, event):
         """Handle exit. """
         if not self.datasaved:
-            answer = QMessageBox.question(self, 'Exit BIDS editor', 'Have you saved the changes you made?',
-                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            answer = QMessageBox.question(self, 'Exit BIDS editor', 'Do you want to save the bidsmap to disk?',
+                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
+            if answer == QMessageBox.Yes:
+                self.save_bidsmap()
             if answer == QMessageBox.No:
+                self.datasaved = True
+            elif answer == QMessageBox.Cancel:
+                if event:               # User clicks the 'X' or presses alt-F4
+                    event.ignore()
+                else:                   # User presses alt-X (= menu action) -> close()
+                    pass
                 return
 
-        self.MainWindow.close()
+        if event:                       # User clicks the 'X' or presses alt-F4
+            super(MainWindow, self).closeEvent(event)
+        else:                           # User presses alt-X (= menu action) -> close()
+            self.close()
+        QApplication.quit()             # TODO: Do not use class method but self.something?
 
 
 class EditWindow(QDialog):
@@ -1441,9 +1432,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', subpr
     # Start the Qt-application
     app = QApplication(sys.argv)
     app.setApplicationName(f"{bidsmapfile} - BIDS editor {bidscoin.version()}")
-    mainwin = MainWindow()
-    gui = UiMainWindow()
-    gui.setupui(mainwin, bidsfolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap, subprefix=subprefix, sesprefix=sesprefix)
+    mainwin = MainWindow(bidsfolder, bidsmapfile, input_bidsmap, output_bidsmap, template_bidsmap, subprefix=subprefix, sesprefix=sesprefix, datasaved=True)
     mainwin.show()
     app.exec()
 
