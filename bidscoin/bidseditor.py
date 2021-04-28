@@ -97,6 +97,7 @@ class UiMainWindow(MainWindow):
         self.dataformats      = [dataformat for dataformat in input_bidsmap if dataformat not in ('Options', 'PlugIns') and bids.dir_bidsmap(input_bidsmap, dataformat)]
 
         self.has_editwindow_open = None
+        self.datasaved           = False
 
         # Set-up the tabs
         tabwidget = self.tabwidget = QtWidgets.QTabWidget()
@@ -725,6 +726,7 @@ class UiMainWindow(MainWindow):
         if filename:
             bids.save_bidsmap(Path(filename), self.output_bidsmap)
             QtCore.QCoreApplication.setApplicationName(f"{filename} - BIDS editor")
+            self.datasaved = True
 
     def inspect_sourcefile(self, item):
         """When source file is double clicked in the samples_table, show popup window. """
@@ -767,6 +769,12 @@ class UiMainWindow(MainWindow):
 
     def exit_application(self):
         """Handle exit. """
+        if not self.datasaved:
+            answer = QMessageBox.question(self, 'Exit BIDS editor', 'Have you saved the changes you made?',
+                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if answer == QMessageBox.No:
+                return
+
         self.MainWindow.close()
 
 
@@ -804,6 +812,7 @@ class EditWindow(QDialog):
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMaximizeButtonHint)
         self.setWindowTitle('Edit BIDS mapping')
+        self.setWhatsThis(f"BIDScoin maps {self.dataformat} attributes to BIDS data types")
 
         # Get data for the tables
         data_provenance, data_attributes, data_bids, data_meta = self.run2data()
@@ -891,7 +900,7 @@ class EditWindow(QDialog):
         # Add a box1 -> box2 arrow
         arrow = QLabel()
         arrow.setPixmap(QtGui.QPixmap(str(RIGHTARROW)).scaled(30, 30, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
-        arrow.setToolTip(f"BIDScoin maps {self.dataformat} attributes to BIDS data types")
+        # arrow.setToolTip(f"BIDScoin maps {self.dataformat} attributes to BIDS data types")
 
         # Add the boxes to the layout
         layout_tables = QHBoxLayout()
@@ -1333,6 +1342,7 @@ class InspectWindow(QDialog):
         textbrowser.setFont(QtGui.QFont("Courier New"))
         textbrowser.insertPlainText(text)
         textbrowser.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
+        textbrowser.setWhatsThis(f"This window displays all available source attributes")
         self.scrollbar = textbrowser.verticalScrollBar()        # For setting the slider to the top (can only be done after self.show()
         layout.addWidget(textbrowser)
 
