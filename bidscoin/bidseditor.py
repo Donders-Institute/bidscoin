@@ -68,19 +68,19 @@ args: Argument string that is passed to dcm2niix. Click [Test] and see the termi
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, bidsfolder, bidsmap_filename, input_bidsmap, template_bidsmap,
-                 subprefix='sub-', sesprefix='ses-', reset: bool=False, datasaved: bool=False):
+    def __init__(self, bidsfolder, bidsmapfile, input_bidsmap, template_bidsmap,
+                 subprefix: str='sub-', sesprefix: str='ses-', datasaved: bool=False, reset: bool=False):
 
         # Set-up the main window
         if not reset:
             super().__init__()
             self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
             self.set_menu_and_status_bar()
-            self.editwindow_isopen = None
+            self.editwindow_opened = None
 
         # Set the input data
         self.bidsfolder       = Path(bidsfolder)
-        self.bidsmap_filename = Path(bidsmap_filename)
+        self.bidsmapfile      = Path(bidsmapfile)
         self.input_bidsmap    = input_bidsmap
         self.output_bidsmap   = copy.deepcopy(input_bidsmap)
         self.template_bidsmap = template_bidsmap
@@ -478,7 +478,7 @@ class MainWindow(QMainWindow):
                 edit_button.clicked.connect(self.open_editwindow)
                 edit_button.setCheckable(not sys.platform.startswith('darwin'))
                 edit_button.setAutoExclusive(True)
-                if provenance.name and str(provenance)==self.editwindow_isopen:    # Highlight the previously opened item
+                if provenance.name and str(provenance)==self.editwindow_opened:    # Highlight the previously opened item
                     edit_button.setChecked(True)
                 else:
                     edit_button.setChecked(False)
@@ -514,17 +514,14 @@ class MainWindow(QMainWindow):
             provenance    = Path(samples_table.item(rowindex, 5).text())
 
         # Check for open edit window, find the right datatype index and open the edit window
-        if not self.editwindow_isopen:
+        if not self.editwindow_opened:
             # Find the source index of the run in the list of runs (using the provenance) and open the edit window
             dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
             for run in self.output_bidsmap[dataformat][datatype]:
-                if run['provenance']==str(provenance):
+                if run['provenance'] == str(provenance):
                     LOGGER.info(f'User is editing {provenance}')
-                    self.editwindow = EditWindow(dataformat, provenance, datatype, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
-                    if provenance.name:
-                        self.editwindow_isopen = str(provenance)
-                    else:
-                        self.editwindow_isopen = True
+                    self.editwindow        = EditWindow(dataformat, provenance, datatype, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
+                    self.editwindow_opened = str(provenance)
                     self.editwindow.done_edit.connect(self.update_subses_and_samples)
                     self.editwindow.finished.connect(self.release_editwindow)
                     self.editwindow.show()
@@ -534,13 +531,13 @@ class MainWindow(QMainWindow):
         else:
             # Ask the user if he wants to save his results first before opening a new edit window
             self.editwindow.reject()
-            if self.editwindow_isopen:
+            if self.editwindow_opened:
                 return
             self.open_editwindow(provenance, datatype)
 
     def release_editwindow(self):
         """Allow a new edit window to be opened"""
-        self.editwindow_isopen = None
+        self.editwindow_opened = None
 
     def update_plugintable(self):
         """Plots an extendable table of plugins from self.output_bidsmap['PlugIns']"""
@@ -667,16 +664,17 @@ class MainWindow(QMainWindow):
 
     def reset(self):
         """Reset button: reset the window with the original input BIDS map. """
-        if self.editwindow_isopen:
+        if self.editwindow_opened:
             self.editwindow.reject(confirm=False)
 
         LOGGER.info('User resets the bidsmap')
         self.__init__(self.bidsfolder,
-                      self.bidsmap_filename,
+                      self.bidsmapfile,
                       self.input_bidsmap,
                       self.template_bidsmap,
                       self.subprefix,
                       self.sesprefix,
+                      self.datasaved,
                       reset=True)
 
         # Start with a fresh errorlog
@@ -914,9 +912,6 @@ class EditWindow(QDialog):
         layout_all.addWidget(buttonBox)
 
         self.center()
-
-        finish = QAction(self)
-        finish.triggered.connect(self.closeEvent)
 
     def get_allowed_suffixes(self):
         """Derive the possible suffixes for each datatype from the template. """
