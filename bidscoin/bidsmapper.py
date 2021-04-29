@@ -131,6 +131,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         app.setApplicationName(f"{bidsmapfile} - BIDS editor {localversion}")
 
         mainwin = bidseditor.MainWindow(bidsfolder, bidsmap_new, template, subprefix=subprefix, sesprefix=sesprefix)
+        mainwin.show()
 
         messagebox = QMessageBox(mainwin)
         messagebox.setText(f"The bidsmapper has finished scanning {rawfolder}\n\n"
@@ -142,9 +143,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         messagebox.setWindowTitle('About the BIDS-mapping workflow')
         messagebox.setIconPixmap(QtGui.QPixmap(str(bidseditor.BIDSCOIN_LOGO)).scaled(150, 150, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
         messagebox.setWindowFlags(messagebox.windowFlags() & ~QtCore.Qt.WindowMinMaxButtonsHint)
-
         messagebox.show()
-        mainwin.show()
+
         app.exec()
 
     LOGGER.info('-------------- FINISHED! -------------------')
