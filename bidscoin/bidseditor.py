@@ -1215,10 +1215,14 @@ class EditWindow(QDialog):
             LOGGER.warning(f"'IntendedFor' fieldmap value was not set")
 
         LOGGER.info(f'User has approved the edit')
-        bids.update_bidsmap(self.target_bidsmap, self.current_datatype, self.target_run['provenance'], self.target_datatype, self.target_run, self.dataformat)
+        if str(self.target_run) != str(self.source_run):
+            bids.update_bidsmap(self.target_bidsmap, self.current_datatype, self.target_run['provenance'], self.target_datatype, self.target_run, self.dataformat)
 
-        self.done_edit.emit(self.target_bidsmap)
-        self.done(1)
+            self.done_edit.emit(self.target_bidsmap)
+            self.done(1)
+
+        else:
+            self.done(2)
 
     def export_run(self):
         """Export the editted run to a (e.g. template) bidsmap on disk"""
