@@ -77,8 +77,7 @@ class MainWindow(QMainWindow):
             self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
             self.set_menu_and_status_bar()
 
-        # Keep track of the bidsmap data status
-        self.datasaved         = datasaved                      # True if data has been saved on disk
+        # Keep track of the EditWindow status
         self.editwindow_opened = None                           # The provenance string of the run-item that is opened in the EditWindow
 
         # Set the input data
@@ -88,6 +87,7 @@ class MainWindow(QMainWindow):
         self.template_bidsmap  = template_bidsmap               # The bidsmap from which new datatype run-items are taken
         self.subprefix         = subprefix                      # The subject prefix for dynamically constructing the bidsname
         self.sesprefix         = sesprefix                      # The session prefix for dynamically constructing the bidsname
+        self.datasaved         = datasaved                      # True if data has been saved on disk
         self.dataformats       = [dataformat for dataformat in input_bidsmap if dataformat not in ('Options', 'PlugIns') and bids.dir_bidsmap(input_bidsmap, dataformat)]
 
         # Set-up the tabs
@@ -122,10 +122,12 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(centralwidget)
 
-        self.datachanged = False                # True if data has been edited. Do this after updating all the tables (which assigns datachanged = False)
+        # Keep track of the bidsmap data status
+        self.datachanged = False                # True if data has been edited. Do this after updating all the tables (which assigns datachanged = True)
 
+        # Center the main window to the center point of screen
         if not reset:
-            self.adjustSize()                   # Center the main window to the center point of screen
+            self.adjustSize()
             cp = QDesktopWidget().availableGeometry().center()
             qr = self.frameGeometry()
             qr.moveCenter(cp)
