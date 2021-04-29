@@ -1310,7 +1310,7 @@ class InspectWindow(QDialog):
 
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
         self.setWindowTitle(str(filename))
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowMinMaxButtonsHint | QtCore.Qt.WindowContextHelpButtonHint)
+        # self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowMinMaxButtonsHint | QtCore.Qt.WindowContextHelpButtonHint)
 
         layout = QVBoxLayout(self)
 
