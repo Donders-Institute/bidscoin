@@ -143,8 +143,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         messagebox.setIconPixmap(QtGui.QPixmap(str(bidseditor.BIDSCOIN_LOGO)).scaled(150, 150, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
         messagebox.setWindowFlags(messagebox.windowFlags() & ~QtCore.Qt.WindowMinMaxButtonsHint)
 
-        messagebox.show()
         mainwin.show()
+        messagebox.show()
         app.exec()
 
     LOGGER.info('-------------- FINISHED! -------------------')
