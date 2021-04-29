@@ -76,16 +76,19 @@ class MainWindow(QMainWindow):
             super().__init__()
             self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
             self.set_menu_and_status_bar()
-            self.editwindow_opened = None                       # The provenance string of the run-item that is opened in the EditWindow
+
+        # Keep track of the bidsmap data status
+        self.datasaved         = datasaved                      # True if data has been saved on disk
+        self.editwindow_opened = None                           # The provenance string of the run-item that is opened in the EditWindow
 
         # Set the input data
-        self.bidsfolder       = Path(bidsfolder)                # The folder where the bids data is / will be stored
-        self.input_bidsmap    = input_bidsmap                   # The original / unedited bidsmap
-        self.output_bidsmap   = copy.deepcopy(input_bidsmap)    # The edited bidsmap
-        self.template_bidsmap = template_bidsmap                # The bidsmap from which new datatype run-items are taken
-        self.subprefix        = subprefix                       # The subject prefix for dynamically constructing the bidsname
-        self.sesprefix        = sesprefix                       # The session prefix for dynamically constructing the bidsname
-        self.dataformats      = [dataformat for dataformat in input_bidsmap if dataformat not in ('Options', 'PlugIns') and bids.dir_bidsmap(input_bidsmap, dataformat)]
+        self.bidsfolder        = Path(bidsfolder)               # The folder where the bids data is / will be stored
+        self.input_bidsmap     = input_bidsmap                  # The original / unedited bidsmap
+        self.output_bidsmap    = copy.deepcopy(input_bidsmap)   # The edited bidsmap
+        self.template_bidsmap  = template_bidsmap               # The bidsmap from which new datatype run-items are taken
+        self.subprefix         = subprefix                      # The subject prefix for dynamically constructing the bidsname
+        self.sesprefix         = sesprefix                      # The session prefix for dynamically constructing the bidsname
+        self.dataformats       = [dataformat for dataformat in input_bidsmap if dataformat not in ('Options', 'PlugIns') and bids.dir_bidsmap(input_bidsmap, dataformat)]
 
         # Set-up the tabs
         tabwidget = self.tabwidget = QtWidgets.QTabWidget()
@@ -119,9 +122,9 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(centralwidget)
 
-        if not reset:
-            self.datasaved = datasaved          # Do this after updating all the tables (which assigns datasaved = False)
+        self.datachanged = False                # True if data has been edited. Do this after updating all the tables (which assigns datachanged = False)
 
+        if not reset:
             self.adjustSize()                   # Center the main window to the center point of screen
             cp = QDesktopWidget().availableGeometry().center()
             qr = self.frameGeometry()
@@ -392,7 +395,7 @@ class MainWindow(QMainWindow):
     def update_subses_and_samples(self, output_bidsmap):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
 
-        self.datasaved = False
+        self.datachanged = True
 
         dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
 
@@ -541,7 +544,7 @@ class MainWindow(QMainWindow):
     def update_plugintable(self):
         """Plots an extendable table of plugins from self.output_bidsmap['PlugIns']"""
 
-        self.datasaved = False
+        self.datachanged = True
 
         plugins  = self.output_bidsmap['PlugIns']
         num_rows = len(plugins) + 1
@@ -611,7 +614,7 @@ class MainWindow(QMainWindow):
             if key and value!=oldvalue:
                 LOGGER.info(f"User has set ['Options']['{tool}']['{key}'] from '{oldvalue}' to '{value}'")
                 self.output_bidsmap['Options'][tool][key] = value
-                self.datasaved = False
+                self.datachanged = True
 
     def test_tool(self, tool: str):
         """Test the bidsmap tool and show the result in a pop-up window
@@ -695,7 +698,8 @@ class MainWindow(QMainWindow):
         if filename:
             bids.save_bidsmap(Path(filename), self.output_bidsmap)
             QtCore.QCoreApplication.setApplicationName(f"{filename} - BIDS editor")
-            self.datasaved = True
+            self.datasaved   = True
+            self.datachanged = False
 
     def inspect_sourcefile(self, item):
         """When source file is double clicked in the samples_table, show popup window. """
@@ -738,7 +742,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Handle exit. """
-        if not self.datasaved and str(self.input_bidsmap) != str(self.output_bidsmap):
+        if not self.datasaved or self.datachanged:
             answer = QMessageBox.question(self, 'Closing the BIDS editor', 'Do you want to save the bidsmap to disk?',
                                           QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
             if answer == QMessageBox.Yes:
@@ -747,7 +751,8 @@ class MainWindow(QMainWindow):
                 if event:               # User clicked the 'X'-button or pressed alt-F4 -> drop signal
                     event.ignore()
                 return
-            self.datasaved = True       # Prevent re-entering this if-statement after close() -> closeEvent()
+            self.datasaved   = True     # Prevent re-entering this if-statement after close() -> closeEvent()
+            self.datachanged = False    # Prevent re-entering this if-statement after close() -> closeEvent()
 
         if event:                       # User clicked the 'X'-button or pressed alt-F4 -> normal closeEvent
             super(MainWindow, self).closeEvent(event)
