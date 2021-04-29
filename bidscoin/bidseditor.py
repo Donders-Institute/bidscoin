@@ -68,7 +68,7 @@ args: Argument string that is passed to dcm2niix. Click [Test] and see the termi
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, bidsfolder, bidsmapfile, input_bidsmap, template_bidsmap,
+    def __init__(self, bidsfolder, input_bidsmap, template_bidsmap,
                  subprefix: str='sub-', sesprefix: str='ses-', datasaved: bool=False, reset: bool=False):
 
         # Set-up the main window
@@ -76,16 +76,15 @@ class MainWindow(QMainWindow):
             super().__init__()
             self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
             self.set_menu_and_status_bar()
-            self.editwindow_opened = None
+            self.editwindow_opened = None                       # The provenance string of the run-item that is opened in the EditWindow
 
         # Set the input data
-        self.bidsfolder       = Path(bidsfolder)
-        self.bidsmapfile      = Path(bidsmapfile)
-        self.input_bidsmap    = input_bidsmap
-        self.output_bidsmap   = copy.deepcopy(input_bidsmap)
-        self.template_bidsmap = template_bidsmap
-        self.subprefix        = subprefix
-        self.sesprefix        = sesprefix
+        self.bidsfolder       = Path(bidsfolder)                # The folder where the bids data is / will be stored
+        self.input_bidsmap    = input_bidsmap                   # The original / unedited bidsmap
+        self.output_bidsmap   = copy.deepcopy(input_bidsmap)    # The edited bidsmap
+        self.template_bidsmap = template_bidsmap                # The bidsmap from which new datatype run-items are taken
+        self.subprefix        = subprefix                       # The subject prefix for dynamically constructing the bidsname
+        self.sesprefix        = sesprefix                       # The session prefix for dynamically constructing the bidsname
         self.dataformats      = [dataformat for dataformat in input_bidsmap if dataformat not in ('Options', 'PlugIns') and bids.dir_bidsmap(input_bidsmap, dataformat)]
 
         # Set-up the tabs
@@ -669,7 +668,6 @@ class MainWindow(QMainWindow):
 
         LOGGER.info('User resets the bidsmap')
         self.__init__(self.bidsfolder,
-                      self.bidsmapfile,
                       self.input_bidsmap,
                       self.template_bidsmap,
                       self.subprefix,
@@ -693,9 +691,7 @@ class MainWindow(QMainWindow):
                     if not run['meta'].get('IntendedFor'):
                         LOGGER.warning(f"IntendedFor fieldmap value is empty for {dataformat} run-item: {run['provenance']}")
 
-        filename, _ = QFileDialog.getSaveFileName(self, 'Save File',
-                        str(self.bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'),
-                        'YAML Files (*.yaml *.yml);;All Files (*)')
+        filename,_ = QFileDialog.getSaveFileName(self, 'Save File',  str(self.bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if filename:
             bids.save_bidsmap(Path(filename), self.output_bidsmap)
             QtCore.QCoreApplication.setApplicationName(f"{filename} - BIDS editor")
@@ -769,22 +765,22 @@ class EditWindow(QDialog):
     # Emit the new bidsmap when done (see docstring)
     done_edit = QtCore.pyqtSignal(dict)
 
-    def __init__(self, dataformat: str, provenance: Path, datatype: str, bidsmap: dict, template_bidsmap: dict, subprefix='sub-', sesprefix='ses-'):
+    def __init__(self, dataformat: str, provenance: Path, datatype: str, bidsmap: dict, template_bidsmap: dict, subprefix: str, sesprefix: str):
         super().__init__()
 
         # Set the data
-        self.dataformat       = dataformat
-        self.source_datatype  = datatype
-        self.target_datatype  = datatype
-        self.current_datatype = datatype
-        self.source_bidsmap   = bidsmap
-        self.target_bidsmap   = copy.deepcopy(bidsmap)
-        self.template_bidsmap = template_bidsmap
-        for run in bidsmap[self.dataformat][datatype]:
+        self.dataformat       = dataformat                  # The data format of the run-item being edited (bidsmap[dataformat][datatype][run-item])
+        self.source_datatype  = datatype                    # The datatype of the original run-item
+        self.target_datatype  = datatype                    # The datatype that the edited run-item is being changed into
+        self.current_datatype = datatype                    # The datatype of the run-item just before it is being changed (again)
+        self.source_bidsmap   = bidsmap                     # The bidsmap at the start of the edit = output_bidsmap in the MainWindow
+        self.target_bidsmap   = copy.deepcopy(bidsmap)      # The edited bidsmap -> will be returned as output_bidsmap in the MainWindow
+        self.template_bidsmap = template_bidsmap            # The bidsmap from which new datatype run-items are taken
+        for run in bidsmap[self.dataformat][datatype]:      # Get the run-item from the source bidsmap given the provenance
             if run['provenance'] == str(provenance):
                 self.source_run = run
-        self.target_run = copy.deepcopy(self.source_run)
-        self.get_allowed_suffixes()
+        self.target_run = copy.deepcopy(self.source_run)    # The edited run-item that is inserted in the target_bidsmap
+        self.get_allowed_suffixes()                         # Set the possible suffixes the user can select for a given datatype
         self.subid, self.sesid = bids.get_subid_sesid(Path(self.source_run['provenance']),
                                                       bidsmap[dataformat]['subject'],
                                                       bidsmap[dataformat]['session'],
@@ -1419,7 +1415,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', subpr
     # Start the Qt-application
     app = QApplication(sys.argv)
     app.setApplicationName(f"{bidsmapfile} - BIDS editor {bidscoin.version()}")
-    mainwin = MainWindow(bidsfolder, bidsmapfile, input_bidsmap, template_bidsmap, subprefix=subprefix, sesprefix=sesprefix, datasaved=True)
+    mainwin = MainWindow(bidsfolder, input_bidsmap, template_bidsmap, subprefix=subprefix, sesprefix=sesprefix, datasaved=True)
     mainwin.show()
     app.exec()
 
