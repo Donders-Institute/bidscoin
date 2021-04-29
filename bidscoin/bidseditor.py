@@ -1207,10 +1207,9 @@ class EditWindow(QDialog):
             LOGGER.warning(f'The "{self.bidsname_textbox.toPlainText()}" run is not valid according to the BIDS standard")')
 
         if self.target_datatype=='fmap' and not self.target_run['meta'].get('IntendedFor'):
-            answer = QMessageBox.question(self, 'Edit BIDS mapping', "The 'IntendedFor' bids-label was not set, which can make that your fieldmap won't be used when "
-                                                                     "pre-processing / analyzing the associated imaging data (e.g. fMRI data). Do you want to go back "
-                                                                     "and set this label?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Yes)
-            if answer == QMessageBox.Yes:
+            answer = QMessageBox.question(self, 'Edit BIDS mapping', "The 'IntendedFor' meta-data is left empty\n\nDo you want to set "
+                                                                     "this label (recommended)?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel | QMessageBox.Yes)
+            if answer==QMessageBox.Cancel or answer==QMessageBox.Yes:
                 return
             LOGGER.warning(f"'IntendedFor' fieldmap value was not set")
 
