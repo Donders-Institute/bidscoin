@@ -788,7 +788,7 @@ class EditWindow(QDialog):
 
         # Set-up the window
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
-        self.setWindowFlags(QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMinMaxButtonsHint)
+        self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowTitleHint & QtCore.Qt.WindowCloseButtonHint & QtCore.Qt.WindowMinMaxButtonsHint)
         self.setWindowTitle('Edit BIDS mapping')
         self.setWhatsThis(f"BIDScoin maps {self.dataformat} attributes to BIDS data types")
 
@@ -1310,7 +1310,7 @@ class InspectWindow(QDialog):
 
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
         self.setWindowTitle(str(filename))
-        # self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowMinMaxButtonsHint | QtCore.Qt.WindowContextHelpButtonHint)
+        self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowMinMaxButtonsHint & QtCore.Qt.WindowContextHelpButtonHint)
 
         layout = QVBoxLayout(self)
 
