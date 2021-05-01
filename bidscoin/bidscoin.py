@@ -309,14 +309,17 @@ def test_plugin(plugin: Path, options: dict) -> bool:
     # First test to see if we can import the plugin
     module = import_plugin(plugin, ('bidsmapper_plugin','bidscoiner_plugin'))
     if inspect.ismodule(module):
-        methods = [method for method in dir(module) if not method.startswith('_')]
-        LOGGER.info(f"{plugin} docstring:\n{module.__doc__}\n{plugin} attributes and methods:\n{methods}")    # Maybe a bit verbose :-)
+        LOGGER.info(f"Succesfully imported the '{plugin}' docstring:\n{module.__doc__}")
     else:
         return False
 
     # Then run the plugin's own 'test' routine (if implemented)
     if 'test' in dir(module) and callable(getattr(module, 'test')):
-        return module.test(options)
+        try:
+            return module.test(options)
+        except Exception as pluginerror:
+            LOGGER.exception(f"Could not run {plugin}.test(options):\n{pluginerror}")
+            return False
 
     return True
 
