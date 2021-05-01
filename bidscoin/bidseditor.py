@@ -546,10 +546,11 @@ class MainWindow(QMainWindow):
                 key = val = ''
                 if keyitem: key = keyitem.text()
                 if valitem: val = valitem.text()
-                if key and val != oldoptions.get(key):
-                    LOGGER.info(f"User has set the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
-                    self.datachanged = True
-                newoptions[key]  = val
+                if key:
+                    newoptions[key] = val
+                    if val != oldoptions.get(key):
+                        LOGGER.info(f"User has set the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
+                        self.datachanged = True
             if plugin == 'bidscoin':
                 self.output_bidsmap['Options']['bidscoin'] = newoptions
             else:
@@ -601,6 +602,7 @@ class MainWindow(QMainWindow):
         plugin_label, plugin_table = self.plugin_table(plugin, {})
         self.options_layout.insertWidget(self.options_layout.count()-2, plugin_label)
         self.options_layout.insertWidget(self.options_layout.count()-2, plugin_table)
+        self.output_bidsmap['Options']['plugins'][plugin] = {}
 
     def del_plugin(self, plugin: str):
         """Removes the plugin table from the Options-tab"""

@@ -310,7 +310,7 @@ def test_plugin(plugin: Path, options: dict) -> bool:
     module = import_plugin(plugin, ('bidsmapper_plugin','bidscoiner_plugin'))
     if inspect.ismodule(module):
         methods = [method for method in dir(module) if not method.startswith('_')]
-        LOGGER.info(f"\n{plugin} docstring:\n{module.__doc__}\n{plugin} attributes and methods:\n{methods}")    # Maybe a bit verbose :-)
+        LOGGER.info(f"{plugin} docstring:\n{module.__doc__}\n{plugin} attributes and methods:\n{methods}")    # Maybe a bit verbose :-)
     else:
         return False
 
