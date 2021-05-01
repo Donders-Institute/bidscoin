@@ -99,13 +99,14 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
     bidsmap, _  = bids.load_bidsmap(bidsmapfile, bidsfolder/'code'/'bidscoin')
-    dataformats = [dataformat for dataformat in bidsmap if dataformat not in ('Options','PlugIns')]
+    dataformats = [dataformat for dataformat in bidsmap if dataformat not in ('Options','PlugIns')]     # Handle legacy bidsmaps (-> 'PlugIns')
     if not bidsmap:
         LOGGER.error(f"No bidsmap file found in {bidsfolder}. Please run the bidsmapper first and/or use the correct bidsfolder")
         return
 
     # Load the data conversion plugins
-    plugins = [module for module in (bidscoin.import_plugin(plugin, ('bidscoiner_plugin',)) for plugin in bidsmap['PlugIns']) if module]
+    plugins = [bidscoin.import_plugin(plugin, ('bidscoiner_plugin',)) for plugin,options in bidsmap['Options']['plugins'].items()]
+    plugins = [plugin for plugin in plugins if plugin]          # Filter the empty items from the list
     if not plugins:
         LOGGER.warning(f"No bidscoiner plugins found in {bidsmapfile}, nothing to do")
         LOGGER.info('-------------- FINISHED! ------------')

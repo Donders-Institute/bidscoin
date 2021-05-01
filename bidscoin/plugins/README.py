@@ -12,6 +12,18 @@ from pathlib import Path
 LOGGER = logging.getLogger(__name__)
 
 
+def test(options: dict) -> bool:
+    """
+    An internal routine to test the working of the plugin + its bidsmap options
+
+    :return: True if the test was successful
+    """
+
+    LOGGER.debug(f'This is a demo-plugin test routine, validating its working with options: {options}')
+
+    return True
+
+
 def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
     """
     All the logic to map the Philips PAR/XML fields onto bids labels go into this plugin function. The function is

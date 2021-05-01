@@ -56,7 +56,7 @@ version:    should correspond with the version in ../bidscoin/version.txt
 bidsignore: Semicolon-separated list of entries that are added to the .bidsignore file
             (for more info, see BIDS specifications), e.g. extra_data/;myfile.txt;yourfile.csv"""
 
-TOOLTIP_DCM2NIIX = """dcm2niix
+TOOLTIP_DCM2NIIX = """dcm2niix2bids
 path: Command to set the path to dcm2niix, e.g.:
       module add dcm2niix/1.0.20180622; (note the semi-colon at the end)
       PATH=/opt/dcm2niix/bin:$PATH; (note the semi-colon at the end)
@@ -75,7 +75,7 @@ class MainWindow(QMainWindow):
         if not reset:
             super().__init__()
             self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
-            self.set_menu_and_status_bar()
+            self.set_menu_statusbar()
 
         # Keep track of the EditWindow status
         self.editwindow_opened = None                           # The provenance string of the run-item that is opened in the EditWindow
@@ -97,11 +97,13 @@ class MainWindow(QMainWindow):
 
         self.subses_table       = {}
         self.samples_table      = {}
+        self.options_label      = {}
+        self.options_table      = {}
         self.ordered_file_index = {}
         for dataformat in self.dataformats:
             self.set_tab_bidsmap(dataformat)
         self.set_tab_options()
-        self.set_tab_file_browser()
+        self.set_tab_filebrowser()
 
         # Set-up the buttons
         buttonbox = QDialogButtonBox()
@@ -138,7 +140,7 @@ class MainWindow(QMainWindow):
             header = self.samples_table[dataformat].horizontalHeader()
             header.setSectionResizeMode(1, QHeaderView.Interactive)
 
-    def set_menu_and_status_bar(self):
+    def set_menu_statusbar(self):
         # Set the menus
         menubar  = QtWidgets.QMenuBar(self)
         menufile = QtWidgets.QMenu(menubar)
@@ -258,112 +260,59 @@ class MainWindow(QMainWindow):
         self.tabwidget.addTab(tab, f"{dataformat} mappings")
         self.tabwidget.setCurrentWidget(tab)
 
-        self.update_subses_and_samples(self.output_bidsmap)
+        self.update_subses_samples(self.output_bidsmap)
 
     def set_tab_options(self):
         """Set the options tab.  """
 
-        # Create the tool tables
-        tool_list    = []
-        tool_options = {}
-        for tool, parameters in self.output_bidsmap['Options'].items():
-
-            # Make a tool list
-            if tool == 'bidscoin':
-                tooltip_text = TOOLTIP_BIDSCOIN
-            elif tool == 'dcm2niix2bids':
-                tooltip_text = TOOLTIP_DCM2NIIX
-            else:
-                tooltip_text = None
-            tool_list.append({'tool': tool, 'tooltip_text': tooltip_text})
-
-            # Store the options for each tool
-            tool_options[tool] = []
-            for key, value in parameters.items():
-                if value is None:
-                    value = ''
-                tool_options[tool].append([
-                    {'value': tool,  'iseditable': False, 'tooltip_text': None},
-                    {'value': key,   'iseditable': False, 'tooltip_text': tooltip_text},
-                    {'value': value, 'iseditable': True,  'tooltip_text': 'Double-click to edit the option'}])
-
-        labels = []
-        self.tables_options = []
-
-        for n, tool_item in enumerate(tool_list):
-            tool         = tool_item['tool']
-            tooltip_text = tool_item['tooltip_text']
-            data         = tool_options[tool]
-            num_rows     = len(data)
-            num_cols     = len(data[0]) + 1     # Always three columns (i.e. tool, key, value) + test-button
-
-            label = QLabel(tool)
-            label.setToolTip(tooltip_text)
-
-            tool_table = MyQTableWidget()
-            tool_table.setRowCount(num_rows)
-            tool_table.setColumnCount(num_cols)
-            tool_table.setColumnHidden(0, True)  # Hide tool column
-            tool_table.setMouseTracking(True)
-            horizontal_header = tool_table.horizontalHeader()
-            horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-            horizontal_header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-            horizontal_header.setSectionResizeMode(2, QHeaderView.Stretch)
-            horizontal_header.setSectionResizeMode(3, QHeaderView.Fixed)
-            horizontal_header.setVisible(False)
-
-            for i, row in enumerate(data):
-                for j, item in enumerate(row):
-                    value = item.get('value', '')
-                    if value is None:
-                        value = ''
-                    iseditable = item.get('iseditable', False)
-                    tooltip_text = item.get('tooltip_text')
-                    tool_table.setItem(i, j, MyWidgetItem(value, iseditable=iseditable))
-                    if tooltip_text:
-                        tool_table.item(i, j).setToolTip(tooltip_text)
-
-            # Add the test-button cell
-            test_button = QPushButton('Test')
-            test_button.clicked.connect(partial(self.test_tool, tool))
-            test_button.setToolTip(f'Click to test the {tool} installation')
-            tool_table.setCellWidget(0, num_cols-1, test_button)
-
-            tool_table.cellChanged.connect(partial(self.toolcell2bidsmap, tool, n))
-
-            labels.append(label)
-            self.tables_options.append(tool_table)
-
-        # Create the plugin table
-        plugin_table = MyQTableWidget(minimum=False)
-        plugin_label = QLabel('Plugins')
-        plugin_label.setToolTip('List of plugins')
-        plugin_table.setMouseTracking(True)
-        plugin_table.setColumnCount(3)   # Always three columns (i.e. path, plugin, test-button)
-        horizontal_header = plugin_table.horizontalHeader()
+        # Create the bidscoin tabel
+        bidscoin_options = self.output_bidsmap['Options']['bidscoin']
+        self.options_label['bidscoin'] = bidscoin_label = QLabel('BIDScoin')
+        bidscoin_label.setToolTip(TOOLTIP_BIDSCOIN)
+        self.options_table['bidscoin'] = bidscoin_table = MyQTableWidget()
+        bidscoin_table.setRowCount(len(bidscoin_options.keys()))
+        bidscoin_table.setColumnCount(3)                        # columns: [key] [value] [testbutton]
+        # bidscoin_table.setColumnHidden(2, True)                 # TODO: Set to False if we have a proper BIDScoin test
+        bidscoin_table.setToolTip(TOOLTIP_BIDSCOIN)
+        horizontal_header = bidscoin_table.horizontalHeader()
         horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
-        horizontal_header.setSectionResizeMode(2, QHeaderView.Fixed)
+        horizontal_header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         horizontal_header.setVisible(False)
+        test_button = QPushButton('Test')                       # Add a test-button
+        test_button.clicked.connect(self.test_bidscoin)
+        test_button.setToolTip(f'Click to test the BIDScoin installation')
+        bidscoin_table.setCellWidget(0, 2, test_button)
+        for n, (key, value) in enumerate(bidscoin_options.items()):
+            if value is None:
+                value = ''
+            bidscoin_table.setItem(n, 0, MyWidgetItem(key, iseditable=False))
+            bidscoin_table.setItem(n, 1, MyWidgetItem(value, iseditable=True))
+        bidscoin_table.cellChanged.connect(self.options2bidsmap)
 
-        self.plugin_table = plugin_table
-        self.update_plugintable()
+        # Set-up the tab layout and add the bidscoin table
+        layout = self.options_layout = QVBoxLayout()
+        layout.addWidget(bidscoin_label)
+        layout.addWidget(bidscoin_table)
 
-        # Set-up the tab layout and add the tables
-        layout = QVBoxLayout()
-        for label, tool_table in zip(labels, self.tables_options):
-            layout.addWidget(label)
-            layout.addWidget(tool_table)
-        layout.addWidget(plugin_label)
-        layout.addWidget(plugin_table)
-        layout.addStretch(1)
+        # Add the plugin tabels
+        for plugin, options in self.output_bidsmap['Options']['plugins'].items():
+            plugin_label, plugin_table = self.plugin_table(plugin, options)
+            layout.addWidget(plugin_label)
+            layout.addWidget(plugin_table)
+
+        # Add an 'Add' button below the tables at the right side
+        add_button = QPushButton('Add', clicked=self.add_plugin)
+        add_button.setToolTip(f'Click to add an installed plugin to the list')
+        layout.addWidget(add_button, alignment=QtCore.Qt.AlignRight)
+        layout.addStretch()
 
         tab = QtWidgets.QWidget()
         tab.setLayout(layout)
 
         self.tabwidget.addTab(tab, 'Options')
 
-    def set_tab_file_browser(self):
+    def set_tab_filebrowser(self):
         """Set the raw data folder inspector tab. """
 
         rootfolder = str(self.bidsfolder.parent)
@@ -394,7 +343,7 @@ class MainWindow(QMainWindow):
 
         self.tabwidget.addTab(tab, 'Data browser')
 
-    def update_subses_and_samples(self, output_bidsmap):
+    def update_subses_samples(self, output_bidsmap):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
 
         self.datachanged = True
@@ -493,22 +442,24 @@ class MainWindow(QMainWindow):
         samples_table.setSortingEnabled(True)
         samples_table.blockSignals(False)
 
-    def subsescell2bidsmap(self, row: int, column:int):
+    def subsescell2bidsmap(self, rowindex: int, colindex:int):
         """Subject or session value has been changed in subject-session table. """
+
         dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
-        if column == 1:
-            key      = self.subses_table[dataformat].item(row, 0).text()
-            value    = self.subses_table[dataformat].item(row, 1).text()
+        if colindex == 1:
+            key      = self.subses_table[dataformat].item(rowindex, 0).text()
+            value    = self.subses_table[dataformat].item(rowindex, 1).text()
             oldvalue = self.output_bidsmap[dataformat][key]
 
             # Only if cell was actually clicked, update
             if key and value != oldvalue:
                 LOGGER.warning(f"Expert usage: User has set {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
                 self.output_bidsmap[dataformat][key] = value
-                self.update_subses_and_samples(self.output_bidsmap)
+                self.update_subses_samples(self.output_bidsmap)
 
     def open_editwindow(self, provenance: Path=Path(), datatype: str= ''):
         """Make sure that index map has been updated. """
+
         if not datatype:
             dataformat    = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
             samples_table = self.samples_table[dataformat]
@@ -526,7 +477,7 @@ class MainWindow(QMainWindow):
                     LOGGER.info(f'User is editing {provenance}')
                     self.editwindow        = EditWindow(dataformat, provenance, datatype, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
                     self.editwindow_opened = str(provenance)
-                    self.editwindow.done_edit.connect(self.update_subses_and_samples)
+                    self.editwindow.done_edit.connect(self.update_subses_samples)
                     self.editwindow.finished.connect(self.release_editwindow)
                     self.editwindow.show()
                     return
@@ -543,128 +494,151 @@ class MainWindow(QMainWindow):
         """Allow a new edit window to be opened"""
         self.editwindow_opened = None
 
-    def update_plugintable(self):
-        """Plots an extendable table of plugins from self.output_bidsmap['PlugIns']"""
+    def plugin_table(self, plugin: str, options: dict) -> tuple:
+        """:return: a plugin-label and a filled plugin-table"""
 
-        self.datachanged = True
+        self.options_label[plugin] = plugin_label = QLabel(f"{plugin} - plugin")
+        self.options_table[plugin] = plugin_table = MyQTableWidget()
+        plugin_table.setRowCount(max(len(options.keys()) + 1, 2))           # Add an extra row for new key-value pairs
+        plugin_table.setColumnCount(3)                                      # columns: [key] [value] [testbutton]
+        horizontal_header = plugin_table.horizontalHeader()
+        horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
+        horizontal_header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        horizontal_header.setVisible(False)
+        test_button = QPushButton('Test')                                   # Add a test-button
+        test_button.clicked.connect(partial(self.test_plugin, plugin))
+        test_button.setToolTip(f'Click to test the "{plugin}" installation')
+        plugin_table.setCellWidget(0, 2, test_button)
+        delete_button = QPushButton('Remove')                               # Add a delete-button
+        delete_button.clicked.connect(partial(self.del_plugin, plugin))
+        delete_button.setToolTip(f'Click to remove the "{plugin}" plugin')
+        plugin_table.setCellWidget(1, 2, delete_button)
+        if plugin=='dcm2niix2bids':
+            tooltip = TOOLTIP_DCM2NIIX
+        else:
+            tooltip = f"Key-value data for the '{plugin}' plugin"
+        plugin_label.setToolTip(tooltip)
+        plugin_table.setToolTip(tooltip)
+        for n, (key, value) in enumerate(options.items()):
+            if value is None:
+                value = ''
+            plugin_table.setItem(n, 0, MyWidgetItem(key, iseditable=False))
+            plugin_table.setItem(n, 1, MyWidgetItem(value, iseditable=True))
+            plugin_table.setItem(n, 2, MyWidgetItem('', iseditable=False))
+        plugin_table.setItem(plugin_table.rowCount() - 1, 2, MyWidgetItem('', iseditable=False))
+        plugin_table.cellChanged.connect(self.options2bidsmap)
 
-        plugins  = self.output_bidsmap['PlugIns']
-        num_rows = len(plugins) + 1
+        return plugin_label, plugin_table
 
-        # Fill the rows of the plugin table
-        plugintable = self.plugin_table
-        plugintable.disconnect()
-        plugintable.setRowCount(num_rows)
-        for i, plugin in enumerate(plugins + ['']):
-            for j in range(3):
-                if j==0:
-                    item = MyWidgetItem('path', iseditable=False)
-                    plugintable.setItem(i, j, item)
-                elif j==1:
-                    item = MyWidgetItem(plugin)
-                    item.setToolTip('Double-click to edit/delete the plugin, which can be the basename of the plugin in the heuristics folder or a custom full pathname')
-                    plugintable.setItem(i, j, item)
-                elif j==2:                  # Add the test-button cell
-                    test_button = QPushButton('Test')
-                    test_button.clicked.connect(partial(self.test_plugin, plugin))
-                    test_button.setToolTip(f"Click to test the {plugin} plugin")
-                    plugintable.setCellWidget(i, j, test_button)
+    def options2bidsmap(self, rowindex: int, colindex: int):
+        """Saves all Options tables to the bidsmap and add an extra row to the plugin_table if it is full"""
 
-        # Append the Add-button cell
-        add_button = QPushButton('Select')
-        add_button.setToolTip('Click to interactively add a plugin')
-        plugintable.setCellWidget(num_rows - 1, 2, add_button)
-        add_button.clicked.connect(self.addedplugin2bidsmap)
-
-        plugintable.cellChanged.connect(self.changedplugin2bidsmap)
-
-    def addedplugin2bidsmap(self):
-        """Add a plugin by letting the user select a plugin-file"""
-        plugin = QFileDialog.getOpenFileNames(self, 'Select the plugin-file(s)', directory=str(self.bidsfolder/'code'/'bidscoin'), filter='Python files (*.py *.pyc *.pyo);; All files (*)')
-        if plugin:
-            LOGGER.info(f'Added plugins: {plugin[0]}')
-            self.output_bidsmap['PlugIns'] += plugin[0]
-            self.update_plugintable()
-
-    def changedplugin2bidsmap(self, row: int, column: int):
-        """Add / edit a plugin or delete if cell is empty"""
-        if column==1:
-            plugin = self.plugin_table.item(row, column).text()
-            if plugin and row == len(self.output_bidsmap['PlugIns']):
-                LOGGER.info(f"Added plugin: '{plugin}'")
-                self.output_bidsmap['PlugIns'].append(plugin)
-            elif plugin:
-                LOGGER.info(f"Edited plugin: '{self.output_bidsmap['PlugIns'][row]}' -> '{plugin}'")
-                self.output_bidsmap['PlugIns'][row] = plugin
-            elif row < len(self.output_bidsmap['PlugIns']):
-                LOGGER.info(f"Deleted plugin: '{self.output_bidsmap['PlugIns'][row]}'")
-                del self.output_bidsmap['PlugIns'][row]
+        for plugin,table in self.options_table.items():
+            if plugin == 'bidscoin':
+                oldoptions = self.output_bidsmap['Options']['bidscoin']
             else:
-                LOGGER.error(f"Unexpected cell change for {plugin}")
+                oldoptions = self.output_bidsmap['Options']['plugins'].get(plugin,{})
+            newoptions = {}
+            for rownr in range(table.rowCount()):
+                keyitem = table.item(rownr, 0)
+                valitem = table.item(rownr, 1)
+                key = val = ''
+                if keyitem: key = keyitem.text()
+                if valitem: val = valitem.text()
+                if key and val != oldoptions.get(key):
+                    LOGGER.info(f"User has set the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
+                    self.datachanged = True
+                    newoptions[key]  = val
+            if plugin == 'bidscoin':
+                self.output_bidsmap['Options']['bidscoin'] = newoptions
+            else:
+                self.output_bidsmap['Options']['plugins'][plugin] = newoptions
 
-            self.update_plugintable()
+            # Add an extra row if the table if full
+            if rowindex + 1 == table.rowCount() and table.currentItem() and table.currentItem().text():
+                table.blockSignals(True)
+                table.insertRow(table.rowCount())
+                table.setItem(table.rowCount() - 1, 2, MyWidgetItem('', iseditable=False))
+                table.blockSignals(False)
 
-    def toolcell2bidsmap(self, tool: str, idx: int, row: int, column: int):
-        """Option value has been changed in the tool options table """
-        if column == 2:
-            table    = self.tables_options[idx]  # Select the selected table
-            key      = table.item(row, 1).text()
-            value    = table.item(row, 2).text()
-            oldvalue = self.output_bidsmap['Options'][tool][key]
+    def add_plugin(self):
+        """Interactively add an installed plugin to the Options-tab"""
 
-            # Only if cell was actually clicked, update
-            if key and value!=oldvalue:
-                LOGGER.info(f"User has set ['Options']['{tool}']['{key}'] from '{oldvalue}' to '{value}'")
-                self.output_bidsmap['Options'][tool][key] = value
-                self.datachanged = True
+        # Set-up a plugin dropdown menu
+        label    = QLabel('Select a plugin that you would like to add')
+        plugins  = bidscoin.list_plugins()
+        dropdown = QComboBox()
+        dropdown.addItems([plugin.stem for plugin in plugins])
 
-    def test_tool(self, tool: str):
-        """Test the bidsmap tool and show the result in a pop-up window
+        # Set-up OK/Cancel buttons
+        buttonbox = QDialogButtonBox()
+        buttonbox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttonbox.button(QDialogButtonBox.Ok).setToolTip('Adds the selected plugin to the bidsmap options')
 
-        :param tool:    Name of the tool that is being tested in bidsmap['Options']
-         """
-        if self.test_tooloptions(tool, self.output_bidsmap['Options'][tool]):
-            QMessageBox.information(self, 'Tool test', f"Execution of {tool}: Passed\n"
-                                                        'See terminal output for more info')
-        else:
-            QMessageBox.warning(self, 'Tool test', f"Execution of {tool}: Failed\n"
-                                                    'See terminal output for more info')
+        # Set-up the dialog window and wait till the user has selected a plugin
+        layout = QVBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(dropdown)
+        layout.addWidget(buttonbox)
+        qdialog = QDialog(modal=True)
+        qdialog.setLayout(layout)
+        qdialog.setWindowTitle('BIDScoin Options')
+        qdialog.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
+        buttonbox.accepted.connect(qdialog.accept)
+        buttonbox.rejected.connect(qdialog.reject)
+        answer = qdialog.exec()
+        if not answer:
+            return
 
-    @staticmethod
-    def test_tooloptions(tool: str, opts: dict) -> bool:
-        """
-        Performs shell tests of the user tool parameters set in bidsmap['Options']
+        # Insert the selected plugin in the options_layout
+        plugin = dropdown.currentText()
+        if plugin in self.output_bidsmap['Options']['plugins']:
+            LOGGER.error(f"Cannot add the '{plugin}' plugin as it already exists in the bidsmap")
+            return
 
-        :param tool:    Name of the tool that is being tested in bidsmap['Options']
-        :param opts:    The editable options belonging to the tool
-        :return:        True if the tool generated the expected result, False if there was a tool error, None if not tested
-        """
+        LOGGER.info(f"Adding the '{plugin}' plugin to bidsmap")
+        plugin_label, plugin_table = self.plugin_table(plugin, {})
+        self.options_layout.insertWidget(self.options_layout.count()-2, plugin_label)
+        self.options_layout.insertWidget(self.options_layout.count()-2, plugin_table)
 
-        if tool=='dcm2niix2bids':
-            command = f"{opts['path']}dcm2niix -u"
-        elif tool=='bidsmapper':
-            command = 'bidsmapper -v'
-        elif tool in ('bidscoin', 'bidscoiner'):
-            command = 'bidscoiner -v'
-        else:
-            LOGGER.warning(f"Testing of '{tool}' not supported")
-            return True
+    def del_plugin(self, plugin: str):
+        """Removes the plugin table from the Options-tab"""
 
-        LOGGER.info(f"Testing: '{tool}'")
-
-        return bidscoin.run_command(command)
+        LOGGER.info(f"Removing the '{plugin}' from bidsmap['Options']['plugins']")
+        plugin_label = self.options_label[plugin]
+        plugin_table = self.options_table[plugin]
+        self.options_layout.removeWidget(plugin_label)
+        self.options_layout.removeWidget(plugin_table)
+        plugin_label.deleteLater()
+        plugin_table.deleteLater()
+        self.output_bidsmap['Options']['plugins'].pop(plugin, None)
+        self.options_label.pop(plugin, None)
+        self.options_table.pop(plugin, None)
 
     def test_plugin(self, plugin: str):
-        """Test the bidsmap plugin and show the result in a pop-up window
+        """Test the plugin and show the result in a pop-up window
 
         :param plugin:    Name of the plugin that is being tested in bidsmap['PlugIns']
          """
-        if bidscoin.test_plugins(Path(plugin)):
+        if bidscoin.test_plugin(Path(plugin), self.output_bidsmap['Options']['plugins'].get(plugin,{})):
             QMessageBox.information(self, 'Plugin test', f"Import of {plugin}: Passed\n"
                                                           'See terminal output for more info')
         else:
             QMessageBox.warning(self, 'Plugin test', f"Import of {plugin}: Failed\n"
                                                       'See terminal output for more info')
+
+    def test_bidscoin(self):
+        """Test the bidsmap tool and show the result in a pop-up window
+
+        :param tool:    Name of the tool that is being tested in bidsmap['Options']
+         """
+        if bidscoin.test_bidscoin(self.output_bidsmap['Options']['bidscoin']):
+            QMessageBox.information(self, 'Tool test', f"BIDScoin test: Passed\n"
+                                                        'See terminal output for more info')
+        else:
+            QMessageBox.warning(self, 'Tool test', f"BIDScoin test: Failed\n"
+                                                    'See terminal output for more info')
 
     def reset(self):
         """Reset button: reset the window with the original input BIDS map. """
@@ -894,25 +868,25 @@ class EditWindow(QDialog):
         layout_tables.addWidget(groupbox2)
 
         # Set-up buttons
-        buttonBox    = QDialogButtonBox()
-        exportbutton = buttonBox.addButton('Export', QDialogButtonBox.ActionRole)
+        buttonbox    = QDialogButtonBox()
+        exportbutton = buttonbox.addButton('Export', QDialogButtonBox.ActionRole)
         exportbutton.setIcon(QtGui.QIcon.fromTheme('document-save'))
         exportbutton.setToolTip('Export this run item to an existing (template) bidsmap')
         exportbutton.clicked.connect(self.export_run)
-        buttonBox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Reset | QDialogButtonBox.Help)
-        buttonBox.button(QDialogButtonBox.Reset).setToolTip('Reset the edits you made')
-        buttonBox.button(QDialogButtonBox.Ok).setToolTip('Apply the edits you made and close this window')
-        buttonBox.button(QDialogButtonBox.Cancel).setToolTip('Discard the edits you made and close this window')
-        buttonBox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDS specification for more info')
-        buttonBox.accepted.connect(self.accept_run)
-        buttonBox.rejected.connect(partial(self.reject, False))
-        buttonBox.helpRequested.connect(self.get_help)
-        buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reset)
+        buttonbox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Reset | QDialogButtonBox.Help)
+        buttonbox.button(QDialogButtonBox.Reset).setToolTip('Reset the edits you made')
+        buttonbox.button(QDialogButtonBox.Ok).setToolTip('Apply the edits you made and close this window')
+        buttonbox.button(QDialogButtonBox.Cancel).setToolTip('Discard the edits you made and close this window')
+        buttonbox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDS specification for more info')
+        buttonbox.accepted.connect(self.accept_run)
+        buttonbox.rejected.connect(partial(self.reject, False))
+        buttonbox.helpRequested.connect(self.get_help)
+        buttonbox.button(QDialogButtonBox.Reset).clicked.connect(self.reset)
 
         # Set-up the main layout
-        layout_all = QVBoxLayout(self)
-        layout_all.addLayout(layout_tables)
-        layout_all.addWidget(buttonBox)
+        layout_main = QVBoxLayout(self)
+        layout_main.addLayout(layout_tables)
+        layout_main.addWidget(buttonbox)
 
         self.center()
 
@@ -1033,11 +1007,11 @@ class EditWindow(QDialog):
 
         table.blockSignals(False)
 
-    def attributescell2run(self, row: int, column: int):
+    def attributescell2run(self, rowindex: int, colindex: int):
         """Source attribute value has been changed. """
-        if column == 1:
-            key      = self.attributes_table.item(row, 0).text()
-            value    = self.attributes_table.item(row, 1).text()
+        if colindex == 1:
+            key      = self.attributes_table.item(rowindex, 0).text()
+            value    = self.attributes_table.item(rowindex, 1).text()
             oldvalue = self.target_run['attributes'].get(key)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
@@ -1049,18 +1023,18 @@ class EditWindow(QDialog):
                     LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                     self.target_run['attributes'][key] = value
                 else:
-                    self.attributes_table.item(row, 1).setText(oldvalue)
+                    self.attributes_table.item(rowindex, 1).setText(oldvalue)
 
-    def bidscell2run(self, row: int, column: int):
+    def bidscell2run(self, rowindex: int, colindex: int):
         """BIDS attribute value has been changed. """
-        if column == 1:
-            key = self.bids_table.item(row, 0).text()
-            if hasattr(self.bids_table.cellWidget(row, 1), 'spacedwidget'):
-                dropdown = self.bids_table.cellWidget(row, 1).spacedwidget
+        if colindex == 1:
+            key = self.bids_table.item(rowindex, 0).text()
+            if hasattr(self.bids_table.cellWidget(rowindex, 1), 'spacedwidget'):
+                dropdown = self.bids_table.cellWidget(rowindex, 1).spacedwidget
                 value    = [dropdown.itemText(n) for n in range(len(dropdown))] + [dropdown.currentIndex()]
                 oldvalue = self.target_run['bids'].get(key)
             else:
-                value    = self.bids_table.item(row, 1).text()
+                value    = self.bids_table.item(rowindex, 1).text()
                 oldvalue = self.target_run['bids'].get(key)
 
             # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes) and store the data in the target_run
@@ -1068,7 +1042,7 @@ class EditWindow(QDialog):
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
                 if isinstance(value, str) and not (value.startswith('<<') and value.endswith('>>')):
                     value = bids.cleanup_value(bids.get_dynamicvalue(value, Path(self.target_run['provenance'])))
-                    self.bids_table.item(row, 1).setText(value)
+                    self.bids_table.item(rowindex, 1).setText(value)
                 if key == 'run' and oldvalue.startswith('<<') and oldvalue.endswith('>>'):
                     answer = QMessageBox.question(self, f"Edit bids entities",
                                                   f'It is highly discouraged to change the <<dynamic>> run-index unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
@@ -1077,23 +1051,23 @@ class EditWindow(QDialog):
                         LOGGER.warning(f"Expert usage: User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                     else:
                         value = oldvalue
-                        self.bids_table.item(row, 1).setText(oldvalue)
+                        self.bids_table.item(rowindex, 1).setText(oldvalue)
                         LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 else:
                     LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 self.target_run['bids'][key] = value
                 self.refresh_bidsname()
 
-    def metacell2run(self, row: int, column: int):
+    def metacell2run(self, rowindex: int, colindex: int):
         """Source meta value has been changed. """
-        key      = self.meta_table.item(row, 0).text()
-        value    = self.meta_table.item(row, 1).text()
+        key      = self.meta_table.item(rowindex, 0).text()
+        value    = self.meta_table.item(rowindex, 1).text()
         oldvalue = self.target_run['meta'].get(key)
         if value != oldvalue:
             # Replace the (dynamic) value
             if not (value.startswith('<<') and value.endswith('>>')):
                 value = bids.get_dynamicvalue(value, Path(self.target_run['provenance']), cleanup=False)
-                self.meta_table.item(row, 1).setText(value)
+                self.meta_table.item(rowindex, 1).setText(value)
             LOGGER.info(f"User has set meta['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
 
         # Read all the meta-data from the table and store it in the target_run
@@ -1107,7 +1081,7 @@ class EditWindow(QDialog):
                 QMessageBox.warning(self, 'Input error', f"Please enter a key-name (left cell) for the '{value_}' value in row {n+1}")
 
         # Refresh the table if needed, i.e. delete empty rows or add a new row if a key is defined on the last row
-        if (not key and not value) or (key and not key.isspace() and row + 1 == self.meta_table.rowCount()):
+        if (not key and not value) or (key and not key.isspace() and rowindex + 1 == self.meta_table.rowCount()):
             _, _, _, data_meta = self.run2data()
             self.fill_table(self.meta_table, data_meta)
 
@@ -1255,23 +1229,27 @@ class EditWindow(QDialog):
 
         super(EditWindow, self).reject()
 
-    def inspect_sourcefile(self, row: int=None, column: int=None):
+    def inspect_sourcefile(self, rowindex: int=None, colindex: int=None):
         """When double clicked, show popup window. """
-        if row == 1 and column == 1:
+        if rowindex == 1 and colindex == 1:
             self.popup = InspectWindow(Path(self.target_run['provenance']))
             self.popup.show()
             self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
 
     @staticmethod
-    def spacedwidget(leftwidget):
-        """Place the widget in a QHBoxLayout and add a stretcher next to it. Return the widget as inputwidget.spacedwidget"""
+    def spacedwidget(alignedwidget, align='left'):
+        """Place the widget in a QHBoxLayout and add a stretcher next to it. Return the widget as widget.spacedwidget"""
         widget = QtWidgets.QWidget()
         layout = QHBoxLayout()
-        layout.addWidget(leftwidget)
-        layout.addStretch()
+        if align != 'left':
+            layout.addStretch()
+            layout.addWidget(alignedwidget)
+        else:
+            layout.addWidget(alignedwidget)
+            layout.addStretch()
         layout.setContentsMargins(0, 0, 0, 0)
         widget.setLayout(layout)
-        widget.spacedwidget = leftwidget
+        widget.spacedwidget = alignedwidget
         return widget
 
     @staticmethod

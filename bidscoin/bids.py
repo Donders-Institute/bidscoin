@@ -248,7 +248,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
     # Issue a warning if the version in the bidsmap YAML-file is not the same as the bidscoin version
     if 'bidscoin' in bidsmap['Options'] and 'version' in bidsmap['Options']['bidscoin']:
         bidsmapversion = bidsmap['Options']['bidscoin']['version']
-    elif 'version' in bidsmap['Options']:
+    elif 'version' in bidsmap['Options']:                       # Handle legacy bidsmaps
         bidsmapversion = bidsmap['Options']['version']
     else:
         bidsmapversion = 'Unknown'
@@ -258,8 +258,8 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
     # Add missing provenance info, run dictionaries and bids entities
     run_ = get_run_()
     for dataformat in bidsmap:
-        if dataformat in ('Options','PlugIns'):   continue
-        if not bidsmap[dataformat]:               continue
+        if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (-> 'PlugIns')
+        if not bidsmap[dataformat]:             continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue
             for index, run in enumerate(bidsmap[dataformat][datatype]):
@@ -282,10 +282,9 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
                                 LOGGER.debug(f"Adding missing {dataformat}/{datatype} entity key: {entitykey}")
                                 run['bids'][entitykey] = ''
 
-    # Make sure we get a proper list of plugins (make sure there are no None's in the list)
-    if not bidsmap.get('PlugIns'):
-        bidsmap['PlugIns'] = []
-    bidsmap['PlugIns'] = [plugin for plugin in bidsmap.get('PlugIns') if plugin]
+    # Make sure we get a proper dictionary with plugins
+    if not bidsmap['Options'].get('plugins'):
+        bidsmap['Options']['plugins'] = {}
 
     # Validate the bidsmap entries
     check_bidsmap(bidsmap, report)
@@ -337,8 +336,8 @@ def check_bidsmap(bidsmap: dict, validate: bool=True) -> bool:
 
     # Check all the runs in the bidsmap
     for dataformat in bidsmap:
-        if dataformat in ('Options','PlugIns'):   continue            # TODO
-        if not bidsmap[dataformat]:               continue
+        if dataformat in ('Options','PlugIns'): continue    # Handle legacy bidsmaps (-> 'PlugIns'). TODO: Check Options
+        if not bidsmap[dataformat]:             continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue
             for run in bidsmap[dataformat][datatype]:

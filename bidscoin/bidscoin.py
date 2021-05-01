@@ -192,7 +192,8 @@ def list_executables(show: bool=False) -> list:
 
 def list_plugins(show: bool=False) -> list:
     """
-    :return:                Nothing
+    :param show: Print the installed plugins if True
+    :return:     List of the installed plugins
     """
 
     if show:
@@ -294,24 +295,40 @@ def import_plugin(plugin: Path, functions: tuple=()) -> module_from_spec:
         LOGGER.exception(f"Could not import {plugin}:\n{pluginerror}")
 
 
-def test_plugins(plugin: Path) -> bool:
+def test_plugin(plugin: Path, options: dict) -> bool:
     """
-    Performs import tests of the plug-ins in bidsmap['PlugIns']
+    Performs import tests of the plug-in
 
-    :param plugin:  The name of the plugin that is being tested (-> bidsmap['Plugins'])
+    :param plugin:  The name of the plugin that is being tested
     :return:        True if the plugin generated the expected result, False if there
                     was a plug-in error, None if this function has an implementation error
     """
 
-    LOGGER.info(f"Testing: '{plugin}' plugin")
+    LOGGER.info(f"Testing the '{plugin}' plugin:")
 
+    # First test to see if we can import the plugin
     module = import_plugin(plugin, ('bidsmapper_plugin','bidscoiner_plugin'))
     if inspect.ismodule(module):
         methods = [method for method in dir(module) if not method.startswith('_')]
-        LOGGER.info(f"\n{plugin} docstring:\n{module.__doc__}\n{plugin} attributes and methods:\n{methods}")
-        return True
+        LOGGER.info(f"\n{plugin} docstring:\n{module.__doc__}\n{plugin} attributes and methods:\n{methods}")    # Maybe a bit verbose :-)
     else:
         return False
+
+    # Then run the plugin's own 'test' routine (if implemented)
+    if 'test' in dir(module) and callable(getattr(module, 'test')):
+        return module.test(options)
+
+    return True
+
+
+def test_bidscoin(Options: dict):
+    """
+    WIP
+    :return:
+    """
+    LOGGER.info('Testing BIDScoin: not (yet) implemented :-)')
+
+    return True
 
 
 def pulltutorialdata(tutorialfolder: str) -> None:

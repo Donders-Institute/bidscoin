@@ -16,6 +16,25 @@ except ImportError:
 LOGGER = logging.getLogger(__name__)
 
 
+def test(options) -> bool:
+    """
+    Performs shell tests dcm2niix
+
+    :return:        True if the tool generated the expected result, False if there was a tool error, None if not tested
+    """
+
+    LOGGER.info('Testing the dcm2niix installation:')
+
+    if 'path' not in options:
+        LOGGER.error(f"The expected 'path' key is not defined in the dcm2niix2bids options")
+    if 'args' not in options:
+        LOGGER.error(f"The expected 'args' key is not defined in the dcm2niix2bids options")
+
+    command = f"{options.get('path')}dcm2niix -u"
+
+    return bidscoin.run_command(command)
+
+
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, subprefix: str, sesprefix: str) -> None:
     """
     The bidscoiner plugin to convert the session DICOM and PAR/REC source-files into BIDS-valid nifti-files in the
@@ -137,8 +156,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
         # Convert the source-files in the run folder to nifti's in the BIDS-folder
         else:
             command = '{path}dcm2niix {args} -f "{filename}" -o "{outfolder}" "{source}"'.format(
-                path      = bidsmap['Options']['dcm2niix2bids']['path'],
-                args      = bidsmap['Options']['dcm2niix2bids']['args'],
+                path      = bidsmap['Options']['dcm2niix2bids'].get('path',''),
+                args      = bidsmap['Options']['dcm2niix2bids'].get('args',''),
                 filename  = bidsname,
                 outfolder = outfolder,
                 source    = source)

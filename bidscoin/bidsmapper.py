@@ -72,7 +72,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         bidsmap_new = copy.deepcopy(bidsmap_old)
     else:
         bidsmap_new = copy.deepcopy(template)
-    for dataformat in [dataformat for dataformat in bidsmap_new if dataformat not in ('Options','PlugIns')]:
+    for dataformat in bidsmap_new:
+        if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (-> 'PlugIns')
         for datatype in bids.bidscoindatatypes + (bids.unknowndatatype, bids.ignoredatatype):
             if bidsmap_new.get(dataformat) and bidsmap_new[dataformat].get(datatype):
                 bidsmap_new[dataformat][datatype] = None
@@ -83,7 +84,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         bidsmapfile = bidscoinfolder/'bidsmap.yaml'
 
     # Load the data scanning plugins
-    plugins = [module for module in (bidscoin.import_plugin(plugin, ('bidsmapper_plugin',)) for plugin in bidsmap_new['PlugIns']) if module]
+    plugins = [bidscoin.import_plugin(plugin, ('bidsmapper_plugin',)) for plugin,options in bidsmap_new['Options']['plugins'].items()]
+    plugins = [plugin for plugin in plugins if plugin]          # Filter the empty items from the list
     if not plugins:
         LOGGER.warning(f"No bidsmapper plugins found in {bidsmapfile}, nothing to do")
         LOGGER.info('-------------- FINISHED! ------------')

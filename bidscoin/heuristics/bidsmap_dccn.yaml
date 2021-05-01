@@ -17,22 +17,16 @@
 
 Options:
 # --------------------------------------------------------------------------------
-# General options
+# General options and plugins
 # --------------------------------------------------------------------------------
   bidscoin:
     version: '3.6.0'              # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
     bidsignore: extra_data/       # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
-  dcm2niix2bids:                  # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
-    path: module add dcm2niix;    # Command to set the path to dcm2niix (note the semi-colon), e.g. module add dcm2niix/1.0.20180622; or PATH=/opt/dcm2niix/bin:$PATH; or /opt/dcm2niix/bin/ or '"C:\Program Files\dcm2niix\"' (note the quotes to deal with the whitespace)
-    args: -b y -z y -i n          # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
-
-
-PlugIns:
-# --------------------------------------------------------------------------------
-# List of plugins to edit the key-value heuristics / perform additional operations
-# --------------------------------------------------------------------------------
-- dcmpar2bidsmap                  # Either a fullpath name of the plugin or just the basename when it is in the default bidscoin/plugins folder (see the README.py in there)
-- dcm2niix2bids
+  plugins:                        # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
+    dcmpar2bidsmap: ~             # The default plugin that is used by the bidsmapper to map DICOM and PAR/REC source data
+    dcm2niix2bids:                # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
+      path: module add dcm2niix;  # Command to set the path to dcm2niix (note the semi-colon), e.g. module add dcm2niix/1.0.20180622; or PATH=/opt/dcm2niix/bin:$PATH; or /opt/dcm2niix/bin/ or '"C:\Program Files\dcm2niix\"' (note the quotes to deal with the whitespace)
+      args: -b y -z y -i n        # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
 
 
 DICOM:
