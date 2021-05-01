@@ -602,6 +602,7 @@ class MainWindow(QMainWindow):
         self.options_layout.insertWidget(self.options_layout.count()-2, plugin_label)
         self.options_layout.insertWidget(self.options_layout.count()-2, plugin_table)
         self.output_bidsmap['Options']['plugins'][plugin] = {}
+        self.datachanged = True
 
     def del_plugin(self, plugin: str):
         """Removes the plugin table from the Options-tab and the data from the bidsmap"""
@@ -613,9 +614,10 @@ class MainWindow(QMainWindow):
         self.options_layout.removeWidget(plugin_table)
         plugin_label.deleteLater()
         plugin_table.deleteLater()
-        self.output_bidsmap['Options']['plugins'].pop(plugin, None)
         self.options_label.pop(plugin, None)
         self.options_table.pop(plugin, None)
+        self.output_bidsmap['Options']['plugins'].pop(plugin, None)
+        self.datachanged = True
 
     def test_plugin(self, plugin: str):
         """Test the plugin and show the result in a pop-up window"""
