@@ -287,7 +287,7 @@ class MainWindow(QMainWindow):
             if value is None:
                 value = ''
             bidscoin_table.setItem(n, 0, MyWidgetItem(key, iseditable=False))
-            bidscoin_table.setItem(n, 1, MyWidgetItem(value, iseditable=True))
+            bidscoin_table.setItem(n, 1, MyWidgetItem(value))
         bidscoin_table.cellChanged.connect(self.options2bidsmap)
 
         # Set-up the tab layout and add the bidscoin table
@@ -512,7 +512,7 @@ class MainWindow(QMainWindow):
         plugin_table.setCellWidget(0, 2, test_button)
         delete_button = QPushButton('Remove')                               # Add a delete-button
         delete_button.clicked.connect(partial(self.del_plugin, plugin))
-        delete_button.setToolTip(f'Click to remove the "{plugin}" plugin')
+        delete_button.setToolTip(f'Click to remove the "{plugin}" plugin from the options')
         plugin_table.setCellWidget(1, 2, delete_button)
         if plugin=='dcm2niix2bids':
             tooltip = TOOLTIP_DCM2NIIX
@@ -523,8 +523,8 @@ class MainWindow(QMainWindow):
         for n, (key, value) in enumerate(options.items()):
             if value is None:
                 value = ''
-            plugin_table.setItem(n, 0, MyWidgetItem(key, iseditable=False))
-            plugin_table.setItem(n, 1, MyWidgetItem(value, iseditable=True))
+            plugin_table.setItem(n, 0, MyWidgetItem(key))
+            plugin_table.setItem(n, 1, MyWidgetItem(value))
             plugin_table.setItem(n, 2, MyWidgetItem('', iseditable=False))
         plugin_table.setItem(plugin_table.rowCount() - 1, 2, MyWidgetItem('', iseditable=False))
         plugin_table.cellChanged.connect(self.options2bidsmap)
