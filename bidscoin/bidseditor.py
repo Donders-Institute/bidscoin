@@ -549,7 +549,7 @@ class MainWindow(QMainWindow):
                 if key and val != oldoptions.get(key):
                     LOGGER.info(f"User has set the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
                     self.datachanged = True
-                    newoptions[key]  = val
+                newoptions[key]  = val
             if plugin == 'bidscoin':
                 self.output_bidsmap['Options']['bidscoin'] = newoptions
             else:
