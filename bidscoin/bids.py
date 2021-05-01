@@ -285,6 +285,9 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
     # Make sure we get a proper dictionary with plugins
     if not bidsmap['Options'].get('plugins'):
         bidsmap['Options']['plugins'] = {}
+    for plugin, options in bidsmap['Options']['plugins'].items():
+        if not bidsmap['Options']['plugins'].get(plugin):
+            bidsmap['Options']['plugins'][plugin] = {}
 
     # Validate the bidsmap entries
     check_bidsmap(bidsmap, report)
