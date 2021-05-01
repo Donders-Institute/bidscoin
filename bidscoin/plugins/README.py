@@ -27,7 +27,10 @@ def test(options: dict) -> bool:
 def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
     """
     All the logic to map the Philips PAR/XML fields onto bids labels go into this plugin function. The function is
-    expecte to update / append new runs to the bidsmap_new data structure
+    expecte to update / append new runs to the bidsmap_new data structure. The bidsmap options for this plugin can
+    be found in:
+
+    bidsmap_new/old['Options']['plugins']['README']
 
     See e.g. dcmpar2bidsmap.py for an example implementation
 
@@ -45,7 +48,9 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, subprefix: str, sesprefix: str) -> None:
     """
     The plugin to convert the runs in the source folder and save them in the bids folder. Each saved datafile should be
-    accompanied with a json sidecar file
+    accompanied with a json sidecar file. The bidsmap options for this plugin can be found in:
+
+    bidsmap_new/old['Options']['plugins']['README']
 
     See e.g. dcm2niix2bids.py for an example implementation
 
