@@ -196,6 +196,8 @@ class MainWindow(QMainWindow):
             self.open_editwindow(provenance, datatype)
 
     def set_menu_statusbar(self):
+        """Set-up the menu and statusbar"""
+
         # Set the menus
         menubar  = QtWidgets.QMenuBar(self)
         menufile = QtWidgets.QMenu(menubar)
@@ -975,13 +977,17 @@ class EditWindow(QDialog):
         :return: (data_provenance, data_attributes, data_bids, data_meta)
         """
 
-        data_provenance = [
-            [{'value': 'path',                                                                'iseditable': False},
-             {'value': str(Path(self.target_run['provenance']).parent),                       'iseditable': False}],
-            [{'value': 'filename',                                                            'iseditable': False},
-             {'value': Path(self.target_run['provenance']).name,                              'iseditable': True}],  # Make the font black to indicate users can click here
-            [{'value': 'size',                                                                'iseditable': False},
-             {'value': self.format_bytes(Path(self.target_run['provenance']).stat().st_size), 'iseditable': False}]]
+        provenance = Path(self.target_run['provenance'])
+        if provenance.is_file():
+            size = self.format_bytes(provenance.stat().st_size)
+        else:
+            size = None
+        data_provenance = [[{'value': 'path',                 'iseditable': False},
+                            {'value': str(provenance.parent), 'iseditable': False}],
+                           [{'value': 'filename',             'iseditable': False},
+                            {'value': provenance.name,        'iseditable': True}],     # Make the font black to indicate users can click here
+                           [{'value': 'size',                 'iseditable': False},
+                            {'value': size,                   'iseditable': False}]]
 
         data_attributes = []
         for key, value in self.target_run['attributes'].items():
