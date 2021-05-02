@@ -182,11 +182,16 @@ class MainWindow(QMainWindow):
         action     = menu.exec(table.viewport().mapToGlobal(pos))
 
         if action == delete_run:
-            LOGGER.warning(f"Expert usage: User has removed run-item {dataformat}[{datatype}]: {provenance}")
-            bids.delete_run(self.output_bidsmap, dataformat, datatype, provenance)
-            self.update_subses_samples(self.output_bidsmap)
-            table.setRowCount(table.rowCount() - 1)
-            self.datachanged = True
+            answer = QMessageBox.question(self, f"Remove {dataformat} mapping",
+                                          f'Only delete mappings for obsolete data (unless you are an expert user). Do you really want to remove this mapping"?',
+                                          QMessageBox.Yes | QMessageBox.Cancel | QMessageBox.Cancel)
+            if answer==QMessageBox.Yes:
+                LOGGER.warning(f"Expert usage: User has removed run-item {dataformat}[{datatype}]: {provenance}")
+                bids.delete_run(self.output_bidsmap, dataformat, datatype, provenance)
+                self.update_subses_samples(self.output_bidsmap)
+                table.setRowCount(table.rowCount() - 1)
+                self.datachanged = True
+
         elif action == edit_run:
             self.open_editwindow(provenance, datatype)
 
