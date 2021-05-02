@@ -1211,7 +1211,7 @@ class EditWindow(QDialog):
             self.bidsname_textbox.setTextColor(QtGui.QColor('gray'))
             font.setStrikeOut(True)
         elif not bids.check_run(self.target_datatype, self.target_run):
-            self.bidsname_textbox.setToolTip(f"Red: This name is not valid according to the BIDS standard")
+            self.bidsname_textbox.setToolTip(f"Red: This name is not valid according to the BIDS standard -- see terminal output for more info")
             self.bidsname_textbox.setTextColor(QtGui.QColor('red'))
             font.setStrikeOut(False)
         else:

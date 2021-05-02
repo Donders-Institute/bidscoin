@@ -532,7 +532,7 @@ def get_dataformat(source: Path) -> str:
     except OSError as nosource:
         LOGGER.warning(nosource)
 
-    LOGGER.warning(f"Cannot determine the dataformat of: {source}")
+    LOGGER.debug(f"Cannot determine the dataformat of: {source}")
     return ''
 
 
