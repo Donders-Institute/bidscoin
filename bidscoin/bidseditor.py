@@ -110,7 +110,7 @@ class MainWindow(QMainWindow):
         buttonbox.setStandardButtons(QDialogButtonBox.Save | QDialogButtonBox.Reset | QDialogButtonBox.Help)
         buttonbox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
         buttonbox.button(QDialogButtonBox.Save).setToolTip('Save the Options and BIDSmap to disk if you are satisfied with all the BIDS output names')
-        buttonbox.button(QDialogButtonBox.Reset).setToolTip('Reset the Options and BIDSmap')
+        buttonbox.button(QDialogButtonBox.Reset).setToolTip('Reset all the Options and BIDS mappings')
         buttonbox.helpRequested.connect(self.get_help)
         buttonbox.button(QDialogButtonBox.Reset).clicked.connect(self.reset)
         buttonbox.button(QDialogButtonBox.Save).clicked.connect(self.save_bidsmap)
@@ -139,6 +139,56 @@ class MainWindow(QMainWindow):
         for dataformat in self.dataformats:
             header = self.samples_table[dataformat].horizontalHeader()
             header.setSectionResizeMode(1, QHeaderView.Interactive)
+
+    def closeEvent(self, event):
+        """Handle exit of the main window -> check if data has been saved"""
+
+        if not self.datasaved or self.datachanged:
+            answer = QMessageBox.question(self, 'Closing the BIDS editor', 'Do you want to save the bidsmap to disk?',
+                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
+            if answer == QMessageBox.Yes:
+                self.save_bidsmap()
+            elif answer == QMessageBox.Cancel:
+                if event:               # User clicked the 'X'-button or pressed alt-F4 -> drop signal
+                    event.ignore()
+                return
+            self.datasaved   = True     # Prevent re-entering this if-statement after close() -> closeEvent()
+            self.datachanged = False    # Prevent re-entering this if-statement after close() -> closeEvent()
+
+        if event:                       # User clicked the 'X'-button or pressed alt-F4 -> normal closeEvent
+            super(MainWindow, self).closeEvent(event)
+        else:                           # User pressed alt-X (= menu action) -> normal close()
+            self.close()
+        QApplication.quit()             # TODO: Do not use class method but self.something?
+
+    @QtCore.pyqtSlot(QtCore.QPoint)
+    def on_customContextMenuRequested(self, pos):
+        """Pops up a context-menu for deleting or editing the right-clicked sample in the samples_table"""
+
+        # Get the activated row-data
+        dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
+        table      = self.samples_table[dataformat]
+        rowindex   = table.currentRow()
+        colindex   = table.currentColumn()
+        datatype   = table.item(rowindex, 2).text()
+        provenance = table.item(rowindex, 5).text()
+
+        # Pop-up the context-menu
+        if colindex in (-1, 0, 4):      # User clicked the index, the edit-button or elsewhere (i.e. not on an activated widget)
+            return
+        menu       = QtWidgets.QMenu(self)
+        delete_run = menu.addAction('Remove')
+        edit_run   = menu.addAction('Edit')
+        action     = menu.exec(table.viewport().mapToGlobal(pos))
+
+        if action == delete_run:
+            LOGGER.warning(f"Expert usage: User has removed run-item {dataformat}[{datatype}]: {provenance}")
+            bids.delete_run(self.output_bidsmap, dataformat, datatype, provenance)
+            self.update_subses_samples(self.output_bidsmap)
+            table.setRowCount(table.rowCount() - 1)
+            self.datachanged = True
+        elif action == edit_run:
+            self.open_editwindow(provenance, datatype)
 
     def set_menu_statusbar(self):
         # Set the menus
@@ -232,7 +282,7 @@ class MainWindow(QMainWindow):
         label = QLabel('Data samples')
         label.setToolTip('List of unique source-data samples')
 
-        samples_table = MyQTableWidget(minimum=False)
+        self.samples_table[dataformat] = samples_table = MyQTableWidget(minimum=False)
         samples_table.setMouseTracking(True)
         samples_table.setShowGrid(True)
         samples_table.setColumnCount(6)
@@ -242,12 +292,13 @@ class MainWindow(QMainWindow):
         samples_table.sortByColumn(0, QtCore.Qt.AscendingOrder)
         samples_table.setColumnHidden(2, True)
         samples_table.setColumnHidden(5, True)
-        samples_table.itemDoubleClicked.connect(self.inspect_sourcefile)
+        samples_table.itemDoubleClicked.connect(self.sample_doubleclicked)
+        samples_table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        samples_table.customContextMenuRequested.connect(self.on_customContextMenuRequested)
         header = samples_table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.Stretch)                 # Temporarily set it to Stretch to have Qt set the right window width -> set to Interactive in setupUI -> not reset
         header.setSectionResizeMode(3, QHeaderView.Stretch)
-        self.samples_table[dataformat] = samples_table
 
         layout = QVBoxLayout()
         layout.addWidget(subses_label)
@@ -301,7 +352,8 @@ class MainWindow(QMainWindow):
             layout.addWidget(plugin_table)
 
         # Add an 'Add' button below the tables at the right side
-        add_button = QPushButton('Add', clicked=self.add_plugin)
+        add_button = QPushButton('Add')
+        add_button.clicked.connect(self.add_plugin)
         add_button.setToolTip(f'Click to add an installed plugin to the list')
         layout.addWidget(add_button, alignment=QtCore.Qt.AlignRight)
         layout.addStretch()
@@ -399,7 +451,7 @@ class MainWindow(QMainWindow):
                 samples_table.setItem(idx, 5, QTableWidgetItem(str(provenance)))                    # Hidden column
 
                 samples_table.item(idx, 0).setFlags(QtCore.Qt.NoItemFlags)
-                samples_table.item(idx, 1).setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                samples_table.item(idx, 1).setFlags(QtCore.Qt.ItemIsEnabled)
                 samples_table.item(idx, 2).setFlags(QtCore.Qt.ItemIsEnabled)
                 samples_table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
                 samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information (Copy: Ctrl+C)')
@@ -678,18 +730,21 @@ class MainWindow(QMainWindow):
             self.datasaved   = True
             self.datachanged = False
 
-    def inspect_sourcefile(self, item):
-        """When source file is double clicked in the samples_table, show popup window"""
+    def sample_doubleclicked(self, item):
+        """When source file is double clicked in the samples_table, show the inspect or edit window"""
 
+        dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
+        datatype   = self.samples_table[dataformat].item(item.row(), 2).text()
+        sourcefile = self.samples_table[dataformat].item(item.row(), 5).text()
         if item.column() == 1:
-            dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
-            sourcefile = self.samples_table[dataformat].item(item.row(), 5)
-            self.popup = InspectWindow(Path(sourcefile.text()))
+            self.popup = InspectWindow(Path(sourcefile))
             self.popup.show()
             self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
+        if item.column() == 3:
+            self.open_editwindow(sourcefile, datatype)
 
     def open_inspectwindow(self, index: int):
-        """Opens the inspect window when a data file in the file-tree tab is double-clicked"""
+        """Opens the inspect or native application window when a data file in the file-tree tab is double-clicked"""
 
         datafile = Path(self.model.fileInfo(index).absoluteFilePath())
         if bids.is_dicomfile(datafile) or bids.is_parfile(datafile):
@@ -719,27 +774,6 @@ class MainWindow(QMainWindow):
     def get_bids_help():
         """Get online help. """
         webbrowser.open(HELP_URL_DEFAULT)
-
-    def closeEvent(self, event):
-        """Handle exit of the main window -> check if data has been saved"""
-
-        if not self.datasaved or self.datachanged:
-            answer = QMessageBox.question(self, 'Closing the BIDS editor', 'Do you want to save the bidsmap to disk?',
-                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
-            if answer == QMessageBox.Yes:
-                self.save_bidsmap()
-            elif answer == QMessageBox.Cancel:
-                if event:               # User clicked the 'X'-button or pressed alt-F4 -> drop signal
-                    event.ignore()
-                return
-            self.datasaved   = True     # Prevent re-entering this if-statement after close() -> closeEvent()
-            self.datachanged = False    # Prevent re-entering this if-statement after close() -> closeEvent()
-
-        if event:                       # User clicked the 'X'-button or pressed alt-F4 -> normal closeEvent
-            super(MainWindow, self).closeEvent(event)
-        else:                           # User pressed alt-X (= menu action) -> normal close()
-            self.close()
-        QApplication.quit()             # TODO: Do not use class method but self.something?
 
 
 class EditWindow(QDialog):
@@ -793,10 +827,10 @@ class EditWindow(QDialog):
         # Set-up the attributes table
         self.attributes_label = QLabel()
         self.attributes_label.setText('Attributes')
-        self.attributes_label.setToolTip(f"The {self.dataformat} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using '*string*' wildcards, see documentation), only change these if you know what you are doing!")
+        self.attributes_label.setToolTip(f"The {self.dataformat} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using regular expressions, see documentation), only change these if you know what you are doing!")
         self.attributes_table = self.set_table(data_attributes, 'attributes', minimum=False)
         self.attributes_table.cellChanged.connect(self.attributescell2run)
-        self.attributes_table.setToolTip(f"The {self.dataformat} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using '*string*' wildcards, see documentation), only change these if you know what you are doing!")
+        self.attributes_table.setToolTip(f"The {self.dataformat} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using regular expressions, see documentation), only change these if you know what you are doing!")
 
         # Set-up the datatype dropdown menu
         self.datatype_label = QLabel()
@@ -894,6 +928,27 @@ class EditWindow(QDialog):
         layout_main.addWidget(buttonbox)
 
         self.center()
+
+    def reject(self, confirm=True):
+        """Ask if the user really wants to close the window"""
+
+        if confirm and str(self.target_run) != str(self.source_run):
+            self.raise_()
+            answer = QMessageBox.question(self, 'Edit BIDS mapping', 'Closing window, do you want to save the changes you made?',
+                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
+            if answer == QMessageBox.Yes:
+                self.accept_run()
+                return
+            if answer == QMessageBox.No:
+                self.done(2)
+                LOGGER.info(f'User has discarded the edit')
+                return
+            if answer == QMessageBox.Cancel:
+                return
+
+        LOGGER.info(f'User has canceled the edit')
+
+        super(EditWindow, self).reject()
 
     def get_allowed_suffixes(self):
         """Derive the possible suffixes for each datatype from the template. """
@@ -1220,27 +1275,6 @@ class EditWindow(QDialog):
             bids.append_run(bidsmap, self.dataformat, self.target_datatype, self.target_run)
             bids.save_bidsmap(yamlfile, bidsmap)
             QMessageBox.information(self, 'Edit BIDS mapping', f"Successfully exported:\n\nbidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}")
-
-    def reject(self, confirm=True):
-        """Ask if the user really wants to close the window"""
-
-        if confirm and str(self.target_run) != str(self.source_run):
-            self.raise_()
-            answer = QMessageBox.question(self, 'Edit BIDS mapping', 'Closing window, do you want to save the changes you made?',
-                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
-            if answer == QMessageBox.Yes:
-                self.accept_run()
-                return
-            if answer == QMessageBox.No:
-                self.done(2)
-                LOGGER.info(f'User has discarded the edit')
-                return
-            if answer == QMessageBox.Cancel:
-                return
-
-        LOGGER.info(f'User has canceled the edit')
-
-        super(EditWindow, self).reject()
 
     def inspect_sourcefile(self, rowindex: int=None, colindex: int=None):
         """When double clicked, show popup window"""
