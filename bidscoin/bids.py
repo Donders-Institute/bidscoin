@@ -536,18 +536,23 @@ def get_dataformat(source: Path) -> str:
     return ''
 
 
-def get_sourcefield(tagname: str, sourcefile: Path=Path(), dataformat: str='') -> Union[str, int]:
+def get_sourcevalue(tagname: str, sourcefile: Union[Path, dict], dataformat: str= '') -> Union[str, int]:
     """
-    Wraps around get_dicomfield and get_parfield or gets filesystem property
+    Gets the tagname header-attribute or tagname filesystem-property
 
     :param tagname:     Name of the field in the sourcefile
-    :param sourcefile:  The full pathname of the (e.g. DICOM or PAR/XML) sourcefile
-    :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
+    :param sourcefile:  The full pathname of the (e.g. DICOM or PAR/XML) sourcefile or a run-item with a run['provenance'] field (needed for dataformat=='FileSystem', tag=='nrfiles')
+    :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'. Use 'FileSystem' to read the run['filesystem'] values
     :return:            Extracted tag-values from the sourcefile
 
     TODO: replace with a dataformat class
     """
 
+    if isinstance(sourcefile, dict):
+        run        = sourcefile
+        sourcefile = Path(run['provenance'])
+    else:
+        run        = get_run_(sourcefile)
     if not sourcefile.name:
         return ''
 
@@ -567,6 +572,14 @@ def get_sourcefield(tagname: str, sourcefile: Path=Path(), dataformat: str='') -
             return sourcefile.name
         if tagname == 'size':
             return sourcefile.stat().st_size
+        if tagname == 'nrfiles':
+            match = lambda file: ((match_attribute(file.parent,         run['filesystem']['path']) or not run['filesystem']['path']) and
+                                  (match_attribute(file.name,           run['filesystem']['name']) or not run['filesystem']['name']) and
+                                  (match_attribute(file.stat().st_size, run['filesystem']['size']) or not run['filesystem']['size']))
+            nrfiles = 0
+            if match(sourcefile):
+                nrfiles = len([file for file in sourcefile.parent.glob('*') if match(file)])
+            return nrfiles
 
 
 def add_prefix(prefix: str, tag: str) -> str:
@@ -665,7 +678,11 @@ def get_run_(provenance: str='') -> dict:
     :return:            The empty run
     """
 
-    return dict(provenance=provenance, filesystem={'path':'', 'name':'', 'size':None}, attributes={}, bids={}, meta={})
+    return dict(provenance = provenance,
+                filesystem = {'path':'', 'name':'', 'size':'', 'nrfiles':''},
+                attributes = {},
+                bids       = {},
+                meta       = {})
 
 
 def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int, str], sourcefile: Path=Path()) -> dict:
@@ -698,7 +715,7 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
 
             for attrkey, attrvalue in run['attributes'].items():
                 if sourcefile.name:
-                    run_['attributes'][attrkey] = get_sourcefield(attrkey, sourcefile, dataformat)
+                    run_['attributes'][attrkey] = get_sourcevalue(attrkey, sourcefile, dataformat)
                 else:
                     run_['attributes'][attrkey] = attrvalue
 
@@ -814,50 +831,52 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, provenance: Path, target
         LOGGER.exception(f"Number of runs in bidsmap['{dataformat}'] changed unexpectedly: {num_runs_in} -> {num_runs_out}")
 
 
-def match_attribute(longvalue, pattern) -> bool:
+def match_attribute(attribute, pattern) -> bool:
     """
-    Match the value items with the longvalue string using regexp. If both longvalue
-    and values are a list then they are directly compared as is
+    Match the value items with the attribute string using regexp. If both attribute
+    and values are a list then they are directly compared as is, else they are converted
+    to a string
 
     Examples:
-        match_attribute('my_pulse_sequence_name', 'name') -> False
-        match_attribute('my_pulse_sequence_name', '*name*') -> True
-        match_attribute('T1_MPRAGE', '['T1w', 'MPRAGE']') -> False
-        match_attribute('T1_MPRAGE', '['T1w', 'T1_MPRAGE']') -> True
-        match_attribute('T1_MPRAGE', '['*T1w*', '*MPRAGE*']') -> True
+        match_attribute('my_pulse_sequence_name', 'name')       -> False
+        match_attribute([1,2,3], [1,2,3])                       -> True
+        match_attribute([1,2,3], '[1, 2, 3]')                   -> True
+        match_attribute('my_pulse_sequence_name', '^my.*name$') -> True
+        match_attribute('T1_MPRage', '(?i).*(MPRAGE|T1w).*'     -> True
 
-    :param longvalue:   The long string that is being searched in (e.g. a DICOM attribute)
-    :param pattern:     Either a list with search items or a string that is matched one-to-one
-    :return:            True if a match is found or both longvalue and values are identical or
+    :param attribute:   The long string that is being searched in (e.g. a DICOM attribute)
+    :param pattern:     A re.fullmatch regular expression pattern
+    :return:            True if a match is found or both attribute and values are identical or
                         empty / None. False otherwise
     """
 
-    # Consider it a match if both longvalue and value are identical or empty / None
-    if longvalue==pattern or (not longvalue and not pattern):
+    # Consider it a match if both attribute and value are identical or empty / None
+    if attribute==pattern or (not attribute and not pattern):
         return True
 
-    if not longvalue or not pattern:
+    if not attribute or not pattern:
         return False
 
     # Make sure we start with proper string types
-    longvalue = str(longvalue).strip()
+    attribute = str(attribute).strip()
     pattern   = str(pattern).strip().encode('unicode_escape').decode()
 
-    # Compare the value items (with / without wildcard) with the longvalue string items
-    match = re.fullmatch(pattern, longvalue)
+    # Compare the value items (with / without wildcard) with the attribute string items
+    match = re.fullmatch(pattern, attribute)
 
     return match is not None
 
 
-def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, matchbidslabels: bool=False) -> bool:
+def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, matchbidslabels: bool=False, matchmetalabels: bool=False) -> bool:
     """
-    Checks if there is already an entry in runlist with the same attributes and, optionally, bids values as in the input run
+    Checks the bidsmap to see if there is already an entry in runlist with the same attributes and, optionally, bids values as in the input run
 
     :param bidsmap:         Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param dataformat:      The information source in the bidsmap that is used, e.g. 'DICOM'
     :param datatype:        The datatype in the source that is used, e.g. 'anat'. Empty values will search through all datatypes
     :param run_item:        The run (listitem) that is searched for in the datatype
     :param matchbidslabels: If True, also matches the BIDS-keys, otherwise only run['attributes']
+    :param matchmetalabels: If True, also matches the meta-keys, otherwise only run['attributes']
     :return:                True if the run exists in runlist, otherwise False
     """
 
@@ -889,6 +908,14 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, mat
         if matchbidslabels and match:
             for itemkey, itemvalue in run_item['bids'].items():
                 value = run['bids'].get(itemkey)            # Matching bids-labels which exist in one datatype but not in the other -> None
+                match = match and value==itemvalue
+                if not match:
+                    break                                   # There is no point in searching further within the run_item now that we've found a mismatch
+
+        # See if the bidskeys also all match. This is probably not very useful, but maybe one day...
+        if matchmetalabels and match:
+            for itemkey, itemvalue in run_item['meta'].items():
+                value = run['meta'].get(itemkey)            # Matching bids-labels which exist in one datatype but not in the other -> None
                 match = match and value==itemvalue
                 if not match:
                     break                                   # There is no point in searching further within the run_item now that we've found a mismatch
@@ -961,13 +988,14 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
 
 def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[dict, str, Union[int, None]]:
     """
-    Find the first run in the bidsmap with dicom attributes that match with the dicom file. Then update the (dynamic) bids values (values are cleaned-up to be BIDS-valid)
+    Find the first run in the bidsmap with filesystem and file attributes that match with the sourcefile. Then update/fill the
+    (dynamic) bids and meta values (bids values are cleaned-up to be BIDS-valid)
 
     :param sourcefile:  The full pathname of the source dicom-file or PAR/XML file
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS keys and attributes, etc
     :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
-    :return:            (run, datatype, index) The matching and filled-in / cleaned run item, datatype and list index as in run = bidsmap[DICOM][datatype][index]
-                        datatype = bids.unknowndatatype and index = None if there is no match, the run is still populated with info from the dicom-file
+    :return:            (run, datatype, index) The matching and filled-in / cleaned run item, datatype and list index as in run = bidsmap[dataformat][datatype][index]
+                        datatype = bids.unknowndatatype and index = None if there is no match, the run is still populated with info from the source-file
     """
 
     if not dataformat:
@@ -990,7 +1018,7 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
 
                 # Check if the attribute value matches with the info from the sourcefile
                 if filevalue:
-                    sourcevalue = get_sourcefield(filekey, sourcefile, 'FileSystem')
+                    sourcevalue = get_sourcevalue(filekey, sourcefile, 'FileSystem')
                     match       = match and match_attribute(sourcevalue, filevalue)
 
                 # Don not fill the empty attribute with the info from the sourcefile but keep the matching expression
@@ -1001,7 +1029,7 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
             for attrkey, attrvalue in run['attributes'].items():
 
                 # Check if the attribute value matches with the info from the sourcefile
-                sourcevalue = get_sourcefield(attrkey, sourcefile, dataformat)
+                sourcevalue = get_sourcevalue(attrkey, sourcefile, dataformat)
                 if attrvalue:
                     match = match and match_attribute(sourcevalue, attrvalue)
 
@@ -1020,10 +1048,10 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
 
             # Try to fill the meta-data
             run_['meta'] = {}
-            for bidskey, metavalue in run['meta'].items():
+            for metakey, metavalue in run['meta'].items():
 
                 # Replace the dynamic bids values
-                run_['meta'][bidskey] = get_dynamicvalue(metavalue, sourcefile, cleanup=False)
+                run_['meta'][metakey] = get_dynamicvalue(metavalue, sourcefile, cleanup=False)
 
             # Stop searching the bidsmap if we have a match
             if match:
@@ -1038,9 +1066,9 @@ def get_subid_sesid(sourcefile: Path, subid: str= '<<SourceFilePath>>', sesid: s
     """
     Extract the cleaned-up subid and sesid from the pathname if subid/sesid == '<<SourceFilePath>>', or from the dicom header
 
-    :param sourcefile: The full pathname of the file. If it is a DICOM file, the sub/ses values are read from the DICOM field if subid/sesid=='<<SourceFilePath>>'
-    :param subid:      The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001') or DICOM field. Can be left empty
-    :param sesid:      The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01') or DICOM field
+    :param sourcefile: The full pathname of the file. If it is a source file, the sub/ses values are parsed from its path if subid/sesid=='<<SourceFilePath>>'
+    :param subid:      The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001') or a dynamic source attribute. Can be left empty
+    :param sesid:      The optional session identifier, same as subid
     :param subprefix:  The optional subprefix (e.g. 'sub-'). Used to parse the sub-value from the provenance as default subid
     :param sesprefix:  The optional sesprefix (e.g. 'ses-'). If it is found in the provenance then a default sesid will be set
     :return:           Updated (subid, sesid) tuple, including the BIDS-compliant sub-/ses-prefix
@@ -1200,7 +1228,7 @@ def get_dynamicvalue(bidsvalue: str, sourcefile: Path, cleanup: bool=True, runti
 
     # Fill any bids-key with the <annotated> dicom attribute(s)
     if bidsvalue.startswith('<') and bidsvalue.endswith('>') and sourcefile.name:
-        sourcevalue = ''.join([str(get_sourcefield(value, sourcefile)) for value in bidsvalue[1:-1].split('><')])
+        sourcevalue = ''.join([str(get_sourcevalue(value, sourcefile)) for value in bidsvalue[1:-1].split('><')])
         if sourcevalue:
             bidsvalue = sourcevalue
             if cleanup:

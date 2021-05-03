@@ -22,7 +22,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog, QDialogButtonBox,
                              QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog, QMessageBox,
                              QTableWidget, QTableWidgetItem, QHeaderView, QGroupBox, QTextBrowser,
-                             QAbstractItemView, QPushButton, QComboBox, QDesktopWidget, QAction)
+                             QPushButton, QComboBox, QDesktopWidget, QAction)
 
 try:
     from bidscoin import bidscoin, bids
@@ -341,8 +341,6 @@ class MainWindow(QMainWindow):
         test_button.setToolTip(f'Click to test the BIDScoin installation')
         bidscoin_table.setCellWidget(0, 2, test_button)
         for n, (key, value) in enumerate(bidscoin_options.items()):
-            if value is None:
-                value = ''
             bidscoin_table.setItem(n, 0, MyWidgetItem(key, iseditable=False))
             bidscoin_table.setItem(n, 1, MyWidgetItem(value))
         bidscoin_table.cellChanged.connect(self.options2bidsmap)
@@ -451,11 +449,11 @@ class MainWindow(QMainWindow):
                     session  = self.bidsfolder/subid/sesid
                 row_index    = self.ordered_file_index[dataformat][provenance]
 
-                samples_table.setItem(idx, 0, QTableWidgetItem(f"{row_index+1:03d}"))
-                samples_table.setItem(idx, 1, QTableWidgetItem(provenance.name))
-                samples_table.setItem(idx, 2, QTableWidgetItem(datatype))                           # Hidden column
-                samples_table.setItem(idx, 3, QTableWidgetItem(str(Path(datatype)/bidsname) + '.*'))
-                samples_table.setItem(idx, 5, QTableWidgetItem(str(provenance)))                    # Hidden column
+                samples_table.setItem(idx, 0, MyWidgetItem(f"{row_index+1:03d}"))
+                samples_table.setItem(idx, 1, MyWidgetItem(provenance.name))
+                samples_table.setItem(idx, 2, MyWidgetItem(datatype))                           # Hidden column
+                samples_table.setItem(idx, 3, MyWidgetItem(Path(datatype)/(bidsname + '.*')))
+                samples_table.setItem(idx, 5, MyWidgetItem(provenance))                         # Hidden column
 
                 samples_table.item(idx, 0).setFlags(QtCore.Qt.NoItemFlags)
                 samples_table.item(idx, 1).setFlags(QtCore.Qt.ItemIsEnabled)
@@ -508,6 +506,8 @@ class MainWindow(QMainWindow):
             key      = self.subses_table[dataformat].item(rowindex, 0).text()
             value    = self.subses_table[dataformat].item(rowindex, 1).text()
             oldvalue = self.output_bidsmap[dataformat][key]
+            if oldvalue is None:
+                oldvalue = ''
 
             # Only if cell was actually clicked, update
             if key and value != oldvalue:
@@ -579,8 +579,6 @@ class MainWindow(QMainWindow):
         plugin_label.setToolTip(tooltip)
         plugin_table.setToolTip(tooltip)
         for n, (key, value) in enumerate(options.items()):
-            if value is None:
-                value = ''
             plugin_table.setItem(n, 0, MyWidgetItem(key))
             plugin_table.setItem(n, 1, MyWidgetItem(value))
             plugin_table.setItem(n, 2, MyWidgetItem('', iseditable=False))
@@ -820,28 +818,25 @@ class EditWindow(QDialog):
         self.setWhatsThis(f"BIDScoin maps {self.dataformat} attributes to BIDS data types")
 
         # Get data for the tables
-        data_provenance, data_attributes, data_bids, data_meta = self.run2data()
+        data_filesystem, data_attributes, data_bids, data_meta = self.run2data()
 
-        # Set-up the provenance table
-        self.provenance_label = QLabel()
-        self.provenance_label.setText('Provenance')
-        self.provenance_label.setToolTip(f"The {self.dataformat} source file from which the attributes were taken (Copy: Ctrl+C)")
-        self.provenance_table = self.set_table(data_provenance, 'provenance')
-        self.provenance_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.provenance_table.setToolTip(f"The {self.dataformat} source file from which the attributes were taken (Copy: Ctrl+C)")
-        self.provenance_table.cellDoubleClicked.connect(self.inspect_sourcefile)
+        # Set-up the filesystem table
+        self.filesystem_label = QLabel('Properties')
+        self.filesystem_label.setToolTip(f"The filesystem (regexp) patterns that are used to uniquely identify source files (middle column) and their actual values (outer-right column). Copy: Ctrl+C")
+        self.filesystem_table = self.set_table(data_filesystem, 'filesystem')
+        self.filesystem_table.cellChanged.connect(self.filesystemcell2run)
+        self.filesystem_table.setToolTip(f"The filesystem (regexp) patterns that are used to uniquely identify source files (middle column) and their actual values (outer-right column). Copy: Ctrl+C")
+        self.filesystem_table.cellDoubleClicked.connect(self.inspect_sourcefile)
 
         # Set-up the attributes table
-        self.attributes_label = QLabel()
-        self.attributes_label.setText('Attributes')
+        self.attributes_label = QLabel(f"Attributes")
         self.attributes_label.setToolTip(f"The {self.dataformat} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using regular expressions, see documentation), only change these if you know what you are doing!")
         self.attributes_table = self.set_table(data_attributes, 'attributes', minimum=False)
         self.attributes_table.cellChanged.connect(self.attributescell2run)
         self.attributes_table.setToolTip(f"The {self.dataformat} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using regular expressions, see documentation), only change these if you know what you are doing!")
 
         # Set-up the datatype dropdown menu
-        self.datatype_label = QLabel()
-        self.datatype_label.setText('Data type')
+        self.datatype_label = QLabel('Data type')
         self.datatype_label.setToolTip(f"The BIDS data type and entities for constructing the BIDS output filename. You are encouraged to change their default values to be more meaningful and readable")
         self.datatype_dropdown = QComboBox()
         self.datatype_dropdown.addItems(bids.bidscoindatatypes + (bids.unknowndatatype, bids.ignoredatatype))
@@ -850,16 +845,14 @@ class EditWindow(QDialog):
         self.datatype_dropdown.setToolTip('The BIDS data type. First make sure this one is correct, then choose the right suffix')
 
         # Set-up the BIDS table
-        self.bids_label = QLabel()
-        self.bids_label.setText('Entities')
+        self.bids_label = QLabel('Entities')
         self.bids_label.setToolTip(f"The BIDS entities that are used to construct the BIDS output filename. You are encouraged to change their default values to be more meaningful and readable")
-        self.bids_table = self.set_table(data_bids, 'bids', minimum=False)
+        self.bids_table = self.set_table(data_bids, 'bids')
         self.bids_table.setToolTip(f"The BIDS entities that are used to construct the BIDS output filename. You are encouraged to change their default values to be more meaningful and readable")
         self.bids_table.cellChanged.connect(self.bidscell2run)
 
         # Set-up the meta table
-        self.meta_label = QLabel()
-        self.meta_label.setText('Meta data')
+        self.meta_label = QLabel('Meta data')
         self.meta_label.setToolTip(f"Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
         self.meta_table = self.set_table(data_meta, 'meta', minimum=False)
         self.meta_table.setShowGrid(True)
@@ -867,8 +860,7 @@ class EditWindow(QDialog):
         self.meta_table.setToolTip(f"Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
 
         # Set-up non-editable BIDS output name section
-        self.bidsname_label = QLabel()
-        self.bidsname_label.setText('Data filename')
+        self.bidsname_label = QLabel('Data filename')
         self.bidsname_label.setToolTip(f"Preview of the BIDS output name for this data type")
         self.bidsname_textbox = QTextBrowser()
         self.bidsname_textbox.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
@@ -883,8 +875,8 @@ class EditWindow(QDialog):
         groupbox1 = QGroupBox(self.dataformat + ' input')
         groupbox1.setSizePolicy(sizepolicy)
         layout1 = QVBoxLayout()
-        layout1.addWidget(self.provenance_label)
-        layout1.addWidget(self.provenance_table)
+        layout1.addWidget(self.filesystem_label)
+        layout1.addWidget(self.filesystem_table)
         layout1.addWidget(self.attributes_label)
         layout1.addWidget(self.attributes_table)
         groupbox1.setLayout(layout1)
@@ -974,34 +966,37 @@ class EditWindow(QDialog):
 
     def run2data(self) -> tuple:
         """Derive the tabular data from the target_run, needed to render the edit window
-        :return: (data_provenance, data_attributes, data_bids, data_meta)
+        :return: (data_filesystem, data_attributes, data_bids, data_meta)
         """
 
-        provenance = Path(self.target_run['provenance'])
+        run        = self.target_run
+        provenance = Path(run['provenance'])
+        size       = ''
         if provenance.is_file():
-            size = self.format_bytes(provenance.stat().st_size)
-        else:
-            size = None
-        data_provenance = [[{'value': 'path',                 'iseditable': False},
-                            {'value': str(provenance.parent), 'iseditable': False}],
-                           [{'value': 'filename',             'iseditable': False},
-                            {'value': provenance.name,        'iseditable': True}],     # Make the font black to indicate users can click here
-                           [{'value': 'size',                 'iseditable': False},
-                            {'value': size,                   'iseditable': False}]]
+            size   = self.format_bytes(provenance.stat().st_size)
+        nrfiles    = bids.get_sourcevalue('nrfiles', run, 'FileSystem')
+        data_filesystem = [[{'value': 'path',                           'iseditable': False},
+                            {'value': run['filesystem'].get('path'),    'iseditable': True},
+                            {'value': provenance.parent,                'iseditable': False}],
+                           [{'value': 'name',                           'iseditable': False},
+                            {'value': run['filesystem'].get('name'),    'iseditable': True},
+                            {'value': provenance.name,                  'iseditable': False}],
+                           [{'value': 'size',                           'iseditable': False},
+                            {'value': run['filesystem'].get('size'),    'iseditable': True},
+                            {'value': size,                             'iseditable': False}],
+                           [{'value': 'nrfiles',                        'iseditable': False},
+                            {'value': run['filesystem'].get('nrfiles'), 'iseditable': True},
+                            {'value': nrfiles,                          'iseditable': False}]]
 
         data_attributes = []
-        for key, value in self.target_run['attributes'].items():
-            if value is None:
-                value = ''
-            data_attributes.append([{'value': key,        'iseditable': False},
-                                    {'value': str(value), 'iseditable': True}])
+        for key, value in run['attributes'].items():
+            data_attributes.append([{'value': key,   'iseditable': False},
+                                    {'value': value, 'iseditable': True}])
 
         data_bids = []
         for key in [bids.entities[entity]['entity'] for entity in bids.entities if entity not in ('subject','session')] + ['suffix']:   # Impose the BIDS-specified order + suffix
-            if key in self.target_run['bids']:
-                value = self.target_run['bids'].get(key,'')
-                if value is None:
-                    value = ''
+            if key in run['bids']:
+                value = run['bids'].get(key)
                 if (self.target_datatype in bids.bidscoindatatypes and key=='suffix') or isinstance(value, list):
                     iseditable = False
                 else:
@@ -1010,24 +1005,26 @@ class EditWindow(QDialog):
                                   {'value': value, 'iseditable': iseditable}])          # NB: This can be a (menu) list
 
         data_meta = []
-        for key, value in self.target_run['meta'].items():
-            if value is None:
-                value = ''
-            data_meta.append([{'value': key,        'iseditable': True},
-                              {'value': str(value), 'iseditable': True}])
+        for key, value in run['meta'].items():
+            data_meta.append([{'value': key,   'iseditable': True},
+                              {'value': value, 'iseditable': True}])
 
-        return data_provenance, data_attributes, data_bids, data_meta
+        return data_filesystem, data_attributes, data_bids, data_meta
 
     def set_table(self, data, name, minimum: bool=True) -> QTableWidget:
         """Return a table widget filled with the data"""
 
+        if data:
+            nrcolumns = len(data[0])
+        else:
+            nrcolumns = 2                               # Always at least two columns (i.e. key, value)
         table = MyQTableWidget(minimum=minimum)
-        table.setColumnCount(2)                         # Always two columns (i.e. key, value)
+        table.setColumnCount(nrcolumns)
         table.setObjectName(name)                       # NB: Serves to identify the tables in fill_table()
         table.setHorizontalHeaderLabels(('key', 'value'))
         horizontal_header = table.horizontalHeader()
-        horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
+        horizontal_header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        horizontal_header.setSectionResizeMode(nrcolumns-1, QHeaderView.Stretch)
         horizontal_header.setVisible(False)
 
         self.fill_table(table, data)
@@ -1057,7 +1054,7 @@ class EditWindow(QDialog):
                 table.setCellWidget(i, 1, self.spacedwidget(suffix_dropdown))
                 continue
             for j, item in enumerate(row):
-                value = item.get('value', '')
+                value = item.get('value')
                 if table.objectName()=='bids' and isinstance(value, list):
                     value_dropdown = QComboBox()
                     value_dropdown.addItems(value[0:-1])
@@ -1078,6 +1075,27 @@ class EditWindow(QDialog):
 
         table.blockSignals(False)
 
+    def filesystemcell2run(self, rowindex: int, colindex: int):
+        """Source attribute value has been changed"""
+
+        if colindex == 1:
+            key      = self.filesystem_table.item(rowindex, 0).text()
+            value    = self.filesystem_table.item(rowindex, 1).text()
+            oldvalue = self.target_run['filesystem'].get(key)
+            if oldvalue is None:
+                oldvalue = ''
+
+            # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
+            if key and value!=oldvalue:
+                answer = QMessageBox.question(self, f"Edit {self.dataformat} attributes",
+                                              f'It is discouraged to change {self.dataformat} attribute values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
+                                              QMessageBox.Yes | QMessageBox.No | QMessageBox.No)
+                if answer==QMessageBox.Yes:
+                    LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                    self.target_run['filesystem'][key] = value
+                else:
+                    self.filesystem_table.item(rowindex, 1).setText(oldvalue)
+
     def attributescell2run(self, rowindex: int, colindex: int):
         """Source attribute value has been changed"""
 
@@ -1085,11 +1103,13 @@ class EditWindow(QDialog):
             key      = self.attributes_table.item(rowindex, 0).text()
             value    = self.attributes_table.item(rowindex, 1).text()
             oldvalue = self.target_run['attributes'].get(key)
+            if oldvalue is None:
+                oldvalue = ''
 
             # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
             if key and value!=oldvalue:
                 answer = QMessageBox.question(self, f"Edit {self.dataformat} attributes",
-                                              f'It is highly discouraged to change {self.dataformat} attribute values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
+                                              f'It is discouraged to change {self.dataformat} attribute values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
                                               QMessageBox.Yes | QMessageBox.No | QMessageBox.No)
                 if answer==QMessageBox.Yes:
                     LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
@@ -1109,6 +1129,8 @@ class EditWindow(QDialog):
             else:
                 value    = self.bids_table.item(rowindex, 1).text()
                 oldvalue = self.target_run['bids'].get(key)
+            if oldvalue is None:
+                oldvalue = ''
 
             # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes) and store the data in the target_run
             if key and value != oldvalue:
@@ -1137,6 +1159,8 @@ class EditWindow(QDialog):
         key      = self.meta_table.item(rowindex, 0).text()
         value    = self.meta_table.item(rowindex, 1).text()
         oldvalue = self.target_run['meta'].get(key)
+        if oldvalue is None:
+            oldvalue = ''
         if value != oldvalue:
             # Replace the (dynamic) value
             if not (value.startswith('<<') and value.endswith('>>')):
@@ -1237,9 +1261,10 @@ class EditWindow(QDialog):
             self.datatype_dropdown.setCurrentIndex(self.datatype_dropdown.findText(self.target_datatype))
 
         # Refresh the source attributes and BIDS values with data from the target_run
-        _, data_attributes, data_bids, data_meta = self.run2data()
+        data_filesystem, data_attributes, data_bids, data_meta = self.run2data()
 
         # Refresh the existing tables
+        self.fill_table(self.filesystem_table, data_filesystem)
         self.fill_table(self.attributes_table, data_attributes)
         self.fill_table(self.bids_table, data_bids)
         self.fill_table(self.meta_table, data_meta)
@@ -1290,7 +1315,7 @@ class EditWindow(QDialog):
     def inspect_sourcefile(self, rowindex: int=None, colindex: int=None):
         """When double clicked, show popup window"""
 
-        if rowindex == 1 and colindex == 1:
+        if rowindex == 1 and colindex == 2:
             self.popup = InspectWindow(Path(self.target_run['provenance']))
             self.popup.show()
             self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
@@ -1411,13 +1436,17 @@ class MyQTableWidget(QTableWidget):
 class MyWidgetItem(QTableWidgetItem):
 
     def __init__(self, value: str='', iseditable: bool=True):
-        """A QTableWidgetItem that is editable or not"""
-        super().__init__()
+        """A QTableWidgetItem that is editable or not and that converts integer values to string"""
 
-        if isinstance(value, int):
-            value = str(value)
+        super().__init__()
         self.setText(value)
         self.seteditable(iseditable)
+
+    def setText(self, p_str):
+        """Catch int and None"""
+        if p_str is None:
+            p_str = ''
+        super(MyWidgetItem, self).setText(str(p_str))
 
     def seteditable(self, iseditable: bool=True):
         """Make the WidgetItem editable"""

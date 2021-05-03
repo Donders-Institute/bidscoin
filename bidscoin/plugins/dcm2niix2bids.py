@@ -302,9 +302,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                 LOGGER.exception(f"No data-file found with {jsonfile} when updating {scans_tsv}")
             elif datatype not in bidsmap['Options']['bidscoin']['bidsignore'] and not run['bids']['suffix'] in bids.get_derivatives(datatype):
                 if 'AcquisitionTime' not in jsondata or not jsondata['AcquisitionTime']:
-                    jsondata['AcquisitionTime'] = bids.get_sourcefield('AcquisitionTime', sourcefile)       # DICOM
+                    jsondata['AcquisitionTime'] = bids.get_sourcevalue('AcquisitionTime', sourcefile)       # DICOM
                 if not jsondata['AcquisitionTime']:
-                    jsondata['AcquisitionTime'] = bids.get_sourcefield('exam_date', sourcefile)             # PAR/XML
+                    jsondata['AcquisitionTime'] = bids.get_sourcevalue('exam_date', sourcefile)             # PAR/XML
                 try:
                     acq_time = dateutil.parser.parse(jsondata['AcquisitionTime'])
                     acq_time = '1925-01-01T' + acq_time.strftime('%H:%M:%S')                                # Privacy protection (see BIDS specification)
