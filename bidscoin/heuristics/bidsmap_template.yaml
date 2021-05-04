@@ -40,10 +40,10 @@ DICOM:
   anat:       # ----------------------- All anatomical runs --------------------
   - provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     filesystem: &fileattr         # This is an optional (stub) entry of filesystem matching (could be added to any run-item)
-      path: ~                     # File folder, e.g. *Parkinson* or ['*phantom*', '*bottle*']
-      name: ~                     # File name, e.g. *fmap* or ['*fieldmap*', '*fmap*']
-      size: ~                     # File size, e.g. 245870 or [245869, 245870, 245871]
-      nrfiles: ~                  # Number of files in the folder that match the above criteria, e.g. 512 or [1, 2, 4]
+      path: ~                     # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
+      name: ~                     # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
+      size: ~                     # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
+      nrfiles: ~                  # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
     attributes: &anat_dicomattr
       Modality: ~
       ProtocolName: ~

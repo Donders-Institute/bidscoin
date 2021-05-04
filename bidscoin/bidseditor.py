@@ -449,7 +449,7 @@ class MainWindow(QMainWindow):
                     session  = self.bidsfolder/subid/sesid
                 row_index    = self.ordered_file_index[dataformat][provenance]
 
-                samples_table.setItem(idx, 0, MyWidgetItem(f"{row_index+1:03d}"))
+                samples_table.setItem(idx, 0, MyWidgetItem(f"{row_index+1:03d}", iseditable=False))
                 samples_table.setItem(idx, 1, MyWidgetItem(provenance.name))
                 samples_table.setItem(idx, 2, MyWidgetItem(datatype))                           # Hidden column
                 samples_table.setItem(idx, 3, MyWidgetItem(Path(datatype)/(bidsname + '.*')))
@@ -969,18 +969,17 @@ class EditWindow(QDialog):
         :return: (data_filesystem, data_attributes, data_bids, data_meta)
         """
 
-        run        = self.target_run
-        provenance = Path(run['provenance'])
-        size       = ''
-        if provenance.is_file():
-            size   = self.format_bytes(provenance.stat().st_size)
-        nrfiles    = bids.get_sourcevalue('nrfiles', run, 'FileSystem')
+        run     = self.target_run
+        path    = bids.get_sourcevalue('path',    run, 'FileSystem')
+        name    = bids.get_sourcevalue('name',    run, 'FileSystem')
+        size    = bids.get_sourcevalue('size',    run, 'FileSystem')
+        nrfiles = bids.get_sourcevalue('nrfiles', run, 'FileSystem')
         data_filesystem = [[{'value': 'path',                           'iseditable': False},
                             {'value': run['filesystem'].get('path'),    'iseditable': True},
-                            {'value': provenance.parent,                'iseditable': False}],
+                            {'value': path,                             'iseditable': False}],
                            [{'value': 'name',                           'iseditable': False},
                             {'value': run['filesystem'].get('name'),    'iseditable': True},
-                            {'value': provenance.name,                  'iseditable': False}],
+                            {'value': name,                             'iseditable': False}],
                            [{'value': 'size',                           'iseditable': False},
                             {'value': run['filesystem'].get('size'),    'iseditable': True},
                             {'value': size,                             'iseditable': False}],
@@ -1011,7 +1010,7 @@ class EditWindow(QDialog):
 
         return data_filesystem, data_attributes, data_bids, data_meta
 
-    def set_table(self, data, name, minimum: bool=True) -> QTableWidget:
+    def set_table(self, data: list, name: str, minimum: bool=True) -> QTableWidget:
         """Return a table widget filled with the data"""
 
         if data:
@@ -1031,7 +1030,7 @@ class EditWindow(QDialog):
 
         return table
 
-    def fill_table(self, table, data):
+    def fill_table(self, table: QTableWidget, data: list):
         """Fill the table with data"""
 
         table.blockSignals(True)
@@ -1065,7 +1064,9 @@ class EditWindow(QDialog):
                     table.setCellWidget(i, j, self.spacedwidget(value_dropdown))
                 else:
                     value_item = MyWidgetItem(value, iseditable=item['iseditable'])
-                    if table.objectName()=='attributes' and j==0:
+                    if table.objectName()=='filesystem' and j==0:
+                        value_item.setToolTip(str(row[2]['value']))
+                    elif table.objectName()=='attributes' and j==0:
                         value_item.setToolTip(bids.get_attributeshelp(key))
                     elif table.objectName()=='bids' and j==0:
                         value_item.setToolTip(bids.get_entityhelp(key))
@@ -1315,10 +1316,13 @@ class EditWindow(QDialog):
     def inspect_sourcefile(self, rowindex: int=None, colindex: int=None):
         """When double clicked, show popup window"""
 
-        if rowindex == 1 and colindex == 2:
-            self.popup = InspectWindow(Path(self.target_run['provenance']))
-            self.popup.show()
-            self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
+        if colindex in (0,2):
+            if rowindex == 0:
+                QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(Path(self.target_run['provenance']).parent)))
+            if rowindex == 1:
+                self.popup = InspectWindow(Path(self.target_run['provenance']))
+                self.popup.show()
+                self.popup.scrollbar.setValue(0)  # This can only be done after self.popup.show()
 
     @staticmethod
     def spacedwidget(alignedwidget, align='left'):
@@ -1336,24 +1340,6 @@ class EditWindow(QDialog):
         widget.setLayout(layout)
         widget.spacedwidget = alignedwidget
         return widget
-
-    @staticmethod
-    def format_bytes(size:int) -> str:
-        """
-        Converts bytes into a human-readable B, KB, MG, GB, TB format
-
-        :param size:    size in bytes
-        :return:        Human-friedly string
-        """
-
-        power = 2**10  # 2**10 = 1024
-        label = {0: '', 1: 'k', 2: 'M', 3: 'G', 4: 'T'}
-        n = 0
-        while size>power and n<len(label):
-            size /= power
-            n += 1
-
-        return f"{size:.2f} {label[n]}B"
 
     def get_help(self):
         """Open web page for help"""
@@ -1444,9 +1430,12 @@ class MyWidgetItem(QTableWidgetItem):
 
     def setText(self, p_str):
         """Catch int and None"""
+
         if p_str is None:
             p_str = ''
+
         super(MyWidgetItem, self).setText(str(p_str))
+
 
     def seteditable(self, iseditable: bool=True):
         """Make the WidgetItem editable"""

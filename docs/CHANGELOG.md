@@ -7,18 +7,21 @@ All notable changes to this project will be documented in this file. The format 
 Making BIDScoin more powerful and generic...
 
 ### Added
-- Support for BIDS v1.6.0
+- Support for BIDS v1.6.0 (-> PET)
 - Separate tabs for DICOM and PAR to edit all the mappings of mixed datasets in a single bidseditor session
-- Run-item matching on filesystem properties, i.e. on the pathname, filename and filesize. This can be used in conjunction with the (DICOM/PAR) attributes
+- Run-item matching on filesystem properties, i.e. on the pathname, filename and filesize and nr of files in the folder. This can be used in conjunction with the (DICOM/PAR) attributes
 - A meta-data dictionary that can be edited with the bidseditor and that will be added to the json sidecar files by the bidscoiner
 - More user feedback in the GUI for new BIDS-compliancy checks on missing or invalid bids data
-- Allow the user to edit json, yaml, tsv and other non-DICOM / non-PAR files in the data browser
+- A right-click menu option to remove a run-item from the bidsmap (advanced usage)
+- Enable the user to edit json, yaml, tsv and other non-DICOM / non-PAR files with double-clicks in the data browser
 - A central 'bidscoin' package function with various utilities, such as listing and installing BIDScoin plugins or executables
+- Plugins can have their own 'test' routine that can be called from the bidseditor
 
 ### Changed
-- Using regular expressions instead of fnmatch to match (template bidsmap) attribute values
+- Using regular expressions instead of fnmatch to match (template bidsmap) attribute values. This makes the templates more powerful and flexible
 - Moved the bidsmapping and bidscoining functionality to stand-alone plugins (changed API), making plugins a first-class BIDScoin citizen
-- Move IntendedFor field over to the meta-data dictionary
+- The plugins have moved to the bidsmap['Options'], where they have their own key-value options dictionary (changed API)
+- Move IntendedFor field over to the new meta-data dictionary
 - Re-introduced skipping hidden folders (hidden files are also skipped)
 - Moved the 'pulltutorial' function over to the new 'bidscoin' function
 

@@ -536,7 +536,7 @@ def get_dataformat(source: Path) -> str:
     return ''
 
 
-def get_sourcevalue(tagname: str, sourcefile: Union[Path, dict], dataformat: str= '') -> Union[str, int]:
+def get_sourcevalue(tagname: str, sourcefile: Union[Path, dict], dataformat: str= '') -> Union[str, int, None]:
     """
     Gets the tagname header-attribute or tagname filesystem-property
 
@@ -554,7 +554,7 @@ def get_sourcevalue(tagname: str, sourcefile: Union[Path, dict], dataformat: str
     else:
         run        = get_run_(sourcefile)
     if not sourcefile.name:
-        return ''
+        return
 
     if not dataformat:
         dataformat = get_dataformat(sourcefile)
@@ -570,9 +570,17 @@ def get_sourcevalue(tagname: str, sourcefile: Union[Path, dict], dataformat: str
             return str(sourcefile.parent)
         if tagname == 'name':
             return sourcefile.name
-        if tagname == 'size':
-            return sourcefile.stat().st_size
-        if tagname == 'nrfiles':
+        if tagname == 'size' and sourcefile.is_file():
+            # Convert the size in bytes into a human-readable B, KB, MG, GB, TB format
+            size  = sourcefile.stat().st_size                   # Size in bytes
+            power = 2**10                                       # 2**10 = 1024
+            label = {0: '', 1: 'k', 2: 'M', 3: 'G', 4: 'T'}     # Standard labels for powers of 1024
+            n = 0                                               # The power/label index
+            while size > power and n < len(label):
+                size /= power
+                n    += 1
+            return f"{size:.2f} {label[n]}B"
+        if tagname == 'nrfiles' and sourcefile.is_file():
             match = lambda file: ((match_attribute(file.parent,         run['filesystem']['path']) or not run['filesystem']['path']) and
                                   (match_attribute(file.name,           run['filesystem']['name']) or not run['filesystem']['name']) and
                                   (match_attribute(file.stat().st_size, run['filesystem']['size']) or not run['filesystem']['size']))
@@ -670,7 +678,7 @@ def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
     return provenance
 
 
-def get_run_(provenance: str='') -> dict:
+def get_run_(provenance: Union[str, Path]='') -> dict:
     """
     Get an empty run-item with the proper structure and provenance info
 
@@ -678,7 +686,7 @@ def get_run_(provenance: str='') -> dict:
     :return:            The empty run
     """
 
-    return dict(provenance = provenance,
+    return dict(provenance = str(provenance),
                 filesystem = {'path':'', 'name':'', 'size':'', 'nrfiles':''},
                 attributes = {},
                 bids       = {},
