@@ -815,25 +815,25 @@ class EditWindow(QDialog):
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
         self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowTitleHint & QtCore.Qt.WindowMinMaxButtonsHint & QtCore.Qt.WindowCloseButtonHint)
         self.setWindowTitle('Edit BIDS mapping')
-        self.setWhatsThis(f"BIDScoin maps {self.dataformat} attributes to BIDS data types")
+        self.setWhatsThis(f"BIDScoin mapping of {self.dataformat} properties and attributes to BIDS output data")
 
         # Get data for the tables
         data_filesystem, data_attributes, data_bids, data_meta = self.run2data()
 
         # Set-up the filesystem table
         self.filesystem_label = QLabel('Properties')
-        self.filesystem_label.setToolTip(f"The filesystem (regexp) patterns that are used to uniquely identify source files (middle column) and their actual values (outer-right column). Copy: Ctrl+C")
+        self.filesystem_label.setToolTip(f"The filesystem properties that match with (identify) the source file. NB: Expert usage (e.g. using regular expressions, see documentation). Copy: Ctrl+C")
         self.filesystem_table = self.set_table(data_filesystem, 'filesystem')
         self.filesystem_table.cellChanged.connect(self.filesystemcell2run)
-        self.filesystem_table.setToolTip(f"The filesystem (regexp) patterns that are used to uniquely identify source files (middle column) and their actual values (outer-right column). Copy: Ctrl+C")
+        self.filesystem_table.setToolTip(f"The filesystem property that matches with the source file")
         self.filesystem_table.cellDoubleClicked.connect(self.inspect_sourcefile)
 
         # Set-up the attributes table
         self.attributes_label = QLabel(f"Attributes")
-        self.attributes_label.setToolTip(f"The {self.dataformat} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using regular expressions, see documentation), only change these if you know what you are doing!")
+        self.attributes_label.setToolTip(f"The {self.dataformat} attributes that match with (identify) the source file. NB: Expert usage (e.g. using regular expressions, see documentation). Copy: Ctrl+C")
         self.attributes_table = self.set_table(data_attributes, 'attributes', minimum=False)
         self.attributes_table.cellChanged.connect(self.attributescell2run)
-        self.attributes_table.setToolTip(f"The {self.dataformat} attributes that are used to uniquely identify source files. NB: Expert usage (e.g. using regular expressions, see documentation), only change these if you know what you are doing!")
+        self.attributes_table.setToolTip(f"The {self.dataformat} attribute that matches with the source file")
 
         # Set-up the datatype dropdown menu
         self.datatype_label = QLabel('Data type')
@@ -848,7 +848,7 @@ class EditWindow(QDialog):
         self.bids_label = QLabel('Entities')
         self.bids_label.setToolTip(f"The BIDS entities that are used to construct the BIDS output filename. You are encouraged to change their default values to be more meaningful and readable")
         self.bids_table = self.set_table(data_bids, 'bids')
-        self.bids_table.setToolTip(f"The BIDS entities that are used to construct the BIDS output filename. You are encouraged to change their default values to be more meaningful and readable")
+        self.bids_table.setToolTip(f"The BIDS entity that is used to construct the BIDS output filename. You are encouraged to change its default value to be more meaningful and readable")
         self.bids_table.cellChanged.connect(self.bidscell2run)
 
         # Set-up the meta table
@@ -857,7 +857,7 @@ class EditWindow(QDialog):
         self.meta_table = self.set_table(data_meta, 'meta', minimum=False)
         self.meta_table.setShowGrid(True)
         self.meta_table.cellChanged.connect(self.metacell2run)
-        self.meta_table.setToolTip(f"Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
+        self.meta_table.setToolTip(f"The key-value pair that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
 
         # Set-up non-editable BIDS output name section
         self.bidsname_label = QLabel('Data filename')
@@ -897,7 +897,6 @@ class EditWindow(QDialog):
         # Add a box1 -> box2 arrow
         arrow = QLabel()
         arrow.setPixmap(QtGui.QPixmap(str(RIGHTARROW)).scaled(30, 30, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
-        # arrow.setToolTip(f"BIDScoin maps {self.dataformat} attributes to BIDS data types")
 
         # Add the boxes to the layout
         layout_tables = QHBoxLayout()
@@ -1064,8 +1063,11 @@ class EditWindow(QDialog):
                     table.setCellWidget(i, j, self.spacedwidget(value_dropdown))
                 else:
                     value_item = MyWidgetItem(value, iseditable=item['iseditable'])
-                    if table.objectName()=='filesystem' and j==0:
-                        value_item.setToolTip(str(row[2]['value']))
+                    if table.objectName()=='filesystem':
+                        if j==1:
+                            value_item.setToolTip('The (regexp) matching pattern that for this property')
+                        if j==2:
+                            value_item.setToolTip(bids.get_filesystemhelp(key))
                     elif table.objectName()=='attributes' and j==0:
                         value_item.setToolTip(bids.get_attributeshelp(key))
                     elif table.objectName()=='bids' and j==0:

@@ -996,8 +996,12 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
 
 def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[dict, str, Union[int, None]]:
     """
-    Find the first run in the bidsmap with filesystem and file attributes that match with the sourcefile. Then update/fill the
-    (dynamic) bids and meta values (bids values are cleaned-up to be BIDS-valid)
+    Find the first run in the bidsmap with filesystem and file attributes that match with the sourcefile, and then
+    through the attributes. The datatypes are searcher for in this order:
+
+    (ignoredatatype,) + bidscoindatatypes + (unknowndatatype,)
+
+    Then update/fill the (dynamic) bids and meta values (bids values are cleaned-up to be BIDS-valid)
 
     :param sourcefile:  The full pathname of the source dicom-file or PAR/XML file
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS keys and attributes, etc
@@ -1153,6 +1157,25 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False) -> str:
     bidsname = f"{bidsname}{add_prefix('_', run['bids']['suffix'])}"            # And end with the suffix
 
     return bidsname
+
+
+def get_filesystemhelp(filesystemkey: str) -> str:
+    """
+    Reads the description of a matching attributes key in the source dictionary
+
+    :param filesystemkey:   The filesystem key for which the help text is obtained
+    :return:                The obtained help text
+    """
+
+    # Return the description from the DICOM dictionary or a default text
+    if filesystemkey == 'path':
+        return 'The path of the source file that is matched against the (regexp) pattern'
+    if filesystemkey == 'name':
+        return 'The name of the source file that is matched against the (regexp) pattern'
+    if filesystemkey == 'size':
+        return 'The size of the source file that is matched against the (regexp) pattern'
+    if filesystemkey == 'nrfiles':
+        return 'The nr of similar files in the folder that matched against the filesystem (regexp) patterns'
 
 
 def get_attributeshelp(attributeskey: str) -> str:
