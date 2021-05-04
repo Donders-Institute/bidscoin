@@ -22,7 +22,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog, QDialogButtonBox,
                              QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog, QMessageBox,
                              QTableWidget, QTableWidgetItem, QHeaderView, QGroupBox, QTextBrowser,
-                             QPushButton, QComboBox, QDesktopWidget, QAction)
+                             QPushButton, QComboBox, QAction)
 
 try:
     from bidscoin import bidscoin, bids
@@ -129,11 +129,7 @@ class MainWindow(QMainWindow):
 
         # Center the main window to the center point of screen
         if not reset:
-            self.adjustSize()
-            cp = QDesktopWidget().availableGeometry().center()
-            qr = self.frameGeometry()
-            qr.moveCenter(cp)
-            self.move(qr.topLeft())             # Top left of rectangle becomes top left of window centering it
+            self.move(QApplication.desktop().screen().rect().center() - self.rect().center())
 
         # Restore the samples_table stretching after the main window has been sized / current tabindex has been set (otherwise the main window can become too narrow)
         for dataformat in self.dataformats:
@@ -925,8 +921,6 @@ class EditWindow(QDialog):
         layout_main.addLayout(layout_tables)
         layout_main.addWidget(buttonbox)
 
-        self.center()
-
     def reject(self, confirm=True):
         """Ask if the user really wants to close the window"""
 
@@ -1347,13 +1341,6 @@ class EditWindow(QDialog):
         """Open web page for help"""
         help_url = HELP_URLS.get(self.target_datatype, HELP_URL_DEFAULT)
         webbrowser.open(help_url)
-
-    def center(self):
-        """Center the edit window"""
-        cp = QDesktopWidget().availableGeometry().center()  # Center point of screen
-        qr = self.frameGeometry()                           # Get the rectangular geometry
-        qr.moveCenter(cp)                                   # Move rectangle's center point to screen's center point
-        self.move(qr.topLeft())                             # Top left of rectangle becomes top left of window centering it
 
 
 class InspectWindow(QDialog):
