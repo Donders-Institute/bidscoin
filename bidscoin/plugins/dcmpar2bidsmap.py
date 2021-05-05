@@ -31,13 +31,13 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     if not dataformat:
         return
 
-    if dataformat=='DICOM':
+    if dataformat == 'DICOM':
         for sourcedir in bidscoin.lsdirs(session):
             sourcefile = bids.get_dicomfile(sourcedir)
             if sourcefile.name:
                 sourcefiles.append(sourcefile)
 
-    if dataformat=='PAR':
+    if dataformat == 'PAR':
         sourcefiles = bids.get_parfiles(session)
 
     # Update the bidsmap with the info from the source files

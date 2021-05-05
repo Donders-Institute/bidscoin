@@ -82,7 +82,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     else:
         with dataset_file.open('r') as fid:
             dataset_description = json.load(fid)
-        if not 'BIDScoin' in [generatedby_['Name'] for generatedby_ in dataset_description.get('GeneratedBy',[])]:
+        if 'BIDScoin' not in [generatedby_['Name'] for generatedby_ in dataset_description.get('GeneratedBy',[])]:
             LOGGER.info(f"Adding {generatedby} to {dataset_file}")
             dataset_description['GeneratedBy'] = dataset_description.get('GeneratedBy',[]) + generatedby
     with dataset_file.open('w') as fid:

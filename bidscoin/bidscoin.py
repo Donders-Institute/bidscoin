@@ -324,7 +324,7 @@ def test_plugin(plugin: Path, options: dict) -> bool:
     return True
 
 
-def test_bidscoin(Options: dict):
+def test_bidscoin(options: dict):
     """
     WIP
     :return:

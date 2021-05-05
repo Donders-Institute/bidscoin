@@ -15,6 +15,7 @@ import textwrap
 import logging
 import copy
 import webbrowser
+from typing import Union
 from pydicom import dcmread
 from pathlib import Path
 from functools import partial
@@ -158,7 +159,7 @@ class MainWindow(QMainWindow):
         QApplication.quit()             # TODO: Do not use class method but self.something?
 
     @QtCore.pyqtSlot(QtCore.QPoint)
-    def on_customContextMenuRequested(self, pos):
+    def show_contextmenu(self, pos):
         """Pops up a context-menu for deleting or editing the right-clicked sample in the samples_table"""
 
         # Get the activated row-data
@@ -181,7 +182,7 @@ class MainWindow(QMainWindow):
             answer = QMessageBox.question(self, f"Remove {dataformat} mapping",
                                           f'Only delete mappings for obsolete data (unless you are an expert user). Do you really want to remove this mapping"?',
                                           QMessageBox.Yes | QMessageBox.Cancel | QMessageBox.Cancel)
-            if answer==QMessageBox.Yes:
+            if answer == QMessageBox.Yes:
                 LOGGER.warning(f"Expert usage: User has removed run-item {dataformat}[{datatype}]: {provenance}")
                 bids.delete_run(self.output_bidsmap, dataformat, datatype, provenance)
                 self.update_subses_samples(self.output_bidsmap)
@@ -297,7 +298,7 @@ class MainWindow(QMainWindow):
         samples_table.setColumnHidden(5, True)
         samples_table.itemDoubleClicked.connect(self.sample_doubleclicked)
         samples_table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        samples_table.customContextMenuRequested.connect(self.on_customContextMenuRequested)
+        samples_table.customContextMenuRequested.connect(self.show_contextmenu)
         header = samples_table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.Stretch)                 # Temporarily set it to Stretch to have Qt set the right window width -> set to Interactive in setupUI -> not reset
@@ -483,7 +484,7 @@ class MainWindow(QMainWindow):
                 edit_button.clicked.connect(self.open_editwindow)
                 edit_button.setCheckable(not sys.platform.startswith('darwin'))
                 edit_button.setAutoExclusive(True)
-                if provenance.name and str(provenance)==self.editwindow_opened:    # Highlight the previously opened item
+                if provenance.name and str(provenance) == self.editwindow_opened:   # Highlight the previously opened item
                     edit_button.setChecked(True)
                 else:
                     edit_button.setChecked(False)
@@ -568,7 +569,7 @@ class MainWindow(QMainWindow):
         delete_button.clicked.connect(partial(self.del_plugin, plugin))
         delete_button.setToolTip(f'Click to remove the "{plugin}" plugin from the options')
         plugin_table.setCellWidget(1, 2, delete_button)
-        if plugin=='dcm2niix2bids':
+        if plugin == 'dcm2niix2bids':
             tooltip = TOOLTIP_DCM2NIIX
         else:
             tooltip = f"Here you can enter key-value data for the '{plugin}' plugin"
@@ -1057,10 +1058,10 @@ class EditWindow(QDialog):
                     table.setCellWidget(i, j, self.spacedwidget(value_dropdown))
                 else:
                     value_item = MyWidgetItem(value, iseditable=item['iseditable'])
-                    if table.objectName()=='filesystem':
-                        if j==1:
+                    if table.objectName() == 'filesystem':
+                        if j == 1:
                             value_item.setToolTip('The (regexp) matching pattern that for this property')
-                        if j==2:
+                        if j == 2:
                             value_item.setToolTip(bids.get_filesystemhelp(key))
                     elif table.objectName()=='attributes' and j==0:
                         value_item.setToolTip(bids.get_attributeshelp(key))
@@ -1083,7 +1084,7 @@ class EditWindow(QDialog):
                 oldvalue = ''
 
             # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
-            if key and value!=oldvalue:
+            if key and value != oldvalue:
                 answer = QMessageBox.question(self, f"Edit {self.dataformat} attributes",
                                               f'It is discouraged to change {self.dataformat} attribute values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
                                               QMessageBox.Yes | QMessageBox.No | QMessageBox.No)
@@ -1223,7 +1224,7 @@ class EditWindow(QDialog):
         bidsname = (Path(self.target_datatype)/bids.get_bidsname(self.subid, self.sesid, self.target_run)).with_suffix('.*')
 
         font = self.bidsname_textbox.font()
-        if self.target_datatype==bids.unknowndatatype:
+        if self.target_datatype == bids.unknowndatatype:
             self.bidsname_textbox.setToolTip(f"Red: This imaging data type is not part of BIDS but will be converted to a BIDS-like entry in the '{bids.unknowndatatype}' folder. Click 'OK' if you want your BIDS output data to look like this")
             self.bidsname_textbox.setTextColor(QtGui.QColor('red'))
             font.setStrikeOut(False)
@@ -1282,7 +1283,7 @@ class EditWindow(QDialog):
         if self.target_datatype=='fmap' and not self.target_run['meta'].get('IntendedFor'):
             answer = QMessageBox.question(self, 'Edit BIDS mapping', "The 'IntendedFor' meta-data is left empty\n\nDo you want to set "
                                                                      "this label (recommended)?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel | QMessageBox.Yes)
-            if answer==QMessageBox.Cancel or answer==QMessageBox.Yes:
+            if answer in (QMessageBox.Cancel, QMessageBox.Yes):
                 return
             LOGGER.warning(f"'IntendedFor' fieldmap value was not set")
 
@@ -1410,7 +1411,7 @@ class MyQTableWidget(QTableWidget):
 
 class MyWidgetItem(QTableWidgetItem):
 
-    def __init__(self, value: str='', iseditable: bool=True):
+    def __init__(self, value: Union[str,Path]='', iseditable: bool=True):
         """A QTableWidgetItem that is editable or not and that converts integer values to string"""
 
         super().__init__()
@@ -1424,7 +1425,6 @@ class MyWidgetItem(QTableWidgetItem):
             p_str = ''
 
         super(MyWidgetItem, self).setText(str(p_str))
-
 
     def seteditable(self, iseditable: bool=True):
         """Make the WidgetItem editable"""

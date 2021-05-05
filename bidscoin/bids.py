@@ -559,13 +559,13 @@ def get_sourcevalue(tagname: str, sourcefile: Union[Path, dict], dataformat: str
     if not dataformat:
         dataformat = get_dataformat(sourcefile)
 
-    if dataformat=='DICOM':
+    if dataformat == 'DICOM':
         return get_dicomfield(tagname, sourcefile)
 
-    if dataformat=='PAR':
+    if dataformat == 'PAR':
         return get_parfield(tagname, sourcefile)
 
-    if dataformat=='FileSystem':
+    if dataformat == 'FileSystem':
         if tagname == 'path':
             return str(sourcefile.parent)
         if tagname == 'name':
@@ -581,9 +581,9 @@ def get_sourcevalue(tagname: str, sourcefile: Union[Path, dict], dataformat: str
                 n    += 1
             return f"{size:.2f} {label[n]}B"
         if tagname == 'nrfiles' and sourcefile.is_file():
-            match = lambda file: ((match_attribute(file.parent,         run['filesystem']['path']) or not run['filesystem']['path']) and
-                                  (match_attribute(file.name,           run['filesystem']['name']) or not run['filesystem']['name']) and
-                                  (match_attribute(file.stat().st_size, run['filesystem']['size']) or not run['filesystem']['size']))
+            def match(file): return ((match_attribute(file.parent,         run['filesystem']['path']) or not run['filesystem']['path']) and
+                                     (match_attribute(file.name,           run['filesystem']['name']) or not run['filesystem']['name']) and
+                                     (match_attribute(file.stat().st_size, run['filesystem']['size']) or not run['filesystem']['size']))
             nrfiles = 0
             if match(sourcefile):
                 nrfiles = len([file for file in sourcefile.parent.glob('*') if match(file)])
@@ -1092,11 +1092,11 @@ def get_subid_sesid(sourcefile: Path, subid: str= '<<SourceFilePath>>', sesid: s
         return '', ''
 
     # Add default value for subid and sesid (e.g. for the bidseditor)
-    if subid=='<<SourceFilePath>>':
+    if subid == '<<SourceFilePath>>':
         subid = [part for part in sourcefile.parent.parts if part.startswith(subprefix)][-1]
     else:
         subid = get_dynamicvalue(subid, sourcefile)
-    if sesid=='<<SourceFilePath>>':
+    if sesid == '<<SourceFilePath>>':
         sesid = [part for part in sourcefile.parent.parts if part.startswith(sesprefix)]
         if sesid:
             sesid = sesid[-1]
@@ -1119,9 +1119,9 @@ def get_derivatives(datatype: str) -> list:
     """
 
     if datatype == 'anat':
-        return [suffix for suffix in bidsdatatypes[datatype][1]['suffixes'] if suffix not in ('UNIT1',)]                            # The qMRI data (maps)
+        return [suffix for suffix in bidsdatatypes[datatype][1]['suffixes'] if suffix not in ('UNIT1',)]                    # The qMRI data (maps)
     elif datatype == 'fmap':
-        return [suffix for n,typegroup in enumerate(bidsdatatypes[datatype]) for suffix in typegroup['suffixes'] if n>1]            # The non-standard fmaps (file collections)
+        return [suffix for n,typegroup in enumerate(bidsdatatypes[datatype]) for suffix in typegroup['suffixes'] if n>1]    # The non-standard fmaps (file collections)
     else:
         return []
 
@@ -1302,9 +1302,9 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') ->
         for keyval in bidsname.split('_'):
             if '-' in keyval:
                 key, value = keyval.split('-', 1)
-                if key==bidskey:
+                if key == bidskey:
                     oldvalue = value
-                if key=='acq':
+                if key == 'acq':
                     acqvalue = value
 
     # Replace the existing bidsvalue with the new value or append the newvalue to the acquisition value
@@ -1352,9 +1352,9 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str=''
     for keyval in bidsname.split('_'):
         if '-' in keyval:
             key, val = keyval.split('-', 1)
-            if key=='sub':
+            if key == 'sub':
                 subid = keyval
-            elif key=='ses':
+            elif key == 'ses':
                 sesid = keyval
             else:
                 run['bids'][key] = val
@@ -1364,9 +1364,9 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str=''
         run['bids']['suffix'] = run['bids']['suffix'][1:]
 
     # Insert the key-value pair in the run
-    if bidskey=='sub':
+    if bidskey == 'sub':
         subid = newvalue
-    elif bidskey=='ses':
+    elif bidskey == 'ses':
         sesid = newvalue
     else:
         run['bids'][bidskey] = newvalue

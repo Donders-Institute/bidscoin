@@ -55,7 +55,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
     # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
     sourcefile   = Path()
     manufacturer = 'UNKNOWN'
-    if dataformat=='DICOM':
+    if dataformat == 'DICOM':
         sources = bidscoin.lsdirs(session)
         for source in sources:
             sourcefile = bids.get_dicomfile(source)
@@ -66,7 +66,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
             LOGGER.info(f"No data found in: {session}")
             return
 
-    elif dataformat=='PAR':
+    elif dataformat == 'PAR':
         sources = bids.get_parfiles(session)
         if sources:
             sourcefile   = sources[0]
@@ -104,9 +104,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
     for source in sources:
 
         # Get a source-file
-        if dataformat=='DICOM':
+        if dataformat == 'DICOM':
             sourcefile = bids.get_dicomfile(source)
-        elif dataformat=='PAR':
+        elif dataformat == 'PAR':
             sourcefile = source
         if not sourcefile.name:
             continue
@@ -194,11 +194,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
 
                     # Patch the phase entity in the newbidsname with the dcm2niix mag/phase info
                     elif 'part' in run['bids'] and postfix in ('ph','real','imaginary'):                        # e.g. part: ['', 'mag', 'phase', 'real', 'imag', 0]
-                        if postfix=='ph':
+                        if postfix == 'ph':
                             newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'phase')
-                        if postfix=='real':
+                        if postfix == 'real':
                             newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'real')
-                        if postfix=='imaginary':
+                        if postfix == 'imaginary':
                             newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'imag')
 
                     # Patch fieldmap images (NB: datatype=='fmap' is too broad, see the fmap.yaml file)
@@ -281,11 +281,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                 jsondata = json.load(json_fid)
 
             # Add the TaskName to the meta-data
-            if datatype=='func' and 'TaskName' not in jsondata:
+            if datatype == 'func' and 'TaskName' not in jsondata:
                 jsondata['TaskName'] = run['bids']['task']
 
             # Add the TracerName and TaskName to the meta-data
-            elif datatype=='pet' and 'TracerName' not in jsondata:
+            elif datatype == 'pet' and 'TracerName' not in jsondata:
                 jsondata['TracerName'] = run['bids']['trc']
 
             # Add all the meta data to the json-file
