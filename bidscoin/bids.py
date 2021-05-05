@@ -1188,6 +1188,9 @@ def get_attributeshelp(attributeskey: str) -> str:
     :return:                The obtained help text
     """
 
+    if not attributeskey:
+        return "Please provide a key-name"
+
     # Return the description from the DICOM dictionary or a default text
     try:
         return f"{attributeskey}\nThe DICOM '{datadict.dictionary_description(attributeskey)}' attribute"
@@ -1203,6 +1206,9 @@ def get_entityhelp(entitykey: str) -> str:
     :param entitykey:   The bids key for which the help text is obtained
     :return:            The obtained help text
     """
+
+    if not entitykey:
+        return "Please provide a key-name"
 
     # Return the description from the entities or a default text
     for entityname in entities:
@@ -1220,16 +1226,19 @@ def get_metahelp(metakey: str) -> str:
     :return:        The obtained help text
     """
 
+    if not metakey:
+        return "Please provide a key-name"
+
     # Return the description from the metadata file or a default text
     metafile = schema_folder/'metadata'/(metakey + '.yaml')
     if metafile.is_file():
         with metafile.open('r') as stream:
             metadata = yaml.load(stream)
-            if metakey == 'IntendedFor':    # IntendedFor is a special search-pattern field in BIDScoin
-                metadata['description'] += ('\nThese associated files can be dynamically searched for during'
-                                            '\nbidscoiner runtime with glob-style matching patterns such as'
-                                            '\n"<<Reward*_bold><Stop*_epi>>" (see the online documentation)')
-            return f"{metadata['name']}\n{metadata['description']}"
+        if metakey == 'IntendedFor':    # IntendedFor is a special search-pattern field in BIDScoin
+            metadata['description'] += ('\nThese associated files can be dynamically searched for during'
+                                        '\nbidscoiner runtime with glob-style matching patterns such as'
+                                        '\n"<<Reward*_bold><Stop*_epi>>" (see the online documentation)')
+        return f"{metadata['name']}\n{metadata['description']}"
 
     return f"{metakey}\nA private key"
 
