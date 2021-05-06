@@ -78,6 +78,14 @@ class MainWindow(QMainWindow):
             self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
             self.set_menu_statusbar()
 
+        if not input_bidsmap:
+            filename, _ = QFileDialog.getOpenFileName(None, 'Open a bidsmap file', str(bidsfolder),
+                                                      'YAML Files (*.yaml *.yml);;All Files (*)')
+            if filename:
+                input_bidsmap, _ = bids.load_bidsmap(Path(filename))
+            else:
+                input_bidsmap = {'Options': template_bidsmap['Options']}
+
         # Keep track of the EditWindow status
         self.editwindow_opened = None                           # The provenance string of the run-item that is opened in the EditWindow
 
@@ -91,7 +99,7 @@ class MainWindow(QMainWindow):
         self.datasaved         = datasaved                      # True if data has been saved on disk
         self.dataformats       = [dataformat for dataformat in input_bidsmap if dataformat not in ('Options', 'PlugIns') and bids.dir_bidsmap(input_bidsmap, dataformat)]
 
-        # Set-up the tabs
+        # Set-up the tabs, add the tables and put the bidsmap data in them
         tabwidget = self.tabwidget = QtWidgets.QTabWidget()
         tabwidget.setTabPosition(QtWidgets.QTabWidget.North)
         tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
@@ -106,11 +114,13 @@ class MainWindow(QMainWindow):
         self.set_tab_options()
         self.set_tab_filebrowser()
 
+        self.datachanged = False        # Keep track of the bidsmap data status -> True if data has been edited. Do this after updating all the tables (which assigns datachanged = True)
+
         # Set-up the buttons
         buttonbox = QDialogButtonBox()
         buttonbox.setStandardButtons(QDialogButtonBox.Save | QDialogButtonBox.Reset | QDialogButtonBox.Help)
         buttonbox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
-        buttonbox.button(QDialogButtonBox.Save).setToolTip('Save the Options and BIDSmap to disk if you are satisfied with all the BIDS output names')
+        buttonbox.button(QDialogButtonBox.Save).setToolTip('Save the bidsmap to disk if you are satisfied with all the BIDS output names')
         buttonbox.button(QDialogButtonBox.Reset).setToolTip('Reset all the Options and BIDS mappings')
         buttonbox.helpRequested.connect(self.get_help)
         buttonbox.button(QDialogButtonBox.Reset).clicked.connect(self.reset)
@@ -124,9 +134,6 @@ class MainWindow(QMainWindow):
         tabwidget.setCurrentIndex(0)
 
         self.setCentralWidget(centralwidget)
-
-        # Keep track of the bidsmap data status
-        self.datachanged = False                # True if data has been edited. Do this after updating all the tables (which assigns datachanged = True)
 
         # Center the main window to the center point of screen
         if not reset:
@@ -208,14 +215,21 @@ class MainWindow(QMainWindow):
         # Set the file menu actions
         actionreset = QAction(self)
         actionreset.setText('Reset')
-        actionreset.setStatusTip('Reset the BIDSmap')
+        actionreset.setStatusTip('Reset the bidsmap')
         actionreset.setShortcut('Ctrl+R')
         actionreset.triggered.connect(self.reset)
         menufile.addAction(actionreset)
 
         actionsave = QAction(self)
+        actionsave.setText('Open')
+        actionsave.setStatusTip('Open a new bidsmap')
+        actionsave.setShortcut('Ctrl+O')
+        actionsave.triggered.connect(self.open_bidsmap)
+        menufile.addAction(actionsave)
+
+        actionsave = QAction(self)
         actionsave.setText('Save')
-        actionsave.setStatusTip('Save the BIDSmap to disk')
+        actionsave.setStatusTip('Save the bidsmap to disk')
         actionsave.setShortcut('Ctrl+S')
         actionsave.triggered.connect(self.save_bidsmap)
         menufile.addAction(actionsave)
@@ -273,7 +287,7 @@ class MainWindow(QMainWindow):
         subses_table.cellChanged.connect(self.subsescell2bidsmap)
         self.subses_table[dataformat] = subses_table
 
-        # Set the BIDSmap table
+        # Set the bidsmap table
         provenance = bids.dir_bidsmap(self.input_bidsmap, dataformat)
         ordered_file_index = {}                                         # The mapping between the ordered provenance and an increasing file-index
         num_files = 0
@@ -372,8 +386,7 @@ class MainWindow(QMainWindow):
         label = QLabel(rootfolder)
         label.setWordWrap(True)
 
-        self.model = QFileSystemModel()
-        model = self.model
+        model = self.model = QFileSystemModel()
         model.setRootPath(rootfolder)
         model.setFilter(QtCore.QDir.NoDotAndDotDot | QtCore.QDir.AllDirs | QtCore.QDir.Files)
         tree = QTreeView()
@@ -716,8 +729,24 @@ class MainWindow(QMainWindow):
                 with open(errorfile, 'w'):          # TODO: This works but it is a hack that somehow prefixes a lot of whitespace to the first LOGGER call
                     pass
 
+    def open_bidsmap(self):
+        """Load a bidsmap from disk and open it the main window"""
+
+        if not self.datasaved or self.datachanged:
+            answer = QMessageBox.question(self, 'Opening a new bidsmap', 'Do you want to save the current bidsmap to disk?',
+                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
+            if answer == QMessageBox.Yes:
+                self.save_bidsmap()
+            elif answer == QMessageBox.Cancel:
+                return
+
+        filename, _ = QFileDialog.getOpenFileName(self, 'Open File', str(self.bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'), 'YAML Files (*.yaml *.yml);;All Files (*)')
+        if filename:
+            self.input_bidsmap, _ = bids.load_bidsmap(Path(filename))
+            self.reset()
+
     def save_bidsmap(self):
-        """Check and save the BIDSmap to file"""
+        """Check and save the bidsmap to file"""
 
         for dataformat in self.dataformats:
             if self.output_bidsmap[dataformat].get('fmap'):
@@ -1464,9 +1493,6 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', subpr
     # Obtain the initial bidsmap info
     template_bidsmap, templatefile = bids.load_bidsmap(templatefile, bidsfolder/'code'/'bidscoin')
     input_bidsmap, bidsmapfile     = bids.load_bidsmap(bidsmapfile,  bidsfolder/'code'/'bidscoin')
-    if not input_bidsmap:
-        LOGGER.error(f'No bidsmap file found in {bidsfolder}. Please run the bidsmapper first and / or use the correct bidsfolder')
-        return
 
     # Start the Qt-application
     app = QApplication(sys.argv)

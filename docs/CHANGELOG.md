@@ -13,6 +13,7 @@ Making BIDScoin more powerful and generic...
 - A meta-data dictionary that can be edited with the bidseditor and that will be added to the json sidecar files by the bidscoiner
 - More user feedback in the GUI for new BIDS-compliancy checks on missing or invalid bids data
 - A right-click menu option to remove a run-item from the bidsmap (advanced usage)
+- The option to load a new bidsmap in the bidseditor
 - Enable the user to edit json, yaml, tsv and other non-DICOM / non-PAR files with double-clicks in the data browser
 - A central 'bidscoin' package function with various utilities, such as listing and installing BIDScoin plugins or executables
 - Plugins can have their own 'test' routine that can be called from the bidseditor
