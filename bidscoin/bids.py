@@ -584,10 +584,7 @@ def get_sourcevalue(tagname: str, sourcefile: Union[Path, dict], dataformat: str
             def match(file): return ((match_attribute(file.parent,         run['filesystem']['path']) or not run['filesystem']['path']) and
                                      (match_attribute(file.name,           run['filesystem']['name']) or not run['filesystem']['name']) and
                                      (match_attribute(file.stat().st_size, run['filesystem']['size']) or not run['filesystem']['size']))
-            nrfiles = 0
-            if match(sourcefile):
-                nrfiles = len([file for file in sourcefile.parent.glob('*') if match(file)])
-            return nrfiles
+            return len([file for file in sourcefile.parent.glob('*') if match(file)])
 
 
 def add_prefix(prefix: str, tag: str) -> str:
