@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
-This tool launches a graphical user interface for editing the bidsmap.yaml file
-that is produced by the bidsmapper. The user can fill in or change the BIDS labels
-for entries that are unidentified or sub-optimal, such that meaningful and nicely
-readable BIDS output names will be generated. The saved bidsmap.yaml output file
-will be used by the bidscoiner to actually convert the source data to BIDS.
+This tool launches a graphical user interface for editing the bidsmap that is produced by the
+bidsmapper. You can edit the BIDS data types and entities until all run-items have a meaningful
+and nicely readable BIDS output name. The (saved) bidsmap.yaml output file will be used by the
+bidscoiner to do the conversion conversion of the source data to BIDS.
 
 You can hoover with your mouse over items to get help text (pop-up tooltips).
 """
@@ -222,7 +221,7 @@ class MainWindow(QMainWindow):
 
         actionsave = QAction(self)
         actionsave.setText('Open')
-        actionsave.setStatusTip('Open a new bidsmap')
+        actionsave.setStatusTip('Open a new bidsmap from disk')
         actionsave.setShortcut('Ctrl+O')
         actionsave.triggered.connect(self.open_bidsmap)
         menufile.addAction(actionsave)
@@ -742,6 +741,7 @@ class MainWindow(QMainWindow):
 
         filename, _ = QFileDialog.getOpenFileName(self, 'Open File', str(self.bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if filename:
+            QtCore.QCoreApplication.setApplicationName(f"{filename} - BIDS editor")
             self.input_bidsmap, _ = bids.load_bidsmap(Path(filename))
             self.reset()
 
@@ -1120,6 +1120,9 @@ class EditWindow(QDialog):
                 if answer==QMessageBox.Yes:
                     LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                     self.target_run['filesystem'][key] = value
+                    # Refresh the nrfiles value
+                    data_filesystem, _, _, _ = self.run2data()
+                    self.fill_table(self.filesystem_table, data_filesystem)
                 else:
                     self.filesystem_table.item(rowindex, 1).setText(oldvalue)
 

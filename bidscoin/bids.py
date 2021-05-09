@@ -864,10 +864,14 @@ def match_attribute(attribute, pattern) -> bool:
 
     # Make sure we start with proper string types
     attribute = str(attribute).strip()
-    pattern   = str(pattern).strip().encode('unicode_escape').decode()
+    pattern   = str(pattern).strip()
 
     # Compare the value items (with / without wildcard) with the attribute string items
-    match = re.fullmatch(pattern, attribute)
+    try:
+        match = re.fullmatch(pattern, attribute)
+    except re.error as illegalpattern:
+        LOGGER.warning(f"Cannot compile regular expression pattern '{pattern}': {illegalpattern}")
+        match = None
 
     return match is not None
 
