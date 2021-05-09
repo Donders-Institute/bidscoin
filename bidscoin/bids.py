@@ -870,7 +870,7 @@ def match_attribute(attribute, pattern) -> bool:
     try:
         match = re.fullmatch(pattern, attribute)
     except re.error as illegalpattern:
-        LOGGER.warning(f"Cannot compile regular expression pattern '{pattern}': {illegalpattern}")
+        LOGGER.error(f"Cannot compile regular expression pattern '{pattern}': {illegalpattern}")
         match = None
 
     return match is not None

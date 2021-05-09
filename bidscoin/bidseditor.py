@@ -187,7 +187,7 @@ class MainWindow(QMainWindow):
         if action == delete_run:
             answer = QMessageBox.question(self, f"Remove {dataformat} mapping",
                                           f'Only delete mappings for obsolete data (unless you are an expert user). Do you really want to remove this mapping"?',
-                                          QMessageBox.Yes | QMessageBox.Cancel | QMessageBox.Cancel)
+                                          QMessageBox.Yes | QMessageBox.Cancel, QMessageBox.Cancel)
             if answer == QMessageBox.Yes:
                 LOGGER.warning(f"Expert usage: User has removed run-item {dataformat}[{datatype}]: {provenance}")
                 bids.delete_run(self.output_bidsmap, dataformat, datatype, provenance)
@@ -957,7 +957,7 @@ class EditWindow(QDialog):
         if confirm and str(self.target_run) != str(self.source_run):
             self.raise_()
             answer = QMessageBox.question(self, 'Edit BIDS mapping', 'Closing window, do you want to save the changes you made?',
-                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
+                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
             if answer == QMessageBox.Yes:
                 self.accept_run()
                 return
@@ -1116,7 +1116,7 @@ class EditWindow(QDialog):
             if key and value != oldvalue:
                 answer = QMessageBox.question(self, f"Edit {self.dataformat} attributes",
                                               f'It is discouraged to change {self.dataformat} attribute values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
-                                              QMessageBox.Yes | QMessageBox.No | QMessageBox.No)
+                                              QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if answer==QMessageBox.Yes:
                     LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                     self.target_run['filesystem'][key] = value
@@ -1140,7 +1140,7 @@ class EditWindow(QDialog):
             if key and value!=oldvalue:
                 answer = QMessageBox.question(self, f"Edit {self.dataformat} attributes",
                                               f'It is discouraged to change {self.dataformat} attribute values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
-                                              QMessageBox.Yes | QMessageBox.No | QMessageBox.No)
+                                              QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if answer==QMessageBox.Yes:
                     LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                     self.target_run['attributes'][key] = value
@@ -1171,7 +1171,7 @@ class EditWindow(QDialog):
                 if key == 'run' and oldvalue.startswith('<<') and oldvalue.endswith('>>'):
                     answer = QMessageBox.question(self, f"Edit bids entities",
                                                   f'It is highly discouraged to change the <<dynamic>> run-index unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
-                                                  QMessageBox.Yes | QMessageBox.No | QMessageBox.No)
+                                                  QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                     if answer==QMessageBox.Yes:
                         LOGGER.warning(f"Expert usage: User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                     else:
@@ -1307,14 +1307,14 @@ class EditWindow(QDialog):
 
         if not bids.check_run(self.target_datatype, self.target_run):
             answer = QMessageBox.question(self, 'Edit BIDS mapping', f'The "{self.target_datatype}/*_{self.target_run["bids"]["suffix"]}" run is not valid according to the BIDS standard. Do you want to go back and edit the run?',
-                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Yes)
+                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
             if answer == QMessageBox.Yes:
                 return
             LOGGER.warning(f'The "{self.bidsname_textbox.toPlainText()}" run is not valid according to the BIDS standard")')
 
         if self.target_datatype=='fmap' and not self.target_run['meta'].get('IntendedFor'):
             answer = QMessageBox.question(self, 'Edit BIDS mapping', "The 'IntendedFor' meta-data is left empty\n\nDo you want to set "
-                                                                     "this label (recommended)?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel | QMessageBox.Yes)
+                                                                     "this label (recommended)?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
             if answer in (QMessageBox.Cancel, QMessageBox.Yes):
                 return
             LOGGER.warning(f"'IntendedFor' fieldmap value was not set")
