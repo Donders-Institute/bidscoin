@@ -6,12 +6,12 @@ https://github.com/dangom/dac2bids/blob/master/dac2bids.py
 
 @author: Marcel Zwiers
 """
-
 import re
 import logging
 import tempfile
 import tarfile
 import zipfile
+from functools import lru_cache
 from pydicom import dcmread, fileset, datadict
 from nibabel.parrec import parse_PAR_header
 from distutils.dir_util import copy_tree
@@ -379,6 +379,7 @@ def parse_x_protocol(pattern: str, dicomfile: Path) -> str:
 # Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) _DICOMDICT_CACHE optimization
 _DICOMDICT_CACHE = None
 _DICOMFILE_CACHE = None
+@lru_cache(maxsize=4096)
 def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
     """
     Robustly extracts a DICOM field/tag from a dictionary or from vendor specific fields
@@ -445,6 +446,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 # Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) _PARDICT_CACHE optimization
 _PARDICT_CACHE = None
 _PARFILE_CACHE = None
+@lru_cache(maxsize=4096)
 def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
     """
     Extracts the value from a PAR/XML field
