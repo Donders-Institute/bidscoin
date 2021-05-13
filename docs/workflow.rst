@@ -130,7 +130,7 @@ If the preview of the BIDS filename and meta-data both look good, you can store 
 
 .. figure:: ./_static/bidseditor_edit.png
 
-   The edit window for customizing a bidsmap run item, showing the ``acq`` value being set to ``phantom``
+   The edit window for customizing a bidsmap run item, featuring the ``TaskName`` value being set to something more informative
 
 Finally, if all BIDS output names in the main window are fine, you can click on the ``Save`` button and proceed with running the bidscoiner tool. Note that the bidsmapper and bidseditor don't do anything except reading from and writing to a bidsmap yaml-file.
 
