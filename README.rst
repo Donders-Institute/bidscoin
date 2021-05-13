@@ -59,6 +59,6 @@ Note:
 .. |RTD| image:: https://readthedocs.org/projects/bidscoin/badge/?version=latest
    :target: http://bidscoin.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
-.. |BIDS| image:: https://img.shields.io/badge/BIDS-v1.5.0-blue
-   :target: https://bids-specification.readthedocs.io/en/v1.5.0/
+.. |BIDS| image:: https://img.shields.io/badge/BIDS-v1.6.0-blue
+   :target: https://bids-specification.readthedocs.io/en/v1.6.0/
    :alt: BIDS
