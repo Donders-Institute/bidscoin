@@ -10,7 +10,7 @@ The bidseditor
 
 .. figure:: ./_static/bidseditor_edit.png
 
-   The edit window for customizing a bidsmap run item, showing the ``acq`` value being set to ``phantom``
+   The edit window for customizing a bidsmap run item, featuring the ``TaskName`` value being set to something more informative
 
 .. figure:: ./_static/bidseditor_options.png
    :scale: 60%
