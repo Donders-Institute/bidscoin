@@ -110,4 +110,4 @@ BIDS validation
 If all of the above work is done, you can (and should) run the web-based `bidsvalidator <https://bids-standard.github.io/bids-validator/>`__ to check for inconsistencies or missing files in your bids data-set (NB: the bidsvalidator also exists as a `command-line tool <https://github.com/bids-standard/bids-validator>`__).
 
 .. note::
-   Privacy-sensitive source data samples may be stored in ``[bidsfolder]/code/bidscoin/provenance`` (see the ``-s`` option in the ``bidsmapper <workflow.html#step-1a-running-the-bidsmapper>``__).
+   Privacy-sensitive source data samples may be stored in ``[bidsfolder]/code/bidscoin/provenance`` (see the ``-s`` option in the `bidsmapper <workflow.html#step-1a-running-the-bidsmapper>`__).
