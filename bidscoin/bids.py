@@ -27,8 +27,8 @@ yaml = YAML()
 LOGGER = logging.getLogger(__name__)
 
 # Define BIDScoin datatypes
-bidscoindatatypes = ('fmap', 'anat', 'func', 'perf', 'dwi', 'meg', 'eeg', 'ieeg', 'beh', 'pet')           # NB: get_matching_run() uses this order to search for a match. TODO: sync with the modalities.yaml schema
-ignoredatatype    = 'leave_out'
+bidscoindatatypes = ('fmap', 'anat', 'func', 'perf', 'dwi', 'pet', 'meg', 'eeg', 'ieeg', 'beh')           # NB: get_matching_run() uses this order to search for a match. TODO: sync with the modalities.yaml schema
+ignoredatatype    = 'exclude'
 unknowndatatype   = 'extra_data'
 
 # Define the default paths
@@ -871,8 +871,8 @@ def match_attribute(attribute, pattern) -> bool:
     # Compare the value items (with / without wildcard) with the attribute string items
     try:
         match = re.fullmatch(pattern, attribute)
-    except re.error as illegalpattern:
-        LOGGER.error(f"Cannot compile regular expression pattern '{pattern}': {illegalpattern}")
+    except re.error as patternerror:
+        LOGGER.error(f"Cannot compile regular expression pattern '{pattern}': {patternerror}")
         match = None
 
     return match is not None
@@ -1098,7 +1098,7 @@ def get_subid_sesid(sourcefile: Path, subid: str= '<<SourceFilePath>>', sesid: s
     if subid == '<<SourceFilePath>>':
         subid = [part for part in sourcefile.parent.parts if part.startswith(subprefix)][-1]
     else:
-        subid = get_dynamicvalue(subid, sourcefile)
+        subid = get_dynamicvalue(subid, sourcefile, runtime=True)
     if sesid == '<<SourceFilePath>>':
         sesid = [part for part in sourcefile.parent.parts if part.startswith(sesprefix)]
         if sesid:
@@ -1106,7 +1106,7 @@ def get_subid_sesid(sourcefile: Path, subid: str= '<<SourceFilePath>>', sesid: s
         else:
             sesid = ''
     else:
-        sesid = get_dynamicvalue(sesid, sourcefile)
+        sesid = get_dynamicvalue(sesid, sourcefile, runtime=True)
 
     # Add sub- and ses- prefixes if they are not there
     subid = 'sub-' + cleanup_value(re.sub(f'^{subprefix}', '', subid))

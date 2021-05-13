@@ -52,13 +52,13 @@ HELP_URLS        = {
 }
 
 TOOLTIP_BIDSCOIN = """BIDScoin
-version:    should correspond with the version in ../bidscoin/version.txt
-bidsignore: Semicolon-separated list of entries that are added to the .bidsignore file
-            (for more info, see BIDS specifications), e.g. extra_data/;myfile.txt;yourfile.csv"""
+version:    Used to check for version conflicts 
+bidsignore: Semicolon-separated list of data types that are added to the .bidsignore file,
+            e.g. extra_data/;myfile.txt;yourfile.csv"""
 
 TOOLTIP_DCM2NIIX = """dcm2niix2bids
-path: Command to set the path to dcm2niix, e.g.:
-      module add dcm2niix/1.0.20180622; (note the semi-colon at the end)
+path: String to set the path to dcm2niix, e.g.:
+      module add dcm2niix/v1.0.20210317; (note the semi-colon at the end)
       PATH=/opt/dcm2niix/bin:$PATH; (note the semi-colon at the end)
       /opt/dcm2niix/bin/  (note the slash at the end)
       '\"C:\\Program Files\\dcm2niix\"' (note the quotes to deal with the whitespace)
@@ -275,7 +275,7 @@ class MainWindow(QMainWindow):
 
         subses_table = MyQTableWidget()
         subses_table.setToolTip(f"Use '<<SourceFilePath>>' to parse the subject and (optional) session label from the pathname\n"
-                                f"Use a dynamic {dataformat} attribute (e.g. '<PatientID>') to extract the subject and (optional) session label from the {dataformat} header")
+                                f"Use a dynamic {dataformat} attribute (e.g. '<<PatientName>>') to extract the subject and (optional) session label from the {dataformat} header")
         subses_table.setMouseTracking(True)
         subses_table.setRowCount(2)
         subses_table.setColumnCount(2)

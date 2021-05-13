@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Converts ("coins") datasets in the sourcefolder to nifti / json / tsv datasets in the
-bidsfolder according to the BIDS standard. Check and edit the bidsmap.yaml file to
-your needs using the bidseditor.py tool before running this function. You can run
-bidscoiner.py after all data is collected, or run / re-run it whenever new data has
-been added to the source folder (presuming the scan protocol hasn't changed). If you
-delete a (subject/) session folder from the bidsfolder, it will be re-created from the
-sourcefolder the next time you run the bidscoiner. Image tags indicating properties
-such as echo-number or complex data can be appended to the "acq" value if the BIDS
-datatype does not provide for this (e.g. "sub-01_acq-MEMPRAGE_T1w.nii" becomes
-"sub-01_acq-MEMPRAGEe1_T1w.nii")
+Converts ("coins") your source datasets to nifti / json / tsv BIDS datasets using
+the information from the bidsmap.yaml file. Edit this bidsmap to your needs using the
+bidseditor tool before running this function or (re-)run the bidsmapper whenever you
+encounter unexpected data. You can run bidscoiner after all data has been collected,
+or run / re-run it whenever new data has been added to your source folder (presuming
+the scan protocol hasn't changed). Also, if you delete a subject/session folder from
+the bidsfolder, it will simply be re-created from the sourcefolder the next time you
+run the bidscoiner.
+
+The bidscoiner uses plugins, as stored in the bidsmap['Options'], to do the actual work
 
 Provenance information, warnings and error messages are stored in the
 bidsfolder/code/bidscoin/bidscoiner.log file.

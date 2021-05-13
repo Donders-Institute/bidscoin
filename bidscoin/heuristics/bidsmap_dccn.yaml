@@ -23,7 +23,7 @@ Options:
     version: '3.6.0'              # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
     bidsignore: extra_data/       # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
   plugins:                        # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
-    dcmpar2bidsmap: ~             # The default plugin that is used by the bidsmapper to map DICOM and PAR/REC source data
+    dcm2bidsmap: ~                # The default plugin that is used by the bidsmapper to map DICOM and PAR/REC source data
     dcm2niix2bids:                # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
       path: module add dcm2niix;  # Command to set the path to dcm2niix (note the semi-colon), e.g. module add dcm2niix/1.0.20180622; or PATH=/opt/dcm2niix/bin:$PATH; or /opt/dcm2niix/bin/ or '"C:\Program Files\dcm2niix\"' (note the quotes to deal with the whitespace)
       args: -b y -z y -i n        # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
@@ -43,7 +43,7 @@ DICOM:
       name: ~                     # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
       size: ~                     # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
       nrfiles: ~                  # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
-    attributes: &anat_dicomattr
+    attributes: &anat_dicomattr   # An empty / non-matching reference dictionary that can be derefenced in other run-items of this data type
       Modality: ~
       ProtocolName: ~
       SeriesDescription: ~
@@ -65,7 +65,7 @@ DICOM:
       run: <<1>>
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       suffix: T1w
-    meta:                         # This is an optional (stub) entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
+    meta:                         # This is an optional entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
   - provenance: ~
     attributes:
       <<: *anat_dicomattr
@@ -76,7 +76,7 @@ DICOM:
     attributes:
       <<: *anat_dicomattr
       ProtocolName: '(?i).*T2w.*'
-      SequenceVariant: '[''SK'', ''SP'']'       # Use a yaml single-quote escape
+      SequenceVariant: '[''SK'', ''SP'']'       # NB: Uses a yaml single-quote escape
     bids:
       <<: *anat_dicoment_nonparametric
       suffix: T2w
@@ -828,6 +828,48 @@ DICOM:
     meta:
       IntendedFor: ~
 
+  pet:        # ----------------------- All PET runs ---------------------------
+  - provenance: ~
+    attributes: &pet_dicomattr
+      Modality: 'PT'
+      StudyDescription: ~
+      SeriesDescription: ~
+      SeriesType: ~
+      Radiopharmaceutical: ~
+      ReconstructionMethod: ~
+      ImageType: ~
+      NumberOfSlices: ~
+      NumberOfTimeSlices: ~
+      SliceThickness: ~
+      PixelSpacing: ~
+      Rows: ~
+      Columns: ~
+    bids: &pet_dicoment_group1
+      task: <SeriesDescription>
+      trc: <Radiopharmaceutical>
+      rec: ['', 'acdyn', 'acstat', 'nacdyn', 'nacstat', 0]
+      run: <<1>>
+      suffix: pet
+    meta:
+      TracerName: <<Radiopharmaceutical>>
+      TracerRadionuclide: ~
+      InjectedRadioactivity: <<RadionuclideTotalDose>>
+      ModeOfAdministration: ~
+      TimeZero: <<RadiopharmaceuticalStartTime>>
+      InjectionStart: <<ContrastBolusStartTime>>
+      FrameDuration: <<ActualFrameDuration>>
+  - provenance: ~
+    attributes: *pet_dicomattr
+    bids:
+      <<: *pet_dicoment_group1
+      suffix: events
+  - provenance: ~
+    attributes: *pet_dicomattr
+    bids:
+      <<: *pet_dicoment_group1
+      recording: ~
+      suffix: blood
+
   eeg:        # ----------------------- All EEG data ---------------------------
   - provenance: ~
     attributes:
@@ -881,43 +923,6 @@ DICOM:
     bids:
       <<: *beh_dicoment_group2
       suffix: beh
-
-  pet:        # ----------------------- All PET runs ---------------------------
-  - provenance: ~
-    attributes: &pet_dicomattr
-      Modality: 'PT'
-      SeriesDescription: ~
-      Radiopharmaceutical: ~
-      ImageType: ~
-      SliceThickness: ~
-      PixelSpacing: ~
-      Rows: ~
-      Columns: ~
-    bids: &pet_dicoment_group1
-      task: <SeriesDescription>
-      trc: <Radiopharmaceutical>
-      rec: ['', 'acdyn', 'acstat', 'nacdyn', 'nacstat', 0]
-      run: <<1>>
-      suffix: pet
-    meta:
-      TracerName: <<Radiopharmaceutical>>
-      TracerRadionuclide: ~
-      InjectedRadioactivity: <<RadionuclideTotalDose>>
-      ModeOfAdministration: ~
-      TimeZero: <<RadiopharmaceuticalStartTime>>
-      InjectionStart: <<ContrastBolusStartTime>>
-      FrameDuration: <<ActualFrameDuration>>
-  - provenance: ~
-    attributes: *pet_dicomattr
-    bids:
-      <<: *pet_dicoment_group1
-      suffix: events
-  - provenance: ~
-    attributes: *pet_dicomattr
-    bids:
-      <<: *pet_dicoment_group1
-      recording: ~
-      suffix: blood
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance: ~
@@ -974,7 +979,7 @@ DICOM:
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       suffix: <ScanningSequence>
 
-  leave_out:  # ----------------------- Data that will be left out -------------
+  exclude:    # ----------------------- Data that will be left out -------------
   - provenance: ~
     attributes: &leaveout_attributes_dicom
       Modality: ~
@@ -1711,7 +1716,7 @@ PAR:
       part: ['', 'mag', 'phase', 'real', 'imag', 0]
       suffix: <exam_name>
 
-  leave_out:  # ----------------------- Data that will be left out -------------
+  exclude:    # ----------------------- Data that will be left out -------------
   - provenance: ~
     attributes:
       series_type: ~

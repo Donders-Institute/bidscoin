@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """
-Creates a bidsmap.yaml YAML file in the bidsfolder/code/bidscoin that maps the
-information from all raw source data to the BIDS labels. You can check and edit
-the bidsmap file with the bidseditor (but also with any text-editor) before
-passing it to the bidscoiner. See the bidseditor help for more information and
-useful tips for running the bidsmapper in interactive mode (the default).
+The bidsmapper scans your source data repository to identify different data types by matching
+them against the items in the template bidsmap. Once a match is found, a mapping to BIDS output
+data types is made. You can check and edit these generated bids-mappings to your needs with the
+(automatically launched) bidseditor. Re-run the bidsmapper whenever something was changed in
+your data acquisition protocol and edit the new data type to your needs (your existing bidsmap
+will be re-used).
+
+The bidsmapper uses plugins, as stored in the bidsmap['Options'], to do the actual work
 """
 
 # Global imports (plugin modules may be imported when needed)
@@ -170,9 +173,9 @@ def main():
     parser.add_argument('-t','--template',    help='The bidsmap template file with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap_dccn.yaml', default='bidsmap_dccn.yaml')
     parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
-    parser.add_argument('-s','--store',       help="Flag to store provenance data samples in the bidsfolder/'code'/'provenance' folder", action='store_true')
+    parser.add_argument('-s','--store',       help="Flag to store provenance data samples in the bidsfolder/'code'/'provenance' folder (useful for inspecting e.g. zipped or transfered datasets)", action='store_true')
     parser.add_argument('-a','--automated',   help="Flag to save the automatically generated bidsmap to disk and without interactively tweaking it with the bidseditor", action='store_true')
-    parser.add_argument('-f','--force',       help='Flag to discard the previous bidsmap and logfile', action='store_true')
+    parser.add_argument('-f','--force',       help='Flag to discard the previously saved bidsmap and logfile', action='store_true')
     parser.add_argument('-v','--version',     help='Show the installed version and check for updates', action='version', version=f'BIDS-version:\t\t{bidscoin.bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}')
     args = parser.parse_args()
 

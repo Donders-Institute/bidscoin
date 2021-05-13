@@ -4,7 +4,7 @@ Data preparation
 Required source data structure
 ------------------------------
 
-BIDScoin requires that the source data input folder is organized according to a ``sub-identifier/[ses-identifier]/data`` structure (the ``ses-identifier`` subfolder is optional). The ``data`` folder can have various formats, as shown in the following examples:
+BIDScoin requires that the source data input folder is organized according to a ``sub-identifier/[ses-identifier]/data`` structure (the ``ses-identifier`` subfolder is optional). The data folder can have various formats, as shown in the following examples:
 
 1. **A 'seriesfolder' organization**. A series folder contains a single data type and are typically acquired in a single run -- a.k.a 'Series' in DICOM speak. This is how users receive their data from the (Siemens) scanners at the `DCCN <https://www.ru.nl/donders/>`__::
 
@@ -39,7 +39,7 @@ BIDScoin requires that the source data input folder is organized according to a 
     |       [..]
     [..]
 
-2. **A 'DICOMDIR' organization**. A DICOMDIR is dictionary-file that indicates the various places where all the various DICOM files are stored. DICOMDIRs are often used in clinical settings and may look like::
+2. **A 'DICOMDIR' organization**. A DICOMDIR is dictionary-file that indicates the various places where the DICOM files are stored. DICOMDIRs are often used in clinical settings and may look like::
 
     sourcedata
     |-- sub-001
@@ -65,7 +65,7 @@ BIDScoin requires that the source data input folder is organized according to a 
     |   [..]
     [..]
 
-3. **A flat DICOM organization**. In a flat DICOM organization all the DICOM files of all the different Series are simply put in one large directory. This organization is sometimes used when exporting data in clinical settings::
+3. **A flat DICOM organization**. In a flat DICOM organization all the DICOM files of all the different Series are simply put in one large directory. This organization is sometimes used when exporting data in clinical settings (the session sub-folder is optional)::
 
     sourcedata
     |-- sub-001
@@ -83,7 +83,7 @@ BIDScoin requires that the source data input folder is organized according to a 
     |       [..]
     [..]
 
-4. **A PAR/REC organization**. All PAR/REC(/XML) files of all the different Series are put in one directory. This organization is how users often export their data from Philips scanners in research settings::
+4. **A PAR/REC organization**. All PAR/REC(/XML) files of all the different Series in one directory. This organization is how users often export their data from Philips scanners in research settings (the session sub-folder is optional)::
 
     sourcedata
     |-- sub-001
@@ -108,10 +108,10 @@ BIDScoin requires that the source data input folder is organized according to a 
     [..]
 
 .. note::
-   You can store your session data in any of the above data organizations as zipped (``.zip``) or tarzipped (e.g. ``.tar.gz``) archive files. BIDScoin `workflow tools <workflow.html>`_ will unpack/unzip those archive files in a temporary folder and will process your session`` data`` from there. The BIDScoin tools will run `dicomsort <#dicomsort>`__ in a temporary folder for flat/DICOMDIR data to sort them in seriesfolders. BIDScoin tools that work from a temporary folder has the downsde of getting a speed penalty. Also note that privacy-sensitive data samples will then be stored in ``[bidsfolder]/code/bidscoin/provenance``.
+   You can store your session data in any of the above data organizations as zipped (``.zip``) or tarzipped (e.g. ``.tar.gz``) archive files. BIDScoin `workflow tools <workflow.html>`_ will automatically unpack/unzip those archive files in a temporary folder and then process your session`` data`` from there. For flat/DICOMDIR data, BIDScoin tools will automatically run `dicomsort <#dicomsort>`__ in a temporary folder to sort them in seriesfolders. BIDScoin tools that work from a temporary folder has the downsde of getting a speed penalty.
 
 .. tip::
-   BIDScoin will skip (linux-style hidden) files and folders starting with a `.` character. You can use this feature to flexibly omit subjects, sessions or runs from your bids repository, for instance when you restarted a MRI scan because something went wrong with the stimulus presentation and you don't want that data to be converted and enumerated as `run-1`, `run-2`.
+   BIDScoin will skip (linux-style hidden) files and folders starting with a `.` (dot) character. You can use this feature to flexibly omit subjects, sessions or runs from your bids repository, for instance when you restarted a MRI scan because something went wrong with the stimulus presentation and you don't want that data to be converted and enumerated as `run-1`, `run-2`.
 
 Data management utilities
 -------------------------

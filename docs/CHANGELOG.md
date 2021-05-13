@@ -23,6 +23,7 @@ Making BIDScoin more powerful and generic...
 - Moved the bidsmapping and bidscoining functionality to stand-alone plugins (changed API), making plugins a first-class BIDScoin citizen
 - The plugins have moved to the bidsmap['Options'], where they have their own key-value options dictionary (changed API)
 - Move IntendedFor field over to the new meta-data dictionary
+- Renamed the `leave_out` datatype to `exclude`
 - Re-introduced skipping hidden folders (hidden files are also skipped)
 - Moved the 'pulltutorial' function over to the new 'bidscoin' function
 

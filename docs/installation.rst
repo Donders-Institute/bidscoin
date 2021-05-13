@@ -1,20 +1,21 @@
 Installation
 ============
 
-BIDScoin can be installed and should work on Linux, MS Windows and on OS-X computers (this latter option has not been tested) that satisfy the system requirements:
+BIDScoin can be installed and should work on Linux, MS Windows and on OS-X computers (this latter option has not been well tested) that satisfy the system requirements:
 
 -  dcm2niix
 -  python 3.8 or higher
+-  (FSL, optional and only needed when using the `defacing <finalizing.html#defacing>`__ tool to remove facial features from anatomical scans)
 
 Dcm2niix installation
 ---------------------
 
-BIDScoin relies on dcm2niix to convert DICOM and PAR/REC files to nifti. Please download and install `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ yourself according to the instructions. When done, make sure that the path to the dcm2niix binary / executable is set correctly in the `Options`_ section in your bidsmap or, for once and for all, in your `Site specific / customized template <advanced.html#site-specific-customized-template>`__ bidsmap.
+The default `dcm2niix2bids` plugin relies on dcm2niix to convert DICOM and PAR/REC files to nifti. To use this plugin, please download and install `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ yourself according to the instructions. When done, make sure that the path to the dcm2niix binary / executable is set correctly in the `Options`_ section in your bidsmap or, for once and for all, put it in your `Site specific / customized template <advanced.html#site-specific-customized-template>`__ bidsmap.
 
 Python 3 installation
 ---------------------
 
-BIDScoin is a python package and therefore a python interpreter needs to be present on the system. On Linux this is usually already the case, but MS Windows users may need to install python themselves. See e.g. `this python 3 distribution <https://docs.anaconda.com/anaconda/install/windows/>`__ for instructions. They may also need to install the `MS Visual C++ <https://visualstudio.microsoft.com/downloads/>`__ build tools (sorry for this pain).
+BIDScoin is a python package and therefore a python interpreter needs to be present on the system. On Linux and OS-X this is usually already the case, but MS Windows users may need to install python themselves. See e.g. this `python 3 distribution <https://docs.anaconda.com/anaconda/install/windows/>`__ for instructions.
 
 BIDScoin installation
 ---------------------
@@ -29,13 +30,13 @@ This will give you the latest stable release of the software. To get the very la
 
 .. code-block:: console
 
-   $ pip install git+https://github.com/Donders-Institute/bidscoin
+   $ pip install --upgrade git+https://github.com/Donders-Institute/bidscoin
 
 If you do not have git (or any other version control system) installed you can `download`_ and unzip the code yourself in a directory named e.g. ``bidscoin`` and run:
 
 .. code-block:: console
 
-   $ pip install bidscoin
+   $ pip install ./bidscoin
 
 Updating BIDScoin
 ^^^^^^^^^^^^^^^^^

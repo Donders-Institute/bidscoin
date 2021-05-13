@@ -1,9 +1,9 @@
 """
-This function contains placeholder code demonstrating the bidscoin plugin API, both for bidsmapper.py and for
-bidscoiner.py. Enter the name of this module (default location is the plugins-folder; otherwise the full path
-must be provided) in the bidsmap dictionary file to import the plugin functions in this module, e.g. "README.py"
-or "myplugin.py". The functions in this module should be named "bidsmapper_plugin" for bidsmapper.py and
-"bidscoiner_plugin" for bidscoiner.py
+This module contains placeholder code demonstrating the bidscoin plugin API, both for bidsmapper.py and for
+bidscoiner.py. The functions in this module are called if the basename of this module (when located in the
+plugins-folder; otherwise the full path must be provided) is listed in the bidsmap. The presence of the
+functions is optional but should be named "test" for the bidseditor, "bidsmapper_plugin" for the bidsmapper
+and "bidscoiner_plugin" for the bidscoiner.
 """
 
 import logging
@@ -16,7 +16,8 @@ def test(options: dict) -> bool:
     """
     An internal routine to test the working of the plugin + its bidsmap options
 
-    :return: True if the test was successful
+    :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']
+    :return:        True if the test was successful
     """
 
     LOGGER.debug(f'This is a demo-plugin test routine, validating its working with options: {options}')
@@ -32,7 +33,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
     bidsmap_new/old['Options']['plugins']['README']
 
-    See e.g. dcmpar2bidsmap.py for an example implementation
+    See e.g. dcm2bidsmap.py for an example implementation
 
     :param session:     The full-path name of the subject/session raw data source folder
     :param bidsmap_new: The study bidsmap that we are building
