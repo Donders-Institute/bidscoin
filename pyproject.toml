@@ -1,6 +1,6 @@
 [metadata]
 name = 'bidscoin'
-version = '3.6.0'
+version = '3.7.0-dev'
 description = 'Map source-level neuroimaging data onto a BIDS data structure'
 author = 'Marcel Zwiers'
 author_email = 'm.zwiers@donders.ru.nl'

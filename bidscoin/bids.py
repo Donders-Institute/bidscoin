@@ -705,9 +705,6 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
                         otherwise a dict with empty attributes & bids keys
     """
 
-    if not dataformat:
-        dataformat = get_dataformat(sourcefile)
-
     runs = bidsmap.get(dataformat, {}).get(datatype, [])
     if not runs:
         runs = []
@@ -749,9 +746,6 @@ def delete_run(bidsmap: dict, dataformat: str, datatype: str, provenance: Path) 
     :return:
     """
 
-    if not dataformat:
-        dataformat = get_dataformat(provenance)
-
     for index, run in enumerate(bidsmap[dataformat][datatype]):
         if run['provenance'] == str(provenance):
             del bidsmap[dataformat][datatype][index]
@@ -768,9 +762,6 @@ def append_run(bidsmap: dict, dataformat: str, datatype: str, run: dict, clean: 
     :param clean:       A boolean to clean-up commentedMap fields
     :return:
     """
-
-    if not dataformat:
-        dataformat = get_dataformat(run['provenance'])
 
     # Copy the values from the run to an empty dict
     if clean:
@@ -810,9 +801,6 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, provenance: Path, target
     :param clean:               A boolean that is passed to bids.append_run (telling it to clean-up commentedMap fields)
     :return:
     """
-
-    if not dataformat:
-        dataformat = get_dataformat(run['provenance'])
 
     num_runs_in = len(dir_bidsmap(bidsmap, dataformat))
 
@@ -890,9 +878,6 @@ def exist_run(bidsmap: dict, dataformat: str, datatype: str, run_item: dict, mat
     :param matchmetalabels: If True, also matches the meta-keys, otherwise only run['attributes']
     :return:                True if the run exists in runlist, otherwise False
     """
-
-    if not dataformat:
-        dataformat = get_dataformat(run_item['provenance'])
 
     if not datatype:
         for datatype in bidscoindatatypes + (unknowndatatype, ignoredatatype):
@@ -1012,9 +997,6 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
     :return:            (run, datatype, index) The matching and filled-in / cleaned run item, datatype and list index as in run = bidsmap[dataformat][datatype][index]
                         datatype = bids.unknowndatatype and index = None if there is no match, the run is still populated with info from the source-file
     """
-
-    if not dataformat:
-        dataformat = get_dataformat(sourcefile)
 
     # Loop through all bidscoindatatypes and runs; all info goes cleanly into run_ (to avoid formatting problem of the CommentedMap)
     run_ = get_run_(str(sourcefile.resolve()))
