@@ -69,6 +69,8 @@ Editing the template
        ProtocolName: '(?i).*(MPRAGE|T1w).*'
        MRAcquisitionType: '3D'
      bids: *anat_dicoment_nonparametric
+     meta:
+       Comments: <<ImageComments>>
    - provenance: ~
      attributes:
        <<: *anat_dicomattr
