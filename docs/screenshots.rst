@@ -8,9 +8,9 @@ The bidseditor
 
    The main window with an overview of all the bidsmap run items
 
-.. figure:: ./_static/bidseditor_edit.png
+.. figure:: ./_static/bidseditor_edit_tooltip.png
 
-   The edit window for customizing a bidsmap run item, featuring the ``TaskName`` value being set to something more informative
+   The edit window with the option to export the customized mapping of run a item, and featuring filesystem matching and dynamic meta-data values
 
 .. figure:: ./_static/bidseditor_options.png
    :scale: 60%
