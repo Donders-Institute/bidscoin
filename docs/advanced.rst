@@ -53,7 +53,7 @@ Editing the template
        RepetitionTime: ~
        PhaseEncodingDirection: ~
      bids: &anat_dicoment_nonparametric  # See: schema/datatypes/anat.yaml
-       acq: <SeriesDescription>
+       acq: <SeriesDescription>    # This will be expanded by the bidsmapper (so the user can edit it)
        ce: ~
        rec: ~
        run: <<1>>
@@ -70,7 +70,7 @@ Editing the template
        MRAcquisitionType: '3D'
      bids: *anat_dicoment_nonparametric
      meta:
-       Comments: <<ImageComments>>
+       Comments: <<ImageComments>>    # This will be expanded during bidscoiner runtime (as it may vary from session to session)
    - provenance: ~
      attributes:
        <<: *anat_dicomattr
