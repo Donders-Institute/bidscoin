@@ -56,7 +56,7 @@ Editing the template
        acq: <SeriesDescription>    # This will be expanded by the bidsmapper (so the user can edit it)
        ce: ~
        rec: ~
-       run: <<1>>
+       run: <<1>>                  # This will be updated during bidscoiner runtime (as it depends on the already existing files)
        part: ['', 'mag', 'phase', 'real', 'imag', 0]
        suffix: T1w
      meta:                         # This is an optional entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
