@@ -61,6 +61,9 @@ Editing the template
        suffix: T1w
      meta:                         # This is an optional entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
    - provenance: ~
+     filesystem:
+       <<: *fileattr
+       nrfiles: [1-3]/d/d          # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
      attributes:
        <<: *anat_dicomattr
        ProtocolName: '(?i).*(MPRAGE|T1w).*'
