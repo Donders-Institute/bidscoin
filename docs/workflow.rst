@@ -66,7 +66,7 @@ Step 1a: Running the bidsmapper
       bidsmapper /project/foo/raw /project/foo/bids
       bidsmapper /project/foo/raw /project/foo/bids -t bidsmap_template
 
-After the source data has been scanned, the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__. For a fully automated workflow users can skip this interactive step using the ``-i`` option (see above).
+After the source data has been scanned, the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__. For a fully automated workflow users can skip this interactive step using the ``-a`` option (see above).
 
 .. tip::
    The default template bidsmap (``-t bidsmap_dccn``) is customized for acquisitions at the DCCN. If this bidsmap is not working well for you, consider `adapting it to your needs <advanced.html#site-specific-customized-template>`__ so that the bidsmapper can recognize more of your scans and map them to BIDS the way you prefer.
