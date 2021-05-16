@@ -163,11 +163,15 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         for session in sessions:
 
             # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-            session, unpacked = bids.unpack(session, subprefix, sesprefix)
+            session, unpacked = bids.unpack(session, bidsmap, subprefix, sesprefix)
 
             # Check if we should skip the session-folder
+            datasource = bids.get_datasource(session, bidsmap['Options']['plugins'])
+            if not datasource.dataformat:
+                LOGGER.info(f"No coinable datasources found in '{session}'")
+                continue
             if not force:
-                subid, sesid = bids.get_subid_sesid(session/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
+                subid, sesid = bids.get_subid_sesid(datasource, subprefix=subprefix, sesprefix=sesprefix)
                 bidssession  = bidsfolder/subid/sesid
                 datatypes    = []
                 for dataformat in dataformats:
@@ -180,7 +184,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     LOGGER.info(f"Skipping processed session: {bidssession} already has {datatypes} data (you can carefully use the -f option to overrule)")
                     continue
 
-            LOGGER.info(f"Coining session: {session}")
+            LOGGER.info(f"Coining datasources in: {session}")
 
             # Run the bidscoiner plugins
             for module in plugins:

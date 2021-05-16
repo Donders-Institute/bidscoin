@@ -23,6 +23,7 @@ import subprocess
 import urllib.request
 import json
 from pathlib import Path
+from functools import lru_cache
 from importlib.util import spec_from_file_location, module_from_spec
 from importlib.metadata import entry_points
 from typing import Tuple, Union, List
@@ -251,7 +252,8 @@ def uninstall_plugins(plugins: Tuple[str]=()) -> bool:
     return True
 
 
-def import_plugin(plugin: Path, functions: tuple=()) -> module_from_spec:
+@lru_cache()
+def import_plugin(plugin: Union[Path, str], functions: tuple=()) -> module_from_spec:
     """
     Imports the plugin if it contains any of the specified functions
 

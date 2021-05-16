@@ -11,6 +11,7 @@ import logging
 import dateutil.parser
 import pandas as pd
 import json
+from typing import Union
 from pathlib import Path
 try:
     from bidscoin import bidscoin, bids, physio
@@ -39,6 +40,39 @@ def test(options) -> bool:
     return bidscoin.run_command(command)
 
 
+def is_sourcefile(file: Path) -> str:
+    """
+    This plugin function supports assessing whether the file is a valid sourcefile
+
+    :param file:    The file that is assessed
+    :return:        The valid dataformat of the file for this plugin
+    """
+
+    if bids.is_dicomfile(file):
+        return 'DICOM'
+
+    if bids.is_parfile(file):
+        return 'PAR'
+
+    return ''
+
+
+def get_attribute(dataformat: str, sourcefile: Path, attribute: str) -> Union[str, int]:
+    """
+    This plugin supports reading attributes from DICOM and PAR dataformats
+
+    :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
+    :param sourcefile:  The sourcefile from which the attribute value should be read
+    :param attribute:   The attribute key for which the value should be read
+    :return:            The attribute value
+    """
+    if dataformat == 'DICOM':
+        return bids.get_dicomfield(attribute, sourcefile)
+
+    if dataformat == 'PAR':
+        return bids.get_parfield(attribute, sourcefile)
+
+
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, subprefix: str, sesprefix: str) -> None:
     """
     The bidscoiner plugin to convert the session DICOM and PAR/REC source-files into BIDS-valid nifti-files in the
@@ -53,41 +87,31 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
     :return:            Nothing
     """
 
-    # See what dataformat we have
-    dataformat = bids.get_dataformat(session)
-
-    # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
-    sourcefile   = Path()
-    manufacturer = 'UNKNOWN'
-    if dataformat == 'DICOM':
-        sources = bidscoin.lsdirs(session)
-        for source in sources:
-            sourcefile = bids.get_dicomfile(source)
-            if sourcefile.name:
-                manufacturer = bids.get_dicomfield('Manufacturer', sourcefile)
-                break
-        if not sourcefile.name:
-            LOGGER.info(f"No data found in: {session}")
-            return
-
-    elif dataformat == 'PAR':
-        sources = bids.get_parfiles(session)
-        if sources:
-            sourcefile   = sources[0]
-            manufacturer = 'Philips Medical Systems'
-        else:
-            LOGGER.info(f"No data found in: {session}")
-            return
-
-    else:
-        LOGGER.info(f"Session {session} cannot be processed by {__name__}")
+    # Get started and see what dataformat we have
+    plugin     = {'dcm2niix2bids': bidsmap['Options']['plugins']['dcm2niix2bids']}
+    datasource = bids.get_datasource(session, plugin)
+    dataformat = datasource.dataformat
+    if not dataformat:
+        LOGGER.info(f"No {__name__} sourcedata found in: {session}")
         return
 
-    subid, sesid = bids.get_subid_sesid(sourcefile,
+    # Make a list of all the data sources / runs
+    manufacturer = 'UNKNOWN'
+    sources      = []
+    if dataformat == 'DICOM':
+        sources      = bidscoin.lsdirs(session)
+        manufacturer = datasource.attributes('Manufacturer')
+    elif dataformat == 'PAR':
+        sources      = bids.get_parfiles(session)
+        manufacturer = 'Philips Medical Systems'
+    else:
+        LOGGER.exception(f"Unsupported dataformat '{dataformat}'")
+
+    # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
+    subid, sesid = bids.get_subid_sesid(datasource,
                                         bidsmap[dataformat]['subject'],
                                         bidsmap[dataformat]['session'],
                                         subprefix, sesprefix)
-
     if subid == subprefix:
         LOGGER.error(f"No valid subject identifier found for: {session}")
         return
@@ -105,9 +129,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
         scans_table.index.name = 'filename'
 
     # Process all the source files or run subfolders
+    sourcefile = Path()
     for source in sources:
 
-        # Get a source-file
+        # Get a data source
         if dataformat == 'DICOM':
             sourcefile = bids.get_dicomfile(source)
         elif dataformat == 'PAR':
@@ -115,8 +140,12 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
         if not sourcefile.name:
             continue
 
-        # Get a matching run from the bidsmap
-        run, datatype, index = bids.get_matching_run(sourcefile, bidsmap, dataformat)
+        # Get a matching run from the bidsmap and update its run['datasource'] object
+        datasource          = bids.DataSource(sourcefile, plugin, dataformat)
+        run, index          = bids.get_matching_run(datasource, bidsmap)
+        datatype            = run['datasource'].datatype
+        datasource.datatype = datatype
+        run['datasource']   = datasource
 
         # Check if we should ignore this run
         if datatype == bids.ignoredatatype:
@@ -142,7 +171,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
         runindex  = run['bids'].get('run', '')
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(outfolder, bidsname)
-        jsonfiles = [(outfolder/bidsname).with_suffix('.json')]      # List -> Collect the associated json-files (for updating them later) -- possibly > 1
+        jsonfiles = [(outfolder/bidsname).with_suffix('.json')]     # List -> Collect the associated json-files (for updating them later) -- possibly > 1
 
         # Check if file already exists (-> e.g. when a static runindex is used)
         if (outfolder/bidsname).with_suffix('.json').is_file():
@@ -152,7 +181,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
 
         # Convert physiological log files (dcm2niix can't handle these)
         if run['bids']['suffix'] == 'physio':
-            if bids.get_dicomfile(source, 2).name:
+            if bids.get_dicomfile(source, 2).name:                  # TODO: issue warning or support PAR
                 LOGGER.warning(f"Found > 1 DICOM file in {source}, using: {sourcefile}")
             physiodata = physio.readphysio(sourcefile)
             physio.physio2tsv(physiodata, outfolder/bidsname)
@@ -160,8 +189,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
         # Convert the source-files in the run folder to nifti's in the BIDS-folder
         else:
             command = '{path}dcm2niix {args} -f "{filename}" -o "{outfolder}" "{source}"'.format(
-                path      = bidsmap['Options']['plugins']['dcm2niix2bids'].get('path',''),
-                args      = bidsmap['Options']['plugins']['dcm2niix2bids'].get('args',''),
+                path      = plugin['dcm2niix2bids'].get('path',''),
+                args      = plugin['dcm2niix2bids'].get('args',''),
                 filename  = bidsname,
                 outfolder = outfolder,
                 source    = source)
@@ -169,7 +198,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                 continue
 
             # Replace uncropped output image with the cropped one
-            if '-x y' in bidsmap['Options']['plugins']['dcm2niix2bids']['args']:
+            if '-x y' in plugin['dcm2niix2bids'].get('args',''):
                 for dcm2niixfile in sorted(outfolder.glob(bidsname + '*_Crop_*')):                              # e.g. *_Crop_1.nii.gz
                     ext         = ''.join(dcm2niixfile.suffixes)
                     newbidsfile = str(dcm2niixfile).rsplit(ext,1)[0].rsplit('_Crop_',1)[0] + ext
@@ -294,7 +323,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
 
             # Add all the meta data to the json-file
             for metakey, metaval in run['meta'].items():
-                metaval = bids.get_dynamicvalue(metaval, sourcefile, cleanup=False, runtime=True)
+                metaval = bids.get_dynamicvalue(metaval, datasource, cleanup=False, runtime=True)
                 LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
                 jsondata[metakey] = metaval
             with jsonfile.open('w') as json_fid:
@@ -306,9 +335,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                 LOGGER.exception(f"No data-file found with {jsonfile} when updating {scans_tsv}")
             elif datatype not in bidsmap['Options']['bidscoin']['bidsignore'] and not run['bids']['suffix'] in bids.get_derivatives(datatype):
                 if 'AcquisitionTime' not in jsondata or not jsondata['AcquisitionTime']:
-                    jsondata['AcquisitionTime'] = bids.get_sourcevalue('AcquisitionTime', sourcefile, dataformat)       # DICOM
+                    jsondata['AcquisitionTime'] = datasource.attributes('AcquisitionTime')                  # DICOM
                 if not jsondata['AcquisitionTime']:
-                    jsondata['AcquisitionTime'] = bids.get_sourcevalue('exam_date', sourcefile, dataformat)             # PAR/XML
+                    jsondata['AcquisitionTime'] = datasource.attributes('exam_date')                        # PAR/XML
                 try:
                     acq_time = dateutil.parser.parse(jsondata['AcquisitionTime'])
                     acq_time = '1925-01-01T' + acq_time.strftime('%H:%M:%S')                                # Privacy protection (see BIDS specification)
@@ -387,7 +416,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                 personals['session_id'] = sesid
             else:
                 return                                              # Only take data from the first session -> BIDS specification
-        age = bids.get_dicomfield('PatientAge', sourcefile)         # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
+        age = datasource.attributes('PatientAge')                   # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
         if age.endswith('D'):
             personals['age'] = str(int(float(age.rstrip('D'))/365.2524))
         elif age.endswith('W'):

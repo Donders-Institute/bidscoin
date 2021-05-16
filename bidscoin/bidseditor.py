@@ -68,7 +68,7 @@ args: Argument string that is passed to dcm2niix. Click [Test] and see the termi
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, bidsfolder, input_bidsmap, template_bidsmap,
+    def __init__(self, bidsfolder: Path, input_bidsmap: dict, template_bidsmap: dict,
                  subprefix: str='sub-', sesprefix: str='ses-', datasaved: bool=False, reset: bool=False):
 
         # Set-up the main window
@@ -190,7 +190,7 @@ class MainWindow(QMainWindow):
                                           QMessageBox.Yes | QMessageBox.Cancel, QMessageBox.Cancel)
             if answer == QMessageBox.Yes:
                 LOGGER.warning(f"Expert usage: User has removed run-item {dataformat}[{datatype}]: {provenance}")
-                bids.delete_run(self.output_bidsmap, dataformat, datatype, provenance)
+                bids.delete_run(self.output_bidsmap, bids.find_run(self.output_bidsmap, provenance, dataformat, datatype))
                 self.update_subses_samples(self.output_bidsmap)
                 table.setRowCount(table.rowCount() - 1)
                 self.datachanged = True
@@ -447,7 +447,7 @@ class MainWindow(QMainWindow):
                 LOGGER.setLevel(loglevel)
 
                 provenance   = Path(run['provenance'])
-                subid, sesid = bids.get_subid_sesid(provenance,
+                subid, sesid = bids.get_subid_sesid(run['datasource'],
                                                     output_bidsmap[dataformat]['subject'],
                                                     output_bidsmap[dataformat]['session'],
                                                     self.subprefix, self.sesprefix)
@@ -527,8 +527,8 @@ class MainWindow(QMainWindow):
     def open_editwindow(self, provenance: Path=Path(), datatype: str= ''):
         """Make sure that index map has been updated"""
 
+        dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
         if not datatype:
-            dataformat    = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
             samples_table = self.samples_table[dataformat]
             button        = self.focusWidget()
             rowindex      = samples_table.indexAt(button.pos()).row()
@@ -538,11 +538,10 @@ class MainWindow(QMainWindow):
         # Check for open edit window, find the right datatype index and open the edit window
         if not self.editwindow_opened:
             # Find the source index of the run in the list of runs (using the provenance) and open the edit window
-            dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
             for run in self.output_bidsmap[dataformat][datatype]:
                 if run['provenance'] == str(provenance):
                     LOGGER.info(f'User is editing {provenance}')
-                    self.editwindow        = EditWindow(dataformat, provenance, datatype, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
+                    self.editwindow        = EditWindow(run, self.output_bidsmap, self.template_bidsmap, self.subprefix, self.sesprefix)
                     self.editwindow_opened = str(provenance)
                     self.editwindow.done_edit.connect(self.update_subses_samples)
                     self.editwindow.finished.connect(self.release_editwindow)
@@ -816,25 +815,24 @@ class EditWindow(QDialog):
     # Emit the new bidsmap when done (see docstring)
     done_edit = QtCore.pyqtSignal(dict)
 
-    def __init__(self, dataformat: str, provenance: Path, datatype: str, bidsmap: dict, template_bidsmap: dict, subprefix: str, sesprefix: str):
+    def __init__(self, run, bidsmap: dict, template_bidsmap: dict, subprefix: str, sesprefix: str):
         super().__init__()
-
         # Set the data
-        self.dataformat       = dataformat                  # The data format of the run-item being edited (bidsmap[dataformat][datatype][run-item])
-        self.source_datatype  = datatype                    # The datatype of the original run-item
-        self.target_datatype  = datatype                    # The datatype that the edited run-item is being changed into
-        self.current_datatype = datatype                    # The datatype of the run-item just before it is being changed (again)
-        self.source_bidsmap   = bidsmap                     # The bidsmap at the start of the edit = output_bidsmap in the MainWindow
-        self.target_bidsmap   = copy.deepcopy(bidsmap)      # The edited bidsmap -> will be returned as output_bidsmap in the MainWindow
-        self.template_bidsmap = template_bidsmap            # The bidsmap from which new datatype run-items are taken
-        for run in bidsmap[self.dataformat][datatype]:      # Get the run-item from the source bidsmap given the provenance
-            if run['provenance'] == str(provenance):
-                self.source_run = run
-        self.target_run = copy.deepcopy(self.source_run)    # The edited run-item that is inserted in the target_bidsmap
-        self.get_allowed_suffixes()                         # Set the possible suffixes the user can select for a given datatype
-        self.subid, self.sesid = bids.get_subid_sesid(Path(self.source_run['provenance']),
-                                                      bidsmap[dataformat]['subject'],
-                                                      bidsmap[dataformat]['session'],
+        datasource: bids.DataSource = run['datasource']
+        self.datasource       = datasource
+        self.dataformat       = datasource.dataformat   # The data format of the run-item being edited (bidsmap[dataformat][datatype][run-item])
+        self.source_datatype  = datasource.datatype     # The BIDS datatype of the original run-item
+        self.target_datatype  = datasource.datatype     # The BIDS datatype that the edited run-item is being changed into
+        self.current_datatype = datasource.datatype     # The BIDS datatype of the run-item just before it is being changed (again)
+        self.source_bidsmap   = bidsmap                 # The bidsmap at the start of the edit = output_bidsmap in the MainWindow
+        self.target_bidsmap   = copy.deepcopy(bidsmap)  # The edited bidsmap -> will be returned as output_bidsmap in the MainWindow
+        self.template_bidsmap = template_bidsmap        # The bidsmap from which new datatype run-items are taken
+        self.source_run       = run                     # The original run-item from the source bidsmap
+        self.target_run       = copy.deepcopy(run)      # The edited run-item that is inserted in the target_bidsmap
+        self.get_allowed_suffixes()                     # Set the possible suffixes the user can select for a given datatype
+        self.subid, self.sesid = bids.get_subid_sesid(datasource,
+                                                      bidsmap[self.dataformat]['subject'],
+                                                      bidsmap[self.dataformat]['session'],
                                                       subprefix, sesprefix)
 
         # Set-up the window
@@ -993,10 +991,10 @@ class EditWindow(QDialog):
         """
 
         run     = self.target_run
-        path    = bids.get_sourcevalue('path',    run, 'FileSystem')
-        name    = bids.get_sourcevalue('name',    run, 'FileSystem')
-        size    = bids.get_sourcevalue('size',    run, 'FileSystem')
-        nrfiles = bids.get_sourcevalue('nrfiles', run, 'FileSystem')
+        path    = self.datasource.filesystem('path')
+        name    = self.datasource.filesystem('name')
+        size    = self.datasource.filesystem('size')
+        nrfiles = self.datasource.filesystem('nrfiles', run)
         data_filesystem = [[{'value': 'path',                           'iseditable': False},
                             {'value': run['filesystem'].get('path'),    'iseditable': True},
                             {'value': path,                             'iseditable': False}],
@@ -1166,7 +1164,7 @@ class EditWindow(QDialog):
             if key and value != oldvalue:
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
                 if isinstance(value, str) and not (value.startswith('<<') and value.endswith('>>')):
-                    value = bids.cleanup_value(bids.get_dynamicvalue(value, Path(self.target_run['provenance'])))
+                    value = bids.cleanup_value(bids.get_dynamicvalue(value, self.datasource))
                     self.bids_table.item(rowindex, 1).setText(value)
                 if key == 'run' and oldvalue.startswith('<<') and oldvalue.endswith('>>'):
                     answer = QMessageBox.question(self, f"Edit bids entities",
@@ -1194,7 +1192,7 @@ class EditWindow(QDialog):
         if value != oldvalue:
             # Replace the (dynamic) value
             if not (value.startswith('<<') and value.endswith('>>')):
-                value = bids.get_dynamicvalue(value, Path(self.target_run['provenance']), cleanup=False)
+                value = bids.get_dynamicvalue(value, self.datasource, cleanup=False)
                 self.meta_table.item(rowindex, 1).setText(value)
             LOGGER.info(f"User has set meta['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
 
@@ -1221,10 +1219,10 @@ class EditWindow(QDialog):
         """
 
         # Get the new target_run
-        self.target_run = bids.get_run(self.template_bidsmap, self.dataformat, self.target_datatype, suffix_idx, Path(self.target_run['provenance']))
+        self.target_run = bids.get_run(self.template_bidsmap, self.target_datatype, suffix_idx, self.datasource)
 
         # Insert the new target_run in our target_bidsmap
-        bids.update_bidsmap(self.target_bidsmap, self.current_datatype, Path(self.target_run['provenance']), self.target_datatype, self.target_run, self.dataformat)
+        bids.update_bidsmap(self.target_bidsmap, self.current_datatype, self.target_run)
 
         # Now that we have updated the bidsmap, we can also update the current_datatype
         self.current_datatype = self.target_datatype
@@ -1321,7 +1319,7 @@ class EditWindow(QDialog):
 
         LOGGER.info(f'User has approved the edit')
         if str(self.target_run) != str(self.source_run):
-            bids.update_bidsmap(self.target_bidsmap, self.current_datatype, self.target_run['provenance'], self.target_datatype, self.target_run, self.dataformat)
+            bids.update_bidsmap(self.target_bidsmap, self.current_datatype, self.target_run)
 
             self.done_edit.emit(self.target_bidsmap)
             self.done(1)
@@ -1338,7 +1336,7 @@ class EditWindow(QDialog):
             LOGGER.info(f'Exporting run item: bidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}')
             yamlfile   = Path(yamlfile)
             bidsmap, _ = bids.load_bidsmap(yamlfile, Path(), False)
-            bids.append_run(bidsmap, self.dataformat, self.target_datatype, self.target_run)
+            bids.append_run(bidsmap, self.target_run)
             bids.save_bidsmap(yamlfile, bidsmap)
             QMessageBox.information(self, 'Edit BIDS mapping', f"Successfully exported:\n\nbidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}")
 

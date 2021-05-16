@@ -25,6 +25,39 @@ def test(options: dict) -> bool:
     return True
 
 
+def is_sourcefile(file: Path) -> str:
+    """
+    This plugin function supports assessing whether the file is a valid sourcefile
+
+    :param file:    The file that is assessed
+    :return:        The valid dataformat of the file for this plugin
+    """
+
+    if file.is_file():
+
+        LOGGER.debug(f'This is a demo-plugin is_sourcefile routine, assessing whether "{file}" has a valid dataformat')
+        return 'dataformat'
+
+    return ''
+
+
+
+def get_attribute(dataformat: str, sourcefile: Path, attribute: str) -> str:
+    """
+    This plugin function supports reading attributes from DICOM and PAR dataformats
+
+    :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
+    :param sourcefile:  The sourcefile from which the attribute value should be read
+    :param attribute:   The attribute key for which the value should be read
+    :return:            The attribute value
+    """
+
+    if dataformat in ('DICOM','PAR'):
+        LOGGER.debug(f'This is a demo-plugin get_attribute routine, reading the {dataformat} "{attribute}" attribute value from "{sourcefile}"')
+
+    return ''
+
+
 def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
     """
     All the logic to map the Philips PAR/XML fields onto bids labels go into this plugin function. The function is
