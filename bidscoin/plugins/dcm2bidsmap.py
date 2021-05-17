@@ -74,7 +74,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
             sourcefile = bids.get_dicomfile(sourcedir)
             if sourcefile.name:
                 sourcefiles.append(sourcefile)
-    if dataformat == 'PAR':
+    elif dataformat == 'PAR':
         sourcefiles = bids.get_parfiles(session)
     else:
         LOGGER.exception(f"Unsupported dataformat '{dataformat}'")

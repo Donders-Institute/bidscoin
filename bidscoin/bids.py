@@ -105,7 +105,7 @@ class DataSource:
             return len([file for file in self.path.parent.glob('*') if match(file)])
 
     def attributes(self, attributekey: str):
-        """Use the plugins to read the attribute value from the data source"""
+        """Use the plugins to read the attribute value from the data source. Return '' if nothing could be read"""
 
         for plugin, options in self.plugins.items():
             module = bidscoin.import_plugin(plugin, ('get_attribute',))
@@ -113,6 +113,7 @@ class DataSource:
                 attributeval = module.get_attribute(self.dataformat, self.path, attributekey)
                 if attributeval:
                     return attributeval
+        return ''
 
 
 def unpack(sourcefolder: Path, bidsmap: dict, subprefix: str='sub-', sesprefix: str='ses-', wildcard: str='*', workfolder: Path='') -> (Path, bool):
@@ -845,13 +846,13 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, run: dict, clean: bool=T
 
     :param bidsmap:             Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param source_datatype:     The current datatype name, e.g. 'anat'
-    :param run:                 The run item that is being moved to run['sourcedata'].datatype
+    :param run:                 The run item that is being moved to run['datasource'].datatype
     :param clean:               A boolean that is passed to bids.append_run (telling it to clean-up commentedMap fields)
     :return:
     """
 
-    dataformat  = run['sourcedata'].dataformat
-    datatype    = run['sourcedata'].datatype
+    dataformat  = run['datasource'].dataformat
+    datatype    = run['datasource'].datatype
     num_runs_in = len(dir_bidsmap(bidsmap, dataformat))
 
     # Warn the user if the target run already exists when the run is moved to another datatype
