@@ -425,5 +425,5 @@ def main():
 
 
 if __name__ == "__main__":
-    setup_logging('test_colouredlog.log')
+    setup_logging(Path('test_colouredlog.log'))
     main()
