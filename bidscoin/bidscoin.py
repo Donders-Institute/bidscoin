@@ -358,6 +358,7 @@ def test_bidscoin(dcm2niix: bool, options: dict=None):
         bidsmapfile = None
         success     = False
 
+    # Test the dcm2niix installation
     if dcm2niix:
         path = options['plugins']['dcm2niix2bids'].get('path','')
         test = run_command(f"{path}dcm2niix -u")
@@ -365,7 +366,8 @@ def test_bidscoin(dcm2niix: bool, options: dict=None):
             LOGGER.warning(f"'{path}dcm2niix' cannot be executed, please update the default '{bidsmapfile}' template bidsmap or use your own template")
         success = success and test
 
-    LOGGER.info('Testing BIDScoin tools: not (yet) implemented :-)')
+    # Test the bidscoin tools and plugins
+    # LOGGER.info('Testing BIDScoin tools: not (yet) implemented :-)')
 
     list_executables(True)
     list_plugins(True)
