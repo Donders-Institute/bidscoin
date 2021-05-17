@@ -38,6 +38,15 @@ If you do not have git (or any other version control system) installed you can `
 
    $ pip install ./bidscoin
 
+Testing BIDScoin
+^^^^^^^^^^^^^^^^
+
+You can run the central ``bidscoin`` tool to test your installation:
+
+.. code-block:: console
+
+   $ bidscoin -t
+
 Updating BIDScoin
 ^^^^^^^^^^^^^^^^^
 

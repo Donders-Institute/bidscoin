@@ -510,17 +510,21 @@ class MainWindow(QMainWindow):
     def subsescell2bidsmap(self, rowindex: int, colindex:int):
         """Subject or session value has been changed in subject-session table"""
 
-        dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
+        # Only if cell was actually clicked, update
         if colindex == 1:
-            key      = self.subses_table[dataformat].item(rowindex, 0).text()
-            value    = self.subses_table[dataformat].item(rowindex, 1).text()
-            oldvalue = self.output_bidsmap[dataformat][key]
+            dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
+            key        = self.subses_table[dataformat].item(rowindex, 0).text()
+            value      = self.subses_table[dataformat].item(rowindex, 1).text()
+            oldvalue   = self.output_bidsmap[dataformat][key]
             if oldvalue is None:
                 oldvalue = ''
 
-            # Only if cell was actually clicked, update
+            # Only if cell content was changed, update
             if key and value != oldvalue:
-                LOGGER.warning(f"Expert usage: User has set {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
+                if key == 'subject':
+                    LOGGER.warning(f"Expert usage: User has set {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
+                else:
+                    LOGGER.info(f"User has set {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
                 self.output_bidsmap[dataformat][key] = value
                 self.update_subses_samples(self.output_bidsmap)
 
@@ -697,7 +701,7 @@ class MainWindow(QMainWindow):
     def test_bidscoin(self):
         """Test the bidsmap tool and show the result in a pop-up window"""
 
-        if bidscoin.test_bidscoin(self.output_bidsmap['Options']['bidscoin']):
+        if bidscoin.test_bidscoin(False, self.output_bidsmap['Options']['bidscoin']):
             QMessageBox.information(self, 'Tool test', f"BIDScoin test: Passed\n"
                                                         'See terminal output for more info')
         else:
@@ -1103,6 +1107,7 @@ class EditWindow(QDialog):
     def filesystemcell2run(self, rowindex: int, colindex: int):
         """Source attribute value has been changed"""
 
+        # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
         if colindex == 1:
             key      = self.filesystem_table.item(rowindex, 0).text()
             value    = self.filesystem_table.item(rowindex, 1).text()
@@ -1110,7 +1115,7 @@ class EditWindow(QDialog):
             if oldvalue is None:
                 oldvalue = ''
 
-            # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
+            # Only if cell was changed, update
             if key and value != oldvalue:
                 answer = QMessageBox.question(self, f"Edit {self.dataformat} attributes",
                                               f'It is discouraged to change {self.dataformat} attribute values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
@@ -1127,6 +1132,7 @@ class EditWindow(QDialog):
     def attributescell2run(self, rowindex: int, colindex: int):
         """Source attribute value has been changed"""
 
+        # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
         if colindex == 1:
             key      = self.attributes_table.item(rowindex, 0).text()
             value    = self.attributes_table.item(rowindex, 1).text()
@@ -1134,7 +1140,7 @@ class EditWindow(QDialog):
             if oldvalue is None:
                 oldvalue = ''
 
-            # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
+            # Only if cell was changed, update
             if key and value!=oldvalue:
                 answer = QMessageBox.question(self, f"Edit {self.dataformat} attributes",
                                               f'It is discouraged to change {self.dataformat} attribute values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
@@ -1148,6 +1154,7 @@ class EditWindow(QDialog):
     def bidscell2run(self, rowindex: int, colindex: int):
         """BIDS attribute value has been changed"""
 
+        # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes) and store the data in the target_run
         if colindex == 1:
             key = self.bids_table.item(rowindex, 0).text()
             if hasattr(self.bids_table.cellWidget(rowindex, 1), 'spacedwidget'):
@@ -1160,7 +1167,7 @@ class EditWindow(QDialog):
             if oldvalue is None:
                 oldvalue = ''
 
-            # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes) and store the data in the target_run
+            # Only if cell was changed, update
             if key and value != oldvalue:
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
                 if isinstance(value, str) and not (value.startswith('<<') and value.endswith('>>')):

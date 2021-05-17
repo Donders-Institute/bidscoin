@@ -27,6 +27,10 @@ from functools import lru_cache
 from importlib.util import spec_from_file_location, module_from_spec
 from importlib.metadata import entry_points
 from typing import Tuple, Union, List
+try:
+    from bidscoin import bids
+except ImportError:
+    import bids             # This should work if bidscoin was not pip-installed
 
 tutorialurl    = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
 bidscoinfolder = Path(__file__).parent
@@ -147,7 +151,7 @@ def run_command(command: str) -> bool:
     Runs a command in a shell using subprocess.run(command, ..)
 
     :param command: The command that is executed
-    :return:        True if the were no errors, False otherwise
+    :return:        True if the command was successfully executed (no errors), False otherwise
     """
 
     LOGGER.info(f"Running: {command}")
@@ -326,14 +330,27 @@ def test_plugin(plugin: Path, options: dict) -> bool:
     return True
 
 
-def test_bidscoin(options: dict):
+def test_bidscoin(dcm2niix: bool, options: dict=None):
     """
-    WIP
-    :return:
-    """
-    LOGGER.info('Testing BIDScoin: not (yet) implemented :-)')
+    Performs a bidscoin installation test
 
-    return True
+    :param dcm2niix:    Include a test for dcm2niix
+    :param options:     The bidscoin options. If empty, the default options are used
+    :return:            True if the test was successful
+    """
+
+    if not options:
+        bidsmap, _ = bids.load_bidsmap(Path('bidsmap_dccn.yaml'))
+        options    = bidsmap['Options']['bidscoin']
+
+    success = True
+
+    if dcm2niix:
+        success = success and run_command(f"{options.get('path')}dcm2niix -u")
+
+    LOGGER.info('Testing BIDScoin tools: not (yet) implemented :-)')
+
+    return success
 
 
 def pulltutorialdata(tutorialfolder: str) -> None:
@@ -380,7 +397,7 @@ def main():
     parser.add_argument('-i', '--install',   help='A list of bidscoin plugins to install', nargs='+')
     parser.add_argument('-u', '--uninstall', help='A list of bidscoin plugins to uninstall', nargs='+')
     parser.add_argument('-d', '--download',  help='Download folder. If given, tutorial MRI data will be downloaded here')
-    # parser.add_argument('-t', '--test',      help='Test the bidscoin installation', action='store_true')  # TODO: implement bidscoin tests
+    parser.add_argument('-t', '--test',      help='Test the bidscoin tools', action='store_true')
     parser.add_argument('-v', '--version',   help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
     if len(sys.argv) == 1:
         parser.print_help()
@@ -392,7 +409,7 @@ def main():
     uninstall_plugins(plugins=args.uninstall)
     install_plugins(plugins=args.install)
     pulltutorialdata(tutorialfolder=args.download)
-
+    test_bidscoin(args.test)
 
 if __name__ == "__main__":
     main()
