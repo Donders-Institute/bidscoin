@@ -183,13 +183,14 @@ def list_executables(show: bool=False) -> list:
     """
 
     if show:
-        LOGGER.info('BIDScoin executable tools:')
+        LOGGER.info('Executable BIDScoin tools:')
 
     scripts = []
     for script in entry_points()['console_scripts']:
         if script.value.startswith('bidscoin'):
             scripts.append(script.name)
             if show:
+                print(f"- {script.name}")
                 LOGGER.info(f"- {script.name}")
 
     return scripts
@@ -202,13 +203,14 @@ def list_plugins(show: bool=False) -> list:
     """
 
     if show:
-        LOGGER.info('BIDScoin installed plugins:')
+        LOGGER.info('Installed BIDScoin plugins:')
 
     plugins = []
     for plugin in (bidscoinfolder/'plugins').glob('*.py'):
         if plugin.stem != '__init__':
             plugins.append(plugin)
             if show:
+                print(f"- {plugin.stem}")
                 LOGGER.info(f"- {plugin.stem}")
 
     return plugins
