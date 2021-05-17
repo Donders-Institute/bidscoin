@@ -183,7 +183,7 @@ def list_executables(show: bool=False) -> list:
     """
 
     if show:
-        LOGGER.info('BIDScoin executables:')
+        LOGGER.info('BIDScoin executable tools:')
 
     scripts = []
     for script in entry_points()['console_scripts']:
@@ -357,6 +357,9 @@ def test_bidscoin(dcm2niix: bool, options: dict=None):
         success = success and run_command(command)
 
     LOGGER.info('Testing BIDScoin tools: not (yet) implemented :-)')
+
+    list_executables(True)
+    list_plugins(True)
 
     return success
 
