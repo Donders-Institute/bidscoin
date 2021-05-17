@@ -190,7 +190,6 @@ def list_executables(show: bool=False) -> list:
         if script.value.startswith('bidscoin'):
             scripts.append(script.name)
             if show:
-                print(f"- {script.name}")
                 LOGGER.info(f"- {script.name}")
 
     return scripts
@@ -210,7 +209,6 @@ def list_plugins(show: bool=False) -> list:
         if plugin.stem != '__init__':
             plugins.append(plugin)
             if show:
-                print(f"- {plugin.stem}")
                 LOGGER.info(f"- {plugin.stem}")
 
     return plugins
@@ -425,6 +423,7 @@ def main():
     if args.test:
         test_bidscoin(args.test)
 
+
 if __name__ == "__main__":
-    setup_logging()
+    setup_logging('test_colouredlog.log')
     main()
