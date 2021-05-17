@@ -29,11 +29,12 @@ from importlib.metadata import entry_points
 from typing import Tuple, Union, List
 try:
     from bidscoin import bids
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     import bids             # This should work if bidscoin was not pip-installed
 
 tutorialurl    = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
 bidscoinfolder = Path(__file__).parent
+LOGGER         = logging.getLogger(__name__)
 
 
 def setup_logging(log_file: Path=Path(), debug: bool=False):
@@ -424,7 +425,5 @@ def main():
 
 
 if __name__ == "__main__":
-    setup_logging(Path('test_colouredlog.log'))
+    setup_logging()
     main()
-
-LOGGER = logging.getLogger(__name__)
