@@ -338,11 +338,8 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
     global _DICOMDICT_CACHE, _DICOMFILE_CACHE
 
-    if not dicomfile.name:
-        return ''
-
     if not dicomfile.is_file():
-        LOGGER.warning(f"{dicomfile} not found")
+        LOGGER.debug(f"{dicomfile} not found")
         value = ''
 
     elif not is_dicomfile(dicomfile):
@@ -405,11 +402,8 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
 
     global _PARDICT_CACHE, _PARFILE_CACHE
 
-    if not parfile.name:
-        return ''
-
     if not parfile.is_file():
-        LOGGER.warning(f"{parfile} not found")
+        LOGGER.debug(f"{parfile} not found")
         value = ''
 
     elif not is_parfile(parfile):
