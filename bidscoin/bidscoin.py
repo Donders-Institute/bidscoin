@@ -347,14 +347,17 @@ def test_bidscoin(dcm2niix: bool, options: dict=None):
 
     LOGGER.info('Testing BIDScoin')
     if not options:
-        bidsmap, _ = bids.load_bidsmap(Path('bidsmap_dccn.yaml'))
-        options    = bidsmap['Options']
+        bidsmap, bidsmapfile = bids.load_bidsmap(Path('bidsmap_dccn.yaml'))
+        options              = bidsmap['Options']
 
     success = True
 
     if dcm2niix:
-        command = f"{options['plugins']['dcm2niix2bids'].get('path','')}dcm2niix -u"
-        success = success and run_command(command)
+        path = options['plugins']['dcm2niix2bids'].get('path','')
+        test = run_command(f"{path}dcm2niix -u")
+        if not test:
+            LOGGER.warning(f"'{path}dcm2niix' cannot be executed, please update '{bidsmapfile}'")
+        success = success and test
 
     LOGGER.info('Testing BIDScoin tools: not (yet) implemented :-)')
 
