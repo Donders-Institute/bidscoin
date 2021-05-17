@@ -85,11 +85,24 @@ Editing the template
 Plugins
 -------
 
-BIDScoin uses a flexible plugin architecture to map and convert your source data to BIDS. The bidsmapper and bidscoiner tools loop over the subjects/sessions in your source directory and then call the plugins listed in the bidsmap to do the actual work. As can be seen in the API code snippet below, the plugins can contain optional ``test``, ``bidsmapper_plugin`` and ``bidscoiner_plugin`` functions that have input arguments with information about the plugin options and about the data input and BIDS output. The 'test()' function is executed when users click on the test-button in the bidseditor GUI, the 'bidsmapper_plugin()' function is called by the bidsmapper and the 'bidscoiner_plugin()' function by the bidscoiner. See also the default ``dcm2bidsmap`` and ``dcm2niix2bids`` plugins for reference implementation.
+BIDScoin uses a flexible plugin architecture to map and convert your source data to BIDS. The bidsmapper and bidscoiner tools loop over the subjects/sessions in your source directory and then call the plugins listed in the bidsmap to do the actual work. As can be seen in the API code snippet below, the plugins can contain optional functions for interacting with their dataformat and for mapping and converting the source data to BIDS. See also the default ``dcm2bidsmap`` and ``dcm2niix2bids`` plugins for reference implementation.
 
-Plugins can be listed, installed and uninstalled using the central ``bidscoin`` command-line tool.
+.. note:: Plugins can be listed, installed and uninstalled using the central ``bidscoin`` command-line tool.
 
 .. code-block:: python3
+
+   """
+   This module contains placeholder code demonstrating the bidscoin plugin API, both for the bidsmapper and for
+   the bidscoiner. The functions in this module are called if the basename of this module (when located in the
+   plugins-folder; otherwise the full path must be provided) is listed in the bidsmap. The presence of the
+   plugin functions is optional but should be named:
+
+   - test:                 A test routine for the plugin + its bidsmap options. Can be called in the bidseditor
+   - is_sourcefile:        A routine to assess whether the file is of a valid dataformat for this plugin
+   - get_attribute:        A routine for reading an attribute from a sourcefile
+   - bidsmapper_plugin:    A routine that can be called by the bidsmapper to make a bidsmap of the source data
+   - bidscoiner_plugin:    A routine that can be called by the bidscoiner to convert the source data to bids
+   """
 
    import logging
    from pathlib import Path
@@ -108,6 +121,39 @@ Plugins can be listed, installed and uninstalled using the central ``bidscoin`` 
        LOGGER.debug(f'This is a demo-plugin test routine, validating its working with options: {options}')
 
        return True
+
+
+   def is_sourcefile(file: Path) -> str:
+       """
+       This plugin function supports assessing whether the file is a valid sourcefile
+
+       :param file:    The file that is assessed
+       :return:        The valid dataformat of the file for this plugin
+       """
+
+       if file.is_file():
+
+           LOGGER.debug(f'This is a demo-plugin is_sourcefile routine, assessing whether "{file}" has a valid dataformat')
+           return 'dataformat'
+
+       return ''
+
+
+
+   def get_attribute(dataformat: str, sourcefile: Path, attribute: str) -> str:
+       """
+       This plugin function supports reading attributes from DICOM and PAR dataformats
+
+       :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
+       :param sourcefile:  The sourcefile from which the attribute value should be read
+       :param attribute:   The attribute key for which the value should be read
+       :return:            The attribute value
+       """
+
+       if dataformat in ('DICOM','PAR'):
+           LOGGER.debug(f'This is a demo-plugin get_attribute routine, reading the {dataformat} "{attribute}" attribute value from "{sourcefile}"')
+
+       return ''
 
 
    def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:

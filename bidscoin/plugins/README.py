@@ -1,9 +1,14 @@
 """
-This module contains placeholder code demonstrating the bidscoin plugin API, both for bidsmapper.py and for
-bidscoiner.py. The functions in this module are called if the basename of this module (when located in the
+This module contains placeholder code demonstrating the bidscoin plugin API, both for the bidsmapper and for
+the bidscoiner. The functions in this module are called if the basename of this module (when located in the
 plugins-folder; otherwise the full path must be provided) is listed in the bidsmap. The presence of the
-functions is optional but should be named "test" for the bidseditor, "bidsmapper_plugin" for the bidsmapper
-and "bidscoiner_plugin" for the bidscoiner.
+plugin functions is optional but should be named:
+
+- test:                 A test routine for the plugin + its bidsmap options. Can be called in the bidseditor
+- is_sourcefile:        A routine to assess whether the file is of a valid dataformat for this plugin
+- get_attribute:        A routine for reading an attribute from a sourcefile
+- bidsmapper_plugin:    A routine that can be called by the bidsmapper to make a bidsmap of the source data
+- bidscoiner_plugin:    A routine that can be called by the bidscoiner to convert the source data to bids
 """
 
 import logging
