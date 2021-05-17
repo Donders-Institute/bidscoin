@@ -266,6 +266,9 @@ def import_plugin(plugin: Union[Path, str], functions: tuple=()) -> module_from_
     :return:            The imported plugin-module
     """
 
+    if not plugin:
+        return
+
     # Get the full path to the plugin-module
     plugin = Path(plugin).with_suffix('.py')
     if len(plugin.parents) == 1:
@@ -274,7 +277,7 @@ def import_plugin(plugin: Union[Path, str], functions: tuple=()) -> module_from_
     # See if we can find the plug-in
     if not plugin.is_file():
         LOGGER.error(f"Could not find plugin: '{plugin}'")
-        return None
+        return
 
     # Load the plugin-module
     LOGGER.info(f"Importing plugin: '{plugin}'")
@@ -309,6 +312,9 @@ def test_plugin(plugin: Path, options: dict) -> bool:
     :return:        True if the plugin generated the expected result, False if there
                     was a plug-in error, None if this function has an implementation error
     """
+
+    if not plugin:
+        return False
 
     LOGGER.info(f"Testing the '{plugin}' plugin:")
 
@@ -411,7 +417,8 @@ def main():
     uninstall_plugins(plugins=args.uninstall)
     install_plugins(plugins=args.install)
     pulltutorialdata(tutorialfolder=args.download)
-    test_bidscoin(args.test)
+    if args.test:
+        test_bidscoin(args.test)
 
 if __name__ == "__main__":
     setup_logging()
