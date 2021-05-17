@@ -112,7 +112,7 @@ BIDScoin uses a flexible plugin architecture to map and convert your source data
 
    def test(options: dict) -> bool:
        """
-       An internal routine to test the working of the plugin + its bidsmap options
+       This plugin function tests the working of the plugin + its bidsmap options
 
        :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']
        :return:        True if the test was successful
@@ -125,10 +125,10 @@ BIDScoin uses a flexible plugin architecture to map and convert your source data
 
    def is_sourcefile(file: Path) -> str:
        """
-       This plugin function supports assessing whether the file is a valid sourcefile
+       This plugin function assesses whether a sourcefile is of a supported dataformat
 
-       :param file:    The file that is assessed
-       :return:        The valid dataformat of the file for this plugin
+       :param file:    The sourcefile that is assessed
+       :return:        The valid / supported dataformat of the sourcefile
        """
 
        if file.is_file():
@@ -142,12 +142,12 @@ BIDScoin uses a flexible plugin architecture to map and convert your source data
 
    def get_attribute(dataformat: str, sourcefile: Path, attribute: str) -> str:
        """
-       This plugin function supports reading attributes from DICOM and PAR dataformats
+       This plugin function reads attributes from the supported sourcefile
 
-       :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
-       :param sourcefile:  The sourcefile from which the attribute value should be read
-       :param attribute:   The attribute key for which the value should be read
-       :return:            The attribute value
+       :param dataformat:  The dataformat of the sourcefile, e.g. DICOM of PAR
+       :param sourcefile:  The sourcefile from which key-value data needs to be read
+       :param attribute:   The attribute key for which the value needs to be retrieved
+       :return:            The retrieved attribute value
        """
 
        if dataformat in ('DICOM','PAR'):
@@ -164,7 +164,7 @@ BIDScoin uses a flexible plugin architecture to map and convert your source data
 
        bidsmap_new/old['Options']['plugins']['README']
 
-       See e.g. dcm2bidsmap.py for an example implementation
+       See also the dcm2bidsmap plugin for reference implementation
 
        :param session:     The full-path name of the subject/session raw data source folder
        :param bidsmap_new: The study bidsmap that we are building
@@ -184,7 +184,7 @@ BIDScoin uses a flexible plugin architecture to map and convert your source data
 
        bidsmap_new/old['Options']['plugins']['README']
 
-       See e.g. dcm2niix2bids.py for an example implementation
+       See also the dcm2niix2bids plugin for reference implementation
 
        :param session:     The full-path name of the subject/session raw data source folder
        :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
