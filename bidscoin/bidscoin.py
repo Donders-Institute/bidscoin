@@ -34,8 +34,7 @@ except ImportError:
 
 tutorialurl    = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
 bidscoinfolder = Path(__file__).parent
-# LOGGER         = logging.getLogger(__name__)
-LOGGER = logging.getLogger(f"bidscoin.{Path(__file__).stem}")
+LOGGER         = logging.getLogger(__name__)
 
 
 def setup_logging(log_file: Path=Path(), debug: bool=False):
@@ -395,6 +394,7 @@ def pulltutorialdata(tutorialfolder: str) -> None:
 def main():
     """Console script usage"""
 
+    setup_logging()
     localversion, versionmessage = version(check=True)
 
     # Parse the input arguments and run bidscoiner(args)
@@ -426,5 +426,4 @@ def main():
 
 
 if __name__ == "__main__":
-    setup_logging()
     main()
