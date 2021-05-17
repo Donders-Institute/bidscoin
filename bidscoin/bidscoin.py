@@ -98,7 +98,7 @@ def version(check: bool=False) -> Union[str, Tuple]:
             stream      = urllib.request.urlopen('https://pypi.org/pypi/bidscoin/json').read()
             pypiversion = json.loads(stream)['info']['version']
         except Exception as pypierror:
-            print(f"Checking BIDScoin version on https://pypi.org/pypi/bidscoin failed:\n{pypierror}")
+            LOGGER.info(f"Checking BIDScoin version on https://pypi.org/pypi/bidscoin failed:\n{pypierror}")
             return localversion, "(Could not check for new BIDScoin versions)"
         if localversion != pypiversion:
             return localversion, f"NB: Your BIDScoin version is NOT up-to-date: {localversion} -> {pypiversion}"
@@ -183,14 +183,14 @@ def list_executables(show: bool=False) -> list:
     """
 
     if show:
-        print('BIDScoin executables:')
+        LOGGER.info('BIDScoin executables:')
 
     scripts = []
     for script in entry_points()['console_scripts']:
         if script.value.startswith('bidscoin'):
             scripts.append(script.name)
             if show:
-                print(f"- {script.name}")
+                LOGGER.info(f"- {script.name}")
 
     return scripts
 
@@ -202,14 +202,14 @@ def list_plugins(show: bool=False) -> list:
     """
 
     if show:
-        print('BIDScoin installed plugins:')
+        LOGGER.info('BIDScoin installed plugins:')
 
     plugins = []
     for plugin in (bidscoinfolder/'plugins').glob('*.py'):
         if plugin.stem != '__init__':
             plugins.append(plugin)
             if show:
-                print(f"- {plugin.stem}")
+                LOGGER.info(f"- {plugin.stem}")
 
     return plugins
 
@@ -224,14 +224,14 @@ def install_plugins(plugins: Tuple[Path]=()) -> bool:
 
     for plugin in plugins:
         plugin = Path(plugin)
-        print(f"Installing: '{plugin}'")
+        LOGGER.info(f"Installing: '{plugin}'")
         try:
             shutil.copyfile(plugin, bidscoinfolder/'plugins'/plugin.with_suffix('.py').name)
         except IOError as install_failure:
-            print(f"{install_failure}\nFailed to install: '{plugin.name}' in '{bidscoinfolder/'plugins'}'")
+            LOGGER.info(f"{install_failure}\nFailed to install: '{plugin.name}' in '{bidscoinfolder/'plugins'}'")
             return False
         if not import_plugin(plugin, ('bidsmapper_plugin', 'bidscoiner_plugin')):
-            print(f"Import failure, please re-install a valid version of '{plugin.name}'")
+            LOGGER.info(f"Import failure, please re-install a valid version of '{plugin.name}'")
             return False
 
     return True
@@ -247,10 +247,10 @@ def uninstall_plugins(plugins: Tuple[str]=()) -> bool:
 
     for plugin in plugins:
         try:
-            print(f"Uninstalling: '{plugin}'")
+            LOGGER.info(f"Uninstalling: '{plugin}'")
             (bidscoinfolder/'plugins'/plugin).with_suffix('.py').unlink()
         except IOError as uninstall_failure:
-            print(f"Failed to uninstall: '{plugin}' in '{bidscoinfolder/'plugins'}', Exciting\n{uninstall_failure}")
+            LOGGER.info(f"Failed to uninstall: '{plugin}' in '{bidscoinfolder/'plugins'}', Exciting\n{uninstall_failure}")
             return False
 
     return True
@@ -339,14 +339,16 @@ def test_bidscoin(dcm2niix: bool, options: dict=None):
     :return:            True if the test was successful
     """
 
+    LOGGER.info('Testing BIDScoin')
     if not options:
         bidsmap, _ = bids.load_bidsmap(Path('bidsmap_dccn.yaml'))
-        options    = bidsmap['Options']['bidscoin']
+        options    = bidsmap['Options']
 
     success = True
 
     if dcm2niix:
-        success = success and run_command(f"{options.get('path')}dcm2niix -u")
+        command = f"{options['plugins']['dcm2niix2bids'].get('path','')}dcm2niix -u"
+        success = success and run_command(command)
 
     LOGGER.info('Testing BIDScoin tools: not (yet) implemented :-)')
 
@@ -369,12 +371,12 @@ def pulltutorialdata(tutorialfolder: str) -> None:
     tutorialfolder.mkdir(parents=True, exist_ok=True)
 
     # Download the data, avoiding ssl certificate issues
-    print(f"Downloading the tutorial dataset...")
+    LOGGER.info(f"Downloading the tutorial dataset...")
     with urllib.request.urlopen(tutorialurl, context=ssl.SSLContext()) as data, open(tutorialtargz, 'wb') as targz_fid:
         shutil.copyfileobj(data, targz_fid)
 
     # Unzip the data in the target folder
-    print(f"Unzipping the downloaded data in: {tutorialfolder}")
+    LOGGER.info(f"Unzipping the downloaded data in: {tutorialfolder}")
     with tarfile.open(tutorialtargz, 'r') as targz_fid:
         targz_fid.extractall(tutorialfolder)
     tutorialtargz.unlink()
@@ -412,4 +414,5 @@ def main():
     test_bidscoin(args.test)
 
 if __name__ == "__main__":
+    setup_logging()
     main()

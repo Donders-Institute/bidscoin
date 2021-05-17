@@ -701,7 +701,7 @@ class MainWindow(QMainWindow):
     def test_bidscoin(self):
         """Test the bidsmap tool and show the result in a pop-up window"""
 
-        if bidscoin.test_bidscoin(False, self.output_bidsmap['Options']['bidscoin']):
+        if bidscoin.test_bidscoin(False, self.output_bidsmap['Options']):
             QMessageBox.information(self, 'Tool test', f"BIDScoin test: Passed\n"
                                                         'See terminal output for more info')
         else:
