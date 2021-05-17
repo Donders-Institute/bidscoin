@@ -34,7 +34,6 @@ except ImportError:
 
 tutorialurl    = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
 bidscoinfolder = Path(__file__).parent
-LOGGER         = logging.getLogger(__name__)
 
 
 def setup_logging(log_file: Path=Path(), debug: bool=False):
@@ -427,3 +426,5 @@ def main():
 if __name__ == "__main__":
     setup_logging(Path('test_colouredlog.log'))
     main()
+
+LOGGER = logging.getLogger(__name__)
