@@ -345,18 +345,24 @@ def test_bidscoin(dcm2niix: bool, options: dict=None):
     :return:            True if the test was successful
     """
 
-    LOGGER.info('Testing BIDScoin')
-    if not options:
-        bidsmap, bidsmapfile = bids.load_bidsmap(Path('bidsmap_dccn.yaml'))
-        options              = bidsmap['Options']
+    LOGGER.info('Testing the BIDScoin tools and settings')
 
-    success = True
+    # Try loading the default bidsmap
+    try:
+        bidsmap, bidsmapfile = bids.load_bidsmap(Path('bidsmap_dccn.yaml'))
+        if not options:
+            options = bidsmap['Options']
+        success = True
+    except Exception as bidsmaperror:
+        LOGGER.error(f'{bidsmaperror}')
+        bidsmapfile = None
+        success     = False
 
     if dcm2niix:
         path = options['plugins']['dcm2niix2bids'].get('path','')
         test = run_command(f"{path}dcm2niix -u")
         if not test:
-            LOGGER.warning(f"'{path}dcm2niix' cannot be executed, please update '{bidsmapfile}'")
+            LOGGER.warning(f"'{path}dcm2niix' cannot be executed, please update the default '{bidsmapfile}' template bidsmap or use your own template")
         success = success and test
 
     LOGGER.info('Testing BIDScoin tools: not (yet) implemented :-)')
