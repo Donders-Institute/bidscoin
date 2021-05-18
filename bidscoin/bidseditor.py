@@ -773,7 +773,7 @@ class MainWindow(QMainWindow):
     def save_options(self):
         """Export the options to a template bidsmap on disk"""
 
-        yamlfile, _ = QFileDialog.getSaveFileName(self, 'Select the (default) template bidsmap to save the options in',
+        yamlfile, _ = QFileDialog.getOpenFileName(self, 'Select the (default) template bidsmap to save the options in',
                         str(bidscoin.bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if yamlfile:
             LOGGER.info(f"Saving bidsmap['Options'] in: {yamlfile}")
