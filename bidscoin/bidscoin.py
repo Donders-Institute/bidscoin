@@ -27,14 +27,15 @@ from functools import lru_cache
 from importlib.util import spec_from_file_location, module_from_spec
 from importlib.metadata import entry_points
 from typing import Tuple, Union, List
-try:
-    from bidscoin import bids
-except ImportError:
-    import bids             # This should work if bidscoin was not pip-installed
 
-tutorialurl    = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
-bidscoinfolder = Path(__file__).parent
-LOGGER         = logging.getLogger(__name__)
+# Define the default paths
+tutorialurl      = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
+bidscoinfolder   = Path(__file__).parent
+schemafolder     = bidscoinfolder/'schema'
+heuristicsfolder = bidscoinfolder/'heuristics'
+bidsmap_template = heuristicsfolder/'bidsmap_dccn.yaml'
+
+LOGGER           = logging.getLogger(__name__)
 
 
 def setup_logging(log_file: Path=Path(), debug: bool=False):
@@ -347,9 +348,14 @@ def test_bidscoin(dcm2niix: bool, options: dict=None):
 
     LOGGER.info('Testing the BIDScoin tools and settings')
 
-    # Try loading the default bidsmap
+    # Try loading the default template bidsmap
     try:
-        bidsmap, bidsmapfile = bids.load_bidsmap(Path('bidsmap_dccn.yaml'))
+        try:                    # Include the import in the test + moving the import to the top of this module will cause circular import issues
+            from bidscoin import bids
+        except ImportError:
+            import bids         # This should work if bidscoin was not pip-installed
+
+        bidsmap, bidsmapfile = bids.load_bidsmap(bidsmap_template)
         if not options:
             options = bidsmap['Options']
         success = True
@@ -363,7 +369,7 @@ def test_bidscoin(dcm2niix: bool, options: dict=None):
         path = options['plugins']['dcm2niix2bids'].get('path','')
         test = run_command(f"{path}dcm2niix -u")
         if not test:
-            LOGGER.warning(f"'{path}dcm2niix' cannot be executed, please update the default '{bidsmapfile}' template bidsmap or use your own template")
+            LOGGER.warning(f"'{path}dcm2niix' cannot be executed, please update the default '{bidsmapfile}' template bidsmap['Options'] (e.g. with the bidseditor) or use your own template")
         success = success and test
 
     # Test the bidscoin tools and plugins

@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Added
 - A BIDScoin installation test (`bidscoin -t`)
+- A bidseditor button to save the Options to a (default) template bidsmap
 
 ### Changed
 - Plugins should now have a `is_sourcefile` and a `get_attribute` function

@@ -10,7 +10,7 @@ BIDScoin can be installed and should work on Linux, MS Windows and on OS-X compu
 Dcm2niix installation
 ---------------------
 
-The default `dcm2niix2bids` plugin relies on dcm2niix to convert DICOM and PAR/REC files to nifti. To use this plugin, please download and install `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ yourself according to the instructions. When done, make sure that the path to the dcm2niix binary / executable is set correctly in the `Options`_ section in your bidsmap or, for once and for all, put it in your `Site specific / customized template <advanced.html#site-specific-customized-template>`__ bidsmap.
+The default ``dcm2niix2bids`` plugin relies on dcm2niix to convert DICOM and PAR/REC files to nifti. To use this plugin, please download and install `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ yourself according to the instructions. When done, make sure that the path to the dcm2niix binary / executable is set correctly in the `Options`_ section in your bidsmap or, for once and for all, put it in your `Site specific / customized template <advanced.html#site-specific-customized-template>`__ bidsmap.
 
 Python 3 installation
 ---------------------

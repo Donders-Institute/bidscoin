@@ -32,17 +32,12 @@ bidscoindatatypes = ('fmap', 'anat', 'func', 'perf', 'dwi', 'pet', 'meg', 'eeg',
 ignoredatatype    = 'exclude'
 unknowndatatype   = 'extra_data'
 
-# Define the default paths
-schema_folder     = Path(__file__).parent/'schema'
-heuristics_folder = Path(__file__).parent/'heuristics'
-bidsmap_template  = heuristics_folder/'bidsmap_template.yaml'
-
 # Read the BIDS schema datatypes and entities
 bidsdatatypes = {}
-for _datatypefile in (schema_folder/'datatypes').glob('*.yaml'):
+for _datatypefile in (bidscoin.schemafolder/'datatypes').glob('*.yaml'):
     with _datatypefile.open('r') as stream:
         bidsdatatypes[_datatypefile.stem] = yaml.load(stream)
-with (schema_folder/'entities.yaml').open('r') as _stream:
+with (bidscoin.schemafolder/'entities.yaml').open('r') as _stream:
     entities = yaml.load(_stream)
 
 
@@ -458,11 +453,11 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
 
     # Input checking
     if not folder.name:
-        folder = heuristics_folder
+        folder = bidscoin.heuristicsfolder
     if not yamlfile.name:
         yamlfile = folder/'bidsmap.yaml'
         if not yamlfile.is_file():
-            yamlfile = bidsmap_template
+            yamlfile = bidscoin.bidsmap_template
 
     # Add a standard file-extension if needed
     if not yamlfile.suffix:
@@ -473,7 +468,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
         if (folder/yamlfile).is_file():
             yamlfile = folder/yamlfile
         else:
-            yamlfile = heuristics_folder/yamlfile
+            yamlfile = bidscoin.heuristicsfolder/yamlfile
 
     if not yamlfile.is_file():
         if report:
@@ -1264,7 +1259,7 @@ def get_metahelp(metakey: str) -> str:
         return "Please provide a key-name"
 
     # Return the description from the metadata file or a default text
-    metafile = schema_folder/'metadata'/(metakey + '.yaml')
+    metafile = bidscoin.schemafolder/'metadata'/(metakey + '.yaml')
     if metafile.is_file():
         with metafile.open('r') as stream:
             metadata = yaml.load(stream)

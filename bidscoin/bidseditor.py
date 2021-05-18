@@ -369,8 +369,14 @@ class MainWindow(QMainWindow):
         # Add an 'Add' button below the tables at the right side
         add_button = QPushButton('Add')
         add_button.clicked.connect(self.add_plugin)
-        add_button.setToolTip(f'Click to add an installed plugin to the list')
+        add_button.setToolTip(f'Click to add an installed plugin')
         layout.addWidget(add_button, alignment=QtCore.Qt.AlignRight)
+
+        # Add an 'Default' button below the tables at the right side
+        set_button = QPushButton('Set default')
+        set_button.clicked.connect(self.save_options)
+        set_button.setToolTip(f'Click to store these options in your default template bidsmap, i.e. set them as your default BIDScoin options')
+        layout.addWidget(set_button, alignment=QtCore.Qt.AlignRight)
         layout.addStretch()
 
         tab = QtWidgets.QWidget()
@@ -668,8 +674,8 @@ class MainWindow(QMainWindow):
 
         LOGGER.info(f"Adding the '{plugin}' plugin to bidsmap")
         plugin_label, plugin_table = self.plugin_table(plugin, {})
-        self.options_layout.insertWidget(self.options_layout.count()-2, plugin_label)
-        self.options_layout.insertWidget(self.options_layout.count()-2, plugin_table)
+        self.options_layout.insertWidget(self.options_layout.count()-3, plugin_label)
+        self.options_layout.insertWidget(self.options_layout.count()-3, plugin_table)
         self.output_bidsmap['Options']['plugins'][plugin] = {}
         self.datachanged = True
 
@@ -763,6 +769,19 @@ class MainWindow(QMainWindow):
             QtCore.QCoreApplication.setApplicationName(f"{filename} - BIDS editor")
             self.datasaved   = True
             self.datachanged = False
+
+    def save_options(self):
+        """Export the options to a template bidsmap on disk"""
+
+        yamlfile, _ = QFileDialog.getSaveFileName(self, 'Select the (default) template bidsmap to save the options in',
+                        str(bidscoin.bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
+        if yamlfile:
+            LOGGER.info(f"Saving bidsmap['Options'] in: {yamlfile}")
+            with open(yamlfile, 'r') as stream:
+                bidsmap = bids.yaml.load(stream)
+            bidsmap['Options'] = self.output_bidsmap['Options']
+            with open(yamlfile, 'w') as stream:
+                bids.yaml.dump(bidsmap, stream)
 
     def sample_doubleclicked(self, item):
         """When source file is double clicked in the samples_table, show the inspect or edit window"""
@@ -1338,7 +1357,7 @@ class EditWindow(QDialog):
         """Export the editted run to a (e.g. template) bidsmap on disk"""
 
         yamlfile, _ = QFileDialog.getOpenFileName(self, 'Export run item to (template) bidsmap',
-                        str(bids.bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
+                        str(bidscoin.bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if yamlfile:
             LOGGER.info(f'Exporting run item: bidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}')
             yamlfile   = Path(yamlfile)
@@ -1495,7 +1514,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='', subpr
     bidscoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidseditor.log')
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSeditor ------------')
-    LOGGER.info(f">>> bidseditor bidsfolder={bidsfolder} bidsmap={bidsmapfile} template={templatefile}"
+    LOGGER.info(f">>> bidseditor bidsfolder={bidsfolder} bidsmap={bidsmapfile} template={templatefile} "
                 f"subprefix={subprefix} sesprefix={sesprefix}")
 
     # Obtain the initial bidsmap info
@@ -1529,7 +1548,7 @@ def main():
 
     parser.add_argument('bidsfolder',           help='The destination folder with the (future) bids data')
     parser.add_argument('-b','--bidsmap',       help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
-    parser.add_argument('-t','--template',      help='The template bidsmap file with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap_dccn.yaml', default='bidsmap_dccn.yaml')
+    parser.add_argument('-t','--template',      help='The template bidsmap file with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap_dccn.yaml', default=bidscoin.bidsmap_template)
     parser.add_argument('-n','--subprefix',     help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
     parser.add_argument('-m','--sesprefix',     help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     args = parser.parse_args()
