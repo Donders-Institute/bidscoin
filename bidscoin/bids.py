@@ -509,7 +509,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
 
                 # Add missing provenance info
                 if not run.get('provenance'):
-                    run['provenance'] = f"sub-unknown/ses-unknown/{dataformat}_{datatype}_id{index+1:03}"
+                    run['provenance'] = str(Path(f"sub-unknown/ses-unknown/{dataformat}_{datatype}_id{index+1:03}"))
 
                 # Add missing run dictionaries (e.g. "meta" or "filesystem")
                 for key, val in run_.items():
