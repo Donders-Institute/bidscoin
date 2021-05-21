@@ -74,7 +74,13 @@ class DataSource:
         return False
 
     def filesystem(self, tagname: str, run: dict=None) -> Union[str, int]:
-        """Gets the filesystem tagname value"""
+        """
+        Gets the filesystem tagname value
+
+        :param tagname: The name of the filesystem property key, e.g. 'name' or 'nrfiles'
+        :param run:     Needed when tagname == 'nrfiles'
+        :return:
+        """
 
         if tagname == 'path':
             return str(self.path.parent)
@@ -93,14 +99,16 @@ class DataSource:
                 n += 1
             return f"{size:.2f} {label[n]}B"
 
-        if tagname == 'nrfiles' and self.path.is_file():
+        if tagname == 'nrfiles' and self.path.is_file() and run:
             def match(file): return ((match_attribute(file.parent,         run['filesystem']['path']) or not run['filesystem']['path']) and
                                      (match_attribute(file.name,           run['filesystem']['name']) or not run['filesystem']['name']) and
                                      (match_attribute(file.stat().st_size, run['filesystem']['size']) or not run['filesystem']['size']))
             return len([file for file in self.path.parent.glob('*') if match(file)])
 
+        return ''
+
     def attributes(self, attributekey: str):
-        """Use the plugins to read the attribute value from the data source. Return '' if nothing could be read"""
+        """Use the plugins to read and return the attribute value from the data source. Return '' if nothing could be read"""
 
         for plugin, options in self.plugins.items():
             module = bidscoin.import_plugin(plugin, ('get_attribute',))
@@ -1272,38 +1280,40 @@ def get_metahelp(metakey: str) -> str:
     return f"{metakey}\nA private key"
 
 
-def get_dynamicvalue(bidsvalue: str, datasource: DataSource, cleanup: bool=True, runtime: bool=False) -> str:
+def get_dynamicvalue(value: str, datasource: DataSource, cleanup: bool=True, runtime: bool=False) -> str:
     """
-    Replaces (dynamic) bidsvalues with (DICOM) run attributes when they start with '<' and end with '>',
-    but not with '<<' and '>>' unless runtime = True
+    Replaces dynamic (bids/meta) values with source attributes of filesystem properties when they start with
+    '<' and end with '>', but not with '<<' and '>>' unless runtime = True
 
-    :param bidsvalue:   The value from the BIDS key-value pair
-    :param datasource:  The data source from which the dynamic value is read
-    :param cleanup:     Removes non-BIDS-compliant characters
-    :param runtime:     Replaces dynamic bidsvalues if True
-    :return:            Updated bidsvalue (if possible, otherwise the original bidsvalue is returned)
+    :param value:       The dynamic value that contains source attribute or filesystem property key(s)
+    :param datasource:  The data source from which the dynamic value or property is read
+    :param cleanup:     Removes non-BIDS-compliant characters if True
+    :param runtime:     Replaces dynamic values if True
+    :return:            Updated value (if possible, otherwise the original value is returned)
     """
 
     # Input checks
-    if not bidsvalue or not isinstance(bidsvalue, str):
-        return bidsvalue
+    if not value or not isinstance(value, str):
+        return value
 
     # Intelligent filling of the value is done runtime by bidscoiner
-    if bidsvalue.startswith('<<') and bidsvalue.endswith('>>'):
+    if value.startswith('<<') and value.endswith('>>'):
         if runtime:
-            bidsvalue = bidsvalue[1:-1]
+            value = value[1:-1]
         else:
-            return bidsvalue
+            return value
 
-    # Fill any bids-key with the <annotated> dicom attribute(s)
-    if bidsvalue.startswith('<') and bidsvalue.endswith('>') and datasource.path.name:
-        sourcevalue = ''.join([str(datasource.attributes(value)) for value in bidsvalue[1:-1].split('><')])
+    # Fill any value-key with the <annotated> source attribute(s) or filesystem property
+    if value.startswith('<') and value.endswith('>') and datasource.path.name:
+        sourcevalue = ''
+        for key in value[1:-1].split('><'):
+            sourcevalue += str(datasource.filesystem(key)) + str(datasource.attributes(key))
         if sourcevalue:
-            bidsvalue = sourcevalue
+            value = sourcevalue
             if cleanup:
-                bidsvalue = cleanup_value(bidsvalue)
+                value = cleanup_value(value)
 
-    return bidsvalue
+    return value
 
 
 def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') -> Union[Path, str]:

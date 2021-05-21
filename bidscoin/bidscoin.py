@@ -157,11 +157,11 @@ def run_command(command: str) -> bool:
 
     LOGGER.info(f"Running: {command}")
     process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)          # TODO: investigate shell=False and capture_output=True for python 3.7
-    LOGGER.info(f"Output:\n{process.stdout.decode('utf-8')}")
-
-    if process.stderr.decode('utf-8') or process.returncode!=0:
-        LOGGER.exception(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stderr.decode('utf-8')}")
+    if process.stderr.decode('utf-8') or process.returncode != 0:
+        LOGGER.error(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stdout.decode('utf-8')}\n{process.stderr.decode('utf-8')}")
         return False
+    else:
+        LOGGER.info(f"Output:\n{process.stdout.decode('utf-8')}")
 
     return True
 
