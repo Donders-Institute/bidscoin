@@ -244,7 +244,9 @@ A first stable release of BIDScoin :-)
 ### To do
 * Add support for non-imaging data
 
-[Unreleased]: https://github.com/Donders-Institute/bidscoin/compare/3.5.3...HEAD
+[3.7.0-dev]: https://github.com/Donders-Institute/bidscoin/compare/3.6.1...HEAD
+[3.6.1]: https://github.com/Donders-Institute/bidscoin/compare/3.6.0...3.6.1
+[3.6.0]: https://github.com/Donders-Institute/bidscoin/compare/3.5.3...3.6.0
 [3.5.3]: https://github.com/Donders-Institute/bidscoin/compare/3.5.2...3.5.3
 [3.5.2]: https://github.com/Donders-Institute/bidscoin/compare/3.5.1...3.5.2
 [3.5.1]: https://github.com/Donders-Institute/bidscoin/compare/3.5...3.5.1
