@@ -11,6 +11,11 @@ All notable changes to this project will be documented in this file. The format 
 ### Changed
 - Plugins should now have a `is_sourcefile` and a `get_attribute` function
 
+## [3.6.1] - 2021-05-20
+
+### Fixed
+The bidscoiner no longer sometimes crashes when dcm2niix produces custom suffixes (e.g. for multi-echo data)
+
 ## [3.6.0] - 2021-05-13
 
 ### Added
