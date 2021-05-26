@@ -1170,9 +1170,9 @@ class EditWindow(QDialog):
                     LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                     self.target_run['attributes'][key] = value
                 else:
-                    self.filesystem_table.blockSignals(True)
+                    self.attributes_table.blockSignals(True)
                     self.attributes_table.item(rowindex, 1).setText(oldvalue)
-                    self.filesystem_table.blockSignals(False)
+                    self.attributes_table.blockSignals(False)
 
     def bidscell2run(self, rowindex: int, colindex: int):
         """BIDS attribute value has been changed"""
@@ -1193,7 +1193,7 @@ class EditWindow(QDialog):
             # Only if cell was changed, update
             if key and value != oldvalue:
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
-                self.filesystem_table.blockSignals(True)
+                self.bids_table.blockSignals(True)
                 if isinstance(value, str) and not (value.startswith('<<') and value.endswith('>>')):
                     value = bids.cleanup_value(bids.get_dynamicvalue(value, self.datasource))
                     self.bids_table.item(rowindex, 1).setText(value)
@@ -1209,7 +1209,7 @@ class EditWindow(QDialog):
                         LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 else:
                     LOGGER.info(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
-                self.filesystem_table.blockSignals(False)
+                self.bids_table.blockSignals(False)
                 self.target_run['bids'][key] = value
                 self.refresh_bidsname()
 
@@ -1225,9 +1225,9 @@ class EditWindow(QDialog):
             # Replace the (dynamic) value
             if not (value.startswith('<<') and value.endswith('>>')):
                 value = bids.get_dynamicvalue(value, self.datasource, cleanup=False)
-                self.filesystem_table.blockSignals(True)
+                self.meta_table.blockSignals(True)
                 self.meta_table.item(rowindex, 1).setText(value)
-                self.filesystem_table.blockSignals(False)
+                self.meta_table.blockSignals(False)
             LOGGER.info(f"User has set meta['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
 
         # Read all the meta-data from the table and store it in the target_run
