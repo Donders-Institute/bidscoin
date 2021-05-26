@@ -1142,9 +1142,6 @@ class EditWindow(QDialog):
                 if answer==QMessageBox.Yes:
                     LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                     self.target_run['filesystem'][key] = value
-                    # Refresh the nrfiles value
-                    data_filesystem, _, _, _ = self.run2data()
-                    self.fill_table(self.filesystem_table, data_filesystem)
                 else:
                     self.filesystem_table.blockSignals(True)
                     self.filesystem_table.item(rowindex, 1).setText(oldvalue)
