@@ -1017,7 +1017,7 @@ class EditWindow(QDialog):
         path    = self.datasource.filesystem('path')
         name    = self.datasource.filesystem('name')
         size    = self.datasource.filesystem('size')
-        nrfiles = self.datasource.filesystem('nrfiles', run)
+        nrfiles = self.datasource.filesystem('nrfiles')
         data_filesystem = [[{'value': 'path',                           'iseditable': False},
                             {'value': run['filesystem'].get('path'),    'iseditable': True},
                             {'value': path,                             'iseditable': False}],

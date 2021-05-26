@@ -48,6 +48,8 @@ class DataSource:
 
         :param provenance:  The full path of a representative file for this data source
         :param plugins:     The plugins that are used to interact with the source datatype
+        :param dataformat:  The dataformat name in the bidsmap, e.g. DICOM or PAR
+        :param datatype:    The intended BIDS datatype of the data source TODO: move to a separate BidsTarget / Mapping class
         """
 
         self.path       = Path(provenance)
@@ -78,7 +80,7 @@ class DataSource:
         Gets the filesystem tagname value
 
         :param tagname: The name of the filesystem property key, e.g. 'name' or 'nrfiles'
-        :param run:     Needed when tagname == 'nrfiles'
+        :param run:     If given and tagname == 'nrfiles' then the nrfiles is dependent on the other filesystem matching-criteria
         :return:
         """
 
@@ -99,11 +101,14 @@ class DataSource:
                 n += 1
             return f"{size:.2f} {label[n]}B"
 
-        if tagname == 'nrfiles' and self.path.is_file() and run:
-            def match(file): return ((match_attribute(file.parent,         run['filesystem']['path']) or not run['filesystem']['path']) and
-                                     (match_attribute(file.name,           run['filesystem']['name']) or not run['filesystem']['name']) and
-                                     (match_attribute(file.stat().st_size, run['filesystem']['size']) or not run['filesystem']['size']))
-            return len([file for file in self.path.parent.glob('*') if match(file)])
+        if tagname == 'nrfiles' and self.path.is_file():
+            if run:                                         # Currently not used but keep the option open for future use
+                def match(file): return ((match_attribute(file.parent,         run['filesystem']['path']) or not run['filesystem']['path']) and
+                                         (match_attribute(file.name,           run['filesystem']['name']) or not run['filesystem']['name']) and
+                                         (match_attribute(file.stat().st_size, run['filesystem']['size']) or not run['filesystem']['size']))
+                return len([file for file in self.path.parent.glob('*') if match(file)])
+            else:
+                return len(list(self.path.parent.glob('*')))
 
         return ''
 
@@ -1066,7 +1071,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict) -> Tuple[dict, Union
 
                 # Check if the attribute value matches with the info from the sourcefile
                 if filevalue:
-                    sourcevalue = datasource.filesystem(filekey, run)
+                    sourcevalue = datasource.filesystem(filekey)
                     match       = match and match_attribute(sourcevalue, filevalue)
 
                 # Don not fill the empty attribute with the info from the sourcefile but keep the matching expression
