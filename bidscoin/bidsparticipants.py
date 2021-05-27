@@ -136,7 +136,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, subprefix: str=
 
         LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
         personals    = dict()
-        subid, sesid = bids.get_subid_sesid(subject/'dum.my')
+        subid, sesid = bids.get_subid_sesid(bids.DataSource(subject/'dum.my'))
         subject      = rawfolder/subid.replace('sub-',subprefix)     # TODO: This assumes that the subject-ids in the rawfolder did not contain BIDS-invalid characters (such as '_')
         sessions     = bidscoin.lsdirs(subject, sesprefix + '*')
         if not subject.is_dir():
@@ -147,7 +147,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, subprefix: str=
         for session in sessions:
 
             # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-            session, unpacked = bids.unpack(session, bidsmap, subprefix, sesprefix)
+            session, unpacked = bids.unpack(session, subprefix, sesprefix)
 
             LOGGER.info(f"Scanning session: {session}")
 

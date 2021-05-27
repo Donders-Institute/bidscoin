@@ -31,7 +31,7 @@ except ImportError:
 localversion, versionmessage = bidscoin.version(check=True)
 
 
-def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=False, participants: bool=False, bidsmapfile: str='bidsmap.yaml', subprefix: str='sub-', sesprefix: str='ses-') -> None:
+def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=False, participants: bool=False, bidsmapfile: str='bidsmap.yaml') -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder and uses the
     bidsmap.yaml file in bidsfolder/code/bidscoin to cast the data into the BIDS folder.
@@ -42,8 +42,6 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     :param force:           If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped
     :param participants:    If True, subjects in particpants.tsv will not be processed (this could be used e.g. to protect these subjects from being reprocessed), also when force=True
     :param bidsmapfile:     The name of the bidsmap YAML-file. If the bidsmap pathname is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin
-    :param subprefix:       The prefix common for all source subject-folders
-    :param sesprefix:       The prefix common for all source session-folders
     :return:                Nothing
     """
 
@@ -56,8 +54,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     bidscoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidscoiner.log')
     LOGGER.info('')
     LOGGER.info(f"-------------- START BIDScoiner {localversion}: BIDS {bidscoin.bidsversion()} ------------")
-    LOGGER.info(f">>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} subjects={subjects} force={force}"
-                f" participants={participants} bidsmap={bidsmapfile} subprefix={subprefix} sesprefix={sesprefix}")
+    LOGGER.info(f">>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} subjects={subjects} force={force} participants={participants} bidsmap={bidsmapfile}")
 
     # Create a code/bidscoin subfolder
     (bidsfolder/'code'/'bidscoin').mkdir(parents=True, exist_ok=True)
@@ -140,6 +137,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         participants_dict = {'participant_id': {'Description': 'Unique participant identifier'}}
 
     # Get the list of subjects
+    subprefix = bidsmap['Options']['bidscoin']['subprefix']
+    sesprefix = bidsmap['Options']['bidscoin']['sesprefix']
     if not subjects:
         subjects = bidscoin.lsdirs(rawfolder, subprefix + '*')
         if not subjects:
@@ -163,7 +162,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         for session in sessions:
 
             # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-            session, unpacked = bids.unpack(session, bidsmap, subprefix, sesprefix)
+            session, unpacked = bids.unpack(session, subprefix, sesprefix)
 
             # Check if we should skip the session-folder
             datasource = bids.get_datasource(session, bidsmap['Options']['plugins'])
@@ -171,7 +170,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                 LOGGER.info(f"No coinable datasources found in '{session}'")
                 continue
             if not force:
-                subid, sesid = bids.get_subid_sesid(datasource, subprefix=subprefix, sesprefix=sesprefix)
+                subid, sesid = datasource.get_subid_sesid(bidsmap[datasource.dataformat]['subject'], bidsmap[datasource.dataformat]['session'])
                 bidssession  = bidsfolder/subid/sesid
                 datatypes    = []
                 for dataformat in dataformats:
@@ -189,7 +188,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             # Run the bidscoiner plugins
             for module in plugins:
                 LOGGER.info(f"Executing plugin: {Path(module.__file__).name}")
-                module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals, subprefix, sesprefix)
+                module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals)
 
             # Clean-up the temporary unpacked data
             if unpacked:
@@ -241,8 +240,6 @@ def main():
     parser.add_argument('-f','--force',             help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')
     parser.add_argument('-s','--skip_participants', help='If this flag is given those subjects that are in participants.tsv will not be processed (also when the --force flag is given). Otherwise the participants.tsv table is ignored', action='store_true')
     parser.add_argument('-b','--bidsmap',           help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
-    parser.add_argument('-n','--subprefix',         help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
-    parser.add_argument('-m','--sesprefix',         help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     parser.add_argument('-v','--version',           help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidscoin.bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
     args = parser.parse_args()
 
@@ -251,9 +248,7 @@ def main():
                subjects     = args.participant_label,
                force        = args.force,
                participants = args.skip_participants,
-               bidsmapfile  = args.bidsmap,
-               subprefix    = args.subprefix,
-               sesprefix    = args.sesprefix)
+               bidsmapfile  = args.bidsmap)
 
 
 if __name__ == "__main__":

@@ -28,21 +28,21 @@ yaml = YAML()
 LOGGER = logging.getLogger(__name__)
 
 # Define BIDScoin datatypes
-bidscoindatatypes = ('fmap', 'anat', 'func', 'perf', 'dwi', 'pet', 'meg', 'eeg', 'ieeg', 'beh')           # NB: get_matching_run() uses this order to search for a match. TODO: sync with the modalities.yaml schema
+bidscoindatatypes = ('fmap', 'anat', 'func', 'perf', 'dwi', 'pet', 'meg', 'eeg', 'ieeg', 'beh')     # NB: get_matching_run() uses this order to search for a match. TODO: sync with the modalities.yaml schema
 ignoredatatype    = 'exclude'
 unknowndatatype   = 'extra_data'
 
 # Read the BIDS schema datatypes and entities
 bidsdatatypes = {}
 for _datatypefile in (bidscoin.schemafolder/'datatypes').glob('*.yaml'):
-    with _datatypefile.open('r') as stream:
-        bidsdatatypes[_datatypefile.stem] = yaml.load(stream)
+    with _datatypefile.open('r') as _stream:
+        bidsdatatypes[_datatypefile.stem] = yaml.load(_stream)
 with (bidscoin.schemafolder/'entities.yaml').open('r') as _stream:
     entities = yaml.load(_stream)
 
 
 class DataSource:
-    def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str=''):
+    def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str='', subprefix: str= 'sub-', sesprefix: str= 'ses-'):
         """
         A source datatype (e.g. DICOM or PAR) that can be converted to BIDS by the plugins
 
@@ -50,6 +50,8 @@ class DataSource:
         :param plugins:     The plugins that are used to interact with the source datatype
         :param dataformat:  The dataformat name in the bidsmap, e.g. DICOM or PAR
         :param datatype:    The intended BIDS datatype of the data source TODO: move to a separate BidsTarget / Mapping class
+        :param subprefix:   The subprefix used in the sourcefolder
+        :param sesprefix:   The sesprefix used in the sourcefolder
         """
 
         self.path       = Path(provenance)
@@ -60,6 +62,8 @@ class DataSource:
             self.plugins = {}
         if not dataformat:
             self.is_datasource()
+        self.subprefix  = subprefix
+        self.sesprefix  = sesprefix
 
     def is_datasource(self) -> bool:
         """Returns True is the datasource has a valid dataformat"""
@@ -123,15 +127,81 @@ class DataSource:
                     return attributeval
         return ''
 
+    def get_subid_sesid(self, subid: str= '<<SourceFilePath>>', sesid: str= '<<SourceFilePath>>') -> Tuple[str, str]:
+        """
+        Extract the cleaned-up subid and sesid from the pathname if subid/sesid == '<<SourceFilePath>>', or from the datasource attributes
 
-def unpack(sourcefolder: Path, bidsmap: dict, subprefix: str='sub-', sesprefix: str='ses-', wildcard: str='*', workfolder: Path='') -> (Path, bool):
+        :param subid:      The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001') or a dynamic source attribute. Can be left empty
+        :param sesid:      The optional session identifier, same as subid
+        :return:           Updated (subid, sesid) tuple, including the BIDS-compliant sub-/ses-prefix
+        """
+
+        # Add default value for subid and sesid (e.g. for the bidseditor)
+        if subid == '<<SourceFilePath>>':
+            subid = [part for part in self.path.parent.parts if part.startswith(self.subprefix)][-1]
+        else:
+            subid = self.get_dynamicvalue(subid, runtime=True)
+        if not subid:
+            LOGGER.error(f"Could not parse sub/ses-id information from '{self.path.parent}': no '{self.subprefix}' label in its path")
+            return '', ''
+        if sesid == '<<SourceFilePath>>':
+            sesid = [part for part in self.path.parent.parts if part.startswith(self.sesprefix)]
+            if sesid:
+                sesid = sesid[-1]
+            else:
+                sesid = ''
+        else:
+            sesid = self.get_dynamicvalue(sesid, runtime=True)
+
+        # Add sub- and ses- prefixes if they are not there
+        subid = 'sub-' + cleanup_value(re.sub(f'^{self.subprefix}', '', subid))
+        if sesid:
+            sesid = 'ses-' + cleanup_value(re.sub(f'^{self.sesprefix}', '', sesid))
+
+        return subid, sesid
+
+    def get_dynamicvalue(self, value: str, cleanup: bool=True, runtime: bool=False) -> str:
+        """
+        Replaces dynamic (bids/meta) values with source attributes of filesystem properties when they start with
+        '<' and end with '>', but not with '<<' and '>>' unless runtime = True
+
+        :param value:       The dynamic value that contains source attribute or filesystem property key(s)
+        :param cleanup:     Removes non-BIDS-compliant characters if True
+        :param runtime:     Replaces dynamic values if True
+        :return:            Updated value (if possible, otherwise the original value is returned)
+        """
+
+        # Input checks
+        if not value or not isinstance(value, str):
+            return value
+
+        # Intelligent filling of the value is done runtime by bidscoiner
+        if value.startswith('<<') and value.endswith('>>'):
+            if runtime:
+                value = value[1:-1]
+            else:
+                return value
+
+        # Fill any value-key with the <annotated> source attribute(s) or filesystem property
+        if value.startswith('<') and value.endswith('>') and self.path.name:
+            sourcevalue = ''
+            for key in value[1:-1].split('><'):
+                sourcevalue += str(self.filesystem(key)) + str(self.attributes(key))
+            if sourcevalue:
+                value = sourcevalue
+                if cleanup:
+                    value = cleanup_value(value)
+
+        return value
+
+
+def unpack(sourcefolder: Path, subprefix: str, sesprefix: str, wildcard: str='*', workfolder: Path='') -> (Path, bool):
     """
     Unpacks and sorts DICOM files in sourcefolder to a temporary folder if sourcefolder contains a DICOMDIR file or .tar.gz, .gz or .zip files
 
     :param sourcefolder:    The full pathname of the folder with the source data
-    :param bidsmap:         Full bidsmap data structure, with all options, BIDS labels and attributes, etc
-    :param subprefix:       The optional subprefix (e.g. 'sub-'). Used to parse the subid
-    :param sesprefix:       The optional sesprefix (e.g. 'ses-'). Used to parse the sesid
+    :param subprefix:       The subprefix (e.g. 'sub-'). Used to parse the subid
+    :param sesprefix:       The sesprefix (e.g. 'ses-'). Used to parse the sesid
     :param wildcard:        A glob search pattern to select the tarballed/zipped files
     :param workfolder:      A root folder for temporary data
     :return:                A tuple with the full pathname of the source or workfolder and a workdir-path or False when the data is not unpacked in a temporary folder
@@ -151,7 +221,7 @@ def unpack(sourcefolder: Path, bidsmap: dict, subprefix: str='sub-', sesprefix: 
         if not workfolder:
             workfolder = tempfile.mkdtemp()
         workfolder   = Path(workfolder)
-        subid, sesid = get_subid_sesid(DataSource(sourcefolder/'dum.my', bidsmap['Options']['plugins']), subprefix=subprefix, sesprefix=sesprefix)
+        subid, sesid = DataSource(sourcefolder/'dum.my', subprefix=subprefix, sesprefix=sesprefix).get_subid_sesid()
         subid, sesid = subid.replace('sub-', subprefix), sesid.replace('ses-', sesprefix)
         worksubses   = workfolder/subid/sesid
         worksubses.mkdir(parents=True, exist_ok=True)
@@ -532,7 +602,9 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
                         run[key] = val
 
                 # Add a DataSource object
-                run['datasource'] = DataSource(run['provenance'], bidsmap['Options']['plugins'], dataformat, datatype)
+                run['datasource'] = DataSource(run['provenance'], bidsmap['Options']['plugins'], dataformat, datatype,
+                                               bidsmap['Options']['bidscoin'].get('subprefix','sub-'),
+                                               bidsmap['Options']['bidscoin'].get('sesprefix','ses-'))
 
                 # Add missing bids entities
                 for typegroup in bidsdatatypes.get(datatype,[]):
@@ -567,7 +639,7 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
         if not bidsmap[dataformat]:             continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue
-            for index, run in enumerate(bidsmap[dataformat][datatype]):
+            for run in bidsmap[dataformat][datatype]:
                 run.pop('datasource', None)
 
     # Validate the bidsmap entries
@@ -691,22 +763,31 @@ def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
     return provenance
 
 
-def get_run_(provenance: Union[str, Path]='', dataformat: str='', datatype: str='') -> dict:
+def get_run_(provenance: Union[str, Path]='', dataformat: str='', datatype: str='', bidsmap: dict=None) -> dict:
     """
     Get an empty run-item with the proper structure and provenance info
 
     :param provenance:  The unique provenance that is use to identify the run
     :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
     :param datatype:    The bidsmap datatype that is used, e.g. 'anat'
+    :param bidsmap:     The bidsmap, with all the bidscoin options in it
     :return:            The empty run
     """
+
+    if bidsmap:
+        plugins    = bidsmap['Options']['plugins']
+        subprefix  = bidsmap['Options']['bidscoin']['subprefix']
+        sesprefix  = bidsmap['Options']['bidscoin']['sesprefix']
+        datasource = DataSource(provenance, plugins, dataformat, datatype, subprefix, sesprefix)
+    else:
+        datasource = DataSource(provenance, dataformat=dataformat, datatype=datatype)
 
     return dict(provenance = str(provenance),
                 filesystem = {'path':'', 'name':'', 'size':'', 'nrfiles':''},
                 attributes = {},
                 bids       = {},
                 meta       = {},
-                datasource = DataSource(provenance, dataformat=dataformat, datatype=datatype))
+                datasource = datasource)
 
 
 def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasource: DataSource) -> dict:
@@ -728,7 +809,7 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
         if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
             # Get a clean run (remove comments to avoid overly complicated commentedMaps from ruamel.yaml)
-            run_ = get_run_(datasource.path)
+            run_ = get_run_(datasource.path, bidsmap=bidsmap)
 
             for filekey, filevalue in run['filesystem'].items():
                 run_['filesystem'][filekey] = filevalue
@@ -740,10 +821,10 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
                     run_['attributes'][attrkey] = attrvalue
 
             for bidskey, bidsvalue in run['bids'].items():
-                run_['bids'][bidskey] = get_dynamicvalue(bidsvalue, run['datasource'])
+                run_['bids'][bidskey] = run['datasource'].get_dynamicvalue(bidsvalue)
 
             for metakey, metavalue in run['meta'].items():
-                run_['meta'][metakey] = get_dynamicvalue(metavalue, run['datasource'], cleanup=False)
+                run_['meta'][metakey] = run['datasource'].get_dynamicvalue(metavalue, cleanup=False)
 
             run_['datasource']      = copy.deepcopy(run['datasource'])
             run_['datasource'].path = datasource.path
@@ -751,7 +832,7 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
             return run_
 
     LOGGER.warning(f"'{datatype}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{datasource.dataformat}']")
-    return get_run_(datasource.path)
+    return get_run_(datasource.path, bidsmap=bidsmap)
 
 
 def find_run(bidsmap: dict, provenance: str, dataformat: str='', datatype: str='') -> dict:
@@ -820,7 +901,7 @@ def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
 
     # Copy the values from the run to an empty dict
     if clean:
-        run_ = get_run_(run['provenance'], datatype=datatype)
+        run_ = get_run_(run['provenance'], datatype=datatype, bidsmap=bidsmap)
 
         for item in run_.keys():
             if item == 'provenance':
@@ -1057,7 +1138,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict) -> Tuple[dict, Union
     # Loop through all bidscoindatatypes and runs; all info goes cleanly into run_ (to avoid formatting problem of the CommentedMap)
     for datatype in (ignoredatatype,) + bidscoindatatypes + (unknowndatatype,):                                 # The datatypes in which a matching run is searched for
 
-        run_ = get_run_(datasource.path, dataformat=datasource.dataformat, datatype=datatype)
+        run_ = get_run_(datasource.path, dataformat=datasource.dataformat, datatype=datatype, bidsmap=bidsmap)
         runs = bidsmap.get(datasource.dataformat, {}).get(datatype, [])
         if not runs:
             runs = []
@@ -1094,7 +1175,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict) -> Tuple[dict, Union
             for bidskey, bidsvalue in run['bids'].items():
 
                 # Replace the dynamic bids values
-                run_['bids'][bidskey] = get_dynamicvalue(bidsvalue, datasource)
+                run_['bids'][bidskey] = datasource.get_dynamicvalue(bidsvalue)
 
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 run_ = strip_suffix(run_)
@@ -1104,7 +1185,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict) -> Tuple[dict, Union
             for metakey, metavalue in run['meta'].items():
 
                 # Replace the dynamic bids values
-                run_['meta'][metakey] = get_dynamicvalue(metavalue, datasource, cleanup=False)
+                run_['meta'][metakey] = datasource.get_dynamicvalue(metavalue, cleanup=False)
 
             # Copy the DataSource object
             if 'datasource' in run:
@@ -1118,43 +1199,6 @@ def get_matching_run(datasource: DataSource, bidsmap: dict) -> Tuple[dict, Union
     # We don't have a match (all tests failed, so datatype should be the *last* one, i.e. unknowndatatype)
     LOGGER.debug(f"Could not find a matching run in the bidsmap for {datasource} -> {datatype}")
     return run_, None
-
-
-def get_subid_sesid(datasource: DataSource, subid: str= '<<SourceFilePath>>', sesid: str= '<<SourceFilePath>>', subprefix: str= 'sub-', sesprefix: str= 'ses-') -> Tuple[str, str]:
-    """
-    Extract the cleaned-up subid and sesid from the pathname if subid/sesid == '<<SourceFilePath>>', or from the datasource
-
-    :param datasource: The DataSource with the provenance file from which the sub/ses values are parsed from if subid/sesid != 'SourceFilePath'
-    :param subid:      The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001') or a dynamic source attribute. Can be left empty
-    :param sesid:      The optional session identifier, same as subid
-    :param subprefix:  The optional subprefix (e.g. 'sub-'). Used to parse the sub-value from the provenance as default subid
-    :param sesprefix:  The optional sesprefix (e.g. 'ses-'). If it is found in the provenance then a default sesid will be set
-    :return:           Updated (subid, sesid) tuple, including the BIDS-compliant sub-/ses-prefix
-    """
-
-    # Add default value for subid and sesid (e.g. for the bidseditor)
-    if subid == '<<SourceFilePath>>':
-        subid = [part for part in datasource.path.parent.parts if part.startswith(subprefix)][-1]
-        if not subid:
-            LOGGER.error(f"Could not parse sub/ses-id information from '{datasource.path.parent}': no '{subprefix}' label in its path")
-            return '', ''
-    else:
-        subid = get_dynamicvalue(subid, datasource, runtime=True)
-    if sesid == '<<SourceFilePath>>':
-        sesid = [part for part in datasource.path.parent.parts if part.startswith(sesprefix)]
-        if sesid:
-            sesid = sesid[-1]
-        else:
-            sesid = ''
-    else:
-        sesid = get_dynamicvalue(sesid, datasource, runtime=True)
-
-    # Add sub- and ses- prefixes if they are not there
-    subid = 'sub-' + cleanup_value(re.sub(f'^{subprefix}', '', subid))
-    if sesid:
-        sesid = 'ses-' + cleanup_value(re.sub(f'^{sesprefix}', '', sesid))
-
-    return subid, sesid
 
 
 def get_derivatives(datatype: str) -> list:
@@ -1195,132 +1239,12 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False) -> str:
         if isinstance(bidsvalue, list):
             bidsvalue = bidsvalue[bidsvalue[-1]]                                # Get the selected item
         else:
-            bidsvalue  = get_dynamicvalue(bidsvalue, run['datasource'], cleanup=True, runtime=runtime)
+            bidsvalue  = run['datasource'].get_dynamicvalue(bidsvalue, cleanup=True, runtime=runtime)
         if bidsvalue:
             bidsname = f"{bidsname}_{entitykey}-{cleanup_value(bidsvalue)}"     # Append the key-value data to the bidsname
-    bidsname = f"{bidsname}{add_prefix('_', run['bids']['suffix'])}"            # And end with the suffix
+    bidsname = f"{bidsname}{add_prefix('_', cleanup_value(run['bids']['suffix']))}"     # And end with the suffix
 
     return bidsname
-
-
-def get_filesystemhelp(filesystemkey: str) -> str:
-    """
-    Reads the description of a matching attributes key in the source dictionary
-
-    :param filesystemkey:   The filesystem key for which the help text is obtained
-    :return:                The obtained help text
-    """
-
-    # Return the description from the DICOM dictionary or a default text
-    if filesystemkey == 'path':
-        return 'The path of the source file that is matched against the (regexp) pattern'
-    if filesystemkey == 'name':
-        return 'The name of the source file that is matched against the (regexp) pattern'
-    if filesystemkey == 'size':
-        return 'The size of the source file that is matched against the (regexp) pattern'
-    if filesystemkey == 'nrfiles':
-        return 'The nr of similar files in the folder that matched against the filesystem (regexp) patterns'
-
-
-def get_attributeshelp(attributeskey: str) -> str:
-    """
-    Reads the description of a matching attributes key in the source dictionary
-
-    TODO: implement PAR/REC support
-
-    :param attributeskey:   The attribute key for which the help text is obtained
-    :return:                The obtained help text
-    """
-
-    if not attributeskey:
-        return "Please provide a key-name"
-
-    # Return the description from the DICOM dictionary or a default text
-    try:
-        return f"{attributeskey}\nThe DICOM '{datadict.dictionary_description(attributeskey)}' attribute"
-
-    except ValueError:
-        return f"{attributeskey}\nA private key"
-
-
-def get_entityhelp(entitykey: str) -> str:
-    """
-    Reads the description of a matching entity=entitykey in the schema/entities.yaml file
-
-    :param entitykey:   The bids key for which the help text is obtained
-    :return:            The obtained help text
-    """
-
-    if not entitykey:
-        return "Please provide a key-name"
-
-    # Return the description from the entities or a default text
-    for entityname in entities:
-        if entities[entityname]['entity'] == entitykey:
-            return f"{entities[entityname]['name']}\n{entities[entityname]['description']}"
-
-    return f"{entitykey}\nA private key"
-
-
-def get_metahelp(metakey: str) -> str:
-    """
-    Reads the description of a matching schema/metadata/metakey.yaml file
-
-    :param metakey: The meta key for which the help text is obtained
-    :return:        The obtained help text
-    """
-
-    if not metakey:
-        return "Please provide a key-name"
-
-    # Return the description from the metadata file or a default text
-    metafile = bidscoin.schemafolder/'metadata'/(metakey + '.yaml')
-    if metafile.is_file():
-        with metafile.open('r') as stream:
-            metadata = yaml.load(stream)
-        if metakey == 'IntendedFor':    # IntendedFor is a special search-pattern field in BIDScoin
-            metadata['description'] += ('\nThese associated files can be dynamically searched for during'
-                                        '\nbidscoiner runtime with glob-style matching patterns such as'
-                                        '\n"<<Reward*_bold><Stop*_epi>>" (see the online documentation)')
-        return f"{metadata['name']}\n{metadata['description']}"
-
-    return f"{metakey}\nA private key"
-
-
-def get_dynamicvalue(value: str, datasource: DataSource, cleanup: bool=True, runtime: bool=False) -> str:
-    """
-    Replaces dynamic (bids/meta) values with source attributes of filesystem properties when they start with
-    '<' and end with '>', but not with '<<' and '>>' unless runtime = True
-
-    :param value:       The dynamic value that contains source attribute or filesystem property key(s)
-    :param datasource:  The data source from which the dynamic value or property is read
-    :param cleanup:     Removes non-BIDS-compliant characters if True
-    :param runtime:     Replaces dynamic values if True
-    :return:            Updated value (if possible, otherwise the original value is returned)
-    """
-
-    # Input checks
-    if not value or not isinstance(value, str):
-        return value
-
-    # Intelligent filling of the value is done runtime by bidscoiner
-    if value.startswith('<<') and value.endswith('>>'):
-        if runtime:
-            value = value[1:-1]
-        else:
-            return value
-
-    # Fill any value-key with the <annotated> source attribute(s) or filesystem property
-    if value.startswith('<') and value.endswith('>') and datasource.path.name:
-        sourcevalue = ''
-        for key in value[1:-1].split('><'):
-            sourcevalue += str(datasource.filesystem(key)) + str(datasource.attributes(key))
-        if sourcevalue:
-            value = sourcevalue
-            if cleanup:
-                value = cleanup_value(value)
-
-    return value
 
 
 def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') -> Union[Path, str]:
@@ -1443,3 +1367,87 @@ def increment_runindex(bidsfolder: Path, bidsname: str, ext: str='.*') -> Union[
             bidsname = get_bidsvalue(bidsname, 'run', str(int(runindex) + 1))
 
     return bidsname
+
+
+def get_filesystemhelp(filesystemkey: str) -> str:
+    """
+    Reads the description of a matching attributes key in the source dictionary
+
+    :param filesystemkey:   The filesystem key for which the help text is obtained
+    :return:                The obtained help text
+    """
+
+    # Return the description from the DICOM dictionary or a default text
+    if filesystemkey == 'path':
+        return 'The path of the source file that is matched against the (regexp) pattern'
+    if filesystemkey == 'name':
+        return 'The name of the source file that is matched against the (regexp) pattern'
+    if filesystemkey == 'size':
+        return 'The size of the source file that is matched against the (regexp) pattern'
+    if filesystemkey == 'nrfiles':
+        return 'The nr of similar files in the folder that matched against the filesystem (regexp) patterns'
+
+
+def get_attributeshelp(attributeskey: str) -> str:
+    """
+    Reads the description of a matching attributes key in the source dictionary
+
+    TODO: implement PAR/REC support
+
+    :param attributeskey:   The attribute key for which the help text is obtained
+    :return:                The obtained help text
+    """
+
+    if not attributeskey:
+        return "Please provide a key-name"
+
+    # Return the description from the DICOM dictionary or a default text
+    try:
+        return f"{attributeskey}\nThe DICOM '{datadict.dictionary_description(attributeskey)}' attribute"
+
+    except ValueError:
+        return f"{attributeskey}\nA private key"
+
+
+def get_entityhelp(entitykey: str) -> str:
+    """
+    Reads the description of a matching entity=entitykey in the schema/entities.yaml file
+
+    :param entitykey:   The bids key for which the help text is obtained
+    :return:            The obtained help text
+    """
+
+    if not entitykey:
+        return "Please provide a key-name"
+
+    # Return the description from the entities or a default text
+    for entityname in entities:
+        if entities[entityname]['entity'] == entitykey:
+            return f"{entities[entityname]['name']}\n{entities[entityname]['description']}"
+
+    return f"{entitykey}\nA private key"
+
+
+def get_metahelp(metakey: str) -> str:
+    """
+    Reads the description of a matching schema/metadata/metakey.yaml file
+
+    :param metakey: The meta key for which the help text is obtained
+    :return:        The obtained help text
+    """
+
+    if not metakey:
+        return "Please provide a key-name"
+
+    # Return the description from the metadata file or a default text
+    metafile = bidscoin.schemafolder/'metadata'/(metakey + '.yaml')
+    if metafile.is_file():
+        with metafile.open('r') as stream:
+            metadata = yaml.load(stream)
+        if metakey == 'IntendedFor':    # IntendedFor is a special search-pattern field in BIDScoin
+            metadata['description'] += ('\nThese associated files can be dynamically searched for during'
+                                        '\nbidscoiner runtime with glob-style matching patterns such as'
+                                        '\n"<<Reward*_bold><Stop*_epi>>" (see the online documentation)')
+        return f"{metadata['name']}\n{metadata['description']}"
+
+    return f"{metakey}\nA private key"

@@ -22,6 +22,8 @@ Options:
   bidscoin:
     version: 3.7.0-dev            # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
     bidsignore: extra_data/       # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
+    subprefix: sub-               # The subject prefix of the source data
+    sesprefix: ses-               # The session prefix of the source data
   plugins:                        # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
     dcm2bidsmap:                  # The default plugin that is used by the bidsmapper to map DICOM and PAR/REC source data
     dcm2niix2bids:                # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info

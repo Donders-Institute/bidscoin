@@ -29,7 +29,7 @@ except ImportError:
 localversion, versionmessage = bidscoin.version(check=True)
 
 
-def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, subprefix: str='sub-', sesprefix: str='ses-', store: bool=False, noedit: bool=False, force: bool=False) -> None:
+def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, subprefix: str, sesprefix: str, store: bool=False, noedit: bool=False, force: bool=False) -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder
     and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code/bidscoin.
@@ -70,7 +70,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     # Create the new bidsmap as a copy / bidsmap skeleton with no datatype entries (i.e. bidsmap with empty lists)
     if force:
         bidsmapfile.unlink(missing_ok=True)
-        bidsmap_old = dict()
+        bidsmap_old = {}
     if bidsmap_old:
         bidsmap_new = copy.deepcopy(bidsmap_old)
     else:
@@ -78,8 +78,13 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     for dataformat in bidsmap_new:
         if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (-> 'PlugIns')
         for datatype in bids.bidscoindatatypes + (bids.unknowndatatype, bids.ignoredatatype):
-            if bidsmap_new.get(dataformat) and bidsmap_new[dataformat].get(datatype):
+            if bidsmap_new[dataformat].get(datatype):
                 bidsmap_new[dataformat][datatype] = None
+
+    # Store/retrieve the user-defined sub-/ses-prefix
+    setprefix(bidsmap_new, subprefix, sesprefix)
+    subprefix = bidsmap_new['Options']['bidscoin']['subprefix']
+    sesprefix = bidsmap_new['Options']['bidscoin']['sesprefix']
 
     # Start with an empty skeleton if we didn't have an old bidsmap
     if not bidsmap_old:
@@ -109,7 +114,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             LOGGER.info(f"Mapping: {session} (subject {n}/{len(subjects)})")
 
             # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-            session, unpacked = bids.unpack(session, bidsmap_new, subprefix, sesprefix)
+            session, unpacked = bids.unpack(session, subprefix, sesprefix)
             if unpacked:
                 store = dict(source=unpacked, target=bidscoinfolder/'provenance')
             elif store:
@@ -135,7 +140,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         app = QApplication(sys.argv)
         app.setApplicationName(f"{bidsmapfile} - BIDS editor {localversion}")
 
-        mainwin = bidseditor.MainWindow(bidsfolder, bidsmap_new, template, subprefix=subprefix, sesprefix=sesprefix)
+        mainwin = bidseditor.MainWindow(bidsfolder, bidsmap_new, template)
         mainwin.show()
 
         messagebox = QMessageBox(mainwin)
@@ -158,6 +163,24 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     bidscoin.reporterrors()
 
 
+def setprefix(bidsmap, subprefix, sesprefix):
+    """Set the prefix in the Options and in all the run['datasource'] objects"""
+    if subprefix:
+        bidsmap['Options']['bidscoin']['subprefix'] = subprefix
+    if sesprefix:
+        bidsmap['Options']['bidscoin']['sesprefix'] = sesprefix
+    for dataformat in bidsmap:
+        if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (-> 'PlugIns')
+        if not bidsmap[dataformat]:             continue
+        for datatype in bidsmap[dataformat]:
+            if not isinstance(bidsmap[dataformat][datatype], list): continue
+            for run in bidsmap[dataformat][datatype]:
+                if subprefix:
+                    run['datasource'].subprefix = subprefix
+                if sesprefix:
+                    run['datasource'].sesprefix = sesprefix
+
+
 def main():
     """Console script usage"""
 
@@ -171,8 +194,8 @@ def main():
     parser.add_argument('bidsfolder',         help='The destination folder with the (future) bids data and the bidsfolder/code/bidscoin/bidsmap.yaml output file')
     parser.add_argument('-b','--bidsmap',     help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
     parser.add_argument('-t','--template',    help='The bidsmap template file with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap_dccn.yaml', default=bidscoin.bidsmap_template)
-    parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
-    parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
+    parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders (e.g. 'Pt' is the subprefix if subject folders are named 'Pt018', 'Pt019', ...). Default: 'sub-'")
+    parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders (e.g. 'M_' is the subprefix if session folders are named 'M_pre', 'M_post', ...). Default: 'ses-'")
     parser.add_argument('-s','--store',       help="Flag to store provenance data samples in the bidsfolder/'code'/'provenance' folder (useful for inspecting e.g. zipped or transfered datasets)", action='store_true')
     parser.add_argument('-a','--automated',   help="Flag to save the automatically generated bidsmap to disk and without interactively tweaking it with the bidseditor", action='store_true')
     parser.add_argument('-f','--force',       help='Flag to discard the previously saved bidsmap and logfile', action='store_true')

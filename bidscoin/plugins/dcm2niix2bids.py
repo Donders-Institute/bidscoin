@@ -73,7 +73,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str) -> Union[st
         return bids.get_parfield(attribute, sourcefile)
 
 
-def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, subprefix: str, sesprefix: str) -> None:
+def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict) -> None:
     """
     The bidscoiner plugin to convert the session DICOM and PAR/REC source-files into BIDS-valid nifti-files in the
     corresponding bidsfolder and extract personals (e.g. Age, Sex) from the source header
@@ -82,8 +82,6 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
     :param bidsfolder:  The full-path name of the BIDS root-folder
     :param personals:   The dictionary with the personal information
-    :param subprefix:   The prefix common for all source subject-folders
-    :param sesprefix:   The prefix common for all source session-folders
     :return:            Nothing
     """
 
@@ -108,12 +106,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
         LOGGER.exception(f"Unsupported dataformat '{dataformat}'")
 
     # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
-    subid, sesid = bids.get_subid_sesid(datasource,
-                                        bidsmap[dataformat]['subject'],
-                                        bidsmap[dataformat]['session'],
-                                        subprefix, sesprefix)
-    if subid == subprefix:
-        LOGGER.error(f"No valid subject identifier found for: {session}")
+    subid, sesid = datasource.get_subid_sesid(bidsmap[dataformat]['subject'], bidsmap[dataformat]['session'])
+    if not subid:
         return
 
     # Create the BIDS session-folder and a scans.tsv file
@@ -143,9 +137,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
         # Get a matching run from the bidsmap and update its run['datasource'] object
         datasource          = bids.DataSource(sourcefile, plugin, dataformat)
         run, index          = bids.get_matching_run(datasource, bidsmap)
-        datatype            = run['datasource'].datatype
-        datasource.datatype = datatype
-        run['datasource']   = datasource
+        datasource          = run['datasource']
+        datasource.path     = sourcefile
+        datasource.plugins  = plugin
+        datatype            = datasource.datatype
 
         # Check if we should ignore this run
         if datatype == bids.ignoredatatype:
@@ -325,7 +320,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
 
             # Add all the meta data to the json-file
             for metakey, metaval in run['meta'].items():
-                metaval = bids.get_dynamicvalue(metaval, datasource, cleanup=False, runtime=True)
+                metaval = datasource.get_dynamicvalue(metaval, cleanup=False, runtime=True)
                 LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
                 jsondata[metakey] = metaval
             with jsonfile.open('w') as json_fid:
