@@ -106,7 +106,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
         LOGGER.exception(f"Unsupported dataformat '{dataformat}'")
 
     # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
-    subid, sesid = datasource.get_subid_sesid(bidsmap[dataformat]['subject'], bidsmap[dataformat]['session'])
+    subid, sesid = datasource.subid_sesid(bidsmap[dataformat]['subject'], bidsmap[dataformat]['session'])
     if not subid:
         return
 
@@ -320,7 +320,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
 
             # Add all the meta data to the json-file
             for metakey, metaval in run['meta'].items():
-                metaval = datasource.get_dynamicvalue(metaval, cleanup=False, runtime=True)
+                metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
                 LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
                 jsondata[metakey] = metaval
             with jsonfile.open('w') as json_fid:
@@ -363,7 +363,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
             if intendedfor:
                 # Search with multiple patterns in all runs and store the relative path to the subject folder
                 if intendedfor.startswith('<') and intendedfor.endswith('>'):
-                    intendedfor = intendedfor[1:-1].split('><')                 # NB: The outer <> brackets have been stripped of by get_dynamicvalue(runtime=True) above
+                    intendedfor = intendedfor[1:-1].split('><')                 # NB: The outer <> brackets have been stripped of by dynamicvalue(runtime=True) above
                 elif not isinstance(intendedfor, list):
                     intendedfor = [intendedfor]
                 for selector in intendedfor:

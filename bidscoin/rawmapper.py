@@ -58,7 +58,8 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: boo
     for session in sessions:
 
         # Get the subject and session identifiers from the sub/ses session folder
-        subid, sesid = bids.get_subid_sesid(session/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
+        datasource   = bids.DataSource(session/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
+        subid, sesid = datasource.subid_sesid()
         subid = subid.replace('sub-', subprefix)
         sesid = sesid.replace('ses-', sesprefix)
 

@@ -81,7 +81,7 @@ class DataSource:
 
     def filesystem(self, tagname: str, run: dict=None) -> Union[str, int]:
         """
-        Gets the filesystem tagname value
+        Gets the filesystem properties
 
         :param tagname: The name of the filesystem property key, e.g. 'name' or 'nrfiles'
         :param run:     If given and tagname == 'nrfiles' then the nrfiles is dependent on the other filesystem matching-criteria
@@ -127,7 +127,7 @@ class DataSource:
                     return attributeval
         return ''
 
-    def get_subid_sesid(self, subid: str= '<<SourceFilePath>>', sesid: str= '<<SourceFilePath>>') -> Tuple[str, str]:
+    def subid_sesid(self, subid: str= '<<SourceFilePath>>', sesid: str= '<<SourceFilePath>>') -> Tuple[str, str]:
         """
         Extract the cleaned-up subid and sesid from the pathname if subid/sesid == '<<SourceFilePath>>', or from the datasource attributes
 
@@ -140,7 +140,7 @@ class DataSource:
         if subid == '<<SourceFilePath>>':
             subid = [part for part in self.path.parent.parts if part.startswith(self.subprefix)][-1]
         else:
-            subid = self.get_dynamicvalue(subid, runtime=True)
+            subid = self.dynamicvalue(subid, runtime=True)
         if not subid:
             LOGGER.error(f"Could not parse sub/ses-id information from '{self.path.parent}': no '{self.subprefix}' label in its path")
             return '', ''
@@ -151,7 +151,7 @@ class DataSource:
             else:
                 sesid = ''
         else:
-            sesid = self.get_dynamicvalue(sesid, runtime=True)
+            sesid = self.dynamicvalue(sesid, runtime=True)
 
         # Add sub- and ses- prefixes if they are not there
         subid = 'sub-' + cleanup_value(re.sub(f'^{self.subprefix}', '', subid))
@@ -160,7 +160,7 @@ class DataSource:
 
         return subid, sesid
 
-    def get_dynamicvalue(self, value: str, cleanup: bool=True, runtime: bool=False) -> str:
+    def dynamicvalue(self, value: str, cleanup: bool=True, runtime: bool=False) -> str:
         """
         Replaces dynamic (bids/meta) values with source attributes of filesystem properties when they start with
         '<' and end with '>', but not with '<<' and '>>' unless runtime = True
@@ -221,7 +221,7 @@ def unpack(sourcefolder: Path, subprefix: str, sesprefix: str, wildcard: str='*'
         if not workfolder:
             workfolder = tempfile.mkdtemp()
         workfolder   = Path(workfolder)
-        subid, sesid = DataSource(sourcefolder/'dum.my', subprefix=subprefix, sesprefix=sesprefix).get_subid_sesid()
+        subid, sesid = DataSource(sourcefolder/'dum.my', subprefix=subprefix, sesprefix=sesprefix).subid_sesid()
         subid, sesid = subid.replace('sub-', subprefix), sesid.replace('ses-', sesprefix)
         worksubses   = workfolder/subid/sesid
         worksubses.mkdir(parents=True, exist_ok=True)
@@ -821,10 +821,10 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
                     run_['attributes'][attrkey] = attrvalue
 
             for bidskey, bidsvalue in run['bids'].items():
-                run_['bids'][bidskey] = run['datasource'].get_dynamicvalue(bidsvalue)
+                run_['bids'][bidskey] = run['datasource'].dynamicvalue(bidsvalue)
 
             for metakey, metavalue in run['meta'].items():
-                run_['meta'][metakey] = run['datasource'].get_dynamicvalue(metavalue, cleanup=False)
+                run_['meta'][metakey] = run['datasource'].dynamicvalue(metavalue, cleanup=False)
 
             run_['datasource']      = copy.deepcopy(run['datasource'])
             run_['datasource'].path = datasource.path
@@ -1175,7 +1175,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict) -> Tuple[dict, Union
             for bidskey, bidsvalue in run['bids'].items():
 
                 # Replace the dynamic bids values
-                run_['bids'][bidskey] = datasource.get_dynamicvalue(bidsvalue)
+                run_['bids'][bidskey] = datasource.dynamicvalue(bidsvalue)
 
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 run_ = strip_suffix(run_)
@@ -1185,7 +1185,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict) -> Tuple[dict, Union
             for metakey, metavalue in run['meta'].items():
 
                 # Replace the dynamic bids values
-                run_['meta'][metakey] = datasource.get_dynamicvalue(metavalue, cleanup=False)
+                run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False)
 
             # Copy the DataSource object
             if 'datasource' in run:
@@ -1239,7 +1239,7 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False) -> str:
         if isinstance(bidsvalue, list):
             bidsvalue = bidsvalue[bidsvalue[-1]]                                # Get the selected item
         else:
-            bidsvalue  = run['datasource'].get_dynamicvalue(bidsvalue, cleanup=True, runtime=runtime)
+            bidsvalue  = run['datasource'].dynamicvalue(bidsvalue, cleanup=True, runtime=runtime)
         if bidsvalue:
             bidsname = f"{bidsname}_{entitykey}-{cleanup_value(bidsvalue)}"     # Append the key-value data to the bidsname
     bidsname = f"{bidsname}{add_prefix('_', cleanup_value(run['bids']['suffix']))}"     # And end with the suffix

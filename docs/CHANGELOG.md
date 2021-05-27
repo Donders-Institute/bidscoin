@@ -7,9 +7,11 @@ All notable changes to this project will be documented in this file. The format 
 ### Added
 - A BIDScoin installation test (`bidscoin -t`)
 - A bidseditor button to save the Options to a (default) template bidsmap
+- Sub-/ses-prefix settings to bidsmap['Options']['bidscoin']
 
 ### Changed
-- Plugins should now have a `is_sourcefile` and a `get_attribute` function
+- Plugins should now have a `is_sourcefile` and a `get_attribute` function and have a simpler API (-> DataSource class)
+- The intricate filtering of the `nrfiles` property by the other filesystem properties has been removed and is now a pure/unfiltered file-system property
 
 ## [3.6.1] - 2021-05-20
 

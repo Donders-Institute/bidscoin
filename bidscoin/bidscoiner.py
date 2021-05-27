@@ -170,7 +170,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                 LOGGER.info(f"No coinable datasources found in '{session}'")
                 continue
             if not force:
-                subid, sesid = datasource.get_subid_sesid(bidsmap[datasource.dataformat]['subject'], bidsmap[datasource.dataformat]['session'])
+                subid, sesid = datasource.subid_sesid(bidsmap[datasource.dataformat]['subject'], bidsmap[datasource.dataformat]['session'])
                 bidssession  = bidsfolder/subid/sesid
                 datatypes    = []
                 for dataformat in dataformats:

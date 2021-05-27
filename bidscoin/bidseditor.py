@@ -452,8 +452,8 @@ class MainWindow(QMainWindow):
                 LOGGER.setLevel(loglevel)
 
                 provenance   = Path(run['provenance'])
-                subid, sesid = run['datasource'].get_subid_sesid(output_bidsmap[dataformat]['subject'],
-                                                                 output_bidsmap[dataformat]['session'])
+                subid, sesid = run['datasource'].subid_sesid(output_bidsmap[dataformat]['subject'],
+                                                             output_bidsmap[dataformat]['session'])
                 bidsname     = bids.get_bidsname(subid, sesid, run)
                 if run['bids']['suffix'] in bids.get_derivatives(datatype):
                     session  = self.bidsfolder/'derivatives'/'[manufacturer]'/subid/sesid
@@ -844,8 +844,8 @@ class EditWindow(QDialog):
         self.source_run        = run                    # The original run-item from the source bidsmap
         self.target_run        = copy.deepcopy(run)     # The edited run-item that is inserted in the target_bidsmap
         self.get_allowed_suffixes()                     # Set the possible suffixes the user can select for a given datatype
-        self.subid, self.sesid = datasource.get_subid_sesid(bidsmap[self.dataformat]['subject'],
-                                                            bidsmap[self.dataformat]['session'])
+        self.subid, self.sesid = datasource.subid_sesid(bidsmap[self.dataformat]['subject'],
+                                                        bidsmap[self.dataformat]['session'])
 
         # Set-up the window
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
@@ -1181,7 +1181,7 @@ class EditWindow(QDialog):
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
                 self.bids_table.blockSignals(True)
                 if isinstance(value, str) and not (value.startswith('<<') and value.endswith('>>')):
-                    value = bids.cleanup_value(self.datasource.get_dynamicvalue(value))
+                    value = bids.cleanup_value(self.datasource.dynamicvalue(value))
                     self.bids_table.item(rowindex, 1).setText(value)
                 if key == 'run' and oldvalue.startswith('<<') and oldvalue.endswith('>>'):
                     answer = QMessageBox.question(self, f"Edit bids entities",
@@ -1210,7 +1210,7 @@ class EditWindow(QDialog):
         if value != oldvalue:
             # Replace the (dynamic) value
             if not (value.startswith('<<') and value.endswith('>>')):
-                value = self.datasource.get_dynamicvalue(value, cleanup=False)
+                value = self.datasource.dynamicvalue(value, cleanup=False)
                 self.meta_table.blockSignals(True)
                 self.meta_table.item(rowindex, 1).setText(value)
                 self.meta_table.blockSignals(False)

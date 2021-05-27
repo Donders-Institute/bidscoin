@@ -72,7 +72,8 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
                 LOGGER.info('--------------------------------------')
                 LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
 
-                sub_id, ses_id = bids.get_subid_sesid(session/'dum.my')
+                datasource     = bids.DataSource(session/'dum.my')
+                sub_id, ses_id = datasource.subid_sesid()
 
                 # Search for images that need to be defaced
                 for match in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):

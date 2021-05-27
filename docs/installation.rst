@@ -41,7 +41,7 @@ If you do not have git (or any other version control system) installed you can `
 Testing BIDScoin
 ^^^^^^^^^^^^^^^^
 
-You can run the central ``bidscoin`` tool to test your installation:
+You can run the ``bidscoin`` utility to test your installation:
 
 .. code-block:: console
 
