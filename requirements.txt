@@ -10,5 +10,4 @@ python-dateutil
 nibabel
 pydeface
 drmaa
-importlib
 # dcm2niix. For more information, see ./docs/installation.md and ./heuristics/bidsmap_template.yaml
