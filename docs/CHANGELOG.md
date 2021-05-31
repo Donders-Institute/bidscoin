@@ -1,11 +1,27 @@
 # Changelog
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
-    
+
+## [3.7.0-dev]
+
+### Added
+- A BIDScoin installation test (`bidscoin -t`)
+- A bidseditor button to save the Options to a (default) template bidsmap
+- Sub-/ses-prefix settings to bidsmap['Options']['bidscoin']
+
+### Changed
+- Plugins should now have a `is_sourcefile` and a `get_attribute` function and have a simpler API (-> DataSource class)
+- The intricate filtering of the `nrfiles` property by the other filesystem properties has been removed and is now a pure/unfiltered file-system property
+
+## [3.6.2] - 2021-05-31
+
+### Fixed
+Removed the redundant importlib dependency from the requirements (could cause an installation error)
+
 ## [3.6.1] - 2021-05-20
 
 ### Fixed
-- The bidscoiner no longer sometimes crashes when dcm2niix produced custom suffixes
+The bidscoiner no longer sometimes crashes when dcm2niix produces custom suffixes (e.g. for multi-echo data)
 
 ## [3.6.0] - 2021-05-13
 
@@ -235,7 +251,9 @@ A first stable release of BIDScoin :-)
 ### To do
 * Add support for non-imaging data
 
-[Unreleased]: https://github.com/Donders-Institute/bidscoin/compare/3.5.3...HEAD
+[3.7.0-dev]: https://github.com/Donders-Institute/bidscoin/compare/3.6.1...HEAD
+[3.6.1]: https://github.com/Donders-Institute/bidscoin/compare/3.6.0...3.6.1
+[3.6.0]: https://github.com/Donders-Institute/bidscoin/compare/3.5.3...3.6.0
 [3.5.3]: https://github.com/Donders-Institute/bidscoin/compare/3.5.2...3.5.3
 [3.5.2]: https://github.com/Donders-Institute/bidscoin/compare/3.5.1...3.5.2
 [3.5.1]: https://github.com/Donders-Institute/bidscoin/compare/3.5...3.5.1
