@@ -13,6 +13,11 @@ All notable changes to this project will be documented in this file. The format 
 - Plugins should now have a `is_sourcefile` and a `get_attribute` function and have a simpler API (-> DataSource class)
 - The intricate filtering of the `nrfiles` property by the other filesystem properties has been removed and is now a pure/unfiltered file-system property
 
+## [3.6.2] - 2021-05-31
+
+### Fixed
+Removed the redundant importlib dependency from the requirements (could cause an installation error)
+
 ## [3.6.1] - 2021-05-20
 
 ### Fixed
