@@ -1164,6 +1164,11 @@ def get_matching_run(datasource: DataSource, bidsmap: dict) -> Tuple[dict, Union
 
                 # Check if the attribute value matches with the info from the sourcefile
                 sourcevalue = datasource.attributes(attrkey)
+                try:
+                    re.compile(str(sourcevalue))
+                except re.error:
+                    for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
+                        sourcevalue = sourcevalue.strip().replace(metacharacter, '')
                 if attrvalue:
                     match = match and match_attribute(sourcevalue, attrvalue)
 
