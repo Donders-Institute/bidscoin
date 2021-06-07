@@ -1045,6 +1045,12 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
 
                 # Check if the attribute value matches with the info from the sourcefile
                 sourcevalue = get_sourcevalue(attrkey, sourcefile, dataformat)
+                try:
+                    re.compile(str(sourcevalue))
+                except re.error:
+                    for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
+                        sourcevalue = sourcevalue.strip().replace(metacharacter, '')
+
                 if attrvalue:
                     match = match and match_attribute(sourcevalue, attrvalue)
 
