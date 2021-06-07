@@ -20,7 +20,7 @@ Options:
 # General options and plugins
 # --------------------------------------------------------------------------------
   bidscoin:
-    version: '3.6.2'              # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
+    version: '3.6.3'              # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
     bidsignore: extra_data/       # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
   plugins:                        # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
     README: ~                     # The plugin basename that is installed in the default bidscoin/plugins folder
