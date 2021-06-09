@@ -722,7 +722,13 @@ def get_run(bidsmap: dict, dataformat: str, datatype: str, suffix_idx: Union[int
 
             for attrkey, attrvalue in run['attributes'].items():
                 if sourcefile.name:
-                    run_['attributes'][attrkey] = get_sourcevalue(attrkey, sourcefile, dataformat)
+                    sourcevalue = get_sourcevalue(attrkey, sourcefile, dataformat)
+                    try:
+                        re.compile(str(sourcevalue))
+                    except re.error:
+                        for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
+                            sourcevalue = sourcevalue.strip().replace(metacharacter, '.')
+                    run_['attributes'][attrkey] = sourcevalue
                 else:
                     run_['attributes'][attrkey] = attrvalue
 
@@ -1049,7 +1055,7 @@ def get_matching_run(sourcefile: Path, bidsmap: dict, dataformat: str) -> Tuple[
                     re.compile(str(sourcevalue))
                 except re.error:
                     for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
-                        sourcevalue = sourcevalue.strip().replace(metacharacter, '')
+                        sourcevalue = sourcevalue.strip().replace(metacharacter, '.')
 
                 if attrvalue:
                     match = match and match_attribute(sourcevalue, attrvalue)

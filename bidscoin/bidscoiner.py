@@ -99,7 +99,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
     bidsmap, _  = bids.load_bidsmap(bidsmapfile, bidsfolder/'code'/'bidscoin')
-    dataformats = [dataformat for dataformat in bidsmap if dataformat not in ('Options','PlugIns')]     # Handle legacy bidsmaps (-> 'PlugIns')
+    dataformats = [dataformat for dataformat in bidsmap if dataformat and dataformat not in ('Options','PlugIns')]     # Handle legacy bidsmaps (-> 'PlugIns')
     if not bidsmap:
         LOGGER.error(f"No bidsmap file found in {bidsfolder}. Please run the bidsmapper first and/or use the correct bidsfolder")
         return
@@ -171,7 +171,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                 bidssession  = bidsfolder/subid/sesid
                 datatypes    = []
                 for dataformat in dataformats:
-                    if not bidsmap[dataformat]['session']:
+                    if sesid and not bidsmap[dataformat].get('session'):
                         bidssession = bidssession.parent
                     for datatype in bidscoin.lsdirs(bidssession):                           # See what datatypes we already have in the bids session-folder
                         if datatype.glob('*') and bidsmap[dataformat].get(datatype.name):   # See if we are going to add data for this datatype
