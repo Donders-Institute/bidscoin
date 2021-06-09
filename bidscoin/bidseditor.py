@@ -95,7 +95,7 @@ class MainWindow(QMainWindow):
         self.output_bidsmap    = copy.deepcopy(input_bidsmap)   # The edited bidsmap
         self.template_bidsmap  = template_bidsmap               # The bidsmap from which new datatype run-items are taken
         self.datasaved         = datasaved                      # True if data has been saved on disk
-        self.dataformats       = [dataformat for dataformat in input_bidsmap if dataformat not in ('Options', 'PlugIns') and bids.dir_bidsmap(input_bidsmap, dataformat)]
+        self.dataformats       = [dataformat for dataformat in input_bidsmap if dataformat and dataformat not in ('Options', 'PlugIns') and bids.dir_bidsmap(input_bidsmap, dataformat)]
 
         # Set-up the tabs, add the tables and put the bidsmap data in them
         tabwidget = self.tabwidget = QtWidgets.QTabWidget()
@@ -1239,7 +1239,7 @@ class EditWindow(QDialog):
         """
 
         # Get the new target_run
-        self.target_run = bids.get_run(self.template_bidsmap, self.target_datatype, suffix_idx, self.datasource)
+        self.target_run = bids.get_run(self.template_bidsmap, self.target_datatype, suffix_idx, self.target_run)
 
         # Insert the new target_run in our target_bidsmap
         bids.update_bidsmap(self.target_bidsmap, self.current_datatype, self.target_run)

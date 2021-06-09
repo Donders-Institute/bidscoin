@@ -816,15 +816,21 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
 
             for attrkey, attrvalue in run['attributes'].items():
                 if datasource.path.name:
-                    run_['attributes'][attrkey] = run['datasource'].attributes(attrkey)
+                    sourcevalue = datasource.attributes(attrkey)
+                    try:
+                        re.compile(str(sourcevalue))
+                    except re.error:
+                        for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
+                            sourcevalue = sourcevalue.strip().replace(metacharacter, '.')
+                    run_['attributes'][attrkey] = sourcevalue
                 else:
                     run_['attributes'][attrkey] = attrvalue
 
             for bidskey, bidsvalue in run['bids'].items():
-                run_['bids'][bidskey] = run['datasource'].dynamicvalue(bidsvalue)
+                run_['bids'][bidskey] = datasource.dynamicvalue(bidsvalue)
 
             for metakey, metavalue in run['meta'].items():
-                run_['meta'][metakey] = run['datasource'].dynamicvalue(metavalue, cleanup=False)
+                run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False)
 
             run_['datasource']      = copy.deepcopy(run['datasource'])
             run_['datasource'].path = datasource.path
@@ -1168,7 +1174,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict) -> Tuple[dict, Union
                     re.compile(str(sourcevalue))
                 except re.error:
                     for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
-                        sourcevalue = sourcevalue.strip().replace(metacharacter, '')
+                        sourcevalue = sourcevalue.strip().replace(metacharacter, '.')
                 if attrvalue:
                     match = match and match_attribute(sourcevalue, attrvalue)
 
