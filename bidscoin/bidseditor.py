@@ -1239,7 +1239,7 @@ class EditWindow(QDialog):
         """
 
         # Get the new target_run
-        self.target_run = bids.get_run(self.template_bidsmap, self.target_datatype, suffix_idx, self.target_run)
+        self.target_run = bids.get_run(self.template_bidsmap, self.target_datatype, suffix_idx, self.datasource)
 
         # Insert the new target_run in our target_bidsmap
         bids.update_bidsmap(self.target_bidsmap, self.current_datatype, self.target_run)
