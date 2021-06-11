@@ -116,14 +116,27 @@ class DataSource:
 
         return ''
 
-    def attributes(self, attributekey: str):
-        """Use the plugins to read and return the attribute value from the data source. Return '' if nothing could be read"""
+    def attributes(self, attributekey: str, validregexp: bool=False):
+        """
+        Use the plugins to read and return the attribute value from the datasource
+
+        :param attributekey: The attribute key for which a value is read from the datasource
+        :param validregexp:  If True, the regexp meta-characters in the attribute value (e.g. '*') are replaced by '.',
+                             e.g. to prevent compile errors in match_attribute()
+        :return:             The attribute value or '' if the attribute could not be read from the datasource
+        """
 
         for plugin, options in self.plugins.items():
             module = bidscoin.import_plugin(plugin, ('get_attribute',))
             if module:
                 attributeval = module.get_attribute(self.dataformat, self.path, attributekey)
                 if attributeval:
+                    if validregexp:
+                        try:            # Strip meta-characters to prevent match_attribute() errors
+                            re.compile(str(attributeval))
+                        except re.error:
+                            for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
+                                attributeval = attributeval.strip().replace(metacharacter, '.')
                     return attributeval
         return ''
 
@@ -816,13 +829,7 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
 
             for attrkey, attrvalue in run['attributes'].items():
                 if datasource.path.name:
-                    sourcevalue = datasource.attributes(attrkey)
-                    try:            # Strip meta-characters to prevent match_attribute() errors
-                        re.compile(str(sourcevalue))
-                    except re.error:
-                        for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
-                            sourcevalue = sourcevalue.strip().replace(metacharacter, '.')
-                    run_['attributes'][attrkey] = sourcevalue
+                    run_['attributes'][attrkey] = datasource.attributes(attrkey, validregexp=True)
                 else:
                     run_['attributes'][attrkey] = attrvalue
 
@@ -1169,12 +1176,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict) -> Tuple[dict, Union
             for attrkey, attrvalue in run['attributes'].items():
 
                 # Check if the attribute value matches with the info from the sourcefile
-                sourcevalue = datasource.attributes(attrkey)
-                try:                # Strip meta-characters to prevent match_attribute() errors
-                    re.compile(str(sourcevalue))
-                except re.error:
-                    for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
-                        sourcevalue = sourcevalue.strip().replace(metacharacter, '.')
+                sourcevalue = datasource.attributes(attrkey, validregexp=True)
                 if attrvalue:
                     match = match and match_attribute(sourcevalue, attrvalue)
 
