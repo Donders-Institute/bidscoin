@@ -1233,7 +1233,7 @@ class EditWindow(QDialog):
 
     def change_run(self, suffix_idx):
         """
-        Resets the edit dialog window with a new target_run from the template bidsmap after a datatype_dropdown_change.
+        Resets the edit dialog window with a new target_run from the template bidsmap after a suffix- or datatype-change
 
         :param suffix_idx: The suffix or index number that will used to extract the run from the template bidsmap
         """

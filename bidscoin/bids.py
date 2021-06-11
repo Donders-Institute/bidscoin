@@ -817,7 +817,7 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
             for attrkey, attrvalue in run['attributes'].items():
                 if datasource.path.name:
                     sourcevalue = datasource.attributes(attrkey)
-                    try:
+                    try:            # Strip meta-characters to prevent match_attribute() errors
                         re.compile(str(sourcevalue))
                     except re.error:
                         for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
@@ -1001,7 +1001,7 @@ def match_attribute(attribute, pattern) -> bool:
     attribute = str(attribute).strip()
     pattern   = str(pattern).strip()
 
-    # Compare the value items (with / without wildcard) with the attribute string items
+    # See if the pattern matches the source attribute
     try:
         match = re.fullmatch(pattern, attribute)
     except re.error as patternerror:
@@ -1170,7 +1170,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict) -> Tuple[dict, Union
 
                 # Check if the attribute value matches with the info from the sourcefile
                 sourcevalue = datasource.attributes(attrkey)
-                try:
+                try:                # Strip meta-characters to prevent match_attribute() errors
                     re.compile(str(sourcevalue))
                 except re.error:
                     for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
