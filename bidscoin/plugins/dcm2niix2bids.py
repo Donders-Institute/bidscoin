@@ -294,10 +294,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
             elif datatype == 'pet' and 'TracerName' not in jsondata:
                 jsondata['TracerName'] = run['bids']['trc']
 
-            # Add all the meta data to the json-file
+            # Add all the meta data to the json-file except `IntendedFor`, which is handled separately later
             for metakey, metaval in run['meta'].items():
-                metaval = bids.get_dynamicvalue(metaval, sourcefile, cleanup=False, runtime=True)
-                LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
+                if metakey is not 'IntendedFor':
+                    LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
+                    metaval = bids.get_dynamicvalue(metaval, sourcefile, cleanup=False, runtime=True)
                 jsondata[metakey] = metaval
             with jsonfile.open('w') as json_fid:
                 json.dump(jsondata, json_fid, indent=4)
@@ -339,7 +340,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
             if intendedfor:
                 # Search with multiple patterns in all runs and store the relative path to the subject folder
                 if intendedfor.startswith('<') and intendedfor.endswith('>'):
-                    intendedfor = intendedfor[1:-1].split('><')                 # NB: The outer <> brackets have been stripped of by get_dynamicvalue(runtime=True) above
+                    intendedfor = intendedfor[2:-2].split('><')
                 elif not isinstance(intendedfor, list):
                     intendedfor = [intendedfor]
                 for selector in intendedfor:
