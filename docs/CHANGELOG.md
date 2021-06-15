@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file. The format 
 ### Fixed
 Remove regular expression metacharacters from the source attribute if needed (could cause a regexp compile error)
 Fixed for list of dynamic <<Intendended><For>> fields
+
 ## [3.6.2] - 2021-05-31
 
 ### Fixed
