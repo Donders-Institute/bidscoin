@@ -13,10 +13,11 @@ All notable changes to this project will be documented in this file. The format 
 - Plugins should now have a `is_sourcefile` and a `get_attribute` function and have a simpler API (-> DataSource class)
 - The intricate filtering of the `nrfiles` property by the other filesystem properties has been removed and is now a pure/unfiltered file-system property
 
-## [3.6.3] - 2021-06-07
+## [3.6.3] - 2021-06-14
 
 ### Fixed
 Remove regular expression metacharacters from the source attribute if needed (could cause a regexp compile error)
+Fixed for list of dynamic <<Intendended><For>> fields
 
 ## [3.6.2] - 2021-05-31
 
