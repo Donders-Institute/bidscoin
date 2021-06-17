@@ -1746,7 +1746,7 @@ Physio:
   subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime
   session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime
 
-  beh:        # ----------------------- All behavioural runs --------------------
+  func:        # ----------------------- All functional runs --------------------
   - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     filesystem:                   # This is what phys2bids is using now (well, part of it)
       path:                       # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"

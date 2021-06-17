@@ -12,7 +12,7 @@ See also:
 """
 
 try:
-    import phys2bids
+    from phys2bids.phys2bids import phys2bids
 except ImportError:
     pass
 try:
@@ -48,11 +48,11 @@ def is_sourcefile(file: Path) -> str:
     :return:        The valid / supported dataformat of the sourcefile
     """
 
-    if file.is_file():
-
+    try:
+        phys2bids(file, info=True)
+        return 'Physio'
+    except Exception:
         LOGGER.debug(f'This is the phys2bids-plugin is_sourcefile routine, assessing whether "{file}" has a valid dataformat')
-        if phys2bids.info:
-            return 'Physio'
 
     return ''
 
@@ -73,7 +73,9 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str) -> str:
     else:
         return ''
 
-    return phys2bids.info(attribute)
+    phys_info = phys2bids(sourcefile, info=True)
+
+    return phys_info.get(attribute, '')
 
 
 def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
@@ -102,7 +104,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
         return
 
     # Collect the different Physio source files (runs) in the session
-    sourcefiles = []
+    sourcefiles = [sourcefile for sourcefile in session.rglob('*') if sourcefile.is_file()]
 
     # Update the bidsmap with the info from the source files
     for sourcefile in sourcefiles:
@@ -113,6 +115,8 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
             return
 
         datasource = bids.DataSource(sourcefile, plugin, dataformat)
+        if not datasource.is_datasource():
+            continue
 
         # See if we can find a matching run in the old bidsmap
         run, index = bids.get_matching_run(datasource, bidsmap_old)
@@ -163,7 +167,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
         return
 
     # Make a list of all the data sources / runs
-    sources = []
+    sourcefiles = [sourcefile for sourcefile in session.rglob('*') if sourcefile.is_file()]
 
     # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
     subid, sesid = datasource.subid_sesid(bidsmap[dataformat]['subject'], bidsmap[dataformat]['session'])
@@ -174,10 +178,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
     bidsses = bidsfolder/subid/sesid
     bidsses.mkdir(parents=True, exist_ok=True)
 
-    for source in sources:
+    for sourcefile in sourcefiles:
 
         # Get a data source, a matching run from the bidsmap and update its run['datasource'] object
-        sourcefile = Path()
         datasource          = bids.DataSource(sourcefile, plugin, dataformat)
         run, index          = bids.get_matching_run(datasource, bidsmap)
         datasource          = run['datasource']
@@ -187,7 +190,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
 
         # Check if we should ignore this run
         if datatype == bids.ignoredatatype:
-            LOGGER.info(f"Leaving out: {source}")
+            LOGGER.info(f"Leaving out: {sourcefile}")
             continue
 
         # Check that we know this run
@@ -195,7 +198,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
             LOGGER.error(f"Skipping unknown '{datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
             continue
 
-        LOGGER.info(f"Processing: {source}")
+        LOGGER.info(f"Processing: {sourcefile}")
 
         outfolder = bidsses/datatype
         outfolder.mkdir(parents=True, exist_ok=True)
@@ -214,6 +217,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                 (outfolder/bidsname).with_suffix(ext).unlink(missing_ok=True)
 
         # Run phys2bids
+        phys2bids(sourcefile, outdir=bidsses, tr=TRs)
 
         # Adapt all the newly produced json files and add user-specified meta-data (NB: assumes every nifti-file comes with a json-file)
         with jsonfile.open('r') as json_fid:
