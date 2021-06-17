@@ -15,7 +15,13 @@ try:
     import phys2bids
 except ImportError:
     pass
+try:
+    from bidscoin import bids
+except ImportError:
+    import bids         # This should work if bidscoin was not pip-installed
 import logging
+import shutil
+import json
 from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
@@ -88,7 +94,48 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     :return:
     """
 
-    LOGGER.debug(f'This is the bidsmapper phys2bids-plugin working on: {session}')
+    # Get started
+    plugin     = {'phys2bidscoin': bidsmap_new['Options']['plugins']['phys2bidscoin']}
+    datasource = bids.get_datasource(session, plugin)
+    dataformat = datasource.dataformat
+    if not dataformat:
+        return
+
+    # Collect the different Physio source files (runs) in the session
+    sourcefiles = []
+
+    # Update the bidsmap with the info from the source files
+    for sourcefile in sourcefiles:
+
+        # Input checks
+        if not sourcefile.name or (not template[dataformat] and not bidsmap_old[dataformat]):
+            LOGGER.error(f"No {dataformat} source information found in the bidsmap and template")
+            return
+
+        datasource = bids.DataSource(sourcefile, plugin, dataformat)
+
+        # See if we can find a matching run in the old bidsmap
+        run, index = bids.get_matching_run(datasource, bidsmap_old)
+
+        # If not, see if we can find a matching run in the template
+        if index is None:
+            run, _ = bids.get_matching_run(datasource, template)
+
+        # See if we have collected the run somewhere in our new bidsmap
+        if not bids.exist_run(bidsmap_new, '', run):
+
+            # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
+            LOGGER.info(f"Found '{run['datasource'].datatype}' {dataformat} sample: {sourcefile}")
+
+            # Now work from the provenance store
+            if store:
+                targetfile             = store['target']/sourcefile.relative_to(store['source'])
+                targetfile.parent.mkdir(parents=True, exist_ok=True)
+                run['provenance']      = str(shutil.copy2(sourcefile, targetfile))
+                run['datasource'].path = targetfile
+
+            # Copy the filled-in run over to the new bidsmap
+            bids.append_run(bidsmap_new, run)
 
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict) -> None:
@@ -107,4 +154,73 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
     :return:            Nothing
     """
 
-    LOGGER.debug(f'This is the bidscoiner phys2bids-plugin working on: {session} -> {bidsfolder}')
+    # Get started and see what dataformat we have
+    plugin     = {'phys2bidscoin': bidsmap['Options']['plugins']['phys2bidscoin']}
+    datasource = bids.get_datasource(session, plugin)
+    dataformat = datasource.dataformat
+    if not dataformat:
+        LOGGER.info(f"No {__name__} sourcedata found in: {session}")
+        return
+
+    # Make a list of all the data sources / runs
+    sources = []
+
+    # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
+    subid, sesid = datasource.subid_sesid(bidsmap[dataformat]['subject'], bidsmap[dataformat]['session'])
+    if not subid:
+        return
+
+    # Create the BIDS session-folder and a scans.tsv file
+    bidsses = bidsfolder/subid/sesid
+    bidsses.mkdir(parents=True, exist_ok=True)
+
+    for source in sources:
+
+        # Get a data source, a matching run from the bidsmap and update its run['datasource'] object
+        sourcefile = Path()
+        datasource          = bids.DataSource(sourcefile, plugin, dataformat)
+        run, index          = bids.get_matching_run(datasource, bidsmap)
+        datasource          = run['datasource']
+        datasource.path     = sourcefile
+        datasource.plugins  = plugin
+        datatype            = datasource.datatype
+
+        # Check if we should ignore this run
+        if datatype == bids.ignoredatatype:
+            LOGGER.info(f"Leaving out: {source}")
+            continue
+
+        # Check that we know this run
+        if index is None:
+            LOGGER.error(f"Skipping unknown '{datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+            continue
+
+        LOGGER.info(f"Processing: {source}")
+
+        outfolder = bidsses/datatype
+        outfolder.mkdir(parents=True, exist_ok=True)
+
+        # Compose the BIDS filename using the matched run
+        bidsname  = bids.get_bidsname(subid, sesid, run, runtime=True)
+        runindex  = run['bids'].get('run', '')
+        if runindex.startswith('<<') and runindex.endswith('>>'):
+            bidsname = bids.increment_runindex(outfolder, bidsname)
+        jsonfile = (outfolder/bidsname).with_suffix('.json')
+
+        # Check if file already exists (-> e.g. when a static runindex is used)
+        if (outfolder/bidsname).with_suffix('.json').is_file():
+            LOGGER.warning(f"{outfolder/bidsname}.* already exists and will be deleted -- check your results carefully!")
+            for ext in ('.nii.gz', '.nii', '.json', '.bval', '.bvec', '.tsv.gz'):
+                (outfolder/bidsname).with_suffix(ext).unlink(missing_ok=True)
+
+        # Run phys2bids
+
+        # Adapt all the newly produced json files and add user-specified meta-data (NB: assumes every nifti-file comes with a json-file)
+        with jsonfile.open('r') as json_fid:
+            jsondata = json.load(json_fid)
+        for metakey, metaval in run['meta'].items():
+            LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
+            metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
+            jsondata[metakey] = metaval
+        with jsonfile.open('w') as json_fid:
+            json.dump(jsondata, json_fid, indent=4)
