@@ -296,7 +296,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
 
             # Add all the meta data to the json-file except `IntendedFor`, which is handled separately later
             for metakey, metaval in run['meta'].items():
-                if metakey is not 'IntendedFor':
+                if metakey != 'IntendedFor':
                     LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
                     metaval = bids.get_dynamicvalue(metaval, sourcefile, cleanup=False, runtime=True)
                 jsondata[metakey] = metaval
