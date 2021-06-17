@@ -217,7 +217,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                 (outfolder/bidsname).with_suffix(ext).unlink(missing_ok=True)
 
         # Run phys2bids
-        phys2bids(sourcefile, outdir=bidsses, tr=TRs)
+        phys2bids(sourcefile, outdir=bidsses, heur_file='heuristic.py', sub=subid, ses=sesid, chtrig=int(run['meta'].get('trigger_channel', 0)),
+                  num_timepoints_expected=run['meta'].get('volume_numbers', None), tr=TRs, pad=run['meta'].get('pad', 9),
+                  ch_name=run['meta'].get('channel_names', []), yml='', debug=False, quiet=False)
 
         # Adapt all the newly produced json files and add user-specified meta-data (NB: assumes every nifti-file comes with a json-file)
         with jsonfile.open('r') as json_fid:
