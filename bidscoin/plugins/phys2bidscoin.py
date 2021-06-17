@@ -200,26 +200,26 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
 
         LOGGER.info(f"Processing: {sourcefile}")
 
-        outfolder = bidsses/datatype
-        outfolder.mkdir(parents=True, exist_ok=True)
+        outdir = bidsses/datatype
+        outdir.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        bidsname  = bids.get_bidsname(subid, sesid, run, runtime=True)
-        runindex  = run['bids'].get('run', '')
+        bidsname = bids.get_bidsname(subid, sesid, run, runtime=True)
+        runindex = run['bids'].get('run', '')
         if runindex.startswith('<<') and runindex.endswith('>>'):
-            bidsname = bids.increment_runindex(outfolder, bidsname)
-        jsonfile = (outfolder/bidsname).with_suffix('.json')
+            bidsname = bids.increment_runindex(outdir, bidsname)
+        jsonfile = (outdir/bidsname).with_suffix('.json')
 
         # Check if file already exists (-> e.g. when a static runindex is used)
-        if (outfolder/bidsname).with_suffix('.json').is_file():
-            LOGGER.warning(f"{outfolder/bidsname}.* already exists and will be deleted -- check your results carefully!")
+        if (outdir/bidsname).with_suffix('.json').is_file():
+            LOGGER.warning(f"{outdir/bidsname}.* already exists and will be deleted -- check your results carefully!")
             for ext in ('.nii.gz', '.nii', '.json', '.bval', '.bvec', '.tsv.gz'):
-                (outfolder/bidsname).with_suffix(ext).unlink(missing_ok=True)
+                (outdir/bidsname).with_suffix(ext).unlink(missing_ok=True)
 
         # Run phys2bids
-        phys2bids(sourcefile, outdir=bidsses, heur_file='heuristic.py', sub=subid, ses=sesid, chtrig=int(run['meta'].get('trigger_channel', 0)),
-                  num_timepoints_expected=run['meta'].get('volume_numbers', None), tr=TRs, pad=run['meta'].get('pad', 9),
-                  ch_name=run['meta'].get('channel_names', []), yml='', debug=False, quiet=False)
+        phys2bids(sourcefile, outdir=outdir, heur_file='heuristic.py', sub=subid, ses=sesid, chtrig=int(run['meta'].get('TriggerChannel', 0)),
+                  num_timepoints_expected=run['meta'].get('VolumeNumbers', None), tr=TRs, pad=run['meta'].get('Pad', 9),
+                  ch_name=run['meta'].get('ChannelNames', []), yml='', debug=False, quiet=False)
 
         # Adapt all the newly produced json files and add user-specified meta-data (NB: assumes every nifti-file comes with a json-file)
         with jsonfile.open('r') as json_fid:
