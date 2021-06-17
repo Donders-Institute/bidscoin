@@ -13,6 +13,11 @@ with (Path(__file__).parent/'README.rst').open('r') as fid:
 with (Path(__file__).parent/'requirements.txt').open('r') as fid:
     requirements = fid.read().splitlines()
 
+# Add extra requirements to install plugin requirements as needed
+EXTRAS_REQUIRE = {
+    'phys2bids':  ['bioread >=1.0.5', 'pymatreader>=0.0.24', 'duecredit', 'phys2bids>=2.0.0,<3.0.0']
+}
+
 setup(name                           = 'bidscoin',          # Required
       version                        = version,             # Required
       packages                       = find_packages(),     # Required
@@ -20,6 +25,7 @@ setup(name                           = 'bidscoin',          # Required
       python_requires                = '>=3.8',
       setup_requires                 = ["pytest-runner"],
       tests_require                  = ["pytest", "pytest-cov", "coverage"],
+      extras_require                 = EXTRAS_REQUIRE,
       package_data                   = {'': ['*version.txt', '*.yaml', 'bidscoin_logo.png', 'bidscoin.ico', 'rightarrow.png']},
       entry_points                   = {'console_scripts': ['bidscoin         = bidscoin.bidscoin:main',
                                                             'bidseditor       = bidscoin.bidseditor:main',
