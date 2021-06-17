@@ -29,6 +29,7 @@ Options:
     dcm2niix2bids:                # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
       path: module add dcm2niix;  # Command to set the path to dcm2niix (note the semi-colon), e.g. module add dcm2niix/1.0.20180622; or PATH=/opt/dcm2niix/bin:$PATH; or /opt/dcm2niix/bin/ or '"C:\Program Files\dcm2niix\"' (note the quotes to deal with the whitespace)
       args: -b y -z y -i n        # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
+    phys2bidscoin:                # The settings for the phys2bidscoin plugin
 
 
 DICOM:
@@ -1737,3 +1738,56 @@ PAR:
     bids:
       acq: <protocol_name><exam_name>
       suffix: <series_type>
+
+Physio:
+# --------------------------------------------------------------------------------
+# Physio key-value heuristics (phys2bids -info data) that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
+  subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime
+  session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime
+
+  beh:        # ----------------------- All behavioural runs --------------------
+  - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    filesystem:                   # This is what phys2bids is using now (well, part of it)
+      path:                       # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
+      name:                       # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
+      size:                       # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
+      nrfiles:                    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
+    attributes:                   # The matching (regexp) criteria for the phys2bids -info data go in here
+      Trigger:
+      CO2:
+      O2:
+      Pulse:
+    bids:
+      task:
+      acq:
+      recording:
+      run: <<1>>                  # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      suffix: physio
+    meta:                         # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
+      SamplingFrequency:
+      StartTime:
+      Trigger: <<Trigger>>
+      Columns:
+  - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    filesystem:                   # This is what phys2bids is using now (well, part of it)
+      path:                       # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
+      name:                       # File name, e.g. ".*eye.*" or ".*(iEEG|MEG).*"
+      size:                       # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
+      nrfiles:                    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
+    attributes:                   # The matching (regexp) criteria for the phys2bids -info data go in here
+      Trigger:
+      CO2:
+      O2:
+      Pulse:
+    bids:
+      task:
+      acq:
+      recording:
+      run: <<1>>                  # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      suffix: stim
+    meta:                         # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by phys2bids
+      SamplingFrequency:
+      StartTime:
+      Trigger: <<Trigger>>
+      Columns:
