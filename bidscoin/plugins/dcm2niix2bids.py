@@ -136,7 +136,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
 
         # Get a matching run from the bidsmap and update its run['datasource'] object
         datasource          = bids.DataSource(sourcefile, plugin, dataformat)
-        run, index          = bids.get_matching_run(datasource, bidsmap)
+        run, index          = bids.get_matching_run(datasource, bidsmap, runtime=True)
         datasource          = run['datasource']
         datasource.path     = sourcefile
         datasource.plugins  = plugin

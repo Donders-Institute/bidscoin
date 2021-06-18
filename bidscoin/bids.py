@@ -1133,7 +1133,7 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
     return run_found and run_valsok and run_keysok
 
 
-def get_matching_run(datasource: DataSource, bidsmap: dict) -> Tuple[dict, Union[int, None]]:
+def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tuple[dict, Union[int, None]]:
     """
     Find the first run in the bidsmap with filesystem and file attributes that match with the data source, and then
     through the attributes. The datatypes are searcher for in this order:
@@ -1144,6 +1144,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict) -> Tuple[dict, Union
 
     :param datasource:  The data source from which the attributes are read
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS keys and attributes, etc
+    :param runtime:     Dynamic <<values>> are expanded if True
     :return:            (run, datatype, index) The matching and filled-in / cleaned run item, datatype and list index as in run = bidsmap[dataformat][datatype][index]
                         datatype = bids.unknowndatatype and index = None if there is no match, the run is still populated with info from the source-file
     """
@@ -1188,7 +1189,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict) -> Tuple[dict, Union
             for bidskey, bidsvalue in run['bids'].items():
 
                 # Replace the dynamic bids values
-                run_['bids'][bidskey] = datasource.dynamicvalue(bidsvalue)
+                run_['bids'][bidskey] = datasource.dynamicvalue(bidsvalue, runtime=runtime)
 
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 run_ = strip_suffix(run_)
@@ -1198,7 +1199,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict) -> Tuple[dict, Union
             for metakey, metavalue in run['meta'].items():
 
                 # Replace the dynamic bids values
-                run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False)
+                run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False, runtime=runtime)
 
             # Copy the DataSource object
             if 'datasource' in run:

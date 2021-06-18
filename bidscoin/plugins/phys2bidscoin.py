@@ -14,7 +14,7 @@ See also:
 try:
     from phys2bids.phys2bids import phys2bids
 except ImportError:
-    pass
+    pass                # TODO: handle gracefully
 try:
     from bidscoin import bids
 except ImportError:
@@ -23,6 +23,7 @@ import logging
 import shutil
 import json
 import tempfile
+import pandas as pd
 from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
@@ -52,7 +53,7 @@ def is_sourcefile(file: Path) -> str:
     try:
         phys2bids(file, info=True)
         return 'Physio'
-    except Exception:
+    except RuntimeError:
         LOGGER.debug(f'This is the phys2bids-plugin is_sourcefile routine, assessing whether "{file}" has a valid dataformat')
 
     return ''
@@ -104,11 +105,8 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     if not dataformat:
         return
 
-    # Collect the different Physio source files (runs) in the session
-    sourcefiles = [sourcefile for sourcefile in session.rglob('*') if is_sourcefile(sourcefile)]
-
     # Update the bidsmap with the info from the source files
-    for sourcefile in sourcefiles:
+    for sourcefile in [file for file in session.rglob('*') if is_sourcefile(file)]:
 
         # Input checks
         if not sourcefile.name or (not template[dataformat] and not bidsmap_old[dataformat]):
@@ -167,86 +165,94 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
         LOGGER.info(f"No {__name__} sourcedata found in: {session}")
         return
 
-    # Make a list of all the data sources / runs
-    sourcefiles = [sourcefile for sourcefile in session.rglob('*') if sourcefile.is_file()]
-
     # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
     subid, sesid = datasource.subid_sesid(bidsmap[dataformat]['subject'], bidsmap[dataformat]['session'])
+    bidsses      = bidsfolder/subid/sesid
     if not subid:
         return
 
-    # Create the BIDS session-folder and a scans.tsv file
-    bidsses = bidsfolder/subid/sesid
-    bidsses.mkdir(parents=True, exist_ok=True)
-
-    for sourcefile in sourcefiles:
+    # Loop over all source data files and convert them to BIDS
+    for sourcefile in [file for file in session.rglob('*') if is_sourcefile(file)]:
 
         # Get a data source, a matching run from the bidsmap and update its run['datasource'] object
-        datasource          = bids.DataSource(sourcefile, plugin, dataformat)
-        run, index          = bids.get_matching_run(datasource, bidsmap)
-        datasource          = run['datasource']
-        datasource.path     = sourcefile
-        datasource.plugins  = plugin
-        datatype            = datasource.datatype
+        datasource         = bids.DataSource(sourcefile, plugin, dataformat)
+        run, index         = bids.get_matching_run(datasource, bidsmap, runtime=True)
+        datasource         = run['datasource']
+        datasource.path    = sourcefile
+        datasource.plugins = plugin
 
         # Check if we should ignore this run
-        if datatype == bids.ignoredatatype:
+        if datasource.datatype == bids.ignoredatatype:
             LOGGER.info(f"Leaving out: {sourcefile}")
             continue
 
         # Check that we know this run
         if index is None:
-            LOGGER.error(f"Skipping unknown '{datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+            LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete the physiological output data in {bidsses} to solve this warning")
             continue
 
         LOGGER.info(f"Processing: {sourcefile}")
 
-        outdir = bidsses/datatype
-        outdir.mkdir(parents=True, exist_ok=True)
+        # Get an ordered list of the func runs from the scans.tsv file (which should have a standardized datetime format)
+        scans_tsv = bidsses/f"{subid}{bids.add_prefix('_', sesid)}_scans.tsv"
+        if scans_tsv.is_file():
+            scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
+            scans_table.sort_values(by=['acq_time', 'filename'], inplace=True)
+        else:
+            LOGGER.error(f"Could not read the TR's for phys2bids due to a missing '{scans_tsv}' file")
+            continue
+        funcscans = []
+        for index, row in scans_table.iterrows():
+            if index.startswith('func/'):
+                funcscans.append(index)
 
-        # Compose the BIDS filename using the matched run
-        bidsname = bids.get_bidsname(subid, sesid, run, runtime=True)
-        runindex = run['bids'].get('run', '')
-        if runindex.startswith('<<') and runindex.endswith('>>'):
-            bidsname = bids.increment_runindex(outdir, bidsname)
-        jsonfile = (outdir/bidsname).with_suffix('.json')
+        # Then read the TR's from the associated func sidecar files
+        tr = []
+        for funcscan in funcscans:
+            with (bidsses/funcscan).with_suffix('.json').open('r') as json_fid:
+                jsondata = json.load(json_fid)
+            tr.append(jsondata['RepetitionTime'])
 
-        # Check if file already exists (-> e.g. when a static runindex is used)
-        if (outdir/bidsname).with_suffix('.json').is_file():
-            LOGGER.warning(f"{outdir/bidsname}.* already exists and will be deleted -- check your results carefully!")
-            for ext in ('.nii.gz', '.nii', '.json', '.bval', '.bvec', '.tsv.gz'):
-                (outdir/bidsname).with_suffix(ext).unlink(missing_ok=True)
-
-        heuristic_str = ('def heur(physinfo, run=''):\n'
-                         '    info = {}\n'
-                         f'    if physinfo == "{sourcefile.name}":'
-        )
-
-        for key, val in run['bids'].items:
-            if key != '':
-                heuristic_str = (f'{heuristic_str}'
-                                 f'\n        info["{key}"] = "{val}"'
-                )
-
-        heuristic_str = f'{heuristic_str}\n    return info'
+        # Create a heuristic function for phys2bids
+        heur_str = ('def heur(physinfo, run=""):\n'
+                    '    info = {}\n'
+                   f'    if physinfo == "{sourcefile.name}":')
+        for key, val in run['bids'].items():
+            heur_str = (f'{heur_str}'
+                        f'\n        info["{key}"] = "{val}"')
+        heur_str = f'{heur_str}\n    return info'
 
         # Write heuristic function as file in temporary folder
-        workfolder = Path(tempfile.mkdtemp())
-        heuristic_file = workfolder/f'heuristic_sub-{subid}_ses-{sesid}.py'
-        with open(heuristic_file, 'w') as text_file:
-            print(heuristic_str, file=text_file)
+        heur_file = Path(tempfile.mkdtemp())/f'heuristic_sub-{subid}_ses-{sesid}.py'
+        with heur_file.open('w') as text_file:
+            print(heur_str, file=text_file)
 
         # Run phys2bids
-        phys2bids(sourcefile, outdir=outdir, heur_file=sourcefile.with_suffix('.py'), sub=subid, ses=sesid, chtrig=int(run['meta'].get('TriggerChannel', 0)),
-                  num_timepoints_expected=run['meta'].get('VolumeNumbers', None), tr=TRs, pad=run['meta'].get('Pad', 9),
-                  ch_name=run['meta'].get('ChannelNames', []), yml='', debug=False, quiet=False)
+        physiofiles = phys2bids(sourcefile,
+                                outdir                  = bidsfolder,
+                                heur_file               = heur_file,
+                                sub                     = subid,
+                                ses                     = sesid,
+                                chtrig                  = int(run['meta'].get('TriggerChannel', 0)),
+                                num_timepoints_expected = run['meta'].get('VolumeNumbers', None),
+                                tr                      = tr,
+                                pad                     = run['meta'].get('Pad', 9),
+                                ch_name                 = run['meta'].get('ChannelNames', []),
+                                yml                     = '',
+                                debug                   = False,
+                                quiet                   = False)
 
-        # Adapt all the newly produced json files and add user-specified meta-data (NB: assumes every nifti-file comes with a json-file)
-        with jsonfile.open('r') as json_fid:
-            jsondata = json.load(json_fid)
-        for metakey, metaval in run['meta'].items():
-            LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
-            metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
-            jsondata[metakey] = metaval
-        with jsonfile.open('w') as json_fid:
-            json.dump(jsondata, json_fid, indent=4)
+        # Adapt all the newly produced json files and add user-specified meta-data (NB: assumes every physio-file comes with a json-file)
+        for physiofile in physiofiles:
+            jsonfile = Path(physiofile).with_suffix('.json')
+            if not jsonfile.is_file():
+                LOGGER.warning(f"Could not find expected json sidecar file '{jsonfile}'")
+                continue
+            with jsonfile.open('r') as json_fid:
+                jsondata = json.load(json_fid)
+            for metakey, metaval in run['meta'].items():
+                LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
+                metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
+                jsondata[metakey] = metaval
+            with jsonfile.open('w') as json_fid:
+                json.dump(jsondata, json_fid, indent=4)
