@@ -22,6 +22,7 @@ except ImportError:
 import logging
 import shutil
 import json
+import tempfile
 from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
@@ -104,7 +105,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
         return
 
     # Collect the different Physio source files (runs) in the session
-    sourcefiles = [sourcefile for sourcefile in session.rglob('*') if sourcefile.is_file()]
+    sourcefiles = [sourcefile for sourcefile in session.rglob('*') if is_sourcefile(sourcefile)]
 
     # Update the bidsmap with the info from the source files
     for sourcefile in sourcefiles:
@@ -216,8 +217,27 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
             for ext in ('.nii.gz', '.nii', '.json', '.bval', '.bvec', '.tsv.gz'):
                 (outdir/bidsname).with_suffix(ext).unlink(missing_ok=True)
 
+        heuristic_str = ('def heur(physinfo, run=''):\n'
+                         '    info = {}\n'
+                         f'    if physinfo == "{sourcefile.name}":'
+        )
+
+        for key, val in run['bids'].items:
+            if key != '':
+                heuristic_str = (f'{heuristic_str}'
+                                 f'\n        info["{key}"] = "{val}"'
+                )
+
+        heuristic_str = f'{heuristic_str}\n    return info'
+
+        # Write heuristic function as file in temporary folder
+        workfolder = Path(tempfile.mkdtemp())
+        heuristic_file = workfolder/f'heuristic_sub-{subid}_ses-{sesid}.py'
+        with open(heuristic_file, 'w') as text_file:
+            print(heuristic_str, file=text_file)
+
         # Run phys2bids
-        phys2bids(sourcefile, outdir=outdir, heur_file='heuristic.py', sub=subid, ses=sesid, chtrig=int(run['meta'].get('TriggerChannel', 0)),
+        phys2bids(sourcefile, outdir=outdir, heur_file=sourcefile.with_suffix('.py'), sub=subid, ses=sesid, chtrig=int(run['meta'].get('TriggerChannel', 0)),
                   num_timepoints_expected=run['meta'].get('VolumeNumbers', None), tr=TRs, pad=run['meta'].get('Pad', 9),
                   ch_name=run['meta'].get('ChannelNames', []), yml='', debug=False, quiet=False)
 
