@@ -1754,40 +1754,26 @@ Physio:
       size:                       # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
       nrfiles:                    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
     attributes:                   # The matching (regexp) criteria for the phys2bids -info data go in here
-      Trigger:
-      CO2:
-      O2:
-      Pulse:
+      ch_num: .*
+      filetype: .*
+      freq: .*
+      ch_name: .*
+      units: .*
+      trigger_idx: .*
     bids:
       task:
       acq:
-      recording:
+      ce:
+      dir:
+      rec:
       run: <<1>>                  # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      recording:
       suffix: physio
     meta:                         # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
-      SamplingFrequency:
-      StartTime:
-      Trigger: <<Trigger>>
-      Columns:
-  - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
-    filesystem:                   # This is what phys2bids is using now (well, part of it)
-      path:                       # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
-      name:                       # File name, e.g. ".*eye.*" or ".*(iEEG|MEG).*"
-      size:                       # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
-      nrfiles:                    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
-    attributes:                   # The matching (regexp) criteria for the phys2bids -info data go in here
-      Trigger:
-      CO2:
-      O2:
-      Pulse:
-    bids:
-      task:
-      acq:
-      recording:
-      run: <<1>>                  # This will be updated during bidscoiner runtime (as it depends on the already existing files)
-      suffix: stim
-    meta:                         # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by phys2bids
-      SamplingFrequency:
-      StartTime:
-      Trigger: <<Trigger>>
-      Columns:
+      TriggerChannel: <<trigger_idx>>
+      ExpectedTimepoints: <<num_timepoints_found>>
+      Pad: 9
+      ChannelNames: <<ch_name>>
+      Threshold: <<thr>>
+      TimeOffset: <<time_offset>>
+      StartTime: <<time_offset>>

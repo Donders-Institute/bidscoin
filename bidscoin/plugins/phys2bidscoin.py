@@ -13,6 +13,7 @@ See also:
 
 try:
     from phys2bids.phys2bids import phys2bids
+    from phys2bids.utils import SUPPORTED_FTYPES
 except ImportError:
     pass                # TODO: handle gracefully
 try:
@@ -50,11 +51,14 @@ def is_sourcefile(file: Path) -> str:
     :return:        The valid / supported dataformat of the sourcefile
     """
 
-    try:
-        phys2bids(file, info=True)
+    if file.suffix[1:] in SUPPORTED_FTYPES:
+        if file.suffix == '.txt':
+            try:
+                phys2bids(file, info=True)
+            except (RuntimeError, AttributeError):
+                LOGGER.debug(f'This is the phys2bids-plugin is_sourcefile routine, assessing whether "{file}" has a valid dataformat')
+                return ''
         return 'Physio'
-    except RuntimeError:
-        LOGGER.debug(f'This is the phys2bids-plugin is_sourcefile routine, assessing whether "{file}" has a valid dataformat')
 
     return ''
 
@@ -234,7 +238,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                                 sub                     = subid,
                                 ses                     = sesid,
                                 chtrig                  = int(run['meta'].get('TriggerChannel', 0)),
-                                num_timepoints_expected = run['meta'].get('VolumeNumbers', None),
+                                num_timepoints_expected = run['meta'].get('ExpectedTimepoints', None),
                                 tr                      = tr,
                                 pad                     = run['meta'].get('Pad', 9),
                                 ch_name                 = run['meta'].get('ChannelNames', []),
