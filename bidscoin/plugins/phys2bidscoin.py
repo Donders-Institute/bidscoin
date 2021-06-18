@@ -225,10 +225,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
         # Write heuristic function as file in temporary folder
         heur_file = Path(tempfile.mkdtemp())/f'heuristic_sub-{subid}_ses-{sesid}.py'
         with heur_file.open('w') as text_file:
-            print(heur_str, file=text_file)
+            text_file.write(heur_str)
 
         # Run phys2bids
-        physiofiles = phys2bids(sourcefile,
+        physiofiles = phys2bids(filename                = sourcefile,
                                 outdir                  = bidsfolder,
                                 heur_file               = heur_file,
                                 sub                     = subid,
@@ -239,14 +239,14 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                                 pad                     = run['meta'].get('Pad', 9),
                                 ch_name                 = run['meta'].get('ChannelNames', []),
                                 yml                     = '',
-                                debug                   = False,
+                                debug                   = True,
                                 quiet                   = False)
 
         # Adapt all the newly produced json files and add user-specified meta-data (NB: assumes every physio-file comes with a json-file)
         for physiofile in physiofiles:
             jsonfile = Path(physiofile).with_suffix('.json')
             if not jsonfile.is_file():
-                LOGGER.warning(f"Could not find expected json sidecar file '{jsonfile}'")
+                LOGGER.error(f"Could not find the expected sidecar file: '{jsonfile}'")
                 continue
             with jsonfile.open('r') as json_fid:
                 jsondata = json.load(json_fid)
