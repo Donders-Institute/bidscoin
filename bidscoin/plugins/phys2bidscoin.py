@@ -228,8 +228,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
 
         # Write heuristic function as file in temporary folder
         heur_file = Path(tempfile.mkdtemp())/f'heuristic_sub-{subid}_ses-{sesid}.py'
-        with heur_file.open('w') as text_file:
-            text_file.write(heur_str)
+        heur_file.write_text(heur_str)
 
         # Run phys2bids
         physiofiles = phys2bids(filename                = sourcefile,
@@ -246,7 +245,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                                 debug                   = True,
                                 quiet                   = False)
 
-        # Adapt all the newly produced json files and add user-specified meta-data (NB: assumes every physio-file comes with a json-file)
+        # Add user-specified meta-data to the newly produced json files (NB: assumes every physio-file comes with a json-file)
         for physiofile in physiofiles:
             jsonfile = Path(physiofile).with_suffix('.json')
             if not jsonfile.is_file():
