@@ -102,24 +102,19 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     :return:
     """
 
-    # Get started
-    plugin     = {'phys2bidscoin': bidsmap_new['Options']['plugins']['phys2bidscoin']}
-    datasource = bids.get_datasource(session, plugin)
-    dataformat = datasource.dataformat
-    if not dataformat:
-        return
+    # Get the plugin settings
+    plugin = {'phys2bidscoin': bidsmap_new['Options']['plugins']['phys2bidscoin']}
 
     # Update the bidsmap with the info from the source files
     for sourcefile in [file for file in session.rglob('*') if is_sourcefile(file)]:
 
+        datasource = bids.DataSource(sourcefile, plugin)
+        dataformat = datasource.dataformat
+
         # Input checks
-        if not sourcefile.name or (not template[dataformat] and not bidsmap_old[dataformat]):
+        if not template[dataformat] and not bidsmap_old[dataformat]:
             LOGGER.error(f"No {dataformat} source information found in the bidsmap and template")
             return
-
-        datasource = bids.DataSource(sourcefile, plugin, dataformat)
-        if not datasource.is_datasource():
-            continue
 
         # See if we can find a matching run in the old bidsmap
         run, index = bids.get_matching_run(datasource, bidsmap_old)
