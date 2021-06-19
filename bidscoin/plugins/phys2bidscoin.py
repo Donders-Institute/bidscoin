@@ -168,6 +168,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
     subid, sesid = datasource.subid_sesid(bidsmap[dataformat]['subject'], bidsmap[dataformat]['session'])
     bidsses      = bidsfolder/subid/sesid
     if not subid:
+        LOGGER.error(f"Could not get a subject-id for {bidsfolder/subid/sesid}")
         return
 
     # Loop over all source data files and convert them to BIDS
