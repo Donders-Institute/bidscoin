@@ -250,13 +250,14 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
         for physiofile in physiofiles:
             jsonfile = Path(physiofile).with_suffix('.json')
             if not jsonfile.is_file():
-                LOGGER.error(f"Could not find the expected sidecar file: '{jsonfile}'")
+                LOGGER.error(f"Could not find the expected json sidecar-file: '{jsonfile}'")
                 continue
             with jsonfile.open('r') as json_fid:
                 jsondata = json.load(json_fid)
             for metakey, metaval in run['meta'].items():
                 LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
                 metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
-                jsondata[metakey] = metaval
+                if metaval:
+                    jsondata[metakey] = metaval
             with jsonfile.open('w') as json_fid:
                 json.dump(jsondata, json_fid, indent=4)
