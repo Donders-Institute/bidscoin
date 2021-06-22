@@ -57,13 +57,14 @@ def is_sourcefile(file: Path) -> str:
     return ''
 
 
-def get_attribute(dataformat: str, sourcefile: Path, attribute: str) -> Union[str, int]:
+def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> Union[str, int]:
     """
     This plugin supports reading attributes from DICOM and PAR dataformats
 
     :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
     :param sourcefile:  The sourcefile from which the attribute value should be read
     :param attribute:   The attribute key for which the value should be read
+    :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap['Options']
     :return:            The attribute value
     """
     if dataformat == 'DICOM':

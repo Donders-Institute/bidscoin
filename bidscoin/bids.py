@@ -129,7 +129,7 @@ class DataSource:
         for plugin, options in self.plugins.items():
             module = bidscoin.import_plugin(plugin, ('get_attribute',))
             if module:
-                attributeval = module.get_attribute(self.dataformat, self.path, attributekey)
+                attributeval = module.get_attribute(self.dataformat, self.path, attributekey, options)
                 if attributeval:
                     if validregexp:
                         try:            # Strip meta-characters to prevent match_attribute() errors

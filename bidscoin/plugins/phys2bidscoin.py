@@ -63,14 +63,14 @@ def is_sourcefile(file: Path) -> str:
     return ''
 
 
-
-def get_attribute(dataformat: str, sourcefile: Path, attribute: str) -> str:
+def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> str:
     """
     This plugin function reads attributes from the supported sourcefile
 
     :param dataformat:  The dataformat of the sourcefile, e.g. DICOM of PAR
     :param sourcefile:  The sourcefile from which key-value data needs to be read
     :param attribute:   The attribute key for which the value needs to be retrieved
+    :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap['Options']
     :return:            The retrieved attribute value
     """
 

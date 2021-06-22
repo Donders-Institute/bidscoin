@@ -32,7 +32,7 @@ def is_sourcefile(file: Path) -> str:
     return ''
 
 
-def get_attribute(dataformat: str, sourcefile: Path, attribute: str) -> Union[str, int]:
+def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> Union[str, int]:
     """
     This plugin function supports reading attributes from DICOM and PAR dataformats
 
