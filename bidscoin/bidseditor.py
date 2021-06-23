@@ -1180,10 +1180,10 @@ class EditWindow(QDialog):
             if key and value != oldvalue:
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
                 self.bids_table.blockSignals(True)
-                if isinstance(value, str) and not (value.startswith('<<') and value.endswith('>>')):
+                if isinstance(value, str) and ('<<' not in value or '>>' not in value):
                     value = bids.cleanup_value(self.datasource.dynamicvalue(value))
                     self.bids_table.item(rowindex, 1).setText(value)
-                if key == 'run' and oldvalue.startswith('<<') and oldvalue.endswith('>>'):
+                if key == 'run' and '<<' in oldvalue and '>>' in oldvalue:
                     answer = QMessageBox.question(self, f"Edit bids entities",
                                                   f'It is highly discouraged to change the <<dynamic>> run-index unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -1209,7 +1209,7 @@ class EditWindow(QDialog):
             oldvalue = ''
         if value != oldvalue:
             # Replace the (dynamic) value
-            if not (value.startswith('<<') and value.endswith('>>')):
+            if '<<' not in value or '>>' not in value:
                 value = self.datasource.dynamicvalue(value, cleanup=False)
                 self.meta_table.blockSignals(True)
                 self.meta_table.item(rowindex, 1).setText(value)

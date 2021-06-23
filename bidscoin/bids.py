@@ -185,21 +185,27 @@ class DataSource:
         """
 
         # Input checks
-        if not value or not isinstance(value, str):
+        if not value or not isinstance(value, str) or not self.path.name:
             return value
 
         # Intelligent filling of the value is done runtime by bidscoiner
-        if value.startswith('<<') and value.endswith('>>'):
+        if '<<' in value and '>>' in value:
             if runtime:
-                value = value[1:-1]
+                value = value.replace('<<', '<').replace('>>', '>')
             else:
                 return value
 
         # Fill any value-key with the <annotated> source attribute(s) or filesystem property
-        if value.startswith('<') and value.endswith('>') and self.path.name:
+        if '<' in value and '>' in value:
             sourcevalue = ''
-            for key in value[1:-1].split('><'):
-                sourcevalue += str(self.filesystem(key)) + str(self.attributes(key))
+            for val in [val.split('>') for val in value.split('<')]:
+                if len(val) == 2:
+                    dynvalue = str(self.filesystem(val[0])) + str(self.attributes(val[0]))
+                    if dynvalue:
+                        sourcevalue += dynvalue
+                    else:
+                        sourcevalue += val[0]
+                sourcevalue += val[-1]
             if sourcevalue:
                 value = sourcevalue
                 if cleanup:
