@@ -88,11 +88,17 @@ class DataSource:
         :return:
         """
 
-        if tagname == 'path':
-            return str(self.path.parent)
+        if tagname.startswith('path'):
+            if tagname.startswith('path:') and tagname.count('%') != 0 and tagname.count('%') % 2 == 0:
+                return parse_pattern(str(self.path.parent), tagname[5:])    # TODO: implement parse_pattern
+            elif tagname == 'path':
+                return str(self.path.parent)
 
-        if tagname == 'name':
-            return self.path.name
+        if tagname.startswith('name'):
+            if tagname.startswith('name:') and tagname.count('%') != 0 and tagname.count('%') % 2 == 0:
+                return parse_pattern(self.path.name, tagname[5:])
+            elif tagname == 'name':
+                return self.path.name
 
         if tagname == 'size' and self.path.is_file():
             # Convert the size in bytes into a human-readable B, KB, MG, GB, TB format
