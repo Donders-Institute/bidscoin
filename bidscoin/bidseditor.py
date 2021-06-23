@@ -273,7 +273,7 @@ class MainWindow(QMainWindow):
         subses_label.setToolTip('Subject/session mapping')
 
         subses_table = MyQTableWidget()
-        subses_table.setToolTip(f"Use '<<SourceFilePath>>' to parse the subject and (optional) session label from the pathname\n"
+        subses_table.setToolTip(f"Use e.g. '<<path:sub-(.*?)>>' to parse the subject and (optional) session label from the pathname\n"
                                 f"Use a dynamic {dataformat} attribute (e.g. '<<PatientName>>') to extract the subject and (optional) session label from the {dataformat} header")
         subses_table.setMouseTracking(True)
         subses_table.setRowCount(2)

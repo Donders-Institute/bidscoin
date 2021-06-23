@@ -36,8 +36,8 @@ DICOM:
 # --------------------------------------------------------------------------------
 # DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
-  session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+  subject: <<path:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
+  session: <<path:/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
 
   anat:       # ----------------------- All anatomical runs --------------------
   - provenance:                   # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
@@ -769,8 +769,8 @@ PAR:
 # --------------------------------------------------------------------------------
 # PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A PAR attribute can also be used as subject-label instead, e.g. <patient_name>
-  session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A PAR attribute can also be used as session-label instead, e.g. <examination_name>
+  subject: <<path:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
+  session: <<path:/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
 
   anat:       # ----------------------- All anatomical runs --------------------
   - provenance:                   # The fullpath name of the PAR file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap

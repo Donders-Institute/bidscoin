@@ -81,22 +81,30 @@ class DataSource:
 
     def filesystem(self, tagname: str, run: dict=None) -> Union[str, int]:
         """
-        Gets the filesystem properties
+        Gets the filesystem properties. The path and name can be parsed using re.search() -> match.group(1)
 
-        :param tagname: The name of the filesystem property key, e.g. 'name' or 'nrfiles'
+        :param tagname: The name of the filesystem property key, e.g. 'name', 'name:sub-(.*?)_' or 'nrfiles'
         :param run:     If given and tagname == 'nrfiles' then the nrfiles is dependent on the other filesystem matching-criteria
-        :return:
+        :return:        The property value or '' if the property could not be parsed from the datasource
         """
 
+        nr = 0
+        if '(' in tagname and ')' in tagname:
+            nr = 1
+
         if tagname.startswith('path'):
-            if tagname.startswith('path:') and tagname.count('%') != 0 and tagname.count('%') % 2 == 0:
-                return parse_pattern(str(self.path.parent), tagname[5:])    # TODO: implement parse_pattern
+            if tagname.startswith('path:'):
+                match = re.search(tagname[5:], self.path.parent.as_posix())
+                if match:
+                    return match.group(nr)
             elif tagname == 'path':
                 return str(self.path.parent)
 
         if tagname.startswith('name'):
-            if tagname.startswith('name:') and tagname.count('%') != 0 and tagname.count('%') % 2 == 0:
-                return parse_pattern(self.path.name, tagname[5:])
+            if tagname.startswith('name:') and '(' in tagname and ')' in tagname:
+                match = re.search(tagname[5:], self.path.name)
+                if match:
+                    return match.group(nr)
             elif tagname == 'name':
                 return self.path.name
 
@@ -146,9 +154,9 @@ class DataSource:
                     return attributeval
         return ''
 
-    def subid_sesid(self, subid: str= '<<SourceFilePath>>', sesid: str= '<<SourceFilePath>>') -> Tuple[str, str]:
+    def subid_sesid(self, subid: str='', sesid: str= '') -> Tuple[str, str]:
         """
-        Extract the cleaned-up subid and sesid from the pathname if subid/sesid == '<<SourceFilePath>>', or from the datasource attributes
+        Extract the cleaned-up subid and sesid from the datasource filesystem or attributes
 
         :param subid:      The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001') or a dynamic source attribute. Can be left empty
         :param sesid:      The optional session identifier, same as subid
@@ -156,21 +164,17 @@ class DataSource:
         """
 
         # Add default value for subid and sesid (e.g. for the bidseditor)
-        if subid == '<<SourceFilePath>>':
-            subid = [part for part in self.path.parent.parts if part.startswith(self.subprefix)][-1]
-        else:
-            subid = self.dynamicvalue(subid, runtime=True)
         if not subid:
-            LOGGER.error(f"Could not parse sub/ses-id information from '{self.path.parent}': no '{self.subprefix}' label in its path")
+            subid = f"path:/{self.subprefix}(.*?)/"
+        if not sesid:
+            sesid = f"path:/{self.sesprefix}(.*?)/"
+        # Parse the sub-/ses-id's
+        subid_ = self.dynamicvalue(subid, runtime=True)
+        if not subid_:
+            LOGGER.error(f"Could not parse sub/ses-id information from {self.path} using: {subid}'")
             return '', ''
-        if sesid == '<<SourceFilePath>>':
-            sesid = [part for part in self.path.parent.parts if part.startswith(self.sesprefix)]
-            if sesid:
-                sesid = sesid[-1]
-            else:
-                sesid = ''
-        else:
-            sesid = self.dynamicvalue(sesid, runtime=True)
+        subid = subid_
+        sesid = self.dynamicvalue(sesid, runtime=True)
 
         # Add sub- and ses- prefixes if they are not there
         subid = 'sub-' + cleanup_value(re.sub(f'^{self.subprefix}', '', subid))
