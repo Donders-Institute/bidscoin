@@ -11,11 +11,10 @@ url = 'https://github.com/Donders-Institute/bidscoin'
 python_version = ['3.8', '3.9']
 
 [options.extras_require]
-phys2bids =
-    bioread >=1.0.5
-    pymatreader >=0.0.24
-    duecredit
-    phys2bids >=2.0.0, <3.0.0
+    bioread = { version = "^1.0.5"}
+    pymatreader = { version = "^0.0.24"}
+    duecredit = {version = "^0.9.1"}
+    phys2bids = {version = "^2.0.0"}
 
 [build-system]
 requires = ['setuptools', 'wheel']
