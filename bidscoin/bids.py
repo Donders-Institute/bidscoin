@@ -192,7 +192,7 @@ class DataSource:
         :param value:       The dynamic value that contains source attribute or filesystem property key(s)
         :param cleanup:     Removes non-BIDS-compliant characters if True
         :param runtime:     Replaces dynamic values if True
-        :return:            Updated value (if possible, otherwise the original value is returned)
+        :return:            Updated value
         """
 
         # Input checks
@@ -209,18 +209,13 @@ class DataSource:
         # Fill any value-key with the <annotated> source attribute(s) or filesystem property
         if '<' in value and '>' in value:
             sourcevalue = ''
-            for val in [val.split('>') for val in value.split('<')]:
-                if len(val) == 2:
-                    dynvalue = str(self.properties(val[0])) + str(self.attributes(val[0]))
-                    if dynvalue:
-                        sourcevalue += dynvalue
-                    else:
-                        sourcevalue += val[0]
-                sourcevalue += val[-1]
-            if sourcevalue:
-                value = sourcevalue
-                if cleanup:
-                    value = cleanup_value(value)
+            for val in [val.split('>') for val in value.split('<')]:    # value = '123<abc>456' -> for val in [['123'], ['abc', '456']]
+                if len(val) == 2:           # The first element is the dynamic part in val
+                    sourcevalue += str(self.properties(val[0])) + str(self.attributes(val[0]))
+                sourcevalue += val[-1]      # The last element is always the non-dymanic part in val
+            value = sourcevalue
+            if cleanup:
+                value = cleanup_value(value)
 
         return value
 
