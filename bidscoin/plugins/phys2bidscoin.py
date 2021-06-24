@@ -140,7 +140,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
             bids.append_run(bidsmap_new, run)
 
 
-def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict) -> None:
+def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
     """
     This wrapper funtion around phys2bids converts the physio data in the session folder and saves it in the bidsfolder.
     Each saved datafile should be accompanied with a json sidecar file. The bidsmap options for this plugin can be found in:
@@ -152,7 +152,6 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
     :param session:     The full-path name of the subject/session raw data source folder
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
     :param bidsfolder:  The full-path name of the BIDS root-folder
-    :param personals:   The dictionary with the personal information
     :return:            Nothing
     """
 
