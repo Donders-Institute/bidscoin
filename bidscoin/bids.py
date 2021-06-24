@@ -79,11 +79,11 @@ class DataSource:
         LOGGER.debug(f"No plugins to read {self.path}")
         return False
 
-    def filesystem(self, tagname: str, run: dict=None) -> Union[str, int]:
+    def properties(self, tagname: str, run: dict=None) -> Union[str, int]:
         """
-        Gets the filesystem properties. The path and name can be parsed using re.search() -> match.group(1)
+        Gets the filesystem properties. The filepath and filename can be parsed using re.search() -> match.group(1)
 
-        :param tagname: The name of the filesystem property key, e.g. 'name', 'name:sub-(.*?)_' or 'nrfiles'
+        :param tagname: The name of the filesystem property key, e.g. 'filename', 'filename:sub-(.*?)_' or 'nrfiles'
         :param run:     If given and tagname == 'nrfiles' then the nrfiles is dependent on the other filesystem matching-criteria
         :return:        The property value or '' if the property could not be parsed from the datasource
         """
@@ -92,23 +92,23 @@ class DataSource:
         if '(' in tagname and ')' in tagname:
             nr = 1
 
-        if tagname.startswith('path'):
-            if tagname.startswith('path:'):
-                match = re.search(tagname[5:], self.path.parent.as_posix())
+        if tagname.startswith('filepath'):
+            if tagname.startswith('filepath:'):
+                match = re.search(tagname[9:], self.path.parent.as_posix())
                 if match:
                     return match.group(nr)
-            elif tagname == 'path':
+            elif tagname == 'filepath':
                 return str(self.path.parent)
 
-        if tagname.startswith('name'):
-            if tagname.startswith('name:') and '(' in tagname and ')' in tagname:
-                match = re.search(tagname[5:], self.path.name)
+        if tagname.startswith('filename'):
+            if tagname.startswith('filename:') and '(' in tagname and ')' in tagname:
+                match = re.search(tagname[9:], self.path.name)
                 if match:
                     return match.group(nr)
-            elif tagname == 'name':
+            elif tagname == 'filename':
                 return self.path.name
 
-        if tagname == 'size' and self.path.is_file():
+        if tagname == 'filesize' and self.path.is_file():
             # Convert the size in bytes into a human-readable B, KB, MG, GB, TB format
             size  = self.path.stat().st_size                # Size in bytes
             power = 2 ** 10                                 # 2**10 = 1024
@@ -121,9 +121,9 @@ class DataSource:
 
         if tagname == 'nrfiles' and self.path.is_file():
             if run:                                         # Currently not used but keep the option open for future use
-                def match(file): return ((match_attribute(file.parent,         run['filesystem']['path']) or not run['filesystem']['path']) and
-                                         (match_attribute(file.name,           run['filesystem']['name']) or not run['filesystem']['name']) and
-                                         (match_attribute(file.stat().st_size, run['filesystem']['size']) or not run['filesystem']['size']))
+                def match(file): return ((match_attribute(file.parent,         run['properties']['filepath']) or not run['properties']['filepath']) and
+                                         (match_attribute(file.name,           run['properties']['filename']) or not run['properties']['filename']) and
+                                         (match_attribute(file.stat().st_size, run['properties']['filesize']) or not run['properties']['filesize']))
                 return len([file for file in self.path.parent.glob('*') if match(file)])
             else:
                 return len(list(self.path.parent.glob('*')))
@@ -156,7 +156,7 @@ class DataSource:
 
     def subid_sesid(self, subid: str='', sesid: str= '') -> Tuple[str, str]:
         """
-        Extract the cleaned-up subid and sesid from the datasource filesystem or attributes
+        Extract the cleaned-up subid and sesid from the datasource properties or attributes
 
         :param subid:      The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001') or a dynamic source attribute. Can be left empty
         :param sesid:      The optional session identifier, same as subid
@@ -165,9 +165,10 @@ class DataSource:
 
         # Add default value for subid and sesid (e.g. for the bidseditor)
         if not subid:
-            subid = f"path:/{self.subprefix}(.*?)/"
+            subid = f"filepath:/{self.subprefix}(.*?)/"
         if not sesid:
-            sesid = f"path:/{self.sesprefix}(.*?)/"
+            sesid = f"filepath:/{self.sesprefix}(.*?)/"
+
         # Parse the sub-/ses-id's
         subid_ = self.dynamicvalue(subid, runtime=True)
         if not subid_:
@@ -210,7 +211,7 @@ class DataSource:
             sourcevalue = ''
             for val in [val.split('>') for val in value.split('<')]:
                 if len(val) == 2:
-                    dynvalue = str(self.filesystem(val[0])) + str(self.attributes(val[0]))
+                    dynvalue = str(self.properties(val[0])) + str(self.attributes(val[0]))
                     if dynvalue:
                         sourcevalue += dynvalue
                     else:
@@ -625,7 +626,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
                 if not run.get('provenance'):
                     run['provenance'] = str(Path(f"sub-unknown/ses-unknown/{dataformat}_{datatype}_id{index+1:03}"))
 
-                # Add missing run dictionaries (e.g. "meta" or "filesystem")
+                # Add missing run dictionaries (e.g. "meta" or "properties")
                 for key, val in run_.items():
                     if key not in run or not run[key]:
                         run[key] = val
@@ -812,7 +813,7 @@ def get_run_(provenance: Union[str, Path]='', dataformat: str='', datatype: str=
         datasource = DataSource(provenance, dataformat=dataformat, datatype=datatype)
 
     return dict(provenance = str(provenance),
-                filesystem = {'path':'', 'name':'', 'size':'', 'nrfiles':''},
+                properties = {'filepath':'', 'filename':'', 'filesize':'', 'nrfiles':''},
                 attributes = {},
                 bids       = {},
                 meta       = {},
@@ -826,7 +827,7 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
     :param bidsmap:     This could be a template bidsmap, with all options, BIDS labels and attributes, etc
     :param datatype:    The datatype in which a matching run is searched for (e.g. 'anat')
     :param suffix_idx:  The name of the suffix that is searched for (e.g. 'bold') or the datatype index number
-    :param datasource:  The datasource with the provenance file from which the filesystem, attributes and dynamic values are read
+    :param datasource:  The datasource with the provenance file from which the properties, attributes and dynamic values are read
     :return:            The clean (filled) run item in the bidsmap[dataformat][bidsdatatype] with the matching suffix_idx,
                         otherwise a dict with empty attributes & bids keys
     """
@@ -840,8 +841,8 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
             # Get a clean run (remove comments to avoid overly complicated commentedMaps from ruamel.yaml)
             run_ = get_run_(datasource.path, bidsmap=bidsmap)
 
-            for filekey, filevalue in run['filesystem'].items():
-                run_['filesystem'][filekey] = filevalue
+            for filekey, filevalue in run['properties'].items():
+                run_['properties'][filekey] = filevalue
 
             for attrkey, attrvalue in run['attributes'].items():
                 if datasource.path.name:
@@ -1001,7 +1002,7 @@ def match_attribute(attribute, pattern) -> bool:
     to a string
 
     Examples:
-        match_attribute('my_pulse_sequence_name', 'name')       -> False
+        match_attribute('my_pulse_sequence_name', 'filename')   -> False
         match_attribute([1,2,3], [1,2,3])                       -> True
         match_attribute([1,2,3], '[1, 2, 3]')                   -> True
         match_attribute('my_pulse_sequence_name', '^my.*name$') -> True
@@ -1057,10 +1058,10 @@ def exist_run(bidsmap: dict, datatype: str, run_item: dict, matchbidslabels: boo
     for run in bidsmap[run_item['datasource'].dataformat][datatype]:
 
         # Begin with match = False only if all attributes are empty
-        match = any([run[matching][attrkey] not in [None,''] for matching in ('filesystem','attributes') for attrkey in run[matching]])  # Normally match==True, but make match==False if all attributes are empty
+        match = any([run[matching][attrkey] not in [None,''] for matching in ('properties','attributes') for attrkey in run[matching]])  # Normally match==True, but make match==False if all attributes are empty
 
         # Search for a case where all run_item items match with the run_item items
-        for matching in ('filesystem', 'attributes'):
+        for matching in ('properties', 'attributes'):
             for itemkey, itemvalue in run_item[matching].items():
                 value = run[matching].get(itemkey)          # Matching bids-labels which exist in one datatype but not in the other -> None
                 match = match and match_attribute(itemvalue, value)
@@ -1151,7 +1152,7 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
 
 def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tuple[dict, Union[int, None]]:
     """
-    Find the first run in the bidsmap with filesystem and file attributes that match with the data source, and then
+    Find the first run in the bidsmap with properties and file attributes that match with the data source, and then
     through the attributes. The datatypes are searcher for in this order:
 
     (ignoredatatype,) + bidscoindatatypes + (unknowndatatype,)
@@ -1174,19 +1175,19 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
             runs = []
         for index, run in enumerate(runs):
 
-            match = any([run[matching][attrkey] not in [None,''] for matching in ('filesystem','attributes') for attrkey in run[matching]])     # Normally match==True, but make match==False if all attributes are empty
+            match = any([run[matching][attrkey] not in [None,''] for matching in ('properties','attributes') for attrkey in run[matching]])     # Normally match==True, but make match==False if all attributes are empty
 
             # Try to see if the sourcefile matches all of the filesystem properties
-            run_['filesystem'] = {}
-            for filekey, filevalue in run['filesystem'].items():
+            run_['properties'] = {}
+            for filekey, filevalue in run['properties'].items():
 
                 # Check if the attribute value matches with the info from the sourcefile
                 if filevalue:
-                    sourcevalue = datasource.filesystem(filekey)
+                    sourcevalue = datasource.properties(filekey)
                     match       = match and match_attribute(sourcevalue, filevalue)
 
                 # Don not fill the empty attribute with the info from the sourcefile but keep the matching expression
-                run_['filesystem'][filekey] = filevalue
+                run_['properties'][filekey] = filevalue
 
             # Try to see if the sourcefile matches all of the attributes and fill all of them
             run_['attributes'] = {}
@@ -1399,23 +1400,23 @@ def increment_runindex(bidsfolder: Path, bidsname: str, ext: str='.*') -> Union[
     return bidsname
 
 
-def get_filesystemhelp(filesystemkey: str) -> str:
+def get_propertieshelp(propertieskey: str) -> str:
     """
     Reads the description of a matching attributes key in the source dictionary
 
-    :param filesystemkey:   The filesystem key for which the help text is obtained
+    :param propertieskey:   The properties key for which the help text is obtained
     :return:                The obtained help text
     """
 
     # Return the description from the DICOM dictionary or a default text
-    if filesystemkey == 'path':
+    if propertieskey == 'filepath':
         return 'The path of the source file that is matched against the (regexp) pattern'
-    if filesystemkey == 'name':
+    if propertieskey == 'filename':
         return 'The name of the source file that is matched against the (regexp) pattern'
-    if filesystemkey == 'size':
+    if propertieskey == 'filesize':
         return 'The size of the source file that is matched against the (regexp) pattern'
-    if filesystemkey == 'nrfiles':
-        return 'The nr of similar files in the folder that matched against the filesystem (regexp) patterns'
+    if propertieskey == 'nrfiles':
+        return 'The nr of similar files in the folder that matched against the properties (regexp) patterns'
 
 
 def get_attributeshelp(attributeskey: str) -> str:
