@@ -154,7 +154,7 @@ class DataSource:
                     return attributeval
         return ''
 
-    def subid_sesid(self, subid: str='', sesid: str= '') -> Tuple[str, str]:
+    def subid_sesid(self, subid: None, sesid: None) -> Tuple[str, str]:
         """
         Extract the cleaned-up subid and sesid from the datasource properties or attributes
 
@@ -163,10 +163,10 @@ class DataSource:
         :return:           Updated (subid, sesid) tuple, including the BIDS-compliant sub-/ses-prefix
         """
 
-        # Add default value for subid and sesid (e.g. for the bidseditor)
-        if not subid:
+        # Add the default value for subid and sesid if not given
+        if subid is None:
             subid = f"filepath:/{self.subprefix}(.*?)/"
-        if not sesid:
+        if sesid is None:
             sesid = f"filepath:/{self.sesprefix}(.*?)/"
 
         # Parse the sub-/ses-id's
