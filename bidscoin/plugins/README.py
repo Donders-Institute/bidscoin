@@ -47,13 +47,14 @@ def is_sourcefile(file: Path) -> str:
 
 
 
-def get_attribute(dataformat: str, sourcefile: Path, attribute: str) -> str:
+def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> str:
     """
     This plugin function reads attributes from the supported sourcefile
 
     :param dataformat:  The dataformat of the sourcefile, e.g. DICOM of PAR
     :param sourcefile:  The sourcefile from which key-value data needs to be read
     :param attribute:   The attribute key for which the value needs to be retrieved
+    :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap['Options']
     :return:            The retrieved attribute value
     """
 
@@ -84,7 +85,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     LOGGER.debug(f'This is a bidsmapper demo-plugin working on: {session}')
 
 
-def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict) -> None:
+def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
     """
     The plugin to convert the runs in the source folder and save them in the bids folder. Each saved datafile should be
     accompanied with a json sidecar file. The bidsmap options for this plugin can be found in:
@@ -96,7 +97,6 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
     :param session:     The full-path name of the subject/session raw data source folder
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
     :param bidsfolder:  The full-path name of the BIDS root-folder
-    :param personals:   The dictionary with the personal information
     :return:            Nothing
     """
 

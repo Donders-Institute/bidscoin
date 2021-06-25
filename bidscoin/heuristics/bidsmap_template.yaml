@@ -36,15 +36,15 @@ DICOM:
 # --------------------------------------------------------------------------------
 # DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
-  session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
 
   anat:       # ----------------------- All anatomical runs --------------------
   - provenance:                   # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
-    filesystem: &fileattr         # This is an optional (stub) entry of filesystem matching (could be added to any run-item)
-      path:                       # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
-      name:                       # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
-      size:                       # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
+    properties: &fileprop         # This is an optional (stub) entry of filesystem matching (could be added to any run-item)
+      filepath:                   # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
+      filename:                   # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
+      filesize:                   # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
       nrfiles:                    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
     attributes: &anat_dicomattr   # An empty / non-matching reference dictionary that can be derefenced in other run-items of this data type
       Modality:
@@ -769,8 +769,8 @@ PAR:
 # --------------------------------------------------------------------------------
 # PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A PAR attribute can also be used as subject-label instead, e.g. <patient_name>
-  session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A PAR attribute can also be used as session-label instead, e.g. <examination_name>
+  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
 
   anat:       # ----------------------- All anatomical runs --------------------
   - provenance:                   # The fullpath name of the PAR file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap

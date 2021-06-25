@@ -81,7 +81,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             if bidsmap_new[dataformat].get(datatype):
                 bidsmap_new[dataformat][datatype] = None
 
-    # Store/retrieve the user-defined sub-/ses-prefix
+    # Store/retrieve the empty or user-defined sub-/ses-prefix
     setprefix(bidsmap_new, subprefix, sesprefix)
     subprefix = bidsmap_new['Options']['bidscoin']['subprefix']
     sesprefix = bidsmap_new['Options']['bidscoin']['sesprefix']
@@ -164,7 +164,10 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
 
 def setprefix(bidsmap, subprefix, sesprefix):
-    """Set the prefix in the Options and in all the run['datasource'] objects"""
+    """Set the prefix in the Options, subject, session and in all the run['datasource'] objects if the prefix is not empty"""
+
+    oldsubprefix = bidsmap['Options']['bidscoin']['subprefix']
+    oldsesprefix = bidsmap['Options']['bidscoin']['sesprefix']
     if subprefix:
         bidsmap['Options']['bidscoin']['subprefix'] = subprefix
     if sesprefix:
@@ -173,6 +176,10 @@ def setprefix(bidsmap, subprefix, sesprefix):
         if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (-> 'PlugIns')
         if not bidsmap[dataformat]:             continue
         for datatype in bidsmap[dataformat]:
+            if subprefix:
+                bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace(oldsubprefix, subprefix)  # This may not work for every template but it's the best we can do
+            if sesprefix:
+                bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace(oldsesprefix, sesprefix)
             if not isinstance(bidsmap[dataformat][datatype], list): continue
             for run in bidsmap[dataformat][datatype]:
                 if subprefix:

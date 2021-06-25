@@ -57,13 +57,14 @@ def is_sourcefile(file: Path) -> str:
     return ''
 
 
-def get_attribute(dataformat: str, sourcefile: Path, attribute: str) -> Union[str, int]:
+def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> Union[str, int]:
     """
     This plugin supports reading attributes from DICOM and PAR dataformats
 
     :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
     :param sourcefile:  The sourcefile from which the attribute value should be read
     :param attribute:   The attribute key for which the value should be read
+    :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap['Options']
     :return:            The attribute value
     """
     if dataformat == 'DICOM':
@@ -73,7 +74,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str) -> Union[st
         return bids.get_parfield(attribute, sourcefile)
 
 
-def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict) -> None:
+def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
     """
     The bidscoiner plugin to convert the session DICOM and PAR/REC source-files into BIDS-valid nifti-files in the
     corresponding bidsfolder and extract personals (e.g. Age, Sex) from the source header
@@ -81,7 +82,6 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
     :param session:     The full-path name of the subject/session source file/folder
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
     :param bidsfolder:  The full-path name of the BIDS root-folder
-    :param personals:   The dictionary with the personal information
     :return:            Nothing
     """
 
@@ -136,7 +136,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
 
         # Get a matching run from the bidsmap and update its run['datasource'] object
         datasource          = bids.DataSource(sourcefile, plugin, dataformat)
-        run, index          = bids.get_matching_run(datasource, bidsmap)
+        run, index          = bids.get_matching_run(datasource, bidsmap, runtime=True)
         datasource          = run['datasource']
         datasource.path     = sourcefile
         datasource.plugins  = plugin
@@ -407,13 +407,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
                 json.dump(jsondata, json_fid, indent=4)
 
     # Collect personal data from a source header (PAR/XML does not contain personal info)
+    personals = {}
+    if sesid and 'session_id' not in personals:
+        personals['session_id'] = sesid
     if dataformat=='DICOM' and sourcefile.name:
-        personals['participant_id'] = subid
-        if sesid:
-            if 'session_id' not in personals:
-                personals['session_id'] = sesid
-            else:
-                return                                              # Only take data from the first session -> BIDS specification
         age = datasource.attributes('PatientAge')                   # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
         if age.endswith('D'):
             personals['age'] = str(int(float(age.rstrip('D'))/365.2524))
@@ -425,6 +422,40 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals:
             personals['age'] = str(int(float(age.rstrip('Y'))))
         elif age:
             personals['age'] = age
-        personals['sex']     = bids.get_dicomfield('PatientSex',    sourcefile)
-        personals['size']    = bids.get_dicomfield('PatientSize',   sourcefile)
-        personals['weight']  = bids.get_dicomfield('PatientWeight', sourcefile)
+        personals['sex']     = datasource.attributes('PatientSex')
+        personals['size']    = datasource.attributes('PatientSize')
+        personals['weight']  = datasource.attributes('PatientWeight')
+
+    # Store the collected personals in the participant_table
+    participants_tsv  = bidsfolder/'participants.tsv'
+    participants_json = participants_tsv.with_suffix('.json')
+    if participants_tsv.is_file():
+        participants_table = pd.read_csv(participants_tsv, sep='\t')
+        participants_table.set_index(['participant_id'], verify_integrity=True, inplace=True)
+    else:
+        participants_table = pd.DataFrame()
+        participants_table.index.name = 'participant_id'
+    if 'session_id' in participants_table.keys() and participants_table.loc[subid, 'session_id']:
+        return                                          # Only take data from the first session -> BIDS specification
+    if participants_json.is_file():
+        with participants_json.open('r') as json_fid:
+            participants_dict = json.load(json_fid)
+    else:
+        participants_dict = {'participant_id': {'Description': 'Unique participant identifier'}}
+    newkeys = False
+    for key in personals:           # TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
+        participants_table.loc[subid, key] = personals[key]
+        if key not in participants_dict:
+            newkeys = True
+            participants_dict[key] = dict(LongName     = 'Long (unabbreviated) name of the column',
+                                          Description  = 'Description of the the column',
+                                          Levels       = dict(Key='Value (This is for categorical variables: a dictionary of possible values (keys) and their descriptions (values))'),
+                                          Units        = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is RECOMMENDED')
+
+    # Write the collected data to the participant files
+    LOGGER.info(f"Writing {subid} subject data to: {participants_tsv}")
+    participants_table.replace('','n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
+    if newkeys:
+        LOGGER.info(f"Writing subject data dictionary to: {participants_json}")
+        with participants_json.open('w') as json_fid:
+            json.dump(participants_dict, json_fid, indent=4)

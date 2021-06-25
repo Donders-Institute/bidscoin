@@ -122,19 +122,13 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                 bidsignore.write(item + '\n')
 
     # Get the table & dictionary of the subjects that have been processed
-    participants_tsv  = bidsfolder/'participants.tsv'
-    participants_json = participants_tsv.with_suffix('.json')
+    participants_tsv = bidsfolder/'participants.tsv'
     if participants_tsv.is_file():
         participants_table = pd.read_csv(participants_tsv, sep='\t')
         participants_table.set_index(['participant_id'], verify_integrity=True, inplace=True)
     else:
         participants_table = pd.DataFrame()
         participants_table.index.name = 'participant_id'
-    if participants_json.is_file():
-        with participants_json.open('r') as json_fid:
-            participants_dict = json.load(json_fid)
-    else:
-        participants_dict = {'participant_id': {'Description': 'Unique participant identifier'}}
 
     # Get the list of subjects
     subprefix = bidsmap['Options']['bidscoin']['subprefix']
@@ -155,8 +149,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             LOGGER.info(f"Skipping subject: {subject} ({n}/{len(subjects)})")
             continue
 
-        personals = dict()
-        sessions  = bidscoin.lsdirs(subject, sesprefix + '*')
+        sessions = bidscoin.lsdirs(subject, sesprefix + '*')
         if not sessions:
             sessions = [subject]
         for session in sessions:
@@ -188,36 +181,11 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             # Run the bidscoiner plugins
             for module in plugins:
                 LOGGER.info(f"Executing plugin: {Path(module.__file__).name}")
-                module.bidscoiner_plugin(session, bidsmap, bidsfolder, personals)
+                module.bidscoiner_plugin(session, bidsmap, bidsfolder)
 
             # Clean-up the temporary unpacked data
             if unpacked:
                 shutil.rmtree(session)
-
-        # Store the collected personals in the participant_table
-        for key in personals:
-
-            # participant_id is the index of the participants_table
-            assert 'participant_id' in personals
-            if key == 'participant_id':
-                continue
-
-            # TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
-
-            if key not in participants_dict:
-                participants_dict[key] = dict(LongName     = 'Long (unabbreviated) name of the column',
-                                              Description  = 'Description of the the column',
-                                              Levels       = dict(Key='Value (This is for categorical variables: a dictionary of possible values (keys) and their descriptions (values))'),
-                                              Units        = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is RECOMMENDED')
-            participants_table.loc[personals['participant_id'], key] = personals[key]
-
-    # Write the collected data to the participant files
-    LOGGER.info(f"Writing subject data to: {participants_tsv}")
-    participants_table.replace('','n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
-
-    LOGGER.info(f"Writing subject data dictionary to: {participants_json}")
-    with participants_json.open('w') as json_fid:
-        json.dump(participants_dict, json_fid, indent=4)
 
     LOGGER.info('-------------- FINISHED! ------------')
     LOGGER.info('')

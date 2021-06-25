@@ -29,21 +29,22 @@ Options:
     dcm2niix2bids:                # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
       path: module add dcm2niix;  # Command to set the path to dcm2niix (note the semi-colon), e.g. module add dcm2niix/1.0.20180622; or PATH=/opt/dcm2niix/bin:$PATH; or /opt/dcm2niix/bin/ or '"C:\Program Files\dcm2niix\"' (note the quotes to deal with the whitespace)
       args: -b y -z y -i n        # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
+    phys2bidscoin:                # The settings for the phys2bidscoin plugin
 
 
 DICOM:
 # --------------------------------------------------------------------------------
 # DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
-  session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
 
   anat:       # ----------------------- All anatomical runs --------------------
   - provenance:                   # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
-    filesystem: &fileattr         # This is an optional (stub) entry of filesystem matching (could be added to any run-item)
-      path:                       # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
-      name:                       # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
-      size:                       # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
+    properties: &fileprop         # This is an optional (stub) entry of properties matching (could be added to any run-item)
+      filepath:                   # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
+      filename:                   # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
+      filesize:                   # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
       nrfiles:                    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
     attributes: &anat_dicomattr   # An empty / non-matching reference dictionary that can be derefenced in other run-items of this data type
       Modality:
@@ -1024,8 +1025,8 @@ PAR:
 # --------------------------------------------------------------------------------
 # PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  subject: <<SourceFilePath>>     # <<SourceFilePath>> extracts the subject label from the source directory during bidscoiner runtime. A PAR attribute can also be used as subject-label instead, e.g. <patient_name>
-  session: <<SourceFilePath>>     # <<SourceFilePath>> extracts the session label from the source directory during bidscoiner runtime. A PAR attribute can also be used as session-label instead, e.g. <examination_name>
+  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
   anat:       # ----------------------- All anatomical runs --------------------
   - provenance:                   # The fullpath name of the PAR file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     attributes: &anat_parattr
@@ -1737,3 +1738,42 @@ PAR:
     bids:
       acq: <protocol_name><exam_name>
       suffix: <series_type>
+
+Physio:
+# --------------------------------------------------------------------------------
+# Physio key-value heuristics (phys2bids -info data) that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
+  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+
+  func:        # ----------------------- All functional runs --------------------
+  - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    properties:                   # This is what phys2bids is using now (well, part of it)
+      filepath:                   # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
+      filename:                   # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
+      filesize:                   # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
+      nrfiles:                    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
+    attributes:                   # The matching (regexp) criteria for the phys2bids -info data go in here
+      ch_num: .*
+      filetype: .*
+      freq: .*
+      ch_name: .*
+      units: .*
+      trigger_idx: .*
+    bids:
+      task:
+      acq:
+      ce:
+      dir:
+      rec:
+      run: <<1>>                  # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      recording:
+      suffix: physio
+    meta:                         # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
+      TriggerChannel: <<trigger_idx>>
+      ExpectedTimepoints: <<num_timepoints_found>>
+      Pad: 9
+      ChannelNames: <<ch_name>>
+      Threshold: <<thr>>
+      TimeOffset: <<time_offset>>
+      StartTime: <<time_offset>>

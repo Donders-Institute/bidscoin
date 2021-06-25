@@ -14,6 +14,7 @@ import textwrap
 import logging
 import copy
 import webbrowser
+import re
 from typing import Union
 from pydicom import dcmread
 from pathlib import Path
@@ -273,7 +274,7 @@ class MainWindow(QMainWindow):
         subses_label.setToolTip('Subject/session mapping')
 
         subses_table = MyQTableWidget()
-        subses_table.setToolTip(f"Use '<<SourceFilePath>>' to parse the subject and (optional) session label from the pathname\n"
+        subses_table.setToolTip(f"Use e.g. '<<filepath:sub-(.*?)>>' to parse the subject and (optional) session label from the pathname\n"
                                 f"Use a dynamic {dataformat} attribute (e.g. '<<PatientName>>') to extract the subject and (optional) session label from the {dataformat} header")
         subses_table.setMouseTracking(True)
         subses_table.setRowCount(2)
@@ -854,15 +855,15 @@ class EditWindow(QDialog):
         self.setWhatsThis(f"BIDScoin mapping of {self.dataformat} properties and attributes to BIDS output data")
 
         # Get data for the tables
-        data_filesystem, data_attributes, data_bids, data_meta = self.run2data()
+        data_properties, data_attributes, data_bids, data_meta = self.run2data()
 
-        # Set-up the filesystem table
-        self.filesystem_label = QLabel('Properties')
-        self.filesystem_label.setToolTip(f"The filesystem properties that match with (identify) the source file. NB: Expert usage (e.g. using regular expressions, see documentation). Copy: Ctrl+C")
-        self.filesystem_table = self.set_table(data_filesystem, 'filesystem')
-        self.filesystem_table.cellChanged.connect(self.filesystemcell2run)
-        self.filesystem_table.setToolTip(f"The filesystem property that matches with the source file")
-        self.filesystem_table.cellDoubleClicked.connect(self.inspect_sourcefile)
+        # Set-up the properties table
+        self.properties_label = QLabel('Properties')
+        self.properties_label.setToolTip(f"The filesystem properties that match with (identify) the source file. NB: Expert usage (e.g. using regular expressions, see documentation). Copy: Ctrl+C")
+        self.properties_table = self.set_table(data_properties, 'properties')
+        self.properties_table.cellChanged.connect(self.propertiescell2run)
+        self.properties_table.setToolTip(f"The filesystem property that matches with the source file")
+        self.properties_table.cellDoubleClicked.connect(self.inspect_sourcefile)
 
         # Set-up the attributes table
         self.attributes_label = QLabel(f"Attributes")
@@ -911,8 +912,8 @@ class EditWindow(QDialog):
         groupbox1 = QGroupBox(self.dataformat + ' input')
         groupbox1.setSizePolicy(sizepolicy)
         layout1 = QVBoxLayout()
-        layout1.addWidget(self.filesystem_label)
-        layout1.addWidget(self.filesystem_table)
+        layout1.addWidget(self.properties_label)
+        layout1.addWidget(self.properties_table)
         layout1.addWidget(self.attributes_label)
         layout1.addWidget(self.attributes_table)
         groupbox1.setLayout(layout1)
@@ -964,7 +965,7 @@ class EditWindow(QDialog):
     def reject(self, confirm=True):
         """Ask if the user really wants to close the window"""
 
-        if confirm and str(self.target_run) != str(self.source_run):
+        if confirm and re.sub('<.*?object at.*?>','',str(self.target_run)) != re.sub('<.*?object at.*?>','',str(self.source_run)):
             self.raise_()
             answer = QMessageBox.question(self, 'Edit BIDS mapping', 'Closing window, do you want to save the changes you made?',
                                           QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
@@ -999,26 +1000,26 @@ class EditWindow(QDialog):
 
     def run2data(self) -> tuple:
         """Derive the tabular data from the target_run, needed to render the edit window
-        :return: (data_filesystem, data_attributes, data_bids, data_meta)
+        :return: (data_properties, data_attributes, data_bids, data_meta)
         """
 
-        run     = self.target_run
-        path    = self.datasource.filesystem('path')
-        name    = self.datasource.filesystem('name')
-        size    = self.datasource.filesystem('size')
-        nrfiles = self.datasource.filesystem('nrfiles')
-        data_filesystem = [[{'value': 'path',                           'iseditable': False},
-                            {'value': run['filesystem'].get('path'),    'iseditable': True},
-                            {'value': path,                             'iseditable': False}],
-                           [{'value': 'name',                           'iseditable': False},
-                            {'value': run['filesystem'].get('name'),    'iseditable': True},
-                            {'value': name,                             'iseditable': False}],
-                           [{'value': 'size',                           'iseditable': False},
-                            {'value': run['filesystem'].get('size'),    'iseditable': True},
-                            {'value': size,                             'iseditable': False}],
-                           [{'value': 'nrfiles',                        'iseditable': False},
-                            {'value': run['filesystem'].get('nrfiles'), 'iseditable': True},
-                            {'value': nrfiles,                          'iseditable': False}]]
+        run      = self.target_run
+        filepath = self.datasource.properties('filepath')
+        filename = self.datasource.properties('filename')
+        filesize = self.datasource.properties('filesize')
+        nrfiles  = self.datasource.properties('nrfiles')
+        data_properties = [[{'value': 'filepath',                        'iseditable': False},
+                            {'value': run['properties'].get('filepath'), 'iseditable': True},
+                            {'value': filepath,                          'iseditable': False}],
+                           [{'value': 'filename',                        'iseditable': False},
+                            {'value': run['properties'].get('filename'), 'iseditable': True},
+                            {'value': filename,                          'iseditable': False}],
+                           [{'value': 'filesize',                        'iseditable': False},
+                            {'value': run['properties'].get('filesize'), 'iseditable': True},
+                            {'value': filesize,                          'iseditable': False}],
+                           [{'value': 'nrfiles',                         'iseditable': False},
+                            {'value': run['properties'].get('nrfiles'),  'iseditable': True},
+                            {'value': nrfiles,                           'iseditable': False}]]
 
         data_attributes = []
         for key, value in run['attributes'].items():
@@ -1041,7 +1042,7 @@ class EditWindow(QDialog):
             data_meta.append([{'value': key,   'iseditable': True},
                               {'value': value, 'iseditable': True}])
 
-        return data_filesystem, data_attributes, data_bids, data_meta
+        return data_properties, data_attributes, data_bids, data_meta
 
     def set_table(self, data: list, name: str, minimum: bool=True) -> QTableWidget:
         """Return a table widget filled with the data"""
@@ -1097,11 +1098,11 @@ class EditWindow(QDialog):
                     table.setCellWidget(i, j, self.spacedwidget(value_dropdown))
                 else:
                     value_item = MyWidgetItem(value, iseditable=item['iseditable'])
-                    if table.objectName() == 'filesystem':
+                    if table.objectName() == 'properties':
                         if j == 1:
                             value_item.setToolTip('The (regexp) matching pattern that for this property')
                         if j == 2:
-                            value_item.setToolTip(bids.get_filesystemhelp(key))
+                            value_item.setToolTip(bids.get_propertieshelp(key))
                     elif table.objectName()=='attributes' and j==0:
                         value_item.setToolTip(bids.get_attributeshelp(key))
                     elif table.objectName()=='bids' and j==0:
@@ -1112,14 +1113,14 @@ class EditWindow(QDialog):
 
         table.blockSignals(False)
 
-    def filesystemcell2run(self, rowindex: int, colindex: int):
+    def propertiescell2run(self, rowindex: int, colindex: int):
         """Source attribute value has been changed"""
 
         # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
         if colindex == 1:
-            key      = self.filesystem_table.item(rowindex, 0).text()
-            value    = self.filesystem_table.item(rowindex, 1).text()
-            oldvalue = self.target_run['filesystem'].get(key)
+            key      = self.properties_table.item(rowindex, 0).text()
+            value    = self.properties_table.item(rowindex, 1).text()
+            oldvalue = self.target_run['properties'].get(key)
             if oldvalue is None:
                 oldvalue = ''
 
@@ -1128,13 +1129,13 @@ class EditWindow(QDialog):
                 answer = QMessageBox.question(self, f"Edit {self.dataformat} attributes",
                                               f'It is discouraged to change {self.dataformat} attribute values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                if answer==QMessageBox.Yes:
+                if answer == QMessageBox.Yes:
                     LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
-                    self.target_run['filesystem'][key] = value
+                    self.target_run['properties'][key] = value
                 else:
-                    self.filesystem_table.blockSignals(True)
-                    self.filesystem_table.item(rowindex, 1).setText(oldvalue)
-                    self.filesystem_table.blockSignals(False)
+                    self.properties_table.blockSignals(True)
+                    self.properties_table.item(rowindex, 1).setText(oldvalue)
+                    self.properties_table.blockSignals(False)
 
     def attributescell2run(self, rowindex: int, colindex: int):
         """Source attribute value has been changed"""
@@ -1152,7 +1153,7 @@ class EditWindow(QDialog):
                 answer = QMessageBox.question(self, f"Edit {self.dataformat} attributes",
                                               f'It is discouraged to change {self.dataformat} attribute values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                if answer==QMessageBox.Yes:
+                if answer == QMessageBox.Yes:
                     LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                     self.target_run['attributes'][key] = value
                 else:
@@ -1180,10 +1181,10 @@ class EditWindow(QDialog):
             if key and value != oldvalue:
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
                 self.bids_table.blockSignals(True)
-                if isinstance(value, str) and not (value.startswith('<<') and value.endswith('>>')):
+                if isinstance(value, str) and ('<<' not in value or '>>' not in value):
                     value = bids.cleanup_value(self.datasource.dynamicvalue(value))
                     self.bids_table.item(rowindex, 1).setText(value)
-                if key == 'run' and oldvalue.startswith('<<') and oldvalue.endswith('>>'):
+                if key == 'run' and '<<' in oldvalue and '>>' in oldvalue:
                     answer = QMessageBox.question(self, f"Edit bids entities",
                                                   f'It is highly discouraged to change the <<dynamic>> run-index unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -1209,7 +1210,7 @@ class EditWindow(QDialog):
             oldvalue = ''
         if value != oldvalue:
             # Replace the (dynamic) value
-            if not (value.startswith('<<') and value.endswith('>>')):
+            if '<<' not in value or '>>' not in value:
                 value = self.datasource.dynamicvalue(value, cleanup=False)
                 self.meta_table.blockSignals(True)
                 self.meta_table.item(rowindex, 1).setText(value)
@@ -1309,10 +1310,10 @@ class EditWindow(QDialog):
             self.datatype_dropdown.setCurrentIndex(self.datatype_dropdown.findText(self.target_datatype))
 
         # Refresh the source attributes and BIDS values with data from the target_run
-        data_filesystem, data_attributes, data_bids, data_meta = self.run2data()
+        data_properties, data_attributes, data_bids, data_meta = self.run2data()
 
         # Refresh the existing tables
-        self.fill_table(self.filesystem_table, data_filesystem)
+        self.fill_table(self.properties_table, data_properties)
         self.fill_table(self.attributes_table, data_attributes)
         self.fill_table(self.bids_table, data_bids)
         self.fill_table(self.meta_table, data_meta)
@@ -1338,7 +1339,7 @@ class EditWindow(QDialog):
             LOGGER.warning(f"'IntendedFor' fieldmap value was not set")
 
         LOGGER.info(f'User has approved the edit')
-        if str(self.target_run) != str(self.source_run):
+        if re.sub('<.*?object at.*?>','',str(self.target_run)) != re.sub('<.*?object at.*?>','',str(self.source_run)):
             bids.update_bidsmap(self.target_bidsmap, self.current_datatype, self.target_run)
 
             self.done_edit.emit(self.target_bidsmap)

@@ -19,7 +19,7 @@ Editing the template
 
 .. figure:: ./_static/bidseditor_edit_tooltip.png
 
-   The edit window with the option to export the customized mapping of run a item, and featuring filesystem matching and dynamic meta-data values
+   The edit window with the option to export the customized mapping of run a item, and featuring properties matching and dynamic meta-data values
 
 2. **Using a text editor**. This is the most powerful way to create or modify a bidsmap template but requires more knowledge of `YAML <http://yaml.org/>`__ and more `understanding of bidsmaps <bidsmap.html>`__. To organise and empower your template you can take the DCCN template bidsmap (``[path_to_bidscoin]/heuristics/bidsmap_dccn.yaml``) as an example and work from there. If you open that template with a text editor, there are a few handy things to take notice of (as shown in the template snippet below). First, you can see that the DCCN template makes use of YAML `anchors and aliases <https://blog.daemonl.com/2016/02/yaml.html>`__ (to make maintanance more sustainable). The second thing to notice is that, of the first run, all values of the attribute dictionary are empty, meaning that it won't match any run-item. In that way, however, the subsequent runs that dereference (e.g. with ``<<: *anatattributes_dicom``) this anchor (e.g. ``&anatattributes_dicom``) will inherit only the keys and can inject their own values, as shown in the second run. The first run of each modality sub-section (like ``anat``) also serves as the default bidsmapping when users manually overrule / change the bids modality using the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ GUI.
 
@@ -32,10 +32,10 @@ Editing the template
 
    anat:       # ----------------------- All anatomical runs --------------------
    - provenance: ~                 # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
-     filesystem: &fileattr         # This is an optional (stub) entry of filesystem matching (could be added to any run-item)
-       path: ~                     # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
-       name: ~                     # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
-       size: ~                     # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
+     properties: &fileattr         # This is an optional (stub) entry of filesystem matching (could be added to any run-item)
+       filepath: ~                 # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
+       filename: ~                 # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
+       filesize: ~                 # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
        nrfiles: ~                  # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
      attributes: &anat_dicomattr   # An empty / non-matching reference dictionary that can be derefenced in other run-items of this data type
        Modality: ~
@@ -61,7 +61,7 @@ Editing the template
        suffix: T1w
      meta:                         # This is an optional entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
    - provenance: ~
-     filesystem:
+     properties:
        <<: *fileattr
        nrfiles: [1-3]/d/d          # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
      attributes:
@@ -140,13 +140,14 @@ BIDScoin uses a flexible plugin architecture to map and convert your source data
 
 
 
-   def get_attribute(dataformat: str, sourcefile: Path, attribute: str) -> str:
+   def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> str:
        """
        This plugin function reads attributes from the supported sourcefile
 
        :param dataformat:  The dataformat of the sourcefile, e.g. DICOM of PAR
        :param sourcefile:  The sourcefile from which key-value data needs to be read
        :param attribute:   The attribute key for which the value needs to be retrieved
+       :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap['Options']
        :return:            The retrieved attribute value
        """
 
