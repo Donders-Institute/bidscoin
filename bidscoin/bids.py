@@ -88,25 +88,23 @@ class DataSource:
         :return:        The property value or '' if the property could not be parsed from the datasource
         """
 
-        if tagname.startswith('filepath'):
-            if tagname.startswith('filepath:'):
-                match = re.findall(tagname[9:], self.path.parent.as_posix())
-                if match:
-                    if len(match) > 1:
-                        LOGGER.warning(f"Multiple matches {match} found when extracting {tagname} from {self.path.parent.as_posix()}")
-                    return match[-1]                        # The last match is most likely the most informative
-            elif tagname == 'filepath':
-                return str(self.path.parent)
+        if tagname.startswith('filepath:') and len(tagname) > 9:
+            match = re.findall(tagname[9:], self.path.parent.as_posix())
+            if match:
+                if len(match) > 1:
+                    LOGGER.warning(f"Multiple matches {match} found when extracting {tagname} from {self.path.parent.as_posix()}, using: {match[-1]}")
+                return match[-1]                            # The last match is most likely the most informative
+        elif tagname == 'filepath':
+            return str(self.path.parent)
 
-        if tagname.startswith('filename'):
-            if tagname.startswith('filename:') and '(' in tagname and ')' in tagname:
-                match = re.findall(tagname[9:], self.path.name)
-                if match:
-                    if len(match) > 1:
-                        LOGGER.warning(f"Multiple matches {match} found when extracting {tagname} from {self.path.name}")
-                    return match[0]                         # The first match is most likely the most informative (?)
-            elif tagname == 'filename':
-                return self.path.name
+        if tagname.startswith('filename:') and len(tagname) > 9:
+            match = re.findall(tagname[9:], self.path.name)
+            if match:
+                if len(match) > 1:
+                    LOGGER.warning(f"Multiple matches {match} found when extracting {tagname} from {self.path.name}, using: {match[0]}")
+                return match[0]                             # The first match is most likely the most informative (?)
+        elif tagname == 'filename':
+            return self.path.name
 
         if tagname == 'filesize' and self.path.is_file():
             # Convert the size in bytes into a human-readable B, KB, MG, GB, TB format
