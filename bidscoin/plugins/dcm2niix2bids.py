@@ -435,7 +435,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
     else:
         participants_table = pd.DataFrame()
         participants_table.index.name = 'participant_id'
-    if 'session_id' in participants_table.keys() and participants_table.loc[subid, 'session_id']:
+    if subid in participants_table.index and 'session_id' in participants_table.keys() and participants_table.loc[subid, 'session_id']:
         return                                          # Only take data from the first session -> BIDS specification
     if participants_json.is_file():
         with participants_json.open('r') as json_fid:

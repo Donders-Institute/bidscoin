@@ -15,11 +15,11 @@ try:
     from phys2bids.phys2bids import phys2bids
     from phys2bids.utils import SUPPORTED_FTYPES
 except ImportError:
-    pass                # TODO: handle gracefully
+    SUPPORTED_FTYPES = ()   # TODO: handle gracefully
 try:
     from bidscoin import bids
 except ImportError:
-    import bids         # This should work if bidscoin was not pip-installed
+    import bids             # This should work if bidscoin was not pip-installed
 import logging
 import shutil
 import json

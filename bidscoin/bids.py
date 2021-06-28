@@ -81,7 +81,7 @@ class DataSource:
 
     def properties(self, tagname: str, run: dict=None) -> Union[str, int]:
         """
-        Gets the filesystem properties. The filepath and filename can be parsed using re.search() -> match.group(1)
+        Gets the filesystem properties. The filepath (with trailing "/") and filename can be parsed using re.search() -> match.group(1)
 
         :param tagname: The name of the filesystem property key, e.g. 'filename', 'filename:sub-(.*?)_' or 'nrfiles'
         :param run:     If given and tagname == 'nrfiles' then the nrfiles is dependent on the other filesystem matching-criteria
@@ -89,13 +89,13 @@ class DataSource:
         """
 
         if tagname.startswith('filepath:') and len(tagname) > 9:
-            match = re.findall(tagname[9:], self.path.parent.as_posix())
+            match = re.findall(tagname[9:], self.path.parent.as_posix() + '/')
             if match:
                 if len(match) > 1:
                     LOGGER.warning(f"Multiple matches {match} found when extracting {tagname} from {self.path.parent.as_posix()}, using: {match[-1]}")
                 return match[-1]                            # The last match is most likely the most informative
         elif tagname == 'filepath':
-            return str(self.path.parent)
+            return str(self.path.parent/"_")[:-1]           # add a dummy "_" component, then strip it -> adds a trailing "/"
 
         if tagname.startswith('filename:') and len(tagname) > 9:
             match = re.findall(tagname[9:], self.path.name)
@@ -152,7 +152,7 @@ class DataSource:
                     return attributeval
         return ''
 
-    def subid_sesid(self, subid: None, sesid: None) -> Tuple[str, str]:
+    def subid_sesid(self, subid=None, sesid=None) -> Tuple[str, str]:
         """
         Extract the cleaned-up subid and sesid from the datasource properties or attributes
 
@@ -163,9 +163,9 @@ class DataSource:
 
         # Add the default value for subid and sesid if not given
         if subid is None:
-            subid = f"filepath:/{self.subprefix}(.*?)/"
+            subid = f"<<filepath:/{self.subprefix}(.*?)/>>"
         if sesid is None:
-            sesid = f"filepath:/{self.sesprefix}(.*?)/"
+            sesid = f"<<filepath:/{self.sesprefix}(.*?)/>>"
 
         # Parse the sub-/ses-id's
         subid_ = self.dynamicvalue(subid, runtime=True)
@@ -1198,8 +1198,11 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
             run_['bids'] = {}
             for bidskey, bidsvalue in run['bids'].items():
 
-                # Replace the dynamic bids values
-                run_['bids'][bidskey] = datasource.dynamicvalue(bidsvalue, runtime=runtime)
+                # Replace the dynamic bids values, except the dynamic run-index (e.g. <<1>>)
+                if bidskey == 'run' and bidsvalue.replace('<','').replace('>','').isdecimal():
+                    run_['bids'][bidskey] = bidsvalue
+                else:
+                    run_['bids'][bidskey] = datasource.dynamicvalue(bidsvalue, runtime=runtime)
 
                 # SeriesDescriptions (and ProtocolName?) may get a suffix like '_SBRef' from the vendor, try to strip it off
                 run_ = strip_suffix(run_)
@@ -1262,7 +1265,7 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False) -> str:
         bidsvalue = run['bids'].get(entitykey)                                  # Get the entity data from the run
         if isinstance(bidsvalue, list):
             bidsvalue = bidsvalue[bidsvalue[-1]]                                # Get the selected item
-        else:
+        elif not (entitykey=='run' and bidsvalue.replace('<','').replace('>','').isdecimal()):
             bidsvalue  = run['datasource'].dynamicvalue(bidsvalue, cleanup=True, runtime=runtime)
         if bidsvalue:
             bidsname = f"{bidsname}_{entitykey}-{cleanup_value(bidsvalue)}"     # Append the key-value data to the bidsname
