@@ -85,7 +85,7 @@ class DataSource:
 
         :param tagname: The name of the filesystem property key, e.g. 'filename', 'filename:sub-(.*?)_' or 'nrfiles'
         :param run:     If given and tagname == 'nrfiles' then the nrfiles is dependent on the other filesystem matching-criteria
-        :return:        The property value or '' if the property could not be parsed from the datasource
+        :return:        The property value (posix with a trailing "/" if tagname == 'filepath') or '' if the property could not be parsed from the datasource
         """
 
         if tagname.startswith('filepath:') and len(tagname) > 9:
@@ -95,7 +95,7 @@ class DataSource:
                     LOGGER.warning(f"Multiple matches {match} found when extracting {tagname} from {self.path.parent.as_posix()}, using: {match[-1]}")
                 return match[-1]                            # The last match is most likely the most informative
         elif tagname == 'filepath':
-            return str(self.path.parent/"_")[:-1]           # add a dummy "_" component, then strip it -> adds a trailing "/"
+            return self.path.parent.as_posix() + '/'
 
         if tagname.startswith('filename:') and len(tagname) > 9:
             match = re.findall(tagname[9:], self.path.name)
@@ -1262,7 +1262,7 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False) -> str:
     # Compose a bidsname from valid BIDS entities only
     bidsname = f"{subid}{add_prefix('_', sesid)}"                               # Start with the subject/session identifier
     for entitykey in [entities[entity]['entity'] for entity in entities]:
-        bidsvalue = run['bids'].get(entitykey)                                  # Get the entity data from the run
+        bidsvalue = run['bids'].get(entitykey,'')                               # Get the entity data from the run
         if isinstance(bidsvalue, list):
             bidsvalue = bidsvalue[bidsvalue[-1]]                                # Get the selected item
         elif not (entitykey=='run' and bidsvalue.replace('<','').replace('>','').isdecimal()):
