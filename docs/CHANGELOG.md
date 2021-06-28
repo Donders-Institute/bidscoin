@@ -8,10 +8,14 @@ All notable changes to this project will be documented in this file. The format 
 - A BIDScoin installation test (`bidscoin -t`)
 - A bidseditor button to save the Options to a (default) template bidsmap
 - Sub-/ses-prefix settings to bidsmap['Options']['bidscoin']
+- Regular expressions for extracting filesystem property substrings
+- A plugin for phys2bids to convert physiological data
+- Option to install extra packages, such as phys2bids
 
 ### Changed
 - Plugins should now have a `is_sourcefile` and a `get_attribute` function and have a simpler API (-> DataSource class)
 - The intricate filtering of the `nrfiles` property by the other filesystem properties has been removed and is now a pure/unfiltered file-system property
+- The `<<SourceFilePath>>` keyword has been replaced by a more flexible filepath regular expression
 
 ## [3.6.3] - 2021-06-14
 
