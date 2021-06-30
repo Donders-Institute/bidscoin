@@ -81,7 +81,9 @@ class DataSource:
 
     def properties(self, tagname: str, run: dict=None) -> Union[str, int]:
         """
-        Gets the filesystem properties. The filepath (with trailing "/") and filename can be parsed using re.search() -> match.group(1)
+        Gets the 'filepath[:regexp]', 'filename[:regexp]', 'filesize' or 'nrfiles' filesystem property. The filepath (with trailing "/")
+        and filename can be parsed using an optional regular expression re.findall(regexp, filepath / filename). The last match is returned
+        for the filepath, the first match for the filename
 
         :param tagname: The name of the filesystem property key, e.g. 'filename', 'filename:sub-(.*?)_' or 'nrfiles'
         :param run:     If given and tagname == 'nrfiles' then the nrfiles is dependent on the other filesystem matching-criteria
@@ -92,7 +94,7 @@ class DataSource:
             match = re.findall(tagname[9:], self.path.parent.as_posix() + '/')
             if match:
                 if len(match) > 1:
-                    LOGGER.warning(f"Multiple matches {match} found when extracting {tagname} from {self.path.parent.as_posix()}, using: {match[-1]}")
+                    LOGGER.warning(f"Multiple matches {match} found when extracting {tagname} from {self.path.parent.as_posix() + '/'}, using: {match[-1]}")
                 return match[-1]                            # The last match is most likely the most informative
         elif tagname == 'filepath':
             return self.path.parent.as_posix() + '/'
@@ -1108,7 +1110,7 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
         LOGGER.warning(f'Invalid bidsmap: BIDS {datatype} entity "suffix" is absent for {run["provenance"]} -> {datatype}')
     if datatype not in bidsdatatypes: return True
     for typegroup in bidsdatatypes[datatype]:
-        if run['bids']['suffix'] in typegroup['suffixes']:
+        if run['bids'].get('suffix') in typegroup['suffixes']:
             run_found = True
 
             # Check if all expected entity-keys are present in the run and if they are properly filled
@@ -1266,10 +1268,10 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False) -> str:
         if isinstance(bidsvalue, list):
             bidsvalue = bidsvalue[bidsvalue[-1]]                                # Get the selected item
         elif not (entitykey=='run' and bidsvalue.replace('<','').replace('>','').isdecimal()):
-            bidsvalue  = run['datasource'].dynamicvalue(bidsvalue, cleanup=True, runtime=runtime)
+            bidsvalue = run['datasource'].dynamicvalue(bidsvalue, cleanup=True, runtime=runtime)
         if bidsvalue:
             bidsname = f"{bidsname}_{entitykey}-{cleanup_value(bidsvalue)}"     # Append the key-value data to the bidsname
-    bidsname = f"{bidsname}{add_prefix('_', cleanup_value(run['bids']['suffix']))}"     # And end with the suffix
+    bidsname = f"{bidsname}{add_prefix('_', cleanup_value(run['bids'].get('suffix')))}"     # And end with the suffix
 
     return bidsname
 
