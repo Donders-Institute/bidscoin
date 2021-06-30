@@ -1239,8 +1239,15 @@ class EditWindow(QDialog):
         :param suffix_idx: The suffix or index number that will used to extract the run from the template bidsmap
         """
 
-        # Get the new target_run
+        old_entities = self.target_run['bids']
+
+        # Get the new target_run from the template
         self.target_run = bids.get_run(self.template_bidsmap, self.target_datatype, suffix_idx, self.datasource)
+
+        # Transfer the old entity data to the new run-item if possible and if it's not there yet
+        for key, val in old_entities.items():
+            if val and key in self.target_run['bids'] and not self.target_run['bids'][key]:
+                self.target_run['bids'][key] = val
 
         # Insert the new target_run in our target_bidsmap
         bids.update_bidsmap(self.target_bidsmap, self.current_datatype, self.target_run)
