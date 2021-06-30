@@ -1241,7 +1241,8 @@ class EditWindow(QDialog):
 
         # Add a check to see if we can still read the source data
         if not Path(self.target_run['provenance']).is_file():
-            QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot reliably change the datatype / suffix because the source file '{self.target_run['provenance']}' can no longer be found. Please restore the source data or use the `bidsmapper -s` option to solve this issue. Resetting run-item now")
+            LOGGER.warning(f"Can no longer find the source file: {self.target_run['provenance']}")
+            QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot reliably change the datatype and/or suffix because the source file '{self.target_run['provenance']}' can no longer be found.\n\nPlease restore the source data or use the `bidsmapper -s` option to solve this issue. Resetting the run-item now...")
             self.reset()
             return
 
