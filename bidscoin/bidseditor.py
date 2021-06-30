@@ -1239,6 +1239,12 @@ class EditWindow(QDialog):
         :param suffix_idx: The suffix or index number that will used to extract the run from the template bidsmap
         """
 
+        # Add a check to see if we can still read the source data
+        if not Path(self.target_run['provenance']).is_file():
+            QMessageBox.warning(self, 'Edit BIDS mapping', f"Cannot reliably change the datatype / suffix because the source file '{self.target_run['provenance']}' can no longer be found. Please restore the source data or use the `bidsmapper -s` option to solve this issue. Resetting run-item now")
+            self.reset()
+            return
+
         old_entities = self.target_run['bids']
 
         # Get the new target_run from the template
@@ -1314,7 +1320,9 @@ class EditWindow(QDialog):
             self.target_bidsmap   = copy.deepcopy(self.source_bidsmap)
 
             # Reset the datatype dropdown menu
+            self.datatype_dropdown.blockSignals(True)
             self.datatype_dropdown.setCurrentIndex(self.datatype_dropdown.findText(self.target_datatype))
+            self.datatype_dropdown.blockSignals(False)
 
         # Refresh the source attributes and BIDS values with data from the target_run
         data_properties, data_attributes, data_bids, data_meta = self.run2data()
