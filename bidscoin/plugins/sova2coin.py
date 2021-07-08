@@ -9,15 +9,11 @@ This module contains the interface with sovabids, both for the bidsmapper and fo
 
 """
 
-try:
-    from phys2bids.phys2bids import phys2bids
-    from phys2bids.utils import SUPPORTED_FTYPES
-except ImportError:
-    SUPPORTED_FTYPES = ()   # TODO: handle gracefully
 from sovabids.utils import get_supported_extensions,flatten
 from sovabids.rules import apply_rules_to_single_file,load_rules
 from sovabids.convert import update_dataset_description
 from sovabids import __path__ as sovapath
+# TODO: Handle sovabids import errors gracefully
 try:
     from bidscoin import bids
 except ImportError:
