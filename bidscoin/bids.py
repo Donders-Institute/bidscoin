@@ -1201,7 +1201,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
             for bidskey, bidsvalue in run['bids'].items():
 
                 # Replace the dynamic bids values, except the dynamic run-index (e.g. <<1>>)
-                if bidskey == 'run' and bidsvalue.replace('<','').replace('>','').isdecimal():
+                if bidskey == 'run' and bidsvalue and bidsvalue.replace('<','').replace('>','').isdecimal():
                     run_['bids'][bidskey] = bidsvalue
                 else:
                     run_['bids'][bidskey] = datasource.dynamicvalue(bidsvalue, runtime=runtime)
