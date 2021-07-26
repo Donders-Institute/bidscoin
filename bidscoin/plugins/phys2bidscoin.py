@@ -79,7 +79,11 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
     else:
         return ''
 
-    phys_info = phys2bids(sourcefile, info=True)
+    if not sourcefile.is_file():
+        LOGGER.error(f"Could not find {sourcefile}")
+        return ''
+
+    phys_info = phys2bids(str(sourcefile), info=True)
 
     return phys_info.get(attribute, '')
 
@@ -226,7 +230,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
         heur_file.write_text(heur_str)
 
         # Run phys2bids
-        physiofiles = phys2bids(filename                = sourcefile,
+        physiofiles = phys2bids(filename                = str(sourcefile),
                                 outdir                  = bidsfolder,
                                 heur_file               = heur_file,
                                 sub                     = subid,
