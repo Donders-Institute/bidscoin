@@ -25,7 +25,6 @@ Options:
     subprefix: sub-               # The subject prefix of the source data
     sesprefix: ses-               # The session prefix of the source data
   plugins:                        # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
-    dcm2bidsmap:                  # The default plugin that is used by the bidsmapper to map DICOM and PAR/REC source data
     dcm2niix2bids:                # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
       path: module add dcm2niix;  # Command to set the path to dcm2niix (note the semi-colon), e.g. module add dcm2niix/1.0.20180622; or PATH=/opt/dcm2niix/bin:$PATH; or /opt/dcm2niix/bin/ or '"C:\Program Files\dcm2niix\"' (note the quotes to deal with the whitespace)
       args: -b y -z y -i n        # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
@@ -87,7 +86,7 @@ DICOM:
     attributes:
       <<: *anat_dicomattr
       ProtocolName: (?i).*TSE.*vfl.*
-      ImageType: .*'NORM'.*                     # NB: The non-NORM image is saved in 'extra_data'
+      ImageType: .*'NORM'.*             # NB: The non-NORM image is saved in 'extra_data'
       SequenceVariant: "['SK', 'SP']"
       ScanningSequence: SE
     bids:
@@ -380,7 +379,7 @@ DICOM:
 
   func:       # ----------------------- All functional runs --------------------
   - provenance:
-    attributes: &func_dicomattr   # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = bold
+    attributes: &func_dicomattr         # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = bold
       Modality:
       ProtocolName:
       SeriesDescription:
@@ -528,7 +527,7 @@ DICOM:
 
   dwi:        # ----------------------- All diffusion runs ---------------------
   - provenance:
-    attributes: &dwi_dicomattr    # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = dwi
+    attributes: &dwi_dicomattr          # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = dwi
       Modality:
       ProtocolName:
       SeriesDescription:
@@ -587,7 +586,7 @@ DICOM:
 
   fmap:       # ----------------------- All fieldmap runs ----------------------
   - provenance:
-    attributes: &fmap_dicomattr   # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = magnitude
+    attributes: &fmap_dicomattr         # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = magnitude
       Modality:
       ProtocolName:
       SeriesDescription:
@@ -1025,10 +1024,11 @@ PAR:
 # --------------------------------------------------------------------------------
 # PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
-  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+  subject: <<filepath:/sub-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>     # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+
   anat:       # ----------------------- All anatomical runs --------------------
-  - provenance:                   # The fullpath name of the PAR file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+  - provenance:                         # The fullpath name of the PAR file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     attributes: &anat_parattr
       series_type:
       exam_name:

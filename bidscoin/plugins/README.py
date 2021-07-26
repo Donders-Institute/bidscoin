@@ -72,7 +72,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
     bidsmap_new/old['Options']['plugins']['README']
 
-    See also the dcm2bidsmap plugin for reference implementation
+    See also the dcm2niix2bids plugin for reference implementation
 
     :param session:     The full-path name of the subject/session raw data source folder
     :param bidsmap_new: The study bidsmap that we are building
