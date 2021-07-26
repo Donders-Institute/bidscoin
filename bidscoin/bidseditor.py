@@ -479,7 +479,7 @@ class MainWindow(QMainWindow):
                 if samples_table.item(idx, 3):
                     if not validrun or datatype == bids.unknowndatatype:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('red'))
-                        samples_table.item(idx, 3).setToolTip(f"Red: This {datatype} data type is not part of BIDS but will be converted to BIDS-like data. You should edit this item or make sure it is in your bidsignore list ([Options] tab)")
+                        samples_table.item(idx, 3).setToolTip(f"Red: This {datatype} item is not BIDS-valid but will still be converted. You should edit this item or make sure it is in your bidsignore list ([Options] tab)")
                     elif datatype == bids.ignoredatatype:
                         samples_table.item(idx, 1).setForeground(QtGui.QColor('gray'))
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('gray'))
