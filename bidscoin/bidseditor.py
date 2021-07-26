@@ -547,7 +547,7 @@ class MainWindow(QMainWindow):
         if not self.editwindow_opened:
             # Find the source index of the run in the list of runs (using the provenance) and open the edit window
             for run in self.output_bidsmap[dataformat][datatype]:
-                if run['provenance'] == str(provenance):
+                if Path(run['provenance']) == provenance:
                     LOGGER.info(f'User is editing {provenance}')
                     self.editwindow        = EditWindow(run, self.output_bidsmap, self.template_bidsmap)
                     self.editwindow_opened = str(provenance)
