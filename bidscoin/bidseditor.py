@@ -555,7 +555,7 @@ class MainWindow(QMainWindow):
                     self.editwindow.finished.connect(self.release_editwindow)
                     self.editwindow.show()
                     return
-            LOGGER.exception(f"Could not find {provenance} run-item")
+            LOGGER.error(f"Could not find {provenance} run-item")
 
         else:
             # Ask the user if he wants to save his results first before opening a new edit window
