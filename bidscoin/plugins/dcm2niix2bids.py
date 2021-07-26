@@ -361,17 +361,6 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
         # Loop over and adapt all the newly produced json files and write to the scans.tsv file (NB: assumes every nifti-file comes with a json-file)
         for jsonfile in sorted(set(jsonfiles)):
 
-            # Add a dummy b0 bval- and bvec-file for any file without a bval/bvec file (e.g. sbref, b0 scans)
-            if datatype == 'dwi':
-                bvecfile = jsonfile.with_suffix('.bvec')
-                bvalfile = jsonfile.with_suffix('.bval')
-                if not bvecfile.is_file():
-                    LOGGER.info(f"Adding dummy bvec file: {bvecfile}")
-                    bvecfile.write_text('0\n0\n0\n')
-                if not bvalfile.is_file():
-                    LOGGER.info(f"Adding dummy bval file: {bvalfile}")
-                    bvalfile.write_text('0\n')
-
             # Load the json meta-data
             with jsonfile.open('r') as json_fid:
                 jsondata = json.load(json_fid)
