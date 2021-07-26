@@ -883,7 +883,7 @@ def find_run(bidsmap: dict, provenance: str, dataformat: str='', datatype: str='
         for datatype in datatypes:
             if bidsmap.get(dataformat) and bidsmap[dataformat].get(datatype):
                 for run in bidsmap[dataformat][datatype]:
-                    if run['provenance'] == provenance:
+                    if Path(run['provenance']) == Path(provenance):
                         return run
 
 
