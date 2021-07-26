@@ -907,7 +907,7 @@ def delete_run(bidsmap: dict, provenance: Union[dict, str], datatype: str= '') -
     if not datatype:
         datatype = run_item['datasource'].datatype
     for index, run in enumerate(bidsmap[dataformat][datatype]):
-        if run['provenance'] == str(provenance):
+        if Path(run['provenance']) == Path(provenance):
             del bidsmap[dataformat][datatype][index]
 
 
