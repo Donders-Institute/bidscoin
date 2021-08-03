@@ -35,6 +35,7 @@ setup(name                           = 'bidscoin',          # Required
                                                             'dicomsort        = bidscoin.dicomsort:main',
                                                             'echocombine      = bidscoin.echocombine:main',
                                                             'deface           = bidscoin.deface:main',
+                                                            'medeface         = bidscoin.medeface:main',
                                                             'bidsparticipants = bidscoin.bidsparticipants:main',
                                                             'physio2tsv       = bidscoin.physio2tsv:main',
                                                             'plotphysio       = bidscoin.plotphysio:main']},
