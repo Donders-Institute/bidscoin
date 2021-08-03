@@ -1,7 +1,7 @@
 Options
 =======
 
-BIDScoin has different options and settings (see below) that can be adjusted per study bidsmap or, when you want to customize the default, edited in the `template bidsmap <bidsmap.html>`__. There are seperate settings for BIDScoin and for the individual plugins that can be edited by double clicking. Installed plugins can be removed or added to extend BIDScoin's functionality.
+BIDScoin has different options and settings (see below) that can be adjusted per study bidsmap or, when you want to customize the default, edited in the `template bidsmap <bidsmap.html>`__. There are separate settings for BIDScoin and for the individual plugins that can be edited by double clicking. Installed plugins can be removed or added to extend BIDScoin's functionality.
 
 .. figure:: ./_static/bidseditor_options.png
    :scale: 75%
@@ -15,11 +15,6 @@ These setting can be used by all the BIDScoin tools:
 
 - ``version``: Used to check for version conflicts (should correspond with the version in ../bidscoin/version.txt)
 - ``bidsignore``: Semicolon-separated list of datatypes that you want to include but that do not pass a BIDS `validation test <https://github.com/bids-standard/bids-validator#bidsignore>`__. Example: ``bidsignore: extra_data/;rTMS/;myfile.txt;yourfile.csv``
-
-dcm2bidsmap - plugin
---------------------
-
-The default bidsmapper plugin that builds a bidsmap from DICOM and PAR/REC source data. There are no settings for this plugin
 
 dcm2niix2bids - plugin
 ----------------------

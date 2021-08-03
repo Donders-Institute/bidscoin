@@ -85,7 +85,7 @@ Editing the template
 Plugins
 -------
 
-BIDScoin uses a flexible plugin architecture to map and convert your source data to BIDS. The bidsmapper and bidscoiner tools loop over the subjects/sessions in your source directory and then call the plugins listed in the bidsmap to do the actual work. As can be seen in the API code snippet below, the plugins can contain optional functions for interacting with their dataformat and for mapping and converting the source data to BIDS. See also the default ``dcm2bidsmap`` and ``dcm2niix2bids`` plugins for reference implementation.
+BIDScoin uses a flexible plugin architecture to map and convert your source data to BIDS. The bidsmapper and bidscoiner tools loop over the subjects/sessions in your source directory and then call the plugins listed in the bidsmap to do the actual work. As can be seen in the API code snippet below, the plugins can contain optional functions for interacting with their dataformat and for mapping and converting the source data to BIDS. See also the default ``dcm2niix2bids`` and ``phys2bidscoin`` plugins for reference implementation.
 
 .. note:: Plugins can be listed, installed and uninstalled using the ``bidscoin`` command-line utility.
 
@@ -165,7 +165,7 @@ BIDScoin uses a flexible plugin architecture to map and convert your source data
 
        bidsmap_new/old['Options']['plugins']['README']
 
-       See also the dcm2bidsmap plugin for reference implementation
+       See also the dcm2niix2bids plugin for reference implementation
 
        :param session:     The full-path name of the subject/session raw data source folder
        :param bidsmap_new: The study bidsmap that we are building

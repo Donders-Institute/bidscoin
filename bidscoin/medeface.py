@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface).
+A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface) that computes
+a defacing mask on an echo-combined image and then applies it to each individual echo-image.
 
 This wrapper is fully BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 
-For multi-echo data see `medeface`
+For single-echo data see `deface`
 """
 
 import os
@@ -15,6 +16,8 @@ import logging
 import pandas as pd
 import pydeface.utils as pdu
 import drmaa
+import nibabel as nib
+import numpy as np
 from pathlib import Path
 try:
     from bidscoin import bidscoin, bids
@@ -22,11 +25,11 @@ except ImportError:
     import bidscoin, bids             # This should work if bidscoin was not pip-installed
 
 
-def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: bool, nativespec: str, kwargs: dict):
+def medeface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: bool, nativespec: str, kwargs: dict):
     """
 
-    :param bidsdir:     The bids-directory with the subject data
-    :param pattern:     Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T1w*'
+    :param bidsdir:     The bids-directory with the (multi-echo) subject data
+    :param pattern:     Globlike search pattern (relative to the subject/session folder) to select the echo-images that need to be defaced, e.g. 'anat/*_T1w*'
     :param subjects:    List of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
     :param output:      Determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images
     :param cluster:     Flag to submit the deface jobs to the high-performance compute (HPC) cluster
@@ -41,8 +44,8 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
     # Start logging
     bidscoin.setup_logging(bidsdir/'code'/'bidscoin'/'deface.log')
     LOGGER.info('')
-    LOGGER.info('------------ START deface ------------')
-    LOGGER.info(f">>> deface bidsfolder={bidsdir} pattern={pattern} subjects={subjects} output={output}"
+    LOGGER.info('------------ START multi-echo deface ----------')
+    LOGGER.info(f">>> medeface bidsfolder={bidsdir} pattern={pattern} subjects={subjects} output={output}"
                 f" cluster={cluster} nativespec={nativespec} {kwargs}")
 
     # Get the list of subjects
@@ -54,7 +57,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
         subjects = ['sub-' + subject.replace('^sub-', '') for subject in subjects]              # Make sure there is a "sub-" prefix
         subjects = [bidsdir/subject for subject in subjects if (bidsdir/subject).is_dir()]
 
-    # Prepare the HPC job submission
+    # Prepare the HPC pydeface job submission
     with drmaa.Session() as pbatch:
         if cluster:
             jt                     = pbatch.createJobTemplate()
@@ -63,7 +66,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
             jt.nativeSpecification = nativespec
             jt.joinFiles           = True
 
-        # Loop over bids subject/session-directories
+        # Loop over bids subject/session-directories to first get all the echo-combined deface masks
         for n, subject in enumerate(subjects, 1):
 
             sessions = bidscoin.lsdirs(subject, 'ses-*')
@@ -77,34 +80,73 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
                 datasource     = bids.DataSource(session/'dum.my')
                 sub_id, ses_id = datasource.subid_sesid()
 
-                # Search for images that need to be defaced
-                for match in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
+                # Read the echo-images that need to be defaced
+                echofiles = sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes])
+                LOGGER.info(f'Loading ME-files: {echofiles}')
+                echos = [nib.load(echofile) for echofile in echofiles]
+
+                # Create a temporary echo-combined image
+                tmpfile  = session/'tmp_echocombined_deface.nii'
+                combined = nib.Nifti1Image(np.average([echo.get_fdata() for echo in echos]), echos[0].affine, echos[0].header)
+                combined.to_filename(tmpfile)
+
+                # Deface the echo-combined image
+                LOGGER.info(f"Creating a deface-mask from the echo-combined image: {tmpfile}")
+                if cluster:
+                    jt.args = [str(tmpfile), '--outfile', str(tmpfile), '--force'] + [item for pair in [[f"--{key}", val] for key,val in kwargs.items()] for item in pair]
+                    jt.jobName = f"pydeface_{sub_id}_{ses_id}"
+                    jobid = pbatch.runJob(jt)
+                    LOGGER.info(f"Your deface job has been submitted with ID: {jobid}")
+                else:
+                    pdu.deface_image(str(tmpfile), str(tmpfile), force=True, forcecleanup=True, **kwargs)
+
+        if cluster:
+            LOGGER.info('Waiting for the deface jobs to finish...')
+            pbatch.synchronize(jobIds=[pbatch.JOB_IDS_SESSION_ALL], timeout=pbatch.TIMEOUT_WAIT_FOREVER,
+                               dispose=True)
+            pbatch.deleteJobTemplate(jt)
+
+        # Loop again over bids subject/session-directories to apply the deface masks and write meta-data
+        for n, subject in enumerate(subjects, 1):
+
+            sessions = bidscoin.lsdirs(subject, 'ses-*')
+            if not sessions:
+                sessions = [subject]
+            for session in sessions:
+
+                LOGGER.info('--------------------------------------')
+                LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
+
+                datasource     = bids.DataSource(session/'dum.my')
+                sub_id, ses_id = datasource.subid_sesid()
+
+                # Read the temporary defacemask and the echo-images that need to be defaced
+                tmpfile    = session/'tmp_echocombined_deface.nii'
+                defacemask = nib.load(tmpfile).get_fdata() != 0     # The original defacemask is saved in a temporary folder so it may be deleted -> use the defaced image to infer the mask
+                tmpfile.unlink()
+                for echofile in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
 
                     # Construct the output filename and relative path name (used in BIDS)
-                    match_rel = match.relative_to(session).as_posix()
+                    echofile_rel = echofile.relative_to(session).as_posix()
                     if not output:
-                        outputfile     = match
-                        outputfile_rel = match_rel
+                        outputfile     = echofile
+                        outputfile_rel = echofile_rel
                     elif output == 'derivatives':
-                        outputfile     = bidsdir/'derivatives'/'deface'/sub_id/ses_id/match.parent.name/match.name
+                        outputfile     = bidsdir/'derivatives'/'deface'/sub_id/ses_id/echofile.parent.name/echofile.name
                         outputfile_rel = outputfile.relative_to(bidsdir).as_posix()
                     else:
-                        outputfile     = session/output/match.name
+                        outputfile     = session/output/echofile.name
                         outputfile_rel = outputfile.relative_to(session).as_posix()
                     outputfile.parent.mkdir(parents=True, exist_ok=True)
 
-                    # Deface the image
-                    LOGGER.info(f"Defacing: {match_rel} -> {outputfile_rel}")
-                    if cluster:
-                        jt.args    = [str(match), '--outfile', str(outputfile), '--force'] + [item for pair in [[f"--{key}",val] for key,val in kwargs.items()] for item in pair]
-                        jt.jobName = f"pydeface_{sub_id}_{ses_id}"
-                        jobid      = pbatch.runJob(jt)
-                        LOGGER.info(f"Your deface job has been submitted with ID: {jobid}")
-                    else:
-                        pdu.deface_image(str(match), str(outputfile), force=True, forcecleanup=True, **kwargs)
+                    # Apply the defacemask
+                    LOGGER.info(f'Apply deface mask on: {echofile} -> {outputfile_rel}')
+                    echoimg   = nib.load(echofile)
+                    outputimg = nib.Nifti1Image(echoimg.get_fdata() * defacemask, echoimg.affine, echoimg.header)
+                    outputimg.to_filename(outputfile)
 
                     # Overwrite or add a json sidecar-file
-                    inputjson  = match.with_suffix('').with_suffix('.json')
+                    inputjson  = echofile.with_suffix('').with_suffix('.json')
                     outputjson = outputfile.with_suffix('').with_suffix('.json')
                     if inputjson.is_file() and inputjson != outputjson:
                         if outputjson.is_file():
@@ -129,7 +171,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
                             intendedfor = fmap_data['IntendedFor']
                             if type(intendedfor)==str:
                                 intendedfor = [intendedfor]
-                            if match_rel in intendedfor:
+                            if echofile_rel in intendedfor:
                                 LOGGER.info(f"Updating 'IntendedFor' to {outputfile_rel} in {fmap}")
                                 fmap_data['IntendedFor'] = intendedfor + [outputfile_rel]
                                 with fmap.open('w') as fmap_fid:
@@ -145,14 +187,9 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
                     if output and output+'/' not in bidsignore and scans_tsv.is_file():
                         LOGGER.info(f"Adding {outputfile_rel} to {scans_tsv}")
                         scans_table                     = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
-                        scans_table.loc[outputfile_rel] = scans_table.loc[match_rel]
+                        scans_table.loc[outputfile_rel] = scans_table.loc[echofile_rel]
                         scans_table.sort_values(by=['acq_time','filename'], inplace=True)
                         scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
-
-        if cluster:
-            LOGGER.info('Waiting for the deface jobs to finish...')
-            pbatch.synchronize(jobIds=[pbatch.JOB_IDS_SESSION_ALL], timeout=pbatch.TIMEOUT_WAIT_FOREVER, dispose=True)
-            pbatch.deleteJobTemplate(jt)
 
     LOGGER.info('-------------- FINISHED! -------------')
     LOGGER.info('')
@@ -166,12 +203,12 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
                                      description=__doc__,
                                      epilog='examples:\n'
-                                            '  deface /project/3017065.01/bids anat/*_T1w*\n'
-                                            '  deface /project/3017065.01/bids anat/*_T1w* -p 001 003 -o derivatives\n'
-                                            '  deface /project/3017065.01/bids anat/*_T1w* -c -n "-l walltime=00:60:00,mem=4gb"\n'
-                                            '  deface /project/3017065.01/bids anat/*_T1w* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
+                                            '  medeface /project/3017065.01/bids anat/*_T1w*\n'
+                                            '  medeface /project/3017065.01/bids anat/*_T1w* -p 001 003 -o derivatives\n'
+                                            '  medeface /project/3017065.01/bids anat/*_T1w* -c -n "-l walltime=00:60:00,mem=4gb"\n'
+                                            '  medeface /project/3017065.01/bids anat/*_T1w* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
     parser.add_argument('bidsfolder', type=str,
-                        help='The bids-directory with the subject data')
+                        help='The bids-directory with the (multi-echo) subject data')
     parser.add_argument('pattern', type=str,
                         help="Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T1w*'")
     parser.add_argument('-p','--participant_label', type=str, nargs='+',
@@ -186,13 +223,13 @@ def main():
                         help='Additional arguments (in dict/json-style) that are passed to pydeface. See examples for usage', type=json.loads, default={})
     args = parser.parse_args()
 
-    deface(bidsdir    = args.bidsfolder,
-           pattern    = args.pattern,
-           subjects   = args.participant_label,
-           output     = args.output,
-           cluster    = args.cluster,
-           nativespec = args.nativespec,
-           kwargs     = args.args)
+    medeface(bidsdir    = args.bidsfolder,
+             pattern    = args.pattern,
+             subjects   = args.participant_label,
+             output     = args.output,
+             cluster    = args.cluster,
+             nativespec = args.nativespec,
+             kwargs     = args.args)
 
 
 if __name__ == '__main__':
