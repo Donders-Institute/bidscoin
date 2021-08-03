@@ -85,6 +85,9 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, outpu
 
                 # Read the echo-images that will be combined to compute the deface mask
                 echofiles = sorted([match for match in session.glob(maskpattern) if '.nii' in match.suffixes])
+                if not echofiles:
+                    LOGGER.info(f'No mask files found for: {session}/{maskpattern}')
+                    continue
                 LOGGER.info(f'Loading mask files: {echofiles}')
                 echos = [nib.load(echofile) for echofile in echofiles]
 
@@ -124,7 +127,10 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, outpu
                 sub_id, ses_id = datasource.subid_sesid()
 
                 # Read the temporary defacemask and the echo-images that need to be defaced
-                tmpfile    = session/'tmp_echocombined_deface.nii'
+                tmpfile = session/'tmp_echocombined_deface.nii'
+                if not tmpfile.is_file():
+                    LOGGER.info(f'No {tmpfile} file found')
+                    continue
                 defacemask = nib.load(tmpfile).get_fdata() != 0     # The original defacemask is saved in a temporary folder so it may be deleted -> use the defaced image to infer the mask
                 tmpfile.unlink()
                 for echofile in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
@@ -209,7 +215,7 @@ def main():
                                             '  medeface /project/3017065.01/bids anat/*_T1w*\n'
                                             '  medeface /project/3017065.01/bids anat/*_T1w* -p 001 003 -o derivatives\n'
                                             '  medeface /project/3017065.01/bids anat/*_T1w* -c -n "-l walltime=00:60:00,mem=4gb"\n'
-                                            '  medeface /project/3017065.01/bids anat/*acq-GRE* -m *acq-GRE*magnitude*"\n'
+                                            '  medeface /project/3017065.01/bids anat/*acq-GRE* -m anat/*acq-GRE*magnitude*"\n'
                                             '  medeface /project/3017065.01/bids anat/*_FLAIR* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
     parser.add_argument('bidsfolder', type=str,
                         help='The bids-directory with the (multi-echo) subject data')
