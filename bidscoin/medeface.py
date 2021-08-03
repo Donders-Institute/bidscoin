@@ -25,11 +25,12 @@ except ImportError:
     import bidscoin, bids             # This should work if bidscoin was not pip-installed
 
 
-def medeface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: bool, nativespec: str, kwargs: dict):
+def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, output: str, cluster: bool, nativespec: str, kwargs: dict):
     """
 
     :param bidsdir:     The bids-directory with the (multi-echo) subject data
     :param pattern:     Globlike search pattern (relative to the subject/session folder) to select the echo-images that need to be defaced, e.g. 'anat/*_T1w*'
+    :param maskpattern: Globlike search pattern (relative to the subject/session folder) to select the images from which the defacemask is computed, e.g. 'anat/*_part-mag_*_T2starw*'. If not given then 'pattern' is used
     :param subjects:    List of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
     :param output:      Determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images
     :param cluster:     Flag to submit the deface jobs to the high-performance compute (HPC) cluster
@@ -40,6 +41,8 @@ def medeface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: b
 
     # Input checking
     bidsdir = Path(bidsdir).resolve()
+    if not maskpattern:
+        maskpattern = pattern
 
     # Start logging
     bidscoin.setup_logging(bidsdir/'code'/'bidscoin'/'deface.log')
@@ -80,14 +83,14 @@ def medeface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: b
                 datasource     = bids.DataSource(session/'dum.my')
                 sub_id, ses_id = datasource.subid_sesid()
 
-                # Read the echo-images that need to be defaced
-                echofiles = sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes])
-                LOGGER.info(f'Loading ME-files: {echofiles}')
+                # Read the echo-images that will be combined to compute the deface mask
+                echofiles = sorted([match for match in session.glob(maskpattern) if '.nii' in match.suffixes])
+                LOGGER.info(f'Loading mask files: {echofiles}')
                 echos = [nib.load(echofile) for echofile in echofiles]
 
                 # Create a temporary echo-combined image
                 tmpfile  = session/'tmp_echocombined_deface.nii'
-                combined = nib.Nifti1Image(np.average([echo.get_fdata() for echo in echos]), echos[0].affine, echos[0].header)
+                combined = nib.Nifti1Image(np.mean([echo.get_fdata() for echo in echos], axis=0), echos[0].affine, echos[0].header)
                 combined.to_filename(tmpfile)
 
                 # Deface the echo-combined image
@@ -206,11 +209,14 @@ def main():
                                             '  medeface /project/3017065.01/bids anat/*_T1w*\n'
                                             '  medeface /project/3017065.01/bids anat/*_T1w* -p 001 003 -o derivatives\n'
                                             '  medeface /project/3017065.01/bids anat/*_T1w* -c -n "-l walltime=00:60:00,mem=4gb"\n'
-                                            '  medeface /project/3017065.01/bids anat/*_T1w* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
+                                            '  medeface /project/3017065.01/bids anat/*acq-GRE* -m *acq-GRE*magnitude*"\n'
+                                            '  medeface /project/3017065.01/bids anat/*_FLAIR* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
     parser.add_argument('bidsfolder', type=str,
                         help='The bids-directory with the (multi-echo) subject data')
     parser.add_argument('pattern', type=str,
-                        help="Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T1w*'")
+                        help="Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T2starw*'")
+    parser.add_argument('-m', '--maskpattern', type=str,
+                        help="Globlike search pattern (relative to the subject/session folder) to select the images from which the defacemask is computed, e.g. 'anat/*_part-mag_*_T2starw*'. If not given then 'pattern' is used")
     parser.add_argument('-p','--participant_label', type=str, nargs='+',
                         help='Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed')
     parser.add_argument('-o','--output', type=str, choices=bids.bidscoindatatypes + (bids.unknowndatatype, 'derivatives'),
@@ -223,13 +229,14 @@ def main():
                         help='Additional arguments (in dict/json-style) that are passed to pydeface. See examples for usage', type=json.loads, default={})
     args = parser.parse_args()
 
-    medeface(bidsdir    = args.bidsfolder,
-             pattern    = args.pattern,
-             subjects   = args.participant_label,
-             output     = args.output,
-             cluster    = args.cluster,
-             nativespec = args.nativespec,
-             kwargs     = args.args)
+    medeface(bidsdir     = args.bidsfolder,
+             pattern     = args.pattern,
+             maskpattern = args.maskpattern,
+             subjects    = args.participant_label,
+             output      = args.output,
+             cluster     = args.cluster,
+             nativespec  = args.nativespec,
+             kwargs      = args.args)
 
 
 if __name__ == '__main__':
