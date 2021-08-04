@@ -88,7 +88,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, outpu
                 if not echofiles:
                     LOGGER.info(f'No mask files found for: {session}/{maskpattern}')
                     continue
-                LOGGER.info(f'Loading mask files: {echofiles}')
+                LOGGER.info(f'Loading mask files: {[str(pth) for pth in echofiles]}')
                 echos = [nib.load(echofile) for echofile in echofiles]
 
                 # Create a temporary echo-combined image
@@ -149,7 +149,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, outpu
                 outputfile.parent.mkdir(parents=True, exist_ok=True)
 
                 # Apply the defacemask
-                LOGGER.info(f'Apply deface mask on: {echofile} -> {outputfile_rel}')
+                LOGGER.info(f'Applying deface mask on: {echofile} -> {outputfile_rel}')
                 echoimg   = nib.load(echofile)
                 outputimg = nib.Nifti1Image(echoimg.get_fdata() * defacemask, echoimg.affine, echoimg.header)
                 outputimg.to_filename(outputfile)
