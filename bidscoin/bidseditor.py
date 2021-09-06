@@ -456,7 +456,7 @@ class MainWindow(QMainWindow):
                 subid, sesid = run['datasource'].subid_sesid(output_bidsmap[dataformat]['subject'],
                                                              output_bidsmap[dataformat]['session'])
                 bidsname     = bids.get_bidsname(subid, sesid, run)
-                if run['bids']['suffix'] in bids.get_derivatives(datatype):
+                if run['bids'].get('suffix') in bids.get_derivatives(datatype):
                     session  = self.bidsfolder/'derivatives'/'[manufacturer]'/subid/sesid
                 else:
                     session  = self.bidsfolder/subid/sesid
@@ -1081,7 +1081,7 @@ class EditWindow(QDialog):
                 suffixes = self.allowed_suffixes.get(self.target_datatype, [''])
                 suffix_dropdown = self.suffix_dropdown = QComboBox()
                 suffix_dropdown.addItems(suffixes)
-                suffix_dropdown.setCurrentIndex(suffix_dropdown.findText(self.target_run['bids']['suffix']))
+                suffix_dropdown.setCurrentIndex(suffix_dropdown.findText(self.target_run['bids'].get('suffix','')))
                 suffix_dropdown.currentIndexChanged.connect(self.suffix_dropdown_change)
                 suffix_dropdown.setToolTip('The suffix that sets the different run types apart. First make sure the "Data type" dropdown-menu is set correctly before chosing the right suffix here')
                 table.setCellWidget(i, 1, self.spacedwidget(suffix_dropdown))
@@ -1279,7 +1279,7 @@ class EditWindow(QDialog):
 
         target_suffix = self.suffix_dropdown.currentText()
 
-        LOGGER.info(f"User has changed the BIDS suffix from '{self.target_run['bids']['suffix']}' to '{target_suffix}' for {self.target_run['provenance']}")
+        LOGGER.info(f"User has changed the BIDS suffix from '{self.target_run['bids'].get('suffix')}' to '{target_suffix}' for {self.target_run['provenance']}")
 
         self.change_run(target_suffix)
 
@@ -1341,7 +1341,7 @@ class EditWindow(QDialog):
         """Save the changes to the target_bidsmap and send it back to the main window: Finished!"""
 
         if not bids.check_run(self.target_datatype, self.target_run):
-            answer = QMessageBox.question(self, 'Edit BIDS mapping', f'The "{self.target_datatype}/*_{self.target_run["bids"]["suffix"]}" run is not valid according to the BIDS standard. Do you want to go back and edit the run?',
+            answer = QMessageBox.question(self, 'Edit BIDS mapping', f'The "{self.target_datatype}/*_{self.target_run["bids"].get("suffix")}" run is not valid according to the BIDS standard. Do you want to go back and edit the run?',
                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
             if answer == QMessageBox.Yes:
                 return
