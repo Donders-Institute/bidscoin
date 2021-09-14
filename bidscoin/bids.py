@@ -134,12 +134,16 @@ class DataSource:
         """
         Use the plugins to read and return the attribute value from the datasource
 
-        :param attributekey: The attribute key for which a value is read from the datasource
+        :param attributekey: The attribute key for which a value is read from the datasource. A colon-separated regular expression can be appended to the attribute key (same as for the `filepath` and `filename` properties)
         :param validregexp:  If True, the regexp meta-characters in the attribute value (e.g. '*') are replaced by '.',
                              e.g. to prevent compile errors in match_attribute()
         :return:             The attribute value or '' if the attribute could not be read from the datasource
         """
 
+        if ':' in attributekey:
+            attributekey, pattern = attributekey.split(':', 1)
+        else:
+            pattern = ''
         for plugin, options in self.plugins.items():
             module = bidscoin.import_plugin(plugin, ('get_attribute',))
             if module:
@@ -151,6 +155,12 @@ class DataSource:
                         except re.error:
                             for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
                                 attributeval = attributeval.strip().replace(metacharacter, '.')
+                    if pattern:
+                        match = re.findall(pattern, attributeval)
+                        if len(match)>1:
+                            LOGGER.warning(f"Multiple matches {match} found when extracting {pattern} from {attributeval}, using: {match[0]}")
+                        attributeval = match[0]     # The first match is most likely the most informative (?)
+
                     return attributeval
         return ''
 
@@ -1264,7 +1274,9 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False) -> str:
     # Compose a bidsname from valid BIDS entities only
     bidsname = f"{subid}{add_prefix('_', sesid)}"                               # Start with the subject/session identifier
     for entitykey in [entities[entity]['entity'] for entity in entities]:
-        bidsvalue = run['bids'].get(entitykey,'')                               # Get the entity data from the run
+        bidsvalue = run['bids'].get(entitykey)                                  # Get the entity data from the run
+        if not bidsvalue:
+            bidsvalue = ''
         if isinstance(bidsvalue, list):
             bidsvalue = bidsvalue[bidsvalue[-1]]                                # Get the selected item
         elif not (entitykey=='run' and bidsvalue.replace('<','').replace('>','').isdecimal()):
