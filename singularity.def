@@ -1,0 +1,31 @@
+Bootstrap: debootstrap 
+MirrorURL: http://deb.debian.org/debian
+OSVersion: stable
+
+%post
+    # Update apt
+    apt-get -y update
+    
+    # Install the latest dcm2niix from sources
+    apt-get -y install git build-essential cmake
+    git clone https://github.com/rordenlab/dcm2niix.git
+    cd dcm2niix
+    mkdir build && cd build
+    cmake ..
+    make install
+
+    # Install BIDScoin from Python repository.
+    # Install as much as possible as Debian package.
+    # NOTE: There were dependency issues. It helped to install PyQt5 from Debian package. 
+    apt-get -y install \
+        python3-pandas \
+        python3-matplotlib \
+        python3-numpy \
+        python3-pyqt5 \
+        python3-ruamel.yaml \
+        python3-coloredlogs \
+        python3-dateutil \
+        python3-nibabel \
+        python3-pip
+    pip3 install multiecho pydeface drmaa pydicom --upgrade
+    pip3 install bidscoin --no-deps # Install the latest stable release.
