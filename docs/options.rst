@@ -1,35 +1,42 @@
 Options
 =======
 
-BIDScoin has different options and settings (see below) that can be adjusted per study bidsmap or, when you want to customize the default, edited in the `template bidsmap <bidsmap.html>`__. There are separate settings for BIDScoin and for the individual plugins that can be edited by double clicking. Installed plugins can be removed or added to extend BIDScoin's functionality.
+BIDScoin has different options and settings (see below) that can be adjusted per study bidsmap or, when you want to customize the default, set as default in the `template bidsmap <bidsmap.html>`__. There are separate settings for BIDScoin and for the individual plugins that can be edited by double clicking the corresponding fields. Installed plugins can be removed or added to extend BIDScoin's functionality.
 
 .. figure:: ./_static/bidseditor_options.png
    :scale: 75%
 
-   The bidseditor options window with the different BIDScoin settings
+   The bidseditor options window with the different settings for BIDScoin and its plugins. The user can manage the plugins that will be used with the `Add` and `Remove` buttons, and save the current options to the template bidsmap by using the `Set default` button.
 
 BIDScoin
 --------
 
 These setting can be used by all the BIDScoin tools:
 
-- ``version``: Used to check for version conflicts (should correspond with the version in ../bidscoin/version.txt)
-- ``bidsignore``: Semicolon-separated list of datatypes that you want to include but that do not pass a BIDS `validation test <https://github.com/bids-standard/bids-validator#bidsignore>`__. Example: ``bidsignore: extra_data/;rTMS/;myfile.txt;yourfile.csv``
+- ``version``: Used to check for version conflicts between the installed version (see ../bidscoin/version.txt) and the version that was used to create the bidsmap, or between the installed version and the latest online version.
+- ``bidsignore``: Semicolon-separated list of (non-BIDS) datatypes that you want to include but that do not pass a BIDS `validation test <https://github.com/bids-standard/bids-validator#bidsignore>`__. These files are added to the `.bidsignore` file. Example: ``bidsignore: extra_data/;rTMS/;myfile.txt;yourfile.csv``
+The core working of BIDScoin can be tested by clicking the [Test] button and inspection of the terminal output.
 
 dcm2niix2bids - plugin
 ----------------------
 
-The default bidscoiner plugin that converts DICOM and PAR/REC source data to BIDS-valid nifti- and json sidecar files. This plugin relies on `dcm2niix <https://github.com/rordenlab/dcm2niix>`__, for which you can set the following options:
+The dcm2niix2bids plugin is the default bidscoiner plugin that converts DICOM and PAR/REC source data to BIDS-valid nifti- and json sidecar files. This plugin relies on `dcm2niix <https://github.com/rordenlab/dcm2niix>`__, for which you can set the following options:
 
-- ``path``: A string that is prepended to the dcm2niix command to make sure it can be found by the operating system. You can leave it empty if dcm2niix is already on your shell path and callable from the command-line, otherwise you could use e.g.:
+- ``path``: A string that is prepended to the dcm2niix command such that it can be found by the operating system. You can leave it empty if dcm2niix is already on your shell path and callable from the command-line, otherwise you could use e.g.:
 
   - ``module add dcm2niix/v1.0.20210317;`` (note the semi-colon at the end)
   - ``PATH=/opt/dcm2niix/bin:$PATH;`` (note the semi-colon at the end)
   - ``/opt/dcm2niix/bin/`` (note the slash at the end)
   - ``'\"C:\\Program Files\\dcm2niix\"'`` (note the quotes to deal with the whitespace)
 
-- ``args``: Argument string that is passed to dcm2niix, e.g. ``-b y -z n -i n``. Click [Test] and see the terminal output for usage
+- ``args``: Argument string that is passed as input to dcm2niix to customize its behavior, e.g. ``-z n -i y`` for ignoring derived data and having uncompressed output data.
+To test the proper working of dcm2niix click [Test] and see the terminal output for more helptext on its input arguments
 
 .. tip::
-   - Put your custom dcm2niix path-setting in your template so that you don't have to set it anymore for every new study
+   - Put your custom dcm2niix path-setting in your template bidsmap so that you don't have to adjust it anymore for every new study
    - SPM users may want to use '-z n', which produces unzipped nifti's
+
+dcm2niix2bids - plugin
+----------------------
+
+The options and settings of this plugin are still under development

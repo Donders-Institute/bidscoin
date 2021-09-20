@@ -4,9 +4,9 @@ Data preparation
 Required source data structure
 ------------------------------
 
-BIDScoin requires that the source data input folder is organized according to a ``subject/[session]/data`` structure (the ``session`` subfolder is optional). The data folder can have various formats, as shown in the following examples:
+BIDScoin requires that the source data repository is organized according to a ``subject/[session]/data`` structure (the ``session`` subfolder is optional). The data folder can be structured in various ways, as illustrated by the following examples:
 
-1. **A 'seriesfolder' organization**. A series folder contains a single data type and are typically acquired in a single run -- a.k.a 'Series' in DICOM speak. This is how users receive their data from the (Siemens) scanners at the `DCCN <https://www.ru.nl/donders/>`__::
+1. **A 'seriesfolder' organization**. The data folder is organised in multiple series subfolders, each of which that contains a single data type that is typically acquired in a single run -- a.k.a 'Series' in DICOM speak. This is how users receive their data from the (Siemens) scanners at the `DCCN <https://www.ru.nl/donders/>`__::
 
     sourcedata
     |-- sub-001
@@ -39,7 +39,7 @@ BIDScoin requires that the source data input folder is organized according to a 
     |       [..]
     [..]
 
-2. **A 'DICOMDIR' organization**. A DICOMDIR is dictionary-file that indicates the various places where the DICOM files are stored. DICOMDIRs are often used in clinical settings and may look like::
+2. **A 'DICOMDIR' organization**. The data folder contains a DICOMDIR file and multiple subfolders. A DICOMDIR is dictionary-file that indicates the various places where the DICOM files are stored. DICOMDIRs are often used in clinical settings and may look like::
 
     sourcedata
     |-- sub-001
@@ -65,7 +65,7 @@ BIDScoin requires that the source data input folder is organized according to a 
     |   [..]
     [..]
 
-3. **A flat DICOM organization**. In a flat DICOM organization all the DICOM files of all the different Series are simply put in one large directory. This organization is sometimes used when exporting data in clinical settings (the session sub-folder is optional)::
+3. **A flat DICOM organization**. In a flat DICOM organization the data folder contains all the DICOM files of all the different Series without any subfolders. This organization is sometimes used when exporting data in clinical settings (the session sub-folder is optional)::
 
     sourcedata
     |-- sub-001
@@ -83,7 +83,7 @@ BIDScoin requires that the source data input folder is organized according to a 
     |       [..]
     [..]
 
-4. **A PAR/REC organization**. All PAR/REC(/XML) files of all the different Series in one directory. This organization is how users often export their data from Philips scanners in research settings (the session sub-folder is optional)::
+4. **A PAR/REC organization**. All PAR/REC(/XML) files of all the different Series are contained in the data folder (without subfolders). This organization is how users often export their data from Philips scanners in research settings (the session sub-folder is optional)::
 
     sourcedata
     |-- sub-001
@@ -108,7 +108,7 @@ BIDScoin requires that the source data input folder is organized according to a 
     [..]
 
 .. note::
-   You can store your session data in any of the above data organizations as zipped (``.zip``) or tarzipped (e.g. ``.tar.gz``) archive files. BIDScoin `workflow tools <workflow.html>`_ will automatically unpack/unzip those archive files in a temporary folder and then process your session data from there. For flat/DICOMDIR data, BIDScoin tools will automatically run `dicomsort <#dicomsort>`__ in a temporary folder to sort them in seriesfolders. BIDScoin tools that work from a temporary folder has the downsde of getting a speed penalty.
+   You can store your session data in any of the above data organizations as zipped (``.zip``) or tarzipped (e.g. ``.tar.gz``) archive files. BIDScoin `workflow tools <workflow.html>`__ will automatically unpack/unzip those archive files in a temporary folder and then process your session data from there. For flat/DICOMDIR data, BIDScoin tools (i.e. the bidsmapper and the bidscoiner) will automatically run `dicomsort <#dicomsort>`__ in a temporary folder to sort them in seriesfolders. Depending on the data and file system, repeatedly unzipping data in the workflow may come with a significant processing speed penalty.
 
 .. tip::
    BIDScoin will skip (linux-style hidden) files and folders starting with a `.` (dot) character. You can use this feature to flexibly omit subjects, sessions or runs from your bids repository, for instance when you restarted a MRI scan because something went wrong with the stimulus presentation and you don't want that data to be converted and enumerated as `run-1`, `run-2`.
@@ -119,7 +119,7 @@ Data management utilities
 dicomsort
 ^^^^^^^^^
 
-The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-organized files (see `above <#required-source-data-structure>`__) into a 'seriesfolder' organization. This can be useful to organise your source data in a more convenient and human readable way, as DICOMDIR or flat DICOM directories can often be hard to comprehend. The BIDScoin tools will run icomsort in a temporary folder if your data is not already organised in series-folders, so in principle you don't really need to run it yourself. Running dicomsort beforehand does, however, give you more flexibility in handling special cases that are not handled properly and it can also give you a speed benefit.
+The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-organized files (see `above <#required-source-data-structure>`__) into a 'seriesfolder' organization. This can be useful to organise your source data in a more convenient and human readable way (DICOMDIR or flat DICOM directories can often be hard to comprehend). The BIDScoin tools will run icomsort in a temporary folder if your data is not already organised in series-folders, so in principle you don't really need to run it yourself. Running dicomsort beforehand does, however, give you more flexibility in handling special cases that are not handled properly and it can also give you a speed benefit.
 
 ::
 
@@ -176,7 +176,7 @@ The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-
 rawmapper
 ^^^^^^^^^
 
-Another command-line utility that can be helpful in organizing your source data is ``rawmapper``. This utility can show you the overview (map) of all the values of DICOM-fields of interest in your data-set and, optionally, use these fields to rename your source data sub-folders (this can be handy e.g. if you manually entered subject-identifiers as [Additional info] at the scanner console and you want to use these to rename your subject folders).
+Another command-line utility that can be helpful in organizing your source data is ``rawmapper``. This utility can show you an overview (map) of all the values of DICOM-fields of interest in your data-set and, optionally, use these fields to rename your source data sub-folders. The latter option can be handy e.g. if you manually entered subject-identifiers as [Additional info] at the scanner console and you want to use these to rename your subject folders.
 
 ::
 

@@ -4,11 +4,11 @@ the bidscoiner. The functions in this module are called if the basename of this 
 plugins-folder; otherwise the full path must be provided) is listed in the bidsmap. The presence of the
 plugin functions is optional but should be named:
 
-- test:                 A test routine for the plugin + its bidsmap options. Can be called in the bidseditor
-- is_sourcefile:        A routine to assess whether the file is of a valid dataformat for this plugin
-- get_attribute:        A routine for reading an attribute from a sourcefile
-- bidsmapper_plugin:    A routine that can be called by the bidsmapper to make a bidsmap of the source data
-- bidscoiner_plugin:    A routine that can be called by the bidscoiner to convert the source data to bids
+- test:              A test function for the plugin + its bidsmap options. Can be called in the bidseditor
+- is_sourcefile:     A function to assess whether a source file is supported by the plugin. The return value should correspond to a data format section in the bidsmap
+- get_attribute:     A function to read an attribute value from a source file
+- bidsmapper_plugin: A function to discover BIDS-mappings in a source data session. To avoid code duplications and minimize plugin development time, various support functions are available to the plugin programmer in BIDScoin's library module named ``bids``
+- bidscoiner_plugin: A function to convert a single source data session to bids according to the specified BIDS-mappings. Various support functions are available in the ``bids`` library module
 """
 
 import logging

@@ -1,10 +1,10 @@
 Advanced usage
 ==============
 
-Site specific / customized template
------------------------------------
+Customized template bidsmap
+---------------------------
 
- The run-items in the default 'bidsmap_dccn' template bidsmap have source dictionary values that are tailored to MRI acquisitions in the Donders Institute. Hence, if you are using different protocol parameters that do not match with the template values, then your runs will initially be data (mis)typed by the bidsmapper as miscellaneous ``extra_data`` -- which you then need to correct afterwards yourself. To improve that initial data typing and further automate your workflow, you may consider creating and using your own customized template bidsmap.
+ The run-items in the default 'bidsmap_dccn' template bidsmap have source dictionary values that are tailored to MRI acquisitions in the Donders Institute. Hence, if you are using different protocol parameters that do not match with the template values, then your runs will initially be data (mis)typed by the bidsmapper as miscellaneous ``extra_data`` -- which you then need to correct afterwards yourself. To improve that initial data typing and further automate your workflow, you may consider creating your own customized template bidsmap.
 
 .. tip::
    Make a copy of the DCCN template (``[path_to_bidscoin]/heuristics/bidsmap_dccn.yaml``) as a starting point for your own template bidsmap, and adapt it to your environment
@@ -21,12 +21,13 @@ Editing the template
 
    The edit window with the option to export the customized mapping of run a item, and featuring properties matching and dynamic meta-data values
 
-2. **Using a text editor**. This is the most powerful way to create or modify a bidsmap template but requires more knowledge of `YAML <http://yaml.org/>`__ and more `understanding of bidsmaps <bidsmap.html>`__. To organise and empower your template you can take the DCCN template bidsmap (``[path_to_bidscoin]/heuristics/bidsmap_dccn.yaml``) as an example and work from there. If you open that template with a text editor, there are a few handy things to take notice of (as shown in the template snippet below). First, you can see that the DCCN template makes use of YAML `anchors and aliases <https://blog.daemonl.com/2016/02/yaml.html>`__ (to make maintanance more sustainable). The second thing to notice is that, of the first run, all values of the attribute dictionary are empty, meaning that it won't match any run-item. In that way, however, the subsequent runs that dereference (e.g. with ``<<: *anatattributes_dicom``) this anchor (e.g. ``&anatattributes_dicom``) will inherit only the keys and can inject their own values, as shown in the second run. The first run of each modality sub-section (like ``anat``) also serves as the default bidsmapping when users manually overrule / change the bids modality using the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ GUI.
+2. **Using a text editor**. This is the adviced and most powerful way to create or modify a bidsmap template but requires more knowledge of `YAML <http://yaml.org/>`__ and more `understanding of bidsmaps <bidsmap.html>`__. To organise and empower your template you can take the DCCN template bidsmap (``[path_to_bidscoin]/heuristics/bidsmap_dccn.yaml``) as an example and work from there. If you open that template with a text editor, there are a few handy things to take notice of (as shown in the template snippet below). First, you can see that the DCCN template makes use of YAML `anchors and aliases <https://blog.daemonl.com/2016/02/yaml.html>`__ (to make maintanance more sustainable). The second thing to notice is that, of the first run, all values of the attribute dictionary are empty, meaning that it won't match any run-item. In that way, however, the subsequent runs that dereference (e.g. with ``<<: *anatattributes_dicom``) this anchor (e.g. ``&anatattributes_dicom``) will inherit only the keys and can inject their own values, as shown in the second run. The first run of each modality sub-section (like ``anat``) also serves as the default bidsmapping when users manually overrule / change the bids modality using the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ GUI.
 
 .. tip::
    - Run-items are matched from top to bottom. You can use this to your advantage by placing certain run-items above others
    - The power of regular expressions is nearly unlimited, you can e.g. use `negative look aheads <https://docs.python.org/3/howto/regex.html#lookahead-assertions>`__ to *not* match (exclude) certain strings
    - Use more attributes for more selective run-item matching. For instance, to distinguish an equally named SBRef DWI scan from the normal DWI scans, you can add ``DiffusionDirectionality: NONE`` to your attribute dictionary
+   - When creating new run-items, make sure to adhere to the format defined in the BIDS schema files (``[path_to_bidscoin]/bidscoin/schema/datatypes``).
 
 .. code-block:: yaml
 
@@ -85,9 +86,9 @@ Editing the template
 Plugins
 -------
 
-BIDScoin uses a flexible plugin architecture to map and convert your source data to BIDS. The bidsmapper and bidscoiner tools loop over the subjects/sessions in your source directory and then call the plugins listed in the bidsmap to do the actual work. As can be seen in the API code snippet below, the plugins can contain optional functions for interacting with their dataformat and for mapping and converting the source data to BIDS. See also the default ``dcm2niix2bids`` and ``phys2bidscoin`` plugins for reference implementation.
+All interactions of BIDScoin routines with source data are done via a plugin layer that interacts in a data format-independent way. The bidsmapper and bidscoiner tools loop over the subjects/sessions in your source directory and then use the plugins listed in the bidsmap to do the actual work. This paragraph describes the requirements and structure of plugins in order to allow advanced users and developers to write their own plugin and extent or customize BIDScoin to their needs. As can be seen in the API code snippet below (but aso see the default ``dcm2niix2bids`` and ``phys2bidscoin`` plugins for reference implementation), a BIDScoin plugin is a Python module with the following programming interface (functions):
 
-.. note:: Plugins can be listed, installed and uninstalled using the ``bidscoin`` command-line utility.
+.. note:: Run the ``bidscoin`` command-line utility to list, install or uninstall BIDScoin plugins
 
 .. code-block:: python3
 
@@ -97,11 +98,11 @@ BIDScoin uses a flexible plugin architecture to map and convert your source data
    plugins-folder; otherwise the full path must be provided) is listed in the bidsmap. The presence of the
    plugin functions is optional but should be named:
 
-   - test:                 A test routine for the plugin + its bidsmap options. Can be called in the bidseditor
-   - is_sourcefile:        A routine to assess whether the file is of a valid dataformat for this plugin
-   - get_attribute:        A routine for reading an attribute from a sourcefile
-   - bidsmapper_plugin:    A routine that can be called by the bidsmapper to make a bidsmap of the source data
-   - bidscoiner_plugin:    A routine that can be called by the bidscoiner to convert the source data to bids
+   - test:                 A test function for the plugin + its bidsmap options. Can be called in the bidseditor
+   - is_sourcefile:        A function to assess whether a source file is supported by the plugin. The return value should correspond to a data format section in the bidsmap
+   - get_attribute:        A function to read an attribute value from a source file
+   - bidsmapper_plugin:    A function to discover BIDS-mappings in a source data session. To avoid code duplications and minimize plugin development time, various support functions are available to the plugin programmer in BIDScoin's library module named ``bids``
+   - bidscoiner_plugin:    A function to convert a single source data session to bids according to the specified BIDS-mappings. Various support functions are available in the ``bids`` library module
    """
 
    import logging

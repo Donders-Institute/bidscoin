@@ -1,16 +1,11 @@
 Installation
 ============
 
-BIDScoin can be installed and should work on Linux, MS Windows and on OS-X computers (this latter option has not been well tested) that satisfy the system requirements:
+BIDScoin can be installed and should work on Linux, MS Windows and on OS-X computers (this latter option is less well tested) that satisfy these system requirements:
 
--  dcm2niix
 -  python 3.8 or higher
+-  dcm2niix (optional, but needed by the standard dcm2niix2bids plugin to convert MRI data)
 -  (FSL, optional and only needed when using the `defacing <finalizing.html#defacing>`__ tool to remove facial features from anatomical scans)
-
-Dcm2niix installation
----------------------
-
-The default ``dcm2niix2bids`` plugin relies on dcm2niix to convert DICOM and PAR/REC files to nifti. To use this plugin, please download and install `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ yourself according to the instructions. When done, make sure that the path to the dcm2niix binary / executable is set correctly in the `Options`_ section in your bidsmap or, for once and for all, put it in your `Site specific / customized template <advanced.html#site-specific-customized-template>`__ bidsmap.
 
 Python 3 installation
 ---------------------
@@ -38,10 +33,18 @@ If you do not have git (or any other version control system) installed you can `
 
    $ pip install ./bidscoin
 
+Dcm2niix installation
+---------------------
+
+The default ``dcm2niix2bids`` plugin relies on dcm2niix to convert DICOM and PAR/REC files to nifti. To make use of dcm2niix, please download and install `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ yourself according to the instructions. When done, make sure that the path to the dcm2niix executable is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
+
+1. Open your template bidsmap with a text editor and adjust the settings as needed. The default template bidsmap is located in the [path_to_bidscoin]/heuristics subfolder -- see the output of ``bidscoin -t`` for the fullpath location on your system.
+2. Go to the `Options`_ tab the first time the BIDScoin GUI is launched and adjust the settings as needed. Then click the ``Set as default`` button to save the settings to your default template bidsmap.
+
 Testing BIDScoin
 ^^^^^^^^^^^^^^^^
 
-You can run the ``bidscoin`` utility to test your installation:
+You can run the ``bidscoin`` utility to test the installation of your BIDScoin tools and settings:
 
 .. code-block:: console
 
@@ -50,7 +53,7 @@ You can run the ``bidscoin`` utility to test your installation:
 Updating BIDScoin
 ^^^^^^^^^^^^^^^^^
 
-Run the pip command as before with the additional ``--upgrade`` option:
+Run the pip command as before with the additional ``--upgrade`` option, e.g.:
 
 .. code-block:: console
 
@@ -58,7 +61,7 @@ Run the pip command as before with the additional ``--upgrade`` option:
 
 .. caution::
    - The bidsmaps are not garanteed to be compatible between different BIDScoin versions
-   - After a succesful BIDScoin installation or upgrade, it may be needed to (re)do any adjustments that were done on the `Site specific / customized template <advanced.html#site-specific-customized-template>`__ file(s) (so make a back-up of these before you upgrade)
+   - After a succesful BIDScoin installation or upgrade, it may be needed to (re)do any adjustments that were done on your `template bidsmap <advanced.html#customized-template-bidsmap>`__ (so make a back-up of it before you upgrade)
 
 .. _Options: options.html
 .. _virtual: https://docs.python.org/3.6/tutorial/venv.html

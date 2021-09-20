@@ -33,6 +33,7 @@ tutorialurl      = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/
 bidscoinfolder   = Path(__file__).parent
 schemafolder     = bidscoinfolder/'schema'
 heuristicsfolder = bidscoinfolder/'heuristics'
+pluginfolder     = bidscoinfolder/'plugins'
 bidsmap_template = heuristicsfolder/'bidsmap_dccn.yaml'
 
 LOGGER           = logging.getLogger(__name__)
@@ -91,7 +92,7 @@ def version(check: bool=False) -> Union[str, Tuple]:
     :return:        The version number or (version number, checking message) if check=True
     """
 
-    localversion = (Path(__file__).parent/'version.txt').read_text().strip()
+    localversion = (bidscoinfolder/'version.txt').read_text().strip()
 
     # Check pypi for the latest version number
     if check:
@@ -116,7 +117,7 @@ def bidsversion() -> str:
     :return:    The BIDS version number
     """
 
-    return (Path(__file__).parent/'bidsversion.txt').read_text().strip()
+    return (bidscoinfolder/'bidsversion.txt').read_text().strip()
 
 
 def reporterrors() -> None:
@@ -273,7 +274,7 @@ def import_plugin(plugin: Union[Path, str], functions: tuple=()) -> module_from_
     # Get the full path to the plugin-module
     plugin = Path(plugin).with_suffix('.py')
     if len(plugin.parents) == 1:
-        plugin = Path(__file__).parent/'plugins'/plugin
+        plugin = pluginfolder/plugin
 
     # See if we can find the plug-in
     if not plugin.is_file():

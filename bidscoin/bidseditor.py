@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-This tool launches a graphical user interface for editing the bidsmap that is produced by the
-bidsmapper. You can edit the BIDS data types and entities until all run-items have a meaningful
+This application launches a graphical user interface for editing the bidsmap that is produced by
+the bidsmapper. You can edit the BIDS data types and entities until all run-items have a meaningful
 and nicely readable BIDS output name. The (saved) bidsmap.yaml output file will be used by the
 bidscoiner to do the conversion conversion of the source data to BIDS.
 
@@ -65,6 +65,7 @@ path: String to set the path to dcm2niix, e.g.:
       PATH=/opt/dcm2niix/bin:$PATH; (note the semi-colon at the end)
       /opt/dcm2niix/bin/  (note the slash at the end)
       '\"C:\\Program Files\\dcm2niix\"' (note the quotes to deal with the whitespace)
+      Leave empty if dcm2niix is already on your path
 args: Argument string that is passed to dcm2niix. Click [Test] and see the terminal output for usage
       Tip: SPM users may want to use '-z n', which produces unzipped nifti's"""
 
@@ -372,12 +373,12 @@ class MainWindow(QMainWindow):
         add_button.setToolTip(f'Click to add an installed plugin')
         layout.addWidget(add_button, alignment=QtCore.Qt.AlignRight)
 
-        # Add an 'Default' button below the tables at the right side
-        set_button = QPushButton('Set default')
+        # Add an 'Default' button below the tables at the left side
+        set_button = QPushButton('Set as default')
         set_button.clicked.connect(self.save_options)
-        set_button.setToolTip(f'Click to store these options in your default template bidsmap, i.e. set them as your default BIDScoin options')
-        layout.addWidget(set_button, alignment=QtCore.Qt.AlignRight)
+        set_button.setToolTip(f'Click to store these options in your default template bidsmap, i.e. set them as default for all new studies')
         layout.addStretch()
+        layout.addWidget(set_button, alignment=QtCore.Qt.AlignLeft)
 
         tab = QtWidgets.QWidget()
         tab.setLayout(layout)
@@ -586,7 +587,7 @@ class MainWindow(QMainWindow):
         plugin_table.setCellWidget(0, 2, test_button)
         delete_button = QPushButton('Remove')                               # Add a delete-button
         delete_button.clicked.connect(partial(self.del_plugin, plugin))
-        delete_button.setToolTip(f'Click to remove the "{plugin}" plugin from the options')
+        delete_button.setToolTip(f'Click to discard / stop using the "{plugin}" plugin')
         plugin_table.setCellWidget(1, 2, delete_button)
         if plugin == 'dcm2niix2bids':
             tooltip = TOOLTIP_DCM2NIIX

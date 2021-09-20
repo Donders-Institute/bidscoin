@@ -25,11 +25,11 @@ Step 1a: Running the bidsmapper
                       sourcefolder bidsfolder
 
     The bidsmapper scans your source data repository to identify different data types by matching
-    them against the items in the template bidsmap. Once a match is found, a mapping to BIDS output
-    data types is made. You can check and edit these generated bids-mappings to your needs with the
-    (automatically launched) bidseditor. Re-run the bidsmapper whenever something was changed in
-    your data acquisition protocol and edit the new data type to your needs (your existing bidsmap
-    will be re-used).
+    them against the run-items in the template bidsmap. Once a match is found, a mapping to BIDS
+    output data types is made and the run-item is added to the study bidsmap. You can check and edit
+    these generated bids-mappings to your needs with the (automatically launched) bidseditor. Re-run
+    the bidsmapper whenever something was changed in your data acquisition protocol and edit the new
+    data type to your needs (your existing bidsmap will be re-used).
 
     The bidsmapper uses plugins, as stored in the bidsmap['Options'], to do the actual work
 
@@ -66,10 +66,10 @@ Step 1a: Running the bidsmapper
       bidsmapper /project/foo/raw /project/foo/bids
       bidsmapper /project/foo/raw /project/foo/bids -t bidsmap_template
 
-After the source data has been scanned, the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__. For a fully automated workflow users can skip this interactive step using the ``-i`` option (see above).
+After the source data has been scanned, the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__ to let the user check and edit the automatically generated study bidsmap. For a fully automated workflow users can skip this interactive step using the ``-i`` option (see above).
 
 .. tip::
-   The default template bidsmap (``-t bidsmap_dccn``) is customized for acquisitions at the DCCN. If this bidsmap is not working well for you, consider `adapting it to your needs <advanced.html#site-specific-customized-template>`__ so that the bidsmapper can recognize more of your scans and map them to BIDS the way you prefer.
+   The default template bidsmap (``-t bidsmap_dccn``) is customized for acquisitions at the DCCN. If this bidsmap is not working well for you, consider `adapting it to your needs <advanced.html#customized-template-bidsmap>`__ so that the bidsmapper can recognize more of your scans and automatically map them to BIDS the way you prefer.
 
 Step 1b: Running the bidseditor
 -------------------------------
@@ -78,8 +78,8 @@ Step 1b: Running the bidseditor
 
     usage: bidseditor [-h] [-b BIDSMAP] [-t TEMPLATE] [-n SUBPREFIX] [-m SESPREFIX] bidsfolder
 
-    This tool launches a graphical user interface for editing the bidsmap that is produced by the
-    bidsmapper. You can edit the BIDS data types and entities until all data-samples have a meaningful
+    This application launches a graphical user interface for editing the bidsmap that is produced by
+    the bidsmapper. You can edit the BIDS data types and entities until all run-items have a meaningful
     and nicely readable BIDS output name. The (saved) bidsmap.yaml output file will be used by the
     bidscoiner to do the conversion conversion of the source data to BIDS.
 
@@ -112,11 +112,11 @@ Step 1b: Running the bidseditor
 Main window
 ^^^^^^^^^^^
 
-As shown below, the main window of the bidseditor opens with ``DICOM mappings`` and ``PAR mappings`` tabs, each containing of a ``Participant labels`` table and a `Data samples` table. By default, the participant table contains dynamic ``<<filepath:regexp>>`` labels, which makes that the label is extracted / copied from the path of the source data during bidscoiner runtime. Alternatively, you can put a dynamic attribute label here (e.g. <<PatientName>>) if you want to extract that information from the source header. The data samples table shows a list of input files (left side) that uniquely represent all the different data types in the sourcedata repository, in conjunction with a preview of their ``BIDS output`` names (right side). The BIDS output names are shown in red if they are not BIDS compliant, striked-out gray when the runs will be ignored / skipped in the conversion to BIDS, otherwise it is colored green.
+As shown below, the main window of the bidseditor opens with separate data mapping tabs for each data format that is present in the bidsmap (here ``DICOM mappings`` and ``PAR mappings``). The data mapping tabs consist of a ``Participant labels`` table and a ``Data samples`` table. By default, the participant table contains `dynamic <bidsmap.html#special-bidsmap-features>`__ ``<<filepath:regexp>>`` property values, which are used to extract the subject and session labels from the path of the source data during bidscoiner runtime. Alternatively, you can put a dynamic attribute value there (e.g. <<PatientName>>) if you want to extract that information from the source header. The data samples table shows a list of input files (left side) that uniquely represent all the different data types in the sourcedata repository, in conjunction with a preview of their ``BIDS output`` names (right side). The BIDS output names are shown in red if they are not BIDS compliant, striked-out gray when the runs will be ignored / skipped in the conversion to BIDS, otherwise it is colored green.
 
 .. figure:: ./_static/bidseditor_main.png
 
-   The main window with an overview of all the bidsmap run items
+   The main window with the ``DICOM mappings`` and ``PAR mappings`` tabs, an ``Options`` tab and a ``Data browser`` tab. The selected ``DICOM mappings`` tab shows an overview of how DICOM source data types (left) are mapped to BIDS output data (right). The BIDScoin settings used for this study can be adjusted in the `Options <options.html>`__ tab and the ``Data browser`` tab can be used to inspect the source data structure.
 
 .. tip::
    Clear the ``session`` label field if you have data with only one seesion. This will remove the optional session label from the BIDS ouptput name
@@ -124,15 +124,15 @@ As shown below, the main window of the bidseditor opens with ``DICOM mappings`` 
 Edit window
 ^^^^^^^^^^^
 
-In the main window, you can double-click the BIDS output name of a data sample or click the ``Edit`` button next to it (NB: the `*` in this button indicates that attention is required) to open a second window, as shown below. In this edit window, the full bids-mapping info of the clicked data-sample (AKA run-item) is shown, with the filesystem ``Properties`` and file ``Attributes`` input on the left, and, most importantly, the associated BIDS ``Data type``, ``Data filename`` and ``Meta data`` output on the right. By double-clicking cells, you can modify the (automatically generated) values that you think are not optimal or incorrect. You should first make sure the BIDS ``Data type`` (drop down menu) and its ``suffix`` label (drop down menu) are set correctly, after which the BIDS entities can be edited. Each time an item is edited, a new ``Data filename`` preview is shown (green or red text indicates that the name is BIDS compliant or not). In the ``Meta data`` table (see the figure below) you can enter key-value pairs that you like to to be appended (by the standard ``dcm2niix2bids`` `plugin <advanced.html#plugins>`__) to the standard meta-data in the json sidecar file. Editing the source properties and attributes of a study bidsmap is usually not necessary and considered `advanced usage <advanced.html>`__.
+In the main window, you can double-click the BIDS output name of a data sample or click the ``Edit`` button next to it (NB: the `*` in this button indicates that attention is required) to open a new window, as shown below. In this new window, the full bids-mapping info of the clicked data-sample (AKA run-item) is shown, with the filesystem ``Properties`` and file ``Attributes`` input on the left, and, most importantly, the associated BIDS ``Data type``, ``Data filename`` and ``Meta data`` output on the right. You should first make sure the BIDS ``Data type`` (drop down menu) and its ``suffix`` label (drop down menu) are set correctly, and then you should edit the (automatically generated) BIDS values that you think are not optimal or incorrect (double-click the cell). Each time an item is edited, a new ``Data filename`` preview is shown (green or red text indicates that the name is BIDS compliant or not). In the ``Meta data`` table (see the figure below) you can enter key-value pairs that you like to to be appended (by the standard ``dcm2niix2bids`` `plugin <advanced.html#plugins>`__) to the standard meta-data in the json sidecar file. Editing the source properties and attributes of a study bidsmap is usually not necessary and considered `advanced usage <advanced.html>`__.
 
 If the preview of the BIDS filename and meta-data both look good, you can store the data in the bidsmap by clicking the ``OK`` button.
 
 .. figure:: ./_static/bidseditor_edit.png
 
-   The edit window for customizing a bidsmap run item, featuring the ``TaskName`` value being set to something more informative
+   The edit window for customizing a bidsmap run item, featuring file name matching (.*\.IMA) and dynamic metadata values (e.g. ``TimeZero``). BIDS values that are restricted to a limited set are presented with a drop-down menu (here the ``Data type``, the ``rec`` and the ``suffix`` value).
 
-Finally, if all BIDS output names in the main window are fine, you can click on the ``Save`` button and proceed with running the bidscoiner tool. Note that the bidsmapper and bidseditor don't do anything except reading from and writing to a bidsmap yaml-file.
+Finally, if all BIDS output names in the main window are fine, you can click on the ``Save`` button and proceed with running the bidscoiner tool (step 2). Note that re-running the bidsmapper or bidseditor is always a safe thing to do since these tools will re-use the existing bidsmap yaml-file and will not delete or write anything to disk except to the bidsmap yaml-file.
 
 .. tip::
    The BIDScoin GUI features several ways to help you setting the right values:
@@ -143,7 +143,7 @@ Finally, if all BIDS output names in the main window are fine, you can click on 
 .. note::
    **Fieldmaps** are acquired and stored in various (sequences and manufacturer dependent) ways and may require special treatment. For instance, it could be that you have ``magnitude1`` and ``magnitude2`` data in one series-folder (which is what Siemens can do). In that case you should select the ``magnitude1`` suffix and let bidscoiner automatically pick up the other magnitude image during runtime. The same holds for ``phase1`` and ``phase2`` data. The suffix ``magnitude`` can be selected for sequences that save fielmaps directly. See the `BIDS specification <https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#fieldmap-data>`__ for more details on fieldmap suffixes.
 
-   Fieldmaps are typically acquired to be applied to specific other scans from the same session. If this is the case then you should indicate this in the ``IntendedFor`` meta-data field, either using a single search string or multiple `dynamic strings <bidsmap.html#special-features>`__ to select the runs that have that string pattern in their BIDS file name. For instance you can use ``task`` to select all functional runs or use ``<<Stop*Go><Reward>>`` to select "Stop1Go"-, "Stop2Go"- and "Reward"-runs. NB: bidsapps may not use your fieldmap at all if you leave this field empty!
+   Fieldmaps are typically acquired to be applied to specific other scans from the same session. If this is the case then you should indicate this association in the ``IntendedFor`` meta-data field, either using a single search string or multiple `dynamic strings <bidsmap.html#special-features>`__ to select the runs that have that string pattern in their BIDS file name. For instance you can use ``task`` to select all functional runs or use ``<<Stop*Go><Reward>>`` to select "Stop1Go"-, "Stop2Go"- and "Reward"-runs. NB: bidsapps may not use your fieldmap at all if you leave this field empty!
 
 Step 2: Running the bidscoiner
 ------------------------------
