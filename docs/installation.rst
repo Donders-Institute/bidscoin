@@ -67,3 +67,96 @@ Run the pip command as before with the additional ``--upgrade`` option, e.g.:
 .. _virtual: https://docs.python.org/3.6/tutorial/venv.html
 .. _conda: https://conda.io/docs/user-guide/tasks/manage-environments.html
 .. _download: https://github.com/Donders-Institute/bidscoin
+
+Singularity
+-----------
+
+BIDScoin can be executed using a `Singularity <https://singularity.hpcng.org/>`__ image. Read `Singularity documentation <https://singularity.hpcng.org/user-docs/master/>`__ for installation and usage instructions.
+
+The current image includes:
+
+* Debian stable,
+* the latest version of `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__,
+* the latest stable release of BIDScoin.
+
+Dependencies:
+
+* Debian (or Debian-like, e.g., Ubuntu) host system,
+* `debootstrap <https://packages.debian.org/bullseye/debootstrap>`__ package.
+
+Building the image
+^^^^^^^^^^^^^^^^^^
+
+Execute the following command to build the BIDScoin image.
+
+.. code-block:: console
+
+   $ sudo singularity build bidscoin.sif singularity.def
+
+Run BIDScoin tools from the image
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Execute BIDScoin tool using the following command:
+
+.. code-block:: console
+ 
+   $ singularity exec bidscoin.sif <bidscoin_tool> <bidscoin_tool_args>
+
+Where ``<bidscoin_tool>`` is a BIDScoin tool (e.g., ``bidsmapper``, ``bidscoiner``, ``dicomsort``) and ``<bidscoin_tool_args>`` are the tool's arguments.
+
+If your data doesn't reside in home directory, add ``--bind`` Singularity argument which maps a directory from the host system to one inside the Singularity container.
+
+.. code-block:: console
+
+   $ singularity exec bidscoin.sif --bind <host_dir>:<container_dir> <bidscoin_tool> <bidscoin_tool_args>
+
+For example:
+
+.. code-block:: console
+
+   $ singularity exec --bind /my/data:/mnt bidscoin.sif bidscoiner /my/data/source /my/data/bids
+
+.. tip::
+
+   Since there is no fixed entry point to the container, you can also use it to execute dcm2niix.
+
+Latest develop release
+^^^^^^^^^^^^^^^^^^^^^^
+
+To install the latest develop realease of BIDScoin, substitute
+
+.. code-block:: none
+
+   pip3 install bidscoin --no-deps
+
+with
+
+.. code-block:: none
+
+   pip3 install --upgrade git+https://github.com/Donders-Institute/bidscoin
+
+in the definition ``singularity.def`` file.
+
+Speed up building the image
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To speed up building the Singularity image, you can change the ``apt`` servers to download the packages from a location closer to you. Add the following line as the first command in the ``%post`` section of  ``singularity.def`` file.
+
+.. code-block:: none
+
+   echo 'deb http://ftp.at.debian.org/debian stable main' > /etc/apt/sources.list
+
+Troubleshooting
+^^^^^^^^^^^^^^^
+
+The image didn't work after copying it to a CentOS 7 host system. The problem was kernel version older than 3.15. A working fix is to add the following line at the end of ``%post`` section of  ``singularity.def`` file.
+
+.. code-block:: none
+
+   strip --remove-section=.note.ABI-tag /usr/lib/x86_64-linux-gnu/libQt5Core.so.5
+
+The fix comes from these resources:
+
+* (Answer #3) https://answers.launchpad.net/yade/+question/696260/
+* https://github.com/wkhtmltopdf/wkhtmltopdf/issues/4497
+* https://stackoverflow.com/questions/58912268/singularity-container-python-pytorch-why-does-import-torch-work-on-arch-l
