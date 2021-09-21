@@ -36,7 +36,7 @@ def test(options) -> bool:
     if 'args' not in options:
         LOGGER.error(f"The expected 'args' key is not defined in the dcm2niix2bids options")
 
-    command = f"{options.get('path')}dcm2niix -u"
+    command = f"{options.get('path')}dcm2niix -u; {options.get('path')}dcm2niix"
 
     return bidscoin.run_command(command)
 
