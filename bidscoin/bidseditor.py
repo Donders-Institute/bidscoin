@@ -67,7 +67,9 @@ path: String to set the path to dcm2niix, e.g.:
       \"C:\\Program Files\\dcm2niix\\" (note the quotes to deal with the whitespace in the path)
       Leave empty if dcm2niix is already on your path
 args: Argument string that is passed to dcm2niix. Click [Test] and see the terminal output for usage
-      Tip: SPM users may want to use '-z n', which produces unzipped nifti's"""
+      Tip: SPM users may want to use '-z n', which produces unzipped nifti's
+anon: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
+"""
 
 
 class MainWindow(QMainWindow):

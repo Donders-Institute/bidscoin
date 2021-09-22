@@ -382,18 +382,23 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
             with jsonfile.open('w') as json_fid:
                 json.dump(jsondata, json_fid, indent=4)
 
-            # Parse the acquisition time from the json file or else from the source header (NB: assuming the source file represents the first acquisition)
+            # Parse the acquisition time from the source header or else from the json file (NB: assuming the source file represents the first acquisition)
             outputfile = [file for file in jsonfile.parent.glob(jsonfile.stem + '.*') if file.suffix in ('.nii','.gz')]     # Find the corresponding nifti/tsv.gz file (there should be only one, let's not make assumptions about the .gz extension)
             if not outputfile:
                 LOGGER.exception(f"No data-file found with {jsonfile} when updating {scans_tsv}")
             elif datatype not in bidsmap['Options']['bidscoin']['bidsignore'] and not run['bids']['suffix'] in bids.get_derivatives(datatype):
-                if 'AcquisitionTime' not in jsondata or not jsondata['AcquisitionTime']:
-                    jsondata['AcquisitionTime'] = datasource.attributes('AcquisitionTime')                  # DICOM
-                if not jsondata['AcquisitionTime']:
-                    jsondata['AcquisitionTime'] = datasource.attributes('exam_date')                        # PAR/XML
+                acq_time = ''
+                if dataformat == 'DICOM':
+                    acq_time = f"{datasource.attributes('AcquisitionDate')}T{datasource.attributes('AcquisitionTime')}"
+                elif dataformat == 'PAR':
+                    acq_time = datasource.attributes('exam_date')
+                if not acq_time or acq_time == 'T':
+                    acq_time = f"1925-01-01T{jsondata.get('AcquisitionTime','')}"
                 try:
-                    acq_time = dateutil.parser.parse(jsondata['AcquisitionTime'])
-                    acq_time = '1925-01-01T' + acq_time.strftime('%H:%M:%S')                                # Privacy protection (see BIDS specification)
+                    acq_time = dateutil.parser.parse(acq_time)
+                    if plugin['dcm2niix2bids'].get('anon','y') in ('y','yes'):
+                        acq_time = acq_time.replace(year=1925, month=1, day=1)      # Privacy protection (see BIDS specification)
+                    acq_time = acq_time.isoformat()
                 except Exception as jsonerror:
                     LOGGER.warning(f"Could not parse the acquisition time from: {sourcefile}\n{jsonerror}")
                     acq_time = 'n/a'
@@ -468,15 +473,17 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
     if dataformat=='DICOM' and sourcefile.name:
         age = datasource.attributes('PatientAge')                   # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
         if age.endswith('D'):
-            personals['age'] = str(int(float(age.rstrip('D'))/365.2524))
+            age = float(age.rstrip('D')) / 365.2524
         elif age.endswith('W'):
-            personals['age'] = str(int(float(age.rstrip('W'))/52.1775))
+            age = float(age.rstrip('W')) / 52.1775
         elif age.endswith('M'):
-            personals['age'] = str(int(float(age.rstrip('M'))/12))
+            age = float(age.rstrip('M')) / 12
         elif age.endswith('Y'):
-            personals['age'] = str(int(float(age.rstrip('Y'))))
-        elif age:
-            personals['age'] = age
+            age = float(age.rstrip('Y'))
+        if age:
+            if plugin['dcm2niix2bids'].get('anon', 'y') in ('y','yes'):
+                age = int(float(age))
+            personals['age'] = str(age)
         personals['sex']     = datasource.attributes('PatientSex')
         personals['size']    = datasource.attributes('PatientSize')
         personals['weight']  = datasource.attributes('PatientWeight')

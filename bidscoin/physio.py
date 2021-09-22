@@ -327,7 +327,7 @@ def readphysio(fn: Union[str,Path]) -> dict:
     # Only return active (nonzero) physio traces
     physio             = dict()
     physio['UUID']     = UUID1
-    physio['ScanDate'] = dateutil.parser.parse(scandate, fuzzy=True).strftime('%Y-%m-%dT%H:%M:%S')
+    physio['ScanDate'] = dateutil.parser.parse(scandate, fuzzy=True).isoformat()
     physio['Freq']     = FREQ
     physio['SliceMap'] = slicemap
     physio['Meta']     = metadata
@@ -374,7 +374,7 @@ def physio2tsv(physio: dict, tsvfile: Union[str, Path]):
     version = (Path(__file__).parent/'version.txt').read_text().strip()
     physio['Meta']['SamplingFrequency'] = physio['Freq']
     physio['Meta']['StartTime']         = starttime
-    physio['Meta']['AcquisitionTime']   = physio['ScanDate']
+    physio['Meta']['AcquisitionTime']   = dateutil.parser.parse(physio['ScanDate']).strftime('%H:%M:%S')
     physio['Meta']['Columns']           = physiotable.columns.to_list()
     physio['Meta']['GeneratedBy']       = [{'name':'BIDScoin', 'Version':version, 'CodeURL':'https://github.com/Donders-Institute/bidscoin'}]
     with tsvfile.with_suffix('.json').open('w') as json_fid:
