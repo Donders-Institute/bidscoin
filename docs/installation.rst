@@ -39,7 +39,7 @@ Dcm2niix installation
 The default ``dcm2niix2bids`` plugin relies on dcm2niix to convert DICOM and PAR/REC files to nifti. To make use of dcm2niix, please download and install `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ yourself according to the instructions. When done, make sure that the path to the dcm2niix executable is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
 
 1. Open your template bidsmap with a text editor and adjust the settings as needed. The default template bidsmap is located in the [path_to_bidscoin]/heuristics subfolder -- see the output of ``bidscoin -t`` for the fullpath location on your system.
-2. Go to the `Options`_ tab the first time the BIDScoin GUI is launched and adjust the settings as needed. Then click the ``Set as default`` button to save the settings to your default template bidsmap.
+2. Go to the `Options`_ tab the first time the BIDScoin GUI is launched and adjust the settings as needed. Then click the [Set as default] button to save the settings to your default template bidsmap.
 
 Testing BIDScoin
 ^^^^^^^^^^^^^^^^
@@ -99,7 +99,7 @@ Run BIDScoin tools from the image
 Execute BIDScoin tool using the following command:
 
 .. code-block:: console
- 
+
    $ singularity exec bidscoin.sif <bidscoin_tool> <bidscoin_tool_args>
 
 Where ``<bidscoin_tool>`` is a BIDScoin tool (e.g., ``bidsmapper``, ``bidscoiner``, ``dicomsort``) and ``<bidscoin_tool_args>`` are the tool's arguments.

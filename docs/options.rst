@@ -6,7 +6,7 @@ BIDScoin has different options and settings (see below) that can be adjusted per
 .. figure:: ./_static/bidseditor_options.png
    :scale: 75%
 
-   The bidseditor options window with the different settings for BIDScoin and its plugins. The user can manage the plugins that will be used with the `Add` and `Remove` buttons, and save the current options to the template bidsmap by using the `Set default` button.
+   The bidseditor options window with the different settings for BIDScoin and its plugins. The user can manage the plugins that will be used with the [Add] and [Remove] buttons, and save the current options to the template bidsmap by using the [Set default] button.
 
 BIDScoin
 --------
@@ -15,6 +15,9 @@ These setting can be used by all the BIDScoin tools:
 
 - ``version``: Used to check for version conflicts between the installed version (see ../bidscoin/version.txt) and the version that was used to create the bidsmap, or between the installed version and the latest online version.
 - ``bidsignore``: Semicolon-separated list of (non-BIDS) datatypes that you want to include but that do not pass a BIDS `validation test <https://github.com/bids-standard/bids-validator#bidsignore>`__. These files are added to the `.bidsignore` file. Example: ``bidsignore: extra_data/;rTMS/;myfile.txt;yourfile.csv``
+- ``subprefix``: The prefix before the subject label in the source data folder, e.g. 'patient-' if the source data is in ``raw/patient-001/ses-01/..``
+- ``sesprefix``: Idem for the session label
+
 The core working of BIDScoin can be tested by clicking the [Test] button and inspection of the terminal output.
 
 dcm2niix2bids - plugin
@@ -27,13 +30,13 @@ The dcm2niix2bids plugin is the default bidscoiner plugin that converts DICOM an
   - ``module add dcm2niix/v1.0.20210317;`` (note the semi-colon at the end)
   - ``PATH=/opt/dcm2niix/bin:$PATH;`` (note the semi-colon at the end)
   - ``/opt/dcm2niix/bin/`` (note the slash at the end)
-  - ``'\"C:\\Program Files\\dcm2niix\"'`` (note the quotes to deal with the whitespace)
+  - ``"C:\Program Files\dcm2niix\"`` (note the quotes to deal with the whitespace in the path)
 
 - ``args``: Argument string that is passed as input to dcm2niix to customize its behavior, e.g. ``-z n -i y`` for ignoring derived data and having uncompressed output data.
 To test the proper working of dcm2niix click [Test] and see the terminal output for more helptext on its input arguments
 
 .. tip::
-   - Put your custom dcm2niix path-setting in your template bidsmap so that you don't have to adjust it anymore for every new study
+   - Use the [Set as default] button to put your custom dcm2niix path-setting in your template bidsmap so that you don't have to adjust it anymore for every new study
    - SPM users may want to use '-z n', which produces unzipped nifti's
 
 dcm2niix2bids - plugin

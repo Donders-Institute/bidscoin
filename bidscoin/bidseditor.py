@@ -64,7 +64,7 @@ path: String to set the path to dcm2niix, e.g.:
       module add dcm2niix/v1.0.20210317; (note the semi-colon at the end)
       PATH=/opt/dcm2niix/bin:$PATH; (note the semi-colon at the end)
       /opt/dcm2niix/bin/  (note the slash at the end)
-      '\"C:\\Program Files\\dcm2niix\"' (note the quotes to deal with the whitespace)
+      \"C:\\Program Files\\dcm2niix\\" (note the quotes to deal with the whitespace in the path)
       Leave empty if dcm2niix is already on your path
 args: Argument string that is passed to dcm2niix. Click [Test] and see the terminal output for usage
       Tip: SPM users may want to use '-z n', which produces unzipped nifti's"""
