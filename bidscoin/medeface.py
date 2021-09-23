@@ -126,13 +126,15 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, outpu
             datasource     = bids.DataSource(session/'dum.my')
             sub_id, ses_id = datasource.subid_sesid()
 
-            # Read the temporary defacemask and the echo-images that need to be defaced
+            # Read the temporary defacemask
             tmpfile = session/'tmp_echocombined_deface.nii'
             if not tmpfile.is_file():
                 LOGGER.info(f'No {tmpfile} file found')
                 continue
             defacemask = nib.load(tmpfile).get_fdata() != 0     # The original defacemask is saved in a temporary folder so it may be deleted -> use the defaced image to infer the mask
             tmpfile.unlink()
+
+            # Process the echo-images that need to be defaced
             for echofile in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
 
                 # Construct the output filename and relative path name (used in BIDS)

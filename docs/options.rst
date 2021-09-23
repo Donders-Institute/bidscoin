@@ -6,7 +6,7 @@ BIDScoin has different options and settings (see below) that can be adjusted per
 .. figure:: ./_static/bidseditor_options.png
    :scale: 75%
 
-   The bidseditor options window with the different settings for BIDScoin and its plugins. The user can manage the plugins that will be used with the [Add] and [Remove] buttons, and save the current options to the template bidsmap by using the [Set default] button.
+   The bidseditor options window with the different settings for BIDScoin and its plugins. The user can manage the plugins that will be used with the [Add] and [Remove] buttons, and save the current options to the template bidsmap by using the [Set as default] button.
 
 BIDScoin
 --------
