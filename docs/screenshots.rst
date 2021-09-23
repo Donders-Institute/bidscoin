@@ -6,13 +6,13 @@ The bidseditor
 
 .. figure:: ./_static/bidseditor_main.png
 
-   The main window with an overview of all the bidsmap run items
+   The bidseditor main window with an overview of the data types in the source data (left column) with a preview of the BIDS output names (right column). The green or red color indicates whether manual editing of the BIDS-mapping is necessary, while the strikeout text indicates that the datatype will not be converted, which is useful for handling irrelevant data. The user can edit the 'subject' and 'session' property values if needed ('session' can be left empty to be omitted) and the result is immediately reflected in the preview. Different tabs represent different data formats in the source dataset, i.e. DICOM and PAR, which are represented as separate sections in the bidsmap. In addition, there is a tab to edit the study specific 'Options' and a tab in which the user can browse the organization of the source data and inspect the data.
 
 .. figure:: ./_static/bidseditor_edit_tooltip.png
 
-   The edit window with the option to export the customized mapping of run a item, and featuring filesystem matching and dynamic meta-data values
+   The BIDS-mapping edit window featuring file name matching (.*\.IMA) and dynamic metadata values (e.g. 'TimeZero'). BIDS values that are restricted to a limited set are presented with a drop-down menu (here the 'Data type', the 'rec' and the 'suffix' value). The user can immediately see the results of their edits in the preview of the BIDS output filename. A green filename indicates that the name is compliant with the BIDS standard, whereas a red name indicates that the user still needs to fill out one or more compulsory bids values (with a pop-up window appearing if the user ignores it). Hoovering with the mouse over features explanatory text from the BIDS schema files. Double clicking on the DICOM filename opens a new window displaying the full header information with all attributes. The user can export the customized mapping to a different bidsmap on disk.
 
 .. figure:: ./_static/bidseditor_options.png
    :scale: 60%
 
-   The options window with BIDScoin settings
+   The bidsmap options for BIDScoin and its plugins. Note how the GUI automatically adapts with a new 'Physio' tab due to the presence of physiological data in the repository, i.e. to the presence of a 'Physio' section in the study bidsmap. The user can manage the plugins that will be used with the [Add] and [Remove] buttons, and save the current options to the template bidsmap by using the [Set as default] button.
