@@ -492,7 +492,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
     participants_tsv  = bidsfolder/'participants.tsv'
     participants_json = participants_tsv.with_suffix('.json')
     if participants_tsv.is_file():
-        participants_table = pd.read_csv(participants_tsv, sep='\t')
+        participants_table = pd.read_csv(participants_tsv, sep='\t', dtype=str)
         participants_table.set_index(['participant_id'], verify_integrity=True, inplace=True)
     else:
         participants_table = pd.DataFrame()
