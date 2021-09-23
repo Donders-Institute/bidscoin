@@ -33,6 +33,8 @@ The dcm2niix2bids plugin is the default bidscoiner plugin that converts DICOM an
   - ``"C:\Program Files\dcm2niix\"`` (note the quotes to deal with the whitespace in the path)
 
 - ``args``: Argument string that is passed as input to dcm2niix to customize its behavior, e.g. ``-z n -i y`` for ignoring derived data and having uncompressed output data.
+- ``anon``: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
+
 To test the proper working of dcm2niix click [Test] and see the terminal output for more helptext on its input arguments
 
 .. tip::

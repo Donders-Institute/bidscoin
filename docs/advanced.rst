@@ -4,7 +4,7 @@ Advanced usage
 Customized template bidsmap
 ---------------------------
 
- The run-items in the default 'bidsmap_dccn' template bidsmap have source dictionary values that are tailored to MRI acquisitions in the Donders Institute. Hence, if you are using different protocol parameters that do not match with the template values, then your runs will initially be data (mis)typed by the bidsmapper as miscellaneous ``extra_data`` -- which you then need to correct afterwards yourself. To improve that initial data typing and further automate your workflow, you may consider creating your own customized template bidsmap.
+ The run-items in the default 'bidsmap_dccn' template bidsmap have source dictionary values that are tailored to MRI acquisitions in the Donders Institute. Hence, if you are using different protocol parameters that do not match with the template values, then your runs will initially be data (mis)typed by the bidsmapper as miscellaneous 'extra_data' -- which you then need to correct afterwards yourself. To improve that initial data typing and further automate your workflow, you may consider creating your own customized template bidsmap.
 
 .. tip::
    Make a copy of the DCCN template (``[path_to_bidscoin]/heuristics/bidsmap_dccn.yaml``) as a starting point for your own template bidsmap, and adapt it to your environment
@@ -15,7 +15,7 @@ Customized template bidsmap
 Editing the template
 ^^^^^^^^^^^^^^^^^^^^
 
-1. **Using the bidseditor**. While this is certainly not recommended for most cases, the easiest (quick and dirty) way to create a bidsmap template is to use the bidseditor GUI. If you have a run item in your study that you would like to be automatically mapped in other / future studies you can simply append that run to the standard or to a custom template bidsmap by editing it to your needs and click the [Export] button (see below). Note that you should first clear the attribute values (e.g. ``EchoTime``) that vary across repeats of the same or similar acquisitions. With the GUI you can still use advanced features, such as `regular expression patterns <https://docs.python.org/3/library/re.html>`__ for the attribute values. You can also open the template bidsmap itself with the bidseditor and edit it directly. The main limitation of using the GUI is that the run items are simply appended to a bidsmap template, meaning that they are last in line (for that datatype) when the bidsmapper tries to find a matching run-item. Another (smaller) limitation is that with the GUI you cannot make usage of YAML anchors and references, yielding a less clearly formatted bidsmap that is harder to maintain. Both limitations are overcome when directly editing the template bidsmap yourself using a text editor (see next point).
+1. **Using the bidseditor**. While this is certainly not recommended for most cases, the easiest (quick and dirty) way to create a bidsmap template is to use the bidseditor GUI. If you have a run item in your study that you would like to be automatically mapped in other / future studies you can simply append that run to the standard or to a custom template bidsmap by editing it to your needs and click the [Export] button (see below). Note that you should first clear the attribute values (e.g. 'EchoTime') that vary across repeats of the same or similar acquisitions. With the GUI you can still use advanced features, such as `regular expression patterns <https://docs.python.org/3/library/re.html>`__ for the attribute values. You can also open the template bidsmap itself with the bidseditor and edit it directly. The main limitation of using the GUI is that the run items are simply appended to a bidsmap template, meaning that they are last in line (for that datatype) when the bidsmapper tries to find a matching run-item. Another (smaller) limitation is that with the GUI you cannot make usage of YAML anchors and references, yielding a less clearly formatted bidsmap that is harder to maintain. Both limitations are overcome when directly editing the template bidsmap yourself using a text editor (see next point).
 
 .. figure:: ./_static/bidseditor_edit_tooltip.png
 
@@ -86,7 +86,7 @@ Editing the template
 Plugins
 -------
 
-All interactions of BIDScoin routines with source data are done via a plugin layer that interacts in a data format-independent way. The bidsmapper and bidscoiner tools loop over the subjects/sessions in your source directory and then use the plugins listed in the bidsmap to do the actual work. This paragraph describes the requirements and structure of plugins in order to allow advanced users and developers to write their own plugin and extent or customize BIDScoin to their needs. As can be seen in the API code snippet below (but aso see the default ``dcm2niix2bids`` and ``phys2bidscoin`` plugins for reference implementation), a BIDScoin plugin is a Python module with the following programming interface (functions):
+All interactions of BIDScoin routines with source data are done via a plugin layer that interacts in a data format-independent way. The bidsmapper and bidscoiner tools loop over the subjects/sessions in your source directory and then use the plugins listed in the bidsmap to do the actual work. This paragraph describes the requirements and structure of plugins in order to allow advanced users and developers to write their own plugin and extent or customize BIDScoin to their needs. As can be seen in the API code snippet below (but aso see the default 'dcm2niix2bids' and 'phys2bidscoin' plugins for reference implementation), a BIDScoin plugin is a Python module with the following programming interface (functions):
 
 .. note:: Run the ``bidscoin`` command-line utility to list, install or uninstall BIDScoin plugins
 
@@ -101,7 +101,7 @@ All interactions of BIDScoin routines with source data are done via a plugin lay
    - test:                 A test function for the plugin + its bidsmap options. Can be called in the bidseditor
    - is_sourcefile:        A function to assess whether a source file is supported by the plugin. The return value should correspond to a data format section in the bidsmap
    - get_attribute:        A function to read an attribute value from a source file
-   - bidsmapper_plugin:    A function to discover BIDS-mappings in a source data session. To avoid code duplications and minimize plugin development time, various support functions are available to the plugin programmer in BIDScoin's library module named ``bids``
+   - bidsmapper_plugin:    A function to discover BIDS-mappings in a source data session. To avoid code duplications and minimize plugin development time, various support functions are available to the plugin programmer in BIDScoin's library module named 'bids'
    - bidscoiner_plugin:    A function to convert a single source data session to bids according to the specified BIDS-mappings. Various support functions are available in the ``bids`` library module
    """
 

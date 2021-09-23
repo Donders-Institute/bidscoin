@@ -27,7 +27,7 @@ This will give you the latest stable release of the software. To get the very la
 
    $ pip install --upgrade git+https://github.com/Donders-Institute/bidscoin
 
-If you do not have git (or any other version control system) installed you can `download`_ and unzip the code yourself in a directory named e.g. ``bidscoin`` and run:
+If you do not have git (or any other version control system) installed you can `download`_ and unzip the code yourself in a directory named e.g. 'bidscoin' and run:
 
 .. code-block:: console
 
@@ -36,7 +36,7 @@ If you do not have git (or any other version control system) installed you can `
 Dcm2niix installation
 ---------------------
 
-The default ``dcm2niix2bids`` plugin relies on dcm2niix to convert DICOM and PAR/REC files to nifti. To make use of dcm2niix, please download and install `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ yourself according to the instructions. When done, make sure that the path to the dcm2niix executable is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
+The default 'dcm2niix2bids' plugin relies on dcm2niix to convert DICOM and PAR/REC files to nifti. To make use of dcm2niix, please download and install `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ yourself according to the instructions. When done, make sure that the path to the dcm2niix executable is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
 
 1. Open your template bidsmap with a text editor and adjust the settings as needed. The default template bidsmap is located in the [path_to_bidscoin]/heuristics subfolder -- see the output of ``bidscoin -t`` for the fullpath location on your system.
 2. Go to the `Options`_ tab the first time the BIDScoin GUI is launched and adjust the settings as needed. Then click the [Set as default] button to save the settings to your default template bidsmap.
@@ -44,7 +44,7 @@ The default ``dcm2niix2bids`` plugin relies on dcm2niix to convert DICOM and PAR
 Testing BIDScoin
 ^^^^^^^^^^^^^^^^
 
-You can run the ``bidscoin`` utility to test the installation of your BIDScoin tools and settings:
+You can run the 'bidscoin' utility to test the installation of your BIDScoin tools and settings:
 
 .. code-block:: console
 

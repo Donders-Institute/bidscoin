@@ -7,7 +7,7 @@ plugin functions is optional but should be named:
 - test:              A test function for the plugin + its bidsmap options. Can be called in the bidseditor
 - is_sourcefile:     A function to assess whether a source file is supported by the plugin. The return value should correspond to a data format section in the bidsmap
 - get_attribute:     A function to read an attribute value from a source file
-- bidsmapper_plugin: A function to discover BIDS-mappings in a source data session. To avoid code duplications and minimize plugin development time, various support functions are available to the plugin programmer in BIDScoin's library module named ``bids``
+- bidsmapper_plugin: A function to discover BIDS-mappings in a source data session. To avoid code duplications and minimize plugin development time, various support functions are available to the plugin programmer in BIDScoin's library module named 'bids'
 - bidscoiner_plugin: A function to convert a single source data session to bids according to the specified BIDS-mappings. Various support functions are available in the ``bids`` library module
 """
 
