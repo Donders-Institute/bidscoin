@@ -1,6 +1,6 @@
 ---
 name: Miscellaneous
-about: Discuss or describe new ideas, developments, news, etc
+about: Discuss or describe future developments, news, general issues, etc
 title: ''
 labels: ''
 assignees: ''
