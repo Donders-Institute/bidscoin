@@ -1023,10 +1023,12 @@ def match_attribute(attribute, pattern) -> bool:
     if attribute==pattern or (not attribute and not pattern):
         return True
 
-    if not attribute or not pattern:
+    if not pattern:
         return False
 
     # Make sure we start with proper string types
+    if attribute is None:
+        attribute = ''
     attribute = str(attribute).strip()
     pattern   = str(pattern).strip()
 
@@ -1081,7 +1083,7 @@ def exist_run(bidsmap: dict, datatype: str, run_item: dict, matchbidslabels: boo
                 if not match:
                     break                                   # There is no point in searching further within the run_item now that we've found a mismatch
 
-        # See if the bidskeys also all match. This is probably not very useful, but maybe one day...
+        # See if the metakeys also all match. This is probably not very useful, but maybe one day...
         if matchmetalabels and match:
             for itemkey, itemvalue in run_item['meta'].items():
                 value = run['meta'].get(itemkey)            # Matching bids-labels which exist in one datatype but not in the other -> None
