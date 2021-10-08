@@ -6,18 +6,19 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Added
 - A BIDScoin installation test (`bidscoin -t`)
+- Option to install extra packages, such as phys2bids
 - A bidseditor button to save the Options to a (default) template bidsmap
 - Sub-/ses-prefix settings to bidsmap['Options']['bidscoin']
-- Regular expressions for extracting filesystem property substrings
+- The BIDS / extra_data / excluded datatypes can now be set per plugin in the bidsmap['Options']['plugins']
+- Regular expressions for extracting property and attribute substrings fro dynamic values via a <<key:regular_expression>> syntax
 - A plugin for phys2bids to convert physiological data
-- Option to install extra packages, such as phys2bids
+- A plugin for spec2nii to convert MR spectroscopy data
 - Added a multi-echo deface function `medeface` that uses the same defacemask for all echo-images
-- The attribute key can be appended with a <<key:regular_expression>>, e.g. to extract a substring from the attribute value
 
 ### Changed
 - Plugins should now have a `is_sourcefile` and a `get_attribute` function and have a simpler API (-> DataSource class)
 - The intricate filtering of the `nrfiles` property by the other filesystem properties has been removed and is now a pure/unfiltered file-system property
-- The `<<SourceFilePath>>` keyword has been replaced by a more flexible <<filepath:regular_expression>> property to extract the subject / session label from the filesystem
+- The default `<<SourceFilePath>>` keyword has been replaced by the more flexible <<filepath:/sub-(.*?)/>> property to extract the subject / session label
 - The dcm2bidsmap and the dcm2niix2bids plugins have been merged
 
 ## [3.6.3] - 2021-06-14
@@ -30,7 +31,7 @@ Fixed for list of dynamic <<Intendended><For>> fields
 
 ### Fixed
 Removed the redundant importlib dependency from the requirements (could cause an installation error)
-
+ 
 ## [3.6.1] - 2021-05-20
 
 ### Fixed
