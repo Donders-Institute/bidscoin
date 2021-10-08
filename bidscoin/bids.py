@@ -27,11 +27,6 @@ yaml = YAML()
 
 LOGGER = logging.getLogger(__name__)
 
-# Define BIDScoin datatypes
-bidscoindatatypes = ('fmap', 'anat', 'func', 'perf', 'dwi', 'pet', 'meg', 'eeg', 'ieeg', 'beh')     # NB: get_matching_run() uses this order to search for a match. TODO: sync with the modalities.yaml schema
-ignoredatatype    = 'exclude'
-unknowndatatype   = 'extra_data'
-
 # Read the BIDS schema datatypes and entities
 bidsdatatypes = {}
 for _datatypefile in (bidscoin.schemafolder/'datatypes').glob('*.yaml'):
@@ -130,7 +125,7 @@ class DataSource:
 
         return ''
 
-    def attributes(self, attributekey: str, validregexp: bool=False):
+    def attributes(self, attributekey: str, validregexp: bool=False) -> str:
         """
         Use the plugins to read and return the attribute value from the datasource
 
@@ -148,10 +143,13 @@ class DataSource:
             module = bidscoin.import_plugin(plugin, ('get_attribute',))
             if module:
                 attributeval = module.get_attribute(self.dataformat, self.path, attributekey, options)
+                if attributeval is None:
+                    attributeval = ''
+                attributeval = str(attributeval)
                 if attributeval:
                     if validregexp:
                         try:            # Strip meta-characters to prevent match_attribute() errors
-                            re.compile(str(attributeval))
+                            re.compile(attributeval)
                         except re.error:
                             for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
                                 attributeval = attributeval.strip().replace(metacharacter, '.')
@@ -391,7 +389,7 @@ def get_parfiles(folder: Path) -> List[Path]:
     return parfiles
 
 
-def get_datasource(session: Path, plugins: dict, recurse: bool=True) -> DataSource:
+def get_datasource(session: Path, plugins: dict, recurse: int=2) -> DataSource:
     """Gets a data source from the session inputfolder and its subfolders"""
 
     datasource = DataSource()
@@ -400,7 +398,7 @@ def get_datasource(session: Path, plugins: dict, recurse: bool=True) -> DataSour
             LOGGER.debug(f'Ignoring hidden file: {item}')
             continue
         if item.is_dir() and recurse:
-            datasource = get_datasource(item, plugins, recurse=False)
+            datasource = get_datasource(item, plugins, recurse-1)
         elif item.is_file():
             datasource = DataSource(item, plugins)
         if datasource.dataformat:
@@ -500,6 +498,77 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
         return str(value)               # If it's a MultiValue type then flatten it
 
 
+# Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) cache optimization
+_TWIXHDR_CACHE  = None
+_TWIXFILE_CACHE = None
+@lru_cache(maxsize=4096)
+def get_twixfield(tagname: str, twixfile: Path, mraid: int=2) -> Union[str, int]:
+    """
+    Recursively searches the TWIX file to extract the field value
+
+    :param tagname:     Name of the TWIX field
+    :param twixfile:    The full pathname of the TWIX file
+    :param: mraid:      The mapVBVD argument for selecting the multiraid file to load (default = 2, i.e. 2nd file)
+    :return:            Extracted tag-values from the TWIX file
+    """
+
+    global _TWIXHDR_CACHE, _TWIXFILE_CACHE
+
+    if not twixfile.is_file():
+        LOGGER.debug(f"{twixfile} not found")
+        value = ''
+
+    else:
+        try:
+            if twixfile != _TWIXFILE_CACHE:
+
+                from mapvbvd import mapVBVD
+
+                twixObj = mapVBVD(twixfile, quiet=True)
+                if isinstance(twixObj, list):
+                    twixObj = twixObj[mraid - 1]
+                hdr = twixObj['hdr']
+                _TWIXHDR_CACHE  = hdr
+                _TWIXFILE_CACHE = twixfile
+            else:
+                hdr = _TWIXHDR_CACHE
+
+            def iterget(item, key):
+                if isinstance(item, dict):
+
+                    # First check to see if we can get the key-value data from the item
+                    val = item.get(key, '')
+                    if val and not isinstance(val, dict):
+                        return val
+
+                    # Loop over the item to see if we can get the key-value from the sub-items
+                    if isinstance(item, dict):
+                        for ds in item:
+                            val = iterget(item[ds], key)
+                            if val:
+                                return val
+
+                return ''
+
+            value = iterget(hdr, tagname)
+
+        except OSError:
+            LOGGER.warning(f'Cannot read {tagname} from {twixfile}')
+            value = ''
+
+        except Exception as twixerror:
+            LOGGER.warning(f'Could not parse {tagname} from {twixfile}\n{twixerror}')
+            value = ''
+
+    # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
+    if isinstance(value, int):
+        return int(value)
+    elif value is None:
+        return ''
+    else:
+        return str(value)               # If it's a MultiValue type then flatten it
+
+
 # Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) _PARDICT_CACHE optimization
 _PARDICT_CACHE = None
 _PARFILE_CACHE = None
@@ -550,6 +619,113 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
         return ''
     else:
         return str(value)               # If it's a MultiValue type then flatten it
+
+
+# Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) cache optimization
+_SPARHDR_CACHE  = None
+_SPARFILE_CACHE = None
+
+@lru_cache(maxsize=4096)
+def get_sparfield(tagname: str, sparfile: Path) -> Union[str, int]:
+    """
+    Extracts the field value from the SPAR header-file
+
+    :param tagname:     Name of the SPAR field
+    :param sparfile:    The full pathname of the SPAR file
+    :return:            Extracted tag-values from the SPAR file
+    """
+
+    global _SPARHDR_CACHE, _SPARFILE_CACHE
+
+    if not sparfile.is_file():
+        LOGGER.debug(f"{sparfile} not found")
+        value = ''
+
+    else:
+        try:
+            if sparfile!=_SPARFILE_CACHE:
+
+                from spec2nii.philips import read_spar
+
+                hdr = read_spar(sparfile)
+                _SPARHDR_CACHE  = hdr
+                _SPARFILE_CACHE = sparfile
+            else:
+                hdr = _SPARHDR_CACHE
+
+            value = hdr.get(tagname, '')
+
+        except OSError:
+            LOGGER.warning(f'Cannot read {tagname} from {sparfile}')
+            value = ''
+
+        except Exception as sparerror:
+            LOGGER.warning(f'Could not parse {tagname} from {sparfile}\n{sparerror}')
+            value = ''
+
+    # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
+    if isinstance(value, int):
+        return int(value)
+    elif value is None:
+        return ''
+    else:
+        return str(value)  # If it's a MultiValue type then flatten it
+
+
+# Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) cache optimization
+_P7HDR_CACHE  = None
+_P7FILE_CACHE = None
+
+@lru_cache(maxsize=4096)
+def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
+    """
+    Extracts the field value from the P-file header
+
+    :param tagname:     Name of the SPAR field
+    :param sparfile:    The full pathname of the SPAR file
+    :return:            Extracted tag-values from the SPAR file
+    """
+
+    global _P7HDR_CACHE, _P7FILE_CACHE
+
+    if not p7file.is_file():
+        LOGGER.debug(f"{p7file} not found")
+        value = ''
+
+    else:
+        try:
+            if p7file!=_P7FILE_CACHE:
+
+                from spec2nii.GE.ge_read_pfile import Pfile
+
+                hdr = Pfile(p7file).hdr
+                _P7HDR_CACHE  = hdr
+                _P7FILE_CACHE = p7file
+            else:
+                hdr = _P7HDR_CACHE
+
+            value = getattr(hdr, tagname, '')
+            if type(value) == bytes:
+                try:
+                    value = value.decode('UTF-8')
+                except UnicodeDecodeError:
+                    pass
+
+        except OSError:
+            LOGGER.warning(f'Cannot read {tagname} from {p7file}')
+            value = ''
+
+        except Exception as p7error:
+            LOGGER.warning(f'Could not parse {tagname} from {p7file}\n{p7error}')
+            value = ''
+
+    # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
+    if isinstance(value, int):
+        return int(value)
+    elif value is None:
+        return ''
+    else:
+        return str(value)  # If it's a MultiValue type then flatten it
 
 
 # ---------------- All function below this point are bidsmap related. TODO: make a class out of them -------------------
@@ -785,13 +961,14 @@ def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
     """
 
     provenance = []
-    for datatype in bidscoindatatypes + (unknowndatatype, ignoredatatype):
-        if bidsmap.get(dataformat) and bidsmap[dataformat].get(datatype):
-            for run in bidsmap[dataformat][datatype]:
-                if not run['provenance']:
-                    LOGGER.warning(f'The bidsmap run {datatype} run does not contain provenance data')
-                else:
-                    provenance.append(Path(run['provenance']))
+    for datatype in bidsmap.get(dataformat):
+        if datatype in ('subject','session') or not bidsmap[dataformat][datatype]:
+            continue
+        for run in bidsmap[dataformat][datatype]:
+            if not run['provenance']:
+                LOGGER.warning(f'The bidsmap run {datatype} run does not contain provenance data')
+            else:
+                provenance.append(Path(run['provenance']))
 
     provenance.sort()
 
@@ -876,25 +1053,24 @@ def find_run(bidsmap: dict, provenance: str, dataformat: str='', datatype: str='
 
     :param bidsmap:     This could be a template bidsmap, with all options, BIDS labels and attributes, etc
     :param provenance:  The unique provenance that is use to identify the run
-    :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'. If empty then it is determined from the provenance
+    :param dataformat:  The dataformat section in the bidsmap in which a matching run is searched for, e.g. 'DICOM'
     :param datatype:    The datatype in which a matching run is searched for (e.g. 'anat')
     :return:            The (unfilled) run item from the bidsmap[dataformat][bidsdatatype]
     """
 
-    if not datatype:
-        datatypes = (datatype,)
-    else:
-        datatypes = bidscoindatatypes + (unknowndatatype, ignoredatatype)
-    if not dataformat:
+    if dataformat:
         dataformats = (dataformat,)
     else:
-        dataformats = [dataformat for dataformat in bidsmap if dataformat not in ('Options','PlugIns')]
+        dataformats = [item for item in bidsmap if item not in ('Options','PlugIns') and bidsmap[item]]
     for dataformat in dataformats:
-        for datatype in datatypes:
-            if bidsmap.get(dataformat) and bidsmap[dataformat].get(datatype):
-                for run in bidsmap[dataformat][datatype]:
-                    if Path(run['provenance']) == Path(provenance):
-                        return run
+        if datatype:
+            datatypes = (datatype,)
+        else:
+            datatypes = [item for item in bidsmap[dataformat] if item not in ('subject','session') and bidsmap[dataformat][item]]
+        for dtype in datatypes:
+            for run in bidsmap[dataformat][dtype]:
+                if Path(run['provenance']) == Path(provenance):
+                    return run
 
 
 def delete_run(bidsmap: dict, provenance: Union[dict, str], datatype: str= '') -> None:
@@ -916,7 +1092,7 @@ def delete_run(bidsmap: dict, provenance: Union[dict, str], datatype: str= '') -
     dataformat = run_item['datasource'].dataformat
     if not datatype:
         datatype = run_item['datasource'].datatype
-    for index, run in enumerate(bidsmap[dataformat][datatype]):
+    for index, run in enumerate(bidsmap[dataformat].get(datatype,[])):
         if Path(run['provenance']) == Path(provenance):
             del bidsmap[dataformat][datatype][index]
 
@@ -1054,8 +1230,12 @@ def exist_run(bidsmap: dict, datatype: str, run_item: dict, matchbidslabels: boo
     :return:                True if the run exists in runlist, otherwise False
     """
 
+    bidscoindatatypes = bidsmap['Options']['bidscoin'].get('datatypes',[])
+    unknowndatatypes  = bidsmap['Options']['bidscoin'].get('unknowntypes',[])
+    ignoredatatypes   = bidsmap['Options']['bidscoin'].get('ignoretypes',[])
+
     if not datatype:
-        for datatype in bidscoindatatypes + (unknowndatatype, ignoredatatype):
+        for datatype in bidscoindatatypes + unknowndatatypes + ignoredatatypes:
             if exist_run(bidsmap, datatype, run_item, matchbidslabels):
                 return True
 
@@ -1162,7 +1342,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
     Find the first run in the bidsmap with properties and file attributes that match with the data source, and then
     through the attributes. The datatypes are searcher for in this order:
 
-    (ignoredatatype,) + bidscoindatatypes + (unknowndatatype,)
+    ignoredatatypes + bidscoindatatypes + unknowndatatypes
 
     Then update/fill the provenance, and the (dynamic) bids and meta values (bids values are cleaned-up to be BIDS-valid)
 
@@ -1170,22 +1350,26 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS keys and attributes, etc
     :param runtime:     Dynamic <<values>> are expanded if True
     :return:            (run, datatype, index) The matching and filled-in / cleaned run item, datatype and list index as in run = bidsmap[dataformat][datatype][index]
-                        datatype = bids.unknowndatatype and index = None if there is no match, the run is still populated with info from the source-file
+                        datatype = unknowndatatypes and index = None if there is no match, the run is still populated with info from the source-file
     """
 
-    # Loop through all bidscoindatatypes and runs; all info goes cleanly into run_ (to avoid formatting problem of the CommentedMap)
-    for datatype in (ignoredatatype,) + bidscoindatatypes + (unknowndatatype,):                                 # The datatypes in which a matching run is searched for
+    bidscoindatatypes = bidsmap['Options']['bidscoin'].get('datatypes',[])
+    unknowndatatypes  = bidsmap['Options']['bidscoin'].get('unknowntypes',[])
+    ignoredatatypes   = bidsmap['Options']['bidscoin'].get('ignoretypes',[])
 
-        run_ = get_run_(datasource.path, dataformat=datasource.dataformat, datatype=datatype, bidsmap=bidsmap)
+    # Loop through all bidscoindatatypes and runs; all info goes cleanly into run_ (to avoid formatting problem of the CommentedMap)
+    run_ = get_run_(datasource.path, dataformat=datasource.dataformat, bidsmap=bidsmap)
+    for datatype in ignoredatatypes + bidscoindatatypes + unknowndatatypes:         # The datatypes in which a matching run is searched for
+
         runs = bidsmap.get(datasource.dataformat, {}).get(datatype, [])
         if not runs:
             runs = []
         for index, run in enumerate(runs):
 
             match = any([run[matching][attrkey] not in [None,''] for matching in ('properties','attributes') for attrkey in run[matching]])     # Normally match==True, but make match==False if all attributes are empty
+            run_ = get_run_(datasource.path, dataformat=datasource.dataformat, datatype=datatype, bidsmap=bidsmap)
 
             # Try to see if the sourcefile matches all of the filesystem properties
-            run_['properties'] = {}
             for filekey, filevalue in run['properties'].items():
 
                 # Check if the attribute value matches with the info from the sourcefile
@@ -1197,7 +1381,6 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
                 run_['properties'][filekey] = filevalue
 
             # Try to see if the sourcefile matches all of the attributes and fill all of them
-            run_['attributes'] = {}
             for attrkey, attrvalue in run['attributes'].items():
 
                 # Check if the attribute value matches with the info from the sourcefile
@@ -1209,7 +1392,6 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
                 run_['attributes'][attrkey] = sourcevalue
 
             # Try to fill the bids-labels
-            run_['bids'] = {}
             for bidskey, bidsvalue in run['bids'].items():
 
                 # Replace the dynamic bids values, except the dynamic run-index (e.g. <<1>>)
@@ -1222,7 +1404,6 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
                 run_ = strip_suffix(run_)
 
             # Try to fill the meta-data
-            run_['meta'] = {}
             for metakey, metavalue in run['meta'].items():
 
                 # Replace the dynamic bids values
@@ -1237,8 +1418,8 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
             if match:
                 return run_, index
 
-    # We don't have a match (all tests failed, so datatype should be the *last* one, i.e. unknowndatatype)
-    LOGGER.debug(f"Could not find a matching run in the bidsmap for {datasource} -> {datatype}")
+    # We don't have a match (all tests failed, so datatype should be the *last* one, e.g. unknowndatatype)
+    LOGGER.debug(f"Could not find a matching run in the bidsmap for {datasource.path} -> {datatype}")
     return run_, None
 
 

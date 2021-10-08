@@ -36,7 +36,7 @@ def test(options) -> bool:
     if 'args' not in options:
         LOGGER.error(f"The expected 'args' key is not defined in the dcm2niix2bids options")
 
-    command = f"{options.get('path')}dcm2niix -u; {options.get('path')}dcm2niix"
+    command = f"{options.get('path','')}dcm2niix -u; {options.get('path','')}dcm2niix"
 
     return bidscoin.run_command(command)
 
@@ -111,7 +111,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
         # Input checks
         if not sourcefile.name or (not template[dataformat] and not bidsmap_old[dataformat]):
-            LOGGER.error(f"No {dataformat} source information found in the bidsmap and template")
+            LOGGER.error(f"No {dataformat} source information found in the bidsmap and template for: {sourcefile}")
             return
 
         datasource = bids.DataSource(sourcefile, plugin, dataformat)
@@ -138,6 +138,10 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)
+
+        else:
+            # Communicate with the user if the run was already present in bidsmap_old or in template
+            LOGGER.debug(f"Known '{run['datasource'].datatype}' {dataformat} sample: {sourcefile}")
 
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
@@ -209,7 +213,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
         datatype            = datasource.datatype
 
         # Check if we should ignore this run
-        if datatype == bids.ignoredatatype:
+        if datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
             LOGGER.info(f"Leaving out: {source}")
             continue
 

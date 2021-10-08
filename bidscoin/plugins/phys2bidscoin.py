@@ -185,7 +185,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
         datasource.plugins = plugin
 
         # Check if we should ignore this run
-        if datasource.datatype == bids.ignoredatatype:
+        if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
             LOGGER.info(f"Leaving out: {sourcefile}")
             continue
 
@@ -253,9 +253,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
             with jsonfile.open('r') as json_fid:
                 jsondata = json.load(json_fid)
             for metakey, metaval in run['meta'].items():
-                LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
                 metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
                 if metaval:
+                    LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
                     jsondata[metakey] = metaval
             with jsonfile.open('w') as json_fid:
                 json.dump(jsondata, json_fid, indent=4)

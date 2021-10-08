@@ -167,7 +167,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
 
     #####################################################################
     # Delete modality agnostic files BIDSCOIN wrote as a safety measure
-    # TODO : Make mne-bids more aware of what was already wrote 
+    # TODO : Make mne-bids more aware of what was already wrote
     #        so that this isnt needed
     for filename in ['dataset_description.json','README','.bidsignore']:
         _file = os.path.join(bidsfolder,filename)
@@ -186,7 +186,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
         datasource.plugins = plugin
 
         # Check if we should ignore this run
-        if datasource.datatype == bids.ignoredatatype:
+        if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
             LOGGER.info(f"Leaving out: {sourcefile}")
             continue
 

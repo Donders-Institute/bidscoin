@@ -75,9 +75,12 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         bidsmap_new = copy.deepcopy(bidsmap_old)
     else:
         bidsmap_new = copy.deepcopy(template)
+    bidscoindatatypes = bidsmap_new['Options']['bidscoin'].get('datatypes',[])
+    unknowndatatypes  = bidsmap_new['Options']['bidscoin'].get('unknowntypes',[])
+    ignoredatatypes   = bidsmap_new['Options']['bidscoin'].get('ignoretypes',[])
     for dataformat in bidsmap_new:
         if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (-> 'PlugIns')
-        for datatype in bids.bidscoindatatypes + (bids.unknowndatatype, bids.ignoredatatype):
+        for datatype in bidscoindatatypes + unknowndatatypes + ignoredatatypes:
             if bidsmap_new[dataformat].get(datatype):
                 bidsmap_new[dataformat][datatype] = None
 

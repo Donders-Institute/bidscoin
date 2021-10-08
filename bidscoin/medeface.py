@@ -192,7 +192,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, outpu
                 if (bidsdir/'.bidsignore').is_file():
                     bidsignore = (bidsdir/'.bidsignore').read_text().splitlines()
                 else:
-                    bidsignore = [bids.unknowndatatype + '/']
+                    bidsignore = []
                 bidsignore.append('derivatives/')
                 scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
                 if output and output+'/' not in bidsignore and scans_tsv.is_file():
@@ -227,7 +227,7 @@ def main():
                         help="Globlike search pattern (relative to the subject/session folder) to select the images from which the defacemask is computed, e.g. 'anat/*_part-mag_*_T2starw*'. If not given then 'pattern' is used")
     parser.add_argument('-p','--participant_label', type=str, nargs='+',
                         help='Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed')
-    parser.add_argument('-o','--output', type=str, choices=bids.bidscoindatatypes + (bids.unknowndatatype, 'derivatives'),
+    parser.add_argument('-o','--output', type=str,
                         help=f"A string that determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images")
     parser.add_argument('-c','--cluster', action='store_true',
                         help='Flag to submit the deface jobs to the high-performance compute (HPC) cluster')

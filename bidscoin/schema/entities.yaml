@@ -275,3 +275,34 @@ description:
 
     This entity is only applicable to derivative data.
   format: label
+nucleus:
+  name: Nucleus name
+  entity: nuc
+  description: |
+    Can be used to distinguish sequences tuned to different nuclei. The label
+    is the name of the nucleus. The key ResonantNucleus MUST also be added in
+    the JSON file, with the same label.
+  format: label
+voxel:
+  name: Voxel location
+  entity: vox
+  description: |
+    can be used to distinguish acquisitions of the same modality localized
+    to different regions of interest. The label is the name of the brain or
+    body region. The key VoxelLocation MUST also be added in the JSON file,
+    with the same label.
+  format: label
+type:
+  name: Type of experiment
+  entity: type
+  description: |
+    The OPTIONAL type-<label> key/value can be used to distinguish acquisitions
+    of the same modality that have meaningful differences in acquisition
+    parameters. This entity allows a variety of labels such as editON and editOFF
+    for spectral editing experiments (if each sub-experiment is saved as separate
+    files) and ref for water-unsuppressed acquisition for concentration
+    referencing. The key ResonantNucleus MUST also be added in the JSON file,
+    with the same label. Using this naming convention allows us to accommodate
+    different types of MRS experiments such as interleaved acquisitions and
+    spectral editing experiments
+  format: label

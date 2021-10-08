@@ -21,15 +21,23 @@ Options:
 # --------------------------------------------------------------------------------
   bidscoin:
     version: 3.7.0-dev            # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
-    bidsignore: extra_data/       # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
+    bidsignore: mrs/;extra_data/  # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
     subprefix: sub-               # The subject prefix of the source data
     sesprefix: ses-               # The session prefix of the source data
+    datatypes: [fmap, anat, func, perf, dwi, pet, meg, eeg, ieeg, beh]   # A list of datatypes that are converted to BIDS
+    unknowntypes: [mrs, extra_data]    # A list of datatypes that are converted to BIDS-like datatype folders
+    ignoretypes: [exclude]        # A list of datatypes that are excluded / not converted to BIDS
   plugins:                        # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
     dcm2niix2bids:                # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
       path: module add dcm2niix;  # Command to set the path to dcm2niix (note the semi-colon), e.g. module add dcm2niix/1.0.20180622; or PATH=/opt/dcm2niix/bin:$PATH; or /opt/dcm2niix/bin/ or '"C:\Program Files\dcm2niix\"' (note the quotes to deal with the whitespace)
       args: -b y -z y -i n        # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
       anon: y                     # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
     phys2bidscoin:                # The settings for the phys2bidscoin plugin
+    spec2nii2bids:                # The settings for the spec2nii2bids plugin
+      path:                       # Command to set the path to spec2nii, e.g. module add spec2nii; or PATH=/opt/spec2nii/bin:$PATH; or /opt/spec2nii/bin/ or '"C:\Program Files\spec2nii\"' (note the quotes to deal with the whitespace)
+      args:                       # Argument string that is passed to spec2nii (see spec2nii -h for more information)
+      anon: y                     # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
+      multiraid: 2                # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
 
 
 DICOM:
@@ -1740,6 +1748,194 @@ PAR:
       acq: <protocol_name><exam_name>
       suffix: <series_type>
 
+
+SPAR:
+# ---------------------------------------------------------------------------------
+# SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
+# ---------------------------------------------------------------------------------
+  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+
+  mrs:        # ---------------------- All spectroscopy runs ------------------
+  - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    properties:                   # This is what phys2bids is using now (well, part of it)
+      filepath:                   # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
+      filename:                   # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
+      filesize:                   # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
+      nrfiles:                    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
+    attributes: &mrs_sparattr     # The matching (regexp) criteria for the phys2bids -info data go in here
+      examination_name:
+      scan_id:
+      echo_time:
+      repetition_time:
+      samples:
+      averages:
+      ap_size:
+      lr_size:
+      cc_size:
+    bids: &mrs_sparent            # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
+      task:
+      acq:
+      inv:
+      nuc:
+      vox:
+      type:
+      run: <<1>>                  # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      suffix: press
+    meta:                         # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
+
+  extra_data: # ----------------------- All extra data -------------------------
+  - provenance:
+    attributes:
+      <<: *mrs_sparattr
+    bids:
+      <<: *mrs_sparent
+    meta:
+
+  exclude:    # ----------------------- Data that will be left out -------------
+  - provenance:
+    attributes:
+      <<: *mrs_sparattr
+    bids:
+      <<: *mrs_sparent
+    meta:
+
+
+Twix:
+# ---------------------------------------------------------------------------------
+# SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
+# ---------------------------------------------------------------------------------
+  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+
+  mrs:        # ---------------------- All spectroscopy runs ------------------
+  - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    properties:                   # This is what phys2bids is using now (well, part of it)
+      filepath:                   # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
+      filename:                   # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
+      filesize:                   # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
+      nrfiles:                    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
+    attributes: &mrs_twixattr     # The matching (regexp) criteria for the phys2bids -info data go in here
+      Modality:
+      ProtocolName:
+      SeriesDescription:
+      ImageType:
+      SequenceName:
+      SequenceVariant:
+      ScanningSequence:
+      MRAcquisitionType:
+      SliceThickness:
+      FlipAngle:
+      EchoNumbers:
+      EchoTime:
+      RepetitionTime:
+    bids: &mrs_twixent            # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
+      task:
+      acq:
+      inv:
+      nuc:
+      vox:
+      type:
+      run: <<1>>                  # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      suffix: mrs
+    meta:                         # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
+  - provenance:
+    attributes:
+      <<: *mrs_twixattr
+      SequenceName: .*
+    bids:
+      <<: *mrs_twixent
+      suffix: press
+    meta:
+
+  extra_data: # ----------------------- All extra data -------------------------
+  - provenance:
+    attributes:
+      <<: *mrs_twixattr
+    bids:
+      <<: *mrs_twixent
+    meta:
+
+  exclude:    # ----------------------- Data that will be left out -------------
+  - provenance:
+    attributes:
+      <<: *mrs_twixattr
+    bids:
+      <<: *mrs_twixent
+    meta:
+
+
+Pfile:
+# ------------------------------------------------------------------------------
+# P-file key-value heuristics (GE MRS fields that are mapped to the BIDS labels)
+# ------------------------------------------------------------------------------
+  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+
+  mrs:        # ---------------------- All spectroscopy runs ------------------
+  - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    attributes: &mrs_p7attr       # The matching (regexp) criteria for spec2nii2bids go in here
+      rhr_rh_logo:                # INVALIDNMR
+      rhr_rh_navs:                # 8
+      rhr_rh_nframes:             # 14
+      rhr_rh_frame_size:          # 4096
+      rhr_rh_point_size:          # 4
+      rhr_rh_da_xres:             # 4096
+      rhr_rh_da_yres:             # 15
+      rhr_spectral_width:         # 5000.0
+      rhr_csi_dims:               # 0
+      rhr_xcsi:                   # 1
+      rhr_ycsi:                   # 1
+      rhr_zcsi:                   # 1
+      rhr_roilenx:                # 20.0
+      rhr_roileny:                # 20.0
+      rhr_roilenz:                # 20.0
+      rhe_magstrength:            # 30000
+      rhs_se_desc:                # PRESS ACC TE 30ms
+      rhi_scanspacing:            # 20.0
+      rhi_nex:                    # 8.0
+      rhi_tr:                     # 3000000
+      rhi_ti:                     # 0
+      rhi_te:                     # 30000
+      rhi_mr_flip:                # 90
+      rhi_psdname:                # PROBE-P
+      rhi_cname:                  # 8HRBRAIN
+    bids: &mrs_p7fileent          # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
+      task:
+      acq:
+      inv:
+      nuc:
+      vox:
+      type:
+      run: <<1>>                  # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      suffix: mrs
+    meta:                         # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
+  - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    attributes:
+      <<: *mrs_p7attr       # The matching (regexp) criteria for spec2nii2bids go in here
+      rhs_se_desc: .*PRESS.*
+    bids:
+      <<: *mrs_p7fileent          # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
+      suffix: press
+    meta:                         # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
+
+  extra_data: # ----------------------- All extra data -------------------------
+  - provenance:
+    attributes:
+      <<: *mrs_p7attr
+    bids:
+      <<: *mrs_p7fileent
+    meta:
+
+  exclude:    # ----------------------- Data that will be left out -------------
+  - provenance:
+    attributes:
+      <<: *mrs_p7attr
+    bids:
+      <<: *mrs_p7fileent
+    meta:
+
+
 Physio:
 # --------------------------------------------------------------------------------
 # Physio key-value heuristics (phys2bids -info data) that are mapped to the BIDS labels)
@@ -1754,14 +1950,14 @@ Physio:
       filename:                   # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
       filesize:                   # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
       nrfiles:                    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
-    attributes:                   # The matching (regexp) criteria for the phys2bids -info data go in here
+    attributes: &attributes_physio  # The matching (regexp) criteria for the phys2bids -info data go in here
       ch_num: .*
       filetype: .*
       freq: .*
       ch_name: .*
       units: .*
       trigger_idx: .*
-    bids:
+    bids: &bids_physio
       task:
       acq:
       ce:
@@ -1778,3 +1974,19 @@ Physio:
       Threshold: <<thr>>
       TimeOffset: <<time_offset>>
       StartTime: <<time_offset>>
+
+  extra_data: # ----------------------- All extra data -------------------------
+  - provenance:
+    attributes:
+      <<: *attributes_physio
+    bids:
+      <<: *bids_physio
+    meta:
+
+  exclude:    # ----------------------- Data that will be left out -------------
+  - provenance:
+    attributes:
+      <<: *attributes_physio
+    bids:
+      <<: *bids_physio
+    meta:
