@@ -187,6 +187,29 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             if unpacked:
                 shutil.rmtree(session)
 
+    # Store the collected personals in the participant_table
+    participants_json = participants_tsv.with_suffix('.json')
+    participants_dict = {}
+    if participants_json.is_file():
+        with participants_json.open('r') as json_fid:
+            participants_dict = json.load(json_fid)
+    if not participants_dict.get('participant_id'):
+        participants_dict['participant_id'] = {'Description': 'Unique participant identifier'}
+    newkey = False
+    for col in participants_tsv.columns:
+        if col not in participants_dict:
+            newkey = True
+            participants_dict[col] = dict(LongName    = 'Long (unabbreviated) name of the column',
+                                          Description = 'Description of the the column',
+                                          Levels      = dict(Key='Value (This is for categorical variables: a dictionary of possible values (keys) and their descriptions (values))'),
+                                          Units       = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is RECOMMENDED')
+
+    # Write the collected data to the participant files
+    if newkey:
+        LOGGER.info(f"Writing subject meta data to: {participants_json}")
+        with participants_json.open('w') as json_fid:
+            json.dump(participants_dict, json_fid, indent=4)
+
     LOGGER.info('-------------- FINISHED! ------------')
     LOGGER.info('')
 
