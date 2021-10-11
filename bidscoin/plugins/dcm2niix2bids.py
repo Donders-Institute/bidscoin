@@ -377,14 +377,14 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
             elif datatype == 'pet' and 'TracerName' not in jsondata:
                 jsondata['TracerName'] = run['bids']['trc']
 
-            # Add all the meta data to the meta-data except `IntendedFor`, which is handled separately later
+            # Add all the meta data to the meta-data. NB: the dynamic `IntendedFor` value is handled separately later
             for metakey, metaval in run['meta'].items():
                 if metakey != 'IntendedFor':
                     metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
-                    if metaval is None:
-                        metaval = ''
-                    LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
-                    jsondata[metakey] = metaval
+                if metaval is None:
+                    metaval = ''
+                LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
+                jsondata[metakey] = metaval
 
             # Save the meta-data to the json sidecar-file
             with jsonfile.open('w') as json_fid:
