@@ -362,7 +362,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
                 for oldfile in outfolder.glob(dcm2niixfile.with_suffix('').stem + '.*'):
                     oldfile.replace(newjsonfile.with_suffix(''.join(oldfile.suffixes)))
 
-        # Loop over and adapt all the newly produced json files and write to the scans.tsv file (NB: assumes every nifti-file comes with a json-file)
+        # Loop over and adapt all the newly produced json sidecar-files and write to the scans.tsv file (NB: assumes every nifti-file comes with a json-file)
         for jsonfile in sorted(set(jsonfiles)):
 
             # Load the json meta-data
@@ -377,12 +377,16 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
             elif datatype == 'pet' and 'TracerName' not in jsondata:
                 jsondata['TracerName'] = run['bids']['trc']
 
-            # Add all the meta data to the json-file except `IntendedFor`, which is handled separately later
+            # Add all the meta data to the meta-data except `IntendedFor`, which is handled separately later
             for metakey, metaval in run['meta'].items():
                 if metakey != 'IntendedFor':
-                    LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
                     metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
-                jsondata[metakey] = metaval
+                    if metaval is None:
+                        metaval = ''
+                    LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
+                    jsondata[metakey] = metaval
+
+            # Save the meta-data to the json sidecar-file
             with jsonfile.open('w') as json_fid:
                 json.dump(jsondata, json_fid, indent=4)
 

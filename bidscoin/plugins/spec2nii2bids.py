@@ -255,7 +255,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
         if not bidscoin.run_command(command):
             continue
 
-        # Load and adapt all the newly produced json file (NB: assumes every nifti-file comes with a json-file)
+        # Load and adapt the newly produced json sidecar-file (NB: assumes every nifti-file comes with a json-file)
         with jsonfile.open('r') as json_fid:
             jsondata = json.load(json_fid)
 
@@ -266,9 +266,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
         # Add all the meta data to the json-file
         for metakey, metaval in run['meta'].items():
             metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
-            if metaval:
-                LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
-                jsondata[metakey] = metaval
+            if metaval is None:
+                metaval = ''
+            LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
+            jsondata[metakey] = metaval
 
         # Save the meta data to disk
         with jsonfile.open('w') as json_fid:
