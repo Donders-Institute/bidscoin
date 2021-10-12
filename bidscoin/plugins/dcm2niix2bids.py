@@ -496,7 +496,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
         personals['size']    = datasource.attributes('PatientSize')
         personals['weight']  = datasource.attributes('PatientWeight')
 
-    # Store the collected personals in the participant_table
+    # Store the collected personals in the participants_table
     participants_tsv = bidsfolder/'participants.tsv'
     if participants_tsv.is_file():
         participants_table = pd.read_csv(participants_tsv, sep='\t', dtype=str)
@@ -507,8 +507,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
     if subid in participants_table.index and 'session_id' in participants_table.keys() and participants_table.loc[subid, 'session_id']:
         return                                          # Only take data from the first session -> BIDS specification
     for key in personals:           # TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
-        participants_table.loc[subid, key] = personals[key]
+        if key not in participants_table or not participants_table[key].get(subid):
+            participants_table.loc[subid, key] = personals[key]
 
-    # Write the collected data to the participant files
+    # Write the collected data to the participants tsv-file
     LOGGER.info(f"Writing {subid} subject data to: {participants_tsv}")
     participants_table.replace('','n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
