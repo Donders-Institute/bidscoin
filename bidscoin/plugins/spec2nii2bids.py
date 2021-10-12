@@ -241,17 +241,17 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
         if args is None:
             args = ''
         if dataformat == 'SPAR':
-            format = 'philips'
-            arg    = f'"{sourcefile.with_suffix(".SDAT")}"'
+            dformat = 'philips'
+            arg     = f'"{sourcefile.with_suffix(".SDAT")}"'
         elif dataformat == 'Twix':
-            format = 'twix'
-            arg    = '-e image'
+            dformat = 'twix'
+            arg     = '-e image'
         elif dataformat == 'Pfile':
-            format = 'ge'
+            dformat = 'ge'
         else:
             LOGGER.error(f"Unsupported dataformat: {dataformat}")
             continue
-        command = f'{path}spec2nii {format} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'
+        command = f'{path}spec2nii {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'
         if not bidscoin.run_command(command):
             continue
 
@@ -306,12 +306,12 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
     personals = {'age': age}
     if sesid and 'session_id' not in personals:
         personals['session_id'] = sesid
-    if dataformat=='Twix' and sourcefile.name:
+    if dataformat == 'Twix':
         personals['sex']    = datasource.attributes('PatientSex')
         personals['size']   = datasource.attributes('PatientSize')
         personals['weight'] = datasource.attributes('PatientWeight')
         age = datasource.attributes('PatientAge')                   # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
-    elif dataformat=='Pfile' and sourcefile.name:
+    elif dataformat == 'Pfile':
         sex = datasource.attributes('rhe_patsex')
         if   sex == '0': personals['sex'] = 'O'
         elif sex == '1': personals['sex'] = 'M'
