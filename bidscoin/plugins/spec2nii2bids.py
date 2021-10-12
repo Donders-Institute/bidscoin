@@ -342,7 +342,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
     if subid in participants_table.index and 'session_id' in participants_table.keys() and participants_table.loc[subid, 'session_id']:
         return                                          # Only take data from the first session -> BIDS specification
     for key in personals:           # TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
-        if key not in participants_table or participants_table[key].isnull().get(subid, True):
+        if key not in participants_table or participants_table[key].isnull().get(subid, True) or participants_table[key].get(subid) == 'n/a':
             participants_table.loc[subid, key] = personals[key]
 
     # Write the collected data to the participants tsv-file
