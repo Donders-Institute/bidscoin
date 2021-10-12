@@ -187,7 +187,10 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             if unpacked:
                 shutil.rmtree(session)
 
-    # Store the collected personals in the participant_table
+    # Re-read the participants_table and store the collected personals in the json sidecar-file
+    if participants_tsv.is_file():
+        participants_table = pd.read_csv(participants_tsv, sep='\t')
+        participants_table.set_index(['participant_id'], verify_integrity=True, inplace=True)
     participants_json = participants_tsv.with_suffix('.json')
     participants_dict = {}
     if participants_json.is_file():
@@ -196,7 +199,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     if not participants_dict.get('participant_id'):
         participants_dict['participant_id'] = {'Description': 'Unique participant identifier'}
     newkey = False
-    for col in participants_tsv.columns:
+    for col in participants_table.columns:
         if col not in participants_dict:
             newkey = True
             participants_dict[col] = dict(LongName    = 'Long (unabbreviated) name of the column',

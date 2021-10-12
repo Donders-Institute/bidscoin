@@ -335,7 +335,7 @@ def is_parfile(file: Path) -> bool:
     """
 
     # TODO: Implement a proper check, e.g. using nibabel
-    if file.is_file() and file.suffix in ('.PAR', '.par', '.XML', '.xml'):
+    if file.is_file() and file.suffix.lower() in ('.par', '.xml'):
         return True
     else:
         return False
