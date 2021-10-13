@@ -626,15 +626,17 @@ class MainWindow(QMainWindow):
                 if keyitem: key = keyitem.text()
                 if valitem: val = valitem.text()
                 if key:
-                    if isinstance(oldoptions.get(key), list):
-                        try:
+                    try:
+                        if isinstance(oldoptions.get(key), float):
+                            val = type(oldoptions.get(key))(val)
+                        if isinstance(oldoptions.get(key), list):
                             val = ast.literal_eval(val)                 # Converting string to list
-                        except (ValueError, SyntaxError):
-                            LOGGER.info(f"Failed to interpret '{val}'")
-                            val = oldoptions.get(key)
-                            valitem.setText(val)
+                    except (ValueError, SyntaxError):
+                        LOGGER.info(f"Failed to interpret '{val}'")
+                        val = oldoptions.get(key)
+                        valitem.setText(val)
                     newoptions[key] = val
-                    if val != oldoptions.get(key):
+                    if str(val) != str(oldoptions.get(key)):
                         LOGGER.info(f"User has set the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
                         self.datachanged = True
             if plugin == 'bidscoin':
