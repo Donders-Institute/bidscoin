@@ -506,7 +506,7 @@ DICOM:
       dir:
       run: <<1>>
       suffix: asl
-    meta:
+    meta: &perf_metadata
       ArterialSpinLabelingType: ['', CASL, PCASL, PASL, 0]
       PostLabelingDelay:
       BackgroundSuppression:
@@ -517,6 +517,8 @@ DICOM:
       <<: *perf_dicomattr
       ProtocolName: (?i).*(ASL|Perfusion).*
     bids: *perf_dicoment_group1
+    meta:
+    <<: *perf_metadata
   - provenance:
     attributes:
       <<: *perf_dicomattr
@@ -524,6 +526,8 @@ DICOM:
     bids:
       <<: *perf_dicoment_group1
       suffix: m0scan
+    meta:
+    <<: *perf_metadata
   - provenance:
     attributes: *perf_dicomattr
     bids: &perf_dicoment_group2         # See: schema/datatypes/perf.yaml
@@ -532,6 +536,8 @@ DICOM:
       dir:
       run: <<1>>
       suffix: aslcontext
+    meta:
+    <<: *perf_metadata
   - provenance:
     attributes: *perf_dicomattr
     bids: &perf_dicoment_group3         # See: schema/datatypes/perf.yaml
@@ -539,6 +545,8 @@ DICOM:
       rec: <SeriesDescription>
       run: <<1>>
       suffix: asllabeling
+    meta:
+    <<: *perf_metadata
 
   dwi:        # ----------------------- All diffusion runs ---------------------
   - provenance:
