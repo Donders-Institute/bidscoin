@@ -381,9 +381,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
             for metakey, metaval in run['meta'].items():
                 if metakey != 'IntendedFor':
                     metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
-                if metaval:
-                    LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
-                    jsondata[metakey] = metaval
+                LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
+                jsondata[metakey] = metaval
 
             # Save the meta-data to the json sidecar-file
             with jsonfile.open('w') as json_fid:
