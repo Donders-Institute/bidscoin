@@ -518,7 +518,7 @@ DICOM:
       ProtocolName: (?i).*(ASL|Perfusion).*
     bids: *perf_dicoment_group1
     meta:
-    <<: *perf_metadata
+      <<: *perf_metadata
   - provenance:
     attributes:
       <<: *perf_dicomattr
@@ -527,7 +527,7 @@ DICOM:
       <<: *perf_dicoment_group1
       suffix: m0scan
     meta:
-    <<: *perf_metadata
+      <<: *perf_metadata
   - provenance:
     attributes: *perf_dicomattr
     bids: &perf_dicoment_group2         # See: schema/datatypes/perf.yaml
@@ -537,7 +537,7 @@ DICOM:
       run: <<1>>
       suffix: aslcontext
     meta:
-    <<: *perf_metadata
+      <<: *perf_metadata
   - provenance:
     attributes: *perf_dicomattr
     bids: &perf_dicoment_group3         # See: schema/datatypes/perf.yaml
@@ -546,7 +546,7 @@ DICOM:
       run: <<1>>
       suffix: asllabeling
     meta:
-    <<: *perf_metadata
+      <<: *perf_metadata
 
   dwi:        # ----------------------- All diffusion runs ---------------------
   - provenance:
