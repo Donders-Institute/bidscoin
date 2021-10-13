@@ -15,6 +15,7 @@ import logging
 import copy
 import webbrowser
 import re
+import ast
 from typing import Union
 from pydicom import dcmread
 from pathlib import Path
@@ -625,6 +626,13 @@ class MainWindow(QMainWindow):
                 if keyitem: key = keyitem.text()
                 if valitem: val = valitem.text()
                 if key:
+                    if isinstance(oldoptions.get(key), list):
+                        try:
+                            val = ast.literal_eval(val)                 # Converting string to list
+                        except (ValueError, SyntaxError):
+                            LOGGER.info(f"Failed to interpret '{val}'")
+                            val = oldoptions.get(key)
+                            valitem.setText(val)
                     newoptions[key] = val
                     if val != oldoptions.get(key):
                         LOGGER.info(f"User has set the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
