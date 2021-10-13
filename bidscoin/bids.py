@@ -1032,11 +1032,19 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
                 else:
                     run_['attributes'][attrkey] = attrvalue
 
+            # Replace the dynamic bids values, except the dynamic run-index (e.g. <<1>>)
             for bidskey, bidsvalue in run['bids'].items():
-                run_['bids'][bidskey] = datasource.dynamicvalue(bidsvalue)
+                if bidskey == 'run' and bidsvalue and bidsvalue.replace('<','').replace('>','').isdecimal():
+                    run_['bids'][bidskey] = bidsvalue
+                else:
+                    run_['bids'][bidskey] = datasource.dynamicvalue(bidsvalue)
 
+            # Replace the dynamic meta values, except the IntendedFor value (e.g. <<task>>)
             for metakey, metavalue in run['meta'].items():
-                run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False)
+                if metakey == 'IntendedFor':
+                    run_['meta'][metakey] = metavalue
+                else:
+                    run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False)
 
             run_['datasource']      = copy.deepcopy(run['datasource'])
             run_['datasource'].path = datasource.path
@@ -1406,8 +1414,11 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
             # Try to fill the meta-data
             for metakey, metavalue in run['meta'].items():
 
-                # Replace the dynamic bids values
-                run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False, runtime=runtime)
+                # Replace the dynamic meta values, except the IntendedFor value (e.g. <<task>>)
+                if metakey == 'IntendedFor':
+                    run_['meta'][metakey] = metavalue
+                else:
+                    run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False, runtime=runtime)
 
             # Copy the DataSource object
             if 'datasource' in run:
