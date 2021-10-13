@@ -370,7 +370,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
                 jsondata = json.load(json_fid)
 
             # Add the TaskName to the meta-data
-            if datatype == 'func' and 'TaskName' not in jsondata:
+            if datatype in ('func','pet') and 'TaskName' not in jsondata:
                 jsondata['TaskName'] = run['bids']['task']
 
             # Add the TracerName and TaskName to the meta-data

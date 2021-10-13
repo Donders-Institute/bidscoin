@@ -506,6 +506,12 @@ DICOM:
       dir:
       run: <<1>>
       suffix: asl
+    meta:
+      ArterialSpinLabelingType: ['', CASL, PCASL, PASL, 0]
+      PostLabelingDelay:
+      BackgroundSuppression:
+      M0Type: ['', Separate, Included, Estimate, Absent, 0]
+      RepetitionTimePreparation:
   - provenance:
     attributes:
       <<: *perf_dicomattr
@@ -865,10 +871,16 @@ DICOM:
       TracerName: <<Radiopharmaceutical>>
       TracerRadionuclide:
       InjectedRadioactivity: <<RadionuclideTotalDose>>
+      InjectedRadioactivityUnits:
+      InjectedMass:
+      InjectedMassUnits:
       ModeOfAdministration:
+      SpecificRadioactivity:
+      SpecificRadioactivityUnits:
       TimeZero: <<RadiopharmaceuticalStartTime>>
       InjectionStart: <<ContrastBolusStartTime>>
       FrameDuration: <<ActualFrameDuration>>
+      Units:
   - provenance:
     attributes: *pet_dicomattr
     bids:
