@@ -512,6 +512,8 @@ DICOM:
       BackgroundSuppression:
       M0Type: "Separate / Included / Estimate / Absent"
       RepetitionTimePreparation:
+      VascularCrushing:
+      AcquisitionVoxelSize:
   - provenance:
     attributes:
       <<: *perf_dicomattr
