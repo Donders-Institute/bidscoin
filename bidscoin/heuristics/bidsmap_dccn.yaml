@@ -507,10 +507,10 @@ DICOM:
       run: <<1>>
       suffix: asl
     meta: &perf_metadata
-      ArterialSpinLabelingType: # ['', CASL, PCASL, PASL, 0]
+      ArterialSpinLabelingType: CASL / PCASL / PASL
       PostLabelingDelay:
       BackgroundSuppression:
-      M0Type: # ['', Separate, Included, Estimate, Absent, 0]
+      M0Type: Separate / Included / Estimate / Absent
       RepetitionTimePreparation:
   - provenance:
     attributes:
