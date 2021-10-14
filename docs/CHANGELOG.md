@@ -8,8 +8,7 @@ All notable changes to this project will be documented in this file. The format 
 - A BIDScoin installation test (`bidscoin -t`)
 - Option to install extra packages, such as phys2bids
 - A bidseditor button to save the Options to a (default) template bidsmap
-- Sub-/ses-prefix settings to bidsmap['Options']['bidscoin']
-- The BIDS / extra_data / excluded datatypes can now be set per plugin in the bidsmap['Options']['plugins']
+- Sub-/ses-prefix settings and BIDS / extra_data / excluded datatypes in bidsmap['Options']['bidscoin']
 - Regular expressions for extracting property and attribute substrings fro dynamic values via a <<key:regular_expression>> syntax
 - A plugin for phys2bids to convert physiological data
 - A plugin for spec2nii to convert MR spectroscopy data
