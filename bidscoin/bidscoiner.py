@@ -198,6 +198,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             participants_dict = json.load(json_fid)
     if not participants_dict.get('participant_id'):
         participants_dict['participant_id'] = {'Description': 'Unique participant identifier'}
+    if not participants_dict.get('session_id') and 'session_id' in participants_table.columns:
+        participants_dict['session_id'] = {'Description': 'Session identifier'}
     newkey = False
     for col in participants_table.columns:
         if col not in participants_dict:

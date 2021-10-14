@@ -478,16 +478,13 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
     personals = {}
     if sesid and 'session_id' not in personals:
         personals['session_id'] = sesid
-    if dataformat=='DICOM' and sourcefile.name:
+    personals['age'] = ''
+    if dataformat == 'DICOM':
         age = datasource.attributes('PatientAge')                   # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
-        if age.endswith('D'):
-            age = float(age.rstrip('D')) / 365.2524
-        elif age.endswith('W'):
-            age = float(age.rstrip('W')) / 52.1775
-        elif age.endswith('M'):
-            age = float(age.rstrip('M')) / 12
-        elif age.endswith('Y'):
-            age = float(age.rstrip('Y'))
+        if age.endswith('D'):   age = float(age.rstrip('D')) / 365.2524
+        elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
+        elif age.endswith('M'): age = float(age.rstrip('M')) / 12
+        elif age.endswith('Y'): age = float(age.rstrip('Y'))
         if age:
             if plugin['dcm2niix2bids'].get('anon', 'y') in ('y','yes'):
                 age = int(float(age))

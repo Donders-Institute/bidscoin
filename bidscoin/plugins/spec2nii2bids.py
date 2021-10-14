@@ -300,8 +300,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
     scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
     # Collect personal data from a source header
-    age       = ''
-    personals = {'age': age}
+    personals = {}
+    if sesid and 'session_id' not in personals:
+        personals['session_id'] = sesid
+    age = ''
     if sesid and 'session_id' not in personals:
         personals['session_id'] = sesid
     if dataformat == 'Twix':
@@ -316,18 +318,13 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
         elif sex == '2': personals['sex'] = 'F'
         age = dateutil.parser.parse(datasource.attributes('rhr_rh_scan_date')) - dateutil.parser.parse(datasource.attributes('rhe_dateofbirth'))
         age = str(age.days) + 'D'
-    if age.endswith('D'):
-        age = float(age.rstrip('D')) / 365.2524
-    elif age.endswith('W'):
-        age = float(age.rstrip('W')) / 52.1775
-    elif age.endswith('M'):
-        age = float(age.rstrip('M')) / 12
-    elif age.endswith('Y'):
-        age = float(age.rstrip('Y'))
-    if age:
-        if plugin['spec2nii2bids'].get('anon', 'y') in ('y','yes'):
-            age = int(float(age))
-        personals['age'] = str(age)
+    if age.endswith('D'):   age = float(age.rstrip('D')) / 365.2524
+    elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
+    elif age.endswith('M'): age = float(age.rstrip('M')) / 12
+    elif age.endswith('Y'): age = float(age.rstrip('Y'))
+    if age and plugin['spec2nii2bids'].get('anon', 'y') in ('y','yes'):
+        age = int(float(age))
+    personals['age'] = str(age)
 
     # Store the collected personals in the participants_table
     participants_tsv = bidsfolder/'participants.tsv'
