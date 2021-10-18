@@ -23,6 +23,10 @@ These setting can be used by all the BIDScoin tools:
 
 The core working of BIDScoin can be tested by clicking the [Test] button and inspection of the terminal output.
 
+.. tip::
+   - Use the [Set as default] button to put your custom dcm2niix path-setting in your template bidsmap so that you don't have to adjust it anymore for every new study
+   - SPM users may want to use '-z n', which produces unzipped nifti's
+
 dcm2niix2bids - plugin
 ----------------------
 
@@ -50,7 +54,3 @@ The spec2nii2bids plugin is a bidscoiner plugin that converts Twix, SPAR/SDAT an
 - ``anon``: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
 
 To test the proper working of spec2nii click [Test] and see the terminal output for more helptext on its input arguments
-
-.. tip::
-   - Use the [Set as default] button to put your custom dcm2niix path-setting in your template bidsmap so that you don't have to adjust it anymore for every new study
-   - SPM users may want to use '-z n', which produces unzipped nifti's
