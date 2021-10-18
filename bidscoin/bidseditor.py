@@ -54,11 +54,14 @@ HELP_URLS        = {
 }
 
 TOOLTIP_BIDSCOIN = """BIDScoin
-version:    Used to check for version conflicts 
-bidsignore: Semicolon-separated list of data types that are added to the .bidsignore file,
-            e.g. extra_data/;myfile.txt;yourfile.csv
-subprefix:  The subject prefix used in the source data folders (e.g. "Pt" is the subprefix if subject folders are named "Pt018", "Pt019", ...)
-sesprefix:  The session prefix used in the source data folders (e.g. "M_" is the subprefix if session folders are named "M_pre", "M_post", ...)"""
+version:      Used to check for version conflicts 
+bidsignore:   Semicolon-separated list of data types that are added to the .bidsignore file,
+              e.g. extra_data/;myfile.txt;yourfile.csv
+subprefix:    The subject prefix used in the source data folders (e.g. "Pt" is the subprefix if subject folders are named "Pt018", "Pt019", ...)
+sesprefix:    The session prefix used in the source data folders (e.g. "M_" is the subprefix if session folders are named "M_pre", "M_post", ...)
+datatypes:    Datatypes that are converted to BIDS
+unknowntypes: Datatypes that are not part of BIDS but that are converted to a BIDS-like entries in the BIDS folder
+ignoretypes:  Datatypes that are excluded / not converted"""
 
 TOOLTIP_DCM2NIIX = """dcm2niix2bids
 path: String to set the path to dcm2niix, e.g.:
