@@ -35,7 +35,7 @@ If you do not have git (or any other version control system) installed you can `
 Dcm2niix installation
 ---------------------
 
-The default 'dcm2niix2bids' plugin relies on dcm2niix to convert DICOM and PAR/REC source data to nifti. To make use of dcm2niix, please download and install `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ yourself according to the instructions. When done, make sure that the path to the dcm2niix executable is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
+Unfortunately the pip installer can only install Python software and the default 'dcm2niix2bids' plugin relies on an external application named `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ to convert DICOM and PAR/REC source data to nifti. To make use of the dcm2niix2bids plugin you should therefore download and install dcm2niix yourself according to the instructions. When done, make sure that the path to the dcm2niix executable is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
 
 1. Open your template bidsmap with a text editor and adjust the settings as needed. The default template bidsmap is located in the [path_to_bidscoin]/heuristics subfolder -- see the output of ``bidscoin -t`` for the fullpath location on your system.
 2. Go to the `Options`_ tab the first time the BIDScoin GUI is launched and adjust the settings as needed. Then click the [Set as default] button to save the settings to your default template bidsmap.
@@ -67,10 +67,10 @@ Run the pip command as before with the additional ``--upgrade`` option, e.g.:
 .. _conda: https://conda.io/docs/user-guide/tasks/manage-environments.html
 .. _download: https://github.com/Donders-Institute/bidscoin
 
-Singularity
------------
+Using a singularity container
+-----------------------------
 
-BIDScoin can be executed using a `Singularity <https://singularity.hpcng.org/>`__ image. Read `Singularity documentation <https://singularity.hpcng.org/user-docs/master/>`__ for installation and usage instructions.
+An alternative for installing BIDScoin and it's dependencies yourself is to execute BIDScoin commands using a `Singularity <https://singularity.hpcng.org/>`__ image. Read `Singularity documentation <https://singularity.hpcng.org/user-docs/master/>`__ for installation and usage instructions.
 
 The current image includes:
 
