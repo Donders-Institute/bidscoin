@@ -40,8 +40,8 @@ Unfortunately the pip installer can only install Python software and the default
 1. Open your template bidsmap with a text editor and adjust the settings as needed. The default template bidsmap is located in the [path_to_bidscoin]/heuristics subfolder -- see the output of ``bidscoin -t`` for the fullpath location on your system.
 2. Go to the `Options`_ tab the first time the BIDScoin GUI is launched and adjust the settings as needed. Then click the [Set as default] button to save the settings to your default template bidsmap.
 
-Testing and updating BIDScoin
------------------------------
+Testing BIDScoin
+----------------
 
 You can run the 'bidscoin' utility to test the installation of your BIDScoin tools and settings:
 
@@ -49,7 +49,10 @@ You can run the 'bidscoin' utility to test the installation of your BIDScoin too
 
    $ bidscoin -t
 
-To upgrade BIDScoin run the pip install command as before with the additional ``--upgrade`` option, e.g.:
+Updating BIDScoin
+-----------------
+
+Run the pip command as before with the additional ``--upgrade`` option, e.g.:
 
 .. code-block:: console
 
