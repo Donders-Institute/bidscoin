@@ -70,7 +70,7 @@ Run the pip command as before with the additional ``--upgrade`` option, e.g.:
 Using a singularity container
 -----------------------------
 
-An alternative for installing BIDScoin and it's dependencies yourself is to execute BIDScoin commands using a `Singularity <https://singularity.hpcng.org/>`__ image. Read `Singularity documentation <https://singularity.hpcng.org/user-docs/master/>`__ for installation and usage instructions.
+An alternative for installing Python, BIDScoin and it's dependencies yourself is to execute BIDScoin commands using a `Singularity <https://singularity.hpcng.org/>`__ image. Read `Singularity documentation <https://singularity.hpcng.org/user-docs/master/>`__ for installation and usage instructions.
 
 The current image includes:
 
