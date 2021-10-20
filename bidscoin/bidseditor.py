@@ -54,21 +54,26 @@ HELP_URLS        = {
 }
 
 TOOLTIP_BIDSCOIN = """BIDScoin
-version:    Used to check for version conflicts 
-bidsignore: Semicolon-separated list of data types that are added to the .bidsignore file,
-            e.g. extra_data/;myfile.txt;yourfile.csv
-subprefix:  The subject prefix used in the source data folders (e.g. "Pt" is the subprefix if subject folders are named "Pt018", "Pt019", ...)
-sesprefix:  The session prefix used in the source data folders (e.g. "M_" is the subprefix if session folders are named "M_pre", "M_post", ...)"""
+version:      Used to check for version conflicts 
+bidsignore:   Semicolon-separated list of data types that are added to the .bidsignore file,
+              e.g. extra_data/;myfile.txt;yourfile.csv
+subprefix:    The subject prefix used in the source data folders (e.g. "Pt" is the subprefix if subject folders are named "Pt018", "Pt019", ...)
+sesprefix:    The session prefix used in the source data folders (e.g. "M_" is the subprefix if session folders are named "M_pre", "M_post", ...)
+datatypes:    Datatypes that are converted to BIDS
+unknowntypes: Datatypes that are not part of BIDS but that are converted to a BIDS-like entries in the BIDS folder
+ignoretypes:  Datatypes that are excluded / not converted"""
 
 TOOLTIP_DCM2NIIX = """dcm2niix2bids
-path: String to set the path to dcm2niix, e.g.:
-      module add dcm2niix/v1.0.20210317; (note the semi-colon at the end)
-      PATH=/opt/dcm2niix/bin:$PATH; (note the semi-colon at the end)
-      /opt/dcm2niix/bin/  (note the slash at the end)
-      \"C:\\Program Files\\dcm2niix\\" (note the quotes to deal with the whitespace in the path)
-      Leave empty if dcm2niix is already on your path
+command: Command to run dcm2niix from the terminal, such as:
+    dcm2niix (if the executable is already present on your path)
+    module add dcm2niix/v1.0.20210317; dcm2niix (if you use a module system)
+    PATH=/opt/dcm2niix/bin:$PATH; dcm2niix (prepend the executable to your path)
+    /opt/dcm2niix/bin/dcm2niix (specify the fullpath to the executable)
+    \"C:\\Program Files\\dcm2niix\\dcm2niix.exe" (use quotes to deal with whitespaces in your fullpath)
+    
 args: Argument string that is passed to dcm2niix. Click [Test] and see the terminal output for usage
-      Tip: SPM users may want to use '-z n', which produces unzipped nifti's
+    Tip: SPM users may want to use '-z n', which produces unzipped nifti's
+    
 anon: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
 """
 
@@ -719,7 +724,7 @@ class MainWindow(QMainWindow):
     def test_bidscoin(self):
         """Test the bidsmap tool and show the result in a pop-up window"""
 
-        if bidscoin.test_bidscoin(False, self.output_bidsmap['Options']):
+        if bidscoin.test_bidscoin(options=self.output_bidsmap['Options'], testplugins=False):
             QMessageBox.information(self, 'Tool test', f"BIDScoin test: Passed\nSee terminal output for more info")
         else:
             QMessageBox.warning(self, 'Tool test', f"BIDScoin test: Failed\nSee terminal output for more info")

@@ -1,27 +1,26 @@
 Installation
 ============
 
-BIDScoin can be installed and should work on Linux, MS Windows and on OS-X computers (this latter option is less well tested) that satisfy these system requirements:
+Python installation
+-------------------
 
--  python 3.8 or higher
--  dcm2niix (optional, but needed by the standard dcm2niix2bids plugin to convert MRI data)
--  (FSL, optional and only needed when using the `defacing <finalizing.html#defacing>`__ tool to remove facial features from anatomical scans)
-
-Python 3 installation
----------------------
-
-BIDScoin is a python package and therefore a python interpreter needs to be present on the system. On Linux and OS-X this is usually already the case, but MS Windows users may need to install python themselves. See e.g. this `python 3 distribution <https://docs.anaconda.com/anaconda/install/windows/>`__ for instructions.
+BIDScoin is a Python 3 package and can be installed on Linux, MS Windows and on OS-X computers, as long as a Python interpreter is installed (v3.8 or higher). On Linux and OS-X this is usually already the case, but MS Windows users may need to first install Python themselves. See e.g. this `Python 3 distribution <https://docs.anaconda.com/anaconda/install/windows/>`__ for instructions.
 
 BIDScoin installation
 ---------------------
 
-To install BIDScoin on your system run the following command in a command-terminal (institute users may want to create and activate a `virtual`_ / `conda`_ python environment first):
+To install BIDScoin on your system run one of the following commands in a command-terminal (tip: you may want or need to install bidscoin in a `virtual`_ / `conda`_ Python environment):
 
 .. code-block:: console
 
-   $ pip install bidscoin
+   $ pip install bidscoin                           # Use this when you want to convert conventional MR imaging data with the dcm2niix2bids plugin
+   $ pip install bidscoin[spec2nii2bids]            # Use this when you want to convert MR spectroscopy data with the spec2nii2bids plugin
+   $ pip install bidscoin[phys2bidscoin]            # Use this when you want to convert physiological data with the phys2bidscoin plugin
+   $ pip install bidscoin[deface]                   # Use this when you want to deface anatomical MRI scans. NB: Requires FSL to be installed on your system
+   $ pip install bidscoin[deface,phys2bidscoin]     # Use this to install two extra packages
+   $ pip install bidscoin[all]                      # Use this to install all extra packages
 
-This will give you the latest stable release of the software. To get the very latest (development) version of the software you can install the package directly from the github source code repository:
+These install commands can be run independently and will give you the latest stable release of BIDScoin and its `plugins <options.html#dcm2niix2bids-plugin>`__. Alternatively, if you need to use the very latest (development / unstable) version of the software, you can also install BIDScoin directly from the github source code repository:
 
 .. code-block:: console
 
@@ -33,27 +32,10 @@ If you do not have git (or any other version control system) installed you can `
 
    $ pip install ./bidscoin
 
-Dcm2niix installation
----------------------
-
-The default 'dcm2niix2bids' plugin relies on dcm2niix to convert DICOM and PAR/REC files to nifti. To make use of dcm2niix, please download and install `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ yourself according to the instructions. When done, make sure that the path to the dcm2niix executable is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
-
-1. Open your template bidsmap with a text editor and adjust the settings as needed. The default template bidsmap is located in the [path_to_bidscoin]/heuristics subfolder -- see the output of ``bidscoin -t`` for the fullpath location on your system.
-2. Go to the `Options`_ tab the first time the BIDScoin GUI is launched and adjust the settings as needed. Then click the [Set as default] button to save the settings to your default template bidsmap.
-
-Testing BIDScoin
-^^^^^^^^^^^^^^^^
-
-You can run the 'bidscoin' utility to test the installation of your BIDScoin tools and settings:
-
-.. code-block:: console
-
-   $ bidscoin -t
-
 Updating BIDScoin
 ^^^^^^^^^^^^^^^^^
 
-Run the pip command as before with the additional ``--upgrade`` option, e.g.:
+Run your pip install command as before with the additional ``--upgrade`` option, e.g.:
 
 .. code-block:: console
 
@@ -68,10 +50,28 @@ Run the pip command as before with the additional ``--upgrade`` option, e.g.:
 .. _conda: https://conda.io/docs/user-guide/tasks/manage-environments.html
 .. _download: https://github.com/Donders-Institute/bidscoin
 
-Singularity
------------
+Dcm2niix installation
+---------------------
 
-BIDScoin can be executed using a `Singularity <https://singularity.hpcng.org/>`__ image. Read `Singularity documentation <https://singularity.hpcng.org/user-docs/master/>`__ for installation and usage instructions.
+Unfortunately the pip installer can only install Python software and the default 'dcm2niix2bids' plugin relies on an external application named `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ to convert DICOM and PAR/REC source data to nifti. To make use of the dcm2niix2bids plugin you should therefore download and install dcm2niix yourself according to the instructions. When done, make sure that the command to run the dcm2niix executable is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
+
+1. Open your template bidsmap with a text editor and adjust the settings as needed. The default template bidsmap is located in the [path_to_bidscoin]/heuristics subfolder -- see the output of ``bidscoin -t`` for the fullpath location on your system.
+2. Go to the `Options`_ tab the first time the BIDScoin GUI is launched and adjust the settings as needed. Then click the [Set as default] button to save the settings to your default template bidsmap.
+
+Testing BIDScoin
+----------------
+
+You can run the 'bidscoin' utility to test the installation of your BIDScoin installation and settings:
+
+.. code-block:: console
+
+   $ bidscoin -t                        # Test with the default template bidsmap
+   $ bidscoin -t my_template_bidsmap    # Test with your custom template bidsmap
+
+Using a singularity container
+-----------------------------
+
+An alternative for installing Python, BIDScoin and it's dependencies yourself is to execute BIDScoin commands using a `Singularity <https://singularity.hpcng.org/>`__ image. Read `Singularity documentation <https://singularity.hpcng.org/user-docs/master/>`__ for installation and usage instructions.
 
 The current image includes:
 
@@ -125,13 +125,13 @@ Latest develop release
 
 To install the latest develop realease of BIDScoin, substitute
 
-.. code-block:: none
+.. code-block:: console
 
    pip3 install bidscoin --no-deps
 
 with
 
-.. code-block:: none
+.. code-block:: console
 
    pip3 install --upgrade git+https://github.com/Donders-Institute/bidscoin
 
@@ -142,7 +142,7 @@ Speed up building the image
 
 To speed up building the Singularity image, you can change the ``apt`` servers to download the packages from a location closer to you. Add the following line as the first command in the ``%post`` section of  ``singularity.def`` file.
 
-.. code-block:: none
+.. code-block:: console
 
    echo 'deb http://ftp.at.debian.org/debian stable main' > /etc/apt/sources.list
 
@@ -151,7 +151,7 @@ Troubleshooting
 
 The image didn't work after copying it to a CentOS 7 host system. The problem was kernel version older than 3.15. A working fix is to add the following line at the end of ``%post`` section of  ``singularity.def`` file.
 
-.. code-block:: none
+.. code-block:: console
 
    strip --remove-section=.note.ABI-tag /usr/lib/x86_64-linux-gnu/libQt5Core.so.5
 

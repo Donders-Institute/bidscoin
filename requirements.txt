@@ -8,5 +8,3 @@ coloredlogs
 multiecho>=0.25
 python-dateutil
 nibabel
-pydeface
-drmaa

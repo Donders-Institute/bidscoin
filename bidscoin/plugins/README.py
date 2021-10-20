@@ -21,7 +21,7 @@ def test(options: dict) -> bool:
     """
     This plugin function tests the working of the plugin + its bidsmap options
 
-    :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']
+    :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['README']
     :return:        True if the test was successful
     """
 

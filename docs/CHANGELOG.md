@@ -234,7 +234,7 @@ A major release and rewrite with important user-facing improvements
 
 ### Added
 * Cross platform support
-* Installation as a python module
+* Installation as a Python module
 * Improved version control
 * Improved BIDS compliance
     

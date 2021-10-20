@@ -29,18 +29,17 @@ def test(options: dict) -> bool:
     """
     This plugin shell tests the working of the spec2nii2bids plugin + its bidsmap options
 
-    :param options: The bidsmap['Options']['spec2nii2bids'] dictionary with the plugin options
+    :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['spec2nii2bids']
     :return:        True if the tool generated the expected result, False if there was a tool error, None if not tested
     """
 
-    LOGGER.info('Testing the spec2nii installation:')
+    LOGGER.info('Testing the spec2nii2bids installation:')
 
-    path = options.get('path','')
-    if path is None:
-        path = ''
-    command = f"{path}spec2nii -h"
+    if 'args' not in options:
+        LOGGER.warning(f"The expected 'args' key is not defined in the spec2nii2bids options")
 
-    return bidscoin.run_command(command)
+    # Test the spec2nii installation
+    return bidscoin.run_command(f"{options.get('command','spec2nii')} -h")
 
 
 def is_sourcefile(file: Path) -> str:
@@ -234,10 +233,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
 
         # Run spec2nii to convert the source-files in the run folder to nifti's in the BIDS-folder
         arg  = ''
-        path = plugin['spec2nii2bids'].get('path', '')
         args = plugin['spec2nii2bids'].get('args', '')
-        if path is None:
-            path = ''
         if args is None:
             args = ''
         if dataformat == 'SPAR':
@@ -251,8 +247,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
         else:
             LOGGER.error(f"Unsupported dataformat: {dataformat}")
             continue
-        command = f'{path}spec2nii {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'
-        if not bidscoin.run_command(command):
+        command = plugin["spec2nii2bids"].get("command", "spec2nii")
+        if not bidscoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
             continue
 
         # Load and adapt the newly produced json sidecar-file (NB: assumes every nifti-file comes with a json-file)

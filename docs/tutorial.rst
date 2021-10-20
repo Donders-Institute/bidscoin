@@ -14,7 +14,7 @@ BIDScoin tutorial
 .. code-block:: console
 
    $ module add bidscoin                # Load the DCCN bidscoin module with the PATH settings and Anaconda environment
-   $ source activate /opt/bidscoin      # Activate the python virtual environment with the BIDScoin python packages
+   $ source activate /opt/bidscoin      # Activate the Python virtual environment with the BIDScoin Python packages
    $ bidscoin --download .              # Download the tutorial data (use a "." for the current folder or adapt it to your needs)
    $ cd bidscointutorial                # Go to the downloaded data (or provide the path to the subfolders when calling the bidscoin tools)
 
