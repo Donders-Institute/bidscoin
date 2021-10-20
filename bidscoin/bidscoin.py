@@ -324,7 +324,7 @@ def test_plugin(plugin: Path, options: dict) -> bool:
     # First test to see if we can import the plugin
     module = import_plugin(plugin, ('bidsmapper_plugin','bidscoiner_plugin'))
     if inspect.ismodule(module):
-        LOGGER.info(f"Succesfully imported the '{plugin}' docstring")
+        LOGGER.info(f"Succesfully imported '{plugin}'")
     else:
         return False
 
