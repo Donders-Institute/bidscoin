@@ -357,14 +357,13 @@ def test_bidscoin(bidsmapfile: Path=bidsmap_template, options: dict=None, testpl
         except ImportError:
             import bids         # This should work if bidscoin was not pip-installed
 
-        bidsmap, bidsmapfile = bids.load_bidsmap(bidsmapfile)
+        bidsmap, _ = bids.load_bidsmap(bidsmapfile)
         if not options:
             options = bidsmap['Options']
         success = True
     except Exception as bidsmaperror:
         LOGGER.error(f'{bidsmaperror}')
-        bidsmapfile = None
-        success     = False
+        success = False
 
     # Test the plugins
     if testplugins and 'plugins' in options:
