@@ -311,6 +311,7 @@ def test_plugin(plugin: Path, options: dict) -> bool:
     Performs import tests of the plug-in
 
     :param plugin:  The name of the plugin that is being tested
+    :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins'][plugin.stem]
     :return:        True if the plugin generated the expected result, False if there
                     was a plug-in error, None if this function has an implementation error
     """
@@ -318,7 +319,7 @@ def test_plugin(plugin: Path, options: dict) -> bool:
     if not plugin:
         return False
 
-    LOGGER.info(f"Testing the '{plugin}' plugin:")
+    LOGGER.info(f"--- Testing the '{plugin}' plugin ---")
 
     # First test to see if we can import the plugin
     module = import_plugin(plugin, ('bidsmapper_plugin','bidscoiner_plugin'))
@@ -338,25 +339,25 @@ def test_plugin(plugin: Path, options: dict) -> bool:
     return True
 
 
-def test_bidscoin(dcm2niix: bool, options: dict=None):
+def test_bidscoin(bidsmapfile: Path=bidsmap_template, options: dict=None, testplugins: bool=True):
     """
     Performs a bidscoin installation test
 
-    :param dcm2niix:    Include a test for dcm2niix
+    :param bidsmapfile: The full pathname or basename of the bidsmap yaml-file. If None, the default bidsmap_template.yaml file in the heuristics folder is used
     :param options:     The bidscoin options. If empty, the default options are used
     :return:            True if the test was successful
     """
 
-    LOGGER.info('Testing the BIDScoin tools and settings')
+    LOGGER.info('--- Testing the BIDScoin tools and settings ---')
 
-    # Try loading the default template bidsmap
+    # Test loading the template bidsmap
     try:
         try:                    # Include the import in the test + moving the import to the top of this module will cause circular import issues
             from bidscoin import bids
         except ImportError:
             import bids         # This should work if bidscoin was not pip-installed
 
-        bidsmap, bidsmapfile = bids.load_bidsmap(bidsmap_template)
+        bidsmap, bidsmapfile = bids.load_bidsmap(bidsmapfile)
         if not options:
             options = bidsmap['Options']
         success = True
@@ -365,19 +366,17 @@ def test_bidscoin(dcm2niix: bool, options: dict=None):
         bidsmapfile = None
         success     = False
 
-    # Test the dcm2niix installation
-    if dcm2niix:
-        path = options['plugins']['dcm2niix2bids'].get('path','')
-        test = run_command(f"{path}dcm2niix -u")
-        if not test:
-            LOGGER.warning(f"'{path}dcm2niix' cannot be executed, please update the default '{bidsmapfile}' template bidsmap['Options'] (e.g. with the bidseditor) or use your own template")
-        success = success and test
+    # Test the plugins
+    if testplugins and 'plugins' in options:
 
-    # Test the bidscoin tools and plugins
-    # LOGGER.info('Testing BIDScoin tools: not (yet) implemented :-)')
+        for plugin in options['plugins']:
+            success = success and test_plugin(plugin, options['plugins'][plugin])
 
+        # Show an overview of the plugins
+        list_plugins(True)
+
+    # Show an overview of the bidscoin tools. TODO: test the entry points?
     list_executables(True)
-    list_plugins(True)
 
     return success
 
@@ -421,13 +420,15 @@ def main():
                                      epilog='examples:\n'
                                             '  bidscoin -l\n'
                                             '  bidscoin -d data/bidscoin_tutorial\n'
+                                            '  bidscoin -t\n'
+                                            '  bidscoin -t my_template_bidsmap\n'
                                             '  bidscoin -i python/project/my_plugin.py downloads/handy_plugin.py\n ')
     parser.add_argument('-l', '--list',      help='List all bidscoin tools', action='store_true')
     parser.add_argument('-p', '--plugins',   help='List all installed plugins', action='store_true')
     parser.add_argument('-i', '--install',   help='A list of bidscoin plugins to install', nargs='+')
     parser.add_argument('-u', '--uninstall', help='A list of bidscoin plugins to uninstall', nargs='+')
     parser.add_argument('-d', '--download',  help='Download folder. If given, tutorial MRI data will be downloaded here')
-    parser.add_argument('-t', '--test',      help='Test the bidscoin tools', action='store_true')
+    parser.add_argument('-t', '--test',      help='Test the bidscoin installation and template bidsmap', nargs='?', const=bidsmap_template)
     parser.add_argument('-v', '--version',   help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
     if len(sys.argv) == 1:
         parser.print_help()
@@ -439,8 +440,7 @@ def main():
     uninstall_plugins(plugins=args.uninstall)
     install_plugins(plugins=args.install)
     pulltutorialdata(tutorialfolder=args.download)
-    if args.test:
-        test_bidscoin(args.test)
+    test_bidscoin(args.test)
 
 
 if __name__ == "__main__":

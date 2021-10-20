@@ -24,21 +24,19 @@ LOGGER = logging.getLogger(__name__)
 
 def test(options) -> bool:
     """
-    Performs shell tests dcm2niix
+    Performs shell tests of dcm2niix
 
-    :return:        True if the tool generated the expected result, False if there was a tool error, None if not tested
+    :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['dcm2niix2bids']
+    :return:        True if the tool generated the expected result, False if there was a tool error
     """
 
-    LOGGER.info('Testing the dcm2niix installation:')
+    LOGGER.info('Testing the dcm2niix2bids installation:')
 
-    if 'path' not in options:
-        LOGGER.error(f"The expected 'path' key is not defined in the dcm2niix2bids options")
     if 'args' not in options:
-        LOGGER.error(f"The expected 'args' key is not defined in the dcm2niix2bids options")
+        LOGGER.warning(f"The expected 'args' key is not defined in the dcm2niix2bids options")
 
-    command = f"{options.get('path','')}dcm2niix -u; {options.get('path','')}dcm2niix"
-
-    return bidscoin.run_command(command)
+    # Test the dcm2niix installation
+    return bidscoin.run_command(f"{options.get('command','dcm2niix')} -u; {options.get('command','dcm2niix')}")
 
 
 def is_sourcefile(file: Path) -> str:
@@ -253,8 +251,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
 
         # Convert the source-files in the run folder to nifti's in the BIDS-folder
         else:
-            command = '{path}dcm2niix {args} -f "{filename}" -o "{outfolder}" "{source}"'.format(
-                path      = plugin['dcm2niix2bids'].get('path',''),
+            command = '{command} {args} -f "{filename}" -o "{outfolder}" "{source}"'.format(
+                command   = plugin['dcm2niix2bids'].get('command','dcm2niix'),
                 args      = plugin['dcm2niix2bids'].get('args',''),
                 filename  = bidsname,
                 outfolder = outfolder,

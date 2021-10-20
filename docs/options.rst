@@ -28,12 +28,13 @@ dcm2niix2bids - plugin
 
 The dcm2niix2bids plugin is the default bidscoiner plugin that converts DICOM and PAR/REC source data to BIDS-valid nifti- and json sidecar files. This plugin relies on `dcm2niix <https://github.com/rordenlab/dcm2niix>`__, for which you can set the following options:
 
-- ``path``: A string that is prepended to the dcm2niix command such that it can be found by the operating system. You can leave it empty if dcm2niix is already on your shell path and callable from the command-line, otherwise you could use e.g.:
+- ``command``: Command to run dcm2niix from the terminal, such as:
 
-  - ``module add dcm2niix/v1.0.20210317;`` (note the semi-colon at the end)
-  - ``PATH=/opt/dcm2niix/bin:$PATH;`` (note the semi-colon at the end)
-  - ``/opt/dcm2niix/bin/`` (note the slash at the end)
-  - ``"C:\Program Files\dcm2niix\"`` (note the quotes to deal with the whitespace in the path)
+  - ``dcm2niix`` (if the executable is already present on your path)
+  - ``module add dcm2niix/v1.0.20210317; dcm2niix`` (if you use a module system)
+  - ``PATH=/opt/dcm2niix/bin:$PATH; dcm2niix`` (prepend the executable to your path)
+  - ``/opt/dcm2niix/bin/dcm2niix`` (specify the fullpath to the executable)
+  - ``\"C:\\Program Files\\dcm2niix\\dcm2niix.exe"`` (use quotes to deal with whitespaces in your fullpath)
 
 - ``args``: Argument string that is passed as input to dcm2niix to customize its behavior, e.g. ``-z n -i y`` for ignoring derived data and having uncompressed output data.
 - ``anon``: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
@@ -41,7 +42,7 @@ The dcm2niix2bids plugin is the default bidscoiner plugin that converts DICOM an
 To test the proper working of dcm2niix click [Test] and see the terminal output for more helptext on its input arguments
 
 .. tip::
-   - Use the [Set as default] button to put your custom dcm2niix path-setting in your template bidsmap so that you don't have to adjust it anymore for every new study
+   - Use the [Set as default] button to put your custom dcm2niix command in your template bidsmap so that you don't have to adjust it anymore for every new study
    - SPM users may want to use '-z n', which produces unzipped nifti's
 
 spec2nii2bids - plugin
@@ -49,8 +50,15 @@ spec2nii2bids - plugin
 
 The spec2nii2bids plugin is a bidscoiner plugin that converts Twix, SPAR/SDAT and P-file spectroscopy source data to BIDS-valid nifti- and json sidecar files. This plugin relies on `spec2nii <https://github.com/wexeee/spec2nii>`__, for which you can set the following options:
 
-- ``path``: A string that is prepended to the spec2nii command such that it can be found by the operating system. You can leave it empty if spec2nii is already on your shell path (default) and callable from the command-line
+- ``command``: Command to run spec2nii, such as:
+
+  - ``module add spec2nii; spec2nii``
+  - ``PATH=/opt/spec2nii/bin:$PATH; spec2nii``
+  - ``/opt/spec2nii/bin/spec2nii``
+  - ``"C:\Program Files\spec2nii\spec2nii.exe"`` (note the quotes to deal with the whitespace)
+
 - ``args``: Argument string that is passed as input to spec2nii to customize its behavior
 - ``anon``: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
+- ``multiraid``: The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
 
 To test the proper working of spec2nii click [Test] and see the terminal output for more helptext on its input arguments
