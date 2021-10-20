@@ -357,7 +357,7 @@ def test_bidscoin(bidsmapfile: Path=bidsmap_template, options: dict=None, testpl
         except ImportError:
             import bids         # This should work if bidscoin was not pip-installed
 
-        bidsmap, _ = bids.load_bidsmap(bidsmapfile)
+        bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile))
         if not options:
             options = bidsmap['Options']
         success = True
