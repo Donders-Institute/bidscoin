@@ -319,12 +319,12 @@ def test_plugin(plugin: Path, options: dict) -> bool:
     if not plugin:
         return False
 
-    LOGGER.info(f"--- Testing the '{plugin}' plugin ---")
+    LOGGER.info(f"--------- Testing the '{plugin}' plugin ---------")
 
     # First test to see if we can import the plugin
     module = import_plugin(plugin, ('bidsmapper_plugin','bidscoiner_plugin'))
     if inspect.ismodule(module):
-        LOGGER.info(f"Succesfully imported the '{plugin}' docstring:\n{module.__doc__}")
+        LOGGER.info(f"Succesfully imported the '{plugin}' docstring")
     else:
         return False
 
@@ -348,7 +348,7 @@ def test_bidscoin(bidsmapfile: Path=bidsmap_template, options: dict=None, testpl
     :return:            True if the test was successful
     """
 
-    LOGGER.info('--- Testing the BIDScoin tools and settings ---')
+    LOGGER.info('--------- Testing the BIDScoin tools and settings ---------')
 
     # Test loading the template bidsmap
     try:
