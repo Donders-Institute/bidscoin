@@ -29,7 +29,7 @@ Create a tutorial playground folder by executing these shell commands:
 .. code-block:: console
 
    $ bidscoin --download .              # Download the tutorial data (use a "." for the current folder or a pathname of choice to save it elsewhere)
-   $ cd bidscointutorial                # Go to the downloaded data (or prepend the full pathname to the input arguments when calling the bidscoin tools)
+   $ cd ./bidscointutorial              # Go to the downloaded data (replace "." with the full pathname if your data was saved elsewhere)
 
 The new ``bidscointutorial`` folder contains a ``raw`` source-data folder and a ``bids_ref`` reference BIDS folder, i.e. the intended end product of this tutorial. In the raw folder you will find these DICOM series (aka "runs"):
 
