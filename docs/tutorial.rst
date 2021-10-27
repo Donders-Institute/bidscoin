@@ -15,13 +15,6 @@ BIDScoin tutorial
 
    $ module add bidscoin                # Load the DCCN bidscoin module with the PATH settings and Anaconda environment
    $ source activate /opt/bidscoin      # Activate the Python virtual environment with the BIDScoin Python packages
-
-Now you should be able to execute BIDScoin commands. Type ``bidscoin`` to get some general help and use it to list all BIDScoin tools.
-
-2. **Data preparation.** Create a tutorial playground folder in your home directory by executing these shell commands:
-
-.. code-block:: console
-
    $ bidscoin --download .              # Download the tutorial data (use a "." for the current folder or adapt it to your needs)
    $ cd bidscointutorial                # Go to the downloaded data (or provide the path to the subfolders when calling the bidscoin tools)
 
@@ -46,7 +39,7 @@ Let's begin with inspecting this new raw data collection:
 - Are the DICOM files for all the ``bids/sub-*`` folders organised in series-subfolders (e.g. ``sub-001/ses-01/003-T1MPRAGE/0001.dcm`` etc)? Use `dicomsort <preparation.html#dicomsort>`__ if this is not the case (hint: it's not the case). A help text for all BIDScoin tools is available by running the tool with the ``-h`` flag (e.g. ``rawmapper -h``)
 - Use the `rawmapper <preparation.html#rawmapper>`__ command to print out the DICOM values of the "EchoTime", "Sex" and "AcquisitionDate" of the fMRI series in the ``raw`` folder
 
-3. **BIDS mapping.** Now we can make a study bidsmap, i.e. the mapping from DICOM source-files to BIDS target-files. To that end, scan all folders in the raw data collection by running the `bidsmapper <workflow.html#step-1a-running-the-bidsmapper>`__ command:
+2. **BIDS mapping.** Now we can make a study bidsmap, i.e. the mapping from DICOM source-files to BIDS target-files. To that end, scan all folders in the raw data collection by running the `bidsmapper <workflow.html#step-1a-running-the-bidsmapper>`__ command:
 
 .. code-block:: console
 
@@ -57,7 +50,7 @@ Let's begin with inspecting this new raw data collection:
 - Since for this dataset we only have one session per subject, remove the session label (and note how the output names simplify, omitting the session subfolders and labels)
 - When all done, go to the ``Options`` tab and change the ``dcm2niix`` settings to get non-zipped nifti output data (i.e. ``*.nii`` instead of ``*.nii.gz``). Test the tool to see if it can run and, as a final step, save your bidsmap. You can always go back later to change any of your edits by running the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ command line tool directly. Try that.
 
-4. **BIDS coining.** The next step, converting the source data into a BIDS collection, is very simple to do (and can be repeated whenever new data has come in). To do this run the `bidscoiner <workflow.html#step-2-running-the-bidscoiner>`__ command-line tool (note that the input is the same as for the bidsmapper):
+3. **BIDS coining.** The next step, converting the source data into a BIDS collection, is very simple to do (and can be repeated whenever new data has come in). To do this run the `bidscoiner <workflow.html#step-2-running-the-bidscoiner>`__ command-line tool (note that the input is the same as for the bidsmapper):
 
 .. code-block:: console
 
@@ -67,7 +60,7 @@ Let's begin with inspecting this new raw data collection:
 - Compare the results in your ``bids/sub-*`` subject folders with the in ``bids_ref`` reference result. Are the file and foldernames the same (don't worry about the multi-echo images and the ``extra_data`` images, they are combined/generated as described below)? Also check the json sidecar files of the fieldmaps. Do they have the right ``EchoTime`` and ``IntendedFor`` fields?
 - What happens if you re-run the ``bidscoiner`` command? Are the same subjects processed again? Re-run ``sub-001``.
 
-5. **Finishing up.** Now that you have converted the data to BIDS, you still need to do some manual work to make it fully ready for data analysis and sharing
+4. **Finishing up.** Now that you have converted the data to BIDS, you still need to do some manual work to make it fully ready for data analysis and sharing
 
 - Combine the echos using the `echocombine <finalizing.html#multi-echo-combination>`__ tool, such that the individual echo images are replaced by the echo-combined image
 - Deface the anatomical scans using the `deface <finalizing.html#defacing>`__ tool. This will take a while, but will obviously not work well for our phantom dataset. Therefore store the 'defaced' output in the ``derivatives`` folder (instead of e.g. overwriting the existing images)
