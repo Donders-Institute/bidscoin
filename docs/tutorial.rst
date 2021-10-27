@@ -19,7 +19,7 @@ Depending on how BIDScoin was installed, you may have to set your Python environ
    $ module add bidscoin                # Load the DCCN bidscoin module with the PATH settings and Anaconda environment
    $ source activate /opt/bidscoin      # Activate the Python virtual environment with the BIDScoin Python packages
 
-Now you should be able to execute BIDScoin commands. Test this by running ``bidscoin`` to get a general overview. Can you generate a list with all BIDScoin tools? What about the plugins?
+Now you should be able to execute BIDScoin commands. Test this by running ``bidscoin`` to get a general overview. Can you generate a list of all BIDScoin tools? What about the plugins?
 
 2. Data preparation
 ~~~~~~~~~~~~~~~~~~~
