@@ -88,7 +88,7 @@ Plugins
 
 all interactions of BIDScoin routines with source data are done via a plugin layer that abstracts away differences between source data formats. The bidsmapper and bidscoiner tools loop over the subjects/sessions in your source directory and then use the plugins listed in the bidsmap to do the actual work. This paragraph describes the requirements and structure of plugins in order to allow advanced users and developers to write their own plugin and extent or customize BIDScoin to their needs. As can be seen in the API code snippet below (but aso see the default 'dcm2niix2bids' and 'phys2bidscoin' plugins for reference implementation), a BIDScoin plugin is a Python module with the following programming interface (functions):
 
-.. note:: Run the ``bidscoin`` command-line utility to list, install or uninstall BIDScoin plugins
+.. note:: Run the ``bidscoin`` utility to list, install or uninstall BIDScoin plugins
 
 .. code-block:: python3
 
