@@ -16,7 +16,7 @@ BIDScoin tutorial
    $ module add bidscoin                # Load the DCCN bidscoin module with the PATH settings and Anaconda environment
    $ source activate /opt/bidscoin      # Activate the Python virtual environment with the BIDScoin Python packages
 
-Now you should be able to execute BIDScoin commands. Type ``bidscoin`` to get some general help and use it to list all BIDScoin tools.
+Now you should be able to execute BIDScoin commands. Type ``bidscoin`` to get some general help and run the command to list all BIDScoin tools.
 
 2. **Data preparation.** Create a tutorial playground folder in your home directory by executing these shell commands:
 
