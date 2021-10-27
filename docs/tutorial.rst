@@ -9,7 +9,7 @@ A good starting point to learn more about BIDS and BIDScoin is to watch `this pr
 BIDScoin tutorial
 -----------------
 
-1. **Getting started.** Depending on how BIDScoin was installed, you may have to set your python environment settings before you can run BIDScoin commands from your command-line interface / shell. In the example below it is assumed that you are using an `environment module <http://modules.sourceforge.net/>`__ to load your Linux Anaconda Python installation and that you have installed BIDScoin in a `conda environment <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands>`__ named "bidscoin". If you are a DCCN user this is the case and you can use the two shell commands below to get started with BIDScoin, otherwise you may skip them or adapt them to your computer system.
+1. **Getting started.** Depending .
 
 .. code-block:: console
 
