@@ -9,7 +9,7 @@ BIDScoin is a Python 3 package and can be installed on Linux, MS Windows and on 
 BIDScoin installation
 ---------------------
 
-To install BIDScoin on your system run one of the following commands in your command-line interface / shell (tip: you may want or need to install bidscoin in a `virtual`_ / `conda`_ Python environment):
+To install BIDScoin on your system run one of the following commands in a command-terminal (tip: you may want or need to install bidscoin in a `virtual`_ / `conda`_ Python environment):
 
 .. code-block:: console
 
