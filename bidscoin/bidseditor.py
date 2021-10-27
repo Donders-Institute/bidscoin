@@ -1247,11 +1247,6 @@ class EditWindow(QDialog):
             key_   = self.meta_table.item(n, 0).text()
             value_ = self.meta_table.item(n, 1).text()
             if key_ and not key_.isspace():
-                if value_.isdigit():
-                    value_ = int(value_)
-                else:
-                    try: value_ = float(value_)
-                    except ValueError: pass
                 self.target_run['meta'][key_] = value_
             elif value_:
                 QMessageBox.warning(self, 'Input error', f"Please enter a key-name (left cell) for the '{value_}' value in row {n+1}")
