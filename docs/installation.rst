@@ -17,7 +17,7 @@ To install BIDScoin on your system run one of the following commands in your com
    $ pip install bidscoin[spec2nii2bids]            # Use this when you want to convert MR spectroscopy data with the spec2nii2bids plugin
    $ pip install bidscoin[phys2bidscoin]            # Use this when you want to convert physiological data with the phys2bidscoin plugin
    $ pip install bidscoin[deface]                   # Use this when you want to deface anatomical MRI scans. NB: Requires FSL to be installed on your system
-   $ pip install bidscoin[deface,phys2bidscoin]     # Use this to install two extra packages
+   $ pip install bidscoin[deface,phys2bidscoin]     # Use this to install two extra packages of interest
    $ pip install bidscoin[all]                      # Use this to install all extra packages
 
 These install commands can be run independently and will give you the latest stable release of BIDScoin and its `plugins <options.html#dcm2niix2bids-plugin>`__. Alternatively, if you need to use the very latest (development / unstable) version of the software, you can also install BIDScoin directly from the github source code repository:

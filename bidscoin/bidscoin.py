@@ -439,7 +439,7 @@ def main():
     uninstall_plugins(plugins=args.uninstall)
     install_plugins(plugins=args.install)
     pulltutorialdata(tutorialfolder=args.download)
-    test_bidscoin(args.test)
+    test_bidscoin(bidsmapfile=args.test)
 
 
 if __name__ == "__main__":
