@@ -23,18 +23,18 @@ BIDScoin is developed at the `Donders Institute <https://www.ru.nl/donders/>`__ 
 BIDScoin functionality
 ----------------------
 
--  [x] DICOM source data
--  [x] PAR / REC source data (Philips)
--  [x] Physiological logging data\*
--  [x] MR Spectroscopy data\**
--  [x] Fieldmaps\*
--  [x] Multi-echo data\*
--  [x] Multi-coil data\*
--  [x] PET data\*
--  [ ] Stimulus / behavioural logfiles
--  [x] Plug-ins
--  [x] Defacing
--  [x] Multi-echo combination
+- [x] DICOM source data
+- [x] PAR / REC source data (Philips)
+- [x] Physiological logging data\*
+- [x] MR Spectroscopy data\*\*
+- [x] Fieldmaps\*
+- [x] Multi-echo data\*
+- [x] Multi-coil data\*
+- [x] PET data\*
+- [ ] Stimulus / behavioural logfiles
+- [x] Plug-ins
+- [x] Defacing
+- [x] Multi-echo combination
 
    ``*  = Only DICOM source data / tested for Siemens``
 
