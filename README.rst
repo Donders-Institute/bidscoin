@@ -37,6 +37,7 @@ BIDScoin functionality
 -  [x] Multi-echo combination
 
    ``*  = Only DICOM source data / tested for Siemens``
+
    ``** = Only Twix, SDAT/SPAR and P-file source data``
 
 ::
