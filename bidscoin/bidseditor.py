@@ -1251,7 +1251,7 @@ class EditWindow(QDialog):
                     value_ = int(value_)
                 else:
                     try: value_ = float(value_)
-                    except (ValueError, TypeError): pass
+                    except ValueError: pass
                 self.target_run['meta'][key_] = value_
             elif value_:
                 QMessageBox.warning(self, 'Input error', f"Please enter a key-name (left cell) for the '{value_}' value in row {n+1}")
