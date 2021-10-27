@@ -12,7 +12,7 @@ BIDScoin tutorial
 1. Getting started
 ~~~~~~~~~~~~~~~~~~
 
-Depending on how BIDScoin was installed, you may have to set your python environment settings before you can run BIDScoin commands from your command-line interface / shell. In the DCCN compute cluster example below it is assumed that an `environment module <http://modules.sourceforge.net/>`__ is used to load your Linux Anaconda Python installation and that BIDScoin is installed in a `conda environment <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands>`__ named "bidscoin". Run or adjust these commands to your computer system if needed:
+Depending on how BIDScoin was installed, you may have to set your Python environment settings before you can run BIDScoin commands from your command-line interface / shell. In the DCCN compute cluster example below it is assumed that an `environment module <http://modules.sourceforge.net/>`__ is used to load your Linux Anaconda Python installation and that BIDScoin is installed in a `conda environment <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands>`__ named "bidscoin". Run or adjust these commands to your computer system if needed:
 
 .. code-block:: console
 
@@ -24,12 +24,12 @@ Now you should be able to execute BIDScoin commands. Test this by running ``bids
 2. Data preparation
 ~~~~~~~~~~~~~~~~~~~
 
-Create a tutorial playground folder in your home directory by executing these shell commands:
+Create a tutorial playground folder by executing these shell commands:
 
 .. code-block:: console
 
-   $ bidscoin --download .              # Download the tutorial data (use a "." for the current folder or adapt it to your needs)
-   $ cd bidscointutorial                # Go to the downloaded data (or provide the path to the subfolders when calling the bidscoin tools)
+   $ bidscoin --download .              # Download the tutorial data (use a "." for the current folder or a pathname of choice to save it elsewhere)
+   $ cd bidscointutorial                # Go to the downloaded data (or prepend the full pathname to the input arguments when calling the bidscoin tools)
 
 The new ``bidscointutorial`` folder contains a ``raw`` source-data folder and a ``bids_ref`` reference BIDS folder, i.e. the intended end product of this tutorial. In the raw folder you will find these DICOM series (aka "runs"):
 

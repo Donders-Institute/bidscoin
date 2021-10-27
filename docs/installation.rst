@@ -26,7 +26,7 @@ These install commands can be run independently and will give you the latest sta
 
    $ pip install --upgrade git+https://github.com/Donders-Institute/bidscoin
 
-If you do not have git (or any other version control system) installed you can `download`_ and unzip the code yourself in a directory named e.g. 'bidscoin' and run:
+If you do not have git (or any other version control system) installed you can `download`_ and unzip the code yourself in a folder named e.g. 'bidscoin' and run:
 
 .. code-block:: console
 
@@ -104,7 +104,7 @@ Execute BIDScoin tool using the following command:
 
 Where ``<bidscoin_tool>`` is a BIDScoin tool (e.g., ``bidsmapper``, ``bidscoiner``, ``dicomsort``) and ``<bidscoin_tool_args>`` are the tool's arguments.
 
-If your data doesn't reside in home directory, add ``--bind`` Singularity argument which maps a directory from the host system to one inside the Singularity container.
+If your data doesn't reside in home folder, add ``--bind`` Singularity argument which maps a folder from the host system to one inside the Singularity container.
 
 .. code-block:: console
 
