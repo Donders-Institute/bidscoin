@@ -192,7 +192,7 @@ class DataSource:
 
         return subid, sesid
 
-    def dynamicvalue(self, value: str, cleanup: bool=True, runtime: bool=False) -> str:
+    def dynamicvalue(self, value, cleanup: bool=True, runtime: bool=False):
         """
         Replaces dynamic (bids/meta) values with source attributes of filesystem properties when they start with
         '<' and end with '>', but not with '<<' and '>>' unless runtime = True
