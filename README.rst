@@ -26,6 +26,7 @@ BIDScoin functionality
 -  [x] DICOM source data
 -  [x] PAR / REC source data (Philips)
 -  [x] Physiological logging data\*
+-  [x] MR Spectroscopy data\**
 -  [x] Fieldmaps\*
 -  [x] Multi-echo data\*
 -  [x] Multi-coil data\*
@@ -35,7 +36,8 @@ BIDScoin functionality
 -  [x] Defacing
 -  [x] Multi-echo combination
 
-   ``* = Only DICOM source data / tested for Siemens``
+   ``*  = Only DICOM source data / tested for Siemens``
+   ``** = Only Twix, SDAT/SPAR and P-file source data``
 
 ::
 
