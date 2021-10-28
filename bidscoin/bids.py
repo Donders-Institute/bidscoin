@@ -508,7 +508,7 @@ def get_twixfield(tagname: str, twixfile: Path, mraid: int=2) -> Union[str, int]
 
     :param tagname:     Name of the TWIX field
     :param twixfile:    The full pathname of the TWIX file
-    :param: mraid:      The mapVBVD argument for selecting the multiraid file to load (default = 2, i.e. 2nd file)
+    :param mraid:       The mapVBVD argument for selecting the multiraid file to load (default = 2, i.e. 2nd file)
     :return:            Extracted tag-values from the TWIX file
     """
 
@@ -624,7 +624,6 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
 # Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) cache optimization
 _SPARHDR_CACHE  = None
 _SPARFILE_CACHE = None
-
 @lru_cache(maxsize=4096)
 def get_sparfield(tagname: str, sparfile: Path) -> Union[str, int]:
     """
@@ -675,15 +674,14 @@ def get_sparfield(tagname: str, sparfile: Path) -> Union[str, int]:
 # Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) cache optimization
 _P7HDR_CACHE  = None
 _P7FILE_CACHE = None
-
 @lru_cache(maxsize=4096)
 def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
     """
     Extracts the field value from the P-file header
 
     :param tagname:     Name of the SPAR field
-    :param sparfile:    The full pathname of the SPAR file
-    :return:            Extracted tag-values from the SPAR file
+    :param p7file:      The full pathname of the P7 file
+    :return:            Extracted tag-values from the P7 file
     """
 
     global _P7HDR_CACHE, _P7FILE_CACHE
@@ -1461,20 +1459,16 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False, cleanup
     """
 
     # Try to update the sub/ses-ids
-    if subid.startswith('sub-'):
-        subid = subid[4:]
+    subid = re.sub(f'^sub-', '', subid)
     if cleanup:
         subid = cleanup_value(subid)
-    subid = f"sub-{subid}"
     if sesid:
-        if sesid.startswith('ses-'):
-            sesid = sesid[4:]
+        sesid = re.sub(f'^ses-', '', sesid)
         if cleanup:
             sesid = cleanup_value(sesid)
-        sesid = f"ses-{sesid}"
 
     # Compose a bidsname from valid BIDS entities only
-    bidsname = f"{subid}{add_prefix('_', sesid)}"                               # Start with the subject/session identifier
+    bidsname = f"sub-{subid}{add_prefix('_ses-', sesid)}"                       # Start with the subject/session identifier
     for entitykey in [entities[entity]['entity'] for entity in entities]:
         bidsvalue = run['bids'].get(entitykey)                                  # Get the entity data from the run
         if not bidsvalue:

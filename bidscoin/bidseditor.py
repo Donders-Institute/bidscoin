@@ -529,8 +529,8 @@ class MainWindow(QMainWindow):
         # Only if cell was actually clicked, update
         if colindex == 1:
             dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
-            key        = self.subses_table[dataformat].item(rowindex, 0).text()
-            value      = self.subses_table[dataformat].item(rowindex, 1).text()
+            key        = self.subses_table[dataformat].item(rowindex, 0).text().strip()
+            value      = self.subses_table[dataformat].item(rowindex, 1).text().strip()
             oldvalue   = self.output_bidsmap[dataformat][key]
             if oldvalue is None:
                 oldvalue = ''
@@ -1196,7 +1196,7 @@ class EditWindow(QDialog):
                 value    = [dropdown.itemText(n) for n in range(len(dropdown))] + [dropdown.currentIndex()]
                 oldvalue = self.target_run['bids'].get(key)
             else:
-                value    = self.bids_table.item(rowindex, 1).text()
+                value    = self.bids_table.item(rowindex, 1).text().strip()
                 oldvalue = self.target_run['bids'].get(key)
             if oldvalue is None:
                 oldvalue = ''
@@ -1227,8 +1227,8 @@ class EditWindow(QDialog):
     def metacell2run(self, rowindex: int, colindex: int):
         """Source meta value has been changed"""
 
-        key      = self.meta_table.item(rowindex, 0).text()
-        value    = self.meta_table.item(rowindex, 1).text()
+        key      = self.meta_table.item(rowindex, 0).text().strip()
+        value    = self.meta_table.item(rowindex, 1).text().strip()
         oldvalue = self.target_run['meta'].get(key)
         if oldvalue is None:
             oldvalue = ''
@@ -1244,10 +1244,10 @@ class EditWindow(QDialog):
         # Read all the meta-data from the table and store it in the target_run
         self.target_run['meta'] = {}
         for n in range(self.meta_table.rowCount()):
-            key_   = self.meta_table.item(n, 0).text()
-            value_ = self.meta_table.item(n, 1).text()
-            if key_ and not key_.isspace():
-                if value_.isdigit():
+            key_   = self.meta_table.item(n, 0).text().strip()
+            value_ = self.meta_table.item(n, 1).text().strip()
+            if key_:
+                if value_.lstrip('-').isdigit():
                     value_ = int(value_)
                 else:
                     try: value_ = float(value_)
@@ -1257,7 +1257,7 @@ class EditWindow(QDialog):
                 QMessageBox.warning(self, 'Input error', f"Please enter a key-name (left cell) for the '{value_}' value in row {n+1}")
 
         # Refresh the table if needed, i.e. delete empty rows or add a new row if a key is defined on the last row
-        if (not key and not value) or (key and not key.isspace() and rowindex + 1 == self.meta_table.rowCount()):
+        if (not key and not value) or (key and rowindex + 1 == self.meta_table.rowCount()):
             _, _, _, data_meta = self.run2data()
             self.fill_table(self.meta_table, data_meta)
 
