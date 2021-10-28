@@ -9,6 +9,7 @@ during subject registration (i.e. stored in the PatientComments dicom field)
 
 import re
 import warnings
+import shutil
 from pathlib import Path
 try:
     from bidscoin import bidscoin, bids
@@ -115,10 +116,7 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: boo
             elif not dryrun:
                 with mapperfile.open('a') as fid:
                     fid.write(f"{subid}\t{sesid}\t{newsubid}\t{newsesid}\n")
-                if sesid and newsesid != sesid:
-                    (rawfolder/subid/sesid).rename(rawfolder/subid/newsesid)
-                if newsubid != subid:
-                    (rawfolder/subid).rename(rawfolder/newsubid)
+                shutil.move(session, newsession)
 
         # Print & save the dicom values in the mapper logfile
         else:
