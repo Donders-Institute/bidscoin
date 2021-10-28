@@ -10,7 +10,7 @@ assignees: ''
 **Describe the bug**
 A clear and concise description of what the bug is. Please provide all warning and error messages as reported in your ``bids/code/bidscoin/*.log`` files (a summary of them is listed at the end)
 
-**To Reproduce**
+**To reproduce**
 Steps to reproduce the behavior:
 1. Go to '...'
 2. Click on '....'
