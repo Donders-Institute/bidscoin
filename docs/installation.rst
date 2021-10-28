@@ -127,7 +127,7 @@ To install the latest develop realease of BIDScoin, substitute
 
 .. code-block:: console
 
-   pip3 install bidscoin --no-deps
+   pip3 install bidscoin
 
 with
 
@@ -140,7 +140,7 @@ in the definition ``singularity.def`` file.
 Speed up building the image
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To speed up building the Singularity image, you can change the ``apt`` servers to download the packages from a location closer to you. Add the following line as the first command in the ``%post`` section of  ``singularity.def`` file.
+To speed up building the Singularity image, you can change the ``apt`` servers to download the packages from a location closer to you. For example, add the following line as the first command in the ``%post`` section of  ``singularity.def`` file to download the packages from Austria (`at`).
 
 .. code-block:: console
 

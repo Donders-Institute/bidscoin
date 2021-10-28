@@ -15,17 +15,8 @@ OSVersion: stable
     make install
 
     # Install BIDScoin from Python repository.
-    # Install as much as possible as Debian package.
-    # NOTE: There were dependency issues. It helped to install PyQt5 from Debian package. 
+    # NOTE: PyQt5 is installed as Debian package to solve dependencies issues occurring when installed with pip.
     apt-get -y install \
-        python3-pandas \
-        python3-matplotlib \
-        python3-numpy \
-        python3-pyqt5 \
-        python3-ruamel.yaml \
-        python3-coloredlogs \
-        python3-dateutil \
-        python3-nibabel \
-        python3-pip
-    pip3 install multiecho pydeface drmaa pydicom --upgrade
-    pip3 install bidscoin --no-deps # Install the latest stable release.
+        python3-pip \
+        python3-pyqt5
+    pip3 install bidscoin # Install the latest stable release.
