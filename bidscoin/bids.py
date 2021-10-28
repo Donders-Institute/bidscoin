@@ -1447,7 +1447,7 @@ def get_derivatives(datatype: str) -> list:
         return []
 
 
-def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False) -> str:
+def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False, cleanup: bool=True) -> str:
     """
     Composes a filename as it should be according to the BIDS standard using the BIDS keys in run. The bids values are
     dynamically updated and cleaned, and invalid bids keys are ignored
@@ -1456,14 +1456,22 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False) -> str:
     :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01'). Can be left empty
     :param run:         The run mapping with the BIDS key-value pairs
     :param runtime:     Replaces dynamic bidsvalues if True
+    :param cleanup:     Removes non-BIDS-compliant characters if True
     :return:            The composed BIDS file-name (without file-extension)
     """
 
     # Try to update the sub/ses-ids
-    if not subid.startswith('sub-'):
-        subid = f"sub-{cleanup_value(subid)}"
-    if sesid and not sesid.startswith('ses-'):
-        sesid = f"ses-{cleanup_value(sesid)}"
+    if subid.startswith('sub-'):
+        subid = subid[4:]
+    if cleanup:
+        subid = cleanup_value(subid)
+    subid = f"sub-{subid}"
+    if sesid:
+        if sesid.startswith('ses-'):
+            sesid = sesid[4:]
+        if cleanup:
+            sesid = cleanup_value(sesid)
+        sesid = f"ses-{sesid}"
 
     # Compose a bidsname from valid BIDS entities only
     bidsname = f"{subid}{add_prefix('_', sesid)}"                               # Start with the subject/session identifier
@@ -1476,8 +1484,13 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False) -> str:
         elif not (entitykey=='run' and bidsvalue.replace('<','').replace('>','').isdecimal()):
             bidsvalue = run['datasource'].dynamicvalue(bidsvalue, cleanup=True, runtime=runtime)
         if bidsvalue:
-            bidsname = f"{bidsname}_{entitykey}-{cleanup_value(bidsvalue)}"     # Append the key-value data to the bidsname
-    bidsname = f"{bidsname}{add_prefix('_', cleanup_value(run['bids'].get('suffix')))}"     # And end with the suffix
+            if cleanup:
+                bidsvalue = cleanup_value(bidsvalue)
+            bidsname = f"{bidsname}_{entitykey}-{bidsvalue}"                    # Append the key-value data to the bidsname
+    suffix = run['bids'].get('suffix')
+    if cleanup and suffix:
+        suffix = cleanup_value(suffix)
+    bidsname = f"{bidsname}{add_prefix('_', suffix)}"                           # And end with the suffix
 
     return bidsname
 
@@ -1577,7 +1590,7 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str) -
         run['bids'][bidskey] = newvalue
 
     # Compose the new filename
-    newbidsfile = (bidspath/get_bidsname(subid, sesid, run)).with_suffix(bidsext)
+    newbidsfile = (bidspath/get_bidsname(subid, sesid, run, cleanup=False)).with_suffix(bidsext)
 
     if isinstance(bidsfile, str):
         newbidsfile = str(newbidsfile)
