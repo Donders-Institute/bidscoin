@@ -111,7 +111,7 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: boo
             print(f"{session} -> {newsession}")
             if newsession == session:
                 continue
-            if newsession.is_dir():
+            if newsession.is_dir() or newsession.is_file():
                 warnings.warn(f"{newsession} already exists, skipping renaming of {session}")
             elif not dryrun:
                 with mapperfile.open('a') as fid:
