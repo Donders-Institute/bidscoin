@@ -15,10 +15,10 @@ OSVersion: stable
     make install
 
     # Install curl (sometimes needed by dcm2niix)
-    apt install curl
+    apt install -y curl
 
     # Install pigz (to speed up dcm2niix)
-    apt install pigz
+    apt install -y pigz
 
     # Install BIDScoin from Python repository.
     # NOTE: PyQt5 is installed as Debian package to solve dependencies issues occurring when installed with pip.
