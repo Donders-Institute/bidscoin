@@ -1,11 +1,11 @@
-Bootstrap: debootstrap 
+Bootstrap: debootstrap
 MirrorURL: http://deb.debian.org/debian
 OSVersion: stable
 
 %post
     # Update apt
     apt-get -y update
-    
+
     # Install the latest dcm2niix from sources
     apt-get -y install git build-essential cmake
     git clone https://github.com/rordenlab/dcm2niix.git
@@ -13,6 +13,12 @@ OSVersion: stable
     mkdir build && cd build
     cmake ..
     make install
+
+    # Install curl (sometimes needed by dcm2niix)
+    sudo apt install curl
+
+    # Install pigz (to speed up dcm2niix)
+    sudo apt install pigz
 
     # Install BIDScoin from Python repository.
     # NOTE: PyQt5 is installed as Debian package to solve dependencies issues occurring when installed with pip.
