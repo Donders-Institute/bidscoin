@@ -1,5 +1,5 @@
 """
-This module contains the interface with spec2nii, both for the bidsmapper and for the bidscoiner:
+This module contains the interface with spec2nii to convert MRS data to BIDS:
 
 - test:                 A test routine for the plugin + its bidsmap options. Can also be called by the user from the bidseditor GUI
 - is_sourcefile:        A routine to assess whether the file is of a valid dataformat for this plugin

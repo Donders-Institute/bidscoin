@@ -1,5 +1,5 @@
 """
-This module contains the interface with phys2bids, both for the bidsmapper and for the bidscoiner:
+This module contains the interface with phys2bids for converting physiological data to BIDS:
 
 - test:                 A test routine for the plugin + its bidsmap options. Can also be called by the user from the bidseditor GUI
 - is_sourcefile:        A routine to assess whether the file is of a valid dataformat for this plugin
@@ -8,6 +8,7 @@ This module contains the interface with phys2bids, both for the bidsmapper and f
 - bidscoiner_plugin:    A routine that can be called by the bidscoiner to convert the source data to bids
 
 See also:
+- https://github.com/physiopy/phys2bids
 - https://github.com/ohbm/hackathon2021/issues/12
 """
 

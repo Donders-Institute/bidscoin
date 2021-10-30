@@ -98,7 +98,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     plugins = [bidscoin.import_plugin(plugin, ('bidsmapper_plugin',)) for plugin,options in bidsmap_new['Options']['plugins'].items()]
     plugins = [plugin for plugin in plugins if plugin]          # Filter the empty items from the list
     if not plugins:
-        LOGGER.warning(f"No bidsmapper plugins found in {bidsmapfile}, nothing to do")
+        LOGGER.warning(f"No plugins found with a `bidsmapper_plugin` function, nothing to do")
         LOGGER.info('-------------- FINISHED! ------------')
         LOGGER.info('')
         return

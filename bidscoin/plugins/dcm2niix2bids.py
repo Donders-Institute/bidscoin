@@ -1,10 +1,12 @@
 """
-Contains the bidscoiner default plugin to convert the session DICOM and PAR/REC source-files into BIDS-valid nifti-files in the
-corresponding bidsfolder and extract personals (e.g. Age, Sex) from the source header.
+This module contains the interface with dcm2niix to convert the session DICOM and PAR/REC source-files into BIDS-valid
+nifti-files in the corresponding bidsfolder and extract personals (e.g. Age, Sex) from the source header.
 
-This plugin uses dcm2niix to do the conversion to nifti & json. This can sometimes lead to appended suffixes
-to the filenames, which are automatically casted to the correct BIDS entities or, if that fails, appended
-to the `acq` entity (e.g. "sub-01_acq-MEMPRAGE_T1w_E1.nii" becoming "sub-01_acq-MEMPRAGEe1_T1w.nii")
+NB: dcm2niix sometimes lead to appended suffixes to the filenames, which are automatically casted to the correct BIDS entities
+or, if that fails, appended to the `acq` entity (e.g. "sub-01_acq-MEMPRAGE_T1w_E1.nii" becoming "sub-01_acq-MEMPRAGEe1_T1w.nii")
+
+See also:
+- https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage
 """
 
 import logging
