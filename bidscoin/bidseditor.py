@@ -1247,9 +1247,8 @@ class EditWindow(QDialog):
             key_   = self.meta_table.item(n, 0).text().strip()
             value_ = self.meta_table.item(n, 1).text().strip()
             if key_:
-                if value_.lstrip('-').isdigit():
-                    value_ = int(value_)
-                else:
+                try: value_ = int(value_)
+                except ValueError:
                     try: value_ = float(value_)
                     except ValueError: pass
                 self.target_run['meta'][key_] = value_
