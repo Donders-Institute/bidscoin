@@ -105,7 +105,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     plugins = [bidscoin.import_plugin(plugin, ('bidscoiner_plugin',)) for plugin,options in bidsmap['Options']['plugins'].items()]
     plugins = [plugin for plugin in plugins if plugin]          # Filter the empty items from the list
     if not plugins:
-        LOGGER.warning(f"No bidscoiner plugins found in {bidsmapfile}, nothing to do")
+        LOGGER.warning(f"The plugins listed in your bidsmap['Options'] did not have a usable `bidscoiner_plugin` function, nothing to do")
         LOGGER.info('-------------- FINISHED! ------------')
         LOGGER.info('')
         return
