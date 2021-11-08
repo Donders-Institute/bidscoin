@@ -339,14 +339,17 @@ def test_plugin(plugin: Path, options: dict) -> bool:
     return True
 
 
-def test_bidscoin(bidsmapfile: Path=bidsmap_template, options: dict=None, testplugins: bool=True):
+def test_bidscoin(bidsmapfile: Path, options: dict=None, testplugins: bool=True):
     """
     Performs a bidscoin installation test
 
-    :param bidsmapfile: The full pathname or basename of the bidsmap yaml-file. If None, the default bidsmap_template.yaml file in the heuristics folder is used
+    :param bidsmapfile: The full pathname or basename of the bidsmap yaml-file
     :param options:     The bidscoin options. If empty, the default options are used
     :return:            True if the test was successful
     """
+
+    if not bidsmapfile:
+        return False
 
     LOGGER.info('--------- Testing the BIDScoin tools and settings ---------')
 
