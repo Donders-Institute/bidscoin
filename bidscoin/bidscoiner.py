@@ -22,6 +22,8 @@ import pandas as pd
 import json
 import logging
 import shutil
+from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 try:
     from bidscoin import bidscoin, bids
@@ -142,50 +144,51 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         subjects = [rawfolder/subject for subject in subjects if (rawfolder/subject).is_dir()]
 
     # Loop over all subjects and sessions and convert them using the bidsmap entries
-    for n, subject in enumerate(subjects, 1):
+    with logging_redirect_tqdm():
+        for n, subject in enumerate(tqdm(subjects), 1):
 
-        LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
-        if participants and subject.name in list(participants_table.index):
-            LOGGER.info(f"Skipping subject: {subject} ({n}/{len(subjects)})")
-            continue
-
-        sessions = bidscoin.lsdirs(subject, sesprefix + '*')
-        if not sessions:
-            sessions = [subject]
-        for session in sessions:
-
-            # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-            session, unpacked = bids.unpack(session, subprefix, sesprefix)
-
-            # Check if we should skip the session-folder
-            datasource = bids.get_datasource(session, bidsmap['Options']['plugins'])
-            if not datasource.dataformat:
-                LOGGER.info(f"No coinable datasources found in '{session}'")
+            LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
+            if participants and subject.name in list(participants_table.index):
+                LOGGER.info(f"Skipping subject: {subject} ({n}/{len(subjects)})")
                 continue
-            if not force:
-                subid, sesid = datasource.subid_sesid(bidsmap[datasource.dataformat]['subject'], bidsmap[datasource.dataformat]['session'])
-                bidssession  = bidsfolder/subid/sesid
-                datatypes    = []
-                for dataformat in dataformats:
-                    if sesid and not bidsmap[dataformat].get('session'):
-                        bidssession = bidssession.parent
-                    for datatype in bidscoin.lsdirs(bidssession):                           # See what datatypes we already have in the bids session-folder
-                        if datatype.glob('*') and bidsmap[dataformat].get(datatype.name):   # See if we are going to add data for this datatype
-                            datatypes.append(datatype.name)
-                if datatypes:
-                    LOGGER.info(f"Skipping processed session: {bidssession} already has {datatypes} data (you can carefully use the -f option to overrule)")
+
+            sessions = bidscoin.lsdirs(subject, sesprefix + '*')
+            if not sessions:
+                sessions = [subject]
+            for session in sessions:
+
+                # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
+                session, unpacked = bids.unpack(session, subprefix, sesprefix)
+
+                # Check if we should skip the session-folder
+                datasource = bids.get_datasource(session, bidsmap['Options']['plugins'])
+                if not datasource.dataformat:
+                    LOGGER.info(f"No coinable datasources found in '{session}'")
                     continue
+                if not force:
+                    subid, sesid = datasource.subid_sesid(bidsmap[datasource.dataformat]['subject'], bidsmap[datasource.dataformat]['session'])
+                    bidssession  = bidsfolder/subid/sesid
+                    datatypes    = []
+                    for dataformat in dataformats:
+                        if sesid and not bidsmap[dataformat].get('session'):
+                            bidssession = bidssession.parent
+                        for datatype in bidscoin.lsdirs(bidssession):                           # See what datatypes we already have in the bids session-folder
+                            if datatype.glob('*') and bidsmap[dataformat].get(datatype.name):   # See if we are going to add data for this datatype
+                                datatypes.append(datatype.name)
+                    if datatypes:
+                        LOGGER.info(f"Skipping processed session: {bidssession} already has {datatypes} data (you can carefully use the -f option to overrule)")
+                        continue
 
-            LOGGER.info(f"Coining datasources in: {session}")
+                LOGGER.info(f"Coining datasources in: {session}")
 
-            # Run the bidscoiner plugins
-            for module in plugins:
-                LOGGER.info(f"Executing plugin: {Path(module.__file__).name}")
-                module.bidscoiner_plugin(session, bidsmap, bidsfolder)
+                # Run the bidscoiner plugins
+                for module in plugins:
+                    LOGGER.info(f"Executing plugin: {Path(module.__file__).name}")
+                    module.bidscoiner_plugin(session, bidsmap, bidsfolder)
 
-            # Clean-up the temporary unpacked data
-            if unpacked:
-                shutil.rmtree(session)
+                # Clean-up the temporary unpacked data
+                if unpacked:
+                    shutil.rmtree(session)
 
     # Re-read the participants_table and store the collected personals in the json sidecar-file
     if participants_tsv.is_file():

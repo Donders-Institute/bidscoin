@@ -17,6 +17,8 @@ import copy
 import logging
 import sys
 import shutil
+from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QMessageBox
@@ -107,32 +109,33 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     subjects = bidscoin.lsdirs(rawfolder, subprefix + '*')
     if not subjects:
         LOGGER.warning(f'No subjects found in: {rawfolder/subprefix}*')
-    for n, subject in enumerate(subjects,1):
+    with logging_redirect_tqdm():
+        for n, subject in enumerate(tqdm(subjects), 1):
 
-        sessions = bidscoin.lsdirs(subject, sesprefix + '*')
-        if not sessions:
-            sessions = [subject]
-        for session in sessions:
+            sessions = bidscoin.lsdirs(subject, sesprefix + '*')
+            if not sessions:
+                sessions = [subject]
+            for session in sessions:
 
-            LOGGER.info(f"Mapping: {session} (subject {n}/{len(subjects)})")
+                LOGGER.info(f"Mapping: {session} (subject {n}/{len(subjects)})")
 
-            # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-            session, unpacked = bids.unpack(session, subprefix, sesprefix)
-            if unpacked:
-                store = dict(source=unpacked, target=bidscoinfolder/'provenance')
-            elif store:
-                store = dict(source=rawfolder, target=bidscoinfolder/'provenance')
-            else:
-                store = dict()
+                # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
+                session, unpacked = bids.unpack(session, subprefix, sesprefix)
+                if unpacked:
+                    store = dict(source=unpacked, target=bidscoinfolder/'provenance')
+                elif store:
+                    store = dict(source=rawfolder, target=bidscoinfolder/'provenance')
+                else:
+                    store = dict()
 
-            # Run the bidsmapper plugins
-            for module in plugins:
-                LOGGER.info(f"Executing plugin: {Path(module.__file__).name}")
-                module.bidsmapper_plugin(session, bidsmap_new, bidsmap_old, template, store)
+                # Run the bidsmapper plugins
+                for module in plugins:
+                    LOGGER.info(f"Executing plugin: {Path(module.__file__).name}")
+                    module.bidsmapper_plugin(session, bidsmap_new, bidsmap_old, template, store)
 
-            # Clean-up the temporary unpacked data
-            if unpacked:
-                shutil.rmtree(session)
+                # Clean-up the temporary unpacked data
+                if unpacked:
+                    shutil.rmtree(session)
 
     # Save the new study bidsmap in the bidscoinfolder or launch the bidseditor UI_MainWindow
     if noedit:

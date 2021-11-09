@@ -22,6 +22,7 @@ import inspect
 import subprocess
 import urllib.request
 import json
+from tqdm import tqdm
 from pathlib import Path
 from functools import lru_cache
 from importlib.util import spec_from_file_location, module_from_spec
@@ -37,6 +38,22 @@ pluginfolder     = bidscoinfolder/'plugins'
 bidsmap_template = heuristicsfolder/'bidsmap_dccn.yaml'
 
 LOGGER           = logging.getLogger(__name__)
+
+
+class TqdmUpTo(tqdm):
+
+    def update_to(self, b=1, bsize=1, tsize=None):
+        """
+        Adds a tqdm progress bar to urllib.request.urlretrieve()
+        https://gist.github.com/leimao/37ff6e990b3226c2c9670a2cd1e4a6f5
+
+        :param b:       Number of blocks transferred so far [default: 1].
+        :param bsize:   Size of each block (in tqdm units) [default: 1].
+        :param tsize:   Total size (in tqdm units). If [default: None] remains unchanged.
+        """
+        if tsize is not None:
+            self.total = tsize
+        self.update(b * bsize - self.n)  # will also set self.n = b * bsize
 
 
 def setup_logging(log_file: Path=Path(), debug: bool=False):
@@ -400,13 +417,14 @@ def pulltutorialdata(tutorialfolder: str) -> None:
 
     # Download the data, avoiding ssl certificate issues
     LOGGER.info(f"Downloading the tutorial dataset...")
-    with urllib.request.urlopen(tutorialurl, context=ssl.SSLContext()) as data, open(tutorialtargz, 'wb') as targz_fid:
-        shutil.copyfileobj(data, targz_fid)
+    with TqdmUpTo(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc=tutorialtargz.name) as t:
+        urllib.request.urlretrieve(tutorialurl, tutorialtargz, reporthook=t.update_to)
 
     # Unzip the data in the target folder
     LOGGER.info(f"Unzipping the downloaded data in: {tutorialfolder}")
     with tarfile.open(tutorialtargz, 'r') as targz_fid:
-        targz_fid.extractall(tutorialfolder)
+        for member in tqdm(iterable=targz_fid.getmembers(), total=len(targz_fid.getmembers())):
+            targz_fid.extract(member, tutorialfolder)
     tutorialtargz.unlink()
 
 

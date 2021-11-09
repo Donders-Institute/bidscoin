@@ -15,6 +15,8 @@ import logging
 import pandas as pd
 import pydeface.utils as pdu
 import drmaa
+from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 try:
     from bidscoin import bidscoin, bids
@@ -64,90 +66,91 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
             jt.joinFiles           = True
 
         # Loop over bids subject/session-directories
-        for n, subject in enumerate(subjects, 1):
+        with logging_redirect_tqdm():
+            for n, subject in enumerate(tqdm(subjects), 1):
 
-            sessions = bidscoin.lsdirs(subject, 'ses-*')
-            if not sessions:
-                sessions = [subject]
-            for session in sessions:
+                sessions = bidscoin.lsdirs(subject, 'ses-*')
+                if not sessions:
+                    sessions = [subject]
+                for session in sessions:
 
-                LOGGER.info('--------------------------------------')
-                LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
+                    LOGGER.info('--------------------------------------')
+                    LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
 
-                datasource     = bids.DataSource(session/'dum.my')
-                sub_id, ses_id = datasource.subid_sesid()
+                    datasource     = bids.DataSource(session/'dum.my')
+                    sub_id, ses_id = datasource.subid_sesid()
 
-                # Search for images that need to be defaced
-                for match in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
+                    # Search for images that need to be defaced
+                    for match in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
 
-                    # Construct the output filename and relative path name (used in BIDS)
-                    match_rel = match.relative_to(session).as_posix()
-                    if not output:
-                        outputfile     = match
-                        outputfile_rel = match_rel
-                    elif output == 'derivatives':
-                        outputfile     = bidsdir/'derivatives'/'deface'/sub_id/ses_id/match.parent.name/match.name
-                        outputfile_rel = outputfile.relative_to(bidsdir).as_posix()
-                    else:
-                        outputfile     = session/output/match.name
-                        outputfile_rel = outputfile.relative_to(session).as_posix()
-                    outputfile.parent.mkdir(parents=True, exist_ok=True)
-
-                    # Deface the image
-                    LOGGER.info(f"Defacing: {match_rel} -> {outputfile_rel}")
-                    if cluster:
-                        jt.args    = [str(match), '--outfile', str(outputfile), '--force'] + [item for pair in [[f"--{key}",val] for key,val in kwargs.items()] for item in pair]
-                        jt.jobName = f"pydeface_{sub_id}_{ses_id}"
-                        jobid      = pbatch.runJob(jt)
-                        LOGGER.info(f"Your deface job has been submitted with ID: {jobid}")
-                    else:
-                        pdu.deface_image(str(match), str(outputfile), force=True, forcecleanup=True, **kwargs)
-
-                    # Overwrite or add a json sidecar-file
-                    inputjson  = match.with_suffix('').with_suffix('.json')
-                    outputjson = outputfile.with_suffix('').with_suffix('.json')
-                    if inputjson.is_file() and inputjson != outputjson:
-                        if outputjson.is_file():
-                            LOGGER.info(f"Overwriting the json sidecar-file: {outputjson}")
-                            outputjson.unlink()
+                        # Construct the output filename and relative path name (used in BIDS)
+                        match_rel = match.relative_to(session).as_posix()
+                        if not output:
+                            outputfile     = match
+                            outputfile_rel = match_rel
+                        elif output == 'derivatives':
+                            outputfile     = bidsdir/'derivatives'/'deface'/sub_id/ses_id/match.parent.name/match.name
+                            outputfile_rel = outputfile.relative_to(bidsdir).as_posix()
                         else:
-                            LOGGER.info(f"Adding a json sidecar-file: {outputjson}")
-                        shutil.copyfile(inputjson, outputjson)
+                            outputfile     = session/output/match.name
+                            outputfile_rel = outputfile.relative_to(session).as_posix()
+                        outputfile.parent.mkdir(parents=True, exist_ok=True)
 
-                    # Add a custom "Defaced" field to the json sidecar-file
-                    with outputjson.open('r') as output_fid:
-                        data = json.load(output_fid)
-                    data['Defaced'] = True
-                    with outputjson.open('w') as output_fid:
-                        json.dump(data, output_fid, indent=4)
+                        # Deface the image
+                        LOGGER.info(f"Defacing: {match_rel} -> {outputfile_rel}")
+                        if cluster:
+                            jt.args    = [str(match), '--outfile', str(outputfile), '--force'] + [item for pair in [[f"--{key}",val] for key,val in kwargs.items()] for item in pair]
+                            jt.jobName = f"pydeface_{sub_id}_{ses_id}"
+                            jobid      = pbatch.runJob(jt)
+                            LOGGER.info(f"Your deface job has been submitted with ID: {jobid}")
+                        else:
+                            pdu.deface_image(str(match), str(outputfile), force=True, forcecleanup=True, **kwargs)
 
-                    # Update the IntendedFor fields in the fieldmap sidecar-files
-                    if output and output != 'derivatives' and (session/'fmap').is_dir():
-                        for fmap in (session/'fmap').glob('*.json'):
-                            with fmap.open('r') as fmap_fid:
-                                fmap_data = json.load(fmap_fid)
-                            intendedfor = fmap_data['IntendedFor']
-                            if type(intendedfor)==str:
-                                intendedfor = [intendedfor]
-                            if match_rel in intendedfor:
-                                LOGGER.info(f"Updating 'IntendedFor' to {outputfile_rel} in {fmap}")
-                                fmap_data['IntendedFor'] = intendedfor + [outputfile_rel]
-                                with fmap.open('w') as fmap_fid:
-                                    json.dump(fmap_data, fmap_fid, indent=4)
+                        # Overwrite or add a json sidecar-file
+                        inputjson  = match.with_suffix('').with_suffix('.json')
+                        outputjson = outputfile.with_suffix('').with_suffix('.json')
+                        if inputjson.is_file() and inputjson != outputjson:
+                            if outputjson.is_file():
+                                LOGGER.info(f"Overwriting the json sidecar-file: {outputjson}")
+                                outputjson.unlink()
+                            else:
+                                LOGGER.info(f"Adding a json sidecar-file: {outputjson}")
+                            shutil.copyfile(inputjson, outputjson)
 
-                    # Update the scans.tsv file
-                    if (bidsdir/'.bidsignore').is_file():
-                        bidsignore = (bidsdir/'.bidsignore').read_text().splitlines()
-                    else:
-                        bidsignore = []
-                    bidsignore.append('derivatives/')
-                    scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
-                    if output and output+'/' not in bidsignore and scans_tsv.is_file():
-                        LOGGER.info(f"Adding {outputfile_rel} to {scans_tsv}")
-                        scans_table                     = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
-                        scans_table.loc[outputfile_rel] = scans_table.loc[match_rel]
-                        scans_table.sort_values(by=['acq_time','filename'], inplace=True)
-                        scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
+                        # Add a custom "Defaced" field to the json sidecar-file
+                        with outputjson.open('r') as output_fid:
+                            data = json.load(output_fid)
+                        data['Defaced'] = True
+                        with outputjson.open('w') as output_fid:
+                            json.dump(data, output_fid, indent=4)
+
+                        # Update the IntendedFor fields in the fieldmap sidecar-files
+                        if output and output != 'derivatives' and (session/'fmap').is_dir():
+                            for fmap in (session/'fmap').glob('*.json'):
+                                with fmap.open('r') as fmap_fid:
+                                    fmap_data = json.load(fmap_fid)
+                                intendedfor = fmap_data['IntendedFor']
+                                if type(intendedfor)==str:
+                                    intendedfor = [intendedfor]
+                                if match_rel in intendedfor:
+                                    LOGGER.info(f"Updating 'IntendedFor' to {outputfile_rel} in {fmap}")
+                                    fmap_data['IntendedFor'] = intendedfor + [outputfile_rel]
+                                    with fmap.open('w') as fmap_fid:
+                                        json.dump(fmap_data, fmap_fid, indent=4)
+
+                        # Update the scans.tsv file
+                        if (bidsdir/'.bidsignore').is_file():
+                            bidsignore = (bidsdir/'.bidsignore').read_text().splitlines()
+                        else:
+                            bidsignore = []
+                        bidsignore.append('derivatives/')
+                        scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
+                        if output and output+'/' not in bidsignore and scans_tsv.is_file():
+                            LOGGER.info(f"Adding {outputfile_rel} to {scans_tsv}")
+                            scans_table                     = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
+                            scans_table.loc[outputfile_rel] = scans_table.loc[match_rel]
+                            scans_table.sort_values(by=['acq_time','filename'], inplace=True)
+                            scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
         if cluster:
             LOGGER.info('Waiting for the deface jobs to finish...')

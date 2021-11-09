@@ -12,6 +12,8 @@ import json
 import logging
 import shutil
 import dateutil.parser
+from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 try:
     from bidscoin import bidscoin, bids
@@ -121,50 +123,51 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, bidsmapfile: st
             participants_table = participants_table.drop(participant)
 
     # Loop over all subjects in the bids-folder and add them to the participants table
-    for n, subject in enumerate(subjects, 1):
+    with logging_redirect_tqdm():
+        for n, subject in enumerate(tqdm(subjects), 1):
 
-        LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
-        personals = dict()
-        subid, _  = bids.DataSource(subject/'dum.my').subid_sesid()
-        subject   = rawfolder/subid.replace('sub-', subprefix)     # TODO: This assumes that the subject-ids in the rawfolder did not contain BIDS-invalid characters (such as '_')
-        sessions  = bidscoin.lsdirs(subject, sesprefix + '*')
-        if not subject.is_dir():
-            LOGGER.error(f"Could not find source-folder: {subject}")
-            continue
-        if not sessions:
-            sessions = [subject]
-        for session in sessions:
+            LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
+            personals = dict()
+            subid, _  = bids.DataSource(subject/'dum.my').subid_sesid()
+            subject   = rawfolder/subid.replace('sub-', subprefix)     # TODO: This assumes that the subject-ids in the rawfolder did not contain BIDS-invalid characters (such as '_')
+            sessions  = bidscoin.lsdirs(subject, sesprefix + '*')
+            if not subject.is_dir():
+                LOGGER.error(f"Could not find source-folder: {subject}")
+                continue
+            if not sessions:
+                sessions = [subject]
+            for session in sessions:
 
-            # Only take data from the first session -> BIDS specification
-            subid, sesid = bids.DataSource(session/'dum.my').subid_sesid()
-            if sesprefix and sesid and 'session_id' not in personals:
-                personals['session_id']         = sesid
-                participants_dict['session_id'] = {'Description': 'Session identifier'}
+                # Only take data from the first session -> BIDS specification
+                subid, sesid = bids.DataSource(session/'dum.my').subid_sesid()
+                if sesprefix and sesid and 'session_id' not in personals:
+                    personals['session_id']         = sesid
+                    participants_dict['session_id'] = {'Description': 'Session identifier'}
 
-            # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-            session, unpacked = bids.unpack(session, subprefix, sesprefix)
+                # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
+                session, unpacked = bids.unpack(session, subprefix, sesprefix)
 
-            LOGGER.info(f"Scanning session: {session}")
+                LOGGER.info(f"Scanning session: {session}")
 
-            # Update / append the personal source data
-            success = scanpersonals(bidsmap, session, personals)
+                # Update / append the personal source data
+                success = scanpersonals(bidsmap, session, personals)
 
-            # Clean-up the temporary unpacked data
-            if unpacked:
-                shutil.rmtree(session)
+                # Clean-up the temporary unpacked data
+                if unpacked:
+                    shutil.rmtree(session)
 
-            if success:
-                break
+                if success:
+                    break
 
-        # Store the collected personals in the participant_table. TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
-        for key in keys:
-            if key not in participants_dict:
-                participants_dict[key] = dict(LongName    = 'Long (unabbreviated) name of the column',
-                                              Description = 'Description of the the column',
-                                              Levels      = dict(Key='Value (This is for categorical variables: a dictionary of possible values (keys) and their descriptions (values))'),
-                                              Units       = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is RECOMMENDED')
+            # Store the collected personals in the participant_table. TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
+            for key in keys:
+                if key not in participants_dict:
+                    participants_dict[key] = dict(LongName    = 'Long (unabbreviated) name of the column',
+                                                  Description = 'Description of the the column',
+                                                  Levels      = dict(Key='Value (This is for categorical variables: a dictionary of possible values (keys) and their descriptions (values))'),
+                                                  Units       = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is RECOMMENDED')
 
-            participants_table.loc[subid, key] = personals.get(key)
+                participants_table.loc[subid, key] = personals.get(key)
 
     # Write the collected data to the participant files
     LOGGER.info(f"Writing subject data to: {participants_tsv}")
