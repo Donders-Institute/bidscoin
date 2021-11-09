@@ -133,9 +133,6 @@ def sortsessions(session: Path, subprefix: str='', sesprefix: str='', dicomfield
     # Input checking
     session = Path(session)
 
-    # Start logging
-    bidscoin.setup_logging()
-
     # Do a recursive call if subprefix is given
     if subprefix:
 
@@ -198,6 +195,9 @@ def main():
     parser.add_argument('-p','--pattern',   help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')
     parser.add_argument('-d','--dryrun',    help='Add this flag to just print the dicomsort commands without actually doing anything', action='store_true')
     args = parser.parse_args()
+
+    # Set-up logging
+    bidscoin.setup_logging()
 
     sortsessions(session    = args.dicomsource,
                  subprefix  = args.subprefix,
