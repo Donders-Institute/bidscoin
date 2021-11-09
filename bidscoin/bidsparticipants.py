@@ -124,7 +124,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, bidsmapfile: st
 
     # Loop over all subjects in the bids-folder and add them to the participants table
     with logging_redirect_tqdm():
-        for n, subject in enumerate(tqdm(subjects), 1):
+        for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
             LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
             personals = dict()

@@ -57,7 +57,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
 
     # Loop over bids subject/session-directories
     with logging_redirect_tqdm():
-        for n, subject in enumerate(tqdm(subjects), 1):
+        for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
             sessions = bidscoin.lsdirs(subject, 'ses-*')
             if not sessions:

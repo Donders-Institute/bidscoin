@@ -145,7 +145,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
     # Loop over all subjects and sessions and convert them using the bidsmap entries
     with logging_redirect_tqdm():
-        for n, subject in enumerate(tqdm(subjects), 1):
+        for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
             LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
             if participants and subject.name in list(participants_table.index):

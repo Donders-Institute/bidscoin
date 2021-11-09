@@ -116,7 +116,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, outpu
 
     # Loop again over bids subject/session-directories to apply the deface masks and write meta-data
     with logging_redirect_tqdm():
-        for n, subject in enumerate(tqdm(subjects), 1):
+        for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
             sessions = bidscoin.lsdirs(subject, 'ses-*')
             if not sessions:

@@ -423,9 +423,10 @@ def pulltutorialdata(tutorialfolder: str) -> None:
     # Unzip the data in the target folder
     LOGGER.info(f"Unzipping the downloaded data in: {tutorialfolder}")
     with tarfile.open(tutorialtargz, 'r') as targz_fid:
-        for member in tqdm(iterable=targz_fid.getmembers(), total=len(targz_fid.getmembers())):
+        for member in tqdm(iterable=targz_fid.getmembers(), total=len(targz_fid.getmembers()), leave=False):
             targz_fid.extract(member, tutorialfolder)
     tutorialtargz.unlink()
+    LOGGER.info(f"Done")
 
 
 def main():
