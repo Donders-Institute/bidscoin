@@ -14,7 +14,6 @@ import argparse
 import textwrap
 import tarfile
 import shutil
-import ssl
 import sys
 import logging
 import coloredlogs
@@ -92,7 +91,7 @@ def setup_logging(log_file: Path=Path(), debug: bool=False):
     loghandler.set_name('loghandler')
     logger.addHandler(loghandler)
 
-    # Set & add the error / warnings handler
+    # Set & add the error / warnings filehandler
     error_file = log_file.with_suffix('.errors')            # Derive the name of the error logfile from the normal log_file
     errorhandler = logging.FileHandler(error_file, mode='w')
     errorhandler.setLevel(logging.WARNING)
@@ -415,10 +414,10 @@ def pulltutorialdata(tutorialfolder: str) -> None:
     tutorialtargz  = tutorialfolder/'bidscointutorial.tar.gz'
     tutorialfolder.mkdir(parents=True, exist_ok=True)
 
-    # Download the data, avoiding ssl certificate issues
+    # Download the data
     LOGGER.info(f"Downloading the tutorial dataset...")
     with TqdmUpTo(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc=tutorialtargz.name) as t:
-        urllib.request.urlretrieve(tutorialurl, tutorialtargz, reporthook=t.update_to)
+        urllib.request.urlretrieve(tutorialurl, tutorialtargz, reporthook=t.update_to)  # In case of ssl certificate issues use: with urllib.request.urlopen(tutorialurl, context=ssl.SSLContext()) as data, open(tutorialtargz, 'wb') as targz_fid: shutil.copyfileobj(data, targz_fid)
 
     # Unzip the data in the target folder
     LOGGER.info(f"Unzipping the downloaded data in: {tutorialfolder}")
