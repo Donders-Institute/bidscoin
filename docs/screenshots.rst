@@ -16,3 +16,7 @@ The bidseditor
    :scale: 60%
 
    The bidsmap options for BIDScoin and its plugins. Note how the GUI automatically adapts with a new [Physio mappings] tab due to the presence of physiological data in the repository, i.e. to the presence of a 'Physio' section in the study bidsmap. The user can manage the plugins that will be used with the [Add] and [Remove] buttons, and save the current options to the template bidsmap by using the [Set as default] button.
+
+.. figure:: ./_static/bidscoiner_terminal.png
+
+   Snapshot of running `bidscoiner` in the terminal.
