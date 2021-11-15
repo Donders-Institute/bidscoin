@@ -52,7 +52,7 @@ Note:
 
    **The full BIDScoin documentation is hosted at** `Read the Docs <https://bidscoin.readthedocs.io>`__
 
-   **For citation and more information, see the BIDScoin publication in** `Frontiers in Neuroinformatics <https://www.frontiersin.org/articles/10.3389/fninf.2021.770608>`__
+   **For citation and more information, see the** `BIDScoin publication <https://www.frontiersin.org/articles/10.3389/fninf.2021.770608>`__ **in Frontiers in Neuroinformatics** (`doi: 10.3389/fninf.2021.770608 <https://doi.org/10.3389/fninf.2021.770608>`__)
 
    **Issues can be reported at** `Github <https://github.com/Donders-Institute/bidscoin/issues>`__
 
