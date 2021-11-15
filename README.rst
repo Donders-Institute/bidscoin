@@ -52,6 +52,8 @@ Note:
 
    **The full BIDScoin documentation is hosted at** `Read the Docs <https://bidscoin.readthedocs.io>`__
 
+   **BIDScoin is published in `Frontiers in Neuroinformatics <https://www.frontiersin.org/articles/10.3389/fninf.2021.770608>`__
+
    **Issues can be reported at** `Github <https://github.com/Donders-Institute/bidscoin/issues>`__
 
 .. |PyPI version| image:: https://img.shields.io/pypi/v/bidscoin?color=success
