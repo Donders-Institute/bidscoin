@@ -417,7 +417,7 @@ def pulltutorialdata(tutorialfolder: str) -> None:
     # Download the data
     LOGGER.info(f"Downloading the tutorial dataset...")
     with TqdmUpTo(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc=tutorialtargz.name) as t:
-        urllib.request.urlretrieve(tutorialurl, tutorialtargz, reporthook=t.update_to)  # In case of ssl certificate issues use: with urllib.request.urlopen(tutorialurl, context=ssl.SSLContext()) as data, open(tutorialtargz, 'wb') as targz_fid: shutil.copyfileobj(data, targz_fid)
+        urllib.request.urlretrieve(tutorialurl, tutorialtargz, reporthook=t.update_to)  # NB: Much faster than requests.get(url, stream=True). In case of ssl certificate issues use: with urllib.request.urlopen(tutorialurl, context=ssl.SSLContext()) as data, open(tutorialtargz, 'wb') as targz_fid: shutil.copyfileobj(data, targz_fid)
 
     # Unzip the data in the target folder
     LOGGER.info(f"Unzipping the downloaded data in: {tutorialfolder}")
