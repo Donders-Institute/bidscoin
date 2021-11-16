@@ -145,6 +145,9 @@ Finally, if all BIDS output names in the main window are fine, you can click on 
 
    Fieldmaps are typically acquired to be applied to specific other scans from the same session. If this is the case then you should indicate this association in the ``IntendedFor`` meta-data field, either using a single search string or multiple `dynamic strings <bidsmap.html#special-features>`__ to select the runs that have that string pattern in their BIDS file name. For instance you can use ``task`` to select all functional runs or use ``<<Stop*Go><Reward>>`` to select "Stop1Go"-, "Stop2Go"- and "Reward"-runs. NB: bidsapps may not use your fieldmap at all if you leave this field empty!
 
+   If the run-index or any other value is not what you want it to be, try using dynamic values, as explained in the `special bidsmap features <bidsmap.html#special-bidsmap-features>`__ section
+
+
 Step 2: Running the bidscoiner
 ------------------------------
 
