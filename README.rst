@@ -12,9 +12,9 @@ BIDScoin: Coin your imaging data to BIDS
 
    <img name="bidscoin-logo" src="./bidscoin/bidscoin_logo.png" height="340px" align="right" alt=" " src="https://bidscoin.readthedocs.io">
 
-|PyPI version| |BIDS| |PyPI - Python Version| |GPLv3| |RTD|
+|PyPI version| |BIDS| |PyPI - Python Version| |GPLv3| |RTD| |DOI|
 
-BIDScoin is a user friendly `open-source <https://github.com/Donders-Institute/bidscoin>`__ Python application that converts ("coins") source-level (raw) neuroimaging data-sets to `nifti <https://nifti.nimh.nih.gov/>`__ / `json <https://www.json.org/>`__ / `tsv <https://en.wikipedia.org/wiki/Tab-separated_values>`__ data-sets that are organized according to the Brain Imaging Data Structure (`BIDS <http://bids.neuroimaging.io>`__) standard. Rather then depending on complex programmatic logic for source data-type identification, BIDScoin uses a mapping approach to identify and convert the source data types into BIDS data types. Different runs of source data are identified by their file system properties (e.g. file name or size) and by their attributes (e.g. ``ProtocolName`` from the DICOM header). Mapping information about how these runs should be converted to BIDS can be pre-specified (e.g. per site) by the user, allowing to automtically make good first guesses on how to convert the data. While this command-line procedure exploits all information available on disk, BIDScoin presents a `Graphical User Interface (GUI) <screenshots.html>`__ for researchers to check and edit these mappings -- bringing in the missing knowledge that often exists only in their heads.
+BIDScoin is a user friendly `open-source <https://github.com/Donders-Institute/bidscoin>`__ Python application that converts ("coins") source-level (raw) neuroimaging data-sets to `nifti <https://nifti.nimh.nih.gov/>`__ / `json <https://www.json.org/>`__ / `tsv <https://en.wikipedia.org/wiki/Tab-separated_values>`__ data-sets that are organized according to the Brain Imaging Data Structure (`BIDS <http://bids.neuroimaging.io>`__) standard. Rather then depending on complex programmatic logic for source data-type identification, BIDScoin uses a mapping approach to identify and convert the source data types into BIDS data types. Different runs of source data are identified by their file system properties (e.g. file name or size) and by their attributes (e.g. ``ProtocolName`` from the DICOM header). Mapping information about how these runs should be converted to BIDS can be pre-specified (e.g. per site) by the user, allowing BIDScoin to make intelligent first suggestions on how to convert the data. While this command-line procedure exploits all information available on disk, BIDScoin presents a `Graphical User Interface (GUI) <screenshots.html>`__ for researchers to check and edit these mappings -- bringing in the missing knowledge that often exists only in their heads.
 
 BIDScoin requires no programming knowledge in order to use it, but users can use regular expression and plug-ins to further enhance BIDScoin's power and flexibilty, and deal with a wider range of source data formats.
 
@@ -52,6 +52,8 @@ Note:
 
    **The full BIDScoin documentation is hosted at** `Read the Docs <https://bidscoin.readthedocs.io>`__
 
+   **For citation and more information, see our** `BIDScoin publication <https://www.frontiersin.org/articles/10.3389/fninf.2021.770608>`__ **in Frontiers in Neuroinformatics** (`doi: 10.3389/fninf.2021.770608 <https://doi.org/10.3389/fninf.2021.770608>`__)
+
    **Issues can be reported at** `Github <https://github.com/Donders-Institute/bidscoin/issues>`__
 
 .. |PyPI version| image:: https://img.shields.io/pypi/v/bidscoin?color=success
@@ -62,6 +64,9 @@ Note:
 .. |RTD| image:: https://readthedocs.org/projects/bidscoin/badge/?version=latest
    :target: http://bidscoin.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
+.. |DOI| image:: https://img.shields.io/badge/doi-10.3389%2Ffinf.2021.770608-informational.svg
+   :target: https://www.frontiersin.org/articles/10.3389/fninf.2021.770608
+   :alt: DOI reference
 .. |BIDS| image:: https://img.shields.io/badge/BIDS-v1.6.0-blue
    :target: https://bids-specification.readthedocs.io/en/v1.6.0/
    :alt: BIDS
