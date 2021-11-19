@@ -27,26 +27,28 @@ Before sharing or pre-processing their images, users may want to combine the sep
 
     positional arguments:
       bidsfolder            The bids-directory with the (multi-echo) subject data
-      pattern               Globlike recursive search pattern (relative to the subject/session folder) to select the first
-                            echo of the images that need to be combined, e.g. '*task-*echo-1*'
+      pattern               Globlike recursive search pattern (relative to the subject/session folder) to select
+                            the first echo of the images that need to be combined, e.g. '*task-*echo-1*'
 
     optional arguments:
       -h, --help            show this help message and exit
       -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
-                            Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out).
-                            If not specified then all sub-folders in the bidsfolder will be processed (default: None)
+                            Space separated list of sub-# identifiers to be processed (the sub- prefix can be
+                            left out). If not specified then all sub-folders in the bidsfolder will be processed
+                            (default: None)
       -o OUTPUT, --output OUTPUT
-                            A string that determines where the output is saved. It can be the name of a BIDS datatype
-                            folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output = [the
-                            name of the input datatype folder] then the original echo images are replaced by one combined
-                            image. If output is left empty then the combined image is saved in the input datatype folder
-                            and the original echo images are moved to the extra_data folder (default: )
+                            A string that determines where the output is saved. It can be the name of a BIDS
+                            datatype folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'.
+                            If output = [the name of the input datatype folder] then the original echo images
+                            are replaced by one combined image. If output is left empty then the combined image
+                            is saved in the input datatype folder and the original echo images are moved to the
+                            extra_data folder (default: )
       -a {PAID,TE,average}, --algorithm {PAID,TE,average}
                             Combination algorithm (default: TE)
       -w [WEIGHTS [WEIGHTS ...]], --weights [WEIGHTS [WEIGHTS ...]]
                             Weights for each echo (default: None)
-      -f, --force           If this flag is given subjects will be processed, regardless of existing target files already
-                            exist. Otherwise the echo-combination will be skipped (default: False)
+      -f, --force           If this flag is given subjects will be processed, regardless of existing target
+                            files already exist. Otherwise the echo-combination will be skipped (default: False)
 
     examples:
       echocombine /project/3017065.01/bids func/*task-stroop*echo-1*
