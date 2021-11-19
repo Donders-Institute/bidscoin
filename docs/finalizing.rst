@@ -17,45 +17,43 @@ Before sharing or pre-processing their images, users may want to combine the sep
 
 ::
 
-    usage: mecombine [-h] [-o OUTPUTNAME] [-a {PAID,TE,average}] [-w [WEIGHTS [WEIGHTS ...]]] [-s] [-v VOLUMES]
-                     pattern
+    usage: echocombine [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-o OUTPUT] [-a {PAID,TE,average}]
+                       [-w [WEIGHTS [WEIGHTS ...]]] [-f]
+                       bidsfolder pattern
 
-    Combine multi-echo echoes.
+    A wrapper around the 'mecombine' multi-echo combination tool (https://github.com/Donders-Institute/multiecho).
 
-    Tools to combine multiple echoes from an fMRI acquisition.
-    It expects input files saved as NIfTIs, preferably organised
-    according to the BIDS standard.
-
-    Currently three different combination algorithms are supported, implementing
-    the following weighting schemes:
-
-    1. PAID => TE * SNR
-    2. TE => TE
-    3. Simple Average => 1
+    This wrapper is fully BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 
     positional arguments:
-      pattern               Globlike search pattern with path to select the echo images that need to be combined.
-                            Because of the search, be sure to check that not too many files are being read
+      bidsfolder            The bids-directory with the (multi-echo) subject data
+      pattern               Globlike recursive search pattern (relative to the subject/session folder) to select the first
+                            echo of the images that need to be combined, e.g. '*task-*echo-1*'
 
     optional arguments:
       -h, --help            show this help message and exit
-      -o OUTPUTNAME, --outputname OUTPUTNAME
-                            File output name. If not a fullpath name, then the output will be stored in the same
-                            folder as the input. If empty, the output filename will be the filename of the first
-                            echo appended with a '_combined' suffix (default: )
+      -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
+                            Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out).
+                            If not specified then all sub-folders in the bidsfolder will be processed (default: None)
+      -o OUTPUT, --output OUTPUT
+                            A string that determines where the output is saved. It can be the name of a BIDS datatype
+                            folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output = [the
+                            name of the input datatype folder] then the original echo images are replaced by one combined
+                            image. If output is left empty then the combined image is saved in the input datatype folder
+                            and the original echo images are moved to the extra_data folder (default: )
       -a {PAID,TE,average}, --algorithm {PAID,TE,average}
-                            Combination algorithm. Default: TE (default: TE)
+                            Combination algorithm (default: TE)
       -w [WEIGHTS [WEIGHTS ...]], --weights [WEIGHTS [WEIGHTS ...]]
-                            Weights (e.g. = echo times) for all echoes (default: None)
-      -s, --saveweights     If passed and algorithm is PAID, save weights (default: False)
-      -v VOLUMES, --volumes VOLUMES
-                            Number of volumes that is used to compute the weights if algorithm is PAID (default:
-                            100)
+                            Weights for each echo (default: None)
+      -f, --force           If this flag is given subjects will be processed, regardless of existing target files already
+                            exist. Otherwise the echo-combination will be skipped (default: False)
 
     examples:
-      mecombine '/project/number/bids/sub-001/func/*_task-motor_*echo-*.nii.gz'
-      mecombine '/project/number/bids/sub-001/func/*_task-rest_*echo-*.nii.gz' -a PAID
-      mecombine '/project/number/bids/sub-001/func/*_acq-MBME_*run-01*.nii.gz' -w 11 22 33 -o sub-001_task-stroop_acq-mecombined_run-01_bold.nii.gz
+      echocombine /project/3017065.01/bids func/*task-stroop*echo-1*
+      echocombine /project/3017065.01/bids *task-stroop*echo-1* -p 001 003
+      echocombine /project/3017065.01/bids func/*task-*echo-1* -o func
+      echocombine /project/3017065.01/bids func/*task-*echo-1* -o derivatives -w 13 26 39 52
+      echocombine /project/3017065.01/bids func/*task-*echo-1* -a PAID
 
 
 Defacing
