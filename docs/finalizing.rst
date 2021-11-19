@@ -57,7 +57,6 @@ Before sharing or pre-processing their images, users may want to combine the sep
       echocombine /project/3017065.01/bids func/*task-*echo-1* -o derivatives -w 13 26 39 52
       echocombine /project/3017065.01/bids func/*task-*echo-1* -a PAID
 
-
 Defacing
 ^^^^^^^^
 
@@ -65,36 +64,36 @@ Before sharing or pre-processing their images, users may want to deface their an
 
 ::
 
-    usage: deface.py [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]]
-                     [-o {fmap,anat,func,perf,dwi,meg,eeg,ieeg,beh,pet,extra_data,derivatives}] [-c]
-                     [-n NATIVESPEC] [-a ARGS]
-                     bidsfolder pattern
+    usage: deface [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-o OUTPUT] [-c] [-n NATIVESPEC] [-a ARGS]
+                  bidsfolder pattern
 
     A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface).
 
     This wrapper is fully BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 
+    For multi-echo data see `medeface`
+
     positional arguments:
-      bidsfolder            The bids-directory with the (multi-echo) subject data
-      pattern               Globlike search pattern (relative to the subject/session folder) to select the images
-                            that need to be defaced, e.g. 'anat/*_T1w*'
+      bidsfolder            The bids-directory with the subject data
+      pattern               Globlike search pattern (relative to the subject/session folder) to select the
+                            images that need to be defaced, e.g. 'anat/*_T1w*'
 
     optional arguments:
       -h, --help            show this help message and exit
       -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
-                            Space separated list of sub-# identifiers to be processed (the sub- prefix can be left
-                            out). If not specified then all sub-folders in the bidsfolder will be processed
+                            Space separated list of sub-# identifiers to be processed (the sub- prefix can be
+                            left out). If not specified then all sub-folders in the bidsfolder will be processed
                             (default: None)
-      -o {fmap,anat,func,perf,dwi,meg,eeg,ieeg,beh,pet,extra_data,derivatives}, --output {fmap,anat,func,perf,dwi,meg,eeg,ieeg,beh,pet,extra_data,derivatives}
+      -o OUTPUT, --output OUTPUT
                             A string that determines where the defaced images are saved. It can be the name of a
                             BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e.
                             'derivatives'. If output is left empty then the original images are replaced by the
                             defaced images (default: None)
-      -c, --cluster         Flag to submit the deface jobs to the high-performance compute (HPC) cluster (default:
-                            False)
+      -c, --cluster         Flag to submit the deface jobs to the high-performance compute (HPC) cluster
+                            (default: False)
       -n NATIVESPEC, --nativespec NATIVESPEC
-                            DRMAA native specifications for submitting deface jobs to the HPC cluster (default: -l
-                            walltime=00:30:00,mem=2gb)
+                            DRMAA native specifications for submitting deface jobs to the HPC cluster (default:
+                            -l walltime=00:30:00,mem=2gb)
       -a ARGS, --args ARGS  Additional arguments (in dict/json-style) that are passed to pydeface. See examples
                             for usage (default: {})
 
@@ -111,10 +110,9 @@ This utility is very similar to the `deface <#defacing>`__ utility above, except
 
 ::
 
-    usage: medeface.py [-h] [-m MASKPATTERN] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]]
-                       [-o {fmap,anat,func,perf,dwi,pet,meg,eeg,ieeg,beh,extra_data,derivatives}] [-c]
-                       [-n NATIVESPEC] [-a ARGS]
-                       bidsfolder pattern
+    usage: medeface [-h] [-m MASKPATTERN] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-o OUTPUT] [-c]
+                    [-n NATIVESPEC] [-a ARGS]
+                    bidsfolder pattern
 
     A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface) that computes
     a defacing mask on a (temporary) echo-combined image and then applies it to each individual echo-image.
@@ -132,24 +130,24 @@ This utility is very similar to the `deface <#defacing>`__ utility above, except
       -h, --help            show this help message and exit
       -m MASKPATTERN, --maskpattern MASKPATTERN
                             Globlike search pattern (relative to the subject/session folder) to select the
-                            images from which the defacemask is computed, e.g. 'anat/*_part-
-                            mag_*_T2starw*'. If not given then 'pattern' is used (default: None)
+                            images from which the defacemask is computed, e.g. 'anat/*_part-mag_*_T2starw*'. If
+                            not given then 'pattern' is used (default: None)
       -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
-                            Space separated list of sub-# identifiers to be processed (the sub- prefix can
-                            be left out). If not specified then all sub-folders in the bidsfolder will be
-                            processed (default: None)
-      -o {fmap,anat,func,perf,dwi,pet,meg,eeg,ieeg,beh,extra_data,derivatives}, --output {fmap,anat,func,perf,dwi,pet,meg,eeg,ieeg,beh,extra_data,derivatives}
-                            A string that determines where the defaced images are saved. It can be the name
-                            of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e.
-                            'derivatives'. If output is left empty then the original images are replaced by
-                            the defaced images (default: None)
+                            Space separated list of sub-# identifiers to be processed (the sub- prefix can be
+                            left out). If not specified then all sub-folders in the bidsfolder will be processed
+                            (default: None)
+      -o OUTPUT, --output OUTPUT
+                            A string that determines where the defaced images are saved. It can be the name of a
+                            BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e.
+                            'derivatives'. If output is left empty then the original images are replaced by the
+                            defaced images (default: None)
       -c, --cluster         Flag to submit the deface jobs to the high-performance compute (HPC) cluster
                             (default: False)
       -n NATIVESPEC, --nativespec NATIVESPEC
-                            DRMAA native specifications for submitting deface jobs to the HPC cluster
-                            (default: -l walltime=00:30:00,mem=2gb)
-      -a ARGS, --args ARGS  Additional arguments (in dict/json-style) that are passed to pydeface. See
-                            examples for usage (default: {})
+                            DRMAA native specifications for submitting deface jobs to the HPC cluster (default:
+                            -l walltime=00:30:00,mem=2gb)
+      -a ARGS, --args ARGS  Additional arguments (in dict/json-style) that are passed to pydeface. See examples
+                            for usage (default: {})
 
     examples:
       medeface /project/3017065.01/bids anat/*_T1w*
