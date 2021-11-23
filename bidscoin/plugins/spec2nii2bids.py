@@ -24,6 +24,12 @@ except ImportError:
 
 LOGGER = logging.getLogger(__name__)
 
+# The default options that are set when installing the plugin
+OPTIONS = {'command': 'spec2nii',   # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or '"C:\Program Files\spec2nii\spec2nii.exe"' (note the quotes to deal with the whitespace)
+           'args': None,            # Argument string that is passed to spec2nii (see spec2nii -h for more information)
+           'anon': 'y',             # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
+           'multiraid': 2}          # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
+
 
 def test(options: dict) -> bool:
     """

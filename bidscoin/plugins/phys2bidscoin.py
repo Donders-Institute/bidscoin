@@ -30,6 +30,9 @@ from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
 
+# The default options that are set when installing the plugin
+OPTIONS = {}
+
 
 def test(options: dict) -> bool:
     """

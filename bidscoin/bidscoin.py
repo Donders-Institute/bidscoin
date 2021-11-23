@@ -27,6 +27,8 @@ from functools import lru_cache
 from importlib.util import spec_from_file_location, module_from_spec
 from importlib.metadata import entry_points
 from typing import Tuple, Union, List
+from ruamel.yaml import YAML
+yaml = YAML()
 
 # Define the default paths
 tutorialurl      = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
@@ -232,46 +234,107 @@ def list_plugins(show: bool=False) -> list:
     return plugins
 
 
-def install_plugins(plugins: Tuple[Path]=()) -> bool:
+def install_plugins(plugins: Tuple[Path]=()) -> Union[bool, None]:
     """
-    :return:                Nothing
+    Installs plugins in the plugins folder and adds their Options and data format section to the default template bidsmap
+
+    :param plugins: Fullpath filenames of the plugins that need to be installed
+    :return:        True if the installation was successful and False if it failed
     """
 
     if not plugins:
-        return True
+        return
 
+    # Load the default template bidsmap
+    with open(bidsmap_template, 'r') as stream:
+        template = yaml.load(stream)
+
+    # Install the plugins
+    success = True
     for plugin in plugins:
         plugin = Path(plugin)
         LOGGER.info(f"Installing: '{plugin}'")
+
+        # Copy the plugin to the plugins folder
         try:
             shutil.copyfile(plugin, bidscoinfolder/'plugins'/plugin.with_suffix('.py').name)
         except IOError as install_failure:
-            LOGGER.info(f"{install_failure}\nFailed to install: '{plugin.name}' in '{bidscoinfolder/'plugins'}'")
-            return False
-        if not import_plugin(plugin, ('bidsmapper_plugin', 'bidscoiner_plugin')):
-            LOGGER.info(f"Import failure, please re-install a valid version of '{plugin.name}'")
-            return False
+            LOGGER.error(f"{install_failure}\nFailed to install: '{plugin.name}' in '{bidscoinfolder/'plugins'}'")
+            success = False
+            continue
+        module = import_plugin(plugin, ('bidsmapper_plugin', 'bidscoiner_plugin'))
+        if not module:
+            LOGGER.error(f"Import failure, please re-install a valid version of '{plugin.name}'")
+            success = False
+            continue
 
-    return True
+        # Add the Options and data format section to the default template bidsmap
+        if 'OPTIONS' in dir(module) or 'BIDSMAP' in dir(module):
+            if 'OPTIONS' in dir(module):
+                LOGGER.info(f"Adding default {plugin.name} bidsmap options to {bidsmap_template.name}")
+                template['Options'][plugin.stem] = module.OPTIONS
+            if 'BIDSMAP' in dir(module):
+                for key, value in module.BIDSMAP.items():
+                    LOGGER.info(f"Adding default {key} bidsmappings to {bidsmap_template.name}")
+                    template[key] = value
+            with open(bidsmap_template, 'w') as stream:
+                yaml.dump(template, stream)
+
+    return success
 
 
-def uninstall_plugins(plugins: Tuple[str]=()) -> bool:
+def uninstall_plugins(plugins: Tuple[str]=(), wipe: bool=True) -> Union[bool, None]:
     """
-    :return:                Nothing
+    Uninstalls plugins in the plugins folder and removes their Options and data format section from the default template bidsmap
+
+    :param plugins: Fullpath filenames of the plugins that need to be uninstalled
+    :param wipe:    Removes the plugin bidsmapping section if True
+    :return:        True if the de-installation was successful, else False
     """
 
     if not plugins:
-        return True
+        return
 
+    # Load the default template bidsmap
+    with open(bidsmap_template, 'r') as stream:
+        template = yaml.load(stream)
+
+    # Uninstall the plugins
+    success = True
     for plugin in plugins:
+
+        if not Path(plugin).is_file():
+            LOGGER.error(f"Plugin {Path(plugin).name} not found''")
+            success = False
+            continue
+
+        module = import_plugin(plugin, ('bidsmapper_plugin', 'bidscoiner_plugin'))
+        if not module:
+            LOGGER.error(f"Import failure of '{plugin.name}'")
+            success = False
+            continue
+
+        # Remove the Options and data format section from the default template bidsmap
+        if 'OPTIONS' in dir(module) or 'BIDSMAP' in dir(module):
+            if 'OPTIONS' in dir(module):
+                LOGGER.info(f"Removing default {plugin.name} bidsmap options from {bidsmap_template.name}")
+                template['Options'].pop(plugin.stem, None)
+            if wipe and 'BIDSMAP' in dir(module):
+                for key, value in module.BIDSMAP.items():
+                    LOGGER.info(f"Removing default {key} bidsmappings from {bidsmap_template.name}")
+                    template.pop(key, None)
+            with open(bidsmap_template, 'w') as stream:
+                yaml.dump(template, stream)
+
+        # Remove the plugin from the plugins folder
         try:
             LOGGER.info(f"Uninstalling: '{plugin}'")
             (bidscoinfolder/'plugins'/plugin).with_suffix('.py').unlink()
         except IOError as uninstall_failure:
             LOGGER.info(f"Failed to uninstall: '{plugin}' in '{bidscoinfolder/'plugins'}', Exciting\n{uninstall_failure}")
-            return False
+            success = False
 
-    return True
+    return success
 
 
 @lru_cache()
@@ -328,8 +391,7 @@ def test_plugin(plugin: Path, options: dict) -> bool:
 
     :param plugin:  The name of the plugin that is being tested
     :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins'][plugin.stem]
-    :return:        True if the plugin generated the expected result, False if there
-                    was a plug-in error, None if this function has an implementation error
+    :return:        True if the plugin generated the expected result, False if there was a plug-in error
     """
 
     if not plugin:

@@ -16,6 +16,10 @@ from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
 
+# The default options that are set when installing the plugin
+OPTIONS = {'command': 'demo',   # Plugin option
+           'args': 'foo bar'}   # Another plugin option
+
 
 def test(options: dict) -> bool:
     """
