@@ -20,6 +20,71 @@ LOGGER = logging.getLogger(__name__)
 OPTIONS = {'command': 'demo',   # Plugin option
            'args': 'foo bar'}   # Another plugin option
 
+# The default bids-mappings that are added when installing the plugin
+BIDSMAP = {'DemoFormat':{
+    'subject': '<<filepath:/sub-(.*?)/>>',     # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
+    'session': '<<filepath:/ses-(.*?)/>>',     # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+
+    'func': [                   # ----------------------- All functional runs --------------------
+        {'provenance': '',      # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+         'properties':          # This is what phys2bids is using now (well, part of it)
+            {'filepath': '',    # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
+             'filename': '',    # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
+             'filesize': '',    # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
+             'nrfiles': ''},    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
+         'attributes':          # The matching (regexp) criteria for the phys2bids -info data go in here
+            {'ch_num': '.*',
+             'filetype': '.*',
+             'freq': '.*',
+             'ch_name': '.*',
+             'units': '.*',
+             'trigger_idx': '.*'},
+         'bids':
+            {'task': '',
+             'acq': '',
+             'ce': '',
+             'dir': '',
+             'rec': '',
+             'run': '<<1>>',    # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+             'recording': '',
+             'suffix': 'physio'},
+         'meta':                # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
+            {'TriggerChannel': '<<trigger_idx>>',
+             'ExpectedTimepoints': '<<num_timepoints_found>>',
+             'ChannelNames': '<<ch_name>>',
+             'Threshold': '<<thr>>',
+             'TimeOffset': '<<time_offset>>'}}],
+
+    'exclude': [  # ----------------------- Data that will be left out -------------
+        {'provenance': '',
+         'properties':
+            {'filepath': '',
+             'filename': '',
+             'filesize': '',
+             'nrfiles': ''},
+         'attributes':
+            {'ch_num': '.*',
+             'filetype': '.*',
+             'freq': '.*',
+             'ch_name': '.*',
+             'units': '.*',
+             'trigger_idx': '.*'},
+         'bids':
+            {'task': '',
+             'acq': '',
+             'ce': '',
+             'dir': '',
+             'rec': '',
+             'run': '<<1>>',
+             'recording': '',
+             'suffix': 'physio'},
+         'meta':
+            {'TriggerChannel': '<<trigger_idx>>',
+             'ExpectedTimepoints': '<<num_timepoints_found>>',
+             'ChannelNames': '<<ch_name>>',
+             'Threshold': '<<thr>>',
+             'TimeOffset': '<<time_offset>>'}}]}}
+
 
 def test(options: dict) -> bool:
     """
