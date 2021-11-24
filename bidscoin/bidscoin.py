@@ -271,11 +271,11 @@ def install_plugins(plugins: Tuple[Path]=()) -> Union[bool, None]:
         # Add the Options and data format section to the default template bidsmap
         if 'OPTIONS' in dir(module) or 'BIDSMAP' in dir(module):
             if 'OPTIONS' in dir(module):
-                LOGGER.info(f"Adding default {plugin.name} bidsmap options to {bidsmap_template.name}")
+                LOGGER.info(f"Adding default {plugin.name} bidsmap options to the {bidsmap_template.stem} template")
                 template['Options'][plugin.stem] = module.OPTIONS
             if 'BIDSMAP' in dir(module):
                 for key, value in module.BIDSMAP.items():
-                    LOGGER.info(f"Adding default {key} bidsmappings to {bidsmap_template.name}")
+                    LOGGER.info(f"Adding default {key} bidsmappings to the {bidsmap_template.stem} template")
                     template[key] = value
             with open(bidsmap_template, 'w') as stream:
                 yaml.dump(template, stream)
@@ -303,35 +303,36 @@ def uninstall_plugins(plugins: Tuple[str]=(), wipe: bool=True) -> Union[bool, No
     success = True
     for plugin in plugins:
 
-        if not Path(plugin).is_file():
-            LOGGER.error(f"Plugin {Path(plugin).name} not found''")
+        plugin = (bidscoinfolder/'plugins'/plugin).with_suffix('.py')
+        if not plugin.is_file():
+            LOGGER.error(f"Plugin {plugin.stem} not found''")
             success = False
             continue
 
         module = import_plugin(plugin, ('bidsmapper_plugin', 'bidscoiner_plugin'))
         if not module:
-            LOGGER.error(f"Import failure of '{plugin.name}'")
+            LOGGER.error(f"Import failure of '{plugin.stem}'")
             success = False
             continue
 
         # Remove the Options and data format section from the default template bidsmap
         if 'OPTIONS' in dir(module) or 'BIDSMAP' in dir(module):
             if 'OPTIONS' in dir(module):
-                LOGGER.info(f"Removing default {plugin.name} bidsmap options from {bidsmap_template.name}")
+                LOGGER.info(f"Removing default {plugin.stem} bidsmap options from the {bidsmap_template.stem} template")
                 template['Options'].pop(plugin.stem, None)
             if wipe and 'BIDSMAP' in dir(module):
                 for key, value in module.BIDSMAP.items():
-                    LOGGER.info(f"Removing default {key} bidsmappings from {bidsmap_template.name}")
+                    LOGGER.info(f"Removing default {key} bidsmappings from the {bidsmap_template.stem} template")
                     template.pop(key, None)
             with open(bidsmap_template, 'w') as stream:
                 yaml.dump(template, stream)
 
         # Remove the plugin from the plugins folder
         try:
-            LOGGER.info(f"Uninstalling: '{plugin}'")
-            (bidscoinfolder/'plugins'/plugin).with_suffix('.py').unlink()
-        except IOError as uninstall_failure:
-            LOGGER.info(f"Failed to uninstall: '{plugin}' in '{bidscoinfolder/'plugins'}', Exciting\n{uninstall_failure}")
+            LOGGER.info(f"Uninstalling: '{plugin.stem}'")
+            plugin.unlink()
+        except IOError as uninstall_error:
+            LOGGER.info(f"Failed to uninstall: '{plugin}'\n{uninstall_error}")
             success = False
 
     return success
