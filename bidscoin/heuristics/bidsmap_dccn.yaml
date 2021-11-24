@@ -44,8 +44,8 @@ DICOM:
 # --------------------------------------------------------------------------------
 # DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
-  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   anat:       # ----------------------- All anatomical runs --------------------
   - provenance:                   # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
@@ -1055,8 +1055,8 @@ PAR:
 # --------------------------------------------------------------------------------
 # PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
-  session: <<filepath:/ses-(.*?)/>>     # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+  subject: <<filepath:/sub-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   anat:       # ----------------------- All anatomical runs --------------------
   - provenance:                         # The fullpath name of the PAR file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
@@ -1775,8 +1775,8 @@ SPAR:
 # ---------------------------------------------------------------------------------
 # SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
 # ---------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
-  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   mrs:        # ---------------------- All spectroscopy runs ------------------
   - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
@@ -1827,8 +1827,8 @@ Twix:
 # ---------------------------------------------------------------------------------
 # SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
 # ---------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
-  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   mrs:        # ---------------------- All spectroscopy runs ------------------
   - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
@@ -1891,8 +1891,8 @@ Pfile:
 # ------------------------------------------------------------------------------
 # P-file key-value heuristics (GE MRS fields that are mapped to the BIDS labels)
 # ------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
-  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   mrs:        # ---------------------- All spectroscopy runs ------------------
   - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
@@ -1962,8 +1962,8 @@ Physio:
 # --------------------------------------------------------------------------------
 # Physio key-value heuristics (phys2bids -info data) that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. A DICOM attribute can also be used as subject-label instead, e.g. <PatientID>
-  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the session label from the source directory. A DICOM attribute can also be used as session-label instead, e.g. <StudyID>
+  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   func:        # ----------------------- All functional runs --------------------
   - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
