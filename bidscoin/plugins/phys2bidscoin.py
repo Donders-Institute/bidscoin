@@ -27,6 +27,7 @@ import json
 import tempfile
 import pandas as pd
 from pathlib import Path
+from functools import lru_cache
 
 LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +68,18 @@ def is_sourcefile(file: Path) -> str:
     return ''
 
 
+@lru_cache(maxsize=4096)
+def phys2bids_cache(sourcefile: Path):
+    """
+    A chached version of phys2bids that reads the info structure
+
+    :param sourcefile:  The sourcefile from which the info needs to be read
+    :return:            The retrieved phys2bids info structure
+    """
+
+    return phys2bids(str(sourcefile), info=True)
+
+
 def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> str:
     """
     This plugin function reads attributes from the supported sourcefile
@@ -87,7 +100,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
         LOGGER.error(f"Could not find {sourcefile}")
         return ''
 
-    phys_info = phys2bids(str(sourcefile), info=True)
+    phys_info = phys2bids_cache(sourcefile)
 
     return phys_info.get(attribute, '')
 
