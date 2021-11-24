@@ -27,14 +27,14 @@ BIDScoin functionality
 -  [x] PAR / REC source data (Philips)
 -  [x] Physiological logging data\*
 -  [x] MR Spectroscopy data\*\*
+-  [x] PET data\*
 -  [x] Fieldmaps\*
 -  [x] Multi-echo data\*
 -  [x] Multi-coil data\*
--  [x] PET data\*
 -  [ ] Stimulus / behavioural logfiles
--  [x] Plug-ins
--  [x] Defacing
 -  [x] Multi-echo combination
+-  [x] Defacing
+-  [x] Plug-ins
 
    ``*  = Only DICOM source data / tested for Siemens``
 

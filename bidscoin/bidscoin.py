@@ -272,7 +272,7 @@ def install_plugins(plugins: Tuple[Path]=()) -> Union[bool, None]:
         if 'OPTIONS' in dir(module) or 'BIDSMAP' in dir(module):
             if 'OPTIONS' in dir(module):
                 LOGGER.info(f"Adding default {plugin.name} bidsmap options to the {bidsmap_template.stem} template")
-                template['Options'][plugin.stem] = module.OPTIONS
+                template['Options']['plugins'][plugin.stem] = module.OPTIONS
             if 'BIDSMAP' in dir(module):
                 for key, value in module.BIDSMAP.items():
                     LOGGER.info(f"Adding default {key} bidsmappings to the {bidsmap_template.stem} template")
@@ -319,7 +319,7 @@ def uninstall_plugins(plugins: Tuple[str]=(), wipe: bool=True) -> Union[bool, No
         if 'OPTIONS' in dir(module) or 'BIDSMAP' in dir(module):
             if 'OPTIONS' in dir(module):
                 LOGGER.info(f"Removing default {plugin.stem} bidsmap options from the {bidsmap_template.stem} template")
-                template['Options'].pop(plugin.stem, None)
+                template['Options']['plugins'].pop(plugin.stem, None)
             if wipe and 'BIDSMAP' in dir(module):
                 for key, value in module.BIDSMAP.items():
                     LOGGER.info(f"Removing default {key} bidsmappings from the {bidsmap_template.stem} template")
