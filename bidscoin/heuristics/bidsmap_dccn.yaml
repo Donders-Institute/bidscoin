@@ -2008,7 +2008,12 @@ Physio:
   exclude:    # ----------------------- Data that will be left out -------------
   - provenance:
     attributes:
-      <<: *attributes_physio
+      ch_num:
+      filetype:
+      freq:
+      ch_name:
+      units:
+      trigger_idx:
     bids:
       <<: *bids_physio
     meta:
