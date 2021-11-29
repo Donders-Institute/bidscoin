@@ -220,7 +220,7 @@ class DataSource:
             for val in [val.split('>') for val in value.split('<')]:    # value = '123<abc>456' -> for val in [['123'], ['abc', '456']]
                 if len(val) == 2:           # The first element is the dynamic part in val
                     sourcevalue += str(self.properties(val[0])) + str(self.attributes(val[0]))
-                sourcevalue += val[-1]      # The last element is always the non-dymanic part in val
+                sourcevalue += val[-1]      # The last element is always the non-dynamic part in val
             value = sourcevalue
             if cleanup:
                 value = cleanup_value(value)

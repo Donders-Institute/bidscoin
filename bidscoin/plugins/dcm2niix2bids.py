@@ -13,9 +13,10 @@ import logging
 import dateutil.parser
 import pandas as pd
 import json
+import ast
+import shutil
 from typing import Union
 from pathlib import Path
-import shutil
 try:
     from bidscoin import bidscoin, bids, physio
 except ImportError:
@@ -386,6 +387,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
             for metakey, metaval in run['meta'].items():
                 if metakey != 'IntendedFor':
                     metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
+                    try:
+                        metaval = ast.literal_eval(metaval)
+                    except ValueError:
+                        pass
                     LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
                 jsondata[metakey] = metaval
 

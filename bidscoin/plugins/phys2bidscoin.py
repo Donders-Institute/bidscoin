@@ -26,7 +26,9 @@ import shutil
 import json
 import tempfile
 import pandas as pd
+import ast
 from pathlib import Path
+from functools import lru_cache
 
 LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +69,18 @@ def is_sourcefile(file: Path) -> str:
     return ''
 
 
+@lru_cache(maxsize=4096)
+def phys2bids_cache(sourcefile: Path):
+    """
+    A chached version of phys2bids that reads the info structure
+
+    :param sourcefile:  The sourcefile from which the info needs to be read
+    :return:            The retrieved phys2bids info structure
+    """
+
+    return phys2bids(str(sourcefile), info=True)
+
+
 def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> str:
     """
     This plugin function reads attributes from the supported sourcefile
@@ -87,7 +101,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
         LOGGER.error(f"Could not find {sourcefile}")
         return ''
 
-    phys_info = phys2bids(str(sourcefile), info=True)
+    phys_info = phys2bids_cache(sourcefile)
 
     return phys_info.get(attribute, '')
 
@@ -235,8 +249,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
 
         # Run phys2bids
         physiofiles = phys2bids(filename                = str(sourcefile),
-                                outdir                  = bidsfolder,
-                                heur_file               = heur_file,
+                                outdir                  = str(bidsfolder),
+                                heur_file               = str(heur_file),
                                 sub                     = subid,
                                 ses                     = sesid,
                                 chtrig                  = int(run['meta'].get('TriggerChannel', 0)),
@@ -258,6 +272,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
                 jsondata = json.load(json_fid)
             for metakey, metaval in run['meta'].items():
                 metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
+                try:
+                    metaval = ast.literal_eval(metaval)
+                except ValueError:
+                    pass
                 LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
                 jsondata[metakey] = metaval
             with jsonfile.open('w') as json_fid:
