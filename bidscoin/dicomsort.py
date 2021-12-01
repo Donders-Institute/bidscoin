@@ -7,6 +7,7 @@ as on the scanner console)
 
 import re
 import logging
+from os.path import splitext
 from pathlib import Path
 import pydicom
 import uuid
@@ -16,7 +17,6 @@ except ImportError:
     import bidscoin, bids         # This should work if bidscoin was not pip-installed
 
 LOGGER = logging.getLogger(__name__)
-
 
 def cleanup(name: str) -> str:
     """
@@ -34,7 +34,7 @@ def cleanup(name: str) -> str:
     return name
 
 
-def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: bool, ext: str, nosort: bool, dryrun: bool) -> None:
+def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: bool, rename_scheme: str, ext: str, nosort: bool, dryrun: bool) -> None:
     """
     Sorts dicomfiles into (3-digit) SeriesNumber-SeriesDescription subfolders (e.g. '003-T1MPRAGE')
 
@@ -42,6 +42,7 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
     :param dicomfiles:      The list of dicomfiles to be sorted and/or renamed
     :param dicomfield:      The dicomfield that is used to construct the series folder name (e.g. SeriesDescription or ProtocolName, which are both used as fallback)
     :param rename:          Boolean to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme
+    :param rename_scheme:   The naming scheme for renaming. Follows the Python string formatting syntax with DICOM field names in curly bracers with {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d} as default.
     :param ext:             The file extension after sorting (empty value keeps original file extension)
     :param nosort:          Boolean to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)
     :param dryrun:          Boolean to just display the action
@@ -70,27 +71,40 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
                     seriesdescr = 'unknown_protocol'
                     LOGGER.warning(f"No {dicomfield}, SeriesDecription or ProtocolName found for: {dicomfile}")
         if rename:
-            acquisitionnr = bids.get_dicomfield('AcquisitionNumber', dicomfile)
-            instancenr    = bids.get_dicomfield('InstanceNumber', dicomfile)
-            if not instancenr:
-                instancenr = bids.get_dicomfield('ImageNumber', dicomfile)          # This Attribute was named Image Number in earlier versions of this Standard
-            patientname    = bids.get_dicomfield('PatientName', dicomfile)
-            if not patientname:
-                patientname = bids.get_dicomfield('PatientsName', dicomfile)        # This Attribute was/is sometimes called PatientsName?
+            # Parse the naming scheme string and test if all attributes are present
+            if re.fullmatch('(({[a-zA-Z]+(:\\d+d)?})|([a-zA-Z0-9_.]+))*', rename_scheme) is None :
+                LOGGER.error('Bad naming scheme. Only alphanumeric characters could be used for the field names (with the optional number of digits afterwards, '
+                             'e.g., \'{InstanceNumber:05d}\'), and only alphanumeric characters, dots, and underscores could be used as separators. ')
+                rename = False
+            else:
+                fields = re.findall('(?<={)([a-zA-Z]+)(?::\\d+d)?(?=})', rename_scheme)
+                field_alternatives = {'InstanceNumber': 'ImageNumber', # alternative field names based on the earlier versions of the Standard or other reasons
+                                      'PatientName': 'PatientsName'}
+                bids_fields = {}
+                for field in fields:
+                    value = bids.get_dicomfield(field, dicomfile)
+                    if not value:
+                        if field in field_alternatives.keys() and bids.get_dicomfield(field_alternatives[field], dicomfile):
+                            rename_scheme.replace('{'+field+'}','{'+field_alternatives[field]+'}')
+                            bids_fields[field_alternatives[field]] = value
 
+                            LOGGER.info('{0} field is absent from the DICOM header, but {1} is present, using {1}'.format(field, field_alternatives[field]))
+                            continue
+
+                        LOGGER.warning(f"Missing '{field}' DICOM field specified in the naming scheme, cannot safely rename {dicomfile}\n")
+                        rename = False
+                    else:
+                        bids_fields[field] = value
+        if not ext:
+            ext = splitext(dicomfile)[1]
         # Move and/or rename the dicomfile in(to) the (series sub)folder
-        if rename and not (patientname and seriesnr and seriesdescr and acquisitionnr and instancenr):
-            LOGGER.warning(f"Missing one or more essential DICOM-fields, cannot safely rename {dicomfile}\n"
-                           f"patientname = {patientname}\n"
-                           f"seriesnumber = {seriesnr}\n"
-                           f"{dicomfield} = {seriesdescr}\n"
-                           f"acquisitionnr = {acquisitionnr}\n"
-                           f"instancenr = {instancenr}")
-            filename = dicomfile.name
-        elif rename:
-            filename = cleanup(f"{patientname}_{seriesnr:03d}_{seriesdescr}_{acquisitionnr:05d}_{instancenr:05d}{ext}")
+        if rename:
+            new_name = rename_scheme.format(**bids_fields)+ext
+            LOGGER.debug('Renaming %s into %s' % (dicomfile.name, new_name))
+            filename = cleanup(new_name)
         else:
             filename = dicomfile.name
+
         if nosort:
             pathname = sessionfolder
         else:
@@ -115,19 +129,22 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
           dicomfile.replace(newfilename)
 
 
-def sortsessions(session: Path, subprefix: str='', sesprefix: str='', dicomfield: str='SeriesDescription', rename: bool=False, ext: str='', nosort: bool=False, pattern: str='.*\.(IMA|dcm)$', dryrun: bool=False) -> None:
+def sortsessions(session: Path, subprefix: str='', sesprefix: str='', dicomfield: str='SeriesDescription', rename: bool=False,
+                 rename_scheme: str="{PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}",
+                 ext: str='', nosort: bool=False, pattern: str='.*\.(IMA|dcm)$', dryrun: bool=False) -> None:
     """
 
-    :param session:     The root folder containing the source [sub/][ses/]dicomfiles or the DICOMDIR file
-    :param subprefix:   The prefix for searching the sub folders in session
-    :param sesprefix:   The prefix for searching the ses folders in sub folder
-    :param dicomfield:  The dicomfield that is used to construct the series folder name (e.g. SeriesDescription or ProtocolName, which are both used as fallback)
-    :param rename:      Boolean to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme
-    :param ext:         The file extension after sorting (empty value keeps original file extension)
-    :param nosort:      Boolean to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)
-    :param pattern:     The regular expression pattern used in re.match() to select the dicom files
-    :param dryrun:      Boolean to just display the action
-    :return:            Nothing
+    :param session:         The root folder containing the source [sub/][ses/]dicomfiles or the DICOMDIR file
+    :param subprefix:       The prefix for searching the sub folders in session
+    :param sesprefix:       The prefix for searching the ses folders in sub folder
+    :param dicomfield:      The dicomfield that is used to construct the series folder name (e.g. SeriesDescription or ProtocolName, which are both used as fallback)
+    :param rename:          Boolean to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme
+    :param rename_scheme:   The naming scheme for renaming. Follows the Python string formatting syntax with DICOM field names in curly bracers with {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d} as default.
+    :param ext:             The file extension after sorting (empty value keeps original file extension)
+    :param nosort:          Boolean to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)
+    :param pattern:         The regular expression pattern used in re.match() to select the dicom files
+    :param dryrun:          Boolean to just display the action
+    :return:                Nothing
     """
 
     # Input checking
@@ -143,7 +160,7 @@ def sortsessions(session: Path, subprefix: str='', sesprefix: str='', dicomfield
                 sessionfolders = [subfolder]
 
             for sessionfolder in sessionfolders:
-                sortsessions(session=sessionfolder, dicomfield=dicomfield, rename=rename, ext=ext, nosort=nosort, pattern=pattern, dryrun=dryrun)
+                sortsessions(session=sessionfolder, dicomfield=dicomfield, rename=rename, rename_scheme=rename_scheme, ext=ext, nosort=nosort, pattern=pattern, dryrun=dryrun)
 
     # Use the DICOMDIR file if it is there
     if (session/'DICOMDIR').is_file():
@@ -161,12 +178,12 @@ def sortsessions(session: Path, subprefix: str='', sesprefix: str='', dicomfield
                     LOGGER.warning(f"The session index-number '{n:02}' is not necessarily meaningful: {sessionfolder}")
 
                 dicomfiles = [session.joinpath(*image.ReferencedFileID) for series in study.children for image in series.children]
-                sortsession(sessionfolder, dicomfiles, dicomfield, rename, ext, nosort, dryrun)
+                sortsession(sessionfolder = sessionfolder, dicomfiles = dicomfiles, dicomfield =  dicomfield, rename = rename, rename_scheme = rename_scheme, ext = ext, nosort = nosort, dryrun = dryrun)
 
     else:
 
         dicomfiles = [dcmfile for dcmfile in session.iterdir() if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
-        sortsession(session, dicomfiles, dicomfield, rename, ext, nosort, dryrun)
+        sortsession(sessionfolder = session, dicomfiles = dicomfiles, dicomfield =  dicomfield, rename = rename, rename_scheme = rename_scheme, ext = ext, nosort = nosort, dryrun = dryrun)
 
 
 def main():
@@ -189,7 +206,8 @@ def main():
     parser.add_argument('-i','--subprefix', help='Provide a prefix string for recursive searching in dicomsource/subject subfolders (e.g. "sub")')
     parser.add_argument('-j','--sesprefix', help='Provide a prefix string for recursive searching in dicomsource/subject/session subfolders (e.g. "ses")')
     parser.add_argument('-f','--fieldname', help='The dicomfield that is used to construct the series folder name ("SeriesDescription" and "ProtocolName" are both used as fallback)', default='SeriesDescription')
-    parser.add_argument('-r','--rename',    help='Flag to rename the DICOM files to a PatientName_SeriesNumber_SeriesDescription_AcquisitionNumber_InstanceNumber scheme (recommended for DICOMDIR data)', action='store_true')
+    parser.add_argument('-r','--rename',    help='Flag to rename the DICOM files (recommended for DICOMDIR data)', action='store_true')
+    parser.add_argument('-s','--scheme',    help='The naming scheme for renaming. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields. Use "{InstanceNumber:05d}_{SOPInstanceUID}" for the default names at DCCN.', default = '{PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}')
     parser.add_argument('-e','--ext',       help='The file extension after sorting (empty value keeps the original file extension), e.g. ".dcm"', default='')
     parser.add_argument('-n','--nosort',    help='Flag to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)', action='store_true')
     parser.add_argument('-p','--pattern',   help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')
@@ -204,6 +222,7 @@ def main():
                  sesprefix  = args.sesprefix,
                  dicomfield = args.fieldname,
                  rename     = args.rename,
+                 rename_scheme = args.scheme,
                  ext        = args.ext,
                  nosort     = args.nosort,
                  pattern    = args.pattern,
