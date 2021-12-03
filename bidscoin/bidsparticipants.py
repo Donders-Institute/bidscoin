@@ -44,7 +44,7 @@ def scanpersonals(bidsmap: dict, session: Path, personals: dict) -> bool:
         personals['sex']    = datasource.attributes('PatientSex')
         personals['size']   = datasource.attributes('PatientSize')
         personals['weight'] = datasource.attributes('PatientWeight')
-        age = str(datasource.attributes('PatientAge'))              # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
+        age = datasource.attributes('PatientAge')                   # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
     elif dataformat=='Pfile':
         sex = datasource.attributes('rhe_patsex')
         if sex=='0':   personals['sex'] = 'O'

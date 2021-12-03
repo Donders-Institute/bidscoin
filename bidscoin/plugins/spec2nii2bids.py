@@ -16,6 +16,7 @@ import shutil
 import json
 import pandas as pd
 import dateutil.parser
+import ast
 from pathlib import Path
 try:
     from bidscoin import bidscoin, bids
@@ -268,6 +269,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
         # Add all the meta data to the json-file
         for metakey, metaval in run['meta'].items():
             metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
+            try:
+                metaval = ast.literal_eval(metaval)
+            except ValueError:
+                pass
             LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
             jsondata[metakey] = metaval
 
@@ -312,7 +317,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
         personals['sex']    = datasource.attributes('PatientSex')
         personals['size']   = datasource.attributes('PatientSize')
         personals['weight'] = datasource.attributes('PatientWeight')
-        age = str(datasource.attributes('PatientAge'))              # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
+        age = datasource.attributes('PatientAge')                   # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
     elif dataformat == 'Pfile':
         sex = datasource.attributes('rhe_patsex')
         if   sex == '0': personals['sex'] = 'O'

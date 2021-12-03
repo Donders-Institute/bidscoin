@@ -12,7 +12,6 @@ import logging
 import tempfile
 import tarfile
 import zipfile
-import ast
 from functools import lru_cache
 from pydicom import dcmread, fileset, datadict
 from nibabel.parrec import parse_PAR_header
@@ -126,12 +125,14 @@ class DataSource:
 
         return ''
 
-    def attributes(self, attributekey: str) -> str:
+    def attributes(self, attributekey: str, validregexp: bool=False) -> str:
         """
         Use the plugins to read and return the attribute value from the datasource
 
         :param attributekey: The attribute key for which a value is read from the datasource. A colon-separated regular expression can be appended to the attribute key (same as for the `filepath` and `filename` properties)
-        :return:             The attribute value or None if the attribute could not be read from the datasource
+        :param validregexp:  If True, the regexp meta-characters in the attribute value (e.g. '*') are replaced by '.',
+                             e.g. to prevent compile errors in match_attribute()
+        :return:             The attribute value or '' if the attribute could not be read from the datasource
         """
 
         if ':' in attributekey:
@@ -142,16 +143,23 @@ class DataSource:
             module = bidscoin.import_plugin(plugin, ('get_attribute',))
             if module:
                 attributeval = module.get_attribute(self.dataformat, self.path, attributekey, options)
+                if attributeval is None:
+                    attributeval = ''
+                attributeval = str(attributeval)
                 if attributeval:
+                    if validregexp:
+                        try:            # Strip meta-characters to prevent match_attribute() errors
+                            re.compile(attributeval)
+                        except re.error:
+                            for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
+                                attributeval = attributeval.strip().replace(metacharacter, '.')
                     if pattern:
                         match = re.findall(pattern, attributeval)
                         if len(match)>1:
                             LOGGER.warning(f"Multiple matches {match} found when extracting {pattern} from {attributeval}, using: {match[0]}")
                         attributeval = match[0]     # The first match is most likely the most informative (?)
 
-                    if attributeval:
-                        return attributeval
-
+                    return attributeval
         return ''
 
     def subid_sesid(self, subid=None, sesid=None) -> Tuple[str, str]:
@@ -174,8 +182,8 @@ class DataSource:
         if not subid_:
             LOGGER.error(f"Could not parse sub/ses-id information from {self.path} using: {subid}'")
             return '', ''
-        subid = str(subid_)
-        sesid = str(self.dynamicvalue(sesid, runtime=True))
+        subid = subid_
+        sesid = self.dynamicvalue(sesid, runtime=True)
 
         # Add sub- and ses- prefixes if they are not there
         subid = 'sub-' + cleanup_value(re.sub(f'^{self.subprefix}', '', subid))
@@ -213,10 +221,7 @@ class DataSource:
                 if len(val) == 2:           # The first element is the dynamic part in val
                     sourcevalue += str(self.properties(val[0])) + str(self.attributes(val[0]))
                 sourcevalue += val[-1]      # The last element is always the non-dynamic part in val
-            try:
-                value = ast.literal_eval(sourcevalue)
-            except (ValueError, SyntaxError):
-                value = sourcevalue
+            value = sourcevalue
             if cleanup:
                 value = cleanup_value(value)
 
@@ -770,9 +775,9 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
 
     # Issue a warning if the version in the bidsmap YAML-file is not the same as the bidscoin version
     if 'bidscoin' in bidsmap['Options'] and 'version' in bidsmap['Options']['bidscoin']:
-        bidsmapversion = str(bidsmap['Options']['bidscoin']['version'])
+        bidsmapversion = bidsmap['Options']['bidscoin']['version']
     elif 'version' in bidsmap['Options']:                       # Handle legacy bidsmaps
-        bidsmapversion = str(bidsmap['Options']['version'])
+        bidsmapversion = bidsmap['Options']['version']
     else:
         bidsmapversion = 'Unknown'
     if bidsmapversion.rsplit('.', 1)[0] != bidscoin.version().rsplit('.', 1)[0] and report:
@@ -1021,7 +1026,7 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
 
             for attrkey, attrvalue in run['attributes'].items():
                 if datasource.path.name:
-                    run_['attributes'][attrkey] = datasource.attributes(attrkey)
+                    run_['attributes'][attrkey] = datasource.attributes(attrkey, validregexp=True)
                 else:
                     run_['attributes'][attrkey] = attrvalue
 
@@ -1179,8 +1184,9 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, run: dict, clean: bool=T
 
 def match_attribute(attribute, pattern) -> bool:
     """
-    Match the value items with the attribute string using regexp. If both attribute and values
-    are a list then they are directly compared as is, else they are converted to a string
+    Match the value items with the attribute string using regexp. If both attribute
+    and values are a list then they are directly compared as is, else they are converted
+    to a string
 
     Examples:
         match_attribute('my_pulse_sequence_name', 'filename')   -> False
@@ -1196,7 +1202,7 @@ def match_attribute(attribute, pattern) -> bool:
     """
 
     # Consider it a match if both attribute and value are identical or empty / None
-    if str(attribute) == str(pattern) or (not attribute and not pattern):
+    if attribute==pattern or (not attribute and not pattern):
         return True
 
     if not pattern:
@@ -1207,13 +1213,6 @@ def match_attribute(attribute, pattern) -> bool:
         attribute = ''
     attribute = str(attribute).strip()
     pattern   = str(pattern).strip()
-
-    # Replace certain regexp meta-characters in the attribute value (e.g. '*' in DICOM-fields) by '.' to prevent compile errors
-    try:
-        re.compile(attribute)
-    except re.error:
-        for metacharacter in ('^', '*', '+', '[', ']'):   # Special regexp characters: ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')')
-            attribute = attribute.strip().replace(metacharacter, '.')
 
     # See if the pattern matches the source attribute
     try:
@@ -1379,7 +1378,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
             # Try to see if the sourcefile matches all of the filesystem properties
             for filekey, filevalue in run['properties'].items():
 
-                # Check if the property value matches with the info from the sourcefile
+                # Check if the attribute value matches with the info from the sourcefile
                 if filevalue:
                     sourcevalue = datasource.properties(filekey)
                     match       = match and match_attribute(sourcevalue, filevalue)
@@ -1391,7 +1390,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
             for attrkey, attrvalue in run['attributes'].items():
 
                 # Check if the attribute value matches with the info from the sourcefile
-                sourcevalue = datasource.attributes(attrkey)
+                sourcevalue = datasource.attributes(attrkey, validregexp=True)
                 if attrvalue:
                     match = match and match_attribute(sourcevalue, attrvalue)
 
