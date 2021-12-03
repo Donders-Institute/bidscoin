@@ -12,6 +12,7 @@ import logging
 import tempfile
 import tarfile
 import zipfile
+import ast
 from functools import lru_cache
 from pydicom import dcmread, fileset, datadict
 from nibabel.parrec import parse_PAR_header
@@ -212,7 +213,10 @@ class DataSource:
                 if len(val) == 2:           # The first element is the dynamic part in val
                     sourcevalue += str(self.properties(val[0])) + str(self.attributes(val[0]))
                 sourcevalue += val[-1]      # The last element is always the non-dynamic part in val
-            value = sourcevalue
+            try:
+                value = ast.literal_eval(sourcevalue)
+            except (ValueError, SyntaxError):
+                value = sourcevalue
             if cleanup:
                 value = cleanup_value(value)
 
