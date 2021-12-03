@@ -7,7 +7,6 @@ as on the scanner console)
 
 import re
 import logging
-from os.path import splitext
 from pathlib import Path
 import pydicom
 import uuid
@@ -96,7 +95,7 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
                     else:
                         dicom_fields[field] = value
         if not ext:
-            ext = splitext(dicomfile)[1]
+            ext = Path(dicomfile).suffix()
         # Move and/or rename the dicomfile in(to) the (series sub)folder
         if rename:
             new_name = rename_scheme.format(**dicom_fields)+ext
