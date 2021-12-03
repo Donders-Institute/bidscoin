@@ -150,6 +150,8 @@ class DataSource:
 
                     return attributeval
 
+        return ''
+
     def subid_sesid(self, subid=None, sesid=None) -> Tuple[str, str]:
         """
         Extract the cleaned-up subid and sesid from the datasource properties or attributes
