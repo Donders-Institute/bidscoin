@@ -272,6 +272,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
             try: metaval = ast.literal_eval(str(metaval))
             except (ValueError, SyntaxError): pass
             LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
+            if not metaval:
+                metaval = None
             jsondata[metakey] = metaval
 
         # Save the meta data to disk
