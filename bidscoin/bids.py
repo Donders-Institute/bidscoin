@@ -761,9 +761,9 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
 
     # Issue a warning if the version in the bidsmap YAML-file is not the same as the bidscoin version
     if 'bidscoin' in bidsmap['Options'] and 'version' in bidsmap['Options']['bidscoin']:
-        bidsmapversion = bidsmap['Options']['bidscoin']['version']
+        bidsmapversion = str(bidsmap['Options']['bidscoin']['version'])
     elif 'version' in bidsmap['Options']:                       # Handle legacy bidsmaps
-        bidsmapversion = bidsmap['Options']['version']
+        bidsmapversion = str(bidsmap['Options']['version'])
     else:
         bidsmapversion = 'Unknown'
     if bidsmapversion.rsplit('.', 1)[0] != bidscoin.version().rsplit('.', 1)[0] and report:
