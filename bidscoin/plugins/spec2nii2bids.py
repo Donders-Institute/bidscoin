@@ -270,7 +270,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
         for metakey, metaval in run['meta'].items():
             metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
             try: metaval = ast.literal_eval(str(metaval))
-            except ValueError: pass
+            except (ValueError, SyntaxError): pass
             LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
             jsondata[metakey] = metaval
 
