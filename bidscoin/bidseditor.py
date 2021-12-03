@@ -628,20 +628,13 @@ class MainWindow(QMainWindow):
                 keyitem = table.item(rownr, 0)
                 valitem = table.item(rownr, 1)
                 key = val = ''
-                if keyitem: key = keyitem.text()
-                if valitem: val = valitem.text()
+                if keyitem: key = keyitem.text().strip()
+                if valitem: val = valitem.text().strip()
                 if key:
-                    try:
-                        if isinstance(oldoptions.get(key), float):
-                            val = type(oldoptions.get(key))(val)
-                        if isinstance(oldoptions.get(key), list):
-                            val = ast.literal_eval(val)                 # Converting string to list
-                    except (ValueError, SyntaxError):
-                        LOGGER.info(f"Failed to interpret '{val}'")
-                        val = oldoptions.get(key)
-                        valitem.setText(val)
+                    try: val = ast.literal_eval(val)            # Converting string to list
+                    except (ValueError, SyntaxError): pass
                     newoptions[key] = val
-                    if str(val) != str(oldoptions.get(key)):
+                    if val != oldoptions.get(key):
                         LOGGER.info(f"User has set the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
                         self.datachanged = True
             if plugin == 'bidscoin':
@@ -650,7 +643,7 @@ class MainWindow(QMainWindow):
                 self.output_bidsmap['Options']['plugins'][plugin] = newoptions
 
             # Add an extra row if the table if full
-            if rowindex + 1 == table.rowCount() and table.currentItem() and table.currentItem().text():
+            if rowindex + 1 == table.rowCount() and table.currentItem() and table.currentItem().text().strip():
                 table.blockSignals(True)
                 table.insertRow(table.rowCount())
                 table.setItem(table.rowCount() - 1, 2, MyWidgetItem('', iseditable=False))
@@ -1142,8 +1135,8 @@ class EditWindow(QDialog):
 
         # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
         if colindex == 1:
-            key      = self.properties_table.item(rowindex, 0).text()
-            value    = self.properties_table.item(rowindex, 1).text()
+            key      = self.properties_table.item(rowindex, 0).text().strip()
+            value    = self.properties_table.item(rowindex, 1).text().strip()
             oldvalue = self.target_run['properties'].get(key)
             if oldvalue is None:
                 oldvalue = ''
@@ -1166,7 +1159,7 @@ class EditWindow(QDialog):
 
         # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
         if colindex == 1:
-            key      = self.attributes_table.item(rowindex, 0).text()
+            key      = self.attributes_table.item(rowindex, 0).text().strip()
             value    = self.attributes_table.item(rowindex, 1).text()
             oldvalue = self.target_run['attributes'].get(key)
             if oldvalue is None:
@@ -1247,10 +1240,8 @@ class EditWindow(QDialog):
             key_   = self.meta_table.item(n, 0).text().strip()
             value_ = self.meta_table.item(n, 1).text().strip()
             if key_:
-                try: value_ = int(value_)
-                except ValueError:
-                    try: value_ = float(value_)
-                    except ValueError: pass
+                try: value_ = ast.literal_eval(value_)      # Converting string to list
+                except (ValueError, SyntaxError): pass
                 self.target_run['meta'][key_] = value_
             elif value_:
                 QMessageBox.warning(self, 'Input error', f"Please enter a key-name (left cell) for the '{value_}' value in row {n+1}")
