@@ -74,7 +74,7 @@ class DataSource:
         LOGGER.debug(f"No plugins to read {self.path}")
         return False
 
-    def properties(self, tagname: str, run: dict=None) -> Union[str, int, None]:
+    def properties(self, tagname: str, run: dict=None) -> Union[str, int]:
         """
         Gets the 'filepath[:regexp]', 'filename[:regexp]', 'filesize' or 'nrfiles' filesystem property. The filepath (with trailing "/")
         and filename can be parsed using an optional regular expression re.findall(regexp, filepath / filename). The last match is returned
@@ -122,6 +122,8 @@ class DataSource:
                 return len([file for file in self.path.parent.glob('*') if match(file)])
             else:
                 return len(list(self.path.parent.glob('*')))
+
+        return ''
 
     def attributes(self, attributekey: str) -> str:
         """
