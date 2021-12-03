@@ -174,8 +174,8 @@ class DataSource:
         if not subid_:
             LOGGER.error(f"Could not parse sub/ses-id information from {self.path} using: {subid}'")
             return '', ''
-        subid = subid_
-        sesid = self.dynamicvalue(sesid, runtime=True)
+        subid = str(subid_)
+        sesid = str(self.dynamicvalue(sesid, runtime=True))
 
         # Add sub- and ses- prefixes if they are not there
         subid = 'sub-' + cleanup_value(re.sub(f'^{self.subprefix}', '', subid))
