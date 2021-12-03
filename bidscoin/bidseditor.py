@@ -633,7 +633,7 @@ class MainWindow(QMainWindow):
                     if not val:
                         val = None
                     try: val = ast.literal_eval(str(val))       # Converting string to e.g. an int or a list
-                    except ValueError: pass
+                    except (ValueError, SyntaxError): pass
                     newoptions[key] = val
                     if val != oldoptions.get(key):
                         LOGGER.info(f"User has set the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
@@ -1142,7 +1142,7 @@ class EditWindow(QDialog):
             if not value:
                 value = None
             try: value = ast.literal_eval(str(value))
-            except ValueError: pass
+            except (ValueError, SyntaxError): pass
 
             # Only if cell was changed, update
             if key and value != oldvalue:
@@ -1168,7 +1168,7 @@ class EditWindow(QDialog):
             if not value:
                 value = None
             try: value = ast.literal_eval(str(value))
-            except ValueError: pass
+            except (ValueError, SyntaxError): pass
 
             # Only if cell was changed, update
             if key and value != oldvalue:
@@ -1227,15 +1227,11 @@ class EditWindow(QDialog):
         key      = self.meta_table.item(rowindex, 0).text().strip()
         value    = self.meta_table.item(rowindex, 1).text().strip()
         oldvalue = self.target_run['meta'].get(key)
-        if not value:
-            value = None
-        try: value = ast.literal_eval(str(value))
-        except ValueError: pass
 
         # Only if cell was changed, update
-        if value != oldvalue:
+        if value and str(value) != str(oldvalue):
             # Replace the (dynamic) value
-            if isinstance(value, str) and ('<<' not in value or '>>' not in value):
+            if '<<' not in value or '>>' not in value:
                 value = self.datasource.dynamicvalue(value, cleanup=False)
                 self.meta_table.blockSignals(True)
                 self.meta_table.item(rowindex, 1).setText(value)
@@ -1248,10 +1244,10 @@ class EditWindow(QDialog):
             key_   = self.meta_table.item(n, 0).text().strip()
             value_ = self.meta_table.item(n, 1).text().strip()
             if key_:
-                try: value_ = int(value_)
-                except ValueError:
-                    try: value_ = float(value_)
-                    except ValueError: pass
+                if not value_:
+                    value_ = None
+                try: value_ = ast.literal_eval(str(value_))
+                except (ValueError, SyntaxError): pass
                 self.target_run['meta'][key_] = value_
             elif value_:
                 QMessageBox.warning(self, 'Input error', f"Please enter a key-name (left cell) for the '{value_}' value in row {n+1}")
