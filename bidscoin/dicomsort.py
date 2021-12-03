@@ -72,7 +72,7 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
                     LOGGER.warning(f"No {dicomfield}, SeriesDecription or ProtocolName found for: {dicomfile}")
         if rename:
             # Parse the naming scheme string and test if all attributes are present
-            if re.fullmatch('(({[a-zA-Z]+(:\\d+d)?})|([a-zA-Z0-9_.]+))*', rename_scheme) is None :
+            if not re.fullmatch('(({[a-zA-Z]+(:\\d+d)?})|([a-zA-Z0-9_.]+))*', rename_scheme):
                 LOGGER.error('Bad naming scheme. Only alphanumeric characters could be used for the field names (with the optional number of digits afterwards, '
                              'e.g., \'{InstanceNumber:05d}\'), and only alphanumeric characters, dots, and underscores could be used as separators. ')
                 rename = False
@@ -80,27 +80,27 @@ def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: 
                 fields = re.findall('(?<={)([a-zA-Z]+)(?::\\d+d)?(?=})', rename_scheme)
                 field_alternatives = {'InstanceNumber': 'ImageNumber', # alternative field names based on the earlier versions of the Standard or other reasons
                                       'PatientName': 'PatientsName'}
-                bids_fields = {}
+                dicom_fields = {}
                 for field in fields:
                     value = bids.get_dicomfield(field, dicomfile)
                     if not value:
                         if field in field_alternatives.keys() and bids.get_dicomfield(field_alternatives[field], dicomfile):
                             rename_scheme.replace('{'+field+'}','{'+field_alternatives[field]+'}')
-                            bids_fields[field_alternatives[field]] = value
+                            dicom_fields[field_alternatives[field]] = value
 
-                            LOGGER.info('{0} field is absent from the DICOM header, but {1} is present, using {1}'.format(field, field_alternatives[field]))
+                            LOGGER.info(f'{field} field is absent from the DICOM header, but {field_alternatives[field]} is present, using {field_alternatives[field]}')
                             continue
 
                         LOGGER.warning(f"Missing '{field}' DICOM field specified in the naming scheme, cannot safely rename {dicomfile}\n")
                         rename = False
                     else:
-                        bids_fields[field] = value
+                        dicom_fields[field] = value
         if not ext:
             ext = splitext(dicomfile)[1]
         # Move and/or rename the dicomfile in(to) the (series sub)folder
         if rename:
-            new_name = rename_scheme.format(**bids_fields)+ext
-            LOGGER.debug('Renaming %s into %s' % (dicomfile.name, new_name))
+            new_name = rename_scheme.format(**dicom_fields)+ext
+            LOGGER.debug(f'Renaming {dicomfile.name} into {new_name}')
             filename = cleanup(new_name)
         else:
             filename = dicomfile.name
