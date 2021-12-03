@@ -16,7 +16,6 @@ import copy
 import webbrowser
 import re
 import ast
-from typing import Union
 from pydicom import dcmread
 from pathlib import Path
 from functools import partial
@@ -628,20 +627,15 @@ class MainWindow(QMainWindow):
                 keyitem = table.item(rownr, 0)
                 valitem = table.item(rownr, 1)
                 key = val = ''
-                if keyitem: key = keyitem.text()
-                if valitem: val = valitem.text()
+                if keyitem: key = keyitem.text().strip()
+                if valitem: val = valitem.text().strip()
                 if key:
-                    try:
-                        if isinstance(oldoptions.get(key), float):
-                            val = type(oldoptions.get(key))(val)
-                        if isinstance(oldoptions.get(key), list):
-                            val = ast.literal_eval(val)                 # Converting string to list
-                    except (ValueError, SyntaxError):
-                        LOGGER.info(f"Failed to interpret '{val}'")
-                        val = oldoptions.get(key)
-                        valitem.setText(val)
+                    if not val:
+                        val = None
+                    try: val = ast.literal_eval(str(val))       # Converting string to e.g. an int or a list
+                    except ValueError: pass
                     newoptions[key] = val
-                    if str(val) != str(oldoptions.get(key)):
+                    if val != oldoptions.get(key):
                         LOGGER.info(f"User has set the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
                         self.datachanged = True
             if plugin == 'bidscoin':
@@ -1142,11 +1136,13 @@ class EditWindow(QDialog):
 
         # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
         if colindex == 1:
-            key      = self.properties_table.item(rowindex, 0).text()
-            value    = self.properties_table.item(rowindex, 1).text()
+            key      = self.properties_table.item(rowindex, 0).text().strip()
+            value    = self.properties_table.item(rowindex, 1).text().strip()
             oldvalue = self.target_run['properties'].get(key)
-            if oldvalue is None:
-                oldvalue = ''
+            if not value:
+                value = None
+            try: value = ast.literal_eval(str(value))
+            except ValueError: pass
 
             # Only if cell was changed, update
             if key and value != oldvalue:
@@ -1166,14 +1162,16 @@ class EditWindow(QDialog):
 
         # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes)
         if colindex == 1:
-            key      = self.attributes_table.item(rowindex, 0).text()
-            value    = self.attributes_table.item(rowindex, 1).text()
+            key      = self.attributes_table.item(rowindex, 0).text().strip()
+            value    = self.attributes_table.item(rowindex, 1).text().strip()
             oldvalue = self.target_run['attributes'].get(key)
-            if oldvalue is None:
-                oldvalue = ''
+            if not value:
+                value = None
+            try: value = ast.literal_eval(str(value))
+            except ValueError: pass
 
             # Only if cell was changed, update
-            if key and value!=oldvalue:
+            if key and value != oldvalue:
                 answer = QMessageBox.question(self, f"Edit {self.dataformat} attributes",
                                               f'It is discouraged to change {self.dataformat} attribute values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -1190,16 +1188,15 @@ class EditWindow(QDialog):
 
         # Only if cell was actually clicked, update (i.e. not when BIDS datatype changes) and store the data in the target_run
         if colindex == 1:
-            key = self.bids_table.item(rowindex, 0).text()
+            key = self.bids_table.item(rowindex, 0).text().strip()
             if hasattr(self.bids_table.cellWidget(rowindex, 1), 'spacedwidget'):
                 dropdown = self.bids_table.cellWidget(rowindex, 1).spacedwidget
                 value    = [dropdown.itemText(n) for n in range(len(dropdown))] + [dropdown.currentIndex()]
-                oldvalue = self.target_run['bids'].get(key)
             else:
                 value    = self.bids_table.item(rowindex, 1).text().strip()
-                oldvalue = self.target_run['bids'].get(key)
-            if oldvalue is None:
-                oldvalue = ''
+            oldvalue = self.target_run['bids'].get(key)
+            if not value:
+                value = None
 
             # Only if cell was changed, update
             if key and value != oldvalue:
@@ -1230,11 +1227,15 @@ class EditWindow(QDialog):
         key      = self.meta_table.item(rowindex, 0).text().strip()
         value    = self.meta_table.item(rowindex, 1).text().strip()
         oldvalue = self.target_run['meta'].get(key)
-        if oldvalue is None:
-            oldvalue = ''
+        if not value:
+            value = None
+        try: value = ast.literal_eval(str(value))
+        except ValueError: pass
+
+        # Only if cell was changed, update
         if value != oldvalue:
             # Replace the (dynamic) value
-            if '<<' not in value or '>>' not in value:
+            if isinstance(value, str) and ('<<' not in value or '>>' not in value):
                 value = self.datasource.dynamicvalue(value, cleanup=False)
                 self.meta_table.blockSignals(True)
                 self.meta_table.item(rowindex, 1).setText(value)
@@ -1522,8 +1523,8 @@ class MyQTableWidget(QTableWidget):
 
 class MyWidgetItem(QTableWidgetItem):
 
-    def __init__(self, value: Union[str,Path]='', iseditable: bool=True):
-        """A QTableWidgetItem that is editable or not and that converts integer values to string"""
+    def __init__(self, value='', iseditable: bool=True):
+        """A QTableWidgetItem that is editable or not and that converts all values to string"""
 
         super().__init__()
         self.setText(value)
@@ -1535,7 +1536,7 @@ class MyWidgetItem(QTableWidgetItem):
         if p_str is None:
             p_str = ''
 
-        super(MyWidgetItem, self).setText(str(p_str))
+        super(MyWidgetItem, self).setText(str(p_str).strip())
 
     def seteditable(self, iseditable: bool=True):
         """Make the WidgetItem editable"""

@@ -74,7 +74,7 @@ class DataSource:
         LOGGER.debug(f"No plugins to read {self.path}")
         return False
 
-    def properties(self, tagname: str, run: dict=None) -> Union[str, int]:
+    def properties(self, tagname: str, run: dict=None) -> Union[str, int, None]:
         """
         Gets the 'filepath[:regexp]', 'filename[:regexp]', 'filesize' or 'nrfiles' filesystem property. The filepath (with trailing "/")
         and filename can be parsed using an optional regular expression re.findall(regexp, filepath / filename). The last match is returned
@@ -123,16 +123,12 @@ class DataSource:
             else:
                 return len(list(self.path.parent.glob('*')))
 
-        return ''
-
-    def attributes(self, attributekey: str, validregexp: bool=False) -> str:
+    def attributes(self, attributekey: str) -> str:
         """
         Use the plugins to read and return the attribute value from the datasource
 
         :param attributekey: The attribute key for which a value is read from the datasource. A colon-separated regular expression can be appended to the attribute key (same as for the `filepath` and `filename` properties)
-        :param validregexp:  If True, the regexp meta-characters in the attribute value (e.g. '*') are replaced by '.',
-                             e.g. to prevent compile errors in match_attribute()
-        :return:             The attribute value or '' if the attribute could not be read from the datasource
+        :return:             The attribute value or None if the attribute could not be read from the datasource
         """
 
         if ':' in attributekey:
@@ -143,16 +139,7 @@ class DataSource:
             module = bidscoin.import_plugin(plugin, ('get_attribute',))
             if module:
                 attributeval = module.get_attribute(self.dataformat, self.path, attributekey, options)
-                if attributeval is None:
-                    attributeval = ''
-                attributeval = str(attributeval)
                 if attributeval:
-                    if validregexp:
-                        try:            # Strip meta-characters to prevent match_attribute() errors
-                            re.compile(attributeval)
-                        except re.error:
-                            for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
-                                attributeval = attributeval.strip().replace(metacharacter, '.')
                     if pattern:
                         match = re.findall(pattern, attributeval)
                         if len(match)>1:
@@ -160,7 +147,6 @@ class DataSource:
                         attributeval = match[0]     # The first match is most likely the most informative (?)
 
                     return attributeval
-        return ''
 
     def subid_sesid(self, subid=None, sesid=None) -> Tuple[str, str]:
         """
@@ -1026,7 +1012,7 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
 
             for attrkey, attrvalue in run['attributes'].items():
                 if datasource.path.name:
-                    run_['attributes'][attrkey] = datasource.attributes(attrkey, validregexp=True)
+                    run_['attributes'][attrkey] = datasource.attributes(attrkey)
                 else:
                     run_['attributes'][attrkey] = attrvalue
 
@@ -1184,9 +1170,8 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, run: dict, clean: bool=T
 
 def match_attribute(attribute, pattern) -> bool:
     """
-    Match the value items with the attribute string using regexp. If both attribute
-    and values are a list then they are directly compared as is, else they are converted
-    to a string
+    Match the value items with the attribute string using regexp. If both attribute and values
+    are a list then they are directly compared as is, else they are converted to a string
 
     Examples:
         match_attribute('my_pulse_sequence_name', 'filename')   -> False
@@ -1202,7 +1187,7 @@ def match_attribute(attribute, pattern) -> bool:
     """
 
     # Consider it a match if both attribute and value are identical or empty / None
-    if attribute==pattern or (not attribute and not pattern):
+    if str(attribute) == str(pattern) or (not attribute and not pattern):
         return True
 
     if not pattern:
@@ -1213,6 +1198,13 @@ def match_attribute(attribute, pattern) -> bool:
         attribute = ''
     attribute = str(attribute).strip()
     pattern   = str(pattern).strip()
+
+    # Replace certain regexp meta-characters in the attribute value (e.g. '*' in DICOM-fields) by '.' to prevent compile errors
+    try:
+        re.compile(attribute)
+    except re.error:
+        for metacharacter in ('^', '*', '+', '[', ']'):   # Special regexp characters: ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')')
+            attribute = attribute.strip().replace(metacharacter, '.')
 
     # See if the pattern matches the source attribute
     try:
@@ -1378,7 +1370,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
             # Try to see if the sourcefile matches all of the filesystem properties
             for filekey, filevalue in run['properties'].items():
 
-                # Check if the attribute value matches with the info from the sourcefile
+                # Check if the property value matches with the info from the sourcefile
                 if filevalue:
                     sourcevalue = datasource.properties(filekey)
                     match       = match and match_attribute(sourcevalue, filevalue)
@@ -1390,7 +1382,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
             for attrkey, attrvalue in run['attributes'].items():
 
                 # Check if the attribute value matches with the info from the sourcefile
-                sourcevalue = datasource.attributes(attrkey, validregexp=True)
+                sourcevalue = datasource.attributes(attrkey)
                 if attrvalue:
                     match = match and match_attribute(sourcevalue, attrvalue)
 

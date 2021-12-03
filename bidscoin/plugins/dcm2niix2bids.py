@@ -13,7 +13,6 @@ import logging
 import dateutil.parser
 import pandas as pd
 import json
-import ast
 import shutil
 from typing import Union
 from pathlib import Path
@@ -387,10 +386,6 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
             for metakey, metaval in run['meta'].items():
                 if metakey != 'IntendedFor':
                     metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
-                    try:
-                        metaval = ast.literal_eval(metaval)
-                    except ValueError:
-                        pass
                     LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
                 jsondata[metakey] = metaval
 
@@ -490,7 +485,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
         personals['session_id'] = sesid
     personals['age'] = ''
     if dataformat == 'DICOM':
-        age = datasource.attributes('PatientAge')                   # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
+        age = str(datasource.attributes('PatientAge'))              # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
         if age.endswith('D'):   age = float(age.rstrip('D')) / 365.2524
         elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
         elif age.endswith('M'): age = float(age.rstrip('M')) / 12

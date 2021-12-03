@@ -26,7 +26,6 @@ import shutil
 import json
 import tempfile
 import pandas as pd
-import ast
 from pathlib import Path
 from functools import lru_cache
 
@@ -272,10 +271,6 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
                 jsondata = json.load(json_fid)
             for metakey, metaval in run['meta'].items():
                 metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
-                try:
-                    metaval = ast.literal_eval(metaval)
-                except ValueError:
-                    pass
                 LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
                 jsondata[metakey] = metaval
             with jsonfile.open('w') as json_fid:
