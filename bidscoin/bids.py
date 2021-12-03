@@ -148,7 +148,8 @@ class DataSource:
                             LOGGER.warning(f"Multiple matches {match} found when extracting {pattern} from {attributeval}, using: {match[0]}")
                         attributeval = match[0]     # The first match is most likely the most informative (?)
 
-                    return attributeval
+                    if attributeval:
+                        return attributeval
 
         return ''
 
