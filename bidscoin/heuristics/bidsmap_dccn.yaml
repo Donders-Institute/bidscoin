@@ -37,7 +37,7 @@ Options:
       args:                       # Argument string that is passed to spec2nii (see spec2nii -h for more information)
       anon: y                     # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
       multiraid: 2                # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
-    phys2bidscoin:                # The settings for the phys2bidscoin plugin
+#    phys2bidscoin:                # The settings for the phys2bidscoin plugin
 
 
 DICOM:

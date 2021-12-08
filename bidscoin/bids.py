@@ -440,11 +440,11 @@ _DICOMFILE_CACHE = None
 @lru_cache(maxsize=4096)
 def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
     """
-    Robustly extracts a DICOM field/tag from a dictionary or from vendor specific fields
+    Robustly extracts a DICOM attribute/tag value from a dictionary or from vendor specific fields
 
-    :param tagname:     Name of the DICOM field
+    :param tagname:     DICOM attribute name (e.g. 'SeriesNumber') or Pydicom-style tag number (e.g. '0x00200011', '(0x20,0x11)', '(0020, 0011)', '(20, 11)', '20,11')
     :param dicomfile:   The full pathname of the dicom-file
-    :return:            Extracted tag-values from the dicom-file
+    :return:            Extracted tag-values as a flat string
     """
 
     global _DICOMDICT_CACHE, _DICOMFILE_CACHE
@@ -468,12 +468,15 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
             else:
                 dicomdata = _DICOMDICT_CACHE
 
-            value = dicomdata.get(tagname, '')
+            try:                                                    # Try Pydicom's hexadecimal tag number first
+                value = eval(f"dicomdata[{tagname}].value")
+            except (NameError, KeyError, SyntaxError):
+                value = dicomdata.get(tagname, '')                  # Then try and see if it is an attribute name
 
             # Try a recursive search
             if not value:
                 for elem in dicomdata.iterall():
-                    if tagname in (elem.name, elem.keyword):
+                    if tagname in (elem.name, elem.keyword, str(elem.tag), str(elem.tag).replace(', ',',')):
                         value = elem.value
                         break
 

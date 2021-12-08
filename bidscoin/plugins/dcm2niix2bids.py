@@ -6,6 +6,7 @@ NB: dcm2niix sometimes lead to appended suffixes to the filenames, which are aut
 or, if that fails, appended to the `acq` entity (e.g. "sub-01_acq-MEMPRAGE_T1w_E1.nii" becoming "sub-01_acq-MEMPRAGEe1_T1w.nii")
 
 See also:
+- https://github.com/rordenlab/dcm2niix
 - https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage
 """
 

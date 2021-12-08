@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file. The format 
 - A plugin for phys2bids to convert physiological data
 - A plugin for spec2nii to convert MR spectroscopy data
 - Added a multi-echo deface function `medeface` that uses the same defacemask for all echo-images
+- The possibility to extract DICOM values using tag numbers (in addition to the attribute name)
 
 ### Changed
 - Plugins should now have a `is_sourcefile` and a `get_attribute` function and have a simpler API (-> DataSource class)
