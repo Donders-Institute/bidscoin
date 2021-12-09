@@ -48,4 +48,4 @@ The dictionary values in a bidsmap are not simple strings but have some special 
 
 .. tip::
 
-   In addition to DICOM attribute names, the more advanced / unambiguous pydicom-style `tag numbers (https://pydicom.github.io/pydicom/stable/old/base_element.html#tag)`__ can also be used for indexing a DICOM header. For instance, the ``PatientName``, ``0x00100010``, ``0x10,0x10``, ``(0x10, 0x10)``, and ``(0010, 0010)`` index keys are all equivalent.
+   In addition to DICOM attribute names, the more advanced / unambiguous pydicom-style `tag numbers <https://pydicom.github.io/pydicom/stable/old/base_element.html#tag>`__ can also be used for indexing a DICOM header. For instance, the ``PatientName``, ``0x00100010``, ``0x10,0x10``, ``(0x10, 0x10)``, and ``(0010, 0010)`` index keys are all equivalent.

@@ -165,10 +165,10 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                 if not datasource.dataformat:
                     LOGGER.info(f"No coinable datasources found in '{session}'")
                     continue
+                subid, sesid = datasource.subid_sesid(bidsmap[datasource.dataformat]['subject'], bidsmap[datasource.dataformat]['session'])
+                bidssession  = bidsfolder/subid/sesid
                 if not force:
-                    subid, sesid = datasource.subid_sesid(bidsmap[datasource.dataformat]['subject'], bidsmap[datasource.dataformat]['session'])
-                    bidssession  = bidsfolder/subid/sesid
-                    datatypes    = []
+                    datatypes = []
                     for dataformat in dataformats:
                         if sesid and not bidsmap[dataformat].get('session'):
                             bidssession = bidssession.parent
@@ -180,11 +180,14 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                         continue
 
                 LOGGER.info(f"Coining datasources in: {session}")
+                if bidssession.is_dir():
+                    LOGGER.warning(f"Existing BIDS output-directory found, which may result in duplicate data (with increased run-index). Make sure {bidsses} was cleaned-up from old data before (re)running the bidscoiner")
+                bidssession.mkdir(parents=True, exist_ok=True)
 
                 # Run the bidscoiner plugins
                 for module in plugins:
                     LOGGER.info(f"Executing plugin: {Path(module.__file__).name}")
-                    module.bidscoiner_plugin(session, bidsmap, bidsfolder)
+                    module.bidscoiner_plugin(session, bidsmap, bidssession)
 
                 # Clean-up the temporary unpacked data
                 if unpacked:

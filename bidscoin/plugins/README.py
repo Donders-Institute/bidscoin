@@ -154,7 +154,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     LOGGER.debug(f'This is a bidsmapper demo-plugin working on: {session}')
 
 
-def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
+def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     """
     The plugin to convert the runs in the source folder and save them in the bids folder. Each saved datafile should be
     accompanied with a json sidecar file. The bidsmap options for this plugin can be found in:
@@ -165,7 +165,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
 
     :param session:     The full-path name of the subject/session raw data source folder
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
-    :param bidsfolder:  The full-path name of the BIDS root-folder
+    :param bidsses:     The full-path name of the BIDS output `ses-` folder
     :return:            Nothing
     """
 

@@ -151,16 +151,26 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
             LOGGER.debug(f"Known '{run['datasource'].datatype}' {dataformat} sample: {sourcefile}")
 
 
-def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
+def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     """
     The bidscoiner plugin to convert the session DICOM and PAR/REC source-files into BIDS-valid nifti-files in the
-    corresponding bidsfolder and extract personals (e.g. Age, Sex) from the source header
+    corresponding bids session-folder and extract personals (e.g. Age, Sex) from the source header
 
-    :param session:     The full-path name of the subject/session source file/folder
+    :param session:     The full-path name of the subject/session source folder
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
-    :param bidsfolder:  The full-path name of the BIDS root-folder
+    :param bidsses:     The full-path name of the BIDS output `ses-` folder
     :return:            Nothing
     """
+
+    # Get the subject identifiers and the BIDS root folder from the session folder
+    bidsfolder = bidsses.parent
+    if bidsfolder.name.startswith('ses-'):
+        sesid      = bidsfolder.name
+        bidsfolder = bidsfolder.parent
+    else:
+        sesid      = ''
+    subid      = bidsfolder.name
+    bidsfolder = bidsfolder.parent
 
     # Get started and see what dataformat we have
     plugin     = {'dcm2niix2bids': bidsmap['Options']['plugins']['dcm2niix2bids']}
@@ -182,16 +192,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
     else:
         LOGGER.exception(f"Unsupported dataformat '{dataformat}'")
 
-    # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
-    subid, sesid = datasource.subid_sesid(bidsmap[dataformat]['subject'], bidsmap[dataformat]['session'])
-    if not subid:
-        return
-
-    # Create the BIDS session-folder and a scans.tsv file
-    bidsses = bidsfolder/subid/sesid
-    if bidsses.is_dir():
-        LOGGER.warning(f"Existing BIDS output-directory found, which may result in duplicate data (with increased run-index). Make sure {bidsses} was cleaned-up from old data before (re)running the bidscoiner")
-    bidsses.mkdir(parents=True, exist_ok=True)
+    # Create a scans.tsv file
     scans_tsv = bidsses/f"{subid}{bids.add_prefix('_',sesid)}_scans.tsv"
     if scans_tsv.is_file():
         scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')

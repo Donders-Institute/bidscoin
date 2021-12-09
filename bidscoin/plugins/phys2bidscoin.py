@@ -162,7 +162,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
             bids.append_run(bidsmap_new, run)
 
 
-def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
+def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     """
     This wrapper funtion around phys2bids converts the physio data in the session folder and saves it in the bidsfolder.
     Each saved datafile should be accompanied with a json sidecar file. The bidsmap options for this plugin can be found in:
@@ -173,9 +173,19 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
 
     :param session:     The full-path name of the subject/session raw data source folder
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
-    :param bidsfolder:  The full-path name of the BIDS root-folder
+    :param bidsses:     The full-path name of the BIDS output `ses-` folder
     :return:            Nothing
     """
+
+    # Get the subject identifiers and the BIDS root folder from the session folder
+    bidsfolder = bidsses.parent
+    if bidsfolder.name.startswith('ses-'):
+        sesid      = bidsfolder.name
+        bidsfolder = bidsfolder.parent
+    else:
+        sesid      = ''
+    subid      = bidsfolder.name
+    bidsfolder = bidsfolder.parent
 
     # Get started and see what dataformat we have
     plugin     = {'phys2bidscoin': bidsmap['Options']['plugins']['phys2bidscoin']}
@@ -183,13 +193,6 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path) -> None:
     dataformat = datasource.dataformat
     if not dataformat:
         LOGGER.info(f"No {__name__} sourcedata found in: {session}")
-        return
-
-    # Get valid BIDS subject/session identifiers from the (first) DICOM- or PAR/XML source file
-    subid, sesid = datasource.subid_sesid(bidsmap[dataformat]['subject'], bidsmap[dataformat]['session'])
-    bidsses      = bidsfolder/subid/sesid
-    if not subid:
-        LOGGER.error(f"Could not get a subject-id for {bidsfolder/subid/sesid}")
         return
 
     # Loop over all source data files and convert them to BIDS
