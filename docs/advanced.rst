@@ -141,15 +141,15 @@ all interactions of BIDScoin routines with source data are done via a plugin lay
 
 
 
-   def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> str:
+    def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> Union[str, int]:
        """
        This plugin function reads attributes from the supported sourcefile
 
-       :param dataformat:  The dataformat of the sourcefile, e.g. DICOM of PAR
-       :param sourcefile:  The sourcefile from which key-value data needs to be read
-       :param attribute:   The attribute key for which the value needs to be retrieved
+       :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
+       :param sourcefile:  The sourcefile from which the attribute value should be read
+       :param attribute:   The attribute key for which the value should be read
        :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap['Options']
-       :return:            The retrieved attribute value
+       :return:            The attribute value
        """
 
        if dataformat in ('DICOM','PAR'):
@@ -179,7 +179,7 @@ all interactions of BIDScoin routines with source data are done via a plugin lay
        LOGGER.debug(f'This is a bidsmapper demo-plugin working on: {session}')
 
 
-   def bidscoiner_plugin(session: Path, bidsmap: dict, bidsfolder: Path, personals: dict, subprefix: str, sesprefix: str) -> None:
+   def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
        """
        The plugin to convert the runs in the source folder and save them in the bids folder. Each saved datafile should be
        accompanied with a json sidecar file. The bidsmap options for this plugin can be found in:
@@ -188,12 +188,9 @@ all interactions of BIDScoin routines with source data are done via a plugin lay
 
        See also the dcm2niix2bids plugin for reference implementation
 
-       :param session:     The full-path name of the subject/session raw data source folder
+       :param session:     The full-path name of the subject/session source folder
        :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
-       :param bidsfolder:  The full-path name of the BIDS root-folder
-       :param personals:   The dictionary with the personal information
-       :param subprefix:   The prefix common for all source subject-folders
-       :param sesprefix:   The prefix common for all source session-folders
+       :param bidsses:     The full-path name of the BIDS output `ses-` folder
        :return:            Nothing
        """
 
