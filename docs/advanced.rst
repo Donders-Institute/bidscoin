@@ -140,8 +140,7 @@ all interactions of BIDScoin routines with source data are done via a plugin lay
        return ''
 
 
-
-    def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> Union[str, int]:
+   def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> Union[str, int]:
        """
        This plugin function reads attributes from the supported sourcefile
 
