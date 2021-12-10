@@ -189,7 +189,7 @@ def main():
                                             '  dicomsort /project/3022026.01/raw\n'
                                             '  dicomsort /project/3022026.01/raw --subprefix sub\n'
                                             '  dicomsort /project/3022026.01/raw --subprefix sub-01 --sesprefix ses\n'
-                                            '  dicomsort /project/3022026.01/raw/sub-011/ses-mri01/DICOMDIR -r -e .dcm\n ')
+                                            '  dicomsort /project/3022026.01/raw/sub-011/ses-mri01/DICOMDIR -r {AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm\n ')
     parser.add_argument('dicomsource',      help='The name of the root folder containing the dicomsource/[sub/][ses/]dicomfiles and / or the (single session/study) DICOMDIR file')
     parser.add_argument('-i','--subprefix', help='Provide a prefix string for recursive searching in dicomsource/subject subfolders (e.g. "sub-")')
     parser.add_argument('-j','--sesprefix', help='Provide a prefix string for recursive searching in dicomsource/subject/session subfolders (e.g. "ses-")')
