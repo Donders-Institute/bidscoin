@@ -98,8 +98,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 LOGGER.error(f"Found ambiguous PET meta data file: {file}")
                 return
 
-            # Load the Excel data
-            data = pd.read_excel(file)
+            # Load the Excel data. TODO: Discuss this with Anthony and Cyril
+            metadata = pd.read_excel(file)
 
             # Load the json sidecar data (there should be only one)
             jsonfile = sorted((bidsses/'pet').rglob('*.json'))
@@ -109,9 +109,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             with jsonfile[0].open('r') as json_fid:
                 jsondata = json.load(json_fid)
 
-            # Add the meta-data
-            for key in data:
-                jsondata[key] = data[key]
+            # Add the meta-data. TODO: implement this once we know how `metadata` is organised
+            for key in metadata:
+                jsondata[key] = metadata[key]
 
             # Save the meta-data to the json sidecar file
             with jsonfile[0].open('w') as json_fid:
