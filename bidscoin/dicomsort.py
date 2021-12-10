@@ -34,7 +34,7 @@ def cleanup(name: str) -> str:
     return name
 
 
-def sortsession(sessionfolder: Path, dicomfiles: list[Path], dicomfield: str, rename: str, nosort: bool, dryrun: bool) -> None:
+def sortsession(sessionfolder: Path, dicomfiles: list, dicomfield: str, rename: str, nosort: bool, dryrun: bool) -> None:
     """
     Sorts dicomfiles into (3-digit) SeriesNumber-SeriesDescription subfolders (e.g. '003-T1MPRAGE')
 

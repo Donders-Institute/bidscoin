@@ -19,9 +19,9 @@ from distutils.dir_util import copy_tree
 from typing import Union, List, Tuple
 from pathlib import Path
 try:
-    from bidscoin import bidscoin
+    from bidscoin import bidscoin, dicomsort
 except ImportError:
-    import bidscoin     # This should work if bidscoin was not pip-installed
+    import bidscoin, dicomsort  # This should work if bidscoin was not pip-installed
 from ruamel.yaml import YAML
 yaml = YAML()
 
@@ -249,11 +249,6 @@ def unpack(sourcefolder: Path, subprefix: str, sesprefix: str, wildcard: str='*'
 
     # Check if we are going to do unpacking and/or sorting
     if packedfiles or (sourcefolder/'DICOMDIR').is_file():
-
-        try:
-            from bidscoin import dicomsort
-        except ImportError:
-            import dicomsort  # This should work if bidscoin was not pip-installed
 
         # Create a (temporary) sub/ses workfolder for unpacking the data
         if not workfolder:
