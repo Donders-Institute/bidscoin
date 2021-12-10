@@ -48,22 +48,22 @@ def is_sourcefile(file: Path) -> str:
     if file.suffix.lower().startswith('.xls'):
         data = pd.read_excel(file)
         if "PatientID" in data:
-            return 'PET2BIDS'
+            return 'PETXLS'
 
     return ''
 
 
 def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> Union[str, int]:
     """
-    This plugin supports reading attributes from DICOM and PAR dataformats
+    This plugin supports reading attributes from the PET Excel file
 
-    :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
+    :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. PETXLS
     :param sourcefile:  The sourcefile from which the attribute value should be read
     :param attribute:   The attribute key for which the value should be read
     :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap['Options']
     :return:            The attribute value
     """
-    if dataformat == 'PET2BIDS':
+    if dataformat == 'PETXLS':
 
         data = pd.read_excel(sourcefile)
 
