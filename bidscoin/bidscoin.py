@@ -28,6 +28,7 @@ from importlib.util import spec_from_file_location, module_from_spec
 from importlib.metadata import entry_points
 from typing import Tuple, Union, List
 from ruamel.yaml import YAML
+yaml = YAML()
 
 # Define the default paths
 tutorialurl      = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
@@ -246,7 +247,7 @@ def install_plugins(plugins: Tuple[Path]=()) -> Union[bool, None]:
 
     # Load the default template bidsmap
     with open(bidsmap_template, 'r') as stream:
-        template = YAML().load(stream)
+        template = yaml.load(stream)
 
     # Install the plugins
     success = True
@@ -277,7 +278,7 @@ def install_plugins(plugins: Tuple[Path]=()) -> Union[bool, None]:
                     LOGGER.info(f"Adding default {key} bidsmappings to the {bidsmap_template.stem} template")
                     template[key] = value
             with open(bidsmap_template, 'w') as stream:
-                YAML().dump(template, stream)
+                yaml.dump(template, stream)
 
     return success
 
@@ -296,7 +297,7 @@ def uninstall_plugins(plugins: Tuple[str]=(), wipe: bool=True) -> Union[bool, No
 
     # Load the default template bidsmap
     with open(bidsmap_template, 'r') as stream:
-        template = YAML().load(stream)
+        template = yaml.load(stream)
 
     # Uninstall the plugins
     success = True
@@ -324,7 +325,7 @@ def uninstall_plugins(plugins: Tuple[str]=(), wipe: bool=True) -> Union[bool, No
                     LOGGER.info(f"Removing default {key} bidsmappings from the {bidsmap_template.stem} template")
                     template.pop(key, None)
             with open(bidsmap_template, 'w') as stream:
-                YAML().dump(template, stream)
+                yaml.dump(template, stream)
 
         # Remove the plugin from the plugins folder
         try:

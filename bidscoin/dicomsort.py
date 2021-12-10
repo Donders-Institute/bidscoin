@@ -7,15 +7,16 @@ as on the scanner console)
 
 import re
 import logging
-from pathlib import Path
 import pydicom
 import uuid
+from pathlib import Path
 try:
     from bidscoin import bidscoin, bids
 except ImportError:
     import bidscoin, bids         # This should work if bidscoin was not pip-installed
 
 LOGGER = logging.getLogger(__name__)
+
 
 def cleanup(name: str) -> str:
     """
