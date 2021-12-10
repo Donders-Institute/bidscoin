@@ -151,10 +151,16 @@ The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-
                             folder name ("SeriesDescription" and "ProtocolName"
                             are both used as fallback) (default:
                             SeriesDescription)
-      -r, --rename          Flag to rename the DICOM files to a PatientName_Series
-                            Number_SeriesDescription_AcquisitionNumber_InstanceNum
-                            ber scheme (recommended for DICOMDIR data) (default:
-                            False)
+      -r, --rename          Flag to rename the DICOM files (recommended for
+                            DICOMDIR data) (default: False)
+      -s, --scheme          The naming scheme for renaming. Follows the Python string
+                            formatting syntax with DICOM field names in curly bracers
+                            with an optional number of digits for numeric fields. Use
+                            "{InstanceNumber:05d}_{SOPInstanceUID}" for the default names
+                            at DCCN (default:
+                            {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_
+                            {AcquisitionNumber:05d}_{InstanceNumber:05d} )
+
       -e EXT, --ext EXT     The file extension after sorting (empty value keeps
                             the original file extension), e.g. ".dcm" (default: )
       -n, --nosort          Flag to skip sorting of DICOM files into SeriesNumber-
