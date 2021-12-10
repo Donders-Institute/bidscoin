@@ -40,7 +40,7 @@ def sortsession(sessionfolder: Path, dicomfiles: list[Path], dicomfield: str, re
     :param sessionfolder:   The name of the destination folder of the dicom files
     :param dicomfiles:      The list of dicomfiles to be sorted and/or renamed
     :param dicomfield:      The dicomfield that is used to construct the series folder name (e.g. SeriesDescription or ProtocolName, which are both used as fallback)
-    :param rename:          The naming scheme for renaming. Follows the Python string formatting syntax with DICOM field names in curly bracers with {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA as default.
+    :param rename:          Optional naming scheme for renaming. Follows the Python string formatting syntax with DICOM field names in curly bracers, e.g. {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA
     :param nosort:          Boolean to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)
     :param dryrun:          Boolean to just display the action
     :return:                Nothing
@@ -126,7 +126,7 @@ def sortsessions(session: Path, subprefix: str='', sesprefix: str='', dicomfield
     :param subprefix:   The prefix for searching the sub folders in session
     :param sesprefix:   The prefix for searching the ses folders in sub folder
     :param dicomfield:  The dicomfield that is used to construct the series folder name (e.g. SeriesDescription or ProtocolName, which are both used as fallback)
-    :param rename:      The naming scheme for renaming. Follows the Python string formatting syntax with DICOM field names in curly bracers with {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA as default.
+    :param rename:      Optional naming scheme for renaming. Follows the Python string formatting syntax with DICOM field names in curly bracers, e.g. {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA
     :param nosort:      Boolean to skip sorting of DICOM files into SeriesNumber-SeriesDescription directories (useful in combination with -r for renaming only)
     :param pattern:     The regular expression pattern used in re.match() to select the dicom files
     :param dryrun:      Boolean to just display the action
