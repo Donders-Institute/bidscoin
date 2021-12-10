@@ -31,7 +31,7 @@ def test(options) -> bool:
     :return:        True if the tool generated the expected result, False if there was a tool error
     """
 
-    LOGGER.info('Testing pet2bidscoin is not implemented (yet):')
+    LOGGER.info('Testing petxls2bids is not implemented (yet):')
 
     return True
 
@@ -81,7 +81,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     """
 
     # Get started and see what data format we have
-    plugin     = {'pet2bidscoin': bidsmap['Options']['plugins']['pet2bidscoin']}
+    plugin     = {'petxls2bids': bidsmap['Options']['plugins']['petxls2bids']}
     datasource = bids.get_datasource(session, plugin)
     dataformat = datasource.dataformat
     if not dataformat:
