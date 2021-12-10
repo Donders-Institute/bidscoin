@@ -20,7 +20,7 @@ except ImportError:
 LOGGER = logging.getLogger(__name__)
 
 # The default options that are set when installing the plugin
-OPTIONS = {'anon': 'y'}                                 # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
+OPTIONS = {'anon': 'y'}                     # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
 
 
 def test(options) -> bool:

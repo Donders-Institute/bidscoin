@@ -169,4 +169,4 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     :return:            Nothing
     """
 
-    LOGGER.debug(f'This is a bidscoiner demo-plugin working on: {session} -> {bidsfolder}')
+    LOGGER.debug(f'This is a bidscoiner demo-plugin working on: {session} -> {bidsses}')
