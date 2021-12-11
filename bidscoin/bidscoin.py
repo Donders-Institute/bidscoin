@@ -215,7 +215,7 @@ def list_executables(show: bool=False) -> list:
     return scripts
 
 
-def list_plugins(show: bool=False) -> list:
+def list_plugins(show: bool=False) -> List[Path]:
     """
     :param show: Print the installed plugins if True
     :return:     List of the installed plugins
