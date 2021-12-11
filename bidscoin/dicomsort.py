@@ -123,6 +123,7 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], dicomfield: str, re
 def sortsessions(session: Path, subprefix: str='', sesprefix: str='', dicomfield: str='SeriesDescription',
                  rename: str='', nosort: bool=False, pattern: str='.*\.(IMA|dcm)$', dryrun: bool=False) -> None:
     """
+    Wrapper around sortsession() to loop over subjects and sessions and index the session DICOM files
 
     :param session:     The root folder containing the source [sub/][ses/]dicomfiles or the DICOMDIR file
     :param subprefix:   The prefix for searching the sub folders in session
