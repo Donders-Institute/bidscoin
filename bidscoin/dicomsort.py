@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-Sorts and / or renames DICOM files into local subfodlers with a (3-digit)
-SeriesNumber-SeriesDescription folder name (i.e. following the same listing
-as on the scanner console)
+Sorts and / or renames DICOM files into local subfolders, e..g with 3-digit SeriesNumber-SeriesDescription
+folder names (i.e. following the same listing as on the scanner console)
 """
 
 import re
@@ -33,7 +32,7 @@ def construct_name(scheme: str, dicomfile: Path) -> str:
     alternatives = {'PatientName':'PatientsName', 'SeriesDescription':'ProtocolName', 'InstanceNumber':'ImageNumber',
                     'PatientsName':'PatientName', 'ProtocolName':'SeriesDescription', 'ImageNumber':'InstanceNumber'}
 
-    schemedata = {}
+    schemevalues = {}
     for field in re.findall('(?<={)([a-zA-Z]+)(?::\\d+d)?(?=})', scheme):
         value = cleanup(bids.get_dicomfield(field, dicomfile))
         if not value and field in alternatives.keys():
@@ -42,9 +41,9 @@ def construct_name(scheme: str, dicomfile: Path) -> str:
             LOGGER.warning(f"Missing '{field}' DICOM field specified in the '{scheme}' naming scheme, cannot find a safe name for: {dicomfile}\n")
             return ''
 
-        schemedata[field] = value
+        schemevalues[field] = value
 
-    return scheme.format(**schemedata) if schemedata else ''
+    return scheme.format(**schemevalues) if schemevalues else ''
 
 
 def validscheme(scheme: str) -> bool:
@@ -193,10 +192,10 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
-                                            '  dicomsort /project/3022026.01/raw\n'
+                                            '  dicomsort sub-011/ses-mri01\n'
+                                            '  dicomsort sub-011/ses-mri01/DICOMDIR -r {AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm\n'
                                             '  dicomsort /project/3022026.01/raw --subprefix sub\n'
-                                            '  dicomsort /project/3022026.01/raw --subprefix sub-01 --sesprefix ses\n'
-                                            '  dicomsort /project/3022026.01/raw/sub-011/ses-mri01/DICOMDIR -r {AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm\n ')
+                                            '  dicomsort /project/3022026.01/raw --subprefix sub-01 --sesprefix ses\n ')
     parser.add_argument('dicomsource',          help='The name of the root folder containing the dicomsource/[sub/][ses/]dicomfiles and / or the (single session/study) DICOMDIR file')
     parser.add_argument('-i','--subprefix',     help='Provide a prefix string for recursive searching in dicomsource/subject subfolders (e.g. "sub-")')
     parser.add_argument('-j','--sesprefix',     help='Provide a prefix string for recursive searching in dicomsource/subject/session subfolders (e.g. "ses-")')
