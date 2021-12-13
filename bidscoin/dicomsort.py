@@ -84,7 +84,7 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
 
     :param sessionfolder:   The name of the destination folder of the dicom files
     :param dicomfiles:      The list of dicomfiles to be sorted and/or renamed
-    :param folderscheme:    Optional naming scheme for the sorted (e.g. Series) subfolders. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields, e.g. {SeriesNumber:03d}_{SeriesDescription}
+    :param folderscheme:    Optional naming scheme for the sorted (e.g. Series) subfolders. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields, e.g. {SeriesNumber:03d}-{SeriesDescription}
     :param namescheme:      Optional naming scheme for renaming the files. Follows the Python string formatting syntax with DICOM field names in curly bracers, e.g. {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA
     :param dryrun:          Boolean to just display the action
     :return:                Nothing
@@ -127,7 +127,7 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
             dicomfile.replace(newfilename)
 
 
-def sortsessions(session: Path, subprefix: str='', sesprefix: str='', folderscheme: str='{SeriesNumber:03d}_{SeriesDescription}',
+def sortsessions(session: Path, subprefix: str='', sesprefix: str='', folderscheme: str='{SeriesNumber:03d}-{SeriesDescription}',
                  namescheme: str='', pattern: str='.*\.(IMA|dcm)$', dryrun: bool=False) -> None:
     """
     Wrapper around sortsession() to loop over subjects and sessions and index the session DICOM files
@@ -135,7 +135,7 @@ def sortsessions(session: Path, subprefix: str='', sesprefix: str='', foldersche
     :param session:      The root folder containing the source [sub/][ses/]dicomfiles or the DICOMDIR file
     :param subprefix:    The prefix for searching the sub folders in session
     :param sesprefix:    The prefix for searching the ses folders in sub folder
-    :param folderscheme: Optional naming scheme for the sorted (e.g. Series) subfolders. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields', default='{SeriesNumber:03d}_{SeriesDescription}'
+    :param folderscheme: Optional naming scheme for the sorted (e.g. Series) subfolders. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields', default='{SeriesNumber:03d}-{SeriesDescription}'
     :param namescheme:   Optional naming scheme for renaming the files. Follows the Python string formatting syntax with DICOM field names in curly bracers, e.g. {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA
     :param pattern:      The regular expression pattern used in re.match() to select the dicom files
     :param dryrun:       Boolean to just display the action
@@ -200,7 +200,7 @@ def main():
     parser.add_argument('dicomsource',          help='The name of the root folder containing the dicomsource/[sub/][ses/]dicomfiles and / or the (single session/study) DICOMDIR file')
     parser.add_argument('-i','--subprefix',     help='Provide a prefix string for recursive searching in dicomsource/subject subfolders (e.g. "sub-")')
     parser.add_argument('-j','--sesprefix',     help='Provide a prefix string for recursive searching in dicomsource/subject/session subfolders (e.g. "ses-")')
-    parser.add_argument('-f','--folderscheme',  help='Naming scheme for the sorted DICOM Series subfolders. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields. Sorting in subfolders is skipped when an empty folderscheme is given (but note that renaming the filenames can still be performed)', default='{SeriesNumber:03d}_{SeriesDescription}')
+    parser.add_argument('-f','--folderscheme',  help='Naming scheme for the sorted DICOM Series subfolders. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields. Sorting in subfolders is skipped when an empty folderscheme is given (but note that renaming the filenames can still be performed)', default='{SeriesNumber:03d}-{SeriesDescription}')
     parser.add_argument('-n','--namescheme',    help='Optional naming scheme that can be provided to rename the DICOM files. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields. Use "{PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA" for the default names at DCCN')
     parser.add_argument('-p','--pattern',       help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')
     parser.add_argument('-d','--dryrun',        help='Add this flag to just print the dicomsort commands without actually doing anything', action='store_true')
