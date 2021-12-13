@@ -72,7 +72,7 @@ def cleanup(name: str) -> str:
     special_characters = ('/', '\\', '*', '?', '"')        # These are the worst offenders, but there are many more
 
     for special in special_characters:
-        name = name.strip().replace(special, '')
+        name = str(name).strip().replace(special, '')
 
     return name
 
