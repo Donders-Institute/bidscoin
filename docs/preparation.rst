@@ -123,51 +123,44 @@ The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-
 
 ::
 
-    usage: dicomsort [-h] [-i SUBPREFIX] [-j SESPREFIX] [-f FIELDNAME] [-r RENAME] [-n]
-                     [-p PATTERN] [-d]
-                     dicomsource
+    usage: dicomsort.py [-h] [-i SUBPREFIX] [-j SESPREFIX] [-f FOLDERSCHEME] [-n NAMESCHEME] [-p PATTERN] [-d] dicomsource
 
-    Sorts and / or renames DICOM files into local subdirectories with a (3-digit)
-    SeriesNumber-SeriesDescription directory name (i.e. following the same listing
-    as on the scanner console)
+    Sorts and / or renames DICOM files into local subfolders, e.g. with 3-digit SeriesNumber-SeriesDescription
+    folder names (i.e. following the same listing as on the scanner console)
 
     positional arguments:
-      dicomsource           The name of the root folder containing the
-                            dicomsource/[sub/][ses/]dicomfiles and / or the (single
-                            session/study) DICOMDIR file
+      dicomsource           The name of the root folder containing the dicomsource/[sub/][ses/]dicomfiles and / or the
+                            (single session/study) DICOMDIR file
 
     optional arguments:
       -h, --help            show this help message and exit
       -i SUBPREFIX, --subprefix SUBPREFIX
-                            Provide a prefix string for recursive searching in
-                            dicomsource/subject subfolders (e.g. "sub-") (default: None)
+                            Provide a prefix string for recursive searching in dicomsource/subject subfolders (e.g.
+                            "sub-") (default: None)
       -j SESPREFIX, --sesprefix SESPREFIX
-                            Provide a prefix string for recursive searching in
-                            dicomsource/subject/session subfolders (e.g. "ses-") (default: None)
-      -f FIELDNAME, --fieldname FIELDNAME
-                            The dicomfield that is used to construct the series folder name
-                            ("SeriesDescription" and "ProtocolName" are both used as fallback)
-                            (default: SeriesDescription)
-      -r RENAME, --rename RENAME
-                            Optional naming scheme for renaming the DICOM files. Follows the
-                            Python string formatting syntax with DICOM field names in curly
-                            bracers with an optional number of digits for numeric fields. Use
-                            "{PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber
-                            :05d}_{InstanceNumber:05d}.IMA" for the default names at DCCN
-                            (default: None)
-      -n, --nosort          Flag to skip sorting of DICOM files into SeriesNumber-SeriesDescription
-                            directories (useful in combination with -r for renaming only) (default: False)
+                            Provide a prefix string for recursive searching in dicomsource/subject/session subfolders
+                            (e.g. "ses-") (default: None)
+      -f FOLDERSCHEME, --folderscheme FOLDERSCHEME
+                            Naming scheme for the sorted DICOM Series subfolders. Follows the Python string formatting
+                            syntax with DICOM field names in curly bracers with an optional number of digits for numeric
+                            fields. Sorting in subfolders is skipped when an empty folderscheme is given (but note that
+                            renaming the filenames can still be performed) (default:
+                            {SeriesNumber:03d}_{SeriesDescription})
+      -n NAMESCHEME, --namescheme NAMESCHEME
+                            Optional naming scheme that can be provided to rename the DICOM files. Follows the Python
+                            string formatting syntax with DICOM field names in curly bracers with an optional number of
+                            digits for numeric fields. Use "{PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{Acquisit
+                            ionNumber:05d}_{InstanceNumber:05d}.IMA" for the default names at DCCN (default: None)
       -p PATTERN, --pattern PATTERN
-                            The regular expression pattern used in re.match(pattern, dicomfile)
-                            to select the dicom files (default: .*\.(IMA|dcm)$)
-      -d, --dryrun          Add this flag to just print the dicomsort commands without actually
-                            doing anything (default: False)
+                            The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files
+                            (default: .*\.(IMA|dcm)$)
+      -d, --dryrun          Add this flag to just print the dicomsort commands without actually doing anything (default: False)
 
     examples:
-      dicomsort /project/3022026.01/raw
+      dicomsort sub-011/ses-mri01
+      dicomsort sub-011/ses-mri01/DICOMDIR -r {AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm
       dicomsort /project/3022026.01/raw --subprefix sub
       dicomsort /project/3022026.01/raw --subprefix sub-01 --sesprefix ses
-      dicomsort /project/3022026.01/raw/sub-011/ses-mri01/DICOMDIR -r {AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm
 
 rawmapper
 ^^^^^^^^^

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Sorts and / or renames DICOM files into local subfolders, e..g with 3-digit SeriesNumber-SeriesDescription
+Sorts and / or renames DICOM files into local subfolders, e.g. with 3-digit SeriesNumber-SeriesDescription
 folder names (i.e. following the same listing as on the scanner console)
 """
 
