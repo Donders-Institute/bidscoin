@@ -123,38 +123,42 @@ The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-
 
 ::
 
-    usage: dicomsort.py [-h] [-i SUBPREFIX] [-j SESPREFIX] [-f FOLDERSCHEME] [-n NAMESCHEME] [-p PATTERN] [-d] dicomsource
+    usage: dicomsort.py [-h] [-i SUBPREFIX] [-j SESPREFIX] [-f FOLDERSCHEME] [-n NAMESCHEME] [-p PATTERN]
+                        [-d]
+                        dicomsource
 
     Sorts and / or renames DICOM files into local subfolders, e.g. with 3-digit SeriesNumber-SeriesDescription
     folder names (i.e. following the same listing as on the scanner console)
 
     positional arguments:
-      dicomsource           The name of the root folder containing the dicomsource/[sub/][ses/]dicomfiles and / or the
-                            (single session/study) DICOMDIR file
+      dicomsource           The name of the root folder containing the dicomsource/[sub/][ses/]dicomfiles
+                            and / or the (single session/study) DICOMDIR file
 
     optional arguments:
       -h, --help            show this help message and exit
       -i SUBPREFIX, --subprefix SUBPREFIX
-                            Provide a prefix string for recursive searching in dicomsource/subject subfolders (e.g.
-                            "sub-") (default: None)
+                            Provide a prefix string for recursive searching in dicomsource/subject
+                            subfolders (e.g. "sub-") (default: None)
       -j SESPREFIX, --sesprefix SESPREFIX
-                            Provide a prefix string for recursive searching in dicomsource/subject/session subfolders
-                            (e.g. "ses-") (default: None)
+                            Provide a prefix string for recursive searching in dicomsource/subject/session
+                            subfolders (e.g. "ses-") (default: None)
       -f FOLDERSCHEME, --folderscheme FOLDERSCHEME
-                            Naming scheme for the sorted DICOM Series subfolders. Follows the Python string formatting
-                            syntax with DICOM field names in curly bracers with an optional number of digits for numeric
-                            fields. Sorting in subfolders is skipped when an empty folderscheme is given (but note that
-                            renaming the filenames can still be performed) (default:
-                            {SeriesNumber:03d}_{SeriesDescription})
+                            Naming scheme for the sorted DICOM Series subfolders. Follows the Python string
+                            formatting syntax with DICOM field names in curly bracers with an optional
+                            number of digits for numeric fields. Sorting in subfolders is skipped when an
+                            empty folderscheme is given (but note that renaming the filenames can still be
+                            performed) (default: {SeriesNumber:03d}_{SeriesDescription})
       -n NAMESCHEME, --namescheme NAMESCHEME
-                            Optional naming scheme that can be provided to rename the DICOM files. Follows the Python
-                            string formatting syntax with DICOM field names in curly bracers with an optional number of
-                            digits for numeric fields. Use "{PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{Acquisit
-                            ionNumber:05d}_{InstanceNumber:05d}.IMA" for the default names at DCCN (default: None)
+                            Optional naming scheme that can be provided to rename the DICOM files. Follows
+                            the Python string formatting syntax with DICOM field names in curly bracers with
+                            an optional number of digits for numeric fields. Use "{PatientName}_{SeriesNumbe
+                            r:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA" for
+                            the default names at DCCN (default: None)
       -p PATTERN, --pattern PATTERN
-                            The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files
-                            (default: .*\.(IMA|dcm)$)
-      -d, --dryrun          Add this flag to just print the dicomsort commands without actually doing anything (default: False)
+                            The regular expression pattern used in re.match(pattern, dicomfile) to select
+                            the dicom files (default: .*\.(IMA|dcm)$)
+      -d, --dryrun          Add this flag to just print the dicomsort commands without actually doing
+                            anything (default: False)
 
     examples:
       dicomsort sub-011/ses-mri01
