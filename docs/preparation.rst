@@ -147,7 +147,7 @@ The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-
                             formatting syntax with DICOM field names in curly bracers with an optional
                             number of digits for numeric fields. Sorting in subfolders is skipped when an
                             empty folderscheme is given (but note that renaming the filenames can still be
-                            performed) (default: {SeriesNumber:03d}_{SeriesDescription})
+                            performed) (default: {SeriesNumber:03d}-{SeriesDescription})
       -n NAMESCHEME, --namescheme NAMESCHEME
                             Optional naming scheme that can be provided to rename the DICOM files. Follows
                             the Python string formatting syntax with DICOM field names in curly bracers with
