@@ -103,7 +103,7 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
             pathname = sessionfolder
         else:
             subfolder = construct_name(folderscheme, dicomfile)
-            if not validscheme(folderscheme) or not subfolder:
+            if not subfolder:
                 LOGGER.error('Cannot create subfolders, aborting dicomsort()...')
                 return
             pathname = sessionfolder/subfolder
@@ -115,7 +115,7 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
                         pathname.mkdir(parents=True)
 
         # Move and/or rename the dicomfiles in(to) the (sub)folder
-        if namescheme and validscheme(namescheme):
+        if namescheme:
             newfilename = pathname/construct_name(namescheme, dicomfile)
         else:
             newfilename = pathname/dicomfile.name
@@ -144,6 +144,9 @@ def sortsessions(session: Path, subprefix: str='', sesprefix: str='', foldersche
 
     # Input checking
     session = Path(session)
+    if (folderscheme and not validscheme(folderscheme)) or (namescheme and not validscheme(namescheme)):
+        LOGGER.error('Wrong scheme input argument(s), aborting dicomsort()...')
+        return
 
     # Do a recursive call if subprefix is given
     if subprefix:
