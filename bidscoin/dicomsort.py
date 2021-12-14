@@ -53,7 +53,8 @@ def validscheme(scheme: str) -> bool:
     :param scheme: The renaming scheme
     :return:
     """
-    if not re.fullmatch('(({[a-zA-Z]+(:\\d+d)?})|([a-zA-Z0-9(_|\-).]+))*', scheme):
+
+    if not re.fullmatch('(({[a-zA-Z]+(:\\d+d)?})|([a-zA-Z0-9\-_.]+))*', scheme):
         LOGGER.error(f"Bad naming scheme: {scheme}. Only alphanumeric characters could be used for the field names (with the optional number of digits afterwards,"
                       "e.g. '{InstanceNumber:05d}'), and only alphanumeric characters, dots, and dashes + underscores could be used as separators.")
         return False
@@ -70,7 +71,6 @@ def cleanup(name: str) -> str:
     """
 
     special_characters = ('/', '\\', '*', '?', '"')        # These are the worst offenders, but there are many more
-
     for special in special_characters:
         if isinstance(name, str):
             name = name.strip().replace(special, '')
@@ -90,15 +90,15 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
     :return:                Nothing
     """
 
-    # Map all dicomfiles and move them to series folders
     LOGGER.info(f">> Sorting: {sessionfolder} ({len(dicomfiles)} files)")
     if not dryrun:
         sessionfolder.mkdir(parents=True, exist_ok=True)
 
+    # Sort the dicomfiles in (e.g. DICOM Series) subfolders
     subfolders = []
     for dicomfile in dicomfiles:
 
-        # Create a (e.g. DICOM Series) sorting subfolder if needed
+        # Create a new subfolder if needed
         if not folderscheme:
             pathname = sessionfolder
         else:
@@ -130,7 +130,7 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
 def sortsessions(session: Path, subprefix: str='', sesprefix: str='', folderscheme: str='{SeriesNumber:03d}-{SeriesDescription}',
                  namescheme: str='', pattern: str='.*\.(IMA|dcm)$', dryrun: bool=False) -> None:
     """
-    Wrapper around sortsession() to loop over subjects and sessions and index the session DICOM files
+    Wrapper around sortsession() to loop over subjects and sessions and map the session DICOM files
 
     :param session:      The root folder containing the source [sub/][ses/]dicomfiles or the DICOMDIR file
     :param subprefix:    The prefix for searching the sub folders in session
@@ -160,8 +160,7 @@ def sortsessions(session: Path, subprefix: str='', sesprefix: str='', foldersche
     # Use the DICOMDIR file if it is there
     if (session/'DICOMDIR').is_file():
 
-        dicomdir = pydicom.dcmread(str(session/'DICOMDIR'))
-
+        dicomdir      = pydicom.dcmread(str(session/'DICOMDIR'))
         sessionfolder = session
         for patient in dicomdir.patient_records:
             if len(dicomdir.patient_records) > 1:
