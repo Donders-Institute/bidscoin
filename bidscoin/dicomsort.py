@@ -196,7 +196,7 @@ def main():
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
                                             '  dicomsort sub-011/ses-mri01\n'
-                                            '  dicomsort sub-011/ses-mri01/DICOMDIR -r {AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm\n'
+                                            '  dicomsort sub-011/ses-mri01/DICOMDIR -n {AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm\n'
                                             '  dicomsort /project/3022026.01/raw --subprefix sub\n'
                                             '  dicomsort /project/3022026.01/raw --subprefix sub-01 --sesprefix ses\n ')
     parser.add_argument('dicomsource',          help='The name of the root folder containing the dicomsource/[sub/][ses/]dicomfiles and / or the (single session/study) DICOMDIR file')
