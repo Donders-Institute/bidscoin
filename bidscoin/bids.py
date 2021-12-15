@@ -801,7 +801,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
             LOGGER.info(f"Adding default options from the {plugin} plugin")
             bidsmap['Options']['plugins'][plugin] = module.OPTIONS if 'OPTIONS' in dir(module) else {}
         if 'BIDSMAP' in dir(module) and yamlfile.parent == bidscoin.heuristicsfolder:
-            for dataformat, bidsmappings in module.BIDSMAP:
+            for dataformat, bidsmappings in module.BIDSMAP.items():
                 if dataformat not in bidsmap:
                     LOGGER.info(f"Adding default bidsmappings from the {plugin} plugin")
                     bidsmap[dataformat] = bidsmappings
