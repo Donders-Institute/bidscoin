@@ -66,7 +66,11 @@ class DataSource:
         for plugin, options in self.plugins.items():
             module = bidscoin.import_plugin(plugin, ('is_sourcefile',))
             if module:
-                dataformat = module.is_sourcefile(self.path)
+                try:
+                    dataformat = module.is_sourcefile(self.path)
+                except Exception as moderror:
+                    dataformat = ''
+                    LOGGER.warning(f"The {plugin} plugin crashed while reading {self.path}\n{moderror}")
                 if dataformat:
                     self.dataformat = dataformat
                     return True

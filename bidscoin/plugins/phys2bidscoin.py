@@ -61,8 +61,8 @@ def is_sourcefile(file: Path) -> str:
         if file.suffix == '.txt':
             try:
                 phys2bids(file, info=True)
-            except (RuntimeError, AttributeError):
-                LOGGER.debug(f'This is the phys2bids-plugin is_sourcefile routine, assessing whether "{file}" has a valid dataformat')
+            except Exception as phys2bidserror:
+                LOGGER.debug(f'The phys2bids-plugin "is_sourcefile()" routine crashed, assessing whether "{file}" has a valid dataformat:\n{phys2bidserror}')
                 return ''
         return 'Physio'
 
