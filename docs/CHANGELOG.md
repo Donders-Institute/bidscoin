@@ -9,17 +9,27 @@ All notable changes to this project will be documented in this file. The format 
 - Option to install extra packages, such as phys2bids
 - A bidseditor button to save the Options to a (default) template bidsmap
 - Sub-/ses-prefix settings and BIDS / extra_data / excluded datatypes in bidsmap['Options']['bidscoin']
-- Regular expressions for extracting property and attribute substrings fro dynamic values via a <<key:regular_expression>> syntax
-- A plugin for phys2bids to convert physiological data
+- Regular expressions for extracting property and attribute substrings from dynamic values via a <<key:regular_expression>> syntax
 - A plugin for spec2nii to convert MR spectroscopy data
+- An experimental plugin for phys2bids to convert physiological data
+- An experimental plugin for pet2bids to convert MR spectroscopy data
 - Added a multi-echo deface function `medeface` that uses the same defacemask for all echo-images
-- The possibility to extract DICOM values using tag numbers (in addition to the attribute name)
+- The possibility to extract DICOM values using pydicom-style tag numbers (in addition to the attribute name)
+- The possibility for plugins to set default bidsmappings and Options when installed
+- A Singularity container configuration file
+- Improved (more fine-grained) plugin installation procedures
+- The option to remove decimals from age and discard acquisition dates from the meta data
 
 ### Changed
-- Plugins should now have a `is_sourcefile` and a `get_attribute` function and have a simpler API (-> DataSource class)
+- Plugins should now have a `is_sourcefile` and a `get_attribute` function and have a simpler/changed API (-> DataSource class)
 - The intricate filtering of the `nrfiles` property by the other filesystem properties has been removed and is now a pure/unfiltered file-system property
 - The default `<<SourceFilePath>>` keyword has been replaced by the more flexible <<filepath:/sub-(.*?)/>> property to extract the subject / session label
 - The dcm2bidsmap and the dcm2niix2bids plugins have been merged
+- The dicomsort utility has new naming-scheme functionality
+- Removed the obsolete bidsmap_template.yaml file
+
+### Fixed
+- Avoid storing Python literal structures as strings
 
 ## [3.6.3] - 2021-06-14
 

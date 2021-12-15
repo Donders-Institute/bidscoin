@@ -64,7 +64,7 @@ Step 1a: Running the bidsmapper
 
     examples:
       bidsmapper /project/foo/raw /project/foo/bids
-      bidsmapper /project/foo/raw /project/foo/bids -t bidsmap_template
+      bidsmapper /project/foo/raw /project/foo/bids -t bidsmap_dccn
 
 After the source data has been scanned, the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__ to let the user check and edit the automatically generated study bidsmap. For a fully automated workflow users can skip this interactive step using the ``-i`` option (see above).
 
@@ -106,7 +106,7 @@ Step 1b: Running the bidseditor
 
     examples:
       bidseditor /project/foo/bids
-      bidseditor /project/foo/bids -t bidsmap_template.yaml
+      bidseditor /project/foo/bids -t bidsmap_dccn.yaml
       bidseditor /project/foo/bids -b my/custom/bidsmap.yaml
 
 Main window

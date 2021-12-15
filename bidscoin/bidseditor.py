@@ -1586,7 +1586,7 @@ def main():
                                      epilog=textwrap.dedent("""
                                          examples:
                                            bidseditor /project/foo/bids
-                                           bidseditor /project/foo/bids -t bidsmap_template.yaml
+                                           bidseditor /project/foo/bids -t bidsmap_dccn.yaml
                                            bidseditor /project/foo/bids -b my/custom/bidsmap.yaml"""))
 
     parser.add_argument('bidsfolder',           help='The destination folder with the (future) bids data')
