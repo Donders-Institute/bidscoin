@@ -58,7 +58,7 @@ def is_sourcefile(file: Path) -> str:
     """
 
     if file.suffix[1:] in SUPPORTED_FTYPES:
-        if file.suffix == '.txt':
+        if file.suffix in ('.txt', '.mat'):
             try:
                 phys2bids(file, info=True)
             except Exception as phys2bidserror:
