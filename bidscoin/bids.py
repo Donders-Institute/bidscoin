@@ -792,12 +792,19 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
     elif bidsmapversion != bidscoin.version() and report:
         LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {bidscoin.version()}. This is normally ok but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
 
-    # Make sure we get a proper dictionary with plugins
+    # Make sure we get a proper plugin options and dataformat sections (use plugin default bidsmappings when a template bidsmap is loaded)
     if not bidsmap['Options'].get('plugins'):
         bidsmap['Options']['plugins'] = {}
     for plugin, options in bidsmap['Options']['plugins'].items():
+        module = bidscoin.import_plugin(plugin)
         if not bidsmap['Options']['plugins'].get(plugin):
-            bidsmap['Options']['plugins'][plugin] = {}
+            LOGGER.info(f"Adding default options from the {plugin} plugin")
+            bidsmap['Options']['plugins'][plugin] = module.OPTIONS if 'OPTIONS' in dir(module) else {}
+        if 'BIDSMAP' in dir(module) and yamlfile.parent == bidscoin.heuristicsfolder:
+            for dataformat, bidsmappings in module.BIDSMAP:
+                if dataformat not in bidsmap:
+                    LOGGER.info(f"Adding default bidsmappings from the {plugin} plugin")
+                    bidsmap[dataformat] = bidsmappings
 
     # Add missing provenance info, run dictionaries and bids entities
     run_ = get_run_()
