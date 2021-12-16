@@ -678,17 +678,25 @@ class MainWindow(QMainWindow):
         if not answer:
             return
 
-        # Insert the selected plugin in the options_layout
+        # Check the selected plugin and get it's options
         plugin = dropdown.currentText()
         if plugin in self.output_bidsmap['Options']['plugins']:
             LOGGER.error(f"Cannot add the '{plugin}' plugin as it already exists in the bidsmap")
             return
+        module = bidscoin.import_plugin(plugin)
+        if module:
+            options = self.input_bidsmap.get(   'Options',{}).get('plugins',{}).get(plugin,
+                      self.template_bidsmap.get('Options',{}).get('plugins',{}).get(plugin,
+                      module.OPTIONS if 'OPTIONS' in dir(module) else {}))
+        else:
+            LOGGER.warning(f"Cannot import the '{plugin}' plugin")
 
+        # Insert the selected plugin in the options_layout
         LOGGER.info(f"Adding the '{plugin}' plugin to bidsmap")
-        plugin_label, plugin_table = self.plugin_table(plugin, {})
+        plugin_label, plugin_table = self.plugin_table(plugin, options)
         self.options_layout.insertWidget(self.options_layout.count()-3, plugin_label)
         self.options_layout.insertWidget(self.options_layout.count()-3, plugin_table)
-        self.output_bidsmap['Options']['plugins'][plugin] = {}
+        self.output_bidsmap['Options']['plugins'][plugin] = options
         self.datachanged = True
 
     def del_plugin(self, plugin: str):
