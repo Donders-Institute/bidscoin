@@ -85,9 +85,13 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         bidsmap_new['Options']['plugins'] = {}
         for plugin in plugins:
             module = bidscoin.import_plugin(plugin)
-            bidsmap_new['Options']['plugins'][plugin] = bidsmap_old.get('Options',{}).get('plugins',{}).get(plugin,
-                                                           template.get('Options',{}).get('plugins',{}).get(plugin,
-                                                           module.OPTIONS if 'OPTIONS' in dir(module) else {}))
+            if module:
+                LOGGER.info(f"Adding the '{plugin}' plugin to the bidsmap")
+                bidsmap_new['Options']['plugins'][plugin] = bidsmap_old.get('Options',{}).get('plugins',{}).get(plugin,
+                                                               template.get('Options',{}).get('plugins',{}).get(plugin,
+                                                               module.OPTIONS if 'OPTIONS' in dir(module) else {}))
+            else:
+                return
     for dataformat in bidsmap_new:
         if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (-> 'PlugIns')
         for datatype in bidscoindatatypes + unknowndatatypes + ignoredatatypes:
