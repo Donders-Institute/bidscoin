@@ -50,6 +50,9 @@ Step 1a: Running the bidsmapper
                             provided by your institute). If the bidsmap filename is relative (i.e. no
                             "/" in the name) then it is assumed to be located in
                             bidsfolder/code/bidscoin. Default: bidsmap_dccn.yaml
+      -p PLUGINS, --plugins PLUGINS
+                            List of plugins to be used (with default options, overrules the plugin list
+                            in the study/template bidsmaps)
       -n SUBPREFIX, --subprefix SUBPREFIX
                             The prefix common for all the source subject-folders. Default: 'sub-'
       -m SESPREFIX, --sesprefix SESPREFIX
