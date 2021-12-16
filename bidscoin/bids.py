@@ -1574,6 +1574,7 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str) -
 
     # Parse the key-value pairs and store all the run info
     run   = get_run_()
+    subid = ''
     sesid = ''
     for keyval in bidsname.split('_'):
         if '-' in keyval:

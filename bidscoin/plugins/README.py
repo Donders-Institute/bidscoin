@@ -144,8 +144,8 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     See also the dcm2niix2bids plugin for reference implementation
 
     :param session:     The full-path name of the subject/session raw data source folder
-    :param bidsmap_new: The study bidsmap that we are building
-    :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap_new: The new study bidsmap that we are building
+    :param bidsmap_old: The previous study bidsmap that has precedence over the template bidsmap
     :param template:    The template bidsmap with the default heuristics
     :param store:       The paths of the source- and target-folder
     :return:

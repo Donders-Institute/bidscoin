@@ -87,8 +87,8 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     All the logic to map the Philips PAR/XML fields onto bids labels go into this function
 
     :param session:     The full-path name of the subject/session raw data source folder
-    :param bidsmap_new: The study bidsmap that we are building
-    :param bidsmap_old: Full BIDS heuristics data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap_new: The new study bidsmap that we are building
+    :param bidsmap_old: The previous study bidsmap that has precedence over the template bidsmap
     :param template:    The template bidsmap with the default heuristics
     :param store:       The paths of the source- and target-folder
     :return:
@@ -105,9 +105,10 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     sourcefiles = []
     if dataformat == 'DICOM':
         for sourcedir in bidscoin.lsdirs(session):
-            sourcefile = bids.get_dicomfile(sourcedir)
-            if sourcefile.name:
-                sourcefiles.append(sourcefile)
+            for n in range(1):      # Option: Use range(2) to scan two files and catch e.g. magnitude1/2 fieldmap files that are stored in one Series folder (but bidscoiner sees only the first file anyhow and it makes bidsmapper 2x slower :-()
+                sourcefile = bids.get_dicomfile(sourcedir, n)
+                if sourcefile.name:
+                    sourcefiles.append(sourcefile)
     elif dataformat == 'PAR':
         sourcefiles = bids.get_parfiles(session)
     else:
@@ -294,11 +295,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                         echonr = f"_{postfix}".replace('_e','')                                                 # E.g. postfix='e1'
                         if not echonr:
                             echonr = '1'
-                        if echonr.isalpha():
+                        if echonr.isnumeric():
+                            newbidsname = bids.insert_bidskeyval(newbidsname, 'echo', echonr.lstrip('0'))       # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
+                        else:
                             LOGGER.error(f"Unexpected postix '{postfix}' found in {dcm2niixfile}")
                             newbidsname = bids.get_bidsvalue(newbidsname, 'dummy', postfix)                     # Append the unknown postfix to the acq-label
-                        else:
-                            newbidsname = bids.insert_bidskeyval(newbidsname, 'echo', str(int(echonr)))         # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
 
                     # Patch the phase entity in the newbidsname with the dcm2niix mag/phase info
                     elif 'part' in run['bids'] and postfix in ('ph','real','imaginary'):                        # e.g. part: ['', 'mag', 'phase', 'real', 'imag', 0]
