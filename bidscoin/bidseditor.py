@@ -683,13 +683,10 @@ class MainWindow(QMainWindow):
         if plugin in self.output_bidsmap['Options']['plugins']:
             LOGGER.error(f"Cannot add the '{plugin}' plugin as it already exists in the bidsmap")
             return
-        module = bidscoin.import_plugin(plugin)
-        if module:
-            options = self.input_bidsmap[   'Options']['plugins'].get(plugin,
-                      self.template_bidsmap['Options']['plugins'].get(plugin,
-                      module.OPTIONS if 'OPTIONS' in dir(module) else {}))
-        else:
-            LOGGER.warning(f"Cannot import the '{plugin}' plugin")
+        module  = bidscoin.import_plugin(plugin)
+        options = self.input_bidsmap[   'Options']['plugins'].get(plugin,
+                  self.template_bidsmap['Options']['plugins'].get(plugin,
+                  module.OPTIONS if 'OPTIONS' in dir(module) else {}))
 
         # Insert the selected plugin in the options_layout
         LOGGER.info(f"Adding the '{plugin}' plugin to bidsmap")
