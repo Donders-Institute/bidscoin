@@ -685,8 +685,8 @@ class MainWindow(QMainWindow):
             return
         module = bidscoin.import_plugin(plugin)
         if module:
-            options = self.input_bidsmap.get(   'Options',{}).get('plugins',{}).get(plugin,
-                      self.template_bidsmap.get('Options',{}).get('plugins',{}).get(plugin,
+            options = self.input_bidsmap[   'Options']['plugins'].get(plugin,
+                      self.template_bidsmap['Options']['plugins'].get(plugin,
                       module.OPTIONS if 'OPTIONS' in dir(module) else {}))
         else:
             LOGGER.warning(f"Cannot import the '{plugin}' plugin")
