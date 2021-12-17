@@ -349,6 +349,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                     newbidsname = newbidsname.replace(f"_{postfix}_",'_')                                       # If it is not last
                     newbidsname = newbidsname.replace(f"_{postfix}.",'.')                                       # If it is last
 
+                    # The ADC images are not BIDS compliant
+                    if postfix == 'ADC':
+                        LOGGER.warning(f"The {newbidsname} image is most likely not BIDS-compliant -- you can probably delete it safely and update the scants.tsv file")
+
                 # Save the nifti file with a new name
                 if runindex.startswith('<<') and runindex.endswith('>>'):
                     newbidsname = bids.increment_runindex(outfolder, newbidsname, '')                           # Update the runindex now that the acq-label has changed
