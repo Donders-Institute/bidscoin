@@ -181,7 +181,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
                 LOGGER.info(f"Coining datasources in: {session}")
                 if bidssession.is_dir():
-                    LOGGER.warning(f"Existing BIDS output-directory found, which may result in duplicate data (with increased run-index). Make sure {bidsses} was cleaned-up from old data before (re)running the bidscoiner")
+                    LOGGER.warning(f"Existing BIDS output-directory found, which may result in duplicate data (with increased run-index). Make sure {bidssession} was cleaned-up from old data before (re)running the bidscoiner")
                 bidssession.mkdir(parents=True, exist_ok=True)
 
                 # Run the bidscoiner plugins
