@@ -165,12 +165,10 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                 if not datasource.dataformat:
                     LOGGER.info(f"No coinable datasources found in '{session}'")
                     continue
-                subval       = bidsmap[datasource.dataformat]['subject']
-                sesval       = bidsmap[datasource.dataformat]['session']
-                subid, sesid = datasource.subid_sesid(subval, sesval if sesval else '')
+                subid        = bidsmap[datasource.dataformat]['subject']
+                sesid        = bidsmap[datasource.dataformat]['session']
+                subid, sesid = datasource.subid_sesid(subid, sesid if sesid else '')
                 bidssession  = bidsfolder/subid/sesid
-                if sesval and not sesid:
-                    LOGGER.warning(f"Could not extract a session label using: {sesval} -> {datasource.path}")
                 if not force:
                     datatypes = []
                     for dataformat in dataformats:
