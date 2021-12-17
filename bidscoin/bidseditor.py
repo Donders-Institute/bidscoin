@@ -465,8 +465,9 @@ class MainWindow(QMainWindow):
                 LOGGER.setLevel(loglevel)
 
                 provenance   = Path(run['provenance'])
-                subid, sesid = run['datasource'].subid_sesid(output_bidsmap[dataformat]['subject'],
-                                                             output_bidsmap[dataformat]['session'])
+                subid        = output_bidsmap[dataformat]['subject']
+                sesid        = output_bidsmap[dataformat]['session']
+                subid, sesid = run['datasource'].subid_sesid(subid, sesid if sesid else '')
                 bidsname     = bids.get_bidsname(subid, sesid, run)
                 if run['bids'].get('suffix') in bids.get_derivatives(datatype):
                     session  = self.bidsfolder/'derivatives'/'[manufacturer]'/subid/sesid
@@ -867,8 +868,9 @@ class EditWindow(QDialog):
         self.source_run        = run                    # The original run-item from the source bidsmap
         self.target_run        = copy.deepcopy(run)     # The edited run-item that is inserted in the target_bidsmap
         self.get_allowed_suffixes()                     # Set the possible suffixes the user can select for a given datatype
-        self.subid, self.sesid = datasource.subid_sesid(bidsmap[self.dataformat]['subject'],
-                                                        bidsmap[self.dataformat]['session'])
+        subid                  = bidsmap[self.dataformat]['subject']
+        sesid                  = bidsmap[self.dataformat]['session']
+        self.subid, self.sesid = datasource.subid_sesid(subid, sesid if sesid else '')
 
         # Set-up the window
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
