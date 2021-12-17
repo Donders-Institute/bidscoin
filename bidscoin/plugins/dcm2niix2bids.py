@@ -159,19 +159,19 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
     :param session:     The full-path name of the subject/session source folder
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
-    :param bidsses:     The full-path name of the BIDS output `ses-` folder
+    :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
     :return:            Nothing
     """
 
-    # Get the subject identifiers and the BIDS root folder from the session folder
-    bidsfolder = bidsses.parent
-    if bidsfolder.name.startswith('ses-'):
-        sesid      = bidsfolder.name
-        bidsfolder = bidsfolder.parent
+    # Get the subject identifiers and the BIDS root folder from the bidsses folder
+    if bidsses.name.startswith('ses-'):
+        bidsfolder = bidsses.parent.parent
+        subid      = bidsses.parent.name
+        sesid      = bidsses.name
     else:
+        bidsfolder = bidsses.parent
+        subid      = bidsses.name
         sesid      = ''
-    subid      = bidsfolder.name
-    bidsfolder = bidsfolder.parent
 
     # Get started and see what dataformat we have
     plugin     = {'dcm2niix2bids': bidsmap['Options']['plugins']['dcm2niix2bids']}

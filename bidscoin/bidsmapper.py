@@ -64,7 +64,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSmapper ------------')
     LOGGER.info(f">>> bidsmapper sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmapfile} "
-                f" template={templatefile} subprefix={subprefix} sesprefix={sesprefix} store={store} automatic={noedit}")
+                f"template={templatefile} plugins={plugins} subprefix={subprefix} sesprefix={sesprefix} store={store}")
 
     # Get the heuristics for filling the new bidsmap
     bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile,  bidscoinfolder)

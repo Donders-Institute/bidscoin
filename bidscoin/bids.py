@@ -166,13 +166,14 @@ class DataSource:
                     return attributeval
         return ''
 
-    def subid_sesid(self, subid=None, sesid=None) -> Tuple[str, str]:
+    def subid_sesid(self, subid: str=None, sesid: str=None) -> Tuple[str, str]:
         """
         Extract the cleaned-up subid and sesid from the datasource properties or attributes
 
-        :param subid:      The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001') or a dynamic source attribute. Can be left empty
-        :param sesid:      The optional session identifier, same as subid
-        :return:           Updated (subid, sesid) tuple, including the BIDS-compliant sub-/ses-prefix
+        :param subid:   The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001') or a dynamic source attribute.
+                        Can be left empty / None to use the default <<filepath:regexp>> extraction
+        :param sesid:   The optional session identifier, same as subid
+        :return:        Updated (subid, sesid) tuple, including the BIDS-compliant sub-/ses-prefix
         """
 
         # Add the default value for subid and sesid if not given
@@ -183,11 +184,11 @@ class DataSource:
 
         # Parse the sub-/ses-id's
         subid_ = self.dynamicvalue(subid, runtime=True)
+        sesid  = self.dynamicvalue(sesid, runtime=True)
         if not subid_:
             LOGGER.error(f"Could not parse sub/ses-id information from {self.path} using: {subid}'")
-            return '', ''
+            subid_ = subid
         subid = subid_
-        sesid = self.dynamicvalue(sesid, runtime=True)
 
         # Add sub- and ses- prefixes if they are not there
         subid = 'sub-' + cleanup_value(re.sub(f'^{self.subprefix}', '', subid))

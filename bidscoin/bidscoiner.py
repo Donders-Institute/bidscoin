@@ -165,13 +165,13 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                 if not datasource.dataformat:
                     LOGGER.info(f"No coinable datasources found in '{session}'")
                     continue
-                subid, sesid = datasource.subid_sesid(bidsmap[datasource.dataformat]['subject'], bidsmap[datasource.dataformat]['session'])
+                subid        = bidsmap[datasource.dataformat]['subject']
+                sesid        = bidsmap[datasource.dataformat]['session']
+                subid, sesid = datasource.subid_sesid(subid, sesid if sesid else '')
                 bidssession  = bidsfolder/subid/sesid
                 if not force:
                     datatypes = []
                     for dataformat in dataformats:
-                        if sesid and not bidsmap[dataformat].get('session'):
-                            bidssession = bidssession.parent
                         for datatype in bidscoin.lsdirs(bidssession):                           # See what datatypes we already have in the bids session-folder
                             if datatype.glob('*') and bidsmap[dataformat].get(datatype.name):   # See if we are going to add data for this datatype
                                 datatypes.append(datatype.name)

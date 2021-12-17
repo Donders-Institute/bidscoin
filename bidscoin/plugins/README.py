@@ -165,7 +165,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
     :param session:     The full-path name of the subject/session raw data source folder
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
-    :param bidsses:     The full-path name of the BIDS output `ses-` folder
+    :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
     :return:            Nothing
     """
 
