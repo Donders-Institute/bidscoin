@@ -129,11 +129,9 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                 LOGGER.info(f"Mapping: {session} (subject {n}/{len(subjects)})")
 
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-                session, unpacked = bids.unpack(session, subprefix, sesprefix)
-                if unpacked:
-                    store = dict(source=unpacked, target=bidscoinfolder/'provenance')
-                elif store:
-                    store = dict(source=rawfolder, target=bidscoinfolder/'provenance')
+                session, unpacked = bids.unpack(session, subprefix, sesprefix)      # TODO: Fix DICOMDIR files with multiple sessions (as in PYDICOMDIR)
+                if store:
+                    store = dict(source = unpacked if unpacked else rawfolder, target = bidscoinfolder/'provenance')
                 else:
                     store = dict()
 
