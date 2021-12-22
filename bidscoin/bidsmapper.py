@@ -139,7 +139,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
                 # Run the bidsmapper plugins
                 for module in plugins:
-                    LOGGER.info(f"Executing plugin: {Path(module.__file__).name}")
+                    LOGGER.info(f"Executing plugin: {Path(module.__file__).name} -> {session}")
                     module.bidsmapper_plugin(session, bidsmap_new, bidsmap_old, template, store)
 
                 # Clean-up the temporary unpacked data
