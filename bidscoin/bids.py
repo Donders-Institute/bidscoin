@@ -479,7 +479,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                 value = dicomdata.get(tagname, '')                  # Then try and see if it is an attribute name
 
             # Try a recursive search
-            if not value:
+            if not value and value != 0:
                 for elem in dicomdata.iterall():
                     if tagname in (elem.name, elem.keyword, str(elem.tag), str(elem.tag).replace(', ',',')):
                         value = elem.value
