@@ -455,7 +455,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
     global _DICOMDICT_CACHE, _DICOMFILE_CACHE
 
     if not dicomfile.is_file():
-        LOGGER.debug(f"{dicomfile} not found")
+        LOGGER.warning(f"{dicomfile} not found")
         value = ''
 
     elif not is_dicomfile(dicomfile):
