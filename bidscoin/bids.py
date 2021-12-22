@@ -136,7 +136,7 @@ class DataSource:
         :param attributekey: The attribute key for which a value is read from the datasource. A colon-separated regular expression can be appended to the attribute key (same as for the `filepath` and `filename` properties)
         :param validregexp:  If True, the regexp meta-characters in the attribute value (e.g. '*') are replaced by '.',
                              e.g. to prevent compile errors in match_attribute()
-        :return:             The attribute value or '' if the attribute could not be read from the datasource
+        :return:             The attribute value or '' if the attribute could not be read from the datasource. NB: values are always converted to strings
         """
 
         if ':' in attributekey:
