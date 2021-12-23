@@ -269,6 +269,7 @@ def unpack(sourcefolder: Path, subprefix: str, sesprefix: str, wildcard: str='*'
         copy_tree(str(sourcefolder), str(worksubses))     # Older python versions don't support PathLib
 
         # Unpack the zip/tarballed files in the temporary folder
+        sessions = []
         for packedfile in [worksubses/packedfile.name for packedfile in packedfiles]:
             LOGGER.info(f"Unpacking: {packedfile.name} -> {worksubses}")
             ext = packedfile.suffixes
@@ -280,10 +281,12 @@ def unpack(sourcefolder: Path, subprefix: str, sesprefix: str, wildcard: str='*'
                     tar_fid.extractall(worksubses)
 
             # Sort the DICOM files immediately (to avoid name collisions)
-            dicomsort.sortsessions(worksubses)
+            sessions += dicomsort.sortsessions(worksubses)
 
         # Sort the DICOM files if not sorted yet (e.g. DICOMDIR)
-        dicomsort.sortsessions(worksubses)
+        sessions += dicomsort.sortsessions(worksubses)
+        if len(set(sessions)) > 1:
+            LOGGER.warning(f"Multiple subject/session folders found in: {sourcefolder}")
 
         return worksubses, workfolder
 
