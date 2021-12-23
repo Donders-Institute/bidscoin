@@ -127,59 +127,70 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
             dicomfile.replace(newfilename)
 
 
-def sortsessions(session: Path, subprefix: str='', sesprefix: str='', folderscheme: str='{SeriesNumber:03d}-{SeriesDescription}',
-                 namescheme: str='', pattern: str='.*\.(IMA|dcm)$', dryrun: bool=False) -> None:
+def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folderscheme: str='{SeriesNumber:03d}-{SeriesDescription}',
+                 namescheme: str='', pattern: str='.*\.(IMA|dcm)$', dryrun: bool=False) -> List[Path]:
     """
     Wrapper around sortsession() to loop over subjects and sessions and map the session DICOM files
 
-    :param session:      The root folder containing the source [sub/][ses/]dicomfiles or the DICOMDIR file
+    :param sourcefolder: The root folder containing the source [sub/][ses/]dicomfiles or the DICOMDIR file
     :param subprefix:    The prefix for searching the sub folders in session
     :param sesprefix:    The prefix for searching the ses folders in sub folder
     :param folderscheme: Optional naming scheme for the sorted (e.g. Series) subfolders. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields', default='{SeriesNumber:03d}-{SeriesDescription}'
     :param namescheme:   Optional naming scheme for renaming the files. Follows the Python string formatting syntax with DICOM field names in curly bracers, e.g. {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA
     :param pattern:      The regular expression pattern used in re.match() to select the dicom files
     :param dryrun:       Boolean to just display the action
-    :return:             Nothing
+    :return:             List of sorted sessions
     """
 
     # Input checking
-    session = Path(session)
+    sourcefolder = Path(sourcefolder)
+    if sourcefolder.is_file():
+        if sourcefolder.name == 'DICOMDIR':
+            sourcefolder = sourcefolder.parent
+        else:
+            LOGGER.error(f"Unexpected dicomsource argument '{sourcefolder}', aborting dicomsort()...")
+            return []
     if (folderscheme and not validscheme(folderscheme)) or (namescheme and not validscheme(namescheme)):
         LOGGER.error('Wrong scheme input argument(s), aborting dicomsort()...')
-        return
+        return []
 
-    # Do a recursive call if subprefix is given
-    if subprefix:
+    # Do a recursive call if a sub- or ses-prefix is given
+    sessions = []       # Collect the sorted session-folders
+    if subprefix or sesprefix:
 
-        for subfolder in bidscoin.lsdirs(session, subprefix + '*'):
+        for subjectfolder in bidscoin.lsdirs(sourcefolder, subprefix + '*'):
             if sesprefix:
-                sessionfolders = bidscoin.lsdirs(subfolder, sesprefix + '*')
+                sessionfolders = bidscoin.lsdirs(subjectfolder, sesprefix + '*')
             else:
-                sessionfolders = [subfolder]
-
+                sessionfolders = [subjectfolder]
             for sessionfolder in sessionfolders:
-                sortsessions(sessionfolder, folderscheme=folderscheme, namescheme=namescheme, pattern=pattern, dryrun=dryrun)
+                sessions += sortsessions(sessionfolder, folderscheme=folderscheme, namescheme=namescheme, pattern=pattern, dryrun=dryrun)
 
     # Use the DICOMDIR file if it is there
-    if (session/'DICOMDIR').is_file():
+    elif (sourcefolder/'DICOMDIR').is_file():
 
-        dicomdir      = pydicom.dcmread(str(session/'DICOMDIR'))
-        sessionfolder = session
+        dicomdir = pydicom.dcmread(str(sourcefolder/'DICOMDIR'))
         for patient in dicomdir.patient_records:
-            if len(dicomdir.patient_records) > 1:
-                sessionfolder = session/f"sub-{cleanup(patient.PatientName)}"
+            for n, study in enumerate(patient.children, 1):
+                dicomfiles    = [sourcefolder.joinpath(*image.ReferencedFileID) for series in study.children for image in series.children]
+                sessionfolder = sourcefolder
+                if dicomfiles:
+                    if len(dicomdir.patient_records) > 1:
+                        sessionfolder = sessionfolder/f"sub-{cleanup(patient.PatientName)}"
+                    if len(patient.children) > 1:
+                        sessionfolder = sessionfolder/f"ses-{n:02}-{cleanup(study.StudyDescription)}"  # TODO: Leave out StudyDescription? Include PatientName/StudiesDescription?
+                    sortsession(sessionfolder, dicomfiles, folderscheme, namescheme, dryrun)
+                sessions.append(sessionfolder)
 
-            for n, study in enumerate(patient.children, 1):                                    # TODO: Check order
-                if len(patient.children) > 1:
-                    sessionfolder = session/f"ses-{n:02}-{cleanup(study.StudyDescription)}"    # TODO: Leave out StudyDescription? Include PatientName/StudiesDescription?
-
-                dicomfiles = [session.joinpath(*image.ReferencedFileID) for series in study.children for image in series.children]
-                sortsession(sessionfolder, dicomfiles, folderscheme, namescheme, dryrun)
-
+    # Sort the DICOM files in the sourcefolder
     else:
 
-        dicomfiles = [dcmfile for dcmfile in session.iterdir() if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
-        sortsession(session, dicomfiles, folderscheme, namescheme, dryrun)
+        sessions   = [sourcefolder]
+        dicomfiles = [dcmfile for dcmfile in sourcefolder.iterdir() if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
+        if dicomfiles:
+            sortsession(sourcefolder, dicomfiles, folderscheme, namescheme, dryrun)
+
+    return sessions
 
 
 def main():
@@ -210,7 +221,7 @@ def main():
     # Set-up logging
     bidscoin.setup_logging()
 
-    sortsessions(session      = args.dicomsource,
+    sortsessions(sourcefolder = args.dicomsource,
                  subprefix    = args.subprefix,
                  sesprefix    = args.sesprefix,
                  folderscheme = args.folderscheme,
