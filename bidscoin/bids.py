@@ -284,9 +284,9 @@ def unpack(sourcefolder: Path, subprefix: str, sesprefix: str, wildcard: str='*'
             sessions += dicomsort.sortsessions(worksubses)
 
         # Sort the DICOM files if not sorted yet (e.g. DICOMDIR)
-        sessions += dicomsort.sortsessions(worksubses)
-        if len(set(sessions)) > 1:
-            LOGGER.warning(f"Multiple subject/session folders found in: {sourcefolder}")
+        sessions = set(sessions + dicomsort.sortsessions(worksubses))
+        if len(sessions) > 1:
+            LOGGER.warning(f"Multiple subject/session folders found in {sourcefolder}:\n{sessions}")
 
         return worksubses, workfolder
 
