@@ -190,7 +190,7 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
         if dicomfiles:
             sortsession(sourcefolder, dicomfiles, folderscheme, namescheme, dryrun)
 
-    return set(sessions)
+    return list(set(sessions))
 
 
 def main():
