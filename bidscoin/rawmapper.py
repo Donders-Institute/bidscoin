@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Maps out the values of a dicom field of all subjects in the sourcefolder, saves
-the result in a mapper-file and, optionally, uses the dicom values to rename
-the sub-/ses-id's of the subfolders. This latter option can be used, e.g.
-when an alternative subject id was entered in the [Additional info] field
-during subject registration (i.e. stored in the PatientComments dicom field)
+Maps out the values of a dicom attribute of all subjects in the sourcefolder, saves the result in a
+mapper-file and, optionally, uses the dicom values to rename the sub-/ses-id's of the subfolders. This
+latter option can be used, e.g. when an alternative subject id was entered in the [Additional info]
+field during subject registration at the scanner console (i.e. this data is stored in the dicom
+attribute named 'PatientComments')
 """
 
 import re
@@ -144,22 +144,22 @@ def main():
                                             '  rawmapper /project/3022026.01/raw -r -d ManufacturerModelName AcquisitionDate --dryrun\n' 
                                             '  rawmapper raw/ -r -s sub-1*/* sub-2*/ses-mri01 --dryrun\n'
                                             '  rawmapper -d EchoTime -w *fMRI* /project/3022026.01/raw\n ')
-    parser.add_argument('sourcefolder',      help='The source folder with the raw data in sub-#/ses-#/series organisation')
-    parser.add_argument('-s','--sessions',   help='Space separated list of selected sub-#/ses-# names / folders to be processed. Otherwise all sessions in the bidsfolder will be selected', nargs='+')
-    parser.add_argument('-d','--dicomfield', help='The name of the dicomfield that is mapped / used to rename the subid/sesid foldernames', default=['PatientComments'], nargs='+')
-    parser.add_argument('-w','--wildcard',   help='The Unix style pathname pattern expansion that is used to select the series from which the dicomfield is being mapped (can contain wildcards)', default='*')
-    parser.add_argument('-o','--outfolder',  help='The mapper-file is normally saved in sourcefolder or, when using this option, in outfolder')
-    parser.add_argument('-r','--rename',     help='If this flag is given sub-subid/ses-sesid directories in the sourcefolder will be renamed to sub-dcmval/ses-dcmval', action='store_true')
-    parser.add_argument('-n','--subprefix',  help='The prefix common for all the source subject-folders', default='sub-')
-    parser.add_argument('-m','--sesprefix',  help='The prefix common for all the source session-folders', default='ses-')
-    parser.add_argument('--dryrun',          help='Add this flag to dryrun (test) the mapping or renaming of the sub-subid/ses-sesid directories (i.e. nothing is stored on disk and directory names are not actually changed))', action='store_true')
+    parser.add_argument('sourcefolder',     help='The source folder with the raw data in sub-#/ses-#/series organisation')
+    parser.add_argument('-s','--sessions',  help='Space separated list of selected sub-#/ses-# names / folders to be processed. Otherwise all sessions in the bidsfolder will be selected', nargs='+')
+    parser.add_argument('-f','--field',     help='The fieldname(s) of the dicom attribute(s) used to rename or map the subid/sesid foldernames', default=['PatientComments'], nargs='+')
+    parser.add_argument('-w','--wildcard',  help='The Unix style pathname pattern expansion that is used to select the series from which the dicomfield is being mapped (can contain wildcards)', default='*')
+    parser.add_argument('-o','--outfolder', help='The mapper-file is normally saved in sourcefolder or, when using this option, in outfolder')
+    parser.add_argument('-r','--rename',    help='If this flag is given sub-subid/ses-sesid directories in the sourcefolder will be renamed to sub-dcmval/ses-dcmval', action='store_true')
+    parser.add_argument('-n','--subprefix', help='The prefix common for all the source subject-folders', default='sub-')
+    parser.add_argument('-m','--sesprefix', help='The prefix common for all the source session-folders', default='ses-')
+    parser.add_argument('-d','--dryrun',    help='Add this flag to dryrun (test) the mapping or renaming of the sub-subid/ses-sesid directories (i.e. nothing is stored on disk and directory names are not actually changed))', action='store_true')
     args = parser.parse_args()
 
     rawmapper(rawfolder  = args.sourcefolder,
               outfolder  = args.outfolder,
               sessions   = args.sessions,
               rename     = args.rename,
-              dicomfield = args.dicomfield,
+              dicomfield = args.field,
               wildcard   = args.wildcard,
               subprefix  = args.subprefix,
               sesprefix  = args.sesprefix,
