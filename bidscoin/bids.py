@@ -426,9 +426,6 @@ def parse_x_protocol(pattern: str, dicomfile: Path) -> str:
     :return:            The string extracted values from the dicom-file according to the given pattern
     """
 
-    if not is_dicomfile_siemens(dicomfile):
-        LOGGER.warning(f"Parsing {pattern} may fail because {dicomfile} does not seem to be a Siemens DICOM file")
-
     regexp = '^' + pattern + '\t = \t(.*)\n'
     regex  = re.compile(regexp.encode('utf-8'))
 
@@ -437,6 +434,9 @@ def parse_x_protocol(pattern: str, dicomfile: Path) -> str:
             match = regex.match(line)
             if match:
                 return match.group(1).decode('utf-8')
+
+    if not is_dicomfile_siemens(dicomfile):
+        LOGGER.warning(f"Parsing {pattern} may have failed because {dicomfile} does not seem to be a Siemens DICOM file")
 
     LOGGER.warning(f"Pattern: '{regexp.encode('unicode_escape').decode()}' not found in: {dicomfile}")
     return ''
