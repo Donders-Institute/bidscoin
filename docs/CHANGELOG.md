@@ -2,7 +2,9 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
-## [3.7.0-dev]
+## [3.7.1-dev]
+
+## [3.7.0] - 2021-12-20
 
 ### Added
 - A BIDScoin installation test (`bidscoin -t`)
@@ -275,7 +277,8 @@ A first stable release of BIDScoin :-)
 ### To do
 * Add support for non-imaging data
 
-[3.7.0-dev]: https://github.com/Donders-Institute/bidscoin/compare/3.6.1...HEAD
+[3.7.1-dev]: https://github.com/Donders-Institute/bidscoin/compare/3.7.0...HEAD
+[3.7.0]: https://github.com/Donders-Institute/bidscoin/compare/3.6.3...3.7.0
 [3.6.3]: https://github.com/Donders-Institute/bidscoin/compare/3.6.2...3.6.3
 [3.6.2]: https://github.com/Donders-Institute/bidscoin/compare/3.6.1...3.6.2
 [3.6.1]: https://github.com/Donders-Institute/bidscoin/compare/3.6.0...3.6.1

@@ -39,7 +39,7 @@ BIDScoin requires that the source data repository is organized according to a ``
     |       [..]
     [..]
 
-2. **A 'DICOMDIR' organization**. The data folder contains a DICOMDIR file and multiple subfolders. A DICOMDIR is dictionary-file that indicates the various places where the DICOM files are stored. DICOMDIRs are often used in clinical settings and may look like::
+2. **A 'DICOMDIR' organization**. The data folder contains a DICOMDIR file and multiple subfolders (NB: single DICOMDIR files containing multiple subjects or sessions are not supported). A DICOMDIR is dictionary-file that indicates the various places where the DICOM files are stored. DICOMDIRs are often used in clinical settings and may look like::
 
     sourcedata
     |-- sub-001
@@ -123,8 +123,7 @@ The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-
 
 ::
 
-    usage: dicomsort.py [-h] [-i SUBPREFIX] [-j SESPREFIX] [-f FOLDERSCHEME] [-n NAMESCHEME] [-p PATTERN]
-                        [-d]
+    usage: dicomsort.py [-h] [-i SUBPREFIX] [-j SESPREFIX] [-f FOLDERSCHEME] [-n NAMESCHEME] [-p PATTERN] [-d]
                         dicomsource
 
     Sorts and / or renames DICOM files into local subfolders, e.g. with 3-digit SeriesNumber-SeriesDescription
@@ -169,56 +168,46 @@ The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-
 rawmapper
 ^^^^^^^^^
 
-Another command-line utility that can be helpful in organizing your source data is ``rawmapper``. This utility can show you an overview (map) of all the values of DICOM-fields of interest in your data-set and, optionally, use these fields to rename your source data sub-folders. The latter option can be handy e.g. if you manually entered subject-identifiers as [Additional info] at the scanner console and you want to use these to rename your subject folders.
+Another command-line utility that can be helpful in organizing your source data is ``rawmapper``. This utility can show you an overview (map) of all the values of DICOM-attributes of interest in your data-set and, optionally, used to rename your source data sub-folders. The latter option can be handy e.g. if you manually entered subject-identifiers as [Additional info] at the scanner console and you want to use these to rename your subject folders.
 
 ::
 
-    usage: rawmapper [-h] [-s SESSIONS [SESSIONS ...]]
-                     [-d DICOMFIELD [DICOMFIELD ...]] [-w WILDCARD]
-                     [-o OUTFOLDER] [-r] [-n SUBPREFIX] [-m SESPREFIX]
-                     [--dryrun]
-                     sourcefolder
+    usage: rawmapper.py [-h] [-s SESSIONS [SESSIONS ...]] [-f FIELD [FIELD ...]] [-w WILDCARD]
+                        [-o OUTFOLDER] [-r] [-n SUBPREFIX] [-m SESPREFIX] [-d]
+                        sourcefolder
 
-    Maps out the values of a dicom field of all subjects in the sourcefolder, saves
-    the result in a mapper-file and, optionally, uses the dicom values to rename
-    the sub-/ses-id's of the subfolders. This latter option can be used, e.g.
-    when an alternative subject id was entered in the [Additional info] field
-    during subject registration (i.e. stored in the PatientComments dicom field)
+    Maps out the values of a dicom attribute of all subjects in the sourcefolder, saves the result in a
+    mapper-file and, optionally, uses the dicom values to rename the sub-/ses-id's of the subfolders. This
+    latter option can be used, e.g. when an alternative subject id was entered in the [Additional info]
+    field during subject registration at the scanner console (i.e. this data is stored in the dicom
+    attribute named 'PatientComments')
 
     positional arguments:
-      sourcefolder          The source folder with the raw data in
-                            sub-#/ses-#/series organisation
+      sourcefolder          The source folder with the raw data in sub-#/ses-#/series organisation
 
     optional arguments:
       -h, --help            show this help message and exit
       -s SESSIONS [SESSIONS ...], --sessions SESSIONS [SESSIONS ...]
-                            Space separated list of selected sub-#/ses-# names /
-                            folders to be processed. Otherwise all sessions in the
-                            bidsfolder will be selected (default: None)
-      -d DICOMFIELD [DICOMFIELD ...], --dicomfield DICOMFIELD [DICOMFIELD ...]
-                            The name of the dicomfield that is mapped / used to
-                            rename the subid/sesid foldernames (default:
-                            ['PatientComments'])
+                            Space separated list of selected sub-#/ses-# names / folders to be processed.
+                            Otherwise all sessions in the bidsfolder will be selected (default: None)
+      -f FIELD [FIELD ...], --field FIELD [FIELD ...]
+                            The fieldname(s) of the dicom attribute(s) used to rename or map the
+                            subid/sesid foldernames (default: ['PatientComments'])
       -w WILDCARD, --wildcard WILDCARD
-                            The Unix style pathname pattern expansion that is used
-                            to select the series from which the dicomfield is
-                            being mapped (can contain wildcards) (default: *)
+                            The Unix style pathname pattern expansion that is used to select the series
+                            from which the dicomfield is being mapped (can contain wildcards) (default: *)
       -o OUTFOLDER, --outfolder OUTFOLDER
-                            The mapper-file is normally saved in sourcefolder or,
-                            when using this option, in outfolder (default: None)
-      -r, --rename          If this flag is given sub-subid/ses-sesid directories
-                            in the sourcefolder will be renamed to sub-dcmval/ses-
-                            dcmval (default: False)
+                            The mapper-file is normally saved in sourcefolder or, when using this option,
+                            in outfolder (default: None)
+      -r, --rename          If this flag is given sub-subid/ses-sesid directories in the sourcefolder will
+                            be renamed to sub-dcmval/ses-dcmval (default: False)
       -n SUBPREFIX, --subprefix SUBPREFIX
-                            The prefix common for all the source subject-folders
-                            (default: sub-)
+                            The prefix common for all the source subject-folders (default: sub-)
       -m SESPREFIX, --sesprefix SESPREFIX
-                            The prefix common for all the source session-folders
-                            (default: ses-)
-      --dryrun              Add this flag to dryrun (test) the mapping or renaming
-                            of the sub-subid/ses-sesid directories (i.e. nothing
-                            is stored on disk and directory names are not actually
-                            changed)) (default: False)
+                            The prefix common for all the source session-folders (default: ses-)
+      -d, --dryrun          Add this flag to dryrun (test) the mapping or renaming of the sub-subid/ses-
+                            sesid directories (i.e. nothing is stored on disk and directory names are not
+                            actually changed)) (default: False)
 
     examples:
       rawmapper /project/3022026.01/raw/
@@ -230,4 +219,3 @@ Another command-line utility that can be helpful in organizing your source data 
 
 .. note::
    If these data management utilities do not satisfy your needs, then have a look at this `reorganize\_dicom\_files <https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md>`__ tool.
-

@@ -20,7 +20,7 @@ Options:
 # General options and plugins
 # --------------------------------------------------------------------------------
   bidscoin:
-    version: 3.7.0-dev            # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
+    version: 3.7.0                # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
     bidsignore: mrs/;extra_data/  # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
     subprefix: sub-               # The subject prefix of the source data
     sesprefix: ses-               # The session prefix of the source data
@@ -37,7 +37,7 @@ Options:
       args:                       # Argument string that is passed to spec2nii (see spec2nii -h for more information)
       anon: y                     # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
       multiraid: 2                # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
-    phys2bidscoin:                # The settings for the phys2bidscoin plugin
+#    phys2bidscoin:                # The settings for the phys2bidscoin plugin
 
 
 DICOM:
@@ -293,7 +293,7 @@ DICOM:
       ce:
       rec:
       run: <<1>>
-      echo:
+      echo: <EchoNumbers>
       part: ['', mag, phase, real, imag, 0]
       suffix: MESE
   - provenance:

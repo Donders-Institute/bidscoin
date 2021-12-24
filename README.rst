@@ -58,15 +58,18 @@ Note:
 
 .. |PyPI version| image:: https://img.shields.io/pypi/v/bidscoin?color=success
    :target: https://pypi.org/project/bidscoin
+   :alt: BIDScoin
 .. |PyPI - Python Version| image:: https://img.shields.io/pypi/pyversions/bidscoin.svg
+   :alt: Python 3
 .. |GPLv3| image:: https://img.shields.io/badge/License-GPLv3-blue.svg
    :target: https://www.gnu.org/licenses/gpl-3.0
+   :alt: GPL-v3.0 license
 .. |RTD| image:: https://readthedocs.org/projects/bidscoin/badge/?version=latest
    :target: http://bidscoin.readthedocs.io/en/latest/?badge=latest
-   :alt: Documentation Status
+   :alt: Documentation status
 .. |DOI| image:: https://img.shields.io/badge/doi-10.3389%2Ffinf.2021.770608-informational.svg
    :target: https://www.frontiersin.org/articles/10.3389/fninf.2021.770608
    :alt: DOI reference
 .. |BIDS| image:: https://img.shields.io/badge/BIDS-v1.6.0-blue
    :target: https://bids-specification.readthedocs.io/en/v1.6.0/
-   :alt: BIDS
+   :alt: Brain Imaging Data Structure (BIDS)
