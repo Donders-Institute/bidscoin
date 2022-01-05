@@ -150,9 +150,9 @@ The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-
       -n NAMESCHEME, --namescheme NAMESCHEME
                             Optional naming scheme that can be provided to rename the DICOM files. Follows
                             the Python string formatting syntax with DICOM field names in curly bracers with
-                            an optional number of digits for numeric fields. Use "{PatientName}_{SeriesNumbe
-                            r:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA" for
-                            the default names at DCCN (default: None)
+                            an optional number of digits for numeric fields. Use e.g. "{PatientName}_{Series
+                            Number:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm"
+                            or "{InstanceNumber:05d}_{SOPInstanceUID}.IMA" for default names (default: None)
       -p PATTERN, --pattern PATTERN
                             The regular expression pattern used in re.match(pattern, dicomfile) to select
                             the dicom files (default: .*\.(IMA|dcm)$)
