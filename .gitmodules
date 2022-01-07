@@ -1,3 +1,3 @@
 [submodule "testdata"]
-	path = testdata
+	path = tests/testdata
 	url = git@github.com:openneuropet/testdata.git
