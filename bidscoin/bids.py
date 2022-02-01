@@ -107,12 +107,9 @@ class DataSource:
         elif tagname == 'filename':
             return self.path.name
 
-        if tagname == 'filesize':
+        if tagname == 'filesize' and self.path.is_file():
             # Convert the size in bytes into a human-readable B, KB, MG, GB, TB format
-            try:
-                size = self.path.stat().st_size             # Size in bytes
-            except IOError:
-                size = 0
+            size  = self.path.stat().st_size                # Size in bytes
             power = 2 ** 10                                 # 2**10 = 1024
             label = {0:'', 1:'k', 2:'M', 3:'G', 4:'T'}      # Standard labels for powers of 1024
             n = 0                                           # The power/label index
@@ -121,17 +118,14 @@ class DataSource:
                 n += 1
             return f"{size:.2f} {label[n]}B"
 
-        if tagname == 'nrfiles':
-            try:
-                if run:                                         # Currently not used but keep the option open for future use
-                    def match(file): return ((match_attribute(file.parent,         run['properties']['filepath']) or not run['properties']['filepath']) and
-                                             (match_attribute(file.name,           run['properties']['filename']) or not run['properties']['filename']) and
-                                             (match_attribute(file.stat().st_size, run['properties']['filesize']) or not run['properties']['filesize']))
-                    return len([file for file in self.path.parent.glob('*') if match(file)])
-                else:
-                    return len(list(self.path.parent.glob('*')))
-            except IOError:
-                pass
+        if tagname == 'nrfiles' and self.path.is_file():
+            if run:                                         # Currently not used but keep the option open for future use
+                def match(file): return ((match_attribute(file.parent,         run['properties']['filepath']) or not run['properties']['filepath']) and
+                                         (match_attribute(file.name,           run['properties']['filename']) or not run['properties']['filename']) and
+                                         (match_attribute(file.stat().st_size, run['properties']['filesize']) or not run['properties']['filesize']))
+                return len([file for file in self.path.parent.glob('*') if match(file)])
+            else:
+                return len(list(self.path.parent.glob('*')))
 
         return ''
 
