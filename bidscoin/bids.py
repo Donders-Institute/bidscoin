@@ -89,43 +89,47 @@ class DataSource:
         :return:        The property value (posix with a trailing "/" if tagname == 'filepath') or '' if the property could not be parsed from the datasource
         """
 
-        if tagname.startswith('filepath:') and len(tagname) > 9:
-            match = re.findall(tagname[9:], self.path.parent.as_posix() + '/')
-            if match:
-                if len(match) > 1:
-                    LOGGER.warning(f"Multiple matches {match} found when extracting {tagname} from {self.path.parent.as_posix() + '/'}, using: {match[-1]}")
-                return match[-1]                            # The last match is most likely the most informative
-        elif tagname == 'filepath':
-            return self.path.parent.as_posix() + '/'
+        try:
+            if tagname.startswith('filepath:') and len(tagname) > 9:
+                match = re.findall(tagname[9:], self.path.parent.as_posix() + '/')
+                if match:
+                    if len(match) > 1:
+                        LOGGER.warning(f"Multiple matches {match} found when extracting {tagname} from {self.path.parent.as_posix() + '/'}, using: {match[-1]}")
+                    return match[-1]                            # The last match is most likely the most informative
+            elif tagname == 'filepath':
+                return self.path.parent.as_posix() + '/'
 
-        if tagname.startswith('filename:') and len(tagname) > 9:
-            match = re.findall(tagname[9:], self.path.name)
-            if match:
-                if len(match) > 1:
-                    LOGGER.warning(f"Multiple matches {match} found when extracting {tagname} from {self.path.name}, using: {match[0]}")
-                return match[0]                             # The first match is most likely the most informative (?)
-        elif tagname == 'filename':
-            return self.path.name
+            if tagname.startswith('filename:') and len(tagname) > 9:
+                match = re.findall(tagname[9:], self.path.name)
+                if match:
+                    if len(match) > 1:
+                        LOGGER.warning(f"Multiple matches {match} found when extracting {tagname} from {self.path.name}, using: {match[0]}")
+                    return match[0]                             # The first match is most likely the most informative (?)
+            elif tagname == 'filename':
+                return self.path.name
 
-        if tagname == 'filesize' and self.path.is_file():
-            # Convert the size in bytes into a human-readable B, KB, MG, GB, TB format
-            size  = self.path.stat().st_size                # Size in bytes
-            power = 2 ** 10                                 # 2**10 = 1024
-            label = {0:'', 1:'k', 2:'M', 3:'G', 4:'T'}      # Standard labels for powers of 1024
-            n = 0                                           # The power/label index
-            while size > power and n < len(label):
-                size /= power
-                n += 1
-            return f"{size:.2f} {label[n]}B"
+            if tagname == 'filesize' and self.path.is_file():
+                # Convert the size in bytes into a human-readable B, KB, MG, GB, TB format
+                size  = self.path.stat().st_size                # Size in bytes
+                power = 2 ** 10                                 # 2**10 = 1024
+                label = {0:'', 1:'k', 2:'M', 3:'G', 4:'T'}      # Standard labels for powers of 1024
+                n = 0                                           # The power/label index
+                while size > power and n < len(label):
+                    size /= power
+                    n += 1
+                return f"{size:.2f} {label[n]}B"
 
-        if tagname == 'nrfiles' and self.path.is_file():
-            if run:                                         # Currently not used but keep the option open for future use
-                def match(file): return ((match_attribute(file.parent,         run['properties']['filepath']) or not run['properties']['filepath']) and
-                                         (match_attribute(file.name,           run['properties']['filename']) or not run['properties']['filename']) and
-                                         (match_attribute(file.stat().st_size, run['properties']['filesize']) or not run['properties']['filesize']))
-                return len([file for file in self.path.parent.glob('*') if match(file)])
-            else:
-                return len(list(self.path.parent.glob('*')))
+            if tagname == 'nrfiles' and self.path.is_file():
+                if run:                                         # Currently not used but keep the option open for future use
+                    def match(file): return ((match_attribute(file.parent,         run['properties']['filepath']) or not run['properties']['filepath']) and
+                                             (match_attribute(file.name,           run['properties']['filename']) or not run['properties']['filename']) and
+                                             (match_attribute(file.stat().st_size, run['properties']['filesize']) or not run['properties']['filesize']))
+                    return len([file for file in self.path.parent.glob('*') if match(file)])
+                else:
+                    return len(list(self.path.parent.glob('*')))
+
+        except OSError as ioerror:
+            LOGGER.warning(f"{ioerror}")
 
         return ''
 
@@ -139,31 +143,36 @@ class DataSource:
         :return:             The attribute value or '' if the attribute could not be read from the datasource. NB: values are always converted to strings
         """
 
-        if ':' in attributekey:
-            attributekey, pattern = attributekey.split(':', 1)
-        else:
-            pattern = ''
-        for plugin, options in self.plugins.items():
-            module = bidscoin.import_plugin(plugin, ('get_attribute',))
-            if module:
-                attributeval = module.get_attribute(self.dataformat, self.path, attributekey, options)
-                if attributeval is None:
-                    attributeval = ''
-                attributeval = str(attributeval)
-                if attributeval:
-                    if validregexp:
-                        try:            # Strip meta-characters to prevent match_attribute() errors
-                            re.compile(attributeval)
-                        except re.error:
-                            for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
-                                attributeval = attributeval.strip().replace(metacharacter, '.')
-                    if pattern:
-                        match = re.findall(pattern, attributeval)
-                        if len(match)>1:
-                            LOGGER.warning(f"Multiple matches {match} found when extracting {pattern} from {attributeval}, using: {match[0]}")
-                        attributeval = match[0]     # The first match is most likely the most informative (?)
+        try:
+            if ':' in attributekey:
+                attributekey, pattern = attributekey.split(':', 1)
+            else:
+                pattern = ''
+            for plugin, options in self.plugins.items():
+                module = bidscoin.import_plugin(plugin, ('get_attribute',))
+                if module:
+                    attributeval = module.get_attribute(self.dataformat, self.path, attributekey, options)
+                    if attributeval is None:
+                        attributeval = ''
+                    attributeval = str(attributeval)
+                    if attributeval:
+                        if validregexp:
+                            try:            # Strip meta-characters to prevent match_attribute() errors
+                                re.compile(attributeval)
+                            except re.error:
+                                for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
+                                    attributeval = attributeval.strip().replace(metacharacter, '.')
+                        if pattern:
+                            match = re.findall(pattern, attributeval)
+                            if len(match)>1:
+                                LOGGER.warning(f"Multiple matches {match} found when extracting {pattern} from {attributeval}, using: {match[0]}")
+                            attributeval = match[0]     # The first match is most likely the most informative (?)
 
-                    return attributeval
+                        return attributeval
+
+        except OSError as ioerror:
+            LOGGER.warning(f"{ioerror}")
+
         return ''
 
     def subid_sesid(self, subid: str=None, sesid: str=None) -> Tuple[str, str]:
