@@ -435,34 +435,69 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
     # Add IntendedFor search results and TE1+TE2 meta-data to the fieldmap json-files. This has been postponed until all datatypes have been processed (i.e. so that all target images are indeed on disk)
     if (bidsses/'fmap').is_dir():
-        for jsonfile in sorted((bidsses/'fmap').glob('sub-*.json')):
+
+        fmaps = [fmap.relative_to(bidsses).as_posix() for fmap in sorted((bidsses/'fmap').glob('sub-*.nii*'))]
+        for fmap in fmaps:
+
+            # Check if there are multiple runs and get the lower- and upperbound from the AcquisitionTime
+            runindex   = bids.get_bidsvalue(fmap, 'run')
+            prevfmap   = bids.get_bidsvalue(fmap, 'run', int(runindex)-1)
+            nextfmap   = bids.get_bidsvalue(fmap, 'run', int(runindex)+1)
+            fmaptime   = dateutil.parser.parse(scans_table.loc[fmap, 'acq_time'])
+            lowerbound = dateutil.parser.parse('00:00:00')
+            upperbound = dateutil.parser.parse('23:59:59')
+            if runindex and prevfmap in fmaps:
+                lowerbound = dateutil.parser.parse(scans_table.loc[prevfmap, 'acq_time'])
+            if runindex and nextfmap in fmaps:
+                upperbound = dateutil.parser.parse(scans_table.loc[nextfmap, 'acq_time'])
 
             # Load the existing meta-data
+            jsonfile = bidsses/Path(fmap).with_suffix('').with_suffix('.json')
             with jsonfile.open('r') as json_fid:
                 jsondata = json.load(json_fid)
 
             # Search for the imaging files that match the IntendedFor search criteria
-            niifiles    = []
             intendedfor = jsondata.get('IntendedFor')
             if intendedfor:
-                # Search with multiple patterns in all runs and store the relative path to the subject folder
+
+                # Search with multiple patterns for matching nifit-files in all runs and store the relative path to the session folder
+                niifiles = []
                 if intendedfor.startswith('<') and intendedfor.endswith('>'):
                     intendedfor = intendedfor[2:-2].split('><')
                 elif not isinstance(intendedfor, list):
                     intendedfor = [intendedfor]
-                for selector in intendedfor:
-                    niifiles.extend([Path(niifile).relative_to(bidsfolder/subid) for niifile in sorted(bidsses.rglob(f"*{selector}*.nii*")) if selector])
+                for part in intendedfor:
+                    selector = part.split(':',1)[1] if ':' in part else ''
+                    pattern  = part.split(':',1)[0]
+                    matches  = [niifile.relative_to(bidsses).as_posix() for niifile in sorted(bidsses.rglob(f"*{pattern}*.nii*")) if pattern]
+                    if selector and matches:
+                        limits    = selector[1:-1].split(':',1)
+                        limits[0] = int(limits[0]) if limits[0] else float('-inf')
+                        limits[1] = int(limits[1]) if limits[1] else float('inf')
+                        acqtimes  = []
+                        for match in matches:
+                            acqtimes.append((dateutil.parser.parse(scans_table.loc[match,'acq_time']), match))
+                        acqtimes.sort(key = lambda acqtime: acqtime[0])
+                        offset = sum([acqtime[0] < fmaptime for acqtime in acqtimes])  # The nr of preceding series: [2 4 5 {8} 11 13] -> [-3 -2 -1 0 1]
+                        for n, acqtime in enumerate(acqtimes):
+                            if lowerbound < acqtime[0] < upperbound and limits[0] <= n-offset < limits[1]:
+                                niifiles.extend([acqtime[1]])
+                    else:
+                        niifiles.extend(matches)
 
                 # Add the IntendedFor data
                 if niifiles:
                     LOGGER.info(f"Adding IntendedFor to: {jsonfile}")
-                    jsondata['IntendedFor'] = [niifile.as_posix() for niifile in niifiles]  # The path needs to use forward slashes instead of backward slashes
+                    jsondata['IntendedFor'] = niifiles                  # NB: The path needs to use forward slashes instead of backward slashes
                 else:
                     LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the search for {intendedfor} gave no results")
                     jsondata['IntendedFor'] = None
+
             else:
                 LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the IntendedFor value of the bidsmap entry was empty")
-            if not jsondata.get('IntendedFor'):     # Work-around because the bids-validator (v1.8) cannot handle `null` values
+
+            # Work-around because the bids-validator (v1.8) cannot handle `null` values
+            if not jsondata.get('IntendedFor'):
                 jsondata.pop('IntendedFor', None)
 
             # Extract the echo times from magnitude1 and magnitude2 and add them to the phasediff json-file
