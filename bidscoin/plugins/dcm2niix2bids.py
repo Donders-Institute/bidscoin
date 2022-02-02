@@ -444,8 +444,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             prevfmap   = bids.get_bidsvalue(fmap, 'run', int(runindex)-1)
             nextfmap   = bids.get_bidsvalue(fmap, 'run', int(runindex)+1)
             fmaptime   = dateutil.parser.parse(scans_table.loc[fmap, 'acq_time'])
-            lowerbound = dateutil.parser.parse('00:00:00')
-            upperbound = dateutil.parser.parse('23:59:59')
+            lowerbound = fmaptime.replace(hour=0,  minute=0,  second=0)
+            upperbound = fmaptime.replace(hour=23, minute=59, second=59)
             if runindex and prevfmap in fmaps:
                 lowerbound = dateutil.parser.parse(scans_table.loc[prevfmap, 'acq_time'])
             if runindex and nextfmap in fmaps:
