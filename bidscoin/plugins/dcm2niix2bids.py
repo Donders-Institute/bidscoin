@@ -467,20 +467,20 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 elif not isinstance(intendedfor, list):
                     intendedfor = [intendedfor]
                 for part in intendedfor:
-                    selector = part.split(':',1)[1] if ':' in part else ''
-                    pattern  = part.split(':',1)[0]
-                    matches  = [niifile.relative_to(bidsses).as_posix() for niifile in sorted(bidsses.rglob(f"*{pattern}*.nii*")) if pattern]
-                    if selector and matches:
-                        limits    = selector[1:-1].split(':',1)
-                        limits[0] = int(limits[0]) if limits[0] else float('-inf')
-                        limits[1] = int(limits[1]) if limits[1] else float('inf')
-                        acqtimes  = []
+                    limits  = part.split(':',1)[1] if ':' in part else ''   # part = 'pattern:[lowerlimit:upperlimit]'
+                    pattern = part.split(':',1)[0]
+                    matches = [niifile.relative_to(bidsses).as_posix() for niifile in sorted(bidsses.rglob(f"*{pattern}*.nii*")) if pattern]
+                    if limits and matches:
+                        limits     = limits[1:-1].split(':',1)              # limits: '[lowerlimit:upperlimit]' -> ['lowerlimit', 'upperlimit']
+                        lowerlimit = int(limits[0]) if limits[0] else float('-inf')
+                        upperlimit = int(limits[1]) if limits[1] else float('inf')
+                        acqtimes   = []
                         for match in matches:
                             acqtimes.append((dateutil.parser.parse(scans_table.loc[match,'acq_time']), match))
                         acqtimes.sort(key = lambda acqtime: acqtime[0])
-                        offset = sum([acqtime[0] < fmaptime for acqtime in acqtimes])  # The nr of preceding series: [2 4 5 {8} 11 13] -> [-3 -2 -1 0 1]
+                        offset = sum([acqtime[0] < fmaptime for acqtime in acqtimes])  # The nr of preceding series
                         for n, acqtime in enumerate(acqtimes):
-                            if lowerbound < acqtime[0] < upperbound and limits[0] <= n-offset < limits[1]:
+                            if lowerbound < acqtime[0] < upperbound and lowerlimit <= n-offset < upperlimit:
                                 niifiles.extend([acqtime[1]])
                     else:
                         niifiles.extend(matches)
