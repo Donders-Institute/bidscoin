@@ -4,7 +4,10 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [3.7.1-dev]
 
-## [3.7.0] - 2021-12-20
+### Changed
+- IntendedFor can now be appended with a "bounding" term to deal with duplicated fieldmaps from interrupted sessions
+
+- ## [3.7.0] - 2021-12-20
 
 ### Added
 - A BIDScoin installation test (`bidscoin -t`)
