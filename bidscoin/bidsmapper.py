@@ -142,7 +142,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
                 # Clean-up the temporary unpacked data
                 if unpacked:
-                    shutil.rmtree(unpacked)
+                    shutil.rmtree(session)
 
     # Save the new study bidsmap in the bidscoinfolder or launch the bidseditor UI_MainWindow
     if noedit:
@@ -177,28 +177,28 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
 
 def setprefix(bidsmap, subprefix, sesprefix):
-    """Set the prefix in the Options, subject, session and in all the run['datasource'] objects if the prefix is not empty"""
+    """Set the prefix in the Options, subject, session and in all the run['datasource'] objects"""
 
     oldsubprefix = bidsmap['Options']['bidscoin']['subprefix']
     oldsesprefix = bidsmap['Options']['bidscoin']['sesprefix']
-    if subprefix:
-        bidsmap['Options']['bidscoin']['subprefix'] = subprefix
-    if sesprefix:
-        bidsmap['Options']['bidscoin']['sesprefix'] = sesprefix
+    bidsmap['Options']['bidscoin']['subprefix'] = subprefix
+    bidsmap['Options']['bidscoin']['sesprefix'] = sesprefix
     for dataformat in bidsmap:
-        if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (-> 'PlugIns')
+        if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (i.e. that have a 'PlugIns' section in the root)
         if not bidsmap[dataformat]:             continue
         for datatype in bidsmap[dataformat]:
-            if subprefix:
-                bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace(oldsubprefix, subprefix)  # This may not work for every template but it's the best we can do
-            if sesprefix:
+            if oldsubprefix:
+                bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace(oldsubprefix, subprefix)
+            else:
+                bidsmap[dataformat]['subject'] = subprefix + bidsmap[dataformat]['subject']     # This may not work for every template, but it's the best we can do
+            if oldsesprefix:
                 bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace(oldsesprefix, sesprefix)
+            else:
+                bidsmap[dataformat]['session'] = sesprefix + bidsmap[dataformat]['session']
             if not isinstance(bidsmap[dataformat][datatype], list): continue
             for run in bidsmap[dataformat][datatype]:
-                if subprefix:
-                    run['datasource'].subprefix = subprefix
-                if sesprefix:
-                    run['datasource'].sesprefix = sesprefix
+                run['datasource'].subprefix = subprefix
+                run['datasource'].sesprefix = sesprefix
 
 
 def main():
