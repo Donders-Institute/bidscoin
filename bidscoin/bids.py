@@ -1516,7 +1516,7 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False, cleanup
     return bidsname
 
 
-def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') -> Union[Path, str]:
+def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue='') -> Union[Path, str]:
     """
     Sets the bidslabel, i.e. '*_bidskey-*_' is replaced with '*_bidskey-bidsvalue_'. If the key is not in the bidsname
     then the newvalue is appended to the acquisition label. If newvalue is empty (= default), then the parsed existing
@@ -1634,7 +1634,7 @@ def increment_runindex(bidsfolder: Path, bidsname: str, ext: str='.*') -> Union[
 
         runindex = get_bidsvalue(bidsname, 'run')
         if runindex:
-            bidsname = get_bidsvalue(bidsname, 'run', str(int(runindex) + 1))
+            bidsname = get_bidsvalue(bidsname, 'run', int(runindex) + 1)
 
     return bidsname
 
