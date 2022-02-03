@@ -119,7 +119,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, bidsmapfile: st
 
     # Remove obsolete participants from the participants table
     for participant in participants_table.index:
-        if participant not in subjects:
+        if participant not in [sub.name for sub in subjects]:
             participants_table = participants_table.drop(participant)
 
     # Loop over all subjects in the bids-folder and add them to the participants table
@@ -128,8 +128,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, bidsmapfile: st
 
             LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
             personals = dict()
-            subid, _  = bids.DataSource(subject/'dum.my').subid_sesid()
-            subject   = rawfolder/subid.replace('sub-', subprefix)     # TODO: This assumes that the subject-ids in the rawfolder did not contain BIDS-invalid characters (such as '_')
+            subject   = rawfolder/subject.name.replace('sub-', subprefix)     # TODO: This assumes e.g. that the subject-ids in the rawfolder did not contain BIDS-invalid characters (such as '_')
             sessions  = bidscoin.lsdirs(subject, sesprefix + '*')
             if not subject.is_dir():
                 LOGGER.error(f"Could not find source-folder: {subject}")
