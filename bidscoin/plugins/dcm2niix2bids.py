@@ -467,13 +467,13 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 elif not isinstance(intendedfor, list):
                     intendedfor = [intendedfor]
                 for part in intendedfor:
-                    limits  = part.split(':',1)[1] if ':' in part else ''   # part = 'pattern:[lowerlimit:upperlimit]'
-                    pattern = part.split(':',1)[0]
+                    limits  = part.split(':',1)[1].strip() if ':' in part else ''   # part = 'pattern: [lowerlimit:upperlimit]'
+                    pattern = part.split(':',1)[0].strip()
                     matches = [niifile.relative_to(bidsses).as_posix() for niifile in sorted(bidsses.rglob(f"*{pattern}*.nii*")) if pattern]
                     if limits and matches:
-                        limits     = limits[1:-1].split(':',1)              # limits: '[lowerlimit:upperlimit]' -> ['lowerlimit', 'upperlimit']
-                        lowerlimit = int(limits[0]) if limits[0] else float('-inf')
-                        upperlimit = int(limits[1]) if limits[1] else float('inf')
+                        limits     = limits[1:-1].split(':',1)                      # limits: '[lowerlimit:upperlimit]' -> ['lowerlimit', 'upperlimit']
+                        lowerlimit = int(limits[0]) if limits[0].strip() else float('-inf')
+                        upperlimit = int(limits[1]) if limits[1].strip() else float('inf')
                         acqtimes   = []
                         for match in matches:
                             acqtimes.append((dateutil.parser.parse(scans_table.loc[match,'acq_time']), match))
