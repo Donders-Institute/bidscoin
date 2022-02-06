@@ -37,7 +37,7 @@ with (bidscoin.schemafolder/'entities.yaml').open('r') as _stream:
 
 
 class DataSource:
-    def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str='', subprefix: str= 'sub-', sesprefix: str= 'ses-'):
+    def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str='', subprefix: str= '', sesprefix: str= ''):
         """
         A source datatype (e.g. DICOM or PAR) that can be converted to BIDS by the plugins
 
@@ -182,7 +182,7 @@ class DataSource:
         :param subid:   The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001') or a dynamic source attribute.
                         Can be left empty / None to use the default <<filepath:regexp>> extraction
         :param sesid:   The optional session identifier, same as subid
-        :return:        Updated (subid, sesid) tuple, including the BIDS-compliant sub-/ses-prefix
+        :return:        Updated (subid, sesid) tuple, including the BIDS-compliant 'sub-'/'ses-' prefixes
         """
 
         # Add the default value for subid and sesid if not given
@@ -242,13 +242,11 @@ class DataSource:
         return value
 
 
-def unpack(sourcefolder: Path, subprefix: str, sesprefix: str, wildcard: str='*', workfolder: Path='') -> (Path, bool):
+def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (Path, bool):
     """
     Unpacks and sorts DICOM files in sourcefolder to a temporary folder if sourcefolder contains a DICOMDIR file or .tar.gz, .gz or .zip files
 
     :param sourcefolder:    The full pathname of the folder with the source data
-    :param subprefix:       The subprefix (e.g. 'sub-'). Used to parse the subid
-    :param sesprefix:       The sesprefix (e.g. 'ses-'). Used to parse the sesid
     :param wildcard:        A glob search pattern to select the tarballed/zipped files
     :param workfolder:      A root folder for temporary data
     :return:                A tuple with the full pathname of the source or workfolder and a workdir-path or False when the data is not unpacked in a temporary folder
@@ -267,10 +265,8 @@ def unpack(sourcefolder: Path, subprefix: str, sesprefix: str, wildcard: str='*'
         # Create a (temporary) sub/ses workfolder for unpacking the data
         if not workfolder:
             workfolder = tempfile.mkdtemp()
-        workfolder   = Path(workfolder)
-        subid, sesid = DataSource(sourcefolder/'dum.my', subprefix=subprefix, sesprefix=sesprefix).subid_sesid()
-        subid, sesid = subid.replace('sub-', subprefix), sesid.replace('ses-', sesprefix)
-        worksubses   = workfolder/subid/sesid
+        workfolder = Path(workfolder)
+        worksubses = workfolder/sourcefolder.relative_to(sourcefolder.parent.parent)
         worksubses.mkdir(parents=True, exist_ok=True)
 
         # Copy everything over to the workfolder
@@ -820,7 +816,9 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
                     bidsmap[dataformat] = bidsmappings
 
     # Add missing provenance info, run dictionaries and bids entities
-    run_ = get_run_()
+    run_      = get_run_()
+    subprefix = bidsmap['Options']['bidscoin'].get('subprefix','')
+    sesprefix = bidsmap['Options']['bidscoin'].get('sesprefix','')
     for dataformat in bidsmap:
         if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (-> 'PlugIns')
         if not bidsmap[dataformat]:             continue
@@ -830,7 +828,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
 
                 # Add missing provenance info
                 if not run.get('provenance'):
-                    run['provenance'] = str(Path(f"sub-unknown/ses-unknown/{dataformat}_{datatype}_id{index+1:03}"))
+                    run['provenance'] = str(Path(f"{subprefix.replace('*','')}-unknown/{sesprefix.replace('*','')}-unknown/{dataformat}_{datatype}_id{index+1:03}"))
 
                 # Add missing run dictionaries (e.g. "meta" or "properties")
                 for key, val in run_.items():
@@ -838,9 +836,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
                         run[key] = val
 
                 # Add a DataSource object
-                run['datasource'] = DataSource(run['provenance'], bidsmap['Options']['plugins'], dataformat, datatype,
-                                               bidsmap['Options']['bidscoin'].get('subprefix','sub-'),
-                                               bidsmap['Options']['bidscoin'].get('sesprefix','ses-'))
+                run['datasource'] = DataSource(run['provenance'], bidsmap['Options']['plugins'], dataformat, datatype, subprefix, sesprefix)
 
                 # Add missing bids entities
                 for typegroup in bidsdatatypes.get(datatype,[]):

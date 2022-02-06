@@ -98,6 +98,11 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
     subfolders = []
     for dicomfile in dicomfiles:
 
+        # Check if the DICOM file exists (e.g. in case of DICOMDIRs this may not be the case)
+        if not dicomfile.is_file():
+            LOGGER.warning(f"Could not find the expected '{dicomfile}' DICOM file")
+            continue
+
         # Create a new subfolder if needed
         if not folderscheme:
             pathname = sessionfolder
@@ -176,9 +181,9 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
                 sessionfolder = sourcefolder
                 if dicomfiles:
                     if len(dicomdir.patient_records) > 1:
-                        sessionfolder = sessionfolder/f"sub-{cleanup(patient.PatientName)}"
+                        sessionfolder = sessionfolder/f"{subprefix}{cleanup(patient.PatientName)}"
                     if len(patient.children) > 1:
-                        sessionfolder = sessionfolder/f"ses-{n:02}-{cleanup(study.StudyDescription)}"  # TODO: Leave out StudyDescription? Include PatientName/StudiesDescription?
+                        sessionfolder = sessionfolder/f"{sesprefix}{n:02}-{cleanup(study.StudyDescription)}"  # TODO: Leave out StudyDescription? Include PatientName/StudiesDescription?
                     sortsession(sessionfolder, dicomfiles, folderscheme, namescheme, dryrun)
                 sessions.append(sessionfolder)
 

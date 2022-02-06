@@ -133,15 +133,14 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         participants_table.index.name = 'participant_id'
 
     # Get the list of subjects
-    subprefix = bidsmap['Options']['bidscoin']['subprefix']
-    sesprefix = bidsmap['Options']['bidscoin']['sesprefix']
+    subprefix = bidsmap['Options']['bidscoin']['subprefix'].replace('*','')
+    sesprefix = bidsmap['Options']['bidscoin']['sesprefix'].replace('*','')
     if not subjects:
         subjects = bidscoin.lsdirs(rawfolder, subprefix + '*')
         if not subjects:
             LOGGER.warning(f"No subjects found in: {rawfolder/subprefix}*")
     else:
-        subjects = [subprefix + re.sub(f"^{subprefix}", '', subject) for subject in subjects]   # Make sure there is a "sub-" prefix
-        subjects = [rawfolder/subject for subject in subjects if (rawfolder/subject).is_dir()]
+        subjects = [rawfolder/(subprefix + re.sub(f"^{subprefix}",'',subject)) for subject in subjects]   # Make sure there is a sub-prefix
 
     # Loop over all subjects and sessions and convert them using the bidsmap entries
     with logging_redirect_tqdm():
@@ -151,14 +150,17 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             if participants and subject.name in list(participants_table.index):
                 LOGGER.info(f"Skipping subject: {subject} ({n}/{len(subjects)})")
                 continue
+            if not subject.is_dir():
+                LOGGER.warning(f"The '{subject}' subject folder does not exist")
+                continue
 
             sessions = bidscoin.lsdirs(subject, sesprefix + '*')
-            if not sessions:
+            if not sessions or (subject/'DICOMDIR').is_file():
                 sessions = [subject]
             for session in sessions:
 
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-                session, unpacked = bids.unpack(session, subprefix, sesprefix)
+                session, unpacked = bids.unpack(session)
 
                 # Check if we should skip the session-folder
                 datasource = bids.get_datasource(session, bidsmap['Options']['plugins'])
@@ -236,7 +238,7 @@ def main():
                                      epilog='examples:\n'
                                             '  bidscoiner /project/foo/raw /project/foo/bids\n'
                                             '  bidscoiner -f /project/foo/raw /project/foo/bids -p sub-009 sub-030\n ')
-    parser.add_argument('sourcefolder',             help='The study root folder containing the raw data in sub-#/[ses-#/]data subfolders (or specify --subprefix and --sesprefix for different prefixes)')
+    parser.add_argument('sourcefolder',             help='The study root folder containing the raw source data')
     parser.add_argument('bidsfolder',               help='The destination / output folder with the bids data')
     parser.add_argument('-p','--participant_label', help='Space separated list of selected sub-# names / folders to be processed (the sub- prefix can be removed). Otherwise all subjects in the sourcefolder will be selected', nargs='+')
     parser.add_argument('-f','--force',             help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')

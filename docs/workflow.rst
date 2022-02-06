@@ -21,8 +21,9 @@ Step 1a: Running the bidsmapper
 
 ::
 
-    usage: bidsmapper [-h] [-b BIDSMAP] [-t TEMPLATE] [-n SUBPREFIX] [-m SESPREFIX] [-s] [-a] [-f] [-v]
-                      sourcefolder bidsfolder
+    usage: bidsmapper.py [-h] [-b BIDSMAP] [-t TEMPLATE] [-p PLUGINS [PLUGINS ...]] [-n SUBPREFIX]
+                         [-m SESPREFIX] [-s] [-a] [-f] [-v]
+                         sourcefolder bidsfolder
 
     The bidsmapper scans your source data repository to identify different data types by matching
     them against the run-items in the template bidsmap. Once a match is found, a mapping to BIDS
@@ -34,32 +35,36 @@ Step 1a: Running the bidsmapper
     The bidsmapper uses plugins, as stored in the bidsmap['Options'], to do the actual work
 
     positional arguments:
-      sourcefolder          The study root folder containing the raw data in sub-#/[ses-#/]data
-                            subfolders (or specify --subprefix and --sesprefix for different prefixes)
+      sourcefolder          The study root folder containing the raw source data folders
       bidsfolder            The destination folder with the (future) bids data and the
                             bidsfolder/code/bidscoin/bidsmap.yaml output file
 
     optional arguments:
       -h, --help            show this help message and exit
       -b BIDSMAP, --bidsmap BIDSMAP
-                            The study bidsmap file with the mapping heuristics. If the bidsmap
-                            filename is relative (i.e. no "/" in the name) then it is assumed to be
-                            located in bidsfolder/code/bidscoin. Default: bidsmap.yaml
+                            The study bidsmap file with the mapping heuristics. If the bidsmap filename
+                            is relative (i.e. no "/" in the name) then it is assumed to be located in
+                            bidsfolder/code/bidscoin. Default: bidsmap.yaml
       -t TEMPLATE, --template TEMPLATE
                             The bidsmap template file with the default heuristics (this could be
                             provided by your institute). If the bidsmap filename is relative (i.e. no
                             "/" in the name) then it is assumed to be located in
                             bidsfolder/code/bidscoin. Default: bidsmap_dccn.yaml
-      -p PLUGINS, --plugins PLUGINS
+      -p PLUGINS [PLUGINS ...], --plugins PLUGINS [PLUGINS ...]
                             List of plugins to be used (with default options, overrules the plugin list
                             in the study/template bidsmaps)
       -n SUBPREFIX, --subprefix SUBPREFIX
-                            The prefix common for all the source subject-folders. Default: 'sub-'
+                            The prefix common for all the source subject-folders (e.g. 'Pt' is the
+                            subprefix if subject folders are named 'Pt018', 'Pt019', ...). Use '*' when
+                            your subject folders do not have a prefix. Default: the value of the study
+                            or template bidsmap, e.g. 'sub-'
       -m SESPREFIX, --sesprefix SESPREFIX
-                            The prefix common for all the source session-folders. Default: 'ses-'
-      -s, --store           Flag to store provenance data samples in the
-                            bidsfolder/'code'/'provenance' folder (useful for inspecting e.g. zipped
-                            or transfered datasets)
+                            The prefix common for all the source session-folders (e.g. 'M_' is the
+                            subprefix if session folders are named 'M_pre', 'M_post', ...). Use '*'
+                            when your session folders do not have a prefix. Default: the value of the
+                            study or template bidsmap, e.g. 'ses-'
+      -s, --store           Flag to store provenance data samples in the bidsfolder/'code'/'provenance'
+                            folder (useful for inspecting e.g. zipped or transfered datasets)
       -a, --automated       Flag to save the automatically generated bidsmap to disk and without
                             interactively tweaking it with the bidseditor
       -f, --force           Flag to discard the previously saved bidsmap and logfile
@@ -79,7 +84,7 @@ Step 1b: Running the bidseditor
 
 ::
 
-    usage: bidseditor [-h] [-b BIDSMAP] [-t TEMPLATE] [-n SUBPREFIX] [-m SESPREFIX] bidsfolder
+    usage: bidseditor.py [-h] [-b BIDSMAP] [-t TEMPLATE] bidsfolder
 
     This application launches a graphical user interface for editing the bidsmap that is produced by
     the bidsmapper. You can edit the BIDS data types and entities until all run-items have a meaningful
@@ -94,18 +99,14 @@ Step 1b: Running the bidseditor
     optional arguments:
       -h, --help            show this help message and exit
       -b BIDSMAP, --bidsmap BIDSMAP
-                            The study bidsmap file with the mapping heuristics. If the bidsmap
-                            filename is relative (i.e. no "/" in the name) then it is assumed to
-                            be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml
+                            The study bidsmap file with the mapping heuristics. If the bidsmap filename
+                            is relative (i.e. no "/" in the name) then it is assumed to be located in
+                            bidsfolder/code/bidscoin. Default: bidsmap.yaml
       -t TEMPLATE, --template TEMPLATE
                             The template bidsmap file with the default heuristics (this could be
-                            provided by your institute). If the bidsmap filename is relative (i.e.
-                            no "/" in the name) then it is assumed to be located in
+                            provided by your institute). If the bidsmap filename is relative (i.e. no
+                            "/" in the name) then it is assumed to be located in
                             bidsfolder/code/bidscoin. Default: bidsmap_dccn.yaml
-      -n SUBPREFIX, --subprefix SUBPREFIX
-                            The prefix common for all the source subject-folders. Default: 'sub-'
-      -m SESPREFIX, --sesprefix SESPREFIX
-                            The prefix common for all the source session-folders. Default: 'ses-'
 
     examples:
       bidseditor /project/foo/bids
@@ -120,6 +121,9 @@ As shown below, the main window of the bidseditor opens with separate data mappi
 .. figure:: ./_static/bidseditor_main.png
 
    The main window with the ``DICOM mappings`` and ``PAR mappings`` tabs, an ``Options`` tab and a ``Data browser`` tab. The selected ``DICOM mappings`` tab shows an overview of how DICOM source data types (left) are mapped to BIDS output data (right). The BIDScoin settings used for this study can be adjusted in the `Options <options.html>`__ tab and the ``Data browser`` tab can be used to inspect the source data structure.
+
+.. tip::
+   If the default ``/sub-(.*?)/`` expression (where ``sub-`` can be substituted by your prefix) fails to parse the subject label, try prepending (a part of) the sourcefolder path, e.g. if your data is in ``/project/raw/sub-001/..`` try ``<<filepath:/raw/sub-(.*?)/``>> for extracting the ``001`` subject label. This is especially useful if your subject folders have no or a very short prefix.
 
 .. tip::
    Clear the ``session`` label field if you have data with only one seesion. This will remove the optional session label from the BIDS ouptput name
@@ -156,9 +160,9 @@ Step 2: Running the bidscoiner
 
 ::
 
-    usage: bidscoiner [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-f] [-s]
-                      [-b BIDSMAP] [-n SUBPREFIX] [-m SESPREFIX] [-v]
-                      sourcefolder bidsfolder
+    usage: bidscoiner.py [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-f] [-s] [-b BIDSMAP]
+                         [-v]
+                         sourcefolder bidsfolder
 
     Converts ("coins") your source datasets to nifti / json / tsv BIDS datasets using
     the information from the bidsmap.yaml file. Edit this bidsmap to your needs using the
@@ -175,34 +179,25 @@ Step 2: Running the bidscoiner
     bidsfolder/code/bidscoin/bidscoiner.log file.
 
     positional arguments:
-      sourcefolder          The study root folder containing the raw data in
-                            sub-#/[ses-#/]data subfolders (or specify --subprefix and
-                            --sesprefix for different prefixes)
+      sourcefolder          The study root folder containing the raw source data
       bidsfolder            The destination / output folder with the bids data
 
     optional arguments:
       -h, --help            show this help message and exit
-      -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PART
-    ICIPANT_LABEL ...]
-                            Space separated list of selected sub-# names / folders to be
-                            processed (the sub- prefix can be removed). Otherwise all
-                            subjects in the sourcefolder will be selected
-      -f, --force           If this flag is given subjects will be processed, regardless of
-                            existing folders in the bidsfolder. Otherwise existing folders
-                            will be skipped
+      -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
+                            Space separated list of selected sub-# names / folders to be processed (the
+                            sub- prefix can be removed). Otherwise all subjects in the sourcefolder
+                            will be selected
+      -f, --force           If this flag is given subjects will be processed, regardless of existing
+                            folders in the bidsfolder. Otherwise existing folders will be skipped
       -s, --skip_participants
-                            If this flag is given those subjects that are in participants.tsv
-                            will not be processed (also when the --force flag is given).
-                            Otherwise the participants.tsv table is ignored
+                            If this flag is given those subjects that are in participants.tsv will not
+                            be processed (also when the --force flag is given). Otherwise the
+                            participants.tsv table is ignored
       -b BIDSMAP, --bidsmap BIDSMAP
-                            The study bidsmap file with the mapping heuristics. If the
-                            bidsmap filename is relative (i.e. no "/" in the name) then it is
-                            assumed to be located in bidsfolder/code/bidscoin. Default:
-                            bidsmap.yaml
-      -n SUBPREFIX, --subprefix SUBPREFIX
-                            The prefix common for all the source subject-folders. Default: 'sub-'
-      -m SESPREFIX, --sesprefix SESPREFIX
-                            The prefix common for all the source session-folders. Default: 'ses-'
+                            The study bidsmap file with the mapping heuristics. If the bidsmap filename
+                            is relative (i.e. no "/" in the name) then it is assumed to be located in
+                            bidsfolder/code/bidscoin. Default: bidsmap.yaml
       -v, --version         Show the installed version and check for updates
 
     examples:

@@ -53,7 +53,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
         if not subjects:
             LOGGER.warning(f"No subjects found in: {bidsdir/'sub-*'}")
     else:
-        subjects = ['sub-' + subject.replace('^sub-', '') for subject in subjects]              # Make sure there is a "sub-" prefix
+        subjects = ['sub-' + subject.replace('sub-', '') for subject in subjects]              # Make sure there is a "sub-" prefix
         subjects = [bidsdir/subject for subject in subjects if (bidsdir/subject).is_dir()]
 
     # Prepare the HPC job submission

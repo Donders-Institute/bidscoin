@@ -286,7 +286,7 @@ class MainWindow(QMainWindow):
         subses_label.setToolTip('Subject/session mapping')
 
         subses_table = MyQTableWidget()
-        subses_table.setToolTip(f"Use e.g. '<<filepath:sub-(.*?)>>' to parse the subject and (optional) session label from the pathname\n"
+        subses_table.setToolTip(f"Use e.g. '<<filepath:/sub-(.*?)/>>' to parse the subject and (optional) session label from the pathname\n"
                                 f"Use a dynamic {dataformat} attribute (e.g. '<<PatientName>>') to extract the subject and (optional) session label from the {dataformat} header")
         subses_table.setMouseTracking(True)
         subses_table.setRowCount(2)
@@ -723,7 +723,7 @@ class MainWindow(QMainWindow):
     def test_bidscoin(self):
         """Test the bidsmap tool and show the result in a pop-up window"""
 
-        if bidscoin.test_bidscoin(options=self.output_bidsmap['Options'], testplugins=False):
+        if bidscoin.test_bidscoin(self.input_bidsmap, options=self.output_bidsmap['Options'], testplugins=False):
             QMessageBox.information(self, 'Tool test', f"BIDScoin test: Passed\nSee terminal output for more info")
         else:
             QMessageBox.warning(self, 'Tool test', f"BIDScoin test: Failed\nSee terminal output for more info")

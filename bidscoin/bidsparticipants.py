@@ -93,7 +93,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, bidsmapfile: st
     LOGGER.info(f">>> bidsparticipants sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmapfile}")
 
     # Get the bidsmap sub-/ses-prefix from the bidsmap YAML-file
-    bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile), bidsfolder / 'code' / 'bidscoin')
+    bidsmap,_ = bids.load_bidsmap(Path(bidsmapfile), bidsfolder/'code'/'bidscoin')
     subprefix = bidsmap['Options']['bidscoin']['subprefix']
     sesprefix = bidsmap['Options']['bidscoin']['sesprefix']
 
@@ -128,7 +128,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, bidsmapfile: st
 
             LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
             personals = dict()
-            subject   = rawfolder/subject.name.replace('sub-', subprefix)     # TODO: This assumes e.g. that the subject-ids in the rawfolder did not contain BIDS-invalid characters (such as '_')
+            subject   = rawfolder/subject.name.replace('sub-', subprefix.replace('*',''))     # TODO: This assumes e.g. that the subject-ids in the rawfolder did not contain BIDS-invalid characters (such as '_')
             sessions  = bidscoin.lsdirs(subject, sesprefix + '*')
             if not subject.is_dir():
                 LOGGER.error(f"Could not find source-folder: {subject}")
@@ -144,7 +144,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, bidsmapfile: st
                     participants_dict['session_id'] = {'Description': 'Session identifier'}
 
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-                session, unpacked = bids.unpack(session, subprefix, sesprefix)
+                session, unpacked = bids.unpack(session)
 
                 LOGGER.info(f"Scanning session: {session}")
 
@@ -197,11 +197,9 @@ def main():
                                      epilog='examples:\n'
                                             '  bidsparticipants /project/foo/raw /project/foo/bids\n'
                                             '  bidsparticipants /project/foo/raw /project/foo/bids -k participant_id age sex\n ')
-    parser.add_argument('sourcefolder',     help='The study root folder containing the raw data in sub-#/[ses-#/]data subfolders (or specify --subprefix and --sesprefix for different prefixes)')
+    parser.add_argument('sourcefolder',     help='The study root folder containing the raw source data folders')
     parser.add_argument('bidsfolder',       help='The destination / output folder with the bids data')
     parser.add_argument('-k','--keys',      help="Space separated list of the participants.tsv columns. Default: 'session_id' 'age' 'sex' 'size' 'weight'", nargs='+', default=['session_id', 'age', 'sex', 'size' ,'weight'])
-    parser.add_argument('-n','--subprefix', help="The prefix common for all the source subject-folders. Default: 'sub-'", default='sub-')
-    parser.add_argument('-m','--sesprefix', help="The prefix common for all the source session-folders. Default: 'ses-'", default='ses-')
     parser.add_argument('-d','--dryrun',    help='Add this flag to only print the participants info on screen', action='store_true')
     parser.add_argument('-b','--bidsmap',   help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
     parser.add_argument('-v','--version',   help='Show the BIDS and BIDScoin version', action='version', version=f"BIDS-version:\t\t{bidscoin.bidsversion()}\nBIDScoin-version:\t{bidscoin.version()}")

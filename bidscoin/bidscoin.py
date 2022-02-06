@@ -418,34 +418,39 @@ def test_plugin(plugin: Path, options: dict) -> bool:
     return True
 
 
-def test_bidscoin(bidsmapfile: Path, options: dict=None, testplugins: bool=True):
+def test_bidscoin(bidsmapfile: Union[Path, dict], options: dict=None, testplugins: bool=True):
     """
     Performs a bidscoin installation test
 
-    :param bidsmapfile: The full pathname or basename of the bidsmap yaml-file
+    :param bidsmapfile: The bidsmap or the full pathname / basename of the bidsmap yaml-file
     :param options:     The bidscoin options. If empty, the default options are used
     :return:            True if the test was successful
     """
 
     if not bidsmapfile:
-        return False
+        return
 
     LOGGER.info('--------- Testing the BIDScoin tools and settings ---------')
 
     # Test loading the template bidsmap
-    try:
-        try:                    # Include the import in the test + moving the import to the top of this module will cause circular import issues
-            from bidscoin import bids
-        except ImportError:
-            import bids         # This should work if bidscoin was not pip-installed
+    if isinstance(bidsmapfile, str):
+        try:
+            try:                    # Include the import in the test + moving the import to the top of this module will cause circular import issues
+                from bidscoin import bids
+            except ImportError:
+                import bids         # This should work if bidscoin was not pip-installed
 
-        bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile))
+            bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile))
+            if not options:
+                options = bidsmap['Options']
+            success = True
+        except Exception as bidsmaperror:
+            LOGGER.error(f'{bidsmaperror}')
+            success = False
+    else:
         if not options:
-            options = bidsmap['Options']
+            options = bidsmapfile['Options']
         success = True
-    except Exception as bidsmaperror:
-        LOGGER.error(f'{bidsmaperror}')
-        success = False
 
     # Test the plugins
     if testplugins and 'plugins' in options:

@@ -4,8 +4,15 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [3.7.1-dev]
 
-### Changed
+### Added
 - IntendedFor can now be appended with a "bounding" term to deal with duplicated fieldmaps from interrupted sessions
+- The possibility to process subject folders without prefix
+
+### Changed
+- The subject/session prefix API 
+
+### Fixed
+- The bidscoin installation test in the bidseditor
 
 - ## [3.7.0] - 2021-12-20
 
