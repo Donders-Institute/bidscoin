@@ -14,7 +14,7 @@ All notable changes to this project will be documented in this file. The format 
 ### Fixed
 - The bidscoin installation test in the bidseditor
 
-- ## [3.7.0] - 2021-12-20
+## [3.7.0] - 2021-12-20
 
 ### Added
 - A BIDScoin installation test (`bidscoin -t`)
