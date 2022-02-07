@@ -123,7 +123,7 @@ As shown below, the main window of the bidseditor opens with separate data mappi
    The main window with the ``DICOM mappings`` and ``PAR mappings`` tabs, an ``Options`` tab and a ``Data browser`` tab. The selected ``DICOM mappings`` tab shows an overview of how DICOM source data types (left) are mapped to BIDS output data (right). The BIDScoin settings used for this study can be adjusted in the `Options <options.html>`__ tab and the ``Data browser`` tab can be used to inspect the source data structure.
 
 .. tip::
-   If the default ``/sub-(.*?)/`` expression (where ``sub-`` can be substituted by your prefix) fails to parse the subject label, try prepending (a part of) the sourcefolder path, e.g. if your data is in ``/project/raw/sub-001/..`` try ``<<filepath:/raw/sub-(.*?)/``>> for extracting the ``001`` subject label. This is especially useful if your subject folders have no or a very short prefix.
+   If the default subject/session expression (e.g. ``/sub-(.*?)/`` where ``sub-`` can be substituted by your prefix) fails to parse the subject or session label, try prepending (a part of) the sourcefolder path, e.g. if your data is in ``/project/sourcedata/s001/..`` and your subject prefix is ``s``, try ``<<filepath:/sourcedata/s(.*?)/``>> for extracting the ``001`` subject label. This is especially useful if your subject folders have no or a very short prefix.
 
 .. tip::
    Clear the ``session`` label field if you have data with only one seesion. This will remove the optional session label from the BIDS ouptput name
