@@ -249,7 +249,7 @@ def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (List[
     :param sourcefolder:    The full pathname of the folder with the source data
     :param wildcard:        A glob search pattern to select the tarballed/zipped files
     :param workfolder:      A root folder for temporary data
-    :return:                Either ([unpacked and sorted session folders], the temporary workdir), or just ([sourcefolder], False)
+    :return:                Either ([unpacked and sorted session folders], True), or ([sourcefolder], False)
     """
 
     # Search for zipped/tarballed files
@@ -292,7 +292,7 @@ def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (List[
         # Sort the DICOM files if not sorted yet (e.g. DICOMDIR)
         sessions = list(set(sessions + dicomsort.sortsessions(worksubses)))
 
-        return sessions, workfolder
+        return sessions, True
 
     else:
 

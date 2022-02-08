@@ -144,19 +144,19 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, bidsmapfile: st
                     participants_dict['session_id'] = {'Description': 'Session identifier'}
 
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-                session, unpacked = bids.unpack(session)
+                sesfolders, unpacked = bids.unpack(session)
+                for sesfolder in sesfolders:
 
-                LOGGER.info(f"Scanning session: {session}")
+                    # Update / append the personal source data
+                    LOGGER.info(f"Scanning session: {sesfolder}")
+                    success = scanpersonals(bidsmap, sesfolder, personals)
 
-                # Update / append the personal source data
-                success = scanpersonals(bidsmap, session, personals)
+                    # Clean-up the temporary unpacked data
+                    if unpacked:
+                        shutil.rmtree(sesfolder)
 
-                # Clean-up the temporary unpacked data
-                if unpacked:
-                    shutil.rmtree(session)
-
-                if success:
-                    break
+                    if success:
+                        break
 
             # Store the collected personals in the participant_table. TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
             for key in keys:
