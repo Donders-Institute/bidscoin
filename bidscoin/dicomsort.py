@@ -162,7 +162,6 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
     # Do a recursive call if a sub- or ses-prefix is given
     sessions = []       # Collect the sorted session-folders
     if subprefix or sesprefix:
-
         for subjectfolder in bidscoin.lsdirs(sourcefolder, subprefix + '*'):
             if sesprefix:
                 sessionfolders = bidscoin.lsdirs(subjectfolder, sesprefix + '*')
@@ -173,23 +172,17 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
 
     # Use the DICOMDIR file if it is there
     elif (sourcefolder/'DICOMDIR').is_file():
-
         dicomdir = pydicom.dcmread(str(sourcefolder/'DICOMDIR'))
         for patient in dicomdir.patient_records:
             for n, study in enumerate(patient.children, 1):
-                dicomfiles    = [sourcefolder.joinpath(*image.ReferencedFileID) for series in study.children for image in series.children]
-                sessionfolder = sourcefolder
+                dicomfiles = [sourcefolder.joinpath(*image.ReferencedFileID) for series in study.children for image in series.children]
                 if dicomfiles:
-                    if len(dicomdir.patient_records) > 1:
-                        sessionfolder = sessionfolder/f"{subprefix}{cleanup(patient.PatientName)}"
-                    if len(patient.children) > 1:
-                        sessionfolder = sessionfolder/f"{sesprefix}{n:02}-{cleanup(study.StudyDescription)}"  # TODO: Leave out StudyDescription? Include PatientName/StudiesDescription?
+                    sessionfolder = sourcefolder/f"{subprefix}{cleanup(patient.PatientName)}"/f"{sesprefix}{n:02}-{cleanup(study.StudyDescription)}"
                     sortsession(sessionfolder, dicomfiles, folderscheme, namescheme, dryrun)
-                sessions.append(sessionfolder)
+                    sessions.append(sessionfolder)
 
     # Sort the DICOM files in the sourcefolder
     else:
-
         sessions   = [sourcefolder]
         dicomfiles = [dcmfile for dcmfile in sourcefolder.iterdir() if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
         if dicomfiles:
