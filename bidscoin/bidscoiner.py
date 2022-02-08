@@ -160,13 +160,13 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             for session in sessions:
 
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-                sessionfolders, unpacked = bids.unpack(session)
-                for session in sessionfolders:
+                sesfolders, unpacked = bids.unpack(session)
+                for sesfolder in sesfolders:
 
                     # Check if we should skip the session-folder
-                    datasource = bids.get_datasource(session, bidsmap['Options']['plugins'])
+                    datasource = bids.get_datasource(sesfolder, bidsmap['Options']['plugins'])
                     if not datasource.dataformat:
-                        LOGGER.info(f"No coinable datasources found in '{session}'")
+                        LOGGER.info(f"No coinable datasources found in '{sesfolder}'")
                         continue
                     subid        = bidsmap[datasource.dataformat]['subject']
                     sesid        = bidsmap[datasource.dataformat]['session']
@@ -182,7 +182,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                             LOGGER.info(f"Skipping processed session: {bidssession} already has {datatypes} data (you can carefully use the -f option to overrule)")
                             continue
 
-                    LOGGER.info(f"Coining datasources in: {session}")
+                    LOGGER.info(f"Coining datasources in: {sesfolder}")
                     if bidssession.is_dir():
                         LOGGER.warning(f"Existing BIDS output-directory found, which may result in duplicate data (with increased run-index). Make sure {bidssession} was cleaned-up from old data before (re)running the bidscoiner")
                     bidssession.mkdir(parents=True, exist_ok=True)
@@ -190,11 +190,11 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     # Run the bidscoiner plugins
                     for module in plugins:
                         LOGGER.info(f"Executing plugin: {Path(module.__file__).name}")
-                        module.bidscoiner_plugin(session, bidsmap, bidssession)
+                        module.bidscoiner_plugin(sesfolder, bidsmap, bidssession)
 
                     # Clean-up the temporary unpacked data
                     if unpacked:
-                        shutil.rmtree(session)
+                        shutil.rmtree(sesfolder)
 
     # Re-read the participants_table and store the collected personals in the json sidecar-file
     if participants_tsv.is_file():

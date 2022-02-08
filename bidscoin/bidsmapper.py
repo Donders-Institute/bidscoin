@@ -127,8 +127,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                 LOGGER.info(f"Mapping: {session} (subject {n}/{len(subjects)})")
 
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-                sessionfolders, unpacked = bids.unpack(session)
-                for session in sessionfolders:
+                sesfolders, unpacked = bids.unpack(session)
+                for sesfolder in sesfolders:
                     if store:
                         store = {'source': unpacked if unpacked else rawfolder, 'target': bidscoinfolder/'provenance'}
                     else:
@@ -136,12 +136,12 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
                     # Run the bidsmapper plugins
                     for module in plugins:
-                        LOGGER.info(f"Executing plugin: {Path(module.__file__).name} -> {session}")
-                        module.bidsmapper_plugin(session, bidsmap_new, bidsmap_old, template, store)
+                        LOGGER.info(f"Executing plugin: {Path(module.__file__).name} -> {sesfolder}")
+                        module.bidsmapper_plugin(sesfolder, bidsmap_new, bidsmap_old, template, store)
 
                     # Clean-up the temporary unpacked data
                     if unpacked:
-                        shutil.rmtree(session)
+                        shutil.rmtree(sesfolder)
 
     # Save the new study bidsmap in the bidscoinfolder or launch the bidseditor UI_MainWindow
     if noedit:
