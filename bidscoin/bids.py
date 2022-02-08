@@ -242,14 +242,14 @@ class DataSource:
         return value
 
 
-def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (Path, bool):
+def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (List[Path], bool):
     """
     Unpacks and sorts DICOM files in sourcefolder to a temporary folder if sourcefolder contains a DICOMDIR file or .tar.gz, .gz or .zip files
 
     :param sourcefolder:    The full pathname of the folder with the source data
     :param wildcard:        A glob search pattern to select the tarballed/zipped files
     :param workfolder:      A root folder for temporary data
-    :return:                A tuple with the full pathname of the source or workfolder and a workdir-path or False when the data is not unpacked in a temporary folder
+    :return:                Either ([unpacked and sorted session folders], the temporary workdir), or just ([sourcefolder], False)
     """
 
     # Search for zipped/tarballed files
@@ -264,8 +264,9 @@ def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (Path,
 
         # Create a (temporary) sub/ses workfolder for unpacking the data
         if not workfolder:
-            workfolder = tempfile.mkdtemp()
-        workfolder = Path(workfolder)
+            workfolder = Path(tempfile.mkdtemp())
+        else:
+            workfolder = Path(workfolder)/next(tempfile._get_candidate_names())
         worksubses = workfolder/sourcefolder.relative_to(sourcefolder.parent.parent)
         worksubses.mkdir(parents=True, exist_ok=True)
 
@@ -289,15 +290,13 @@ def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (Path,
             sessions += dicomsort.sortsessions(worksubses)
 
         # Sort the DICOM files if not sorted yet (e.g. DICOMDIR)
-        sessions = set(sessions + dicomsort.sortsessions(worksubses))
-        if len(sessions) > 1:
-            LOGGER.warning(f"Multiple subject/session folders found in {sourcefolder}:\n{sessions}")
+        sessions = list(set(sessions + dicomsort.sortsessions(worksubses)))
 
-        return worksubses, workfolder
+        return sessions, workfolder
 
     else:
 
-        return sourcefolder, False
+        return [sourcefolder], False
 
 
 def is_dicomfile(file: Path) -> bool:
