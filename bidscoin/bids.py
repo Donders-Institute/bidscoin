@@ -200,9 +200,9 @@ class DataSource:
         subid = subid_
 
         # Add sub- and ses- prefixes if they are not there
-        subid = 'sub-' + cleanup_value(re.sub(f'^{self.subprefix}', '', subid))
+        subid = 'sub-' + cleanup_value(re.sub(f"^{self.subprefix if self.subprefix!='*' else ''}", '', subid))
         if sesid:
-            sesid = 'ses-' + cleanup_value(re.sub(f'^{self.sesprefix}', '', sesid))
+            sesid = 'ses-' + cleanup_value(re.sub(f"^{self.sesprefix if self.sesprefix!='*' else ''}", '', sesid))
 
         return subid, sesid
 
