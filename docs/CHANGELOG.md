@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file. The format 
 - The possibility to process subject folders without prefix
 
 ### Changed
-- The subject/session prefix API 
+- Removed / changed redundant subject/session prefix input arguments (now stored in the bidsmap)
 
 ### Fixed
 - The bidscoin installation test in the bidseditor
