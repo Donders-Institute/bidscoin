@@ -129,7 +129,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, bidsmapfile: st
             LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
             personals = dict()
             subject   = rawfolder/subject.name.replace('sub-', subprefix.replace('*',''))     # TODO: This assumes e.g. that the subject-ids in the rawfolder did not contain BIDS-invalid characters (such as '_')
-            sessions  = bidscoin.lsdirs(subject, sesprefix + '*')
+            sessions  = bidscoin.lsdirs(subject, sesprefix if sesprefix!='*' else '' + '*')
             if not subject.is_dir():
                 LOGGER.error(f"Could not find source-folder: {subject}")
                 continue
