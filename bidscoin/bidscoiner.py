@@ -136,7 +136,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     subprefix = bidsmap['Options']['bidscoin']['subprefix'].replace('*','')
     sesprefix = bidsmap['Options']['bidscoin']['sesprefix'].replace('*','')
     if not subjects:
-        subjects = bidscoin.lsdirs(rawfolder, subprefix if subprefix!='*' else '' + '*')
+        subjects = bidscoin.lsdirs(rawfolder, (subprefix if subprefix!='*' else '') + '*')
         if not subjects:
             LOGGER.warning(f"No subjects found in: {rawfolder/subprefix}*")
     else:
@@ -154,7 +154,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                 LOGGER.warning(f"The '{subject}' subject folder does not exist")
                 continue
 
-            sessions = bidscoin.lsdirs(subject, sesprefix if sesprefix!='*' else '' + '*')
+            sessions = bidscoin.lsdirs(subject, (sesprefix if sesprefix!='*' else '') + '*')
             if not sessions or (subject/'DICOMDIR').is_file():
                 sessions = [subject]
             for session in sessions:

@@ -113,13 +113,13 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         return
 
     # Loop over all subjects and sessions and built up the bidsmap entries
-    subjects = bidscoin.lsdirs(rawfolder, subprefix if subprefix!='*' else '' + '*')
+    subjects = bidscoin.lsdirs(rawfolder, (subprefix if subprefix!='*' else '') + '*')
     if not subjects:
         LOGGER.warning(f'No subjects found in: {rawfolder/subprefix}*')
     with logging_redirect_tqdm():
         for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
-            sessions = bidscoin.lsdirs(subject, sesprefix if sesprefix!='*' else '' + '*')
+            sessions = bidscoin.lsdirs(subject, (sesprefix if sesprefix!='*' else '') + '*')
             if not sessions or (subject/'DICOMDIR').is_file():
                 sessions = [subject]
             for session in sessions:
