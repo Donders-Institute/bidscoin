@@ -460,7 +460,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             intendedfor = jsondata.get('IntendedFor')
             if intendedfor:
 
-                # Search with multiple patterns for matching nifit-files in all runs and store the relative path to the session folder
+                # Search with multiple patterns for matching nifti-files in all runs and store the relative path to the session folder
                 niifiles = []
                 if intendedfor.startswith('<') and intendedfor.endswith('>'):
                     intendedfor = intendedfor[2:-2].split('><')
@@ -476,7 +476,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                         upperlimit = int(limits[1]) if limits[1].strip() else float('inf')
                         acqtimes   = []
                         for match in matches:
-                            acqtimes.append((dateutil.parser.parse(scans_table.loc[match,'acq_time']), (Path(sesid)/match).as_posix()))     # The time + relative filepath
+                            acqtimes.append((dateutil.parser.parse(scans_table.loc[match,'acq_time']), match))     # Time + filepath relative to the session-folder
                         acqtimes.sort(key = lambda acqtime: acqtime[0])
                         offset = sum([acqtime[0] < fmaptime for acqtime in acqtimes])  # The nr of preceding series
                         for n, acqtime in enumerate(acqtimes):
@@ -485,10 +485,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                     else:
                         niifiles.extend(matches)
 
-                # Add the IntendedFor data
+                # Add the IntendedFor data. NB: The paths need to use forward slashes and be relative to the subject folder
                 if niifiles:
                     LOGGER.info(f"Adding IntendedFor to: {jsonfile}")
-                    jsondata['IntendedFor'] = niifiles                  # NB: The path needs to use forward slashes instead of backward slashes
+                    jsondata['IntendedFor'] = [(Path(sesid)/niifile).as_posix() for niifile in niifiles]
                 else:
                     LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the search for {intendedfor} gave no results")
                     jsondata['IntendedFor'] = None
