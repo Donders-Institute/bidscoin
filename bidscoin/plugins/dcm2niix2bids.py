@@ -476,12 +476,12 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                         upperlimit = int(limits[1]) if limits[1].strip() else float('inf')
                         acqtimes   = []
                         for match in matches:
-                            acqtimes.append((dateutil.parser.parse(scans_table.loc[match,'acq_time']), match))
+                            acqtimes.append((dateutil.parser.parse(scans_table.loc[match,'acq_time']), (Path(sesid)/match).as_posix()))     # The time + relative filepath
                         acqtimes.sort(key = lambda acqtime: acqtime[0])
                         offset = sum([acqtime[0] < fmaptime for acqtime in acqtimes])  # The nr of preceding series
                         for n, acqtime in enumerate(acqtimes):
                             if lowerbound < acqtime[0] < upperbound and lowerlimit <= n-offset < upperlimit:
-                                niifiles += (Path(sesid)/acqtime[1]).as_posix()
+                                niifiles += acqtime[1]
                     else:
                         niifiles.extend(matches)
 
