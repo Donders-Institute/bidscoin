@@ -492,11 +492,12 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                         value = elem.value
                         break
 
-        except OSError:
-            LOGGER.warning(f'Cannot read {tagname} from {dicomfile}')
+        except OSError as ioerror:
+            LOGGER.warning(f"Cannot read {tagname} from {dicomfile}\n{ioerror}")
             value = ''
 
         except Exception as dicomerror:
+            LOGGER.warning(f"Cannot read {tagname} from {dicomfile}\n{dicomerror}")
             try:
                 value = parse_x_protocol(tagname, dicomfile)
 
