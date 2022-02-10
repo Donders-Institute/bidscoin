@@ -474,7 +474,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
             if dicomfile != _DICOMFILE_CACHE:
                 dicomdata = dcmread(dicomfile, force=True)          # The DICM tag may be missing for anonymized DICOM files
                 if 'Modality' not in dicomdata:
-                    raise ValueError(f'Cannot read {dicomfile}')
+                    raise ValueError(f'Missing DICOM Modality field in: {dicomfile}')
                 _DICOMDICT_CACHE = dicomdata
                 _DICOMFILE_CACHE = dicomfile
             else:
