@@ -115,8 +115,8 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                             echo.with_suffix('').with_suffix('.json').unlink()
 
                     # Construct relative path names as they are used in BIDS
-                    oldechos_rel = [str(echo.relative_to(session).as_posix()) for echo in echos]
-                    newechos_rel = [str(echo.relative_to(session).as_posix()) for echo in echos + newechos if echo.is_file()]
+                    oldechos_rel = [echo.relative_to(session).as_posix() for echo in echos]
+                    newechos_rel = [echo.relative_to(session).as_posix() for echo in echos + newechos if echo.is_file()]
                     if output == 'derivatives':
                         cefile_rel = ''                 # This doesn't work for IntendedFor in BIDS :-(
                     else:
@@ -150,7 +150,8 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                         elif 'acq_time' in scans_table:
                             with cefile.with_suffix('').with_suffix('.json').open('r') as fid:
                                 metadata = json.load(fid)
-                            scans_table.loc['oldrow', 'acq_time'] = metadata.get('AcquisitionTime')
+                            date = scans_table.iloc[0]['acq_time'].split('T')[0]
+                            scans_table.loc['oldrow', 'acq_time'] = f"{date}T{metadata.get('AcquisitionTime')}"
                         else:
                             scans_table.loc['oldrow'] = None
 
