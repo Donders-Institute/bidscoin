@@ -67,7 +67,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 LOGGER.info('-------------------------------------')
                 LOGGER.info(f"Combining echos for ({n}/{len(subjects)}): {session}")
 
-                sub_id, ses_id = bids.DataSource(session/'dum.my').subid_sesid()
+                sub_id, ses_id = bids.DataSource(session/'dum.my', subprefix='sub-', sesprefix='ses-').subid_sesid()
 
                 # Search for multi-echo matches
                 for match in sorted([match for match in session.rglob(pattern) if '.nii' in match.suffixes]):
