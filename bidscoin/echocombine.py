@@ -72,21 +72,26 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 # Search for multi-echo matches
                 for match in sorted([match for match in session.rglob(pattern) if '.nii' in match.suffixes]):
 
-                    # Check if it is normal/BIDS multi-echo data
-                    datatype  = match.parent.name
-                    echonr    = bids.get_bidsvalue(match, 'echo')
-                    mepattern = bids.get_bidsvalue(match, 'echo', '*')
+                    # Check if it is normal/BIDS multi-echo data or that the echo-number is appended to the acquisition label (as done in BIDScoin)
+                    if '_echo-' in match:
+                        echonr      = bids.get_bidsvalue(match, 'echo')
+                        mepattern   = bids.get_bidsvalue(match, 'echo', '*')
+                    elif '_acq-' in match and bids.get_bidsvalue(match, 'acq').split('e')[-1].isnumeric():
+                        acq, echonr = bids.get_bidsvalue(match, 'acq').rsplit('e',1)
+                        mepattern   = bids.get_bidsvalue(match, 'acq', acq + 'e*')
+                        LOGGER.info(f"No 'echo' key-value pair found in the filename, using the 'acq-{acq}e{echonr}' pair instead (BIDScoin-style)")
+                    else:
+                        LOGGER.warning(f"No 'echo' encoding found in the filename, skipping: {match}")
+                        continue
                     echos     = sorted(match.parent.glob(mepattern.name))
                     newechos  = [echo.parents[1]/unknowndatatype/echo.name for echo in echos]
-                    if not echonr:
-                        LOGGER.warning(f"No 'echo' key-value pair found in the filename, skipping: {match}")
-                        continue
                     if len(echos) == 1:
                         LOGGER.warning(f"Only one echo image found, nothing to do for: {match}")
                         continue
 
                     # Construct the combined-echo output filename and check if that file already exists
-                    cename = match.name.replace(f"_echo-{echonr}", '')
+                    datatype = match.parent.name
+                    cename   = match.name.replace(f"_echo-{echonr}", '')
                     if not output:
                         cefile = session/datatype/cename
                     elif output == 'derivatives':
