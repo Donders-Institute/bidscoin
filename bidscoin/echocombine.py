@@ -73,10 +73,10 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 for match in sorted([match for match in session.rglob(pattern) if '.nii' in match.suffixes]):
 
                     # Check if it is normal/BIDS multi-echo data or that the echo-number is appended to the acquisition label (as done in BIDScoin)
-                    if '_echo-' in match:
+                    if '_echo-' in match.name:
                         echonr      = bids.get_bidsvalue(match, 'echo')
                         mepattern   = bids.get_bidsvalue(match, 'echo', '*')
-                    elif '_acq-' in match and bids.get_bidsvalue(match, 'acq').split('e')[-1].isnumeric():
+                    elif '_acq-' in match.name and bids.get_bidsvalue(match, 'acq').split('e')[-1].isnumeric():
                         acq, echonr = bids.get_bidsvalue(match, 'acq').rsplit('e',1)
                         mepattern   = bids.get_bidsvalue(match, 'acq', acq + 'e*')
                         LOGGER.info(f"No 'echo' key-value pair found in the filename, using the 'acq-{acq}e{echonr}' pair instead (BIDScoin-style)")
