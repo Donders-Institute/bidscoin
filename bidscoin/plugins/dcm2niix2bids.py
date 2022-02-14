@@ -481,7 +481,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                         offset = sum([acqtime[0] < fmaptime for acqtime in acqtimes])  # The nr of preceding series
                         for n, acqtime in enumerate(acqtimes):
                             if lowerbound < acqtime[0] < upperbound and lowerlimit <= n-offset < upperlimit:
-                                niifiles += acqtime[1]
+                                niifiles.append(acqtime[1])
                     else:
                         niifiles.extend(matches)
 
