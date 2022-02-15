@@ -136,7 +136,8 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                             intendedfor = metadata.get('IntendedFor', [])
                             if isinstance(intendedfor, str):
                                 intendedfor = [intendedfor]
-                            if (Path(sesid)/oldechos_rel[0]).as_posix() in intendedfor:     # IntendedFor must be relative to the subject folder
+                            intendedfor = [file.split(subid+'/',1)[1] for file in intendedfor]    # NB: IntendedFor is relative to the subject folder
+                            if oldechos_rel[0] in intendedfor:
                                 LOGGER.info(f"Updating 'IntendedFor' in {fmap}")
                                 relfiles                = [file for file in intendedfor if file not in oldechos_rel] + newechos_rel + [cefile_rel]
                                 metadata['IntendedFor'] = [(Path(sesid)/relfile).as_posix() for relfile in relfiles]
