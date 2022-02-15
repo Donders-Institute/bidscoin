@@ -138,7 +138,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                                 intendedfor = [intendedfor]
                             if (Path(sesid)/oldechos_rel[0]).as_posix() in intendedfor:     # IntendedFor must be relative to the subject folder
                                 LOGGER.info(f"Updating 'IntendedFor' in {fmap}")
-                                relfiles                = [file for file in intendedfor if file not in oldechos_rel] + newechos_rel + list(cefile_rel)
+                                relfiles                = [file for file in intendedfor if file not in oldechos_rel] + newechos_rel + [cefile_rel]
                                 metadata['IntendedFor'] = [(Path(sesid)/relfile).as_posix() for relfile in relfiles]
                                 with fmap.open('w') as fmap_fid:
                                     json.dump(metadata, fmap_fid, indent=4)
