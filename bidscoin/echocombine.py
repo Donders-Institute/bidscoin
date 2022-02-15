@@ -67,7 +67,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 LOGGER.info('-------------------------------------')
                 LOGGER.info(f"Combining echos for ({n}/{len(subjects)}): {session}")
 
-                sub_id, ses_id = bids.DataSource(session/'dum.my', subprefix='sub-', sesprefix='ses-').subid_sesid()
+                subid, sesid = bids.DataSource(session/'dum.my', subprefix='sub-', sesprefix='ses-').subid_sesid()
 
                 # Search for multi-echo matches
                 for match in sorted([match for match in session.rglob(pattern) if '.nii' in match.suffixes]):
@@ -96,7 +96,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                     if not output:
                         cefile = session/datatype/cename
                     elif output == 'derivatives':
-                        cefile = bidsdir/'derivatives'/'multiecho'/sub_id/ses_id/datatype/cename
+                        cefile = bidsdir/'derivatives'/'multiecho'/subid/sesid/datatype/cename
                     else:
                         cefile = session/output/cename
                     cefile.parent.mkdir(parents=True, exist_ok=True)
@@ -120,15 +120,15 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                             echo.unlink()
                             echo.with_suffix('').with_suffix('.json').unlink()
 
-                    # Construct relative path names as they are used in BIDS
+                    # Construct the path names relative to the session folder (as in the scans.tsv file)
                     oldechos_rel = [echo.relative_to(session).as_posix() for echo in echos]
                     newechos_rel = [echo.relative_to(session).as_posix() for echo in echos + newechos if echo.is_file()]
                     if output == 'derivatives':
-                        cefile_rel = ''                 # This doesn't work for IntendedFor in BIDS :-(
+                        cefile_rel = ''                 # A remote folder cannot be specified as IntendedFor :-(
                     else:
-                        cefile_rel = str(cefile.relative_to(session).as_posix())
+                        cefile_rel = cefile.relative_to(session).as_posix()
 
-                    # Update the IntendedFor fields in the fieldmap sidecar files (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
+                    # Update the IntendedFor fields of the fieldmaps (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
                     if output != 'derivatives' and (session/'fmap').is_dir():
                         for fmap in (session/'fmap').glob('*.json'):
                             with fmap.open('r') as fmap_fid:
@@ -136,9 +136,10 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                             intendedfor = metadata.get('IntendedFor', [])
                             if isinstance(intendedfor, str):
                                 intendedfor = [intendedfor]
-                            if oldechos_rel[0] in intendedfor:
+                            if (Path(sesid)/oldechos_rel[0]).as_posix() in intendedfor:     # IntendedFor must be relative to the subject folder
                                 LOGGER.info(f"Updating 'IntendedFor' in {fmap}")
-                                metadata['IntendedFor'] = [file for file in intendedfor if file not in oldechos_rel] + newechos_rel + list(filter(None,[cefile_rel]))
+                                relfiles                = [file for file in intendedfor if file not in oldechos_rel] + newechos_rel + list(cefile_rel)
+                                metadata['IntendedFor'] = [(Path(sesid)/relfile).as_posix() for relfile in relfiles]
                                 with fmap.open('w') as fmap_fid:
                                     json.dump(metadata, fmap_fid, indent=4)
 
@@ -147,7 +148,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                         bidsignore = (bidsdir/'.bidsignore').read_text().splitlines()
                     else:
                         bidsignore = [unknowndatatype + '/']
-                    scans_tsv = session/f"{sub_id}{bids.add_prefix('_',ses_id)}_scans.tsv"
+                    scans_tsv = session/f"{subid}{bids.add_prefix('_', sesid)}_scans.tsv"
                     if scans_tsv.is_file():
 
                         scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
