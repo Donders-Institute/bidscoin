@@ -269,7 +269,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 outfolder = outfolder,
                 source    = source)
             if not bidscoin.run_command(command):
-                LOGGER.warning("Subsequent processing may fail or crash due to the dcm2niix-error")
+                LOGGER.warning("Subsequent processing may fail or crash due to the previous dcm2niix-error")
+            if outfolder.glob(f"{bidsname}a.nii*"):
+                LOGGER.warning(f"Unexpected variants of {outfolder/bidsname}* were produced by dcm2niix. Possibly this can be remedied by using the dcm2niix -i option (to ignore derived, localizer and 2D images)")
 
             # Replace uncropped output image with the cropped one
             if '-x y' in plugin['dcm2niix2bids'].get('args',''):
