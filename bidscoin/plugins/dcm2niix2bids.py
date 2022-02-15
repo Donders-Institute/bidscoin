@@ -269,7 +269,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 outfolder = outfolder,
                 source    = source)
             if not bidscoin.run_command(command):
-                continue
+                LOGGER.warning("Subsequent processing may fail or crash due to the dcm2niix-error")
 
             # Replace uncropped output image with the cropped one
             if '-x y' in plugin['dcm2niix2bids'].get('args',''):
