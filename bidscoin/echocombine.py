@@ -43,9 +43,6 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
     LOGGER.info(f">>> echocombine bidsfolder={bidsdir} pattern={pattern} subjects={subjects} output={output}"
                 f" algorithm={algorithm} weights={weights}")
 
-    if 'echo' not in pattern:
-        LOGGER.warning(f"Missing 'echo-#' substring in glob-like search pattern, i.e. '{pattern}' does not seem to select the first echo")
-
     # Get the list of subjects
     if not subjects:
         subjects = bidscoin.lsdirs(bidsdir, 'sub-*')
