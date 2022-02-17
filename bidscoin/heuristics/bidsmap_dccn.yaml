@@ -413,9 +413,10 @@ DICOM:
       echo: <EchoNumbers>
       part: ['', mag, phase, real, imag, 0]
       suffix: bold
-    meta: &func_dicommeta
+    meta: &func_meta
       TaskName: <ProtocolName>
       B0FieldSource:
+      B0FieldIdentifier:
   - provenance:
     attributes:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
       <<: *func_dicomattr
@@ -424,7 +425,7 @@ DICOM:
       <<: *func_dicoment_func
       suffix: sbref
     meta:
-      <<: *func_dicommeta
+      <<: *func_meta
   - provenance:
     attributes:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
       <<: *func_dicomattr
@@ -447,14 +448,14 @@ DICOM:
       SeriesDescription: (?i).*((f|functional).?MRI|task|BOLD|CMRR.*_TR).*PHYSIO.*
     bids: *func_dicoment_timeseries
     meta:
-      <<: *func_dicommeta
+      <<: *func_meta
   - provenance:
     attributes:                         # Then catch the bold runs themselves
       <<: *func_dicomattr
       ProtocolName: (?i).*((f|functional).?MRI|task|BOLD|CMRR.*_TR).*
     bids: *func_dicoment_func
     meta:
-      <<: *func_dicommeta
+      <<: *func_meta
   - provenance:
     attributes:
       <<: *func_dicomattr
@@ -463,7 +464,7 @@ DICOM:
       <<: *func_dicoment_func
       suffix: cbv
     meta:
-      <<: *func_dicommeta
+      <<: *func_meta
   - provenance:
     attributes: *func_dicomattr
     bids: &func_dicoment_events         # See: schema/datatypes/func.yaml
@@ -516,6 +517,7 @@ DICOM:
       VascularCrushing:
       AcquisitionVoxelSize:
       B0FieldSource:
+      B0FieldIdentifier:
   - provenance:
     attributes:
       <<: *perf_dicomattr
@@ -577,6 +579,7 @@ DICOM:
       suffix: dwi
     meta: &dwi_meta
       B0FieldSource:
+      B0FieldIdentifier:
   - provenance:
     attributes:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
       <<: *dwi_dicomattr
@@ -641,7 +644,6 @@ DICOM:
       run: <<1>>
       suffix: magnitude1
     meta: &fmap_meta
-      B0FieldSource:
       B0FieldIdentifier:
       IntendedFor:
   - provenance:
@@ -1410,9 +1412,9 @@ PAR:
       echo:
       part: ['', mag, phase, real, imag, 0]
       suffix: bold
-    meta: &func_parmeta
+    meta:
+      <<: *func_meta
       TaskName: <exam_name>
-      B0FieldSource:
   - provenance:
     attributes:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
       <<: *func_parattr
@@ -1421,14 +1423,14 @@ PAR:
       <<: *func_parent_func
       suffix: sbref
     meta:
-      <<: *func_parmeta
+      <<: *func_meta
   - provenance:
     attributes:                         # Then catch the bold runs themselves
       <<: *func_parattr
       protocol_name: (?i).*((f|functional).?MRI|task|BOLD).*
     bids: *func_parent_func
     meta:
-      <<: *func_parmeta
+      <<: *func_meta
   - provenance:
     attributes:
       <<: *func_parattr
@@ -1437,7 +1439,7 @@ PAR:
       <<: *func_parent_func
       suffix: cbv
     meta:
-      <<: *func_parmeta
+      <<: *func_meta
   - provenance:
     attributes: *func_parattr
     bids: &func_parent_events           # See: schema/datatypes/func.yaml

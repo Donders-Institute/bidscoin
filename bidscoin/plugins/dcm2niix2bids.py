@@ -499,8 +499,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the IntendedFor value of the bidsmap entry was empty")
 
             # Work-around because the bids-validator (v1.8) cannot handle `null` values
-            if not jsondata.get('IntendedFor'):
-                jsondata.pop('IntendedFor', None)
+            if not jsondata.get('B0FieldSource'):     jsondata.pop('B0FieldSource', None)
+            if not jsondata.get('B0FieldIdentifier'): jsondata.pop('B0FieldIdentifier', None)
+            if not jsondata.get('IntendedFor'):       jsondata.pop('IntendedFor', None)
 
             # Extract the echo times from magnitude1 and magnitude2 and add them to the phasediff json-file
             if jsonfile.name.endswith('phasediff.json'):
