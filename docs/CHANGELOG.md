@@ -7,12 +7,14 @@ All notable changes to this project will be documented in this file. The format 
 ### Added
 - IntendedFor can now be appended with a "bounding" term to deal with duplicated fieldmaps from interrupted sessions
 - The possibility to process subject folders without prefix
+- Support for BIDS 1.7 (e.g. for the new `B0FieldSource` and `B0FieldIdentifier` fieldmap meta fields)
 
 ### Changed
 - Removed / changed redundant subject/session prefix input arguments (now stored in the bidsmap)
 
 ### Fixed
 - The bidscoin installation test in the bidseditor
+- The IntendedFor list update when combining echos
 
 ## [3.7.0] - 2021-12-20
 

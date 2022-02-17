@@ -413,8 +413,9 @@ DICOM:
       echo: <EchoNumbers>
       part: ['', mag, phase, real, imag, 0]
       suffix: bold
-    meta:
+    meta: &func_dicommeta
       TaskName: <ProtocolName>
+      B0FieldSource:
   - provenance:
     attributes:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
       <<: *func_dicomattr
@@ -423,7 +424,7 @@ DICOM:
       <<: *func_dicoment_func
       suffix: sbref
     meta:
-      TaskName: <ProtocolName>
+      <<: *func_dicommeta
   - provenance:
     attributes:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
       <<: *func_dicomattr
@@ -446,14 +447,14 @@ DICOM:
       SeriesDescription: (?i).*((f|functional).?MRI|task|BOLD|CMRR.*_TR).*PHYSIO.*
     bids: *func_dicoment_timeseries
     meta:
-      TaskName: <ProtocolName>
+      <<: *func_dicommeta
   - provenance:
     attributes:                         # Then catch the bold runs themselves
       <<: *func_dicomattr
       ProtocolName: (?i).*((f|functional).?MRI|task|BOLD|CMRR.*_TR).*
     bids: *func_dicoment_func
     meta:
-      TaskName: <ProtocolName>
+      <<: *func_dicommeta
   - provenance:
     attributes:
       <<: *func_dicomattr
@@ -462,7 +463,7 @@ DICOM:
       <<: *func_dicoment_func
       suffix: cbv
     meta:
-      TaskName: <ProtocolName>
+      <<: *func_dicommeta
   - provenance:
     attributes: *func_dicomattr
     bids: &func_dicoment_events         # See: schema/datatypes/func.yaml
@@ -506,7 +507,7 @@ DICOM:
       dir:
       run: <<1>>
       suffix: asl
-    meta: &perf_metadata
+    meta: &perf_meta
       ArterialSpinLabelingType: "CASL / PCASL / PASL"
       PostLabelingDelay:
       BackgroundSuppression:
@@ -514,13 +515,14 @@ DICOM:
       RepetitionTimePreparation:
       VascularCrushing:
       AcquisitionVoxelSize:
+      B0FieldSource:
   - provenance:
     attributes:
       <<: *perf_dicomattr
       ProtocolName: (?i).*(ASL|Perfusion).*
     bids: *perf_dicoment_group1
     meta:
-      <<: *perf_metadata
+      <<: *perf_meta
   - provenance:
     attributes:
       <<: *perf_dicomattr
@@ -529,7 +531,7 @@ DICOM:
       <<: *perf_dicoment_group1
       suffix: m0scan
     meta:
-      <<: *perf_metadata
+      <<: *perf_meta
   - provenance:
     attributes: *perf_dicomattr
     bids: &perf_dicoment_group2         # See: schema/datatypes/perf.yaml
@@ -539,7 +541,7 @@ DICOM:
       run: <<1>>
       suffix: aslcontext
     meta:
-      <<: *perf_metadata
+      <<: *perf_meta
   - provenance:
     attributes: *perf_dicomattr
     bids: &perf_dicoment_group3         # See: schema/datatypes/perf.yaml
@@ -548,7 +550,7 @@ DICOM:
       run: <<1>>
       suffix: asllabeling
     meta:
-      <<: *perf_metadata
+      <<: *perf_meta
 
   dwi:        # ----------------------- All diffusion runs ---------------------
   - provenance:
@@ -573,6 +575,8 @@ DICOM:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
       suffix: dwi
+    meta: &dwi_meta
+      B0FieldSource:
   - provenance:
     attributes:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
       <<: *dwi_dicomattr
@@ -583,6 +587,8 @@ DICOM:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
       suffix: sbref
+    meta:
+      <<: *dwi_meta
   - provenance:
     attributes:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
       <<: *dwi_dicomattr
@@ -603,11 +609,15 @@ DICOM:
       <<: *dwi_dicomattr
       ProtocolName: (?i).*(DWI|diffusion|DTI).*
     bids: *dwi_dicoment_DWI
+    meta:
+      <<: *dwi_meta
   - provenance:
     attributes:
       <<: *dwi_dicomattr
       ImageType: .*'DIFFUSION'.*
     bids: *dwi_dicoment_DWI
+    meta:
+      <<: *dwi_meta
 
   fmap:       # ----------------------- All fieldmap runs ----------------------
   - provenance:
@@ -630,7 +640,9 @@ DICOM:
       acq: <SeriesDescription>
       run: <<1>>
       suffix: magnitude1
-    meta:
+    meta: &fmap_meta
+      B0FieldSource:
+      B0FieldIdentifier:
       IntendedFor:
   - provenance:
     attributes:
@@ -642,7 +654,7 @@ DICOM:
       <<: *fmap_dicoment_fieldmaps
       suffix: phasediff
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -653,7 +665,7 @@ DICOM:
       <<: *fmap_dicoment_fieldmaps
       suffix: magnitude1
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -664,7 +676,7 @@ DICOM:
       <<: *fmap_dicoment_fieldmaps
       suffix: magnitude2
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -675,7 +687,7 @@ DICOM:
       <<: *fmap_dicoment_fieldmaps
       suffix: phase1
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -686,7 +698,7 @@ DICOM:
       <<: *fmap_dicoment_fieldmaps
       suffix: phase2
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -695,7 +707,7 @@ DICOM:
       <<: *fmap_dicoment_fieldmaps
       suffix: fieldmap
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -704,7 +716,7 @@ DICOM:
       <<: *fmap_dicoment_fieldmaps
       suffix: magnitude
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -717,14 +729,14 @@ DICOM:
       run: <<1>>
       suffix: epi
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_dicomattr
     bids:
       <<: *fmap_dicoment_PEPolar
       suffix: m0scan
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_TB1DAM         # See: schema/datatypes/fmap.yaml
@@ -737,7 +749,7 @@ DICOM:
       run: <<1>>
       suffix: TB1DAM
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_TB1EPI         # See: schema/datatypes/fmap.yaml
@@ -751,7 +763,7 @@ DICOM:
       run: <<1>>
       suffix: TB1EPI
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
@@ -765,7 +777,7 @@ DICOM:
       run: <<1>>
       suffix: TB1AFI
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -777,7 +789,7 @@ DICOM:
       acq: famp
       suffix: TB1TFL
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -789,7 +801,7 @@ DICOM:
       acq: anat
       suffix: TB1TFL
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -800,7 +812,7 @@ DICOM:
       acq: anat
       suffix: TB1RFM
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -810,14 +822,14 @@ DICOM:
       acq: famp
       suffix: TB1RFM
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_dicomattr
     bids:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
       suffix: RB1COR
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_TB1SRGE        # See: schema/datatypes/fmap.yaml
@@ -831,7 +843,7 @@ DICOM:
       run: <<1>>
       suffix: TB1SRGE
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -844,7 +856,7 @@ DICOM:
       run: <<1>>
       suffix: TB1map
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -853,7 +865,7 @@ DICOM:
       <<: *fmap_dicoment_parametric
       suffix: RB1map
     meta:
-      IntendedFor:
+      <<: *fmap_meta
 
   pet:        # ----------------------- All PET runs ---------------------------
   - provenance:
@@ -1398,8 +1410,9 @@ PAR:
       echo:
       part: ['', mag, phase, real, imag, 0]
       suffix: bold
-    meta:
+    meta: &func_parmeta
       TaskName: <exam_name>
+      B0FieldSource:
   - provenance:
     attributes:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
       <<: *func_parattr
@@ -1408,14 +1421,14 @@ PAR:
       <<: *func_parent_func
       suffix: sbref
     meta:
-      TaskName: <exam_name>
+      <<: *func_parmeta
   - provenance:
     attributes:                         # Then catch the bold runs themselves
       <<: *func_parattr
       protocol_name: (?i).*((f|functional).?MRI|task|BOLD).*
     bids: *func_parent_func
     meta:
-      TaskName: <exam_name>
+      <<: *func_parmeta
   - provenance:
     attributes:
       <<: *func_parattr
@@ -1424,7 +1437,7 @@ PAR:
       <<: *func_parent_func
       suffix: cbv
     meta:
-      TaskName: <exam_name>
+      <<: *func_parmeta
   - provenance:
     attributes: *func_parattr
     bids: &func_parent_events           # See: schema/datatypes/func.yaml
@@ -1480,11 +1493,15 @@ PAR:
       dir:
       run: <<1>>
       suffix: asl
+    meta:
+      <<: *perf_meta
   - provenance:
     attributes:
       <<: *perf_parattr
       protocol_name: (?i).*(ASL|Perfusion).*
     bids: *perf_parent_group1
+    meta:
+      <<: *perf_meta
   - provenance:
     attributes:
       <<: *perf_parattr
@@ -1492,6 +1509,8 @@ PAR:
     bids:
       <<: *perf_parent_group1
       suffix: m0scan
+    meta:
+      <<: *perf_meta
   - provenance:
     attributes: *perf_parattr
     bids: &perf_parent_group2           # See: schema/datatypes/perf.yaml
@@ -1500,6 +1519,8 @@ PAR:
       dir:
       run: <<1>>
       suffix: aslcontext
+    meta:
+      <<: *perf_meta
   - provenance:
     attributes: *perf_parattr
     bids: &perf_parent_group3           # See: schema/datatypes/perf.yaml
@@ -1507,6 +1528,8 @@ PAR:
       rec: <exam_name>
       run: <<1>>
       suffix: asllabeling
+    meta:
+      <<: *perf_meta
 
   dwi:        # ----------------------- All diffusion runs ---------------------
   - provenance:
@@ -1530,6 +1553,8 @@ PAR:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
       suffix: dwi
+    meta:
+      <<: *dwi_meta
   - provenance:
     attributes:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
       <<: *dwi_parattr
@@ -1545,6 +1570,8 @@ PAR:
       <<: *dwi_parattr
       diffusion: '1'
     bids: *dwi_parent_DWI
+    meta:
+      <<: *dwi_meta
 
   fmap:       # ----------------------- All fieldmap runs ----------------------
   - provenance:
@@ -1567,49 +1594,49 @@ PAR:
       run: <<1>>
       suffix: magnitude1
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: magnitude2
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: phasediff
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: phase1
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: phase2
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: fieldmap
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: magnitude
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids: &fmap_parent_PEPolar          # See: schema/datatypes/fmap.yaml
@@ -1619,14 +1646,14 @@ PAR:
       run: <<1>>
       suffix: epi
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_PEPolar
       suffix: m0scan
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids: &fmap_parent_TB1DAM           # See: schema/datatypes/fmap.yaml
@@ -1639,7 +1666,7 @@ PAR:
       run: <<1>>
       suffix: TB1DAM
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids: &fmap_parent_TB1EPI           # See: schema/datatypes/fmap.yaml
@@ -1653,7 +1680,7 @@ PAR:
       run: <<1>>
       suffix: TB1EPI
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids: &fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
@@ -1667,28 +1694,28 @@ PAR:
       run: <<1>>
       suffix: TB1AFI
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
       suffix: TB1TFL
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
       suffix: TB1RFM
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
       suffix: RB1COR
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids: &fmap_parent_TB1SRGE          # See: schema/datatypes/fmap.yaml
@@ -1702,7 +1729,7 @@ PAR:
       run: <<1>>
       suffix: TB1SRGE
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids: &fmap_parent_parametric
@@ -1712,14 +1739,14 @@ PAR:
       run: <<1>>
       suffix: TB1map
     meta:
-      IntendedFor:
+      <<: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_parametric
       suffix: RB1map
     meta:
-      IntendedFor:
+      <<: *fmap_meta
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance:

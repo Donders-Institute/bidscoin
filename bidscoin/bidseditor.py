@@ -772,8 +772,8 @@ class MainWindow(QMainWindow):
         for dataformat in self.dataformats:
             if self.output_bidsmap[dataformat].get('fmap'):
                 for run in self.output_bidsmap[dataformat]['fmap']:
-                    if not run['meta'].get('IntendedFor'):
-                        LOGGER.warning(f"IntendedFor fieldmap value is empty for {dataformat} run-item: {run['provenance']}")
+                    if not (run['meta'].get('B0FieldSource') or run['meta'].get('B0FieldIdentifier') or run['meta'].get('IntendedFor')):
+                        LOGGER.warning(f"B0FieldIdentifier/IntendedFor fieldmap value is empty for {dataformat} run-item: {run['provenance']}")
 
         filename,_ = QFileDialog.getSaveFileName(self, 'Save File',  str(self.bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if filename:
@@ -1373,12 +1373,12 @@ class EditWindow(QDialog):
                 return
             LOGGER.warning(f'The "{self.bidsname_textbox.toPlainText()}" run is not valid according to the BIDS standard")')
 
-        if self.target_datatype=='fmap' and not self.target_run['meta'].get('IntendedFor'):
-            answer = QMessageBox.question(self, 'Edit BIDS mapping', "The 'IntendedFor' meta-data is left empty\n\nDo you want to set "
-                                                                     "this label (recommended)?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
+        if self.target_datatype=='fmap' and not (self.target_run['meta'].get('B0FieldSource') or self.target_run['meta'].get('B0FieldIdentifier') or self.target_run['meta'].get('IntendedFor')):
+            answer = QMessageBox.question(self, 'Edit BIDS mapping', "The 'B0FieldIdentifier/IntendedFor' meta-data is left empty\n\nDo you want to go back and "
+                                                                     "set this data (recommended)?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
             if answer in (QMessageBox.Cancel, QMessageBox.Yes):
                 return
-            LOGGER.warning(f"'IntendedFor' fieldmap value was not set")
+            LOGGER.warning(f"'B0FieldIdentifier/IntendedFor' fieldmap data was not set")
 
         LOGGER.info(f'User has approved the edit')
         if re.sub('<(?!.*<).*? object at .*?>','',str(self.target_run)) != re.sub('<(?!.*<).*? object at .*?>','',str(self.source_run)):    # Ignore the memory address of the datasource object

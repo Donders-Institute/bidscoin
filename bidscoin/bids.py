@@ -347,10 +347,15 @@ def is_parfile(file: Path) -> bool:
     """
 
     # TODO: Implement a proper check, e.g. using nibabel
-    if file.is_file() and file.suffix.lower() in ('.par', '.xml') and '# CLINICAL TRYOUT' in file.read_text():
-        return True
-    else:
-        return False
+    try:
+        if file.is_file() and file.suffix.lower() == '.par' and '# CLINICAL TRYOUT' in file.read_text():
+            return True
+        elif file.is_file() and file.suffix.lower() == '.xml':
+            return True
+    except (OSError, UnicodeDecodeError) as ioerror:
+        pass
+
+    return False
 
 
 def get_dicomfile(folder: Path, index: int=0) -> Path:
