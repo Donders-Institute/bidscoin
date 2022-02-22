@@ -403,6 +403,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                     metaval = None
                 jsondata[metakey] = metaval
 
+            # Remove unused (but added from the template) B0FieldIdentifiers/Sources
+            if not jsondata.get('B0FieldSource'):     jsondata.pop('B0FieldSource', None)
+            if not jsondata.get('B0FieldIdentifier'): jsondata.pop('B0FieldIdentifier', None)
+
             # Save the meta-data to the json sidecar-file
             with jsonfile.open('w') as json_fid:
                 json.dump(jsondata, json_fid, indent=4)
@@ -495,13 +499,12 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                     LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the search for {intendedfor} gave no results")
                     jsondata['IntendedFor'] = None
 
-            else:
-                LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the IntendedFor value of the bidsmap entry was empty")
+            elif not (jsondata.get('B0FieldSource') or jsondata.get('B0FieldIdentifier')):
+                LOGGER.warning(f"Empty IntendedFor / B0FieldSource / B0FieldIdentifier fieldmap values in {jsonfile} (i.e. the fieldmap may not be used)")
 
-            # Work-around because the bids-validator (v1.8) cannot handle `null` values
-            if not jsondata.get('B0FieldSource'):     jsondata.pop('B0FieldSource', None)
-            if not jsondata.get('B0FieldIdentifier'): jsondata.pop('B0FieldIdentifier', None)
-            if not jsondata.get('IntendedFor'):       jsondata.pop('IntendedFor', None)
+            # Work-around because the bids-validator (v1.8) cannot handle `null` values / unused IntendedFor fields
+            if not jsondata.get('IntendedFor'):
+                jsondata.pop('IntendedFor', None)
 
             # Extract the echo times from magnitude1 and magnitude2 and add them to the phasediff json-file
             if jsonfile.name.endswith('phasediff.json'):

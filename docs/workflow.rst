@@ -126,7 +126,7 @@ As shown below, the main window of the bidseditor opens with separate data mappi
    If the default subject/session expression (e.g. ``/sub-(.*?)/`` where ``sub-`` can be substituted by your prefix) fails to parse the subject or session label, try prepending (a part of) the sourcefolder path, e.g. if your data is in ``/project/sourcedata/s001/..`` and your subject prefix is ``s``, try ``<<filepath:/sourcedata/s(.*?)/>>`` for extracting the ``001`` subject label. This is especially useful if your subject folders have no or a very short prefix.
 
 .. tip::
-   Clear the ``session`` label field if you have data with only one seesion. This will remove the optional session label from the BIDS ouptput name
+   Clear the ``session`` label field if you have data with only one session. This will remove the optional session label from the BIDS ouptput name
 
 Edit window
 ^^^^^^^^^^^
@@ -141,19 +141,21 @@ If the preview of the BIDS filename and meta-data both look good, you can store 
 
 Finally, if all BIDS output names in the main window are fine, you can click on the [Save] button and proceed with running the bidscoiner tool (step 2). Note that re-running the bidsmapper or bidseditor is always a safe thing to do since these tools will re-use the existing bidsmap yaml-file and will not delete or write anything to disk except to the bidsmap yaml-file.
 
+Fieldmaps
+`````````
+
+Fieldmaps are acquired and stored in various (sequences and manufacturer dependent) ways and may require some special treatment. For instance, it could be that you have ``magnitude1`` and ``magnitude2`` data in one series-folder (which is what Siemens can do). In that case you should select the ``magnitude1`` suffix and let bidscoiner automatically pick up the ``magnitude2`` during runtime (or vice versa). The same holds for ``phase1`` and ``phase2`` data. The suffix ``magnitude`` can be selected for sequences that save fieldmaps directly. See the `BIDS specification <https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#fieldmap-data>`__ for more details on fieldmap suffixes.
+
+Fieldmaps are typically acquired to be applied to specific other scans from the same session. The BIDS specification provides two `meta-data mechanisms <https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#expressing-the-mr-protocol-intent-for-fieldmaps>`__ to store this semantic meta data (NB: BIDS-apps may not use your fieldmap at all if you do not specify anything):
+
+1. First there is the older ``IntendedFor`` mechanism that can handle more basic use cases, i.e. it explicitly specifies the path of the target images to which the fieldmap should be applied, but it is left implicit from which images the fieldmap is to be computed. You can enter a dynamic ``IntendedFor`` search string in the ``Meta data`` table to have BIDScoin automatically fill out this field for you. For instance you can simply use ``task-Stop*_bold`` as a search pattern to specify all functional runs in the BIDS session that have ``task-Stop`` and ``_bold`` as part of their filename. For more advanced usage and explanation, see the `special bidsmap features <bidsmap.html#special-bidsmap-features>`__ section
+2. Second, there is the new and more flexible ``B0Fieldmap`` mechanism that uses a ``B0FieldIdentifier`` to group all the images from which the fieldmap can be computed, and a ``B0FieldSource`` to indicate which fieldmap should be used to correct the image. For instance, you could use ``{B0FieldIdentifier: sbref_fmap}`` in your ``AP`` and ``PA`` PE-polar ``sbref`` images, in conjunction with ``{B0FieldSource: sbref_fmap}`` in your associated ``AP`` PE-polar ``bold`` image.
+
 .. tip::
    The BIDScoin GUI features several ways to help you setting the right values:
    * Double-clicking an input filename pops-up an inspection window with the full header information (e.g. useful for checking attributes that are not (yet) in your bidsmap)
    * Hoovering with your mouse over a cell pops-up a tooltip with more background information (e.g. from the BIDS specifications)
    * Always check the terminal output and make sure there are no warnings or error messages there (a summary of them is printed when exiting the application)
-
-.. note::
-   **Fieldmaps** are acquired and stored in various (sequences and manufacturer dependent) ways and may require special treatment. For instance, it could be that you have ``magnitude1`` and ``magnitude2`` data in one series-folder (which is what Siemens can do). In that case you should select the ``magnitude1`` suffix and let bidscoiner automatically pick up the other magnitude image during runtime. The same holds for ``phase1`` and ``phase2`` data. The suffix ``magnitude`` can be selected for sequences that save fielmaps directly. See the `BIDS specification <https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#fieldmap-data>`__ for more details on fieldmap suffixes.
-
-   Fieldmaps are typically acquired to be applied to specific other scans from the same session. If this is the case then you should indicate this association in the ``IntendedFor`` meta-data field, either using a single search string or multiple `dynamic strings <bidsmap.html#special-features>`__ to select the runs that have that string pattern in their BIDS file name. For instance you can use ``task`` to select all functional runs or use ``<<Stop*Go><Reward>>`` to select "Stop1Go"-, "Stop2Go"- and "Reward"-runs. NB: bidsapps may not use your fieldmap at all if you leave this field empty!
-
-   If the run-index or any other value is not what you want it to be, try using dynamic values, as explained in the `special bidsmap features <bidsmap.html#special-bidsmap-features>`__ section
-
 
 Step 2: Running the bidscoiner
 ------------------------------
