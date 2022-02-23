@@ -24,7 +24,7 @@ Options:
     bidsignore: mrs/;extra_data/  # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
     subprefix: sub-               # The subject prefix of the source data
     sesprefix: ses-               # The session prefix of the source data
-    datatypes: [fmap, anat, func, perf, dwi, pet, meg, eeg, ieeg, beh]   # A list of datatypes that are converted to BIDS
+    datatypes: [fmap, anat, func, perf, dwi, pet, eeg, ieeg, beh]   # A list of datatypes that are converted to BIDS (useful for skipping data)
     unknowntypes: [mrs, extra_data]    # A list of datatypes that are converted to BIDS-like datatype folders
     ignoretypes: [exclude]        # A list of datatypes that are excluded / not converted to BIDS
   plugins:                        # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
@@ -916,60 +916,6 @@ DICOM:
       <<: *pet_dicoment_group1
       recording:
       suffix: blood
-
-  eeg:        # ----------------------- All EEG data ---------------------------
-  - provenance:
-    attributes:
-      Modality: EEG
-      ProtocolName:
-      SeriesDescription:
-    bids:                               # See: schema/datatypes/eeg.yaml
-      acq: <ProtocolName>
-      task: <SeriesDescription>
-      run: <<1>>
-      suffix: eeg
-
-  ieeg:       # ----------------------- All iEEG data --------------------------
-  - provenance:
-    attributes:
-      Modality: EEG
-      ProtocolName:
-      SeriesDescription:
-    bids:                               # See: schema/datatypes/ieeg.yaml
-      acq: <ProtocolName>
-      task: <SeriesDescription>
-      run: <<1>>
-      suffix: ieeg
-
-  beh:        # ----------------------- All behavioural data -------------------
-  - provenance:
-    attributes: &beh_dicomattr
-      Modality:
-      ProtocolName:
-      SeriesDescription:
-    bids: &beh_dicoment_group1          # See: schema/datatypes/beh.yaml
-      task: <SeriesDescription>
-      acq:
-      recording:
-      run:
-      suffix: physio
-  - provenance:
-    attributes: *beh_dicomattr
-    bids:
-      <<: *beh_dicoment_group1
-      suffix: stim
-  - provenance:
-    attributes: *beh_dicomattr
-    bids: &beh_dicoment_group2          # See: schema/datatypes/beh.yaml
-      task: <SeriesDescription>
-      acq:
-      run:
-      suffix: events
-  - provenance:
-    attributes: *beh_dicomattr
-    bids:
-      <<: *beh_dicoment_group2
-      suffix: beh
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance:

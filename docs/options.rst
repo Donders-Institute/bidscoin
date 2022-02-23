@@ -17,7 +17,7 @@ These setting can be used by all the BIDScoin tools:
 - ``bidsignore``: Semicolon-separated list of (non-BIDS) datatypes that you want to include but that do not pass a BIDS `validation test <https://github.com/bids-standard/bids-validator#bidsignore>`__. These files are added to the `.bidsignore` file. Example: ``bidsignore: extra_data/;rTMS/;myfile.txt;yourfile.csv``
 - ``subprefix``: The prefix before the subject label in the source data folder, e.g. 'patient-' if the source data is in ``raw/patient-001/ses-01/..``
 - ``sesprefix``: Idem for the session label
-- ``datatypes``: Datatypes that are converted to BIDS
+- ``datatypes``: Datatypes that are converted to BIDS. This can be useful for ignoring / excluding specific datatypes (without changing their mappings)
 - ``unknowntypes``: Datatypes that are not part of BIDS but that are converted to a BIDS-like entries in the BIDS folder
 - ``ignoretypes``: Datatypes that are excluded / not converted"""
 
