@@ -27,14 +27,21 @@ yaml = YAML()
 
 LOGGER = logging.getLogger(__name__)
 
-# Read the BIDS schema datatypes and entities
+# Read the BIDS schema data
+with (bidscoin.schemafolder/'objects'/'datatypes.yaml').open('r') as _stream:
+    bidsdatatypesdef = yaml.load(_stream)                                       # The valid BIDS datatypes, along with their full names and descriptions
 bidsdatatypes = {}
-for _datatypefile in (bidscoin.schemafolder/'datatypes').glob('*.yaml'):
-    with _datatypefile.open('r') as _stream:
-        bidsdatatypes[_datatypefile.stem] = yaml.load(_stream)
-with (bidscoin.schemafolder/'entities.yaml').open('r') as _stream:
-    entities = yaml.load(_stream)
-
+for _datatype in bidsdatatypesdef:
+    with (bidscoin.schemafolder/'rules'/'datatypes'/_datatype).with_suffix('.yaml').open('r') as _stream:
+        bidsdatatypes[_datatype] = yaml.load(_stream)                           # The entities that can/should be present for each BIDS datatype
+with (bidscoin.schemafolder/'objects'/'suffixes.yaml').open('r') as _stream:
+    suffixes = yaml.load(_stream)                                               # The descriptions of the valid BIDS file suffixes
+with (bidscoin.schemafolder/'objects'/'entities.yaml').open('r') as _stream:
+    entities = yaml.load(_stream)                                               # The descriptions of the entities present in BIDS filenames
+with (bidscoin.schemafolder/'rules'/'entities.yaml').open('r') as _stream:
+    entitiesorder = yaml.load(_stream)                                          # The order in which the entities should appear within filenames
+with (bidscoin.schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
+    metadata = yaml.load(_stream)                                               # The descriptions of the valid BIDS metadata fields
 
 class DataSource:
     def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str='', subprefix: str= '', sesprefix: str= ''):
@@ -1375,7 +1382,7 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
 def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tuple[dict, Union[int, None]]:
     """
     Find the first run in the bidsmap with properties and file attributes that match with the data source, and then
-    through the attributes. The datatypes are searcher for in this order:
+    through the attributes. The datatypes are searched for in this order:
 
     ignoredatatypes + bidscoindatatypes + unknowndatatypes
 
@@ -1498,7 +1505,7 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False, cleanup
 
     # Compose a bidsname from valid BIDS entities only
     bidsname = f"sub-{subid}{add_prefix('_ses-', sesid)}"                       # Start with the subject/session identifier
-    for entitykey in [entities[entity]['entity'] for entity in entities]:
+    for entitykey in [entities[entity]['entity'] for entity in entitiesorder]:
         bidsvalue = run['bids'].get(entitykey)                                  # Get the entity data from the run
         if not bidsvalue:
             bidsvalue = ''
@@ -1678,7 +1685,43 @@ def get_attributeshelp(attributeskey: str) -> str:
         return f"{attributeskey}\nThe DICOM '{datadict.dictionary_description(attributeskey)}' attribute"
 
     except ValueError:
-        return f"{attributeskey}\nA private key"
+        return f"{attributeskey}\nA private attribute"
+
+
+def get_datatypehelp(datatype: str) -> str:
+    """
+    Reads the description of the datatype in the schema/objects/datatypes.yaml file
+
+    :param datatype:    The datatype for which the help text is obtained
+    :return:            The obtained help text
+    """
+
+    if not datatype:
+        return "Please provide a datatype"
+
+    # Return the description for the datatype or a default text
+    if datatype in bidsdatatypesdef:
+        return f"{bidsdatatypesdef[datatype]['name']}\n{bidsdatatypesdef[datatype]['description']}"
+
+    return f"{datatype}\nA private datatype"
+
+
+def get_suffixhelp(suffix: str) -> str:
+    """
+    Reads the description of the suffix in the schema/objects/suffixes.yaml file
+
+    :param suffix:      The suffix for which the help text is obtained
+    :return:            The obtained help text
+    """
+
+    if not suffix:
+        return "Please provide a suffix"
+
+    # Return the description for the suffix or a default text
+    if suffix in suffixes:
+        return f"{suffixes[suffix]['name']}\n{suffixes[suffix]['description']}"
+
+    return f"{suffix}\nA private suffix"
 
 
 def get_entityhelp(entitykey: str) -> str:
@@ -1697,7 +1740,7 @@ def get_entityhelp(entitykey: str) -> str:
         if entities[entityname]['entity'] == entitykey:
             return f"{entities[entityname]['name']}\n{entities[entityname]['description']}"
 
-    return f"{entitykey}\nA private key"
+    return f"{entitykey}\nA private entity"
 
 
 def get_metahelp(metakey: str) -> str:
@@ -1712,14 +1755,12 @@ def get_metahelp(metakey: str) -> str:
         return "Please provide a key-name"
 
     # Return the description from the metadata file or a default text
-    metafile = bidscoin.schemafolder/'metadata'/(metakey + '.yaml')
-    if metafile.is_file():
-        with metafile.open('r') as stream:
-            metadata = yaml.load(stream)
+    if metakey in metadata:           # metadata[metaname]['name'] == metaname???
+        description = metadata[metakey]['description']
         if metakey == 'IntendedFor':    # IntendedFor is a special search-pattern field in BIDScoin
-            metadata['description'] += ('\nThese associated files can be dynamically searched for during'
-                                        '\nbidscoiner runtime with glob-style matching patterns such as'
-                                        '\n"<<Reward*_bold><Stop*_epi>>" (see the online documentation)')
-        return f"{metadata['name']}\n{metadata['description']}"
+            description += ('\nNB: These associated files can be dynamically searched for'
+                            '\nduring bidscoiner runtime with glob-style matching patterns,'
+                            '\n"such as <<Reward*_bold><Stop*_epi>>" (see documentation)')
+        return f"{metadata[metakey]['name']}\n{description}"
 
-    return f"{metakey}\nA private key"
+    return f"{metakey}\nA private meta key"

@@ -904,6 +904,8 @@ class EditWindow(QDialog):
         self.datatype_dropdown.setCurrentIndex(self.datatype_dropdown.findText(self.target_datatype))
         self.datatype_dropdown.currentIndexChanged.connect(self.datatype_dropdown_change)
         self.datatype_dropdown.setToolTip('The BIDS data type. First make sure this one is correct, then choose the right suffix')
+        for n, datatype in enumerate(self.bidscoindatatypes):
+            self.datatype_dropdown.setItemData(n, bids.get_datatypehelp(datatype), QtCore.Qt.ToolTipRole)
 
         # Set-up the BIDS table
         self.bids_label = QLabel('Entities')
@@ -1051,7 +1053,7 @@ class EditWindow(QDialog):
                                     {'value': value, 'iseditable': True}])
 
         data_bids = []
-        for key in [bids.entities[entity]['entity'] for entity in bids.entities if entity not in ('subject','session')] + ['suffix']:   # Impose the BIDS-specified order + suffix
+        for key in [bids.entities[entity]['entity'] for entity in bids.entitiesorder if entity not in ('subject','session')] + ['suffix']:   # Impose the BIDS-specified order + suffix
             if key in run['bids']:
                 value = run['bids'].get(key)
                 if (self.target_datatype in self.bidscoindatatypes and key=='suffix') or isinstance(value, list):
@@ -1108,6 +1110,8 @@ class EditWindow(QDialog):
                 suffix_dropdown.setCurrentIndex(suffix_dropdown.findText(self.target_run['bids'].get('suffix','')))
                 suffix_dropdown.currentIndexChanged.connect(self.suffix_dropdown_change)
                 suffix_dropdown.setToolTip('The suffix that sets the different run types apart. First make sure the "Data type" dropdown-menu is set correctly before chosing the right suffix here')
+                for n, suffix in enumerate(suffixes):
+                    suffix_dropdown.setItemData(n, bids.get_suffixhelp(suffix), QtCore.Qt.ToolTipRole)
                 table.setCellWidget(i, 1, self.spacedwidget(suffix_dropdown))
                 continue
             for j, item in enumerate(row):
