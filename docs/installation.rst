@@ -68,6 +68,8 @@ You can run the 'bidscoin' utility to test the installation of your BIDScoin ins
    $ bidscoin -t                        # Test with the default template bidsmap
    $ bidscoin -t my_template_bidsmap    # Test with your custom template bidsmap
 
+Note that, as a test, dcm2niix inquires the internet for available updates. On some (e.g. Ubuntu) systems that may generate (an innocent) error because the ``curl`` aplication may not be installed (see also the singularity definition file). Please consult the documentation for your operating system if you like to install curl.
+
 Using a singularity container
 -----------------------------
 
