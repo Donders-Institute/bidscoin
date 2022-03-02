@@ -311,6 +311,7 @@ DICOM:
       acq: <SeriesDescription>
       ce:
       rec:
+      echo: <EchoNumbers>
       run: <<1>>
       flip:
       part: ['', mag, phase, real, imag, 0]
@@ -553,6 +554,17 @@ DICOM:
       suffix: asllabeling
     meta:
       <<: *perf_meta
+  - provenance:
+    attributes: *perf_dicomattr
+    bids: &perf_dicoment_physio         # See: schema/datatypes/perf.yaml
+      acq: <ProtocolName>
+      rec: <SeriesDescription>
+      recording:
+      dir:
+      run: <<1>>
+      suffix: physio
+    meta:
+      <<: *perf_meta
 
   dwi:        # ----------------------- All diffusion runs ---------------------
   - provenance:
@@ -601,6 +613,8 @@ DICOM:
       acq: <SeriesDescription>
       dir:
       run: <<1>>
+      part: ['', mag, phase, real, imag, 0]
+      recording:
       suffix: physio
   - provenance:
     attributes:
@@ -851,7 +865,7 @@ DICOM:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*B1.?map.*
       ImageType: .*FLIP ANGLE MAP.*
-    bids: &fmap_dicoment_parametric
+    bids: &fmap_dicoment_parametric     # See: schema/datatypes/fmap.yaml
       acq: <SeriesDescription>
       ce:
       rec:
@@ -885,13 +899,13 @@ DICOM:
       PixelSpacing:
       Rows:
       Columns:
-    bids: &pet_dicoment_group1
+    bids: &pet_dicoment_pet             # See: schema/datatypes/pet.yaml
       task: <SeriesDescription>
       trc: <Radiopharmaceutical>
       rec: ['', acdyn, acstat, nacdyn, nacstat, 0]
       run: <<1>>
       suffix: pet
-    meta:
+    meta: &pet_meta
       TracerName: <<Radiopharmaceutical>>
       TracerRadionuclide:
       InjectedRadioactivity: <<RadionuclideTotalDose>>
@@ -907,15 +921,36 @@ DICOM:
       Units:
   - provenance:
     attributes: *pet_dicomattr
-    bids:
-      <<: *pet_dicoment_group1
-      suffix: events
+    bids: &pet_dicoment_blood           # See: schema/datatypes/pet.yaml
+      task: <SeriesDescription>
+      trc: <Radiopharmaceutical>
+      rec: ['', acdyn, acstat, nacdyn, nacstat, 0]
+      recording:
+      run: <<1>>
+      suffix: blood
+    meta:
+      <<: *pet_meta
   - provenance:
     attributes: *pet_dicomattr
-    bids:
-      <<: *pet_dicoment_group1
+    bids: &pet_dicoment_events          # See: schema/datatypes/pet.yaml
+      task: <SeriesDescription>
+      trc: <Radiopharmaceutical>
+      rec: ['', acdyn, acstat, nacdyn, nacstat, 0]
+      run: <<1>>
+      suffix: events
+    meta:
+      <<: *pet_meta
+  - provenance:
+    attributes: *pet_dicomattr
+    bids: &pet_dicoment_physio          # See: schema/datatypes/pet.yaml
+      task: <SeriesDescription>
+      trc: <Radiopharmaceutical>
+      rec: ['', acdyn, acstat, nacdyn, nacstat, 0]
       recording:
-      suffix: blood
+      run: <<1>>
+      suffix: physio
+    meta:
+      <<: *pet_meta
 
   eeg:        # ----------------------- All EEG data ---------------------------
   - provenance:
@@ -940,36 +975,6 @@ DICOM:
       task: <SeriesDescription>
       run: <<1>>
       suffix: ieeg
-
-  beh:        # ----------------------- All behavioural data -------------------
-  - provenance:
-    attributes: &beh_dicomattr
-      Modality:
-      ProtocolName:
-      SeriesDescription:
-    bids: &beh_dicoment_group1          # See: schema/datatypes/beh.yaml
-      task: <SeriesDescription>
-      acq:
-      recording:
-      run:
-      suffix: physio
-  - provenance:
-    attributes: *beh_dicomattr
-    bids:
-      <<: *beh_dicoment_group1
-      suffix: stim
-  - provenance:
-    attributes: *beh_dicomattr
-    bids: &beh_dicoment_group2          # See: schema/datatypes/beh.yaml
-      task: <SeriesDescription>
-      acq:
-      run:
-      suffix: events
-  - provenance:
-    attributes: *beh_dicomattr
-    bids:
-      <<: *beh_dicoment_group2
-      suffix: beh
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance:
@@ -1315,6 +1320,7 @@ PAR:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
+      echo:
       run: <<1>>
       flip:
       part: ['', mag, phase, real, imag, 0]
