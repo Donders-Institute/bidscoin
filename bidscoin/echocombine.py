@@ -2,7 +2,7 @@
 """
 A wrapper around the 'mecombine' multi-echo combination tool (https://github.com/Donders-Institute/multiecho).
 
-This wrapper is fully BIDS-aware (a 'bidsapp') and writes BIDS compliant output
+Except for BIDS inheritances, this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 """
 
 import argparse

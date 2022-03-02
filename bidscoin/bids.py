@@ -43,6 +43,7 @@ with (bidscoin.schemafolder/'rules'/'entities.yaml').open('r') as _stream:
 with (bidscoin.schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
     metadata = yaml.load(_stream)                                               # The descriptions of the valid BIDS metadata fields
 
+
 class DataSource:
     def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str='', subprefix: str= '', sesprefix: str= ''):
         """
@@ -857,7 +858,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
                         for entityname in typegroup['entities']:
                             entitykey = entities[entityname]['entity']
                             if entitykey not in run['bids'] and entitykey not in ('sub','ses'):
-                                LOGGER.debug(f"Adding missing {dataformat}/{datatype} entity key: {entitykey}")
+                                LOGGER.info(f"Adding missing {dataformat}>{datatype}>{run['bids']['suffix']} entity key: {entitykey}")
                                 run['bids'][entitykey] = ''
 
     # Validate the bidsmap entries

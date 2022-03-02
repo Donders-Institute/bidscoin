@@ -23,7 +23,7 @@ Before sharing or pre-processing their images, users may want to combine the sep
 
     A wrapper around the 'mecombine' multi-echo combination tool (https://github.com/Donders-Institute/multiecho).
 
-    This wrapper is fully BIDS-aware (a 'bidsapp') and writes BIDS compliant output
+    Except for BIDS inheritances, this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 
     positional arguments:
       bidsfolder            The bids-directory with the (multi-echo) subject data
@@ -71,7 +71,7 @@ Before sharing or pre-processing their images, users may want to deface their an
 
     A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface).
 
-    This wrapper is fully BIDS-aware (a 'bidsapp') and writes BIDS compliant output
+    Except for BIDS inheritances, this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 
     For multi-echo data see `medeface`
 
@@ -119,7 +119,7 @@ This utility is very similar to the `deface <#defacing>`__ utility above, except
     A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface) that computes
     a defacing mask on a (temporary) echo-combined image and then applies it to each individual echo-image.
 
-    This wrapper is fully BIDS-aware (a 'bidsapp') and writes BIDS compliant output
+    Except for BIDS inheritances, this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 
     For single-echo data see `deface`
 

@@ -3,7 +3,7 @@
 A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface) that computes
 a defacing mask on a (temporary) echo-combined image and then applies it to each individual echo-image.
 
-This wrapper is fully BIDS-aware (a 'bidsapp') and writes BIDS compliant output
+Except for BIDS inheritances, this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 
 For single-echo data see `deface`
 """

@@ -1,18 +1,9 @@
 from pathlib import Path
 from setuptools import setup, find_packages
 
-# Read the version from file
-with (Path(__file__).parent/'bidscoin'/'version.txt').open('r') as fid:
-    version = fid.read().strip()
-
-# Read the contents of the README file
-with (Path(__file__).parent/'README.rst').open('r') as fid:
-    readme = fid.read()
-
-# Read the contents of the requirements file
-with (Path(__file__).parent/'requirements.txt').open('r') as fid:
-    requirements = fid.read().splitlines()
-
+version       = (Path(__file__).parent/'bidscoin'/'version.txt').read_text().strip()
+readme        = (Path(__file__).parent/'README.rst').read_text()
+requirements  = (Path(__file__).parent/'requirements.txt').read_text().splitlines()
 phys2bidscoin = ['bioread>=1.0.5', 'pymatreader>=0.0.24', 'duecredit', 'phys2bids>=2.0.0,<3.0.0']
 spec2nii2bids = ['spec2nii']
 pet2bids      = ['pet2bids']

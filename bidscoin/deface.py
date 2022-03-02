@@ -2,7 +2,7 @@
 """
 A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface).
 
-This wrapper is fully BIDS-aware (a 'bidsapp') and writes BIDS compliant output
+Except for BIDS inheritances, this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 
 For multi-echo data see `medeface`
 """
