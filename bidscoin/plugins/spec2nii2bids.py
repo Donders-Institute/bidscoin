@@ -192,8 +192,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         LOGGER.info(f"No {__name__} sourcedata found in: {session}")
         return
 
-    # Create the BIDS session-folder and a scans.tsv file
-    bidsses.mkdir(parents=True, exist_ok=True)
+    # Read or create a scans_table and tsv-file
     scans_tsv = bidsses/f"{subid}{bids.add_prefix('_',sesid)}_scans.tsv"
     if scans_tsv.is_file():
         scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
@@ -307,7 +306,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     # Write the scans_table to disk
     LOGGER.info(f"Writing acquisition time data to: {scans_tsv}")
     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
-    scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
+    scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
     # Collect personal data from a source header
     personals = {}

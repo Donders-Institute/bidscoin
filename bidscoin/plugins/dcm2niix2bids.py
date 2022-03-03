@@ -84,7 +84,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
 
 def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
     """
-    All the logic to map the Philips PAR/XML fields onto bids labels go into this function
+    All the logic to map the DICOM/PAR source fields onto bids labels go into this function
 
     :param session:     The full-path name of the subject/session raw data source folder
     :param bidsmap_new: The new study bidsmap that we are building
@@ -193,7 +193,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     else:
         LOGGER.exception(f"Unsupported dataformat '{dataformat}'")
 
-    # Create a scans.tsv file
+    # Read or create a scans_table and tsv-file
     scans_tsv = bidsses/f"{subid}{bids.add_prefix('_',sesid)}_scans.tsv"
     if scans_tsv.is_file():
         scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
@@ -437,7 +437,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     # Write the scans_table to disk
     LOGGER.info(f"Writing acquisition time data to: {scans_tsv}")
     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
-    scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
+    scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
     # Add IntendedFor search results and TE1+TE2 meta-data to the fieldmap json-files. This has been postponed until all datatypes have been processed (i.e. so that all target images are indeed on disk)
     if (bidsses/'fmap').is_dir():
