@@ -415,7 +415,7 @@ DICOM:
       part: ['', mag, phase, real, imag, 0]
       suffix: bold
     meta: &func_meta
-      TaskName: <ProtocolName>
+      TaskName:
       B0FieldSource:
       B0FieldIdentifier:
   - provenance:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
@@ -1776,18 +1776,14 @@ SPAR:
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance:
-    attributes:
-      <<: *mrs_sparattr
-    bids:
-      <<: *mrs_sparent
+    attributes: *mrs_sparattr
+    bids: *mrs_sparent
     meta:
 
   exclude:    # ----------------------- Data that will be left out -------------
   - provenance:
-    attributes:
-      <<: *mrs_sparattr
-    bids:
-      <<: *mrs_sparent
+    attributes: *mrs_sparattr
+    bids: *mrs_sparent
     meta:
 
 
@@ -1836,18 +1832,14 @@ Twix:
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance:
-    attributes:
-      <<: *mrs_twixattr
-    bids:
-      <<: *mrs_twixent
+    attributes: *mrs_twixattr
+    bids: *mrs_twixent
     meta:
 
   exclude:    # ----------------------- Data that will be left out -------------
   - provenance:
-    attributes:
-      <<: *mrs_twixattr
-    bids:
-      <<: *mrs_twixent
+    attributes: *mrs_twixattr
+    bids: *mrs_twixent
     meta:
 
 
@@ -1907,18 +1899,14 @@ Pfile:
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance:
-    attributes:
-      <<: *mrs_p7attr
-    bids:
-      <<: *mrs_p7fileent
+    attributes: *mrs_p7attr
+    bids: *mrs_p7fileent
     meta:
 
   exclude:    # ----------------------- Data that will be left out -------------
   - provenance:
-    attributes:
-      <<: *mrs_p7attr
-    bids:
-      <<: *mrs_p7fileent
+    attributes: *mrs_p7attr
+    bids: *mrs_p7fileent
     meta:
 
 
@@ -2340,10 +2328,7 @@ Nibabel:
       echo:
       part: ['', mag, phase, real, imag, 0]
       suffix: bold
-    meta: &func_meta
-      TaskName:
-      B0FieldSource:
-      B0FieldIdentifier:
+    meta: *func_meta
   - provenance:                         # First match the SBREF bold runs (the normal bold runs won't have SBREF in the name)
     properties:
       <<: *fileprop
@@ -2415,16 +2400,7 @@ Nibabel:
       dir:
       run: <<1>>
       suffix: asl
-    meta: &perf_meta
-      ArterialSpinLabelingType: "CASL / PCASL / PASL"
-      PostLabelingDelay:
-      BackgroundSuppression:
-      M0Type: "Separate / Included / Estimate / Absent"
-      RepetitionTimePreparation:
-      VascularCrushing:
-      AcquisitionVoxelSize:
-      B0FieldSource:
-      B0FieldIdentifier:
+    meta: *perf_meta
   - provenance:
     properties:
       <<: *fileprop
@@ -2482,9 +2458,7 @@ Nibabel:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
       suffix: dwi
-    meta: &dwi_meta
-      B0FieldSource:
-      B0FieldIdentifier:
+    meta: *dwi_meta
   - provenance:                         # First catch the SBREF runs
     properties:
       <<: *fileprop
@@ -2525,9 +2499,7 @@ Nibabel:
       acq: <descrip>
       run: <<1>>
       suffix: magnitude1
-    meta: &fmap_meta
-      B0FieldIdentifier:
-      IntendedFor:
+    meta: *fmap_meta
   - provenance:
     properties: *fileprop
     attributes: *nibattr
@@ -2736,3 +2708,4 @@ Nibabel:
     attributes: *nibattr
     bids:
       acq: <descrip>
+      suffix:
