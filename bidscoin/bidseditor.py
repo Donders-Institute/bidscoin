@@ -1574,6 +1574,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='') -> No
     # Obtain the initial bidsmap info
     template_bidsmap, templatefile = bids.load_bidsmap(templatefile, bidsfolder/'code'/'bidscoin')
     input_bidsmap, bidsmapfile     = bids.load_bidsmap(bidsmapfile,  bidsfolder/'code'/'bidscoin')
+    template_bidsmap['Options']    = input_bidsmap['Options']   # Always use the options of the input bidsmap
 
     # Start the Qt-application
     app = QApplication(sys.argv)

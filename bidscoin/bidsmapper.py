@@ -69,6 +69,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     # Get the heuristics for filling the new bidsmap
     bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile,  bidscoinfolder)
     template, _              = bids.load_bidsmap(templatefile, bidscoinfolder)
+    template['Options']      = bidsmap_old['Options']   # Always use the options of the old bidsmap
 
     # Create the new bidsmap as a copy / bidsmap skeleton with no datatype entries (i.e. bidsmap with empty lists)
     if force:
