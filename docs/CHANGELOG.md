@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file. The format 
 - IntendedFor can now be appended with a "bounding" term to deal with duplicated fieldmaps from interrupted sessions
 - The possibility to process subject folders without prefix
 - Support for BIDS 1.7 (e.g. for the new `B0FieldSource` and `B0FieldIdentifier` fieldmap meta fields)
+- A Nibabel2bids plugin (e.g. to convert nifti datasets to bids)
 
 ### Changed
 - Removed / changed redundant subject/session prefix input arguments (now stored in the bidsmap)

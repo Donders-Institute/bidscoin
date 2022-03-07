@@ -73,6 +73,7 @@ Step 1a: Running the bidsmapper
     examples:
       bidsmapper /project/foo/raw /project/foo/bids
       bidsmapper /project/foo/raw /project/foo/bids -t bidsmap_dccn
+      bidsmapper /project/foo/raw /project/foo/bids -p nibabel2bids
 
 After the source data has been scanned, the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__ to let the user check and edit the automatically generated study bidsmap. For a fully automated workflow users can skip this interactive step using the ``-i`` option (see above).
 
