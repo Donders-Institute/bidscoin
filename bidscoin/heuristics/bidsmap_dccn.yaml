@@ -53,7 +53,7 @@ DICOM:
       filepath:                   # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
       filename:                   # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
       filesize:                   # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
-      nrfiles:                    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
+      nrfiles:                    # Number of files in the folder
     attributes: &anat_dicomattr   # An empty / non-matching reference dictionary that can be derefenced in other run-items of this data type
       Modality:
       ProtocolName:
@@ -388,8 +388,8 @@ DICOM:
       suffix: MTR
 
   func:       # ----------------------- All functional runs --------------------
-  - provenance:
-    attributes: &func_dicomattr         # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = bold
+  - provenance:                         # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = bold
+    attributes: &func_dicomattr
       Modality:
       ProtocolName:
       SeriesDescription:
@@ -418,17 +418,16 @@ DICOM:
       TaskName: <ProtocolName>
       B0FieldSource:
       B0FieldIdentifier:
-  - provenance:
-    attributes:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
+  - provenance:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
+    attributes:
       <<: *func_dicomattr
       SeriesDescription: (?i).*((f|functional).?MRI|task|BOLD|CMRR.*_TR).*SBREF.*
     bids:
       <<: *func_dicoment_func
       suffix: sbref
-    meta:
-      <<: *func_meta
-  - provenance:
-    attributes:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
+    meta: *func_meta
+  - provenance:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
+    attributes:
       <<: *func_dicomattr
       ProtocolName: (?i).*((f|functional).?MRI|task|BOLD|CMRR.*_TR).*
       ImageType: .*'PHYSIO'.*
@@ -448,15 +447,13 @@ DICOM:
       <<: *func_dicomattr
       SeriesDescription: (?i).*((f|functional).?MRI|task|BOLD|CMRR.*_TR).*PHYSIO.*
     bids: *func_dicoment_timeseries
-    meta:
-      <<: *func_meta
-  - provenance:
-    attributes:                         # Then catch the bold runs themselves
+    meta: *func_meta
+  - provenance:                         # Then catch the bold runs themselves
+    attributes:
       <<: *func_dicomattr
       ProtocolName: (?i).*((f|functional).?MRI|task|BOLD|CMRR.*_TR).*
     bids: *func_dicoment_func
-    meta:
-      <<: *func_meta
+    meta: *func_meta
   - provenance:
     attributes:
       <<: *func_dicomattr
@@ -464,8 +461,7 @@ DICOM:
     bids:
       <<: *func_dicoment_func
       suffix: cbv
-    meta:
-      <<: *func_meta
+    meta: *func_meta
   - provenance:
     attributes: *func_dicomattr
     bids: &func_dicoment_events         # See: schema/datatypes/func.yaml
@@ -524,8 +520,7 @@ DICOM:
       <<: *perf_dicomattr
       ProtocolName: (?i).*(ASL|Perfusion).*
     bids: *perf_dicoment_group1
-    meta:
-      <<: *perf_meta
+    meta: *perf_meta
   - provenance:
     attributes:
       <<: *perf_dicomattr
@@ -533,8 +528,7 @@ DICOM:
     bids:
       <<: *perf_dicoment_group1
       suffix: m0scan
-    meta:
-      <<: *perf_meta
+    meta: *perf_meta
   - provenance:
     attributes: *perf_dicomattr
     bids: &perf_dicoment_group2         # See: schema/datatypes/perf.yaml
@@ -543,8 +537,7 @@ DICOM:
       dir:
       run: <<1>>
       suffix: aslcontext
-    meta:
-      <<: *perf_meta
+    meta: *perf_meta
   - provenance:
     attributes: *perf_dicomattr
     bids: &perf_dicoment_group3         # See: schema/datatypes/perf.yaml
@@ -552,8 +545,7 @@ DICOM:
       rec: <SeriesDescription>
       run: <<1>>
       suffix: asllabeling
-    meta:
-      <<: *perf_meta
+    meta: *perf_meta
   - provenance:
     attributes: *perf_dicomattr
     bids: &perf_dicoment_physio         # See: schema/datatypes/perf.yaml
@@ -563,12 +555,11 @@ DICOM:
       dir:
       run: <<1>>
       suffix: physio
-    meta:
-      <<: *perf_meta
+    meta: *perf_meta
 
   dwi:        # ----------------------- All diffusion runs ---------------------
-  - provenance:
-    attributes: &dwi_dicomattr          # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = dwi
+  - provenance:                         # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = dwi
+    attributes: &dwi_dicomattr
       Modality:
       ProtocolName:
       SeriesDescription:
@@ -592,8 +583,8 @@ DICOM:
     meta: &dwi_meta
       B0FieldSource:
       B0FieldIdentifier:
-  - provenance:
-    attributes:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
+  - provenance:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
+    attributes:
       <<: *dwi_dicomattr
       SeriesDescription: (?i).*(DWI|diffusion|DTI).*SBREF.*
     bids: &dwi_dicoment_sbref           # See: schema/datatypes/dwi.yaml
@@ -602,14 +593,13 @@ DICOM:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
       suffix: sbref
-    meta:
-      <<: *dwi_meta
-  - provenance:
-    attributes:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
+    meta: *dwi_meta
+  - provenance:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
+    attributes:
       <<: *dwi_dicomattr
       ProtocolName: (?i).*(DWI|diffusion|DTI).*
       ImageType: .*'PHYSIO'.*
-    bids: &dwi_dicoment_physio          # Not (yet) in: schema/datatypes/dwi.yaml
+    bids: &dwi_dicoment_physio          # See: schema/datatypes/dwi.yaml
       acq: <SeriesDescription>
       dir:
       run: <<1>>
@@ -621,24 +611,22 @@ DICOM:
       <<: *dwi_dicomattr
       SeriesDescription: (?i).*(DWI|diffusion|DTI).*PHYSIO.*
     bids: *dwi_dicoment_physio
-  - provenance:
-    attributes:                         # Then catch the normal DWI runs
+  - provenance:                         # Then catch the normal DWI runs
+    attributes:
       <<: *dwi_dicomattr
       ProtocolName: (?i).*(DWI|diffusion|DTI).*
     bids: *dwi_dicoment_DWI
-    meta:
-      <<: *dwi_meta
+    meta: *dwi_meta
   - provenance:
     attributes:
       <<: *dwi_dicomattr
       ImageType: .*'DIFFUSION'.*
     bids: *dwi_dicoment_DWI
-    meta:
-      <<: *dwi_meta
+    meta: *dwi_meta
 
   fmap:       # ----------------------- All fieldmap runs ----------------------
-  - provenance:
-    attributes: &fmap_dicomattr         # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = magnitude
+  - provenance:                         # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = magnitude
+    attributes: &fmap_dicomattr
       Modality:
       ProtocolName:
       SeriesDescription:
@@ -669,8 +657,7 @@ DICOM:
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: phasediff
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -680,8 +667,7 @@ DICOM:
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: magnitude1
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -691,8 +677,7 @@ DICOM:
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: magnitude2
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -702,8 +687,7 @@ DICOM:
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: phase1
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -713,8 +697,7 @@ DICOM:
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: phase2
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -722,8 +705,7 @@ DICOM:
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: fieldmap
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -731,8 +713,7 @@ DICOM:
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: magnitude
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -744,15 +725,13 @@ DICOM:
       dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
       suffix: epi
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_dicomattr
     bids:
       <<: *fmap_dicoment_PEPolar
       suffix: m0scan
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_TB1DAM         # See: schema/datatypes/fmap.yaml
@@ -764,8 +743,7 @@ DICOM:
       part: ['', mag, phase, real, imag, 0]
       run: <<1>>
       suffix: TB1DAM
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_TB1EPI         # See: schema/datatypes/fmap.yaml
@@ -778,8 +756,7 @@ DICOM:
       part: ['', mag, phase, real, imag, 0]
       run: <<1>>
       suffix: TB1EPI
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
@@ -792,8 +769,7 @@ DICOM:
       part: ['', mag, phase, real, imag, 0]
       run: <<1>>
       suffix: TB1AFI
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -804,8 +780,7 @@ DICOM:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml & https://bids-specification.readthedocs.io/en/stable/99-appendices/11-qmri.html#tb1tfl-and-tb1rfm-specific-notes
       acq: famp
       suffix: TB1TFL
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -816,8 +791,7 @@ DICOM:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
       acq: anat
       suffix: TB1TFL
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -827,8 +801,7 @@ DICOM:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
       acq: anat
       suffix: TB1RFM
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -837,15 +810,13 @@ DICOM:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
       acq: famp
       suffix: TB1RFM
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_dicomattr
     bids:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
       suffix: RB1COR
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_TB1SRGE        # See: schema/datatypes/fmap.yaml
@@ -858,8 +829,7 @@ DICOM:
       part: ['', mag, phase, real, imag, 0]
       run: <<1>>
       suffix: TB1SRGE
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -871,8 +841,7 @@ DICOM:
       rec:
       run: <<1>>
       suffix: TB1map
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -880,8 +849,7 @@ DICOM:
     bids:
       <<: *fmap_dicoment_parametric
       suffix: RB1map
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
 
   pet:        # ----------------------- All PET runs ---------------------------
   - provenance:
@@ -928,8 +896,7 @@ DICOM:
       recording:
       run: <<1>>
       suffix: blood
-    meta:
-      <<: *pet_meta
+    meta: *pet_meta
   - provenance:
     attributes: *pet_dicomattr
     bids: &pet_dicoment_events          # See: schema/datatypes/pet.yaml
@@ -938,8 +905,7 @@ DICOM:
       rec: ['', acdyn, acstat, nacdyn, nacstat, 0]
       run: <<1>>
       suffix: events
-    meta:
-      <<: *pet_meta
+    meta: *pet_meta
   - provenance:
     attributes: *pet_dicomattr
     bids: &pet_dicoment_physio          # See: schema/datatypes/pet.yaml
@@ -949,8 +915,7 @@ DICOM:
       recording:
       run: <<1>>
       suffix: physio
-    meta:
-      <<: *pet_meta
+    meta: *pet_meta
 
   eeg:        # ----------------------- All EEG data ---------------------------
   - provenance:
@@ -1421,22 +1386,20 @@ PAR:
     meta:
       <<: *func_meta
       TaskName: <exam_name>
-  - provenance:
-    attributes:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
+  - provenance:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
+    attributes:
       <<: *func_parattr
       protocol_name: (?i).*((f|functional).?MRI|task|BOLD).*SBREF.*
     bids:
       <<: *func_parent_func
       suffix: sbref
-    meta:
-      <<: *func_meta
-  - provenance:
-    attributes:                         # Then catch the bold runs themselves
+    meta: *func_meta
+  - provenance:                         # Then catch the bold runs themselves
+    attributes:
       <<: *func_parattr
       protocol_name: (?i).*((f|functional).?MRI|task|BOLD).*
     bids: *func_parent_func
-    meta:
-      <<: *func_meta
+    meta: *func_meta
   - provenance:
     attributes:
       <<: *func_parattr
@@ -1444,8 +1407,7 @@ PAR:
     bids:
       <<: *func_parent_func
       suffix: cbv
-    meta:
-      <<: *func_meta
+    meta: *func_meta
   - provenance:
     attributes: *func_parattr
     bids: &func_parent_events           # See: schema/datatypes/func.yaml
@@ -1501,15 +1463,13 @@ PAR:
       dir:
       run: <<1>>
       suffix: asl
-    meta:
-      <<: *perf_meta
+    meta: *perf_meta
   - provenance:
     attributes:
       <<: *perf_parattr
       protocol_name: (?i).*(ASL|Perfusion).*
     bids: *perf_parent_group1
-    meta:
-      <<: *perf_meta
+    meta: *perf_meta
   - provenance:
     attributes:
       <<: *perf_parattr
@@ -1517,8 +1477,7 @@ PAR:
     bids:
       <<: *perf_parent_group1
       suffix: m0scan
-    meta:
-      <<: *perf_meta
+    meta: *perf_meta
   - provenance:
     attributes: *perf_parattr
     bids: &perf_parent_group2           # See: schema/datatypes/perf.yaml
@@ -1527,8 +1486,7 @@ PAR:
       dir:
       run: <<1>>
       suffix: aslcontext
-    meta:
-      <<: *perf_meta
+    meta: *perf_meta
   - provenance:
     attributes: *perf_parattr
     bids: &perf_parent_group3           # See: schema/datatypes/perf.yaml
@@ -1536,8 +1494,7 @@ PAR:
       rec: <exam_name>
       run: <<1>>
       suffix: asllabeling
-    meta:
-      <<: *perf_meta
+    meta: *perf_meta
 
   dwi:        # ----------------------- All diffusion runs ---------------------
   - provenance:
@@ -1561,10 +1518,9 @@ PAR:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
       suffix: dwi
-    meta:
-      <<: *dwi_meta
-  - provenance:
-    attributes:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
+    meta: *dwi_meta
+  - provenance:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
+    attributes:
       <<: *dwi_parattr
       protocol_name: (?i).*(DWI|diffusion|DTI).*SBREF.*
     bids: &dwi_parent_sbref             # See: schema/datatypes/dwi.yaml
@@ -1578,8 +1534,7 @@ PAR:
       <<: *dwi_parattr
       diffusion: '1'
     bids: *dwi_parent_DWI
-    meta:
-      <<: *dwi_meta
+    meta: *dwi_meta
 
   fmap:       # ----------------------- All fieldmap runs ----------------------
   - provenance:
@@ -1601,50 +1556,43 @@ PAR:
       acq: <protocol_name>
       run: <<1>>
       suffix: magnitude1
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: magnitude2
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: phasediff
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: phase1
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: phase2
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: fieldmap
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_fieldmaps
       suffix: magnitude
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids: &fmap_parent_PEPolar          # See: schema/datatypes/fmap.yaml
@@ -1653,15 +1601,13 @@ PAR:
       dir:
       run: <<1>>
       suffix: epi
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_PEPolar
       suffix: m0scan
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids: &fmap_parent_TB1DAM           # See: schema/datatypes/fmap.yaml
@@ -1673,8 +1619,7 @@ PAR:
       part: ['', mag, phase, real, imag, 0]
       run: <<1>>
       suffix: TB1DAM
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids: &fmap_parent_TB1EPI           # See: schema/datatypes/fmap.yaml
@@ -1687,8 +1632,7 @@ PAR:
       part: ['', mag, phase, real, imag, 0]
       run: <<1>>
       suffix: TB1EPI
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids: &fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
@@ -1701,29 +1645,25 @@ PAR:
       part: ['', mag, phase, real, imag, 0]
       run: <<1>>
       suffix: TB1AFI
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
       suffix: TB1TFL
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
       suffix: TB1RFM
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
       suffix: RB1COR
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids: &fmap_parent_TB1SRGE          # See: schema/datatypes/fmap.yaml
@@ -1736,8 +1676,7 @@ PAR:
       part: ['', mag, phase, real, imag, 0]
       run: <<1>>
       suffix: TB1SRGE
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids: &fmap_parent_parametric
@@ -1746,15 +1685,13 @@ PAR:
       rec:
       run: <<1>>
       suffix: TB1map
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_parametric
       suffix: RB1map
-    meta:
-      <<: *fmap_meta
+    meta: *fmap_meta
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance:
@@ -1810,17 +1747,13 @@ SPAR:
 # ---------------------------------------------------------------------------------
 # SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
 # ---------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+  subject: <<filepath:/sub-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   mrs:        # ---------------------- All spectroscopy runs ------------------
-  - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
-    properties:                   # This is what phys2bids is using now (well, part of it)
-      filepath:                   # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
-      filename:                   # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
-      filesize:                   # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
-      nrfiles:                    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
-    attributes: &mrs_sparattr     # The matching (regexp) criteria for the phys2bids -info data go in here
+  - provenance:                         # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    properties: *fileprop               # This is an optional (stub) entry of properties matching (could be added to any run-item)
+    attributes: &mrs_sparattr           # The matching (regexp) criteria for the phys2bids -info data go in here
       examination_name:
       scan_id:
       echo_time:
@@ -1830,16 +1763,16 @@ SPAR:
       ap_size:
       lr_size:
       cc_size:
-    bids: &mrs_sparent            # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
+    bids: &mrs_sparent                  # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
       task:
       acq:
       inv:
       nuc:
       vox:
       type:
-      run: <<1>>                  # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      run: <<1>>                        # This will be updated during bidscoiner runtime (as it depends on the already existing files)
       suffix: press
-    meta:                         # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
+    meta:                               # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance:
@@ -1862,17 +1795,13 @@ Twix:
 # ---------------------------------------------------------------------------------
 # SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
 # ---------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+  subject: <<filepath:/sub-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   mrs:        # ---------------------- All spectroscopy runs ------------------
-  - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
-    properties:                   # This is what phys2bids is using now (well, part of it)
-      filepath:                   # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
-      filename:                   # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
-      filesize:                   # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
-      nrfiles:                    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
-    attributes: &mrs_twixattr     # The matching (regexp) criteria for the phys2bids -info data go in here
+  - provenance:                         # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    properties: *fileprop               # This is an optional (stub) entry of properties matching (could be added to any run-item)
+    attributes: &mrs_twixattr           # The matching (regexp) criteria for the phys2bids -info data go in here
       Modality:
       ProtocolName:
       SeriesDescription:
@@ -1886,16 +1815,16 @@ Twix:
       EchoNumbers:
       EchoTime:
       RepetitionTime:
-    bids: &mrs_twixent            # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
+    bids: &mrs_twixent                  # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
       task:
       acq:
       inv:
       nuc:
       vox:
       type:
-      run: <<1>>                  # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      run: <<1>>                        # This will be updated during bidscoiner runtime (as it depends on the already existing files)
       suffix: mrs
-    meta:                         # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
+    meta:                               # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
   - provenance:
     attributes:
       <<: *mrs_twixattr
@@ -1926,55 +1855,55 @@ Pfile:
 # ------------------------------------------------------------------------------
 # P-file key-value heuristics (GE MRS fields that are mapped to the BIDS labels)
 # ------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+  subject: <<filepath:/sub-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   mrs:        # ---------------------- All spectroscopy runs ------------------
-  - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
-    attributes: &mrs_p7attr       # The matching (regexp) criteria for spec2nii2bids go in here
-      rhr_rh_logo:                # INVALIDNMR
-      rhr_rh_navs:                # 8
-      rhr_rh_nframes:             # 14
-      rhr_rh_frame_size:          # 4096
-      rhr_rh_point_size:          # 4
-      rhr_rh_da_xres:             # 4096
-      rhr_rh_da_yres:             # 15
-      rhr_spectral_width:         # 5000.0
-      rhr_csi_dims:               # 0
-      rhr_xcsi:                   # 1
-      rhr_ycsi:                   # 1
-      rhr_zcsi:                   # 1
-      rhr_roilenx:                # 20.0
-      rhr_roileny:                # 20.0
-      rhr_roilenz:                # 20.0
-      rhe_magstrength:            # 30000
-      rhs_se_desc:                # PRESS ACC TE 30ms
-      rhi_scanspacing:            # 20.0
-      rhi_nex:                    # 8.0
-      rhi_tr:                     # 3000000
-      rhi_ti:                     # 0
-      rhi_te:                     # 30000
-      rhi_mr_flip:                # 90
-      rhi_psdname:                # PROBE-P
-      rhi_cname:                  # 8HRBRAIN
-    bids: &mrs_p7fileent          # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
+  - provenance:                         # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    attributes: &mrs_p7attr             # The matching (regexp) criteria for spec2nii2bids go in here
+      rhr_rh_logo:                      # INVALIDNMR
+      rhr_rh_navs:                      # 8
+      rhr_rh_nframes:                   # 14
+      rhr_rh_frame_size:                # 4096
+      rhr_rh_point_size:                # 4
+      rhr_rh_da_xres:                   # 4096
+      rhr_rh_da_yres:                   # 15
+      rhr_spectral_width:               # 5000.0
+      rhr_csi_dims:                     # 0
+      rhr_xcsi:                         # 1
+      rhr_ycsi:                         # 1
+      rhr_zcsi:                         # 1
+      rhr_roilenx:                      # 20.0
+      rhr_roileny:                      # 20.0
+      rhr_roilenz:                      # 20.0
+      rhe_magstrength:                  # 30000
+      rhs_se_desc:                      # PRESS ACC TE 30ms
+      rhi_scanspacing:                  # 20.0
+      rhi_nex:                          # 8.0
+      rhi_tr:                           # 3000000
+      rhi_ti:                           # 0
+      rhi_te:                           # 30000
+      rhi_mr_flip:                      # 90
+      rhi_psdname:                      # PROBE-P
+      rhi_cname:                        # 8HRBRAIN
+    bids: &mrs_p7fileent                # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
       task:
       acq:
       inv:
       nuc:
       vox:
       type:
-      run: <<1>>                  # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      run: <<1>>                        # This will be updated during bidscoiner runtime (as it depends on the already existing files)
       suffix: mrs
-    meta:                         # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
-  - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    meta:                               # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
+  - provenance:                         # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     attributes:
-      <<: *mrs_p7attr       # The matching (regexp) criteria for spec2nii2bids go in here
+      <<: *mrs_p7attr                   # The matching (regexp) criteria for spec2nii2bids go in here
       rhs_se_desc: .*PRESS.*
     bids:
-      <<: *mrs_p7fileent          # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
+      <<: *mrs_p7fileent                # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
       suffix: press
-    meta:                         # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
+    meta:                               # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance:
@@ -1997,33 +1926,29 @@ Physio:
 # --------------------------------------------------------------------------------
 # Physio key-value heuristics (phys2bids -info data) that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-  session: <<filepath:/ses-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+  subject: <<filepath:/sub-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   func:        # ----------------------- All functional runs --------------------
-  - provenance:                   # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
-    properties:                   # This is what phys2bids is using now (well, part of it)
-      filepath:                   # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
-      filename:                   # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
-      filesize:                   # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
-      nrfiles:                    # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
-    attributes: &attributes_physio  # The matching (regexp) criteria for the phys2bids -info data go in here
-      ch_num: .*
-      filetype: .*
-      freq: .*
-      ch_name: .*
-      units: .*
-      trigger_idx: .*
+  - provenance:                         # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    properties: *fileprop               # This is an optional (stub) entry of properties matching (could be added to any run-item)
+    attributes: &attributes_physio      # The matching (regexp) criteria for the phys2bids -info data go in here
+      ch_num:
+      filetype:
+      freq:
+      ch_name:
+      units:
+      trigger_idx:
     bids: &bids_physio
       task:
       acq:
       ce:
       dir:
       rec:
-      run: <<1>>                  # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      run: <<1>>                        # This will be updated during bidscoiner runtime (as it depends on the already existing files)
       recording:
       suffix: physio
-    meta:                         # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
+    meta:                               # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
       TriggerChannel: <<trigger_idx>>
       ExpectedTimepoints: <<num_timepoints_found>>
       Pad: 9
@@ -2034,10 +1959,8 @@ Physio:
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance:
-    attributes:
-      <<: *attributes_physio
-    bids:
-      <<: *bids_physio
+    attributes: *attributes_physio
+    bids: *bids_physio
     meta:
 
   exclude:    # ----------------------- Data that will be left out -------------
@@ -2049,6 +1972,767 @@ Physio:
       ch_name:
       units:
       trigger_idx:
-    bids:
-      <<: *bids_physio
+    bids: *bids_physio
     meta:
+
+
+Nibabel:
+# --------------------------------------------------------------------------------
+# Nibabel key-value heuristics (header fields that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
+  subject: <<filepath:/sub-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+
+  anat:       # ----------------------- All anatomical runs --------------------
+  - provenance:                         # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    attributes: &nibattr                # An empty / non-matching reference dictionary that can be derefenced in other run-items of this data type
+      dim:
+      dim_info:
+      pixdim:
+      descrip:
+      intent_name:
+    bids: &anat_nibent_nonparametric    # See: schema/datatypes/anat.yaml
+      acq: <descrip>                    # This will be expanded by the bidsmapper (so the user can edit it)
+      ce:
+      rec:
+      run: <<1>>                        # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      part: ['', mag, phase, real, imag, 0]
+      suffix: T1w
+    meta:                               # This is an optional entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*(MPRAGE|T1w).*
+    attributes: *nibattr
+    bids: *anat_nibent_nonparametric
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*T2w.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_nonparametric
+      suffix: T2w
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: .*PDw.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_nonparametric
+      suffix: PDw
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*T2star.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_nonparametric
+      suffix: T2starw
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*FLAIR.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_nonparametric
+      suffix: FLAIR
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*Inplane.?T1.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_nonparametric
+      suffix: inplaneT1
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*Inplane.?T2.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_nonparametric
+      suffix: inplaneT2
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: .*PDT2.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_nonparametric
+      suffix: PDT2
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*ANGIO.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_nonparametric
+      suffix: angio
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*T1.?map.*
+    attributes: *nibattr
+    bids: &anat_nibent_parametric       # See: schema/datatypes/anat.yaml
+      acq: <descrip>
+      ce:
+      rec:
+      run: <<1>>
+      suffix: T1map
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*T2.?map.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: T2map
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*T2star.?map.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: T2starmap
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*R1.?map.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: R1map
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*R2.?map.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: R2map
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*R2star.?map.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: R2starmap
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*PD.?map.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: PDmap
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*MTR.?map.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: MTRmap
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*MT.?sat.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: MTsat
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*(MP2RAGE|UNIT1).*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: UNIT1
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*T1rho.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: T1rho
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*MWF.?map.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: MWFmap
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*MTV.?map.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: MTVmap
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*PDT2.?map.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: PDT2map
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*Chi.?map.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: Chimap
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*S0.?map.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: S0map
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*M0.?map.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: M0map
+  - provenance:
+    properties: *fileprop
+    attributes: *nibattr
+    bids: &anat_nibent_defacemask       # See: schema/datatypes/anat.yaml
+      acq: <descrip>
+      ce:
+      rec:
+      run: <<1>>
+      mod:
+      suffix: defacemask
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*ME.?SE.*
+    attributes: *nibattr
+    bids: &anat_nibent_multiecho        # See: schema/datatypes/anat.yaml
+      acq: <descrip>
+      ce:
+      rec:
+      run: <<1>>
+      echo:
+      part: ['', mag, phase, real, imag, 0]
+      suffix: MESE
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*ME.?GRE.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_multiecho
+      suffix: MEGRE
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*VFA.*
+    attributes: *nibattr
+    bids: &anat_nibent_multiflip        # See: schema/datatypes/anat.yaml
+      acq: <descrip>
+      ce:
+      rec:
+      echo:
+      run: <<1>>
+      flip:
+      part: ['', mag, phase, real, imag, 0]
+      suffix: VFA
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*IR.?T1.*
+    attributes: *nibattr
+    bids: &anat_nibent_multiinv         # See: schema/datatypes/anat.yaml
+      acq: <descrip>
+      ce:
+      rec:
+      run: <<1>>
+      inv:
+      part: ['', mag, phase, real, imag, 0]
+      suffix: IRT1
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*(MP2RAGE|INV1).*
+    attributes: *nibattr
+    bids: &anat_nibent_mp2rage           # See: schema/datatypes/anat.yaml
+      acq: <descrip>
+      ce:
+      rec:
+      run: <<1>>
+      echo:
+      flip:
+      inv: 1
+      part: ['', mag, phase, real, imag, 0]
+      suffix: MP2RAGE
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*(MP2RAGE|INV2).*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_mp2rage
+      inv: 2
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*MPM.*
+    attributes: *nibattr
+    bids: &anat_nibent_vfamt            # See: schema/datatypes/anat.yaml
+      acq: <descrip>
+      ce:
+      rec:
+      run: <<1>>
+      echo:
+      flip:
+      mt:
+      part: ['', mag, phase, real, imag, 0]
+      suffix: MPM
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*MTS.*
+    attributes: *nibattr
+    bids:
+      <<: *anat_nibent_vfamt
+      suffix: MTS
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*MTR.*
+    attributes: *nibattr
+    bids: &anat_nibent_mtr              # See: schema/datatypes/anat.yaml
+      acq: <SeriesDescription>
+      ce:
+      rec:
+      run: <<1>>
+      mt:
+      part: ['', mag, phase, real, imag, 0]
+      suffix: MTR
+
+  func:       # ----------------------- All functional runs --------------------
+  - provenance:                         # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = bold
+    properties: *fileprop
+    attributes: *nibattr
+    bids: &func_nibent_func             # See: schema/datatypes/func.yaml
+      task:
+      acq: <descrip>
+      ce:
+      dir:
+      rec:
+      run: <<1>>
+      echo:
+      part: ['', mag, phase, real, imag, 0]
+      suffix: bold
+    meta: &func_meta
+      TaskName:
+      B0FieldSource:
+      B0FieldIdentifier:
+  - provenance:                         # First match the SBREF bold runs (the normal bold runs won't have SBREF in the name)
+    properties:
+      <<: *fileprop
+      filename: (?i).*((f|functional).?MRI|task|BOLD|CMRR.*_TR).*SBREF.*
+    attributes: *nibattr
+    bids:
+      <<: *func_nibent_func
+      suffix: sbref
+    meta: *func_meta
+  - provenance:
+    properties: *fileprop
+    attributes: *nibattr
+    bids: &func_nibent_timeseries       # See: schema/datatypes/func.yaml
+      task:
+      acq: <descrip>
+      ce:
+      dir:
+      rec:
+      recording:
+      run: <<1>>
+      suffix: physio
+    meta:
+      TaskName:
+  - provenance:                         # Then catch the bold runs themselves
+    properties:
+      <<: *fileprop
+      filename: (?i).*((f|functional).?MRI|task|BOLD|CMRR.*_TR).*
+    attributes: *nibattr
+    bids: *func_nibent_func
+    meta: *func_meta
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*(CBV|CerebralBloodVolume).*
+    attributes: *nibattr
+    bids:
+      <<: *func_nibent_func
+      suffix: cbv
+    meta: *func_meta
+  - provenance:
+    properties: *fileprop
+    attributes: *nibattr
+    bids: &func_nibent_events           # See: schema/datatypes/func.yaml
+      task:
+      acq: <descrip>
+      ce:
+      dir:
+      rec:
+      run: <<1>>
+      suffix: events
+    meta:
+      TaskName:
+  - provenance:
+    properties: *fileprop
+    attributes: *nibattr
+    bids:
+      <<: *func_nibent_timeseries
+      suffix: stim
+    meta:
+      TaskName:
+
+  perf:       # ----------------------- All perfusion runs ---------------------
+  - provenance:
+    properties: *fileprop
+    attributes: *nibattr
+    bids: &perf_nibent_group1           # See: schema/datatypes/perf.yaml
+      acq: <descrip>
+      rec:
+      dir:
+      run: <<1>>
+      suffix: asl
+    meta: &perf_meta
+      ArterialSpinLabelingType: "CASL / PCASL / PASL"
+      PostLabelingDelay:
+      BackgroundSuppression:
+      M0Type: "Separate / Included / Estimate / Absent"
+      RepetitionTimePreparation:
+      VascularCrushing:
+      AcquisitionVoxelSize:
+      B0FieldSource:
+      B0FieldIdentifier:
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*(ASL|Perfusion).*
+    attributes: *nibattr
+    bids: *perf_nibent_group1
+    meta: *perf_meta
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*M0.?scan.*
+    attributes: *nibattr
+    bids:
+      <<: *perf_nibent_group1
+      suffix: m0scan
+    meta: *perf_meta
+  - provenance:
+    properties: *fileprop
+    attributes: *nibattr
+    bids: &perf_nibent_group2           # See: schema/datatypes/perf.yaml
+      acq: <descrip>
+      rec:
+      dir:
+      run: <<1>>
+      suffix: aslcontext
+    meta: *perf_meta
+  - provenance:
+    properties: *fileprop
+    attributes: *nibattr
+    bids: &perf_nibent_group3           # See: schema/datatypes/perf.yaml
+      acq: <descrip>
+      rec:
+      run: <<1>>
+      suffix: asllabeling
+    meta: *perf_meta
+  - provenance:
+    properties: *fileprop
+    attributes: *nibattr
+    bids: &perf_nibent_physio           # See: schema/datatypes/perf.yaml
+      acq: <descrip>
+      rec:
+      recording:
+      dir:
+      run: <<1>>
+      suffix: physio
+    meta: *perf_meta
+
+  dwi:        # ----------------------- All diffusion runs ---------------------
+  - provenance:
+    properties: *fileprop
+    attributes: *nibattr
+    bids: &dwi_nibent_DWI               # See: schema/datatypes/dwi.yaml
+      acq: <descrip>
+      dir:
+      run: <<1>>
+      part: ['', mag, phase, real, imag, 0]
+      suffix: dwi
+    meta: &dwi_meta
+      B0FieldSource:
+      B0FieldIdentifier:
+  - provenance:                         # First catch the SBREF runs
+    properties:
+      <<: *fileprop
+      filename: (?i).*(DWI|diffusion|DTI).*SBREF.*
+    attributes: *nibattr
+    bids: &dwi_nibent_sbref             # See: schema/datatypes/dwi.yaml
+      acq: <descrip>
+      dir:
+      run: <<1>>
+      part: ['', mag, phase, real, imag, 0]
+      suffix: sbref
+    meta: *dwi_meta
+  - provenance:                         # Then catch the normal DWI runs
+    properties:
+      <<: *fileprop
+      filename: (?i).*(DWI|diffusion|DTI).*
+    attributes: *nibattr
+    bids: *dwi_nibent_DWI
+    meta: *dwi_meta
+  - provenance:
+    properties: *fileprop
+    attributes: *nibattr
+    bids: &dwi_nibent_physio            # See: schema/datatypes/dwi.yaml
+      acq: <descrip>
+      dir:
+      run: <<1>>
+      part: ['', mag, phase, real, imag, 0]
+      recording:
+      suffix: physio
+
+  fmap:       # ----------------------- All fieldmap runs ----------------------
+  - provenance:                         # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = magnitude
+    properties:
+      <<: *fileprop
+      filename: (?i).*magnitude.*
+    attributes: *nibattr
+    bids: &fmap_nibent_fieldmaps        # See: schema/datatypes/fmap.yaml
+      acq: <descrip>
+      run: <<1>>
+      suffix: magnitude1
+    meta: &fmap_meta
+      B0FieldIdentifier:
+      IntendedFor:
+  - provenance:
+    properties: *fileprop
+    attributes: *nibattr
+    bids:
+      <<: *fmap_nibent_fieldmaps
+      suffix: magnitude2
+    meta: *fmap_meta
+  - provenance:
+    properties: *fileprop
+    attributes: *nibattr
+    bids:
+      <<: *fmap_nibent_fieldmaps
+      suffix: magnitude
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*(fmap|field.?map|B0.?map).*phasediff.*
+    attributes: *nibattr
+    bids:
+      <<: *fmap_nibent_fieldmaps
+      suffix: phasediff
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*(fmap|field.?map|B0.?map).*phase.*
+    attributes: *nibattr
+    bids:
+      <<: *fmap_nibent_fieldmaps
+      suffix: phase1
+    meta: *fmap_meta
+  - provenance:
+    properties: *fileprop
+    attributes: *nibattr
+    bids:
+      <<: *fmap_nibent_fieldmaps
+      suffix: phase2
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*(fmap|field.?map|B0.?map).*
+    attributes: *nibattr
+    bids:
+      <<: *fmap_nibent_fieldmaps
+      suffix: fieldmap
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*(inverted|pepolar|_inv).*
+    attributes: *nibattr
+    bids: &fmap_nibent_PEPolar          # See: schema/datatypes/fmap.yaml
+      acq: <descrip>
+      ce:
+      dir:
+      run: <<1>>
+      suffix: epi
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*m0scan.*
+    attributes: *nibattr
+    bids:
+      <<: *fmap_nibent_PEPolar
+      suffix: m0scan
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*TB1DAM.*
+    attributes: *nibattr
+    bids: &fmap_nibent_TB1DAM           # See: schema/datatypes/fmap.yaml
+      acq: <descrip>
+      ce:
+      rec:
+      flip:
+      inv:
+      part: ['', mag, phase, real, imag, 0]
+      run: <<1>>
+      suffix: TB1DAM
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*TB1EPI.*
+    attributes: *nibattr
+    bids: &fmap_nibent_TB1EPI           # See: schema/datatypes/fmap.yaml
+      acq: <descrip>
+      ce:
+      rec:
+      flip:
+      echo:
+      inv:
+      part: ['', mag, phase, real, imag, 0]
+      run: <<1>>
+      suffix: TB1EPI
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*TB1AFI.*
+    attributes: *nibattr
+    bids: &fmap_nibent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
+      acq: <descrip>
+      ce:
+      rec:
+      flip:
+      echo:
+      inv:
+      part: ['', mag, phase, real, imag, 0]
+      run: <<1>>
+      suffix: TB1AFI
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*TB1TFL.*
+    attributes: *nibattr
+    bids:
+      <<: *fmap_nibent_RFFieldMaps     # See: schema/datatypes/fmap.yaml & https://bids-specification.readthedocs.io/en/stable/99-appendices/11-qmri.html#tb1tfl-and-tb1rfm-specific-notes
+      acq: famp
+      suffix: TB1TFL
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*TB1RFM.*
+    attributes: *nibattr
+    bids:
+      <<: *fmap_nibent_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      acq: anat
+      suffix: TB1RFM
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*RB1COR.*
+    attributes: *nibattr
+    bids:
+      <<: *fmap_nibent_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      suffix: RB1COR
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*TB1SRGE.*
+    attributes: *nibattr
+    bids: &fmap_nibent_TB1SRGE        # See: schema/datatypes/fmap.yaml
+      acq: <descrip>
+      ce:
+      rec:
+      flip:
+      echo:
+      inv:
+      part: ['', mag, phase, real, imag, 0]
+      run: <<1>>
+      suffix: TB1SRGE
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i)(.*TB1.?|FLIP.?ANGLE)map.*
+    attributes: *nibattr
+    bids: &fmap_nibent_parametric     # See: schema/datatypes/fmap.yaml
+      acq: <descrip>
+      ce:
+      rec:
+      run: <<1>>
+      suffix: TB1map
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*RB1.?map.*
+    attributes: *nibattr
+    bids:
+      <<: *fmap_nibent_parametric
+      suffix: RB1map
+    meta: *fmap_meta
+
+  extra_data: # ----------------------- All extra data -------------------------
+  - provenance:
+    properties: *fileprop
+    attributes: *nibattr
+    bids:
+      acq: <descrip>
+      inv:
+      rec:
+      ce:
+      task:
+      echo:
+      dir:
+      run: <<1>>
+      mod:
+      part: ['', mag, phase, real, imag, 0]
+      suffix:
+
+  exclude:    # ----------------------- Data that will be left out -------------
+  - provenance:
+    properties:
+      <<: *fileprop
+      filename: (?i).*(Scout|localizer|t2_haste_sag_ipat2).*
+    attributes: *nibattr
+    bids:
+      acq: <descrip>
