@@ -312,7 +312,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         participants_table.index.name = 'participant_id'
     if subid in participants_table.index and 'session_id' in participants_table.keys() and participants_table.loc[subid, 'session_id']:
         return                                          # Only take data from the first session -> BIDS specification
-    participants_table.loc[subid] = None
+    participants_table.loc[subid, 'acq'] = None
 
     # Write the collected data to the participants tsv-file
     LOGGER.info(f"Writing {subid} subject data to: {participants_tsv}")
