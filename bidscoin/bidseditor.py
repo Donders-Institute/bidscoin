@@ -1404,7 +1404,7 @@ class EditWindow(QDialog):
         if yamlfile:
             LOGGER.info(f'Exporting run item: bidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}')
             yamlfile   = Path(yamlfile)
-            bidsmap, _ = bids.load_bidsmap(yamlfile, Path(), False)
+            bidsmap, _ = bids.load_bidsmap(yamlfile, Path(), report=False)
             bids.append_run(bidsmap, self.target_run)
             bids.save_bidsmap(yamlfile, bidsmap)
             QMessageBox.information(self, 'Edit BIDS mapping', f"Successfully exported:\n\nbidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}")

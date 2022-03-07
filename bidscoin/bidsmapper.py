@@ -67,8 +67,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                 f"template={templatefile} plugins={plugins} subprefix={subprefix} sesprefix={sesprefix} store={store}")
 
     # Get the heuristics for filling the new bidsmap
-    bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile,  bidscoinfolder)
-    template, _              = bids.load_bidsmap(templatefile, bidscoinfolder)
+    bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile,  bidscoinfolder, plugins)
+    template, _              = bids.load_bidsmap(templatefile, bidscoinfolder, plugins)
 
     # Create the new bidsmap as a copy / bidsmap skeleton with no datatype entries (i.e. bidsmap with empty lists)
     if force:
@@ -78,18 +78,10 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         bidsmap_new = copy.deepcopy(bidsmap_old)
     else:
         bidsmap_new = copy.deepcopy(template)
-    bidscoindatatypes = bidsmap_new['Options']['bidscoin'].get('datatypes',[])
-    unknowndatatypes  = bidsmap_new['Options']['bidscoin'].get('unknowntypes',[])
-    ignoredatatypes   = bidsmap_new['Options']['bidscoin'].get('ignoretypes',[])
-    if plugins:
-        bidsmap_new['Options']['plugins'] = {}
-        for plugin in plugins:
-            LOGGER.info(f"Adding the '{plugin}' plugin to the bidsmap")
-            module = bidscoin.import_plugin(plugin)
-            bidsmap_new['Options']['plugins'][plugin] = bidsmap_old.get('Options',{}).get('plugins',{}).get(plugin,
-                                                        template.get(   'Options',{}).get('plugins',{}).get(plugin,
-                                                        module.OPTIONS if 'OPTIONS' in dir(module) else {}))
     template['Options'] = bidsmap_new['Options']                # Always use the options of the new bidsmap
+    bidscoindatatypes   = bidsmap_new['Options']['bidscoin'].get('datatypes',[])
+    unknowndatatypes    = bidsmap_new['Options']['bidscoin'].get('unknowntypes',[])
+    ignoredatatypes     = bidsmap_new['Options']['bidscoin'].get('ignoretypes',[])
     for dataformat in bidsmap_new:
         if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (-> 'PlugIns')
         for datatype in bidscoindatatypes + unknowndatatypes + ignoredatatypes:

@@ -759,7 +759,7 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
 # ---------------- All function below this point are bidsmap related. TODO: make a class out of them -------------------
 
 
-def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=True) -> Tuple[dict, Path]:
+def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=(), report: Union[bool,None]=True) -> Tuple[dict, Path]:
     """
     Read the mapping heuristics from the bidsmap yaml-file. If yamlfile is not fullpath, then 'folder' is first searched before
     the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, then 'bidsmap_template'. So fullpath
@@ -769,6 +769,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
 
     :param yamlfile:    The full pathname or basename of the bidsmap yaml-file. If None, the default bidsmap_template file in the heuristics folder is used
     :param folder:      Only used when yamlfile=basename or None: yamlfile is then first searched for in folder and then falls back to the ./heuristics folder (useful for centrally managed template yaml-files)
+    :param plugins:     List of plugins to be used (with default options, overrules the plugin list in the study/template bidsmaps)
     :param report:      Report log.info when reading a file
     :return:            Tuple with (1) ruamel.yaml dict structure, with all options, BIDS mapping heuristics, labels and attributes, etc and (2) the fullpath yaml-file
     """
@@ -818,7 +819,10 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), report: Union[bool,None]=T
     # Make sure we get a proper plugin options and dataformat sections (use plugin default bidsmappings when a template bidsmap is loaded)
     if not bidsmap['Options'].get('plugins'):
         bidsmap['Options']['plugins'] = {}
-    for plugin, options in bidsmap['Options']['plugins'].items():
+    if plugins:
+        for plugin in [plugin for plugin in bidsmap['Options']['plugins'] if plugin not in plugins]:
+            del bidsmap['Options']['plugins'][plugin]
+    for plugin in plugins if plugins else bidsmap['Options']['plugins']:
         module = bidscoin.import_plugin(plugin)
         if not bidsmap['Options']['plugins'].get(plugin):
             LOGGER.info(f"Adding default options from the {plugin} plugin")
@@ -1023,8 +1027,8 @@ def get_run_(provenance: Union[str, Path]='', dataformat: str='', datatype: str=
 
     if bidsmap:
         plugins    = bidsmap['Options']['plugins']
-        subprefix  = bidsmap['Options']['bidscoin']['subprefix']
-        sesprefix  = bidsmap['Options']['bidscoin']['sesprefix']
+        subprefix  = bidsmap['Options']['bidscoin'].get('subprefix','')
+        sesprefix  = bidsmap['Options']['bidscoin'].get('sesprefix','')
         datasource = DataSource(provenance, plugins, dataformat, datatype, subprefix, sesprefix)
     else:
         datasource = DataSource(provenance, dataformat=dataformat, datatype=datatype)
@@ -1465,7 +1469,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
                 return run_, index
 
     # We don't have a match (all tests failed, so datatype should be the *last* one, e.g. unknowndatatype)
-    LOGGER.debug(f"Could not find a matching run in the bidsmap for {datasource.path} -> {datatype}")
+    LOGGER.debug(f"Could not find a matching run in the bidsmap for {datasource.path} -> {ignoredatatypes + bidscoindatatypes} -> {unknowndatatypes}")
     return run_, None
 
 
