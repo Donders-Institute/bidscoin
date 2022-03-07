@@ -433,7 +433,7 @@ def test_bidscoin(bidsmapfile: Union[Path, dict], options: dict=None, testplugin
     LOGGER.info('--------- Testing the BIDScoin tools and settings ---------')
 
     # Test loading the template bidsmap
-    if isinstance(bidsmapfile, str):
+    if isinstance(bidsmapfile, (str, Path)):
         try:
             try:                    # Include the import in the test + moving the import to the top of this module will cause circular import issues
                 from bidscoin import bids
