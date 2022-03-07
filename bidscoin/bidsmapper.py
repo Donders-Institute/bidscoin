@@ -89,7 +89,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
             bidsmap_new['Options']['plugins'][plugin] = bidsmap_old.get('Options',{}).get('plugins',{}).get(plugin,
                                                         template.get(   'Options',{}).get('plugins',{}).get(plugin,
                                                         module.OPTIONS if 'OPTIONS' in dir(module) else {}))
-            template['Options'] = bidsmap_new['Options']    # Always use the options of the new bidsmap
+    template['Options'] = bidsmap_new['Options']                # Always use the options of the new bidsmap
     for dataformat in bidsmap_new:
         if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (-> 'PlugIns')
         for datatype in bidscoindatatypes + unknowndatatypes + ignoredatatypes:
