@@ -93,6 +93,8 @@ class MainWindow(QMainWindow):
                                                       'YAML Files (*.yaml *.yml);;All Files (*)')
             if filename:
                 input_bidsmap, _ = bids.load_bidsmap(Path(filename))
+                if input_bidsmap.get('Options'):
+                    template_bidsmap['Options'] = input_bidsmap['Options']      # Always use the options of the input bidsmap
             else:
                 input_bidsmap = {'Options': template_bidsmap['Options']}
 
@@ -1574,7 +1576,8 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='') -> No
     # Obtain the initial bidsmap info
     template_bidsmap, templatefile = bids.load_bidsmap(templatefile, bidsfolder/'code'/'bidscoin')
     input_bidsmap, bidsmapfile     = bids.load_bidsmap(bidsmapfile,  bidsfolder/'code'/'bidscoin')
-    template_bidsmap['Options']    = input_bidsmap['Options']   # Always use the options of the input bidsmap
+    if input_bidsmap.get('Options'):
+        template_bidsmap['Options'] = input_bidsmap['Options']      # Always use the options of the input bidsmap
 
     # Start the Qt-application
     app = QApplication(sys.argv)
