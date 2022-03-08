@@ -37,11 +37,9 @@ def test(options) -> bool:
     try:
         LOGGER.info(f"Nibabel version: {nib.info.VERSION}")
         if options['ext'] not in ('.nii', '.nii.gz'):
-            LOGGER.error(f"The expected 'ext' key is not defined in the nibabel2bids options")
-            return False
-        if not isinstance(options['meta'], list):
-            LOGGER.error(f"The 'meta' value in the nibabel2bids options is not a list")
-            return False
+            LOGGER.warning(f"The 'ext' value in the nibabel2bids options is not '.nii' or '.nii.gz'")
+        if not isinstance(options.get('meta',OPTIONS['meta']), list):
+            LOGGER.warning(f"The 'meta' value in the nibabel2bids options is not a list")
     except Exception as nibabelerror:
         LOGGER.error(f"Nibabel error:\n{nibabelerror}")
         return False
@@ -155,8 +153,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
     # Get started
     options    = bidsmap['Options']['plugins']['nibabel2bids']
-    ext        = options.get('ext')
-    meta       = options.get('meta')
+    ext        = options.get('ext', OPTIONS['ext'])
+    meta       = options.get('meta', [])
     datasource = bids.get_datasource(session, {'nibabel2bids':options}, recurse=2)
     if not datasource.dataformat == 'Nibabel':
         return
