@@ -185,8 +185,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         sesid      = ''
 
     # Get started and see what dataformat we have
-    plugin     = {'spec2nii2bids': bidsmap['Options']['plugins']['spec2nii2bids']}
-    datasource = bids.get_datasource(session, plugin)
+    options    = bidsmap['Options']['plugins']['spec2nii2bids']
+    datasource = bids.get_datasource(session, {'spec2nii2bids':options})
     dataformat = datasource.dataformat
     if not dataformat:
         LOGGER.info(f"No {__name__} sourcedata found in: {session}")
@@ -204,11 +204,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     for sourcefile in [file for file in session.rglob('*') if is_sourcefile(file)]:
 
         # Get a data source, a matching run from the bidsmap and update its run['datasource'] object
-        datasource         = bids.DataSource(sourcefile, plugin, dataformat)
+        datasource         = bids.DataSource(sourcefile, {'spec2nii2bids':options}, dataformat)
         run, index         = bids.get_matching_run(datasource, bidsmap, runtime=True)
         datasource         = run['datasource']
         datasource.path    = sourcefile
-        datasource.plugins = plugin
+        datasource.plugins = {'spec2nii2bids': options}
         datatype           = datasource.datatype
 
         # Check if we should ignore this run
@@ -242,7 +242,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
         # Run spec2nii to convert the source-files in the run folder to nifti's in the BIDS-folder
         arg  = ''
-        args = plugin['spec2nii2bids'].get('args', '')
+        args = options.get('args', '')
         if args is None:
             args = ''
         if dataformat == 'SPAR':
@@ -256,17 +256,13 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         else:
             LOGGER.error(f"Unsupported dataformat: {dataformat}")
             continue
-        command = plugin["spec2nii2bids"].get("command", "spec2nii")
+        command = options.get("command", "spec2nii")
         if not bidscoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
             continue
 
         # Load and adapt the newly produced json sidecar-file (NB: assumes every nifti-file comes with a json-file)
         with jsonfile.open('r') as json_fid:
             jsondata = json.load(json_fid)
-
-        # Add the TaskName to the meta-data
-        if 'TaskName' not in jsondata and run['bids']['task']:
-            jsondata['TaskName'] = run['bids']['task']
 
         # Add all the meta data to the json-file
         for metakey, metaval in run['meta'].items():
@@ -295,7 +291,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 acq_time = f"1925-01-01T{jsondata.get('AcquisitionTime','')}"
             try:
                 acq_time = dateutil.parser.parse(acq_time)
-                if plugin['spec2nii2bids'].get('anon','y') in ('y','yes'):
+                if options.get('anon','y') in ('y','yes'):
                     acq_time = acq_time.replace(year=1925, month=1, day=1)      # Privacy protection (see BIDS specification)
                 acq_time = acq_time.isoformat()
             except Exception as jsonerror:
@@ -331,7 +327,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
     elif age.endswith('M'): age = float(age.rstrip('M')) / 12
     elif age.endswith('Y'): age = float(age.rstrip('Y'))
-    if age and plugin['spec2nii2bids'].get('anon', 'y') in ('y','yes'):
+    if age and options.get('anon', 'y') in ('y','yes'):
         age = int(float(age))
     personals['age'] = str(age)
 
