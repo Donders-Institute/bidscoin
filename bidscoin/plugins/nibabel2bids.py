@@ -36,7 +36,7 @@ def test(options) -> bool:
     # Test the nibabel installation
     try:
         LOGGER.info(f"Nibabel version: {nib.info.VERSION}")
-        if options['ext'] not in ('.nii', '.nii.gz'):
+        if options.get('ext',OPTIONS['ext']) not in ('.nii', '.nii.gz'):
             LOGGER.warning(f"The 'ext' value in the nibabel2bids options is not '.nii' or '.nii.gz'")
         if not isinstance(options.get('meta',OPTIONS['meta']), list):
             LOGGER.warning(f"The 'meta' value in the nibabel2bids options is not a list")
