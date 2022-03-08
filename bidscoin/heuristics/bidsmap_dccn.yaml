@@ -2493,7 +2493,7 @@ Nibabel:
   - provenance:                         # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = magnitude
     properties:
       <<: *fileprop
-      filename: (?i).*magnitude.*
+      filename: (?i).*magnitude1.*
     attributes: *nibattr
     bids: &fmap_nibent_fieldmaps        # See: schema/datatypes/fmap.yaml
       acq: <descrip>
@@ -2501,14 +2501,18 @@ Nibabel:
       suffix: magnitude1
     meta: *fmap_meta
   - provenance:
-    properties: *fileprop
+    properties:
+      <<: *fileprop
+      filename: (?i).*magnitude2.*
     attributes: *nibattr
     bids:
       <<: *fmap_nibent_fieldmaps
       suffix: magnitude2
     meta: *fmap_meta
   - provenance:
-    properties: *fileprop
+    properties:
+      <<: *fileprop
+      filename: (?i).*magnitude.*
     attributes: *nibattr
     bids:
       <<: *fmap_nibent_fieldmaps
@@ -2517,7 +2521,7 @@ Nibabel:
   - provenance:
     properties:
       <<: *fileprop
-      filename: (?i).*(fmap|field.?map|B0.?map).*phasediff.*
+      filename: (?i).*(fmap|field.?map|B0.?map|phasediff).*
     attributes: *nibattr
     bids:
       <<: *fmap_nibent_fieldmaps
