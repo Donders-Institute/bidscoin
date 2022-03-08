@@ -260,7 +260,8 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
             runindex   = bids.get_bidsvalue(fmap, 'run')
             prevfmap   = bids.get_bidsvalue(fmap, 'run', int(runindex)-1)
             nextfmap   = bids.get_bidsvalue(fmap, 'run', int(runindex)+1)
-            fmaptime   = dateutil.parser.parse(scans_table.loc[fmap, 'acq_time'])
+            acqtime    = scans_table.loc[fmap, 'acq_time']
+            fmaptime   = dateutil.parser.parse(acqtime if isinstance(acqtime,str) else '1925-01-01')
             lowerbound = fmaptime.replace(hour=0,  minute=0,  second=0)
             upperbound = fmaptime.replace(hour=23, minute=59, second=59)
             if runindex and prevfmap in fmaps:

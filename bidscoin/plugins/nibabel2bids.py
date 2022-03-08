@@ -20,7 +20,7 @@ LOGGER = logging.getLogger(__name__)
 
 # The default/fallback options that are set when installing/using the plugin
 OPTIONS = {'ext': '.nii.gz',
-           'meta': ['.json', '.tsv', '.bval', 'bvec']}
+           'meta': ['.json', '.tsv', '.bval', '.bvec']}
 
 
 def test(options) -> bool:
