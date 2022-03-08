@@ -42,11 +42,14 @@ def test(options: dict) -> bool:
 
     LOGGER.info('Testing the spec2nii2bids installation:')
 
+    if 'command' not in options:
+        LOGGER.error(f"The expected 'command' key is not defined in the spec2nii2bids options")
+        return False
     if 'args' not in options:
         LOGGER.warning(f"The expected 'args' key is not defined in the spec2nii2bids options")
 
     # Test the spec2nii installation
-    return bidscoin.run_command(f"{options.get('command','spec2nii')} -h")
+    return bidscoin.run_command(f"{options['command']} -h")
 
 
 def is_sourcefile(file: Path) -> str:
@@ -90,7 +93,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
 
     if dataformat == 'Twix':
 
-        return bids.get_twixfield(attribute, sourcefile, options.get('multiraid'))
+        return bids.get_twixfield(attribute, sourcefile, options.get('multiraid', OPTIONS['multiraid']))
 
     if dataformat == 'SPAR':
 
@@ -242,7 +245,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
         # Run spec2nii to convert the source-files in the run folder to nifti's in the BIDS-folder
         arg  = ''
-        args = options.get('args', '')
+        args = options.get('args', OPTIONS['args'])
         if args is None:
             args = ''
         if dataformat == 'SPAR':
@@ -291,7 +294,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 acq_time = f"1925-01-01T{jsondata.get('AcquisitionTime','')}"
             try:
                 acq_time = dateutil.parser.parse(acq_time)
-                if options.get('anon','y') in ('y','yes'):
+                if options.get('anon',OPTIONS['anon']) in ('y','yes'):
                     acq_time = acq_time.replace(year=1925, month=1, day=1)      # Privacy protection (see BIDS specification)
                 acq_time = acq_time.isoformat()
             except Exception as jsonerror:
@@ -327,7 +330,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
     elif age.endswith('M'): age = float(age.rstrip('M')) / 12
     elif age.endswith('Y'): age = float(age.rstrip('Y'))
-    if age and options.get('anon', 'y') in ('y','yes'):
+    if age and options.get('anon',OPTIONS['anon']) in ('y','yes'):
         age = int(float(age))
     personals['age'] = str(age)
 

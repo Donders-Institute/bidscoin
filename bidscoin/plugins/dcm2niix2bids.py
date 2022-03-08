@@ -41,11 +41,14 @@ def test(options) -> bool:
 
     LOGGER.info('Testing the dcm2niix2bids installation:')
 
+    if 'command' not in options:
+        LOGGER.error(f"The expected 'command' key is not defined in the dcm2niix2bids options")
+        return False
     if 'args' not in options:
         LOGGER.warning(f"The expected 'args' key is not defined in the dcm2niix2bids options")
 
     # Test the dcm2niix installation
-    return bidscoin.run_command(f"{options.get('command','dcm2niix')} -u; {options.get('command','dcm2niix')}")
+    return bidscoin.run_command(f"{options['command']} -u; {options['command']}")
 
 
 def is_sourcefile(file: Path) -> str:
@@ -263,7 +266,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Convert the source-files in the run folder to nifti's in the BIDS-folder
         else:
             command = '{command} {args} -f "{filename}" -o "{outfolder}" "{source}"'.format(
-                command   = options.get('command','dcm2niix'),
+                command   = options['command'],
                 args      = options.get('args',''),
                 filename  = bidsname,
                 outfolder = outfolder,
@@ -443,7 +446,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         elif age.endswith('M'): age = float(age.rstrip('M')) / 12
         elif age.endswith('Y'): age = float(age.rstrip('Y'))
         if age:
-            if options.get('anon', 'y') in ('y','yes'):
+            if options.get('anon','y') in ('y','yes'):
                 age = int(float(age))
             personals['age'] = str(age)
         personals['sex']     = datasource.attributes('PatientSex')

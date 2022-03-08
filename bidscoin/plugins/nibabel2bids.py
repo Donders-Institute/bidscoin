@@ -19,8 +19,8 @@ except ImportError:
 LOGGER = logging.getLogger(__name__)
 
 # The default/fallback options that are set when installing/using the plugin
-OPTIONS = {'ext': '.nii.gz',
-           'meta': ['.json', '.tsv', '.bval', '.bvec']}
+OPTIONS = {'ext': '.nii.gz',                                # The (nibabel) file extension of the output data, i.e. ``.nii.gz`` or ``.nii``
+           'meta': ['.json', '.tsv', '.bval', '.bvec']}     # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
 
 
 def test(options) -> bool:
@@ -36,10 +36,17 @@ def test(options) -> bool:
     # Test the nibabel installation
     try:
         LOGGER.info(f"Nibabel version: {nib.info.VERSION}")
-        return True
+        if options['ext'] not in ('.nii', '.nii.gz'):
+            LOGGER.error(f"The expected 'ext' key is not defined in the nibabel2bids options")
+            return False
+        if not isinstance(options['meta'], list):
+            LOGGER.error(f"The 'meta' value in the nibabel2bids options is not a list")
+            return False
     except Exception as nibabelerror:
         LOGGER.error(f"Nibabel error:\n{nibabelerror}")
         return False
+
+    return True
 
 
 def is_sourcefile(file: Path) -> str:
@@ -148,7 +155,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
     # Get started
     options    = bidsmap['Options']['plugins']['nibabel2bids']
-    ext        = options.get('ext', '.nii.gz')
+    ext        = options.get('ext')
     meta       = options.get('meta')
     datasource = bids.get_datasource(session, {'nibabel2bids':options}, recurse=2)
     if not datasource.dataformat == 'Nibabel':
