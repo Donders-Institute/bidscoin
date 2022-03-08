@@ -40,7 +40,8 @@ def test(options) -> bool:
             LOGGER.error(f"The 'ext: {options.get('ext')}' value in the nibabel2bids options is not '.nii' or '.nii.gz'")
             return False
         if not isinstance(options.get('meta',OPTIONS['meta']), list):
-            LOGGER.warning(f"The 'meta: {options.get('meta')}' value in the nibabel2bids options is not a list")
+            LOGGER.error(f"The 'meta: {options.get('meta')}' value in the nibabel2bids options is not a list")
+            return False
     except Exception as nibabelerror:
         LOGGER.error(f"Nibabel error:\n{nibabelerror}")
         return False
