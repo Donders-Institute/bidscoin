@@ -3,6 +3,7 @@ This module contains the interface to convert the session nifti source-files int
 """
 
 import logging
+import dateutil.parser
 import json
 import ast
 import shutil
@@ -17,8 +18,9 @@ except ImportError:
 
 LOGGER = logging.getLogger(__name__)
 
-# The default options that are set when installing the plugin
-OPTIONS = {'ext': '.nii.gz'}
+# The default/fallback options that are set when installing/using the plugin
+OPTIONS = {'ext': '.nii.gz',
+           'meta': ['.json', '.tsv', '.bval', 'bvec']}
 
 
 def test(options) -> bool:
@@ -85,16 +87,15 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     # Get started
     plugin     = {'nibabel2bids': bidsmap_new['Options']['plugins']['nibabel2bids']}
     datasource = bids.get_datasource(session, plugin, recurse=2)
-    dataformat = datasource.dataformat
-    if not dataformat == 'Nibabel':
+    if not datasource.dataformat == 'Nibabel':
         return
-    if not (template[dataformat] or bidsmap_old[dataformat]):
-        LOGGER.error(f"No {dataformat} source information found in the bidsmap and template")
+    if not (template[datasource.dataformat] or bidsmap_old[datasource.dataformat]):
+        LOGGER.error(f"No {datasource.dataformat} source information found in the bidsmap and template")
         return
 
     # Collect the different DICOM/PAR source files for all runs in the session
     for sourcefile in [file for file in session.rglob('*') if is_sourcefile(file)]:
-        datasource = bids.DataSource(sourcefile, plugin, dataformat)
+        datasource = bids.DataSource(sourcefile, plugin, datasource.dataformat)
 
         # See if we can find a matching run in the old bidsmap
         run, index = bids.get_matching_run(datasource, bidsmap_old)
@@ -107,7 +108,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
         if not bids.exist_run(bidsmap_new, '', run):
 
             # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
-            LOGGER.info(f"Found '{run['datasource'].datatype}' {dataformat} sample: {sourcefile}")
+            LOGGER.info(f"Found '{run['datasource'].datatype}' {datasource.dataformat} sample: {sourcefile}")
 
             # Now work from the provenance store
             if store:
@@ -121,7 +122,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
         else:
             # Communicate with the user if the run was already present in bidsmap_old or in template
-            LOGGER.debug(f"Known '{run['datasource'].datatype}' {dataformat} sample: {sourcefile}")
+            LOGGER.debug(f"Known '{run['datasource'].datatype}' {datasource.dataformat} sample: {sourcefile}")
 
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
@@ -146,13 +147,14 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         sesid      = ''
 
     # Get started
-    plugin     = {'nibabel2bids': bidsmap['Options']['plugins']['nibabel2bids']}
-    datasource = bids.get_datasource(session, plugin, recurse=2)
-    dataformat = datasource.dataformat
-    if not dataformat == 'Nibabel':
+    options    = bidsmap['Options']['plugins']['nibabel2bids']
+    ext        = options.get('ext', '.nii.gz')
+    meta       = options.get('meta')
+    datasource = bids.get_datasource(session, {'nibabel2bids':options}, recurse=2)
+    if not datasource.dataformat == 'Nibabel':
         return
-    if not bidsmap[dataformat]:
-        LOGGER.error(f"No {dataformat} source information found in the bidsmap")
+    if not bidsmap[datasource.dataformat]:
+        LOGGER.error(f"No {datasource.dataformat} source information found in the bidsmap")
         return
 
     # Read or create a scans_table and tsv-file
@@ -166,13 +168,12 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     # Collect the different Nibabel source files for all files in the session
     for sourcefile in [file for file in session.rglob('*') if is_sourcefile(file)]:
 
-        datasource          = bids.DataSource(sourcefile, plugin, dataformat)
+        datasource          = bids.DataSource(sourcefile, {'nibabel2bids':options}, datasource.dataformat)
         run, index          = bids.get_matching_run(datasource, bidsmap, runtime=True)
         datasource          = run['datasource']
         datasource.path     = sourcefile
-        datasource.plugins  = plugin
+        datasource.plugins  = {'nibabel2bids': options}
         datatype            = datasource.datatype
-        ext                 = plugin.get('ext','.nii.gz')
 
         # Check if we should ignore this run
         if datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
@@ -200,15 +201,22 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Check if file already exists (-> e.g. when a static runindex is used)
         if bidsfile.is_file():
             LOGGER.warning(f"{bidsfile}.* already exists and will be deleted -- check your results carefully!")
-            for suffix in (ext, '.json', '.bval', '.bvec'):
-                bidsfile.with_suffix('').with_suffix(suffix).unlink(missing_ok=True)
+            bidsfile.with_suffix('').with_suffix(ext).unlink()
 
-        # Save the sourcefile as a BIDS nifti file
+        # Save the sourcefile as a BIDS nifti file and copy the associated metadata files
         nib.save(nib.load(sourcefile), bidsfile)
+        for suffix in meta:
+            if sourcefile.with_suffix('').with_suffix(suffix).is_file():
+                bidsfile.with_suffix('').with_suffix(suffix).unlink(missing_ok=True)
+                shutil.copy2(sourcefile.with_suffix('').with_suffix(suffix), bidsfile.with_suffix('').with_suffix(suffix))
 
         # Load the json meta-data
         jsonfile = bidsfile.with_suffix('').with_suffix('.json')
-        jsondata = {}
+        if jsonfile.is_file():
+            with jsonfile.open('r') as json_fid:
+                jsondata = json.load(json_fid)
+        else:
+            jsondata = {}
 
         # Add all the meta data to the meta-data. NB: the dynamic `IntendedFor` value is handled separately later
         for metakey, metaval in run['meta'].items():
@@ -229,78 +237,13 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         with jsonfile.open('w') as json_fid:
             json.dump(jsondata, json_fid, indent=4)
 
-        # Add an (empty) entry to the scans_table (we don't have useful data to put there)
-        scans_table.loc[bidsfile.relative_to(bidsses).as_posix()] = None
+        # Add an entry to the scans_table (we typically don't have useful data to put there)
+        acq_time = dateutil.parser.parse(f"1925-01-01T{jsondata.get('AcquisitionTime', '')}")
+        scans_table.loc[bidsfile.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time.isoformat()
 
     # Write the scans_table to disk
     LOGGER.info(f"Writing data to: {scans_tsv}")
     scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
-
-    # Add IntendedFor search results and TE1+TE2 meta-data to the fieldmap json-files. This has been postponed until all datatypes have been processed (i.e. so that all target images are indeed on disk)
-    if (bidsses/'fmap').is_dir():
-
-        for fmap in sorted((bidsses/'fmap').glob('sub-*.nii*')):
-
-            # Load the existing meta-data
-            jsonfile = bidsses/fmap.with_suffix('').with_suffix('.json')
-            with jsonfile.open('r') as json_fid:
-                jsondata = json.load(json_fid)
-
-            # Search for the imaging files that match the IntendedFor search criteria
-            intendedfor = jsondata.get('IntendedFor')
-            if intendedfor:
-
-                # Search with multiple patterns for matching nifti-files in all runs and store the relative path to the session folder
-                niifiles = []
-                if intendedfor.startswith('<') and intendedfor.endswith('>'):
-                    intendedfor = intendedfor[2:-2].split('><')
-                elif not isinstance(intendedfor, list):
-                    intendedfor = [intendedfor]
-                for part in intendedfor:
-                    pattern = part.split(':',1)[0].strip()  # NB: part = 'pattern: [lowerlimit:upperlimit]' is not supported due to the unknown acq_time
-                    matches = [niifile.relative_to(bidsses).as_posix() for niifile in sorted(bidsses.rglob(f"*{pattern}*.nii*")) if pattern]
-                    niifiles.extend(matches)
-
-                # Add the IntendedFor data. NB: The paths need to use forward slashes and be relative to the subject folder
-                if niifiles:
-                    LOGGER.info(f"Adding IntendedFor to: {jsonfile}")
-                    jsondata['IntendedFor'] = [(Path(sesid)/niifile).as_posix() for niifile in niifiles]
-                else:
-                    LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the search for {intendedfor} gave no results")
-                    jsondata['IntendedFor'] = None
-
-            elif not (jsondata.get('B0FieldSource') or jsondata.get('B0FieldIdentifier')):
-                LOGGER.warning(f"Empty IntendedFor / B0FieldSource / B0FieldIdentifier fieldmap values in {jsonfile} (i.e. the fieldmap may not be used)")
-
-            # Work-around because the bids-validator (v1.8) cannot handle `null` values / unused IntendedFor fields
-            if not jsondata.get('IntendedFor'):
-                jsondata.pop('IntendedFor', None)
-
-            # Extract the echo times from magnitude1 and magnitude2 and add them to the phasediff json-file
-            if jsonfile.name.endswith('phasediff.json'):
-                json_magnitude = [None, None]
-                echotime       = [None, None]
-                for n in (0,1):
-                    json_magnitude[n] = jsonfile.parent/jsonfile.name.replace('_phasediff', f"_magnitude{n+1}")
-                    if not json_magnitude[n].is_file():
-                        LOGGER.error(f"Could not find expected magnitude{n+1} image associated with: {jsonfile}")
-                    else:
-                        with json_magnitude[n].open('r') as json_fid:
-                            data = json.load(json_fid)
-                        echotime[n] = data.get('EchoTime')
-                jsondata['EchoTime1'] = jsondata['EchoTime2'] = None
-                if None in echotime:
-                    LOGGER.error(f"Cannot find and add valid EchoTime1={echotime[0]} and EchoTime2={echotime[1]} data to: {jsonfile}")
-                elif echotime[0] > echotime[1]:
-                    LOGGER.error(f"Found invalid EchoTime1={echotime[0]} > EchoTime2={echotime[1]} for: {jsonfile}")
-                else:
-                    jsondata['EchoTime1'] = echotime[0]
-                    jsondata['EchoTime2'] = echotime[1]
-                    LOGGER.info(f"Adding EchoTime1: {echotime[0]} and EchoTime2: {echotime[1]} to {jsonfile}")
-
-            # Save the collected meta-data to disk
-            with jsonfile.open('w') as json_fid:
-                json.dump(jsondata, json_fid, indent=4)
 
     # Add an (empty) entry to the participants_table (we don't have useful data to put there)
     participants_tsv = bidsfolder/'participants.tsv'

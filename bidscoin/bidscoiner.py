@@ -16,6 +16,7 @@ bidsfolder/code/bidscoin/bidscoiner.log file.
 """
 
 import argparse
+import dateutil.parser
 import textwrap
 import re
 import pandas as pd
@@ -192,6 +193,9 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                         LOGGER.info(f"Executing plugin: {Path(module.__file__).name}")
                         module.bidscoiner_plugin(sesfolder, bidsmap, bidssession)
 
+                    # Add the special fieldmap metadata (IntendedFor, B0FieldIdentifier, TE, etc)
+                    addmetadata(bidssession, subid, sesid)
+
                     # Clean-up the temporary unpacked data
                     if unpacked:
                         shutil.rmtree(sesfolder)
@@ -228,6 +232,116 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     LOGGER.info('')
 
     bidscoin.reporterrors()
+
+
+def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
+    """
+    Adds the special fieldmap metadata (IntendedFor, B0FieldIdentifier, TE, etc)
+
+    :param bidsses: The session folder with the BIDS session data
+    :param subid:   The subject 'sub-label' identifier
+    :param sesid:   The session 'ses-label' identifier
+    """
+
+    # Add IntendedFor search results and TE1+TE2 meta-data to the fieldmap json-files. This has been postponed until all datatypes have been processed (i.e. so that all target images are indeed on disk)
+    if (bidsses/'fmap').is_dir():
+
+        scans_tsv = bidsses/f"{subid}{bids.add_prefix('_', sesid)}_scans.tsv"
+        if scans_tsv.is_file():
+            scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
+        else:
+            scans_table = pd.DataFrame(columns=['acq_time'], dtype='str')
+            scans_table.index.name = 'filename'
+
+        fmaps = [fmap.relative_to(bidsses).as_posix() for fmap in sorted((bidsses/'fmap').glob('sub-*.nii*'))]
+        for fmap in fmaps:
+
+            # Check if there are multiple runs and get the lower- and upperbound from the AcquisitionTime
+            runindex   = bids.get_bidsvalue(fmap, 'run')
+            prevfmap   = bids.get_bidsvalue(fmap, 'run', int(runindex)-1)
+            nextfmap   = bids.get_bidsvalue(fmap, 'run', int(runindex)+1)
+            fmaptime   = dateutil.parser.parse(scans_table.loc[fmap, 'acq_time'])
+            lowerbound = fmaptime.replace(hour=0,  minute=0,  second=0)
+            upperbound = fmaptime.replace(hour=23, minute=59, second=59)
+            if runindex and prevfmap in fmaps:
+                lowerbound = dateutil.parser.parse(scans_table.loc[prevfmap, 'acq_time'])
+            if runindex and nextfmap in fmaps:
+                upperbound = dateutil.parser.parse(scans_table.loc[nextfmap, 'acq_time'])
+
+            # Load the existing meta-data
+            jsonfile = bidsses/Path(fmap).with_suffix('').with_suffix('.json')
+            with jsonfile.open('r') as json_fid:
+                jsondata = json.load(json_fid)
+
+            # Search for the imaging files that match the IntendedFor search criteria
+            intendedfor = jsondata.get('IntendedFor')
+            if intendedfor:
+
+                # Search with multiple patterns for matching nifti-files in all runs and store the relative path to the session folder
+                niifiles = []
+                if intendedfor.startswith('<') and intendedfor.endswith('>'):
+                    intendedfor = intendedfor[2:-2].split('><')
+                elif not isinstance(intendedfor, list):
+                    intendedfor = [intendedfor]
+                for part in intendedfor:
+                    limits  = part.split(':',1)[1].strip() if ':' in part else ''   # part = 'pattern: [lowerlimit:upperlimit]'
+                    pattern = part.split(':',1)[0].strip()
+                    matches = [niifile.relative_to(bidsses).as_posix() for niifile in sorted(bidsses.rglob(f"*{pattern}*.nii*")) if pattern]
+                    if limits and matches:
+                        limits     = limits[1:-1].split(':',1)                      # limits: '[lowerlimit:upperlimit]' -> ['lowerlimit', 'upperlimit']
+                        lowerlimit = int(limits[0]) if limits[0].strip() else float('-inf')
+                        upperlimit = int(limits[1]) if limits[1].strip() else float('inf')
+                        acqtimes   = []
+                        for match in matches:
+                            acqtimes.append((dateutil.parser.parse(scans_table.loc[match,'acq_time']), match))     # Time + filepath relative to the session-folder
+                        acqtimes.sort(key = lambda acqtime: acqtime[0])
+                        offset = sum([acqtime[0] < fmaptime for acqtime in acqtimes])  # The nr of preceding series
+                        for n, acqtime in enumerate(acqtimes):
+                            if lowerbound < acqtime[0] < upperbound and lowerlimit <= n-offset < upperlimit:
+                                niifiles.append(acqtime[1])
+                    else:
+                        niifiles.extend(matches)
+
+                # Add the IntendedFor data. NB: The paths need to use forward slashes and be relative to the subject folder
+                if niifiles:
+                    LOGGER.info(f"Adding IntendedFor to: {jsonfile}")
+                    jsondata['IntendedFor'] = [(Path(sesid)/niifile).as_posix() for niifile in niifiles]
+                else:
+                    LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the search for {intendedfor} gave no results")
+                    jsondata['IntendedFor'] = None
+
+            elif not (jsondata.get('B0FieldSource') or jsondata.get('B0FieldIdentifier')):
+                LOGGER.warning(f"Empty IntendedFor / B0FieldSource / B0FieldIdentifier fieldmap values in {jsonfile} (i.e. the fieldmap may not be used)")
+
+            # Work-around because the bids-validator (v1.8) cannot handle `null` values / unused IntendedFor fields
+            if not jsondata.get('IntendedFor'):
+                jsondata.pop('IntendedFor', None)
+
+            # Extract the echo times from magnitude1 and magnitude2 and add them to the phasediff json-file
+            if jsonfile.name.endswith('phasediff.json'):
+                json_magnitude = [None, None]
+                echotime       = [None, None]
+                for n in (0,1):
+                    json_magnitude[n] = jsonfile.parent/jsonfile.name.replace('_phasediff', f"_magnitude{n+1}")
+                    if not json_magnitude[n].is_file():
+                        LOGGER.error(f"Could not find expected magnitude{n+1} image associated with: {jsonfile}")
+                    else:
+                        with json_magnitude[n].open('r') as json_fid:
+                            data = json.load(json_fid)
+                        echotime[n] = data.get('EchoTime')
+                jsondata['EchoTime1'] = jsondata['EchoTime2'] = None
+                if None in echotime:
+                    LOGGER.error(f"Cannot find and add valid EchoTime1={echotime[0]} and EchoTime2={echotime[1]} data to: {jsonfile}")
+                elif echotime[0] > echotime[1]:
+                    LOGGER.error(f"Found invalid EchoTime1={echotime[0]} > EchoTime2={echotime[1]} for: {jsonfile}")
+                else:
+                    jsondata['EchoTime1'] = echotime[0]
+                    jsondata['EchoTime2'] = echotime[1]
+                    LOGGER.info(f"Adding EchoTime1: {echotime[0]} and EchoTime2: {echotime[1]} to {jsonfile}")
+
+            # Save the collected meta-data to disk
+            with jsonfile.open('w') as json_fid:
+                json.dump(jsondata, json_fid, indent=4)
 
 
 def main():

@@ -174,8 +174,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         sesid      = ''
 
     # Get started and see what dataformat we have
-    plugin     = {'dcm2niix2bids': bidsmap['Options']['plugins']['dcm2niix2bids']}
-    datasource = bids.get_datasource(session, plugin)
+    options    = bidsmap['Options']['plugins']['dcm2niix2bids']
+    datasource = bids.get_datasource(session, {'dcm2niix2bids': options})
     dataformat = datasource.dataformat
     if not dataformat:
         LOGGER.info(f"No {__name__} sourcedata found in: {session}")
@@ -214,11 +214,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             continue
 
         # Get a matching run from the bidsmap and update its run['datasource'] object
-        datasource          = bids.DataSource(sourcefile, plugin, dataformat)
+        datasource          = bids.DataSource(sourcefile, {'dcm2niix2bids': options}, dataformat)
         run, index          = bids.get_matching_run(datasource, bidsmap, runtime=True)
         datasource          = run['datasource']
         datasource.path     = sourcefile
-        datasource.plugins  = plugin
+        datasource.plugins  = {'dcm2niix2bids': options}
         datatype            = datasource.datatype
 
         # Check if we should ignore this run
@@ -263,8 +263,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Convert the source-files in the run folder to nifti's in the BIDS-folder
         else:
             command = '{command} {args} -f "{filename}" -o "{outfolder}" "{source}"'.format(
-                command   = plugin['dcm2niix2bids'].get('command','dcm2niix'),
-                args      = plugin['dcm2niix2bids'].get('args',''),
+                command   = options.get('command','dcm2niix'),
+                args      = options.get('args',''),
                 filename  = bidsname,
                 outfolder = outfolder,
                 source    = source)
@@ -274,7 +274,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 LOGGER.warning(f"Unexpected variants of {outfolder/bidsname}* were produced by dcm2niix. Possibly this can be remedied by using the dcm2niix -i option (to ignore derived, localizer and 2D images)")
 
             # Replace uncropped output image with the cropped one
-            if '-x y' in plugin['dcm2niix2bids'].get('args',''):
+            if '-x y' in options.get('args',''):
                 for dcm2niixfile in sorted(outfolder.glob(bidsname + '*_Crop_*')):                              # e.g. *_Crop_1.nii.gz
                     ext         = ''.join(dcm2niixfile.suffixes)
                     newbidsfile = str(dcm2niixfile).rsplit(ext,1)[0].rsplit('_Crop_',1)[0] + ext
@@ -384,14 +384,6 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             with jsonfile.open('r') as json_fid:
                 jsondata = json.load(json_fid)
 
-            # Add the TaskName to the meta-data
-            if datatype in ('func','pet') and 'TaskName' not in jsondata:
-                jsondata['TaskName'] = run['bids']['task']
-
-            # Add the TracerName and TaskName to the meta-data
-            elif datatype == 'pet' and 'TracerName' not in jsondata:
-                jsondata['TracerName'] = run['bids']['trc']
-
             # Add all the meta data to the meta-data. NB: the dynamic `IntendedFor` value is handled separately later
             for metakey, metaval in run['meta'].items():
                 if metakey != 'IntendedFor':
@@ -425,7 +417,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                     acq_time = f"1925-01-01T{jsondata.get('AcquisitionTime','')}"
                 try:
                     acq_time = dateutil.parser.parse(acq_time)
-                    if plugin['dcm2niix2bids'].get('anon','y') in ('y','yes'):
+                    if options.get('anon','y') in ('y','yes'):
                         acq_time = acq_time.replace(year=1925, month=1, day=1)      # Privacy protection (see BIDS specification)
                     acq_time = acq_time.isoformat()
                 except Exception as jsonerror:
@@ -439,99 +431,6 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
     scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
-    # Add IntendedFor search results and TE1+TE2 meta-data to the fieldmap json-files. This has been postponed until all datatypes have been processed (i.e. so that all target images are indeed on disk)
-    if (bidsses/'fmap').is_dir():
-
-        fmaps = [fmap.relative_to(bidsses).as_posix() for fmap in sorted((bidsses/'fmap').glob('sub-*.nii*'))]
-        for fmap in fmaps:
-
-            # Check if there are multiple runs and get the lower- and upperbound from the AcquisitionTime
-            runindex   = bids.get_bidsvalue(fmap, 'run')
-            prevfmap   = bids.get_bidsvalue(fmap, 'run', int(runindex)-1)
-            nextfmap   = bids.get_bidsvalue(fmap, 'run', int(runindex)+1)
-            fmaptime   = dateutil.parser.parse(scans_table.loc[fmap, 'acq_time'])
-            lowerbound = fmaptime.replace(hour=0,  minute=0,  second=0)
-            upperbound = fmaptime.replace(hour=23, minute=59, second=59)
-            if runindex and prevfmap in fmaps:
-                lowerbound = dateutil.parser.parse(scans_table.loc[prevfmap, 'acq_time'])
-            if runindex and nextfmap in fmaps:
-                upperbound = dateutil.parser.parse(scans_table.loc[nextfmap, 'acq_time'])
-
-            # Load the existing meta-data
-            jsonfile = bidsses/Path(fmap).with_suffix('').with_suffix('.json')
-            with jsonfile.open('r') as json_fid:
-                jsondata = json.load(json_fid)
-
-            # Search for the imaging files that match the IntendedFor search criteria
-            intendedfor = jsondata.get('IntendedFor')
-            if intendedfor:
-
-                # Search with multiple patterns for matching nifti-files in all runs and store the relative path to the session folder
-                niifiles = []
-                if intendedfor.startswith('<') and intendedfor.endswith('>'):
-                    intendedfor = intendedfor[2:-2].split('><')
-                elif not isinstance(intendedfor, list):
-                    intendedfor = [intendedfor]
-                for part in intendedfor:
-                    limits  = part.split(':',1)[1].strip() if ':' in part else ''   # part = 'pattern: [lowerlimit:upperlimit]'
-                    pattern = part.split(':',1)[0].strip()
-                    matches = [niifile.relative_to(bidsses).as_posix() for niifile in sorted(bidsses.rglob(f"*{pattern}*.nii*")) if pattern]
-                    if limits and matches:
-                        limits     = limits[1:-1].split(':',1)                      # limits: '[lowerlimit:upperlimit]' -> ['lowerlimit', 'upperlimit']
-                        lowerlimit = int(limits[0]) if limits[0].strip() else float('-inf')
-                        upperlimit = int(limits[1]) if limits[1].strip() else float('inf')
-                        acqtimes   = []
-                        for match in matches:
-                            acqtimes.append((dateutil.parser.parse(scans_table.loc[match,'acq_time']), match))     # Time + filepath relative to the session-folder
-                        acqtimes.sort(key = lambda acqtime: acqtime[0])
-                        offset = sum([acqtime[0] < fmaptime for acqtime in acqtimes])  # The nr of preceding series
-                        for n, acqtime in enumerate(acqtimes):
-                            if lowerbound < acqtime[0] < upperbound and lowerlimit <= n-offset < upperlimit:
-                                niifiles.append(acqtime[1])
-                    else:
-                        niifiles.extend(matches)
-
-                # Add the IntendedFor data. NB: The paths need to use forward slashes and be relative to the subject folder
-                if niifiles:
-                    LOGGER.info(f"Adding IntendedFor to: {jsonfile}")
-                    jsondata['IntendedFor'] = [(Path(sesid)/niifile).as_posix() for niifile in niifiles]
-                else:
-                    LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the search for {intendedfor} gave no results")
-                    jsondata['IntendedFor'] = None
-
-            elif not (jsondata.get('B0FieldSource') or jsondata.get('B0FieldIdentifier')):
-                LOGGER.warning(f"Empty IntendedFor / B0FieldSource / B0FieldIdentifier fieldmap values in {jsonfile} (i.e. the fieldmap may not be used)")
-
-            # Work-around because the bids-validator (v1.8) cannot handle `null` values / unused IntendedFor fields
-            if not jsondata.get('IntendedFor'):
-                jsondata.pop('IntendedFor', None)
-
-            # Extract the echo times from magnitude1 and magnitude2 and add them to the phasediff json-file
-            if jsonfile.name.endswith('phasediff.json'):
-                json_magnitude = [None, None]
-                echotime       = [None, None]
-                for n in (0,1):
-                    json_magnitude[n] = jsonfile.parent/jsonfile.name.replace('_phasediff', f"_magnitude{n+1}")
-                    if not json_magnitude[n].is_file():
-                        LOGGER.error(f"Could not find expected magnitude{n+1} image associated with: {jsonfile}")
-                    else:
-                        with json_magnitude[n].open('r') as json_fid:
-                            data = json.load(json_fid)
-                        echotime[n] = data['EchoTime']
-                jsondata['EchoTime1'] = jsondata['EchoTime2'] = None
-                if None in echotime:
-                    LOGGER.error(f"Cannot find and add valid EchoTime1={echotime[0]} and EchoTime2={echotime[1]} data to: {jsonfile}")
-                elif echotime[0] > echotime[1]:
-                    LOGGER.error(f"Found invalid EchoTime1={echotime[0]} > EchoTime2={echotime[1]} for: {jsonfile}")
-                else:
-                    jsondata['EchoTime1'] = echotime[0]
-                    jsondata['EchoTime2'] = echotime[1]
-                    LOGGER.info(f"Adding EchoTime1: {echotime[0]} and EchoTime2: {echotime[1]} to {jsonfile}")
-
-            # Save the collected meta-data to disk
-            with jsonfile.open('w') as json_fid:
-                json.dump(jsondata, json_fid, indent=4)
-
     # Collect personal data from a source header (PAR/XML does not contain personal info)
     personals = {}
     if sesid and 'session_id' not in personals:
@@ -544,7 +443,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         elif age.endswith('M'): age = float(age.rstrip('M')) / 12
         elif age.endswith('Y'): age = float(age.rstrip('Y'))
         if age:
-            if plugin['dcm2niix2bids'].get('anon', 'y') in ('y','yes'):
+            if options.get('anon', 'y') in ('y','yes'):
                 age = int(float(age))
             personals['age'] = str(age)
         personals['sex']     = datasource.attributes('PatientSex')
