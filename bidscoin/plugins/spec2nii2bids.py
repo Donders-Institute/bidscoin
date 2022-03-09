@@ -151,7 +151,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
             # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
             if not match:
-                LOGGER.info(f"Found '{datasource.datatype}' {dataformat} sample: {sourcefile}")
+                LOGGER.info(f"Discovered '{datasource.datatype}' {dataformat} sample: {sourcefile}")
 
             # Now work from the provenance store
             if store:
