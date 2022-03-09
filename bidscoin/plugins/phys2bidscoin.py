@@ -200,15 +200,16 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Get a data source, a matching run from the bidsmap and update its run['datasource'] object
         datasource = bids.DataSource(sourcefile, plugin, datasource.dataformat)
         run, index = bids.get_matching_run(datasource, bidsmap, runtime=True)
+        datatype   = run['datasource'].datatype
 
         # Check if we should ignore this run
-        if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
+        if datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
             LOGGER.info(f"Leaving out: {sourcefile}")
             continue
 
         # Check that we know this run
         if index is None:
-            LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete the physiological output data in {bidsses} to solve this warning")
+            LOGGER.error(f"Skipping unknown '{datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete the physiological output data in {bidsses} to solve this warning")
             continue
 
         LOGGER.info(f"Processing: {sourcefile}")
