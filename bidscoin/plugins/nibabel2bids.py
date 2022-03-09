@@ -19,8 +19,8 @@ except ImportError:
 LOGGER = logging.getLogger(__name__)
 
 # The default/fallback options that are set when installing/using the plugin
-OPTIONS = {'ext': '.nii.gz',                                # The (nibabel) file extension of the output data, i.e. ``.nii.gz`` or ``.nii``
-           'meta': ['.json', '.tsv', '.bval', '.bvec']}     # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
+OPTIONS = {'ext': '.nii.gz',                                        # The (nibabel) file extension of the output data, i.e. ``.nii.gz`` or ``.nii``
+           'meta': ['.json', '.tsv', '.tsv.gz', '.bval', '.bvec']}  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
 
 
 def test(options) -> bool:
