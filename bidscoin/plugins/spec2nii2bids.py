@@ -140,10 +140,10 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
             return
 
         # See if we can find a matching run in the old bidsmap
-        run, index = bids.get_matching_run(datasource, bidsmap_old)
+        run, match = bids.get_matching_run(datasource, bidsmap_old)
 
         # If not, see if we can find a matching run in the template
-        if index is None:
+        if not match:
             run, _ = bids.get_matching_run(datasource, template)
 
         # See if we have collected the run somewhere in our new bidsmap

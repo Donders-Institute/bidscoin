@@ -127,10 +127,10 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
         # See if we can find a matching run in the old bidsmap
         datasource = bids.DataSource(sourcefile, plugin, dataformat)
-        run, index = bids.get_matching_run(datasource, bidsmap_old)
+        run, match = bids.get_matching_run(datasource, bidsmap_old)
 
         # If not, see if we can find a matching run in the template
-        if index is None:
+        if not match:
             run, _ = bids.get_matching_run(datasource, template)
 
         # See if we have collected the run somewhere in our new bidsmap
@@ -216,7 +216,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
         # Get a matching run from the bidsmap
         datasource = bids.DataSource(sourcefile, {'dcm2niix2bids': options}, dataformat)
-        run, index = bids.get_matching_run(datasource, bidsmap, runtime=True)
+        run, match = bids.get_matching_run(datasource, bidsmap, runtime=True)
 
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
@@ -224,7 +224,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             continue
 
         # Check if we already know this run
-        if index is None:
+        if not match:
             LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
             continue
 

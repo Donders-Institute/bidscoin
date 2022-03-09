@@ -1384,7 +1384,7 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
     return run_found and run_valsok and run_keysok
 
 
-def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tuple[dict, Union[int, None]]:
+def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tuple[dict, bool]:
     """
     Find the first run in the bidsmap with properties and file attributes that match with the data source, and then
     through the attributes. The datatypes are searched for in this order:
@@ -1396,8 +1396,8 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
     :param datasource:  The data source from which the attributes are read. NB: The datasource.datatype attribute is updated
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS keys and attributes, etc
     :param runtime:     Dynamic <<values>> are expanded if True
-    :return:            (run, index) The matching and filled-in / cleaned run item, datatype and list index as in run = bidsmap[dataformat][datatype][index]
-                        index = None if there is no match, the run is still populated with info from the source-file
+    :return:            (run, match) The matching and filled-in / cleaned run item, datatype, and True if there is a match
+                        If there is no match then the run is still populated with info from the source-file
     """
 
     bidscoindatatypes = bidsmap['Options']['bidscoin'].get('datatypes',[])
@@ -1410,12 +1410,10 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
 
         runs                = bidsmap.get(datasource.dataformat, {}).get(datatype, [])
         datasource.datatype = datatype
-        if not runs:
-            runs = []
-        for index, run in enumerate(runs):
+        for run in runs if runs else []:
 
             match = any([run[matching][attrkey] not in [None,''] for matching in ('properties','attributes') for attrkey in run[matching]])     # Normally match==True, but make match==False if all attributes are empty
-            run_ = get_run_(datasource.path, dataformat=datasource.dataformat, datatype=datatype, bidsmap=bidsmap)
+            run_  = get_run_(datasource.path, dataformat=datasource.dataformat, datatype=datatype, bidsmap=bidsmap)
 
             # Try to see if the sourcefile matches all of the filesystem properties
             for filekey, filevalue in run['properties'].items():
@@ -1466,11 +1464,11 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
 
             # Stop searching the bidsmap if we have a match
             if match:
-                return run_, index
+                return run_, True
 
     # We don't have a match (all tests failed, so datatype should be the *last* one, e.g. unknowndatatype)
     LOGGER.debug(f"Could not find a matching run in the bidsmap for {datasource.path} -> {ignoredatatypes + bidscoindatatypes} -> {unknowndatatypes}")
-    return run_, None
+    return run_, False
 
 
 def get_derivatives(datatype: str) -> list:
