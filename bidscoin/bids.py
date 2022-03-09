@@ -45,7 +45,7 @@ with (bidscoin.schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
 
 
 class DataSource:
-    def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str='', subprefix: str= '', sesprefix: str= ''):
+    def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str='', subprefix: str='', sesprefix: str=''):
         """
         A source datatype (e.g. DICOM or PAR) that can be converted to BIDS by the plugins
 

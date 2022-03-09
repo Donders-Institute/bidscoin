@@ -210,13 +210,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     for sourcefile in sourcefiles:
 
         # Get a data source, a matching run from the bidsmap and update its run['datasource'] object
-        datasource         = bids.DataSource(sourcefile, {'spec2nii2bids':options})
-        run, index         = bids.get_matching_run(datasource, bidsmap, runtime=True)
-        datasource         = run['datasource']
-        datasource.path    = sourcefile
-        datasource.plugins = {'spec2nii2bids': options}
-        dataformat         = datasource.dataformat
-        datatype           = datasource.datatype
+        datasource = bids.DataSource(sourcefile, {'spec2nii2bids':options})
+        run, index = bids.get_matching_run(datasource, bidsmap, runtime=True)
+        dataformat = datasource.dataformat
+        datatype   = datasource.datatype
 
         # Check if we should ignore this run
         if datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
