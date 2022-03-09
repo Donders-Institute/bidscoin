@@ -94,7 +94,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     # Get started
     plugin     = {'nibabel2bids': bidsmap_new['Options']['plugins']['nibabel2bids']}
     datasource = bids.get_datasource(session, plugin, recurse=2)
-    if not datasource.dataformat == 'Nibabel':
+    if not datasource.dataformat:
         return
     if not (template[datasource.dataformat] or bidsmap_old[datasource.dataformat]):
         LOGGER.error(f"No {datasource.dataformat} source information found in the bidsmap and template")
@@ -154,14 +154,12 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         sesid      = ''
 
     # Get started
-    options    = bidsmap['Options']['plugins']['nibabel2bids']
-    ext        = options.get('ext', OPTIONS['ext'])
-    meta       = options.get('meta', [])
-    datasource = bids.get_datasource(session, {'nibabel2bids':options}, recurse=2)
-    if not datasource.dataformat == 'Nibabel':
-        return
-    if not bidsmap[datasource.dataformat]:
-        LOGGER.error(f"No {datasource.dataformat} source information found in the bidsmap")
+    options     = bidsmap['Options']['plugins']['nibabel2bids']
+    ext         = options.get('ext', OPTIONS['ext'])
+    meta        = options.get('meta', [])
+    sourcefiles = [file for file in session.rglob('*') if is_sourcefile(file)]
+    if not sourcefiles:
+        LOGGER.info(f"No {__name__} sourcedata found in: {session}")
         return
 
     # Read or create a scans_table and tsv-file
@@ -173,9 +171,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         scans_table.index.name = 'filename'
 
     # Collect the different Nibabel source files for all files in the session
-    for sourcefile in [file for file in session.rglob('*') if is_sourcefile(file)]:
+    for sourcefile in sourcefiles:
 
-        datasource          = bids.DataSource(sourcefile, {'nibabel2bids':options}, datasource.dataformat)
+        datasource          = bids.DataSource(sourcefile, {'nibabel2bids':options})
         run, index          = bids.get_matching_run(datasource, bidsmap, runtime=True)
         datasource          = run['datasource']
         datasource.path     = sourcefile

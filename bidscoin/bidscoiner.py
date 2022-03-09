@@ -276,7 +276,7 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
 
             # Search for the imaging files that match the IntendedFor search criteria
             intendedfor = jsondata.get('IntendedFor')
-            if intendedfor:
+            if intendedfor and isinstance(intendedfor, str):
 
                 # Search with multiple patterns for matching nifti-files in all runs and store the relative path to the session folder
                 niifiles = []

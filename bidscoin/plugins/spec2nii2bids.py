@@ -130,6 +130,9 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
         datasource = bids.DataSource(sourcefile, plugin)
         dataformat = datasource.dataformat
+        if not template[dataformat] and not bidsmap_old[dataformat]:
+            LOGGER.error(f"No {dataformat} source information found in the bidsmap and template for: {sourcefile}")
+            return
 
         # Input checks
         if not template.get(dataformat) and not bidsmap_old.get(dataformat):
@@ -188,10 +191,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         sesid      = ''
 
     # Get started and see what dataformat we have
-    options    = bidsmap['Options']['plugins']['spec2nii2bids']
-    datasource = bids.get_datasource(session, {'spec2nii2bids':options})
-    dataformat = datasource.dataformat
-    if not dataformat:
+    options     = bidsmap['Options']['plugins']['spec2nii2bids']
+    datasource  = bids.get_datasource(session, {'spec2nii2bids':options})
+    sourcefiles = [file for file in session.rglob('*') if is_sourcefile(file)]
+    if not sourcefiles:
         LOGGER.info(f"No {__name__} sourcedata found in: {session}")
         return
 
@@ -204,14 +207,15 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         scans_table.index.name = 'filename'
 
     # Loop over all MRS source data files and convert them to BIDS
-    for sourcefile in [file for file in session.rglob('*') if is_sourcefile(file)]:
+    for sourcefile in sourcefiles:
 
         # Get a data source, a matching run from the bidsmap and update its run['datasource'] object
-        datasource         = bids.DataSource(sourcefile, {'spec2nii2bids':options}, dataformat)
+        datasource         = bids.DataSource(sourcefile, {'spec2nii2bids':options})
         run, index         = bids.get_matching_run(datasource, bidsmap, runtime=True)
         datasource         = run['datasource']
         datasource.path    = sourcefile
         datasource.plugins = {'spec2nii2bids': options}
+        dataformat         = datasource.dataformat
         datatype           = datasource.datatype
 
         # Check if we should ignore this run
@@ -257,8 +261,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         elif dataformat == 'Pfile':
             dformat = 'ge'
         else:
-            LOGGER.error(f"Unsupported dataformat: {dataformat}")
-            continue
+            LOGGER.exception(f"Unsupported dataformat: {dataformat}")
         command = options.get("command", "spec2nii")
         if not bidscoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
             continue
