@@ -149,7 +149,8 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
         if not bids.exist_run(bidsmap_new, '', run):
 
             # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
-            LOGGER.info(f"Found '{datasource.datatype}' {dataformat} sample: {sourcefile}")
+            if not match:
+                LOGGER.info(f"Found '{datasource.datatype}' {dataformat} sample: {sourcefile}")
 
             # Now work from the provenance store
             if store:
