@@ -217,7 +217,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Get a matching run from the bidsmap and update its run['datasource'] object
         datasource = bids.DataSource(sourcefile, {'dcm2niix2bids': options}, dataformat)
         run, index = bids.get_matching_run(datasource, bidsmap, runtime=True)
-        datatype   = datasource.datatype
+        datatype   = run['datasource'].datatype
 
         # Check if we should ignore this run
         if datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
@@ -267,7 +267,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 outfolder = outfolder,
                 source    = source)
             if not bidscoin.run_command(command):
-                LOGGER.warning("Subsequent processing may fail or crash due to the previous dcm2niix-error")
+                LOGGER.error(f"Conversion of {source} seems to have failed -- check your results carefully")
+                continue
             if list(outfolder.glob(f"{bidsname}a.nii*")):
                 LOGGER.warning(f"Unexpected variants of {outfolder/bidsname}* were produced by dcm2niix. Possibly this can be remedied by using the dcm2niix -i option (to ignore derived, localizer and 2D images)")
 

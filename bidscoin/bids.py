@@ -1396,8 +1396,8 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
     :param datasource:  The data source from which the attributes are read
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS keys and attributes, etc
     :param runtime:     Dynamic <<values>> are expanded if True
-    :return:            (run, datatype, index) The matching and filled-in / cleaned run item, datatype and list index as in run = bidsmap[dataformat][datatype][index]
-                        datatype = unknowndatatypes and index = None if there is no match, the run is still populated with info from the source-file
+    :return:            (run, index) The matching and filled-in / cleaned run item, datatype and list index as in run = bidsmap[dataformat][datatype][index]
+                        index = None if there is no match, the run is still populated with info from the source-file
     """
 
     bidscoindatatypes = bidsmap['Options']['bidscoin'].get('datatypes',[])

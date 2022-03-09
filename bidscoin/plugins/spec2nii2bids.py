@@ -212,7 +212,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Get a data source, a matching run from the bidsmap and update its run['datasource'] object
         datasource = bids.DataSource(sourcefile, {'spec2nii2bids':options})
         run, index = bids.get_matching_run(datasource, bidsmap, runtime=True)
-        datatype   = datasource.datatype
+        datatype   = run['datasource'].datatype
 
         # Check if we should ignore this run
         if datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
@@ -260,6 +260,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             LOGGER.exception(f"Unsupported dataformat: {dataformat}")
         command = options.get("command", "spec2nii")
         if not bidscoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
+            LOGGER.error(f"Conversion of {sourcefile} seems to have failed -- check your results carefully")
             continue
 
         # Load and adapt the newly produced json sidecar-file (NB: assumes every nifti-file comes with a json-file)
