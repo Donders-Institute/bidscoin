@@ -197,7 +197,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     # Loop over all source data files and convert them to BIDS
     for sourcefile in sourcefiles:
 
-        # Get a data source, a matching run from the bidsmap and update its run['datasource'] object
+        # Get a data source, a matching run from the bidsmap
         datasource = bids.DataSource(sourcefile, plugin, datasource.dataformat)
         run, index = bids.get_matching_run(datasource, bidsmap, runtime=True)
 

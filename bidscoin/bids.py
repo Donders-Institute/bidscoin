@@ -1393,7 +1393,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
 
     Then update/fill the provenance, and the (dynamic) bids and meta values (bids values are cleaned-up to be BIDS-valid)
 
-    :param datasource:  The data source from which the attributes are read. The datasource.datatype attribute is updated if empty and a match is found
+    :param datasource:  The data source from which the attributes are read. NB: The datasource.datatype attribute is updated
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS keys and attributes, etc
     :param runtime:     Dynamic <<values>> are expanded if True
     :return:            (run, index) The matching and filled-in / cleaned run item, datatype and list index as in run = bidsmap[dataformat][datatype][index]
@@ -1408,7 +1408,8 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
     run_ = get_run_(datasource.path, dataformat=datasource.dataformat, bidsmap=bidsmap)
     for datatype in ignoredatatypes + bidscoindatatypes + unknowndatatypes:         # The datatypes in which a matching run is searched for
 
-        runs = bidsmap.get(datasource.dataformat, {}).get(datatype, [])
+        runs                = bidsmap.get(datasource.dataformat, {}).get(datatype, [])
+        datasource.datatype = datatype
         if not runs:
             runs = []
         for index, run in enumerate(runs):
@@ -1460,14 +1461,11 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
                     run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False, runtime=runtime)
 
             # Copy the DataSource object
-            if 'datasource' in run:
-                run_['datasource']      = copy.deepcopy(run['datasource'])
-                run_['datasource'].path = datasource.path
+            run_['datasource']      = copy.deepcopy(run['datasource'])
+            run_['datasource'].path = datasource.path
 
             # Stop searching the bidsmap if we have a match
             if match:
-                if not datasource.datatype:
-                    datasource.datatype = datatype
                 return run_, index
 
     # We don't have a match (all tests failed, so datatype should be the *last* one, e.g. unknowndatatype)
