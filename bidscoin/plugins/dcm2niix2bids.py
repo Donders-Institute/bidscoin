@@ -137,7 +137,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
         if not bids.exist_run(bidsmap_new, '', run):
 
             # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
-            LOGGER.info(f"Found '{run['datasource'].datatype}' {dataformat} sample: {sourcefile}")
+            LOGGER.info(f"Found '{datasource.datatype}' {dataformat} sample: {sourcefile}")
 
             # Now work from the provenance store
             if store:
@@ -150,7 +150,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
         else:
             # Communicate with the user if the run was already present in bidsmap_old or in template
-            LOGGER.debug(f"Known '{run['datasource'].datatype}' {dataformat} sample: {sourcefile}")
+            LOGGER.debug(f"Known '{datasource.datatype}' {dataformat} sample: {sourcefile}")
 
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
@@ -217,25 +217,24 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Get a matching run from the bidsmap and update its run['datasource'] object
         datasource = bids.DataSource(sourcefile, {'dcm2niix2bids': options}, dataformat)
         run, index = bids.get_matching_run(datasource, bidsmap, runtime=True)
-        datatype   = run['datasource'].datatype
 
         # Check if we should ignore this run
-        if datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
+        if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
             LOGGER.info(f"Leaving out: {source}")
             continue
 
         # Check if we already know this run
         if index is None:
-            LOGGER.error(f"Skipping unknown '{datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+            LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
             continue
 
         LOGGER.info(f"Processing: {source}")
 
         # Create the BIDS session/datatype output folder
-        if run['bids']['suffix'] in bids.get_derivatives(datatype):
-            outfolder = bidsfolder/'derivatives'/manufacturer.replace(' ','')/subid/sesid/datatype
+        if run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):
+            outfolder = bidsfolder/'derivatives'/manufacturer.replace(' ','')/subid/sesid/datasource.datatype
         else:
-            outfolder = bidsses/datatype
+            outfolder = bidsses/datasource.datatype
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
@@ -405,7 +404,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             outputfile = [file for file in jsonfile.parent.glob(jsonfile.stem + '.*') if file.suffix in ('.nii','.gz')]     # Find the corresponding nifti/tsv.gz file (there should be only one, let's not make assumptions about the .gz extension)
             if not outputfile:
                 LOGGER.exception(f"No data-file found with {jsonfile} when updating {scans_tsv}")
-            elif datatype not in bidsmap['Options']['bidscoin']['bidsignore'] and not run['bids']['suffix'] in bids.get_derivatives(datatype):
+            elif datasource.datatype not in bidsmap['Options']['bidscoin']['bidsignore'] and not run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):
                 acq_time = ''
                 if dataformat == 'DICOM':
                     acq_time = f"{datasource.attributes('AcquisitionDate')}T{datasource.attributes('AcquisitionTime')}"

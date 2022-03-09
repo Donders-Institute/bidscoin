@@ -1393,7 +1393,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
 
     Then update/fill the provenance, and the (dynamic) bids and meta values (bids values are cleaned-up to be BIDS-valid)
 
-    :param datasource:  The data source from which the attributes are read
+    :param datasource:  The data source from which the attributes are read. The datasource.datatype attribute is updated if empty and a match is found
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS keys and attributes, etc
     :param runtime:     Dynamic <<values>> are expanded if True
     :return:            (run, index) The matching and filled-in / cleaned run item, datatype and list index as in run = bidsmap[dataformat][datatype][index]
@@ -1466,6 +1466,8 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
 
             # Stop searching the bidsmap if we have a match
             if match:
+                if not datasource.datatype:
+                    datasource.datatype = datatype
                 return run_, index
 
     # We don't have a match (all tests failed, so datatype should be the *last* one, e.g. unknowndatatype)
