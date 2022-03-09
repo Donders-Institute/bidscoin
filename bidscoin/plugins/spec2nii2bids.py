@@ -130,11 +130,11 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
         datasource = bids.DataSource(sourcefile, plugin)
         dataformat = datasource.dataformat
+
+        # Input checks
         if not template[dataformat] and not bidsmap_old[dataformat]:
             LOGGER.error(f"No {dataformat} source information found in the bidsmap and template for: {sourcefile}")
             return
-
-        # Input checks
         if not template.get(dataformat) and not bidsmap_old.get(dataformat):
             LOGGER.error(f"No {dataformat} source information found in the bidsmap and template for: {sourcefile}")
             return
@@ -154,10 +154,9 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
             # Now work from the provenance store
             if store:
-                targetfile             = store['target']/sourcefile.relative_to(store['source'])
+                targetfile        = store['target']/sourcefile.relative_to(store['source'])
                 targetfile.parent.mkdir(parents=True, exist_ok=True)
-                run['provenance']      = str(shutil.copy2(sourcefile, targetfile))
-                run['datasource'].path = targetfile
+                run['provenance'] = str(shutil.copy2(sourcefile, targetfile))
 
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)

@@ -153,10 +153,9 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
             # Now work from the provenance store
             if store:
-                targetfile             = store['target']/sourcefile.relative_to(store['source'])
+                targetfile        = store['target']/sourcefile.relative_to(store['source'])
                 targetfile.parent.mkdir(parents=True, exist_ok=True)
-                run['provenance']      = str(shutil.copy2(sourcefile, targetfile))
-                run['datasource'].path = targetfile
+                run['provenance'] = str(shutil.copy2(sourcefile, targetfile))
 
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)
@@ -187,23 +186,20 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         subid      = bidsses.name
         sesid      = ''
 
-    # Get started and see what dataformat we have
-    plugin     = {'phys2bidscoin': bidsmap['Options']['plugins']['phys2bidscoin']}
-    datasource = bids.get_datasource(session, plugin)
-    dataformat = datasource.dataformat
-    if not dataformat:
+    # Get started
+    plugin      = {'phys2bidscoin': bidsmap['Options']['plugins']['phys2bidscoin']}
+    datasource  = bids.get_datasource(session, plugin)
+    sourcefiles = [file for file in session.rglob('*') if is_sourcefile(file)]
+    if not sourcefiles:
         LOGGER.info(f"No {__name__} sourcedata found in: {session}")
         return
 
     # Loop over all source data files and convert them to BIDS
-    for sourcefile in [file for file in session.rglob('*') if is_sourcefile(file)]:
+    for sourcefile in sourcefiles:
 
         # Get a data source, a matching run from the bidsmap and update its run['datasource'] object
-        datasource         = bids.DataSource(sourcefile, plugin, dataformat)
-        run, index         = bids.get_matching_run(datasource, bidsmap, runtime=True)
-        datasource         = run['datasource']
-        datasource.path    = sourcefile
-        datasource.plugins = plugin
+        datasource = bids.DataSource(sourcefile, plugin, datasource.dataformat)
+        run, index = bids.get_matching_run(datasource, bidsmap, runtime=True)
 
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:

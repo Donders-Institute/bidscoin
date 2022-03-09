@@ -102,9 +102,9 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
     # Collect the different DICOM/PAR source files for all runs in the session
     for sourcefile in [file for file in session.rglob('*') if is_sourcefile(file)]:
-        datasource = bids.DataSource(sourcefile, plugin, datasource.dataformat)
 
         # See if we can find a matching run in the old bidsmap
+        datasource = bids.DataSource(sourcefile, plugin, datasource.dataformat)
         run, index = bids.get_matching_run(datasource, bidsmap_old)
 
         # If not, see if we can find a matching run in the template
@@ -119,10 +119,9 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
             # Now work from the provenance store
             if store:
-                targetfile             = store['target']/sourcefile.relative_to(store['source'])
+                targetfile        = store['target']/sourcefile.relative_to(store['source'])
                 targetfile.parent.mkdir(parents=True, exist_ok=True)
-                run['provenance']      = str(shutil.copy2(sourcefile, targetfile))
-                run['datasource'].path = targetfile
+                run['provenance'] = str(shutil.copy2(sourcefile, targetfile))
 
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)
