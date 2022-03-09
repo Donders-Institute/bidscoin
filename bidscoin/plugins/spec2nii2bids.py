@@ -260,8 +260,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             LOGGER.exception(f"Unsupported dataformat: {dataformat}")
         command = options.get("command", "spec2nii")
         if not bidscoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
-            LOGGER.error(f"Conversion of {sourcefile} seems to have failed -- check your results carefully")
-            continue
+            if not list(outfolder.glob(f"{bidsname}.nii*")): continue
 
         # Load and adapt the newly produced json sidecar-file (NB: assumes every nifti-file comes with a json-file)
         with jsonfile.open('r') as json_fid:
