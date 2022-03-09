@@ -193,6 +193,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     # Get started and see what dataformat we have
     options     = bidsmap['Options']['plugins']['spec2nii2bids']
     datasource  = bids.get_datasource(session, {'spec2nii2bids':options})
+    dataformat  = datasource.dataformat
     sourcefiles = [file for file in session.rglob('*') if is_sourcefile(file)]
     if not sourcefiles:
         LOGGER.info(f"No {__name__} sourcedata found in: {session}")
@@ -212,7 +213,6 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Get a data source, a matching run from the bidsmap and update its run['datasource'] object
         datasource = bids.DataSource(sourcefile, {'spec2nii2bids':options})
         run, index = bids.get_matching_run(datasource, bidsmap, runtime=True)
-        dataformat = datasource.dataformat
         datatype   = datasource.datatype
 
         # Check if we should ignore this run
