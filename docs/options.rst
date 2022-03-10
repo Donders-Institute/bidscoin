@@ -67,7 +67,7 @@ To test the proper working of spec2nii click [Test] and see the terminal output 
 nibabel2bids - plugin
 ---------------------
 
-The nibabel2bids plugin is a bidscoiner plugin that converts `nibabel <https://nipy.org/nibabel>`__ supported source data to BIDS-valid nifti- and json sidecar files. You can set the following options:
+The nibabel2bids plugin is a bidscoiner plugin that converts the wide variety of `nibabel <https://nipy.org/nibabel>`__ datatypes to BIDS-valid nifti- and json sidecar files (you can even take existing nifti datasets as input). The following options can be set:
 
 - ``ext``: The (nibabel) file extension of the output data, i.e. ``.nii.gz`` or ``.nii``
 - ``meta``: The file extensions of the associated / equally named metadata sourcefiles that are copied over as BIDS sidecar files, such as ``['.json', '.tsv', '.bval', '.bvec']``
