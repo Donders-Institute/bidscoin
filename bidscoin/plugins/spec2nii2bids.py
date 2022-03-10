@@ -26,10 +26,11 @@ except ImportError:
 LOGGER = logging.getLogger(__name__)
 
 # The default options that are set when installing the plugin
-OPTIONS = {'command': 'spec2nii',   # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or '"C:\Program Files\spec2nii\spec2nii.exe"' (note the quotes to deal with the whitespace)
-           'args': None,            # Argument string that is passed to spec2nii (see spec2nii -h for more information)
-           'anon': 'y',             # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
-           'multiraid': 2}          # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
+OPTIONS = {'command': 'spec2nii',       # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or '"C:\Program Files\spec2nii\spec2nii.exe"' (note the quotes to deal with the whitespace)
+           'args': None,                # Argument string that is passed to spec2nii (see spec2nii -h for more information)
+           'anon': 'y',                 # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
+           'meta': ['.json', '.tsv', '.tsv.gz'],  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
+           'multiraid': 2}              # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
 
 
 def test(options: dict) -> bool:
@@ -265,6 +266,13 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Load and adapt the newly produced json sidecar-file (NB: assumes every nifti-file comes with a json-file)
         with jsonfile.open('r') as json_fid:
             jsondata = json.load(json_fid)
+
+        # Copy over the source meta-data
+        metadata = bids.copymetadata(sourcefile, outfolder/bidsname, options.get('meta', []))
+        for metakey, metaval in metadata.items():
+            if jsondata.get(metakey) == metaval:
+                LOGGER.warning(f"Replacing {metakey} values in {jsonfile}: {jsondata[metakey]} -> {metaval}")
+            jsondata[metakey] = metaval
 
         # Add all the meta data to the json-file
         for metakey, metaval in run['meta'].items():

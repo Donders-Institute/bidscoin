@@ -12,6 +12,8 @@ import logging
 import tempfile
 import tarfile
 import zipfile
+import json
+import shutil
 from functools import lru_cache
 from pydicom import dcmread, fileset, datadict
 from nibabel.parrec import parse_PAR_header
@@ -1646,9 +1648,42 @@ def increment_runindex(bidsfolder: Path, bidsname: str, ext: str='.*') -> Union[
 
         runindex = get_bidsvalue(bidsname, 'run')
         if runindex:
-            bidsname = get_bidsvalue(bidsname, 'run', int(runindex) + 1)
+            bidsname = get_bidsvalue(bidsname, 'run', str(int(runindex) + 1))
 
     return bidsname
+
+
+def copymetadata(metasource: Path, metatarget: Path, extensions: list) -> dict:
+    """
+    Copies over or, in case of json-files, returns the content of 'metasource' data files
+
+    NB: In future versions this function could also support returning the content of e.g. csv- or Excel-files
+
+    :param metasource:  The filepath of the source-data file with associated / equally named meta-data files
+    :param metatarget:  The filepath of the source-data file to with the (non-json) meta-data files are copied over
+    :param extensions:  A list of file extensions of the meta-data files
+    :return:            The meta-data of the json-file
+    """
+
+    metadict = {}
+    for ext in extensions:
+        metasource = metasource.with_suffix('').with_suffix(ext)
+        metatarget = metatarget.with_suffix('').with_suffix(ext)
+        if metasource.is_file():
+            LOGGER.info(f"Copying source data from: '{metasource}''")
+            if ext == '.json':
+                with metasource.open('r') as json_fid:
+                    metadict = json.load(json_fid)
+                if not isinstance(metadict, dict):
+                    LOGGER.error(f"Skipping unexpectedly formatted meta-data in: {metasource}")
+                    metadict = {}
+            else:
+                if metatarget.is_file():
+                    LOGGER.warning(f"Deleting unexpected existing data-file: {metatarget}")
+                    metatarget.unlink()
+                shutil.copy2(metasource, metatarget)
+
+    return metadict
 
 
 def get_propertieshelp(propertieskey: str) -> str:

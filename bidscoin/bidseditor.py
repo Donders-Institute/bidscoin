@@ -75,7 +75,10 @@ args: Argument string that is passed to dcm2niix. Click [Test] and see the termi
     Tip: SPM users may want to use '-z n', which produces unzipped nifti's
     
 anon: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
-"""
+
+meta: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as
+    BIDS (sidecar) files, such as ['.json', '.tsv', '.tsv.gz']. You can use this to enrich json sidecar files,
+    or add data that is not supported by this plugin"""
 
 
 class MainWindow(QMainWindow):
