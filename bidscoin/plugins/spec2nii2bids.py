@@ -307,7 +307,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             except Exception as jsonerror:
                 LOGGER.warning(f"Could not parse the acquisition time from: {sourcefile}\n{jsonerror}")
                 acq_time = 'n/a'
-            scans_table.loc[sourcefile.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time
+            scans_table.loc[jsonfile.with_suffix('.nii.gz').relative_to(bidsses).as_posix(), 'acq_time'] = acq_time
 
     # Write the scans_table to disk
     LOGGER.info(f"Writing acquisition time data to: {scans_tsv}")
@@ -333,7 +333,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         elif sex == '2': personals['sex'] = 'F'
         age = dateutil.parser.parse(datasource.attributes('rhr_rh_scan_date')) - dateutil.parser.parse(datasource.attributes('rhe_dateofbirth'))
         age = str(age.days) + 'D'
-    if age.endswith('D'):   age = float(age.rstrip('D')) / 365.2524
+    if   age.endswith('D'): age = float(age.rstrip('D')) / 365.2524
     elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
     elif age.endswith('M'): age = float(age.rstrip('M')) / 12
     elif age.endswith('Y'): age = float(age.rstrip('Y'))

@@ -446,7 +446,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     personals['age'] = ''
     if dataformat == 'DICOM':
         age = datasource.attributes('PatientAge')                   # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
-        if age.endswith('D'):   age = float(age.rstrip('D')) / 365.2524
+        if   age.endswith('D'): age = float(age.rstrip('D')) / 365.2524
         elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
         elif age.endswith('M'): age = float(age.rstrip('M')) / 12
         elif age.endswith('Y'): age = float(age.rstrip('Y'))
