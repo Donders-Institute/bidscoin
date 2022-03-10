@@ -28,7 +28,8 @@ LOGGER = logging.getLogger(__name__)
 # The default options that are set when installing the plugin
 OPTIONS = {'command': 'module add dcm2niix; dcm2niix',  # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or '"C:\Program Files\dcm2niix\dcm2niix.exe"' (use quotes to deal with whitespaces in the path)
            'args': '-b y -z y -i n',                    # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
-           'anon': 'y'}                                 # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
+           'anon': 'y',                                 # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
+           'meta': ['.json', '.tsv', '.tsv.gz']}        # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
 
 
 def test(options) -> bool:
@@ -375,6 +376,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 for oldfile in outfolder.glob(dcm2niixfile.with_suffix('').stem + '.*'):
                     oldfile.replace(newjsonfile.with_suffix(''.join(oldfile.suffixes)))
 
+        # Copy over the source meta-data
+        metadata = bids.copymetadata(sourcefile, outfolder/bidsname, options.get('meta', []))
+
         # Loop over and adapt all the newly produced json sidecar-files and write to the scans.tsv file (NB: assumes every nifti-file comes with a json-file)
         for jsonfile in sorted(set(jsonfiles)):
 
@@ -382,7 +386,13 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             with jsonfile.open('r') as json_fid:
                 jsondata = json.load(json_fid)
 
-            # Add all the meta data to the meta-data. NB: the dynamic `IntendedFor` value is handled separately later
+            # Add all the source meta data to the meta-data
+            for metakey, metaval in metadata.items():
+                if jsondata.get(metakey) == metaval:
+                    LOGGER.warning(f"Replacing {metakey} values in {jsonfile}: {jsondata[metakey]} -> {metaval}")
+                jsondata[metakey] = metaval
+
+            # Add all the run meta data to the meta-data. NB: the dynamic `IntendedFor` value is handled separately later
             for metakey, metaval in run['meta'].items():
                 if metakey != 'IntendedFor':
                     metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)

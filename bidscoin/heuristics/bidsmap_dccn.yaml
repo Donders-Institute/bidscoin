@@ -20,24 +20,26 @@ Options:
 # General options and plugins
 # --------------------------------------------------------------------------------
   bidscoin:
-    version: 3.7.1-dev            # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
-    bidsignore: mrs/;extra_data/  # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
-    subprefix: sub-               # The subject prefix of the source data
-    sesprefix: ses-               # The session prefix of the source data
-    datatypes: [fmap, anat, func, perf, dwi, pet, eeg, ieeg]   # A list of datatypes that are converted to BIDS (useful for skipping data)
-    unknowntypes: [mrs, extra_data]    # A list of datatypes that are converted to BIDS-like datatype folders
-    ignoretypes: [exclude]        # A list of datatypes that are excluded / not converted to BIDS
-  plugins:                        # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
-    dcm2niix2bids:                # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
+    version: 3.7.1                  # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
+    bidsignore: mrs/;extra_data/    # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
+    subprefix: sub-                 # The subject prefix of the source data
+    sesprefix: ses-                 # The session prefix of the source data
+    datatypes: [fmap, anat, func, perf, dwi, pet, eeg, ieeg]  # A list of datatypes that are converted to BIDS (useful for skipping data)
+    unknowntypes: [mrs, extra_data] # A list of datatypes that are converted to BIDS-like datatype folders
+    ignoretypes: [exclude]          # A list of datatypes that are excluded / not converted to BIDS
+  plugins:                          # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
+    dcm2niix2bids:                  # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
       command: module add dcm2niix; dcm2niix # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or '"C:\Program Files\dcm2niix\dcm2niix.exe"' (use quotes to deal with whitespaces in the path)
-      args: -b y -z y -i n        # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
-      anon: y                     # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
-    spec2nii2bids:                # The settings for the spec2nii2bids plugin
-      command: spec2nii           # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or '"C:\Program Files\spec2nii\spec2nii.exe"' (note the quotes to deal with the whitespace)
-      args:                       # Argument string that is passed to spec2nii (see spec2nii -h for more information)
-      anon: y                     # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
-      multiraid: 2                # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
-#    phys2bidscoin:                # The settings for the phys2bidscoin plugin
+      args: -b y -z y -i n          # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
+      anon: y                       # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
+      meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata sourcefiles that are copied over to the BIDS sidecar files
+    spec2nii2bids:                  # The settings for the spec2nii2bids plugin
+      command: spec2nii             # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or '"C:\Program Files\spec2nii\spec2nii.exe"' (note the quotes to deal with the whitespace)
+      args:                         # Argument string that is passed to spec2nii (see spec2nii -h for more information)
+      anon: y                       # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
+      meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata sourcefiles that are copied over to the BIDS sidecar files
+      multiraid: 2                  # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
+#    phys2bidscoin:                  # The settings for the phys2bidscoin plugin
 
 
 DICOM:

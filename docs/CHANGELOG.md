@@ -2,20 +2,24 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
-## [3.7.1-dev]
+## [dev]
+
+## [3.7.1] - 2022-03-10
 
 ### Added
 - IntendedFor can now be appended with a "bounding" term to deal with duplicated fieldmaps from interrupted sessions
 - The possibility to process subject folders without prefix
 - Support for BIDS 1.7 (e.g. for the new `B0FieldSource` and `B0FieldIdentifier` fieldmap meta fields)
-- A Nibabel2bids plugin (e.g. to convert nifti datasets to bids)
+- A `nibabel2bids` plugin (e.g. to convert nifti datasets to BIDS)
+- Plugin `meta` option setting to enrich json sidecar files or add data that is not supported
 
 ### Changed
 - Removed / changed redundant subject/session prefix input arguments (now stored in the bidsmap)
+- The `IntendedFor` search feature now works independent of plugins
 
 ### Fixed
 - The bidscoin installation test in the bidseditor
-- The IntendedFor list update when combining echos
+- The IntendedFor list when combining echos
 
 ## [3.7.0] - 2021-12-20
 
@@ -290,7 +294,8 @@ A first stable release of BIDScoin :-)
 ### To do
 * Add support for non-imaging data
 
-[3.7.1-dev]: https://github.com/Donders-Institute/bidscoin/compare/3.7.0...HEAD
+[dev]: https://github.com/Donders-Institute/bidscoin/compare/3.7.1...HEAD
+[3.7.1]: https://github.com/Donders-Institute/bidscoin/compare/3.7.0...3.7.1
 [3.7.0]: https://github.com/Donders-Institute/bidscoin/compare/3.6.3...3.7.0
 [3.6.3]: https://github.com/Donders-Institute/bidscoin/compare/3.6.2...3.6.3
 [3.6.2]: https://github.com/Donders-Institute/bidscoin/compare/3.6.1...3.6.2

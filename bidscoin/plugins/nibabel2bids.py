@@ -204,20 +204,12 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             LOGGER.warning(f"{bidsfile}.* already exists and will be deleted -- check your results carefully!")
             bidsfile.with_suffix('').with_suffix(ext).unlink()
 
-        # Save the sourcefile as a BIDS nifti file and copy the associated metadata files
+        # Save the sourcefile as a BIDS nifti file
         nib.save(nib.load(sourcefile), bidsfile)
-        for suffix in meta:
-            if sourcefile.with_suffix('').with_suffix(suffix).is_file():
-                bidsfile.with_suffix('').with_suffix(suffix).unlink(missing_ok=True)
-                shutil.copy2(sourcefile.with_suffix('').with_suffix(suffix), bidsfile.with_suffix('').with_suffix(suffix))
 
-        # Load the json meta-data
+        # Copy over the source meta-data
         jsonfile = bidsfile.with_suffix('').with_suffix('.json')
-        if jsonfile.is_file():
-            with jsonfile.open('r') as json_fid:
-                jsondata = json.load(json_fid)
-        else:
-            jsondata = {}
+        jsondata = bids.copymetadata(sourcefile, bidsfile, meta)
 
         # Add all the meta data to the meta-data. NB: the dynamic `IntendedFor` value is handled separately later
         for metakey, metaval in run['meta'].items():
