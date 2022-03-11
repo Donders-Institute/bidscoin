@@ -6,7 +6,7 @@ The BIDScoin architecture
 
 .. figure:: ./_static/bidscoin_architecture.png
 
-   The BIDScoin architecture and dataflow, showing different layers of abstraction. The BIDScoin layer interacts with the plugins using a single programming interface (API), which in turn interact with the source data in a dataformat dependent way. The BIDScoin layer also interacts with the metadata layer, where all mapping information is stored.
+   The BIDScoin architecture and dataflow, showing different layers of abstraction. The BIDScoin layer interacts with the plugins using a single programming interface (API), which in turn interact with the source data in a dataformat dependent way. The BIDScoin layer also interacts with the metadata layer, where all prior knowledge and mapping information is stored.
 
 The bidseditor
 ~~~~~~~~~~~~~~
