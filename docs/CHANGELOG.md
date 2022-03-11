@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
-## [3.7.1] - 2022-03-10
+## [3.7.1] - 2022-03-11
 
 ### Added
 - IntendedFor can now be appended with a "bounding" term to deal with duplicated fieldmaps from interrupted sessions
