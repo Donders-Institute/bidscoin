@@ -49,7 +49,7 @@ To test the proper working of dcm2niix click [Test] and see the terminal output 
 spec2nii2bids - plugin
 ----------------------
 
-The spec2nii2bids plugin is a bidscoiner plugin that converts Twix, SPAR/SDAT and P-file spectroscopy source data to BIDS-valid nifti- and json sidecar files. This plugin relies on `spec2nii <https://github.com/wexeee/spec2nii>`__, for which you can set the following options:
+The spec2nii2bids plugin is a default bidscoiner plugin that converts Twix, SPAR/SDAT and P-file spectroscopy source data to BIDS-valid nifti- and json sidecar files. This plugin relies on `spec2nii <https://github.com/wexeee/spec2nii>`__, for which you can set the following options:
 
 - ``command``: Command to run spec2nii, such as:
 
@@ -69,7 +69,7 @@ To test the proper working of spec2nii click [Test] and see the terminal output 
 nibabel2bids - plugin
 ---------------------
 
-The nibabel2bids plugin is a bidscoiner plugin that converts the wide variety of `nibabel <https://nipy.org/nibabel>`__ datatypes to BIDS-valid nifti- and json sidecar files. The following options can be set:
+The nibabel2bids plugin is an optional bidscoiner plugin that converts the wide variety of `nibabel <https://nipy.org/nibabel>`__ datatypes to BIDS-valid nifti- and json sidecar files. The following options can be set:
 
 - ``ext``: The (nibabel) file extension of the output data, i.e. ``.nii.gz`` or ``.nii``
 - ``meta``: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as BIDS (sidecar) files, such as ``['.json', '.tsv', '.tsv.gz', '.bval', '.bvec']``. You can use this to enrich json sidecar files or add data that is not supported by this plugin. For instance, in this way you can still convert a nifti dataset that was previously created with dcm2niix to BIDS. NB: Data entered in the meta table of the bidseditor GUI always has priority over data in source json files, which itself has priority over dcm2niix-generated json data.
