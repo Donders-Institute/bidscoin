@@ -1,12 +1,15 @@
 Screenshots
 ===========
 
-The bidseditor
-~~~~~~~~~~~~~~
+The BIDScoin architecture
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: ./_static/bidscoin_architecture.png
 
    The BIDScoin architecture and dataflow, showing different layers of abstraction. The BIDScoin layer interacts with the plugins using a single programming interface (API), which in turn interact with the source data in a dataformat dependent way. The BIDScoin layer also interacts with the metadata layer, where all mapping information is stored.
+
+The bidseditor
+~~~~~~~~~~~~~~
 
 .. figure:: ./_static/bidseditor_main.png
 
@@ -20,6 +23,9 @@ The bidseditor
    :scale: 60%
 
    The bidsmap options for BIDScoin and its plugins. The user can manage the plugins that will be used with the [Add] and [Remove] buttons, and save the current options to the template bidsmap by using the [Set as default] button.
+
+The bidscoiner
+~~~~~~~~~~~~~~
 
 .. figure:: ./_static/bidscoiner_terminal.png
 
