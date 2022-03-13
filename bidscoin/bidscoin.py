@@ -339,7 +339,7 @@ def uninstall_plugins(plugins: Tuple[str]=(), wipe: bool=True) -> Union[bool, No
 
 
 @lru_cache()
-def import_plugin(plugin: Union[Path, str], functions: tuple=()) -> module_from_spec:
+def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> module_from_spec:
     """
     Imports the plugin if it contains any of the specified functions
 
@@ -386,7 +386,7 @@ def import_plugin(plugin: Union[Path, str], functions: tuple=()) -> module_from_
         LOGGER.exception(f"Could not import {plugin}:\n{pluginerror}")
 
 
-def test_plugin(plugin: Path, options: dict) -> bool:
+def test_plugin(plugin: Union[Path,str], options: dict) -> bool:
     """
     Performs import tests of the plug-in
 
@@ -418,7 +418,7 @@ def test_plugin(plugin: Path, options: dict) -> bool:
     return True
 
 
-def test_bidscoin(bidsmapfile: Union[Path, dict], options: dict=None, testplugins: bool=True):
+def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins: bool=True):
     """
     Performs a bidscoin installation test
 
@@ -453,15 +453,17 @@ def test_bidscoin(bidsmapfile: Union[Path, dict], options: dict=None, testplugin
         success = True
 
     # Test the plugins
-    if testplugins and 'plugins' in options:
+    if testplugins:
 
-        for plugin in options['plugins']:
-            success = success and test_plugin(plugin, options['plugins'][plugin])
+        for plugin in (bidscoinfolder/'plugins').glob('*.py'):
+            success = success and test_plugin(plugin, options['plugins'].get(plugin,{}))
 
         # Show an overview of the plugins
         list_plugins(True)
 
     # Show an overview of the bidscoin tools. TODO: test the entry points?
+    if not options['plugins']:
+        LOGGER.warning('No plugins found in the bidsmap (BIDScoin will likely not do anything)')
     list_executables(True)
 
     return success

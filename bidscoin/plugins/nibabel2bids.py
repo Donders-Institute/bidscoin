@@ -23,7 +23,7 @@ OPTIONS = {'ext': '.nii.gz',                                        # The (nibab
            'meta': ['.json', '.tsv', '.tsv.gz', '.bval', '.bvec']}  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
 
 
-def test(options) -> bool:
+def test(options: dict=OPTIONS) -> bool:
     """
     Performs a nibabel test
 

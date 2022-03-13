@@ -44,7 +44,7 @@ def test(options: dict) -> bool:
     :return:        True if the test was successful
     """
 
-    LOGGER.debug(f'This is the phys2bids-plugin test routine, validating its working with options: {options}')
+    LOGGER.info(f'This is the phys2bids-plugin WIP test routine')
 
     return True
 

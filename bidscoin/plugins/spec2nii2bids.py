@@ -33,7 +33,7 @@ OPTIONS = {'command': 'spec2nii',       # Command to run spec2nii, e.g. "module 
            'multiraid': 2}              # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
 
 
-def test(options: dict) -> bool:
+def test(options: dict=OPTIONS) -> bool:
     """
     This plugin shell tests the working of the spec2nii2bids plugin + its bidsmap options
 
@@ -43,14 +43,14 @@ def test(options: dict) -> bool:
 
     LOGGER.info('Testing the spec2nii2bids installation:')
 
-    if 'command' not in options:
+    if 'command' not in {**OPTIONS, **options}:
         LOGGER.error(f"The expected 'command' key is not defined in the spec2nii2bids options")
         return False
-    if 'args' not in options:
+    if 'args' not in {**OPTIONS, **options}:
         LOGGER.warning(f"The expected 'args' key is not defined in the spec2nii2bids options")
 
     # Test the spec2nii installation
-    return bidscoin.run_command(f"{options['command']} -h")
+    return bidscoin.run_command(f"{options.get('command',OPTIONS['command'])} -h")
 
 
 def is_sourcefile(file: Path) -> str:

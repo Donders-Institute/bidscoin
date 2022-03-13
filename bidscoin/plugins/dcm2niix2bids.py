@@ -32,7 +32,7 @@ OPTIONS = {'command': 'module add dcm2niix; dcm2niix',  # Command to run dcm2nii
            'meta': ['.json', '.tsv', '.tsv.gz']}        # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
 
 
-def test(options) -> bool:
+def test(options: dict=OPTIONS) -> bool:
     """
     Performs shell tests of dcm2niix
 
@@ -42,14 +42,15 @@ def test(options) -> bool:
 
     LOGGER.info('Testing the dcm2niix2bids installation:')
 
-    if 'command' not in options:
+    if 'command' not in {**OPTIONS, **options}:
         LOGGER.error(f"The expected 'command' key is not defined in the dcm2niix2bids options")
         return False
-    if 'args' not in options:
+    if 'args' not in {**OPTIONS, **options}:
         LOGGER.warning(f"The expected 'args' key is not defined in the dcm2niix2bids options")
 
     # Test the dcm2niix installation
-    return bidscoin.run_command(f"{options['command']} -u; {options['command']}")
+    command = options.get('command', OPTIONS['command'])
+    return bidscoin.run_command(f"{command} -u; {command}")
 
 
 def is_sourcefile(file: Path) -> str:

@@ -86,7 +86,7 @@ BIDSMAP = {'DemoFormat':{
              'TimeOffset': '<<time_offset>>'}}]}}
 
 
-def test(options: dict) -> bool:
+def test(options: dict=OPTIONS) -> bool:
     """
     This plugin function tests the working of the plugin + its bidsmap options
 
@@ -94,7 +94,7 @@ def test(options: dict) -> bool:
     :return:        True if the test was successful
     """
 
-    LOGGER.debug(f'This is a demo-plugin test routine, validating its working with options: {options}')
+    LOGGER.info(f'This is a demo-plugin test routine, validating its working with options: {options}')
 
     return True
 
@@ -113,7 +113,6 @@ def is_sourcefile(file: Path) -> str:
         return 'dataformat' if file is 'supportedformat' else ''
 
     return ''
-
 
 
 def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> str:
