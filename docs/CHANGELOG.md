@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
-## [3.7.2] - 2022-03-11
+## [3.7.2] - 2022-03-13
 
 ### Fixed
 - The installation of the BIDS schema files
