@@ -383,7 +383,7 @@ def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> module_from_s
             return module
 
     except Exception as pluginerror:
-        LOGGER.exception(f"Could not import {plugin}:\n{pluginerror}")
+        LOGGER.error(f"Could not import {plugin}:\n{pluginerror}")
 
 
 def test_plugin(plugin: Union[Path,str], options: dict) -> bool:
@@ -412,7 +412,7 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> bool:
         try:
             return module.test(options)
         except Exception as pluginerror:
-            LOGGER.exception(f"Could not run {plugin}.test(options):\n{pluginerror}")
+            LOGGER.error(f"Could not run {plugin}.test(options):\n{pluginerror}")
             return False
 
     return True
