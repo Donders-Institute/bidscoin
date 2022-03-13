@@ -464,7 +464,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
         list_plugins(True)
         for plugin in (bidscoinfolder/'plugins').glob('*.py'):
             if plugin.stem != '__init__':
-                success = success and test_plugin(plugin, options['plugins'].get(plugin.stem,{}))
+                success = success and test_plugin(plugin.stem, options['plugins'].get(plugin.stem,{}))
 
     return success
 
