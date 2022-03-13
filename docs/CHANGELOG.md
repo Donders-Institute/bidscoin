@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
+## [3.7.2] - 2022-03-11
+
+### Fixed
+- The installation of the BIDS schema files
+
 ## [3.7.1] - 2022-03-11
 
 ### Added
@@ -294,7 +299,8 @@ A first stable release of BIDScoin :-)
 ### To do
 * Add support for non-imaging data
 
-[dev]: https://github.com/Donders-Institute/bidscoin/compare/3.7.1...HEAD
+[dev]: https://github.com/Donders-Institute/bidscoin/compare/3.7.2...HEAD
+[3.7.2]: https://github.com/Donders-Institute/bidscoin/compare/3.7.1...3.7.2
 [3.7.1]: https://github.com/Donders-Institute/bidscoin/compare/3.7.0...3.7.1
 [3.7.0]: https://github.com/Donders-Institute/bidscoin/compare/3.6.3...3.7.0
 [3.6.3]: https://github.com/Donders-Institute/bidscoin/compare/3.6.2...3.6.3
