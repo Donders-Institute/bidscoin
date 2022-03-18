@@ -556,8 +556,8 @@ class MainWindow(QMainWindow):
         dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
         if not datatype:
             samples_table = self.samples_table[dataformat]
-            button        = self.focusWidget()
-            rowindex      = samples_table.indexAt(button.pos()).row()
+            clicked       = self.focusWidget()
+            rowindex      = samples_table.indexAt(clicked.pos()).row()
             datatype      = samples_table.item(rowindex, 2).text()
             provenance    = samples_table.item(rowindex, 5).text()
 

@@ -50,7 +50,7 @@ def test(options: dict=OPTIONS) -> bool:
 
     # Test the dcm2niix installation
     command = options.get('command', OPTIONS['command'])
-    return bidscoin.run_command(f"{command} -u; {command}")
+    return bidscoin.run_command(f"{command} -u")
 
 
 def is_sourcefile(file: Path) -> str:
