@@ -67,7 +67,7 @@ TOOLTIP_DCM2NIIX = """dcm2niix2bids
 command: Command to run dcm2niix from the terminal, such as:
     dcm2niix (if the executable is already present on your path)
     module add dcm2niix/v1.0.20210317; dcm2niix (if you use a module system)
-    PATH=/opt/dcm2niix/bin:$PATH; dcm2niix (prepend the executable to your path)
+    PATH=/opt/dcm2niix/bin:$PATH; dcm2niix (prepend the path to your executable)
     /opt/dcm2niix/bin/dcm2niix (specify the fullpath to the executable)
     \"C:\\Program Files\\dcm2niix\\dcm2niix.exe" (use quotes to deal with whitespaces in your fullpath)
     

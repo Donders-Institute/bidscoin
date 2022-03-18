@@ -32,7 +32,7 @@ The dcm2niix2bids plugin is the default bidscoiner plugin that converts DICOM an
 
   - ``dcm2niix`` (if the executable is already present on your path)
   - ``module add dcm2niix/v1.0.20210317; dcm2niix`` (if you use a module system)
-  - ``PATH=/opt/dcm2niix/bin:$PATH; dcm2niix`` (prepend the executable to your path)
+  - ``PATH=/opt/dcm2niix/bin:$PATH; dcm2niix`` (prepend the path to your executable)
   - ``/opt/dcm2niix/bin/dcm2niix`` (specify the fullpath to the executable)
   - ``"C:\Program Files\dcm2niix\dcm2niix.exe"`` (use quotes to deal with whitespaces in your fullpath)
 
@@ -55,7 +55,7 @@ The spec2nii2bids plugin is a default bidscoiner plugin that converts Twix, SPAR
 
   - ``dcm2niix`` (normal usage, i.e. the executable is already present on your path)
   - ``module add spec2nii; spec2nii`` (if you use a module system)
-  - ``PATH=/opt/spec2nii/bin:$PATH; spec2nii`` (prepend the executable to your path)
+  - ``PATH=/opt/spec2nii/bin:$PATH; spec2nii`` (prepend the path to your executable)
   - ``/opt/spec2nii/bin/spec2nii`` (specify the fullpath to the executable)
   - ``"C:\Program Files\spec2nii\spec2nii.exe"`` (use quotes to deal with whitespaces in your fullpath)
 
