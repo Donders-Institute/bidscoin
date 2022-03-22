@@ -134,9 +134,9 @@ class DataSource:
                     def match(file): return ((match_attribute(file.parent,         run['properties']['filepath']) or not run['properties']['filepath']) and
                                              (match_attribute(file.name,           run['properties']['filename']) or not run['properties']['filename']) and
                                              (match_attribute(file.stat().st_size, run['properties']['filesize']) or not run['properties']['filesize']))
-                    return len([file for file in self.path.parent.glob('*') if match(file)])
+                    return len([file for file in self.path.parent.iterdir() if match(file)])
                 else:
-                    return len(list(self.path.parent.glob('*')))
+                    return len(list(self.path.parent.iterdir()))
 
         except OSError as ioerror:
             LOGGER.warning(f"{ioerror}")

@@ -184,7 +184,7 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
     # Sort the DICOM files in the sourcefolder
     else:
         sessions   = [sourcefolder]
-        dicomfiles = [dcmfile for dcmfile in sourcefolder.iterdir() if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
+        dicomfiles = [dcmfile for dcmfile in sourcefolder.rglob('*') if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
         if dicomfiles:
             sortsession(sourcefolder, dicomfiles, folderscheme, namescheme, dryrun)
 
