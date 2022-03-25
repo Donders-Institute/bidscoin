@@ -39,7 +39,7 @@ BIDScoin requires that the source data repository is organized according to a ``
     |       [..]
     [..]
 
-2. **A 'DICOMDIR' organization**. The data folder contains a DICOMDIR file and multiple subfolders (NB: single DICOMDIR files containing multiple subjects or sessions are not supported). A DICOMDIR is dictionary-file that indicates the various places where the DICOM files are stored. DICOMDIRs are often used in clinical settings and may look like::
+2. **A 'DICOMDIR' organization**. The data folder contains a DICOMDIR file and multiple subfolders. A DICOMDIR is dictionary-file that indicates the various places where the DICOM files are stored. DICOMDIRs are often used in clinical settings and may look like::
 
     sourcedata
     |-- sub-001
@@ -64,6 +64,8 @@ BIDScoin requires that the source data repository is organized according to a ``
     |-- sub-002
     |   [..]
     [..]
+
+  The above organisation of one DICOMDIR file per subject or session is supported out of the box by the bidscoiner and bidsmapper. If you have a single multi-subject DICOMDIR file for your entire repository you can reorganize your data by running the `dicomsort <#dicomsort.html>`__ utility beforehand.
 
 3. **A flat DICOM organization**. In a flat DICOM organization the data folder contains all the DICOM files of all the different Series without any subfolders. This organization is sometimes used when exporting data in clinical settings (the session sub-folder is optional)::
 
@@ -130,16 +132,16 @@ The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-
     folder names (i.e. following the same listing as on the scanner console)
 
     positional arguments:
-      dicomsource           The name of the root folder containing the dicomsource/[sub/][ses/]dicomfiles
-                            and / or the (single session/study) DICOMDIR file
+      dicomsource           The root folder containing the dicomsource/[sub/][ses/] dicomfiles or the
+                            DICOMDIR file
 
     optional arguments:
       -h, --help            show this help message and exit
       -i SUBPREFIX, --subprefix SUBPREFIX
-                            Provide a prefix string for recursive searching in dicomsource/subject
+                            Provide a prefix string for recursive sorting of dicomsource/subject
                             subfolders (e.g. "sub-") (default: None)
       -j SESPREFIX, --sesprefix SESPREFIX
-                            Provide a prefix string for recursive searching in dicomsource/subject/session
+                            Provide a prefix string for recursive sorting of dicomsource/subject/session
                             subfolders (e.g. "ses-") (default: None)
       -f FOLDERSCHEME, --folderscheme FOLDERSCHEME
                             Naming scheme for the sorted DICOM Series subfolders. Follows the Python string
@@ -162,6 +164,7 @@ The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-
     examples:
       dicomsort sub-011/ses-mri01
       dicomsort sub-011/ses-mri01/DICOMDIR -n {AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm
+      dicomsort /project/3022026.01/raw/DICOMDIR
       dicomsort /project/3022026.01/raw --subprefix sub
       dicomsort /project/3022026.01/raw --subprefix sub-01 --sesprefix ses
 

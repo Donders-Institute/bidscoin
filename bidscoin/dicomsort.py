@@ -158,6 +158,8 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
     if (folderscheme and not validscheme(folderscheme)) or (namescheme and not validscheme(namescheme)):
         LOGGER.error('Wrong scheme input argument(s), aborting dicomsort()...')
         return []
+    if not subprefix: subprefix = ''
+    if not sesprefix: sesprefix = ''
 
     # Do a recursive call if a sub- or ses-prefix is given
     sessions = []       # Collect the sorted session-folders
@@ -205,11 +207,12 @@ def main():
                                      epilog='examples:\n'
                                             '  dicomsort sub-011/ses-mri01\n'
                                             '  dicomsort sub-011/ses-mri01/DICOMDIR -n {AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm\n'
+                                            '  dicomsort /project/3022026.01/raw/DICOMDIR'
                                             '  dicomsort /project/3022026.01/raw --subprefix sub\n'
                                             '  dicomsort /project/3022026.01/raw --subprefix sub-01 --sesprefix ses\n ')
-    parser.add_argument('dicomsource',          help='The name of the root folder containing the dicomsource/[sub/][ses/]dicomfiles and / or the (single session/study) DICOMDIR file')
-    parser.add_argument('-i','--subprefix',     help='Provide a prefix string for recursive searching in dicomsource/subject subfolders (e.g. "sub-")')
-    parser.add_argument('-j','--sesprefix',     help='Provide a prefix string for recursive searching in dicomsource/subject/session subfolders (e.g. "ses-")')
+    parser.add_argument('dicomsource',          help='The root folder containing the dicomsource/[sub/][ses/] dicomfiles or the DICOMDIR file')
+    parser.add_argument('-i','--subprefix',     help='Provide a prefix string for recursive sorting of dicomsource/subject subfolders (e.g. "sub-")')
+    parser.add_argument('-j','--sesprefix',     help='Provide a prefix string for recursive sorting of dicomsource/subject/session subfolders (e.g. "ses-")')
     parser.add_argument('-f','--folderscheme',  help='Naming scheme for the sorted DICOM Series subfolders. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields. Sorting in subfolders is skipped when an empty folderscheme is given (but note that renaming the filenames can still be performed)', default='{SeriesNumber:03d}-{SeriesDescription}')
     parser.add_argument('-n','--namescheme',    help='Optional naming scheme that can be provided to rename the DICOM files. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields. Use e.g. "{PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm" or "{InstanceNumber:05d}_{SOPInstanceUID}.IMA" for default names')
     parser.add_argument('-p','--pattern',       help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')
