@@ -4,7 +4,7 @@ Data preparation
 Required source data structure
 ------------------------------
 
-BIDScoin requires that the source data repository is organized according to a ``subject/[session]/data`` structure (the ``session`` subfolder is optional). The data folder can be structured in various ways, as illustrated by the following examples:
+Out of the box, BIDScoin requires that the source data repository is organized according to a ``subject/[session]/data`` structure (the ``session`` subfolder is optional). The data folder can be structured in various ways, as illustrated by the following examples:
 
 1. **A 'seriesfolder' organization**. The data folder is organised in multiple series subfolders, each of which that contains a single data type that is typically acquired in a single run -- a.k.a 'Series' in DICOM speak. This is how users receive their data from the (Siemens) scanners at the `DCCN <https://www.ru.nl/donders/>`__::
 
