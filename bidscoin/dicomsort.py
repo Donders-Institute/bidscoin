@@ -161,19 +161,9 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
     if not subprefix: subprefix = ''
     if not sesprefix: sesprefix = ''
 
-    # Do a recursive call if a sub- or ses-prefix is given
-    sessions = []       # Collect the sorted session-folders
-    if subprefix or sesprefix:
-        for subjectfolder in bidscoin.lsdirs(sourcefolder, subprefix + '*'):
-            if sesprefix:
-                sessionfolders = bidscoin.lsdirs(subjectfolder, sesprefix + '*')
-            else:
-                sessionfolders = [subjectfolder]
-            for sessionfolder in sessionfolders:
-                sessions += sortsessions(sessionfolder, folderscheme=folderscheme, namescheme=namescheme, pattern=pattern, dryrun=dryrun)
-
     # Use the DICOMDIR file if it is there
-    elif (sourcefolder/'DICOMDIR').is_file():
+    sessions = []       # Collect the sorted session-folders
+    if (sourcefolder/'DICOMDIR').is_file():
         dicomdir = pydicom.dcmread(str(sourcefolder/'DICOMDIR'))
         for patient in dicomdir.patient_records:
             for n, study in enumerate(patient.children, 1):
@@ -182,6 +172,16 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
                     sessionfolder = sourcefolder/f"{subprefix}{cleanup(patient.PatientName)}"/f"{sesprefix}{n:02}-{cleanup(study.StudyDescription)}"
                     sortsession(sessionfolder, dicomfiles, folderscheme, namescheme, dryrun)
                     sessions.append(sessionfolder)
+
+    # Do a recursive call if a sub- or ses-prefix is given
+    elif subprefix or sesprefix:
+        for subjectfolder in bidscoin.lsdirs(sourcefolder, subprefix + '*'):
+            if sesprefix:
+                sessionfolders = bidscoin.lsdirs(subjectfolder, sesprefix + '*')
+            else:
+                sessionfolders = [subjectfolder]
+            for sessionfolder in sessionfolders:
+                sessions += sortsessions(sessionfolder, folderscheme=folderscheme, namescheme=namescheme, pattern=pattern, dryrun=dryrun)
 
     # Sort the DICOM files in the sourcefolder
     else:
@@ -207,9 +207,7 @@ def main():
                                      epilog='examples:\n'
                                             '  dicomsort sub-011/ses-mri01\n'
                                             '  dicomsort sub-011/ses-mri01/DICOMDIR -n {AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm\n'
-                                            '  dicomsort /project/3022026.01/raw/DICOMDIR'
-                                            '  dicomsort /project/3022026.01/raw --subprefix sub\n'
-                                            '  dicomsort /project/3022026.01/raw --subprefix sub-01 --sesprefix ses\n ')
+                                            '  dicomsort /project/3022026.01/raw/DICOMDIR --subprefix sub- --sesprefix ses-\n ')
     parser.add_argument('dicomsource',          help='The root folder containing the dicomsource/[sub/][ses/] dicomfiles or the DICOMDIR file')
     parser.add_argument('-i','--subprefix',     help='Provide a prefix string for recursive sorting of dicomsource/subject subfolders (e.g. "sub-")')
     parser.add_argument('-j','--sesprefix',     help='Provide a prefix string for recursive sorting of dicomsource/subject/session subfolders (e.g. "ses-")')

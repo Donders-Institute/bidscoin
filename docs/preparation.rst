@@ -164,9 +164,7 @@ The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-
     examples:
       dicomsort sub-011/ses-mri01
       dicomsort sub-011/ses-mri01/DICOMDIR -n {AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm
-      dicomsort /project/3022026.01/raw/DICOMDIR
-      dicomsort /project/3022026.01/raw --subprefix sub
-      dicomsort /project/3022026.01/raw --subprefix sub-01 --sesprefix ses
+      dicomsort /project/3022026.01/raw/DICOMDIR --subprefix sub- --sesprefix ses-
 
 rawmapper
 ^^^^^^^^^
