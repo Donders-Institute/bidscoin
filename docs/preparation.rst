@@ -65,7 +65,7 @@ BIDScoin requires that the source data repository is organized according to a ``
     |   [..]
     [..]
 
-  The above organisation of one DICOMDIR file per subject or session is supported out of the box by the bidscoiner and bidsmapper. If you have a single multi-subject DICOMDIR file for your entire repository you can reorganize your data by running the `dicomsort <#dicomsort.html>`__ utility beforehand.
+  The above organisation of one DICOMDIR file per subject or session is supported out of the box by the bidscoiner and bidsmapper. If you have a single multi-subject DICOMDIR file for your entire repository you can reorganize your data by running the `dicomsort <#dicomsort>`__ utility beforehand.
 
 3. **A flat DICOM organization**. In a flat DICOM organization the data folder contains all the DICOM files of all the different Series without any subfolders. This organization is sometimes used when exporting data in clinical settings (the session sub-folder is optional)::
 
