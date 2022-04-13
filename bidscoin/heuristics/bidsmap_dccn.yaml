@@ -1981,7 +1981,19 @@ Nibabel:
       pixdim:
       descrip:
       intent_name:
-      <<: *anat_dicomattr
+      Modality:
+      ProtocolName:
+      SeriesDescription:
+      ImageType:
+      SequenceName:
+      SequenceVariant:
+      ScanningSequence:
+      MRAcquisitionType:
+      SliceThickness:
+      FlipAngle:
+      EchoTime:
+      RepetitionTime:
+      InPlanePhaseEncodingDirectionDICOM:
     bids: &anat_nibent_nonparametric    # See: schema/datatypes/anat.yaml
       acq: <descrip>                    # This will be expanded by the bidsmapper (so the user can edit it)
       ce:

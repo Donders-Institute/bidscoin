@@ -70,7 +70,7 @@ class DataSource:
         self.subprefix  = subprefix
         self.sesprefix  = sesprefix
         self.metadata   = {}
-        jsonfile        = self.path.with_suffix('').with_suffix('.json')
+        jsonfile        = self.path.with_suffix('').with_suffix('.json') if self.path.name else self.path
         if jsonfile.is_file():
             with jsonfile.open('r') as json_fid:
                 self.metadata = json.load(json_fid)
@@ -178,7 +178,7 @@ class DataSource:
                     module = bidscoin.import_plugin(plugin, ('get_attribute',))
                     if module:
                         attributeval = module.get_attribute(self.dataformat, self.path, attributekey, options)
-                        attributeval = str(attributeval) if attributeval else ''
+                        attributeval = str(attributeval) if attributeval is not None else ''
                     if attributeval:
                         break
 

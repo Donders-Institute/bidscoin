@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
+### Added
+- The usage of json sidecar files as a datasource for attribute values
+
+### Changed
+- Dicomsort now searches recursively over the sessionfolder
+- Images that have already been defaced are now skipped
+
 ## [3.7.2] - 2022-03-13
 
 ### Fixed
