@@ -172,7 +172,7 @@ class DataSource:
 
             # Read the attribute value from the sidecar file or from the datasource
             if attributekey in self.metadata:
-                attributeval = self.metadata[attributekey]
+                attributeval = str(self.metadata[attributekey]) if self.metadata[attributekey] is not None else ''
             else:
                 for plugin, options in self.plugins.items():
                     module = bidscoin.import_plugin(plugin, ('get_attribute',))
