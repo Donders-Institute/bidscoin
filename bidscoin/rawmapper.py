@@ -120,7 +120,7 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: boo
                 if newsession.is_dir():
                     for item in session.iterdir():
                         shutil.move(item, newsession/item.name)
-                    session.unlink()
+                    session.rmdir()
                 else:
                     shutil.move(session, newsession)
 
