@@ -69,6 +69,11 @@ class DataSource:
             self.is_datasource()
         self.subprefix  = subprefix
         self.sesprefix  = sesprefix
+        self.metadata   = {}
+        jsonfile        = self.path.with_suffix('').with_suffix('.json')
+        if jsonfile.is_file():
+            with jsonfile.open('r') as json_fid:
+                self.metadata = json.load(json_fid)
 
     def is_datasource(self) -> bool:
         """Returns True is the datasource has a valid dataformat"""
@@ -145,45 +150,53 @@ class DataSource:
 
     def attributes(self, attributekey: str, validregexp: bool=False) -> str:
         """
-        Use the plugins to read and return the attribute value from the datasource
+        Read the attribute value from the json sidecar file if it is there, else use the plugins to read it from the datasource
 
-        :param attributekey: The attribute key for which a value is read from the datasource. A colon-separated regular expression can be appended to the attribute key (same as for the `filepath` and `filename` properties)
+        :param attributekey: The attribute key for which a value is read from the json-file or from the datasource. A colon-separated regular expression can be appended to the attribute key (same as for the `filepath` and `filename` properties)
         :param validregexp:  If True, the regexp meta-characters in the attribute value (e.g. '*') are replaced by '.',
                              e.g. to prevent compile errors in match_attribute()
         :return:             The attribute value or '' if the attribute could not be read from the datasource. NB: values are always converted to strings
         """
 
+        attributeval = ''
+
         try:
+            # Split off the regular expression pattern
             if ':' in attributekey:
                 attributekey, pattern = attributekey.split(':', 1)
             else:
                 pattern = ''
-            for plugin, options in self.plugins.items():
-                module = bidscoin.import_plugin(plugin, ('get_attribute',))
-                if module:
-                    attributeval = module.get_attribute(self.dataformat, self.path, attributekey, options)
-                    if attributeval is None:
-                        attributeval = ''
-                    attributeval = str(attributeval)
-                    if attributeval:
-                        if validregexp:
-                            try:            # Strip meta-characters to prevent match_attribute() errors
-                                re.compile(attributeval)
-                            except re.error:
-                                for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
-                                    attributeval = attributeval.strip().replace(metacharacter, '.')
-                        if pattern:
-                            match = re.findall(pattern, attributeval)
-                            if len(match)>1:
-                                LOGGER.warning(f"Multiple matches {match} found when extracting {pattern} from {attributeval}, using: {match[0]}")
-                            attributeval = match[0]     # The first match is most likely the most informative (?)
 
-                        return attributeval
+            # Read the attribute value from the sidecar file or from the datasource
+            if attributekey in self.metadata:
+                attributeval = self.metadata[attributekey]
+            else:
+                for plugin, options in self.plugins.items():
+                    module = bidscoin.import_plugin(plugin, ('get_attribute',))
+                    if module:
+                        attributeval = module.get_attribute(self.dataformat, self.path, attributekey, options)
+                        attributeval = str(attributeval) if attributeval else ''
+                    if attributeval:
+                        break
+
+            # Apply the regular expression to the attribute value
+            if attributeval:
+                if validregexp:
+                    try:            # Strip meta-characters to prevent match_attribute() errors
+                        re.compile(attributeval)
+                    except re.error:
+                        for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
+                            attributeval = attributeval.strip().replace(metacharacter, '.')
+                if pattern:
+                    match = re.findall(pattern, attributeval)
+                    if len(match) > 1:
+                        LOGGER.warning(f"Multiple matches {match} found when extracting {pattern} from {attributeval}, using: {match[0]}")
+                    attributeval = match[0]     # The first match is most likely the most informative (?)
 
         except OSError as ioerror:
             LOGGER.warning(f"{ioerror}")
 
-        return ''
+        return attributeval
 
     def subid_sesid(self, subid: str=None, sesid: str=None) -> Tuple[str, str]:
         """
