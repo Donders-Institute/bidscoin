@@ -17,12 +17,13 @@ except ImportError:
     import bidscoin, bids         # This should work if bidscoin was not pip-installed
 
 
-def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: bool=False, dicomfield: tuple=('PatientComments',), wildcard: str='*', subprefix: str='sub-', sesprefix: str='ses-', dryrun: bool=False) -> None:
+def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: bool=False, force: bool=False, dicomfield: tuple=('PatientComments',), wildcard: str='*', subprefix: str='sub-', sesprefix: str='ses-', dryrun: bool=False) -> None:
     """
     :param rawfolder:   The root folder-name of the sub/ses/data/file tree containing the source data files
     :param outfolder:   The name of the folder where the mapping-file is saved (default = sourcefolder)
     :param sessions:    Space separated list of selected sub-#/ses-# names / folders to be processed. Otherwise all sessions in the bidsfolder will be selected
     :param rename:      Flag for renaming the sub-subid folders to sub-dicomfield
+    :param force:       Flag to rename the directories, even if the target-directory already exists
     :param dicomfield:  The names of the dicomfields that are mapped (/ renamed to sub-dcmval/ses-dcmval)
     :param wildcard:    The Unix style pathname pattern expansion that is used by glob to select the series from which the dicomfield is being mapped
     :param subprefix:   The prefix common for all source subject-folders
@@ -111,12 +112,17 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: boo
             print(f"{session} -> {newsession}")
             if newsession == session:
                 continue
-            if newsession.is_dir() or newsession.is_file():
+            if not force and newsession.is_dir() or newsession.is_file():
                 warnings.warn(f"{newsession} already exists, skipping renaming of {session}")
             elif not dryrun:
                 with mapperfile.open('a') as fid:
                     fid.write(f"{subid}\t{sesid}\t{newsubid}\t{newsesid}\n")
-                shutil.move(session, newsession)
+                if newsession.is_dir():
+                    for item in session.iterdir():
+                        shutil.move(item, newsession/item.name)
+                    session.unlink()
+                else:
+                    shutil.move(session, newsession)
 
         # Print & save the dicom values in the mapper logfile
         else:
@@ -150,6 +156,7 @@ def main():
     parser.add_argument('-w','--wildcard',  help='The Unix style pathname pattern expansion that is used to select the series from which the dicomfield is being mapped (can contain wildcards)', default='*')
     parser.add_argument('-o','--outfolder', help='The mapper-file is normally saved in sourcefolder or, when using this option, in outfolder')
     parser.add_argument('-r','--rename',    help='If this flag is given sub-subid/ses-sesid directories in the sourcefolder will be renamed to sub-dcmval/ses-dcmval', action='store_true')
+    parser.add_argument('-c','--clobber',   help='Flag to rename the directories, even if the target-directory already exists', action='store_true')
     parser.add_argument('-n','--subprefix', help='The prefix common for all the source subject-folders', default='sub-')
     parser.add_argument('-m','--sesprefix', help='The prefix common for all the source session-folders', default='ses-')
     parser.add_argument('-d','--dryrun',    help='Add this flag to dryrun (test) the mapping or renaming of the sub-subid/ses-sesid directories (i.e. nothing is stored on disk and directory names are not actually changed))', action='store_true')
@@ -159,6 +166,7 @@ def main():
               outfolder  = args.outfolder,
               sessions   = args.sessions,
               rename     = args.rename,
+              force      = args.clobber,
               dicomfield = args.field,
               wildcard   = args.wildcard,
               subprefix  = args.subprefix,
