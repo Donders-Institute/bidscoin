@@ -74,6 +74,9 @@ class DataSource:
         if jsonfile.is_file():
             with jsonfile.open('r') as json_fid:
                 self.metadata = json.load(json_fid)
+                if not isinstance(self.metadata, dict):
+                    LOGGER.warning(f"Skipping unexpectedly formatted meta-data in: {jsonfile}")
+                    self.metadata = {}
 
     def is_datasource(self) -> bool:
         """Returns True is the datasource has a valid dataformat"""
