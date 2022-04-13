@@ -113,7 +113,7 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: boo
             if newsession == session:
                 continue
             if not force and newsession.is_dir() or newsession.is_file():
-                warnings.warn(f"{newsession} already exists, skipping renaming of {session}")
+                warnings.warn(f"{newsession} already exists, skipping renaming of {session} (you can use the '-c' option to override this)")
             elif not dryrun:
                 with mapperfile.open('a') as fid:
                     fid.write(f"{subid}\t{sesid}\t{newsubid}\t{newsesid}\n")

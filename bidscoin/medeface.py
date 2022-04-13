@@ -83,7 +83,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                 LOGGER.info('--------------------------------------')
                 LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
 
-                datasource     = bids.DataSource(session/'dum.my')
+                datasource   = bids.DataSource(session/'dum.my', subprefix='sub-', sesprefix='ses-')
                 subid, sesid = datasource.subid_sesid()
 
                 # Read the echo-images that will be combined to compute the deface mask
@@ -136,7 +136,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                 LOGGER.info('--------------------------------------')
                 LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
 
-                datasource   = bids.DataSource(session/'dum.my')
+                datasource   = bids.DataSource(session/'dum.my', subprefix='sub-', sesprefix='ses-')
                 subid, sesid = datasource.subid_sesid()
 
                 # Read the temporary defacemask

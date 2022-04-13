@@ -138,7 +138,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, bidsmapfile: st
             for session in sessions:
 
                 # Only take data from the first session -> BIDS specification
-                subid, sesid = bids.DataSource(session/'dum.my').subid_sesid()
+                subid, sesid = bids.DataSource(session/'dum.my', subprefix='sub-', sesprefix='ses-').subid_sesid()
                 if sesprefix and sesid and 'session_id' not in personals:
                     personals['session_id']         = sesid
                     participants_dict['session_id'] = {'Description': 'Session identifier'}

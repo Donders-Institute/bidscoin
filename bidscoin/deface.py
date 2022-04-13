@@ -78,7 +78,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                     LOGGER.info('--------------------------------------')
                     LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
 
-                    datasource   = bids.DataSource(session/'dum.my')
+                    datasource   = bids.DataSource(session/'dum.my', subprefix='sub-', sesprefix='ses-')
                     subid, sesid = datasource.subid_sesid()
 
                     # Search for images that need to be defaced

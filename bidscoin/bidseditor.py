@@ -490,7 +490,7 @@ class MainWindow(QMainWindow):
                 samples_table.item(idx, 1).setFlags(QtCore.Qt.ItemIsEnabled)
                 samples_table.item(idx, 2).setFlags(QtCore.Qt.ItemIsEnabled)
                 samples_table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
-                samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information (Copy: Ctrl+C)')
+                samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information')
                 samples_table.item(idx, 1).setStatusTip(str(provenance.parent) + str(Path('/')))
                 samples_table.item(idx, 3).setStatusTip(str(session) + str(Path('/')))
 

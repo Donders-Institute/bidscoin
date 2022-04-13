@@ -113,7 +113,7 @@ Out of the box, BIDScoin requires that the source data repository is organized a
    You can store your session data in any of the above data organizations as zipped (``.zip``) or tarzipped (e.g. ``.tar.gz``) archive files. BIDScoin `workflow tools <workflow.html>`__ will automatically unpack/unzip those archive files in a temporary folder and then process your session data from there. For flat/DICOMDIR data, BIDScoin tools (i.e. the bidsmapper and the bidscoiner) will automatically run `dicomsort <#dicomsort>`__ in a temporary folder to sort them in seriesfolders. Depending on the data and file system, repeatedly unzipping data in the workflow may come with a significant processing speed penalty.
 
 .. tip::
-   BIDScoin will skip (linux-style hidden) files and folders starting with a `.` (dot) character. You can use this feature to flexibly omit subjects, sessions or runs from your bids repository, for instance when you restarted a MRI scan because something went wrong with the stimulus presentation and you don't want that data to be converted and enumerated as `run-1`, `run-2`.
+   BIDScoin will skip (Linux-style hidden) files and folders of which the name starts with a `.` (dot) character. You can use this feature to flexibly omit subjects, sessions or runs from your bids repository, for instance when you restarted an MRI scan because something went wrong with the stimulus presentation and you don't want that data to be converted and enumerated as `run-1`, `run-2`.
 
 Data management utilities
 -------------------------
