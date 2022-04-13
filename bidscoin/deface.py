@@ -24,12 +24,13 @@ except ImportError:
     import bidscoin, bids             # This should work if bidscoin was not pip-installed
 
 
-def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: bool, nativespec: str, kwargs: dict):
+def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
     """
 
     :param bidsdir:     The bids-directory with the subject data
     :param pattern:     Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T1w*'
     :param subjects:    List of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
+    :param force:       If True then images will be processed, regardless if images have already been defaced (i.e. if {"Defaced": True} in the json sidecar file)
     :param output:      Determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images
     :param cluster:     Flag to submit the deface jobs to the high-performance compute (HPC) cluster
     :param nativespec:  DRMAA native specifications for submitting deface jobs to the HPC cluster
@@ -95,6 +96,14 @@ def deface(bidsdir: str, pattern: str, subjects: list, output: str, cluster: boo
                             outputfile     = session/output/match.name
                             outputfile_rel = outputfile.relative_to(session).as_posix()
                         outputfile.parent.mkdir(parents=True, exist_ok=True)
+
+                        # Check the json "Defaced" field to see if it has already been defaced
+                        if not force and outputjson.is_file():
+                            with outputjson.open('r') as output_fid:
+                                data = json.load(output_fid)
+                            if data.get('Defaced'):
+                                LOGGER.info(f"Skipping already defaced image: {match_rel} -> {outputfile_rel}")
+                                continue
 
                         # Deface the image
                         LOGGER.info(f"Defacing: {match_rel} -> {outputfile_rel}")
@@ -179,6 +188,8 @@ def main():
                         help="Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T1w*'")
     parser.add_argument('-p','--participant_label', type=str, nargs='+',
                         help='Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed')
+    parser.add_argument('-f','--force', action='store_true',
+                        help='If this flag is given images will be processed, regardless if images have already been defaced (i.e. if {"Defaced": True} in the json sidecar file)')
     parser.add_argument('-o','--output', type=str,
                         help=f"A string that determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images")
     parser.add_argument('-c','--cluster', action='store_true',
@@ -192,6 +203,7 @@ def main():
     deface(bidsdir    = args.bidsfolder,
            pattern    = args.pattern,
            subjects   = args.participant_label,
+           force      = args.force,
            output     = args.output,
            cluster    = args.cluster,
            nativespec = args.nativespec,
