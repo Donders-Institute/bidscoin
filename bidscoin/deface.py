@@ -98,6 +98,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                         outputfile.parent.mkdir(parents=True, exist_ok=True)
 
                         # Check the json "Defaced" field to see if it has already been defaced
+                        outputjson = outputfile.with_suffix('').with_suffix('.json')
                         if not force and outputjson.is_file():
                             with outputjson.open('r') as output_fid:
                                 data = json.load(output_fid)
@@ -116,8 +117,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                             pdu.deface_image(str(match), str(outputfile), force=True, forcecleanup=True, **kwargs)
 
                         # Overwrite or add a json sidecar-file
-                        inputjson  = match.with_suffix('').with_suffix('.json')
-                        outputjson = outputfile.with_suffix('').with_suffix('.json')
+                        inputjson = match.with_suffix('').with_suffix('.json')
                         if inputjson.is_file() and inputjson != outputjson:
                             if outputjson.is_file():
                                 LOGGER.info(f"Overwriting the json sidecar-file: {outputjson}")
