@@ -20,6 +20,7 @@ except ImportError:
 
 unknowndatatype = 'extra_data'
 
+
 def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorithm: str, weights: list, force: bool=False):
     """
 

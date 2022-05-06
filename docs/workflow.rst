@@ -11,8 +11,8 @@ By default, step 1a automatically launches step 1b, so in it's simplest form, al
 
 .. code-block:: console
 
-    $ bidsmapper sourcefolder bidsfolder
-    $ bidscoiner sourcefolder bidsfolder
+    $ bidsmapper sourcefolder bidsfolder    # Scans your data and creates a study bidsmap
+    $ bidscoiner sourcefolder bidsfolder    # Converts your data to BIDS using the study bidsmap
 
 If you add new subjects all you need to do is re-run the bidscoiner -- unless the scan protocol was changed, then you also need to first re-run the bidsmapper to add the new samples to the study bidsmap. The paragraphs below describe the BIDScoin worklow in more detail.
 
