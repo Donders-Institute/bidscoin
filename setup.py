@@ -35,7 +35,7 @@ setup(name                           = 'bidscoin',          # Required
                                                             'bidsparticipants = bidscoin.bidsparticipants:main',
                                                             'physio2tsv       = bidscoin.physio2tsv:main',
                                                             'plotphysio       = bidscoin.plotphysio:main']},
-      classifiers                    = ['Programming Language :: Python :: 3',
+      classifiers                    = ['Programming Language :: Python :: 3.8',
                                         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
                                         'Operating System :: OS Independent'],
       keywords                       = 'bids mri imaging neuroimaging dicom par rec nifti pet defacing echo-combination',
