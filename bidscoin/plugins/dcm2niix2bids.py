@@ -189,7 +189,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     manufacturer = 'UNKNOWN'
     sources      = []
     if dataformat == 'DICOM':
-        sources      = bidscoin.lsdirs(session)
+        sources      = bidscoin.lsdirs(session, '**/*')
         manufacturer = datasource.attributes('Manufacturer')
     elif dataformat == 'PAR':
         sources      = bids.get_parfiles(session)
