@@ -109,7 +109,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     # Collect the different DICOM/PAR source files for all runs in the session
     sourcefiles = []
     if dataformat == 'DICOM':
-        for sourcedir in bidscoin.lsdirs(session, '**/*'):
+        for sourcedir in bidscoin.lsdirs(session, '*') + bidscoin.lsdirs(session, '**/*'):
             for n in range(1):      # Option: Use range(2) to scan two files and catch e.g. magnitude1/2 fieldmap files that are stored in one Series folder (but bidscoiner sees only the first file anyhow and it makes bidsmapper 2x slower :-()
                 sourcefile = bids.get_dicomfile(sourcedir, n)
                 if sourcefile.name:
