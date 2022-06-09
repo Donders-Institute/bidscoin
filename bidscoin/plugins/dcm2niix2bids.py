@@ -16,6 +16,7 @@ import pandas as pd
 import json
 import ast
 import shutil
+import os
 from typing import Union
 from pathlib import Path
 try:
@@ -50,7 +51,7 @@ def test(options: dict=OPTIONS) -> bool:
 
     # Test the dcm2niix installation
     command = options.get('command', OPTIONS['command'])
-    return bidscoin.run_command(f"{command} -u")
+    return bidscoin.run_command(f"{command} -{'u' if os.name=='posix' else 'v'}")
 
 
 def is_sourcefile(file: Path) -> str:
