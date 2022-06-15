@@ -457,12 +457,14 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
     LOGGER.info('Testing the PyQt GUI setup:')
     try:
         app = QApplication(sys.argv)
-        window = QPushButton('GUI test: OK')
+        window = QPushButton('Minimal GUI test: OK')
         window.show()
         QApplication.quit()
-        LOGGER.info('The GUI seems to work')
+        success = True
+        LOGGER.info('The GUI seems to work OK')
     except Exception as pyqterror:
         LOGGER.error(f"The installed PyQt version does not seem to work for your system:\n{pyqterror}")
+        success = False
 
     # Show an overview of the bidscoin tools. TODO: test the entry points?
     if not options['plugins']:
