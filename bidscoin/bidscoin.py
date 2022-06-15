@@ -21,6 +21,7 @@ import inspect
 import subprocess
 import urllib.request
 import json
+from PyQt5.QtWidgets import QApplication, QPushButton
 from tqdm import tqdm
 from pathlib import Path
 from functools import lru_cache
@@ -451,6 +452,17 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
         if not options:
             options = bidsmapfile['Options']
         success = True
+
+    # Test PyQt
+    LOGGER.info('Testing the PyQt GUI setup:')
+    try:
+        app = QApplication(sys.argv)
+        window = QPushButton('GUI test: OK')
+        window.show()
+        QApplication.quit()
+        LOGGER.info('The GUI seems to work')
+    except Exception as pyqterror:
+        LOGGER.error(f"The installed PyQt version does not seem to work for your system:\n{pyqterror}")
 
     # Show an overview of the bidscoin tools. TODO: test the entry points?
     if not options['plugins']:
