@@ -21,6 +21,7 @@ import inspect
 import subprocess
 import urllib.request
 import json
+from PyQt5.QtWidgets import QApplication, QPushButton
 from tqdm import tqdm
 from pathlib import Path
 from functools import lru_cache
@@ -433,6 +434,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
     LOGGER.info('--------- Testing the BIDScoin tools and settings ---------')
 
     # Test loading the template bidsmap
+    success = True
     if isinstance(bidsmapfile, (str, Path)):
         try:
             try:                    # Include the import in the test + moving the import to the top of this module will cause circular import issues
@@ -443,14 +445,24 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
             bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile))
             if not options:
                 options = bidsmap['Options']
-            success = True
         except Exception as bidsmaperror:
             LOGGER.error(f'{bidsmaperror}')
             success = False
     else:
         if not options:
             options = bidsmapfile['Options']
-        success = True
+
+    # Test PyQt
+    LOGGER.info('Testing the PyQt GUI setup:')
+    try:
+        app = QApplication(sys.argv)
+        window = QPushButton('Minimal GUI test: OK')
+        window.show()
+        QApplication.quit()
+        LOGGER.info('The GUI seems to work OK')
+    except Exception as pyqterror:
+        LOGGER.error(f"The installed PyQt version does not seem to work for your system:\n{pyqterror}")
+        success = False
 
     # Show an overview of the bidscoin tools. TODO: test the entry points?
     if not options['plugins']:

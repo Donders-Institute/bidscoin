@@ -68,14 +68,15 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: boo
         # Parse the new subject and session identifiers from the dicomfield
         series = bidscoin.lsdirs(session, wildcard)
         if not series:
-            series = ''
-            dcmval = ''
+            series    = Path()
+            dicomfile = bids.get_dicomfile(session)     # Try and see if there is a DICOM file in the root of the session folder
         else:
-            series = series[0]                  # NB: Assumes the first folder contains a dicom file and that all folders give the same info
-            dcmval = ''
-            for dcmfield in dicomfield:
-                dcmval = dcmval + '/' + str(bids.get_dicomfield(dcmfield, bids.get_dicomfile(series)))
-            dcmval = dcmval[1:]
+            series    = series[0]                       # NB: Assumes the first folder contains a dicom file and that all folders give the same info
+            dicomfile = bids.get_dicomfile(series)      # Try and see if there is a DICOM file in the root of the session folder
+        dcmval = ''
+        for dcmfield in dicomfield:
+            dcmval = dcmval + '/' + str(bids.get_dicomfield(dcmfield, dicomfile))
+        dcmval = dcmval[1:]
 
         # Rename the session subfolder in the sourcefolder and print & save this info
         if rename:
