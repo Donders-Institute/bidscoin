@@ -110,7 +110,7 @@ def is_sourcefile(file: Path) -> str:
     if file.is_file():
 
         LOGGER.debug(f'This is a demo-plugin is_sourcefile routine, assessing whether "{file}" has a valid dataformat')
-        return 'dataformat' if file is 'supportedformat' else ''
+        return 'dataformat' if file == 'supportedformat' else ''
 
     return ''
 

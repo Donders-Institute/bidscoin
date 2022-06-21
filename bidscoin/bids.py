@@ -702,12 +702,15 @@ def get_sparfield(tagname: str, sparfile: Path) -> Union[str, int]:
 
             value = hdr.get(tagname, '')
 
+        except ImportError:
+            LOGGER.warning(f"The extra `spec2nii` library could not be found or was not installed (see the BIDScoin install instructions)")
+
         except OSError:
-            LOGGER.warning(f'Cannot read {tagname} from {sparfile}')
+            LOGGER.warning(f"Cannot read {tagname} from {sparfile}")
             value = ''
 
         except Exception as sparerror:
-            LOGGER.warning(f'Could not parse {tagname} from {sparfile}\n{sparerror}')
+            LOGGER.warning(f"Could not parse {tagname} from {sparfile}\n{sparerror}")
             value = ''
 
     # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
@@ -756,6 +759,9 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
                     value = value.decode('UTF-8')
                 except UnicodeDecodeError:
                     pass
+
+        except ImportError:
+            LOGGER.warning(f"The extra `spec2nii` library could not be found or was not installed (see the BIDScoin install instructions)")
 
         except OSError:
             LOGGER.warning(f'Cannot read {tagname} from {p7file}')
