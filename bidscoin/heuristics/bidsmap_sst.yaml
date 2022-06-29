@@ -423,7 +423,7 @@ DICOM:
   - provenance:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
     attributes:
       <<: *func_dicomattr
-      SeriesDescription: (?i).*(f.?MRI|task|BOLD|func|rest|CMRR.*_TR).*SBREF.*
+      SeriesDescription: (?i).*(f.?MRI|task|BOLD|func|rest|RSN|CMRR.*_TR).*SBREF.*
     bids:
       <<: *func_dicoment_func
       suffix: sbref
@@ -431,7 +431,7 @@ DICOM:
   - provenance:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
     attributes:
       <<: *func_dicomattr
-      ProtocolName: (?i).*(f.?MRI|task|BOLD|func|rest|CMRR.*_TR).*
+      ProtocolName: (?i).*(f.?MRI|task|BOLD|func|rest|RSN|CMRR.*_TR).*
       ImageType: .*'PHYSIO'.*
     bids: &func_dicoment_timeseries     # See: schema/datatypes/func.yaml
       task: <<filepath:/.*/...(.*)/.*/>>
@@ -447,13 +447,13 @@ DICOM:
   - provenance:
     attributes:
       <<: *func_dicomattr
-      SeriesDescription: (?i).*(f.?MRI|task|BOLD|func|rest|CMRR.*_TR).*PHYSIO.*
+      SeriesDescription: (?i).*(f.?MRI|task|BOLD|func|rest|RSN|CMRR.*_TR).*PHYSIO.*
     bids: *func_dicoment_timeseries
     meta: *func_meta
   - provenance:                         # Then catch the bold runs themselves
     attributes:
       <<: *func_dicomattr
-      ProtocolName: (?i).*(f.?MRI|task|BOLD|func|rest|CMRR.*_TR).*
+      ProtocolName: (?i).*(f.?MRI|task|BOLD|func|rest|RSN|CMRR.*_TR).*
     bids: *func_dicoment_func
     meta: *func_meta
   - provenance:
@@ -1409,7 +1409,7 @@ PAR:
   - provenance:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
     attributes:
       <<: *func_parattr
-      protocol_name: (?i).*(f.?MRI|task|BOLD|func|rest).*SBREF.*
+      protocol_name: (?i).*(f.?MRI|task|BOLD|func|rest|RSN).*SBREF.*
     bids:
       <<: *func_parent_func
       suffix: sbref
@@ -1417,7 +1417,7 @@ PAR:
   - provenance:                         # Then catch the bold runs themselves
     attributes:
       <<: *func_parattr
-      protocol_name: (?i).*(f.?MRI|task|BOLD|func|rest).*
+      protocol_name: (?i).*(f.?MRI|task|BOLD|func|rest|RSN).*
     bids: *func_parent_func
     meta: *func_meta
   - provenance:
@@ -2365,7 +2365,7 @@ Nibabel:
   - provenance:                         # First match the SBREF bold runs (the normal bold runs won't have SBREF in the name)
     properties:
       <<: *fileprop
-      filename: (?i).*(f.?MRI|task|BOLD|func|rest|CMRR.*_TR).*SBREF.*
+      filename: (?i).*(f.?MRI|task|BOLD|func|rest|RSN|CMRR.*_TR).*SBREF.*
     attributes: *nibattr
     bids:
       <<: *func_nibent_func
@@ -2388,7 +2388,7 @@ Nibabel:
   - provenance:                         # Then catch the bold runs themselves
     properties:
       <<: *fileprop
-      filename: (?i).*(f.?MRI|task|BOLD|func|rest|CMRR.*_TR).*
+      filename: (?i).*(f.?MRI|task|BOLD|func|rest|RSN|CMRR.*_TR).*
     attributes: *nibattr
     bids: *func_nibent_func
     meta: *func_meta
