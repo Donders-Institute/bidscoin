@@ -17,6 +17,7 @@ import copy
 import logging
 import sys
 import shutil
+import re
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
@@ -56,6 +57,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     bidsmapfile    = Path(bidsmapfile)
     templatefile   = Path(templatefile)
     bidscoinfolder = bidsfolder/'code'/'bidscoin'
+    metasubprefix  = [char for char in subprefix if char in ('^', '$', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')')]
+    metasesprefix  = [char for char in sesprefix if char in ('^', '$', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')')]
 
     # Start logging
     if force:
@@ -65,6 +68,10 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     LOGGER.info('-------------- START BIDSmapper ------------')
     LOGGER.info(f">>> bidsmapper sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmapfile} "
                 f"template={templatefile} plugins={plugins} subprefix={subprefix} sesprefix={sesprefix} store={store} force={force}")
+    if metasubprefix and subprefix!='*':
+        LOGGER.warning(f"Regular expression metacharacters {metasubprefix} found in {subprefix}, this may cause errors later on...")
+    if metasesprefix and sesprefix!='*':
+        LOGGER.warning(f"Regular expression metacharacters {metasesprefix} found in {sesprefix}, this may cause errors later on...")
 
     # Get the heuristics for filling the new bidsmap
     bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile,  bidscoinfolder, plugins)
@@ -192,13 +199,13 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str) -> tuple:
         if not bidsmap[dataformat]:             continue
         for datatype in bidsmap[dataformat]:
             if oldsubprefix:
-                bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace(oldsubprefix, subprefix)
+                bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace(oldsubprefix, subprefix.replace('?','.'))   # Replace the '?' glob wildcard with the '.' regexp wildcard
             else:
-                bidsmap[dataformat]['subject'] = subprefix + bidsmap[dataformat]['subject']     # This may not work for every template, but it's the best we can do
+                bidsmap[dataformat]['subject'] = subprefix.replace('?','.') + bidsmap[dataformat]['subject']                        # This may not work for every template, but it's the best we can do
             if oldsesprefix:
-                bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace(oldsesprefix, sesprefix)
+                bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace(oldsesprefix, sesprefix.replace('?','.'))
             else:
-                bidsmap[dataformat]['session'] = sesprefix + bidsmap[dataformat]['session']
+                bidsmap[dataformat]['session'] = sesprefix.replace('?','.') + bidsmap[dataformat]['session']
             if not isinstance(bidsmap[dataformat][datatype], list): continue
             for run in bidsmap[dataformat][datatype]:
                 run['datasource'].subprefix = subprefix
