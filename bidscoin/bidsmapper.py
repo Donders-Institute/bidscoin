@@ -57,8 +57,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     bidsmapfile    = Path(bidsmapfile)
     templatefile   = Path(templatefile)
     bidscoinfolder = bidsfolder/'code'/'bidscoin'
-    metasubprefix  = [char for char in subprefix if char in ('^', '$', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')')]
-    metasesprefix  = [char for char in sesprefix if char in ('^', '$', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')')]
+    metasubprefix  = [char for char in subprefix if char in ('^', '$', '+', '{', '}', '[', ']', '\\', '|', '(', ')')]
+    metasesprefix  = [char for char in sesprefix if char in ('^', '$', '+', '{', '}', '[', ']', '\\', '|', '(', ')')]
 
     # Start logging
     if force:
@@ -68,9 +68,9 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     LOGGER.info('-------------- START BIDSmapper ------------')
     LOGGER.info(f">>> bidsmapper sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmapfile} "
                 f"template={templatefile} plugins={plugins} subprefix={subprefix} sesprefix={sesprefix} store={store} force={force}")
-    if metasubprefix and subprefix!='*':
+    if metasubprefix:
         LOGGER.warning(f"Regular expression metacharacters {metasubprefix} found in {subprefix}, this may cause errors later on...")
-    if metasesprefix and sesprefix!='*':
+    if metasesprefix:
         LOGGER.warning(f"Regular expression metacharacters {metasesprefix} found in {sesprefix}, this may cause errors later on...")
 
     # Get the heuristics for filling the new bidsmap
@@ -194,18 +194,21 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str) -> tuple:
     bidsmap['Options']['bidscoin']['subprefix'] = subprefix
     bidsmap['Options']['bidscoin']['sesprefix'] = sesprefix
 
+    # Replace the glob wildcards with the regexp wildcards
+    resubprefix = subprefix.replace('*','.*').replace('?','.')
+    resesprefix = sesprefix.replace('*','.*').replace('?','.')
     for dataformat in bidsmap:
         if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (i.e. that have a 'PlugIns' section in the root)
         if not bidsmap[dataformat]:             continue
         for datatype in bidsmap[dataformat]:
             if oldsubprefix:
-                bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace(oldsubprefix, subprefix.replace('?','.'))   # Replace the '?' glob wildcard with the '.' regexp wildcard
+                bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace(oldsubprefix, resubprefix)
             else:
-                bidsmap[dataformat]['subject'] = subprefix.replace('?','.') + bidsmap[dataformat]['subject']                        # This may not work for every template, but it's the best we can do
+                bidsmap[dataformat]['subject'] = resubprefix + bidsmap[dataformat]['subject']    # This may not work for every template, but it's the best we can do
             if oldsesprefix:
-                bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace(oldsesprefix, sesprefix.replace('?','.'))
+                bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace(oldsesprefix, resesprefix)
             else:
-                bidsmap[dataformat]['session'] = sesprefix.replace('?','.') + bidsmap[dataformat]['session']
+                bidsmap[dataformat]['session'] = resesprefix + bidsmap[dataformat]['session']
             if not isinstance(bidsmap[dataformat][datatype], list): continue
             for run in bidsmap[dataformat][datatype]:
                 run['datasource'].subprefix = subprefix
