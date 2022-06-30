@@ -14,7 +14,6 @@ import json
 import logging
 import pandas as pd
 import pydeface.utils as pdu
-import drmaa
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
@@ -32,7 +31,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
     :param subjects:    List of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
     :param force:       If True then images will be processed, regardless if images have already been defaced (i.e. if {"Defaced": True} in the json sidecar file)
     :param output:      Determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images
-    :param cluster:     Flag to submit the deface jobs to the high-performance compute (HPC) cluster
+    :param cluster:     Flag to submit the deface jobs to the high-performance compute (HPC) cluster using the drmaa library
     :param nativespec:  DRMAA native specifications for submitting deface jobs to the HPC cluster
     :param kwargs:      Additional arguments (in dict/json-style) that are passed to pydeface. See examples for usage
     :return:
@@ -54,11 +53,15 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
         if not subjects:
             LOGGER.warning(f"No subjects found in: {bidsdir/'sub-*'}")
     else:
-        subjects = ['sub-' + subject.replace('sub-', '') for subject in subjects]              # Make sure there is a "sub-" prefix
+        subjects = ['sub-' + subject.replace('sub-', '') for subject in subjects]               # Make sure there is a "sub-" prefix
         subjects = [bidsdir/subject for subject in subjects if (bidsdir/subject).is_dir()]
 
     # Prepare the HPC job submission
-    with drmaa.Session() as pbatch:
+    if cluster:
+        from drmaa import Session as drmaasession
+    else:
+        from contextlib import nullcontext as drmaasession                                      # Use a dummy context manager
+    with drmaasession() as pbatch:
         if cluster:
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
@@ -193,7 +196,7 @@ def main():
     parser.add_argument('-o','--output', type=str,
                         help=f"A string that determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images")
     parser.add_argument('-c','--cluster', action='store_true',
-                        help='Flag to submit the deface jobs to the high-performance compute (HPC) cluster')
+                        help='Flag to use the DRMAA library to submit the deface jobs to the high-performance compute (HPC) cluster')
     parser.add_argument('-n','--nativespec', type=str, default='-l walltime=00:30:00,mem=2gb',
                         help='DRMAA native specifications for submitting deface jobs to the HPC cluster')
     parser.add_argument('-a','--args',

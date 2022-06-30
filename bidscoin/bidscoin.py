@@ -464,6 +464,17 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
         LOGGER.error(f"The installed PyQt version does not seem to work for your system:\n{pyqterror}")
         success = False
 
+    # Test the DRMAA configuration (used by pydeface only)
+    try:
+        import pydeface
+        try:
+            import drmaa
+            LOGGER.info('The pydeface / DRMAA library was succesfully imported')
+        except (RuntimeError, OSError, ModuleNotFoundError, ImportError) as drmaaerror:
+            LOGGER.warning(f"The DRMAA library could not be imported. This is OK if you want to run pydeface locally and not use the option to distribute jobs on a compute cluster\n{drmaaerror}")
+    except ModuleNotFoundError:
+        pass
+
     # Show an overview of the bidscoin tools. TODO: test the entry points?
     if not options['plugins']:
         LOGGER.warning('No plugins found in the bidsmap (BIDScoin will likely not do anything)')
