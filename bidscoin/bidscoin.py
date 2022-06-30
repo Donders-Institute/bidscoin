@@ -470,7 +470,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
         try:
             import drmaa
             LOGGER.info('The pydeface / DRMAA library was succesfully imported')
-        except (RuntimeError, OSError, ModuleNotFoundError, ImportError) as drmaaerror:
+        except (RuntimeError, OSError, FileNotFoundError, ModuleNotFoundError, ImportError) as drmaaerror:
             LOGGER.warning(f"The DRMAA library could not be imported. This is OK if you want to run pydeface locally and not use the option to distribute jobs on a compute cluster\n{drmaaerror}")
     except ModuleNotFoundError:
         pass
