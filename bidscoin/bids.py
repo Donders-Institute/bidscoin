@@ -113,7 +113,7 @@ class DataSource:
                 if match:
                     if len(match) > 1:
                         LOGGER.warning(f"Multiple matches {match} found when extracting {tagname} from {self.path.parent.as_posix() + '/'}, using: {match[-1]}")
-                    return match[-1]                            # The last match is most likely the most informative
+                    return match[-1] if match else ''           # The last match is most likely the most informative
             elif tagname == 'filepath':
                 return self.path.parent.as_posix() + '/'
 
@@ -122,7 +122,7 @@ class DataSource:
                 if match:
                     if len(match) > 1:
                         LOGGER.warning(f"Multiple matches {match} found when extracting {tagname} from {self.path.name}, using: {match[0]}")
-                    return match[0]                             # The first match is most likely the most informative (?)
+                    return match[0] if match else ''            # The first match is most likely the most informative (?)
             elif tagname == 'filename':
                 return self.path.name
 
@@ -194,7 +194,7 @@ class DataSource:
                     match = re.findall(pattern, attributeval)
                     if len(match) > 1:
                         LOGGER.warning(f"Multiple matches {match} found when extracting {pattern} from {attributeval}, using: {match[0]}")
-                    attributeval = match[0]     # The first match is most likely the most informative (?)
+                    attributeval = match[0] if match else ''    # The first match is most likely the most informative (?)
 
         except OSError as ioerror:
             LOGGER.warning(f"{ioerror}")
