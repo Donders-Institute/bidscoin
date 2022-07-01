@@ -57,8 +57,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     bidsmapfile    = Path(bidsmapfile)
     templatefile   = Path(templatefile)
     bidscoinfolder = bidsfolder/'code'/'bidscoin'
-    metasubprefix  = [char for char in subprefix if char in ('^', '$', '+', '{', '}', '[', ']', '\\', '|', '(', ')')]
-    metasesprefix  = [char for char in sesprefix if char in ('^', '$', '+', '{', '}', '[', ']', '\\', '|', '(', ')')]
+    metasubprefix  = [char for char in subprefix or '' if char in ('^', '$', '+', '{', '}', '[', ']', '\\', '|', '(', ')')]
+    metasesprefix  = [char for char in sesprefix or '' if char in ('^', '$', '+', '{', '}', '[', ']', '\\', '|', '(', ')')]
 
     # Start logging
     if force:
