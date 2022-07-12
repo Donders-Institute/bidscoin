@@ -325,7 +325,7 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                 for n in (0,1):
                     json_magnitude[n] = jsonfile.parent/jsonfile.name.replace('_phasediff', f"_magnitude{n+1}")
                     if not json_magnitude[n].is_file():
-                        LOGGER.error(f"Could not find expected magnitude{n+1} image associated with: {jsonfile}")
+                        LOGGER.error(f"Could not find expected magnitude{n+1} image associated with: {jsonfile}\nUse the bidseditor to verify that the fmap images that belong together have corresponding BIDS output names")
                     else:
                         with json_magnitude[n].open('r') as json_fid:
                             data = json.load(json_fid)

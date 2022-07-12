@@ -654,6 +654,7 @@ DICOM:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
+      ScanningSequence: GR
       EchoNumbers: '2'
       ImageType: .*'P'.*
     bids:
@@ -664,6 +665,7 @@ DICOM:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
+      ScanningSequence: GR
       EchoNumbers: '1'
       ImageType: .*'M'.*
     bids:
@@ -674,6 +676,7 @@ DICOM:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
+      ScanningSequence: GR
       EchoNumbers: '2'
       ImageType: .*'M'.*
     bids:
@@ -684,6 +687,7 @@ DICOM:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
+      ScanningSequence: GR
       EchoNumbers: '1'
       ImageType: .*'P'.*
     bids:
@@ -694,6 +698,7 @@ DICOM:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
+      ScanningSequence: GR
       EchoNumbers: '2'
       ImageType: .*'P'.*
     bids:
@@ -704,6 +709,7 @@ DICOM:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
+      ScanningSequence: GR
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: fieldmap
@@ -712,6 +718,7 @@ DICOM:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
+      ScanningSequence: GR
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: magnitude

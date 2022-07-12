@@ -849,7 +849,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
     for plugin in plugins if plugins else bidsmap['Options']['plugins']:
         module = bidscoin.import_plugin(plugin)
         if not bidsmap['Options']['plugins'].get(plugin):
-            LOGGER.info(f"Adding default options from the {plugin} plugin")
+            LOGGER.info(f"Adding default bidsmap options from the {plugin} plugin")
             bidsmap['Options']['plugins'][plugin] = module.OPTIONS if 'OPTIONS' in dir(module) else {}
         if 'BIDSMAP' in dir(module) and yamlfile.parent == bidscoin.heuristicsfolder:
             for dataformat, bidsmappings in module.BIDSMAP.items():
@@ -886,7 +886,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
                         for entityname in typegroup['entities']:
                             entitykey = entities[entityname]['entity']
                             if entitykey not in run['bids'] and entitykey not in ('sub','ses'):
-                                LOGGER.info(f"Adding missing {dataformat}>{datatype}>{run['bids']['suffix']} entity key: {entitykey}")
+                                LOGGER.info(f"Adding missing {dataformat}>{datatype}>{run['bids']['suffix']} bidsmap entity key: {entitykey}")
                                 run['bids'][entitykey] = ''
 
     # Validate the bidsmap entries

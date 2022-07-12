@@ -4,12 +4,23 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
+## [3.7.3] - 2022-07-12
+
 ### Added
 - The usage of json sidecar files as a datasource for attribute values
+- A template bidsmap for the [ScanSessionTool](https://github.com/fladd/ScanSessionTool)
+- Usage of json sidecar files as an attribute source
 
 ### Changed
 - Dicomsort now searches recursively over the sessionfolder
+- The dcm2niix2bids plugin now searches recursively for DICOM Series folders
 - Images that have already been defaced are now skipped
+
+### Fixed
+- The non-HPC use of pydeface no longer requires DRMAA installation
+- Account for `*` and `?` wildcards in the sub/ses prefixes in the bidsmapper
+- Account for dynamic values with non-matching regular expressions (special thanks to Mateusz Pawlik)
+- Various minor bugs
 
 ## [3.7.2] - 2022-03-13
 
@@ -306,7 +317,8 @@ A first stable release of BIDScoin :-)
 ### To do
 * Add support for non-imaging data
 
-[dev]: https://github.com/Donders-Institute/bidscoin/compare/3.7.2...HEAD
+[dev]: https://github.com/Donders-Institute/bidscoin/compare/3.7.3...HEAD
+[3.7.3]: https://github.com/Donders-Institute/bidscoin/compare/3.7.2...3.7.3
 [3.7.2]: https://github.com/Donders-Institute/bidscoin/compare/3.7.1...3.7.2
 [3.7.1]: https://github.com/Donders-Institute/bidscoin/compare/3.7.0...3.7.1
 [3.7.0]: https://github.com/Donders-Institute/bidscoin/compare/3.6.3...3.7.0
