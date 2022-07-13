@@ -202,18 +202,18 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path) ->
     resesprefix    = sesprefix.replace('*', '' if sesprefix=='*' else '.*').replace('?', '.')
     for dataformat in bidsmap:
         if not bidsmap[dataformat] or dataformat=='Options': continue
-        if '<<filepath:' in bidsmap[dataformat]['subject']:
+        if bidsmap[dataformat]['subject'].startswith('<<filepath:'):
             if oldresubprefix:
                 bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace(oldresubprefix, resubprefix)
             else:
-                bidsmap[dataformat]['subject'] = resubprefix + bidsmap[dataformat]['subject']       # This may not work for every template, but it's the best we can do
+                LOGGER.warning(f"Could not update the bidsmap subject label expression: {bidsmap[dataformat]['subject']}")
             if not bidsmap[dataformat]['subject'].startswith(f"<<filepath:.*/{rawfolder.name}"):    # NB: Don't prepend the fullpath of rawfolder because of potential data unpacking in /tmp
                 bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace('<<filepath:', f"<<filepath:.*/{rawfolder.name}")
-        if '<<filepath:' in bidsmap[dataformat]['session']:
+        if bidsmap[dataformat]['session'].startswith('<<filepath:'):
             if oldresesprefix:
                 bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace(oldresubprefix, resubprefix).replace(oldresesprefix, resesprefix)
             else:
-                bidsmap[dataformat]['session'] = resesprefix + bidsmap[dataformat]['session']
+                LOGGER.warning(f"Could not update the bidsmap session label expression: {bidsmap[dataformat]['session']}")
             if not bidsmap[dataformat]['session'].startswith(f"<<filepath:.*/{rawfolder.name}"):
                 bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace('<<filepath:', f"<<filepath:.*/{rawfolder.name}")
         for datatype in bidsmap[dataformat]:
