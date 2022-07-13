@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
-## [3.7.3] - 2022-07-12
+## [3.7.3] - 2022-07-13
 
 ### Added
 - The usage of json sidecar files as a datasource for attribute values
