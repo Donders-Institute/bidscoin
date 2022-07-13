@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file. The format 
 - Dicomsort now searches recursively over the sessionfolder
 - The dcm2niix2bids plugin now searches recursively for DICOM Series folders
 - Images that have already been defaced are now skipped
+- Prepend the rawfolder name & subprefix for more robust subject- / session-label filepath extraction
 
 ### Fixed
 - The non-HPC use of pydeface no longer requires DRMAA installation
