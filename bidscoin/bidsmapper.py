@@ -96,7 +96,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                 bidsmap_new[dataformat][datatype] = None
 
     # Store/retrieve the empty or user-defined sub-/ses-prefix
-    subprefix, sesprefix = setprefix(bidsmap_new, subprefix, sesprefix)
+    subprefix, sesprefix = setprefix(bidsmap_new, subprefix, sesprefix, rawfolder)
 
     # Start with an empty skeleton if we didn't have an old bidsmap
     if not bidsmap_old:
@@ -175,13 +175,14 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     bidscoin.reporterrors()
 
 
-def setprefix(bidsmap: dict, subprefix: str, sesprefix: str) -> tuple:
+def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path) -> tuple:
     """
     Set the prefix in the Options, subject, session and in all the run['datasource'] objects
 
     :param bidsmap:     The bidsmap with the data
     :param subprefix:   The subprefix (take value from bidsmap if empty)
     :param sesprefix:   The sesprefix (take value from bidsmap if empty)
+    :param rawfolder:   The root folder-name of the sub/ses/data/file tree containing the source data files
     :return:            A (subprefix, sesprefix) tuple
     """
 
@@ -195,20 +196,27 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str) -> tuple:
     bidsmap['Options']['bidscoin']['sesprefix'] = sesprefix
 
     # Replace the glob wildcards with the regexp wildcards
-    resubprefix = subprefix.replace('*','.*').replace('?','.')
-    resesprefix = sesprefix.replace('*','.*').replace('?','.')
+    oldresubprefix = oldsubprefix.replace('*', '.*').replace('?', '.')
+    oldresesprefix = oldsesprefix.replace('*', '.*').replace('?', '.')
+    resubprefix    = subprefix.replace('*', '' if subprefix=='*' else '.*').replace('?', '.')
+    resesprefix    = sesprefix.replace('*', '' if sesprefix=='*' else '.*').replace('?', '.')
     for dataformat in bidsmap:
-        if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (i.e. that have a 'PlugIns' section in the root)
-        if not bidsmap[dataformat]:             continue
-        for datatype in bidsmap[dataformat]:
-            if oldsubprefix:
-                bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace(oldsubprefix, resubprefix)
+        if not bidsmap[dataformat] or dataformat=='Options': continue
+        if '<<filepath:' in bidsmap[dataformat]['subject']:
+            if oldresubprefix:
+                bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace(oldresubprefix, resubprefix)
             else:
-                bidsmap[dataformat]['subject'] = resubprefix + bidsmap[dataformat]['subject']    # This may not work for every template, but it's the best we can do
-            if oldsesprefix:
-                bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace(oldsesprefix, resesprefix)
+                bidsmap[dataformat]['subject'] = resubprefix + bidsmap[dataformat]['subject']       # This may not work for every template, but it's the best we can do
+            if not bidsmap[dataformat]['subject'].startswith(f"<<filepath:.*/{rawfolder.name}"):    # NB: Don't prepend the fullpath of rawfolder because of potential data unpacking in /tmp
+                bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace('<<filepath:', f"<<filepath:.*/{rawfolder.name}")
+        if '<<filepath:' in bidsmap[dataformat]['session']:
+            if oldresesprefix:
+                bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace(oldresubprefix, resubprefix).replace(oldresesprefix, resesprefix)
             else:
                 bidsmap[dataformat]['session'] = resesprefix + bidsmap[dataformat]['session']
+            if not bidsmap[dataformat]['session'].startswith(f"<<filepath:.*/{rawfolder.name}"):
+                bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace('<<filepath:', f"<<filepath:.*/{rawfolder.name}")
+        for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue
             for run in bidsmap[dataformat][datatype]:
                 run['datasource'].subprefix = subprefix
