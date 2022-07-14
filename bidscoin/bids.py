@@ -799,7 +799,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
     """
 
     # Input checking
-    if not folder.name:
+    if not folder.name or not folder.is_dir():
         folder = bidscoin.heuristicsfolder
     if not yamlfile.name:
         yamlfile = folder/'bidsmap.yaml'
