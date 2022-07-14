@@ -139,9 +139,9 @@ class DataSource:
 
             if tagname == 'nrfiles' and self.path.is_file():
                 if run:                                         # Currently not used but keep the option open for future use
-                    def match(file): return ((match_attribute(file.parent,         run['properties']['filepath']) or not run['properties']['filepath']) and
-                                             (match_attribute(file.name,           run['properties']['filename']) or not run['properties']['filename']) and
-                                             (match_attribute(file.stat().st_size, run['properties']['filesize']) or not run['properties']['filesize']))
+                    def match(file): return ((match_runvalue(file.parent, run['properties']['filepath']) or not run['properties']['filepath']) and
+                                             (match_runvalue(file.name, run['properties']['filename']) or not run['properties']['filename']) and
+                                             (match_runvalue(file.stat().st_size, run['properties']['filesize']) or not run['properties']['filesize']))
                     return len([file for file in self.path.parent.iterdir() if match(file)])
                 else:
                     return len(list(self.path.parent.iterdir()))
@@ -157,7 +157,7 @@ class DataSource:
 
         :param attributekey: The attribute key for which a value is read from the json-file or from the datasource. A colon-separated regular expression can be appended to the attribute key (same as for the `filepath` and `filename` properties)
         :param validregexp:  If True, the regexp meta-characters in the attribute value (e.g. '*') are replaced by '.',
-                             e.g. to prevent compile errors in match_attribute()
+                             e.g. to prevent compile errors in match_runvalue()
         :return:             The attribute value or '' if the attribute could not be read from the datasource. NB: values are always converted to strings
         """
 
@@ -185,7 +185,7 @@ class DataSource:
             # Apply the regular expression to the attribute value
             if attributeval:
                 if validregexp:
-                    try:            # Strip meta-characters to prevent match_attribute() errors
+                    try:            # Strip meta-characters to prevent match_runvalue() errors
                         re.compile(attributeval)
                     except re.error:
                         for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
@@ -1086,8 +1086,8 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
             # Get a clean run (remove comments to avoid overly complicated commentedMaps from ruamel.yaml)
             run_ = get_run_(datasource.path, bidsmap=bidsmap)
 
-            for filekey, filevalue in run['properties'].items():
-                run_['properties'][filekey] = filevalue
+            for propkey, propvalue in run['properties'].items():
+                run_['properties'][propkey] = propvalue
 
             for attrkey, attrvalue in run['attributes'].items():
                 if datasource.path.name:
@@ -1247,18 +1247,18 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, run: dict, clean: bool=T
         LOGGER.exception(f"Number of runs in bidsmap['{dataformat}'] changed unexpectedly: {num_runs_in} -> {num_runs_out}")
 
 
-def match_attribute(attribute, pattern) -> bool:
+def match_runvalue(attribute, pattern) -> bool:
     """
     Match the value items with the attribute string using regexp. If both attribute
     and values are a list then they are directly compared as is, else they are converted
     to a string
 
     Examples:
-        match_attribute('my_pulse_sequence_name', 'filename')   -> False
-        match_attribute([1,2,3], [1,2,3])                       -> True
-        match_attribute([1,2,3], '[1, 2, 3]')                   -> True
-        match_attribute('my_pulse_sequence_name', '^my.*name$') -> True
-        match_attribute('T1_MPRage', '(?i).*(MPRAGE|T1w).*'     -> True
+        match_runvalue('my_pulse_sequence_name', 'filename')   -> False
+        match_runvalue([1,2,3], [1,2,3])                       -> True
+        match_runvalue([1,2,3], '[1, 2, 3]')                   -> True
+        match_runvalue('my_pulse_sequence_name', '^my.*name$') -> True
+        match_runvalue('T1_MPRage', '(?i).*(MPRAGE|T1w).*'     -> True
 
     :param attribute:   The long string that is being searched in (e.g. a DICOM attribute)
     :param pattern:     A re.fullmatch regular expression pattern
@@ -1322,7 +1322,7 @@ def exist_run(bidsmap: dict, datatype: str, run_item: dict, matchbidslabels: boo
         for matching in ('properties', 'attributes'):
             for itemkey, itemvalue in run_item[matching].items():
                 value = run[matching].get(itemkey)          # Matching bids-labels which exist in one datatype but not in the other -> None
-                match = match and match_attribute(itemvalue, value)
+                match = match and match_runvalue(itemvalue, value)
                 if not match:
                     break                                   # There is no point in searching further within the run_item now that we've found a mismatch
 
@@ -1440,15 +1440,15 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
             run_  = get_run_(datasource.path, dataformat=datasource.dataformat, datatype=datatype, bidsmap=bidsmap)
 
             # Try to see if the sourcefile matches all of the filesystem properties
-            for filekey, filevalue in run['properties'].items():
+            for propkey, propvalue in run['properties'].items():
 
                 # Check if the attribute value matches with the info from the sourcefile
-                if filevalue:
-                    sourcevalue = datasource.properties(filekey)
-                    match       = match and match_attribute(sourcevalue, filevalue)
+                if propvalue:
+                    sourcevalue = datasource.properties(propkey)
+                    match       = match and match_runvalue(sourcevalue, propvalue)
 
                 # Don not fill the empty attribute with the info from the sourcefile but keep the matching expression
-                run_['properties'][filekey] = filevalue
+                run_['properties'][propkey] = propvalue
 
             # Try to see if the sourcefile matches all of the attributes and fill all of them
             for attrkey, attrvalue in run['attributes'].items():
@@ -1456,7 +1456,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
                 # Check if the attribute value matches with the info from the sourcefile
                 sourcevalue = datasource.attributes(attrkey, validregexp=True)
                 if attrvalue:
-                    match = match and match_attribute(sourcevalue, attrvalue)
+                    match = match and match_runvalue(sourcevalue, attrvalue)
 
                 # Fill the empty attribute with the info from the sourcefile
                 run_['attributes'][attrkey] = sourcevalue
