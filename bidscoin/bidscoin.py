@@ -477,7 +477,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
         pass
 
     # Show an overview of the bidscoin tools. TODO: test the entry points?
-    if not options['plugins']:
+    if options and not options.get('plugins'):
         LOGGER.warning('No plugins found in the bidsmap (BIDScoin will likely not do anything)')
     list_executables(True)
 
@@ -488,7 +488,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
         list_plugins(True)
         for plugin in (bidscoinfolder/'plugins').glob('*.py'):
             if plugin.stem != '__init__':
-                success = test_plugin(plugin.stem, options['plugins'].get(plugin.stem,{})) and success
+                success = test_plugin(plugin.stem, options['plugins'].get(plugin.stem,{}) if options else {}) and success
 
     return success
 
