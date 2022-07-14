@@ -1045,20 +1045,16 @@ DICOM:
   - provenance:
     attributes:
       <<: *leaveout_attributes_dicom
-    properties: &fileprop         # This is an optional (stub) entry of properties matching (could be added to any run-item)
-      filepath: .*/TBV/.*         # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
-      filename:                   # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
-      filesize:                   # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
-      nrfiles:                    # Number of files in the folder
+    properties:
+      <<: *fileprop
+      filepath: .*/TBV/.*                   # Exclude all TBV data
     bids: *leaveout_bids_dicom
   - provenance:
     attributes:
       <<: *leaveout_attributes_dicom
-    properties: &fileprop         # This is an optional (stub) entry of properties matching (could be added to any run-item)
-      filepath: .*/BV/.*          # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
-      filename:                   # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
-      filesize:                   # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
-      nrfiles:                    # Number of files in the folder
+    properties:
+      <<: *fileprop
+      filepath: .*/BV/.*                    # Exclude all BV data
     bids: *leaveout_bids_dicom
 
 
