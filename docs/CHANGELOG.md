@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file. The format 
 - Prepend the rawfolder name & subprefix for more robust subject- / session-label filepath extraction
 
 ### Fixed
+- Pydeface not parsing subject / session labels from the filepath
 - The non-HPC use of pydeface no longer requires DRMAA installation
 - Account for `*` and `?` wildcards in the sub/ses prefixes in the bidsmapper
 - Account for dynamic values with non-matching regular expressions (special thanks to Mateusz Pawlik)
