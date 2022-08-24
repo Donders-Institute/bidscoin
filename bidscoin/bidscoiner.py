@@ -23,6 +23,7 @@ import pandas as pd
 import json
 import logging
 import shutil
+import urllib.request
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
@@ -91,11 +92,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     # Create a README file if it does not exist
     readme_file = bidsfolder/'README'
     if not readme_file.is_file():
-        LOGGER.info(f"Creating README file: {readme_file}")
-        readme_file.write_text(f"A free form text ( README ) describing the dataset in more details that SHOULD be provided\n\n"
-                               f"The raw BIDS data was created using BIDScoin {localversion}\n"
-                               f"All provenance information and settings can be found in ./code/bidscoin\n"
-                               f"For more information see: https://github.com/Donders-Institute/bidscoin\n")
+        LOGGER.info(f"Creating a template README file (adjust it to your needs): {readme_file}")
+        urllib.request.urlretrieve('https://raw.githubusercontent.com/bids-standard/bids-starter-kit/main/templates/README.MD', readme_file)
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
     bidsmap, _  = bids.load_bidsmap(bidsmapfile, bidsfolder/'code'/'bidscoin')
