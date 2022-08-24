@@ -93,7 +93,15 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     readme_file = bidsfolder/'README'
     if not readme_file.is_file():
         LOGGER.info(f"Creating a template README file (adjust it to your needs): {readme_file}")
-        urllib.request.urlretrieve('https://raw.githubusercontent.com/bids-standard/bids-starter-kit/main/templates/README.MD', readme_file)
+        try:
+            urllib.request.urlretrieve('https://raw.githubusercontent.com/bids-standard/bids-starter-kit/main/templates/README.MD', readme_file)
+        except urllib.error.URLError:
+            readme_file.write_text(
+                f"A free form text ( README ) describing the dataset in more details that SHOULD be provided. For an example, see e.g.:\n"
+                f"https://github.com/bids-standard/bids-starter-kit/blob/main/templates/README.MD\n\n"
+                f"The raw BIDS data was created using BIDScoin {localversion}\n"
+                f"All provenance information and settings can be found in ./code/bidscoin\n"
+                f"For more information see: https://github.com/Donders-Institute/bidscoin\n")
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
     bidsmap, _  = bids.load_bidsmap(bidsmapfile, bidsfolder/'code'/'bidscoin')
