@@ -331,8 +331,12 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         if   sex == '0': personals['sex'] = 'O'
         elif sex == '1': personals['sex'] = 'M'
         elif sex == '2': personals['sex'] = 'F'
-        age = dateutil.parser.parse(datasource.attributes('rhr_rh_scan_date')) - dateutil.parser.parse(datasource.attributes('rhe_dateofbirth'))
-        age = str(age.days) + 'D'
+        try:
+            age = dateutil.parser.parse(datasource.attributes('rhr_rh_scan_date')) - dateutil.parser.parse(datasource.attributes('rhe_dateofbirth'))
+            age = str(age.days) + 'D'
+        except dateutil.parser.ParserError as dateerror:
+            pass
+
     if   age.endswith('D'): age = float(age.rstrip('D')) / 365.2524
     elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
     elif age.endswith('M'): age = float(age.rstrip('M')) / 12

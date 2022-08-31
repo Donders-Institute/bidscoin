@@ -262,10 +262,14 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
         fmaps = [fmap.relative_to(bidsses).as_posix() for fmap in sorted((bidsses/'fmap').glob('sub-*.nii*'))]
         for fmap in fmaps:
 
+            # Skip unexpected fieldmaps
+            if fmap not in scans_table.index:
+                continue
+
             # Check if there are multiple runs and get the lower- and upperbound from the AcquisitionTime
             runindex   = bids.get_bidsvalue(fmap, 'run')
-            prevfmap   = bids.get_bidsvalue(fmap, 'run', int(runindex)-1)
-            nextfmap   = bids.get_bidsvalue(fmap, 'run', int(runindex)+1)
+            prevfmap   = bids.get_bidsvalue(fmap, 'run', str(int(runindex) - 1))
+            nextfmap   = bids.get_bidsvalue(fmap, 'run', str(int(runindex) + 1))
             acqtime    = scans_table.loc[fmap, 'acq_time']
             fmaptime   = dateutil.parser.parse(acqtime if isinstance(acqtime,str) else '1925-01-01')
             lowerbound = fmaptime.replace(hour=0,  minute=0,  second=0)

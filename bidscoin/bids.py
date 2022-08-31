@@ -1511,7 +1511,7 @@ def get_derivatives(datatype: str) -> list:
 def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False, cleanup: bool=True) -> str:
     """
     Composes a filename as it should be according to the BIDS standard using the BIDS keys in run. The bids values are
-    dynamically updated and cleaned, and invalid bids keys are ignored
+    dynamically updated and cleaned, and invalid bids keys and empty bids values are ignored
 
     :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001')
     :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01'). Can be left empty
@@ -1552,7 +1552,7 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False, cleanup
     return bidsname
 
 
-def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue='') -> Union[Path, str]:
+def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') -> Union[Path, str]:
     """
     Sets the bidslabel, i.e. '*_bidskey-*_' is replaced with '*_bidskey-bidsvalue_'. If the key is not in the bidsname
     then the newvalue is appended to the acquisition label. If newvalue is empty (= default), then the parsed existing
