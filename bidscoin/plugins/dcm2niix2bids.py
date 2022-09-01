@@ -271,8 +271,22 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 source    = source)
             if not bidscoin.run_command(command):
                 if not list(outfolder.glob(f"{bidsname}.nii*")): continue
-            if list(outfolder.glob(f"{bidsname}a.nii*")):
-                LOGGER.warning(f"Unexpected variants of {outfolder/bidsname}* were produced by dcm2niix. Possibly this can be remedied by using the dcm2niix -i option (to ignore derived, localizer and 2D images)")
+
+            # Handle the ABCD GE pepolar sequence
+            extrafile = list(outfolder.glob(f"{bidsname}a.nii*"))
+            ext = ''.join(extrafile[0].suffixes)
+            if extrafile:
+                # Load the json meta-data to see if it's a pepolar sequence
+                with extrafile[0].with_suffix('').with_suffix('.json').open('r') as json_fid:
+                    jsondata = json.load(json_fid)
+                if 'PhaseEncodingPolarityGE' in jsondata:
+                    invfile = bids.get_bidsvalue(outfolder/(bidsname+ext), 'dir', bids.get_bidsvalue(bidsname,'dir') + jsondata['PhaseEncodingPolarityGE'])
+                    LOGGER.info(f"Renaming GE reversed polarity image: {extrafile[0]} -> {invfile}")
+                    extrafile[0].rename(invfile)
+                    extrafile[0].with_suffix('').with_suffix('.json').rename(invfile.with_suffix('').with_suffix('.json'))
+                    jsonfiles.append(invfile.with_suffix('').with_suffix('.json'))
+                else:
+                    LOGGER.warning(f"Unexpected variants of {outfolder/bidsname}* were produced by dcm2niix. Possibly this can be remedied by using the dcm2niix -i option (to ignore derived, localizer and 2D images)")
 
             # Replace uncropped output image with the cropped one
             if '-x y' in options.get('args',''):
