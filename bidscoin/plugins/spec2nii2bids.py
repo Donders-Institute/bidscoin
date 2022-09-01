@@ -66,7 +66,7 @@ def is_sourcefile(file: Path) -> str:
         return 'Twix'
     elif suffix == '.spar':
         return 'SPAR'
-    elif suffix == '.7':
+    elif suffix == '.7' and not bids.is_dicomfile(file):
         return 'Pfile'
 
     return ''
