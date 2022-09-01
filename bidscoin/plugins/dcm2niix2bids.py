@@ -274,12 +274,12 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
             # Handle the ABCD GE pepolar sequence
             extrafile = list(outfolder.glob(f"{bidsname}a.nii*"))
-            ext = ''.join(extrafile[0].suffixes)
             if extrafile:
                 # Load the json meta-data to see if it's a pepolar sequence
                 with extrafile[0].with_suffix('').with_suffix('.json').open('r') as json_fid:
                     jsondata = json.load(json_fid)
                 if 'PhaseEncodingPolarityGE' in jsondata:
+                    ext     = ''.join(extrafile[0].suffixes)
                     invfile = bids.get_bidsvalue(outfolder/(bidsname+ext), 'dir', bids.get_bidsvalue(bidsname,'dir') + jsondata['PhaseEncodingPolarityGE'])
                     LOGGER.info(f"Renaming GE reversed polarity image: {extrafile[0]} -> {invfile}")
                     extrafile[0].rename(invfile)
