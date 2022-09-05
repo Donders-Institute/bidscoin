@@ -6,7 +6,6 @@ readme        = (Path(__file__).parent/'README.rst').read_text()
 requirements  = (Path(__file__).parent/'requirements.txt').read_text().splitlines()
 phys2bidscoin = ['bioread>=1.0.5', 'pymatreader>=0.0.24', 'duecredit', 'phys2bids>=2.0.0,<3.0.0']
 spec2nii2bids = ['spec2nii']
-pet2bids      = ['pet2bids']
 deface        = ['pydeface', 'drmaa']
 all_extras    = phys2bidscoin + spec2nii2bids + deface
 
@@ -20,7 +19,6 @@ setup(name                           = 'bidscoin',          # Required
       extras_require                 = {'all':           all_extras,
                                         'phys2bidscoin': phys2bidscoin,
                                         'spec2nii2bids': spec2nii2bids,
-                                        'pet2bids':      pet2bids,
                                         'deface':        deface},
       package_data                   = {'': ['*version.txt', '*.yaml', 'bidscoin_logo.png', 'bidscoin.ico', 'rightarrow.png']},
       entry_points                   = {'console_scripts': ['bidscoin         = bidscoin.bidscoin:main',
