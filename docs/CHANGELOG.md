@@ -3,6 +3,8 @@
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [dev]
+- Added support for the ABCD GE pepolar pulse sequence
+- Remove the DCCN specific dcm2niix module usage in the bidsmap template
 
 ## [3.7.3] - 2022-07-13
 
