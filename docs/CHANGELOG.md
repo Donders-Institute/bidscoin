@@ -3,8 +3,14 @@
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [dev]
+
+### Added
 - Added support for the ABCD GE pepolar pulse sequence
+ 
+### Changed
 - Remove the DCCN specific dcm2niix module usage in the bidsmap template
+- Add `-l n` to the dcm2niix arguments to revert old UIN16 -> INT16 behaviour (otherwise fmriprep outputs are twice as large)
+- No longer enforce BIDS compliance on .bidsignore datatypes
 
 ## [3.7.3] - 2022-07-13
 

@@ -206,7 +206,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     if unpacked:
                         shutil.rmtree(sesfolder)
 
-    # Re-read the participants_table and store the collected personals in the json sidecar-file
+    # Re-read the participants_table (the plugins may have changed it) and store the collected personals in the json sidecar-file
     if participants_tsv.is_file():
         participants_table = pd.read_csv(participants_tsv, sep='\t')
         participants_table.set_index(['participant_id'], verify_integrity=True, inplace=True)

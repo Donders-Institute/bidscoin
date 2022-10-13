@@ -226,6 +226,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
             LOGGER.info(f"Leaving out: {source}")
             continue
+        bidsignore = datasource.datatype in bidsmap['Options']['bidscoin']['bidsignore']
 
         # Check if we already know this run
         if not match:
@@ -242,7 +243,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        bidsname  = bids.get_bidsname(subid, sesid, run, runtime=True)
+        bidsname  = bids.get_bidsname(subid, sesid, run, bidsignore, runtime=True)
         runindex  = run['bids'].get('run', '')
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(outfolder, bidsname)
@@ -297,15 +298,17 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                     dcm2niixfile.replace(newbidsfile)
 
             # Rename all files that got additional postfixes from dcm2niix. See: https://github.com/rordenlab/dcm2niix/blob/master/FILENAMING.md
-            dcm2niixpostfixes = ('_c', '_i', '_Eq', '_real', '_imaginary', '_MoCo', '_t', '_Tilt', '_e', '_ph', '_ADC', '_fieldmaphz')
+            dcm2niixpostfixes = ('_c', '_i', '_Eq', '_real', '_imaginary', '_MoCo', '_t', '_Tilt', '_e', '_ph', '_ADC', '_fieldmaphz')      #_c%d, _e%d and _ph (and any combination of these in that order) are for multi-coil data, multi-echo data and phase data
             dcm2niixfiles     = sorted(set([dcm2niixfile for dcm2niixpostfix in dcm2niixpostfixes for dcm2niixfile in outfolder.glob(f"{bidsname}*{dcm2niixpostfix}*.nii*")]))
             if not jsonfiles[0].is_file() and dcm2niixfiles:                                                    # Possibly renamed by dcm2niix, e.g. with multi-echo data (but not always for the first echo)
                 jsonfiles.pop(0)
             for dcm2niixfile in dcm2niixfiles:
+
+                # Strip each dcm2niix postfix and assign it to bids entities in a newly constructed bidsname
                 ext         = ''.join(dcm2niixfile.suffixes)
-                postfixes   = str(dcm2niixfile).split(bidsname)[1].rsplit(ext)[0].split('_')[1:]
-                newbidsname = dcm2niixfile.name                                                                 # Strip the additional postfixes and assign them to bids entities in the for-loop below
-                for postfix in postfixes:                                                                       # dcm2niix postfixes _c%d, _e%d and _ph (and any combination of these in that order) are for multi-coil data, multi-echo data and phase data
+                postfixes   = dcm2niixfile.name.split(bidsname)[1].rsplit(ext)[0].split('_')[1:]
+                newbidsname = dcm2niixfile.name
+                for postfix in postfixes:
 
                     # Patch the echo entity in the newbidsname with the dcm2niix echo info                      # NB: We can't rely on the bids-entity info here because manufacturers can e.g. put multiple echos in one series / run-folder
                     if 'echo' in run['bids'] and postfix.startswith('e'):
@@ -313,7 +316,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                         if not echonr:
                             echonr = '1'
                         if echonr.isnumeric():
-                            newbidsname = bids.insert_bidskeyval(newbidsname, 'echo', echonr.lstrip('0'))       # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
+                            newbidsname = bids.insert_bidskeyval(newbidsname, 'echo', echonr.lstrip('0'), bidsignore)       # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
                         else:
                             LOGGER.error(f"Unexpected postix '{postfix}' found in {dcm2niixfile}")
                             newbidsname = bids.get_bidsvalue(newbidsname, 'dummy', postfix)                     # Append the unknown postfix to the acq-label
@@ -321,11 +324,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                     # Patch the phase entity in the newbidsname with the dcm2niix mag/phase info
                     elif 'part' in run['bids'] and postfix in ('ph','real','imaginary'):                        # e.g. part: ['', 'mag', 'phase', 'real', 'imag', 0]
                         if postfix == 'ph':
-                            newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'phase')
+                            newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'phase', bidsignore)
                         if postfix == 'real':
-                            newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'real')
+                            newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'real', bidsignore)
                         if postfix == 'imaginary':
-                            newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'imag')
+                            newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'imag', bidsignore)
 
                     # Patch fieldmap images (NB: datatype=='fmap' is too broad, see the fmap.yaml file)
                     elif run['bids']['suffix'] in bids.bidsdatatypes['fmap'][0]['suffixes']:                    # i.e. in ('magnitude','magnitude1','magnitude2','phase1','phase2','phasediff','fieldmap'). TODO: Make this robust for future BIDS versions
@@ -368,9 +371,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
                     # The ADC images are not BIDS compliant
                     if postfix == 'ADC':
-                        LOGGER.warning(f"The {newbidsname} image is most likely not BIDS-compliant -- you can probably delete it safely and update the scants.tsv file")
+                        LOGGER.warning(f"The {newbidsname} image is not BIDS-compliant -- you can probably delete it safely and update {scans_tsv}")
 
-                # Save the nifti file with a new name
+                # Save the nifti file with the newly constructed name
                 if runindex.startswith('<<') and runindex.endswith('>>'):
                     newbidsname = bids.increment_runindex(outfolder, newbidsname, '')                           # Update the runindex now that the acq-label has changed
                 newbidsfile = outfolder/newbidsname
@@ -431,7 +434,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             outputfile = [file for file in jsonfile.parent.glob(jsonfile.stem + '.*') if file.suffix in ('.nii','.gz')]     # Find the corresponding nifti/tsv.gz file (there should be only one, let's not make assumptions about the .gz extension)
             if not outputfile:
                 LOGGER.exception(f"No data-file found with {jsonfile} when updating {scans_tsv}")
-            elif datasource.datatype not in bidsmap['Options']['bidscoin']['bidsignore'] and not run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):
+            elif not bidsignore and not run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):
                 acq_time = ''
                 if dataformat == 'DICOM':
                     acq_time = f"{datasource.attributes('AcquisitionDate')}T{datasource.attributes('AcquisitionTime')}"

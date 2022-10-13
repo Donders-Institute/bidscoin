@@ -1508,7 +1508,7 @@ def get_derivatives(datatype: str) -> list:
         return []
 
 
-def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False, cleanup: bool=True) -> str:
+def get_bidsname(subid: str, sesid: str, run: dict, bidsignore: bool, runtime: bool=False, cleanup: bool=True) -> str:
     """
     Composes a filename as it should be according to the BIDS standard using the BIDS keys in run. The bids values are
     dynamically updated and cleaned, and invalid bids keys and empty bids values are ignored
@@ -1516,6 +1516,7 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False, cleanup
     :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001')
     :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01'). Can be left empty
     :param run:         The run mapping with the BIDS key-value pairs
+    :param bidsignore:  Removes non-BIDS-compliant bids-keys if True
     :param runtime:     Replaces dynamic bidsvalues if True
     :param cleanup:     Removes non-BIDS-compliant characters if True
     :return:            The composed BIDS file-name (without file-extension)
@@ -1532,7 +1533,11 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False, cleanup
 
     # Compose a bidsname from valid BIDS entities only
     bidsname = f"sub-{subid}{add_prefix('_ses-', sesid)}"                       # Start with the subject/session identifier
-    for entitykey in [entities[entity]['entity'] for entity in entitiesorder]:
+    if bidsignore:
+        entitiekeys = [key for key in run['bids'] if key!='suffix']             # Use the keys from th run
+    else:
+        entitiekeys = [entities[entity]['entity'] for entity in entitiesorder]  # Use the keys from the BIDS schema
+    for entitykey in entitiekeys:
         bidsvalue = run['bids'].get(entitykey)                                  # Get the entity data from the run
         if not bidsvalue:
             bidsvalue = ''
@@ -1607,13 +1612,14 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') ->
         return oldvalue
 
 
-def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str) -> Union[Path, str]:
+def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, bidsignore: bool) -> Union[Path, str]:
     """
     Inserts or replaces the bids key-label pair into the bidsfile. All invalid keys are removed from the name
 
     :param bidsfile:    The bidsname (e.g. as returned from get_bidsname or fullpath)
     :param bidskey:     The name of the new bidskey, e.g. 'echo' or 'suffix'
     :param newvalue:    The value of the new bidskey
+    :param bidsignore:  Removes non-BIDS-compliant bids-keys if True
     :return:            The bidsname with the new bids key-value pair
     """
 
@@ -1648,7 +1654,7 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str) -
         run['bids'][bidskey] = newvalue
 
     # Compose the new filename
-    newbidsfile = (bidspath/get_bidsname(subid, sesid, run, cleanup=False)).with_suffix(bidsext)
+    newbidsfile = (bidspath/get_bidsname(subid, sesid, run, bidsignore, cleanup=False)).with_suffix(bidsext)
 
     if isinstance(bidsfile, str):
         newbidsfile = str(newbidsfile)

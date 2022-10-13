@@ -114,6 +114,7 @@ class MainWindow(QMainWindow):
         self.bidscoindatatypes = input_bidsmap['Options']['bidscoin'].get('datatypes',[])
         self.unknowndatatypes  = input_bidsmap['Options']['bidscoin'].get('unknowntypes',[])
         self.ignoredatatypes   = input_bidsmap['Options']['bidscoin'].get('ignoretypes',[])
+        self.bidsignore        = input_bidsmap['Options']['bidscoin'].get('bidsignore','')
 
         # Set-up the tabs, add the tables and put the bidsmap data in them
         tabwidget = self.tabwidget = QtWidgets.QTabWidget()
@@ -473,7 +474,7 @@ class MainWindow(QMainWindow):
                 subid        = output_bidsmap[dataformat]['subject']
                 sesid        = output_bidsmap[dataformat]['session']
                 subid, sesid = run['datasource'].subid_sesid(subid, sesid if sesid else '')
-                bidsname     = bids.get_bidsname(subid, sesid, run)
+                bidsname     = bids.get_bidsname(subid, sesid, run, datatype in self.bidsignore)
                 if run['bids'].get('suffix') in bids.get_derivatives(datatype):
                     session  = self.bidsfolder/'derivatives'/'[manufacturer]'/subid/sesid
                 else:
@@ -867,6 +868,7 @@ class EditWindow(QDialog):
         self.bidscoindatatypes = [datatype for datatype in bidsmap['Options']['bidscoin'].get('datatypes',[])    if datatype in template_bidsmap[self.dataformat]]
         self.unknowndatatypes  = [datatype for datatype in bidsmap['Options']['bidscoin'].get('unknowntypes',[]) if datatype in template_bidsmap[self.dataformat]]
         self.ignoredatatypes   = [datatype for datatype in bidsmap['Options']['bidscoin'].get('ignoretypes',[])  if datatype in template_bidsmap[self.dataformat]]
+        self.bidsignore        = bidsmap['Options']['bidscoin'].get('bidsignore','')
         self.source_bidsmap    = bidsmap                # The bidsmap at the start of the edit = output_bidsmap in the MainWindow
         self.target_bidsmap    = copy.deepcopy(bidsmap) # The edited bidsmap -> will be returned as output_bidsmap in the MainWindow
         self.template_bidsmap  = template_bidsmap       # The bidsmap from which new datatype run-items are taken
@@ -1058,7 +1060,11 @@ class EditWindow(QDialog):
                                     {'value': value, 'iseditable': True}])
 
         data_bids = []
-        for key in [bids.entities[entity]['entity'] for entity in bids.entitiesorder if entity not in ('subject','session')] + ['suffix']:   # Impose the BIDS-specified order + suffix
+        if self.target_datatype in self.bidsignore:
+            bidskeys = run['bids'].keys()
+        else:
+            bidskeys = [bids.entities[entity]['entity'] for entity in bids.entitiesorder if entity not in ('subject','session')] + ['suffix']   # Impose the BIDS-specified order + suffix
+        for key in bidskeys:
             if key in run['bids']:
                 value = run['bids'].get(key)
                 if (self.target_datatype in self.bidscoindatatypes and key=='suffix') or isinstance(value, list):
@@ -1321,7 +1327,7 @@ class EditWindow(QDialog):
     def refresh_bidsname(self):
         """Updates the bidsname with the current (edited) bids values"""
 
-        bidsname = (Path(self.target_datatype)/bids.get_bidsname(self.subid, self.sesid, self.target_run)).with_suffix('.*')
+        bidsname = (Path(self.target_datatype)/bids.get_bidsname(self.subid, self.sesid, self.target_run, self.target_datatype in self.bidsignore)).with_suffix('.*')
 
         font = self.bidsname_textbox.font()
         if self.target_datatype in self.unknowndatatypes:

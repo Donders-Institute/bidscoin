@@ -232,11 +232,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        bidsname  = bids.get_bidsname(subid, sesid, run, runtime=True)
-        runindex  = run['bids'].get('run', '')
+        bidsname = bids.get_bidsname(subid, sesid, run, datasource.datatype in bidsmap['Options']['bidscoin']['bidsignore'], runtime=True)
+        runindex = run['bids'].get('run', '')
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(outfolder, bidsname)
-        jsonfile  = (outfolder/bidsname).with_suffix('.json')
+        jsonfile = (outfolder/bidsname).with_suffix('.json')
 
         # Check if file already exists (-> e.g. when a static runindex is used)
         if jsonfile.is_file():
