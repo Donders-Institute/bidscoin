@@ -1370,7 +1370,7 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
 
     # Use the suffix to find the right typegroup
     if validate and 'suffix' not in run['bids']:
-        LOGGER.warning(f'Invalid bidsmap: BIDS {datatype} entity "suffix" is absent for {run["provenance"]} -> {datatype}')
+        LOGGER.warning(f'Invalid bidsmap run-item: BIDS {datatype} entity "suffix" is absent for {run["provenance"]} -> {datatype}')
     if datatype not in bidsdatatypes: return True
     for typegroup in bidsdatatypes[datatype]:
         if run['bids'].get('suffix') in typegroup['suffixes']:
@@ -1534,11 +1534,11 @@ def get_bidsname(subid: str, sesid: str, run: dict, bidsignore: bool, runtime: b
     # Compose a bidsname from valid BIDS entities only
     bidsname = f"sub-{subid}{add_prefix('_ses-', sesid)}"                       # Start with the subject/session identifier
     if bidsignore:
-        entitiekeys = [key for key in run['bids'] if key!='suffix']             # Use the keys from th run
+        entitiekeys = [key for key in run['bids'] if key!='suffix']             # Use the keys from the run item
     else:
         entitiekeys = [entities[entity]['entity'] for entity in entitiesorder]  # Use the keys from the BIDS schema
     for entitykey in entitiekeys:
-        bidsvalue = run['bids'].get(entitykey)                                  # Get the entity data from the run
+        bidsvalue = run['bids'].get(entitykey)                                  # Get the entity data from the run item
         if not bidsvalue:
             bidsvalue = ''
         if isinstance(bidsvalue, list):

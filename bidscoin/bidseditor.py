@@ -209,7 +209,7 @@ class MainWindow(QMainWindow):
             if answer == QMessageBox.Yes:
                 LOGGER.warning(f"Expert usage: User has removed run-item {dataformat}[{datatype}]: {provenance}")
                 bids.delete_run(self.output_bidsmap, bids.find_run(self.output_bidsmap, provenance, dataformat, datatype))
-                self.update_subses_samples(self.output_bidsmap)
+                self.update_subses_samples(self.output_bidsmap, dataformat)
                 table.setRowCount(table.rowCount() - 1)
                 self.datachanged = True
 
@@ -346,7 +346,7 @@ class MainWindow(QMainWindow):
         self.tabwidget.addTab(tab, f"{dataformat} mappings")
         self.tabwidget.setCurrentWidget(tab)
 
-        self.update_subses_samples(self.output_bidsmap)
+        self.update_subses_samples(self.output_bidsmap, dataformat)
 
     def set_tab_options(self):
         """Set the options tab"""
@@ -432,13 +432,10 @@ class MainWindow(QMainWindow):
 
         self.tabwidget.addTab(tab, 'Data browser')
 
-    def update_subses_samples(self, output_bidsmap):
+    def update_subses_samples(self, output_bidsmap, dataformat):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
 
-        self.datachanged = True
-
-        dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
-
+        self.datachanged    = True
         self.output_bidsmap = output_bidsmap  # input main window / output from edit window -> output main window
 
         # Update the subject / session table
@@ -496,7 +493,10 @@ class MainWindow(QMainWindow):
                 samples_table.item(idx, 3).setStatusTip(str(session) + str(Path('/')))
 
                 if samples_table.item(idx, 3):
-                    if not validrun or datatype in self.unknowndatatypes:
+                    if datatype in self.bidsignore:
+                        samples_table.item(idx, 3).setForeground(QtGui.QColor('darkorange'))
+                        samples_table.item(idx, 3).setToolTip(f"Orange: This {datatype} item is ignored by BIDS-apps and BIDS-validators")
+                    elif not validrun or datatype in self.unknowndatatypes:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('red'))
                         samples_table.item(idx, 3).setToolTip(f"Red: This {datatype} item is not BIDS-valid but will still be converted. You should edit this item or make sure it is in your bidsignore list ([Options] tab)")
                     elif datatype in self.ignoredatatypes:
@@ -534,8 +534,8 @@ class MainWindow(QMainWindow):
         """Subject or session value has been changed in subject-session table"""
 
         # Only if cell was actually clicked, update
-        if colindex == 1:
-            dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
+        dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
+        if colindex == 1 and dataformat in self.dataformats:
             key        = self.subses_table[dataformat].item(rowindex, 0).text().strip()
             value      = self.subses_table[dataformat].item(rowindex, 1).text().strip()
             oldvalue   = self.output_bidsmap[dataformat][key]
@@ -549,7 +549,7 @@ class MainWindow(QMainWindow):
                 else:
                     LOGGER.info(f"User has set {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
                 self.output_bidsmap[dataformat][key] = value
-                self.update_subses_samples(self.output_bidsmap)
+                self.update_subses_samples(self.output_bidsmap, dataformat)
 
     def open_editwindow(self, provenance: Path=Path(), datatype: str= ''):
         """Make sure that index map has been updated"""
@@ -646,10 +646,16 @@ class MainWindow(QMainWindow):
                         self.datachanged = True
             if plugin == 'bidscoin':
                 self.output_bidsmap['Options']['bidscoin'] = newoptions
+                self.bidscoindatatypes = newoptions.get('datatypes', [])
+                self.unknowndatatypes  = newoptions.get('unknowntypes', [])
+                self.ignoredatatypes   = newoptions.get('ignoretypes', [])
+                self.bidsignore        = newoptions.get('bidsignore', '')
+                for dataformat in self.dataformats:
+                    self.update_subses_samples(self.output_bidsmap, dataformat)
             else:
                 self.output_bidsmap['Options']['plugins'][plugin] = newoptions
 
-            # Add an extra row if the table if full
+            # Add an extra row if the table is full
             if rowindex + 1 == table.rowCount() and table.currentItem() and table.currentItem().text().strip():
                 table.blockSignals(True)
                 table.insertRow(table.rowCount())
@@ -854,7 +860,7 @@ class EditWindow(QDialog):
     """
 
     # Emit the new bidsmap when done (see docstring)
-    done_edit = QtCore.pyqtSignal(dict)
+    done_edit = QtCore.pyqtSignal(dict, str)
 
     def __init__(self, run, bidsmap: dict, template_bidsmap: dict):
         super().__init__()
@@ -1330,12 +1336,16 @@ class EditWindow(QDialog):
         bidsname = (Path(self.target_datatype)/bids.get_bidsname(self.subid, self.sesid, self.target_run, self.target_datatype in self.bidsignore)).with_suffix('.*')
 
         font = self.bidsname_textbox.font()
-        if self.target_datatype in self.unknowndatatypes:
-            self.bidsname_textbox.setToolTip(f"Red: This imaging data type is not part of BIDS but will be converted to a BIDS-like entry in the {self.unknowndatatypes} folder. Click 'OK' if you want your BIDS output data to look like this")
+        if self.target_datatype in self.bidsignore:
+            self.bidsname_textbox.setToolTip(f"Orange: This '{self.target_datatype}' data type is ignored by BIDS-apps and BIDS-validators")
+            self.bidsname_textbox.setTextColor(QtGui.QColor('darkorange'))
+            font.setStrikeOut(False)
+        elif self.target_datatype in self.unknowndatatypes:
+            self.bidsname_textbox.setToolTip(f"Red: This '{self.target_datatype}' data type is not part of BIDS but will be converted to a BIDS-like entry in the {self.unknowndatatypes} folder. Click 'OK' if you want your BIDS output data to look like this")
             self.bidsname_textbox.setTextColor(QtGui.QColor('red'))
             font.setStrikeOut(False)
         elif self.target_datatype in self.ignoredatatypes:
-            self.bidsname_textbox.setToolTip("Gray / Strike-out: This imaging data type will be ignored and not converted BIDS. Click 'OK' if you want your BIDS output data to look like this")
+            self.bidsname_textbox.setToolTip(f"Gray / Strike-out: This '{self.target_datatype}' data type will be ignored and not converted BIDS. Click 'OK' if you want your BIDS output data to look like this")
             self.bidsname_textbox.setTextColor(QtGui.QColor('gray'))
             font.setStrikeOut(True)
         elif not bids.check_run(self.target_datatype, self.target_run):
@@ -1343,7 +1353,7 @@ class EditWindow(QDialog):
             self.bidsname_textbox.setTextColor(QtGui.QColor('red'))
             font.setStrikeOut(False)
         else:
-            self.bidsname_textbox.setToolTip(f"Green: This '{self.target_datatype}' imaging data type is part of BIDS. Click 'OK' if you want your BIDS output data to look like this")
+            self.bidsname_textbox.setToolTip(f"Green: This '{self.target_datatype}' data type is part of BIDS. Click 'OK' if you want your BIDS output data to look like this")
             self.bidsname_textbox.setTextColor(QtGui.QColor('green'))
             font.setStrikeOut(False)
         self.bidsname_textbox.setFont(font)
@@ -1399,7 +1409,7 @@ class EditWindow(QDialog):
         if re.sub('<(?!.*<).*? object at .*?>','',str(self.target_run)) != re.sub('<(?!.*<).*? object at .*?>','',str(self.source_run)):    # Ignore the memory address of the datasource object
             bids.update_bidsmap(self.target_bidsmap, self.current_datatype, self.target_run)
 
-            self.done_edit.emit(self.target_bidsmap)
+            self.done_edit.emit(self.target_bidsmap, self.dataformat)
             self.done(1)
 
         else:

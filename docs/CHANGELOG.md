@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Added
 - Added support for the ABCD GE pepolar pulse sequence
+- Use an orange bidsname font in the bidseditor for .bidsignore datatypes
  
 ### Changed
 - Remove the DCCN specific dcm2niix module usage in the bidsmap template
