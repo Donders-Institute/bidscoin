@@ -16,6 +16,8 @@ import copy
 import webbrowser
 import re
 import ast
+import json
+import csv
 from typing import Union
 from pydicom import dcmread
 from pathlib import Path
@@ -191,16 +193,16 @@ class MainWindow(QMainWindow):
         table      = self.samples_table[dataformat]
         rowindex   = table.currentRow()
         colindex   = table.currentColumn()
-        datatype   = table.item(rowindex, 2).text()
-        provenance = table.item(rowindex, 5).text()
-
-        # Pop-up the context-menu
         if colindex in (-1, 0, 4):      # User clicked the index, the edit-button or elsewhere (i.e. not on an activated widget)
             return
+
+        # Pop-up the context-menu
         menu       = QtWidgets.QMenu(self)
         delete_run = menu.addAction('Remove')
         edit_run   = menu.addAction('Edit')
         action     = menu.exec(table.viewport().mapToGlobal(pos))
+        datatype   = table.item(rowindex, 2).text()
+        provenance = table.item(rowindex, 5).text()
 
         if action == delete_run:
             answer = QMessageBox.question(self, f"Remove {dataformat} mapping",
@@ -932,6 +934,8 @@ class EditWindow(QDialog):
         self.meta_label.setToolTip(f"Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
         self.meta_table = self.set_table(data_meta, 'meta', minimum=False)
         self.meta_table.setShowGrid(True)
+        self.meta_table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.meta_table.customContextMenuRequested.connect(self.show_contextmenu)
         self.meta_table.cellChanged.connect(self.metacell2run)
         self.meta_table.setToolTip(f"The key-value pair that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
 
@@ -1021,6 +1025,58 @@ class EditWindow(QDialog):
         LOGGER.info(f'User has canceled the edit')
 
         super(EditWindow, self).reject()
+
+    @QtCore.pyqtSlot(QtCore.QPoint)
+    def show_contextmenu(self, pos):
+        """Pops up a context-menu for importing data in the meta_table"""
+
+        menu        = QtWidgets.QMenu(self)
+        import_data = menu.addAction('Import meta data')
+        clear_table = menu.addAction('Clear table')
+        action      = menu.exec(self.meta_table.viewport().mapToGlobal(pos))
+
+        if action == import_data:
+
+            # Read all the meta-data from the table and store it in the target_run
+            metafile, _ = QFileDialog.getOpenFileName(self, 'Import meta data from file',
+                                                      str(self.source_run['provenance']),
+                                                      'JSON/YAML/CSV/TSV Files (*.json *.yaml *.yml *.txt *.csv *.tsv);;All Files (*)')
+            if metafile:
+
+                # Get the existing meta-data from the table
+                _, _, _, data_meta = self.run2data()
+
+                # Read the new meta-data from disk
+                LOGGER.info(f"Importing meta data from: '{metafile}''")
+                try:
+                    with open(metafile, 'r') as meta_fid:
+                        if Path(metafile).suffix == '.json':
+                            metadata = json.load(meta_fid)
+                        elif Path(metafile).suffix in ('.yaml', '.yml'):
+                            metadata = bids.yaml.load(meta_fid)
+                        else:
+                            dialect = csv.Sniffer().sniff(meta_fid.read())
+                            meta_fid.seek(0)
+                            metadata = {}
+                            for row in csv.reader(meta_fid, dialect=dialect):
+                                metadata[row[0]] = row[1] if len(row)>1 else None
+                    if not isinstance(metadata, dict):
+                        raise ValueError('Unknown dataformat')
+                except Exception as readerror:
+                    LOGGER.info(f"Failed to import meta-data from: {metafile}\n{readerror}")
+                    return
+
+                # Write all the meta-data to the target_run
+                for key, value in metadata.items():
+                    self.target_run['meta'][key] = value
+
+                # Refresh the meta-table using the target_run
+                _, _, _, data_meta = self.run2data()
+                self.fill_table(self.meta_table, data_meta)
+
+        elif action == clear_table:
+            self.target_run['meta'] = {}
+            self.fill_table(self.meta_table, [])
 
     def get_allowed_suffixes(self):
         """Derive the possible suffixes for each datatype from the template. """
