@@ -284,28 +284,29 @@ def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (List[
     packedfiles.extend(sourcefolder.glob(f"{wildcard}.tar.?z"))
     packedfiles.extend(sourcefolder.glob(f"{wildcard}.tar.bz2"))
     packedfiles.extend(sourcefolder.glob(f"{wildcard}.zip"))
+    flatfiles = not bidscoin.lsdirs(sourcefolder) and next(sourcefolder.glob(wildcard), False)     # No directories, but data-files: A flat unsorted (DICOM) data organization
 
     # Check if we are going to do unpacking and/or sorting
-    if packedfiles or (sourcefolder/'DICOMDIR').is_file():
+    if packedfiles or flatfiles or (sourcefolder/'DICOMDIR').is_file():
 
         # Create a (temporary) sub/ses workfolder for unpacking the data
         if not workfolder:
-            workfolder = Path(tempfile.mkdtemp())
+            workfolder = Path(tempfile.mkdtemp(dir=tempfile.gettempdir()))
         else:
             workfolder = Path(workfolder)/next(tempfile._get_candidate_names())
-        worksubses = workfolder/sourcefolder.relative_to(sourcefolder.parent.parent)     # = workfolder/raw/sub/ses
+        worksubses = workfolder/sourcefolder.relative_to(sourcefolder.parent.parent)    # = workfolder/raw/sub/ses
         worksubses.mkdir(parents=True, exist_ok=True)
 
         # Copy everything over to the workfolder
         LOGGER.info(f"Making temporary copy: {sourcefolder} -> {worksubses}")
-        copy_tree(str(sourcefolder), str(worksubses))     # Older python versions don't support PathLib
+        copy_tree(str(sourcefolder), str(worksubses))                                   # Older python versions don't support PathLib
 
         # Unpack the zip/tarballed files in the temporary folder
         sessions = []
         for packedfile in [worksubses/packedfile.name for packedfile in packedfiles]:
             LOGGER.info(f"Unpacking: {packedfile.name} -> {worksubses}")
             ext = packedfile.suffixes
-            if ext[-1] == '.zip':
+            if ext and ext[-1] == '.zip':
                 with zipfile.ZipFile(packedfile, 'r') as zip_fid:
                     zip_fid.extractall(worksubses)
             elif '.tar' in ext:
