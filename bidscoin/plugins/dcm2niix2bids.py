@@ -271,7 +271,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 outfolder = outfolder,
                 source    = source)
             if not bidscoin.run_command(command):
-                if not list(outfolder.glob(f"{bidsname}.nii*")): continue
+                if not list(outfolder.glob(f"{bidsname}.*nii*")): continue
 
             # Handle the ABCD GE pepolar sequence
             extrafile = list(outfolder.glob(f"{bidsname}a.nii*"))
