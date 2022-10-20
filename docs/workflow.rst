@@ -16,6 +16,9 @@ By default, step 1a automatically launches step 1b, so in it's simplest form, al
 
 If you add new subjects all you need to do is re-run the bidscoiner -- unless the scan protocol was changed, then you also need to first re-run the bidsmapper to add the new samples to the study bidsmap. The paragraphs below describe the BIDScoin worklow in more detail.
 
+.. tip::
+   If you don't know what command to use or what to do, run the ``bidscoin`` command to give you a workflow overview
+
 Step 1a: Running the bidsmapper
 -------------------------------
 
@@ -209,7 +212,7 @@ Step 2: Running the bidscoiner
 
 .. tip::
    * Always check the terminal output for possible warnings or errors (a summary of them is printed at the end)
-   * Check your json sidecar files of your fieldmaps, in particular see if they have the expected ``IntendedFor`` values
+   * Check your json sidecar files of your fieldmaps, in particular see if they have the expected ``IntendedFor``/``B0FieldIdentifier`` values
 
 .. note::
    The provenance of the produced BIDS data-sets is stored in the ``[bidsfolder]/code/bidscoin/bidscoiner.log`` file. This file is also very useful for debugging / tracking down bidscoin issues.
