@@ -284,7 +284,7 @@ def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (List[
     packedfiles.extend(sourcefolder.glob(f"{wildcard}.tar.?z"))
     packedfiles.extend(sourcefolder.glob(f"{wildcard}.tar.bz2"))
     packedfiles.extend(sourcefolder.glob(f"{wildcard}.zip"))
-    flatfiles = not bidscoin.lsdirs(sourcefolder) and next(sourcefolder.glob(wildcard), False)     # No directories, but data-files: A flat unsorted (DICOM) data organization
+    flatfiles = not bidscoin.lsdirs(sourcefolder) and next(sourcefolder.glob(wildcard), False)      # No directories, but data-files: A flat unsorted (DICOM) data organization
 
     # Check if we are going to do unpacking and/or sorting
     if packedfiles or flatfiles or (sourcefolder/'DICOMDIR').is_file():
@@ -294,7 +294,7 @@ def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (List[
             workfolder = Path(tempfile.mkdtemp(dir=tempfile.gettempdir()))
         else:
             workfolder = Path(workfolder)/next(tempfile._get_candidate_names())
-        worksubses = workfolder/sourcefolder.relative_to(sourcefolder.parent.parent.parent)    # = workfolder/raw/sub/ses
+        worksubses = workfolder/sourcefolder.relative_to('/')
         worksubses.mkdir(parents=True, exist_ok=True)
 
         # Copy everything over to the workfolder
