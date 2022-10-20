@@ -34,9 +34,10 @@ If you do not have git (or any other version control system) installed you can `
 
 .. tip::
    On certain (Linux) systems you may get an error message saying: 'Could not load the Qt platform plugin "xcb" in "" even though it was found'. This may be solved by downgrading your PyQt5 library, e.g. by running:
-   .. code-block:: console
-      pip uninstall pyqt5
-      pip install pyqt5==5.14
+
+   pip uninstall pyqt5
+
+   pip install pyqt5==5.14
 
 Updating BIDScoin
 ^^^^^^^^^^^^^^^^^
