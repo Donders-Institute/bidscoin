@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
-## [3.7.4] - 2022-17-10
+## [3.7.4] - 2022-21-10
 
 ### Added
 - Added support for the ABCD GE pepolar pulse sequence
@@ -25,7 +25,6 @@ All notable changes to this project will be documented in this file. The format 
 ### Added
 - The usage of json sidecar files as a datasource for attribute values
 - A template bidsmap for the [ScanSessionTool](https://github.com/fladd/ScanSessionTool)
-- Usage of json sidecar files as an attribute source
 
 ### Changed
 - Dicomsort now searches recursively over the sessionfolder
