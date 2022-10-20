@@ -419,7 +419,7 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> bool:
     return True
 
 
-def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins: bool=True):
+def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins: bool=True, testgui: bool=True):
     """
     Performs a bidscoin installation test
 
@@ -453,16 +453,17 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
             options = bidsmapfile['Options']
 
     # Test PyQt
-    LOGGER.info('Testing the PyQt GUI setup:')
-    try:
-        app = QApplication(sys.argv)
-        window = QPushButton('Minimal GUI test: OK')
-        window.show()
-        QApplication.quit()
-        LOGGER.info('The GUI seems to work OK')
-    except Exception as pyqterror:
-        LOGGER.error(f"The installed PyQt version does not seem to work for your system:\n{pyqterror}")
-        success = False
+    if testgui:
+        LOGGER.info('Testing the PyQt GUI setup:')
+        try:
+            app = QApplication(sys.argv)
+            window = QPushButton('Minimal GUI test: OK')
+            window.show()
+            QApplication.quit()
+            LOGGER.info('The GUI seems to work OK')
+        except Exception as pyqterror:
+            LOGGER.error(f"The installed PyQt version does not seem to work for your system:\n{pyqterror}")
+            success = False
 
     # Test the DRMAA configuration (used by pydeface only)
     try:
