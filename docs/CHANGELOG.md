@@ -4,14 +4,21 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
+## [3.7.4] - 2022-17-10
+
 ### Added
 - Added support for the ABCD GE pepolar pulse sequence
-- Use an orange bidsname font in the bidseditor for .bidsignore datatypes
+- Use an orange bidsname font in the bidseditor for `.bidsignore` datatypes
+- A (right-click) context menu in the bidseditor to import meta-data from disk into the meta-table
  
 ### Changed
 - Remove the DCCN specific dcm2niix module usage in the bidsmap template
 - Add `-l n` to the dcm2niix arguments to revert old UIN16 -> INT16 behaviour (otherwise fmriprep outputs are twice as large)
-- No longer enforce BIDS compliance on .bidsignore datatypes
+- No longer enforce BIDS compliance on `.bidsignore` datatypes
+
+### Fixed
+- Sorting flat DICOM data (in a temporary working directory)
+- The dcm2niix module (if not removed) raised an error that prevented handling dcm2niix suffixes
 
 ## [3.7.3] - 2022-07-13
 
@@ -328,7 +335,8 @@ A first stable release of BIDScoin :-)
 ### To do
 * Add support for non-imaging data
 
-[dev]: https://github.com/Donders-Institute/bidscoin/compare/3.7.3...HEAD
+[dev]: https://github.com/Donders-Institute/bidscoin/compare/3.7.4...HEAD
+[3.7.4]: https://github.com/Donders-Institute/bidscoin/compare/3.7.3...3.7.4
 [3.7.3]: https://github.com/Donders-Institute/bidscoin/compare/3.7.2...3.7.3
 [3.7.2]: https://github.com/Donders-Institute/bidscoin/compare/3.7.1...3.7.2
 [3.7.1]: https://github.com/Donders-Institute/bidscoin/compare/3.7.0...3.7.1

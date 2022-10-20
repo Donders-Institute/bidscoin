@@ -20,7 +20,7 @@ Options:
 # General options and plugins
 # --------------------------------------------------------------------------------
   bidscoin:
-    version: 3.7.3                  # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
+    version: 3.7.4                  # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
     bidsignore: mrs/;extra_data/    # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
     subprefix: sub-                 # The subject prefix of the source data
     sesprefix: ses-                 # The session prefix of the source data
@@ -588,7 +588,7 @@ DICOM:
   - provenance:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
     attributes:
       <<: *dwi_dicomattr
-      SeriesDescription: (?i).*(DWI|diffusion|HARDI|DTI).*SBREF.*
+      SeriesDescription: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*SBREF.*
     bids: &dwi_dicoment_sbref           # See: schema/datatypes/dwi.yaml
       acq: <SeriesDescription>
       dir:
@@ -599,7 +599,7 @@ DICOM:
   - provenance:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
     attributes:
       <<: *dwi_dicomattr
-      ProtocolName: (?i).*(DWI|diffusion|HARDI|DTI).*
+      ProtocolName: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*
       ImageType: .*'PHYSIO'.*
     bids: &dwi_dicoment_physio          # See: schema/datatypes/dwi.yaml
       acq: <SeriesDescription>
@@ -611,12 +611,12 @@ DICOM:
   - provenance:
     attributes:
       <<: *dwi_dicomattr
-      SeriesDescription: (?i).*(DWI|diffusion|HARDI|DTI).*PHYSIO.*
+      SeriesDescription: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*PHYSIO.*
     bids: *dwi_dicoment_physio
   - provenance:                         # Then catch the normal DWI runs
     attributes:
       <<: *dwi_dicomattr
-      ProtocolName: (?i).*(DWI|diffusion|HARDI|DTI).*
+      ProtocolName: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*
     bids: *dwi_dicoment_DWI
     meta: *dwi_meta
   - provenance:
@@ -1531,7 +1531,7 @@ PAR:
   - provenance:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
     attributes:
       <<: *dwi_parattr
-      protocol_name: (?i).*(DWI|diffusion|HARDI|DTI).*SBREF.*
+      protocol_name: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*SBREF.*
     bids: &dwi_parent_sbref             # See: schema/datatypes/dwi.yaml
       acq: <protocol_name>
       dir:
@@ -2484,7 +2484,7 @@ Nibabel:
   - provenance:                         # First catch the SBREF runs
     properties:
       <<: *fileprop
-      filename: (?i).*(DWI|diffusion|HARDI|DTI).*SBREF.*
+      filename: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*SBREF.*
     attributes: *nibattr
     bids: &dwi_nibent_sbref             # See: schema/datatypes/dwi.yaml
       acq: <descrip>
@@ -2496,7 +2496,7 @@ Nibabel:
   - provenance:                         # Then catch the normal DWI runs
     properties:
       <<: *fileprop
-      filename: (?i).*(DWI|diffusion|HARDI|DTI).*
+      filename: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*
     attributes: *nibattr
     bids: *dwi_nibent_DWI
     meta: *dwi_meta
