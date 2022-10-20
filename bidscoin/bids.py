@@ -294,7 +294,7 @@ def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (List[
             workfolder = Path(tempfile.mkdtemp(dir=tempfile.gettempdir()))
         else:
             workfolder = Path(workfolder)/next(tempfile._get_candidate_names())
-        worksubses = workfolder/sourcefolder.relative_to(sourcefolder.parent.parent)    # = workfolder/raw/sub/ses
+        worksubses = workfolder/sourcefolder.relative_to(sourcefolder.parent.parent.parent)    # = workfolder/raw/sub/ses
         worksubses.mkdir(parents=True, exist_ok=True)
 
         # Copy everything over to the workfolder
