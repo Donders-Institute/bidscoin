@@ -259,8 +259,12 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         if run['bids']['suffix'] == 'physio':
             if bids.get_dicomfile(source, 2).name:                  # TODO: issue warning or support PAR
                 LOGGER.warning(f"Found > 1 DICOM file in {source}, using: {sourcefile}")
-            physiodata = physio.readphysio(sourcefile)
-            physio.physio2tsv(physiodata, outfolder/bidsname)
+            try:
+                physiodata = physio.readphysio(sourcefile)
+                physio.physio2tsv(physiodata, outfolder/bidsname)
+            except Exception as physioerror:
+                LOGGER.error(f"Could not read/convert physiological file: {sourcefile}\n{physioerror}")
+                continue
 
         # Convert the source-files in the run folder to nifti's in the BIDS-folder
         else:
