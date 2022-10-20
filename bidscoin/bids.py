@@ -284,10 +284,12 @@ def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (List[
     packedfiles.extend(sourcefolder.glob(f"{wildcard}.tar.?z"))
     packedfiles.extend(sourcefolder.glob(f"{wildcard}.tar.bz2"))
     packedfiles.extend(sourcefolder.glob(f"{wildcard}.zip"))
-    flatfiles = not bidscoin.lsdirs(sourcefolder) and next(sourcefolder.glob(wildcard), False)      # No directories, but data-files: A flat unsorted (DICOM) data organization
+
+    # See if we have a flat unsorted (DICOM) data organization, i.e. no directories, but DICOM-files
+    flatDICOM = not bidscoin.lsdirs(sourcefolder) and get_dicomfile(sourcefolder).is_file()
 
     # Check if we are going to do unpacking and/or sorting
-    if packedfiles or flatfiles or (sourcefolder/'DICOMDIR').is_file():
+    if packedfiles or flatDICOM or (sourcefolder/'DICOMDIR').is_file():
 
         # Create a (temporary) sub/ses workfolder for unpacking the data
         if not workfolder:
