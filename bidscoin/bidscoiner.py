@@ -266,19 +266,6 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
             if fmap not in scans_table.index:
                 continue
 
-            # Check if there are multiple runs and get the lower- and upperbound from the AcquisitionTime
-            runindex   = bids.get_bidsvalue(fmap, 'run')
-            prevfmap   = bids.get_bidsvalue(fmap, 'run', str(int(runindex) - 1 if runindex else ''))
-            nextfmap   = bids.get_bidsvalue(fmap, 'run', str(int(runindex) + 1 if runindex else ''))
-            acqtime    = scans_table.loc[fmap, 'acq_time']
-            fmaptime   = dateutil.parser.parse(acqtime if isinstance(acqtime,str) else '1925-01-01')
-            lowerbound = fmaptime.replace(hour=0,  minute=0,  second=0)
-            upperbound = fmaptime.replace(hour=23, minute=59, second=59)
-            if runindex and prevfmap in fmaps:
-                lowerbound = dateutil.parser.parse(scans_table.loc[prevfmap, 'acq_time'])
-            if runindex and nextfmap in fmaps:
-                upperbound = dateutil.parser.parse(scans_table.loc[nextfmap, 'acq_time'])
-
             # Load the existing meta-data
             jsonfile = bidsses/Path(fmap).with_suffix('').with_suffix('.json')
             with jsonfile.open('r') as json_fid:
@@ -287,6 +274,20 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
             # Search for the imaging files that match the IntendedFor search criteria
             intendedfor = jsondata.get('IntendedFor')
             if intendedfor and isinstance(intendedfor, str):
+
+                # Check if there are multiple runs and get the lower- and upperbound from the AcquisitionTime to limit down the IntendedFor search
+                acqtime    = scans_table.loc[fmap, 'acq_time']
+                fmaptime   = dateutil.parser.parse(acqtime if isinstance(acqtime, str) else '1925-01-01')
+                lowerbound = fmaptime.replace(year=1900)                                            # Use an ultra-wide lower limit for the IntendedFor search
+                upperbound = fmaptime.replace(year=2100)                                            # Idem for the upper limit
+                runindex   = bids.get_bidsvalue(fmap, 'run')
+                if runindex:                                                                        # There may be more fieldmaps, hence limit down the search to the adjacently acquired data
+                    prevfmap = bids.get_bidsvalue(fmap, 'run', str(int(runindex) - 1))
+                    nextfmap = bids.get_bidsvalue(fmap, 'run', str(int(runindex) + 1))
+                    if prevfmap in fmaps:
+                        lowerbound = dateutil.parser.parse(scans_table.loc[prevfmap, 'acq_time'])   # Narrow the lower search limit down to the preceding fieldmap
+                    if nextfmap in fmaps:
+                        upperbound = dateutil.parser.parse(scans_table.loc[nextfmap, 'acq_time'])   # Narrow the upper search limit down to the succeeding fieldmap
 
                 # Search with multiple patterns for matching nifti-files in all runs and store the relative path to the session folder
                 niifiles = []

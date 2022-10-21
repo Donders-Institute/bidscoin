@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
-## [3.7.4] - 2022-21-10
+## [3.7.4] - 2022-10-21
 
 ### Added
 - Added support for the ABCD GE pepolar pulse sequence
