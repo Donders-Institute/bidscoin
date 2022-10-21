@@ -256,15 +256,10 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
         if scans_tsv.is_file():
             scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
         else:
-            scans_table = pd.DataFrame(columns=['acq_time'], dtype='str')
-            scans_table.index.name = 'filename'
+            scans_table = pd.DataFrame(columns=['acq_time'])
 
         fmaps = [fmap.relative_to(bidsses).as_posix() for fmap in sorted((bidsses/'fmap').glob('sub-*.nii*'))]
         for fmap in fmaps:
-
-            # Skip unexpected fieldmaps
-            if fmap not in scans_table.index:
-                continue
 
             # Load the existing meta-data
             jsonfile = bidsses/Path(fmap).with_suffix('').with_suffix('.json')
@@ -276,18 +271,20 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
             if intendedfor and isinstance(intendedfor, str):
 
                 # Check if there are multiple runs and get the lower- and upperbound from the AcquisitionTime to limit down the IntendedFor search
-                acqtime    = scans_table.loc[fmap, 'acq_time']
-                fmaptime   = dateutil.parser.parse(acqtime if isinstance(acqtime, str) else '1925-01-01')
-                lowerbound = fmaptime.replace(year=1900)                                            # Use an ultra-wide lower limit for the IntendedFor search
+                fmaptime   = dateutil.parser.parse('1925-01-01')                                    # If nothing, use the BIDS stub acquisition time
+                lowerbound = fmaptime.replace(year=1900)                                            # If nothing, use an ultra-wide lower limit for the IntendedFor search
                 upperbound = fmaptime.replace(year=2100)                                            # Idem for the upper limit
-                runindex   = bids.get_bidsvalue(fmap, 'run')
-                if runindex:                                                                        # There may be more fieldmaps, hence limit down the search to the adjacently acquired data
+                try:                                                                                # There may be more fieldmaps, hence try to limit down the search to the adjacently acquired data
+                    fmaptime = dateutil.parser.parse(scans_table.loc[fmap, 'acq_time'])
+                    runindex = bids.get_bidsvalue(fmap, 'run')
                     prevfmap = bids.get_bidsvalue(fmap, 'run', str(int(runindex) - 1))
                     nextfmap = bids.get_bidsvalue(fmap, 'run', str(int(runindex) + 1))
                     if prevfmap in fmaps:
                         lowerbound = dateutil.parser.parse(scans_table.loc[prevfmap, 'acq_time'])   # Narrow the lower search limit down to the preceding fieldmap
                     if nextfmap in fmaps:
                         upperbound = dateutil.parser.parse(scans_table.loc[nextfmap, 'acq_time'])   # Narrow the upper search limit down to the succeeding fieldmap
+                except (ValueError, KeyError, dateutil.parser.ParserError) as acqtimeerror:
+                    pass                                                                            # Raise this only if there are limits and matches, i.e. below
 
                 # Search with multiple patterns for matching nifti-files in all runs and store the relative path to the session folder
                 niifiles = []
@@ -300,17 +297,21 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                     pattern = part.split(':',1)[0].strip()
                     matches = [niifile.relative_to(bidsses).as_posix() for niifile in sorted(bidsses.rglob(f"*{pattern}*.nii*")) if pattern]
                     if limits and matches:
-                        limits     = limits[1:-1].split(':',1)                      # limits: '[lowerlimit:upperlimit]' -> ['lowerlimit', 'upperlimit']
-                        lowerlimit = int(limits[0]) if limits[0].strip() else float('-inf')
-                        upperlimit = int(limits[1]) if limits[1].strip() else float('inf')
-                        acqtimes   = []
-                        for match in matches:
-                            acqtimes.append((dateutil.parser.parse(scans_table.loc[match,'acq_time']), match))     # Time + filepath relative to the session-folder
-                        acqtimes.sort(key = lambda acqtime: acqtime[0])
-                        offset = sum([acqtime[0] < fmaptime for acqtime in acqtimes])  # The nr of preceding series
-                        for n, acqtime in enumerate(acqtimes):
-                            if lowerbound < acqtime[0] < upperbound and lowerlimit <= n-offset < upperlimit:
-                                niifiles.append(acqtime[1])
+                        try:
+                            limits     = limits[1:-1].split(':',1)                  # limits: '[lowerlimit:upperlimit]' -> ['lowerlimit', 'upperlimit']
+                            lowerlimit = int(limits[0]) if limits[0].strip() else float('-inf')
+                            upperlimit = int(limits[1]) if limits[1].strip() else float('inf')
+                            acqtimes   = []
+                            for match in matches:
+                                acqtimes.append((dateutil.parser.parse(scans_table.loc[match,'acq_time']), match))      # Time + filepath relative to the session-folder
+                            acqtimes.sort(key = lambda acqtime: acqtime[0])
+                            offset = sum([acqtime[0] < fmaptime for acqtime in acqtimes])  # The nr of preceding series
+                            for n, acqtime in enumerate(acqtimes):
+                                if lowerbound < acqtime[0] < upperbound and lowerlimit <= n-offset < upperlimit:
+                                    niifiles.append(acqtime[1])
+                        except Exception as intendedforerror:
+                            LOGGER.error(f"Could not bound the <{part}> IntendedFor search as it requires a *_scans.tsv file with acq_time values for: {fmap}\n{intendedforerror}")
+                            niifiles.extend(matches)
                     else:
                         niifiles.extend(matches)
 
