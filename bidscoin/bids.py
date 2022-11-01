@@ -32,10 +32,10 @@ LOGGER = logging.getLogger(__name__)
 # Read the BIDS schema data
 with (bidscoin.schemafolder/'objects'/'datatypes.yaml').open('r') as _stream:
     bidsdatatypesdef = yaml.load(_stream)                                       # The valid BIDS datatypes, along with their full names and descriptions
-bidsdatatypes = {}
+datatyperules = {}
 for _datatype in bidsdatatypesdef:
-    with (bidscoin.schemafolder/'rules'/'datatypes'/_datatype).with_suffix('.yaml').open('r') as _stream:
-        bidsdatatypes[_datatype] = yaml.load(_stream)                           # The entities that can/should be present for each BIDS datatype
+    with (bidscoin.schemafolder/'rules'/'files'/'raw'/_datatype).with_suffix('.yaml').open('r') as _stream:
+        datatyperules[_datatype] = yaml.load(_stream)                           # The entities that can/should be present for each BIDS datatype
 with (bidscoin.schemafolder/'objects'/'suffixes.yaml').open('r') as _stream:
     suffixes = yaml.load(_stream)                                               # The descriptions of the valid BIDS file suffixes
 with (bidscoin.schemafolder/'objects'/'entities.yaml').open('r') as _stream:
@@ -884,10 +884,10 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
                 run['datasource'] = DataSource(run['provenance'], bidsmap['Options']['plugins'], dataformat, datatype, subprefix, sesprefix)
 
                 # Add missing bids entities
-                for typegroup in bidsdatatypes.get(datatype,[]):
-                    if run['bids']['suffix'] in typegroup['suffixes']:      # run_found = True
-                        for entityname in typegroup['entities']:
-                            entitykey = entities[entityname]['entity']
+                for typegroup in datatyperules.get(datatype, {}):
+                    if run['bids']['suffix'] in datatyperules[datatype][typegroup]['suffixes']:         # run_found = True
+                        for entity in datatyperules[datatype][typegroup]['entities']:
+                            entitykey = entities[entity]['name']
                             if entitykey not in run['bids'] and entitykey not in ('sub','ses'):
                                 LOGGER.info(f"Adding missing {dataformat}>{datatype}>{run['bids']['suffix']} bidsmap entity key: {entitykey}")
                                 run['bids'][entitykey] = ''
@@ -931,7 +931,7 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
 
 def check_bidsmap(bidsmap: dict, validate: bool=True) -> bool:
     """
-    Check the bidsmap for required and optional entitities using the BIDS schema files
+    Check all the runs in the bidsmap for required and optional entitities using the BIDS schema files
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param validate:    Validate if all bids-keys and values are present according to the BIDS schema specifications
@@ -948,6 +948,34 @@ def check_bidsmap(bidsmap: dict, validate: bool=True) -> bool:
             if not isinstance(bidsmap[dataformat][datatype], list): continue
             for run in bidsmap[dataformat][datatype]:
                 valid = check_run(datatype, run, validate) and valid
+
+    return valid
+
+
+def check_template(bidsmap: dict) -> bool:
+    """
+    Check all the datatypes in the template bidsmap for required and optional entitities using the BIDS schema files
+
+    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :return:            True if the template bidsmap is valid, otherwise False
+    """
+
+    valid = True
+
+    # Check all the datatypes in the bidsmap
+    for dataformat in bidsmap:
+        if dataformat in ('Options','PlugIns'): continue
+        if not bidsmap[dataformat]:             continue
+        for datatype in bidsmap[dataformat]:
+            if datatype not in datatyperules or not isinstance(bidsmap[dataformat][datatype], list): continue
+            datatypesuffixes = []
+            for run in bidsmap[dataformat][datatype]:
+                datatypesuffixes.append(run['bids']['suffix'])
+            for field in datatyperules[datatype]:
+                for suffix in datatyperules[datatype][field]['suffixes']:
+                    if suffix not in datatypesuffixes and 'DEPRECATED' not in suffixes[suffix]['description']:
+                        LOGGER.warning(f"Missing '{suffix}' run-item in: bidsmap[{dataformat}][{datatype}] (NB: this may be fine / a deprecated item)")
+                        valid = False
 
     return valid
 
@@ -1126,7 +1154,7 @@ def find_run(bidsmap: dict, provenance: str, dataformat: str='', datatype: str='
     Find the (first) run in bidsmap[dataformat][bidsdatatype] with run['provenance'] == provenance
 
     :param bidsmap:     This could be a template bidsmap, with all options, BIDS labels and attributes, etc
-    :param provenance:  The unique provenance that is use to identify the run
+    :param provenance:  The unique provenance that is used to identify the run
     :param dataformat:  The dataformat section in the bidsmap in which a matching run is searched for, e.g. 'DICOM'
     :param datatype:    The datatype in which a matching run is searched for (e.g. 'anat')
     :return:            The (unfilled) run item from the bidsmap[dataformat][bidsdatatype]
@@ -1374,14 +1402,14 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
     # Use the suffix to find the right typegroup
     if validate and 'suffix' not in run['bids']:
         LOGGER.warning(f'Invalid bidsmap run-item: BIDS {datatype} entity "suffix" is absent for {run["provenance"]} -> {datatype}')
-    if datatype not in bidsdatatypes: return True
-    for typegroup in bidsdatatypes[datatype]:
-        if run['bids'].get('suffix') in typegroup['suffixes']:
+    if datatype not in datatyperules: return True
+    for typegroup in datatyperules[datatype]:
+        if run['bids'].get('suffix') in datatyperules[datatype][typegroup]['suffixes']:
             run_found = True
 
             # Check if all expected entity-keys are present in the run and if they are properly filled
-            for entityname in typegroup['entities']:
-                entitykey = entities[entityname]['entity']
+            for entity in datatyperules[datatype][typegroup]['entities']:
+                entitykey = entities[entity]['name']
                 bidsvalue = run['bids'].get(entitykey)
                 if entitykey in ('sub', 'ses'): continue
                 if isinstance(bidsvalue, list):
@@ -1391,13 +1419,13 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
                 if validate and entitykey not in run['bids']:
                     LOGGER.warning(f'Invalid bidsmap: BIDS entity "{entitykey}" is absent for {run["provenance"]} -> {datatype}/*_{run["bids"]["suffix"]}')
                     run_keysok = False
-                elif typegroup['entities'][entityname]=='required' and not bidsvalue:
+                elif datatyperules[datatype][typegroup]['entities'][entity]=='required' and not bidsvalue:
                     if validate is False:                   # Do not inform the user about empty template values
                         LOGGER.info(f'BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
                     run_valsok = False
 
             # Check if all the bids-keys are present in the schema file
-            entitykeys = [entities[entityname]['entity'] for entityname in typegroup['entities']]
+            entitykeys = [entities[entity]['name'] for entity in datatyperules[datatype][typegroup]['entities']]
             for bidskey in run['bids']:
                 if bidskey not in entitykeys + ['suffix']:
                     if validate:
@@ -1504,9 +1532,9 @@ def get_derivatives(datatype: str) -> list:
     """
 
     if datatype == 'anat':
-        return [suffix for suffix in bidsdatatypes[datatype][1]['suffixes'] if suffix not in ('UNIT1',)]                    # The qMRI data (maps)
+        return [suffix for suffix in datatyperules[datatype]['parametric']['suffixes'] if suffix not in ('UNIT1',)]                                         # The qMRI data (maps)
     elif datatype == 'fmap':
-        return [suffix for n,typegroup in enumerate(bidsdatatypes[datatype]) for suffix in typegroup['suffixes'] if n>1]    # The non-standard fmaps (file collections)
+        return [suffix for typegroup in datatyperules[datatype] for suffix in datatyperules[datatype][typegroup]['suffixes'] if typegroup!='fieldmaps']     # The non-standard fmaps (file collections)
     else:
         return []
 
@@ -1539,7 +1567,7 @@ def get_bidsname(subid: str, sesid: str, run: dict, bidsignore: bool, runtime: b
     if bidsignore:
         entitiekeys = [key for key in run['bids'] if key!='suffix']             # Use the keys from the run item
     else:
-        entitiekeys = [entities[entity]['entity'] for entity in entitiesorder]  # Use the keys from the BIDS schema
+        entitiekeys = [entities[entity]['name'] for entity in entitiesorder]    # Use the keys from the BIDS schema
     for entitykey in entitiekeys:
         bidsvalue = run['bids'].get(entitykey)                                  # Get the entity data from the run item
         if not bidsvalue:
@@ -1754,7 +1782,7 @@ def get_attributeshelp(attributeskey: str) -> str:
         return f"{attributeskey}\nThe DICOM '{datadict.dictionary_description(attributeskey)}' attribute"
 
     except ValueError:
-        return f"{attributeskey}\nA private attribute"
+        return f"{attributeskey}\nAn unknown/private attribute"
 
 
 def get_datatypehelp(datatype: str) -> str:
@@ -1770,9 +1798,9 @@ def get_datatypehelp(datatype: str) -> str:
 
     # Return the description for the datatype or a default text
     if datatype in bidsdatatypesdef:
-        return f"{bidsdatatypesdef[datatype]['name']}\n{bidsdatatypesdef[datatype]['description']}"
+        return f"{bidsdatatypesdef[datatype]['display_name']}\n{bidsdatatypesdef[datatype]['description']}"
 
-    return f"{datatype}\nA private datatype"
+    return f"{datatype}\nAn unknown/private datatype"
 
 
 def get_suffixhelp(suffix: str) -> str:
@@ -1788,9 +1816,9 @@ def get_suffixhelp(suffix: str) -> str:
 
     # Return the description for the suffix or a default text
     if suffix in suffixes:
-        return f"{suffixes[suffix]['name']}\n{suffixes[suffix]['description']}"
+        return f"{suffixes[suffix]['display_name']}\n{suffixes[suffix]['description']}"
 
-    return f"{suffix}\nA private suffix"
+    return f"{suffix}\nAn unknown/private suffix"
 
 
 def get_entityhelp(entitykey: str) -> str:
@@ -1805,11 +1833,11 @@ def get_entityhelp(entitykey: str) -> str:
         return "Please provide a key-name"
 
     # Return the description from the entities or a default text
-    for entityname in entities:
-        if entities[entityname]['entity'] == entitykey:
-            return f"{entities[entityname]['name']}\n{entities[entityname]['description']}"
+    for entity in entities:
+        if entities[entity]['name'] == entitykey:
+            return f"{entities[entity]['display_name']}\n{entities[entity]['description']}"
 
-    return f"{entitykey}\nA private entity"
+    return f"{entitykey}\nAn unknown/private entity"
 
 
 def get_metahelp(metakey: str) -> str:
@@ -1824,12 +1852,13 @@ def get_metahelp(metakey: str) -> str:
         return "Please provide a key-name"
 
     # Return the description from the metadata file or a default text
-    if metakey in metadata:           # metadata[metaname]['name'] == metaname???
-        description = metadata[metakey]['description']
-        if metakey == 'IntendedFor':    # IntendedFor is a special search-pattern field in BIDScoin
-            description += ('\nNB: These associated files can be dynamically searched for'
-                            '\nduring bidscoiner runtime with glob-style matching patterns,'
-                            '\n"such as <<Reward*_bold><Stop*_epi>>" (see documentation)')
-        return f"{metadata[metakey]['name']}\n{description}"
+    for field in metadata:
+        if metakey == metadata[field].get('name'):
+            description = metadata[field]['description']
+            if metakey == 'IntendedFor':    # IntendedFor is a special search-pattern field in BIDScoin
+                description += ('\nNB: These associated files can be dynamically searched for'
+                                '\nduring bidscoiner runtime with glob-style matching patterns,'
+                                '\n"such as <<Reward*_bold><Stop*_epi>>" (see documentation)')
+            return f"{metadata[field]['display_name']}\n{description}"
 
-    return f"{metakey}\nA private meta key"
+    return f"{metakey}\nAn unknown/private meta key"

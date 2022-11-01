@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
+### Added
+- Support for BIDS 1.8
+
 ## [3.7.4] - 2022-10-21
 
 ### Added

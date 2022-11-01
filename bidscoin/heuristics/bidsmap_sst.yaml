@@ -1537,6 +1537,7 @@ PAR:
       prep_direction:
     bids: &dwi_parent_DWI               # See: schema/datatypes/dwi.yaml
       acq: <protocol_name>
+      rec:
       dir:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
@@ -1548,6 +1549,7 @@ PAR:
       protocol_name: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*SBREF.*
     bids: &dwi_parent_sbref             # See: schema/datatypes/dwi.yaml
       acq: <protocol_name>
+      rec:
       dir:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
@@ -2490,6 +2492,7 @@ Nibabel:
     attributes: *nibattr
     bids: &dwi_nibent_DWI               # See: schema/datatypes/dwi.yaml
       acq: <descrip>
+      rec:
       dir:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
@@ -2502,6 +2505,7 @@ Nibabel:
     attributes: *nibattr
     bids: &dwi_nibent_sbref             # See: schema/datatypes/dwi.yaml
       acq: <descrip>
+      rec:
       dir:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]

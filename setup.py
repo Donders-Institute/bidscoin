@@ -20,7 +20,7 @@ setup(name                           = 'bidscoin',          # Required
                                         'phys2bidscoin': phys2bidscoin,
                                         'spec2nii2bids': spec2nii2bids,
                                         'deface':        deface},
-      package_data                   = {'': ['*version.txt', '*.yaml', 'bidscoin_logo.png', 'bidscoin.ico', 'rightarrow.png']},
+      package_data                   = {'': ['*version.txt', '*VERSION', '*.yaml', 'bidscoin_logo.png', 'bidscoin.ico', 'rightarrow.png']},
       entry_points                   = {'console_scripts': ['bidscoin         = bidscoin.bidscoin:main',
                                                             'bidseditor       = bidscoin.bidseditor:main',
                                                             'bidsmapper       = bidscoin.bidsmapper:main',

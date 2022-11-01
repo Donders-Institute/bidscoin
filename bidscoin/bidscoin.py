@@ -136,7 +136,7 @@ def bidsversion() -> str:
     :return:    The BIDS version number
     """
 
-    return (bidscoinfolder/'bidsversion.txt').read_text().strip()
+    return (schemafolder/'BIDS_VERSION').read_text().strip()
 
 
 def reporterrors() -> None:
@@ -203,15 +203,17 @@ def list_executables(show: bool=False) -> list:
     :return:                Nothing
     """
 
-    if show:
-        LOGGER.info('Executable BIDScoin tools:')
+    if show: LOGGER.info('Executable BIDScoin tools:')
 
     scripts = []
-    for script in entry_points()['console_scripts']:
+    if sys.version_info.major == 3 and sys.version_info.minor < 10:
+        console_scripts = entry_points()['console_scripts']                 # Raises DeprecationWarning for python >= 3.10: SelectableGroups dict interface is deprecated
+    else:
+        console_scripts = entry_points().select(group='console_scripts')    # The select method was introduced in python = 3.10
+    for script in console_scripts:
         if script.value.startswith('bidscoin'):
             scripts.append(script.name)
-            if show:
-                LOGGER.info(f"- {script.name}")
+            if show: LOGGER.info(f"- {script.name}")
 
     return scripts
 
@@ -443,14 +445,14 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
                 import bids         # This should work if bidscoin was not pip-installed
 
             bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile))
-            if not options:
-                options = bidsmap['Options']
         except Exception as bidsmaperror:
-            LOGGER.error(f'{bidsmaperror}')
+            LOGGER.error(f"An error occurred when loading {bidsmapfile}:\n{bidsmaperror}")
             success = False
     else:
-        if not options:
-            options = bidsmapfile['Options']
+        bidsmap = bidsmapfile
+
+    # Check if all entities of each datatype in the bidsmap are present
+    success = bids.check_template(bidsmap) and success
 
     # Test PyQt
     if testgui:
@@ -478,11 +480,13 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
         pass
 
     # Show an overview of the bidscoin tools. TODO: test the entry points?
-    if options and not options.get('plugins'):
-        LOGGER.warning('No plugins found in the bidsmap (BIDScoin will likely not do anything)')
     list_executables(True)
 
     # Test the plugins
+    if not options:
+        options = bidsmap['Options']
+    if not options.get('plugins'):
+        LOGGER.warning('No plugins found in the bidsmap (BIDScoin will likely not do anything)')
     if testplugins:
 
         # Show an overview of the plugins and show the test results

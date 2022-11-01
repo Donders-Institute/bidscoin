@@ -73,6 +73,6 @@ Note:
 .. |DOI| image:: https://img.shields.io/badge/doi-10.3389%2Ffinf.2021.770608-informational.svg
    :target: https://www.frontiersin.org/articles/10.3389/fninf.2021.770608
    :alt: DOI reference
-.. |BIDS| image:: https://img.shields.io/badge/BIDS-v1.7.0-blue
-   :target: https://bids-specification.readthedocs.io/en/v1.7.0/
+.. |BIDS| image:: https://img.shields.io/badge/BIDS-v1.8.0-blue
+   :target: https://bids-specification.readthedocs.io/en/v1.8.0/
    :alt: Brain Imaging Data Structure (BIDS)

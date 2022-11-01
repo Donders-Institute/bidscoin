@@ -162,7 +162,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                         else:
                             scans_table.loc['oldrow'] = None
 
-                        if output+'/' not in bidsignore + ['derivatives/'] and cefile.parent.name in bids.bidsdatatypes:
+                        if output+'/' not in bidsignore + ['derivatives/'] and cefile.parent.name in bids.datatyperules:
                             LOGGER.info(f"Adding '{cefile_rel}' to '{scans_tsv}'")
                             scans_table.loc[cefile_rel] = scans_table.loc['oldrow']
 
@@ -170,7 +170,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                             if echo in scans_table.index and not (session/echo).is_file():
                                 LOGGER.info(f"Removing '{echo}' from '{scans_tsv}'")
                                 scans_table.drop(echo, inplace=True)
-                            elif echo not in scans_table.index and (session/echo).is_file() and echo.split('/')[0] in bids.bidsdatatypes:
+                            elif echo not in scans_table.index and (session/echo).is_file() and echo.split('/')[0] in bids.datatyperules:
                                 LOGGER.info(f"Adding '{echo}' to '{scans_tsv}'")
                                 scans_table.loc[echo] = scans_table.loc['oldrow']       # NB: Assuming that the echo-rows are all identical
 

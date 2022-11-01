@@ -1125,7 +1125,7 @@ class EditWindow(QDialog):
         if self.target_datatype in self.bidsignore:
             bidskeys = run['bids'].keys()
         else:
-            bidskeys = [bids.entities[entity]['entity'] for entity in bids.entitiesorder if entity not in ('subject','session')] + ['suffix']   # Impose the BIDS-specified order + suffix
+            bidskeys = [bids.entities[entity]['name'] for entity in bids.entitiesorder if entity not in ('subject','session')] + ['suffix']   # Impose the BIDS-specified order + suffix
         for key in bidskeys:
             if key in run['bids']:
                 value = run['bids'].get(key)
@@ -1330,10 +1330,9 @@ class EditWindow(QDialog):
             elif value_:
                 QMessageBox.warning(self, 'Input error', f"Please enter a key-name (left cell) for the '{value_}' value in row {n+1}")
 
-        # Refresh the table if needed, i.e. delete empty rows or add a new row if a key is defined on the last row
-        if (not key and not value) or (key and rowindex + 1 == self.meta_table.rowCount()):
-            _, _, _, data_meta = self.run2data()
-            self.fill_table(self.meta_table, data_meta)
+        # Refresh the table, i.e. delete empty rows or add a new row if a key is defined on the last row
+        _, _, _, data_meta = self.run2data()
+        self.fill_table(self.meta_table, data_meta)
 
     def change_run(self, suffix_idx):
         """

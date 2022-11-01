@@ -315,10 +315,10 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                     else:
                         niifiles.extend(matches)
 
-                # Add the IntendedFor data. NB: The paths need to use forward slashes and be relative to the subject folder
+                # Add the IntendedFor data. NB: The BIDS URI paths need to use forward slashes and be relative to the bids root folder
                 if niifiles:
                     LOGGER.info(f"Adding IntendedFor to: {jsonfile}")
-                    jsondata['IntendedFor'] = [(Path(sesid)/niifile).as_posix() for niifile in niifiles]
+                    jsondata['IntendedFor'] = [f"bids::{(Path(subid)/sesid/niifile).as_posix()}" for niifile in niifiles]
                 else:
                     LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the search for {intendedfor} gave no results")
                     jsondata['IntendedFor'] = None
