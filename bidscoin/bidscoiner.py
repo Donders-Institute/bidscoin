@@ -277,8 +277,8 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                 try:                                                                                # There may be more fieldmaps, hence try to limit down the search to the adjacently acquired data
                     fmaptime = dateutil.parser.parse(scans_table.loc[fmap, 'acq_time'])
                     runindex = bids.get_bidsvalue(fmap, 'run')
-                    prevfmap = bids.get_bidsvalue(fmap, 'run', str(int(runindex) - 1))
-                    nextfmap = bids.get_bidsvalue(fmap, 'run', str(int(runindex) + 1))
+                    prevfmap = bids.get_bidsvalue(fmap, 'run', str(int(runindex) - 1 if runindex else ''))
+                    nextfmap = bids.get_bidsvalue(fmap, 'run', str(int(runindex) + 1 if runindex else ''))
                     if prevfmap in fmaps:
                         lowerbound = dateutil.parser.parse(scans_table.loc[prevfmap, 'acq_time'])   # Narrow the lower search limit down to the preceding fieldmap
                     if nextfmap in fmaps:
