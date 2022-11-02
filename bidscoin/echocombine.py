@@ -122,7 +122,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                     oldechos_rel = [echo.relative_to(session).as_posix() for echo in echos]
                     newechos_rel = [echo.relative_to(session).as_posix() for echo in echos + newechos if echo.is_file()]
                     if output == 'derivatives':
-                        cefile_rel = ''                 # A remote folder cannot be specified as IntendedFor :-(
+                        cefile_rel = ''                 # A remote folder cannot be specified easily, it's too much hassle
                     else:
                         cefile_rel = cefile.relative_to(session).as_posix()
 
@@ -134,12 +134,13 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                             intendedfor = metadata.get('IntendedFor', [])
                             if isinstance(intendedfor, str):
                                 intendedfor = [intendedfor]
-                            if sesid:                   # NB: IntendedFor is relative to the subject folder
+                            intendedfor = [file.split(f"bids::{subid}/",1)[1] for file in intendedfor]      # NB: IntendedFor is relative to the bids folder (split it off temporarily)
+                            if sesid:
                                 intendedfor = [file.split(sesid+'/',1)[1] for file in intendedfor]
                             if oldechos_rel[0] in intendedfor:
                                 LOGGER.info(f"Updating 'IntendedFor' in {fmap}")
                                 relfiles                = [file for file in intendedfor if file not in oldechos_rel] + newechos_rel + [cefile_rel]
-                                metadata['IntendedFor'] = [(Path(sesid)/relfile).as_posix() for relfile in relfiles]
+                                metadata['IntendedFor'] = [f"bids::{(Path(subid)/sesid/relfile).as_posix()}" for relfile in relfiles]
                                 with fmap.open('w') as fmap_fid:
                                     json.dump(metadata, fmap_fid, indent=4)
 

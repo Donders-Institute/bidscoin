@@ -144,9 +144,9 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                                 intendedfor = fmap_data['IntendedFor']
                                 if isinstance(intendedfor, str):
                                     intendedfor = [intendedfor]
-                                if (Path(sesid)/match_rel).as_posix() in intendedfor:
-                                    LOGGER.info(f"Updating 'IntendedFor' to {Path(sesid)/outputfile_rel} in {fmap}")
-                                    fmap_data['IntendedFor'] = intendedfor + [(Path(sesid)/outputfile_rel).as_posix()]
+                                if f"bids::{(Path(subid)/sesid/match_rel).as_posix()}" in intendedfor:
+                                    LOGGER.info(f"Updating 'IntendedFor' to bids::{(Path(subid)/sesid/outputfile_rel).as_posix()} in {fmap}")
+                                    fmap_data['IntendedFor'] = intendedfor + [f"bids::{(Path(subid)/sesid/outputfile_rel).as_posix()}"]
                                     with fmap.open('w') as fmap_fid:
                                         json.dump(fmap_data, fmap_fid, indent=4)
 
