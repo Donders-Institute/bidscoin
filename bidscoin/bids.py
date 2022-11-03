@@ -1409,12 +1409,14 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
 
             # Check if all expected entity-keys are present in the run and if they are properly filled
             for entity in datatyperules[datatype][typegroup]['entities']:
-                entitykey = entities[entity]['name']
-                bidsvalue = run['bids'].get(entitykey)
+                entitykey    = entities[entity]['name']
+                entityformat = entities[entity]['format']   # E.g. 'label' or 'index' (the entity type always seems to be 'string')
+                bidsvalue    = run['bids'].get(entitykey)
+                dynamicvalue = True if isinstance(bidsvalue, str) and ('<' in bidsvalue and '>' in bidsvalue) else False
                 if entitykey in ('sub', 'ses'): continue
                 if isinstance(bidsvalue, list):
                     bidsvalue = bidsvalue[bidsvalue[-1]]    # Get the selected item
-                if isinstance(bidsvalue, str) and not ('<' in bidsvalue and '>' in bidsvalue) and bidsvalue != cleanup_value(bidsvalue):
+                if not dynamicvalue and bidsvalue != cleanup_value(bidsvalue):
                     LOGGER.warning(f'Invalid {entitykey} value: "{bidsvalue}" for {run["provenance"]} -> {datatype}/*_{run["bids"]["suffix"]}')
                 if validate and entitykey not in run['bids']:
                     LOGGER.warning(f'Invalid bidsmap: BIDS entity "{entitykey}" is absent for {run["provenance"]} -> {datatype}/*_{run["bids"]["suffix"]}')
@@ -1422,6 +1424,9 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
                 elif datatyperules[datatype][typegroup]['entities'][entity]=='required' and not bidsvalue:
                     if validate is False:                   # Do not inform the user about empty template values
                         LOGGER.info(f'BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
+                    run_valsok = False
+                if bidsvalue and not dynamicvalue and entityformat=='index' and not str(bidsvalue).isnumeric():
+                    LOGGER.warning(f'Invalid bidsmap: The BIDS {entitykey}-index: "{bidsvalue}" is not a number for {run["provenance"]}')
                     run_valsok = False
 
             # Check if all the bids-keys are present in the schema file
@@ -1708,6 +1713,9 @@ def increment_runindex(bidsfolder: Path, bidsname: str, ext: str='.*') -> Union[
         runindex = get_bidsvalue(bidsname, 'run')
         if runindex:
             bidsname = get_bidsvalue(bidsname, 'run', str(int(runindex) + 1))
+        else:
+            LOGGER.error(f"Could not increment run-index in: {bidsfolder/bidsname}")
+            break
 
     return bidsname
 

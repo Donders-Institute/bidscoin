@@ -111,17 +111,16 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                 # Deface the echo-combined image
                 LOGGER.info(f"Creating a deface-mask from the echo-combined image: {tmpfile}")
                 if cluster:
-                    jt.args = [str(tmpfile), '--outfile', str(tmpfile), '--force'] + [item for pair in [[f"--{key}", val] for key,val in kwargs.items()] for item in pair]
+                    jt.args    = [str(tmpfile), '--outfile', str(tmpfile), '--force'] + [item for pair in [[f"--{key}", val] for key,val in kwargs.items()] for item in pair]
                     jt.jobName = f"pydeface_{subid}_{sesid}"
-                    jobid = pbatch.runJob(jt)
+                    jobid      = pbatch.runJob(jt)
                     LOGGER.info(f"Your deface job has been submitted with ID: {jobid}")
                 else:
                     pdu.deface_image(str(tmpfile), str(tmpfile), force=True, forcecleanup=True, **kwargs)
 
         if cluster:
             LOGGER.info('Waiting for the deface jobs to finish...')
-            pbatch.synchronize(jobIds=[pbatch.JOB_IDS_SESSION_ALL], timeout=pbatch.TIMEOUT_WAIT_FOREVER,
-                               dispose=True)
+            pbatch.synchronize(jobIds=[pbatch.JOB_IDS_SESSION_ALL], timeout=pbatch.TIMEOUT_WAIT_FOREVER, dispose=True)
             pbatch.deleteJobTemplate(jt)
 
     # Loop again over bids subject/session-directories to apply the deface masks and write meta-data

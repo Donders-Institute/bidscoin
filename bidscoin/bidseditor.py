@@ -1287,7 +1287,7 @@ class EditWindow(QDialog):
                     self.bids_table.item(rowindex, 1).setText(value)
                 if key == 'run' and '<<' in oldvalue and '>>' in oldvalue:
                     answer = QMessageBox.question(self, f"Edit bids entities",
-                                                  f'It is highly discouraged to change the <<dynamic>> run-index unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
+                                                  f'It is discouraged to change the <<dynamic>> run-index unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                     if answer==QMessageBox.Yes:
                         LOGGER.warning(f"Expert usage: User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")

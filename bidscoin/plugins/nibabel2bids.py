@@ -194,7 +194,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
         # Compose the BIDS filename using the matched run
         bidsname = bids.get_bidsname(subid, sesid, run, datasource.datatype in bidsmap['Options']['bidscoin']['bidsignore'], runtime=True)
-        runindex = run['bids'].get('run', '')
+        runindex = run['bids'].get('run')
+        runindex = str(runindex) if runindex else ''
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(outfolder, bidsname)
         bidsfile = (outfolder/bidsname).with_suffix(ext)
