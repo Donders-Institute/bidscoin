@@ -304,7 +304,8 @@ def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (List[
         copy_tree(str(sourcefolder), str(worksubses))                                   # Older python versions don't support PathLib
 
         # Unpack the zip/tarballed files in the temporary folder
-        sessions = []
+        sessions  = []
+        recursive = False
         for packedfile in [worksubses/packedfile.name for packedfile in packedfiles]:
             LOGGER.info(f"Unpacking: {packedfile.name} -> {worksubses}")
             ext = packedfile.suffixes
@@ -315,12 +316,15 @@ def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (List[
                 with tarfile.open(packedfile, 'r') as tar_fid:
                     tar_fid.extractall(worksubses)
 
-            # Sort the DICOM files immediately (to avoid name collisions)
+            # Sort the DICOM files in the worksubses rootfolder immediately (to avoid name collisions)
             if not (worksubses/'DICOMDIR').is_file():
-                sessions += dicomsort.sortsessions(worksubses, recursive=False)
+                if get_dicomfile(worksubses).name:
+                    sessions += dicomsort.sortsessions(worksubses, recursive=False)
+                else:
+                    recursive = True
 
         # Sort the DICOM files if not sorted yet (e.g. DICOMDIR)
-        sessions = list(set(sessions + dicomsort.sortsessions(worksubses, recursive=False)))
+        sessions = list(set(sessions + dicomsort.sortsessions(worksubses, recursive=recursive)))
 
         return sessions, True
 
