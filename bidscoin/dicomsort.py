@@ -133,7 +133,7 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
 
 
 def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folderscheme: str='{SeriesNumber:03d}-{SeriesDescription}',
-                 namescheme: str='', pattern: str='.*\.(IMA|dcm)$', dryrun: bool=False) -> List[Path]:
+                 namescheme: str='', pattern: str='.*\.(IMA|dcm)$', recursive: bool=True, dryrun: bool=False) -> List[Path]:
     """
     Wrapper around sortsession() to loop over subjects and sessions and map the session DICOM files
 
@@ -143,6 +143,7 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
     :param folderscheme: Optional naming scheme for the sorted (e.g. Series) subfolders. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields', default='{SeriesNumber:03d}-{SeriesDescription}'
     :param namescheme:   Optional naming scheme for renaming the files. Follows the Python string formatting syntax with DICOM field names in curly bracers, e.g. {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA
     :param pattern:      The regular expression pattern used in re.match() to select the dicom files
+    :param recurive:     Boolean to search for DICOM files recursively in a session folder
     :param dryrun:       Boolean to just display the action
     :return:             List of sorted sessions
     """
@@ -181,12 +182,15 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
             else:
                 sessionfolders = [subjectfolder]
             for sessionfolder in sessionfolders:
-                sessions += sortsessions(sessionfolder, folderscheme=folderscheme, namescheme=namescheme, pattern=pattern, dryrun=dryrun)
+                sessions += sortsessions(sessionfolder, folderscheme=folderscheme, namescheme=namescheme, pattern=pattern, recursive=recursive, dryrun=dryrun)
 
     # Sort the DICOM files in the sourcefolder
     else:
-        sessions   = [sourcefolder]
-        dicomfiles = [dcmfile for dcmfile in sourcefolder.rglob('*') if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
+        sessions = [sourcefolder]
+        if recursive:
+            dicomfiles = [dcmfile for dcmfile in sourcefolder.rglob('*') if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
+        else:
+            dicomfiles = [dcmfile for dcmfile in sourcefolder.iterdir()  if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
         if dicomfiles:
             sortsession(sourcefolder, dicomfiles, folderscheme, namescheme, dryrun)
 

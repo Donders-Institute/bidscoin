@@ -316,10 +316,10 @@ def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (List[
                     tar_fid.extractall(worksubses)
 
             # Sort the DICOM files immediately (to avoid name collisions)
-            sessions += dicomsort.sortsessions(worksubses)
+            sessions += dicomsort.sortsessions(worksubses, recursive=False)
 
         # Sort the DICOM files if not sorted yet (e.g. DICOMDIR)
-        sessions = list(set(sessions + dicomsort.sortsessions(worksubses)))
+        sessions = list(set(sessions + dicomsort.sortsessions(worksubses, recursive=False)))
 
         return sessions, True
 
