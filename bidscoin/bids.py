@@ -1416,7 +1416,7 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
                 if entitykey in ('sub', 'ses'): continue
                 if isinstance(bidsvalue, list):
                     bidsvalue = bidsvalue[bidsvalue[-1]]    # Get the selected item
-                if not dynamicvalue and bidsvalue != cleanup_value(bidsvalue):
+                if bidsvalue and not dynamicvalue and bidsvalue != cleanup_value(bidsvalue):
                     LOGGER.warning(f'Invalid {entitykey} value: "{bidsvalue}" for {run["provenance"]} -> {datatype}/*_{run["bids"]["suffix"]}')
                 if validate and entitykey not in run['bids']:
                     LOGGER.warning(f'Invalid bidsmap: BIDS entity "{entitykey}" is absent for {run["provenance"]} -> {datatype}/*_{run["bids"]["suffix"]}')

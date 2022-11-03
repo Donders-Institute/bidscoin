@@ -1285,7 +1285,7 @@ class EditWindow(QDialog):
                 if isinstance(value, str) and ('<<' not in value or '>>' not in value):
                     value = bids.cleanup_value(self.datasource.dynamicvalue(value))
                     self.bids_table.item(rowindex, 1).setText(value)
-                if key == 'run' and '<<' in oldvalue and '>>' in oldvalue:
+                if key == 'run' and value and '<<' in oldvalue and '>>' in oldvalue:
                     answer = QMessageBox.question(self, f"Edit bids entities",
                                                   f'It is discouraged to change the <<dynamic>> run-index unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
