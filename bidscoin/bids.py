@@ -1426,7 +1426,7 @@ def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
                         LOGGER.info(f'BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
                     run_valsok = False
                 if bidsvalue and not dynamicvalue and entityformat=='index' and not str(bidsvalue).isnumeric():
-                    LOGGER.warning(f'Invalid bidsmap: The BIDS {entitykey}-index: "{bidsvalue}" is not a number for {run["provenance"]}')
+                    LOGGER.warning(f'Invalid BIDS {entitykey}-index: "{bidsvalue}" is not a number for {run["provenance"]} -> {datatype}/*_{run["bids"]["suffix"]}')
                     run_valsok = False
 
             # Check if all the bids-keys are present in the schema file
