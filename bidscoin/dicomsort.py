@@ -124,7 +124,7 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
             newfilename = pathname/construct_name(namescheme, dicomfile)
         else:
             newfilename = pathname/dicomfile.name
-        if newfilename.samefile(dicomfile):
+        if newfilename == dicomfile:
             continue
         if newfilename.is_file():
             LOGGER.warning(f"File already exists: {dicomfile} -> {newfilename}")
