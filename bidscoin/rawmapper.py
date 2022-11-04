@@ -119,7 +119,7 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: boo
                 with mapperfile.open('a') as fid:
                     fid.write(f"{subid}\t{sesid}\t{newsubid}\t{newsesid}\n")
                 if newsession.is_dir():
-                    for item in session.iterdir():
+                    for item in list(session.iterdir()):
                         shutil.move(item, newsession/item.name)
                     session.rmdir()
                 else:

@@ -182,8 +182,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     if not force and bidssession.is_dir():
                         datatypes = []
                         for dataformat in dataformats:
-                            for datatype in bidscoin.lsdirs(bidssession):                           # See what datatypes we already have in the bids session-folder
-                                if datatype.iterdir() and bidsmap[dataformat].get(datatype.name):   # See if we are going to add data for this datatype
+                            for datatype in bidscoin.lsdirs(bidssession):                               # See what datatypes we already have in the bids session-folder
+                                if list(datatype.iterdir()) and bidsmap[dataformat].get(datatype.name): # See if we are going to add data for this datatype
                                     datatypes.append(datatype.name)
                         if datatypes:
                             LOGGER.info(f"Skipping processed session: {bidssession} already has {datatypes} data (you can carefully use the -f option to overrule)")
