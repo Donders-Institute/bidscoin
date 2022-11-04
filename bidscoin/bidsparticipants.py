@@ -147,7 +147,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, bidsmapfile: st
                     participants_dict['session_id'] = {'Description': 'Session identifier'}
 
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-                sesfolders, unpacked = bids.unpack(session)
+                sesfolders, unpacked = bids.unpack(session, bidsmap['Options']['bidscoin'].get('unzip',''))
                 for sesfolder in sesfolders:
 
                     # Update / append the personal source data
