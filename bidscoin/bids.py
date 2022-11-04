@@ -268,28 +268,24 @@ class DataSource:
         return value
 
 
-def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (List[Path], bool):
+def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> (List[Path], bool):
     """
     Unpacks and sorts DICOM files in sourcefolder to a temporary folder if sourcefolder contains a DICOMDIR file or .tar.gz, .gz or .zip files
 
     :param sourcefolder:    The full pathname of the folder with the source data
-    :param wildcard:        A glob search pattern to select the tarballed/zipped files
+    :param wildcard:        A glob search pattern to select the tarballed/zipped files (leave empty to skip unzipping)
     :param workfolder:      A root folder for temporary data
     :return:                Either ([unpacked and sorted session folders], True), or ([sourcefolder], False)
     """
 
     # Search for zipped/tarballed files
-    packedfiles = []
-    packedfiles.extend(sourcefolder.glob(f"{wildcard}.tar"))
-    packedfiles.extend(sourcefolder.glob(f"{wildcard}.tar.?z"))
-    packedfiles.extend(sourcefolder.glob(f"{wildcard}.tar.bz2"))
-    packedfiles.extend(sourcefolder.glob(f"{wildcard}.zip"))
+    tarzipfiles = list(sourcefolder.glob(wildcard)) if wildcard else []
 
     # See if we have a flat unsorted (DICOM) data organization, i.e. no directories, but DICOM-files
     flatDICOM = not bidscoin.lsdirs(sourcefolder) and get_dicomfile(sourcefolder).is_file()
 
     # Check if we are going to do unpacking and/or sorting
-    if packedfiles or flatDICOM or (sourcefolder/'DICOMDIR').is_file():
+    if tarzipfiles or flatDICOM or (sourcefolder/'DICOMDIR').is_file():
 
         # Create a (temporary) sub/ses workfolder for unpacking the data
         if not workfolder:
@@ -301,19 +297,19 @@ def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (List[
 
         # Copy everything over to the workfolder
         LOGGER.info(f"Making temporary copy: {sourcefolder} -> {worksubses}")
-        copy_tree(str(sourcefolder), str(worksubses))                                   # Older python versions don't support PathLib
+        copy_tree(str(sourcefolder), str(worksubses))       # Older python versions don't support PathLib
 
         # Unpack the zip/tarballed files in the temporary folder
         sessions  = []
         recursive = False
-        for packedfile in [worksubses/packedfile.name for packedfile in packedfiles]:
-            LOGGER.info(f"Unpacking: {packedfile.name} -> {worksubses}")
-            ext = packedfile.suffixes
+        for tarzipfile in [worksubses/tarzipfile.name for tarzipfile in tarzipfiles]:
+            LOGGER.info(f"Unpacking: {tarzipfile.name} -> {worksubses}")
+            ext = tarzipfile.suffixes
             if ext and ext[-1] == '.zip':
-                with zipfile.ZipFile(packedfile, 'r') as zip_fid:
+                with zipfile.ZipFile(tarzipfile, 'r') as zip_fid:
                     zip_fid.extractall(worksubses)
             elif '.tar' in ext:
-                with tarfile.open(packedfile, 'r') as tar_fid:
+                with tarfile.open(tarzipfile, 'r') as tar_fid:
                     tar_fid.extractall(worksubses)
 
             # Sort the DICOM files in the worksubses rootfolder immediately (to avoid name collisions)
@@ -321,7 +317,7 @@ def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (List[
                 if get_dicomfile(worksubses).name:
                     sessions += dicomsort.sortsessions(worksubses, recursive=False)
                 else:
-                    recursive = True
+                    recursive = True                        # The unzipped data may have leading directory components
 
         # Sort the DICOM files if not sorted yet (e.g. DICOMDIR)
         sessions = list(set(sessions + dicomsort.sortsessions(worksubses, recursive=recursive)))

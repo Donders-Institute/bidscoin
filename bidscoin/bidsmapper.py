@@ -32,7 +32,7 @@ except ImportError:
 localversion, versionmessage = bidscoin.version(check=True)
 
 
-def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, plugins: list, subprefix: str, sesprefix: str, store: bool=False, noedit: bool=False, force: bool=False) -> None:
+def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, plugins: list, subprefix: str, sesprefix: str, unzip: str, store: bool=False, noedit: bool=False, force: bool=False) -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder
     and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code/bidscoin.
@@ -45,6 +45,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     :param plugins:         Optional list of plugins that should be used (overrules the list in the study/template bidsmaps)
     :param subprefix:       The prefix common for all source subject-folders
     :param sesprefix:       The prefix common for all source session-folders
+    :param unzip:           Wildcard pattern to select tar/zip-files in the session folder. Leave empty to use the bidsmap value
     :param store:           If True, the provenance samples will be stored
     :param noedit:          The bidseditor will not be launched if True
     :param force:           If True, the previous bidsmap and logfiles will be deleted
@@ -89,6 +90,10 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     bidscoindatatypes   = bidsmap_new['Options']['bidscoin'].get('datatypes',[])
     unknowndatatypes    = bidsmap_new['Options']['bidscoin'].get('unknowntypes',[])
     ignoredatatypes     = bidsmap_new['Options']['bidscoin'].get('ignoretypes',[])
+    if unzip:
+        bidsmap_new['Options']['bidscoin']['unzip'] = unzip
+    else:
+        unzip = bidsmap_new['Options']['bidscoin'].get('unzip','')
     for dataformat in bidsmap_new:
         if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (-> 'PlugIns')
         for datatype in bidscoindatatypes + unknowndatatypes + ignoredatatypes:
@@ -127,7 +132,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                 LOGGER.info(f"Mapping: {session} (subject {n}/{len(subjects)})")
 
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-                sesfolders, unpacked = bids.unpack(session)
+                sesfolders, unpacked = bids.unpack(session, unzip)
                 for sesfolder in sesfolders:
                     if store:
                         store = {'source': sesfolder.parent.parent.parent.parent if unpacked else rawfolder.parent, 'target': bidscoinfolder/'provenance'}
@@ -233,15 +238,17 @@ def main():
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
                                             '  bidsmapper /project/foo/raw /project/foo/bids\n'
-                                            '  bidsmapper /project/foo/raw /project/foo/bids -t bidsmap_dccn\n'
-                                            '  bidsmapper /project/foo/raw /project/foo/bids -p nibabel2bids\n ')
+                                            '  bidsmapper /project/foo/raw /project/foo/bids -t bidsmap_dccn    # Uses a bidsmap of choice\n'
+                                            '  bidsmapper /project/foo/raw /project/foo/bids -p nibabel2bids    # Uses a plugin of choice\n'
+                                            "  bidsmapper /project/foo/raw /project/foo/bids -u '*.tar.gz'      # Unzip tarballed sourcefiles\n ")
     parser.add_argument('sourcefolder',       help='The study root folder containing the raw source data folders')
     parser.add_argument('bidsfolder',         help='The destination folder with the (future) bids data and the bidsfolder/code/bidscoin/bidsmap.yaml output file')
     parser.add_argument('-b','--bidsmap',     help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
     parser.add_argument('-t','--template',    help='The bidsmap template file with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap_dccn.yaml', default=bidscoin.bidsmap_template)
-    parser.add_argument('-p','--plugins',     help='List of plugins to be used (with default options, overrules the plugin list in the study/template bidsmaps)', nargs='+', default=[])
-    parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders (e.g. 'Pt' is the subprefix if subject folders are named 'Pt018', 'Pt019', ...). Use '*' when your subject folders do not have a prefix. Default: the value of the study or template bidsmap, e.g. 'sub-'")
-    parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders (e.g. 'M_' is the subprefix if session folders are named 'M_pre', 'M_post', ...). Use '*' when your session folders do not have a prefix. Default: the value of the study or template bidsmap, e.g. 'ses-'")
+    parser.add_argument('-p','--plugins',     help='List of plugins to be used. Default: the plugin list of the study/template bidsmap)', nargs='+', default=[])
+    parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders (e.g. 'Pt' is the subprefix if subject folders are named 'Pt018', 'Pt019', ...). Use '*' when your subject folders do not have a prefix. Default: the value of the study/template bidsmap, e.g. 'sub-'")
+    parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders (e.g. 'M_' is the subprefix if session folders are named 'M_pre', 'M_post', ...). Use '*' when your session folders do not have a prefix. Default: the value of the study/template bidsmap, e.g. 'ses-'")
+    parser.add_argument('-u', '--unzip',      help="Wildcard pattern to unpack tarballed/zip-files in the sub/ses sourcefolder that need to be unzipped (in a tempdir) to make the data readable. Default: the value of the study/template bidsmap")
     parser.add_argument('-s','--store',       help="Flag to store provenance data samples in the bidsfolder/'code'/'provenance' folder (useful for inspecting e.g. zipped or transfered datasets)", action='store_true')
     parser.add_argument('-a','--automated',   help="Flag to save the automatically generated bidsmap to disk and without interactively tweaking it with the bidseditor", action='store_true')
     parser.add_argument('-f','--force',       help='Flag to discard the previously saved bidsmap and logfile', action='store_true')
@@ -255,6 +262,7 @@ def main():
                plugins      = args.plugins,
                subprefix    = args.subprefix,
                sesprefix    = args.sesprefix,
+               unzip        = args.unzip,
                store        = args.store,
                noedit       = args.automated,
                force        = args.force)
