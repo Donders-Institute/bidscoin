@@ -293,7 +293,7 @@ def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> (List[P
             workfolder = Path(tempfile.mkdtemp(dir=tempfile.gettempdir()))
         else:
             workfolder = Path(workfolder)/next(tempfile._get_candidate_names())
-        worksubses = workfolder/sourcefolder.relative_to('/')
+        worksubses = workfolder/sourcefolder.relative_to(sourcefolder.anchor)
         worksubses.mkdir(parents=True, exist_ok=True)
 
         # Copy everything over to the workfolder
