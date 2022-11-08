@@ -17,7 +17,6 @@ import copy
 import logging
 import sys
 import shutil
-import re
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
@@ -76,7 +75,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
     # Get the heuristics for filling the new bidsmap
     bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile,  bidscoinfolder, plugins)
-    template, _              = bids.load_bidsmap(templatefile, bidscoinfolder, plugins)
+    template, _              = bids.load_bidsmap(templatefile, bidscoinfolder, plugins, validate=(True,True,False))
 
     # Create the new bidsmap as a copy / bidsmap skeleton with no datatype entries (i.e. bidsmap with empty lists)
     if force:
@@ -87,18 +86,15 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     else:
         bidsmap_new = copy.deepcopy(template)
     template['Options'] = bidsmap_new['Options']                # Always use the options of the new bidsmap
-    bidscoindatatypes   = bidsmap_new['Options']['bidscoin'].get('datatypes',[])
-    unknowndatatypes    = bidsmap_new['Options']['bidscoin'].get('unknowntypes',[])
-    ignoredatatypes     = bidsmap_new['Options']['bidscoin'].get('ignoretypes',[])
     if unzip:
         bidsmap_new['Options']['bidscoin']['unzip'] = unzip
     else:
         unzip = bidsmap_new['Options']['bidscoin'].get('unzip','')
     for dataformat in bidsmap_new:
-        if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (-> 'PlugIns')
-        for datatype in bidscoindatatypes + unknowndatatypes + ignoredatatypes:
-            if bidsmap_new[dataformat].get(datatype):
-                bidsmap_new[dataformat][datatype] = None
+        if dataformat == 'Options': continue
+        for datatype in bidsmap_new[dataformat]:
+            if datatype not in ('subject', 'session'):
+                bidsmap_new[dataformat][datatype] = []
 
     # Store/retrieve the empty or user-defined sub-/ses-prefix
     subprefix, sesprefix = setprefix(bidsmap_new, subprefix, sesprefix, rawfolder)
@@ -222,7 +218,7 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path) ->
             if not bidsmap[dataformat]['session'].startswith(f"<<filepath:.*/{rawfolder.name}"):
                 bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace('<<filepath:', f"<<filepath:.*/{rawfolder.name}")
         for datatype in bidsmap[dataformat]:
-            if not isinstance(bidsmap[dataformat][datatype], list): continue
+            if not isinstance(bidsmap[dataformat][datatype], list): continue  # E.g. 'subject' and 'session'
             for run in bidsmap[dataformat][datatype]:
                 run['datasource'].subprefix = subprefix
                 run['datasource'].sesprefix = sesprefix

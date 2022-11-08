@@ -113,7 +113,6 @@ class MainWindow(QMainWindow):
         self.template_bidsmap  = template_bidsmap               # The bidsmap from which new datatype run-items are taken
         self.datasaved         = datasaved                      # True if data has been saved on disk
         self.dataformats       = [dataformat for dataformat in input_bidsmap if dataformat and dataformat not in ('Options', 'PlugIns') and bids.dir_bidsmap(input_bidsmap, dataformat)]
-        self.bidscoindatatypes = input_bidsmap['Options']['bidscoin'].get('datatypes',[])
         self.unknowndatatypes  = input_bidsmap['Options']['bidscoin'].get('unknowntypes',[])
         self.ignoredatatypes   = input_bidsmap['Options']['bidscoin'].get('ignoretypes',[])
         self.bidsignore        = input_bidsmap['Options']['bidscoin'].get('bidsignore','')
@@ -239,12 +238,12 @@ class MainWindow(QMainWindow):
         actionreset.triggered.connect(self.reset)
         menufile.addAction(actionreset)
 
-        actionsave = QAction(self)
-        actionsave.setText('Open')
-        actionsave.setStatusTip('Open a new bidsmap from disk')
-        actionsave.setShortcut('Ctrl+O')
-        actionsave.triggered.connect(self.open_bidsmap)
-        menufile.addAction(actionsave)
+        actionopen = QAction(self)
+        actionopen.setText('Open')
+        actionopen.setStatusTip('Open a new bidsmap from disk')
+        actionopen.setShortcut('Ctrl+O')
+        actionopen.triggered.connect(self.open_bidsmap)
+        menufile.addAction(actionopen)
 
         actionsave = QAction(self)
         actionsave.setText('Save')
@@ -457,16 +456,14 @@ class MainWindow(QMainWindow):
         samples_table.blockSignals(True)
         samples_table.setSortingEnabled(False)
         samples_table.clearContents()
-        for datatype in self.bidscoindatatypes + self.unknowndatatypes + self.ignoredatatypes:
-            runs = output_bidsmap.get(dataformat, {}).get(datatype, [])
-
-            if not runs: continue
+        for datatype, runs in output_bidsmap[dataformat].items():
+            if not isinstance(runs, list): continue     # E.g. datape = 'subject' or 'session'
             for run in runs:
 
                 # Check the run
                 loglevel = LOGGER.level
                 LOGGER.setLevel('ERROR')
-                validrun = bids.check_run(datatype, run, validate=False)
+                validrun = all(bids.check_run(datatype, run, validate=(False,True,True))[1:3])
                 LOGGER.setLevel(loglevel)
 
                 provenance   = Path(run['provenance'])
@@ -498,9 +495,6 @@ class MainWindow(QMainWindow):
                     if datatype in self.bidsignore:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('darkorange'))
                         samples_table.item(idx, 3).setToolTip(f"Orange: This {datatype} item is ignored by BIDS-apps and BIDS-validators")
-                    elif not validrun or datatype in self.unknowndatatypes:
-                        samples_table.item(idx, 3).setForeground(QtGui.QColor('red'))
-                        samples_table.item(idx, 3).setToolTip(f"Red: This {datatype} item is not BIDS-valid but will still be converted. You should edit this item or make sure it is in your bidsignore list ([Options] tab)")
                     elif datatype in self.ignoredatatypes:
                         samples_table.item(idx, 1).setForeground(QtGui.QColor('gray'))
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('gray'))
@@ -508,6 +502,9 @@ class MainWindow(QMainWindow):
                         f.setStrikeOut(True)
                         samples_table.item(idx, 3).setFont(f)
                         samples_table.item(idx, 3).setToolTip('Gray / Strike-out: This imaging data type will be ignored and not converted BIDS')
+                    elif not validrun or datatype in self.unknowndatatypes:
+                        samples_table.item(idx, 3).setForeground(QtGui.QColor('red'))
+                        samples_table.item(idx, 3).setToolTip(f"Red: This {datatype} item is not BIDS-valid but will still be converted. You should edit this item or make sure it is in your bidsignore list ([Options] tab)")
                     else:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('green'))
                         samples_table.item(idx, 3).setToolTip(f"Green: This '{datatype}' data type is part of BIDS")
@@ -648,7 +645,6 @@ class MainWindow(QMainWindow):
                         self.datachanged = True
             if plugin == 'bidscoin':
                 self.output_bidsmap['Options']['bidscoin'] = newoptions
-                self.bidscoindatatypes = newoptions.get('datatypes', [])
                 self.unknowndatatypes  = newoptions.get('unknowntypes', [])
                 self.ignoredatatypes   = newoptions.get('ignoretypes', [])
                 self.bidsignore        = newoptions.get('bidsignore', '')
@@ -873,9 +869,9 @@ class EditWindow(QDialog):
         self.source_datatype   = datasource.datatype    # The BIDS datatype of the original run-item
         self.target_datatype   = datasource.datatype    # The BIDS datatype that the edited run-item is being changed into
         self.current_datatype  = datasource.datatype    # The BIDS datatype of the run-item just before it is being changed (again)
-        self.bidscoindatatypes = [datatype for datatype in bidsmap['Options']['bidscoin'].get('datatypes',[])    if datatype in template_bidsmap[self.dataformat]]
-        self.unknowndatatypes  = [datatype for datatype in bidsmap['Options']['bidscoin'].get('unknowntypes',[]) if datatype in template_bidsmap[self.dataformat]]
-        self.ignoredatatypes   = [datatype for datatype in bidsmap['Options']['bidscoin'].get('ignoretypes',[])  if datatype in template_bidsmap[self.dataformat]]
+        self.unknowndatatypes  = bidsmap['Options']['bidscoin'].get('unknowntypes',[])
+        self.ignoredatatypes   = bidsmap['Options']['bidscoin'].get('ignoretypes',[])
+        self.bidsdatatypes     = [datatype for datatype in bidsmap[datasource.dataformat] if datatype not in self.unknowndatatypes + self.ignoredatatypes + ['subject', 'session']]
         self.bidsignore        = bidsmap['Options']['bidscoin'].get('bidsignore','')
         self.source_bidsmap    = bidsmap                # The bidsmap at the start of the edit = output_bidsmap in the MainWindow
         self.target_bidsmap    = copy.deepcopy(bidsmap) # The edited bidsmap -> will be returned as output_bidsmap in the MainWindow
@@ -915,11 +911,11 @@ class EditWindow(QDialog):
         self.datatype_label = QLabel('Data type')
         self.datatype_label.setToolTip(f"The BIDS data type and entities for constructing the BIDS output filename. You are encouraged to change their default values to be more meaningful and readable")
         self.datatype_dropdown = QComboBox()
-        self.datatype_dropdown.addItems(self.bidscoindatatypes + self.unknowndatatypes + self.ignoredatatypes)
+        self.datatype_dropdown.addItems(self.bidsdatatypes + self.unknowndatatypes + self.ignoredatatypes)
         self.datatype_dropdown.setCurrentIndex(self.datatype_dropdown.findText(self.target_datatype))
         self.datatype_dropdown.currentIndexChanged.connect(self.datatype_dropdown_change)
         self.datatype_dropdown.setToolTip('The BIDS data type. First make sure this one is correct, then choose the right suffix')
-        for n, datatype in enumerate(self.bidscoindatatypes):
+        for n, datatype in enumerate(self.bidsdatatypes + self.unknowndatatypes):
             self.datatype_dropdown.setItemData(n, bids.get_datatypehelp(datatype), QtCore.Qt.ToolTipRole)
 
         # Set-up the BIDS table
@@ -1082,11 +1078,9 @@ class EditWindow(QDialog):
         """Derive the possible suffixes for each datatype from the template. """
 
         allowed_suffixes = {}
-        for datatype in self.bidscoindatatypes + self.unknowndatatypes + self.ignoredatatypes:
+        for datatype in self.bidsdatatypes + self.unknowndatatypes + self.ignoredatatypes:
             allowed_suffixes[datatype] = []
-            runs = self.template_bidsmap.get(self.dataformat, {}).get(datatype, [])
-            if not runs: continue
-            for run in runs:
+            for run in self.template_bidsmap[self.dataformat].get(datatype, []):
                 suffix = run['bids'].get('suffix')
                 if suffix and suffix not in allowed_suffixes.get(datatype, []):
                     allowed_suffixes[datatype].append(suffix)
@@ -1129,7 +1123,7 @@ class EditWindow(QDialog):
         for key in bidskeys:
             if key in run['bids']:
                 value = run['bids'].get(key)
-                if (self.target_datatype in self.bidscoindatatypes and key=='suffix') or isinstance(value, list):
+                if (self.target_datatype in self.bidsdatatypes and key=='suffix') or isinstance(value, list):
                     iseditable = False
                 else:
                     iseditable = True
@@ -1175,7 +1169,7 @@ class EditWindow(QDialog):
 
         for i, row in enumerate(data + addrow):
             key = row[0]['value']
-            if table.objectName()=='bids' and key=='suffix' and self.target_datatype in self.bidscoindatatypes:
+            if table.objectName()=='bids' and key=='suffix' and self.target_datatype in self.bidsdatatypes:
                 table.setItem(i, 0, MyWidgetItem('suffix', iseditable=False))
                 suffixes = self.allowed_suffixes.get(self.target_datatype, [''])
                 suffix_dropdown = self.suffix_dropdown = QComboBox()
@@ -1403,7 +1397,7 @@ class EditWindow(QDialog):
             self.bidsname_textbox.setToolTip(f"Gray / Strike-out: This '{self.target_datatype}' data type will be ignored and not converted BIDS. Click 'OK' if you want your BIDS output data to look like this")
             self.bidsname_textbox.setTextColor(QtGui.QColor('gray'))
             font.setStrikeOut(True)
-        elif not bids.check_run(self.target_datatype, self.target_run):
+        elif not all(bids.check_run(self.target_datatype, self.target_run, validate=(False,True,True))[1:3]):
             self.bidsname_textbox.setToolTip(f"Red: This name is not valid according to the BIDS standard -- see terminal output for more info")
             self.bidsname_textbox.setTextColor(QtGui.QColor('red'))
             font.setStrikeOut(False)
@@ -1446,7 +1440,7 @@ class EditWindow(QDialog):
     def accept_run(self):
         """Save the changes to the target_bidsmap and send it back to the main window: Finished!"""
 
-        if not bids.check_run(self.target_datatype, self.target_run):
+        if False in bids.check_run(self.target_datatype, self.target_run, validate=(False,False,False))[1:3]:
             answer = QMessageBox.question(self, 'Edit BIDS mapping', f'The "{self.target_datatype}/*_{self.target_run["bids"].get("suffix")}" run is not valid according to the BIDS standard. Do you want to go back and edit the run?',
                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
             if answer == QMessageBox.Yes:
@@ -1478,7 +1472,7 @@ class EditWindow(QDialog):
         if yamlfile:
             LOGGER.info(f'Exporting run item: bidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}')
             yamlfile   = Path(yamlfile)
-            bidsmap, _ = bids.load_bidsmap(yamlfile, Path(), report=False)
+            bidsmap, _ = bids.load_bidsmap(yamlfile, Path(), validate=(False,False,False))
             bids.append_run(bidsmap, self.target_run)
             bids.save_bidsmap(yamlfile, bidsmap)
             QMessageBox.information(self, 'Edit BIDS mapping', f"Successfully exported:\n\nbidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}")
@@ -1648,7 +1642,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='') -> No
     LOGGER.info(f">>> bidseditor bidsfolder={bidsfolder} bidsmap={bidsmapfile} template={templatefile}")
 
     # Obtain the initial bidsmap info
-    template_bidsmap, templatefile = bids.load_bidsmap(templatefile, bidsfolder/'code'/'bidscoin')
+    template_bidsmap, templatefile = bids.load_bidsmap(templatefile, bidsfolder/'code'/'bidscoin', validate=(True,True,False))
     input_bidsmap, bidsmapfile     = bids.load_bidsmap(bidsmapfile,  bidsfolder/'code'/'bidscoin')
     if input_bidsmap.get('Options'):
         template_bidsmap['Options'] = input_bidsmap['Options']      # Always use the options of the input bidsmap

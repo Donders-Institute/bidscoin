@@ -145,7 +145,7 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
     :param folderscheme: Optional naming scheme for the sorted (e.g. Series) subfolders. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields', default='{SeriesNumber:03d}-{SeriesDescription}'
     :param namescheme:   Optional naming scheme for renaming the files. Follows the Python string formatting syntax with DICOM field names in curly bracers, e.g. {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA
     :param pattern:      The regular expression pattern used in re.match() to select the dicom files
-    :param recurive:     Boolean to search for DICOM files recursively in a session folder
+    :param recursive:    Boolean to search for DICOM files recursively in a session folder
     :param dryrun:       Boolean to just display the action
     :return:             List of sorted sessions
     """

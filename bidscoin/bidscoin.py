@@ -444,9 +444,10 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
             except ImportError:
                 import bids         # This should work if bidscoin was not pip-installed
 
-            bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile))
+            bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile), validate=(True,True,False))
         except Exception as bidsmaperror:
             LOGGER.error(f"An error occurred when loading {bidsmapfile}:\n{bidsmaperror}")
+            bidsmap = {'Options': {}}
             success = False
     else:
         bidsmap = bidsmapfile

@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Changed
 - The default behaviour is now not to unzip data in the sourcefolders anymore. Instead, users can use the `--unzip` option in the bidsmapper
+- Removed BIDScoin's redundant/confusing `datatypes` option from the bidsmap
 
 ## [3.7.4] - 2022-10-21
 

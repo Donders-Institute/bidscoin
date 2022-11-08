@@ -9,3 +9,4 @@ tqdm>=4.60.0
 multiecho>=0.25
 python-dateutil
 nibabel
+bids_validator
