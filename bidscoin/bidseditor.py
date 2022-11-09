@@ -71,7 +71,7 @@ command: Command to run dcm2niix from the terminal, such as:
     module add dcm2niix/v1.0.20210317; dcm2niix (if you use a module system)
     PATH=/opt/dcm2niix/bin:$PATH; dcm2niix (prepend the path to your executable)
     /opt/dcm2niix/bin/dcm2niix (specify the fullpath to the executable)
-    \"C:\\Program Files\\dcm2niix\\dcm2niix.exe" (use quotes to deal with whitespaces in your fullpath)
+    \C:\\"Program Files"\\dcm2niix\\dcm2niix.exe (use quotes to deal with whitespaces in your fullpath)
     
 args: Argument string that is passed to dcm2niix. Click [Test] and see the terminal output for usage
     Tip: SPM users may want to use '-z n', which produces unzipped nifti's
@@ -637,8 +637,6 @@ class MainWindow(QMainWindow):
                 if keyitem: key = keyitem.text().strip()
                 if valitem: val = valitem.text().strip()
                 if key:
-                    try: val = ast.literal_eval(val)            # Converting string to list
-                    except (ValueError, SyntaxError): pass
                     newoptions[key] = val
                     if val != oldoptions.get(key):
                         LOGGER.info(f"User has set the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
@@ -1319,7 +1317,7 @@ class EditWindow(QDialog):
             key_   = self.meta_table.item(n, 0).text().strip()
             value_ = self.meta_table.item(n, 1).text().strip()
             if key_:
-                try: value_ = ast.literal_eval(value_)      # Converting string to list
+                try: value_ = ast.literal_eval(value_)      # E.g. convert stringified list or int back to list or int
                 except (ValueError, SyntaxError): pass
                 self.target_run['meta'][key_] = value_
             elif value_:

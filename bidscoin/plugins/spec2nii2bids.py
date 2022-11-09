@@ -26,7 +26,7 @@ except ImportError:
 LOGGER = logging.getLogger(__name__)
 
 # The default options that are set when installing the plugin
-OPTIONS = {'command': 'spec2nii',       # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or '"C:\Program Files\spec2nii\spec2nii.exe"' (note the quotes to deal with the whitespace)
+OPTIONS = {'command': 'spec2nii',       # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or 'C:\"Program Files"\spec2nii\spec2nii.exe' (note the quotes to deal with the whitespace)
            'args': None,                # Argument string that is passed to spec2nii (see spec2nii -h for more information)
            'anon': 'y',                 # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
            'meta': ['.json', '.tsv', '.tsv.gz'],  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
@@ -278,7 +278,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Add all the meta data to the json-file
         for metakey, metaval in run['meta'].items():
             metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
-            try: metaval = ast.literal_eval(str(metaval))
+            try: metaval = ast.literal_eval(str(metaval))            # E.g. convert stringified list or int back to list or int
             except (ValueError, SyntaxError): pass
             LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
             if not metaval:
