@@ -637,6 +637,9 @@ class MainWindow(QMainWindow):
                 if keyitem: key = keyitem.text().strip()
                 if valitem: val = valitem.text().strip()
                 if key:
+                    if val.startswith('[') and val.endswith(']'):           # E.g. convert string to list
+                        try: val = ast.literal_eval(val)
+                        except (ValueError, SyntaxError): pass
                     newoptions[key] = val
                     if val != oldoptions.get(key):
                         LOGGER.info(f"User has set the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
