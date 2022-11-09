@@ -45,6 +45,7 @@ To test the proper working of dcm2niix click [Test] and see the terminal output 
 .. tip::
    - Use the [Set as default] button to put your custom dcm2niix command in your template bidsmap so that you don't have to adjust it anymore for every new study
    - SPM users may want to use '-z n', which produces unzipped nifti's
+   - Install ``pigz`` to speed-up dm2niix (search the web for more help)
 
 spec2nii2bids - plugin
 ----------------------
