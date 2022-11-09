@@ -637,7 +637,7 @@ class MainWindow(QMainWindow):
                 if keyitem: key = keyitem.text().strip()
                 if valitem: val = valitem.text().strip()
                 if key:
-                    if val.startswith('[') and val.endswith(']'):           # E.g. convert string to list
+                    if not val.startswith('"') and not val.endswith('"'):           # E.g. convert string or int to list or int but avoid encoding strings such as "C:\tmp" (\t -> tab)
                         try: val = ast.literal_eval(val)
                         except (ValueError, SyntaxError): pass
                     newoptions[key] = val
