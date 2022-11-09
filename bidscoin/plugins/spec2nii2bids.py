@@ -50,7 +50,7 @@ def test(options: dict=OPTIONS) -> int:
         LOGGER.warning(f"The expected 'args' key is not defined in the spec2nii2bids options")
 
     # Test the spec2nii installation
-    return bidscoin.run_command(f"{options.get('command',OPTIONS['command'])} -h")
+    return bidscoin.run_command(f"{options.get('command',OPTIONS['command'])} -v")
 
 
 def is_sourcefile(file: Path) -> str:

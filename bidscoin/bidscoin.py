@@ -176,11 +176,11 @@ def run_command(command: str) -> int:
     """
 
     LOGGER.info(f"Running: {command}")
-    process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)          # TODO: investigate shell=False and capture_output=True for python 3.7
-    if process.stderr.decode() or process.returncode != 0:
-        LOGGER.error(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stdout.decode()}\n{process.stderr.decode()}")
+    process = subprocess.run(command, shell=True, capture_output=True, text=True)
+    if process.stderr or process.returncode != 0:
+        LOGGER.error(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
     else:
-        LOGGER.info(f"Output:\n{process.stdout.decode()}")
+        LOGGER.info(f"Output:\n{process.stdout}")
 
     return process.returncode
 
