@@ -33,19 +33,19 @@ OPTIONS = {'command': 'module add dcm2niix; dcm2niix',  # Command to run dcm2nii
            'meta': ['.json', '.tsv', '.tsv.gz']}        # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
 
 
-def test(options: dict=OPTIONS) -> bool:
+def test(options: dict=OPTIONS) -> int:
     """
     Performs shell tests of dcm2niix
 
     :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['dcm2niix2bids']
-    :return:        True if the tool generated the expected result, False if there was a tool error
+    :return:        The errorcode (e.g 0 if the tool generated the expected result, > 0 if there was a tool error)
     """
 
     LOGGER.info('Testing the dcm2niix2bids installation:')
 
     if 'command' not in {**OPTIONS, **options}:
         LOGGER.error(f"The expected 'command' key is not defined in the dcm2niix2bids options")
-        return False
+        return 1
     if 'args' not in {**OPTIONS, **options}:
         LOGGER.warning(f"The expected 'args' key is not defined in the dcm2niix2bids options")
 
@@ -275,7 +275,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 filename  = bidsname,
                 outfolder = outfolder,
                 source    = source)
-            if not bidscoin.run_command(command):
+            if bidscoin.run_command(command):
                 if not list(outfolder.glob(f"{bidsname}.*nii*")): continue
 
             # Handle the ABCD GE pepolar sequence

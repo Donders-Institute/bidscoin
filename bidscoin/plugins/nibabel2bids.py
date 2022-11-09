@@ -23,12 +23,12 @@ OPTIONS = {'ext': '.nii.gz',                                        # The (nibab
            'meta': ['.json', '.tsv', '.tsv.gz', '.bval', '.bvec']}  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
 
 
-def test(options: dict=OPTIONS) -> bool:
+def test(options: dict=OPTIONS) -> int:
     """
     Performs a nibabel test
 
     :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['nibabel2bids']
-    :return:        True if the tool generated the expected result, False if there was a tool error
+    :return:        The errorcode: 0 for successful execution, 1 for general tool errors, 2 for `ext` option errors, 3 for `meta` option errors
     """
 
     LOGGER.info('Testing the nibabel2bids installation:')
@@ -38,15 +38,15 @@ def test(options: dict=OPTIONS) -> bool:
         LOGGER.info(f"Nibabel version: {nib.info.VERSION}")
         if options.get('ext',OPTIONS['ext']) not in ('.nii', '.nii.gz'):
             LOGGER.error(f"The 'ext: {options.get('ext')}' value in the nibabel2bids options is not '.nii' or '.nii.gz'")
-            return False
+            return 2
         if not isinstance(options.get('meta',OPTIONS['meta']), list):
             LOGGER.error(f"The 'meta: {options.get('meta')}' value in the nibabel2bids options is not a list")
-            return False
+            return 3
     except Exception as nibabelerror:
         LOGGER.error(f"Nibabel error:\n{nibabelerror}")
-        return False
+        return 1
 
-    return True
+    return 0
 
 
 def is_sourcefile(file: Path) -> str:

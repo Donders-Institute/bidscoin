@@ -725,7 +725,8 @@ class MainWindow(QMainWindow):
     def test_plugin(self, plugin: str):
         """Test the plugin and show the result in a pop-up window"""
 
-        if bidscoin.test_plugin(Path(plugin), self.output_bidsmap['Options']['plugins'].get(plugin,{})):
+        status = bidscoin.test_plugin(Path(plugin), self.output_bidsmap['Options']['plugins'].get(plugin,{}))
+        if not status or (status==3 and plugin=='dcm2niix'):
             QMessageBox.information(self, 'Plugin test', f"Import of {plugin}: Passed\nSee terminal output for more info")
         else:
             QMessageBox.warning(self, 'Plugin test', f"Import of {plugin}: Failed\nSee terminal output for more info")
@@ -733,7 +734,7 @@ class MainWindow(QMainWindow):
     def test_bidscoin(self):
         """Test the bidsmap tool and show the result in a pop-up window"""
 
-        if bidscoin.test_bidscoin(self.input_bidsmap, options=self.output_bidsmap['Options'], testplugins=False, testgui=False):
+        if not bidscoin.test_bidscoin(self.input_bidsmap, options=self.output_bidsmap['Options'], testplugins=False, testgui=False, testtemplate=False):
             QMessageBox.information(self, 'Tool test', f"BIDScoin test: Passed\nSee terminal output for more info")
         else:
             QMessageBox.warning(self, 'Tool test', f"BIDScoin test: Failed\nSee terminal output for more info")

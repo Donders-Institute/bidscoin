@@ -33,19 +33,19 @@ OPTIONS = {'command': 'spec2nii',       # Command to run spec2nii, e.g. "module 
            'multiraid': 2}              # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
 
 
-def test(options: dict=OPTIONS) -> bool:
+def test(options: dict=OPTIONS) -> int:
     """
     This plugin shell tests the working of the spec2nii2bids plugin + its bidsmap options
 
     :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['spec2nii2bids']
-    :return:        True if the tool generated the expected result, False if there was a tool error, None if not tested
+    :return:        The errorcode (e.g 0 if the tool generated the expected result, > 0 if there was a tool error)
     """
 
     LOGGER.info('Testing the spec2nii2bids installation:')
 
     if 'command' not in {**OPTIONS, **options}:
         LOGGER.error(f"The expected 'command' key is not defined in the spec2nii2bids options")
-        return False
+        return 1
     if 'args' not in {**OPTIONS, **options}:
         LOGGER.warning(f"The expected 'args' key is not defined in the spec2nii2bids options")
 
@@ -261,7 +261,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         else:
             LOGGER.exception(f"Unsupported dataformat: {dataformat}")
         command = options.get("command", "spec2nii")
-        if not bidscoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
+        if bidscoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
             if not list(outfolder.glob(f"{bidsname}.nii*")): continue
 
         # Load and adapt the newly produced json sidecar-file (NB: assumes every nifti-file comes with a json-file)

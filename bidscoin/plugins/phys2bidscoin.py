@@ -41,12 +41,12 @@ def test(options: dict) -> bool:
     This plugin function tests the working of the plugin + its bidsmap options
 
     :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['phys2bidscoin']
-    :return:        True if the test was successful
+    :return:        The errorcode (e.g 0 if the tool generated the expected result, > 0 if there was a tool error)
     """
 
     LOGGER.info(f'This is the phys2bids-plugin WIP test routine')
 
-    return True
+    return 0
 
 
 def is_sourcefile(file: Path) -> str:

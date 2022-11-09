@@ -28,12 +28,12 @@ def test(options) -> bool:
     Performs shell tests of dcm2niix
 
     :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['dcm2niix2bids']
-    :return:        True if the tool generated the expected result, False if there was a tool error
+    :return:        The errorcode (e.g 0 if the tool generated the expected result, > 0 if there was a tool error)
     """
 
     LOGGER.info('Testing petxls2bids is not implemented (yet):')
 
-    return True
+    return 0
 
 
 @lru_cache(maxsize=4096)

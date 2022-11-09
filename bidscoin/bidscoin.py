@@ -167,23 +167,22 @@ def reporterrors() -> None:
                     f"NB: Files in {logfile.parent} may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
 
 
-def run_command(command: str) -> bool:
+def run_command(command: str) -> int:
     """
     Runs a command in a shell using subprocess.run(command, ..)
 
     :param command: The command that is executed
-    :return:        True if the command was successfully executed (no errors), False otherwise
+    :return:        Errorcode (i.e. 0 if the command was successfully executed (no errors), > 0 otherwise)
     """
 
     LOGGER.info(f"Running: {command}")
     process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)          # TODO: investigate shell=False and capture_output=True for python 3.7
     if process.stderr.decode() or process.returncode != 0:
         LOGGER.error(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stdout.decode()}\n{process.stderr.decode()}")
-        return False
     else:
         LOGGER.info(f"Output:\n{process.stdout.decode()}")
 
-    return True
+    return process.returncode
 
 
 def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
@@ -389,17 +388,17 @@ def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> module_from_s
         LOGGER.error(f"Could not import {plugin}:\n{pluginerror}")
 
 
-def test_plugin(plugin: Union[Path,str], options: dict) -> bool:
+def test_plugin(plugin: Union[Path,str], options: dict) -> int:
     """
     Performs import tests of the plug-in
 
     :param plugin:  The name of the plugin that is being tested
     :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins'][plugin.stem]
-    :return:        True if the plugin generated the expected result, False if there was a plug-in error
+    :return:        The result of the plugin test routine (e.g. 0 if it passed or 1 if there was a general plug-in error)
     """
 
     if not plugin:
-        return False
+        return 1
 
     LOGGER.info(f"--------- Testing the '{plugin}' plugin ---------")
 
@@ -408,7 +407,7 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> bool:
     if inspect.ismodule(module):
         LOGGER.info(f"Succesfully imported '{plugin}'")
     else:
-        return False
+        return 1
 
     # Then run the plugin's own 'test' routine (if implemented)
     if 'test' in dir(module) and callable(getattr(module, 'test')):
@@ -416,22 +415,22 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> bool:
             return module.test(options)
         except Exception as pluginerror:
             LOGGER.error(f"Could not run {plugin}.test(options):\n{pluginerror}")
-            return False
+            return 1
 
-    return True
+    return 0
 
 
-def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins: bool=True, testgui: bool=True):
+def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins: bool=True, testgui: bool=True, testtemplate: bool=True) -> int:
     """
     Performs a bidscoin installation test
 
     :param bidsmapfile: The bidsmap or the full pathname / basename of the bidsmap yaml-file
     :param options:     The bidscoin options. If empty, the default options are used
-    :return:            True if the test was successful
+    :return:            0 if the test was successful, otherwise 1
     """
 
     if not bidsmapfile:
-        return
+        return 1
 
     LOGGER.info('--------- Testing the BIDScoin tools and settings ---------')
 
@@ -453,7 +452,13 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
         bidsmap = bidsmapfile
 
     # Check if all entities of each datatype in the bidsmap are present
-    success = bids.check_template(bidsmap) and success
+    if testtemplate:
+        try:
+            try: from bidscoin  import bids
+            except ImportError: import bids  # This should work if bidscoin was not pip-installed
+            success = bids.check_template(bidsmap) and success
+        except ImportError:
+            LOGGER.info(f"Could not fully test: {bidsmap}")
 
     # Test PyQt
     if testgui:
@@ -494,9 +499,9 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
         list_plugins(True)
         for plugin in (bidscoinfolder/'plugins').glob('*.py'):
             if plugin.stem != '__init__':
-                success = test_plugin(plugin.stem, options['plugins'].get(plugin.stem,{}) if options else {}) and success
+                success = not test_plugin(plugin.stem, options['plugins'].get(plugin.stem,{}) if options else {}) and success
 
-    return success
+    return int(not success)
 
 
 def pulltutorialdata(tutorialfolder: str) -> None:

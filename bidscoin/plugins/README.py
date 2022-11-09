@@ -91,12 +91,12 @@ def test(options: dict=OPTIONS) -> bool:
     This plugin function tests the working of the plugin + its bidsmap options
 
     :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['README']
-    :return:        True if the test was successful
+    :return:        The errorcode (e.g 0 if the tool generated the expected result, > 0 if there was a tool error)
     """
 
     LOGGER.info(f'This is a demo-plugin test routine, validating its working with options: {options}')
 
-    return True
+    return 0
 
 
 def is_sourcefile(file: Path) -> str:
