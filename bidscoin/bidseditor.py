@@ -726,7 +726,7 @@ class MainWindow(QMainWindow):
         """Test the plugin and show the result in a pop-up window"""
 
         status = bidscoin.test_plugin(Path(plugin), self.output_bidsmap['Options']['plugins'].get(plugin,{}))
-        if not status or (status==3 and plugin=='dcm2niix'):
+        if not status or (status==3 and plugin=='dcm2niix2bids'):
             QMessageBox.information(self, 'Plugin test', f"Import of {plugin}: Passed\nSee terminal output for more info")
         else:
             QMessageBox.warning(self, 'Plugin test', f"Import of {plugin}: Failed\nSee terminal output for more info")
