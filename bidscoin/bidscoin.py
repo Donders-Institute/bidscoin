@@ -431,7 +431,7 @@ def test_bidsmap(bidsmapfile: str) -> int:
     if not bidsmapfile:
         return 1
 
-    LOGGER.info('--------- Testing normal bidsmap runs using the bids-validator ---------')
+    LOGGER.info('--------- Testing bidsmap runs and their bids-names ---------')
 
     try:  # Include the import in the test + moving the import to the top of this module will cause circular import issues
         from bidscoin import bids
