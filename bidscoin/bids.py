@@ -961,7 +961,7 @@ def validate_bidsmap(bidsmap: dict, level: int=2) -> bool:
                 elif not ignore:
                     valid = valid and bidstest
                 if (level==0 and not bidstest) or (level==1 and not ignore) or level > 1:
-                    LOGGER.info(f"{bidstest}: {bidsname}")
+                    LOGGER.info(f"{bidstest}:\t{bidsname}")
 
     return valid
 
