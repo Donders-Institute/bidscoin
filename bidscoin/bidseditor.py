@@ -1454,7 +1454,7 @@ class EditWindow(QDialog):
             answer = QMessageBox.question(self, 'Edit BIDS mapping', f'The "{bidsname}" name does not seem valid but it does pass the bids-validator. Do you want to go back and edit the run?',
                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
             if answer==QMessageBox.Yes: return
-            LOGGER.warning(f'The "{bidsname}" run seems valid but not according to the BIDS-validator")')
+            LOGGER.warning(f'The "{bidsname}" name does not seem valid but it does pass the bids-validator")')
         elif not validrun:
             answer = QMessageBox.question(self, 'Edit BIDS mapping', f'The "{bidsname}" name is not valid according to the BIDS standard. Do you want to go back and edit the run?',
                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
