@@ -1118,7 +1118,7 @@ class EditWindow(QDialog):
                                     {'value': value, 'iseditable': True}])
 
         data_bids = []
-        if self.target_datatype in self.bidsignore:
+        if self.target_datatype in self.bidsignore or self.target_datatype in self.ignoredatatypes:
             bidskeys = run['bids'].keys()
         else:
             bidskeys = [bids.entities[entity]['name'] for entity in bids.entitiesorder if entity not in ('subject','session')] + ['suffix']   # Impose the BIDS-specified order + suffix
