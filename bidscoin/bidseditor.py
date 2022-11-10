@@ -146,7 +146,7 @@ class MainWindow(QMainWindow):
         buttonbox.button(QDialogButtonBox.Save).clicked.connect(self.save_bidsmap)
         validatebutton = buttonbox.addButton('Validate', QDialogButtonBox.ActionRole)
         validatebutton.setIcon(QtGui.QIcon.fromTheme('tools-check-spelling'))
-        validatebutton.setToolTip('Test all normal runs in the study bidsmap using the bids-validator (see terminal output)')
+        validatebutton.setToolTip('Test the bidsname of all normal runs in the study bidsmap using the bids-validator (see terminal output)')
         validatebutton.clicked.connect(self.validate_runs)
 
         # Set-up the main layout

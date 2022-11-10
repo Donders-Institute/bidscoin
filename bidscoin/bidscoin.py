@@ -422,7 +422,7 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> int:
 
 def test_bidsmap(bidsmapfile: str) -> int:
     """
-    Tests runs in the bidsmap using the bids-validator
+    Tests the bidsname of runs in the bidsmap using the bids-validator
 
     :param bidsmapfile: The bidsmap or the full pathname / basename of the bidsmap yaml-file
     :return:            0 if the test was successful, otherwise 1
@@ -585,7 +585,7 @@ def main():
     parser.add_argument('-u', '--uninstall',   help='A list of bidscoin plugins to uninstall', nargs='+')
     parser.add_argument('-d', '--download',    help='Download folder. If given, tutorial MRI data will be downloaded here')
     parser.add_argument('-t', '--test',        help='Test the bidscoin installation and template bidsmap', nargs='?', const=bidsmap_template)
-    parser.add_argument('-b', '--bidsmaptest', help='Test all normal runs in the study bidsmap using the bids-validator. Provide the bids-folder or the bidsmap filepath')
+    parser.add_argument('-b', '--bidsmaptest', help='Test the bidsnames of all normal runs in the study bidsmap using the bids-validator. Provide the bids-folder or the bidsmap filepath')
     parser.add_argument('-v', '--version',     help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
     if len(sys.argv) == 1:
         parser.print_help()
