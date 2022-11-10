@@ -1446,16 +1446,16 @@ class EditWindow(QDialog):
         bidsname = self.bidsname_textbox.toPlainText()
         validrun = False not in bids.check_run(self.target_datatype, self.target_run, validate=(False,False,False))[1:3]
         if self.target_datatype not in self.bidsignore and self.target_datatype not in self.ignoredatatypes + self.unknowndatatypes:
-            bidsvalid = BIDSValidator().is_bids((Path('/') / self.subid / self.sesid / bidsname).with_suffix('.json').as_posix())
+            bidsvalid = BIDSValidator().is_bids((Path('/')/self.subid/self.sesid/bidsname).with_suffix('.json').as_posix())
         else:
             bidsvalid = validrun
 
         # If the bidsname is not valid, ask the user if that's OK
         message = ''
         if validrun and not bidsvalid:
-            message = f'The "{bidsname}" name seems valid but does not pass the bids-validator'
+            message = f'The run-item seems valid but the "{bidsname}" name does not pass the bids-validator test'
         elif not validrun and bidsvalid:
-            message = f'The "{bidsname}" name does not seem valid but it does pass the bids-validator'
+            message = f'The run-item does not seem to be valid but the "{bidsname}" name does pass the bids-validator test'
         elif not validrun:
             message = f'The "{bidsname}" name is not valid according to the BIDS standard'
         elif self.target_datatype=='fmap' and not (self.target_run['meta'].get('B0FieldSource') or
