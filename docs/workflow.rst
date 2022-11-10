@@ -7,7 +7,7 @@ With a sufficiently `organized source data folder <preparation.html>`__, the dat
 
    Creation and application of a study bidsmap
 
-By default, step 1a automatically launches step 1b, so in it's simplest form, all you need to do to convert your raw source data into BIDS is to run two simple shell commands, e.g.:
+By default, when finished the bidsmapper automatically launches the bidseditor, so in it's simplest form, all you need to do to convert your raw source data into BIDS is to run two simple shell commands, e.g.:
 
 .. code-block:: console
 
