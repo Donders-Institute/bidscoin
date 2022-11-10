@@ -954,8 +954,8 @@ def validate_bidsmap(bidsmap: dict, level: int=2) -> bool:
     # Test all the runs in the bidsmap
     LOGGER.info(f"bids-validator {bids_validator.__version__} test results (* = in .bidsignore):")
     for dataformat in bidsmap:
-        if dataformat in ('Options','PlugIns'): continue    # Handle legacy bidsmaps (-> 'PlugIns'). TODO: Check Options
-        if not bidsmap[dataformat]:             continue
+        if dataformat == 'Options': continue
+        if not bidsmap[dataformat]: continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue        # E.g. 'subject' and 'session'
             ignore_1 = datatype in ignoretypes or datatype in bidsignore
