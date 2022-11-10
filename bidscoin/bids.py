@@ -930,7 +930,7 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
         yaml.dump(bidsmap, stream)
 
 
-def validate_bidsmap(bidsmap: dict, level: int=2) -> bool:
+def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
     """
     Test all the runs in the bidsmap using the bids-validator
 

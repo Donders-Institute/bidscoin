@@ -570,6 +570,7 @@ def main():
                                             '  bidscoin -d data/bidscoin_tutorial\n'
                                             '  bidscoin -t\n'
                                             '  bidscoin -t my_template_bidsmap\n'
+                                            '  bidscoin -b my_study_bidsmap\n'
                                             '  bidscoin -i python/project/my_plugin.py downloads/handy_plugin.py\n ')
     parser.add_argument('-l', '--list',        help='List all bidscoin tools', action='store_true')
     parser.add_argument('-p', '--plugins',     help='List all installed plugins', action='store_true')
@@ -577,7 +578,7 @@ def main():
     parser.add_argument('-u', '--uninstall',   help='A list of bidscoin plugins to uninstall', nargs='+')
     parser.add_argument('-d', '--download',    help='Download folder. If given, tutorial MRI data will be downloaded here')
     parser.add_argument('-t', '--test',        help='Test the bidscoin installation and template bidsmap', nargs='?', const=bidsmap_template)
-    parser.add_argument('-b', '--bidsmaptest', help='Test all runs in the bidsmao using the bids-validator')
+    parser.add_argument('-b', '--bidsmaptest', help='Test all normal runs in the study bidsmap using the bids-validator')
     parser.add_argument('-v', '--version',     help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
     if len(sys.argv) == 1:
         parser.print_help()
