@@ -75,7 +75,7 @@ def setup_logging(log_file: Path=Path(), debug: bool=False):
         fmt = '%(asctime)s - %(name)s - %(levelname)s | %(message)s'
         logger.setLevel(logging.DEBUG)
     else:
-        fmt = '%(asctime)s - %(levelname)s | %(message)s'
+        fmt = '%(asctime)s - %(levelname)s | %(message)s' if log_file.name else ''
         logger.setLevel(logging.INFO)
     datefmt   = '%Y-%m-%d %H:%M:%S'
     formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
