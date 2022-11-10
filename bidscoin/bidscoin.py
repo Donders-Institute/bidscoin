@@ -420,6 +420,29 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> int:
     return 0
 
 
+def test_bidsmap(bidsmapfile: Union[Path,dict]) -> int:
+    """
+    Tests all runs in the bidsmao using the bids-validator
+
+    :param bidsmapfile: The bidsmap or the full pathname / basename of the bidsmap yaml-file
+    :return:            0 if the test was successful, otherwise 1
+    """
+
+    if not bidsmapfile:
+        return 1
+
+    LOGGER.info('--------- Testing all bidsmap runs using the bids-validator ---------')
+
+    try:  # Include the import in the test + moving the import to the top of this module will cause circular import issues
+        from bidscoin import bids
+    except ImportError:
+        import bids  # This should work if bidscoin was not pip-installed
+
+    bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile), validate=(False, False, False))
+
+    return not bids.validate_bidsmap(bidsmap)
+
+
 def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins: bool=True, testgui: bool=True, testtemplate: bool=True) -> int:
     """
     Performs a bidscoin installation test
@@ -548,13 +571,14 @@ def main():
                                             '  bidscoin -t\n'
                                             '  bidscoin -t my_template_bidsmap\n'
                                             '  bidscoin -i python/project/my_plugin.py downloads/handy_plugin.py\n ')
-    parser.add_argument('-l', '--list',      help='List all bidscoin tools', action='store_true')
-    parser.add_argument('-p', '--plugins',   help='List all installed plugins', action='store_true')
-    parser.add_argument('-i', '--install',   help='A list of bidscoin plugins to install', nargs='+')
-    parser.add_argument('-u', '--uninstall', help='A list of bidscoin plugins to uninstall', nargs='+')
-    parser.add_argument('-d', '--download',  help='Download folder. If given, tutorial MRI data will be downloaded here')
-    parser.add_argument('-t', '--test',      help='Test the bidscoin installation and template bidsmap', nargs='?', const=bidsmap_template)
-    parser.add_argument('-v', '--version',   help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
+    parser.add_argument('-l', '--list',        help='List all bidscoin tools', action='store_true')
+    parser.add_argument('-p', '--plugins',     help='List all installed plugins', action='store_true')
+    parser.add_argument('-i', '--install',     help='A list of bidscoin plugins to install', nargs='+')
+    parser.add_argument('-u', '--uninstall',   help='A list of bidscoin plugins to uninstall', nargs='+')
+    parser.add_argument('-d', '--download',    help='Download folder. If given, tutorial MRI data will be downloaded here')
+    parser.add_argument('-t', '--test',        help='Test the bidscoin installation and template bidsmap', nargs='?', const=bidsmap_template)
+    parser.add_argument('-b', '--bidsmaptest', help='Test all runs in the bidsmao using the bids-validator')
+    parser.add_argument('-v', '--version',     help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
     if len(sys.argv) == 1:
         parser.print_help()
         return
@@ -566,6 +590,7 @@ def main():
     install_plugins(plugins=args.install)
     pulltutorialdata(tutorialfolder=args.download)
     test_bidscoin(bidsmapfile=args.test)
+    test_bidsmap(bidsmapfile=args.bidsmaptest)
 
 
 if __name__ == "__main__":

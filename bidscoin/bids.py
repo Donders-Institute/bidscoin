@@ -930,6 +930,35 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
         yaml.dump(bidsmap, stream)
 
 
+def validate_bidsmap(bidsmap: dict, fulltest: bool=False) -> bool:
+    """
+    Test all the runs in the bidsmap using the bids-validator
+
+    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param fulltest:    If True also test the `.bidsignore` and `ignoretypes` datatypes
+    :return:            True if all runs in bidsmap passed the test, otherwise False
+    """
+
+    valid      = True
+    ignore     = bidsmap['Options']['bidscoin'].get('ignoretypes', [])
+    bidsignore = bidsmap['Options']['bidscoin'].get('bidsignore', '')
+
+    # Test all the runs in the bidsmap
+    for dataformat in bidsmap:
+        if dataformat in ('Options','PlugIns'): continue    # Handle legacy bidsmaps (-> 'PlugIns'). TODO: Check Options
+        if not bidsmap[dataformat]:             continue
+        for datatype in bidsmap[dataformat]:
+            if not isinstance(bidsmap[dataformat][datatype], list): continue        # E.g. 'subject' and 'session'
+            for run in bidsmap[dataformat][datatype]:
+                bidsname = get_bidsname('sub-foo', '', run, False)
+                bidstest = BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")
+                valid    = valid and bidstest
+                if fulltest or (datatype not in bidsignore and datatype not in ignore):
+                    LOGGER.info(f"{bidsname}: {bidstest}")
+
+    return valid
+
+
 def check_bidsmap(bidsmap: dict, validate: Tuple[bool,bool,bool]=(True,True,True)) -> bool:
     """
     Check all the runs in the bidsmap for required and optional entitities using the BIDS schema files
