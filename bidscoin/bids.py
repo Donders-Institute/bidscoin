@@ -1416,13 +1416,13 @@ def exist_run(bidsmap: dict, datatype: str, run_item: dict, matchbidslabels: boo
     return False
 
 
-def check_run(datatype: str, run: dict, validate: Tuple[bool,bool,bool]=(False,False,False)) -> Tuple[Union[bool,None],Union[bool,None],Union[bool,None]]:
+def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, False, False)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
     """
     Check run for required and optional entitities using the BIDS schema files
 
     :param datatype:    The datatype that is checked, e.g. 'anat'
     :param run:         The run (listitem) with bids entities that are checked against missing values & invalid keys
-    :param validate:    Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
+    :param check:       Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
     :return:            True/False if the run entities are bids-valid or None if they cannot be checked
     """
 
@@ -1431,12 +1431,12 @@ def check_run(datatype: str, run: dict, validate: Tuple[bool,bool,bool]=(False,F
     run_valsok   = None
 
     # Check if we have provenance info
-    if all(validate) and not run['provenance']:
+    if all(check) and not run['provenance']:
         LOGGER.info(f'No provenance info found for {datatype}/*_{run["bids"]["suffix"]}')
 
     # Use the suffix to find the right typegroup
     if 'suffix' not in run['bids']:
-        if validate[1]: LOGGER.warning(f'Invalid bidsmap: The {datatype} "suffix" key is missing (run-item {datatype} -> {run["provenance"]}')
+        if check[1]: LOGGER.warning(f'Invalid bidsmap: The {datatype} "suffix" key is missing ({datatype} -> {run["provenance"]})')
         return run_keysok, False, run_valsok                # The suffix is not BIDS-valid, we cannot check the keys and values
     if datatype not in datatyperules:
         return run_keysok, run_suffixok, run_valsok         # We cannot check anything
@@ -1460,23 +1460,23 @@ def check_run(datatype: str, run: dict, validate: Tuple[bool,bool,bool]=(False,F
                 if isinstance(bidsvalue, list):
                     bidsvalue = bidsvalue[bidsvalue[-1]]    # Get the selected item
                 if entitykey not in run['bids']:
-                    if validate[0]: LOGGER.warning(f'Invalid bidsmap: The "{entitykey}" key is missing (run-item {datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]}')
+                    if check[0]: LOGGER.warning(f'Invalid bidsmap: The "{entitykey}" key is missing ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
                     run_keysok = False
                 if bidsvalue and not dynamicvalue and bidsvalue!=cleanup_value(bidsvalue):
-                    if validate[2]: LOGGER.warning(f'Invalid {entitykey} value: "{bidsvalue}" (run-item {datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
+                    if check[2]: LOGGER.warning(f'Invalid {entitykey} value: "{bidsvalue}" ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
                     run_valsok = False
                 elif not bidsvalue and datatyperules[datatype][typegroup]['entities'][entity]=='required':
-                    if validate[2]: LOGGER.info(f'Required "{entitykey}" value is missing (run-item {datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]}')
+                    if check[2]: LOGGER.info(f'Required "{entitykey}" value is missing ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
                     run_valsok = False
                 if bidsvalue and not dynamicvalue and entityformat=='index' and not str(bidsvalue).isnumeric():
-                    if validate[2]: LOGGER.warning(f'Invalid {entitykey}-index: "{bidsvalue}" is not a number (run-item {datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]}')
+                    if check[2]: LOGGER.warning(f'Invalid {entitykey}-index: "{bidsvalue}" is not a number ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
                     run_valsok = False
 
             # Check if all the bids-keys are present in the schema file
             entitykeys = [entities[entity]['name'] for entity in datatyperules[datatype][typegroup]['entities']]
             for bidskey in run['bids']:
                 if bidskey not in entitykeys + ['suffix']:
-                    if validate[0]: LOGGER.warning(f'Invalid bidsmap: The "{bidskey}" is not allowed according to the BIDS standard (run-item {datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]}')
+                    if check[0]: LOGGER.warning(f'Invalid bidsmap: The "{bidskey}" is not allowed according to the BIDS standard ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
                     run_keysok = False
                     if run_valsok: run_valsok = None
 
@@ -1488,8 +1488,8 @@ def check_run(datatype: str, run: dict, validate: Tuple[bool,bool,bool]=(False,F
         run_suffixok = bids_validator.BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")  # NB: Using the BIDSValidator sounds nice but doesn't give any control over the BIDS-version
         run_valsok   = run_suffixok
 
-    if validate[1] and run_suffixok == False:
-        LOGGER.warning(f'Invalid {run["bids"]["suffix"]}-suffix (run-item {datatype} -> {run["provenance"]}')
+    if check[1] and run_suffixok == False:
+        LOGGER.warning(f'Invalid {run["bids"]["suffix"]}-suffix ({datatype} -> {run["provenance"]})')
 
     return run_keysok, run_suffixok, run_valsok
 

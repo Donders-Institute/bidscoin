@@ -467,7 +467,7 @@ class MainWindow(QMainWindow):
                 # Check the run
                 loglevel = LOGGER.level
                 LOGGER.setLevel('ERROR')
-                validrun = all(bids.check_run(datatype, run, validate=(False,True,True))[1:3])
+                validrun = all(bids.check_run(datatype, run, check=(False, True, True))[1:3])
                 LOGGER.setLevel(loglevel)
 
                 provenance   = Path(run['provenance'])
@@ -1411,7 +1411,7 @@ class EditWindow(QDialog):
             self.bidsname_textbox.setToolTip(f"Gray / Strike-out: This '{self.target_datatype}' data type will be ignored and not converted BIDS. Click 'OK' if you want your BIDS output data to look like this")
             self.bidsname_textbox.setTextColor(QtGui.QColor('gray'))
             font.setStrikeOut(True)
-        elif not all(bids.check_run(self.target_datatype, self.target_run, validate=(False,True,True))[1:3]):
+        elif not all(bids.check_run(self.target_datatype, self.target_run, check=(False, True, True))[1:3]):
             self.bidsname_textbox.setToolTip(f"Red: This name is not valid according to the BIDS standard -- see terminal output for more info")
             self.bidsname_textbox.setTextColor(QtGui.QColor('red'))
             font.setStrikeOut(False)
@@ -1456,7 +1456,7 @@ class EditWindow(QDialog):
 
         # Check if the bidsname is valid
         bidsname = self.bidsname_textbox.toPlainText()
-        validrun = False not in bids.check_run(self.target_datatype, self.target_run, validate=(False,False,False))[1:3]
+        validrun = False not in bids.check_run(self.target_datatype, self.target_run, check=(False, False, False))[1:3]
         if self.target_datatype not in self.bidsignore and self.target_datatype not in self.ignoredatatypes:
             bidsvalid = BIDSValidator().is_bids((Path('/')/self.subid/self.sesid/bidsname).with_suffix('.json').as_posix())
         else:
