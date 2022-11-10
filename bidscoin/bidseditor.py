@@ -18,6 +18,7 @@ import re
 import ast
 import json
 import csv
+from bids_validator import BIDSValidator
 from typing import Union
 from pydicom import dcmread
 from pathlib import Path
@@ -171,17 +172,16 @@ class MainWindow(QMainWindow):
             if answer == QMessageBox.Yes:
                 self.save_bidsmap()
             elif answer == QMessageBox.Cancel:
-                if event:               # User clicked the 'X'-button or pressed alt-F4 -> drop signal
-                    event.ignore()
+                if event: event.ignore()    # User clicked the 'X'-button or pressed alt-F4 -> drop signal
                 return
-            self.datasaved   = True     # Prevent re-entering this if-statement after close() -> closeEvent()
-            self.datachanged = False    # Prevent re-entering this if-statement after close() -> closeEvent()
+            self.datasaved   = True         # Prevent re-entering this if-statement after close() -> closeEvent()
+            self.datachanged = False        # Prevent re-entering this if-statement after close() -> closeEvent()
 
-        if event:                       # User clicked the 'X'-button or pressed alt-F4 -> normal closeEvent
+        if event:                           # User clicked the 'X'-button or pressed alt-F4 -> normal closeEvent
             super(MainWindow, self).closeEvent(event)
-        else:                           # User pressed alt-X (= menu action) -> normal close()
+        else:                               # User pressed alt-X (= menu action) -> normal close()
             self.close()
-        QApplication.quit()             # TODO: Do not use class method but self.something?
+        QApplication.quit()                 # TODO: Do not use class method but self.something?
 
     @QtCore.pyqtSlot(QtCore.QPoint)
     def show_contextmenu(self, pos):
@@ -1442,19 +1442,30 @@ class EditWindow(QDialog):
     def accept_run(self):
         """Save the changes to the target_bidsmap and send it back to the main window: Finished!"""
 
-        if False in bids.check_run(self.target_datatype, self.target_run, validate=(False,False,False))[1:3]:
-            answer = QMessageBox.question(self, 'Edit BIDS mapping', f'The "{self.target_datatype}/*_{self.target_run["bids"].get("suffix")}" run is not valid according to the BIDS standard. Do you want to go back and edit the run?',
+        bidsname  = self.bidsname_textbox.toPlainText()
+        bidsvalid = BIDSValidator().is_bids((Path('/')/self.subid/self.sesid/bidsname).with_suffix('.json').as_posix())
+        validrun  = False not in bids.check_run(self.target_datatype, self.target_run, validate=(False,False,False))[1:3]
+        if validrun and not bidsvalid:
+            answer = QMessageBox.question(self, 'Edit BIDS mapping', f'The "{bidsname}" name seems valid but does not pass the bids-validator. Do you want to go back and edit the run?',
                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-            if answer == QMessageBox.Yes:
-                return
-            LOGGER.warning(f'The "{self.bidsname_textbox.toPlainText()}" run is not valid according to the BIDS standard")')
+            if answer == QMessageBox.Yes: return
+            LOGGER.warning(f'The "{bidsname}" run seems valid but does not pass the bids-validator")')
+        elif not validrun and bidsvalid:
+            answer = QMessageBox.question(self, 'Edit BIDS mapping', f'The "{bidsname}" name does not seem valid but it does pass the bids-validator. Do you want to go back and edit the run?',
+                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            if answer==QMessageBox.Yes: return
+            LOGGER.warning(f'The "{bidsname}" run seems valid but not according to the BIDS-validator")')
+        elif not validrun:
+            answer = QMessageBox.question(self, 'Edit BIDS mapping', f'The "{bidsname}" name is not valid according to the BIDS standard. Do you want to go back and edit the run?',
+                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            if answer == QMessageBox.Yes: return
+            LOGGER.warning(f'The "{bidsname}" name is not valid according to the BIDS standard")')
 
         if self.target_datatype=='fmap' and not (self.target_run['meta'].get('B0FieldSource') or self.target_run['meta'].get('B0FieldIdentifier') or self.target_run['meta'].get('IntendedFor')):
             answer = QMessageBox.question(self, 'Edit BIDS mapping', "The 'B0FieldIdentifier/IntendedFor' meta-data is left empty\n\nDo you want to go back and "
                                                                      "set this data (recommended)?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
-            if answer in (QMessageBox.Cancel, QMessageBox.Yes):
-                return
-            LOGGER.warning(f"'B0FieldIdentifier/IntendedFor' fieldmap data was not set")
+            if answer in (QMessageBox.Cancel, QMessageBox.Yes): return
+            LOGGER.warning(f"'B0FieldIdentifier/IntendedFor' fieldmap data was not set for {bidsname}")
 
         LOGGER.info(f'User has approved the edit')
         if re.sub('<(?!.*<).*? object at .*?>','',str(self.target_run)) != re.sub('<(?!.*<).*? object at .*?>','',str(self.source_run)):    # Ignore the memory address of the datasource object
