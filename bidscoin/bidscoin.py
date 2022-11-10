@@ -444,7 +444,7 @@ def test_bidsmap(bidsmapfile: str):
         bidsmapfile = Path()
     else:
         bidsfolder  = Path()
-    bidsmap, _ = bids.load_bidsmap(bidsmapfile, bidsfolder, check=(True, True, True))
+    bidsmap, _ = bids.load_bidsmap(bidsmapfile, bidsfolder, check=(True,True,True))
     bids.validate_bidsmap(bidsmap)
 
 
@@ -465,13 +465,10 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
     # Test loading the template bidsmap
     success = True
     if isinstance(bidsmapfile, (str, Path)):
-        try:
-            try:                    # Include the import in the test + moving the import to the top of this module will cause circular import issues
-                from bidscoin import bids
-            except ImportError:
-                import bids         # This should work if bidscoin was not pip-installed
-
-            bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile), check=(True, True, False))
+        try:            # Moving the import to the top of this module will cause circular import issues
+            try:  from bidscoin import bids
+            except ImportError: import bids         # This should work if bidscoin was not pip-installed
+            bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile), check=(True,True,False))
         except Exception as bidsmaperror:
             LOGGER.error(f"An error occurred when loading {bidsmapfile}:\n{bidsmaperror}")
             bidsmap = {'Options': {}}
@@ -481,8 +478,8 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
 
     # Check if all entities of each datatype in the bidsmap are present
     if testtemplate:
-        try:
-            try: from bidscoin  import bids
+        try:                # Moving the import to the top of this module will cause circular import issues
+            try:  from bidscoin import bids
             except ImportError: import bids  # This should work if bidscoin was not pip-installed
             success = bids.check_template(bidsmap) and success
         except ImportError:

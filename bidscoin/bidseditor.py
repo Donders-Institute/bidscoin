@@ -1498,7 +1498,7 @@ class EditWindow(QDialog):
         if yamlfile:
             LOGGER.info(f'Exporting run item: bidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}')
             yamlfile   = Path(yamlfile)
-            bidsmap, _ = bids.load_bidsmap(yamlfile, Path(), check=(False, False, False))
+            bidsmap, _ = bids.load_bidsmap(yamlfile, Path(), check=(False,False,False))
             bids.append_run(bidsmap, self.target_run)
             bids.save_bidsmap(yamlfile, bidsmap)
             QMessageBox.information(self, 'Edit BIDS mapping', f"Successfully exported:\n\nbidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}")
@@ -1554,10 +1554,8 @@ class InspectWindow(QDialog):
                 for field in hdr._fields_:
                     data = getattr(hdr, field[0])
                     if type(data) == bytes:
-                        try:
-                            data = data.decode('UTF-8')
-                        except UnicodeDecodeError:
-                            pass
+                        try: data = data.decode('UTF-8')
+                        except UnicodeDecodeError: pass
                     text += f"{field[0]}:\t {data}\n"
             except ImportError as perror:
                 text = f"Could not inspect: {filename}"
@@ -1668,7 +1666,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='') -> No
     LOGGER.info(f">>> bidseditor bidsfolder={bidsfolder} bidsmap={bidsmapfile} template={templatefile}")
 
     # Obtain the initial bidsmap info
-    template_bidsmap, templatefile = bids.load_bidsmap(templatefile, bidsfolder /'code' /'bidscoin', check=(True, True, False))
+    template_bidsmap, templatefile = bids.load_bidsmap(templatefile, bidsfolder/'code'/'bidscoin', check=(True,True,False))
     input_bidsmap, bidsmapfile     = bids.load_bidsmap(bidsmapfile,  bidsfolder/'code'/'bidscoin')
     if input_bidsmap.get('Options'):
         template_bidsmap['Options'] = input_bidsmap['Options']      # Always use the options of the input bidsmap

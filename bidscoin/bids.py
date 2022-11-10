@@ -538,7 +538,6 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
             LOGGER.warning(f"Could not read {tagname} from {dicomfile}\n{dicomerror}")
             try:
                 value = parse_x_protocol(tagname, dicomfile)
-
             except Exception as dicomerror:
                 LOGGER.warning(f'Could not parse {tagname} from {dicomfile}\n{dicomerror}')
                 value = ''
@@ -696,7 +695,7 @@ def get_sparfield(tagname: str, sparfile: Path) -> Union[str, int]:
 
     else:
         try:
-            if sparfile!=_SPARFILE_CACHE:
+            if sparfile != _SPARFILE_CACHE:
 
                 from spec2nii.philips import read_spar
 
@@ -749,7 +748,7 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
 
     else:
         try:
-            if p7file!=_P7FILE_CACHE:
+            if p7file != _P7FILE_CACHE:
 
                 from spec2nii.GE.ge_read_pfile import Pfile
 
@@ -761,10 +760,8 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
 
             value = getattr(hdr, tagname, '')
             if type(value) == bytes:
-                try:
-                    value = value.decode('UTF-8')
-                except UnicodeDecodeError:
-                    pass
+                try: value = value.decode('UTF-8')
+                except UnicodeDecodeError: pass
 
         except ImportError:
             LOGGER.warning(f"The extra `spec2nii` library could not be found or was not installed (see the BIDScoin install instructions)")
@@ -789,7 +786,7 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
 # ---------------- All function below this point are bidsmap related. TODO: make a class out of them -------------------
 
 
-def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=(), check: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[dict[dict[Union[dict,list[dict]]]], Path]:
+def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=(), check: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[dict, Path]:
     """
     Read the mapping heuristics from the bidsmap yaml-file. If yamlfile is not fullpath, then 'folder' is first searched before
     the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, then 'bidsmap_template'. So fullpath
@@ -1489,7 +1486,7 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
         run_suffixok = bids_validator.BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")  # NB: Using the BIDSValidator sounds nice but doesn't give any control over the BIDS-version
         run_valsok   = run_suffixok
 
-    if check[1] and run_suffixok == False:
+    if check[1] and run_suffixok is False:
         LOGGER.warning(f'Invalid suffix: "{run["bids"]["suffix"]}" ({datatype} -> {run["provenance"]})')
 
     return run_keysok, run_suffixok, run_valsok
