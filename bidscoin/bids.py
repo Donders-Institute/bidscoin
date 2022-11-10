@@ -922,7 +922,7 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
 
     # Validate the bidsmap entries
     LOGGER.info('Checking the bidsmap:')
-    if not check_bidsmap(bidsmap, (False,False,True)):
+    if not check_bidsmap(bidsmap, (False,True,True)):
         LOGGER.warning('Bidsmap values are invalid according to the BIDS specification')
     if not validate_bidsmap(bidsmap, 0):
         LOGGER.warning('Bidsmap names are invalid according to the bids-validator')
