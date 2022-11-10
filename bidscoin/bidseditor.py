@@ -146,7 +146,7 @@ class MainWindow(QMainWindow):
         buttonbox.button(QDialogButtonBox.Save).clicked.connect(self.save_bidsmap)
         validatebutton = buttonbox.addButton('Validate', QDialogButtonBox.ActionRole)
         validatebutton.setIcon(QtGui.QIcon.fromTheme('tools-check-spelling'))
-        validatebutton.setToolTip('Test the bidsname of all normal runs in the study bidsmap using the bids-validator (see terminal output)')
+        validatebutton.setToolTip('Test the run-items and bidsname of all normal runs in the study bidsmap (see terminal output)')
         validatebutton.clicked.connect(self.validate_runs)
 
         # Set-up the main layout
@@ -745,8 +745,10 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, 'Tool test', f"BIDScoin test: Failed\nSee terminal output for more info")
 
     def validate_runs(self):
-        """Test all normal runs in the study bidsmap using the bids-validator"""
+        """Test the runs in the study bidsmap"""
 
+        LOGGER.info('Checking the bidsmap for warnings:')
+        bids.check_bidsmap(self.output_bidsmap)
         bids.validate_bidsmap(self.output_bidsmap)
 
     def reset(self):
