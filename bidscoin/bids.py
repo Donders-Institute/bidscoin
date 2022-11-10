@@ -930,13 +930,16 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
         yaml.dump(bidsmap, stream)
 
 
-def validate_bidsmap(bidsmap: dict, fulltest: bool=False) -> bool:
+def validate_bidsmap(bidsmap: dict, level: int=2) -> bool:
     """
     Test all the runs in the bidsmap using the bids-validator
 
-    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
-    :param fulltest:    If True also test the `.bidsignore` and `ignoretypes` datatypes
-    :return:            True if all runs in bidsmap passed the test, otherwise False
+    :param bidsmap: Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param level:  (-1) as 1 but no logging reports,
+                    (0) as 1 but only report invalid runs,
+                    (1) test normal datatypes, i.e. datatypes not in `.bidsignore` or `ignoretypes`,
+                    (2) test all datatypes
+    :return:        True if all tested runs in bidsmap were bids-valid, otherwise False
     """
 
     valid      = True
@@ -952,8 +955,11 @@ def validate_bidsmap(bidsmap: dict, fulltest: bool=False) -> bool:
             for run in bidsmap[dataformat][datatype]:
                 bidsname = get_bidsname('sub-foo', '', run, False)
                 bidstest = BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")
-                valid    = valid and bidstest
-                if fulltest or (datatype not in bidsignore and datatype not in ignore):
+                if level > 1:
+                    valid = valid and bidstest
+                elif datatype not in bidsignore and datatype not in ignore:
+                    valid = valid and bidstest
+                if (level == 0 and not bidstest) or level > 1:
                     LOGGER.info(f"{bidsname}: {bidstest}")
 
     return valid
