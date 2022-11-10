@@ -428,15 +428,12 @@ def test_bidsmap(bidsmapfile: str):
     :return:
     """
 
-    if not bidsmapfile:
-        return
-
-    LOGGER.info('--------- Testing bidsmap runs and their bids-names ---------')
-
     try:  # Include the import in the test + moving the import to the top of this module will cause circular import issues
         from bidscoin import bids
     except ImportError:
         import bids  # This should work if bidscoin was not pip-installed
+
+    LOGGER.info('--------- Testing bidsmap runs and their bids-names ---------')
 
     bidsmapfile = Path(bidsmapfile)
     if bidsmapfile.is_dir():
