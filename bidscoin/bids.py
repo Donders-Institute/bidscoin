@@ -6,6 +6,7 @@ https://github.com/dangom/dac2bids/blob/master/dac2bids.py
 
 @author: Marcel Zwiers
 """
+
 import copy
 import re
 import logging
@@ -788,7 +789,7 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
 # ---------------- All function below this point are bidsmap related. TODO: make a class out of them -------------------
 
 
-def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=(), check: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[dict, Path]:
+def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=(), check: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[dict[dict[Union[dict,list[dict]]]], Path]:
     """
     Read the mapping heuristics from the bidsmap yaml-file. If yamlfile is not fullpath, then 'folder' is first searched before
     the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, then 'bidsmap_template'. So fullpath
