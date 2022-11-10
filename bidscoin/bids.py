@@ -942,9 +942,9 @@ def validate_bidsmap(bidsmap: dict, level: int=2) -> bool:
     :return:        True if all tested runs in bidsmap were bids-valid, otherwise False
     """
 
-    valid      = True
-    ignore     = bidsmap['Options']['bidscoin'].get('ignoretypes', [])
-    bidsignore = bidsmap['Options']['bidscoin'].get('bidsignore', '')
+    valid       = True
+    ignoretypes = bidsmap['Options']['bidscoin'].get('ignoretypes', [])
+    bidsignore  = bidsmap['Options']['bidscoin'].get('bidsignore', '')
 
     # Test all the runs in the bidsmap
     for dataformat in bidsmap:
@@ -952,15 +952,16 @@ def validate_bidsmap(bidsmap: dict, level: int=2) -> bool:
         if not bidsmap[dataformat]:             continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue        # E.g. 'subject' and 'session'
+            ignore = datatype in bidsignore or datatype not in ignoretypes
             for run in bidsmap[dataformat][datatype]:
                 bidsname = get_bidsname('sub-foo', '', run, False)
                 bidstest = BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")
                 if level > 1:
                     valid = valid and bidstest
-                elif datatype not in bidsignore and datatype not in ignore:
+                elif not ignore:
                     valid = valid and bidstest
-                if (level == 0 and not bidstest) or level > 1:
-                    LOGGER.info(f"{bidsname}: {bidstest}")
+                if (level==0 and not bidstest) or (level==1 and not ignore) or level > 1:
+                    LOGGER.info(f"{bidstest}: {bidsname}")
 
     return valid
 
