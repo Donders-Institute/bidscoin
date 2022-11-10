@@ -1489,7 +1489,7 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
         run_valsok   = run_suffixok
 
     if check[1] and run_suffixok == False:
-        LOGGER.warning(f'Invalid "{run["bids"]["suffix"]}" suffix ({datatype} -> {run["provenance"]})')
+        LOGGER.warning(f'Invalid suffix: "{run["bids"]["suffix"]}" ({datatype} -> {run["provenance"]})')
 
     return run_keysok, run_suffixok, run_valsok
 
