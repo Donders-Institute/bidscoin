@@ -788,7 +788,7 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
 # ---------------- All function below this point are bidsmap related. TODO: make a class out of them -------------------
 
 
-def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=(), validate: Tuple[bool,bool,bool]=(True,True,True)) -> Tuple[dict, Path]:
+def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=(), check: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[dict, Path]:
     """
     Read the mapping heuristics from the bidsmap yaml-file. If yamlfile is not fullpath, then 'folder' is first searched before
     the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, then 'bidsmap_template'. So fullpath
@@ -799,7 +799,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
     :param yamlfile:    The full pathname or basename of the bidsmap yaml-file. If None, the default bidsmap_template file in the heuristics folder is used
     :param folder:      Only used when yamlfile=basename or None: yamlfile is then first searched for in folder and then falls back to the ./heuristics folder (useful for centrally managed template yaml-files)
     :param plugins:     List of plugins to be used (with default options, overrules the plugin list in the study/template bidsmaps)
-    :param validate:    Booleans to validate if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
+    :param check:       Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
     :return:            Tuple with (1) ruamel.yaml dict structure, with all options, BIDS mapping heuristics, labels and attributes, etc and (2) the fullpath yaml-file
     """
 
@@ -823,10 +823,10 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
             yamlfile = bidscoin.heuristicsfolder/yamlfile
 
     if not yamlfile.is_file():
-        if all(validate):
+        if all(check):
             LOGGER.info(f"No existing bidsmap file found: {yamlfile}")
         return dict(), yamlfile
-    elif any(validate):
+    elif any(check):
         LOGGER.info(f"Reading: {yamlfile}")
 
     # Read the heuristics from the bidsmap file
@@ -840,9 +840,9 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
         bidsmapversion = bidsmap['Options']['version']
     else:
         bidsmapversion = 'Unknown'
-    if bidsmapversion.rsplit('.', 1)[0] != bidscoin.version().rsplit('.', 1)[0] and any(validate):
+    if bidsmapversion.rsplit('.', 1)[0] != bidscoin.version().rsplit('.', 1)[0] and any(check):
         LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created with version {bidsmapversion}, but this is version {bidscoin.version()}')
-    elif bidsmapversion != bidscoin.version() and any(validate):
+    elif bidsmapversion != bidscoin.version() and any(check):
         LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {bidscoin.version()}. This is normally ok but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
 
     # Make sure we get a proper plugin options and dataformat sections (use plugin default bidsmappings when a template bidsmap is loaded)
@@ -894,7 +894,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
                                 run['bids'][entitykey] = ''
 
     # Validate the bidsmap entries
-    check_bidsmap(bidsmap, validate)
+    check_bidsmap(bidsmap, check)
 
     return bidsmap, yamlfile
 
@@ -972,7 +972,7 @@ def check_bidsmap(bidsmap: dict, validate: Tuple[bool,bool,bool]=(True,True,True
     Check all the runs in the bidsmap for required and optional entitities using the BIDS schema files
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
-    :param validate:    Booleans to validate if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
+    :param validate:    Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
     :return:            False if the bidsmap is proved to be invalid, otherwise True
     """
 
@@ -1418,7 +1418,7 @@ def check_run(datatype: str, run: dict, validate: Tuple[bool,bool,bool]=(False,F
 
     :param datatype:    The datatype that is checked, e.g. 'anat'
     :param run:         The run (listitem) with bids entities that are checked against missing values & invalid keys
-    :param validate:    Booleans to validate if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
+    :param validate:    Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
     :return:            True/False if the run entities are bids-valid or None if they cannot be checked
     """
 

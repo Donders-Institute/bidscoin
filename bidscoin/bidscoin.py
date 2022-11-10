@@ -441,7 +441,7 @@ def test_bidsmap(bidsmapfile: str):
         bidsmapfile = Path()
     else:
         bidsfolder  = Path()
-    bidsmap, _ = bids.load_bidsmap(bidsmapfile, bidsfolder, validate=(True, True, True))
+    bidsmap, _ = bids.load_bidsmap(bidsmapfile, bidsfolder, check=(True, True, True))
     bids.validate_bidsmap(bidsmap)
 
 
@@ -468,7 +468,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
             except ImportError:
                 import bids         # This should work if bidscoin was not pip-installed
 
-            bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile), validate=(True,True,False))
+            bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile), check=(True, True, False))
         except Exception as bidsmaperror:
             LOGGER.error(f"An error occurred when loading {bidsmapfile}:\n{bidsmaperror}")
             bidsmap = {'Options': {}}

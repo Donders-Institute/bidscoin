@@ -93,7 +93,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, bidsmapfile: st
     LOGGER.info(f">>> bidsparticipants sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmapfile}")
 
     # Get the bidsmap sub-/ses-prefix from the bidsmap YAML-file
-    bidsmap,_ = bids.load_bidsmap(Path(bidsmapfile), bidsfolder/'code'/'bidscoin', validate=(False,False,False))
+    bidsmap,_ = bids.load_bidsmap(Path(bidsmapfile), bidsfolder /'code' /'bidscoin', check=(False, False, False))
     if not bidsmap:
         LOGGER.info('Make sure to run "bidsmapper" first, exiting now')
         return
