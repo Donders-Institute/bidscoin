@@ -1463,7 +1463,7 @@ class EditWindow(QDialog):
                                                    self.target_run['meta'].get('IntendedFor')):
             message = f'The "B0FieldIdentifier/IntendedFor" meta-data is left empty for {bidsname} (not recommended)'
         if message:
-            answer = QMessageBox.question(self, 'Edit BIDS mapping', f'Warning: {message}\n\nDo you want to go back and edit the run?',
+            answer = QMessageBox.question(self, 'Edit BIDS mapping', f'WARNING:\n{message}\n\nDo you want to go back and edit the run?',
                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
             if answer == QMessageBox.Yes: return
             LOGGER.warning(message)
