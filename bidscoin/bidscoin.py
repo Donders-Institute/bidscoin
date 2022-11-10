@@ -420,16 +420,16 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> int:
     return 0
 
 
-def test_bidsmap(bidsmapfile: str) -> int:
+def test_bidsmap(bidsmapfile: str):
     """
     Tests the bidsmaps run-items and their bidsname using BIDScoin's check and the bids-validator
 
     :param bidsmapfile: The bidsmap or the full pathname / basename of the bidsmap yaml-file
-    :return:            0 if the test was successful, otherwise 1
+    :return:
     """
 
     if not bidsmapfile:
-        return 1
+        return
 
     LOGGER.info('--------- Testing bidsmap runs and their bids-names ---------')
 
@@ -444,14 +444,8 @@ def test_bidsmap(bidsmapfile: str) -> int:
         bidsmapfile = Path()
     else:
         bidsfolder  = Path()
-    bidsmap, bidsmapfile = bids.load_bidsmap(bidsmapfile, bidsfolder, validate=(False, False, False))
-    LOGGER.info(f"Loaded: {bidsmapfile}")
-
-    LOGGER.info('Checking the bidsmap for warnings:')
-    runsvalid = bids.check_bidsmap(bidsmap)
-    bidsvalid = bids.validate_bidsmap(bidsmap)
-
-    return not (runsvalid and bidsvalid)
+    bidsmap, _ = bids.load_bidsmap(bidsmapfile, bidsfolder, validate=(True, True, True))
+    bids.validate_bidsmap(bidsmap)
 
 
 def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins: bool=True, testgui: bool=True, testtemplate: bool=True) -> int:
