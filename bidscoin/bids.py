@@ -965,7 +965,7 @@ def validate_bidsmap(bidsmap: dict, level: int=2) -> bool:
                 bidstest = bids_validator.BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")
                 if level==3 or (abs(level)==2 and not ignore_2) or (-2<level<2 and not ignore_1):
                     valid = valid and bidstest
-                    if (level==0 and bidstest) or level>0:
+                    if (level==0 and not bidstest) or level>0:
                         LOGGER.info(f"{bidstest}{'*' if datatype in bidsignore else ''}:\t{datatype}/{bidsname}.*")
 
     return valid
