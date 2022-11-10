@@ -422,7 +422,7 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> int:
 
 def test_bidsmap(bidsmapfile: Union[Path,dict]) -> int:
     """
-    Tests all runs in the bidsmao using the bids-validator
+    Tests runs in the bidsmap using the bids-validator
 
     :param bidsmapfile: The bidsmap or the full pathname / basename of the bidsmap yaml-file
     :return:            0 if the test was successful, otherwise 1
@@ -431,7 +431,7 @@ def test_bidsmap(bidsmapfile: Union[Path,dict]) -> int:
     if not bidsmapfile:
         return 1
 
-    LOGGER.info('--------- Testing the bidsmap runs using the bids-validator ---------')
+    LOGGER.info('--------- Testing normal bidsmap runs using the bids-validator ---------')
 
     try:  # Include the import in the test + moving the import to the top of this module will cause circular import issues
         from bidscoin import bids

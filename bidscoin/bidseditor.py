@@ -138,12 +138,16 @@ class MainWindow(QMainWindow):
         # Set-up the buttons
         buttonbox = QDialogButtonBox()
         buttonbox.setStandardButtons(QDialogButtonBox.Save | QDialogButtonBox.Reset | QDialogButtonBox.Help)
+        buttonbox.helpRequested.connect(self.get_help)
         buttonbox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
         buttonbox.button(QDialogButtonBox.Save).setToolTip('Save the bidsmap to disk if you are satisfied with all the BIDS output names')
         buttonbox.button(QDialogButtonBox.Reset).setToolTip('Reset all the Options and BIDS mappings')
-        buttonbox.helpRequested.connect(self.get_help)
         buttonbox.button(QDialogButtonBox.Reset).clicked.connect(self.reset)
         buttonbox.button(QDialogButtonBox.Save).clicked.connect(self.save_bidsmap)
+        validatebutton = buttonbox.addButton('Validate', QDialogButtonBox.ActionRole)
+        validatebutton.setIcon(QtGui.QIcon.fromTheme('tools-check-spelling'))
+        validatebutton.setToolTip('Test all normal runs in the study bidsmap using the bids-validator (see terminal output)')
+        validatebutton.clicked.connect(self.validate_runs)
 
         # Set-up the main layout
         centralwidget = QtWidgets.QWidget()
@@ -739,6 +743,11 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, 'Tool test', f"BIDScoin test: Passed\nSee terminal output for more info")
         else:
             QMessageBox.warning(self, 'Tool test', f"BIDScoin test: Failed\nSee terminal output for more info")
+
+    def validate_runs(self):
+        """Test all normal runs in the study bidsmap using the bids-validator"""
+
+        bids.validate_bidsmap(self.output_bidsmap)
 
     def reset(self):
         """Reset button: reset the window with the original input BIDS map"""

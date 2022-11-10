@@ -932,7 +932,7 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
 
 def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
     """
-    Test all the runs in the bidsmap using the bids-validator
+    Test runs in the bidsmap using the bids-validator
 
     :param bidsmap: Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param level:  (-1) as 1 but no logging reports,
