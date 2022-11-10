@@ -1442,30 +1442,31 @@ class EditWindow(QDialog):
     def accept_run(self):
         """Save the changes to the target_bidsmap and send it back to the main window: Finished!"""
 
-        bidsname  = self.bidsname_textbox.toPlainText()
-        bidsvalid = BIDSValidator().is_bids((Path('/')/self.subid/self.sesid/bidsname).with_suffix('.json').as_posix())
-        validrun  = False not in bids.check_run(self.target_datatype, self.target_run, validate=(False,False,False))[1:3]
-        if validrun and not bidsvalid:
-            answer = QMessageBox.question(self, 'Edit BIDS mapping', f'The "{bidsname}" name seems valid but does not pass the bids-validator. Do you want to go back and edit the run?',
-                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-            if answer == QMessageBox.Yes: return
-            LOGGER.warning(f'The "{bidsname}" run seems valid but does not pass the bids-validator")')
-        elif not validrun and bidsvalid:
-            answer = QMessageBox.question(self, 'Edit BIDS mapping', f'The "{bidsname}" name does not seem valid but it does pass the bids-validator. Do you want to go back and edit the run?',
-                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-            if answer==QMessageBox.Yes: return
-            LOGGER.warning(f'The "{bidsname}" name does not seem valid but it does pass the bids-validator")')
-        elif not validrun:
-            answer = QMessageBox.question(self, 'Edit BIDS mapping', f'The "{bidsname}" name is not valid according to the BIDS standard. Do you want to go back and edit the run?',
-                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-            if answer == QMessageBox.Yes: return
-            LOGGER.warning(f'The "{bidsname}" name is not valid according to the BIDS standard")')
+        # Check if the bidsname is valid
+        bidsname = self.bidsname_textbox.toPlainText()
+        validrun = False not in bids.check_run(self.target_datatype, self.target_run, validate=(False,False,False))[1:3]
+        if self.target_datatype not in self.bidsignore and self.target_datatype not in self.ignoredatatypes + self.unknowndatatypes:
+            bidsvalid = BIDSValidator().is_bids((Path('/') / self.subid / self.sesid / bidsname).with_suffix('.json').as_posix())
+        else:
+            bidsvalid = validrun
 
-        if self.target_datatype=='fmap' and not (self.target_run['meta'].get('B0FieldSource') or self.target_run['meta'].get('B0FieldIdentifier') or self.target_run['meta'].get('IntendedFor')):
-            answer = QMessageBox.question(self, 'Edit BIDS mapping', "The 'B0FieldIdentifier/IntendedFor' meta-data is left empty\n\nDo you want to go back and "
-                                                                     "set this data (recommended)?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
-            if answer in (QMessageBox.Cancel, QMessageBox.Yes): return
-            LOGGER.warning(f"'B0FieldIdentifier/IntendedFor' fieldmap data was not set for {bidsname}")
+        # If the bidsname is not valid, ask the user if that's OK
+        message = ''
+        if validrun and not bidsvalid:
+            message = f'The "{bidsname}" name seems valid but does not pass the bids-validator'
+        elif not validrun and bidsvalid:
+            message = f'The "{bidsname}" name does not seem valid but it does pass the bids-validator'
+        elif not validrun:
+            message = f'The "{bidsname}" name is not valid according to the BIDS standard'
+        elif self.target_datatype=='fmap' and not (self.target_run['meta'].get('B0FieldSource') or
+                                                   self.target_run['meta'].get('B0FieldIdentifier') or
+                                                   self.target_run['meta'].get('IntendedFor')):
+            message = f'The "B0FieldIdentifier/IntendedFor" meta-data is left empty for {bidsname} (not recommended)'
+        if message:
+            answer = QMessageBox.question(self, 'Edit BIDS mapping', f'Warning: {message}\n\nDo you want to go back and edit the run?',
+                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            if answer == QMessageBox.Yes: return
+            LOGGER.warning(message)
 
         LOGGER.info(f'User has approved the edit')
         if re.sub('<(?!.*<).*? object at .*?>','',str(self.target_run)) != re.sub('<(?!.*<).*? object at .*?>','',str(self.source_run)):    # Ignore the memory address of the datasource object
