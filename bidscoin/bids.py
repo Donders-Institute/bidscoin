@@ -923,6 +923,8 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
     # Validate the bidsmap entries
     if not check_bidsmap(bidsmap, (False,False,True)):
         LOGGER.warning('Bidsmap values are invalid according to the BIDS specification')
+    if not validate_bidsmap(bidsmap, 0):
+        LOGGER.warning('Bidsmap names are invalid according to the bids-validator')
 
     LOGGER.info(f"Writing bidsmap to: {filename}")
     filename.parent.mkdir(parents=True, exist_ok=True)
@@ -930,15 +932,17 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
         yaml.dump(bidsmap, stream)
 
 
-def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
+def validate_bidsmap(bidsmap: dict, level: int=2) -> bool:
     """
     Test the bidsname of runs in the bidsmap using the bids-validator
 
     :param bidsmap: Full bidsmap data structure, with all options, BIDS labels and attributes, etc
-    :param level:  (-1) as 1 but no logging reports,
+    :param level:  (-2) as 2 but no logging reports,
+                   (-1) as 1 but no logging reports,
                     (0) as 1 but only report invalid runs,
-                    (1) test normal datatypes, i.e. datatypes not in `.bidsignore` or `ignoretypes`,
-                    (2) test all datatypes
+                    (1) test BIDS datatypes, i.e. datatypes not in `.bidsignore` or `ignoretypes`,
+                    (2) test converted datatypes, i.e. datatypes not in `ignoretypes`,
+                    (3) test all datatypes
     :return:        True if all tested runs in bidsmap were bids-valid, otherwise False
     """
 
@@ -947,22 +951,21 @@ def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
     bidsignore  = bidsmap['Options']['bidscoin'].get('bidsignore', '')
 
     # Test all the runs in the bidsmap
-    LOGGER.info(f"bids-validator {bids_validator.__version__} test results:")
+    LOGGER.info(f"bids-validator {bids_validator.__version__} test results (* = datatype in .bidsgore):")
     for dataformat in bidsmap:
         if dataformat in ('Options','PlugIns'): continue    # Handle legacy bidsmaps (-> 'PlugIns'). TODO: Check Options
         if not bidsmap[dataformat]:             continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue        # E.g. 'subject' and 'session'
-            ignore = datatype in bidsignore or datatype in ignoretypes
+            ignore_1 = datatype in ignoretypes or datatype in bidsignore
+            ignore_2 = datatype in ignoretypes
             for run in bidsmap[dataformat][datatype]:
                 bidsname = get_bidsname('sub-foo', '', run, False)
                 bidstest = bids_validator.BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")
-                if level > 1:
+                if level==3 or (abs(level)==2 and not ignore_2) or (-2<level<2 and not ignore_1):
                     valid = valid and bidstest
-                elif not ignore:
-                    valid = valid and bidstest
-                if (level==0 and not bidstest) or (level==1 and not ignore) or level > 1:
-                    LOGGER.info(f"{bidstest}:\t{datatype}/{bidsname}.*")
+                    if (level==0 and bidstest) or level>0:
+                        LOGGER.info(f"{bidstest}{'*' if datatype in bidsignore else ''}:\t{datatype}/{bidsname}.*")
 
     return valid
 
