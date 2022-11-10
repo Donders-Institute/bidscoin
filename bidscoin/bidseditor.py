@@ -1445,7 +1445,7 @@ class EditWindow(QDialog):
         # Check if the bidsname is valid
         bidsname = self.bidsname_textbox.toPlainText()
         validrun = False not in bids.check_run(self.target_datatype, self.target_run, validate=(False,False,False))[1:3]
-        if self.target_datatype not in self.bidsignore and self.target_datatype not in self.ignoredatatypes + self.unknowndatatypes:
+        if self.target_datatype not in self.bidsignore and self.target_datatype not in self.ignoredatatypes:
             bidsvalid = BIDSValidator().is_bids((Path('/')/self.subid/self.sesid/bidsname).with_suffix('.json').as_posix())
         else:
             bidsvalid = validrun
