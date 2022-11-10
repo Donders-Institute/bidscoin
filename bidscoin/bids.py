@@ -961,8 +961,8 @@ def validate_bidsmap(bidsmap: dict, level: int=2) -> bool:
             ignore_1 = datatype in ignoretypes or datatype in bidsignore
             ignore_2 = datatype in ignoretypes
             for run in bidsmap[dataformat][datatype]:
-                bidsname = get_bidsname('sub-foo', '', run, False)
-                bidstest = bids_validator.BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")
+                bidsname = get_bidsname(dataformat, '', run, False)
+                bidstest = bids_validator.BIDSValidator().is_bids(f"/sub-{dataformat}/{datatype}/{bidsname}.json")
                 if level==3 or (abs(level)==2 and not ignore_2) or (-2<level<2 and not ignore_1):
                     valid = valid and bidstest
                     if (level==0 and not bidstest) or level>0:
