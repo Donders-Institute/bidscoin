@@ -438,7 +438,13 @@ def test_bidsmap(bidsmapfile: Union[Path,dict]) -> int:
     except ImportError:
         import bids  # This should work if bidscoin was not pip-installed
 
-    bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile), validate=(False, False, False))
+    bidsmapfile = Path(bidsmapfile)
+    if bidsmapfile.is_dir():
+        folder      = bidsmapfile
+        bidsmapfile = Path()
+    else:
+        folder = Path()
+    bidsmap, _ = bids.load_bidsmap(bidsmapfile, folder, validate=(False, False, False))
 
     return not bids.validate_bidsmap(bidsmap)
 
@@ -578,7 +584,7 @@ def main():
     parser.add_argument('-u', '--uninstall',   help='A list of bidscoin plugins to uninstall', nargs='+')
     parser.add_argument('-d', '--download',    help='Download folder. If given, tutorial MRI data will be downloaded here')
     parser.add_argument('-t', '--test',        help='Test the bidscoin installation and template bidsmap', nargs='?', const=bidsmap_template)
-    parser.add_argument('-b', '--bidsmaptest', help='Test all normal runs in the study bidsmap using the bids-validator')
+    parser.add_argument('-b', '--bidsmaptest', help='Test all normal runs in the study bidsmap using the bids-validator. Provide the bids-folder or the bidsmap filepath')
     parser.add_argument('-v', '--version',     help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
     if len(sys.argv) == 1:
         parser.print_help()
