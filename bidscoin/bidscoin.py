@@ -420,7 +420,7 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> int:
     return 0
 
 
-def test_bidsmap(bidsmapfile: Union[Path,dict]) -> int:
+def test_bidsmap(bidsmapfile: str) -> int:
     """
     Tests runs in the bidsmap using the bids-validator
 
@@ -440,11 +440,12 @@ def test_bidsmap(bidsmapfile: Union[Path,dict]) -> int:
 
     bidsmapfile = Path(bidsmapfile)
     if bidsmapfile.is_dir():
-        folder      = bidsmapfile
+        bidsfolder  = bidsmapfile/'code'/'bidscoin'
         bidsmapfile = Path()
     else:
-        folder = Path()
-    bidsmap, _ = bids.load_bidsmap(bidsmapfile, folder, validate=(False, False, False))
+        bidsfolder  = Path()
+    bidsmap, bidsmapfile = bids.load_bidsmap(bidsmapfile, bidsfolder, validate=(False, False, False))
+    LOGGER.info(f"Loaded: {bidsmapfile}")
 
     return not bids.validate_bidsmap(bidsmap)
 
