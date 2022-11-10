@@ -14,13 +14,13 @@ import tarfile
 import zipfile
 import json
 import shutil
+import bids_validator
 from functools import lru_cache
 from pydicom import dcmread, fileset, datadict
 from nibabel.parrec import parse_PAR_header
 from distutils.dir_util import copy_tree
 from typing import Union, List, Tuple
 from pathlib import Path
-from bids_validator import BIDSValidator
 try:
     from bidscoin import bidscoin, dicomsort
 except ImportError:
@@ -947,7 +947,7 @@ def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
     bidsignore  = bidsmap['Options']['bidscoin'].get('bidsignore', '')
 
     # Test all the runs in the bidsmap
-    LOGGER.info('bids-validator:')
+    LOGGER.info(f"bids-validator {bids_validator.__version__} test results:")
     for dataformat in bidsmap:
         if dataformat in ('Options','PlugIns'): continue    # Handle legacy bidsmaps (-> 'PlugIns'). TODO: Check Options
         if not bidsmap[dataformat]:             continue
@@ -956,7 +956,7 @@ def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
             ignore = datatype in bidsignore or datatype in ignoretypes
             for run in bidsmap[dataformat][datatype]:
                 bidsname = get_bidsname('sub-foo', '', run, False)
-                bidstest = BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")
+                bidstest = bids_validator.BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")
                 if level > 1:
                     valid = valid and bidstest
                 elif not ignore:
@@ -1481,7 +1481,7 @@ def check_run(datatype: str, run: dict, validate: Tuple[bool,bool,bool]=(False,F
     # Hack: There are physio, stim and events entities in the 'task'-rules, which can added to any datatype
     if run['bids'].get('suffix') in datatyperules['task']['events']['suffixes'] + datatyperules['task']['timeseries']['suffixes']:
         bidsname     = get_bidsname('sub-foo', '', run, False)
-        run_suffixok = BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")  # NB: Using the BIDSValidator sounds nice but doesn't give any control over the BIDS-version
+        run_suffixok = bids_validator.BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")  # NB: Using the BIDSValidator sounds nice but doesn't give any control over the BIDS-version
         run_valsok   = run_suffixok
 
     if validate[1] and run_suffixok == False:
