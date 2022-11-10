@@ -428,6 +428,9 @@ def test_bidsmap(bidsmapfile: str):
     :return:
     """
 
+    if not bidsmapfile:
+        return
+
     try:  # Include the import in the test + moving the import to the top of this module will cause circular import issues
         from bidscoin import bids
     except ImportError:
