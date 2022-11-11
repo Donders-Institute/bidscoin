@@ -58,53 +58,54 @@ class TqdmUpTo(tqdm):
         self.update(b * bsize - self.n)  # will also set self.n = b * bsize
 
 
-def setup_logging(log_file: Path=Path(), verbose: bool=False):
+def setup_logging(logfile: Path=Path(), debug: bool=False):
     """
-    Setup the logging
+    Setup the logging framework
 
-    :param log_file:    Name of the logfile
-    :param verbose:     Set log level to VERBOSE if debug==True
+    :param logfile:     Name of the logfile
+    :param debug:       Add the function name to the log-messages and set the console logging level to VERB
     :return:
      """
 
+    # Set the default formats
+    if debug:
+        fmt  = '%(asctime)s - %(name)s - %(levelname)s | %(message)s'
+        cfmt = '%(levelname)s - %(name)s | %(message)s'
+    else:
+        fmt  = '%(asctime)s - %(levelname)s | %(message)s'
+        cfmt = '%(levelname)s | %(message)s'
+    datefmt  = '%Y-%m-%d %H:%M:%S'
+
     # Add a verbose logging level = 15
-    logging.VERBOSE = 15
-    logging.addLevelName(15, 'VERBOSE')
-    logging.__all__ += ['VERBOSE'] if 'VERBOSE' not in logging.__all__ else []
+    logging.VERB = 15
+    logging.addLevelName(logging.VERB, 'VERB')
+    logging.__all__ += ['VERB'] if 'VERB' not in logging.__all__ else []
     def verbose(self, message, *args, **kws):
-        if self.isEnabledFor(15): self._log(15, message, args, **kws)
+        if self.isEnabledFor(logging.VERB): self._log(logging.VERB, message, args, **kws)
     logging.Logger.verbose = verbose
 
-    # Get the root logger
-    logging.basicConfig(level=logging.VERBOSE)
+    # Set the root logging level
     logger = logging.getLogger()
+    logger.setLevel('VERB')
 
-    # Set the format and logging level
-    if verbose:
-        fmt = '%(asctime)s - %(name)s - %(levelname)s | %(message)s'
-    else:
-        fmt = '%(asctime)s - %(levelname)s | %(message)s'
-    datefmt   = '%Y-%m-%d %H:%M:%S'
-    formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
+    # Add the console streamhandler and bring some color to those boring logs! :-)
+    coloredlogs.install(level='VERB' if debug or not logfile.name else 'INFO', fmt=cfmt, datefmt=datefmt)   # NB: Using tqdm sets the streamhandler level to 0, see: https://github.com/tqdm/tqdm/pull/1235
 
-    # Set & add the streamhandler and add some color to those boring terminal logs! :-)
-    coloredlogs.install(level=logging.INFO if log_file.name else logging.VERBOSE, fmt='%(levelname)s | %(message)s', datefmt=datefmt)
-
-    if not log_file.name:
+    if not logfile.name:
         return
 
-    # Set & add the log filehandler
-    log_file.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
-    loghandler = logging.FileHandler(log_file)
-    loghandler.setLevel(logging.VERBOSE)
+    # Add the log filehandler
+    logfile.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
+    formatter  = logging.Formatter(fmt=fmt, datefmt=datefmt)
+    loghandler = logging.FileHandler(logfile)
+    loghandler.setLevel('VERB')
     loghandler.setFormatter(formatter)
     loghandler.set_name('loghandler')
     logger.addHandler(loghandler)
 
-    # Set & add the error / warnings filehandler
-    error_file = log_file.with_suffix('.errors')            # Derive the name of the error logfile from the normal log_file
-    errorhandler = logging.FileHandler(error_file, mode='w')
-    errorhandler.setLevel(logging.WARNING)
+    # Add the error/warnings filehandler
+    errorhandler = logging.FileHandler(logfile.with_suffix('.errors'), mode='w')
+    errorhandler.setLevel('WARNING')
     errorhandler.setFormatter(formatter)
     errorhandler.set_name('errorhandler')
     logger.addHandler(errorhandler)
@@ -154,10 +155,10 @@ def reporterrors() -> None:
     """
 
     # Find the filehandlers and report the errors and warnings
-    for filehandler in logging.getLogger().handlers:
-        if filehandler.name == 'errorhandler':
+    for handler in logging.getLogger().handlers:
+        if handler.name == 'errorhandler':
 
-            errorfile = Path(filehandler.baseFilename)
+            errorfile = Path(handler.baseFilename)
             if errorfile.stat().st_size:
                 LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errorfile.read_text()}{40 * '<'}\n")
 
@@ -165,13 +166,13 @@ def reporterrors() -> None:
                 LOGGER.info(f'No BIDScoin errors or warnings were reported')
                 LOGGER.info('')
 
-        elif filehandler.name == 'loghandler':
-            logfile = Path(filehandler.baseFilename)
+        elif handler.name == 'loghandler':
+            logfile = Path(handler.baseFilename)
 
     # Final message
     if 'logfile' in locals():
         LOGGER.info(f"For the complete log see: {logfile}\n"
-                    f"NB: Files in {logfile.parent} may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
+                    f"NB: That folder may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
 
 
 def run_command(command: str) -> int:

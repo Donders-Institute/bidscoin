@@ -83,6 +83,9 @@ class DataSource:
     def is_datasource(self) -> bool:
         """Returns True is the datasource has a valid dataformat"""
 
+        if not self.path.is_file() or self.path.is_dir():
+            return False
+
         for plugin, options in self.plugins.items():
             module = bidscoin.import_plugin(plugin, ('is_sourcefile',))
             if module:
@@ -90,12 +93,13 @@ class DataSource:
                     dataformat = module.is_sourcefile(self.path)
                 except Exception as moderror:
                     dataformat = ''
-                    LOGGER.warning(f"The {plugin} plugin crashed while reading {self.path}\n{moderror}")
+                    LOGGER.exception(f"The {plugin} plugin crashed while reading {self.path}\n{moderror}")
                 if dataformat:
                     self.dataformat = dataformat
                     return True
 
-        if self.path.name: LOGGER.verbose(f"No plugins found that can read: {self.path}")
+        if self.datatype:
+            LOGGER.verbose(f"No plugins found that can read {self.datatype}: {self.path}")
 
         return False
 
@@ -1576,7 +1580,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
                 return run_, True
 
     # We don't have a match (all tests failed, so datatype should be the *last* one, e.g. unknowndatatype)
-    LOGGER.verbose(f"Could not find a matching run in the bidsmap for {datasource.path}")
+    LOGGER.debug(f"Could not find a matching run in the bidsmap for {datasource.path}")
     return run_, False
 
 
