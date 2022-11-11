@@ -63,7 +63,7 @@ def setup_logging(logfile: Path=Path(), debug: bool=False):
     Setup the logging framework
 
     :param logfile:     Name of the logfile
-    :param debug:       Add the function name to the log-messages and set the console logging level to VERB
+    :param debug:       Add the function name to the log-messages and set the console logging level to VERBOSE
     :return:
      """
 
@@ -77,19 +77,19 @@ def setup_logging(logfile: Path=Path(), debug: bool=False):
     datefmt  = '%Y-%m-%d %H:%M:%S'
 
     # Add a verbose logging level = 15
-    logging.VERB = 15
-    logging.addLevelName(logging.VERB, 'VERB')
-    logging.__all__ += ['VERB'] if 'VERB' not in logging.__all__ else []
+    logging.VERBOSE = 15
+    logging.addLevelName(logging.VERBOSE, 'VERBOSE')
+    logging.__all__ += ['VERBOSE'] if 'VERBOSE' not in logging.__all__ else []
     def verbose(self, message, *args, **kws):
-        if self.isEnabledFor(logging.VERB): self._log(logging.VERB, message, args, **kws)
+        if self.isEnabledFor(logging.VERBOSE): self._log(logging.VERBOSE, message, args, **kws)
     logging.Logger.verbose = verbose
 
     # Set the root logging level
     logger = logging.getLogger()
-    logger.setLevel('VERB')
+    logger.setLevel('VERBOSE')
 
     # Add the console streamhandler and bring some color to those boring logs! :-)
-    coloredlogs.install(level='VERB' if debug or not logfile.name else 'INFO', fmt=cfmt, datefmt=datefmt)   # NB: Using tqdm sets the streamhandler level to 0, see: https://github.com/tqdm/tqdm/pull/1235
+    coloredlogs.install(level='VERBOSE' if debug or not logfile.name else 'INFO', fmt=cfmt, datefmt=datefmt)   # NB: Using tqdm sets the streamhandler level to 0, see: https://github.com/tqdm/tqdm/pull/1235
 
     if not logfile.name:
         return
@@ -98,7 +98,7 @@ def setup_logging(logfile: Path=Path(), debug: bool=False):
     logfile.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
     formatter  = logging.Formatter(fmt=fmt, datefmt=datefmt)
     loghandler = logging.FileHandler(logfile)
-    loghandler.setLevel('VERB')
+    loghandler.setLevel('VERBOSE')
     loghandler.setFormatter(formatter)
     loghandler.set_name('loghandler')
     logger.addHandler(loghandler)
