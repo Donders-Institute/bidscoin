@@ -109,7 +109,7 @@ def is_sourcefile(file: Path) -> str:
 
     if file.is_file():
 
-        LOGGER.debug(f'This is a demo-plugin is_sourcefile routine, assessing whether "{file}" has a valid dataformat')
+        LOGGER.verbose(f'This is a demo-plugin is_sourcefile routine, assessing whether "{file}" has a valid dataformat')
         return 'dataformat' if file == 'supportedformat' else ''
 
     return ''
@@ -127,7 +127,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
     """
 
     if dataformat in ('DICOM','PAR'):
-        LOGGER.debug(f'This is a demo-plugin get_attribute routine, reading the {dataformat} "{attribute}" attribute value from "{sourcefile}"')
+        LOGGER.verbose(f'This is a demo-plugin get_attribute routine, reading the {dataformat} "{attribute}" attribute value from "{sourcefile}"')
 
     return ''
 
@@ -150,7 +150,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     :return:
     """
 
-    LOGGER.debug(f'This is a bidsmapper demo-plugin working on: {session}')
+    LOGGER.verbose(f'This is a bidsmapper demo-plugin working on: {session}')
 
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
@@ -168,4 +168,4 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     :return:            Nothing
     """
 
-    LOGGER.debug(f'This is a bidscoiner demo-plugin working on: {session} -> {bidsses}')
+    LOGGER.verbose(f'This is a bidscoiner demo-plugin working on: {session} -> {bidsses}')

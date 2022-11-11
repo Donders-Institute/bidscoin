@@ -282,7 +282,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 if 'PhaseEncodingPolarityGE' in jsondata:
                     ext     = ''.join(extrafile[0].suffixes)
                     invfile = bids.get_bidsvalue(outfolder/(bidsname+ext), 'dir', bids.get_bidsvalue(bidsname,'dir') + jsondata['PhaseEncodingPolarityGE'])
-                    LOGGER.info(f"Renaming GE reversed polarity image: {extrafile[0]} -> {invfile}")
+                    LOGGER.verbose(f"Renaming GE reversed polarity image: {extrafile[0]} -> {invfile}")
                     extrafile[0].rename(invfile)
                     extrafile[0].with_suffix('').with_suffix('.json').rename(invfile.with_suffix('').with_suffix('.json'))
                     jsonfiles.append(invfile.with_suffix('').with_suffix('.json'))
@@ -333,7 +333,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                     # Patch fieldmap images (NB: datatype=='fmap' is too broad, see the fmap.yaml file)
                     elif run['bids']['suffix'] in bids.datatyperules['fmap']['fieldmaps']['suffixes']:          # i.e. in ('magnitude','magnitude1','magnitude2','phase1','phase2','phasediff','fieldmap')
                         if len(dcm2niixfiles) not in (1, 2, 3, 4):                                              # Phase / echo data may be stored in the same data source / run folder
-                            LOGGER.debug(f"Unknown fieldmap {outfolder/bidsname} for '{postfix}'")
+                            LOGGER.verbose(f"Unknown fieldmap {outfolder/bidsname} for '{postfix}'")
                         newbidsname = newbidsname.replace('_magnitude1a',    '_magnitude2')                     # First catch this potential weird / rare case
                         newbidsname = newbidsname.replace('_magnitude1_pha', '_phase2')                         # First catch this potential weird / rare case
                         newbidsname = newbidsname.replace('_magnitude1_e1',  '_magnitude1')                     # Case 2 = Two phase and magnitude images
@@ -377,7 +377,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 if runindex.startswith('<<') and runindex.endswith('>>'):
                     newbidsname = bids.increment_runindex(outfolder, newbidsname, '')                           # Update the runindex now that the acq-label has changed
                 newbidsfile = outfolder/newbidsname
-                LOGGER.info(f"Found dcm2niix {postfixes} postfixes, renaming\n{dcm2niixfile} ->\n{newbidsfile}")
+                LOGGER.verbose(f"Found dcm2niix {postfixes} postfixes, renaming\n{dcm2niixfile} ->\n{newbidsfile}")
                 if newbidsfile.is_file():
                     LOGGER.warning(f"Overwriting existing {newbidsfile} file -- check your results carefully!")
                 dcm2niixfile.replace(newbidsfile)
@@ -417,7 +417,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                     metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
                     try: metaval = ast.literal_eval(str(metaval))            # E.g. convert stringified list or int back to list or int
                     except (ValueError, SyntaxError): pass
-                    LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
+                    LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
                 if not metaval:
                     metaval = None
                 jsondata[metakey] = metaval
@@ -454,7 +454,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 scans_table.loc[scanpath.as_posix(), 'acq_time'] = acq_time
 
     # Write the scans_table to disk
-    LOGGER.info(f"Writing acquisition time data to: {scans_tsv}")
+    LOGGER.verbose(f"Writing acquisition time data to: {scans_tsv}")
     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
     scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
@@ -492,5 +492,5 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             participants_table.loc[subid, key] = personals[key]
 
     # Write the collected data to the participants tsv-file
-    LOGGER.info(f"Writing {subid} subject data to: {participants_tsv}")
+    LOGGER.verbose(f"Writing {subid} subject data to: {participants_tsv}")
     participants_table.replace('','n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')

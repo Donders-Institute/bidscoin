@@ -93,7 +93,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
     """
 
     if dataformat == 'Physio':
-        LOGGER.debug(f'This is the phys2bids-plugin get_attribute routine, reading the {dataformat} "{attribute}" attribute value from "{sourcefile}"')
+        LOGGER.verbose(f'This is the phys2bids-plugin get_attribute routine, reading the {dataformat} "{attribute}" attribute value from "{sourcefile}"')
     else:
         return ''
 

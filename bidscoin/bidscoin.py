@@ -58,21 +58,29 @@ class TqdmUpTo(tqdm):
         self.update(b * bsize - self.n)  # will also set self.n = b * bsize
 
 
-def setup_logging(log_file: Path=Path(), debug: bool=False):
+def setup_logging(log_file: Path=Path(), verbose: bool=False):
     """
     Setup the logging
 
     :param log_file:    Name of the logfile
-    :param debug:       Set log level to DEBUG if debug==True
+    :param verbose:     Set log level to VERBOSE if debug==True
     :return:
      """
 
+    # Add a verbose logging level = 15
+    logging.VERBOSE = 15
+    logging.addLevelName(15, 'VERBOSE')
+    logging.__all__ += ['VERBOSE'] if 'VERBOSE' not in logging.__all__ else []
+    def verbose(self, message, *args, **kws):
+        if self.isEnabledFor(15): self._log(15, message, args, **kws)
+    logging.Logger.verbose = verbose
+
     # Get the root logger
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.VERBOSE)
     logger = logging.getLogger()
 
     # Set the format and logging level
-    if debug:
+    if verbose:
         fmt = '%(asctime)s - %(name)s - %(levelname)s | %(message)s'
     else:
         fmt = '%(asctime)s - %(levelname)s | %(message)s'
@@ -80,7 +88,7 @@ def setup_logging(log_file: Path=Path(), debug: bool=False):
     formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
 
     # Set & add the streamhandler and add some color to those boring terminal logs! :-)
-    coloredlogs.install(level=logging.INFO, fmt='%(levelname)s | %(message)s', datefmt=datefmt)
+    coloredlogs.install(level=logging.INFO if log_file.name else logging.VERBOSE, fmt='%(levelname)s | %(message)s', datefmt=datefmt)
 
     if not log_file.name:
         return
@@ -88,7 +96,7 @@ def setup_logging(log_file: Path=Path(), debug: bool=False):
     # Set & add the log filehandler
     log_file.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
     loghandler = logging.FileHandler(log_file)
-    loghandler.setLevel(logging.DEBUG)
+    loghandler.setLevel(logging.VERBOSE)
     loghandler.setFormatter(formatter)
     loghandler.set_name('loghandler')
     logger.addHandler(loghandler)
@@ -363,7 +371,7 @@ def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> module_from_s
         return
 
     # Load the plugin-module
-    LOGGER.debug(f"Importing plugin: '{plugin}'")
+    LOGGER.verbose(f"Importing plugin: '{plugin}'")
     try:
         spec   = spec_from_file_location('bidscoin.plugin.' + plugin.stem, plugin)
         module = module_from_spec(spec)
@@ -372,7 +380,7 @@ def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> module_from_s
         functionsfound = []
         for function in functions:
             if function not in dir(module):
-                LOGGER.debug(f"Could not find '{function}' in the '{plugin}' plugin")
+                LOGGER.verbose(f"Could not find '{function}' in the '{plugin}' plugin")
             elif not callable(getattr(module, function)):
                 LOGGER.error(f"'The {function}' attribute in the '{plugin}' plugin is not callable")
             else:

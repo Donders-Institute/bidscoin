@@ -95,7 +95,8 @@ class DataSource:
                     self.dataformat = dataformat
                     return True
 
-        LOGGER.debug(f"No plugins found that can read: {self.path}")
+        if self.path.name: LOGGER.verbose(f"No plugins found that can read: {self.path}")
+
         return False
 
     def properties(self, tagname: str, run: dict=None) -> Union[str, int]:
@@ -341,7 +342,7 @@ def is_dicomfile(file: Path) -> bool:
 
     if file.is_file():
         if file.stem.startswith('.'):
-            LOGGER.debug(f'File is hidden: {file}')
+            LOGGER.verbose(f'File is hidden: {file}')
         with file.open('rb') as dicomfile:
             dicomfile.seek(0x80, 1)
             if dicomfile.read(4) == b'DICM':
@@ -408,7 +409,7 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
     idx = 0
     for file in files:
         if file.stem.startswith('.'):
-            LOGGER.debug(f'Ignoring hidden file: {file}')
+            LOGGER.verbose(f'Ignoring hidden file: {file}')
             continue
         if is_dicomfile(file):
             if idx == index:
@@ -430,7 +431,7 @@ def get_parfiles(folder: Path) -> List[Path]:
     parfiles = []
     for file in sorted(folder.iterdir()):
         if file.stem.startswith('.'):
-            LOGGER.debug(f'Ignoring hidden file: {file}')
+            LOGGER.verbose(f'Ignoring hidden file: {file}')
             continue
         if is_parfile(file):
             parfiles.append(file)
@@ -444,7 +445,7 @@ def get_datasource(session: Path, plugins: dict, recurse: int=2) -> DataSource:
     datasource = DataSource()
     for item in sorted(session.iterdir()):
         if item.stem.startswith('.'):
-            LOGGER.debug(f'Ignoring hidden file: {item}')
+            LOGGER.verbose(f'Ignoring hidden file: {item}')
             continue
         if item.is_dir() and recurse:
             datasource = get_datasource(item, plugins, recurse-1)
@@ -1575,7 +1576,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
                 return run_, True
 
     # We don't have a match (all tests failed, so datatype should be the *last* one, e.g. unknowndatatype)
-    LOGGER.debug(f"Could not find a matching run in the bidsmap for {datasource.path}")
+    LOGGER.verbose(f"Could not find a matching run in the bidsmap for {datasource.path}")
     return run_, False
 
 

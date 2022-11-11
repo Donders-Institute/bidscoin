@@ -546,7 +546,7 @@ class MainWindow(QMainWindow):
                 if key == 'subject':
                     LOGGER.warning(f"Expert usage: User has set {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
                 else:
-                    LOGGER.debug(f"User has set {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
+                    LOGGER.verbose(f"User has set {dataformat}['{key}'] from '{oldvalue}' to '{value}'")
                 self.output_bidsmap[dataformat][key] = value
                 self.update_subses_samples(self.output_bidsmap, dataformat)
 
@@ -566,7 +566,7 @@ class MainWindow(QMainWindow):
             # Find the source index of the run in the list of runs (using the provenance) and open the edit window
             for run in self.output_bidsmap[dataformat][datatype]:
                 if Path(run['provenance']) == Path(provenance):
-                    LOGGER.debug(f'User is editing {provenance}')
+                    LOGGER.verbose(f'User is editing {provenance}')
                     self.editwindow        = EditWindow(run, self.output_bidsmap, self.template_bidsmap)
                     self.editwindow_opened = str(provenance)
                     self.editwindow.done_edit.connect(self.update_subses_samples)
@@ -642,7 +642,7 @@ class MainWindow(QMainWindow):
                         except (ValueError, SyntaxError): pass
                     newoptions[key] = val
                     if val != oldoptions.get(key):
-                        LOGGER.debug(f"User has set the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
+                        LOGGER.verbose(f"User has set the '{plugin}' option from '{key}: {oldoptions.get(key)}' to '{key}: {val}'")
                         self.datachanged = True
             if plugin == 'bidscoin':
                 self.output_bidsmap['Options']['bidscoin'] = newoptions
@@ -764,7 +764,7 @@ class MainWindow(QMainWindow):
         for filehandler in LOGGER.handlers:
             if filehandler.name=='errorhandler' and Path(filehandler.baseFilename).stat().st_size:
                 errorfile = filehandler.baseFilename
-                LOGGER.debug(f"Resetting {errorfile}")
+                LOGGER.verbose(f"Resetting {errorfile}")
                 with open(errorfile, 'w'): pass     # This works but it is a hack that somehow prefixes a lot of whitespace to the first LOGGER call
 
     def open_bidsmap(self):
@@ -1021,12 +1021,12 @@ class EditWindow(QDialog):
                 return
             if answer == QMessageBox.No:
                 self.done(2)
-                LOGGER.debug(f'User has discarded the edit')
+                LOGGER.verbose(f'User has discarded the edit')
                 return
             if answer == QMessageBox.Cancel:
                 return
 
-        LOGGER.debug(f'User has canceled the edit')
+        LOGGER.verbose(f'User has canceled the edit')
 
         super(EditWindow, self).reject()
 
@@ -1296,9 +1296,9 @@ class EditWindow(QDialog):
                     else:
                         value = oldvalue
                         self.bids_table.item(rowindex, 1).setText(oldvalue)
-                        LOGGER.debug(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                        LOGGER.verbose(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 else:
-                    LOGGER.debug(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+                    LOGGER.verbose(f"User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                 self.bids_table.blockSignals(False)
                 self.target_run['bids'][key] = value
                 self.refresh_bidsname()
@@ -1318,7 +1318,7 @@ class EditWindow(QDialog):
                 self.meta_table.blockSignals(True)
                 self.meta_table.item(rowindex, 1).setText(value)
                 self.meta_table.blockSignals(False)
-            LOGGER.debug(f"User has set meta['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
+            LOGGER.verbose(f"User has set meta['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
 
         # Read all the meta-data from the table and store it in the target_run
         self.target_run['meta'] = {}
@@ -1374,7 +1374,7 @@ class EditWindow(QDialog):
 
         self.target_datatype = self.datatype_dropdown.currentText()
 
-        LOGGER.debug(f"User has changed the BIDS data type from '{self.current_datatype}' to '{self.target_datatype}' for {self.target_run['provenance']}")
+        LOGGER.verbose(f"User has changed the BIDS data type from '{self.current_datatype}' to '{self.target_datatype}' for {self.target_run['provenance']}")
 
         self.change_run(0)
 
@@ -1383,7 +1383,7 @@ class EditWindow(QDialog):
 
         target_suffix = self.suffix_dropdown.currentText()
 
-        LOGGER.debug(f"User has changed the BIDS suffix from '{self.target_run['bids'].get('suffix')}' to '{target_suffix}' for {self.target_run['provenance']}")
+        LOGGER.verbose(f"User has changed the BIDS suffix from '{self.target_run['bids'].get('suffix')}' to '{target_suffix}' for {self.target_run['provenance']}")
 
         self.change_run(target_suffix)
 
@@ -1423,7 +1423,7 @@ class EditWindow(QDialog):
 
         # Reset the target_run to the source_run
         if not refresh:
-            LOGGER.debug('User resets the BIDS mapping')
+            LOGGER.verbose('User resets the BIDS mapping')
             self.current_datatype = self.source_datatype
             self.target_datatype  = self.source_datatype
             self.target_run       = copy.deepcopy(self.source_run)
@@ -1475,7 +1475,7 @@ class EditWindow(QDialog):
             if answer == QMessageBox.Yes: return
             LOGGER.warning(message)
 
-        LOGGER.debug(f'User has approved the edit')
+        LOGGER.verbose(f'User has approved the edit')
         if re.sub('<(?!.*<).*? object at .*?>','',str(self.target_run)) != re.sub('<(?!.*<).*? object at .*?>','',str(self.source_run)):    # Ignore the memory address of the datasource object
             bids.update_bidsmap(self.target_bidsmap, self.current_datatype, self.target_run)
 
@@ -1554,7 +1554,7 @@ class InspectWindow(QDialog):
                     text += f"{field[0]}:\t {data}\n"
             except ImportError as perror:
                 text = f"Could not inspect: {filename}"
-                LOGGER.debug(f"Could not import spec2nii to read {filename}\n{perror}")
+                LOGGER.verbose(f"Could not import spec2nii to read {filename}\n{perror}")
         else:
             text = f"Could not inspect: {filename}"
             LOGGER.info(text)

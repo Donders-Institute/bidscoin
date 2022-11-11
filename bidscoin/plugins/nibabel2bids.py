@@ -214,7 +214,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
                 try: metaval = ast.literal_eval(str(metaval))            # E.g. convert stringified list or int back to list or int
                 except (ValueError, SyntaxError): pass
-                LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
+                LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
             if not metaval:
                 metaval = None
             jsondata[metakey] = metaval
@@ -232,7 +232,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         scans_table.loc[bidsfile.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time.isoformat()
 
     # Write the scans_table to disk
-    LOGGER.info(f"Writing data to: {scans_tsv}")
+    LOGGER.verbose(f"Writing data to: {scans_tsv}")
     scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
     # Add an (empty) entry to the participants_table (we don't have useful data to put there)
@@ -248,5 +248,5 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     participants_table.loc[subid, 'session_id'] = sesid if sesid else None
 
     # Write the collected data to the participants tsv-file
-    LOGGER.info(f"Writing {subid} subject data to: {participants_tsv}")
+    LOGGER.verbose(f"Writing {subid} subject data to: {participants_tsv}")
     participants_table.replace('','n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
