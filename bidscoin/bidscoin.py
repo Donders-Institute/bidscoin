@@ -68,20 +68,19 @@ def setup_logging(log_file: Path=Path(), debug: bool=False):
      """
 
     # Get the root logger
+    logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger()
 
     # Set the format and logging level
     if debug:
         fmt = '%(asctime)s - %(name)s - %(levelname)s | %(message)s'
-        logger.setLevel(logging.DEBUG)
     else:
         fmt = '%(asctime)s - %(levelname)s | %(message)s'
-        logger.setLevel(logging.INFO)
     datefmt   = '%Y-%m-%d %H:%M:%S'
     formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
 
     # Set & add the streamhandler and add some color to those boring terminal logs! :-)
-    coloredlogs.install(level=logger.level, fmt='%(levelname)s | %(message)s', datefmt=datefmt)
+    coloredlogs.install(level=logging.INFO, fmt='%(levelname)s | %(message)s', datefmt=datefmt)
 
     if not log_file.name:
         return

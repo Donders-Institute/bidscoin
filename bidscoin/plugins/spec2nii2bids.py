@@ -84,7 +84,6 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
     """
 
     if dataformat not in ('Twix', 'SPAR', 'Pfile'):
-        LOGGER.error(f'The spec2nii2bids-plugin get_attribute routine cannot read the "{dataformat}" ({sourcefile})')
         return ''
 
     if not sourcefile.is_file():
