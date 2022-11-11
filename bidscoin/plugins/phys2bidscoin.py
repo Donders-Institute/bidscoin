@@ -62,7 +62,7 @@ def is_sourcefile(file: Path) -> str:
             try:
                 phys2bids(file, info=True)
             except Exception as phys2bidserror:
-                LOGGER.debug(f'The phys2bids-plugin "is_sourcefile()" routine crashed, assessing whether "{file}" has a valid dataformat:\n{phys2bidserror}')
+                LOGGER.exception(f'The phys2bids-plugin "is_sourcefile()" routine crashed, assessing whether "{file}" has a valid dataformat:\n{phys2bidserror}')
                 return ''
         return 'Physio'
 

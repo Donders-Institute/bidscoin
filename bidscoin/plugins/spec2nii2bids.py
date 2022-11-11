@@ -83,9 +83,8 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
     :return:            The retrieved attribute value
     """
 
-    if dataformat in ('Twix', 'SPAR', 'Pfile'):
-        LOGGER.debug(f'This is the spec2nii2bids-plugin get_attribute routine, reading the {dataformat} "{attribute}" attribute value from "{sourcefile}"')
-    else:
+    if dataformat not in ('Twix', 'SPAR', 'Pfile'):
+        LOGGER.error(f'The spec2nii2bids-plugin get_attribute routine cannot read the "{dataformat}" ({sourcefile})')
         return ''
 
     if not sourcefile.is_file():
@@ -162,10 +161,6 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)
-
-        else:
-            # Communicate with the user if the run was already present in bidsmap_old or in template
-            LOGGER.debug(f"Known '{datasource.datatype}' {dataformat} sample: {sourcefile}")
 
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:

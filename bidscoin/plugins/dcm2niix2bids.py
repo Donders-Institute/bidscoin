@@ -151,10 +151,6 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)
 
-        else:
-            # Communicate with the user if the run was already present in bidsmap_old or in template
-            LOGGER.debug(f"Known '{datasource.datatype}' {dataformat} sample: {sourcefile}")
-
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     """

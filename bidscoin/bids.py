@@ -95,7 +95,7 @@ class DataSource:
                     self.dataformat = dataformat
                     return True
 
-        LOGGER.debug(f"No plugins to read {self.path}")
+        LOGGER.debug(f"No plugins found that can read: {self.path}")
         return False
 
     def properties(self, tagname: str, run: dict=None) -> Union[str, int]:
@@ -341,12 +341,12 @@ def is_dicomfile(file: Path) -> bool:
 
     if file.is_file():
         if file.stem.startswith('.'):
-            LOGGER.warning(f'File is hidden: {file}')
+            LOGGER.debug(f'File is hidden: {file}')
         with file.open('rb') as dicomfile:
             dicomfile.seek(0x80, 1)
             if dicomfile.read(4) == b'DICM':
                 return True
-        LOGGER.debug(f"Reading non-standard DICOM file: {file}")
+        # Reading non-standard DICOM file
         if file.suffix.lower() in ('.ima','.dcm','.dicm','.dicom',''):           # Avoid memory problems when reading a very large (e.g. EEG) source file
             dicomdata = dcmread(file, force=True)               # The DICM tag may be missing for anonymized DICOM files
             return 'Modality' in dicomdata
@@ -408,7 +408,7 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
     idx = 0
     for file in files:
         if file.stem.startswith('.'):
-            LOGGER.warning(f'Ignoring hidden file: {file}')
+            LOGGER.debug(f'Ignoring hidden file: {file}')
             continue
         if is_dicomfile(file):
             if idx == index:
@@ -430,7 +430,7 @@ def get_parfiles(folder: Path) -> List[Path]:
     parfiles = []
     for file in sorted(folder.iterdir()):
         if file.stem.startswith('.'):
-            LOGGER.warning(f'Ignoring hidden file: {file}')
+            LOGGER.debug(f'Ignoring hidden file: {file}')
             continue
         if is_parfile(file):
             parfiles.append(file)
@@ -568,7 +568,7 @@ def get_twixfield(tagname: str, twixfile: Path, mraid: int=2) -> Union[str, int]
     global _TWIXHDR_CACHE, _TWIXFILE_CACHE
 
     if not twixfile.is_file():
-        LOGGER.debug(f"{twixfile} not found")
+        LOGGER.error(f"{twixfile} not found")
         value = ''
 
     else:
@@ -638,7 +638,7 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
     global _PARDICT_CACHE, _PARFILE_CACHE
 
     if not parfile.is_file():
-        LOGGER.debug(f"{parfile} not found")
+        LOGGER.error(f"{parfile} not found")
         value = ''
 
     elif not is_parfile(parfile):
@@ -690,7 +690,7 @@ def get_sparfield(tagname: str, sparfile: Path) -> Union[str, int]:
     global _SPARHDR_CACHE, _SPARFILE_CACHE
 
     if not sparfile.is_file():
-        LOGGER.debug(f"{sparfile} not found")
+        LOGGER.error(f"{sparfile} not found")
         value = ''
 
     else:
@@ -743,7 +743,7 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
     global _P7HDR_CACHE, _P7FILE_CACHE
 
     if not p7file.is_file():
-        LOGGER.debug(f"{p7file} not found")
+        LOGGER.error(f"{p7file} not found")
         value = ''
 
     else:
@@ -1420,7 +1420,7 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
 
     :param datatype:    The datatype that is checked, e.g. 'anat'
     :param run:         The run (listitem) with bids entities that are checked against missing values & invalid keys
-    :param check:       Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
+    :param check:       Booleans to report if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
     :return:            True/False if the run entities are bids-valid or None if they cannot be checked
     """
 
