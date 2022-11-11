@@ -84,6 +84,14 @@ def setup_logging(logfile: Path=Path(), debug: bool=False):
         if self.isEnabledFor(logging.VERBOSE): self._log(logging.VERBOSE, message, args, **kws)
     logging.Logger.verbose = verbose
 
+    # Add a succes logging level = 35
+    logging.SUCCESS = 35
+    logging.addLevelName(logging.SUCCESS, 'SUCCESS')
+    logging.__all__ += ['SUCCESS'] if 'SUCCESS' not in logging.__all__ else []
+    def success(self, message, *args, **kws):
+        if self.isEnabledFor(logging.SUCCESS): self._log(logging.SUCCESS, message, args, **kws)
+    logging.Logger.success = success
+
     # Set the root logging level
     logger = logging.getLogger()
     logger.setLevel('VERBOSE')
@@ -160,10 +168,10 @@ def reporterrors() -> None:
 
             errorfile = Path(handler.baseFilename)
             if errorfile.stat().st_size:
-                LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errorfile.read_text()}{40 * '<'}\n")
+                LOGGER.warning(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errorfile.read_text()}{40 * '<'}\n")
 
             else:
-                LOGGER.info(f'No BIDScoin errors or warnings were reported')
+                LOGGER.success(f'No BIDScoin errors or warnings were reported')
                 LOGGER.info('')
 
         elif handler.name == 'loghandler':
@@ -413,7 +421,7 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> int:
     # First test to see if we can import the plugin
     module = import_plugin(plugin, ('bidsmapper_plugin','bidscoiner_plugin'))
     if inspect.ismodule(module):
-        LOGGER.info(f"Succesfully imported '{plugin}'")
+        LOGGER.success(f"Succesfully imported '{plugin}'")
     else:
         return 1
 
@@ -501,7 +509,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
             window = QPushButton('Minimal GUI test: OK')
             window.show()
             QApplication.quit()
-            LOGGER.info('The GUI seems to work OK')
+            LOGGER.success('The GUI seems to work OK')
         except Exception as pyqterror:
             LOGGER.error(f"The installed PyQt version does not seem to work for your system:\n{pyqterror}")
             success = False
@@ -512,7 +520,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
         LOGGER.info('Testing the DRMAA setup:')
         try:
             import drmaa
-            LOGGER.info('The DRMAA library was successfully imported')
+            LOGGER.success('The DRMAA library was successfully imported')
         except (RuntimeError, OSError, FileNotFoundError, ModuleNotFoundError, ImportError) as drmaaerror:
             LOGGER.warning(f"The DRMAA library could not be imported. This is OK if you want to run pydeface locally and not use the option to distribute jobs on a compute cluster\n{drmaaerror}")
     except ModuleNotFoundError:
@@ -563,7 +571,7 @@ def pulltutorialdata(tutorialfolder: str) -> None:
         for member in tqdm(iterable=targz_fid.getmembers(), total=len(targz_fid.getmembers()), leave=False):
             targz_fid.extract(member, tutorialfolder)
     tutorialtargz.unlink()
-    LOGGER.info(f"Done")
+    LOGGER.success(f"Done")
 
 
 def main():

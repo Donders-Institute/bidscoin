@@ -170,7 +170,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
         app.exec()
 
-    LOGGER.info('-------------- FINISHED! -------------------')
+    LOGGER.success('-------------- FINISHED! -------------------')
     LOGGER.info('')
 
     bidscoin.reporterrors()
