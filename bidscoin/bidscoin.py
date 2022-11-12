@@ -98,6 +98,7 @@ def setup_logging(logfile: Path=Path(), debug: bool=False):
 
     # Add the console streamhandler and bring some color to those boring logs! :-)
     coloredlogs.install(level='VERBOSE' if debug or not logfile.name else 'INFO', fmt=cfmt, datefmt=datefmt)   # NB: Using tqdm sets the streamhandler level to 0, see: https://github.com/tqdm/tqdm/pull/1235
+    coloredlogs.DEFAULT_LEVEL_STYLES['verbose']['color'] = 22
 
     if not logfile.name:
         return
