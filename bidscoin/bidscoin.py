@@ -299,6 +299,9 @@ def install_plugins(plugins: Tuple[Path]=()) -> Union[bool, None]:
             with open(bidsmap_template, 'w') as stream:
                 yaml.dump(template, stream)
 
+    if success:
+        LOGGER.succes('Installation of the plugin(s) was successful')
+
     return success
 
 
@@ -353,6 +356,9 @@ def uninstall_plugins(plugins: Tuple[str]=(), wipe: bool=True) -> Union[bool, No
         except IOError as uninstall_error:
             LOGGER.error(f"Failed to uninstall: '{plugin}'\n{uninstall_error}")
             success = False
+
+    if success:
+        LOGGER.succes('De-installation of the plugin(s) was successful')
 
     return success
 
@@ -542,6 +548,11 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
         for plugin in (bidscoinfolder/'plugins').glob('*.py'):
             if plugin.stem != '__init__':
                 success = not test_plugin(plugin.stem, options['plugins'].get(plugin.stem,{}) if options else {}) and success
+
+    if int:
+        LOGGER.warning('Not all plugins tests finished successfully')
+    else:
+        LOGGER.success('All plugins tests finished successfully')
 
     return int(not success)
 
