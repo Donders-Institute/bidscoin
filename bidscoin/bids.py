@@ -971,6 +971,11 @@ def validate_bidsmap(bidsmap: dict, level: int=2) -> bool:
                     if (level==0 and not bidstest) or level>0:
                         LOGGER.info(f"{bidstest}{'*' if datatype in bidsignore else ''}:\t{datatype}/{bidsname}.*")
 
+    if valid:
+        LOGGER.success('All generated bidsnames are BIDS-valid')
+    else:
+        LOGGER.warning('Not all generated bidsnames are BIDS-valid')
+
     return valid
 
 
@@ -993,6 +998,11 @@ def check_bidsmap(bidsmap: dict, validate: Tuple[bool,bool,bool]=(True,True,True
             if not isinstance(bidsmap[dataformat][datatype], list): continue        # E.g. 'subject' and 'session'
             for run in bidsmap[dataformat][datatype]:
                 valid = valid and not any([result==False for result in check_run(datatype, run, validate)])
+
+    if valid:
+        LOGGER.success('All run-items in the bidsmap are valid')
+    else:
+        LOGGER.warning('Not all run-items in the bidsmap are valid')
 
     return valid
 
@@ -1020,6 +1030,11 @@ def check_template(bidsmap: dict) -> bool:
                     if suffix not in datatypesuffixes and 'DEPRECATED' not in suffixes[suffix]['description']:
                         LOGGER.warning(f"Missing '{suffix}' run-item in: bidsmap[{dataformat}][{datatype}] (NB: this may be fine / a deprecated item)")
                         valid = False
+
+    if valid:
+        LOGGER.success('All datatypes in the bidsmap are valid')
+    else:
+        LOGGER.warning('Not all datatypes in the bidsmap are valid')
 
     return valid
 
@@ -1469,7 +1484,7 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
                     if check[2]: LOGGER.warning(f'Invalid {entitykey} value: "{bidsvalue}" ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
                     run_valsok = False
                 elif not bidsvalue and datatyperules[datatype][typegroup]['entities'][entity]=='required':
-                    if check[2]: LOGGER.info(f'Required "{entitykey}" value is missing ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
+                    if check[2]: LOGGER.warning(f'Required "{entitykey}" value is missing ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
                     run_valsok = False
                 if bidsvalue and not dynamicvalue and entityformat=='index' and not str(bidsvalue).isnumeric():
                     if check[2]: LOGGER.warning(f'Invalid {entitykey}-index: "{bidsvalue}" is not a number ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
