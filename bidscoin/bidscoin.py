@@ -428,7 +428,7 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> int:
     # First test to see if we can import the plugin
     module = import_plugin(plugin, ('bidsmapper_plugin','bidscoiner_plugin'))
     if inspect.ismodule(module):
-        LOGGER.success(f"Succesfully imported '{plugin}'")
+        LOGGER.info(f"Succesfully imported '{plugin}'")
     else:
         return 1
 
