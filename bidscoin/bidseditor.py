@@ -743,7 +743,6 @@ class MainWindow(QMainWindow):
     def validate_runs(self):
         """Test the runs in the study bidsmap"""
 
-        LOGGER.info('Checking the bidsmap for warnings:')
         bids.check_bidsmap(self.output_bidsmap)
         bids.validate_bidsmap(self.output_bidsmap)
 
