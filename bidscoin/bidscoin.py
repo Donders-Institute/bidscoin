@@ -84,8 +84,8 @@ def setup_logging(logfile: Path=Path(), debug: bool=False):
         if self.isEnabledFor(logging.VERBOSE): self._log(logging.VERBOSE, message, args, **kws)
     logging.Logger.verbose = verbose
 
-    # Add a succes logging level = 35
-    logging.SUCCESS = 35
+    # Add a succes logging level = 25
+    logging.SUCCESS = 25
     logging.addLevelName(logging.SUCCESS, 'SUCCESS')
     logging.__all__ += ['SUCCESS'] if 'SUCCESS' not in logging.__all__ else []
     def success(self, message, *args, **kws):
@@ -168,7 +168,7 @@ def reporterrors() -> None:
 
             errorfile = Path(handler.baseFilename)
             if errorfile.stat().st_size:
-                LOGGER.warning(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errorfile.read_text()}{40 * '<'}\n")
+                LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errorfile.read_text()}{40 * '<'}\n")
 
             else:
                 LOGGER.success(f'No BIDScoin errors or warnings were reported')
@@ -350,7 +350,7 @@ def uninstall_plugins(plugins: Tuple[str]=(), wipe: bool=True) -> Union[bool, No
             LOGGER.info(f"Uninstalling: '{plugin.stem}'")
             plugin.unlink()
         except IOError as uninstall_error:
-            LOGGER.info(f"Failed to uninstall: '{plugin}'\n{uninstall_error}")
+            LOGGER.error(f"Failed to uninstall: '{plugin}'\n{uninstall_error}")
             success = False
 
     return success

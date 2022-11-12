@@ -84,7 +84,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         with dataset_file.open('r') as fid:
             dataset_description = json.load(fid)
         if 'BIDScoin' not in [generatedby_['Name'] for generatedby_ in dataset_description.get('GeneratedBy',[])]:
-            LOGGER.info(f"Adding {generatedby} to {dataset_file}")
+            LOGGER.verbose(f"Adding {generatedby} to {dataset_file}")
             dataset_description['GeneratedBy'] = dataset_description.get('GeneratedBy',[]) + generatedby
     with dataset_file.open('w') as fid:
         json.dump(dataset_description, fid, indent=4)
@@ -123,7 +123,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     bidsignore_items = [item.strip() for item in bidsmap['Options']['bidscoin']['bidsignore'].split(';')]
     bidsignore_file  = bidsfolder/'.bidsignore'
     if bidsignore_items:
-        LOGGER.info(f"Writing {bidsignore_items} entries to {bidsignore_file}")
+        LOGGER.verbose(f"Writing {bidsignore_items} entries to {bidsignore_file}")
         if bidsignore_file.is_file():
             bidsignore_items += bidsignore_file.read_text().splitlines()
         with bidsignore_file.open('w') as bidsignore:
@@ -196,7 +196,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
                     # Run the bidscoiner plugins
                     for module in plugins:
-                        LOGGER.info(f"Executing plugin: {Path(module.__file__).name}")
+                        LOGGER.verbose(f"Executing plugin: {Path(module.__file__).name}")
                         module.bidscoiner_plugin(sesfolder, bidsmap, bidssession)
 
                     # Add the special fieldmap metadata (IntendedFor, B0FieldIdentifier, TE, etc)
