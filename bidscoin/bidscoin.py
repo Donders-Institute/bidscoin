@@ -549,9 +549,9 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
                 success = not test_plugin(plugin.stem, options['plugins'].get(plugin.stem,{}) if options else {}) and success
 
     if int:
-        LOGGER.warning('Not all plugins tests finished successfully')
+        LOGGER.warning('Not all plugins finished their test successfully')
     else:
-        LOGGER.success('All plugins tests finished successfully')
+        LOGGER.success('All plugins finished their test successfully')
 
     return int(not success)
 
