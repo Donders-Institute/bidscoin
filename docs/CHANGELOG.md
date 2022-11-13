@@ -8,7 +8,10 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Added
 - Support for BIDS 1.8.0
-- The option to test run-items with the bids-validator
+- A BIDSCOIN_DEBUG environment variable to run bidscoin in a more verbose debug mode
+- VERBOSE and SUCCESS logging levels
+- Checks using the bids-validator python module
+- Options to perform bidsmap tests with `bidscoin -t/b`
 
 ### Changed
 - The default behaviour is now not to unzip data in the sourcefolders anymore. Instead, users can use the `--unzip` option in the bidsmapper

@@ -82,6 +82,14 @@ def setup_logging(logfile: Path=Path()):
         cfmt = '%(levelname)s | %(message)s'
     datefmt  = '%Y-%m-%d %H:%M:%S'
 
+    # Add a BIDScoin debug logging level = 11 (NB: using the standard debug mode will generate may debug messages from imports)
+    logging.BCDEBUG = 11
+    logging.addLevelName(logging.BCDEBUG, 'BCDEBUG')
+    logging.__all__ += ['BCDEBUG'] if 'BCDEBUG' not in logging.__all__ else []
+    def bcdebug(self, message, *args, **kws):
+        if self.isEnabledFor(logging.BCDEBUG): self._log(logging.BCDEBUG, message, args, **kws)
+    logging.Logger.bcdebug = bcdebug
+
     # Add a verbose logging level = 15
     logging.VERBOSE = 15
     logging.addLevelName(logging.VERBOSE, 'VERBOSE')
@@ -100,10 +108,10 @@ def setup_logging(logfile: Path=Path()):
 
     # Set the root logging level
     logger = logging.getLogger()
-    logger.setLevel('DEBUG' if debug else 'VERBOSE')
+    logger.setLevel('BCDEBUG' if debug else 'VERBOSE')
 
     # Add the console streamhandler and bring some color to those boring logs! :-)
-    coloredlogs.install(level='VERBOSE' if debug or not logfile.name else 'INFO', fmt=cfmt, datefmt=datefmt)   # NB: Using tqdm sets the streamhandler level to 0, see: https://github.com/tqdm/tqdm/pull/1235
+    coloredlogs.install(level='BCDEBUG' if debug or not logfile.name else 'INFO', fmt=cfmt, datefmt=datefmt)   # NB: Using tqdm sets the streamhandler level to 0, see: https://github.com/tqdm/tqdm/pull/1235
     coloredlogs.DEFAULT_LEVEL_STYLES['verbose']['color'] = 245  # = Gray
 
     if not logfile.name:
@@ -114,7 +122,7 @@ def setup_logging(logfile: Path=Path()):
     logfile.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
     formatter  = logging.Formatter(fmt=fmt, datefmt=datefmt)
     loghandler = logging.FileHandler(logfile)
-    loghandler.setLevel('VERBOSE')
+    loghandler.setLevel('BCDEBUG' if debug or not logfile.name else 'VERBOSE')
     loghandler.setFormatter(formatter)
     loghandler.set_name('loghandler')
     logger.addHandler(loghandler)
@@ -552,8 +560,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
     list_executables(True)
 
     # Test the plugins
-    if not options:
-        options = bidsmap['Options']
+    options = bidsmap['Options'] if not options and bidsmap else {}
     if not options.get('plugins'):
         LOGGER.warning('No plugins found in the bidsmap (BIDScoin will likely not do anything)')
     if testplugins:

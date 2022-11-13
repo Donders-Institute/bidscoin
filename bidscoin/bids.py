@@ -826,8 +826,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
             yamlfile = bidscoin.heuristicsfolder/yamlfile
 
     if not yamlfile.is_file():
-        if all(check):
-            LOGGER.info(f"No existing bidsmap file found: {yamlfile}")
+        LOGGER.info(f"No existing bidsmap file found: {yamlfile}")
         return dict(), yamlfile
     elif any(check):
         LOGGER.info(f"Reading: {yamlfile}")
@@ -947,6 +946,10 @@ def validate_bidsmap(bidsmap: dict, level: int=2) -> bool:
     :return:        True if all tested runs in bidsmap were bids-valid, otherwise False
     """
 
+    if not bidsmap:
+        LOGGER.info('No bidsmap to validate')
+        return False
+
     valid       = True
     ignoretypes = bidsmap['Options']['bidscoin'].get('ignoretypes', [])
     bidsignore  = bidsmap['Options']['bidscoin'].get('bidsignore', '')
@@ -987,6 +990,10 @@ def check_bidsmap(bidsmap: dict, check: Tuple[bool, bool, bool]=(True, True, Tru
 
     valid = (None, None, None)
 
+    if not bidsmap:
+        LOGGER.info('No bidsmap run-items to check')
+        return valid
+
     # Check all the runs in the bidsmap
     LOGGER.info('Checking the bidsmap run-items:')
     for dataformat in bidsmap:
@@ -1013,6 +1020,10 @@ def check_template(bidsmap: dict) -> bool:
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :return:            True if the template bidsmap is valid, otherwise False
     """
+
+    if not bidsmap:
+        LOGGER.info('No bidsmap datatypes to check')
+        return False
 
     valid = True
 
@@ -1113,6 +1124,7 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
 
     if check[1] and run_suffixok is False:
         LOGGER.warning(f'Invalid run-item with suffix: "{run["bids"]["suffix"]}" ({datatype} -> {run["provenance"]})')
+        LOGGER.bcdebug(f"Run['bids']:\n{run['bids']}")
 
     return run_keysok, run_suffixok, run_valsok
 
@@ -1595,7 +1607,6 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
                 return run_, True
 
     # We don't have a match (all tests failed, so datatype should be the *last* one, e.g. unknowndatatype)
-    LOGGER.debug(f"Could not find a matching run in the bidsmap for {datasource.path}")
     return run_, False
 
 
