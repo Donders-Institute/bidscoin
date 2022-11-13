@@ -7,6 +7,8 @@ The basic workflow is to run these two tools:
   $ bidsmapper sourcefolder bidsfolder        # This produces a study bidsmap and launches a GUI
   $ bidscoiner sourcefolder bidsfolder        # This converts your data to BIDS according to the study bidsmap
 
+Set the environment variable BIDSCOIN_DEBUG=TRUE in your console to run BIDScoin in it's more verbose DEBUG logging mode
+
 For more documentation see: https://bidscoin.readthedocs.io
 """
 
@@ -15,6 +17,7 @@ import textwrap
 import tarfile
 import shutil
 import sys
+import os
 import logging
 import coloredlogs
 import inspect
@@ -58,14 +61,17 @@ class TqdmUpTo(tqdm):
         self.update(b * bsize - self.n)  # will also set self.n = b * bsize
 
 
-def setup_logging(logfile: Path=Path(), debug: bool=False):
+def setup_logging(logfile: Path=Path()):
     """
     Setup the logging framework
 
     :param logfile:     Name of the logfile
-    :param debug:       Add the function name to the log-messages and set the console logging level to VERBOSE
     :return:
      """
+
+    # Get the BIDSCOIN_DEBUG environment variable to set the log-messages and logging level
+    debug = os.environ.get('BIDSCOIN_DEBUG')
+    debug = True if debug and debug.upper() not in ('0', 'FALSE', 'N', 'NO', 'NONE') else False
 
     # Set the default formats
     if debug:
@@ -84,7 +90,7 @@ def setup_logging(logfile: Path=Path(), debug: bool=False):
         if self.isEnabledFor(logging.VERBOSE): self._log(logging.VERBOSE, message, args, **kws)
     logging.Logger.verbose = verbose
 
-    # Add a succes logging level = 25
+    # Add a success logging level = 25
     logging.SUCCESS = 25
     logging.addLevelName(logging.SUCCESS, 'SUCCESS')
     logging.__all__ += ['SUCCESS'] if 'SUCCESS' not in logging.__all__ else []
@@ -94,13 +100,14 @@ def setup_logging(logfile: Path=Path(), debug: bool=False):
 
     # Set the root logging level
     logger = logging.getLogger()
-    logger.setLevel('VERBOSE')
+    logger.setLevel('DEBUG' if debug else 'VERBOSE')
 
     # Add the console streamhandler and bring some color to those boring logs! :-)
     coloredlogs.install(level='VERBOSE' if debug or not logfile.name else 'INFO', fmt=cfmt, datefmt=datefmt)   # NB: Using tqdm sets the streamhandler level to 0, see: https://github.com/tqdm/tqdm/pull/1235
     coloredlogs.DEFAULT_LEVEL_STYLES['verbose']['color'] = 245  # = Gray
 
     if not logfile.name:
+        if debug: LOGGER.info('\t<<<<<<<<<< Running BIDScoin in DEBUG mode >>>>>>>>>>')
         return
 
     # Add the log filehandler
@@ -118,6 +125,8 @@ def setup_logging(logfile: Path=Path(), debug: bool=False):
     errorhandler.setFormatter(formatter)
     errorhandler.set_name('errorhandler')
     logger.addHandler(errorhandler)
+
+    if debug: LOGGER.info('\t<<<<<<<<<< Running BIDScoin in DEBUG mode >>>>>>>>>>')
 
 
 def version(check: bool=False) -> Union[str, Tuple]:
@@ -300,7 +309,7 @@ def install_plugins(plugins: Tuple[Path]=()) -> Union[bool, None]:
                 yaml.dump(template, stream)
 
     if success:
-        LOGGER.succes('Installation of the plugin(s) was successful')
+        LOGGER.success('Installation of the plugin(s) was successful')
 
     return success
 
@@ -358,7 +367,7 @@ def uninstall_plugins(plugins: Tuple[str]=(), wipe: bool=True) -> Union[bool, No
             success = False
 
     if success:
-        LOGGER.succes('De-installation of the plugin(s) was successful')
+        LOGGER.success('De-installation of the plugin(s) was successful')
 
     return success
 
@@ -434,12 +443,18 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> int:
     # Then run the plugin's own 'test' routine (if implemented)
     if 'test' in dir(module) and callable(getattr(module, 'test')):
         try:
-            return module.test(options)
+            returncode = module.test(options)
+            if returncode:
+                LOGGER.warning(f"The'{plugin}' plugin did not function correctly")
+            else:
+                LOGGER.success(f"The'{plugin}' plugin functioned correctly")
+            return returncode
         except Exception as pluginerror:
             LOGGER.error(f"Could not run {plugin}.test(options):\n{pluginerror}")
             return 1
-
-    return 0
+    else:
+        LOGGER.info(f"The '{plugin}' did not have a test routine")
+        return 0
 
 
 def test_bidsmap(bidsmapfile: str):
@@ -482,11 +497,12 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
     if not bidsmapfile:
         return 1
 
-    LOGGER.info('--------- Testing the BIDScoin tools and settings ---------')
+    LOGGER.info("--------- Testing the BIDScoin's core functionality ---------")
 
     # Test loading the template bidsmap
     success = True
     if isinstance(bidsmapfile, (str, Path)):
+        LOGGER.info(f"Running bidsmap checks:")
         try:            # Moving the import to the top of this module will cause circular import issues
             try:  from bidscoin import bids
             except ImportError: import bids         # This should work if bidscoin was not pip-installed

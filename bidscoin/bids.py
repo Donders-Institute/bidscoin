@@ -976,16 +976,16 @@ def validate_bidsmap(bidsmap: dict, level: int=2) -> bool:
     return valid
 
 
-def check_bidsmap(bidsmap: dict, check: Tuple[bool, bool, bool]=(True, True, True)) -> bool:
+def check_bidsmap(bidsmap: dict, check: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
     """
     Check all the runs in the bidsmap for required and optional entitities using the BIDS schema files
 
     :param bidsmap: Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param check:   Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
-    :return:        False if the bidsmap is proved to be invalid, otherwise True
+    :return:        False if the keys, suffixes and values are proven to be invalid, otherwise None or True
     """
 
-    valid = True
+    valid = (None, None, None)
 
     # Check all the runs in the bidsmap
     LOGGER.info('Checking the bidsmap run-items:')
@@ -995,9 +995,10 @@ def check_bidsmap(bidsmap: dict, check: Tuple[bool, bool, bool]=(True, True, Tru
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue        # E.g. 'subject' and 'session'
             for run in bidsmap[dataformat][datatype]:
-                valid = valid and not any([result == False for result in check_run(datatype, run, check)])
+                checks = check_run(datatype, run, check)
+                valid  = [val and chck for val,chck in zip(valid,checks)]
 
-    if valid:
+    if all([val for val,chck in zip(valid,check) if chck is True]):
         LOGGER.success('All run-items in the bidsmap are valid')
     else:
         LOGGER.warning('Not all run-items in the bidsmap are valid')
@@ -1016,7 +1017,7 @@ def check_template(bidsmap: dict) -> bool:
     valid = True
 
     # Check all the datatypes in the bidsmap
-    LOGGER.info('Checking the bidsmap run-items:')
+    LOGGER.info('Checking the bidsmap datatypes:')
     for dataformat in bidsmap:
         if dataformat == 'Options': continue
         for datatype in bidsmap[dataformat]:
@@ -1045,7 +1046,7 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
     :param datatype:    The datatype that is checked, e.g. 'anat'
     :param run:         The run (listitem) with bids entities that are checked against missing values & invalid keys
     :param check:       Booleans to report if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
-    :return:            True/False if the run entities are bids-valid or None if they cannot be checked
+    :return:            True/False if the keys, suffixes and values are bids-valid or None if they cannot be checked
     """
 
     run_keysok   = None
