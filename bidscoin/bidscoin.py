@@ -111,7 +111,7 @@ def setup_logging(logfile: Path=Path()):
     logger.setLevel('BCDEBUG' if debug else 'VERBOSE')
 
     # Add the console streamhandler and bring some color to those boring logs! :-)
-    coloredlogs.install(level='BCDEBUG' if debug or not logfile.name else 'INFO', fmt=cfmt, datefmt=datefmt)   # NB: Using tqdm sets the streamhandler level to 0, see: https://github.com/tqdm/tqdm/pull/1235
+    coloredlogs.install(level='BCDEBUG' if debug else 'VERBOSE' if not logfile.name else 'INFO', fmt=cfmt, datefmt=datefmt)   # NB: Using tqdm sets the streamhandler level to 0, see: https://github.com/tqdm/tqdm/pull/1235
     coloredlogs.DEFAULT_LEVEL_STYLES['verbose']['color'] = 245  # = Gray
 
     if not logfile.name:
