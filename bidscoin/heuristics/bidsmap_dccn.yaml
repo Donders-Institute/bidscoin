@@ -2512,8 +2512,7 @@ Nibabel:
     properties: *fileprop
     attributes: *nibattr
     bids: &dwi_nibent_physio            # See: schema/datatypes/dwi.yaml
-      task: <descrip>
-      acq:
+      acq: <descrip>
       dir:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
