@@ -2413,8 +2413,8 @@ Nibabel:
     properties: *fileprop
     attributes: *nibattr
     bids: &func_nibent_events           # See: schema/datatypes/func.yaml
-      task:
-      acq: <descrip>
+      task: <descrip>
+      acq:
       ce:
       dir:
       rec:
