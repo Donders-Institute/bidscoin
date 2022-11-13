@@ -901,16 +901,6 @@ DICOM:
       Units:
   - provenance:
     attributes: *pet_dicomattr
-    bids: &pet_dicoment_blood           # See: schema/datatypes/pet.yaml
-      task: <<filepath:/.*/...(.*)/.*/>>
-      trc: <Radiopharmaceutical>
-      rec: ['', acdyn, acstat, nacdyn, nacstat, 0]
-      recording:
-      run: <<1>>
-      suffix: blood
-    meta: *pet_meta
-  - provenance:
-    attributes: *pet_dicomattr
     bids: &pet_dicoment_events          # See: schema/datatypes/pet.yaml
       task: <<filepath:/.*/...(.*)/.*/>>
       trc: <Radiopharmaceutical>
