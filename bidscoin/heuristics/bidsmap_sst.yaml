@@ -552,7 +552,8 @@ DICOM:
     attributes: *perf_dicomattr
     bids: &perf_dicoment_physio         # See: schema/datatypes/perf.yaml
       acq: <<filepath:/.*/...(.*)/.*/>>
-      rec: <SeriesDescription>
+      rec:
+      task: <SeriesDescription>
       recording:
       dir:
       run: <<1>>
@@ -578,6 +579,7 @@ DICOM:
       PhaseEncodingDirection:
     bids: &dwi_dicoment_DWI             # See: schema/datatypes/dwi.yaml
       acq: <<filepath:/.*/...(.*)/.*/>> # More consistent between SBREF and PHYSIO files
+      rec:
       dir:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
@@ -591,6 +593,7 @@ DICOM:
       SeriesDescription: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*SBREF.*
     bids: &dwi_dicoment_sbref           # See: schema/datatypes/dwi.yaml
       acq: <<filepath:/.*/...(.*)/.*/>>
+      rec:
       dir:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
@@ -1953,7 +1956,7 @@ Physio:
       units:
       trigger_idx:
     bids: &bids_physio
-      task:
+      task: <descrip>
       acq:
       ce:
       dir:
@@ -2380,8 +2383,8 @@ Nibabel:
     properties: *fileprop
     attributes: *nibattr
     bids: &func_nibent_timeseries       # See: schema/datatypes/func.yaml
-      task:
-      acq: <descrip>
+      task: <descrip>
+      acq:
       ce:
       dir:
       rec:
@@ -2478,7 +2481,8 @@ Nibabel:
     properties: *fileprop
     attributes: *nibattr
     bids: &perf_nibent_physio           # See: schema/datatypes/perf.yaml
-      acq: <descrip>
+      task: <descrip>
+      acq:
       rec:
       recording:
       dir:
@@ -2522,7 +2526,8 @@ Nibabel:
     properties: *fileprop
     attributes: *nibattr
     bids: &dwi_nibent_physio            # See: schema/datatypes/dwi.yaml
-      acq: <descrip>
+      task: <descrip>
+      acq:
       dir:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]

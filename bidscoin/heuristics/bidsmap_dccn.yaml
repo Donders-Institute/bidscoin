@@ -552,7 +552,8 @@ DICOM:
     attributes: *perf_dicomattr
     bids: &perf_dicoment_physio         # See: schema/datatypes/perf.yaml
       acq: <ProtocolName>
-      rec: <SeriesDescription>
+      rec:
+      task: <SeriesDescription>
       recording:
       dir:
       run: <<1>>
@@ -1941,7 +1942,7 @@ Physio:
       units:
       trigger_idx:
     bids: &bids_physio
-      task:
+      task: <descrip>
       acq:
       ce:
       dir:
@@ -2368,8 +2369,8 @@ Nibabel:
     properties: *fileprop
     attributes: *nibattr
     bids: &func_nibent_timeseries       # See: schema/datatypes/func.yaml
-      task:
-      acq: <descrip>
+      task: <descrip>
+      acq:
       ce:
       dir:
       rec:
@@ -2466,7 +2467,8 @@ Nibabel:
     properties: *fileprop
     attributes: *nibattr
     bids: &perf_nibent_physio           # See: schema/datatypes/perf.yaml
-      acq: <descrip>
+      task: <descrip>
+      acq:
       rec:
       recording:
       dir:
@@ -2510,7 +2512,8 @@ Nibabel:
     properties: *fileprop
     attributes: *nibattr
     bids: &dwi_nibent_physio            # See: schema/datatypes/dwi.yaml
-      acq: <descrip>
+      task: <descrip>
+      acq:
       dir:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
