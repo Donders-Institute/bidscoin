@@ -346,6 +346,10 @@ def uninstall_plugins(filenames: List[str]=(), wipe: bool=True) -> None:
     # Uninstall the plugins
     for file in files:
 
+        # First check if we can import the plugin
+        if file.suffix == '.py':
+            module = import_plugin(pluginfolder/file.name, ('bidsmapper_plugin', 'bidscoiner_plugin'))
+
         # Remove the file from the target folder
         targetfolder = heuristicsfolder if file.suffix == '.yaml' else pluginfolder
         LOGGER.info(f"Uninstalling: '{file}'")
@@ -358,13 +362,10 @@ def uninstall_plugins(filenames: List[str]=(), wipe: bool=True) -> None:
             LOGGER.success(f"The '{file.name}' template bidsmap was successfully uninstalled")
             continue
 
-        # Check if we can import the plugin
-        module = import_plugin(pluginfolder/file.name, ('bidsmapper_plugin', 'bidscoiner_plugin'))
+        # Remove the Options and data format section from the default template bidsmap
         if not module:
             LOGGER.warning(f"Cannot remove any {file.stem} bidsmap options from the {bidsmap_template.stem} template")
             continue
-
-        # Remove the Options and data format section from the default template bidsmap
         if 'OPTIONS' in dir(module) or 'BIDSMAP' in dir(module):
             if 'OPTIONS' in dir(module):
                 LOGGER.info(f"Removing default {file.stem} bidsmap options from the {bidsmap_template.stem} template")
@@ -620,7 +621,7 @@ def main():
                                             '  bidscoin -b my_study_bidsmap\n'
                                             '  bidscoin -i python/project/my_template_bidsmap.yaml downloads/my_plugin.py\n ')
     parser.add_argument('-l', '--list',        help='List all bidscoin tools', action='store_true')
-    parser.add_argument('-p', '--plugins',     help='List all template bidsmaps and installed plugins', action='store_true')
+    parser.add_argument('-p', '--plugins',     help='List all installed plugins and template bidsmaps', action='store_true')
     parser.add_argument('-i', '--install',     help='A list of template bidsmaps and/or bidscoin plugins to install', nargs='+')
     parser.add_argument('-u', '--uninstall',   help='A list of template bidsmaps and/or bidscoin plugins to uninstall', nargs='+')
     parser.add_argument('-d', '--download',    help='Download folder. If given, tutorial MRI data will be downloaded here')
