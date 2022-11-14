@@ -17,6 +17,7 @@ import json
 import pandas as pd
 import dateutil.parser
 import ast
+from bids_validator import BIDSValidator
 from pathlib import Path
 try:
     from bidscoin import bidscoin, bids
@@ -232,6 +233,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(outfolder, bidsname)
         jsonfile = (outfolder/bidsname).with_suffix('.json')
+
+        # Check if the bidsname is valid
+        isbids = BIDSValidator.is_bids(Path('/')/subid/sesid/datasource.datatype/bidsname+'.json')
+        if not isbids:
+            LOGGER.warning(f"The '{outfolder/bidsname}.*' ouput name does not pass the bids-validator test")
 
         # Check if file already exists (-> e.g. when a static runindex is used)
         if jsonfile.is_file():

@@ -9,6 +9,7 @@ import ast
 import shutil
 import pandas as pd
 import nibabel as nib
+from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
 try:
@@ -195,6 +196,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(outfolder, bidsname)
         bidsfile = (outfolder/bidsname).with_suffix(ext)
+
+        # Check if the bidsname is valid
+        isbids = BIDSValidator.is_bids(Path('/')/subid/sesid/datasource.datatype/bidsname+'.json')
+        if not isbids:
+            LOGGER.warning(f"The '{outfolder/bidsname}.*' ouput name does not pass the bids-validator test")
 
         # Check if file already exists (-> e.g. when a static runindex is used)
         if bidsfile.is_file():
