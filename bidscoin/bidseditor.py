@@ -1459,7 +1459,7 @@ class EditWindow(QDialog):
         # If the bidsname is not valid, ask the user if that's OK
         message = ''
         if validrun and not bidsvalid:
-            message = f'The run-item seems valid but the "{bidsname}" name does not pass the bids-validator test'
+            message = f'The run-item seems valid but the "{bidsname}" name did not pass the bids-validator test'
         elif not validrun and bidsvalid:
             message = f'The run-item does not seem to be valid but the "{bidsname}" name does pass the bids-validator test'
         elif not validrun:
