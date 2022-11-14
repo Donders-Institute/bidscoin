@@ -308,7 +308,7 @@ def install_plugins(filenames: List[str]=()) -> None:
         # Check if we can import the plugin
         module = import_plugin(file, ('bidsmapper_plugin', 'bidscoiner_plugin'))
         if not module:
-            LOGGER.error(f"Import failure, please re-install a valid version of '{file.name}'")
+            LOGGER.error(f"Plugin failure, please re-install a valid version of '{file.name}'")
             continue
 
         # Add the Options and data format section of the plugin to the default template bidsmap
