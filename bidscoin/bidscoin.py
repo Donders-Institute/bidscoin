@@ -233,7 +233,7 @@ def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
 
 def list_executables(show: bool=False) -> list:
     """
-    :return:                Nothing
+    :return:            List of BIDScoin console scripts
     """
 
     if show: LOGGER.info('Executable BIDScoin tools:')
@@ -251,64 +251,71 @@ def list_executables(show: bool=False) -> list:
     return scripts
 
 
-def list_plugins(show: bool=False) -> List[Path]:
+def list_plugins(show: bool=False) -> Tuple[List[Path], List[Path]]:
     """
-    :param show: Print the installed plugins if True
-    :return:     List of the installed plugins
+    :param show: Print the template bidsmaps and installed plugins if True
+    :return:     List of the installed plugins and template bidsmaps
     """
 
-    if show:
-        LOGGER.info('Installed BIDScoin plugins:')
+    if show: LOGGER.info(f"Installed template bidsmaps ({heuristicsfolder}):")
+    templates = []
+    for template in heuristicsfolder.glob('*.yaml'):
+        if template.stem != '__init__':
+            templates.append(template)
+            if show: LOGGER.info(f"- {template.stem}")
 
+    if show: LOGGER.info(f"Installed plugins ({pluginfolder}):")
     plugins = []
-    for plugin in (bidscoinfolder/'plugins').glob('*.py'):
+    for plugin in pluginfolder.glob('*.py'):
         if plugin.stem != '__init__':
             plugins.append(plugin)
-            if show:
-                LOGGER.info(f"- {plugin.stem}")
+            if show: LOGGER.info(f"- {plugin.stem}")
 
-    return plugins
+    return plugins, templates
 
 
-def install_plugins(plugins: Tuple[Path]=()) -> Union[bool, None]:
+def install_plugins(filenames: List[str]=()) -> None:
     """
-    Installs plugins in the plugins folder and adds their Options and data format section to the default template bidsmap
+    Installs template bidsmaps and plugins and adds the plugin Options and data format section to the default template bidsmap
 
-    :param plugins: Fullpath filenames of the plugins that need to be installed
-    :return:        True if the installation was successful and False if it failed
+    :param filenames:   Fullpath filenames of the and template bidsmaps plugins that need to be installed
+    :return:            Nothing
     """
 
-    if not plugins:
+    files = [Path(file) for file in filenames if file.endswith('.yaml') or file.endswith('.py')]
+    if not files:
         return
 
     # Load the default template bidsmap
     with open(bidsmap_template, 'r') as stream:
         template = yaml.load(stream)
 
-    # Install the plugins
-    success = True
-    for plugin in plugins:
-        plugin = Path(plugin)
-        LOGGER.info(f"Installing: '{plugin}'")
+    # Install the template bidsmaps and plugins the their targetfolder
+    for file in files:
 
-        # Copy the plugin to the plugins folder
+        # Copy the file to their target folder
+        targetfolder = heuristicsfolder if file.suffix == '.yaml' else pluginfolder
+        LOGGER.info(f"Installing: '{file}'")
         try:
-            shutil.copyfile(plugin, bidscoinfolder/'plugins'/plugin.with_suffix('.py').name)
+            shutil.copyfile(file, targetfolder/file.name)
         except IOError as install_failure:
-            LOGGER.error(f"{install_failure}\nFailed to install: '{plugin.name}' in '{bidscoinfolder/'plugins'}'")
-            success = False
+            LOGGER.error(f"{install_failure}\nFailed to install: '{file.name}' in '{targetfolder}'")
             continue
-        module = import_plugin(plugin, ('bidsmapper_plugin', 'bidscoiner_plugin'))
-        if not module:
-            LOGGER.error(f"Import failure, please re-install a valid version of '{plugin.name}'")
-            success = False
+        if file.suffix == '.yaml':
+            LOGGER.success(f"The '{file.name}' template bidsmap was successfully installed")
             continue
 
-        # Add the Options and data format section to the default template bidsmap
+        # Check if we can import the plugin
+        module = import_plugin(file, ('bidsmapper_plugin', 'bidscoiner_plugin'))
+        if not module:
+            LOGGER.error(f"Import failure, please re-install a valid version of '{file.name}'")
+            continue
+
+        # Add the Options and data format section of the plugin to the default template bidsmap
         if 'OPTIONS' in dir(module) or 'BIDSMAP' in dir(module):
             if 'OPTIONS' in dir(module):
-                LOGGER.info(f"Adding default {plugin.name} bidsmap options to the {bidsmap_template.stem} template")
-                template['Options']['plugins'][plugin.stem] = module.OPTIONS
+                LOGGER.info(f"Adding default {file.name} bidsmap options to the {bidsmap_template.stem} template")
+                template['Options']['plugins'][file.stem] = module.OPTIONS
             if 'BIDSMAP' in dir(module):
                 for key, value in module.BIDSMAP.items():
                     LOGGER.info(f"Adding default {key} bidsmappings to the {bidsmap_template.stem} template")
@@ -316,22 +323,20 @@ def install_plugins(plugins: Tuple[Path]=()) -> Union[bool, None]:
             with open(bidsmap_template, 'w') as stream:
                 yaml.dump(template, stream)
 
-    if success:
-        LOGGER.success('Installation of the plugin(s) was successful')
-
-    return success
+        LOGGER.success(f"The '{file.name}' plugin was successfully installed")
 
 
-def uninstall_plugins(plugins: Tuple[str]=(), wipe: bool=True) -> Union[bool, None]:
+def uninstall_plugins(filenames: List[str]=(), wipe: bool=True) -> None:
     """
-    Uninstalls plugins in the plugins folder and removes their Options and data format section from the default template bidsmap
+    Uninstalls template bidsmaps and plugins and removes the plugin Options and data format section from the default template bidsmap
 
-    :param plugins: Fullpath filenames of the plugins that need to be uninstalled
-    :param wipe:    Removes the plugin bidsmapping section if True
-    :return:        True if the de-installation was successful, else False
+    :param filenames:   Fullpath filenames of the and template bidsmaps plugins that need to be uninstalled
+    :param wipe:        Removes the plugin bidsmapping section if True
+    :return:            None
     """
 
-    if not plugins:
+    files = [Path(file) for file in filenames if file.endswith('.yaml') or file.endswith('.py')]
+    if not files:
         return
 
     # Load the default template bidsmap
@@ -339,26 +344,31 @@ def uninstall_plugins(plugins: Tuple[str]=(), wipe: bool=True) -> Union[bool, No
         template = yaml.load(stream)
 
     # Uninstall the plugins
-    success = True
-    for plugin in plugins:
+    for file in files:
 
-        plugin = (bidscoinfolder/'plugins'/plugin).with_suffix('.py')
-        if not plugin.is_file():
-            LOGGER.error(f"Plugin {plugin.stem} not found''")
-            success = False
+        # Remove the file from the target folder
+        targetfolder = heuristicsfolder if file.suffix == '.yaml' else pluginfolder
+        LOGGER.info(f"Uninstalling: '{file}'")
+        try:
+            (targetfolder/file.name).unlink()
+        except IOError as uninstall_error:
+            LOGGER.error(f"{uninstall_error}\nFailed to uninstall: '{file}'")
+            continue
+        if file.suffix == '.yaml':
+            LOGGER.success(f"The '{file.name}' template bidsmap was successfully uninstalled")
             continue
 
-        module = import_plugin(plugin, ('bidsmapper_plugin', 'bidscoiner_plugin'))
+        # Check if we can import the plugin
+        module = import_plugin(pluginfolder/file.name, ('bidsmapper_plugin', 'bidscoiner_plugin'))
         if not module:
-            LOGGER.error(f"Import failure of '{plugin.stem}'")
-            success = False
+            LOGGER.warning(f"Cannot remove any {file.stem} bidsmap options from the {bidsmap_template.stem} template")
             continue
 
         # Remove the Options and data format section from the default template bidsmap
         if 'OPTIONS' in dir(module) or 'BIDSMAP' in dir(module):
             if 'OPTIONS' in dir(module):
-                LOGGER.info(f"Removing default {plugin.stem} bidsmap options from the {bidsmap_template.stem} template")
-                template['Options']['plugins'].pop(plugin.stem, None)
+                LOGGER.info(f"Removing default {file.stem} bidsmap options from the {bidsmap_template.stem} template")
+                template['Options']['plugins'].pop(file.stem, None)
             if wipe and 'BIDSMAP' in dir(module):
                 for key, value in module.BIDSMAP.items():
                     LOGGER.info(f"Removing default {key} bidsmappings from the {bidsmap_template.stem} template")
@@ -366,18 +376,7 @@ def uninstall_plugins(plugins: Tuple[str]=(), wipe: bool=True) -> Union[bool, No
             with open(bidsmap_template, 'w') as stream:
                 yaml.dump(template, stream)
 
-        # Remove the plugin from the plugins folder
-        try:
-            LOGGER.info(f"Uninstalling: '{plugin.stem}'")
-            plugin.unlink()
-        except IOError as uninstall_error:
-            LOGGER.error(f"Failed to uninstall: '{plugin}'\n{uninstall_error}")
-            success = False
-
-    if success:
-        LOGGER.success('De-installation of the plugin(s) was successful')
-
-    return success
+        LOGGER.success(f"The '{file.stem}' plugin was successfully uninstalled")
 
 
 @lru_cache()
@@ -567,7 +566,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
 
         # Show an overview of the plugins and show the test results
         list_plugins(True)
-        for plugin in (bidscoinfolder/'plugins').glob('*.py'):
+        for plugin in pluginfolder.glob('*.py'):
             if plugin.stem != '__init__':
                 success = not test_plugin(plugin.stem, options['plugins'].get(plugin.stem,{}) if options else {}) and success
 
@@ -623,11 +622,11 @@ def main():
                                             '  bidscoin -t\n'
                                             '  bidscoin -t my_template_bidsmap\n'
                                             '  bidscoin -b my_study_bidsmap\n'
-                                            '  bidscoin -i python/project/my_plugin.py downloads/handy_plugin.py\n ')
+                                            '  bidscoin -i python/project/my_template_bidsmap.yaml downloads/my_plugin.py\n ')
     parser.add_argument('-l', '--list',        help='List all bidscoin tools', action='store_true')
-    parser.add_argument('-p', '--plugins',     help='List all installed plugins', action='store_true')
-    parser.add_argument('-i', '--install',     help='A list of bidscoin plugins to install', nargs='+')
-    parser.add_argument('-u', '--uninstall',   help='A list of bidscoin plugins to uninstall', nargs='+')
+    parser.add_argument('-p', '--plugins',     help='List all template bidsmaps and installed plugins', action='store_true')
+    parser.add_argument('-i', '--install',     help='A list of template bidsmaps and/or bidscoin plugins to install', nargs='+')
+    parser.add_argument('-u', '--uninstall',   help='A list of template bidsmaps and/or bidscoin plugins to uninstall', nargs='+')
     parser.add_argument('-d', '--download',    help='Download folder. If given, tutorial MRI data will be downloaded here')
     parser.add_argument('-t', '--test',        help='Test the bidscoin installation and template bidsmap', nargs='?', const=bidsmap_template)
     parser.add_argument('-b', '--bidsmaptest', help='Test the run-items and their bidsnames of all normal runs in the study bidsmap. Provide the bids-folder or the bidsmap filepath')

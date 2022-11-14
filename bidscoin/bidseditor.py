@@ -665,9 +665,9 @@ class MainWindow(QMainWindow):
         """Interactively add an installed plugin to the Options-tab and save the data in the bidsmap"""
 
         # Set-up a plugin dropdown menu
-        label    = QLabel('Select a plugin that you would like to add')
-        plugins  = bidscoin.list_plugins()
-        dropdown = QComboBox()
+        label     = QLabel('Select a plugin that you would like to add')
+        plugins,_ = bidscoin.list_plugins()
+        dropdown  = QComboBox()
         dropdown.addItems([plugin.stem for plugin in plugins])
 
         # Set-up OK/Cancel buttons
