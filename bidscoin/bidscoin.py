@@ -351,12 +351,12 @@ def uninstall_plugins(filenames: List[str]=(), wipe: bool=True) -> None:
             module = import_plugin(pluginfolder/file.name, ('bidsmapper_plugin', 'bidscoiner_plugin'))
 
         # Remove the file from the target folder
-        targetfolder = heuristicsfolder if file.suffix == '.yaml' else pluginfolder
         LOGGER.info(f"Uninstalling: '{file}'")
+        sourcefolder = heuristicsfolder if file.suffix == '.yaml' else pluginfolder
         try:
-            (targetfolder/file.name).unlink()
+            (sourcefolder/file.name).unlink()
         except IOError as uninstall_error:
-            LOGGER.error(f"{uninstall_error}\nFailed to uninstall: '{file}'")
+            LOGGER.error(f"{uninstall_error}\nFailed to uninstall: '{file.name}' from {sourcefolder}")
             continue
         if file.suffix == '.yaml':
             LOGGER.success(f"The '{file.name}' template bidsmap was successfully uninstalled")
