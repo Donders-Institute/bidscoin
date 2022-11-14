@@ -1121,6 +1121,7 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
         bidsname     = get_bidsname('sub-foo', '', run, False)
         run_suffixok = bids_validator.BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")  # NB: Using the BIDSValidator sounds nice but doesn't give any control over the BIDS-version
         run_valsok   = run_suffixok
+        LOGGER.bcdebug(f"{run_suffixok} bidsname: /sub-foo/{datatype}/{bidsname}.json")
 
     if check[1] and run_suffixok is False:
         LOGGER.warning(f'Invalid run-item with suffix: "{run["bids"]["suffix"]}" ({datatype} -> {run["provenance"]})')
