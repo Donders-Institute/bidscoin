@@ -247,9 +247,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         jsonfiles = [(outfolder/bidsname).with_suffix('.json')]     # List -> Collect the associated json-files (for updating them later) -- possibly > 1
 
         # Check if the bidsname is valid
-        isbids = BIDSValidator().is_bids((Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.json').as_posix())
+        bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.json').as_posix()
+        isbids   = BIDSValidator().is_bids(bidstest)
         if not isbids:
-            LOGGER.warning(f"The '{outfolder/bidsname}.*' ouput name did not pass the bids-validator test")
+            LOGGER.warning(f"The '{bidstest}' ouput name did not pass the bids-validator test")
 
         # Check if file already exists (-> e.g. when a static runindex is used)
         if (outfolder/bidsname).with_suffix('.json').is_file():
