@@ -200,7 +200,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Check if the bidsname is valid
         bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.json').as_posix()
         isbids   = BIDSValidator().is_bids(bidstest)
-        if not isbids:
+        if not isbids and not bidsignore:
             LOGGER.warning(f"The '{bidstest}' ouput name did not pass the bids-validator test")
 
         # Check if file already exists (-> e.g. when a static runindex is used)
