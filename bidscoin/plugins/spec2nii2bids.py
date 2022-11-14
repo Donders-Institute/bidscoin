@@ -214,6 +214,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
             LOGGER.info(f"Leaving out: {sourcefile}")
             continue
+        bidsignore = datasource.datatype in bidsmap['Options']['bidscoin']['bidsignore']
 
         # Check that we know this run
         if index is None:
@@ -227,7 +228,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        bidsname = bids.get_bidsname(subid, sesid, run, datasource.datatype in bidsmap['Options']['bidscoin']['bidsignore'], runtime=True)
+        bidsname = bids.get_bidsname(subid, sesid, run, bidsignore, runtime=True)
         runindex = run['bids'].get('run')
         runindex = str(runindex) if runindex else ''
         if runindex.startswith('<<') and runindex.endswith('>>'):
@@ -291,7 +292,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             json.dump(jsondata, json_fid, indent=4)
 
         # Parse the acquisition time from the source header or else from the json file (NB: assuming the source file represents the first acquisition)
-        if datasource.datatype not in bidsmap['Options']['bidscoin']['bidsignore'] and not run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):
+        if not bidsignore and not run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):
             acq_time = ''
             if dataformat == 'SPAR':
                 acq_time = datasource.attributes('scan_date')
