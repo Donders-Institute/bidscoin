@@ -282,9 +282,9 @@ def install_plugins(filenames: List[str]=()) -> None:
     :return:            Nothing
     """
 
+    if not filenames: return
+
     files = [Path(file) for file in filenames if file.endswith('.yaml') or file.endswith('.py')]
-    if not files:
-        return
 
     # Load the default template bidsmap
     with open(bidsmap_template, 'r') as stream:
@@ -335,9 +335,9 @@ def uninstall_plugins(filenames: List[str]=(), wipe: bool=True) -> None:
     :return:            None
     """
 
+    if not filenames: return
+
     files = [Path(file) for file in filenames if file.endswith('.yaml') or file.endswith('.py')]
-    if not files:
-        return
 
     # Load the default template bidsmap
     with open(bidsmap_template, 'r') as stream:
@@ -389,8 +389,7 @@ def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> module_from_s
     :return:            The imported plugin-module
     """
 
-    if not plugin:
-        return
+    if not plugin: return
 
     # Get the full path to the plugin-module
     plugin = Path(plugin).with_suffix('.py')
@@ -436,8 +435,7 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> int:
     :return:        The result of the plugin test routine (e.g. 0 if it passed or 1 if there was a general plug-in error)
     """
 
-    if not plugin:
-        return 1
+    if not plugin: return 1
 
     LOGGER.info(f"--------- Testing the '{plugin}' plugin ---------")
 
@@ -501,8 +499,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
     :return:            0 if the test was successful, otherwise 1
     """
 
-    if not bidsmapfile:
-        return 1
+    if not bidsmapfile: return 1
 
     LOGGER.info("--------- Testing the BIDScoin's core functionality ---------")
 
@@ -586,8 +583,7 @@ def pulltutorialdata(tutorialfolder: str) -> None:
     :return:
     """
 
-    if not tutorialfolder:
-        return
+    if not tutorialfolder: return
 
     tutorialfolder = Path(tutorialfolder).resolve()
     tutorialtargz  = tutorialfolder/'bidscointutorial.tar.gz'
@@ -638,8 +634,8 @@ def main():
 
     list_executables(show=args.list)
     list_plugins(show=args.plugins)
-    uninstall_plugins(plugins=args.uninstall)
-    install_plugins(plugins=args.install)
+    uninstall_plugins(filenames=args.uninstall)
+    install_plugins(filenames=args.install)
     pulltutorialdata(tutorialfolder=args.download)
     test_bidscoin(bidsmapfile=args.test)
     test_bidsmap(bidsmapfile=args.bidsmaptest)
