@@ -11,7 +11,8 @@ All notable changes to this project will be documented in this file. The format 
 - A BIDSCOIN_DEBUG environment variable to run bidscoin in a more verbose debug mode
 - VERBOSE and SUCCESS logging levels
 - Checks using the bids-validator python module
-- Options to perform bidsmap tests with `bidscoin -t/b`
+- Options to perform bidsmap tests with `bidscoin -t / -b`
+- Option to list and install template bidsmaps
 
 ### Changed
 - The default behaviour is now not to unzip data in the sourcefolders anymore. Instead, users can use the `--unzip` option in the bidsmapper

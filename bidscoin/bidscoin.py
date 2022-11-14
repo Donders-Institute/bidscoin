@@ -40,7 +40,7 @@ bidscoinfolder   = Path(__file__).parent
 schemafolder     = bidscoinfolder/'schema'
 heuristicsfolder = bidscoinfolder/'heuristics'
 pluginfolder     = bidscoinfolder/'plugins'
-bidsmap_template = heuristicsfolder/'bidsmap_dccn.yaml'
+bidsmap_template = heuristicsfolder/'bidsmap_dccn.yaml'     # TODO: make this a user setting (in $HOME)?
 
 LOGGER           = logging.getLogger(__name__)
 
@@ -262,7 +262,7 @@ def list_plugins(show: bool=False) -> Tuple[List[Path], List[Path]]:
     for template in heuristicsfolder.glob('*.yaml'):
         if template.stem != '__init__':
             templates.append(template)
-            if show: LOGGER.info(f"- {template.stem}")
+            if show: LOGGER.info(f"- {template.stem}{' (default)' if template.samefile(bidsmap_template) else ''}")
 
     if show: LOGGER.info(f"Installed plugins ({pluginfolder}):")
     plugins = []
