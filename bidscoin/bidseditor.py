@@ -708,6 +708,9 @@ class MainWindow(QMainWindow):
         self.output_bidsmap['Options']['plugins'][plugin] = options
         self.datachanged = True
 
+        # Notify the user that the bidsmapper need to be re-runned
+        QMessageBox.information(self, 'Add plugin', f"The '{plugin}' plugin was added. Most likely you need to close the bidseditor now and re-run the bidsmapper to discover new source datatypes with the new plugin")
+
     def del_plugin(self, plugin: str):
         """Removes the plugin table from the Options-tab and the data from the bidsmap"""
 
