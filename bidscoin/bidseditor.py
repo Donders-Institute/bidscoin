@@ -1695,7 +1695,7 @@ def main():
 
     parser.add_argument('bidsfolder',           help='The destination folder with the (future) bids data')
     parser.add_argument('-b','--bidsmap',       help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
-    parser.add_argument('-t','--template',      help=f'The template bidsmap file with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: {bidscoin.bidsmap_template.name}', default=bidscoin.bidsmap_template)
+    parser.add_argument('-t','--template',      help=f'The template bidsmap file with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: {bidscoin.bidsmap_template.stem}', default=bidscoin.bidsmap_template)
     args = parser.parse_args()
 
     bidseditor(bidsfolder   = args.bidsfolder,
