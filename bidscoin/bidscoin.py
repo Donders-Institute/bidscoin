@@ -40,10 +40,13 @@ bidscoinfolder   = Path(__file__).parent
 schemafolder     = bidscoinfolder/'schema'
 heuristicsfolder = bidscoinfolder/'heuristics'
 pluginfolder     = bidscoinfolder/'plugins'
-bidsmap_template = heuristicsfolder/'bidsmap_dccn.yaml'     # TODO: make this a user setting (in $HOME)?
+bidsmap_template = heuristicsfolder/'bidsmap_dccn.yaml'     # Default template bidsmap TODO: make it a user setting (in $HOME)?
 
-LOGGER           = logging.getLogger(__name__)
+# Get the BIDSCOIN_DEBUG environment variable to set the log-messages and logging level, etc
+debug  = os.environ.get('BIDSCOIN_DEBUG')
+debug  = True if debug and debug.upper() not in ('0', 'FALSE', 'N', 'NO', 'NONE') else False
 
+LOGGER = logging.getLogger(__name__)
 
 class TqdmUpTo(tqdm):
 
@@ -68,10 +71,6 @@ def setup_logging(logfile: Path=Path()):
     :param logfile:     Name of the logfile
     :return:
      """
-
-    # Get the BIDSCOIN_DEBUG environment variable to set the log-messages and logging level
-    debug = os.environ.get('BIDSCOIN_DEBUG')
-    debug = True if debug and debug.upper() not in ('0', 'FALSE', 'N', 'NO', 'NONE') else False
 
     # Set the default formats
     if debug:
@@ -122,7 +121,7 @@ def setup_logging(logfile: Path=Path()):
     logfile.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
     formatter  = logging.Formatter(fmt=fmt, datefmt=datefmt)
     loghandler = logging.FileHandler(logfile)
-    loghandler.setLevel('BCDEBUG' if debug or not logfile.name else 'VERBOSE')
+    loghandler.setLevel('BCDEBUG')
     loghandler.setFormatter(formatter)
     loghandler.set_name('loghandler')
     logger.addHandler(loghandler)

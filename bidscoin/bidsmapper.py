@@ -234,7 +234,7 @@ def main():
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
                                             '  bidsmapper /project/foo/raw /project/foo/bids\n'
-                                            '  bidsmapper /project/foo/raw /project/foo/bids -t bidsmap_custom  # Uses a bidsmap of choice\n'
+                                            '  bidsmapper /project/foo/raw /project/foo/bids -t bidsmap_custom  # Uses a template bidsmap of choice\n'
                                             '  bidsmapper /project/foo/raw /project/foo/bids -p nibabel2bids    # Uses a plugin of choice\n'
                                             "  bidsmapper /project/foo/raw /project/foo/bids -u '*.tar.gz'      # Unzip tarballed sourcefiles\n ")
     parser.add_argument('sourcefolder',       help='The study root folder containing the raw source data folders')
