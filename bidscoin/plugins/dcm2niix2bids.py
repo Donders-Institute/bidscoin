@@ -27,10 +27,10 @@ except ImportError:
 LOGGER = logging.getLogger(__name__)
 
 # The default options that are set when installing the plugin
-OPTIONS = {'command': 'module add dcm2niix; dcm2niix',  # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or 'C:\"Program Files"\dcm2niix\dcm2niix.exe' (use quotes to deal with whitespaces in the path)
-           'args': '-b y -z y -i n',                    # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
-           'anon': 'y',                                 # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
-           'meta': ['.json', '.tsv', '.tsv.gz']}        # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
+OPTIONS = {'command': 'dcm2niix',                   # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or 'C:\"Program Files"\dcm2niix\dcm2niix.exe' (use quotes to deal with whitespaces in the path)
+           'args': '-b y -z y -i n',                # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
+           'anon': 'y',                             # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
+           'meta': ['.json', '.tsv', '.tsv.gz']}    # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
 
 
 def test(options: dict=OPTIONS) -> int:
