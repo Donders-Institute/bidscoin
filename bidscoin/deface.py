@@ -150,12 +150,9 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                                         json.dump(fmap_data, fmap_fid, indent=4)
 
                         # Update the scans.tsv file
-                        if (bidsdir/'.bidsignore').is_file():
-                            bidsignore = (bidsdir/'.bidsignore').read_text().splitlines()
-                        else:
-                            bidsignore = []
+                        scans_tsv  = session/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
+                        bidsignore = (bidsdir/'.bidsignore').read_text().splitlines() if (bidsdir/'.bidsignore').is_file() else []
                         bidsignore.append('derivatives/')
-                        scans_tsv = session/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
                         if output and output+'/' not in bidsignore and scans_tsv.is_file():
                             LOGGER.info(f"Adding {outputfile_rel} to {scans_tsv}")
                             scans_table                     = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
