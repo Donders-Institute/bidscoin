@@ -18,9 +18,9 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 try:
-    from bidscoin import bidscoin, bids
+    from bidscoin import bidscoin
 except ImportError:
-    import bidscoin, bids             # This should work if bidscoin was not pip-installed
+    import bidscoin                 # This should work if bidscoin was not pip-installed
 
 
 def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
@@ -73,6 +73,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
         with logging_redirect_tqdm():
             for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
+                subid    = subject.name
                 sessions = bidscoin.lsdirs(subject, 'ses-*')
                 if not sessions:
                     sessions = [subject]
@@ -81,10 +82,8 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                     LOGGER.info('--------------------------------------')
                     LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
 
-                    datasource   = bids.DataSource(session/'dum.my', subprefix='sub-', sesprefix='ses-')
-                    subid, sesid = datasource.subid_sesid()
-
                     # Search for images that need to be defaced
+                    sesid = session.name if session.name.startswith('ses-') else ''
                     for match in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
 
                         # Construct the output filename and relative path name (used in BIDS)

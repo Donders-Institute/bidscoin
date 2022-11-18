@@ -22,9 +22,9 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 try:
-    from bidscoin import bidscoin, bids
+    from bidscoin import bidscoin
 except ImportError:
-    import bidscoin, bids             # This should work if bidscoin was not pip-installed
+    import bidscoin                 # This should work if bidscoin was not pip-installed
 
 
 def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
@@ -75,6 +75,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
         # Loop over bids subject/session-directories to first get all the echo-combined deface masks
         for n, subject in enumerate(subjects, 1):
 
+            subid    = subject.name
             sessions = bidscoin.lsdirs(subject, 'ses-*')
             if not sessions:
                 sessions = [subject]
@@ -83,10 +84,8 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                 LOGGER.info('--------------------------------------')
                 LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
 
-                datasource   = bids.DataSource(session/'dum.my', subprefix='sub-', sesprefix='ses-')
-                subid, sesid = datasource.subid_sesid()
-
                 # Read the echo-images that will be combined to compute the deface mask
+                sesid     = session.name if session.name.startswith('ses-') else ''
                 echofiles = sorted([match for match in session.glob(maskpattern) if '.nii' in match.suffixes])
                 if not echofiles:
                     LOGGER.info(f'No mask files found for: {session}/{maskpattern}')
@@ -127,6 +126,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
     with logging_redirect_tqdm():
         for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
+            subid    = subject.name
             sessions = bidscoin.lsdirs(subject, 'ses-*')
             if not sessions:
                 sessions = [subject]
@@ -135,10 +135,8 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                 LOGGER.info('--------------------------------------')
                 LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
 
-                datasource   = bids.DataSource(session/'dum.my', subprefix='sub-', sesprefix='ses-')
-                subid, sesid = datasource.subid_sesid()
-
                 # Read the temporary defacemask
+                sesid   = session.name if session.name.startswith('ses-') else ''
                 tmpfile = session/'tmp_echocombined_deface.nii'
                 if not tmpfile.is_file():
                     LOGGER.info(f'No {tmpfile} file found')

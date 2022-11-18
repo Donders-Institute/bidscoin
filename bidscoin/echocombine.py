@@ -57,6 +57,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
     with logging_redirect_tqdm():
         for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
+            subid    = subject.name
             sessions = bidscoin.lsdirs(subject, 'ses-*')
             if not sessions:
                 sessions = [subject]
@@ -65,9 +66,8 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                 LOGGER.info('-------------------------------------')
                 LOGGER.info(f"Combining echos for ({n}/{len(subjects)}): {session}")
 
-                subid, sesid = bids.DataSource(session/'dum.my', subprefix='sub-', sesprefix='ses-').subid_sesid()
-
                 # Search for multi-echo matches
+                sesid = session.name if session.name.startswith('ses-') else ''
                 for match in sorted([match for match in session.rglob(pattern) if '.nii' in match.suffixes]):
 
                     # Check if it is normal/BIDS multi-echo data or that the echo-number is appended to the acquisition label (as done in BIDScoin)
