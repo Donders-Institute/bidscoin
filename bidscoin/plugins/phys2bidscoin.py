@@ -215,7 +215,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         LOGGER.info(f"Processing: {sourcefile}")
 
         # Get an ordered list of the func runs from the scans.tsv file (which should have a standardized datetime format)
-        scans_tsv = bidsses/f"{subid}{bids.add_prefix('_', sesid)}_scans.tsv"
+        scans_tsv = bidsses/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
         if scans_tsv.is_file():
             scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
             scans_table.sort_values(by=['acq_time', 'filename'], inplace=True)

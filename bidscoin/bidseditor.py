@@ -1231,8 +1231,8 @@ class EditWindow(QDialog):
 
             # Only if cell was changed, update
             if key and value != oldvalue:
-                answer = QMessageBox.question(self, f"Edit {self.dataformat} attributes",
-                                              f'It is discouraged to change {self.dataformat} attribute values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
+                answer = QMessageBox.question(self, f"Edit {self.dataformat} properties",
+                                              f'It is discouraged to change {self.dataformat} property values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if answer == QMessageBox.Yes:
                     LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")

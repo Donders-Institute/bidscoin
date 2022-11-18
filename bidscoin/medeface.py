@@ -48,7 +48,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
         maskpattern = pattern
 
     # Start logging
-    bidscoin.setup_logging(bidsdir/'code'/'bidscoin'/'deface.log')
+    bidscoin.setup_logging(bidsdir/'code'/'bidscoin'/'medeface.log')
     LOGGER.info('')
     LOGGER.info('------------ START multi-echo deface ----------')
     LOGGER.info(f">>> medeface bidsfolder={bidsdir} pattern={pattern} subjects={subjects} output={output}"
@@ -206,7 +206,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                     else:
                         bidsignore = []
                     bidsignore.append('derivatives/')
-                    scans_tsv = session/f"{subid}{bids.add_prefix('_',sesid)}_scans.tsv"
+                    scans_tsv = session/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
                     if output and output+'/' not in bidsignore and scans_tsv.is_file():
                         LOGGER.info(f"Adding {outputfile_rel} to {scans_tsv}")
                         scans_table                     = pd.read_csv(scans_tsv, sep='\t', index_col='filename')

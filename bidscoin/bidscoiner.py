@@ -252,7 +252,7 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
     # Add IntendedFor search results and TE1+TE2 meta-data to the fieldmap json-files. This has been postponed until all datatypes have been processed (i.e. so that all target images are indeed on disk)
     if (bidsses/'fmap').is_dir():
 
-        scans_tsv = bidsses/f"{subid}{bids.add_prefix('_', sesid)}_scans.tsv"
+        scans_tsv = bidsses/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
         if scans_tsv.is_file():
             scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
         else:

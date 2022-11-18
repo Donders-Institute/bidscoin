@@ -160,7 +160,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         return
 
     # Read or create a scans_table and tsv-file
-    scans_tsv = bidsses/f"{subid}{bids.add_prefix('_', sesid)}_scans.tsv"
+    scans_tsv = bidsses/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
     if scans_tsv.is_file():
         scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
     else:

@@ -156,7 +156,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                         else:
                             bidsignore = []
                         bidsignore.append('derivatives/')
-                        scans_tsv = session/f"{subid}{bids.add_prefix('_',sesid)}_scans.tsv"
+                        scans_tsv = session/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
                         if output and output+'/' not in bidsignore and scans_tsv.is_file():
                             LOGGER.info(f"Adding {outputfile_rel} to {scans_tsv}")
                             scans_table                     = pd.read_csv(scans_tsv, sep='\t', index_col='filename')

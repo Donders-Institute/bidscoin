@@ -1130,23 +1130,6 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
     return run_keysok, run_suffixok, run_valsok
 
 
-def add_prefix(prefix: str, tag: str) -> str:
-    """
-    Simple function to account for optional BIDS tags in the bids file names, i.e. it prefixes 'prefix' only when tag is not empty
-
-    :param prefix:  The prefix (e.g. '_ses-')
-    :param tag:     The tag (e.g. 'medication')
-    :return:        The tag with the leading prefix (e.g. '_ses-medication') or just the empty tag ''
-    """
-
-    if tag:
-        tag = prefix + str(tag)
-    else:
-        tag = ''
-
-    return tag
-
-
 def strip_suffix(run: dict) -> dict:
     """
     Certain attributes such as SeriesDescriptions (but not ProtocolName!?) may get a suffix like '_SBRef' from the vendor,
@@ -1648,7 +1631,7 @@ def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bo
             sesid = cleanup_value(sesid)
 
     # Compose a bidsname from valid BIDS entities only
-    bidsname = f"sub-{subid}{add_prefix('_ses-', sesid)}"                       # Start with the subject/session identifier
+    bidsname = f"sub-{subid}{'_ses-'+sesid if sesid else ''}"                   # Start with the subject/session identifier
     if validkeys:
         entitiekeys = [key for key in run['bids'] if key!='suffix']             # Use the keys from the run item
     else:
@@ -1668,7 +1651,7 @@ def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bo
     suffix = run['bids'].get('suffix')
     if cleanup and suffix:
         suffix = cleanup_value(suffix)
-    bidsname = f"{bidsname}{add_prefix('_', suffix)}"                           # And end with the suffix
+    bidsname = f"{bidsname}{'_'+suffix if suffix else ''}"                      # And end with the suffix
 
     return bidsname
 
