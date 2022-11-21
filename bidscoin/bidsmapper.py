@@ -233,10 +233,10 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
-                                            '  bidsmapper /project/foo/raw /project/foo/bids\n'
-                                            '  bidsmapper /project/foo/raw /project/foo/bids -t bidsmap_custom  # Uses a template bidsmap of choice\n'
-                                            '  bidsmapper /project/foo/raw /project/foo/bids -p nibabel2bids    # Uses a plugin of choice\n'
-                                            "  bidsmapper /project/foo/raw /project/foo/bids -u '*.tar.gz'      # Unzip tarballed sourcefiles\n ")
+                                            '  bidsmapper myproject/raw myproject/bids\n'
+                                            '  bidsmapper myproject/raw myproject/bids -t bidsmap_custom  # Uses a template bidsmap of choice\n'
+                                            '  bidsmapper myproject/raw myproject/bids -p nibabel2bids    # Uses a plugin of choice\n'
+                                            "  bidsmapper myproject/raw myproject/bids -u '*.tar.gz'      # Unzip tarballed sourcefiles\n ")
     parser.add_argument('sourcefolder',       help='The study root folder containing the raw source data folders')
     parser.add_argument('bidsfolder',         help='The destination folder with the (future) bids data and the bidsfolder/code/bidscoin/bidsmap.yaml output file')
     parser.add_argument('-b','--bidsmap',     help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')

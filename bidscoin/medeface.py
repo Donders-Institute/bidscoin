@@ -221,11 +221,11 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
                                      description=__doc__,
                                      epilog='examples:\n'
-                                            '  medeface /project/3017065.01/bids anat/*_T1w*\n'
-                                            '  medeface /project/3017065.01/bids anat/*_T1w* -p 001 003 -o derivatives\n'
-                                            '  medeface /project/3017065.01/bids anat/*_T1w* -c -n "-l walltime=00:60:00,mem=4gb"\n'
-                                            '  medeface /project/3017065.01/bids anat/*acq-GRE* -m anat/*acq-GRE*magnitude*"\n'
-                                            '  medeface /project/3017065.01/bids anat/*_FLAIR* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
+                                            '  medeface myproject/bids anat/*_T1w*\n'
+                                            '  medeface myproject/bids anat/*_T1w* -p 001 003 -o derivatives\n'
+                                            '  medeface myproject/bids anat/*_T1w* -c -n "-l walltime=00:60:00,mem=4gb"\n'
+                                            '  medeface myproject/bids anat/*acq-GRE* -m anat/*acq-GRE*magnitude*"\n'
+                                            '  medeface myproject/bids anat/*_FLAIR* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
     parser.add_argument('bidsfolder', type=str,
                         help='The bids-directory with the (multi-echo) subject data')
     parser.add_argument('pattern', type=str,

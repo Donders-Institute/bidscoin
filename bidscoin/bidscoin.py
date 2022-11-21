@@ -618,7 +618,7 @@ def main():
                                             '  bidscoin -t\n'
                                             '  bidscoin -t my_template_bidsmap\n'
                                             '  bidscoin -b my_study_bidsmap\n'
-                                            '  bidscoin -i python/project/my_template_bidsmap.yaml downloads/my_plugin.py\n ')
+                                            '  bidscoin -i data/my_template_bidsmap.yaml downloads/my_plugin.py\n ')
     parser.add_argument('-l', '--list',        help='List all bidscoin tools', action='store_true')
     parser.add_argument('-p', '--plugins',     help='List all installed plugins and template bidsmaps', action='store_true')
     parser.add_argument('-i', '--install',     help='A list of template bidsmaps and/or bidscoin plugins to install', nargs='+')

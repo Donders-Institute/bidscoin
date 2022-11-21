@@ -198,8 +198,8 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
-                                            '  bidsparticipants /project/foo/raw /project/foo/bids\n'
-                                            '  bidsparticipants /project/foo/raw /project/foo/bids -k participant_id age sex\n ')
+                                            '  bidsparticipants myproject/raw myproject/bids\n'
+                                            '  bidsparticipants myproject/raw myproject/bids -k participant_id age sex\n ')
     parser.add_argument('sourcefolder',     help='The study root folder containing the raw source data folders')
     parser.add_argument('bidsfolder',       help='The destination / output folder with the bids data')
     parser.add_argument('-k','--keys',      help="Space separated list of the participants.tsv columns. Default: 'session_id' 'age' 'sex' 'size' 'weight'", nargs='+', default=['session_id', 'age', 'sex', 'size' ,'weight'])

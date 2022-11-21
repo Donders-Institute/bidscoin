@@ -1689,9 +1689,9 @@ def main():
                                      description=textwrap.dedent(__doc__),
                                      epilog=textwrap.dedent("""
                                          examples:
-                                           bidseditor /project/foo/bids
-                                           bidseditor /project/foo/bids -t bidsmap_dccn.yaml
-                                           bidseditor /project/foo/bids -b my/custom/bidsmap.yaml"""))
+                                           bidseditor myproject/bids
+                                           bidseditor myproject/bids -t bidsmap_dccn.yaml
+                                           bidseditor myproject/bids -b my/custom/bidsmap.yaml"""))
 
     parser.add_argument('bidsfolder',           help='The destination folder with the (future) bids data')
     parser.add_argument('-b','--bidsmap',       help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')

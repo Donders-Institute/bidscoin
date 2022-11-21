@@ -213,7 +213,7 @@ def main():
                                      epilog='examples:\n'
                                             '  dicomsort sub-011/ses-mri01\n'
                                             '  dicomsort sub-011/ses-mri01/DICOMDIR -n {AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm\n'
-                                            '  dicomsort /project/3022026.01/raw/DICOMDIR --subprefix sub- --sesprefix ses-\n ')
+                                            '  dicomsort myproject/raw/DICOMDIR --subprefix sub- --sesprefix ses-\n ')
     parser.add_argument('dicomsource',          help='The root folder containing the dicomsource/[sub/][ses/] dicomfiles or the DICOMDIR file')
     parser.add_argument('-i','--subprefix',     help='Provide a prefix string for recursive sorting of dicomsource/subject subfolders (e.g. "sub-")')
     parser.add_argument('-j','--sesprefix',     help='Provide a prefix string for recursive sorting of dicomsource/subject/session subfolders (e.g. "ses-")')

@@ -77,7 +77,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
     """
 
     if dataformat == 'Nibabel':
-        return nib.load(str(sourcefile)).header.get(attribute)
+        return nib.load(sourcefile).header.get(attribute)
 
 
 def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
