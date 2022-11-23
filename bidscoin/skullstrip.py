@@ -23,7 +23,7 @@ except ImportError:
     import bids, bidscoin               # This should work if bidscoin was not pip-installed
 
 
-def skullstrip(bidsdir: str, pattern: str, subjects: list, output: list, masked: str, force: bool, args: str):
+def skullstrip(bidsdir: str, pattern: str, subjects: list, output: list[str], masked: str, force: bool, args: str):
     """
 
     :param bidsdir:     The bids-directory with the subject data
@@ -41,7 +41,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, output: list, masked:
     if len(output) == 0:
         output = ['derivatives']
     if len(output) == 1:
-        output.append(output)
+        output += output
     if len(output) != 2:
         print(f"The 'output' argument should be one or strings, not {len(output)} ({output})")
         return
