@@ -145,7 +145,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, output: list[str], ma
                         # Load the volume data, multiply it with the mask and save it to the output image
                         addoutimg.parent.mkdir(parents=True, exist_ok=True)
                         addobj = nib.load(addimg)
-                        if addobj.header.get_data_shape() == maskobj.header.get_data_shape():
+                        if addobj.header.get_data_shape()[0:3] == maskobj.header.get_data_shape():
                             LOGGER.info(f"Applying skullstrip-mask to: {addoutimg}")
                             addmsk = nib.Nifti1Image(addobj.get_fdata() * maskvol, addobj.affine, addobj.header)
                             addmsk.to_filename(addoutimg)
@@ -226,10 +226,10 @@ def main():
                                             '  skullstrip myproject/bids anat/*_T1w* -p 001 003 -a \' --no-csf\'\n'
                                             '  skullstrip myproject/bids fmap/*_magnitude1* -o extra_data fmap -m fmap/*_phasediff\n ')
     parser.add_argument('bidsfolder',               help="The bids-directory with the subject data", type=str)
-    parser.add_argument('pattern',                  help="Globlike search pattern (relative to the subject/session folder) to select the images that need to be skullstripped, e.g. 'anat/*_T1w*'", type=str)
+    parser.add_argument('pattern',                  help="Globlike search pattern (relative to the subject/session folder) to select the (3D) images that need to be skullstripped, e.g. 'anat/*_T1w*'", type=str)
     parser.add_argument('-p','--participant_label', help="Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed", type=str, nargs='+')
     parser.add_argument('-o','--output',            help="One or two output strings that determine where the skullstripped + additional masked images are saved. Each output string can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives' (default). If the output string is the same as the datatype then the original images are replaced by the skullstripped images", nargs='+')
-    parser.add_argument('-m','--masked',            help="Globlike search pattern (relative to the subject/session folder) to select additional images from the same space that need to be masked with the same mask, e.g. 'fmap/*_phasediff'. NB: This option can only be used if pattern yieds a single file per session", type=str)
+    parser.add_argument('-m','--masked',            help="Globlike search pattern (relative to the subject/session folder) to select additional (3D/4D) images from the same space that need to be masked with the same mask, e.g. 'fmap/*_phasediff'. NB: This option can only be used if pattern yieds a single file per session", type=str)
     parser.add_argument('-f','--force',             help="Process images, regardless whether images have already been skullstripped (i.e. if {'SkullStripped': True} in the json sidecar file)", action='store_true')
     parser.add_argument('-a','--args',              help="Additional arguments that are passed to synthstrip (NB: Use quotes and a leading space to prevent unintended argument parsing)", type=str, default='')
     args = parser.parse_args()
