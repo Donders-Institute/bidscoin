@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file. The format 
 - Checks using the bids-validator python module
 - Options to perform bidsmap tests with `bidscoin -t / -b`
 - Option to list and install template bidsmaps
+- The skullstrip tool (a bids-wrapper around synthstrip)
 
 ### Changed
 - The default behaviour is now not to unzip data in the sourcefolders anymore. Instead, users can use the `--unzip` option in the bidsmapper
