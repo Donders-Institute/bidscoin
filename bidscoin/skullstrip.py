@@ -45,7 +45,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, output: list, masked:
     if len(output) != 2:
         print(f"The 'output' argument should be one or strings, not {len(output)} ({output})")
         return
-    if not os.environ.get('mri_synthstrip):
+    if not os.environ.get('mri_synthstrip'):
         print("Could not find 'mri_synth', skullstrip requires FreeSurfer v7.3.2 or higher")
         return
 
