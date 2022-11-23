@@ -45,7 +45,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, output: list, masked:
     if len(output) != 2:
         print(f"The 'output' argument should be one or strings, not {len(output)} ({output})")
         return
-    if not os.environ.get('mri_synth'):
+    if not os.environ.get('mri_synthstrip):
         print("Could not find 'mri_synth', skullstrip requires FreeSurfer v7.3.2 or higher")
         return
 
@@ -218,7 +218,7 @@ def main():
                                      epilog='examples:\n'
                                             '  skullstrip myproject/bids anat/*_T1w*\n'
                                             '  skullstrip myproject/bids anat/*_T1w* -p 001 003 -a \' --no-csf\'\n'
-                                            '  skullstrip myproject/bids fmap/*_magnitude1* -o fmap -m fmap/*_phasediff\n ')
+                                            '  skullstrip myproject/bids fmap/*_magnitude1* -o extra_data fmap -m fmap/*_phasediff\n ')
     parser.add_argument('bidsfolder',               help="The bids-directory with the subject data", type=str)
     parser.add_argument('pattern',                  help="Globlike search pattern (relative to the subject/session folder) to select the images that need to be skullstripped, e.g. 'anat/*_T1w*'", type=str)
     parser.add_argument('-p','--participant_label', help="Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed", type=str, nargs='+')
