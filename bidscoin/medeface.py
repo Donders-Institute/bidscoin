@@ -3,7 +3,7 @@
 A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface) that computes
 a defacing mask on a (temporary) echo-combined image and then applies it to each individual echo-image.
 
-Except for BIDS inheritances, this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS compliant output
+Except for BIDS inheritances and IntendedFor usage, this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 
 For single-echo data see `deface`
 """
@@ -166,43 +166,19 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                     outputimg = nib.Nifti1Image(echoimg.get_fdata() * defacemask, echoimg.affine, echoimg.header)
                     outputimg.to_filename(outputfile)
 
-                    # Overwrite or add a json sidecar-file
+                    # Add a json sidecar-file with the "Defaced" field
                     inputjson  = echofile.with_suffix('').with_suffix('.json')
                     outputjson = outputfile.with_suffix('').with_suffix('.json')
-                    if inputjson.is_file() and inputjson != outputjson:
-                        if outputjson.is_file():
-                            LOGGER.info(f"Overwriting the json sidecar-file: {outputjson}")
-                            outputjson.unlink()
-                        else:
-                            LOGGER.info(f"Adding a json sidecar-file: {outputjson}")
-                        shutil.copyfile(inputjson, outputjson)
-
-                    # Add a custom "Defaced" field to the json sidecar-file
-                    with outputjson.open('r') as output_fid:
-                        data = json.load(output_fid)
-                    data['Defaced'] = True
-                    with outputjson.open('w') as output_fid:
-                        json.dump(data, output_fid, indent=4)
-
-                    # Update the IntendedFor fields in the fieldmap sidecar-files NB: IntendedFor must be relative to the subject folder
-                    if output and output != 'derivatives' and (session/'fmap').is_dir():
-                        for fmap in (session/'fmap').glob('*.json'):
-                            with fmap.open('r') as fmap_fid:
-                                fmap_data = json.load(fmap_fid)
-                            intendedfor = fmap_data['IntendedFor']
-                            if isinstance(intendedfor, str):
-                                intendedfor = [intendedfor]
-                            if f"bids::{(Path(subid)/sesid/echofile_rel).as_posix()}" in intendedfor:
-                                LOGGER.info(f"Updating 'IntendedFor' to bids::{(Path(subid)/sesid/outputfile_rel).as_posix()} in {fmap}")
-                                fmap_data['IntendedFor'] = intendedfor + [f"bids::{(Path(subid)/sesid/outputfile_rel).as_posix()}"]
-                                with fmap.open('w') as fmap_fid:
-                                    json.dump(fmap_data, fmap_fid, indent=4)
+                    with inputjson.open('r') as sidecar:
+                        metadata = json.load(sidecar)
+                    metadata['Defaced'] = True
+                    with outputjson.open('w') as sidecar:
+                        json.dump(metadata, sidecar, indent=4)
 
                     # Update the scans.tsv file
                     scans_tsv  = session/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
-                    bidsignore = (bidsdir/'.bidsignore').read_text().splitlines() if (bidsdir/'.bidsignore').is_file() else []
-                    bidsignore.append('derivatives/')
-                    if output and output+'/' not in bidsignore and scans_tsv.is_file():
+                    bidsignore = (bidsdir/'.bidsignore').read_text().splitlines() if (bidsdir/'.bidsignore').is_file() else ['extra_data/']
+                    if output and output+'/' not in bidsignore + ['derivatives/'] and scans_tsv.is_file():
                         LOGGER.info(f"Adding {outputfile_rel} to {scans_tsv}")
                         scans_table                     = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
                         scans_table.loc[outputfile_rel] = scans_table.loc[echofile_rel]
