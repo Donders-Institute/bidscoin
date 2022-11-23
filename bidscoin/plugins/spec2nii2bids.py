@@ -267,8 +267,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             if not list(outfolder.glob(f"{bidsname}.nii*")): continue
 
         # Load and adapt the newly produced json sidecar-file (NB: assumes every nifti-file comes with a json-file)
-        with jsonfile.open('r') as json_fid:
-            jsondata = json.load(json_fid)
+        with jsonfile.open('r') as sidecar:
+            jsondata = json.load(sidecar)
 
         # Copy over the source meta-data
         metadata = bids.copymetadata(sourcefile, outfolder/bidsname, options.get('meta', []))
@@ -288,8 +288,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             jsondata[metakey] = metaval
 
         # Save the meta data to disk
-        with jsonfile.open('w') as json_fid:
-            json.dump(jsondata, json_fid, indent=4)
+        with jsonfile.open('w') as sidecar:
+            json.dump(jsondata, sidecar, indent=4)
 
         # Parse the acquisition time from the source header or else from the json file (NB: assuming the source file represents the first acquisition)
         if not bidsignore and not run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):

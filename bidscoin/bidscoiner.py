@@ -263,8 +263,8 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
 
             # Load the existing meta-data
             jsonfile = bidsses/Path(fmap).with_suffix('').with_suffix('.json')
-            with jsonfile.open('r') as json_fid:
-                jsondata = json.load(json_fid)
+            with jsonfile.open('r') as sidecar:
+                jsondata = json.load(sidecar)
 
             # Search for the imaging files that match the IntendedFor search criteria
             intendedfor = jsondata.get('IntendedFor')
@@ -339,8 +339,8 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                     if not json_magnitude[n].is_file():
                         LOGGER.error(f"Could not find expected magnitude{n+1} image associated with: {jsonfile}\nUse the bidseditor to verify that the fmap images that belong together have corresponding BIDS output names")
                     else:
-                        with json_magnitude[n].open('r') as json_fid:
-                            data = json.load(json_fid)
+                        with json_magnitude[n].open('r') as sidecar:
+                            data = json.load(sidecar)
                         echotime[n] = data.get('EchoTime')
                 jsondata['EchoTime1'] = jsondata['EchoTime2'] = None
                 if None in echotime:
@@ -353,8 +353,8 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                     LOGGER.verbose(f"Adding EchoTime1: {echotime[0]} and EchoTime2: {echotime[1]} to {jsonfile}")
 
             # Save the collected meta-data to disk
-            with jsonfile.open('w') as json_fid:
-                json.dump(jsondata, json_fid, indent=4)
+            with jsonfile.open('w') as sidecar:
+                json.dump(jsondata, sidecar, indent=4)
 
 
 def main():

@@ -56,7 +56,7 @@ class DataSource:
         :param provenance:  The full path of a representative file for this data source
         :param plugins:     The plugins that are used to interact with the source datatype
         :param dataformat:  The dataformat name in the bidsmap, e.g. DICOM or PAR
-        :param datatype:    The intended BIDS datatype of the data source TODO: move to a separate BidsTarget / Mapping class
+        :param datatype:    The intended BIDS datatype of the data source TODO: move to a separate BidsTarget/Mapping class
         :param subprefix:   The subprefix used in the sourcefolder
         :param sesprefix:   The sesprefix used in the sourcefolder
         """
@@ -106,7 +106,7 @@ class DataSource:
     def properties(self, tagname: str, run: dict=None) -> Union[str, int]:
         """
         Gets the 'filepath[:regexp]', 'filename[:regexp]', 'filesize' or 'nrfiles' filesystem property. The filepath (with trailing "/")
-        and filename can be parsed using an optional regular expression re.findall(regexp, filepath / filename). The last match is returned
+        and filename can be parsed using an optional regular expression re.findall(regexp, filepath/filename). The last match is returned
         for the filepath, the first match for the filename
 
         :param tagname: The name of the filesystem property key, e.g. 'filename', 'filename:sub-(.*?)_' or 'nrfiles'
@@ -213,7 +213,7 @@ class DataSource:
         Extract the cleaned-up subid and sesid from the datasource properties or attributes
 
         :param subid:   The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001') or a dynamic source attribute.
-                        Can be left empty / None to use the default <<filepath:regexp>> extraction
+                        Can be left empty/None to use the default <<filepath:regexp>> extraction
         :param sesid:   The optional session identifier, same as subid
         :return:        Updated (subid, sesid) tuple, including the BIDS-compliant 'sub-'/'ses-' prefixes
         """
@@ -1424,10 +1424,10 @@ def match_runvalue(attribute, pattern) -> bool:
     :param attribute:   The long string that is being searched in (e.g. a DICOM attribute)
     :param pattern:     A re.fullmatch regular expression pattern
     :return:            True if a match is found or both attribute and values are identical or
-                        empty / None. False otherwise
+                        empty/None. False otherwise
     """
 
-    # Consider it a match if both attribute and value are identical or empty / None
+    # Consider it a match if both attribute and value are identical or empty/None
     if attribute==pattern or (not attribute and not pattern):
         return True
 
@@ -1596,7 +1596,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
 
 def get_derivatives(datatype: str) -> list:
     """
-    Retrieves a list of suffixes that are stored in the derivatives folder (e.g. the qMRI maps). TODO: Replace with a more systematic / documented method
+    Retrieves a list of suffixes that are stored in the derivatives folder (e.g. the qMRI maps). TODO: Replace with a more systematic/documented method
     """
 
     if datatype == 'anat':
@@ -1789,7 +1789,7 @@ def copymetadata(metasource: Path, metatarget: Path, extensions: list) -> dict:
 
     NB: In future versions this function could also support returning the content of e.g. csv- or Excel-files
 
-    :param metasource:  The filepath of the source-data file with associated / equally named meta-data files
+    :param metasource:  The filepath of the source-data file with associated/equally named meta-data files
     :param metatarget:  The filepath of the source-data file to with the (non-json) meta-data files are copied over
     :param extensions:  A list of file extensions of the meta-data files
     :return:            The meta-data of the json-file
