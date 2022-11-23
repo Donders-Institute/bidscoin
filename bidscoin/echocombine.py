@@ -118,7 +118,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                             echo.unlink()
                             echo.with_suffix('').with_suffix('.json').unlink()
 
-                    # Construct the path names relative to the session folder (as in the scans.tsv file)
+                    # Construct the path names relative to the session folder (used for updating the IntendedFor list and scans.tsv file)
                     oldechos_rel = [echo.relative_to(session).as_posix() for echo in echos]
                     newechos_rel = [echo.relative_to(session).as_posix() for echo in echos + newechos if echo.is_file()]
                     if output == 'derivatives':
@@ -129,53 +129,64 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                     # Update the IntendedFor fields of the fieldmaps (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
                     if output != 'derivatives' and (session/'fmap').is_dir():
                         for fmap in (session/'fmap').glob('*.json'):
+
+                            # Load the IntendedFor data as a list
                             with fmap.open('r') as fmap_fid:
-                                metadata = json.load(fmap_fid)
-                            intendedfor = metadata.get('IntendedFor', [])
+                                fmapdata = json.load(fmap_fid)
+                            intendedfor = fmapdata.get('IntendedFor')
+                            if not intendedfor or oldechos_rel[0] not in str(intendedfor):
+                                continue
                             if isinstance(intendedfor, str):
                                 intendedfor = [intendedfor]
-                            intendedfor = [file.split(f"bids::{subid}/",1)[1] for file in intendedfor]      # NB: IntendedFor is relative to the bids folder (split it off temporarily)
-                            if sesid:
-                                intendedfor = [file.split(sesid+'/',1)[1] for file in intendedfor]
-                            if oldechos_rel[0] in intendedfor:
-                                LOGGER.info(f"Updating 'IntendedFor' in {fmap}")
-                                relfiles                = [file for file in intendedfor if file not in oldechos_rel] + newechos_rel + [cefile_rel]
-                                metadata['IntendedFor'] = [f"bids::{(Path(subid)/sesid/relfile).as_posix()}" for relfile in relfiles]
-                                with fmap.open('w') as fmap_fid:
-                                    json.dump(metadata, fmap_fid, indent=4)
+
+                            # Filter out the old echo entries and add the new and echo-combined entries
+                            LOGGER.info(f"Updating 'IntendedFor' in {fmap}")
+                            newintendedfor = []
+                            for item in intendedfor:
+                                item_rel = item.split(f":{subid}/",1)[-1]     # NB: The BIDS v1.8 IntendedFor URI is relative to the bids folder (split it off)
+                                if sesid:
+                                    item_rel = item_rel.split(sesid+'/',1)[-1]
+                                if item_rel not in oldechos_rel:
+                                    newintendedfor.append(item)
+                                else:
+                                    uri = item.replace(item_rel,'')           # E.g. uri = 'bids::sub-01/ses-01/' or 'ses-01/' or ''
+                            fmapdata['IntendedFor'] = newintendedfor + [f"{uri}{file}" for file in newechos_rel + [cefile_rel]]
+                            with fmap.open('w') as fmap_fid:
+                                json.dump(fmapdata, fmap_fid, indent=4)
 
                     # Update the scans.tsv file
-                    if (bidsdir/'.bidsignore').is_file():
-                        bidsignore = (bidsdir/'.bidsignore').read_text().splitlines()
-                    else:
-                        bidsignore = [unknowndatatype + '/']
                     scans_tsv = session/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
                     if scans_tsv.is_file():
 
+                        # Store the original echo data in a dummy row
                         scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
                         if oldechos_rel[0] in scans_table.index:
-                            scans_table.loc['oldrow'] = scans_table.loc[oldechos_rel[0]]
+                            scans_table.loc['dummyrow'] = scans_table.loc[oldechos_rel[0]]
                         elif 'acq_time' in scans_table:
                             with cefile.with_suffix('').with_suffix('.json').open('r') as fid:
                                 metadata = json.load(fid)
                             date = scans_table.iloc[0]['acq_time'].split('T')[0]
-                            scans_table.loc['oldrow', 'acq_time'] = f"{date}T{metadata.get('AcquisitionTime')}"
+                            scans_table.loc['dummyrow', 'acq_time'] = f"{date}T{metadata.get('AcquisitionTime')}"
                         else:
-                            scans_table.loc['oldrow'] = None
+                            scans_table.loc['dummyrow'] = None
 
+                        # Add the echo-combined image
+                        bidsignore = (bidsdir/'.bidsignore').read_text().splitlines() if (bidsdir/'.bidsignore').is_file() else [unknowndatatype+'/']
                         if output+'/' not in bidsignore + ['derivatives/'] and cefile.parent.name in bids.datatyperules:
                             LOGGER.info(f"Adding '{cefile_rel}' to '{scans_tsv}'")
-                            scans_table.loc[cefile_rel] = scans_table.loc['oldrow']
+                            scans_table.loc[cefile_rel] = scans_table.loc['dummyrow']
 
+                        # Remove the old echo images and add the new ones
                         for echo in oldechos_rel + newechos_rel:
                             if echo in scans_table.index and not (session/echo).is_file():
                                 LOGGER.info(f"Removing '{echo}' from '{scans_tsv}'")
                                 scans_table.drop(echo, inplace=True)
                             elif echo not in scans_table.index and (session/echo).is_file() and echo.split('/')[0] in bids.datatyperules:
                                 LOGGER.info(f"Adding '{echo}' to '{scans_tsv}'")
-                                scans_table.loc[echo] = scans_table.loc['oldrow']       # NB: Assuming that the echo-rows are all identical
+                                scans_table.loc[echo] = scans_table.loc['dummyrow']       # NB: Assuming that the echo-rows are all identical
 
-                        scans_table.drop('oldrow', inplace=True)
+                        # Save the data
+                        scans_table.drop('dummyrow', inplace=True)
                         scans_table.sort_values(by=['acq_time','filename'], inplace=True)
                         scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
                         for scan in scans_table.index:
