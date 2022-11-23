@@ -180,7 +180,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
                                 item_rel = item.split(f":{subid}/",1)[-1]     # NB: The BIDS v1.8 IntendedFor URI is relative to the bids instead of the subject folder (split it off)
                                 uri      = item.replace(item_rel, '')         # E.g. uri = 'bids::sub-01/ses-01/' or 'ses-01/' or ''
                                 for original, stripped in zip([srcimg] + addimgs, [outputimg] + addoutimgs):
-                                    if stripped.match('*/derivatives/*'): continue
+                                    if not stripped.name or 'derivatives' in stripped.parts: continue
                                     if item_rel == original.relative_to(subject).as_posix() and item_rel != stripped.relative_to(subject).as_posix():
                                         intendedfor.append(f"{uri}{stripped.relative_to(subject).as_posix()}")
 
@@ -195,7 +195,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
                         scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
                         bidsignore  = (bidsdir/'.bidsignore').read_text().splitlines() if (bidsdir/'.bidsignore').is_file() else ['extra_data/']
                         for original, stripped in zip([srcimg] + addimgs, [outputimg] + addoutimgs):
-                            if not stripped.name or stripped.match('*/derivatives/*') or stripped.parent.name+'/' in bidsignore:
+                            if not stripped.name or 'derivatives' in stripped.parts or stripped.parent.name+'/' in bidsignore:
                                 continue
                             original_rel = original.relative_to(session).as_posix()
                             stripped_rel = stripped.relative_to(session).as_posix()
