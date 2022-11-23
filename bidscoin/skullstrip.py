@@ -197,7 +197,6 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, output: list, masked:
                                 scans_table.loc[stripped_rel] = scans_table.loc[original_rel]
 
                         # Save the data
-                        scans_table.drop('dummyrow', inplace=True)
                         scans_table.sort_values(by=['acq_time','filename'], inplace=True)
                         scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
                         for scan in scans_table.index:
