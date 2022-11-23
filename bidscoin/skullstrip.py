@@ -107,6 +107,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, output: list, masked:
 
                     # Skullstrip the image
                     maskimg = bidsdir/'derivatives'/'skullstrip'/subid/sesid/srcimg.parent.name/f"{srcent}_{derent}_mask{ext}"
+                    maskimg.parent.mkdir(parents=True, exist_ok=True)
                     bidscoin.run_command(f"mri_synthstrip -i  {srcimg} -o {outputimg} -m {maskimg} {args}")
 
                     # Add a json sidecar-file with the "SkullStripped" field
