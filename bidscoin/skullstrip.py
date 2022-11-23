@@ -38,7 +38,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
 
     # Input checking
     bidsdir = Path(bidsdir).resolve()
-    if len(output) == 0:
+    if not output or len(output) == 0:
         output = ['derivatives']
     if len(output) == 1:
         output += output
