@@ -122,7 +122,8 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, output: list[str], ma
                         json.dump(metadata, sidecar, indent=4)
 
                     # Apply the mask to the additional images and save it as output
-                    maskvol    = nib.load(maskimg).get_fdata()
+                    maskobj    = nib.load(maskimg)
+                    maskvol    = maskobj.get_fdata()
                     addoutimgs = []                # To be used for updating the IntendedFor list and the scans.tsv file
                     for addimg in addimgs:
 
@@ -142,11 +143,15 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, output: list[str], ma
                                 continue
 
                         # Load the volume data, multiply it with the mask and save it to the output image
-                        LOGGER.info(f"Applying skullstrip-mask to: {addoutimg}")
                         addoutimg.parent.mkdir(parents=True, exist_ok=True)
-                        addimg = nib.load(addimg)
-                        addmsk = nib.Nifti1Image(addimg.get_fdata() * maskvol, addimg.affine, addimg.header)
-                        addmsk.to_filename(addoutimg)
+                        addobj = nib.load(addimg)
+                        if addobj.header.get_data_shape() == maskobj.header.get_data_shape():
+                            LOGGER.info(f"Applying skullstrip-mask to: {addoutimg}")
+                            addmsk = nib.Nifti1Image(addobj.get_fdata() * maskvol, addobj.affine, addobj.header)
+                            addmsk.to_filename(addoutimg)
+                        else:
+                            LOGGER.error(f"Cannot apply skullstrip-mask to: {addoutimg}\nIt's dimensions are {addobj.header.get_data_shape()} but the mask is {maskobj.header.get_data_shape()}")
+                            continue
 
                         # Add a json sidecar-file to the output image
                         with addimg.with_suffix('').with_suffix('.json').open('r') as sidecar:
