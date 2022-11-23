@@ -8,7 +8,7 @@ The corresponding brain mask is saved in the bids/derivatives/synthstrip folder
 Assumes installation of FreeSurfer v7.3.2 or higher
 """
 
-import os
+import shutil
 import argparse
 import json
 import logging
@@ -45,8 +45,8 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, output: list, masked:
     if len(output) != 2:
         print(f"The 'output' argument should be one or strings, not {len(output)} ({output})")
         return
-    if not os.environ.get('mri_synthstrip'):
-        print("Could not find 'mri_synth', skullstrip requires FreeSurfer v7.3.2 or higher")
+    if not shutil.which('mri_synthstrip'):
+        print("Could not find 'mri_synthstrip', skullstrip requires FreeSurfer v7.3.2 or higher")
         return
 
     # Start logging
