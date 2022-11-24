@@ -18,13 +18,14 @@ except ImportError:
 LOGGER = logging.getLogger(__name__)
 
 
-def construct_name(scheme: str, dicomfile: Path) -> str:
+def construct_name(scheme: str, dicomfile: Path, force: bool) -> str:
     """
     Check the renaming scheme for presence in the DICOM file and use an alternative if available. Then construct the new
     name by replacing the DICOM keys for their values, and applying the formatted string
 
     :param scheme:      The renaming scheme
     :param dicomfile:   The DICOM file that should be renamed
+    :param force:       Construct the new name even in the presence of missing DICOM fields in the scheme
     :return:            The new name constructed from the scheme
     """
 
@@ -37,11 +38,11 @@ def construct_name(scheme: str, dicomfile: Path) -> str:
         value = cleanup(bids.get_dicomfield(field, dicomfile))
         if not value and value != 0 and field in alternatives.keys():
             value = cleanup(bids.get_dicomfield(alternatives[field], dicomfile))
-        if not value and value != 0:
-            LOGGER.warning(f"Missing '{field}' DICOM field specified in the '{scheme}' naming scheme, cannot find a safe name for: {dicomfile}\n")
+        if not value and value != 0 and not force:
+            LOGGER.error(f"Missing '{field}' DICOM field specified in the '{scheme}' folder/name scheme, cannot find a safe name for: {dicomfile}\n")
             return ''
-
-        schemevalues[field] = value
+        else:
+            schemevalues[field] = value
 
     return scheme.format(**schemevalues) if schemevalues else ''
 
@@ -78,7 +79,7 @@ def cleanup(name: str) -> str:
     return name
 
 
-def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, namescheme: str, dryrun: bool) -> None:
+def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, namescheme: str, force: bool, dryrun: bool) -> None:
     """
     Sorts dicomfiles into subfolders (e.g. a 3-digit SeriesNumber-SeriesDescription subfolder, such as '003-T1MPRAGE')
 
@@ -86,6 +87,7 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
     :param dicomfiles:      The list of dicomfiles to be sorted and/or renamed
     :param folderscheme:    Optional naming scheme for the sorted (e.g. Series) subfolders. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields, e.g. {SeriesNumber:03d}-{SeriesDescription}
     :param namescheme:      Optional naming scheme for renaming the files. Follows the Python string formatting syntax with DICOM field names in curly bracers, e.g. {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA
+    :param force:           Construct the new name even in the presence of missing DICOM fields in the folder/name scheme
     :param dryrun:          Boolean to just display the action
     :return:                Nothing
     """
@@ -107,7 +109,7 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
         if not folderscheme:
             pathname = sessionfolder
         else:
-            subfolder = construct_name(folderscheme, dicomfile)
+            subfolder = construct_name(folderscheme, dicomfile, force)
             if not subfolder:
                 LOGGER.error('Cannot create subfolders, aborting dicomsort()...')
                 return
@@ -121,7 +123,7 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
 
         # Move and/or rename the dicomfiles in(to) the (sub)folder
         if namescheme:
-            newfilename = pathname/construct_name(namescheme, dicomfile)
+            newfilename = pathname/construct_name(namescheme, dicomfile, force)
         else:
             newfilename = pathname/dicomfile.name
         if newfilename == dicomfile:
@@ -135,7 +137,7 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
 
 
 def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folderscheme: str='{SeriesNumber:03d}-{SeriesDescription}',
-                 namescheme: str='', pattern: str='.*\.(IMA|dcm)$', recursive: bool=True, dryrun: bool=False) -> List[Path]:
+                 namescheme: str='', pattern: str='.*\.(IMA|dcm)$', recursive: bool=True, force: bool=False, dryrun: bool=False) -> List[Path]:
     """
     Wrapper around sortsession() to loop over subjects and sessions and map the session DICOM files
 
@@ -146,6 +148,7 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
     :param namescheme:   Optional naming scheme for renaming the files. Follows the Python string formatting syntax with DICOM field names in curly bracers, e.g. {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA
     :param pattern:      The regular expression pattern used in re.match() to select the dicom files
     :param recursive:    Boolean to search for DICOM files recursively in a session folder
+    :param force:        Construct the new name even in the presence of missing DICOM fields in the folder/name scheme
     :param dryrun:       Boolean to just display the action
     :return:             List of sorted sessions
     """
@@ -173,7 +176,7 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
                 dicomfiles = [sourcefolder.joinpath(*image.ReferencedFileID) for series in study.children for image in series.children]
                 if dicomfiles:
                     sessionfolder = sourcefolder/f"{subprefix}{cleanup(patient.PatientName)}"/f"{sesprefix}{n:02}-{cleanup(study.StudyDescription)}"
-                    sortsession(sessionfolder, dicomfiles, folderscheme, namescheme, dryrun)
+                    sortsession(sessionfolder, dicomfiles, folderscheme, namescheme, force, dryrun)
                     sessions.append(sessionfolder)
 
     # Do a recursive call if a sub- or ses-prefix is given
@@ -194,7 +197,7 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
         else:
             dicomfiles = [dcmfile for dcmfile in sourcefolder.iterdir()  if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
         if dicomfiles:
-            sortsession(sourcefolder, dicomfiles, folderscheme, namescheme, dryrun)
+            sortsession(sourcefolder, dicomfiles, folderscheme, namescheme, force, dryrun)
 
     return list(set(sessions))
 
@@ -220,6 +223,7 @@ def main():
     parser.add_argument('-f','--folderscheme',  help='Naming scheme for the sorted DICOM Series subfolders. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields. Sorting in subfolders is skipped when an empty folderscheme is given (but note that renaming the filenames can still be performed)', default='{SeriesNumber:03d}-{SeriesDescription}')
     parser.add_argument('-n','--namescheme',    help='Optional naming scheme that can be provided to rename the DICOM files. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields. Use e.g. "{PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm" or "{InstanceNumber:05d}_{SOPInstanceUID}.IMA" for default names')
     parser.add_argument('-p','--pattern',       help='The regular expression pattern used in re.match(pattern, dicomfile) to select the dicom files', default='.*\.(IMA|dcm)$')
+    parser.add_argument('--force',              help='Construct the new name even in the presence of missing DICOM fields in the folder/name scheme', action='store_true')
     parser.add_argument('-d','--dryrun',        help='Add this flag to just print the dicomsort commands without actually doing anything', action='store_true')
     args = parser.parse_args()
 
@@ -232,6 +236,7 @@ def main():
                  folderscheme = args.folderscheme,
                  namescheme   = args.namescheme,
                  pattern      = args.pattern,
+                 force        = args.force,
                  dryrun       = args.dryrun)
 
 
