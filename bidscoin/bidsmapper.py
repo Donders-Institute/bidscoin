@@ -131,7 +131,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                 sesfolders, unpacked = bids.unpack(session, unzip)
                 for sesfolder in sesfolders:
                     if store:
-                        store = {'source': sesfolder.parent.parent.parent.parent if unpacked else rawfolder.parent, 'target': bidscoinfolder/'provenance'}
+                        store = {'source': sesfolder.parent.parent.parent.parent if unpacked else rawfolder.parent,
+                                 'target': bidscoinfolder/'provenance'}
                     else:
                         store = {}
 

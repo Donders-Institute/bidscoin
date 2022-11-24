@@ -154,9 +154,11 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
             # Now work from the provenance store
             if store:
-                targetfile        = store['target']/sourcefile.relative_to(store['source'])
+                targetfile             = store['target']/sourcefile.relative_to(store['source'])
                 targetfile.parent.mkdir(parents=True, exist_ok=True)
-                run['provenance'] = str(shutil.copy2(sourcefile, targetfile))
+                LOGGER.verbose(f"Storing the discovered {dataformat} sample as: {targetfile}")
+                run['provenance']      = str(shutil.copy2(sourcefile, targetfile))
+                run['datasource'].path = targetfile
 
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)

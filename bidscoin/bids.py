@@ -304,7 +304,7 @@ def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> (List[P
 
         # Copy everything over to the workfolder
         LOGGER.info(f"Making temporary copy: {sourcefolder} -> {worksubses}")
-        copy_tree(str(sourcefolder), str(worksubses))       # Older python versions don't support PathLib
+        copy_tree(str(sourcefolder), str(worksubses))       # Older python (< 3.10) versions don't support PathLib
 
         # Unpack the zip/tarballed files in the temporary folder
         sessions  = []
@@ -1307,7 +1307,7 @@ def find_run(bidsmap: dict, provenance: str, dataformat: str='', datatype: str='
 
 def delete_run(bidsmap: dict, provenance: Union[dict, str], datatype: str= '') -> None:
     """
-    Delete a run from the BIDS map
+    Delete the first matching run from the BIDS map
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param provenance:  The provenance identifier of/or the run-item that is deleted
@@ -1327,6 +1327,9 @@ def delete_run(bidsmap: dict, provenance: Union[dict, str], datatype: str= '') -
     for index, run in enumerate(bidsmap[dataformat].get(datatype,[])):
         if Path(run['provenance']) == Path(provenance):
             del bidsmap[dataformat][datatype][index]
+            return
+
+    LOGGER.error(f"Could not find (and delete) this '{datatype}' run: '{provenance}")
 
 
 def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
@@ -1386,10 +1389,14 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, run: dict, clean: bool=T
     datatype    = run['datasource'].datatype
     num_runs_in = len(dir_bidsmap(bidsmap, dataformat))
 
+    # Assert that the target datatype is known
+    if not datatype:
+        LOGGER.error(f'The datatype of the run cannot be determined...')
+
     # Warn the user if the target run already exists when the run is moved to another datatype
     if source_datatype != datatype:
         if exist_run(bidsmap, datatype, run):
-            LOGGER.warning(f'That "{source_datatype}" run already exists in {datatype}...')
+            LOGGER.error(f'The "{source_datatype}" run already exists in {datatype}...')
 
         # Delete the source run
         delete_run(bidsmap, run, source_datatype)
