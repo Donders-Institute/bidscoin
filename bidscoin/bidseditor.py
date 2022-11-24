@@ -879,9 +879,9 @@ class EditWindow(QDialog):
         self.source_datatype   = datasource.datatype    # The BIDS datatype of the original run-item
         self.target_datatype   = datasource.datatype    # The BIDS datatype that the edited run-item is being changed into
         self.current_datatype  = datasource.datatype    # The BIDS datatype of the run-item just before it is being changed (again)
-        self.unknowndatatypes  = bidsmap['Options']['bidscoin'].get('unknowntypes',[])
-        self.ignoredatatypes   = bidsmap['Options']['bidscoin'].get('ignoretypes',[])
-        self.bidsdatatypes     = [datatype for datatype in bidsmap[datasource.dataformat] if datatype not in self.unknowndatatypes + self.ignoredatatypes + ['subject', 'session']]
+        self.unknowndatatypes  = [datatype for datatype in bidsmap['Options']['bidscoin'].get('unknowntypes',[]) if datatype in template_bidsmap[self.dataformat]]
+        self.ignoredatatypes   = [datatype for datatype in bidsmap['Options']['bidscoin'].get('ignoretypes', []) if datatype in template_bidsmap[self.dataformat]]
+        self.bidsdatatypes     = [datatype for datatype in template_bidsmap[self.dataformat] if datatype not in self.unknowndatatypes + self.ignoredatatypes + ['subject', 'session']]
         self.bidsignore        = bidsmap['Options']['bidscoin'].get('bidsignore','')
         self.source_bidsmap    = bidsmap                # The bidsmap at the start of the edit = output_bidsmap in the MainWindow
         self.target_bidsmap    = copy.deepcopy(bidsmap) # The edited bidsmap -> will be returned as output_bidsmap in the MainWindow
@@ -1342,7 +1342,7 @@ class EditWindow(QDialog):
         """
         Resets the edit dialog window with a new target_run from the template bidsmap after a suffix- or datatype-change
 
-        :param suffix_idx: The suffix or index number that will used to extract the run from the template bidsmap
+        :param suffix_idx: The suffix or index number that will be used to extract the run from the template bidsmap
         """
 
         # Add a check to see if we can still read the source data
@@ -1355,7 +1355,13 @@ class EditWindow(QDialog):
         old_entities = self.target_run['bids']
 
         # Get the new target_run from the template
-        self.target_run = bids.get_run(self.template_bidsmap, self.target_datatype, suffix_idx, self.datasource)
+        new_target_run = bids.get_run(self.template_bidsmap, self.target_datatype, suffix_idx, self.datasource)
+        if not new_target_run:
+            QMessageBox.error(self, 'Edit BIDS mapping', f"Cannot find the {self.target_datatype}[{suffix_idx}] datatype in your template. Resetting the run-item now...")
+            self.reset()
+            return
+        else:
+            self.target_run = new_target_run
 
         # Transfer the old entity data to the new run-item if possible and if it's not there yet
         for key, val in old_entities.items():

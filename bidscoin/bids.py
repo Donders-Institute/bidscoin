@@ -1237,7 +1237,7 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
     :param suffix_idx:  The name of the suffix that is searched for (e.g. 'bold') or the datatype index number
     :param datasource:  The datasource with the provenance file from which the properties, attributes and dynamic values are read
     :return:            The clean (filled) run item in the bidsmap[dataformat][bidsdatatype] with the matching suffix_idx,
-                        otherwise a dict with empty attributes & bids keys
+                        otherwise an empty dict
     """
 
     runs = bidsmap.get(datasource.dataformat, {}).get(datatype, [])
@@ -1275,8 +1275,8 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
 
             return run_
 
-    LOGGER.warning(f"'{datatype}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{datasource.dataformat}']")
-    return get_run_(datasource.path, bidsmap=bidsmap)
+    LOGGER.error(f"A '{datatype}' run with suffix_idx '{suffix_idx}' cannot be found in bidsmap['{datasource.dataformat}']")
+    return {}
 
 
 def find_run(bidsmap: dict, provenance: str, dataformat: str='', datatype: str='') -> dict:
@@ -1389,7 +1389,7 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, run: dict, clean: bool=T
     # Warn the user if the target run already exists when the run is moved to another datatype
     if source_datatype != datatype:
         if exist_run(bidsmap, datatype, run):
-            LOGGER.warning(f'That run from {source_datatype} already exists in {datatype}...')
+            LOGGER.warning(f'That "{source_datatype}" run already exists in {datatype}...')
 
         # Delete the source run
         delete_run(bidsmap, run, source_datatype)
