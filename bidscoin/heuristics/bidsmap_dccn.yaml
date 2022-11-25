@@ -359,6 +359,7 @@ DICOM:
     attributes:
       <<: *anat_dicomattr
       ProtocolName: (?i).*MPM.*
+      EffectiveEchoTime:
     bids: &anat_dicoment_vfamt          # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce:
