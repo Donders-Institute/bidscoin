@@ -24,7 +24,7 @@ These install commands can be run independently and will give you the latest sta
 
 .. code-block:: console
 
-   $ pip install --upgrade git+https://github.com/Donders-Institute/bidscoin
+   $ pip install git+https://github.com/Donders-Institute/bidscoin
 
 If you do not have git (or any other version control system) installed you can `download`_ and unzip the code yourself in a folder named e.g. 'bidscoin' and run:
 
@@ -42,11 +42,12 @@ If you do not have git (or any other version control system) installed you can `
 Updating BIDScoin
 ^^^^^^^^^^^^^^^^^
 
-Run your pip install command as before with the additional ``--upgrade`` option, e.g.:
+Run your pip install command as before with the additional ``--upgrade`` or ``--force-reinstall`` option, e.g.:
 
 .. code-block:: console
 
-   $ pip install --upgrade bidscoin
+   $ pip install --upgrade bidscoin                                                     # The latest stable release
+   $ pip install --force-reinstall git+https://github.com/Donders-Institute/bidscoin    # The latest code (add ``--no-deps`` to only upgrade the bidscoin package)
 
 .. caution::
    - The bidsmaps are not garanteed to be compatible between different BIDScoin versions
@@ -146,7 +147,7 @@ with
 
 .. code-block:: console
 
-   pip3 install --upgrade git+https://github.com/Donders-Institute/bidscoin
+   pip3 install git+https://github.com/Donders-Institute/bidscoin
 
 in the definition ``singularity.def`` file.
 
