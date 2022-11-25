@@ -155,10 +155,10 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
             LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
             if participants and subject.name in list(participants_table.index):
-                LOGGER.info(f"Skipping subject: {subject} ({n}/{len(subjects)})")
+                LOGGER.info(f">>> Skipping subject: {subject} ({n}/{len(subjects)})")
                 continue
             if not subject.is_dir():
-                LOGGER.warning(f"The '{subject}' subject folder does not exist")
+                LOGGER.error(f"The '{subject}' subject folder does not exist")
                 continue
 
             sessions = bidscoin.lsdirs(subject, (sesprefix if sesprefix!='*' else '') + '*')
@@ -173,7 +173,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     # Check if we should skip the session-folder
                     datasource = bids.get_datasource(sesfolder, bidsmap['Options']['plugins'])
                     if not datasource.dataformat:
-                        LOGGER.info(f"No coinable datasources found in '{sesfolder}'")
+                        LOGGER.info(f">>> No coinable datasources found in '{sesfolder}'")
                         continue
                     subid        = bidsmap[datasource.dataformat]['subject']
                     sesid        = bidsmap[datasource.dataformat]['session']
@@ -186,10 +186,10 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                                 if list(datatype.iterdir()) and bidsmap[dataformat].get(datatype.name): # See if we are going to add data for this datatype
                                     datatypes.append(datatype.name)
                         if datatypes:
-                            LOGGER.info(f"Skipping processed session: {bidssession} already has {datatypes} data (you can carefully use the -f option to overrule)")
+                            LOGGER.info(f">>> Skipping processed session: {bidssession} already has {datatypes} data (you can carefully use the -f option to overrule)")
                             continue
 
-                    LOGGER.info(f"Coining datasources in: {sesfolder}")
+                    LOGGER.info(f">>> Coining datasources in: {sesfolder}")
                     if bidssession.is_dir():
                         LOGGER.warning(f"Existing BIDS output-directory found, which may result in duplicate data (with increased run-index). Make sure {bidssession} was cleaned-up from old data before (re)running the bidscoiner")
                     bidssession.mkdir(parents=True, exist_ok=True)

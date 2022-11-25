@@ -194,7 +194,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     dataformat  = datasource.dataformat
     sourcefiles = [file for file in session.rglob('*') if is_sourcefile(file)]
     if not sourcefiles:
-        LOGGER.info(f"No {__name__} sourcedata found in: {session}")
+        LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
         return
 
     # Read or create a scans_table and tsv-file
@@ -214,7 +214,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
-            LOGGER.info(f"Leaving out: {sourcefile}")
+            LOGGER.info(f"--> Leaving out: {sourcefile}")
             continue
         bidsignore = datasource.datatype in bidsmap['Options']['bidscoin']['bidsignore']
 
@@ -223,7 +223,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete the MRS output data in {bidsses} to solve this warning")
             continue
 
-        LOGGER.info(f"Processing: {sourcefile}")
+        LOGGER.info(f"--> Coining: {sourcefile}")
 
         # Create the BIDS session/datatype output folder
         outfolder = bidsses/datasource.datatype

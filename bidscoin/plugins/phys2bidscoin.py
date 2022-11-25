@@ -194,7 +194,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     datasource  = bids.get_datasource(session, plugin)
     sourcefiles = [file for file in session.rglob('*') if is_sourcefile(file)]
     if not sourcefiles:
-        LOGGER.info(f"No {__name__} sourcedata found in: {session}")
+        LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
         return
 
     # Loop over all source data files and convert them to BIDS
@@ -206,7 +206,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
-            LOGGER.info(f"Leaving out: {sourcefile}")
+            LOGGER.info(f"--> Leaving out: {sourcefile}")
             continue
 
         # Check that we know this run
@@ -214,7 +214,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete the physiological output data in {bidsses} to solve this warning")
             continue
 
-        LOGGER.info(f"Processing: {sourcefile}")
+        LOGGER.info(f"--> Coining: {sourcefile}")
 
         # Get an ordered list of the func runs from the scans.tsv file (which should have a standardized datetime format)
         scans_tsv = bidsses/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"

@@ -181,7 +181,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     datasource = bids.get_datasource(session, {'dcm2niix2bids': options})
     dataformat = datasource.dataformat
     if not dataformat:
-        LOGGER.info(f"No {__name__} sourcedata found in: {session}")
+        LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
         return
 
     # Make a list of all the data sources / runs
@@ -222,16 +222,16 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
-            LOGGER.info(f"Leaving out: {source}")
+            LOGGER.info(f"--> Leaving out: {source}")
             continue
         bidsignore = datasource.datatype in bidsmap['Options']['bidscoin']['bidsignore']
 
         # Check if we already know this run
         if not match:
-            LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+            LOGGER.error(f"--> Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
             continue
 
-        LOGGER.info(f"Processing: {source}")
+        LOGGER.info(f"--> Coining: {source}")
 
         # Create the BIDS session/datatype output folder
         if run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):
@@ -296,7 +296,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                     extrafile[0].with_suffix('').with_suffix('.json').rename(invfile.with_suffix('').with_suffix('.json'))
                     jsonfiles.append(invfile.with_suffix('').with_suffix('.json'))
                 else:
-                    LOGGER.warning(f"Unexpected variants of {outfolder/bidsname}* were produced by dcm2niix. Possibly this can be remedied by using the dcm2niix -i option (to ignore derived, localizer and 2D images)")
+                    LOGGER.warning(f"Unexpected variants of {outfolder/bidsname}* were produced by dcm2niix. Possibly this can be remedied by using the dcm2niix -i option (to ignore derived, localizer and 2D images) or by clearing the BIDS folder brefore running bidscoiner")
 
             # Replace uncropped output image with the cropped one
             if '-x y' in options.get('args',''):
@@ -383,7 +383,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
                     # The ADC images are not BIDS compliant
                     if postfix == 'ADC':
-                        LOGGER.warning(f"The {newbidsname} image is not BIDS-compliant -- you can probably delete it safely and update {scans_tsv}")
+                        LOGGER.warning(f"The {newbidsname} image is a derivate / not BIDS-compliant -- you can probably delete it safely and update {scans_tsv}")
 
                 # Save the nifti file with the newly constructed name
                 if runindex.startswith('<<') and runindex.endswith('>>'):
