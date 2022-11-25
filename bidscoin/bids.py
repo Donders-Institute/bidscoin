@@ -876,7 +876,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
 
                 # Add missing provenance info
                 if not run.get('provenance'):
-                    run['provenance'] = str(Path(f"{subprefix.replace('*','')}-unknown/{sesprefix.replace('*','')}-unknown/{dataformat}_{datatype}_id{index+1:03}"))
+                    run['provenance'] = Path(f"{subprefix.replace('*','')}-unknown/{sesprefix.replace('*','')}-unknown/{dataformat}_{datatype}_id{index+1:03}").as_posix()
 
                 # Add missing run dictionaries (e.g. "meta" or "properties")
                 for key, val in run_.items():
@@ -1406,7 +1406,7 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, run: dict, clean: bool=T
 
     else:
         for index, run_ in enumerate(bidsmap[dataformat][datatype]):
-            if run_['provenance'] == run['provenance']:
+            if Path(run_['provenance']) == Path(run['provenance']):
                 bidsmap[dataformat][datatype][index] = run
                 break
 
