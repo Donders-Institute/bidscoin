@@ -6,6 +6,7 @@ https://github.com/dangom/dac2bids/blob/master/dac2bids.py
 
 @author: Marcel Zwiers
 """
+
 import copy
 import re
 import logging
@@ -14,6 +15,7 @@ import tarfile
 import zipfile
 import json
 import shutil
+import bids_validator
 from functools import lru_cache
 from pydicom import dcmread, fileset, datadict
 from nibabel.parrec import parse_PAR_header
@@ -32,10 +34,10 @@ LOGGER = logging.getLogger(__name__)
 # Read the BIDS schema data
 with (bidscoin.schemafolder/'objects'/'datatypes.yaml').open('r') as _stream:
     bidsdatatypesdef = yaml.load(_stream)                                       # The valid BIDS datatypes, along with their full names and descriptions
-bidsdatatypes = {}
-for _datatype in bidsdatatypesdef:
-    with (bidscoin.schemafolder/'rules'/'datatypes'/_datatype).with_suffix('.yaml').open('r') as _stream:
-        bidsdatatypes[_datatype] = yaml.load(_stream)                           # The entities that can/should be present for each BIDS datatype
+datatyperules = {}
+for _datatypefile in (bidscoin.schemafolder/'rules'/'files'/'raw').glob('*.yaml'):
+    with _datatypefile.open('r') as _stream:
+        datatyperules[_datatypefile.stem] = yaml.load(_stream)                  # The entities that can/should be present for each BIDS datatype
 with (bidscoin.schemafolder/'objects'/'suffixes.yaml').open('r') as _stream:
     suffixes = yaml.load(_stream)                                               # The descriptions of the valid BIDS file suffixes
 with (bidscoin.schemafolder/'objects'/'entities.yaml').open('r') as _stream:
@@ -54,7 +56,7 @@ class DataSource:
         :param provenance:  The full path of a representative file for this data source
         :param plugins:     The plugins that are used to interact with the source datatype
         :param dataformat:  The dataformat name in the bidsmap, e.g. DICOM or PAR
-        :param datatype:    The intended BIDS datatype of the data source TODO: move to a separate BidsTarget / Mapping class
+        :param datatype:    The intended BIDS datatype of the data source TODO: move to a separate BidsTarget/Mapping class
         :param subprefix:   The subprefix used in the sourcefolder
         :param sesprefix:   The sesprefix used in the sourcefolder
         """
@@ -81,6 +83,9 @@ class DataSource:
     def is_datasource(self) -> bool:
         """Returns True is the datasource has a valid dataformat"""
 
+        if not self.path.is_file() or self.path.is_dir():
+            return False
+
         for plugin, options in self.plugins.items():
             module = bidscoin.import_plugin(plugin, ('is_sourcefile',))
             if module:
@@ -88,18 +93,20 @@ class DataSource:
                     dataformat = module.is_sourcefile(self.path)
                 except Exception as moderror:
                     dataformat = ''
-                    LOGGER.warning(f"The {plugin} plugin crashed while reading {self.path}\n{moderror}")
+                    LOGGER.exception(f"The {plugin} plugin crashed while reading {self.path}\n{moderror}")
                 if dataformat:
                     self.dataformat = dataformat
                     return True
 
-        LOGGER.debug(f"No plugins to read {self.path}")
+        if self.datatype:
+            LOGGER.verbose(f"No plugins found that can read {self.datatype}: {self.path}")
+
         return False
 
     def properties(self, tagname: str, run: dict=None) -> Union[str, int]:
         """
         Gets the 'filepath[:regexp]', 'filename[:regexp]', 'filesize' or 'nrfiles' filesystem property. The filepath (with trailing "/")
-        and filename can be parsed using an optional regular expression re.findall(regexp, filepath / filename). The last match is returned
+        and filename can be parsed using an optional regular expression re.findall(regexp, filepath/filename). The last match is returned
         for the filepath, the first match for the filename
 
         :param tagname: The name of the filesystem property key, e.g. 'filename', 'filename:sub-(.*?)_' or 'nrfiles'
@@ -206,7 +213,7 @@ class DataSource:
         Extract the cleaned-up subid and sesid from the datasource properties or attributes
 
         :param subid:   The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001') or a dynamic source attribute.
-                        Can be left empty / None to use the default <<filepath:regexp>> extraction
+                        Can be left empty/None to use the default <<filepath:regexp>> extraction
         :param sesid:   The optional session identifier, same as subid
         :return:        Updated (subid, sesid) tuple, including the BIDS-compliant 'sub-'/'ses-' prefixes
         """
@@ -268,55 +275,59 @@ class DataSource:
         return value
 
 
-def unpack(sourcefolder: Path, wildcard: str='*', workfolder: Path='') -> (List[Path], bool):
+def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> (List[Path], bool):
     """
     Unpacks and sorts DICOM files in sourcefolder to a temporary folder if sourcefolder contains a DICOMDIR file or .tar.gz, .gz or .zip files
 
     :param sourcefolder:    The full pathname of the folder with the source data
-    :param wildcard:        A glob search pattern to select the tarballed/zipped files
+    :param wildcard:        A glob search pattern to select the tarballed/zipped files (leave empty to skip unzipping)
     :param workfolder:      A root folder for temporary data
     :return:                Either ([unpacked and sorted session folders], True), or ([sourcefolder], False)
     """
 
     # Search for zipped/tarballed files
-    packedfiles = []
-    packedfiles.extend(sourcefolder.glob(f"{wildcard}.tar"))
-    packedfiles.extend(sourcefolder.glob(f"{wildcard}.tar.?z"))
-    packedfiles.extend(sourcefolder.glob(f"{wildcard}.tar.bz2"))
-    packedfiles.extend(sourcefolder.glob(f"{wildcard}.zip"))
+    tarzipfiles = list(sourcefolder.glob(wildcard)) if wildcard else []
+
+    # See if we have a flat unsorted (DICOM) data organization, i.e. no directories, but DICOM-files
+    flatDICOM = not bidscoin.lsdirs(sourcefolder) and get_dicomfile(sourcefolder).is_file()
 
     # Check if we are going to do unpacking and/or sorting
-    if packedfiles or (sourcefolder/'DICOMDIR').is_file():
+    if tarzipfiles or flatDICOM or (sourcefolder/'DICOMDIR').is_file():
 
         # Create a (temporary) sub/ses workfolder for unpacking the data
         if not workfolder:
-            workfolder = Path(tempfile.mkdtemp())
+            workfolder = Path(tempfile.mkdtemp(dir=tempfile.gettempdir()))
         else:
             workfolder = Path(workfolder)/next(tempfile._get_candidate_names())
-        worksubses = workfolder/sourcefolder.relative_to(sourcefolder.parent.parent)     # = workfolder/raw/sub/ses
+        worksubses = workfolder/sourcefolder.relative_to(sourcefolder.anchor)
         worksubses.mkdir(parents=True, exist_ok=True)
 
         # Copy everything over to the workfolder
         LOGGER.info(f"Making temporary copy: {sourcefolder} -> {worksubses}")
-        copy_tree(str(sourcefolder), str(worksubses))     # Older python versions don't support PathLib
+        copy_tree(str(sourcefolder), str(worksubses))       # Older python (< 3.10) versions don't support PathLib
 
         # Unpack the zip/tarballed files in the temporary folder
-        sessions = []
-        for packedfile in [worksubses/packedfile.name for packedfile in packedfiles]:
-            LOGGER.info(f"Unpacking: {packedfile.name} -> {worksubses}")
-            ext = packedfile.suffixes
-            if ext[-1] == '.zip':
-                with zipfile.ZipFile(packedfile, 'r') as zip_fid:
+        sessions  = []
+        recursive = False
+        for tarzipfile in [worksubses/tarzipfile.name for tarzipfile in tarzipfiles]:
+            LOGGER.info(f"Unpacking: {tarzipfile.name} -> {worksubses}")
+            ext = tarzipfile.suffixes
+            if ext and ext[-1] == '.zip':
+                with zipfile.ZipFile(tarzipfile, 'r') as zip_fid:
                     zip_fid.extractall(worksubses)
             elif '.tar' in ext:
-                with tarfile.open(packedfile, 'r') as tar_fid:
+                with tarfile.open(tarzipfile, 'r') as tar_fid:
                     tar_fid.extractall(worksubses)
 
-            # Sort the DICOM files immediately (to avoid name collisions)
-            sessions += dicomsort.sortsessions(worksubses)
+            # Sort the DICOM files in the worksubses rootfolder immediately (to avoid name collisions)
+            if not (worksubses/'DICOMDIR').is_file():
+                if get_dicomfile(worksubses).name:
+                    sessions += dicomsort.sortsessions(worksubses, recursive=False)
+                else:
+                    recursive = True                        # The unzipped data may have leading directory components
 
         # Sort the DICOM files if not sorted yet (e.g. DICOMDIR)
-        sessions = list(set(sessions + dicomsort.sortsessions(worksubses)))
+        sessions = list(set(sessions + dicomsort.sortsessions(worksubses, recursive=recursive)))
 
         return sessions, True
 
@@ -335,12 +346,12 @@ def is_dicomfile(file: Path) -> bool:
 
     if file.is_file():
         if file.stem.startswith('.'):
-            LOGGER.warning(f'File is hidden: {file}')
+            LOGGER.verbose(f'File is hidden: {file}')
         with file.open('rb') as dicomfile:
             dicomfile.seek(0x80, 1)
             if dicomfile.read(4) == b'DICM':
                 return True
-        LOGGER.debug(f"Reading non-standard DICOM file: {file}")
+        # Reading non-standard DICOM file
         if file.suffix.lower() in ('.ima','.dcm','.dicm','.dicom',''):           # Avoid memory problems when reading a very large (e.g. EEG) source file
             dicomdata = dcmread(file, force=True)               # The DICM tag may be missing for anonymized DICOM files
             return 'Modality' in dicomdata
@@ -402,7 +413,7 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
     idx = 0
     for file in files:
         if file.stem.startswith('.'):
-            LOGGER.warning(f'Ignoring hidden file: {file}')
+            LOGGER.verbose(f'Ignoring hidden file: {file}')
             continue
         if is_dicomfile(file):
             if idx == index:
@@ -424,7 +435,7 @@ def get_parfiles(folder: Path) -> List[Path]:
     parfiles = []
     for file in sorted(folder.iterdir()):
         if file.stem.startswith('.'):
-            LOGGER.warning(f'Ignoring hidden file: {file}')
+            LOGGER.verbose(f'Ignoring hidden file: {file}')
             continue
         if is_parfile(file):
             parfiles.append(file)
@@ -438,7 +449,7 @@ def get_datasource(session: Path, plugins: dict, recurse: int=2) -> DataSource:
     datasource = DataSource()
     for item in sorted(session.iterdir()):
         if item.stem.startswith('.'):
-            LOGGER.debug(f'Ignoring hidden file: {item}')
+            LOGGER.verbose(f'Ignoring hidden file: {item}')
             continue
         if item.is_dir() and recurse:
             datasource = get_datasource(item, plugins, recurse-1)
@@ -532,7 +543,6 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
             LOGGER.warning(f"Could not read {tagname} from {dicomfile}\n{dicomerror}")
             try:
                 value = parse_x_protocol(tagname, dicomfile)
-
             except Exception as dicomerror:
                 LOGGER.warning(f'Could not parse {tagname} from {dicomfile}\n{dicomerror}')
                 value = ''
@@ -563,7 +573,7 @@ def get_twixfield(tagname: str, twixfile: Path, mraid: int=2) -> Union[str, int]
     global _TWIXHDR_CACHE, _TWIXFILE_CACHE
 
     if not twixfile.is_file():
-        LOGGER.debug(f"{twixfile} not found")
+        LOGGER.error(f"{twixfile} not found")
         value = ''
 
     else:
@@ -633,7 +643,7 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
     global _PARDICT_CACHE, _PARFILE_CACHE
 
     if not parfile.is_file():
-        LOGGER.debug(f"{parfile} not found")
+        LOGGER.error(f"{parfile} not found")
         value = ''
 
     elif not is_parfile(parfile):
@@ -685,12 +695,12 @@ def get_sparfield(tagname: str, sparfile: Path) -> Union[str, int]:
     global _SPARHDR_CACHE, _SPARFILE_CACHE
 
     if not sparfile.is_file():
-        LOGGER.debug(f"{sparfile} not found")
+        LOGGER.error(f"{sparfile} not found")
         value = ''
 
     else:
         try:
-            if sparfile!=_SPARFILE_CACHE:
+            if sparfile != _SPARFILE_CACHE:
 
                 from spec2nii.philips import read_spar
 
@@ -738,12 +748,12 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
     global _P7HDR_CACHE, _P7FILE_CACHE
 
     if not p7file.is_file():
-        LOGGER.debug(f"{p7file} not found")
+        LOGGER.error(f"{p7file} not found")
         value = ''
 
     else:
         try:
-            if p7file!=_P7FILE_CACHE:
+            if p7file != _P7FILE_CACHE:
 
                 from spec2nii.GE.ge_read_pfile import Pfile
 
@@ -755,10 +765,8 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
 
             value = getattr(hdr, tagname, '')
             if type(value) == bytes:
-                try:
-                    value = value.decode('UTF-8')
-                except UnicodeDecodeError:
-                    pass
+                try: value = value.decode('UTF-8')
+                except UnicodeDecodeError: pass
 
         except ImportError:
             LOGGER.warning(f"The extra `spec2nii` library could not be found or was not installed (see the BIDScoin install instructions)")
@@ -783,7 +791,7 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
 # ---------------- All function below this point are bidsmap related. TODO: make a class out of them -------------------
 
 
-def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=(), report: Union[bool,None]=True) -> Tuple[dict, Path]:
+def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=(), check: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[dict, Path]:
     """
     Read the mapping heuristics from the bidsmap yaml-file. If yamlfile is not fullpath, then 'folder' is first searched before
     the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, then 'bidsmap_template'. So fullpath
@@ -794,7 +802,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
     :param yamlfile:    The full pathname or basename of the bidsmap yaml-file. If None, the default bidsmap_template file in the heuristics folder is used
     :param folder:      Only used when yamlfile=basename or None: yamlfile is then first searched for in folder and then falls back to the ./heuristics folder (useful for centrally managed template yaml-files)
     :param plugins:     List of plugins to be used (with default options, overrules the plugin list in the study/template bidsmaps)
-    :param report:      Report log.info when reading a file
+    :param check:       Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
     :return:            Tuple with (1) ruamel.yaml dict structure, with all options, BIDS mapping heuristics, labels and attributes, etc and (2) the fullpath yaml-file
     """
 
@@ -818,10 +826,9 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
             yamlfile = bidscoin.heuristicsfolder/yamlfile
 
     if not yamlfile.is_file():
-        if report:
-            LOGGER.info(f"No existing bidsmap file found: {yamlfile}")
+        LOGGER.info(f"No existing bidsmap file found: {yamlfile}")
         return dict(), yamlfile
-    elif report:
+    elif any(check):
         LOGGER.info(f"Reading: {yamlfile}")
 
     # Read the heuristics from the bidsmap file
@@ -835,9 +842,9 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
         bidsmapversion = bidsmap['Options']['version']
     else:
         bidsmapversion = 'Unknown'
-    if bidsmapversion.rsplit('.', 1)[0] != bidscoin.version().rsplit('.', 1)[0] and report:
+    if bidsmapversion.rsplit('.', 1)[0] != bidscoin.version().rsplit('.', 1)[0] and any(check):
         LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created with version {bidsmapversion}, but this is version {bidscoin.version()}')
-    elif bidsmapversion != bidscoin.version() and report:
+    elif bidsmapversion != bidscoin.version() and any(check):
         LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {bidscoin.version()}. This is normally ok but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
 
     # Make sure we get a proper plugin options and dataformat sections (use plugin default bidsmappings when a template bidsmap is loaded)
@@ -862,10 +869,9 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
     subprefix = bidsmap['Options']['bidscoin'].get('subprefix','')
     sesprefix = bidsmap['Options']['bidscoin'].get('sesprefix','')
     for dataformat in bidsmap:
-        if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (-> 'PlugIns')
-        if not bidsmap[dataformat]:             continue
+        if dataformat == 'Options': continue
         for datatype in bidsmap[dataformat]:
-            if not isinstance(bidsmap[dataformat][datatype], list): continue
+            if not isinstance(bidsmap[dataformat][datatype], list): continue    # E.g. 'subject', 'session' and empty datatypes
             for index, run in enumerate(bidsmap[dataformat][datatype]):
 
                 # Add missing provenance info
@@ -881,16 +887,16 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
                 run['datasource'] = DataSource(run['provenance'], bidsmap['Options']['plugins'], dataformat, datatype, subprefix, sesprefix)
 
                 # Add missing bids entities
-                for typegroup in bidsdatatypes.get(datatype,[]):
-                    if run['bids']['suffix'] in typegroup['suffixes']:      # run_found = True
-                        for entityname in typegroup['entities']:
-                            entitykey = entities[entityname]['entity']
+                for typegroup in datatyperules.get(datatype, {}):
+                    if run['bids']['suffix'] in datatyperules[datatype][typegroup]['suffixes']:         # run_found = True
+                        for entity in datatyperules[datatype][typegroup]['entities']:
+                            entitykey = entities[entity]['name']
                             if entitykey not in run['bids'] and entitykey not in ('sub','ses'):
                                 LOGGER.info(f"Adding missing {dataformat}>{datatype}>{run['bids']['suffix']} bidsmap entity key: {entitykey}")
                                 run['bids'][entitykey] = ''
 
     # Validate the bidsmap entries
-    check_bidsmap(bidsmap, report)
+    check_bidsmap(bidsmap, check)
 
     return bidsmap, yamlfile
 
@@ -912,13 +918,13 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
         if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (-> 'PlugIns')
         if not bidsmap[dataformat]:             continue
         for datatype in bidsmap[dataformat]:
-            if not isinstance(bidsmap[dataformat][datatype], list): continue
+            if not isinstance(bidsmap[dataformat][datatype], list): continue    # E.g. 'subject' and 'session'
             for run in bidsmap[dataformat][datatype]:
                 run.pop('datasource', None)
 
     # Validate the bidsmap entries
-    if not check_bidsmap(bidsmap, False):
-        LOGGER.warning('Bidsmap values are invalid according to the BIDS specification')
+    check_bidsmap(bidsmap, (False,True,True))
+    validate_bidsmap(bidsmap, 0)
 
     LOGGER.info(f"Writing bidsmap to: {filename}")
     filename.parent.mkdir(parents=True, exist_ok=True)
@@ -926,44 +932,202 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
         yaml.dump(bidsmap, stream)
 
 
-def check_bidsmap(bidsmap: dict, validate: bool=True) -> bool:
+def validate_bidsmap(bidsmap: dict, level: int=2) -> bool:
     """
-    Check the bidsmap for required and optional entitities using the BIDS schema files
+    Test the bidsname of runs in the bidsmap using the bids-validator
 
-    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
-    :param validate:    Validate if all bids-keys and values are present according to the BIDS schema specifications
-    :return:            True if the bidsmap is valid, otherwise False
+    :param bidsmap: Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param level:  (-2) as 2 but no logging reports,
+                   (-1) as 1 but no logging reports,
+                    (0) as 1 but only report invalid runs,
+                    (1) test BIDS datatypes, i.e. datatypes not in `.bidsignore` or `ignoretypes`,
+                    (2) test converted datatypes, i.e. datatypes not in `ignoretypes`,
+                    (3) test all datatypes
+    :return:        True if all tested runs in bidsmap were bids-valid, otherwise False
     """
 
-    valid = True
+    if not bidsmap:
+        LOGGER.info('No bidsmap to validate')
+        return False
 
-    # Check all the runs in the bidsmap
+    valid       = True
+    ignoretypes = bidsmap['Options']['bidscoin'].get('ignoretypes', [])
+    bidsignore  = bidsmap['Options']['bidscoin'].get('bidsignore', '')
+
+    # Test all the runs in the bidsmap
+    LOGGER.info(f"bids-validator {bids_validator.__version__} test results (* = in .bidsignore):")
     for dataformat in bidsmap:
-        if dataformat in ('Options','PlugIns'): continue    # Handle legacy bidsmaps (-> 'PlugIns'). TODO: Check Options
-        if not bidsmap[dataformat]:             continue
+        if dataformat == 'Options': continue
+        if not bidsmap[dataformat]: continue
         for datatype in bidsmap[dataformat]:
-            if not isinstance(bidsmap[dataformat][datatype], list): continue
+            if not isinstance(bidsmap[dataformat][datatype], list): continue        # E.g. 'subject' and 'session'
+            ignore_1 = datatype in ignoretypes or datatype in bidsignore
+            ignore_2 = datatype in ignoretypes
             for run in bidsmap[dataformat][datatype]:
-                valid = check_run(datatype, run, validate) and valid
+                bidsname = get_bidsname(dataformat, '', run, False)
+                bidstest = bids_validator.BIDSValidator().is_bids(f"/sub-{cleanup_value(dataformat)}/{datatype}/{bidsname}.json")
+                if level==3 or (abs(level)==2 and not ignore_2) or (-2<level<2 and not ignore_1):
+                    valid = valid and bidstest
+                    if (level==0 and not bidstest) or level>0:
+                        LOGGER.info(f"{bidstest}{'*' if datatype in bidsignore else ''}:\t{datatype}/{bidsname}.*")
+
+    if valid:
+        LOGGER.success('All generated bidsnames are BIDS-valid')
+    else:
+        LOGGER.warning('Not all generated bidsnames are BIDS-valid')
 
     return valid
 
 
-def add_prefix(prefix: str, tag: str) -> str:
+def check_bidsmap(bidsmap: dict, check: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
     """
-    Simple function to account for optional BIDS tags in the bids file names, i.e. it prefixes 'prefix' only when tag is not empty
+    Check all the runs in the bidsmap for required and optional entitities using the BIDS schema files
 
-    :param prefix:  The prefix (e.g. '_ses-')
-    :param tag:     The tag (e.g. 'medication')
-    :return:        The tag with the leading prefix (e.g. '_ses-medication') or just the empty tag ''
+    :param bidsmap: Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param check:   Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
+    :return:        False if the keys, suffixes and values are proven to be invalid, otherwise None or True
     """
 
-    if tag:
-        tag = prefix + str(tag)
+    valid = (None, None, None)
+
+    if not bidsmap:
+        LOGGER.info('No bidsmap run-items to check')
+        return valid
+
+    # Check all the runs in the bidsmap
+    LOGGER.info('Checking the bidsmap run-items:')
+    for dataformat in bidsmap:
+        if dataformat in ('Options','PlugIns'): continue    # Handle legacy bidsmaps (-> 'PlugIns'). TODO: Check Options
+        if not bidsmap[dataformat]:             continue
+        for datatype in bidsmap[dataformat]:
+            if not isinstance(bidsmap[dataformat][datatype], list): continue        # E.g. 'subject' and 'session'
+            for run in bidsmap[dataformat][datatype]:
+                checks = check_run(datatype, run, check)
+                valid  = [val and chck for val,chck in zip(valid,checks)]
+
+    if all([val for val,chck in zip(valid,check) if chck is True]):
+        LOGGER.success('All run-items in the bidsmap are valid')
     else:
-        tag = ''
+        LOGGER.warning('Not all run-items in the bidsmap are valid')
 
-    return tag
+    return valid
+
+
+def check_template(bidsmap: dict) -> bool:
+    """
+    Check all the datatypes in the template bidsmap for required and optional entitities using the BIDS schema files
+
+    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :return:            True if the template bidsmap is valid, otherwise False
+    """
+
+    if not bidsmap:
+        LOGGER.info('No bidsmap datatypes to check')
+        return False
+
+    valid = True
+
+    # Check all the datatypes in the bidsmap
+    LOGGER.info('Checking the bidsmap datatypes:')
+    for dataformat in bidsmap:
+        if dataformat == 'Options': continue
+        for datatype in bidsmap[dataformat]:
+            if datatype not in datatyperules or not isinstance(bidsmap[dataformat][datatype], list): continue   # No rules to check or datatype = 'subject'/'session'
+            datatypesuffixes = []
+            for run in bidsmap[dataformat][datatype]:
+                datatypesuffixes.append(run['bids']['suffix'])
+            for typegroup in datatyperules[datatype]:
+                for suffix in datatyperules[datatype][typegroup]['suffixes']:
+                    if suffix not in datatypesuffixes and 'DEPRECATED' not in suffixes[suffix]['description']:
+                        LOGGER.warning(f"Missing '{suffix}' run-item in: bidsmap[{dataformat}][{datatype}] (NB: this may be fine / a deprecated item)")
+                        valid = False
+
+    if valid:
+        LOGGER.success('All datatypes in the bidsmap are valid')
+    else:
+        LOGGER.warning('Not all datatypes in the bidsmap are valid')
+
+    return valid
+
+
+def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, False, False)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
+    """
+    Check run for required and optional entitities using the BIDS schema files
+
+    :param datatype:    The datatype that is checked, e.g. 'anat'
+    :param run:         The run (listitem) with bids entities that are checked against missing values & invalid keys
+    :param check:       Booleans to report if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
+    :return:            True/False if the keys, suffixes and values are bids-valid or None if they cannot be checked
+    """
+
+    run_keysok   = None
+    run_suffixok = None
+    run_valsok   = None
+
+    # Check if we have provenance info
+    if all(check) and not run['provenance']:
+        LOGGER.info(f'No provenance info found for {datatype}/*_{run["bids"]["suffix"]}')
+
+    # Use the suffix to find the right typegroup
+    if 'suffix' not in run['bids']:
+        if check[1]: LOGGER.warning(f'Invalid bidsmap: The {datatype} "suffix" key is missing ({datatype} -> {run["provenance"]})')
+        return run_keysok, False, run_valsok                # The suffix is not BIDS-valid, we cannot check the keys and values
+    if datatype not in datatyperules:
+        return run_keysok, run_suffixok, run_valsok         # We cannot check anything
+    for typegroup in datatyperules[datatype]:
+
+        run_suffixok = False                                # We can now check the suffix
+
+        if run['bids'].get('suffix') in datatyperules[datatype][typegroup]['suffixes']:
+
+            run_keysok   = True                             # We can now check the key
+            run_suffixok = True                             # The suffix is valid
+            run_valsok   = True                             # We can now check the value
+
+            # Check if all expected entity-keys are present in the run and if they are properly filled
+            for entity in datatyperules[datatype][typegroup]['entities']:
+                entitykey    = entities[entity]['name']
+                entityformat = entities[entity]['format']   # E.g. 'label' or 'index' (the entity type always seems to be 'string')
+                bidsvalue    = run['bids'].get(entitykey)
+                dynamicvalue = True if isinstance(bidsvalue, str) and ('<' in bidsvalue and '>' in bidsvalue) else False
+                if entitykey in ('sub', 'ses'): continue
+                if isinstance(bidsvalue, list):
+                    bidsvalue = bidsvalue[bidsvalue[-1]]    # Get the selected item
+                if entitykey not in run['bids']:
+                    if check[0]: LOGGER.warning(f'Invalid bidsmap: The "{entitykey}" key is missing ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
+                    run_keysok = False
+                if bidsvalue and not dynamicvalue and bidsvalue!=cleanup_value(bidsvalue):
+                    if check[2]: LOGGER.warning(f'Invalid {entitykey} value: "{bidsvalue}" ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
+                    run_valsok = False
+                elif not bidsvalue and datatyperules[datatype][typegroup]['entities'][entity]=='required':
+                    if check[2]: LOGGER.warning(f'Required "{entitykey}" value is missing ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
+                    run_valsok = False
+                if bidsvalue and not dynamicvalue and entityformat=='index' and not str(bidsvalue).isnumeric():
+                    if check[2]: LOGGER.warning(f'Invalid {entitykey}-index: "{bidsvalue}" is not a number ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
+                    run_valsok = False
+
+            # Check if all the bids-keys are present in the schema file
+            entitykeys = [entities[entity]['name'] for entity in datatyperules[datatype][typegroup]['entities']]
+            for bidskey in run['bids']:
+                if bidskey not in entitykeys + ['suffix']:
+                    if check[0]: LOGGER.warning(f'Invalid bidsmap: The "{bidskey}" is not allowed according to the BIDS standard ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
+                    run_keysok = False
+                    if run_valsok: run_valsok = None
+
+            break
+
+    # Hack: There are physio, stim and events entities in the 'task'-rules, which can added to any datatype
+    if run['bids'].get('suffix') in datatyperules['task']['events']['suffixes'] + datatyperules['task']['timeseries']['suffixes']:
+        bidsname     = get_bidsname('sub-foo', '', run, False)
+        run_suffixok = bids_validator.BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")  # NB: Using the BIDSValidator sounds nice but doesn't give any control over the BIDS-version
+        run_valsok   = run_suffixok
+        LOGGER.bcdebug(f"{run_suffixok} bidsname: /sub-foo/{datatype}/{bidsname}.json")
+
+    if check[1] and run_suffixok is False:
+        LOGGER.warning(f'Invalid run-item with suffix: "{run["bids"]["suffix"]}" ({datatype} -> {run["provenance"]})')
+        LOGGER.bcdebug(f"Run['bids']:\n{run['bids']}")
+
+    return run_keysok, run_suffixok, run_valsok
 
 
 def strip_suffix(run: dict) -> dict:
@@ -1025,8 +1189,7 @@ def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
 
     provenance = []
     for datatype in bidsmap.get(dataformat):
-        if datatype in ('subject','session') or not bidsmap[dataformat][datatype]:
-            continue
+        if not isinstance(bidsmap[dataformat][datatype], list): continue  # E.g. 'subject' and 'session'
         for run in bidsmap[dataformat][datatype]:
             if not run['provenance']:
                 LOGGER.warning(f'The bidsmap run {datatype} run does not contain provenance data')
@@ -1074,12 +1237,10 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
     :param suffix_idx:  The name of the suffix that is searched for (e.g. 'bold') or the datatype index number
     :param datasource:  The datasource with the provenance file from which the properties, attributes and dynamic values are read
     :return:            The clean (filled) run item in the bidsmap[dataformat][bidsdatatype] with the matching suffix_idx,
-                        otherwise a dict with empty attributes & bids keys
+                        otherwise an empty dict
     """
 
     runs = bidsmap.get(datasource.dataformat, {}).get(datatype, [])
-    if not runs:
-        runs = []
     for index, run in enumerate(runs):
         if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
@@ -1114,8 +1275,8 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
 
             return run_
 
-    LOGGER.warning(f"'{datatype}' run with suffix_idx '{suffix_idx}' not found in bidsmap['{datasource.dataformat}']")
-    return get_run_(datasource.path, bidsmap=bidsmap)
+    LOGGER.error(f"A '{datatype}' run with suffix_idx '{suffix_idx}' cannot be found in bidsmap['{datasource.dataformat}']")
+    return {}
 
 
 def find_run(bidsmap: dict, provenance: str, dataformat: str='', datatype: str='') -> dict:
@@ -1123,7 +1284,7 @@ def find_run(bidsmap: dict, provenance: str, dataformat: str='', datatype: str='
     Find the (first) run in bidsmap[dataformat][bidsdatatype] with run['provenance'] == provenance
 
     :param bidsmap:     This could be a template bidsmap, with all options, BIDS labels and attributes, etc
-    :param provenance:  The unique provenance that is use to identify the run
+    :param provenance:  The unique provenance that is used to identify the run
     :param dataformat:  The dataformat section in the bidsmap in which a matching run is searched for, e.g. 'DICOM'
     :param datatype:    The datatype in which a matching run is searched for (e.g. 'anat')
     :return:            The (unfilled) run item from the bidsmap[dataformat][bidsdatatype]
@@ -1146,7 +1307,7 @@ def find_run(bidsmap: dict, provenance: str, dataformat: str='', datatype: str='
 
 def delete_run(bidsmap: dict, provenance: Union[dict, str], datatype: str= '') -> None:
     """
-    Delete a run from the BIDS map
+    Delete the first matching run from the BIDS map
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :param provenance:  The provenance identifier of/or the run-item that is deleted
@@ -1166,6 +1327,9 @@ def delete_run(bidsmap: dict, provenance: Union[dict, str], datatype: str= '') -
     for index, run in enumerate(bidsmap[dataformat].get(datatype,[])):
         if Path(run['provenance']) == Path(provenance):
             del bidsmap[dataformat][datatype][index]
+            return
+
+    LOGGER.error(f"Could not find (and delete) this '{datatype}' run: '{provenance}")
 
 
 def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
@@ -1185,7 +1349,7 @@ def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
     if clean:
         run_ = get_run_(run['provenance'], datatype=datatype, bidsmap=bidsmap)
 
-        for item in run_.keys():
+        for item in run_:
             if item == 'provenance':
                 continue
             if item == 'datasource':
@@ -1225,10 +1389,14 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, run: dict, clean: bool=T
     datatype    = run['datasource'].datatype
     num_runs_in = len(dir_bidsmap(bidsmap, dataformat))
 
+    # Assert that the target datatype is known
+    if not datatype:
+        LOGGER.error(f'The datatype of the run cannot be determined...')
+
     # Warn the user if the target run already exists when the run is moved to another datatype
     if source_datatype != datatype:
         if exist_run(bidsmap, datatype, run):
-            LOGGER.warning(f'That run from {source_datatype} already exists in {datatype}...')
+            LOGGER.error(f'The "{source_datatype}" run already exists in {datatype}...')
 
         # Delete the source run
         delete_run(bidsmap, run, source_datatype)
@@ -1238,7 +1406,7 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, run: dict, clean: bool=T
 
     else:
         for index, run_ in enumerate(bidsmap[dataformat][datatype]):
-            if run_['provenance'] == run['provenance']:
+            if Path(run_['provenance']) == Path(run['provenance']):
                 bidsmap[dataformat][datatype][index] = run
                 break
 
@@ -1263,10 +1431,10 @@ def match_runvalue(attribute, pattern) -> bool:
     :param attribute:   The long string that is being searched in (e.g. a DICOM attribute)
     :param pattern:     A re.fullmatch regular expression pattern
     :return:            True if a match is found or both attribute and values are identical or
-                        empty / None. False otherwise
+                        empty/None. False otherwise
     """
 
-    # Consider it a match if both attribute and value are identical or empty / None
+    # Consider it a match if both attribute and value are identical or empty/None
     if attribute==pattern or (not attribute and not pattern):
         return True
 
@@ -1301,19 +1469,17 @@ def exist_run(bidsmap: dict, datatype: str, run_item: dict, matchbidslabels: boo
     :return:                True if the run exists in runlist, otherwise False
     """
 
-    bidscoindatatypes = bidsmap['Options']['bidscoin'].get('datatypes',[])
-    unknowndatatypes  = bidsmap['Options']['bidscoin'].get('unknowntypes',[])
-    ignoredatatypes   = bidsmap['Options']['bidscoin'].get('ignoretypes',[])
-
+    dataformat = run_item['datasource'].dataformat
     if not datatype:
-        for datatype in bidscoindatatypes + unknowndatatypes + ignoredatatypes:
+        for datatype in bidsmap.get(dataformat,{}):
+            if not isinstance(bidsmap[dataformat][datatype], list): continue  # E.g. 'subject' and 'session'
             if exist_run(bidsmap, datatype, run_item, matchbidslabels):
                 return True
 
-    if not bidsmap.get(run_item['datasource'].dataformat, {}).get(datatype):
+    if not bidsmap.get(dataformat, {}).get(datatype):
         return False
 
-    for run in bidsmap[run_item['datasource'].dataformat][datatype]:
+    for run in bidsmap[dataformat][datatype]:
 
         # Begin with match = False only if all attributes are empty
         match = any([run[matching][attrkey] not in [None,''] for matching in ('properties','attributes') for attrkey in run[matching]])  # Normally match==True, but make match==False if all attributes are empty
@@ -1349,71 +1515,12 @@ def exist_run(bidsmap: dict, datatype: str, run_item: dict, matchbidslabels: boo
     return False
 
 
-def check_run(datatype: str, run: dict, validate: bool=False) -> bool:
-    """
-    Check run for required and optional entitities using the BIDS schema files
-
-    :param datatype:    The datatype that is checked, e.g. 'anat'
-    :param run:         The run (listitem) with bids entities that are checked against missing values & invalid keys
-    :param validate:    Validate if all bids-keys and values are present according to the BIDS schema specifications
-    :return:            True if the run entities are bids-valid or if they cannot be checked, otherwise False
-    """
-
-    run_found  = False
-    run_valsok = True
-    run_keysok = True
-
-    # Check if we have provenance info
-    if validate and not run['provenance']:
-        pass    # TODO: avoid this when reading templates
-        # logger.info(f'No provenance info found for {datatype}/*_{run["bids"]["suffix"]}')
-
-    # Use the suffix to find the right typegroup
-    if validate and 'suffix' not in run['bids']:
-        LOGGER.warning(f'Invalid bidsmap: BIDS {datatype} entity "suffix" is absent for {run["provenance"]} -> {datatype}')
-    if datatype not in bidsdatatypes: return True
-    for typegroup in bidsdatatypes[datatype]:
-        if run['bids'].get('suffix') in typegroup['suffixes']:
-            run_found = True
-
-            # Check if all expected entity-keys are present in the run and if they are properly filled
-            for entityname in typegroup['entities']:
-                entitykey = entities[entityname]['entity']
-                bidsvalue = run['bids'].get(entitykey)
-                if entitykey in ('sub', 'ses'): continue
-                if isinstance(bidsvalue, list):
-                    bidsvalue = bidsvalue[bidsvalue[-1]]    # Get the selected item
-                if isinstance(bidsvalue, str) and not ('<' in bidsvalue and '>' in bidsvalue) and bidsvalue != cleanup_value(bidsvalue):
-                    LOGGER.warning(f'Invalid {entitykey} value: "{bidsvalue}" for {run["provenance"]} -> {datatype}/*_{run["bids"]["suffix"]}')
-                if validate and entitykey not in run['bids']:
-                    LOGGER.warning(f'Invalid bidsmap: BIDS entity "{entitykey}" is absent for {run["provenance"]} -> {datatype}/*_{run["bids"]["suffix"]}')
-                    run_keysok = False
-                elif typegroup['entities'][entityname]=='required' and not bidsvalue:
-                    if validate is False:                   # Do not inform the user about empty template values
-                        LOGGER.info(f'BIDS entity "{entitykey}" is required for {datatype}/*_{run["bids"]["suffix"]}')
-                    run_valsok = False
-
-            # Check if all the bids-keys are present in the schema file
-            entitykeys = [entities[entityname]['entity'] for entityname in typegroup['entities']]
-            for bidskey in run['bids']:
-                if bidskey not in entitykeys + ['suffix']:
-                    if validate:
-                        LOGGER.warning(f'Invalid bidsmap: BIDS {datatype} entity {run["provenance"]} -> "{bidskey}: {run["bids"][bidskey]}" is not allowed according to the BIDS standard')
-                        run_keysok = False
-                    elif run["bids"][bidskey]:
-                        if validate is False:
-                            LOGGER.info(f'BIDS {datatype} entity "{bidskey}: {run["bids"][bidskey]}" is not allowed according to the BIDS standard (clear "{run["bids"][bidskey]})" to resolve this issue)')
-                        run_valsok = False
-
-    return run_found and run_valsok and run_keysok
-
-
 def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tuple[dict, bool]:
     """
     Find the first run in the bidsmap with properties and file attributes that match with the data source, and then
     through the attributes. The datatypes are searched for in this order:
 
-    ignoredatatypes + bidscoindatatypes + unknowndatatypes
+    ignoredatatypes (e.g. 'exclude') -> normal bidsdatatypes (e.g. 'anat') -> unknowndatatypes (e.g. 'extra_data')
 
     Then update/fill the provenance, and the (dynamic) bids and meta values (bids values are cleaned-up to be BIDS-valid)
 
@@ -1424,15 +1531,15 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
                         If there is no match then the run is still populated with info from the source-file
     """
 
-    bidscoindatatypes = bidsmap['Options']['bidscoin'].get('datatypes',[])
-    unknowndatatypes  = bidsmap['Options']['bidscoin'].get('unknowntypes',[])
-    ignoredatatypes   = bidsmap['Options']['bidscoin'].get('ignoretypes',[])
+    unknowndatatypes = bidsmap['Options']['bidscoin'].get('unknowntypes',[])
+    ignoredatatypes  = bidsmap['Options']['bidscoin'].get('ignoretypes',[])
+    bidsdatatypes    = [dtype for dtype in bidsmap.get(datasource.dataformat) if dtype not in unknowndatatypes + ignoredatatypes + ['subject', 'session']]
 
-    # Loop through all bidscoindatatypes and runs; all info goes cleanly into run_ (to avoid formatting problem of the CommentedMap)
+    # Loop through all datatypes and runs; all info goes cleanly into run_ (to avoid formatting problem of the CommentedMap)
     run_ = get_run_(datasource.path, dataformat=datasource.dataformat, bidsmap=bidsmap)
-    for datatype in ignoredatatypes + bidscoindatatypes + unknowndatatypes:         # The datatypes in which a matching run is searched for
+    for datatype in ignoredatatypes + bidsdatatypes + unknowndatatypes:         # The ordered datatypes in which a matching run is searched for
 
-        runs                = bidsmap.get(datasource.dataformat, {}).get(datatype, [])
+        runs                = bidsmap.get(datasource.dataformat, {}).get(datatype)
         datasource.datatype = datatype
         for run in runs if runs else []:
 
@@ -1491,24 +1598,23 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
                 return run_, True
 
     # We don't have a match (all tests failed, so datatype should be the *last* one, e.g. unknowndatatype)
-    LOGGER.debug(f"Could not find a matching run in the bidsmap for {datasource.path} -> {ignoredatatypes + bidscoindatatypes} -> {unknowndatatypes}")
     return run_, False
 
 
 def get_derivatives(datatype: str) -> list:
     """
-    Retrieves a list of suffixes that are stored in the derivatives folder (e.g. the qMRI maps). TODO: Replace with a more systematic / documented method
+    Retrieves a list of suffixes that are stored in the derivatives folder (e.g. the qMRI maps). TODO: Replace with a more systematic/documented method
     """
 
     if datatype == 'anat':
-        return [suffix for suffix in bidsdatatypes[datatype][1]['suffixes'] if suffix not in ('UNIT1',)]                    # The qMRI data (maps)
+        return [suffix for suffix in datatyperules[datatype]['parametric']['suffixes'] if suffix not in ('UNIT1',)]                                         # The qMRI data (maps)
     elif datatype == 'fmap':
-        return [suffix for n,typegroup in enumerate(bidsdatatypes[datatype]) for suffix in typegroup['suffixes'] if n>1]    # The non-standard fmaps (file collections)
+        return [suffix for typegroup in datatyperules[datatype] for suffix in datatyperules[datatype][typegroup]['suffixes'] if typegroup not in ('fieldmaps','pepolar')]     # The non-standard fmaps (file collections)
     else:
         return []
 
 
-def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False, cleanup: bool=True) -> str:
+def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bool=False, cleanup: bool=True) -> str:
     """
     Composes a filename as it should be according to the BIDS standard using the BIDS keys in run. The bids values are
     dynamically updated and cleaned, and invalid bids keys and empty bids values are ignored
@@ -1516,6 +1622,7 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False, cleanup
     :param subid:       The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001')
     :param sesid:       The optional session identifier, i.e. name of the session folder (e.g. 'ses-01' or just '01'). Can be left empty
     :param run:         The run mapping with the BIDS key-value pairs
+    :param validkeys:   Removes non-BIDS-compliant bids-keys if True
     :param runtime:     Replaces dynamic bidsvalues if True
     :param cleanup:     Removes non-BIDS-compliant characters if True
     :return:            The composed BIDS file-name (without file-extension)
@@ -1531,14 +1638,18 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False, cleanup
             sesid = cleanup_value(sesid)
 
     # Compose a bidsname from valid BIDS entities only
-    bidsname = f"sub-{subid}{add_prefix('_ses-', sesid)}"                       # Start with the subject/session identifier
-    for entitykey in [entities[entity]['entity'] for entity in entitiesorder]:
-        bidsvalue = run['bids'].get(entitykey)                                  # Get the entity data from the run
+    bidsname = f"sub-{subid}{'_ses-'+sesid if sesid else ''}"                   # Start with the subject/session identifier
+    if validkeys:
+        entitiekeys = [key for key in run['bids'] if key!='suffix']             # Use the keys from the run item
+    else:
+        entitiekeys = [entities[entity]['name'] for entity in entitiesorder]    # Use the keys from the BIDS schema
+    for entitykey in entitiekeys:
+        bidsvalue = run['bids'].get(entitykey)                                  # Get the entity data from the run item
         if not bidsvalue:
             bidsvalue = ''
         if isinstance(bidsvalue, list):
             bidsvalue = bidsvalue[bidsvalue[-1]]                                # Get the selected item
-        elif not (entitykey=='run' and bidsvalue.replace('<','').replace('>','').isdecimal()):
+        elif runtime and not (entitykey=='run' and bidsvalue.replace('<','').replace('>','').isdecimal()):
             bidsvalue = run['datasource'].dynamicvalue(bidsvalue, cleanup=True, runtime=runtime)
         if bidsvalue:
             if cleanup:
@@ -1547,7 +1658,7 @@ def get_bidsname(subid: str, sesid: str, run: dict, runtime: bool=False, cleanup
     suffix = run['bids'].get('suffix')
     if cleanup and suffix:
         suffix = cleanup_value(suffix)
-    bidsname = f"{bidsname}{add_prefix('_', suffix)}"                           # And end with the suffix
+    bidsname = f"{bidsname}{'_'+suffix if suffix else ''}"                      # And end with the suffix
 
     return bidsname
 
@@ -1607,13 +1718,14 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') ->
         return oldvalue
 
 
-def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str) -> Union[Path, str]:
+def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, validkeys: bool) -> Union[Path, str]:
     """
     Inserts or replaces the bids key-label pair into the bidsfile. All invalid keys are removed from the name
 
     :param bidsfile:    The bidsname (e.g. as returned from get_bidsname or fullpath)
     :param bidskey:     The name of the new bidskey, e.g. 'echo' or 'suffix'
     :param newvalue:    The value of the new bidskey
+    :param validkeys:   Removes non-BIDS-compliant bids-keys if True
     :return:            The bidsname with the new bids key-value pair
     """
 
@@ -1648,7 +1760,7 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str) -
         run['bids'][bidskey] = newvalue
 
     # Compose the new filename
-    newbidsfile = (bidspath/get_bidsname(subid, sesid, run, cleanup=False)).with_suffix(bidsext)
+    newbidsfile = (bidspath / get_bidsname(subid, sesid, run, validkeys, cleanup=False)).with_suffix(bidsext)
 
     if isinstance(bidsfile, str):
         newbidsfile = str(newbidsfile)
@@ -1671,6 +1783,9 @@ def increment_runindex(bidsfolder: Path, bidsname: str, ext: str='.*') -> Union[
         runindex = get_bidsvalue(bidsname, 'run')
         if runindex:
             bidsname = get_bidsvalue(bidsname, 'run', str(int(runindex) + 1))
+        else:
+            LOGGER.error(f"Could not increment run-index in: {bidsfolder/bidsname}")
+            break
 
     return bidsname
 
@@ -1681,7 +1796,7 @@ def copymetadata(metasource: Path, metatarget: Path, extensions: list) -> dict:
 
     NB: In future versions this function could also support returning the content of e.g. csv- or Excel-files
 
-    :param metasource:  The filepath of the source-data file with associated / equally named meta-data files
+    :param metasource:  The filepath of the source-data file with associated/equally named meta-data files
     :param metatarget:  The filepath of the source-data file to with the (non-json) meta-data files are copied over
     :param extensions:  A list of file extensions of the meta-data files
     :return:            The meta-data of the json-file
@@ -1745,7 +1860,7 @@ def get_attributeshelp(attributeskey: str) -> str:
         return f"{attributeskey}\nThe DICOM '{datadict.dictionary_description(attributeskey)}' attribute"
 
     except ValueError:
-        return f"{attributeskey}\nA private attribute"
+        return f"{attributeskey}\nAn unknown/private attribute"
 
 
 def get_datatypehelp(datatype: str) -> str:
@@ -1761,9 +1876,9 @@ def get_datatypehelp(datatype: str) -> str:
 
     # Return the description for the datatype or a default text
     if datatype in bidsdatatypesdef:
-        return f"{bidsdatatypesdef[datatype]['name']}\n{bidsdatatypesdef[datatype]['description']}"
+        return f"{bidsdatatypesdef[datatype]['display_name']}\n{bidsdatatypesdef[datatype]['description']}"
 
-    return f"{datatype}\nA private datatype"
+    return f"{datatype}\nAn unknown/private datatype"
 
 
 def get_suffixhelp(suffix: str) -> str:
@@ -1779,9 +1894,9 @@ def get_suffixhelp(suffix: str) -> str:
 
     # Return the description for the suffix or a default text
     if suffix in suffixes:
-        return f"{suffixes[suffix]['name']}\n{suffixes[suffix]['description']}"
+        return f"{suffixes[suffix]['display_name']}\n{suffixes[suffix]['description']}"
 
-    return f"{suffix}\nA private suffix"
+    return f"{suffix}\nAn unknown/private suffix"
 
 
 def get_entityhelp(entitykey: str) -> str:
@@ -1796,11 +1911,11 @@ def get_entityhelp(entitykey: str) -> str:
         return "Please provide a key-name"
 
     # Return the description from the entities or a default text
-    for entityname in entities:
-        if entities[entityname]['entity'] == entitykey:
-            return f"{entities[entityname]['name']}\n{entities[entityname]['description']}"
+    for entity in entities:
+        if entities[entity]['name'] == entitykey:
+            return f"{entities[entity]['display_name']}\n{entities[entity]['description']}"
 
-    return f"{entitykey}\nA private entity"
+    return f"{entitykey}\nAn unknown/private entity"
 
 
 def get_metahelp(metakey: str) -> str:
@@ -1815,12 +1930,13 @@ def get_metahelp(metakey: str) -> str:
         return "Please provide a key-name"
 
     # Return the description from the metadata file or a default text
-    if metakey in metadata:           # metadata[metaname]['name'] == metaname???
-        description = metadata[metakey]['description']
-        if metakey == 'IntendedFor':    # IntendedFor is a special search-pattern field in BIDScoin
-            description += ('\nNB: These associated files can be dynamically searched for'
-                            '\nduring bidscoiner runtime with glob-style matching patterns,'
-                            '\n"such as <<Reward*_bold><Stop*_epi>>" (see documentation)')
-        return f"{metadata[metakey]['name']}\n{description}"
+    for field in metadata:
+        if metakey == metadata[field].get('name'):
+            description = metadata[field]['description']
+            if metakey == 'IntendedFor':    # IntendedFor is a special search-pattern field in BIDScoin
+                description += ('\nNB: These associated files can be dynamically searched for'
+                                '\nduring bidscoiner runtime with glob-style matching patterns,'
+                                '\n"such as <<Reward*_bold><Stop*_epi>>" (see documentation)')
+            return f"{metadata[field]['display_name']}\n{description}"
 
-    return f"{metakey}\nA private meta key"
+    return f"{metakey}\nAn unknown/private meta key"

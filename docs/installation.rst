@@ -24,7 +24,7 @@ These install commands can be run independently and will give you the latest sta
 
 .. code-block:: console
 
-   $ pip install --upgrade git+https://github.com/Donders-Institute/bidscoin
+   $ pip install git+https://github.com/Donders-Institute/bidscoin
 
 If you do not have git (or any other version control system) installed you can `download`_ and unzip the code yourself in a folder named e.g. 'bidscoin' and run:
 
@@ -32,14 +32,22 @@ If you do not have git (or any other version control system) installed you can `
 
    $ pip install ./bidscoin
 
+.. tip::
+   On certain (Linux) systems you may get an error message saying: 'Could not load the Qt platform plugin "xcb" in "" even though it was found'. This may be solved by downgrading your PyQt5 library, e.g. by running:
+
+   pip uninstall pyqt5
+
+   pip install pyqt5==5.14
+
 Updating BIDScoin
 ^^^^^^^^^^^^^^^^^
 
-Run your pip install command as before with the additional ``--upgrade`` option, e.g.:
+Run your pip install command as before with the additional ``--upgrade`` or ``--force-reinstall`` option, e.g.:
 
 .. code-block:: console
 
-   $ pip install --upgrade bidscoin
+   $ pip install --upgrade bidscoin                                                     # The latest stable release
+   $ pip install --force-reinstall git+https://github.com/Donders-Institute/bidscoin    # The latest code (add ``--no-deps`` to only upgrade the bidscoin package)
 
 .. caution::
    - The bidsmaps are not garanteed to be compatible between different BIDScoin versions
@@ -53,10 +61,14 @@ Run your pip install command as before with the additional ``--upgrade`` option,
 Dcm2niix installation
 ---------------------
 
-Unfortunately the pip installer can only install Python software and the default 'dcm2niix2bids' plugin relies on an external application named `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ to convert DICOM and PAR/REC source data to nifti. To make use of the dcm2niix2bids plugin you should therefore download and install dcm2niix yourself according to the instructions. When done, make sure that the command to run the dcm2niix executable is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
+Unfortunately the pip installer can only install Python software and the default 'dcm2niix2bids' plugin relies on an external application named `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ to convert DICOM and PAR/REC source data to nifti. To make use of the dcm2niix2bids plugin you should therefore download and install dcm2niix yourself according to the instructions. When done, make sure that the dcm2niix executable is on your user or system path (Windows users can add the path permanently, e.g. by running: ``setx path "%path%;C:\Program Files\dcm2niix"``). Otherwise, make sure that the command to run the dcm2niix executable (exactly as if you would run it yourself in your command terminal) is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
 
-1. Open your template bidsmap with a text editor and adjust the settings as needed. The default template bidsmap is located in the [path_to_bidscoin]/heuristics subfolder -- see the output of ``bidscoin -t`` for the fullpath location on your system.
+1. Open your template bidsmap with a text editor and adjust the settings as needed. The default template bidsmap is located in the [path_to_bidscoin]/heuristics subfolder -- see the output of ``bidscoin -p`` for the fullpath location on your system.
 2. Go to the `Options`_ tab the first time the BIDScoin GUI is launched and adjust the settings as needed. Then click the [Set as default] button to save the settings to your default template bidsmap.
+
+.. tip::
+
+   Install the `pigz <https://zlib.net/pigz/>`__ tool to speed-up dcm2niix. An easy way to install both dcm2niix and pigz at once, is to install  `MRIcroGL <https://www.nitrc.org/projects/mricrogl/>__
 
 Testing BIDScoin
 ----------------
@@ -135,7 +147,7 @@ with
 
 .. code-block:: console
 
-   pip3 install --upgrade git+https://github.com/Donders-Institute/bidscoin
+   pip3 install git+https://github.com/Donders-Institute/bidscoin
 
 in the definition ``singularity.def`` file.
 

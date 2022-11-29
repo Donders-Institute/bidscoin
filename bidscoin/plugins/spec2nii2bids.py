@@ -17,6 +17,7 @@ import json
 import pandas as pd
 import dateutil.parser
 import ast
+from bids_validator import BIDSValidator
 from pathlib import Path
 try:
     from bidscoin import bidscoin, bids
@@ -26,31 +27,31 @@ except ImportError:
 LOGGER = logging.getLogger(__name__)
 
 # The default options that are set when installing the plugin
-OPTIONS = {'command': 'spec2nii',       # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or '"C:\Program Files\spec2nii\spec2nii.exe"' (note the quotes to deal with the whitespace)
+OPTIONS = {'command': 'spec2nii',       # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or 'C:\"Program Files"\spec2nii\spec2nii.exe' (note the quotes to deal with the whitespace)
            'args': None,                # Argument string that is passed to spec2nii (see spec2nii -h for more information)
            'anon': 'y',                 # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
            'meta': ['.json', '.tsv', '.tsv.gz'],  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
            'multiraid': 2}              # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
 
 
-def test(options: dict=OPTIONS) -> bool:
+def test(options: dict=OPTIONS) -> int:
     """
     This plugin shell tests the working of the spec2nii2bids plugin + its bidsmap options
 
     :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['spec2nii2bids']
-    :return:        True if the tool generated the expected result, False if there was a tool error, None if not tested
+    :return:        The errorcode (e.g 0 if the tool generated the expected result, > 0 if there was a tool error)
     """
 
     LOGGER.info('Testing the spec2nii2bids installation:')
 
     if 'command' not in {**OPTIONS, **options}:
         LOGGER.error(f"The expected 'command' key is not defined in the spec2nii2bids options")
-        return False
+        return 1
     if 'args' not in {**OPTIONS, **options}:
         LOGGER.warning(f"The expected 'args' key is not defined in the spec2nii2bids options")
 
     # Test the spec2nii installation
-    return bidscoin.run_command(f"{options.get('command',OPTIONS['command'])} -h")
+    return bidscoin.run_command(f"{options.get('command',OPTIONS['command'])} -v")
 
 
 def is_sourcefile(file: Path) -> str:
@@ -83,9 +84,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
     :return:            The retrieved attribute value
     """
 
-    if dataformat in ('Twix', 'SPAR', 'Pfile'):
-        LOGGER.debug(f'This is the spec2nii2bids-plugin get_attribute routine, reading the {dataformat} "{attribute}" attribute value from "{sourcefile}"')
-    else:
+    if dataformat not in ('Twix', 'SPAR', 'Pfile'):
         return ''
 
     if not sourcefile.is_file():
@@ -156,16 +155,14 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
             # Now work from the provenance store
             if store:
-                targetfile        = store['target']/sourcefile.relative_to(store['source'])
+                targetfile             = store['target']/sourcefile.relative_to(store['source'])
                 targetfile.parent.mkdir(parents=True, exist_ok=True)
-                run['provenance'] = str(shutil.copy2(sourcefile, targetfile))
+                LOGGER.verbose(f"Storing the discovered {dataformat} sample as: {targetfile}")
+                run['provenance']      = str(shutil.copy2(sourcefile, targetfile))
+                run['datasource'].path = targetfile
 
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)
-
-        else:
-            # Communicate with the user if the run was already present in bidsmap_old or in template
-            LOGGER.debug(f"Known '{datasource.datatype}' {dataformat} sample: {sourcefile}")
 
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
@@ -197,11 +194,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     dataformat  = datasource.dataformat
     sourcefiles = [file for file in session.rglob('*') if is_sourcefile(file)]
     if not sourcefiles:
-        LOGGER.info(f"No {__name__} sourcedata found in: {session}")
+        LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
         return
 
     # Read or create a scans_table and tsv-file
-    scans_tsv = bidsses/f"{subid}{bids.add_prefix('_',sesid)}_scans.tsv"
+    scans_tsv = bidsses/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
     if scans_tsv.is_file():
         scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
     else:
@@ -217,26 +214,34 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
-            LOGGER.info(f"Leaving out: {sourcefile}")
+            LOGGER.info(f"--> Leaving out: {sourcefile}")
             continue
+        bidsignore = datasource.datatype in bidsmap['Options']['bidscoin']['bidsignore']
 
         # Check that we know this run
         if index is None:
             LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete the MRS output data in {bidsses} to solve this warning")
             continue
 
-        LOGGER.info(f"Processing: {sourcefile}")
+        LOGGER.info(f"--> Coining: {sourcefile}")
 
         # Create the BIDS session/datatype output folder
         outfolder = bidsses/datasource.datatype
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        bidsname  = bids.get_bidsname(subid, sesid, run, runtime=True)
-        runindex  = run['bids'].get('run', '')
+        bidsname = bids.get_bidsname(subid, sesid, run, bidsignore, runtime=True)
+        runindex = run['bids'].get('run')
+        runindex = str(runindex) if runindex else ''
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(outfolder, bidsname)
-        jsonfile  = (outfolder/bidsname).with_suffix('.json')
+        jsonfile = (outfolder/bidsname).with_suffix('.json')
+
+        # Check if the bidsname is valid
+        bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.json').as_posix()
+        isbids   = BIDSValidator().is_bids(bidstest)
+        if not isbids and not bidsignore:
+            LOGGER.warning(f"The '{bidstest}' ouput name did not pass the bids-validator test")
 
         # Check if file already exists (-> e.g. when a static runindex is used)
         if jsonfile.is_file():
@@ -260,12 +265,12 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         else:
             LOGGER.exception(f"Unsupported dataformat: {dataformat}")
         command = options.get("command", "spec2nii")
-        if not bidscoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
+        if bidscoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
             if not list(outfolder.glob(f"{bidsname}.nii*")): continue
 
         # Load and adapt the newly produced json sidecar-file (NB: assumes every nifti-file comes with a json-file)
-        with jsonfile.open('r') as json_fid:
-            jsondata = json.load(json_fid)
+        with jsonfile.open('r') as sidecar:
+            jsondata = json.load(sidecar)
 
         # Copy over the source meta-data
         metadata = bids.copymetadata(sourcefile, outfolder/bidsname, options.get('meta', []))
@@ -277,19 +282,19 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Add all the meta data to the json-file
         for metakey, metaval in run['meta'].items():
             metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
-            try: metaval = ast.literal_eval(str(metaval))
+            try: metaval = ast.literal_eval(str(metaval))            # E.g. convert stringified list or int back to list or int
             except (ValueError, SyntaxError): pass
-            LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
+            LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
             if not metaval:
                 metaval = None
             jsondata[metakey] = metaval
 
         # Save the meta data to disk
-        with jsonfile.open('w') as json_fid:
-            json.dump(jsondata, json_fid, indent=4)
+        with jsonfile.open('w') as sidecar:
+            json.dump(jsondata, sidecar, indent=4)
 
         # Parse the acquisition time from the source header or else from the json file (NB: assuming the source file represents the first acquisition)
-        if datasource.datatype not in bidsmap['Options']['bidscoin']['bidsignore'] and not run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):
+        if not bidsignore and not run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):
             acq_time = ''
             if dataformat == 'SPAR':
                 acq_time = datasource.attributes('scan_date')
@@ -310,7 +315,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             scans_table.loc[jsonfile.with_suffix('.nii.gz').relative_to(bidsses).as_posix(), 'acq_time'] = acq_time
 
     # Write the scans_table to disk
-    LOGGER.info(f"Writing acquisition time data to: {scans_tsv}")
+    LOGGER.verbose(f"Writing acquisition time data to: {scans_tsv}")
     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
     scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
@@ -360,5 +365,5 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             participants_table.loc[subid, key] = personals[key]
 
     # Write the collected data to the participants tsv-file
-    LOGGER.info(f"Writing {subid} subject data to: {participants_tsv}")
+    LOGGER.verbose(f"Writing {subid} subject data to: {participants_tsv}")
     participants_table.replace('','n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')

@@ -16,7 +16,7 @@ import pandas as pd
 import json
 import ast
 import shutil
-import os
+from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
 try:
@@ -27,31 +27,31 @@ except ImportError:
 LOGGER = logging.getLogger(__name__)
 
 # The default options that are set when installing the plugin
-OPTIONS = {'command': 'module add dcm2niix; dcm2niix',  # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or '"C:\Program Files\dcm2niix\dcm2niix.exe"' (use quotes to deal with whitespaces in the path)
-           'args': '-b y -z y -i n',                    # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
-           'anon': 'y',                                 # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
-           'meta': ['.json', '.tsv', '.tsv.gz']}        # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
+OPTIONS = {'command': 'dcm2niix',                   # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or 'C:\"Program Files"\dcm2niix\dcm2niix.exe' (use quotes to deal with whitespaces in the path)
+           'args': '-b y -z y -i n',                # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
+           'anon': 'y',                             # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
+           'meta': ['.json', '.tsv', '.tsv.gz']}    # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
 
 
-def test(options: dict=OPTIONS) -> bool:
+def test(options: dict=OPTIONS) -> int:
     """
     Performs shell tests of dcm2niix
 
     :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['dcm2niix2bids']
-    :return:        True if the tool generated the expected result, False if there was a tool error
+    :return:        The errorcode (e.g 0 if the tool generated the expected result, > 0 if there was a tool error)
     """
 
     LOGGER.info('Testing the dcm2niix2bids installation:')
 
     if 'command' not in {**OPTIONS, **options}:
         LOGGER.error(f"The expected 'command' key is not defined in the dcm2niix2bids options")
-        return False
+        return 1
     if 'args' not in {**OPTIONS, **options}:
         LOGGER.warning(f"The expected 'args' key is not defined in the dcm2niix2bids options")
 
     # Test the dcm2niix installation
     command = options.get('command', OPTIONS['command'])
-    return bidscoin.run_command(f"{command} -{'u' if os.name=='posix' else 'v'}")
+    return bidscoin.run_command(f"{command} -v")
 
 
 def is_sourcefile(file: Path) -> str:
@@ -145,16 +145,14 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
             # Now work from the provenance store
             if store:
-                targetfile        = store['target']/sourcefile.relative_to(store['source'])
+                targetfile             = store['target']/sourcefile.relative_to(store['source'])
                 targetfile.parent.mkdir(parents=True, exist_ok=True)
-                run['provenance'] = str(shutil.copy2(sourcefile, targetfile))
+                LOGGER.verbose(f"Storing the discovered {dataformat} sample as: {targetfile}")
+                run['provenance']      = str(shutil.copy2(sourcefile, targetfile))
+                run['datasource'].path = targetfile
 
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)
-
-        else:
-            # Communicate with the user if the run was already present in bidsmap_old or in template
-            LOGGER.debug(f"Known '{datasource.datatype}' {dataformat} sample: {sourcefile}")
 
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
@@ -183,7 +181,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     datasource = bids.get_datasource(session, {'dcm2niix2bids': options})
     dataformat = datasource.dataformat
     if not dataformat:
-        LOGGER.info(f"No {__name__} sourcedata found in: {session}")
+        LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
         return
 
     # Make a list of all the data sources / runs
@@ -199,7 +197,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         LOGGER.exception(f"Unsupported dataformat '{dataformat}'")
 
     # Read or create a scans_table and tsv-file
-    scans_tsv = bidsses/f"{subid}{bids.add_prefix('_',sesid)}_scans.tsv"
+    scans_tsv = bidsses/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
     if scans_tsv.is_file():
         scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
     else:
@@ -224,15 +222,16 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
-            LOGGER.info(f"Leaving out: {source}")
+            LOGGER.info(f"--> Leaving out: {source}")
             continue
+        bidsignore = datasource.datatype in bidsmap['Options']['bidscoin']['bidsignore']
 
         # Check if we already know this run
         if not match:
-            LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+            LOGGER.error(f"--> Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
             continue
 
-        LOGGER.info(f"Processing: {source}")
+        LOGGER.info(f"--> Coining: {source}")
 
         # Create the BIDS session/datatype output folder
         if run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):
@@ -242,11 +241,18 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        bidsname  = bids.get_bidsname(subid, sesid, run, runtime=True)
-        runindex  = run['bids'].get('run', '')
+        bidsname  = bids.get_bidsname(subid, sesid, run, bidsignore, runtime=True)
+        runindex  = run['bids'].get('run')
+        runindex  = str(runindex) if runindex else ''
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(outfolder, bidsname)
         jsonfiles = [(outfolder/bidsname).with_suffix('.json')]     # List -> Collect the associated json-files (for updating them later) -- possibly > 1
+
+        # Check if the bidsname is valid
+        bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.json').as_posix()
+        isbids   = BIDSValidator().is_bids(bidstest)
+        if not isbids and not bidsignore:
+            LOGGER.warning(f"The '{bidstest}' ouput name did not pass the bids-validator test")
 
         # Check if file already exists (-> e.g. when a static runindex is used)
         if (outfolder/bidsname).with_suffix('.json').is_file():
@@ -258,8 +264,12 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         if run['bids']['suffix'] == 'physio':
             if bids.get_dicomfile(source, 2).name:                  # TODO: issue warning or support PAR
                 LOGGER.warning(f"Found > 1 DICOM file in {source}, using: {sourcefile}")
-            physiodata = physio.readphysio(sourcefile)
-            physio.physio2tsv(physiodata, outfolder/bidsname)
+            try:
+                physiodata = physio.readphysio(sourcefile)
+                physio.physio2tsv(physiodata, outfolder/bidsname)
+            except Exception as physioerror:
+                LOGGER.error(f"Could not read/convert physiological file: {sourcefile}\n{physioerror}")
+                continue
 
         # Convert the source-files in the run folder to nifti's in the BIDS-folder
         else:
@@ -269,8 +279,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 filename  = bidsname,
                 outfolder = outfolder,
                 source    = source)
-            if not bidscoin.run_command(command):
-                if not list(outfolder.glob(f"{bidsname}.nii*")): continue
+            if bidscoin.run_command(command):
+                if not list(outfolder.glob(f"{bidsname}.*nii*")): continue
 
             # Handle the ABCD GE pepolar sequence
             extrafile = list(outfolder.glob(f"{bidsname}a.nii*"))
@@ -281,12 +291,12 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 if 'PhaseEncodingPolarityGE' in jsondata:
                     ext     = ''.join(extrafile[0].suffixes)
                     invfile = bids.get_bidsvalue(outfolder/(bidsname+ext), 'dir', bids.get_bidsvalue(bidsname,'dir') + jsondata['PhaseEncodingPolarityGE'])
-                    LOGGER.info(f"Renaming GE reversed polarity image: {extrafile[0]} -> {invfile}")
+                    LOGGER.verbose(f"Renaming GE reversed polarity image: {extrafile[0]} -> {invfile}")
                     extrafile[0].rename(invfile)
                     extrafile[0].with_suffix('').with_suffix('.json').rename(invfile.with_suffix('').with_suffix('.json'))
                     jsonfiles.append(invfile.with_suffix('').with_suffix('.json'))
                 else:
-                    LOGGER.warning(f"Unexpected variants of {outfolder/bidsname}* were produced by dcm2niix. Possibly this can be remedied by using the dcm2niix -i option (to ignore derived, localizer and 2D images)")
+                    LOGGER.warning(f"Unexpected variants of {outfolder/bidsname}* were produced by dcm2niix. Possibly this can be remedied by using the dcm2niix -i option (to ignore derived, localizer and 2D images) or by clearing the BIDS folder brefore running bidscoiner")
 
             # Replace uncropped output image with the cropped one
             if '-x y' in options.get('args',''):
@@ -297,15 +307,17 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                     dcm2niixfile.replace(newbidsfile)
 
             # Rename all files that got additional postfixes from dcm2niix. See: https://github.com/rordenlab/dcm2niix/blob/master/FILENAMING.md
-            dcm2niixpostfixes = ('_c', '_i', '_Eq', '_real', '_imaginary', '_MoCo', '_t', '_Tilt', '_e', '_ph', '_ADC', '_fieldmaphz')
+            dcm2niixpostfixes = ('_c', '_i', '_Eq', '_real', '_imaginary', '_MoCo', '_t', '_Tilt', '_e', '_ph', '_ADC', '_fieldmaphz')      #_c%d, _e%d and _ph (and any combination of these in that order) are for multi-coil data, multi-echo data and phase data
             dcm2niixfiles     = sorted(set([dcm2niixfile for dcm2niixpostfix in dcm2niixpostfixes for dcm2niixfile in outfolder.glob(f"{bidsname}*{dcm2niixpostfix}*.nii*")]))
             if not jsonfiles[0].is_file() and dcm2niixfiles:                                                    # Possibly renamed by dcm2niix, e.g. with multi-echo data (but not always for the first echo)
                 jsonfiles.pop(0)
             for dcm2niixfile in dcm2niixfiles:
+
+                # Strip each dcm2niix postfix and assign it to bids entities in a newly constructed bidsname
                 ext         = ''.join(dcm2niixfile.suffixes)
-                postfixes   = str(dcm2niixfile).split(bidsname)[1].rsplit(ext)[0].split('_')[1:]
-                newbidsname = dcm2niixfile.name                                                                 # Strip the additional postfixes and assign them to bids entities in the for-loop below
-                for postfix in postfixes:                                                                       # dcm2niix postfixes _c%d, _e%d and _ph (and any combination of these in that order) are for multi-coil data, multi-echo data and phase data
+                postfixes   = dcm2niixfile.name.split(bidsname)[1].rsplit(ext)[0].split('_')[1:]
+                newbidsname = dcm2niixfile.name
+                for postfix in postfixes:
 
                     # Patch the echo entity in the newbidsname with the dcm2niix echo info                      # NB: We can't rely on the bids-entity info here because manufacturers can e.g. put multiple echos in one series / run-folder
                     if 'echo' in run['bids'] and postfix.startswith('e'):
@@ -313,7 +325,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                         if not echonr:
                             echonr = '1'
                         if echonr.isnumeric():
-                            newbidsname = bids.insert_bidskeyval(newbidsname, 'echo', echonr.lstrip('0'))       # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
+                            newbidsname = bids.insert_bidskeyval(newbidsname, 'echo', echonr.lstrip('0'), bidsignore)       # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
+                        elif echonr[0:-1].isnumeric():
+                            newbidsname = bids.insert_bidskeyval(newbidsname, 'echo', echonr[0:-1].lstrip('0'), bidsignore) # Strip of the 'a', 'b', etc from `e1a`, `e1b`, etc
+                            newbidsname = bids.get_bidsvalue(newbidsname, 'dummy', echonr[-1])                  # Append the 'a' to the acq-label
                         else:
                             LOGGER.error(f"Unexpected postix '{postfix}' found in {dcm2niixfile}")
                             newbidsname = bids.get_bidsvalue(newbidsname, 'dummy', postfix)                     # Append the unknown postfix to the acq-label
@@ -321,16 +336,16 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                     # Patch the phase entity in the newbidsname with the dcm2niix mag/phase info
                     elif 'part' in run['bids'] and postfix in ('ph','real','imaginary'):                        # e.g. part: ['', 'mag', 'phase', 'real', 'imag', 0]
                         if postfix == 'ph':
-                            newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'phase')
+                            newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'phase', bidsignore)
                         if postfix == 'real':
-                            newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'real')
+                            newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'real', bidsignore)
                         if postfix == 'imaginary':
-                            newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'imag')
+                            newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'imag', bidsignore)
 
                     # Patch fieldmap images (NB: datatype=='fmap' is too broad, see the fmap.yaml file)
-                    elif run['bids']['suffix'] in bids.bidsdatatypes['fmap'][0]['suffixes']:                    # i.e. in ('magnitude','magnitude1','magnitude2','phase1','phase2','phasediff','fieldmap'). TODO: Make this robust for future BIDS versions
+                    elif run['bids']['suffix'] in bids.datatyperules['fmap']['fieldmaps']['suffixes']:          # i.e. in ('magnitude','magnitude1','magnitude2','phase1','phase2','phasediff','fieldmap')
                         if len(dcm2niixfiles) not in (1, 2, 3, 4):                                              # Phase / echo data may be stored in the same data source / run folder
-                            LOGGER.debug(f"Unknown fieldmap {outfolder/bidsname} for '{postfix}'")
+                            LOGGER.verbose(f"Unknown fieldmap {outfolder/bidsname} for '{postfix}'")
                         newbidsname = newbidsname.replace('_magnitude1a',    '_magnitude2')                     # First catch this potential weird / rare case
                         newbidsname = newbidsname.replace('_magnitude1_pha', '_phase2')                         # First catch this potential weird / rare case
                         newbidsname = newbidsname.replace('_magnitude1_e1',  '_magnitude1')                     # Case 2 = Two phase and magnitude images
@@ -368,13 +383,13 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
                     # The ADC images are not BIDS compliant
                     if postfix == 'ADC':
-                        LOGGER.warning(f"The {newbidsname} image is most likely not BIDS-compliant -- you can probably delete it safely and update the scants.tsv file")
+                        LOGGER.warning(f"The {newbidsname} image is a derivate / not BIDS-compliant -- you can probably delete it safely and update {scans_tsv}")
 
-                # Save the nifti file with a new name
+                # Save the nifti file with the newly constructed name
                 if runindex.startswith('<<') and runindex.endswith('>>'):
                     newbidsname = bids.increment_runindex(outfolder, newbidsname, '')                           # Update the runindex now that the acq-label has changed
                 newbidsfile = outfolder/newbidsname
-                LOGGER.info(f"Found dcm2niix {postfixes} postfixes, renaming\n{dcm2niixfile} ->\n{newbidsfile}")
+                LOGGER.verbose(f"Found dcm2niix {postfixes} postfixes, renaming\n{dcm2niixfile} ->\n{newbidsfile}")
                 if newbidsfile.is_file():
                     LOGGER.warning(f"Overwriting existing {newbidsfile} file -- check your results carefully!")
                 dcm2niixfile.replace(newbidsfile)
@@ -412,9 +427,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             for metakey, metaval in run['meta'].items():
                 if metakey != 'IntendedFor':
                     metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
-                    try: metaval = ast.literal_eval(str(metaval))
+                    try: metaval = ast.literal_eval(str(metaval))            # E.g. convert stringified list or int back to list or int
                     except (ValueError, SyntaxError): pass
-                    LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
+                    LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
                 if not metaval:
                     metaval = None
                 jsondata[metakey] = metaval
@@ -431,7 +446,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             outputfile = [file for file in jsonfile.parent.glob(jsonfile.stem + '.*') if file.suffix in ('.nii','.gz')]     # Find the corresponding nifti/tsv.gz file (there should be only one, let's not make assumptions about the .gz extension)
             if not outputfile:
                 LOGGER.exception(f"No data-file found with {jsonfile} when updating {scans_tsv}")
-            elif datasource.datatype not in bidsmap['Options']['bidscoin']['bidsignore'] and not run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):
+            elif not bidsignore and not run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):
                 acq_time = ''
                 if dataformat == 'DICOM':
                     acq_time = f"{datasource.attributes('AcquisitionDate')}T{datasource.attributes('AcquisitionTime')}"
@@ -451,7 +466,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 scans_table.loc[scanpath.as_posix(), 'acq_time'] = acq_time
 
     # Write the scans_table to disk
-    LOGGER.info(f"Writing acquisition time data to: {scans_tsv}")
+    LOGGER.verbose(f"Writing acquisition time data to: {scans_tsv}")
     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
     scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
@@ -489,5 +504,5 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             participants_table.loc[subid, key] = personals[key]
 
     # Write the collected data to the participants tsv-file
-    LOGGER.info(f"Writing {subid} subject data to: {participants_tsv}")
+    LOGGER.verbose(f"Writing {subid} subject data to: {participants_tsv}")
     participants_table.replace('','n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')

@@ -20,21 +20,21 @@ Options:
 # General options and plugins
 # --------------------------------------------------------------------------------
   bidscoin:
-    version: 3.7.3                  # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
+    version: 3.8.0                  # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
     bidsignore: mrs/;extra_data/    # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
     subprefix: sub-                 # The subject prefix of the source data
     sesprefix: ses-                 # The session prefix of the source data
-    datatypes: [fmap, anat, func, perf, dwi, pet, eeg, ieeg]  # A list of datatypes that are converted to BIDS (useful for skipping data)
     unknowntypes: [mrs, extra_data] # A list of datatypes that are converted to BIDS-like datatype folders
     ignoretypes: [exclude]          # A list of datatypes that are excluded / not converted to BIDS
+    unzip:                          # Wildcard pattern to select tarballed/zip-files in the sourcefolders that need to be unzipped (in a tempdir) to expose the data, e.g. '*.tar.gz'
   plugins:                          # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
     dcm2niix2bids:                  # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
-      command: module add dcm2niix; dcm2niix # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or '"C:\Program Files\dcm2niix\dcm2niix.exe"' (use quotes to deal with whitespaces in the path)
-      args: -b y -z y -i n          # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
+      command: dcm2niix             # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or 'C:\"Program Files"\dcm2niix\dcm2niix.exe' (use quotes to deal with whitespaces in the path)
+      args: -b y -z y -i n -l n     # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
       anon: y                       # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
       meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata sourcefiles that are copied over to the BIDS sidecar files
     spec2nii2bids:                  # The settings for the spec2nii2bids plugin
-      command: spec2nii             # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or '"C:\Program Files\spec2nii\spec2nii.exe"' (note the quotes to deal with the whitespace)
+      command: spec2nii             # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or 'C:\"Program Files"\spec2nii\spec2nii.exe' (note the quotes to deal with the whitespace)
       args:                         # Argument string that is passed to spec2nii (see spec2nii -h for more information)
       anon: y                       # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
       meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata sourcefiles that are copied over to the BIDS sidecar files
@@ -359,6 +359,7 @@ DICOM:
     attributes:
       <<: *anat_dicomattr
       ProtocolName: (?i).*MPM.*
+      EffectiveEchoTime:
     bids: &anat_dicoment_vfamt          # See: schema/datatypes/anat.yaml
       acq: <SeriesDescription>
       ce:
@@ -552,7 +553,8 @@ DICOM:
     attributes: *perf_dicomattr
     bids: &perf_dicoment_physio         # See: schema/datatypes/perf.yaml
       acq: <ProtocolName>
-      rec: <SeriesDescription>
+      rec:
+      task: <SeriesDescription>
       recording:
       dir:
       run: <<1>>
@@ -578,6 +580,7 @@ DICOM:
       PhaseEncodingDirection:
     bids: &dwi_dicoment_DWI             # See: schema/datatypes/dwi.yaml
       acq: <ProtocolName>               # More consistent between SBREF and PHYSIO files
+      rec:
       dir:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
@@ -588,9 +591,10 @@ DICOM:
   - provenance:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
     attributes:
       <<: *dwi_dicomattr
-      SeriesDescription: (?i).*(DWI|diffusion|HARDI|DTI).*SBREF.*
+      SeriesDescription: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*SBREF.*
     bids: &dwi_dicoment_sbref           # See: schema/datatypes/dwi.yaml
       acq: <SeriesDescription>
+      rec:
       dir:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
@@ -599,7 +603,7 @@ DICOM:
   - provenance:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
     attributes:
       <<: *dwi_dicomattr
-      ProtocolName: (?i).*(DWI|diffusion|HARDI|DTI).*
+      ProtocolName: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*
       ImageType: .*'PHYSIO'.*
     bids: &dwi_dicoment_physio          # See: schema/datatypes/dwi.yaml
       acq: <SeriesDescription>
@@ -611,12 +615,12 @@ DICOM:
   - provenance:
     attributes:
       <<: *dwi_dicomattr
-      SeriesDescription: (?i).*(DWI|diffusion|HARDI|DTI).*PHYSIO.*
+      SeriesDescription: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*PHYSIO.*
     bids: *dwi_dicoment_physio
   - provenance:                         # Then catch the normal DWI runs
     attributes:
       <<: *dwi_dicomattr
-      ProtocolName: (?i).*(DWI|diffusion|HARDI|DTI).*
+      ProtocolName: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*
     bids: *dwi_dicoment_DWI
     meta: *dwi_meta
   - provenance:
@@ -896,16 +900,6 @@ DICOM:
       InjectionStart: <<ContrastBolusStartTime>>
       FrameDuration: <<ActualFrameDuration>>
       Units:
-  - provenance:
-    attributes: *pet_dicomattr
-    bids: &pet_dicoment_blood           # See: schema/datatypes/pet.yaml
-      task: <SeriesDescription>
-      trc: <Radiopharmaceutical>
-      rec: ['', acdyn, acstat, nacdyn, nacstat, 0]
-      recording:
-      run: <<1>>
-      suffix: blood
-    meta: *pet_meta
   - provenance:
     attributes: *pet_dicomattr
     bids: &pet_dicoment_events          # See: schema/datatypes/pet.yaml
@@ -1523,6 +1517,7 @@ PAR:
       prep_direction:
     bids: &dwi_parent_DWI               # See: schema/datatypes/dwi.yaml
       acq: <protocol_name>
+      rec:
       dir:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
@@ -1531,9 +1526,10 @@ PAR:
   - provenance:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
     attributes:
       <<: *dwi_parattr
-      protocol_name: (?i).*(DWI|diffusion|HARDI|DTI).*SBREF.*
+      protocol_name: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*SBREF.*
     bids: &dwi_parent_sbref             # See: schema/datatypes/dwi.yaml
       acq: <protocol_name>
+      rec:
       dir:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
@@ -1926,7 +1922,7 @@ Physio:
   subject: <<filepath:/sub-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
   session: <<filepath:/sub-.*?/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
-  func:        # ----------------------- All functional runs --------------------
+  func:       # ----------------------- All functional runs --------------------
   - provenance:                         # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     properties: *fileprop               # This is an optional (stub) entry of properties matching (could be added to any run-item)
     attributes: &attributes_physio      # The matching (regexp) criteria for the phys2bids -info data go in here
@@ -1937,7 +1933,7 @@ Physio:
       units:
       trigger_idx:
     bids: &bids_physio
-      task:
+      task: <descrip>
       acq:
       ce:
       dir:
@@ -2364,8 +2360,8 @@ Nibabel:
     properties: *fileprop
     attributes: *nibattr
     bids: &func_nibent_timeseries       # See: schema/datatypes/func.yaml
-      task:
-      acq: <descrip>
+      task: <descrip>
+      acq:
       ce:
       dir:
       rec:
@@ -2394,8 +2390,8 @@ Nibabel:
     properties: *fileprop
     attributes: *nibattr
     bids: &func_nibent_events           # See: schema/datatypes/func.yaml
-      task:
-      acq: <descrip>
+      task: <descrip>
+      acq:
       ce:
       dir:
       rec:
@@ -2462,7 +2458,8 @@ Nibabel:
     properties: *fileprop
     attributes: *nibattr
     bids: &perf_nibent_physio           # See: schema/datatypes/perf.yaml
-      acq: <descrip>
+      task: <descrip>
+      acq:
       rec:
       recording:
       dir:
@@ -2476,6 +2473,7 @@ Nibabel:
     attributes: *nibattr
     bids: &dwi_nibent_DWI               # See: schema/datatypes/dwi.yaml
       acq: <descrip>
+      rec:
       dir:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
@@ -2484,10 +2482,11 @@ Nibabel:
   - provenance:                         # First catch the SBREF runs
     properties:
       <<: *fileprop
-      filename: (?i).*(DWI|diffusion|HARDI|DTI).*SBREF.*
+      filename: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*SBREF.*
     attributes: *nibattr
     bids: &dwi_nibent_sbref             # See: schema/datatypes/dwi.yaml
       acq: <descrip>
+      rec:
       dir:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
@@ -2496,7 +2495,7 @@ Nibabel:
   - provenance:                         # Then catch the normal DWI runs
     properties:
       <<: *fileprop
-      filename: (?i).*(DWI|diffusion|HARDI|DTI).*
+      filename: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*
     attributes: *nibattr
     bids: *dwi_nibent_DWI
     meta: *dwi_meta

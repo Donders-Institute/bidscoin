@@ -7,6 +7,8 @@ The basic workflow is to run these two tools:
   $ bidsmapper sourcefolder bidsfolder        # This produces a study bidsmap and launches a GUI
   $ bidscoiner sourcefolder bidsfolder        # This converts your data to BIDS according to the study bidsmap
 
+Set the environment variable BIDSCOIN_DEBUG=TRUE in your console to run BIDScoin in it's more verbose DEBUG logging mode
+
 For more documentation see: https://bidscoin.readthedocs.io
 """
 
@@ -15,6 +17,7 @@ import textwrap
 import tarfile
 import shutil
 import sys
+import os
 import logging
 import coloredlogs
 import inspect
@@ -37,10 +40,13 @@ bidscoinfolder   = Path(__file__).parent
 schemafolder     = bidscoinfolder/'schema'
 heuristicsfolder = bidscoinfolder/'heuristics'
 pluginfolder     = bidscoinfolder/'plugins'
-bidsmap_template = heuristicsfolder/'bidsmap_dccn.yaml'
+bidsmap_template = heuristicsfolder/'bidsmap_dccn.yaml'     # Default template bidsmap TODO: make it a user setting (in $HOME)?
 
-LOGGER           = logging.getLogger(__name__)
+# Get the BIDSCOIN_DEBUG environment variable to set the log-messages and logging level, etc
+debug  = os.environ.get('BIDSCOIN_DEBUG')
+debug  = True if debug and debug.upper() not in ('0', 'FALSE', 'N', 'NO', 'NONE') else False
 
+LOGGER = logging.getLogger(__name__)
 
 class TqdmUpTo(tqdm):
 
@@ -58,49 +64,76 @@ class TqdmUpTo(tqdm):
         self.update(b * bsize - self.n)  # will also set self.n = b * bsize
 
 
-def setup_logging(log_file: Path=Path(), debug: bool=False):
+def setup_logging(logfile: Path=Path()):
     """
-    Setup the logging
+    Setup the logging framework
 
-    :param log_file:    Name of the logfile
-    :param debug:       Set log level to DEBUG if debug==True
+    :param logfile:     Name of the logfile
     :return:
      """
 
-    # Get the root logger
-    logger = logging.getLogger()
-
-    # Set the format and logging level
+    # Set the default formats
     if debug:
-        fmt = '%(asctime)s - %(name)s - %(levelname)s | %(message)s'
-        logger.setLevel(logging.DEBUG)
+        fmt  = '%(asctime)s - %(name)s - %(levelname)s | %(message)s'
+        cfmt = '%(levelname)s - %(name)s | %(message)s'
     else:
-        fmt = '%(asctime)s - %(levelname)s | %(message)s'
-        logger.setLevel(logging.INFO)
-    datefmt   = '%Y-%m-%d %H:%M:%S'
-    formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
+        fmt  = '%(asctime)s - %(levelname)s | %(message)s'
+        cfmt = '%(levelname)s | %(message)s'
+    datefmt  = '%Y-%m-%d %H:%M:%S'
 
-    # Set & add the streamhandler and add some color to those boring terminal logs! :-)
-    coloredlogs.install(level=logger.level, fmt=fmt, datefmt=datefmt)
+    # Add a BIDScoin debug logging level = 11 (NB: using the standard debug mode will generate may debug messages from imports)
+    logging.BCDEBUG = 11
+    logging.addLevelName(logging.BCDEBUG, 'BCDEBUG')
+    logging.__all__ += ['BCDEBUG'] if 'BCDEBUG' not in logging.__all__ else []
+    def bcdebug(self, message, *args, **kws):
+        if self.isEnabledFor(logging.BCDEBUG): self._log(logging.BCDEBUG, message, args, **kws)
+    logging.Logger.bcdebug = bcdebug
 
-    if not log_file.name:
+    # Add a verbose logging level = 15
+    logging.VERBOSE = 15
+    logging.addLevelName(logging.VERBOSE, 'VERBOSE')
+    logging.__all__ += ['VERBOSE'] if 'VERBOSE' not in logging.__all__ else []
+    def verbose(self, message, *args, **kws):
+        if self.isEnabledFor(logging.VERBOSE): self._log(logging.VERBOSE, message, args, **kws)
+    logging.Logger.verbose = verbose
+
+    # Add a success logging level = 25
+    logging.SUCCESS = 25
+    logging.addLevelName(logging.SUCCESS, 'SUCCESS')
+    logging.__all__ += ['SUCCESS'] if 'SUCCESS' not in logging.__all__ else []
+    def success(self, message, *args, **kws):
+        if self.isEnabledFor(logging.SUCCESS): self._log(logging.SUCCESS, message, args, **kws)
+    logging.Logger.success = success
+
+    # Set the root logging level
+    logger = logging.getLogger()
+    logger.setLevel('BCDEBUG' if debug else 'VERBOSE')
+
+    # Add the console streamhandler and bring some color to those boring logs! :-)
+    coloredlogs.install(level='BCDEBUG' if debug else 'VERBOSE' if not logfile.name else 'INFO', fmt=cfmt, datefmt=datefmt)   # NB: Using tqdm sets the streamhandler level to 0, see: https://github.com/tqdm/tqdm/pull/1235
+    coloredlogs.DEFAULT_LEVEL_STYLES['verbose']['color'] = 245  # = Gray
+
+    if not logfile.name:
+        if debug: LOGGER.info('\t<<<<<<<<<< Running BIDScoin in DEBUG mode >>>>>>>>>>')
         return
 
-    # Set & add the log filehandler
-    log_file.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
-    loghandler = logging.FileHandler(log_file)
-    loghandler.setLevel(logging.DEBUG)
+    # Add the log filehandler
+    logfile.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
+    formatter  = logging.Formatter(fmt=fmt, datefmt=datefmt)
+    loghandler = logging.FileHandler(logfile)
+    loghandler.setLevel('BCDEBUG')
     loghandler.setFormatter(formatter)
     loghandler.set_name('loghandler')
     logger.addHandler(loghandler)
 
-    # Set & add the error / warnings filehandler
-    error_file = log_file.with_suffix('.errors')            # Derive the name of the error logfile from the normal log_file
-    errorhandler = logging.FileHandler(error_file, mode='w')
-    errorhandler.setLevel(logging.WARNING)
+    # Add the error/warnings filehandler
+    errorhandler = logging.FileHandler(logfile.with_suffix('.errors'), mode='w')
+    errorhandler.setLevel('WARNING')
     errorhandler.setFormatter(formatter)
     errorhandler.set_name('errorhandler')
     logger.addHandler(errorhandler)
+
+    if debug: LOGGER.info('\t<<<<<<<<<< Running BIDScoin in DEBUG mode >>>>>>>>>>')
 
 
 def version(check: bool=False) -> Union[str, Tuple]:
@@ -136,7 +169,7 @@ def bidsversion() -> str:
     :return:    The BIDS version number
     """
 
-    return (bidscoinfolder/'bidsversion.txt').read_text().strip()
+    return (schemafolder/'BIDS_VERSION').read_text().strip()
 
 
 def reporterrors() -> None:
@@ -147,43 +180,42 @@ def reporterrors() -> None:
     """
 
     # Find the filehandlers and report the errors and warnings
-    for filehandler in logging.getLogger().handlers:
-        if filehandler.name == 'errorhandler':
+    for handler in logging.getLogger().handlers:
+        if handler.name == 'errorhandler':
 
-            errorfile = Path(filehandler.baseFilename)
+            errorfile = Path(handler.baseFilename)
             if errorfile.stat().st_size:
                 LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errorfile.read_text()}{40 * '<'}\n")
 
             else:
-                LOGGER.info(f'No BIDScoin errors or warnings were reported')
+                LOGGER.success(f'No BIDScoin errors or warnings were reported')
                 LOGGER.info('')
 
-        elif filehandler.name == 'loghandler':
-            logfile = Path(filehandler.baseFilename)
+        elif handler.name == 'loghandler':
+            logfile = Path(handler.baseFilename)
 
     # Final message
     if 'logfile' in locals():
         LOGGER.info(f"For the complete log see: {logfile}\n"
-                    f"NB: Files in {logfile.parent} may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
+                    f"NB: That folder may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
 
 
-def run_command(command: str) -> bool:
+def run_command(command: str) -> int:
     """
     Runs a command in a shell using subprocess.run(command, ..)
 
     :param command: The command that is executed
-    :return:        True if the command was successfully executed (no errors), False otherwise
+    :return:        Errorcode (i.e. 0 if the command was successfully executed (no errors), > 0 otherwise)
     """
 
     LOGGER.info(f"Running: {command}")
-    process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)          # TODO: investigate shell=False and capture_output=True for python 3.7
-    if process.stderr.decode('utf-8') or process.returncode != 0:
-        LOGGER.error(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stdout.decode('utf-8')}\n{process.stderr.decode('utf-8')}")
-        return False
+    process = subprocess.run(command, shell=True, capture_output=True, text=True)
+    if process.stderr or process.returncode != 0:
+        LOGGER.error(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
     else:
-        LOGGER.info(f"Output:\n{process.stdout.decode('utf-8')}")
+        LOGGER.info(f"Output:\n{process.stdout}")
 
-    return True
+    return process.returncode
 
 
 def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
@@ -200,80 +232,89 @@ def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
 
 def list_executables(show: bool=False) -> list:
     """
-    :return:                Nothing
+    :return:            List of BIDScoin console scripts
     """
 
-    if show:
-        LOGGER.info('Executable BIDScoin tools:')
+    if show: LOGGER.info('Executable BIDScoin tools:')
 
     scripts = []
-    for script in entry_points()['console_scripts']:
+    if sys.version_info.major == 3 and sys.version_info.minor < 10:
+        console_scripts = entry_points()['console_scripts']                 # Raises DeprecationWarning for python >= 3.10: SelectableGroups dict interface is deprecated
+    else:
+        console_scripts = entry_points().select(group='console_scripts')    # The select method was introduced in python = 3.10
+    for script in console_scripts:
         if script.value.startswith('bidscoin'):
             scripts.append(script.name)
-            if show:
-                LOGGER.info(f"- {script.name}")
+            if show: LOGGER.info(f"- {script.name}")
 
     return scripts
 
 
-def list_plugins(show: bool=False) -> List[Path]:
+def list_plugins(show: bool=False) -> Tuple[List[Path], List[Path]]:
     """
-    :param show: Print the installed plugins if True
-    :return:     List of the installed plugins
+    :param show: Print the template bidsmaps and installed plugins if True
+    :return:     List of the installed plugins and template bidsmaps
     """
 
-    if show:
-        LOGGER.info('Installed BIDScoin plugins:')
+    if show: LOGGER.info(f"Installed template bidsmaps ({heuristicsfolder}):")
+    templates = []
+    for template in heuristicsfolder.glob('*.yaml'):
+        if template.stem != '__init__':
+            templates.append(template)
+            if show: LOGGER.info(f"- {template.stem}{' (default)' if template.samefile(bidsmap_template) else ''}")
 
+    if show: LOGGER.info(f"Installed plugins ({pluginfolder}):")
     plugins = []
-    for plugin in (bidscoinfolder/'plugins').glob('*.py'):
+    for plugin in pluginfolder.glob('*.py'):
         if plugin.stem != '__init__':
             plugins.append(plugin)
-            if show:
-                LOGGER.info(f"- {plugin.stem}")
+            if show: LOGGER.info(f"- {plugin.stem}")
 
-    return plugins
+    return plugins, templates
 
 
-def install_plugins(plugins: Tuple[Path]=()) -> Union[bool, None]:
+def install_plugins(filenames: List[str]=()) -> None:
     """
-    Installs plugins in the plugins folder and adds their Options and data format section to the default template bidsmap
+    Installs template bidsmaps and plugins and adds the plugin Options and data format section to the default template bidsmap
 
-    :param plugins: Fullpath filenames of the plugins that need to be installed
-    :return:        True if the installation was successful and False if it failed
+    :param filenames:   Fullpath filenames of the and template bidsmaps plugins that need to be installed
+    :return:            Nothing
     """
 
-    if not plugins:
-        return
+    if not filenames: return
+
+    files = [Path(file) for file in filenames if file.endswith('.yaml') or file.endswith('.py')]
 
     # Load the default template bidsmap
     with open(bidsmap_template, 'r') as stream:
         template = yaml.load(stream)
 
-    # Install the plugins
-    success = True
-    for plugin in plugins:
-        plugin = Path(plugin)
-        LOGGER.info(f"Installing: '{plugin}'")
+    # Install the template bidsmaps and plugins the their targetfolder
+    for file in files:
 
-        # Copy the plugin to the plugins folder
+        # Copy the file to their target folder
+        targetfolder = heuristicsfolder if file.suffix == '.yaml' else pluginfolder
+        LOGGER.info(f"Installing: '{file}'")
         try:
-            shutil.copyfile(plugin, bidscoinfolder/'plugins'/plugin.with_suffix('.py').name)
+            shutil.copyfile(file, targetfolder/file.name)
         except IOError as install_failure:
-            LOGGER.error(f"{install_failure}\nFailed to install: '{plugin.name}' in '{bidscoinfolder/'plugins'}'")
-            success = False
+            LOGGER.error(f"{install_failure}\nFailed to install: '{file.name}' in '{targetfolder}'")
             continue
-        module = import_plugin(plugin, ('bidsmapper_plugin', 'bidscoiner_plugin'))
-        if not module:
-            LOGGER.error(f"Import failure, please re-install a valid version of '{plugin.name}'")
-            success = False
+        if file.suffix == '.yaml':
+            LOGGER.success(f"The '{file.name}' template bidsmap was successfully installed")
             continue
 
-        # Add the Options and data format section to the default template bidsmap
+        # Check if we can import the plugin
+        module = import_plugin(file, ('bidsmapper_plugin', 'bidscoiner_plugin'))
+        if not module:
+            LOGGER.error(f"Plugin failure, please re-install a valid version of '{file.name}'")
+            continue
+
+        # Add the Options and data format section of the plugin to the default template bidsmap
         if 'OPTIONS' in dir(module) or 'BIDSMAP' in dir(module):
             if 'OPTIONS' in dir(module):
-                LOGGER.info(f"Adding default {plugin.name} bidsmap options to the {bidsmap_template.stem} template")
-                template['Options']['plugins'][plugin.stem] = module.OPTIONS
+                LOGGER.info(f"Adding default {file.name} bidsmap options to the {bidsmap_template.stem} template")
+                template['Options']['plugins'][file.stem] = module.OPTIONS
             if 'BIDSMAP' in dir(module):
                 for key, value in module.BIDSMAP.items():
                     LOGGER.info(f"Adding default {key} bidsmappings to the {bidsmap_template.stem} template")
@@ -281,46 +322,53 @@ def install_plugins(plugins: Tuple[Path]=()) -> Union[bool, None]:
             with open(bidsmap_template, 'w') as stream:
                 yaml.dump(template, stream)
 
-    return success
+        LOGGER.success(f"The '{file.name}' plugin was successfully installed")
 
 
-def uninstall_plugins(plugins: Tuple[str]=(), wipe: bool=True) -> Union[bool, None]:
+def uninstall_plugins(filenames: List[str]=(), wipe: bool=True) -> None:
     """
-    Uninstalls plugins in the plugins folder and removes their Options and data format section from the default template bidsmap
+    Uninstalls template bidsmaps and plugins and removes the plugin Options and data format section from the default template bidsmap
 
-    :param plugins: Fullpath filenames of the plugins that need to be uninstalled
-    :param wipe:    Removes the plugin bidsmapping section if True
-    :return:        True if the de-installation was successful, else False
+    :param filenames:   Fullpath filenames of the and template bidsmaps plugins that need to be uninstalled
+    :param wipe:        Removes the plugin bidsmapping section if True
+    :return:            None
     """
 
-    if not plugins:
-        return
+    if not filenames: return
+
+    files = [Path(file) for file in filenames if file.endswith('.yaml') or file.endswith('.py')]
 
     # Load the default template bidsmap
     with open(bidsmap_template, 'r') as stream:
         template = yaml.load(stream)
 
     # Uninstall the plugins
-    success = True
-    for plugin in plugins:
+    for file in files:
 
-        plugin = (bidscoinfolder/'plugins'/plugin).with_suffix('.py')
-        if not plugin.is_file():
-            LOGGER.error(f"Plugin {plugin.stem} not found''")
-            success = False
+        # First check if we can import the plugin
+        if file.suffix == '.py':
+            module = import_plugin(pluginfolder/file.name, ('bidsmapper_plugin', 'bidscoiner_plugin'))
+
+        # Remove the file from the target folder
+        LOGGER.info(f"Uninstalling: '{file}'")
+        sourcefolder = heuristicsfolder if file.suffix == '.yaml' else pluginfolder
+        try:
+            (sourcefolder/file.name).unlink()
+        except IOError as uninstall_error:
+            LOGGER.error(f"{uninstall_error}\nFailed to uninstall: '{file.name}' from {sourcefolder}")
             continue
-
-        module = import_plugin(plugin, ('bidsmapper_plugin', 'bidscoiner_plugin'))
-        if not module:
-            LOGGER.error(f"Import failure of '{plugin.stem}'")
-            success = False
+        if file.suffix == '.yaml':
+            LOGGER.success(f"The '{file.name}' template bidsmap was successfully uninstalled")
             continue
 
         # Remove the Options and data format section from the default template bidsmap
+        if not module:
+            LOGGER.warning(f"Cannot remove any {file.stem} bidsmap options from the {bidsmap_template.stem} template")
+            continue
         if 'OPTIONS' in dir(module) or 'BIDSMAP' in dir(module):
             if 'OPTIONS' in dir(module):
-                LOGGER.info(f"Removing default {plugin.stem} bidsmap options from the {bidsmap_template.stem} template")
-                template['Options']['plugins'].pop(plugin.stem, None)
+                LOGGER.info(f"Removing default {file.stem} bidsmap options from the {bidsmap_template.stem} template")
+                template['Options']['plugins'].pop(file.stem, None)
             if wipe and 'BIDSMAP' in dir(module):
                 for key, value in module.BIDSMAP.items():
                     LOGGER.info(f"Removing default {key} bidsmappings from the {bidsmap_template.stem} template")
@@ -328,15 +376,7 @@ def uninstall_plugins(plugins: Tuple[str]=(), wipe: bool=True) -> Union[bool, No
             with open(bidsmap_template, 'w') as stream:
                 yaml.dump(template, stream)
 
-        # Remove the plugin from the plugins folder
-        try:
-            LOGGER.info(f"Uninstalling: '{plugin.stem}'")
-            plugin.unlink()
-        except IOError as uninstall_error:
-            LOGGER.info(f"Failed to uninstall: '{plugin}'\n{uninstall_error}")
-            success = False
-
-    return success
+        LOGGER.success(f"The '{file.stem}' plugin was successfully uninstalled")
 
 
 @lru_cache()
@@ -349,8 +389,7 @@ def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> module_from_s
     :return:            The imported plugin-module
     """
 
-    if not plugin:
-        return
+    if not plugin: return
 
     # Get the full path to the plugin-module
     plugin = Path(plugin).with_suffix('.py')
@@ -363,7 +402,7 @@ def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> module_from_s
         return
 
     # Load the plugin-module
-    LOGGER.debug(f"Importing plugin: '{plugin}'")
+    LOGGER.verbose(f"Importing plugin: '{plugin}'")
     try:
         spec   = spec_from_file_location('bidscoin.plugin.' + plugin.stem, plugin)
         module = module_from_spec(spec)
@@ -372,7 +411,7 @@ def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> module_from_s
         functionsfound = []
         for function in functions:
             if function not in dir(module):
-                LOGGER.debug(f"Could not find '{function}' in the '{plugin}' plugin")
+                LOGGER.verbose(f"Could not find '{function}' in the '{plugin}' plugin")
             elif not callable(getattr(module, function)):
                 LOGGER.error(f"'The {function}' attribute in the '{plugin}' plugin is not callable")
             else:
@@ -387,82 +426,119 @@ def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> module_from_s
         LOGGER.error(f"Could not import {plugin}:\n{pluginerror}")
 
 
-def test_plugin(plugin: Union[Path,str], options: dict) -> bool:
+def test_plugin(plugin: Union[Path,str], options: dict) -> int:
     """
     Performs import tests of the plug-in
 
     :param plugin:  The name of the plugin that is being tested
     :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins'][plugin.stem]
-    :return:        True if the plugin generated the expected result, False if there was a plug-in error
+    :return:        The result of the plugin test routine (e.g. 0 if it passed or 1 if there was a general plug-in error)
     """
 
-    if not plugin:
-        return False
+    if not plugin: return 1
 
     LOGGER.info(f"--------- Testing the '{plugin}' plugin ---------")
 
     # First test to see if we can import the plugin
     module = import_plugin(plugin, ('bidsmapper_plugin','bidscoiner_plugin'))
-    if inspect.ismodule(module):
-        LOGGER.info(f"Succesfully imported '{plugin}'")
-    else:
-        return False
+    if not inspect.ismodule(module):
+        LOGGER.error(f"Could not import '{plugin}'")
+        return 1
 
     # Then run the plugin's own 'test' routine (if implemented)
     if 'test' in dir(module) and callable(getattr(module, 'test')):
         try:
-            return module.test(options)
+            returncode = module.test(options)
+            if returncode:
+                LOGGER.warning(f"The'{plugin}' plugin did not function correctly")
+            else:
+                LOGGER.success(f"The'{plugin}' plugin functioned correctly")
+            return returncode
         except Exception as pluginerror:
             LOGGER.error(f"Could not run {plugin}.test(options):\n{pluginerror}")
-            return False
+            return 1
+    else:
+        LOGGER.info(f"The '{plugin}' did not have a test routine")
+        return 0
 
-    return True
 
-
-def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins: bool=True):
+def test_bidsmap(bidsmapfile: str):
     """
-    Performs a bidscoin installation test
+    Tests the bidsmaps run-items and their bidsname using BIDScoin's check and the bids-validator
 
     :param bidsmapfile: The bidsmap or the full pathname / basename of the bidsmap yaml-file
-    :param options:     The bidscoin options. If empty, the default options are used
-    :return:            True if the test was successful
+    :return:
     """
 
     if not bidsmapfile:
         return
 
-    LOGGER.info('--------- Testing the BIDScoin tools and settings ---------')
+    try:  # Include the import in the test + moving the import to the top of this module will cause circular import issues
+        from bidscoin import bids
+    except ImportError:
+        import bids  # This should work if bidscoin was not pip-installed
+
+    LOGGER.info('--------- Testing bidsmap runs and their bids-names ---------')
+
+    bidsmapfile = Path(bidsmapfile)
+    if bidsmapfile.is_dir():
+        bidsfolder  = bidsmapfile/'code'/'bidscoin'
+        bidsmapfile = Path()
+    else:
+        bidsfolder  = Path()
+    bidsmap, _ = bids.load_bidsmap(bidsmapfile, bidsfolder, check=(True,True,True))
+    bids.validate_bidsmap(bidsmap)
+
+
+def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins: bool=True, testgui: bool=True, testtemplate: bool=True) -> int:
+    """
+    Performs a bidscoin installation test
+
+    :param bidsmapfile: The bidsmap or the full pathname / basename of the bidsmap yaml-file
+    :param options:     The bidscoin options. If empty, the default options are used
+    :return:            0 if the test was successful, otherwise 1
+    """
+
+    if not bidsmapfile: return 1
+
+    LOGGER.info("--------- Testing the BIDScoin's core functionality ---------")
 
     # Test loading the template bidsmap
     success = True
     if isinstance(bidsmapfile, (str, Path)):
-        try:
-            try:                    # Include the import in the test + moving the import to the top of this module will cause circular import issues
-                from bidscoin import bids
-            except ImportError:
-                import bids         # This should work if bidscoin was not pip-installed
-
-            bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile))
-            if not options:
-                options = bidsmap['Options']
+        LOGGER.info(f"Running bidsmap checks:")
+        try:            # Moving the import to the top of this module will cause circular import issues
+            try:  from bidscoin import bids
+            except ImportError: import bids         # This should work if bidscoin was not pip-installed
+            bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile), check=(True,True,False))
         except Exception as bidsmaperror:
-            LOGGER.error(f'{bidsmaperror}')
+            LOGGER.error(f"An error occurred when loading {bidsmapfile}:\n{bidsmaperror}")
+            bidsmap = {'Options': {}}
             success = False
     else:
-        if not options:
-            options = bidsmapfile['Options']
+        bidsmap = bidsmapfile
+
+    # Check if all entities of each datatype in the bidsmap are present
+    if testtemplate:
+        try:                # Moving the import to the top of this module will cause circular import issues
+            try:  from bidscoin import bids
+            except ImportError: import bids  # This should work if bidscoin was not pip-installed
+            success = bids.check_template(bidsmap) and success
+        except ImportError:
+            LOGGER.info(f"Could not fully test: {bidsmap}")
 
     # Test PyQt
-    LOGGER.info('Testing the PyQt GUI setup:')
-    try:
-        app = QApplication(sys.argv)
-        window = QPushButton('Minimal GUI test: OK')
-        window.show()
-        QApplication.quit()
-        LOGGER.info('The GUI seems to work OK')
-    except Exception as pyqterror:
-        LOGGER.error(f"The installed PyQt version does not seem to work for your system:\n{pyqterror}")
-        success = False
+    if testgui:
+        LOGGER.info('Testing the PyQt GUI setup:')
+        try:
+            app = QApplication(sys.argv)
+            window = QPushButton('Minimal GUI test: OK')
+            window.show()
+            QApplication.quit()
+            LOGGER.success('The GUI seems to work OK')
+        except Exception as pyqterror:
+            LOGGER.error(f"The installed PyQt version does not seem to work for your system:\n{pyqterror}")
+            success = False
 
     # Test the DRMAA configuration (used by pydeface only)
     try:
@@ -470,27 +546,33 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
         LOGGER.info('Testing the DRMAA setup:')
         try:
             import drmaa
-            LOGGER.info('The DRMAA library was successfully imported')
+            LOGGER.success('The DRMAA library was successfully imported')
         except (RuntimeError, OSError, FileNotFoundError, ModuleNotFoundError, ImportError) as drmaaerror:
             LOGGER.warning(f"The DRMAA library could not be imported. This is OK if you want to run pydeface locally and not use the option to distribute jobs on a compute cluster\n{drmaaerror}")
     except ModuleNotFoundError:
         pass
 
     # Show an overview of the bidscoin tools. TODO: test the entry points?
-    if options and not options.get('plugins'):
-        LOGGER.warning('No plugins found in the bidsmap (BIDScoin will likely not do anything)')
     list_executables(True)
 
     # Test the plugins
+    options = bidsmap['Options'] if not options and bidsmap else {}
+    if not options.get('plugins'):
+        LOGGER.warning('No plugins found in the bidsmap (BIDScoin will likely not do anything)')
     if testplugins:
 
         # Show an overview of the plugins and show the test results
         list_plugins(True)
-        for plugin in (bidscoinfolder/'plugins').glob('*.py'):
+        for plugin in pluginfolder.glob('*.py'):
             if plugin.stem != '__init__':
-                success = test_plugin(plugin.stem, options['plugins'].get(plugin.stem,{}) if options else {}) and success
+                success = not test_plugin(plugin.stem, options['plugins'].get(plugin.stem,{}) if options else {}) and success
 
-    return success
+    if int:
+        LOGGER.warning('Not all plugins finished their test successfully')
+    else:
+        LOGGER.success('All plugins finished their test successfully')
+
+    return int(not success)
 
 
 def pulltutorialdata(tutorialfolder: str) -> None:
@@ -501,8 +583,7 @@ def pulltutorialdata(tutorialfolder: str) -> None:
     :return:
     """
 
-    if not tutorialfolder:
-        return
+    if not tutorialfolder: return
 
     tutorialfolder = Path(tutorialfolder).resolve()
     tutorialtargz  = tutorialfolder/'bidscointutorial.tar.gz'
@@ -519,7 +600,7 @@ def pulltutorialdata(tutorialfolder: str) -> None:
         for member in tqdm(iterable=targz_fid.getmembers(), total=len(targz_fid.getmembers()), leave=False):
             targz_fid.extract(member, tutorialfolder)
     tutorialtargz.unlink()
-    LOGGER.info(f"Done")
+    LOGGER.success(f"Done")
 
 
 def main():
@@ -536,14 +617,16 @@ def main():
                                             '  bidscoin -d data/bidscoin_tutorial\n'
                                             '  bidscoin -t\n'
                                             '  bidscoin -t my_template_bidsmap\n'
-                                            '  bidscoin -i python/project/my_plugin.py downloads/handy_plugin.py\n ')
-    parser.add_argument('-l', '--list',      help='List all bidscoin tools', action='store_true')
-    parser.add_argument('-p', '--plugins',   help='List all installed plugins', action='store_true')
-    parser.add_argument('-i', '--install',   help='A list of bidscoin plugins to install', nargs='+')
-    parser.add_argument('-u', '--uninstall', help='A list of bidscoin plugins to uninstall', nargs='+')
-    parser.add_argument('-d', '--download',  help='Download folder. If given, tutorial MRI data will be downloaded here')
-    parser.add_argument('-t', '--test',      help='Test the bidscoin installation and template bidsmap', nargs='?', const=bidsmap_template)
-    parser.add_argument('-v', '--version',   help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
+                                            '  bidscoin -b my_study_bidsmap\n'
+                                            '  bidscoin -i data/my_template_bidsmap.yaml downloads/my_plugin.py\n ')
+    parser.add_argument('-l', '--list',        help='List all bidscoin tools', action='store_true')
+    parser.add_argument('-p', '--plugins',     help='List all installed plugins and template bidsmaps', action='store_true')
+    parser.add_argument('-i', '--install',     help='A list of template bidsmaps and/or bidscoin plugins to install', nargs='+')
+    parser.add_argument('-u', '--uninstall',   help='A list of template bidsmaps and/or bidscoin plugins to uninstall', nargs='+')
+    parser.add_argument('-d', '--download',    help='Download folder. If given, tutorial MRI data will be downloaded here')
+    parser.add_argument('-t', '--test',        help='Test the bidscoin installation and template bidsmap', nargs='?', const=bidsmap_template)
+    parser.add_argument('-b', '--bidsmaptest', help='Test the run-items and their bidsnames of all normal runs in the study bidsmap. Provide the bids-folder or the bidsmap filepath')
+    parser.add_argument('-v', '--version',     help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
     if len(sys.argv) == 1:
         parser.print_help()
         return
@@ -551,10 +634,11 @@ def main():
 
     list_executables(show=args.list)
     list_plugins(show=args.plugins)
-    uninstall_plugins(plugins=args.uninstall)
-    install_plugins(plugins=args.install)
+    uninstall_plugins(filenames=args.uninstall)
+    install_plugins(filenames=args.install)
     pulltutorialdata(tutorialfolder=args.download)
     test_bidscoin(bidsmapfile=args.test)
+    test_bidsmap(bidsmapfile=args.bidsmaptest)
 
 
 if __name__ == "__main__":

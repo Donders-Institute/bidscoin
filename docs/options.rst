@@ -34,7 +34,7 @@ The dcm2niix2bids plugin is the default bidscoiner plugin that converts DICOM an
   - ``module add dcm2niix/v1.0.20210317; dcm2niix`` (if you use a module system)
   - ``PATH=/opt/dcm2niix/bin:$PATH; dcm2niix`` (prepend the path to your executable)
   - ``/opt/dcm2niix/bin/dcm2niix`` (specify the fullpath to the executable)
-  - ``"C:\Program Files\dcm2niix\dcm2niix.exe"`` (use quotes to deal with whitespaces in your fullpath)
+  - ``C:\"Program Files"\dcm2niix\dcm2niix.exe`` (use quotes to deal with whitespaces in your fullpath)
 
 - ``args``: Argument string that is passed as input to dcm2niix to customize its behavior, e.g. ``-z n -i y`` for ignoring derived data and having uncompressed output data.
 - ``anon``: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
@@ -45,6 +45,7 @@ To test the proper working of dcm2niix click [Test] and see the terminal output 
 .. tip::
    - Use the [Set as default] button to put your custom dcm2niix command in your template bidsmap so that you don't have to adjust it anymore for every new study
    - SPM users may want to use '-z n', which produces unzipped nifti's
+   - Install ``pigz`` to speed-up dm2niix (search the web for more help)
 
 spec2nii2bids - plugin
 ----------------------
@@ -57,7 +58,7 @@ The spec2nii2bids plugin is a default bidscoiner plugin that converts Twix, SPAR
   - ``module add spec2nii; spec2nii`` (if you use a module system)
   - ``PATH=/opt/spec2nii/bin:$PATH; spec2nii`` (prepend the path to your executable)
   - ``/opt/spec2nii/bin/spec2nii`` (specify the fullpath to the executable)
-  - ``"C:\Program Files\spec2nii\spec2nii.exe"`` (use quotes to deal with whitespaces in your fullpath)
+  - ``C:\"Program Files"\spec2nii\spec2nii.exe`` (use quotes to deal with whitespaces in your fullpath)
 
 - ``args``: Argument string that is passed as input to spec2nii to customize its behavior
 - ``anon``: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data

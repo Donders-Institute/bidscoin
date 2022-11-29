@@ -7,7 +7,7 @@ With a sufficiently `organized source data folder <preparation.html>`__, the dat
 
    Creation and application of a study bidsmap
 
-By default, step 1a automatically launches step 1b, so in it's simplest form, all you need to do to convert your raw source data into BIDS is to run two simple shell commands, e.g.:
+By default, when finished the bidsmapper automatically launches the bidseditor, so in it's simplest form, all you need to do to convert your raw source data into BIDS is to run two simple shell commands, e.g.:
 
 .. code-block:: console
 
@@ -15,6 +15,9 @@ By default, step 1a automatically launches step 1b, so in it's simplest form, al
     $ bidscoiner sourcefolder bidsfolder    # Converts your data to BIDS using the study bidsmap
 
 If you add new subjects all you need to do is re-run the bidscoiner -- unless the scan protocol was changed, then you also need to first re-run the bidsmapper to add the new samples to the study bidsmap. The paragraphs below describe the BIDScoin worklow in more detail.
+
+.. tip::
+   If you don't know what shell command to use or what to do, run the ``bidscoin`` command to give you a workflow overview
 
 Step 1a: Running the bidsmapper
 -------------------------------
@@ -132,7 +135,7 @@ As shown below, the main window of the bidseditor opens with separate data mappi
 Edit window
 ^^^^^^^^^^^
 
-In the main window, you can double-click the BIDS output name of a data sample or click the [Edit] button next to it (NB: the `*` in this button indicates that attention is required) to open a new window, as shown below. In this new window, the full bids-mapping info of the clicked data-sample (AKA run-item) is shown, with the filesystem ``Properties`` and file ``Attributes`` input on the left, and, most importantly, the associated BIDS ``Data type``, ``Data filename`` and ``Meta data`` output on the right. You should first make sure the BIDS ``Data type`` (drop down menu) and its ``suffix`` label (drop down menu) are set correctly, and then you should edit the (automatically generated) BIDS values that you think are not optimal or incorrect (double-click the cell). Each time an item is edited, a new ``Data filename`` preview is shown (green or red text indicates that the name is BIDS compliant or not). In the ``Meta data`` table (see the figure below) you can enter key-value pairs that you like to to be appended (by the standard ``dcm2niix2bids`` `plugin <advanced.html#plugins>`__) to the standard meta-data in the json sidecar file. Editing the source properties and attributes of a study bidsmap is usually not necessary and considered `advanced usage <advanced.html>`__.
+In the main window, you can double-click the BIDS output name of a data sample or click the [Edit] button next to it (NB: the `*` in this button indicates that attention is required) to open a new window, as shown below. In this new window, the full bids-mapping info of the clicked data-sample (AKA run-item) is shown, with the filesystem ``Properties`` and file ``Attributes`` input on the left, and, most importantly, the associated BIDS ``Data type``, ``Data filename`` and ``Meta data`` output on the right. You should first make sure the BIDS ``Data type`` (drop down menu) and its ``suffix`` label (drop down menu) are set correctly, and then you should edit the (automatically generated) BIDS values that you think are not optimal or incorrect (double-click the cell). Each time an item is edited, a new ``Data filename`` preview is shown (green or red text indicates that the name is BIDS compliant or not). In the ``Meta data`` table (see the figure below) you can enter key-value pairs that you like to to be appended (by the standard ``dcm2niix2bids`` `plugin <advanced.html#plugins>`__) to the standard meta-data in the json sidecar file. Right-clicking the meta table allows you to import meta-data from JSON/YAML/CSV/TSV files on disk. Editing the source properties and attributes of a study bidsmap is usually not necessary and considered `advanced usage <advanced.html>`__.
 
 If the preview of the BIDS filename and meta-data both look good, you can store the data in the bidsmap by clicking the [OK] button.
 
@@ -209,7 +212,7 @@ Step 2: Running the bidscoiner
 
 .. tip::
    * Always check the terminal output for possible warnings or errors (a summary of them is printed at the end)
-   * Check your json sidecar files of your fieldmaps, in particular see if they have the expected ``IntendedFor`` values
+   * Check your json sidecar files of your fieldmaps, in particular see if they have the expected ``IntendedFor``/``B0FieldIdentifier`` values
 
 .. note::
    The provenance of the produced BIDS data-sets is stored in the ``[bidsfolder]/code/bidscoin/bidscoiner.log`` file. This file is also very useful for debugging / tracking down bidscoin issues.

@@ -4,12 +4,42 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
+## [3.8.0] - 2022-11-4
+
+### Added
+- Support for BIDS 1.8.0
+- A BIDSCOIN_DEBUG environment variable to run bidscoin in a more verbose debug mode
+- VERBOSE and SUCCESS logging levels
+- Checks using the bids-validator python module
+- Options to perform bidsmap tests with `bidscoin -t / -b`
+- Option to list and install template bidsmaps
+- The skullstrip tool (a bids-wrapper around synthstrip)
+
+### Changed
+- The default behaviour is now not to unzip data in the sourcefolders anymore. Instead, users can use the `--unzip` option in the bidsmapper
+- Removed BIDScoin's redundant/confusing `datatypes` option from the bidsmap
+
+## [3.7.4] - 2022-10-21
+
+### Added
+- Added support for the ABCD GE pepolar pulse sequence
+- Use an orange bidsname font in the bidseditor for `.bidsignore` datatypes
+- A (right-click) context menu in the bidseditor to import meta-data from disk into the meta-table
+ 
+### Changed
+- Remove the DCCN specific dcm2niix module usage in the bidsmap template
+- Add `-l n` to the dcm2niix arguments to revert old UIN16 -> INT16 behaviour (otherwise fmriprep outputs are twice as large)
+- No longer enforce BIDS compliance on `.bidsignore` datatypes
+
+### Fixed
+- Sorting flat DICOM data (in a temporary working directory)
+- The dcm2niix module (if not removed) raised an error that prevented handling dcm2niix suffixes
+
 ## [3.7.3] - 2022-07-13
 
 ### Added
 - The usage of json sidecar files as a datasource for attribute values
 - A template bidsmap for the [ScanSessionTool](https://github.com/fladd/ScanSessionTool)
-- Usage of json sidecar files as an attribute source
 
 ### Changed
 - Dicomsort now searches recursively over the sessionfolder
@@ -319,7 +349,9 @@ A first stable release of BIDScoin :-)
 ### To do
 * Add support for non-imaging data
 
-[dev]: https://github.com/Donders-Institute/bidscoin/compare/3.7.3...HEAD
+[dev]: https://github.com/Donders-Institute/bidscoin/compare/3.8.0...HEAD
+[3.8.0]: https://github.com/Donders-Institute/bidscoin/compare/3.7.4...3.8.0
+[3.7.4]: https://github.com/Donders-Institute/bidscoin/compare/3.7.3...3.7.4
 [3.7.3]: https://github.com/Donders-Institute/bidscoin/compare/3.7.2...3.7.3
 [3.7.2]: https://github.com/Donders-Institute/bidscoin/compare/3.7.1...3.7.2
 [3.7.1]: https://github.com/Donders-Institute/bidscoin/compare/3.7.0...3.7.1

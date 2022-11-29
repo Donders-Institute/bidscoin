@@ -158,6 +158,11 @@ This utility is very similar to the `deface <#defacing>`__ utility above, except
       medeface /project/3017065.01/bids anat/*acq-GRE* -m anat/*acq-GRE*magnitude*"
       medeface /project/3017065.01/bids anat/*_FLAIR* -a '{"cost": "corratio", "verbose": ""}'
 
+Skull-stripping
+^^^^^^^^^^^^^^^
+
+The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS valid output. NB: skullstrip requires `FreeSurfer <https://surfer.nmr.mgh.harvard.edu/docs/synthstrip/>`__ of (v7.3.2 or higher) to be installed on the system
+
 BIDS validation
 ---------------
 

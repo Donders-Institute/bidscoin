@@ -93,7 +93,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, bidsmapfile: st
     LOGGER.info(f">>> bidsparticipants sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmapfile}")
 
     # Get the bidsmap sub-/ses-prefix from the bidsmap YAML-file
-    bidsmap,_ = bids.load_bidsmap(Path(bidsmapfile), bidsfolder/'code'/'bidscoin')
+    bidsmap,_ = bids.load_bidsmap(Path(bidsmapfile), bidsfolder/'code'/'bidscoin', check=(False,False,False))
     if not bidsmap:
         LOGGER.info('Make sure to run "bidsmapper" first, exiting now')
         return
@@ -147,7 +147,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, bidsmapfile: st
                     participants_dict['session_id'] = {'Description': 'Session identifier'}
 
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-                sesfolders, unpacked = bids.unpack(session)
+                sesfolders, unpacked = bids.unpack(session, bidsmap['Options']['bidscoin'].get('unzip',''))
                 for sesfolder in sesfolders:
 
                     # Update / append the personal source data
@@ -198,8 +198,8 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
-                                            '  bidsparticipants /project/foo/raw /project/foo/bids\n'
-                                            '  bidsparticipants /project/foo/raw /project/foo/bids -k participant_id age sex\n ')
+                                            '  bidsparticipants myproject/raw myproject/bids\n'
+                                            '  bidsparticipants myproject/raw myproject/bids -k participant_id age sex\n ')
     parser.add_argument('sourcefolder',     help='The study root folder containing the raw source data folders')
     parser.add_argument('bidsfolder',       help='The destination / output folder with the bids data')
     parser.add_argument('-k','--keys',      help="Space separated list of the participants.tsv columns. Default: 'session_id' 'age' 'sex' 'size' 'weight'", nargs='+', default=['session_id', 'age', 'sex', 'size' ,'weight'])

@@ -41,12 +41,12 @@ def test(options: dict) -> bool:
     This plugin function tests the working of the plugin + its bidsmap options
 
     :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['phys2bidscoin']
-    :return:        True if the test was successful
+    :return:        The errorcode (e.g 0 if the tool generated the expected result, > 0 if there was a tool error)
     """
 
     LOGGER.info(f'This is the phys2bids-plugin WIP test routine')
 
-    return True
+    return 0
 
 
 def is_sourcefile(file: Path) -> str:
@@ -62,7 +62,7 @@ def is_sourcefile(file: Path) -> str:
             try:
                 phys2bids(file, info=True)
             except Exception as phys2bidserror:
-                LOGGER.debug(f'The phys2bids-plugin "is_sourcefile()" routine crashed, assessing whether "{file}" has a valid dataformat:\n{phys2bidserror}')
+                LOGGER.exception(f'The phys2bids-plugin "is_sourcefile()" routine crashed, assessing whether "{file}" has a valid dataformat:\n{phys2bidserror}')
                 return ''
         return 'Physio'
 
@@ -93,7 +93,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
     """
 
     if dataformat == 'Physio':
-        LOGGER.debug(f'This is the phys2bids-plugin get_attribute routine, reading the {dataformat} "{attribute}" attribute value from "{sourcefile}"')
+        LOGGER.verbose(f'This is the phys2bids-plugin get_attribute routine, reading the {dataformat} "{attribute}" attribute value from "{sourcefile}"')
     else:
         return ''
 
@@ -154,9 +154,11 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
             # Now work from the provenance store
             if store:
-                targetfile        = store['target']/sourcefile.relative_to(store['source'])
+                targetfile             = store['target']/sourcefile.relative_to(store['source'])
                 targetfile.parent.mkdir(parents=True, exist_ok=True)
-                run['provenance'] = str(shutil.copy2(sourcefile, targetfile))
+                LOGGER.verbose(f"Storing the discovered {dataformat} sample as: {targetfile}")
+                run['provenance']      = str(shutil.copy2(sourcefile, targetfile))
+                run['datasource'].path = targetfile
 
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)
@@ -192,7 +194,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     datasource  = bids.get_datasource(session, plugin)
     sourcefiles = [file for file in session.rglob('*') if is_sourcefile(file)]
     if not sourcefiles:
-        LOGGER.info(f"No {__name__} sourcedata found in: {session}")
+        LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
         return
 
     # Loop over all source data files and convert them to BIDS
@@ -204,7 +206,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
-            LOGGER.info(f"Leaving out: {sourcefile}")
+            LOGGER.info(f"--> Leaving out: {sourcefile}")
             continue
 
         # Check that we know this run
@@ -212,10 +214,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete the physiological output data in {bidsses} to solve this warning")
             continue
 
-        LOGGER.info(f"Processing: {sourcefile}")
+        LOGGER.info(f"--> Coining: {sourcefile}")
 
         # Get an ordered list of the func runs from the scans.tsv file (which should have a standardized datetime format)
-        scans_tsv = bidsses/f"{subid}{bids.add_prefix('_', sesid)}_scans.tsv"
+        scans_tsv = bidsses/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
         if scans_tsv.is_file():
             scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
             scans_table.sort_values(by=['acq_time', 'filename'], inplace=True)
@@ -272,9 +274,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 jsondata = json.load(json_fid)
             for metakey, metaval in run['meta'].items():
                 metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
-                try: metaval = ast.literal_eval(str(metaval))
+                try: metaval = ast.literal_eval(str(metaval))            # E.g. convert stringified list or int back to list or int
                 except (ValueError, SyntaxError): pass
-                LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
+                LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
                 if not metaval:
                     metaval = None
                 jsondata[metakey] = metaval

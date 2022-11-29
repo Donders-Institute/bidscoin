@@ -119,7 +119,7 @@ def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: boo
                 with mapperfile.open('a') as fid:
                     fid.write(f"{subid}\t{sesid}\t{newsubid}\t{newsesid}\n")
                 if newsession.is_dir():
-                    for item in session.iterdir():
+                    for item in list(session.iterdir()):
                         shutil.move(item, newsession/item.name)
                     session.rmdir()
                 else:
@@ -145,12 +145,12 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n' 
-                                            '  rawmapper /project/3022026.01/raw/\n'
-                                            '  rawmapper /project/3022026.01/raw -d AcquisitionDate\n' 
-                                            '  rawmapper /project/3022026.01/raw -s sub-100/ses-mri01 sub-126/ses-mri01\n'
-                                            '  rawmapper /project/3022026.01/raw -r -d ManufacturerModelName AcquisitionDate --dryrun\n' 
+                                            '  rawmapper myproject/raw/\n'
+                                            '  rawmapper myproject/raw -d AcquisitionDate\n' 
+                                            '  rawmapper myproject/raw -s sub-100/ses-mri01 sub-126/ses-mri01\n'
+                                            '  rawmapper myproject/raw -r -d ManufacturerModelName AcquisitionDate --dryrun\n' 
                                             '  rawmapper raw/ -r -s sub-1*/* sub-2*/ses-mri01 --dryrun\n'
-                                            '  rawmapper -d EchoTime -w *fMRI* /project/3022026.01/raw\n ')
+                                            '  rawmapper -d EchoTime -w *fMRI* myproject/raw\n ')
     parser.add_argument('sourcefolder',     help='The source folder with the raw data in sub-#/ses-#/series organisation')
     parser.add_argument('-s','--sessions',  help='Space separated list of selected sub-#/ses-# names / folders to be processed. Otherwise all sessions in the bidsfolder will be selected', nargs='+')
     parser.add_argument('-f','--field',     help='The fieldname(s) of the dicom attribute(s) used to rename or map the subid/sesid foldernames', default=['PatientComments'], nargs='+')

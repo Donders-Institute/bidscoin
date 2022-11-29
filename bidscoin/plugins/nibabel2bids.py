@@ -9,6 +9,7 @@ import ast
 import shutil
 import pandas as pd
 import nibabel as nib
+from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
 try:
@@ -23,12 +24,12 @@ OPTIONS = {'ext': '.nii.gz',                                        # The (nibab
            'meta': ['.json', '.tsv', '.tsv.gz', '.bval', '.bvec']}  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
 
 
-def test(options: dict=OPTIONS) -> bool:
+def test(options: dict=OPTIONS) -> int:
     """
     Performs a nibabel test
 
     :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['nibabel2bids']
-    :return:        True if the tool generated the expected result, False if there was a tool error
+    :return:        The errorcode: 0 for successful execution, 1 for general tool errors, 2 for `ext` option errors, 3 for `meta` option errors
     """
 
     LOGGER.info('Testing the nibabel2bids installation:')
@@ -38,15 +39,15 @@ def test(options: dict=OPTIONS) -> bool:
         LOGGER.info(f"Nibabel version: {nib.info.VERSION}")
         if options.get('ext',OPTIONS['ext']) not in ('.nii', '.nii.gz'):
             LOGGER.error(f"The 'ext: {options.get('ext')}' value in the nibabel2bids options is not '.nii' or '.nii.gz'")
-            return False
+            return 2
         if not isinstance(options.get('meta',OPTIONS['meta']), list):
             LOGGER.error(f"The 'meta: {options.get('meta')}' value in the nibabel2bids options is not a list")
-            return False
+            return 3
     except Exception as nibabelerror:
         LOGGER.error(f"Nibabel error:\n{nibabelerror}")
-        return False
+        return 1
 
-    return True
+    return 0
 
 
 def is_sourcefile(file: Path) -> str:
@@ -76,7 +77,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
     """
 
     if dataformat == 'Nibabel':
-        return nib.load(str(sourcefile)).header.get(attribute)
+        return nib.load(sourcefile).header.get(attribute)
 
 
 def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
@@ -120,16 +121,14 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
             # Now work from the provenance store
             if store:
-                targetfile        = store['target']/sourcefile.relative_to(store['source'])
+                targetfile             = store['target']/sourcefile.relative_to(store['source'])
                 targetfile.parent.mkdir(parents=True, exist_ok=True)
-                run['provenance'] = str(shutil.copy2(sourcefile, targetfile))
+                LOGGER.verbose(f"Storing the discovered {datasource.dataformat} sample as: {targetfile}")
+                run['provenance']      = str(shutil.copy2(sourcefile, targetfile))
+                run['datasource'].path = targetfile
 
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)
-
-        else:
-            # Communicate with the user if the run was already present in bidsmap_old or in template
-            LOGGER.debug(f"Known '{datasource.datatype}' {datasource.dataformat} sample: {sourcefile}")
 
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
@@ -159,11 +158,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     meta        = options.get('meta', [])
     sourcefiles = [file for file in session.rglob('*') if is_sourcefile(file)]
     if not sourcefiles:
-        LOGGER.info(f"No {__name__} sourcedata found in: {session}")
+        LOGGER.info(f"--> No {__name__} sourcedata found in: {session}")
         return
 
     # Read or create a scans_table and tsv-file
-    scans_tsv = bidsses/f"{subid}{bids.add_prefix('_', sesid)}_scans.tsv"
+    scans_tsv = bidsses/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
     if scans_tsv.is_file():
         scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
     else:
@@ -178,26 +177,34 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
-            LOGGER.info(f"Leaving out: {sourcefile}")
+            LOGGER.info(f"--> Leaving out: {sourcefile}")
             continue
+        bidsignore = datasource.datatype in bidsmap['Options']['bidscoin']['bidsignore']
 
         # Check if we already know this run
         if not match:
             LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
             continue
 
-        LOGGER.info(f"Processing: {sourcefile}")
+        LOGGER.info(f"--> Coining: {sourcefile}")
 
         # Create the BIDS session/datatype output folder
         outfolder = bidsses/datasource.datatype
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        bidsname = bids.get_bidsname(subid, sesid, run, runtime=True)
-        runindex = run['bids'].get('run', '')
+        bidsname = bids.get_bidsname(subid, sesid, run, bidsignore, runtime=True)
+        runindex = run['bids'].get('run')
+        runindex = str(runindex) if runindex else ''
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(outfolder, bidsname)
         bidsfile = (outfolder/bidsname).with_suffix(ext)
+
+        # Check if the bidsname is valid
+        bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.json').as_posix()
+        isbids   = BIDSValidator().is_bids(bidstest)
+        if not isbids and not bidsignore:
+            LOGGER.warning(f"The '{bidstest}' ouput name did not pass the bids-validator test")
 
         # Check if file already exists (-> e.g. when a static runindex is used)
         if bidsfile.is_file():
@@ -215,9 +222,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         for metakey, metaval in run['meta'].items():
             if metakey != 'IntendedFor':
                 metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
-                try: metaval = ast.literal_eval(str(metaval))
+                try: metaval = ast.literal_eval(str(metaval))            # E.g. convert stringified list or int back to list or int
                 except (ValueError, SyntaxError): pass
-                LOGGER.info(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
+                LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
             if not metaval:
                 metaval = None
             jsondata[metakey] = metaval
@@ -235,7 +242,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         scans_table.loc[bidsfile.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time.isoformat()
 
     # Write the scans_table to disk
-    LOGGER.info(f"Writing data to: {scans_tsv}")
+    LOGGER.verbose(f"Writing data to: {scans_tsv}")
     scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
     # Add an (empty) entry to the participants_table (we don't have useful data to put there)
@@ -251,5 +258,5 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     participants_table.loc[subid, 'session_id'] = sesid if sesid else None
 
     # Write the collected data to the participants tsv-file
-    LOGGER.info(f"Writing {subid} subject data to: {participants_tsv}")
+    LOGGER.verbose(f"Writing {subid} subject data to: {participants_tsv}")
     participants_table.replace('','n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')

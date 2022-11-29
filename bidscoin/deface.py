@@ -2,7 +2,7 @@
 """
 A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface).
 
-Except for BIDS inheritances, this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS compliant output
+Except for BIDS inheritances and IntendedFor usage, this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 
 For multi-echo data see `medeface`
 """
@@ -18,9 +18,9 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 try:
-    from bidscoin import bidscoin, bids
+    from bidscoin import bidscoin
 except ImportError:
-    import bidscoin, bids             # This should work if bidscoin was not pip-installed
+    import bidscoin                 # This should work if bidscoin was not pip-installed
 
 
 def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
@@ -73,6 +73,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
         with logging_redirect_tqdm():
             for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
+                subid    = subject.name
                 sessions = bidscoin.lsdirs(subject, 'ses-*')
                 if not sessions:
                     sessions = [subject]
@@ -81,10 +82,8 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                     LOGGER.info('--------------------------------------')
                     LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
 
-                    datasource   = bids.DataSource(session/'dum.my', subprefix='sub-', sesprefix='ses-')
-                    subid, sesid = datasource.subid_sesid()
-
                     # Search for images that need to be defaced
+                    sesid = session.name if session.name.startswith('ses-') else ''
                     for match in sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes]):
 
                         # Construct the output filename and relative path name (used in BIDS)
@@ -103,9 +102,9 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                         # Check the json "Defaced" field to see if it has already been defaced
                         outputjson = outputfile.with_suffix('').with_suffix('.json')
                         if not force and outputjson.is_file():
-                            with outputjson.open('r') as output_fid:
-                                data = json.load(output_fid)
-                            if data.get('Defaced'):
+                            with outputjson.open('r') as sidecar:
+                                metadata = json.load(sidecar)
+                            if metadata.get('Defaced'):
                                 LOGGER.info(f"Skipping already defaced image: {match_rel} -> {outputfile_rel}")
                                 continue
 
@@ -119,45 +118,18 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                         else:
                             pdu.deface_image(str(match), str(outputfile), force=True, forcecleanup=True, **kwargs)
 
-                        # Overwrite or add a json sidecar-file
+                        # Add a json sidecar-file with the "Defaced" field
                         inputjson = match.with_suffix('').with_suffix('.json')
-                        if inputjson.is_file() and inputjson != outputjson:
-                            if outputjson.is_file():
-                                LOGGER.info(f"Overwriting the json sidecar-file: {outputjson}")
-                                outputjson.unlink()
-                            else:
-                                LOGGER.info(f"Adding a json sidecar-file: {outputjson}")
-                            shutil.copyfile(inputjson, outputjson)
-
-                        # Add a custom "Defaced" field to the json sidecar-file
-                        with outputjson.open('r') as output_fid:
-                            data = json.load(output_fid)
-                        data['Defaced'] = True
-                        with outputjson.open('w') as output_fid:
-                            json.dump(data, output_fid, indent=4)
-
-                        # Update the IntendedFor fields in the fieldmap sidecar-files. NB: IntendedFor must be relative to the subject folder
-                        if output and output != 'derivatives' and (session/'fmap').is_dir():
-                            for fmap in (session/'fmap').glob('*.json'):
-                                with fmap.open('r') as fmap_fid:
-                                    fmap_data = json.load(fmap_fid)
-                                intendedfor = fmap_data['IntendedFor']
-                                if isinstance(intendedfor, str):
-                                    intendedfor = [intendedfor]
-                                if (Path(sesid)/match_rel).as_posix() in intendedfor:
-                                    LOGGER.info(f"Updating 'IntendedFor' to {Path(sesid)/outputfile_rel} in {fmap}")
-                                    fmap_data['IntendedFor'] = intendedfor + [(Path(sesid)/outputfile_rel).as_posix()]
-                                    with fmap.open('w') as fmap_fid:
-                                        json.dump(fmap_data, fmap_fid, indent=4)
+                        with inputjson.open('r') as sidecar:
+                            metadata = json.load(sidecar)
+                        metadata['Defaced'] = True
+                        with outputjson.open('w') as sidecar:
+                            json.dump(metadata, sidecar, indent=4)
 
                         # Update the scans.tsv file
-                        if (bidsdir/'.bidsignore').is_file():
-                            bidsignore = (bidsdir/'.bidsignore').read_text().splitlines()
-                        else:
-                            bidsignore = []
-                        bidsignore.append('derivatives/')
-                        scans_tsv = session/f"{subid}{bids.add_prefix('_',sesid)}_scans.tsv"
-                        if output and output+'/' not in bidsignore and scans_tsv.is_file():
+                        scans_tsv  = session/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
+                        bidsignore = (bidsdir/'.bidsignore').read_text().splitlines() if (bidsdir/'.bidsignore').is_file() else ['extra_data/']
+                        if output and output+'/' not in bidsignore + ['derivatives/'] and scans_tsv.is_file():
                             LOGGER.info(f"Adding {outputfile_rel} to {scans_tsv}")
                             scans_table                     = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
                             scans_table.loc[outputfile_rel] = scans_table.loc[match_rel]
@@ -181,10 +153,10 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
                                      description=__doc__,
                                      epilog='examples:\n'
-                                            '  deface /project/3017065.01/bids anat/*_T1w*\n'
-                                            '  deface /project/3017065.01/bids anat/*_T1w* -p 001 003 -o derivatives\n'
-                                            '  deface /project/3017065.01/bids anat/*_T1w* -c -n "-l walltime=00:60:00,mem=4gb"\n'
-                                            '  deface /project/3017065.01/bids anat/*_T1w* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
+                                            '  deface myproject/bids anat/*_T1w*\n'
+                                            '  deface myproject/bids anat/*_T1w* -p 001 003 -o derivatives\n'
+                                            '  deface myproject/bids anat/*_T1w* -c -n "-l walltime=00:60:00,mem=4gb"\n'
+                                            '  deface myproject/bids anat/*_T1w* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
     parser.add_argument('bidsfolder', type=str,
                         help='The bids-directory with the subject data')
     parser.add_argument('pattern', type=str,

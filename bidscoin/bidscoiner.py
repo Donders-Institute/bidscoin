@@ -84,7 +84,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         with dataset_file.open('r') as fid:
             dataset_description = json.load(fid)
         if 'BIDScoin' not in [generatedby_['Name'] for generatedby_ in dataset_description.get('GeneratedBy',[])]:
-            LOGGER.info(f"Adding {generatedby} to {dataset_file}")
+            LOGGER.verbose(f"Adding {generatedby} to {dataset_file}")
             dataset_description['GeneratedBy'] = dataset_description.get('GeneratedBy',[]) + generatedby
     with dataset_file.open('w') as fid:
         json.dump(dataset_description, fid, indent=4)
@@ -123,7 +123,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     bidsignore_items = [item.strip() for item in bidsmap['Options']['bidscoin']['bidsignore'].split(';')]
     bidsignore_file  = bidsfolder/'.bidsignore'
     if bidsignore_items:
-        LOGGER.info(f"Writing {bidsignore_items} entries to {bidsignore_file}")
+        LOGGER.verbose(f"Writing {bidsignore_items} entries to {bidsignore_file}")
         if bidsignore_file.is_file():
             bidsignore_items += bidsignore_file.read_text().splitlines()
         with bidsignore_file.open('w') as bidsignore:
@@ -155,10 +155,10 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
             LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
             if participants and subject.name in list(participants_table.index):
-                LOGGER.info(f"Skipping subject: {subject} ({n}/{len(subjects)})")
+                LOGGER.info(f">>> Skipping subject: {subject} ({n}/{len(subjects)})")
                 continue
             if not subject.is_dir():
-                LOGGER.warning(f"The '{subject}' subject folder does not exist")
+                LOGGER.error(f"The '{subject}' subject folder does not exist")
                 continue
 
             sessions = bidscoin.lsdirs(subject, (sesprefix if sesprefix!='*' else '') + '*')
@@ -167,13 +167,13 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             for session in sessions:
 
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
-                sesfolders, unpacked = bids.unpack(session)
+                sesfolders, unpacked = bids.unpack(session, bidsmap['Options']['bidscoin'].get('unzip',''))
                 for sesfolder in sesfolders:
 
                     # Check if we should skip the session-folder
                     datasource = bids.get_datasource(sesfolder, bidsmap['Options']['plugins'])
                     if not datasource.dataformat:
-                        LOGGER.info(f"No coinable datasources found in '{sesfolder}'")
+                        LOGGER.info(f">>> No coinable datasources found in '{sesfolder}'")
                         continue
                     subid        = bidsmap[datasource.dataformat]['subject']
                     sesid        = bidsmap[datasource.dataformat]['session']
@@ -182,21 +182,21 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     if not force and bidssession.is_dir():
                         datatypes = []
                         for dataformat in dataformats:
-                            for datatype in bidscoin.lsdirs(bidssession):                           # See what datatypes we already have in the bids session-folder
-                                if datatype.iterdir() and bidsmap[dataformat].get(datatype.name):   # See if we are going to add data for this datatype
+                            for datatype in bidscoin.lsdirs(bidssession):                               # See what datatypes we already have in the bids session-folder
+                                if list(datatype.iterdir()) and bidsmap[dataformat].get(datatype.name): # See if we are going to add data for this datatype
                                     datatypes.append(datatype.name)
                         if datatypes:
-                            LOGGER.info(f"Skipping processed session: {bidssession} already has {datatypes} data (you can carefully use the -f option to overrule)")
+                            LOGGER.info(f">>> Skipping processed session: {bidssession} already has {datatypes} data (you can carefully use the -f option to overrule)")
                             continue
 
-                    LOGGER.info(f"Coining datasources in: {sesfolder}")
+                    LOGGER.info(f">>> Coining datasources in: {sesfolder}")
                     if bidssession.is_dir():
                         LOGGER.warning(f"Existing BIDS output-directory found, which may result in duplicate data (with increased run-index). Make sure {bidssession} was cleaned-up from old data before (re)running the bidscoiner")
                     bidssession.mkdir(parents=True, exist_ok=True)
 
                     # Run the bidscoiner plugins
                     for module in plugins:
-                        LOGGER.info(f"Executing plugin: {Path(module.__file__).name}")
+                        LOGGER.verbose(f"Executing plugin: {Path(module.__file__).name}")
                         module.bidscoiner_plugin(sesfolder, bidsmap, bidssession)
 
                     # Add the special fieldmap metadata (IntendedFor, B0FieldIdentifier, TE, etc)
@@ -206,7 +206,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     if unpacked:
                         shutil.rmtree(sesfolder)
 
-    # Re-read the participants_table and store the collected personals in the json sidecar-file
+    # Re-read the participants_table (the plugins may have changed it) and store the collected personals in the json sidecar-file
     if participants_tsv.is_file():
         participants_table = pd.read_csv(participants_tsv, sep='\t')
         participants_table.set_index(['participant_id'], verify_integrity=True, inplace=True)
@@ -252,41 +252,39 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
     # Add IntendedFor search results and TE1+TE2 meta-data to the fieldmap json-files. This has been postponed until all datatypes have been processed (i.e. so that all target images are indeed on disk)
     if (bidsses/'fmap').is_dir():
 
-        scans_tsv = bidsses/f"{subid}{bids.add_prefix('_', sesid)}_scans.tsv"
+        scans_tsv = bidsses/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
         if scans_tsv.is_file():
             scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
         else:
-            scans_table = pd.DataFrame(columns=['acq_time'], dtype='str')
-            scans_table.index.name = 'filename'
+            scans_table = pd.DataFrame(columns=['acq_time'])
 
         fmaps = [fmap.relative_to(bidsses).as_posix() for fmap in sorted((bidsses/'fmap').glob('sub-*.nii*'))]
         for fmap in fmaps:
 
-            # Skip unexpected fieldmaps
-            if fmap not in scans_table.index:
-                continue
-
-            # Check if there are multiple runs and get the lower- and upperbound from the AcquisitionTime
-            runindex   = bids.get_bidsvalue(fmap, 'run')
-            prevfmap   = bids.get_bidsvalue(fmap, 'run', str(int(runindex) - 1))
-            nextfmap   = bids.get_bidsvalue(fmap, 'run', str(int(runindex) + 1))
-            acqtime    = scans_table.loc[fmap, 'acq_time']
-            fmaptime   = dateutil.parser.parse(acqtime if isinstance(acqtime,str) else '1925-01-01')
-            lowerbound = fmaptime.replace(hour=0,  minute=0,  second=0)
-            upperbound = fmaptime.replace(hour=23, minute=59, second=59)
-            if runindex and prevfmap in fmaps:
-                lowerbound = dateutil.parser.parse(scans_table.loc[prevfmap, 'acq_time'])
-            if runindex and nextfmap in fmaps:
-                upperbound = dateutil.parser.parse(scans_table.loc[nextfmap, 'acq_time'])
-
             # Load the existing meta-data
             jsonfile = bidsses/Path(fmap).with_suffix('').with_suffix('.json')
-            with jsonfile.open('r') as json_fid:
-                jsondata = json.load(json_fid)
+            with jsonfile.open('r') as sidecar:
+                jsondata = json.load(sidecar)
 
             # Search for the imaging files that match the IntendedFor search criteria
             intendedfor = jsondata.get('IntendedFor')
             if intendedfor and isinstance(intendedfor, str):
+
+                # Check if there are multiple runs and get the lower- and upperbound from the AcquisitionTime to limit down the IntendedFor search
+                fmaptime   = dateutil.parser.parse('1925-01-01')                                    # If nothing, use the BIDS stub acquisition time
+                lowerbound = fmaptime.replace(year=1900)                                            # If nothing, use an ultra-wide lower limit for the IntendedFor search
+                upperbound = fmaptime.replace(year=2100)                                            # Idem for the upper limit
+                try:                                                                                # There may be more fieldmaps, hence try to limit down the search to the adjacently acquired data
+                    fmaptime = dateutil.parser.parse(scans_table.loc[fmap, 'acq_time'])
+                    runindex = bids.get_bidsvalue(fmap, 'run')
+                    prevfmap = bids.get_bidsvalue(fmap, 'run', str(int(runindex) - 1))
+                    nextfmap = bids.get_bidsvalue(fmap, 'run', str(int(runindex) + 1))
+                    if prevfmap in fmaps:
+                        lowerbound = dateutil.parser.parse(scans_table.loc[prevfmap, 'acq_time'])   # Narrow the lower search limit down to the preceding fieldmap
+                    if nextfmap in fmaps:
+                        upperbound = dateutil.parser.parse(scans_table.loc[nextfmap, 'acq_time'])   # Narrow the upper search limit down to the succeeding fieldmap
+                except (ValueError, KeyError, dateutil.parser.ParserError) as acqtimeerror:
+                    pass                                                                            # Raise this only if there are limits and matches, i.e. below
 
                 # Search with multiple patterns for matching nifti-files in all runs and store the relative path to the session folder
                 niifiles = []
@@ -299,24 +297,28 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                     pattern = part.split(':',1)[0].strip()
                     matches = [niifile.relative_to(bidsses).as_posix() for niifile in sorted(bidsses.rglob(f"*{pattern}*.nii*")) if pattern]
                     if limits and matches:
-                        limits     = limits[1:-1].split(':',1)                      # limits: '[lowerlimit:upperlimit]' -> ['lowerlimit', 'upperlimit']
-                        lowerlimit = int(limits[0]) if limits[0].strip() else float('-inf')
-                        upperlimit = int(limits[1]) if limits[1].strip() else float('inf')
-                        acqtimes   = []
-                        for match in matches:
-                            acqtimes.append((dateutil.parser.parse(scans_table.loc[match,'acq_time']), match))     # Time + filepath relative to the session-folder
-                        acqtimes.sort(key = lambda acqtime: acqtime[0])
-                        offset = sum([acqtime[0] < fmaptime for acqtime in acqtimes])  # The nr of preceding series
-                        for n, acqtime in enumerate(acqtimes):
-                            if lowerbound < acqtime[0] < upperbound and lowerlimit <= n-offset < upperlimit:
-                                niifiles.append(acqtime[1])
+                        try:
+                            limits     = limits[1:-1].split(':',1)                  # limits: '[lowerlimit:upperlimit]' -> ['lowerlimit', 'upperlimit']
+                            lowerlimit = int(limits[0]) if limits[0].strip() else float('-inf')
+                            upperlimit = int(limits[1]) if limits[1].strip() else float('inf')
+                            acqtimes   = []
+                            for match in matches:
+                                acqtimes.append((dateutil.parser.parse(scans_table.loc[match,'acq_time']), match))      # Time + filepath relative to the session-folder
+                            acqtimes.sort(key = lambda acqtime: acqtime[0])
+                            offset = sum([acqtime[0] < fmaptime for acqtime in acqtimes])  # The nr of preceding series
+                            for n, acqtime in enumerate(acqtimes):
+                                if lowerbound < acqtime[0] < upperbound and lowerlimit <= n-offset < upperlimit:
+                                    niifiles.append(acqtime[1])
+                        except Exception as intendedforerror:
+                            LOGGER.error(f"Could not bound the <{part}> IntendedFor search as it requires a *_scans.tsv file with acq_time values for: {fmap}\n{intendedforerror}")
+                            niifiles.extend(matches)
                     else:
                         niifiles.extend(matches)
 
-                # Add the IntendedFor data. NB: The paths need to use forward slashes and be relative to the subject folder
+                # Add the IntendedFor data. NB: The BIDS URI paths need to use forward slashes and be relative to the bids root folder
                 if niifiles:
-                    LOGGER.info(f"Adding IntendedFor to: {jsonfile}")
-                    jsondata['IntendedFor'] = [(Path(sesid)/niifile).as_posix() for niifile in niifiles]
+                    LOGGER.verbose(f"Adding IntendedFor to: {jsonfile}")
+                    jsondata['IntendedFor'] = [f"bids::{(Path(subid)/sesid/niifile).as_posix()}" for niifile in niifiles]
                 else:
                     LOGGER.warning(f"Empty 'IntendedFor' fieldmap value in {jsonfile}: the search for {intendedfor} gave no results")
                     jsondata['IntendedFor'] = None
@@ -337,8 +339,8 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                     if not json_magnitude[n].is_file():
                         LOGGER.error(f"Could not find expected magnitude{n+1} image associated with: {jsonfile}\nUse the bidseditor to verify that the fmap images that belong together have corresponding BIDS output names")
                     else:
-                        with json_magnitude[n].open('r') as json_fid:
-                            data = json.load(json_fid)
+                        with json_magnitude[n].open('r') as sidecar:
+                            data = json.load(sidecar)
                         echotime[n] = data.get('EchoTime')
                 jsondata['EchoTime1'] = jsondata['EchoTime2'] = None
                 if None in echotime:
@@ -348,11 +350,11 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                 else:
                     jsondata['EchoTime1'] = echotime[0]
                     jsondata['EchoTime2'] = echotime[1]
-                    LOGGER.info(f"Adding EchoTime1: {echotime[0]} and EchoTime2: {echotime[1]} to {jsonfile}")
+                    LOGGER.verbose(f"Adding EchoTime1: {echotime[0]} and EchoTime2: {echotime[1]} to {jsonfile}")
 
             # Save the collected meta-data to disk
-            with jsonfile.open('w') as json_fid:
-                json.dump(jsondata, json_fid, indent=4)
+            with jsonfile.open('w') as sidecar:
+                json.dump(jsondata, sidecar, indent=4)
 
 
 def main():
@@ -362,8 +364,8 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
-                                            '  bidscoiner /project/foo/raw /project/foo/bids\n'
-                                            '  bidscoiner -f /project/foo/raw /project/foo/bids -p sub-009 sub-030\n ')
+                                            '  bidscoiner myproject/raw myproject/bids\n'
+                                            '  bidscoiner -f myproject/raw myproject/bids -p sub-009 sub-030\n ')
     parser.add_argument('sourcefolder',             help='The study root folder containing the raw source data')
     parser.add_argument('bidsfolder',               help='The destination / output folder with the bids data')
     parser.add_argument('-p','--participant_label', help='Space separated list of selected sub-# names / folders to be processed (the sub- prefix can be removed). Otherwise all subjects in the sourcefolder will be selected', nargs='+')

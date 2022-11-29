@@ -3,7 +3,7 @@
 A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface) that computes
 a defacing mask on a (temporary) echo-combined image and then applies it to each individual echo-image.
 
-Except for BIDS inheritances, this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS compliant output
+Except for BIDS inheritances and IntendedFor usage, this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 
 For single-echo data see `deface`
 """
@@ -22,9 +22,9 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 try:
-    from bidscoin import bidscoin, bids
+    from bidscoin import bidscoin
 except ImportError:
-    import bidscoin, bids             # This should work if bidscoin was not pip-installed
+    import bidscoin                 # This should work if bidscoin was not pip-installed
 
 
 def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
@@ -48,7 +48,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
         maskpattern = pattern
 
     # Start logging
-    bidscoin.setup_logging(bidsdir/'code'/'bidscoin'/'deface.log')
+    bidscoin.setup_logging(bidsdir/'code'/'bidscoin'/'medeface.log')
     LOGGER.info('')
     LOGGER.info('------------ START multi-echo deface ----------')
     LOGGER.info(f">>> medeface bidsfolder={bidsdir} pattern={pattern} subjects={subjects} output={output}"
@@ -75,6 +75,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
         # Loop over bids subject/session-directories to first get all the echo-combined deface masks
         for n, subject in enumerate(subjects, 1):
 
+            subid    = subject.name
             sessions = bidscoin.lsdirs(subject, 'ses-*')
             if not sessions:
                 sessions = [subject]
@@ -83,10 +84,8 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                 LOGGER.info('--------------------------------------')
                 LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
 
-                datasource   = bids.DataSource(session/'dum.my', subprefix='sub-', sesprefix='ses-')
-                subid, sesid = datasource.subid_sesid()
-
                 # Read the echo-images that will be combined to compute the deface mask
+                sesid     = session.name if session.name.startswith('ses-') else ''
                 echofiles = sorted([match for match in session.glob(maskpattern) if '.nii' in match.suffixes])
                 if not echofiles:
                     LOGGER.info(f'No mask files found for: {session}/{maskpattern}')
@@ -111,23 +110,23 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                 # Deface the echo-combined image
                 LOGGER.info(f"Creating a deface-mask from the echo-combined image: {tmpfile}")
                 if cluster:
-                    jt.args = [str(tmpfile), '--outfile', str(tmpfile), '--force'] + [item for pair in [[f"--{key}", val] for key,val in kwargs.items()] for item in pair]
+                    jt.args    = [str(tmpfile), '--outfile', str(tmpfile), '--force'] + [item for pair in [[f"--{key}", val] for key,val in kwargs.items()] for item in pair]
                     jt.jobName = f"pydeface_{subid}_{sesid}"
-                    jobid = pbatch.runJob(jt)
+                    jobid      = pbatch.runJob(jt)
                     LOGGER.info(f"Your deface job has been submitted with ID: {jobid}")
                 else:
                     pdu.deface_image(str(tmpfile), str(tmpfile), force=True, forcecleanup=True, **kwargs)
 
         if cluster:
             LOGGER.info('Waiting for the deface jobs to finish...')
-            pbatch.synchronize(jobIds=[pbatch.JOB_IDS_SESSION_ALL], timeout=pbatch.TIMEOUT_WAIT_FOREVER,
-                               dispose=True)
+            pbatch.synchronize(jobIds=[pbatch.JOB_IDS_SESSION_ALL], timeout=pbatch.TIMEOUT_WAIT_FOREVER, dispose=True)
             pbatch.deleteJobTemplate(jt)
 
     # Loop again over bids subject/session-directories to apply the deface masks and write meta-data
     with logging_redirect_tqdm():
         for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
+            subid    = subject.name
             sessions = bidscoin.lsdirs(subject, 'ses-*')
             if not sessions:
                 sessions = [subject]
@@ -136,10 +135,8 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                 LOGGER.info('--------------------------------------')
                 LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
 
-                datasource   = bids.DataSource(session/'dum.my', subprefix='sub-', sesprefix='ses-')
-                subid, sesid = datasource.subid_sesid()
-
                 # Read the temporary defacemask
+                sesid   = session.name if session.name.startswith('ses-') else ''
                 tmpfile = session/'tmp_echocombined_deface.nii'
                 if not tmpfile.is_file():
                     LOGGER.info(f'No {tmpfile} file found')
@@ -169,46 +166,19 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                     outputimg = nib.Nifti1Image(echoimg.get_fdata() * defacemask, echoimg.affine, echoimg.header)
                     outputimg.to_filename(outputfile)
 
-                    # Overwrite or add a json sidecar-file
+                    # Add a json sidecar-file with the "Defaced" field
                     inputjson  = echofile.with_suffix('').with_suffix('.json')
                     outputjson = outputfile.with_suffix('').with_suffix('.json')
-                    if inputjson.is_file() and inputjson != outputjson:
-                        if outputjson.is_file():
-                            LOGGER.info(f"Overwriting the json sidecar-file: {outputjson}")
-                            outputjson.unlink()
-                        else:
-                            LOGGER.info(f"Adding a json sidecar-file: {outputjson}")
-                        shutil.copyfile(inputjson, outputjson)
-
-                    # Add a custom "Defaced" field to the json sidecar-file
-                    with outputjson.open('r') as output_fid:
-                        data = json.load(output_fid)
-                    data['Defaced'] = True
-                    with outputjson.open('w') as output_fid:
-                        json.dump(data, output_fid, indent=4)
-
-                    # Update the IntendedFor fields in the fieldmap sidecar-files NB: IntendedFor must be relative to the subject folder
-                    if output and output != 'derivatives' and (session/'fmap').is_dir():
-                        for fmap in (session/'fmap').glob('*.json'):
-                            with fmap.open('r') as fmap_fid:
-                                fmap_data = json.load(fmap_fid)
-                            intendedfor = fmap_data['IntendedFor']
-                            if isinstance(intendedfor, str):
-                                intendedfor = [intendedfor]
-                            if (Path(sesid)/echofile_rel).as_posix() in intendedfor:
-                                LOGGER.info(f"Updating 'IntendedFor' to {Path(sesid)/outputfile_rel} in {fmap}")
-                                fmap_data['IntendedFor'] = intendedfor + [(Path(sesid)/outputfile_rel).as_posix()]
-                                with fmap.open('w') as fmap_fid:
-                                    json.dump(fmap_data, fmap_fid, indent=4)
+                    with inputjson.open('r') as sidecar:
+                        metadata = json.load(sidecar)
+                    metadata['Defaced'] = True
+                    with outputjson.open('w') as sidecar:
+                        json.dump(metadata, sidecar, indent=4)
 
                     # Update the scans.tsv file
-                    if (bidsdir/'.bidsignore').is_file():
-                        bidsignore = (bidsdir/'.bidsignore').read_text().splitlines()
-                    else:
-                        bidsignore = []
-                    bidsignore.append('derivatives/')
-                    scans_tsv = session/f"{subid}{bids.add_prefix('_',sesid)}_scans.tsv"
-                    if output and output+'/' not in bidsignore and scans_tsv.is_file():
+                    scans_tsv  = session/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
+                    bidsignore = (bidsdir/'.bidsignore').read_text().splitlines() if (bidsdir/'.bidsignore').is_file() else ['extra_data/']
+                    if output and output+'/' not in bidsignore + ['derivatives/'] and scans_tsv.is_file():
                         LOGGER.info(f"Adding {outputfile_rel} to {scans_tsv}")
                         scans_table                     = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
                         scans_table.loc[outputfile_rel] = scans_table.loc[echofile_rel]
@@ -227,11 +197,11 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
                                      description=__doc__,
                                      epilog='examples:\n'
-                                            '  medeface /project/3017065.01/bids anat/*_T1w*\n'
-                                            '  medeface /project/3017065.01/bids anat/*_T1w* -p 001 003 -o derivatives\n'
-                                            '  medeface /project/3017065.01/bids anat/*_T1w* -c -n "-l walltime=00:60:00,mem=4gb"\n'
-                                            '  medeface /project/3017065.01/bids anat/*acq-GRE* -m anat/*acq-GRE*magnitude*"\n'
-                                            '  medeface /project/3017065.01/bids anat/*_FLAIR* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
+                                            '  medeface myproject/bids anat/*_T1w*\n'
+                                            '  medeface myproject/bids anat/*_T1w* -p 001 003 -o derivatives\n'
+                                            '  medeface myproject/bids anat/*_T1w* -c -n "-l walltime=00:60:00,mem=4gb"\n'
+                                            '  medeface myproject/bids anat/*acq-GRE* -m anat/*acq-GRE*magnitude*"\n'
+                                            '  medeface myproject/bids anat/*_FLAIR* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
     parser.add_argument('bidsfolder', type=str,
                         help='The bids-directory with the (multi-echo) subject data')
     parser.add_argument('pattern', type=str,
