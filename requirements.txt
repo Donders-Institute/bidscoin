@@ -9,3 +9,4 @@ tqdm
 multiecho>=0.25
 python-dateutil
 nibabel
+pypet2bids>=1.0.0
