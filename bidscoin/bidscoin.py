@@ -450,10 +450,10 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> int:
     if 'test' in dir(module) and callable(getattr(module, 'test')):
         try:
             returncode = module.test(options)
-            if returncode:
-                LOGGER.warning(f"The'{plugin}' plugin did not function correctly")
-            else:
+            if returncode in ((0,) if plugin != 'dcm2niix2bids' else (0,3)):
                 LOGGER.success(f"The'{plugin}' plugin functioned correctly")
+            else:
+                LOGGER.warning(f"The'{plugin}' plugin did not function correctly")
             return returncode
         except Exception as pluginerror:
             LOGGER.error(f"Could not run {plugin}.test(options):\n{pluginerror}")

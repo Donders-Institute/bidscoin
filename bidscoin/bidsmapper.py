@@ -27,7 +27,6 @@ try:
 except ImportError:
     import bidscoin, bids, bidseditor         # This should work if bidscoin was not pip-installed
 
-
 localversion, versionmessage = bidscoin.version(check=True)
 
 

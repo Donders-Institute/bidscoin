@@ -14,7 +14,6 @@ except ImportError:
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
     import bidscoin, bids
 
-
 bidscoin.setup_logging()
 template, _ = bids.load_bidsmap(bidscoin.bidsmap_template, check=(False,False,False))
 
