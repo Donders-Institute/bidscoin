@@ -18,14 +18,16 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: s-weigand/setup-conda@v1
       - name: Install dependencies
         run: |
-          conda env update --file environment.yml --name base
-          conda install -c conda-forge dcm2niix
           pip install --upgrade pip
           pip install -e .[all]
           pip install pytest
+      - uses: s-weigand/setup-conda@v1
+      - name: Install dcm2niix
+        run: |
+          conda env update --file environment.yml --name base
+          conda install -c conda-forge dcm2niix
       - name: Test with pytest
         run: |
           pytest
