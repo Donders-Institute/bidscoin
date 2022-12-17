@@ -23,8 +23,8 @@ jobs:
           pip install --upgrade pip
           pip install -e .[all]
           pip install pytest
-      - uses: s-weigand/setup-conda@v1
       - name: Install dcm2niix
+        uses: s-weigand/setup-conda@v1
         run: |
           conda env update --file environment.yml --name base
           conda install -c conda-forge dcm2niix
