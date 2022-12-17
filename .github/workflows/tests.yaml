@@ -20,6 +20,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
+    # Install the latest dcm2niix from sources
+          apt-get -y install git build-essential cmake
+          git clone https://github.com/rordenlab/dcm2niix.git
+          cd dcm2niix
+          mkdir build && cd build
+          cmake ..
+          make install
           pip install --upgrade pip
           pip install -e .[all]
           pip install pytest
