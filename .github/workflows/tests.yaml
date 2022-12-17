@@ -1,4 +1,4 @@
-name: CI
+name: BIDScoin CI
 on:
   push:
     branches:
@@ -6,15 +6,21 @@ on:
   pull_request:
   workflow_dispatch:
 jobs:
-  test:
-    name: Run tests
+  build:
+
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python: ['3.8', '3.9', '3.10', '3.11']
+
     steps:
-      - name: Test Py ${{ matrix.python-version }}
-        uses: collective/tox-action@main
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.python }}
+      - name: Install tox and any other packages
+        run: pip install tox
+      - name: Run tox
+        # Run tox using the version of Python in `PATH`
+        run: tox -e py
