@@ -19,7 +19,6 @@ import bids_validator
 from functools import lru_cache
 from pydicom import dcmread, fileset, datadict
 from nibabel.parrec import parse_PAR_header
-from distutils.dir_util import copy_tree
 from typing import Union, List, Tuple
 from pathlib import Path
 try:
@@ -303,7 +302,7 @@ def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> (List[P
 
         # Copy everything over to the workfolder
         LOGGER.info(f"Making temporary copy: {sourcefolder} -> {worksubses}")
-        copy_tree(str(sourcefolder), str(worksubses))       # Older python (< 3.10) versions don't support PathLib
+        shutil.copytree(sourcefolder, worksubses, dirs_exist_ok=True)
 
         # Unpack the zip/tarballed files in the temporary folder
         sessions  = []
