@@ -1,7 +1,12 @@
 import shutil
 from pydicom.data import get_testdata_file
 from pathlib import Path
-from bidscoin import bidscoin, bidsmapper, bidscoiner
+try:
+    from bidscoin import bidscoin, bidsmapper, bidscoiner
+except ImportError:
+    import sys
+    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    import bidscoin, bidsmapper, bidscoiner
 
 
 def test_bidscoiner(rawfolder, bidsfolder, bidsmap):

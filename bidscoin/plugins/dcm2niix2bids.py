@@ -23,7 +23,10 @@ try:
     from bidscoin import bidscoin, bids
     from utilities import physio
 except ImportError:
-    import bidscoin, bids, utilities.physio  # This should work if bidscoin was not pip-installed
+    import sys
+    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    sys.path.append(str(Path(__file__).parents[1]/'utilities'))
+    import bidscoin, bids, physio
 
 LOGGER = logging.getLogger(__name__)
 

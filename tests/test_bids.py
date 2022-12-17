@@ -3,7 +3,12 @@ import shutil
 import re
 from pathlib import Path
 from pydicom.data import get_testdata_file
-from bidscoin import bidscoin, bids
+try:
+    from bidscoin import bidscoin, bids
+except ImportError:
+    import sys
+    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    import bidscoin, bids
 
 bidscoin.setup_logging()
 

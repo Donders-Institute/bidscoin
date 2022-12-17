@@ -25,7 +25,9 @@ try:
     from bidscoin import bidscoin
     from utilities import dicomsort
 except ImportError:
-    import bidscoin, utilities.dicomsort  # This should work if bidscoin was not pip-installed
+    import sys
+    sys.path.append(str(Path(__file__).parents[1]/'utilities'))         # This should work if bidscoin was not pip-installed
+    import bidscoin, dicomsort
 from ruamel.yaml import YAML
 yaml = YAML()
 

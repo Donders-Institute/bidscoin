@@ -20,7 +20,9 @@ from pathlib import Path
 try:
     from bidscoin import bidscoin
 except ImportError:
-    import bidscoin                 # This should work if bidscoin was not pip-installed
+    import sys
+    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    import bidscoin
 
 
 def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
