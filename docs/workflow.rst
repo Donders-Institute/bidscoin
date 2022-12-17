@@ -216,3 +216,20 @@ Step 2: Running the bidscoiner
 
 .. note::
    The provenance of the produced BIDS data-sets is stored in the ``[bidsfolder]/code/bidscoin/bidscoiner.log`` file. This file is also very useful for debugging / tracking down bidscoin issues.
+
+Finishing up
+------------
+
+After a successful run of bidscoiner, the work to convert your data in a fully compliant BIDS dataset is usually not fully over and, depending on the complexity of your data-set, additional tools may need to be run to post-process (e.g. deface) your data or convert datatypes not supported by the standard BIDScoin plugins (e.g. EEG data). BIDScoin comes with some bidsapps that can help you finishing up your bids data repository.
+
+Adding more meta-data
+^^^^^^^^^^^^^^^^^^^^^
+To make your dataset reproducable and shareable, you should add study-level meta-data in the modality agnostic BIDS files (BIDScoin saves stub versions of them). For instance, you should update the content of the ``dataset_description.json`` and ``README`` files in your bids folder and you may need to provide e.g. additional ``*_sessions.tsv`` or ``participants.json`` files (see the `BIDS specification <https://bids-specification.readthedocs.io/en/stable/03-modality-agnostic-files.html>`__ for more information). Moreover, if you have behavioural log-files you will find that BIDScoin does not (yet) support converting these into BIDS compliant ``*_events.tsv/json`` files (advanced users are encouraged to use the bidscoiner `plug-in <advanced.html#plugins>`__ option and write their own log-file parser).
+
+BIDS validation
+^^^^^^^^^^^^^^^
+
+If all of the above work is done, you can (and should) run the web-based `bidsvalidator <https://bids-standard.github.io/bids-validator/>`__ to check for inconsistencies or missing files in your bids data-set (NB: the bidsvalidator also exists as a `command-line tool <https://github.com/bids-standard/bids-validator>`__).
+
+.. note::
+   Privacy-sensitive source data samples may be stored in ``[bidsfolder]/code/bidscoin/provenance`` (see the ``-s`` option in the `bidsmapper <workflow.html#step-1a-running-the-bidsmapper>`__).

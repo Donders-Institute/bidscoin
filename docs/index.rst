@@ -8,9 +8,11 @@
    preparation
    workflow
    bidsmap
-   finalizing
    options
+   plugins
    advanced
+   bidsapps
+   utilities
    screenshots
    tutorial
    CHANGELOG

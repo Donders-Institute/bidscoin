@@ -1,17 +1,8 @@
-Finishing up
-============
-
-After a successful run of bidscoiner, the work to convert your data in a fully compliant BIDS dataset is usually not fully over and, depending on the complexity of your data-set, additional tools may need to be run to post-process (e.g. deface) your data or convert datatypes not supported by the standard BIDScoin plugins (e.g. EEG data). Below you can find some tips and additional BIDScoin tools that may help you finishing up.
-
-Adding more meta-data
----------------------
-To make your dataset reproducable and shareable, you should add study-level meta-data in the modality agnostic BIDS files (BIDScoin saves stub versions of them). For instance, you should update the content of the ``dataset_description.json`` and ``README`` files in your bids folder and you may need to provide e.g. additional ``*_sessions.tsv`` or ``participants.json`` files (see the `BIDS specification <https://bids-specification.readthedocs.io/en/stable/03-modality-agnostic-files.html>`__ for more information). Moreover, if you have behavioural log-files you will find that BIDScoin does not (yet) support converting these into BIDS compliant ``*_events.tsv/json`` files (advanced users are encouraged to use the bidscoiner `plug-in <advanced.html#plugins>`__ option and write their own log-file parser).
-
-Data sharing utilities
-----------------------
+BIDS-apps
+=========
 
 Multi-echo combination
-^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
 Before sharing or pre-processing their images, users may want to combine the separate the individual echos of multi-echo MRI acquisitions. The ``echcombine``-tool is a wrapper around ``mecombine`` that writes BIDS valid output.
 
@@ -60,7 +51,7 @@ Before sharing or pre-processing their images, users may want to combine the sep
       echocombine /project/3017065.01/bids func/*task-*echo-1* -a PAID
 
 Defacing
-^^^^^^^^
+--------
 
 Before sharing or pre-processing their images, users may want to deface their anatomical MRI acquisitions to protect the privacy of their subjects. The ``deface``-tool is a wrapper around `pydeface <https://github.com/poldracklab/pydeface>`__ that writes BIDS valid output. NB: pydeface requires `FSL <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation>`__ to be installed on the system.
 
@@ -106,7 +97,7 @@ Before sharing or pre-processing their images, users may want to deface their an
       deface /project/3017065.01/bids anat/*_T1w* -a '{"cost": "corratio", "verbose": ""}'
 
 Multi-echo defacing
-^^^^^^^^^^^^^^^^^^^
+-------------------
 
 This utility is very similar to the `deface <#defacing>`__ utility above, except that it can handle multi-echo data.
 
@@ -159,14 +150,6 @@ This utility is very similar to the `deface <#defacing>`__ utility above, except
       medeface /project/3017065.01/bids anat/*_FLAIR* -a '{"cost": "corratio", "verbose": ""}'
 
 Skull-stripping
-^^^^^^^^^^^^^^^
-
-The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS valid output. NB: skullstrip requires `FreeSurfer <https://surfer.nmr.mgh.harvard.edu/docs/synthstrip/>`__ of (v7.3.2 or higher) to be installed on the system
-
-BIDS validation
 ---------------
 
-If all of the above work is done, you can (and should) run the web-based `bidsvalidator <https://bids-standard.github.io/bids-validator/>`__ to check for inconsistencies or missing files in your bids data-set (NB: the bidsvalidator also exists as a `command-line tool <https://github.com/bids-standard/bids-validator>`__).
-
-.. note::
-   Privacy-sensitive source data samples may be stored in ``[bidsfolder]/code/bidscoin/provenance`` (see the ``-s`` option in the `bidsmapper <workflow.html#step-1a-running-the-bidsmapper>`__).
+The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS valid output. NB: skullstrip requires `FreeSurfer <https://surfer.nmr.mgh.harvard.edu/docs/synthstrip/>`__ of (v7.3.2 or higher) to be installed on the system

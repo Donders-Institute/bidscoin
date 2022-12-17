@@ -370,6 +370,8 @@ DICOM:
       mt:
       part: ['', mag, phase, real, imag, 0]
       suffix: MPM
+    meta:
+      EffectiveEchoTime: <<EffectiveEchoTime>>
   - provenance:
     attributes:
       <<: *anat_dicomattr
@@ -549,17 +551,17 @@ DICOM:
       run: <<1>>
       suffix: asllabeling
     meta: *perf_meta
-  - provenance:
-    attributes: *perf_dicomattr
-    bids: &perf_dicoment_physio         # See: schema/datatypes/perf.yaml
-      acq: <ProtocolName>
-      rec:
-      task: <SeriesDescription>
-      recording:
-      dir:
-      run: <<1>>
-      suffix: physio
-    meta: *perf_meta
+#  - provenance:
+#    attributes: *perf_dicomattr
+#    bids: &perf_dicoment_physio         # See: schema/datatypes/perf.yaml
+#      acq: <ProtocolName>
+#      rec:
+#      task: <SeriesDescription>
+#      recording:
+#      dir:
+#      run: <<1>>
+#      suffix: physio
+#    meta: *perf_meta
 
   dwi:        # ----------------------- All diffusion runs ---------------------
   - provenance:                         # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = dwi
@@ -909,16 +911,16 @@ DICOM:
       run: <<1>>
       suffix: events
     meta: *pet_meta
-  - provenance:
-    attributes: *pet_dicomattr
-    bids: &pet_dicoment_physio          # See: schema/datatypes/pet.yaml
-      task: <SeriesDescription>
-      trc: <Radiopharmaceutical>
-      rec: ['', acdyn, acstat, nacdyn, nacstat, 0]
-      recording:
-      run: <<1>>
-      suffix: physio
-    meta: *pet_meta
+#  - provenance:
+#    attributes: *pet_dicomattr
+#    bids: &pet_dicoment_physio          # See: schema/datatypes/pet.yaml
+#      task: <SeriesDescription>
+#      trc: <Radiopharmaceutical>
+#      rec: ['', acdyn, acstat, nacdyn, nacstat, 0]
+#      recording:
+#      run: <<1>>
+#      suffix: physio
+#    meta: *pet_meta
 
   eeg:        # ----------------------- All EEG data ---------------------------
   - provenance:
@@ -2454,18 +2456,18 @@ Nibabel:
       run: <<1>>
       suffix: asllabeling
     meta: *perf_meta
-  - provenance:
-    properties: *fileprop
-    attributes: *nibattr
-    bids: &perf_nibent_physio           # See: schema/datatypes/perf.yaml
-      task: <descrip>
-      acq:
-      rec:
-      recording:
-      dir:
-      run: <<1>>
-      suffix: physio
-    meta: *perf_meta
+#  - provenance:
+#    properties: *fileprop
+#    attributes: *nibattr
+#    bids: &perf_nibent_physio           # See: schema/datatypes/perf.yaml
+#      task: <descrip>
+#      acq:
+#      rec:
+#      recording:
+#      dir:
+#      run: <<1>>
+#      suffix: physio
+#    meta: *perf_meta
 
   dwi:        # ----------------------- All diffusion runs ---------------------
   - provenance:

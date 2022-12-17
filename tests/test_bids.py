@@ -1,23 +1,110 @@
-import unittest
-import os
+import pytest
+import shutil
+import re
+from pathlib import Path
+from pydicom.data import get_testdata_file
+from bidscoin import bidscoin, bids
 
-from bidscoin.bids import bidsversion, version
-
-
-class TestBids(unittest.TestCase):
-
-    def test_version(self):
-        v = version()
-        with open('version.txt') as fp:
-            v_from_file = fp.read().strip()
-        self.assertEqual(v, v_from_file)
-
-    def test_bids_version(self):
-        bids_v = bidsversion()
-        with open('bidsversion.txt') as fp:
-            bids_v_from_file = fp.read().strip()
-        self.assertEqual(bids_v, bids_v_from_file)
+bidscoin.setup_logging()
 
 
-if __name__ == '__main__':
-    unittest.main()
+@pytest.fixture(scope='module')
+def dcm_file():
+    return Path(get_testdata_file('MR_small.dcm'))
+
+
+@pytest.fixture(scope='module')
+def dicomdir():
+    return Path(get_testdata_file('DICOMDIR'))
+
+
+class TestDataSource:
+    """Test the bids.DataSource class"""
+
+    @pytest.fixture()
+    def datasource(self, dcm_file):
+        return bids.DataSource(dcm_file, {'dcm2niix2bids': {}}, 'DICOM')
+
+    def test_is_datasource(self, datasource):
+        assert datasource.is_datasource()
+        assert datasource.dataformat == 'DICOM'
+
+    def test_properties(self, datasource):
+        assert datasource.properties('filepath:.*/(.*?)_files/.*') == 'test'    # path = [..]/pydicom/data/test_files/MR_small.dcm'
+        assert datasource.properties('filename:MR_(.*?)\.dcm')     == 'small'
+        assert datasource.properties('filesize')                   == '9.60 kB'
+        assert datasource.properties('nrfiles')                    == 75
+
+    def test_attributes(self, datasource):
+        assert datasource.attributes('PatientName:.*\^(.*?)1') == 'MR'          # PatientName = 'CompressedSamples^MR1'
+
+    @pytest.mark.parametrize('subid',  ['sub-001', 'pat_visit'])
+    @pytest.mark.parametrize('sesid',  ['ses-01',  'visit_01', ''])
+    @pytest.mark.parametrize('subprefix', ['sub-', 'pat_', '*'])
+    @pytest.mark.parametrize('sesprefix', ['ses-', 'visit_', '*'])
+    def test_subid_sesid(self, subid, sesid, subprefix, sesprefix, tmp_path, dcm_file):
+        subsesdir     = tmp_path/'data'/subid/sesid
+        subsesdir.mkdir(parents=True)
+        subses_file   = shutil.copy(dcm_file, subsesdir)
+        subses_source = bids.DataSource(subses_file, {'dcm2niix2bids': {}}, 'DICOM', subprefix=subprefix, sesprefix=sesprefix)
+        resubprefix   = '' if subprefix == '*' else subprefix
+        resesprefix   = '' if sesprefix == '*' else sesprefix
+        sub, ses      = subses_source.subid_sesid(f"<<filepath:/data/{resubprefix}(.*?)/>>", f"<<filepath:/data/{resubprefix}.*?/{resesprefix}(.*?)/>>")
+        expected_sub  = 'sub-' + bids.cleanup_value(re.sub(f"^{subprefix if subprefix!='*' else ''}", '', subid) if subid.startswith(subprefix) or subprefix=='*' else '')  # NB: this expression is too complicated / resembles the actual code too much :-/
+        expected_ses  = 'ses-' + bids.cleanup_value(re.sub(f"^{sesprefix if sesprefix!='*' else ''}", '', sesid)) if (subid.startswith(subprefix) or subprefix=='*') and (sesid.startswith(sesprefix) or sesprefix=='*') and sesid else ''
+        print(f"[{subprefix}, {subid}] -> {sub}")
+        print(f"[{sesprefix}, {sesid}] -> {ses}")
+        assert (sub, ses) == (expected_sub, expected_ses)
+        assert subses_source.subid_sesid(f"<<PatientName:.*\^(.*?)1>>", '') == ('sub-MR', '')
+
+    def test_dynamicvalue(self, datasource):
+        assert datasource.dynamicvalue('PatientName:.*\^(.*?)1') == 'PatientName:.*\\^(.*?)1'
+        assert datasource.dynamicvalue('<PatientName:.*\^(.*?)1>') == 'MR'
+        assert datasource.dynamicvalue('<<PatientName:.*\^(.*?)1>>') == '<<PatientName:.*\\^(.*?)1>>'
+        assert datasource.dynamicvalue('<<PatientName:.*\^(.*?)1>>', runtime=True) == 'MR'
+        assert datasource.dynamicvalue('pat-<PatientName:.*\^(.*?)1>I<filename:MR_(.*?)\.dcm>') == 'patMRIsmall'
+
+
+def test_unpack(dicomdir, tmp_path):
+    unpacked = bids.unpack(dicomdir.parent, '', tmp_path)
+    assert len(unpacked[0]) == 6
+    assert unpacked[1]
+    # TODO: expand tests
+
+
+def test_is_dicomfile(dcm_file):
+    assert bids.is_dicomfile(dcm_file)
+
+
+def test_get_dicomfile(dcm_file, dicomdir):
+    assert bids.get_dicomfile(dcm_file.parent).name == '693_J2KI.dcm'
+    assert bids.get_dicomfile(dicomdir.parent).name == '6154'
+
+
+def test_get_datasource(dicomdir):
+    datasource = bids.get_datasource(dicomdir.parent, {'dcm2niix2bids': {}})
+    assert datasource.is_datasource()
+    assert datasource.dataformat == 'DICOM'
+
+
+@pytest.mark.parametrize('template', bidscoin.list_plugins()[1])
+def test_load_check_template(template):
+    bidsmap, _ = bids.load_bidsmap(template, check=(False,False,False))
+    assert isinstance(bidsmap, dict) and bidsmap
+    # assert bids.check_template(bidsmap)   # NB: Skip until the deprecated bids-entitities are removed from the BIDS schema
+
+
+def test_match_runvalue():
+    assert bids.match_runvalue('my_pulse_sequence_name', '_name')      == False
+    assert bids.match_runvalue('my_pulse_sequence_name', '^my.*name$') == True
+    assert bids.match_runvalue('T1_MPRage', '(?i).*(MPRAGE|T1w).*')    == True
+    assert bids.match_runvalue('', None)                               == True
+    assert bids.match_runvalue(None, '')                               == True
+    assert bids.match_runvalue(  [1, 2, 3],    [1,2,  3])              == True
+    assert bids.match_runvalue(  [1,2,  3],   '[1, 2, 3]')             == True
+    assert bids.match_runvalue(  [1, 2, 3],  '\[1, 2, 3\]')            == True
+    assert bids.match_runvalue( '[1, 2, 3]',  '[1, 2, 3]')             == True
+    assert bids.match_runvalue( '[1, 2, 3]', '\[1, 2, 3\]')            == True
+    assert bids.match_runvalue( '[1, 2, 3]',   [1, 2, 3])              == True
+    assert bids.match_runvalue( '[1,2,  3]',   [1,2,  3])              == False
+    assert bids.match_runvalue('\[1, 2, 3\]',  [1, 2, 3])              == False

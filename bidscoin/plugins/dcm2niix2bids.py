@@ -20,9 +20,10 @@ from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
 try:
-    from bidscoin import bidscoin, bids, physio
+    from bidscoin import bidscoin, bids
+    from utilities import physio
 except ImportError:
-    import bidscoin, bids, physio     # This should work if bidscoin was not pip-installed
+    import bidscoin, bids, utilities.physio  # This should work if bidscoin was not pip-installed
 
 LOGGER = logging.getLogger(__name__)
 

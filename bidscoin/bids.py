@@ -23,9 +23,10 @@ from distutils.dir_util import copy_tree
 from typing import Union, List, Tuple
 from pathlib import Path
 try:
-    from bidscoin import bidscoin, dicomsort
+    from bidscoin import bidscoin
+    from utilities import dicomsort
 except ImportError:
-    import bidscoin, dicomsort  # This should work if bidscoin was not pip-installed
+    import bidscoin, utilities.dicomsort  # This should work if bidscoin was not pip-installed
 from ruamel.yaml import YAML
 yaml = YAML()
 
@@ -228,14 +229,12 @@ class DataSource:
         subid_ = self.dynamicvalue(subid, runtime=True)
         sesid  = self.dynamicvalue(sesid, runtime=True)
         if not subid_:
-            LOGGER.error(f"Could not parse sub/ses-id information from {self.path} using: {subid}'")
-            subid_ = subid
+            LOGGER.error(f"Could not parse required sub-<label> information from {self.path} using: {subid} -> 'sub-'")
         subid = subid_
 
         # Add sub- and ses- prefixes if they are not there
         subid = 'sub-' + cleanup_value(re.sub(f"^{self.subprefix if self.subprefix!='*' else ''}", '', subid))
-        if sesid:
-            sesid = 'ses-' + cleanup_value(re.sub(f"^{self.sesprefix if self.sesprefix!='*' else ''}", '', sesid))
+        sesid = 'ses-' + cleanup_value(re.sub(f"^{self.sesprefix if self.sesprefix!='*' else ''}", '', sesid)) if sesid else ''
 
         return subid, sesid
 
@@ -245,7 +244,7 @@ class DataSource:
         '<' and end with '>', but not with '<<' and '>>' unless runtime = True
 
         :param value:       The dynamic value that contains source attribute or filesystem property key(s)
-        :param cleanup:     Removes non-BIDS-compliant characters if True
+        :param cleanup:     Removes non-BIDS-compliant characters from the retrieved dynamic value if True
         :param runtime:     Replaces dynamic values if True
         :return:            Updated value
         """
@@ -523,7 +522,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
             try:                                                    # Try Pydicom's hexadecimal tag number first
                 value = eval(f"dicomdata[{tagname}].value")
             except (NameError, KeyError, SyntaxError):
-                value = dicomdata.get(tagname, '')                  # Then try and see if it is an attribute name
+                value = dicomdata.get(tagname) if tagname in dicomdata else ''  # Then try and see if it is an attribute name. NB: Do not use dicomdata.get(tagname, '') to avoid using its class attributes (e.g. 'filename')
 
             # Try a recursive search
             if not value and value != 0:
@@ -990,6 +989,9 @@ def check_bidsmap(bidsmap: dict, check: Tuple[bool, bool, bool]=(True, True, Tru
 
     valid = (None, None, None)
 
+    if not any(check):
+        return valid
+
     if not bidsmap:
         LOGGER.info('No bidsmap run-items to check')
         return valid
@@ -1005,10 +1007,12 @@ def check_bidsmap(bidsmap: dict, check: Tuple[bool, bool, bool]=(True, True, Tru
                 checks = check_run(datatype, run, check)
                 valid  = [val and chck for val,chck in zip(valid,checks)]
 
-    if all([val for val,chck in zip(valid,check) if chck is True]):
+    if all([val==True for val,chck in zip(valid,check) if chck is True]):
         LOGGER.success('All run-items in the bidsmap are valid')
-    else:
+    elif any([val==False for val,chck in zip(valid,check) if chck is True]):
         LOGGER.warning('Not all run-items in the bidsmap are valid')
+    else:
+        LOGGER.info('Could not validate every run-item in the bidsmap')
 
     return valid
 
@@ -1424,9 +1428,9 @@ def match_runvalue(attribute, pattern) -> bool:
     Examples:
         match_runvalue('my_pulse_sequence_name', 'filename')   -> False
         match_runvalue([1,2,3], [1,2,3])                       -> True
-        match_runvalue([1,2,3], '[1, 2, 3]')                   -> True
+        match_runvalue([1,2,3], '\[1, 2, 3\]')                 -> True
         match_runvalue('my_pulse_sequence_name', '^my.*name$') -> True
-        match_runvalue('T1_MPRage', '(?i).*(MPRAGE|T1w).*'     -> True
+        match_runvalue('T1_MPRage', '(?i).*(MPRAGE|T1w).*')    -> True
 
     :param attribute:   The long string that is being searched in (e.g. a DICOM attribute)
     :param pattern:     A re.fullmatch regular expression pattern
@@ -1435,7 +1439,7 @@ def match_runvalue(attribute, pattern) -> bool:
     """
 
     # Consider it a match if both attribute and value are identical or empty/None
-    if attribute==pattern or (not attribute and not pattern):
+    if str(attribute)==str(pattern) or (not attribute and not pattern):
         return True
 
     if not pattern:
