@@ -54,8 +54,9 @@ def test(options: dict=OPTIONS) -> int:
         LOGGER.warning(f"The expected 'args' key is not defined in the dcm2niix2bids options")
 
     # Test the dcm2niix installation
-    command = options.get('command', OPTIONS['command'])
-    return bidscoin.run_command(f"{command} -v")
+    errorcode = bidscoin.run_command(f"{options.get('command', OPTIONS['command'])} -v")
+
+    return errorcode if errorcode != 3 else 0
 
 
 def is_sourcefile(file: Path) -> str:

@@ -29,4 +29,4 @@ def test_plugin(plugin, options):
         raise ImportError(f"Invalid plugin: '{plugin}'")
 
     # Then run the plugin's own 'test' routine (if implemented)
-    assert module.test(options.get(plugin.stem, {})) in ((0,) if plugin.stem != 'dcm2niix2bids' else (0,3))
+    assert module.test(options.get(plugin.stem, {})) == 0

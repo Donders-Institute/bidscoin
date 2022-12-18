@@ -450,7 +450,7 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> int:
     if 'test' in dir(module) and callable(getattr(module, 'test')):
         try:
             returncode = module.test(options)
-            if returncode in ((0,) if plugin != 'dcm2niix2bids' else (0,3)):
+            if returncode == 0:
                 LOGGER.success(f"The'{plugin}' plugin functioned correctly")
             else:
                 LOGGER.warning(f"The'{plugin}' plugin did not function correctly")
@@ -567,14 +567,17 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
         list_plugins(True)
         for plugin in pluginfolder.glob('*.py'):
             if plugin.stem != '__init__':
-                success = not test_plugin(plugin.stem, options['plugins'].get(plugin.stem,{}) if options else {}) and success
+                errorcode = test_plugin(plugin.stem, options['plugins'].get(plugin.stem,{}) if options else {})
+                success   = not errorcode and success
+                if errorcode:
+                    LOGGER.warning(f"Failed test: {plugin.stem}")
 
-    if int:
-        LOGGER.warning('Not all plugins finished their test successfully')
+    if not success:
+        LOGGER.warning('Not all tests finishd successfully')
     else:
-        LOGGER.success('All plugins finished their test successfully')
+        LOGGER.success('All tests finished successfully')
 
-    return int(not success)
+    return not success
 
 
 def pulltutorialdata(tutorialfolder: str) -> None:
