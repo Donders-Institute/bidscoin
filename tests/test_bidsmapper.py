@@ -10,7 +10,7 @@ except ImportError:
 
 
 def test_bidsmapper(rawfolder, bidsfolder, bidsmap):
-    shutil.copytree(Path(get_testdata_file('DICOMDIR')).parent, rawfolder, dirs_exist_ok=True)
+    shutil.copytree(Path(get_testdata_file('DICOMDIR')).parent, rawfolder, dirs_exist_ok=True)  # NB: This is NOT picking up the DICOMDIR data :-(
     shutil.rmtree(rawfolder/'TINY_ALPHA')
     bidsmapper.bidsmapper(rawfolder, bidsfolder, bidsmap, bidscoin.bidsmap_template, [], '*', '*', '', noedit=True)
     assert bidsmap.is_file()

@@ -172,6 +172,7 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
     # Use the DICOMDIR file if it is there
     sessions = []       # Collect the sorted session-folders
     if (sourcefolder/'DICOMDIR').is_file():
+        LOGGER.info(f"Reading: {sourcefolder/'DICOMDIR'}")
         dicomdir = pydicom.dcmread(str(sourcefolder/'DICOMDIR'))
         for patient in dicomdir.patient_records:
             for n, study in enumerate(patient.children, 1):
@@ -183,6 +184,7 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
 
     # Do a recursive call if a sub- or ses-prefix is given
     elif subprefix or sesprefix:
+        LOGGER.info(f"Searching for subject/session folders in: {sourcefolder}")
         for subjectfolder in bidscoin.lsdirs(sourcefolder, subprefix + '*'):
             if sesprefix:
                 sessionfolders = bidscoin.lsdirs(subjectfolder, sesprefix + '*')

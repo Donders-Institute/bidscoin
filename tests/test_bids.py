@@ -72,9 +72,10 @@ class TestDataSource:
 
 def test_unpack(dicomdir, tmp_path):
     unpacked = bids.unpack(dicomdir.parent, '', tmp_path)
-    assert len(unpacked[0]) == 6
     assert unpacked[1]
-    # TODO: expand tests
+    assert len(unpacked[0]) == 6
+    for ses in unpacked[0]:
+        assert 'Doe^Archibald' in ses.parts or 'Doe^Peter' in ses.parts
 
 
 def test_is_dicomfile(dcm_file):

@@ -11,12 +11,15 @@ except ImportError:
 
 def test_bidscoiner(rawfolder, bidsfolder, bidsmap):
     if not bidsmap.is_file():
-        shutil.copytree(Path(get_testdata_file('DICOMDIR')).parent, rawfolder, dirs_exist_ok=True)
+        shutil.copytree(Path(get_testdata_file('DICOMDIR')).parent, rawfolder, dirs_exist_ok=True)  # NB: This is NOT picking up the DICOMDIR data :-(
         shutil.rmtree(rawfolder/'TINY_ALPHA')
         bidsmapper.bidsmapper(rawfolder, bidsfolder, bidsmap, bidscoin.bidsmap_template, [], '*', '*', '', noedit=True)
         (bidsmap.parent/'bidsmapper.errors').unlink()
     bidscoiner.bidscoiner(rawfolder, bidsfolder)
     assert (bidsmap.parent/'bidscoiner.errors').stat().st_size == 0
+    assert (bidsfolder/'sub-77654033').is_dir()
+    assert (bidsfolder/'sub-98892001').is_dir()
+    assert (bidsfolder/'sub-98892003').is_dir()
 
 
 # def test_addmetadata(bidsfolder, bidsmap):
