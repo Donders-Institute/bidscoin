@@ -76,6 +76,6 @@ Note:
 .. |BIDS| image:: https://img.shields.io/badge/BIDS-v1.8.0-blue
    :target: https://bids-specification.readthedocs.io/en/v1.8.0/
    :alt: Brain Imaging Data Structure (BIDS)
-.. |Tests| image:: https://github.com/Donders-Institute/bidscoin/actions/workflows/tests.yml/badge.svg
+.. |Tests| image:: https://github.com/Donders-Institute/bidscoin/actions/workflows/tests.yaml/badge.svg
    :target: https://github.com/Donders-Institute/bidscoin/actions
    :alt: Pytest results
