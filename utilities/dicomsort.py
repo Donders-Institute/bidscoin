@@ -115,13 +115,13 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
             if not subfolder:
                 LOGGER.error('Cannot create subfolders, aborting dicomsort()...')
                 return
-            pathname = sessionfolder/subfolder
             if subfolder not in subfolders:
                 subfolders.append(subfolder)
-                if not pathname.is_dir():
-                    LOGGER.info(f"   Creating:  {pathname}")
-                    if not dryrun:
-                        pathname.mkdir(parents=True)
+            pathname = sessionfolder/subfolder
+            if not pathname.is_dir():
+                LOGGER.info(f"   Creating:  {pathname}")
+                if not dryrun:
+                    pathname.mkdir(parents=True)
 
         # Move and/or rename the dicomfiles in(to) the (sub)folder
         if namescheme:
@@ -203,7 +203,7 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
         if dicomfiles:
             sortsession(sourcefolder, dicomfiles, folderscheme, namescheme, force, dryrun)
 
-    return list(set(sessions))
+    return sorted(set(sessions))
 
 
 def main():

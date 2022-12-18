@@ -8,6 +8,8 @@ except ImportError:
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
     import bidscoin, bidsmapper, bidscoiner
 
+bidscoin.setup_logging()
+
 
 def test_bidscoiner(rawfolder, bidsfolder, bidsmap):
     if not bidsmap.is_file():

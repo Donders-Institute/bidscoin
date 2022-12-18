@@ -20,5 +20,6 @@ jobs:
           pip install pytest
       - name: Tests with pytest
         run: |
+          pytest tests/test_dicomsort.py
           pytest tests/test_bids.py
           pytest tests/test_bidsmapper.py

@@ -8,6 +8,8 @@ except ImportError:
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
     import bidscoin, bids, bidsmapper
 
+bidscoin.setup_logging()
+
 
 def test_bidsmapper(rawfolder, bidsfolder, bidsmap):
     shutil.copytree(Path(get_testdata_file('DICOMDIR')).parent, rawfolder, dirs_exist_ok=True)  # NB: This is NOT picking up the DICOMDIR data :-(
