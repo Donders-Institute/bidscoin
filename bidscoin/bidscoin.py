@@ -573,9 +573,9 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
                     LOGGER.warning(f"Failed test: {plugin.stem}")
 
     if not success:
-        LOGGER.warning('Not all tests finishd successfully')
+        LOGGER.warning('Not all tests finishd successfully (this may be ok, but check the output above)')
     else:
-        LOGGER.success('All tests finished successfully')
+        LOGGER.success('All tests finished successfully :-)')
 
     return not success
 

@@ -1,11 +1,8 @@
 name: CI
 on:
-#  push:
-#    branches:
-#      - 'master'
-  pull_request:
+  push:
 jobs:
-  build:
+  unit tests:
     defaults:
       run:
         shell: bash -l {0}
@@ -13,7 +10,6 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.8', '3.9', '3.10']
-
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
@@ -25,14 +21,7 @@ jobs:
           pip install --upgrade pip
           pip install -e .[all]
           pip install pytest
-      - name: Install dcm2niix
-      - uses: conda-incubator/setup-miniconda@v2
-        with:
-          activate-environment: anaconda-client-env
-          environment-file: etc/example-environment.yml
-          auto-activate-base: false
-      - run: |
-          conda install -c conda-forge dcm2niix
-      - name: Test with pytest
+      - name: Tests with pytest
         run: |
-          pytest
+          pytest tests/test_bids.py
+          pytest tests/test_bidsmapper.py
