@@ -3,9 +3,6 @@ on:
   push:
 jobs:
   tests:
-    defaults:
-      run:
-        shell: bash -l {0}
     runs-on: ubuntu-latest
     strategy:
       matrix:
