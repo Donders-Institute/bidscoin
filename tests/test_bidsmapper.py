@@ -11,16 +11,16 @@ except ImportError:
 bidscoin.setup_logging()
 
 
-def test_bidsmapper(rawfolder, bidsfolder, bidsmap):
-    shutil.copytree(Path(get_testdata_file('DICOMDIR')).parent, rawfolder, dirs_exist_ok=True)  # NB: This is NOT picking up the DICOMDIR data :-(
-    shutil.rmtree(rawfolder/'TINY_ALPHA')
-    bidsmapper.bidsmapper(rawfolder, bidsfolder, bidsmap, bidscoin.bidsmap_template, [], '*', '', '', noedit=True)
-    assert bidsmap.is_file()
-    assert (bidsmap.parent/'bidsmapper.errors').stat().st_size == 0
-    (bidsmap.parent/'bidsmapper.errors').unlink()
+def test_bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
+    shutil.copytree(Path(get_testdata_file('DICOMDIR')).parent, raw_dicomdir, dirs_exist_ok=True)  # NB: This is NOT picking up the DICOMDIR data :-(
+    shutil.rmtree(raw_dicomdir/'TINY_ALPHA')
+    bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidscoin.bidsmap_template, [], '*', '', '', noedit=True)
+    assert bidsmap_dicomdir.is_file()
+    assert (bidsmap_dicomdir.parent/'bidsmapper.errors').stat().st_size==0
+    (bidsmap_dicomdir.parent/'bidsmapper.errors').unlink()
 
 
-def test_setprefix(rawfolder, bidsmap):
-    bidsmap, _ = bids.load_bidsmap(bidsmap)
+def test_setprefix(raw_dicomdir, bidsmap_dicomdir):
+    bidsmap_dicomdir, _ = bids.load_bidsmap(bidsmap_dicomdir)
     # TODO: manipulate prefixes
-    bidsmapper.setprefix(bidsmap, '*', '*', rawfolder)
+    bidsmapper.setprefix(bidsmap_dicomdir, '*', '*', raw_dicomdir)
