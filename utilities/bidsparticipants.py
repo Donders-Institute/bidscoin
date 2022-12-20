@@ -61,7 +61,7 @@ def scanpersonals(bidsmap: dict, session: Path, personals: dict) -> bool:
     return True
 
 
-def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list[str], bidsmapfile: str='bidsmap.yaml', dryrun: bool=False) -> None:
+def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: str='bidsmap.yaml', dryrun: bool=False) -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder to (re)generate the particpants.tsv file in the BIDS folder.
 
