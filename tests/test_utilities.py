@@ -27,11 +27,12 @@ def test_dicomsort(tmp_path):
 
 
 def test_bidsparticipants(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
-    if bidsmap_dicomdir.is_file():
-        with open(bids_dicomdir/'participants.tsv') as file:
+    participantsfile = bids_dicomdir/'participants.tsv'
+    if participantsfile.is_file():
+        with open(participantsfile) as file:
             olddata = list(csv.reader(file, delimiter='\t'))
         bidsparticipants.bidsparticipants(raw_dicomdir, bids_dicomdir, ['age', 'sex', 'size', 'weight'])
-        with open(bids_dicomdir/'participants.tsv') as file:
+        with open(participantsfile) as file:
             newdata = list(csv.reader(file, delimiter='\t'))
         assert olddata == newdata
 
