@@ -105,7 +105,7 @@ def rawmapper(rawfolder, outfolder: str='', sessions: tuple=(), rename: bool=Fal
                             delim = '\\'
                         else:
                             delim = '\r\n'
-                        newsubsesid = [val for val in dicomval.split(delim) if val]   # Skip empty lines / entries
+                        newsubsesid = [val for val in dicomval[0].split(delim) if val]   # Skip empty lines / entries
                         newsubid, newsesid = newsubsesid + ([''] if len(newsubsesid)==1 else [])
                     else:
                         newsubid, newsesid = dicomval
