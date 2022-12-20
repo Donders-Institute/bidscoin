@@ -42,22 +42,14 @@ def scanpersonals(bidsmap: dict, session: Path, personals: dict) -> bool:
         return False
 
     # Collect personal data from a source header (PAR/XML does not contain personal info)
-    if dataformat in ('DICOM', 'Twix'):
-        personals['sex']    = datasource.attributes('PatientSex')
-        personals['size']   = datasource.attributes('PatientSize')
-        personals['weight'] = datasource.attributes('PatientWeight')
-        age = datasource.attributes('PatientAge')                   # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
-    elif dataformat=='Pfile':
-        sex = datasource.attributes('rhe_patsex')
-        if sex=='0':   personals['sex'] = 'O'
-        elif sex=='1': personals['sex'] = 'M'
-        elif sex=='2': personals['sex'] = 'F'
-        age = dateutil.parser.parse(datasource.attributes('rhr_rh_scan_date')) - dateutil.parser.parse(datasource.attributes('rhe_dateofbirth'))
-        age = str(age.days) + 'D'
-    else:
-        return False
+    if dataformat not in ('DICOM', 'Twix'): return False
 
-    if age.endswith('D'):   age = float(age.rstrip('D')) / 365.2524
+    personals['sex']    = datasource.attributes('PatientSex')
+    personals['size']   = datasource.attributes('PatientSize')
+    personals['weight'] = datasource.attributes('PatientWeight')
+
+    age = datasource.attributes('PatientAge')                   # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
+    if   age.endswith('D'): age = float(age.rstrip('D')) / 365.2524
     elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
     elif age.endswith('M'): age = float(age.rstrip('M')) / 12
     elif age.endswith('Y'): age = float(age.rstrip('Y'))
@@ -69,7 +61,7 @@ def scanpersonals(bidsmap: dict, session: Path, personals: dict) -> bool:
     return True
 
 
-def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, bidsmapfile: str='bidsmap.yaml', dryrun: bool=False) -> None:
+def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list[str], bidsmapfile: str='bidsmap.yaml', dryrun: bool=False) -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder to (re)generate the particpants.tsv file in the BIDS folder.
 
@@ -142,9 +134,9 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, bidsmapfile: st
                 sessions = [subject]
             for session in sessions:
 
-                # Only take data from the first session -> BIDS specification
-                subid, sesid = bids.DataSource(session/'dum.my', subprefix='sub-', sesprefix='ses-').subid_sesid()
-                if sesprefix and sesid and 'session_id' not in personals:
+                success = False         # Only take data from the first session -> BIDS specification
+                subid, sesid = bids.DataSource(session/'dum.my', subprefix=subprefix, sesprefix=sesprefix).subid_sesid()
+                if sesid and 'session_id' not in personals:
                     personals['session_id']         = sesid
                     participants_dict['session_id'] = {'Description': 'Session identifier'}
 
@@ -160,8 +152,9 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: str, bidsmapfile: st
                     if unpacked:
                         shutil.rmtree(sesfolder)
 
-                    if success:
-                        break
+                    if success: break
+
+                if success: break
 
             # Store the collected personals in the participant_table. TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
             for key in keys:
@@ -204,7 +197,7 @@ def main():
                                             '  bidsparticipants myproject/raw myproject/bids -k participant_id age sex\n ')
     parser.add_argument('sourcefolder',     help='The study root folder containing the raw source data folders')
     parser.add_argument('bidsfolder',       help='The destination / output folder with the bids data')
-    parser.add_argument('-k','--keys',      help="Space separated list of the participants.tsv columns. Default: 'session_id' 'age' 'sex' 'size' 'weight'", nargs='+', default=['session_id', 'age', 'sex', 'size' ,'weight'])
+    parser.add_argument('-k','--keys',      help="Space separated list of the participants.tsv columns. Default: 'session_id' 'age' 'sex' 'size' 'weight'", nargs='+', default=['age', 'sex', 'size', 'weight'])    # NB: session_id is default
     parser.add_argument('-d','--dryrun',    help='Add this flag to only print the participants info on screen', action='store_true')
     parser.add_argument('-b','--bidsmap',   help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
     parser.add_argument('-v','--version',   help='Show the BIDS and BIDScoin version', action='version', version=f"BIDS-version:\t\t{bidscoin.bidsversion()}\nBIDScoin-version:\t{bidscoin.version()}")

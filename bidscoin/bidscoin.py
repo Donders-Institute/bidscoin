@@ -228,7 +228,7 @@ def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
     :return:            A list with all directories in the folder
     """
 
-    return [fname for fname in sorted(folder.glob(wildcard)) if fname.is_dir() and not fname.name.startswith('.')]
+    return sorted([fname for fname in sorted(folder.glob(wildcard)) if fname.is_dir() and not fname.name.startswith('.')])
 
 
 def list_executables(show: bool=False) -> list:
