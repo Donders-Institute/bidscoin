@@ -71,12 +71,12 @@ def rawmapper(rawfolder, outfolder: str='', sessions: tuple=(), rename: bool=Fal
     # Loop over the selected sessions in the sourcefolder
     for session in sorted(sessions):
 
-        # Get the subject and session identifiers from the sub/ses session folder
-        datasource = bids.DataSource(session/'dum.my')
-        subid      = datasource.dynamicvalue(f"<filepath:/{subprefix}(.*?)/>", cleanup=False)
-        sesid      = datasource.dynamicvalue(f"<filepath:/{subprefix}.*?/{sesprefix_}(.*?)/>", cleanup=False) if sesprefix else ''
+        # Get the (uncleaned) subject and session identifiers from the sourcefolder
+        datasource = bids.DataSource(session/'dum.my', subprefix=subprefix, sesprefix=sesprefix)
+        subid      = datasource.dynamicvalue(f"<filepath:/{datasource.resubprefix()}(.*?)/>", cleanup=False)
+        sesid      = datasource.dynamicvalue(f"<filepath:/{datasource.resubprefix()}.*?/{datasource.resesprefix()}(.*?)/>", cleanup=False) if sesprefix else ''
 
-            # Parse the new subject and session identifiers from the dicomfield
+        # Parse the new subject and session identifiers from the dicomfield
         series = bidscoin.lsdirs(session, wildcard)
         if not series:
             series    = Path()
@@ -126,7 +126,7 @@ def rawmapper(rawfolder, outfolder: str='', sessions: tuple=(), rename: bool=Fal
                 with mapperfile.open('a') as fid:
                     fid.write(f"{subprefix}{subid}\t{sesprefix_}{sesid}\t{newsubid}\t{newsesid}\n")
                 if newsession.is_dir():
-                    for item in list(session.iterdir()):
+                    for item in session.iterdir():
                         shutil.move(item, newsession/item.name)
                     session.rmdir()
                 else:

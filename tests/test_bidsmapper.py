@@ -1,26 +1,30 @@
-import shutil
-from pydicom.data import get_testdata_file
 from pathlib import Path
+import pytest
+import re
 try:
     from bidscoin import bids, bidscoin, bidsmapper
+    from utilities import dicomsort
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
-    import bidscoin, bids, bidsmapper
+    sys.path.append(str(Path(__file__).parents[1]/'utilities'))
+    import bidscoin, bids, bidsmapper, dicomsort
 
 bidscoin.setup_logging()
 
 
-def test_bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
-    shutil.copytree(Path(get_testdata_file('DICOMDIR')).parent, raw_dicomdir, dirs_exist_ok=True)  # NB: This is NOT picking up the DICOMDIR data :-(
-    shutil.rmtree(raw_dicomdir/'TINY_ALPHA')
-    bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidscoin.bidsmap_template, [], '*', '', '', noedit=True)
+@pytest.mark.parametrize('subprefix', ['Doe', 'Doe^', '*'])
+@pytest.mark.parametrize('sesprefix', ['0', '*'])
+def test_bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, subprefix, sesprefix):
+    resubprefix = '' if subprefix=='*' else re.escape(subprefix)
+    resesprefix = '' if sesprefix=='*' else re.escape(sesprefix)
+    bidsmap     = bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidscoin.bidsmap_template, [], subprefix, sesprefix, unzip='', noedit=True, force=True)
+    assert bidsmap['Options']['bidscoin']['subprefix'] == subprefix
+    assert bidsmap['Options']['bidscoin']['sesprefix'] == sesprefix
+    assert bidsmap['DICOM']['subject']                 == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}(.*?)/>>"
+    assert bidsmap['DICOM']['session']                 == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}.*?/{resesprefix}(.*?)/>>"
     assert bidsmap_dicomdir.is_file()
+    assert 'Doe^Archibald' in bidsmap_dicomdir.read_text()                                      # Make sure we have discovered `Archibald` samples (-> provenance)
+    assert 'Doe^Peter' in bidsmap_dicomdir.read_text()                                          # Make sure we have discovered `Peter` samples (-> provenance)
     assert (bidsmap_dicomdir.parent/'bidsmapper.errors').stat().st_size==0
-    (bidsmap_dicomdir.parent/'bidsmapper.errors').unlink()
-
-
-def test_setprefix(raw_dicomdir, bidsmap_dicomdir):
-    bidsmap_dicomdir, _ = bids.load_bidsmap(bidsmap_dicomdir)
-    # TODO: manipulate prefixes
-    bidsmapper.setprefix(bidsmap_dicomdir, '*', '*', raw_dicomdir)
+    (bidsmap_dicomdir.parent/'bidsmapper.errors').unlink(missing_ok=True)

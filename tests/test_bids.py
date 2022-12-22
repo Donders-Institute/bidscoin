@@ -43,22 +43,19 @@ class TestDataSource:
     def test_attributes(self, datasource):
         assert datasource.attributes('PatientName:.*\^(.*?)1') == 'MR'          # PatientName = 'CompressedSamples^MR1'
 
-    @pytest.mark.parametrize('subid',  ['sub-001', 'pat_visit'])
-    @pytest.mark.parametrize('sesid',  ['ses-01',  'visit_01', ''])
-    @pytest.mark.parametrize('subprefix', ['sub-', 'pat_', '*'])
-    @pytest.mark.parametrize('sesprefix', ['ses-', 'visit_', '*'])
+    @pytest.mark.parametrize('subid',  ['sub-001', 'pat^visit'])
+    @pytest.mark.parametrize('sesid',  ['ses-01',  'visit^01', ''])
+    @pytest.mark.parametrize('subprefix', ['sub-', 'pat^', '*'])
+    @pytest.mark.parametrize('sesprefix', ['ses-', 'visit^', '*'])
     def test_subid_sesid(self, subid, sesid, subprefix, sesprefix, tmp_path, dcm_file):
         subsesdir     = tmp_path/'data'/subid/sesid
         subsesdir.mkdir(parents=True)
         subses_file   = shutil.copy(dcm_file, subsesdir)
         subses_source = bids.DataSource(subses_file, {'dcm2niix2bids': {}}, 'DICOM', subprefix=subprefix, sesprefix=sesprefix)
-        resubprefix   = '' if subprefix == '*' else subprefix
-        resesprefix   = '' if sesprefix == '*' else sesprefix
-        sub, ses      = subses_source.subid_sesid(f"<<filepath:/data/{resubprefix}(.*?)/>>", f"<<filepath:/data/{resubprefix}.*?/{resesprefix}(.*?)/>>")
-        expected_sub  = 'sub-' + bids.cleanup_value(re.sub(f"^{subprefix if subprefix!='*' else ''}", '', subid) if subid.startswith(subprefix) or subprefix=='*' else '')  # NB: this expression is too complicated / resembles the actual code too much :-/
-        expected_ses  = 'ses-' + bids.cleanup_value(re.sub(f"^{sesprefix if sesprefix!='*' else ''}", '', sesid)) if (subid.startswith(subprefix) or subprefix=='*') and (sesid.startswith(sesprefix) or sesprefix=='*') and sesid else ''
-        print(f"[{subprefix}, {subid}] -> {sub}")
-        print(f"[{sesprefix}, {sesid}] -> {ses}")
+        sub, ses      = subses_source.subid_sesid(f"<<filepath:/data/{subses_source.resubprefix()}(.*?)/>>", f"<<filepath:/data/{subses_source.resubprefix()}.*?/{subses_source.resesprefix()}(.*?)/>>")
+        expected_sub  = 'sub-' + bids.cleanup_value(re.sub(f"^{subses_source.resubprefix()}", '', subid)  if subid.startswith(subprefix)  or subprefix=='*' else '')  # NB: this expression is too complicated / resembles the actual code too much :-/
+        expected_ses  = 'ses-' + bids.cleanup_value(re.sub(f"^{subses_source.resesprefix()}", '', sesid)) if (subid.startswith(subprefix) or subprefix=='*') and (sesid.startswith(sesprefix) or sesprefix=='*') and sesid else ''
+        print(f"[{subprefix}, {subid}] -> {sub}\t\t[{sesprefix}, {sesid}] -> {ses}")
         assert (sub, ses) == (expected_sub, expected_ses)
         assert subses_source.subid_sesid(f"<<PatientName:.*\^(.*?)1>>", '') == ('sub-MR', '')
 

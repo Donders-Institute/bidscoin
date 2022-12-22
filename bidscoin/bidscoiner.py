@@ -147,7 +147,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         if not subjects:
             LOGGER.warning(f"No subjects found in: {rawfolder/subprefix}*")
     else:
-        subjects = [rawfolder/(subprefix + re.sub(f"^{subprefix}",'',subject)) for subject in subjects]   # Make sure there is a sub-prefix
+        subjects = [rawfolder/(subprefix + re.sub(f"^{'' if subprefix=='*' else re.escape(subprefix)}",'',subject)) for subject in subjects]   # Make sure there is a sub-prefix
 
     # Loop over all subjects and sessions and convert them using the bidsmap entries
     with logging_redirect_tqdm():

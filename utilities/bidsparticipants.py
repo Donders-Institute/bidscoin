@@ -11,7 +11,6 @@ import pandas as pd
 import json
 import logging
 import shutil
-import dateutil.parser
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
@@ -67,7 +66,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
 
     :param rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
     :param bidsfolder:      The name of the BIDS root folder
-    :param keys:            The keys that are extracted fro mthe source data when populating the participants.tsv file
+    :param keys:            The keys that are extracted from the source data when populating the participants.tsv file
     :param bidsmapfile:     The name of the bidsmap YAML-file. If the bidsmap pathname is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin
     :param dryrun:          Boolean to just display the participants info
     :return:                Nothing
@@ -126,7 +125,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
             LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
             personals = dict()
             subject   = rawfolder/subject.name.replace('sub-', subprefix.replace('*',''))     # TODO: This assumes e.g. that the subject-ids in the rawfolder did not contain BIDS-invalid characters (such as '_')
-            sessions  = bidscoin.lsdirs(subject, (sesprefix if sesprefix!='*' else '') + '*')
+            sessions  = bidscoin.lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
             if not subject.is_dir():
                 LOGGER.error(f"Could not find source-folder: {subject}")
                 continue
@@ -134,7 +133,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
                 sessions = [subject]
             for session in sessions:
 
-                success = False         # Only take data from the first session -> BIDS specification
+                success      = False            # Only take data from the first session -> BIDS specification
                 subid, sesid = bids.DataSource(session/'dum.my', subprefix=subprefix, sesprefix=sesprefix).subid_sesid()
                 if sesid and 'session_id' not in personals:
                     personals['session_id']         = sesid

@@ -63,24 +63,32 @@ class DataSource:
         :param sesprefix:   The sesprefix used in the sourcefolder
         """
 
-        self.path       = Path(provenance)
-        self.datatype   = datatype
-        self.dataformat = dataformat
-        self.plugins    = plugins
+        self.path        = Path(provenance)
+        self.datatype    = datatype
+        self.dataformat  = dataformat
+        self.plugins     = plugins
         if not plugins:
             self.plugins = {}
         if not dataformat:
             self.is_datasource()
-        self.subprefix  = subprefix
-        self.sesprefix  = sesprefix
-        self.metadata   = {}
-        jsonfile        = self.path.with_suffix('').with_suffix('.json') if self.path.name else self.path
+        self.subprefix   = subprefix
+        self.sesprefix   = sesprefix
+        self.metadata    = {}
+        jsonfile         = self.path.with_suffix('').with_suffix('.json') if self.path.name else self.path
         if jsonfile.is_file():
             with jsonfile.open('r') as json_fid:
                 self.metadata = json.load(json_fid)
                 if not isinstance(self.metadata, dict):
                     LOGGER.warning(f"Skipping unexpectedly formatted meta-data in: {jsonfile}")
                     self.metadata = {}
+
+    def resubprefix(self) -> str:
+        """Returns the subprefix with escaped regular expression characters. A single '*' wildcard is returned as ''"""
+        return '' if self.subprefix=='*' else re.escape(self.subprefix)
+
+    def resesprefix(self) -> str:
+        """Returns the sesprefix with escaped regular expression characters. A single '*' wildcard is returned as ''"""
+        return '' if self.sesprefix=='*' else re.escape(self.sesprefix)
 
     def is_datasource(self) -> bool:
         """Returns True is the datasource has a valid dataformat"""
@@ -121,7 +129,7 @@ class DataSource:
                 match = re.findall(tagname[9:], self.path.parent.as_posix() + '/')
                 if match:
                     if len(match) > 1:
-                        LOGGER.warning(f"Multiple matches {match} found when extracting {tagname} from {self.path.parent.as_posix() + '/'}, using: {match[-1]}")
+                        LOGGER.warning(f"Multiple matches {match} found when extracting '{tagname}' from '{self.path.parent.as_posix() + '/'}'. Using: {match[-1]}")
                     return match[-1] if match else ''           # The last match is most likely the most informative
             elif tagname == 'filepath':
                 return self.path.parent.as_posix() + '/'
@@ -130,7 +138,7 @@ class DataSource:
                 match = re.findall(tagname[9:], self.path.name)
                 if match:
                     if len(match) > 1:
-                        LOGGER.warning(f"Multiple matches {match} found when extracting {tagname} from {self.path.name}, using: {match[0]}")
+                        LOGGER.warning(f"Multiple matches {match} found when extracting '{tagname}' from '{self.path.name}'. Using: {match[0]}")
                     return match[0] if match else ''            # The first match is most likely the most informative (?)
             elif tagname == 'filename':
                 return self.path.name
@@ -155,6 +163,9 @@ class DataSource:
                 else:
                     return len(list(self.path.parent.iterdir()))
 
+        except re.error as patternerror:
+            LOGGER.error(f"Cannot compile regular expression pattern '{tagname}': {patternerror}")
+
         except OSError as ioerror:
             LOGGER.warning(f"{ioerror}")
 
@@ -170,14 +181,12 @@ class DataSource:
         :return:             The attribute value or '' if the attribute could not be read from the datasource. NB: values are always converted to strings
         """
 
-        attributeval = ''
+        attributeval = pattern = ''
 
         try:
             # Split off the regular expression pattern
             if ':' in attributekey:
                 attributekey, pattern = attributekey.split(':', 1)
-            else:
-                pattern = ''
 
             # Read the attribute value from the sidecar file or from the datasource
             if attributekey in self.metadata:
@@ -202,8 +211,11 @@ class DataSource:
                 if pattern:
                     match = re.findall(pattern, attributeval)
                     if len(match) > 1:
-                        LOGGER.warning(f"Multiple matches {match} found when extracting {pattern} from {attributeval}, using: {match[0]}")
+                        LOGGER.warning(f"Multiple matches {match} found when extracting '{pattern}' from '{attributeval}'. Using: {match[0]}")
                     attributeval = match[0] if match else ''    # The first match is most likely the most informative (?)
+
+        except re.error as patternerror:
+            LOGGER.error(f"Cannot compile regular expression pattern '{pattern}': {patternerror}")
 
         except OSError as ioerror:
             LOGGER.warning(f"{ioerror}")
@@ -222,9 +234,9 @@ class DataSource:
 
         # Add the default value for subid and sesid if not given
         if subid is None:
-            subid = f"<<filepath:/{self.subprefix}(.*?)/>>"
+            subid = f"<<filepath:/{self.resubprefix()})(.*?)/>>"
         if sesid is None:
-            sesid = f"<<filepath:/{self.sesprefix}(.*?)/>>"
+            sesid = f"<<filepath:/{self.resesprefix()})(.*?)/>>"
 
         # Parse the sub-/ses-id's
         subid_ = self.dynamicvalue(subid, runtime=True)
@@ -234,8 +246,8 @@ class DataSource:
         subid = subid_
 
         # Add sub- and ses- prefixes if they are not there
-        subid = 'sub-' + cleanup_value(re.sub(f"^{self.subprefix if self.subprefix!='*' else ''}", '', subid))
-        sesid = 'ses-' + cleanup_value(re.sub(f"^{self.sesprefix if self.sesprefix!='*' else ''}", '', sesid)) if sesid else ''
+        subid =  'sub-' + cleanup_value(re.sub(f"^{self.resubprefix()}", '', subid))
+        sesid = ('ses-' + cleanup_value(re.sub(f"^{self.resesprefix()}", '', sesid))) if sesid else ''
 
         return subid, sesid
 
@@ -327,7 +339,7 @@ def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> (List[P
                     recursive = True                        # The unzipped data may have leading directory components
 
         # Sort the DICOM files if not sorted yet (e.g. DICOMDIR)
-        sessions = list(set(sessions + dicomsort.sortsessions(worksubses, recursive=recursive)))
+        sessions = sorted(set(sessions + dicomsort.sortsessions(worksubses, recursive=recursive)))
 
         return sessions, True
 
@@ -801,7 +813,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
 
     :param yamlfile:    The full pathname or basename of the bidsmap yaml-file. If None, the default bidsmap_template file in the heuristics folder is used
     :param folder:      Only used when yamlfile=basename or None: yamlfile is then first searched for in folder and then falls back to the ./heuristics folder (useful for centrally managed template yaml-files)
-    :param plugins:     List of plugins to be used (with default options, overrules the plugin list in the study/template bidsmaps)
+    :param plugins:     List of plugins to be used (with default options, overrules the plugin list in the study/template bidsmaps). Leave empty to use all plugins in the bidsmap
     :param check:       Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
     :return:            Tuple with (1) ruamel.yaml dict structure, with all options, BIDS mapping heuristics, labels and attributes, etc and (2) the fullpath yaml-file
     """
@@ -1635,12 +1647,10 @@ def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bo
 
     # Try to update the sub/ses-ids
     subid = re.sub(f'^sub-', '', subid)
+    sesid = re.sub(f'^ses-', '', sesid) if sesid else ''                        # Catch sesid = None
     if cleanup:
         subid = cleanup_value(subid)
-    if sesid:
-        sesid = re.sub(f'^ses-', '', sesid)
-        if cleanup:
-            sesid = cleanup_value(sesid)
+        sesid = cleanup_value(sesid)
 
     # Compose a bidsname from valid BIDS entities only
     bidsname = f"sub-{subid}{'_ses-'+sesid if sesid else ''}"                   # Start with the subject/session identifier
