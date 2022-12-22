@@ -15,10 +15,11 @@ bidscoin.setup_logging()
 
 @pytest.mark.parametrize('subprefix', ['Doe', 'Doe^', '*'])
 @pytest.mark.parametrize('sesprefix', ['0', '*'])
-def test_bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, subprefix, sesprefix):
+@pytest.mark.parametrize('store', [False, True])
+def test_bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, subprefix, sesprefix, store):
     resubprefix = '' if subprefix=='*' else re.escape(subprefix)
     resesprefix = '' if sesprefix=='*' else re.escape(sesprefix)
-    bidsmap     = bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidscoin.bidsmap_template, [], subprefix, sesprefix, unzip='', noedit=True, force=True)
+    bidsmap     = bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidscoin.bidsmap_template, [], subprefix, sesprefix, unzip='', store=store, noedit=True, force=True)
     assert bidsmap['Options']['bidscoin']['subprefix'] == subprefix
     assert bidsmap['Options']['bidscoin']['sesprefix'] == sesprefix
     assert bidsmap['DICOM']['subject']                 == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}(.*?)/>>"
