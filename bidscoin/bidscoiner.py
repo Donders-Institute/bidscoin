@@ -35,7 +35,7 @@ except ImportError:
 localversion, _ = bidscoin.version(check=True)
 
 
-def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=False, participants: bool=False, bidsmapfile: str='bidsmap.yaml') -> None:
+def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=False, bidsmapfile: str='bidsmap.yaml') -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder and uses the
     bidsmap.yaml file in bidsfolder/code/bidscoin to cast the data into the BIDS folder.
@@ -44,7 +44,6 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     :param bidsfolder:      The name of the BIDS root folder
     :param subjects:        List of selected subjects / participants (i.e. sub-# names / folders) to be processed (the sub- prefix can be removed). Otherwise all subjects in the sourcefolder will be selected
     :param force:           If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped
-    :param participants:    If True, subjects in particpants.tsv will not be processed (this could be used e.g. to protect these subjects from being reprocessed), also when force=True
     :param bidsmapfile:     The name of the bidsmap YAML-file. If the bidsmap pathname is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin
     :return:                Nothing
     """
@@ -58,7 +57,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     bidscoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidscoiner.log')
     LOGGER.info('')
     LOGGER.info(f"-------------- START BIDScoiner {localversion}: BIDS {bidscoin.bidsversion()} ------------")
-    LOGGER.info(f">>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} subjects={subjects} force={force} participants={participants} bidsmap={bidsmapfile}")
+    LOGGER.info(f">>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} subjects={subjects} force={force} bidsmap={bidsmapfile}")
 
     # Create a code/bidscoin subfolder
     (bidsfolder/'code'/'bidscoin').mkdir(parents=True, exist_ok=True)
@@ -154,9 +153,6 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
             LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
-            if participants and subject.name in list(participants_table.index):
-                LOGGER.info(f">>> Skipping subject: {subject} ({n}/{len(subjects)})")
-                continue
             if not subject.is_dir():
                 LOGGER.error(f"The '{subject}' subject folder does not exist")
                 continue
@@ -369,16 +365,14 @@ def main():
     parser.add_argument('sourcefolder',             help='The study root folder containing the raw source data')
     parser.add_argument('bidsfolder',               help='The destination / output folder with the bids data')
     parser.add_argument('-p','--participant_label', help='Space separated list of selected sub-# names / folders to be processed (the sub- prefix can be removed). Otherwise all subjects in the sourcefolder will be selected', nargs='+')
-    parser.add_argument('-f','--force',             help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')
-    parser.add_argument('-s','--skip_participants', help='If this flag is given those subjects that are in participants.tsv will not be processed (also when the --force flag is given). Otherwise the participants.tsv table is ignored', action='store_true')
     parser.add_argument('-b','--bidsmap',           help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
+    parser.add_argument('-f','--force',             help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')
     args = parser.parse_args()
 
     bidscoiner(rawfolder    = args.sourcefolder,
                bidsfolder   = args.bidsfolder,
                subjects     = args.participant_label,
                force        = args.force,
-               participants = args.skip_participants,
                bidsmapfile  = args.bidsmap)
 
 

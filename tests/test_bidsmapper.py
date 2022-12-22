@@ -27,5 +27,6 @@ def test_bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, subprefix, se
     assert bidsmap_dicomdir.is_file()
     assert 'Doe^Archibald' in bidsmap_dicomdir.read_text()                                      # Make sure we have discovered `Archibald` samples (-> provenance)
     assert 'Doe^Peter' in bidsmap_dicomdir.read_text()                                          # Make sure we have discovered `Peter` samples (-> provenance)
-    assert (bidsmap_dicomdir.parent/'bidsmapper.errors').stat().st_size==0
+    assert (bidsmap_dicomdir.parent/'bidsmapper.errors').stat().st_size == 0
+    assert (bidsmap_dicomdir.parent/'provenance').is_dir()              == store
     (bidsmap_dicomdir.parent/'bidsmapper.errors').unlink(missing_ok=True)
