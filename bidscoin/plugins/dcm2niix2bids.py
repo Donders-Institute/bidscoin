@@ -47,6 +47,9 @@ def test(options: dict=OPTIONS) -> int:
 
     LOGGER.info('Testing the dcm2niix2bids installation:')
 
+    if 'readphysio' not in dir(physio) or 'physio2tsv' not in dir(physio):
+        LOGGER.error("Could not import the expected 'readphysio' and/or 'physio2tsv' from the physio.py utility")
+        return 1
     if 'command' not in {**OPTIONS, **options}:
         LOGGER.error(f"The expected 'command' key is not defined in the dcm2niix2bids options")
         return 1

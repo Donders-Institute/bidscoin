@@ -46,6 +46,9 @@ def test(options: dict=OPTIONS) -> int:
 
     LOGGER.info('Testing the spec2nii2bids installation:')
 
+    if 'get_twixfield' not in dir(bids) or 'get_sparfield' not in dir(bids) or 'get_p7field' not in dir(bids):
+        LOGGER.error("Could not import the expected 'get_twixfield', 'get_sparfield' and/or 'get_p7field' from the bids.py library")
+        return 1
     if 'command' not in {**OPTIONS, **options}:
         LOGGER.error(f"The expected 'command' key is not defined in the spec2nii2bids options")
         return 1

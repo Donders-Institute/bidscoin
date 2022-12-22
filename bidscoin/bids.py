@@ -47,7 +47,7 @@ with (bidscoin.schemafolder/'objects'/'entities.yaml').open('r') as _stream:
 with (bidscoin.schemafolder/'rules'/'entities.yaml').open('r') as _stream:
     entitiesorder = yaml.load(_stream)                                          # The order in which the entities should appear within filenames
 with (bidscoin.schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
-    metadata = yaml.load(_stream)                                               # The descriptions of the valid BIDS metadata fields
+    metafields = yaml.load(_stream)                                               # The descriptions of the valid BIDS metadata fields
 
 
 class DataSource:
@@ -1945,13 +1945,13 @@ def get_metahelp(metakey: str) -> str:
         return "Please provide a key-name"
 
     # Return the description from the metadata file or a default text
-    for field in metadata:
-        if metakey == metadata[field].get('name'):
-            description = metadata[field]['description']
+    for field in metafields:
+        if metakey == metafields[field].get('name'):
+            description = metafields[field]['description']
             if metakey == 'IntendedFor':    # IntendedFor is a special search-pattern field in BIDScoin
                 description += ('\nNB: These associated files can be dynamically searched for'
                                 '\nduring bidscoiner runtime with glob-style matching patterns,'
                                 '\n"such as <<Reward*_bold><Stop*_epi>>" (see documentation)')
-            return f"{metadata[field]['display_name']}\n{description}"
+            return f"{metafields[field]['display_name']}\n{description}"
 
     return f"{metakey}\nAn unknown/private meta key"
