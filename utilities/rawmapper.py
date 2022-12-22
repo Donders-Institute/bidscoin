@@ -36,9 +36,9 @@ def rawmapper(rawfolder, outfolder: str='', sessions: tuple=(), rename: bool=Fal
 
     # Input checking
     rawfolder = Path(rawfolder).resolve()
+    print(f"Mapping: {rawfolder}")
     if not outfolder or not Path(outfolder).name:
         outfolder = rawfolder
-        print(f"Outfolder: {outfolder}")
     outfolder = Path(outfolder).resolve()
     if rename and not 0<len(dicomfield)<3:
         print(f"Cannot rename subject/session folders using {len(dicomfield)} dicomfields (use one or two fields)")
@@ -53,6 +53,7 @@ def rawmapper(rawfolder, outfolder: str='', sessions: tuple=(), rename: bool=Fal
     # Write the header of the mapper logfile
     mapperfile = outfolder/f"rawmapper_{'_'.join(dicomfield)}.tsv"
     if not dryrun:
+        print(f"Saving rawmapper-data in: {mapperfile}")
         if rename:
             if not mapperfile.is_file():     # Write the header once
                 mapperfile.write_text('subid\tsesid\tnewsubid\tnewsesid\n')
