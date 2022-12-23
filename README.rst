@@ -9,7 +9,8 @@ BIDScoin: Coin your imaging data to BIDS
    :target: https://bidscoin.readthedocs.io
 
 .. raw:: html
-   <img name="bidscoin-logo" src="./bidscoin/bidscoin_logo.png" height="340px" align="right" alt=" ">
+
+   <img name="bidscoin-logo" src="./bidscoin/bidscoin_logo.png" height="340px" align="right" alt=" " src="https://bidscoin.readthedocs.io">
 
 |PyPI version| |BIDS| |PyPI - Python Version| |GPLv3| |RTD| |Tests| |DOI|
 
