@@ -1,5 +1,5 @@
-Demo and tutorial
-=================
+Tutorial
+========
 
 BIDS introduction and BIDScoin demo
 -----------------------------------
