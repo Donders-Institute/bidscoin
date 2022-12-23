@@ -10,7 +10,7 @@ BIDScoin: Coin your imaging data to BIDS
 
 .. raw:: html
 
-   <p style="text-align:right;height:140px;"><img src="./bidscoin/bidscoin_logo.png" alt=" "></p>
+   <p style="text-align:right;height:10px;"><img src="./bidscoin/bidscoin_logo.png" alt=" "></p>
 
 |PyPI version| |BIDS| |PyPI - Python Version| |GPLv3| |RTD| |Tests| |DOI|
 
