@@ -49,8 +49,8 @@ The new ``bidscointutorial`` folder contains a ``raw`` source-data folder and a 
 
 Let's begin with inspecting this new raw data collection:
 
-- Are the DICOM files for all the ``bids/sub-*`` folders organised in series-subfolders (e.g. ``sub-001/ses-01/003-T1MPRAGE/0001.dcm`` etc)? Use `dicomsort <preparation.html#dicomsort>`__ if this is not the case (hint: it's not the case). A help text for all BIDScoin tools is available by running the tool with the ``-h`` flag (e.g. ``rawmapper -h``)
-- Use the `rawmapper <preparation.html#rawmapper>`__ command to print out the DICOM values of the "EchoTime", "Sex" and "AcquisitionDate" of the fMRI series in the ``raw`` folder
+- Are the DICOM files for all the ``bids/sub-*`` folders organised in series-subfolders (e.g. ``sub-001/ses-01/003-T1MPRAGE/0001.dcm`` etc)? Use `dicomsort <utilities.html#dicomsort>`__ if this is not the case (hint: it's not the case). A help text for all BIDScoin tools is available by running the tool with the ``-h`` flag (e.g. ``rawmapper -h``)
+- Use the `rawmapper <utilities.html#rawmapper>`__ command to print out the DICOM values of the "EchoTime", "Sex" and "AcquisitionDate" of the fMRI series in the ``raw`` folder
 
 3. BIDS mapping
 ~~~~~~~~~~~~~~~
@@ -84,8 +84,8 @@ The next step, converting the source data into a BIDS collection, is very simple
 
 Now that you have converted the data to BIDS, you still need to do some manual work to make it fully ready for data analysis and sharing
 
-- Combine the echos using the `echocombine <finalizing.html#multi-echo-combination>`__ tool, such that the individual echo images are replaced by the echo-combined image
-- Deface the anatomical scans using the `deface <finalizing.html#defacing>`__ tool. This will take a while, but will obviously not work well for our phantom dataset. Therefore store the 'defaced' output in the ``derivatives`` folder (instead of e.g. overwriting the existing images)
+- Combine the echos using the `echocombine <bidsapps.html#multi-echo-combination>`__ tool, such that the individual echo images are replaced by the echo-combined image
+- Deface the anatomical scans using the `deface <bidsapps.html#defacing>`__ tool. This will take a while, but will obviously not work well for our phantom dataset. Therefore store the 'defaced' output in the ``derivatives`` folder (instead of e.g. overwriting the existing images)
 - Inspect the ``bids/participants.tsv`` file and decide if it is ok.
 - Update the ``dataset_description.json`` and ``README`` files in your ``bids`` folder
 - As a final step, run the `bids-validator <https://bids-standard.github.io/bids-validator/>`__ on your ``~/bids_tutorial`` folder. Are you completely ready now to share this dataset?
