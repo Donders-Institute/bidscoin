@@ -22,6 +22,7 @@ jobs:
           pip install pytest
       - name: Tests with pytest
         run: |
+          pytest tests/test_bidscoin.py
           pytest tests/test_bids.py
           pytest tests/test_bidsmapper.py
           pytest tests/test_utilities.py
