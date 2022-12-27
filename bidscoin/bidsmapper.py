@@ -33,9 +33,8 @@ localversion, versionmessage = bidscoin.version(check=True)
 
 def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, plugins: list, subprefix: str, sesprefix: str, unzip: str, store: bool=False, noedit: bool=False, force: bool=False) -> dict:
     """
-    Main function that processes all the subjects and session in the sourcefolder
-    and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code/bidscoin.
-    Folders in sourcefolder are assumed to contain a single dataset.
+    Main function that processes all the subjects and session in the sourcefolder and that generates a fully filled-in bidsmap.yaml
+    file in bidsfolder/code/bidscoin. Folders in sourcefolder are assumed to contain a single dataset.
 
     :param rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
     :param bidsfolder:      The name of the BIDS root folder
