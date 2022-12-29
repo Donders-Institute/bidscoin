@@ -9,5 +9,5 @@ tqdm>=4.60.0
 multiecho>=0.25
 python-dateutil
 nibabel
-pypet2bids>=1.0.0
+pypet2bids
 bids_validator

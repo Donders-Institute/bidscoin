@@ -13,3 +13,6 @@ __pycache__
 .tox
 tests/testdata/*.log
 tests/testdata/bidsmap_output.yaml
+bidscointutorial*/
+.DS_Store
+
