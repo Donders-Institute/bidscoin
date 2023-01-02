@@ -75,8 +75,9 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     template, _              = bids.load_bidsmap(templatefile, bidscoinfolder, plugins, check=(True,True,False))
 
     # Create the new bidsmap as a copy / bidsmap skeleton with no datatype entries (i.e. bidsmap with empty lists)
-    if force:
-        bidsmapfile.unlink(missing_ok=True)
+    if force and bidsmapfile.is_file():
+        LOGGER.info(f"Deleting previous bidsmap: {bidsmapfile}")
+        bidsmapfile.unlink()
         bidsmap_old = {}
     if bidsmap_old:
         bidsmap_new = copy.deepcopy(bidsmap_old)
@@ -198,7 +199,7 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path) ->
     bidsmap['Options']['bidscoin']['sesprefix'] = sesprefix
 
     # Update the bidsmap dataformat sections
-    reprefix = lambda prefix: '' if prefix=='*' else re.escape(prefix)
+    reprefix = lambda prefix: '' if prefix=='*' else re.escape(prefix).replace('\-','-')
     for dataformat in bidsmap:
         if not bidsmap[dataformat] or dataformat=='Options': continue
 

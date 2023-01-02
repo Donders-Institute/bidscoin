@@ -83,12 +83,12 @@ class DataSource:
                     self.metadata = {}
 
     def resubprefix(self) -> str:
-        """Returns the subprefix with escaped regular expression characters. A single '*' wildcard is returned as ''"""
-        return '' if self.subprefix=='*' else re.escape(self.subprefix)
+        """Returns the subprefix with escaped regular expression characters (except '-'). A single '*' wildcard is returned as ''"""
+        return '' if self.subprefix=='*' else re.escape(self.subprefix).replace('\-','-')
 
     def resesprefix(self) -> str:
-        """Returns the sesprefix with escaped regular expression characters. A single '*' wildcard is returned as ''"""
-        return '' if self.sesprefix=='*' else re.escape(self.sesprefix)
+        """Returns the sesprefix with escaped regular expression characters (except '-'). A single '*' wildcard is returned as ''"""
+        return '' if self.sesprefix=='*' else re.escape(self.sesprefix).replace('\-','-')
 
     def is_datasource(self) -> bool:
         """Returns True is the datasource has a valid dataformat"""
@@ -838,8 +838,8 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
             yamlfile = bidscoin.heuristicsfolder/yamlfile
 
     if not yamlfile.is_file():
-        LOGGER.info(f"No existing bidsmap file found: {yamlfile}")
-        return dict(), yamlfile
+        LOGGER.verbose(f"No existing bidsmap file found: {yamlfile}")
+        return {}, yamlfile
     elif any(check):
         LOGGER.info(f"Reading: {yamlfile}")
 

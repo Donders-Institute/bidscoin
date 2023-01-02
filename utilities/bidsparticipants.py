@@ -123,7 +123,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
         for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
             LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
-            personals = dict()
+            personals = {}
             subject   = rawfolder/subject.name.replace('sub-', subprefix.replace('*',''))     # TODO: This assumes e.g. that the subject-ids in the rawfolder did not contain BIDS-invalid characters (such as '_')
             sessions  = bidscoin.lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
             if not subject.is_dir():
