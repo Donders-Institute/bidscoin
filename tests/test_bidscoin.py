@@ -29,6 +29,8 @@ def test_runcommand():
 
 def test_list_executables():
     assert 'bidsmapper' in bidscoin.list_executables()
+    assert 'dicomsort' in bidscoin.list_executables()
+    assert 'deface' in bidscoin.list_executables()
 
 
 def test_list_plugins():

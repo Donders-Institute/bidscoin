@@ -207,7 +207,7 @@ class DataSource:
                         re.compile(attributeval)
                     except re.error:
                         for metacharacter in ('.', '^', '$', '*', '+', '?', '{', '}', '[', ']', '\\', '|', '(', ')'):
-                            attributeval = attributeval.strip().replace(metacharacter, '.')
+                            attributeval = attributeval.strip().replace(metacharacter, '.')     # Alternative: attributeval = re.escape(attributeval)
                 if pattern:
                     match = re.findall(pattern, attributeval)
                     if len(match) > 1:
@@ -1053,6 +1053,11 @@ def check_template(bidsmap: dict) -> bool:
             datatypesuffixes = []
             for run in bidsmap[dataformat][datatype]:
                 datatypesuffixes.append(run['bids']['suffix'])
+                for key, val in run['attributes'].items():
+                    try:
+                        re.compile(str(val))
+                    except re.error:
+                        LOGGER.warning(f"Invalid regexp pattern in the {key} value '{val}' in: bidsmap[{dataformat}][{datatype}] -> {run['provenance']}\nThis may cause run-matching errors unless '{val}' is a literal attribute value")
             for typegroup in datatyperules[datatype]:
                 for suffix in datatyperules[datatype][typegroup]['suffixes']:
                     if suffix not in datatypesuffixes and 'DEPRECATED' not in suffixes[suffix]['description']:
@@ -1856,6 +1861,8 @@ def get_propertieshelp(propertieskey: str) -> str:
     if propertieskey == 'nrfiles':
         return 'The nr of similar files in the folder that matched against the properties (regexp) patterns'
 
+    return f"{propertieskey} is not a valid property-key"
+
 
 def get_attributeshelp(attributeskey: str) -> str:
     """
@@ -1868,7 +1875,7 @@ def get_attributeshelp(attributeskey: str) -> str:
     """
 
     if not attributeskey:
-        return "Please provide a key-name"
+        return 'Please provide a key-name'
 
     # Return the description from the DICOM dictionary or a default text
     try:

@@ -244,7 +244,7 @@ def list_executables(show: bool=False) -> list:
     else:
         console_scripts = entry_points().select(group='console_scripts')    # The select method was introduced in python = 3.10
     for script in console_scripts:
-        if script.value.startswith('bidscoin'):
+        if script.value.startswith('bidscoin') or script.value.startswith('bidsapps') or script.value.startswith('utilities'):
             scripts.append(script.name)
             if show: LOGGER.info(f"- {script.name}")
 
@@ -508,13 +508,16 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
     # Test loading the template bidsmap
     success = True
     if isinstance(bidsmapfile, (str, Path)):
+        if not bidsmapfile.is_file():
+            LOGGER.info(f"Cannot find bidsmap-file: {bidsmapfile}")
+            return 1
         LOGGER.info(f"Running bidsmap checks:")
         try:            # Moving the import to the top of this module will cause circular import issues
             try:  from bidscoin import bids
             except ImportError: import bids         # This should work if bidscoin was not pip-installed
             bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile), check=(True,True,False))
         except Exception as bidsmaperror:
-            LOGGER.error(f"An error occurred when loading {bidsmapfile}:\n{bidsmaperror}")
+            LOGGER.error(f"An error occurred when loading {bidsmapfile}:\n{bidsmaperror}\nThis may be due to invalid YAML syntax. You can check this using a YAML validator (e.g. https://www.yamllint.com)")
             bidsmap = {'Options': {}}
             success = False
     else:
