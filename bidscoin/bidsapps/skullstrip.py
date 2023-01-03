@@ -25,7 +25,7 @@ except ImportError:
     import bids, bidscoin
 
 
-def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: list[str], force: bool, args: str):
+def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: list, force: bool, args: str):
     """
 
     :param bidsdir:     The bids-directory with the subject data
