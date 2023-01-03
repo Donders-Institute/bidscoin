@@ -183,6 +183,23 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)
 
+            # TODO: when this plugin is loaded and run we want to check and see if there are any PET dicoms that
+            # TODO: appear in the DICOM section of the bidsmap.yaml and if so we want to remove them from the DICOMs
+            # TODO: section of the bidsmap
+            # sometimes we find PET dicoms in the DICOM section, no no no no, if we're using this plugin
+            # we don't want PET dicoms being converted by dcm2niix! We want to use dcm2niix4pet my dear Watson
+            pet_runs = bidsmap_new['PET']
+            for pet_run in pet_runs:
+                dicom_pet_run = bids.find_run(
+                    bidsmap=bidsmap_new,
+                    provenance=pet_run['provenance'],
+                    dataformat='DICOM'
+                )
+                if dicom_pet_run:
+                    bids.
+            # for now we just force it to convert
+
+
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     """
