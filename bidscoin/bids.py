@@ -1060,7 +1060,7 @@ def check_template(bidsmap: dict) -> bool:
                         LOGGER.warning(f"Invalid regexp pattern in the {key} value '{val}' in: bidsmap[{dataformat}][{datatype}] -> {run['provenance']}\nThis may cause run-matching errors unless '{val}' is a literal attribute value")
             for typegroup in datatyperules[datatype]:
                 for suffix in datatyperules[datatype][typegroup]['suffixes']:
-                    if suffix not in datatypesuffixes and 'DEPRECATED' not in suffixes[suffix]['description']:
+                    if suffix not in datatypesuffixes and '[DEPRECATED]' not in suffixes[suffix]['description'] and '**Change:** Removed from' not in suffixes[suffix]['description'] and '**Change:** Replaced by' not in suffixes[suffix]['description']:
                         LOGGER.warning(f"Missing '{suffix}' run-item in: bidsmap[{dataformat}][{datatype}] (NB: this may be fine / a deprecated item)")
                         valid = False
 

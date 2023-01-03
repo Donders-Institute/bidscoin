@@ -94,7 +94,7 @@ def test_get_datasource(dicomdir):
 def test_load_check_template(template):
     bidsmap, _ = bids.load_bidsmap(template, check=(False,False,False))
     assert isinstance(bidsmap, dict) and bidsmap
-    # assert bids.check_template(bidsmap)   # NB: Skip until the deprecated bids-entitities are removed from the BIDS schema
+    assert bids.check_template(bidsmap)
 
 
 def test_match_runvalue():
