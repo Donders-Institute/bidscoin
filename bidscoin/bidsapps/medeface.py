@@ -15,7 +15,6 @@ import json
 import logging
 import pandas as pd
 import pydeface.utils as pdu
-import drmaa
 import nibabel as nib
 import numpy as np
 from tqdm import tqdm
@@ -62,11 +61,15 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
         if not subjects:
             LOGGER.warning(f"No subjects found in: {bidsdir/'sub-*'}")
     else:
-        subjects = ['sub-' + subject.replace('sub-', '') for subject in subjects]              # Make sure there is a "sub-" prefix
+        subjects = ['sub-' + subject.replace('sub-', '') for subject in subjects]               # Make sure there is a "sub-" prefix
         subjects = [bidsdir/subject for subject in subjects if (bidsdir/subject).is_dir()]
 
     # Prepare the HPC pydeface job submission
-    with drmaa.Session() as pbatch:
+    if cluster:
+        from drmaa import Session as drmaasession
+    else:
+        from contextlib import nullcontext as drmaasession                                      # Use a dummy context manager
+    with drmaasession() as pbatch:
         if cluster:
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
