@@ -28,9 +28,12 @@ def test_runcommand():
 
 
 def test_list_executables():
-    assert 'bidsmapper' in bidscoin.list_executables()
-    assert 'dicomsort' in bidscoin.list_executables()
-    assert 'deface' in bidscoin.list_executables()
+    executables = bidscoin.list_executables()
+    assert 'bidsmapper' in executables
+    assert 'dicomsort' in executables
+    assert 'deface' in executables
+    for executable in executables:
+        assert bidscoin.run_command(f"{executable} -h") == 0
 
 
 def test_list_plugins():
