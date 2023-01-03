@@ -3,10 +3,10 @@ import shutil
 from pathlib import Path
 from pydicom.data import get_testdata_file
 try:
-    from utilities import dicomsort
+    from bidscoin.utilities import dicomsort
 except ImportError:
     import sys
-    sys.path.append(str(Path(__file__).parents[1]/'utilities'))         # This should work if bidscoin was not pip-installed
+    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'/'utilities'))         # This should work if bidscoin was not pip-installed
     import dicomsort
 
 

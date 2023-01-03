@@ -4,11 +4,11 @@ from pydicom.data import get_testdata_file
 from pathlib import Path
 try:
     from bidscoin import bidscoin
-    from utilities import dicomsort, rawmapper, bidsparticipants
+    from bidscoin.utilities import dicomsort, rawmapper, bidsparticipants
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
-    sys.path.append(str(Path(__file__).parents[1]/'utilities'))
+    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'/'utilities'))
     import bidscoin, dicomsort, rawmapper, bidsparticipants
 
 bidscoin.setup_logging()

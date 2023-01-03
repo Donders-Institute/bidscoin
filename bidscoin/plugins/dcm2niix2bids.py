@@ -21,10 +21,10 @@ from typing import Union
 from pathlib import Path
 try:
     from bidscoin import bidscoin, bids
-    from utilities import physio
+    from bidscoin.utilities import physio
 except ImportError:
     import sys
-    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    sys.path.append(str(Path(__file__).parents[1]))         # This should work if bidscoin was not pip-installed
     sys.path.append(str(Path(__file__).parents[1]/'utilities'))
     import bidscoin, bids, physio
 

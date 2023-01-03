@@ -29,7 +29,7 @@ try:
     from bidscoin import bids
 except ImportError:
     import sys
-    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
     import bids
 
 LOGGER = logging.getLogger(__name__)

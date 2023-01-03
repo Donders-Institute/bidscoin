@@ -15,4 +15,5 @@
    utilities
    screenshots
    tutorial
+   troubleshooting
    CHANGELOG

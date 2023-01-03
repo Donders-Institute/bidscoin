@@ -3,11 +3,11 @@ import pytest
 import re
 try:
     from bidscoin import bids, bidscoin, bidsmapper
-    from utilities import dicomsort
+    from bidscoin.utilities import dicomsort
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
-    sys.path.append(str(Path(__file__).parents[1]/'utilities'))
+    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'/'utilities'))
     import bidscoin, bids, bidsmapper, dicomsort
 
 bidscoin.setup_logging()

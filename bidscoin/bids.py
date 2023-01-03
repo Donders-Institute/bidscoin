@@ -23,10 +23,10 @@ from typing import Union, List, Tuple
 from pathlib import Path
 try:
     from bidscoin import bidscoin
-    from utilities import dicomsort
+    from bidscoin.utilities import dicomsort
 except ImportError:
     import sys
-    sys.path.append(str(Path(__file__).parents[1]/'utilities'))         # This should work if bidscoin was not pip-installed
+    sys.path.append(str(Path(__file__).parent/'utilities'))                     # This should work if bidscoin was not pip-installed
     import bidscoin, dicomsort
 from ruamel.yaml import YAML
 yaml = YAML()

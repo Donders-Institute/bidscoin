@@ -7,7 +7,6 @@ field during subject registration at the scanner console (i.e. this data is stor
 attribute named 'PatientComments')
 """
 
-import re
 import warnings
 import shutil
 from pathlib import Path
@@ -15,7 +14,7 @@ try:
     from bidscoin import bidscoin, bids
 except ImportError:
     import sys
-    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
     import bidscoin, bids
 
 

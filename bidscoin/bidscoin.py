@@ -244,7 +244,7 @@ def list_executables(show: bool=False) -> list:
     else:
         console_scripts = entry_points().select(group='console_scripts')    # The select method was introduced in python = 3.10
     for script in console_scripts:
-        if script.value.startswith('bidscoin') or script.value.startswith('bidsapps') or script.value.startswith('utilities'):
+        if script.value.startswith('bidscoin'):
             scripts.append(script.name)
             if show: LOGGER.info(f"- {script.name}")
 

@@ -21,7 +21,7 @@ try:
     from bidscoin import bidscoin
 except ImportError:
     import sys
-    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
     import bidscoin
 
 
