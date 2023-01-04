@@ -7,7 +7,7 @@ requirements  = (Path(__file__).parent/'requirements.txt').read_text().splitline
 phys2bidscoin = ['bioread>=1.0.5', 'pymatreader>=0.0.24', 'duecredit', 'phys2bids>=2.0.0,<3.0.0']
 spec2nii2bids = ['spec2nii']
 deface        = ['pydeface', 'drmaa']
-all_extras    = phys2bidscoin + spec2nii2bids + deface
+all_extras    = spec2nii2bids + deface # + phys2bidscoin
 
 setup(name                           = 'bidscoin',          # Required
       version                        = version,             # Required

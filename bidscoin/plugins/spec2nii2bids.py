@@ -254,7 +254,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             for ext in ('.nii.gz', '.nii', '.json', '.bval', '.bvec', '.tsv.gz'):
                 (outfolder/bidsname).with_suffix(ext).unlink(missing_ok=True)
 
-        # Run spec2nii to convert the source-files in the run folder to nifti's in the BIDS-folder
+        # Run spec2nii to convert the source-files in the run folder to NIfTI's in the BIDS-folder
         arg  = ''
         args = options.get('args', OPTIONS['args'])
         if args is None:
@@ -273,7 +273,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         if bidscoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
             if not list(outfolder.glob(f"{bidsname}.nii*")): continue
 
-        # Load and adapt the newly produced json sidecar-file (NB: assumes every nifti-file comes with a json-file)
+        # Load and adapt the newly produced json sidecar-file (NB: assumes every NIfTI-file comes with a json-file)
         with jsonfile.open('r') as sidecar:
             jsondata = json.load(sidecar)
 

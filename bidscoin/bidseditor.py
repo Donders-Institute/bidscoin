@@ -75,7 +75,7 @@ command: Command to run dcm2niix from the terminal, such as:
     \C:\\"Program Files"\\dcm2niix\\dcm2niix.exe (use quotes to deal with whitespaces in your fullpath)
     
 args: Argument string that is passed to dcm2niix. Click [Test] and see the terminal output for usage
-    Tip: SPM users may want to use '-z n', which produces unzipped nifti's
+    Tip: SPM users may want to use '-z n', which produces unzipped NIfTI's
     
 anon: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
 

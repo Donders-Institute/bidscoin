@@ -1,6 +1,6 @@
 """
 This module contains the interface with dcm2niix to convert the session DICOM and PAR/REC source-files into BIDS-valid
-nifti-files in the corresponding bidsfolder and extract personals (e.g. Age, Sex) from the source header.
+NIfTI-files in the corresponding bidsfolder and extract personals (e.g. Age, Sex) from the source header.
 
 NB: dcm2niix sometimes lead to appended suffixes to the filenames, which are automatically casted to the correct BIDS entities
 or, if that fails, appended to the `acq` entity (e.g. "sub-01_acq-MEMPRAGE_T1w_E1.nii" becoming "sub-01_acq-MEMPRAGEe1_T1w.nii")
@@ -33,7 +33,7 @@ LOGGER = logging.getLogger(__name__)
 
 # The default options that are set when installing the plugin
 OPTIONS = {'command': 'dcm2niix',                   # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or 'C:\"Program Files"\dcm2niix\dcm2niix.exe' (use quotes to deal with whitespaces in the path)
-           'args': '-b y -z y -i n',                # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
+           'args': '-b y -z y -i n',                # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped NIfTI's, see dcm2niix -h for more information)
            'anon': 'y',                             # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
            'meta': ['.json', '.tsv', '.tsv.gz']}    # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
 
@@ -175,7 +175,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     """
-    The bidscoiner plugin to convert the session DICOM and PAR/REC source-files into BIDS-valid nifti-files in the
+    The bidscoiner plugin to convert the session DICOM and PAR/REC source-files into BIDS-valid NIfTI-files in the
     corresponding bids session-folder and extract personals (e.g. Age, Sex) from the source header
 
     :param session:     The full-path name of the subject/session source folder
@@ -289,7 +289,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 LOGGER.error(f"Could not read/convert physiological file: {sourcefile}\n{physioerror}")
                 continue
 
-        # Convert the source-files in the run folder to nifti's in the BIDS-folder
+        # Convert the source-files in the run folder to NIfTI's in the BIDS-folder
         else:
             command = '{command} {args} -f "{filename}" -o "{outfolder}" "{source}"'.format(
                 command   = options['command'],
@@ -404,7 +404,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                     if postfix == 'ADC':
                         LOGGER.warning(f"The {newbidsname} image is a derivate / not BIDS-compliant -- you can probably delete it safely and update {scans_tsv}")
 
-                # Save the nifti file with the newly constructed name
+                # Save the NIfTI file with the newly constructed name
                 if runindex.startswith('<<') and runindex.endswith('>>'):
                     newbidsname = bids.increment_runindex(outfolder, newbidsname, '')                           # Update the runindex now that the acq-label has changed
                 newbidsfile = outfolder/newbidsname
@@ -429,7 +429,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Copy over the source meta-data
         metadata = bids.copymetadata(sourcefile, outfolder/bidsname, options.get('meta', []))
 
-        # Loop over and adapt all the newly produced json sidecar-files and write to the scans.tsv file (NB: assumes every nifti-file comes with a json-file)
+        # Loop over and adapt all the newly produced json sidecar-files and write to the scans.tsv file (NB: assumes every NIfTI-file comes with a json-file)
         for jsonfile in sorted(set(jsonfiles)):
 
             # Load the json meta-data
@@ -462,7 +462,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 json.dump(jsondata, json_fid, indent=4)
 
             # Parse the acquisition time from the source header or else from the json file (NB: assuming the source file represents the first acquisition)
-            outputfile = [file for file in jsonfile.parent.glob(jsonfile.stem + '.*') if file.suffix in ('.nii','.gz')]     # Find the corresponding nifti/tsv.gz file (there should be only one, let's not make assumptions about the .gz extension)
+            outputfile = [file for file in jsonfile.parent.glob(jsonfile.stem + '.*') if file.suffix in ('.nii','.gz')]     # Find the corresponding NIfTI/tsv.gz file (there should be only one, let's not make assumptions about the .gz extension)
             if not outputfile:
                 LOGGER.exception(f"No data-file found with {jsonfile} when updating {scans_tsv}")
             elif not bidsignore and not run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):

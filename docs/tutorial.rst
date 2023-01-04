@@ -64,7 +64,7 @@ Now we can make a study bidsmap, i.e. the mapping from DICOM source-files to BID
 - In the GUI that appears at the end, edit the task and acquisition labels of the functional scans into something more readable, e.g. ``task-Reward`` for the ``acq-mb8`` scans and ``task-Stop`` for the ``acq-mb3me3 scans``. Also make the name of the T1 scan more user friendly, e.g. by naming the acquisition label simply ``acq-mprage``.
 - Add a search pattern to the ``IntendedFor`` field such that the first fieldmap will select your ``Reward`` runs and the second fieldmap your ``Stop`` runs (see the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ fieldmap notes for more details)
 - Since for this dataset we only have one session per subject, remove the session label (and note how the output names simplify, omitting the session subfolders and labels)
-- When all done, go to the ``Options`` tab and change the ``dcm2niix`` settings to get non-zipped nifti output data (i.e. ``*.nii`` instead of ``*.nii.gz``). Test the tool to see if it can run and, as a final step, save your bidsmap. You can always go back later to change any of your edits by running the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ command line tool directly. Try that.
+- When all done, go to the ``Options`` tab and change the ``dcm2niix`` settings to get non-zipped NIfTI output data (i.e. ``*.nii`` instead of ``*.nii.gz``). Test the tool to see if it can run and, as a final step, save your bidsmap. You can always go back later to change any of your edits by running the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ command line tool directly. Try that.
 
 4. BIDS coining
 ~~~~~~~~~~~~~~~

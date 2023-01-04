@@ -1,5 +1,5 @@
 """
-This module contains the interface to convert the session nifti source-files into BIDS-valid nifti-files in the corresponding bidsfolder.
+This module contains the interface to convert the session NIfTI source-files into BIDS-valid NIfTI-files in the corresponding bidsfolder.
 """
 
 import logging
@@ -144,7 +144,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     """
-    The bidscoiner plugin to convert the session Nibabel source-files into BIDS-valid nifti-files in the
+    The bidscoiner plugin to convert the session Nibabel source-files into BIDS-valid NIfTI-files in the
     corresponding bids session-folder
 
     :param session:     The full-path name of the subject/session source folder
@@ -222,7 +222,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             LOGGER.warning(f"{bidsfile}.* already exists and will be deleted -- check your results carefully!")
             bidsfile.with_suffix('').with_suffix(ext).unlink()
 
-        # Save the sourcefile as a BIDS nifti file
+        # Save the sourcefile as a BIDS NIfTI file
         nib.save(nib.load(sourcefile), bidsfile)
 
         # Copy over the source meta-data

@@ -24,7 +24,7 @@ except ImportError:
 
 def scanpersonals(bidsmap: dict, session: Path, personals: dict) -> bool:
     """
-    Converts the session source-files into BIDS-valid nifti-files in the corresponding bidsfolder and
+    Converts the session source-files into BIDS-valid NIfTI-files in the corresponding bidsfolder and
     extracts personals (e.g. Age, Sex) from the source header
 
     :param bidsmap:     The study bidsmap with the mapping heuristics

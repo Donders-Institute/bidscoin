@@ -170,7 +170,7 @@ Step 2: Running the bidscoiner
                          [-v]
                          sourcefolder bidsfolder
 
-    Converts ("coins") your source datasets to nifti / json / tsv BIDS datasets using
+    Converts ("coins") your source datasets to NIfTI / json / tsv BIDS datasets using
     the information from the bidsmap.yaml file. Edit this bidsmap to your needs using the
     bidseditor tool before running this function or (re-)run the bidsmapper whenever you
     encounter unexpected data. You can run bidscoiner after all data has been collected,
