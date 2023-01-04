@@ -3,6 +3,7 @@ import shutil
 import re
 from pathlib import Path
 from pydicom.data import get_testdata_file
+from nibabel.testing import data_path
 try:
     from bidscoin import bidscoin, bids
 except ImportError:
@@ -21,6 +22,11 @@ def dcm_file():
 @pytest.fixture(scope='module')
 def dicomdir():
     return Path(get_testdata_file('DICOMDIR'))
+
+
+@pytest.fixture(scope='module')
+def par_file():
+    return Path(data_path)/'phantom_EPI_asc_CLEAR_2_1.PAR'
 
 
 class TestDataSource:
@@ -60,10 +66,10 @@ class TestDataSource:
         assert subses_source.subid_sesid(f"<<PatientName:.*\^(.*?)1>>", '') == ('sub-MR', '')
 
     def test_dynamicvalue(self, datasource):
-        assert datasource.dynamicvalue('PatientName:.*\^(.*?)1') == 'PatientName:.*\\^(.*?)1'
-        assert datasource.dynamicvalue('<PatientName:.*\^(.*?)1>') == 'MR'
-        assert datasource.dynamicvalue('<<PatientName:.*\^(.*?)1>>') == '<<PatientName:.*\\^(.*?)1>>'
-        assert datasource.dynamicvalue('<<PatientName:.*\^(.*?)1>>', runtime=True) == 'MR'
+        assert datasource.dynamicvalue('PatientName:.*\^(.*?)1')                                == 'PatientName:.*\\^(.*?)1'
+        assert datasource.dynamicvalue('<PatientName:.*\^(.*?)1>')                              == 'MR'
+        assert datasource.dynamicvalue('<<PatientName:.*\^(.*?)1>>')                            == '<<PatientName:.*\\^(.*?)1>>'
+        assert datasource.dynamicvalue('<<PatientName:.*\^(.*?)1>>', runtime=True)              == 'MR'
         assert datasource.dynamicvalue('pat-<PatientName:.*\^(.*?)1>I<filename:MR_(.*?)\.dcm>') == 'patMRIsmall'
 
 
@@ -77,6 +83,10 @@ def test_unpack(dicomdir, tmp_path):
 
 def test_is_dicomfile(dcm_file):
     assert bids.is_dicomfile(dcm_file)
+
+
+def test_is_parfile(par_file):
+    assert bids.is_parfile(par_file)
 
 
 def test_get_dicomfile(dcm_file, dicomdir):

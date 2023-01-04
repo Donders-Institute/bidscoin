@@ -9,6 +9,7 @@ import ast
 import shutil
 import pandas as pd
 import nibabel as nib
+from nibabel.testing import data_path
 from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
@@ -38,14 +39,22 @@ def test(options: dict=OPTIONS) -> int:
 
     # Test the nibabel installation
     try:
+
         LOGGER.info(f"Nibabel version: {nib.info.VERSION}")
         if options.get('ext',OPTIONS['ext']) not in ('.nii', '.nii.gz'):
             LOGGER.error(f"The 'ext: {options.get('ext')}' value in the nibabel2bids options is not '.nii' or '.nii.gz'")
             return 2
+
         if not isinstance(options.get('meta',OPTIONS['meta']), list):
             LOGGER.error(f"The 'meta: {options.get('meta')}' value in the nibabel2bids options is not a list")
             return 3
+
+        niifile = Path(data_path)/'anatomical.nii'
+        assert is_sourcefile(niifile) == 'Nibabel'
+        assert str(get_attribute('Nibabel', niifile, 'descrip', options)) == "b'spm - 3D normalized'"
+
     except Exception as nibabelerror:
+
         LOGGER.error(f"Nibabel error:\n{nibabelerror}")
         return 1
 
@@ -79,7 +88,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
     """
 
     if dataformat == 'Nibabel':
-        return nib.load(sourcefile).header.get(attribute)
+        return nib.load(sourcefile).header.get(attribute).item()
 
 
 def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:

@@ -19,6 +19,7 @@ import shutil
 from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
+from nibabel.testing import data_path
 try:
     from bidscoin import bidscoin, bids
     from bidscoin.utilities import physio
@@ -58,6 +59,15 @@ def test(options: dict=OPTIONS) -> int:
 
     # Test the dcm2niix installation
     errorcode = bidscoin.run_command(f"{options.get('command', OPTIONS['command'])} -v")
+
+    # Test reading an attribute from a PAR-file
+    parfile = Path(data_path)/'phantom_EPI_asc_CLEAR_2_1.PAR'
+    try:
+        assert is_sourcefile(parfile) == 'PAR'
+        assert get_attribute('PAR', parfile, 'exam_name', options) == 'Konvertertest'
+    except Exception as pluginerror:
+        LOGGER.error(f"Could not read attribute(s) from {parfile}:\n{pluginerror}")
+        return 1
 
     return errorcode if errorcode != 3 else 0
 
