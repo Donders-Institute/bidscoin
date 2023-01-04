@@ -1305,7 +1305,7 @@ def find_run(bidsmap: dict, provenance: str, dataformat: str='', datatype: str='
                     return run
 
 
-def delete_run(bidsmap: dict, provenance: Union[dict, str], datatype: str= '') -> None:
+def delete_run(bidsmap: dict, provenance: Union[dict, str], datatype: str= '', dataformat: str='') -> None:
     """
     Delete the first matching run from the BIDS map
 
@@ -1316,12 +1316,13 @@ def delete_run(bidsmap: dict, provenance: Union[dict, str], datatype: str= '') -
     """
 
     if isinstance(provenance, str):
-        run_item = find_run(bidsmap, provenance)
+        run_item = find_run(bidsmap, provenance, dataformat)
     else:
         run_item = provenance
         provenance = run_item['provenance']
 
-    dataformat = run_item['datasource'].dataformat
+    if not dataformat:
+        dataformat = run_item['datasource'].dataformat
     if not datatype:
         datatype = run_item['datasource'].datatype
     for index, run in enumerate(bidsmap[dataformat].get(datatype,[])):
