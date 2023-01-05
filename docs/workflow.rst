@@ -24,9 +24,9 @@ Step 1a: Running the bidsmapper
 
 ::
 
-    usage: bidsmapper.py [-h] [-b BIDSMAP] [-t TEMPLATE] [-p PLUGINS [PLUGINS ...]]
-                         [-n SUBPREFIX] [-m SESPREFIX] [-u UNZIP] [-s] [-a] [-f]
-                         sourcefolder bidsfolder
+    usage: bidsmapper [-h] [-b BIDSMAP] [-t TEMPLATE] [-p PLUGINS [PLUGINS ...]]
+                      [-n SUBPREFIX] [-m SESPREFIX] [-u UNZIP] [-s] [-a] [-f]
+                      sourcefolder bidsfolder
 
     The bidsmapper scans your source data repository to identify different data types by matching
     them against the run-items in the template bidsmap. Once a match is found, a mapping to BIDS
@@ -93,7 +93,7 @@ Step 1b: Running the bidseditor
 
 ::
 
-    usage: bidseditor.py [-h] [-b BIDSMAP] [-t TEMPLATE] bidsfolder
+    usage: bidseditor [-h] [-b BIDSMAP] [-t TEMPLATE] bidsfolder
 
     This application launches a graphical user interface for editing the bidsmap that is produced
     by the bidsmapper. You can edit the BIDS data types and entities until all run-items have a
@@ -171,8 +171,8 @@ Step 2: Running the bidscoiner
 
 ::
 
-    usage: bidscoiner.py [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-b BIDSMAP] [-f]
-                         sourcefolder bidsfolder
+    usage: bidscoiner [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-b BIDSMAP] [-f]
+                      sourcefolder bidsfolder
 
     Converts ("coins") your source datasets to NIfTI/json/tsv BIDS datasets using the mapping
     information from the bidsmap.yaml file. Edit this bidsmap to your needs using the bidseditor

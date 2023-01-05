@@ -8,8 +8,8 @@ The bidscoin command-line utility serves as a central starting point to test and
 
 ::
 
-    usage: bidscoin.py [-h] [-l] [-p] [-i INSTALL [INSTALL ...]] [-u UNINSTALL [UNINSTALL ...]]
-                       [-d DOWNLOAD] [-t [TEST]] [-b BIDSMAPTEST] [-v]
+    usage: bidscoin [-h] [-l] [-p] [-i INSTALL [INSTALL ...]] [-u UNINSTALL [UNINSTALL ...]]
+                    [-d DOWNLOAD] [-t [TEST]] [-b BIDSMAPTEST] [-v]
 
     BIDScoin is a toolkit to convert and organize raw data-sets according to the Brain Imaging
     Data Structure (BIDS)
@@ -56,9 +56,9 @@ The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-
 
 ::
 
-    usage: dicomsort.py [-h] [-i SUBPREFIX] [-j SESPREFIX] [-f FOLDERSCHEME] [-n NAMESCHEME]
-                        [-p PATTERN] [--force] [-d]
-                        dicomsource
+    usage: dicomsort [-h] [-i SUBPREFIX] [-j SESPREFIX] [-f FOLDERSCHEME] [-n NAMESCHEME]
+                     [-p PATTERN] [--force] [-d]
+                     dicomsource
 
     Sorts and/or renames DICOM files into local subfolders, e.g. with 3-digit SeriesNumber-SeriesDescription
     folder names (i.e. following the same listing as on the scanner console)
@@ -112,9 +112,9 @@ Another command-line utility that can be helpful in organizing your source data 
 
 ::
 
-    usage: rawmapper.py [-h] [-s SESSIONS [SESSIONS ...]] [-f FIELD [FIELD ...]] [-w WILDCARD]
-                        [-o OUTFOLDER] [-r] [-c] [-n SUBPREFIX] [-m [SESPREFIX]] [-d]
-                        sourcefolder
+    usage: rawmapper [-h] [-s SESSIONS [SESSIONS ...]] [-f FIELD [FIELD ...]] [-w WILDCARD]
+                     [-o OUTFOLDER] [-r] [-c] [-n SUBPREFIX] [-m [SESPREFIX]] [-d]
+                     sourcefolder
 
     Maps out the values of a dicom attribute of all subjects in the sourcefolder, saves the result
     in a mapper-file and, optionally, uses the dicom values to rename the sub-/ses-id's of the
@@ -174,8 +174,8 @@ The bidsparticipants tool is useful for (re-)generating a participants.tsv file 
 
 ::
 
-    usage: bidsparticipants.py [-h] [-k KEYS [KEYS ...]] [-d] [-b BIDSMAP] [-v]
-                               sourcefolder bidsfolder
+    usage: bidsparticipants [-h] [-k KEYS [KEYS ...]] [-d] [-b BIDSMAP] [-v]
+                            sourcefolder bidsfolder
 
     (Re)scans data sets in the source folder for subject meta data to populate the participants.tsv
     file in the bids directory, e.g. after you renamed (be careful there!), added or deleted data
