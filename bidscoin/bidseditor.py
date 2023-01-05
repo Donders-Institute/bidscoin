@@ -558,6 +558,9 @@ class MainWindow(QMainWindow):
             samples_table = self.samples_table[dataformat]
             clicked       = self.focusWidget()
             rowindex      = samples_table.indexAt(clicked.pos()).row()
+            if rowindex < 0:                                        # This may happen on MacOS? (github issue #131)
+                LOGGER.bcdebug(f"User clicked on the [Edit] button (presumably) but PyQt returns pos={clicked.pos()} -> rowindex={rowindex}")
+                return
             datatype      = samples_table.item(rowindex, 2).text()
             provenance    = samples_table.item(rowindex, 5).text()
 
