@@ -24,16 +24,16 @@ Step 1a: Running the bidsmapper
 
 ::
 
-    usage: bidsmapper.py [-h] [-b BIDSMAP] [-t TEMPLATE] [-p PLUGINS [PLUGINS ...]] [-n SUBPREFIX]
-                         [-m SESPREFIX] [-s] [-a] [-f] [-v]
+    usage: bidsmapper.py [-h] [-b BIDSMAP] [-t TEMPLATE] [-p PLUGINS [PLUGINS ...]]
+                         [-n SUBPREFIX] [-m SESPREFIX] [-u UNZIP] [-s] [-a] [-f]
                          sourcefolder bidsfolder
 
     The bidsmapper scans your source data repository to identify different data types by matching
     them against the run-items in the template bidsmap. Once a match is found, a mapping to BIDS
-    output data types is made and the run-item is added to the study bidsmap. You can check and edit
-    these generated bids-mappings to your needs with the (automatically launched) bidseditor. Re-run
-    the bidsmapper whenever something was changed in your data acquisition protocol and edit the new
-    data type to your needs (your existing bidsmap will be re-used).
+    output data types is made and the run-item is added to the study bidsmap. You can check and
+    edit these generated bids-mappings to your needs with the (automatically launched) bidseditor.
+    Re-run the bidsmapper whenever something was changed in your data acquisition protocol and
+    edit the new data type to your needs (your existing bidsmap will be re-used).
 
     The bidsmapper uses plugins, as stored in the bidsmap['Options'], to do the actual work
 
@@ -45,38 +45,43 @@ Step 1a: Running the bidsmapper
     optional arguments:
       -h, --help            show this help message and exit
       -b BIDSMAP, --bidsmap BIDSMAP
-                            The study bidsmap file with the mapping heuristics. If the bidsmap filename
-                            is relative (i.e. no "/" in the name) then it is assumed to be located in
-                            bidsfolder/code/bidscoin. Default: bidsmap.yaml
+                            The study bidsmap file with the mapping heuristics. If the bidsmap
+                            filename is relative (i.e. no "/" in the name) then it is assumed to
+                            be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml
       -t TEMPLATE, --template TEMPLATE
                             The bidsmap template file with the default heuristics (this could be
-                            provided by your institute). If the bidsmap filename is relative (i.e. no
-                            "/" in the name) then it is assumed to be located in
-                            bidsfolder/code/bidscoin. Default: bidsmap_dccn.yaml
+                            provided by your institute). If the bidsmap filename is relative
+                            (i.e. no "/" in the name) then it is assumed to be located in
+                            bidsfolder/code/bidscoin. Default: bidsmap_dccn
       -p PLUGINS [PLUGINS ...], --plugins PLUGINS [PLUGINS ...]
-                            List of plugins to be used (with default options, overrules the plugin list
-                            in the study/template bidsmaps)
+                            List of plugins to be used. Default: the plugin list of the
+                            study/template bidsmap)
       -n SUBPREFIX, --subprefix SUBPREFIX
-                            The prefix common for all the source subject-folders (e.g. 'Pt' is the
-                            subprefix if subject folders are named 'Pt018', 'Pt019', ...). Use '*' when
-                            your subject folders do not have a prefix. Default: the value of the study
-                            or template bidsmap, e.g. 'sub-'
+                            The prefix common for all the source subject-folders (e.g. 'Pt' is
+                            the subprefix if subject folders are named 'Pt018', 'Pt019', ...).
+                            Use '*' when your subject folders do not have a prefix. Default: the
+                            value of the study/template bidsmap, e.g. 'sub-'
       -m SESPREFIX, --sesprefix SESPREFIX
-                            The prefix common for all the source session-folders (e.g. 'M_' is the
-                            subprefix if session folders are named 'M_pre', 'M_post', ...). Use '*'
-                            when your session folders do not have a prefix. Default: the value of the
-                            study or template bidsmap, e.g. 'ses-'
-      -s, --store           Flag to store provenance data samples in the bidsfolder/'code'/'provenance'
-                            folder (useful for inspecting e.g. zipped or transfered datasets)
+                            The prefix common for all the source session-folders (e.g. 'M_' is
+                            the subprefix if session folders are named 'M_pre', 'M_post', ..).
+                            Use '*' when your session folders do not have a prefix. Default: the
+                            value of the study/template bidsmap, e.g. 'ses-'
+      -u UNZIP, --unzip UNZIP
+                            Wildcard pattern to unpack tarballed/zip-files in the sub/ses
+                            sourcefolder that need to be unzipped (in a tempdir) to make the data
+                            readable. Default: the value of the study/template bidsmap
+      -s, --store           Flag to store provenance data samples in the
+                            bidsfolder/'code'/'provenance' folder (useful for inspecting e.g.
+                            zipped or transfered datasets)
       -a, --automated       Flag to save the automatically generated bidsmap to disk and without
                             interactively tweaking it with the bidseditor
       -f, --force           Flag to discard the previously saved bidsmap and logfile
-      -v, --version         Show the installed version and check for updates
 
     examples:
-      bidsmapper /project/foo/raw /project/foo/bids
-      bidsmapper /project/foo/raw /project/foo/bids -t bidsmap_dccn
-      bidsmapper /project/foo/raw /project/foo/bids -p nibabel2bids
+      bidsmapper myproject/raw myproject/bids
+      bidsmapper myproject/raw myproject/bids -t bidsmap_custom  # Uses a template bidsmap of choice
+      bidsmapper myproject/raw myproject/bids -p nibabel2bids    # Uses a plugin of choice
+      bidsmapper myproject/raw myproject/bids -u '*.tar.gz'      # Unzip tarballed sourcefiles
 
 After the source data has been scanned, the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__ to let the user check and edit the automatically generated study bidsmap. For a fully automated workflow users can skip this interactive step using the ``-i`` option (see above).
 
@@ -90,10 +95,10 @@ Step 1b: Running the bidseditor
 
     usage: bidseditor.py [-h] [-b BIDSMAP] [-t TEMPLATE] bidsfolder
 
-    This application launches a graphical user interface for editing the bidsmap that is produced by
-    the bidsmapper. You can edit the BIDS data types and entities until all run-items have a meaningful
-    and nicely readable BIDS output name. The (saved) bidsmap.yaml output file will be used by the
-    bidscoiner to do the conversion conversion of the source data to BIDS.
+    This application launches a graphical user interface for editing the bidsmap that is produced
+    by the bidsmapper. You can edit the BIDS data types and entities until all run-items have a
+    meaningful and nicely readable BIDS output name. The (saved) bidsmap.yaml output file will be
+    used by the bidscoiner to do the conversion of the source data to BIDS.
 
     You can hoover with your mouse over items to get help text (pop-up tooltips).
 
@@ -103,19 +108,19 @@ Step 1b: Running the bidseditor
     optional arguments:
       -h, --help            show this help message and exit
       -b BIDSMAP, --bidsmap BIDSMAP
-                            The study bidsmap file with the mapping heuristics. If the bidsmap filename
-                            is relative (i.e. no "/" in the name) then it is assumed to be located in
-                            bidsfolder/code/bidscoin. Default: bidsmap.yaml
+                            The study bidsmap file with the mapping heuristics. If the bidsmap
+                            filename is relative (i.e. no "/" in the name) then it is assumed to
+                            be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml
       -t TEMPLATE, --template TEMPLATE
                             The template bidsmap file with the default heuristics (this could be
-                            provided by your institute). If the bidsmap filename is relative (i.e. no
-                            "/" in the name) then it is assumed to be located in
-                            bidsfolder/code/bidscoin. Default: bidsmap_dccn.yaml
+                            provided by your institute). If the bidsmap filename is relative
+                            (i.e. no "/" in the name) then it is assumed to be located in
+                            bidsfolder/code/bidscoin. Default: bidsmap_dccn
 
     examples:
-      bidseditor /project/foo/bids
-      bidseditor /project/foo/bids -t bidsmap_dccn.yaml
-      bidseditor /project/foo/bids -b my/custom/bidsmap.yaml
+      bidseditor myproject/bids
+      bidseditor myproject/bids -t bidsmap_dccn.yaml
+      bidseditor myproject/bids -b my/custom/bidsmap.yaml
 
 Main window
 ^^^^^^^^^^^
@@ -135,7 +140,7 @@ As shown below, the main window of the bidseditor opens with separate data mappi
 Edit window
 ^^^^^^^^^^^
 
-In the main window, you can double-click the BIDS output name of a data sample or click the [Edit] button next to it (NB: the `*` in this button indicates that attention is required) to open a new window, as shown below. In this new window, the full bids-mapping info of the clicked data-sample (AKA run-item) is shown, with the filesystem ``Properties`` and file ``Attributes`` input on the left, and, most importantly, the associated BIDS ``Data type``, ``Data filename`` and ``Meta data`` output on the right. You should first make sure the BIDS ``Data type`` (drop down menu) and its ``suffix`` label (drop down menu) are set correctly, and then you should edit the (automatically generated) BIDS values that you think are not optimal or incorrect (double-click the cell). Each time an item is edited, a new ``Data filename`` preview is shown (green or red text indicates that the name is BIDS compliant or not). In the ``Meta data`` table (see the figure below) you can enter key-value pairs that you like to to be appended (by the standard ``dcm2niix2bids`` `plugin <plugins.html#plugins>`__) to the standard meta-data in the json sidecar file. Right-clicking the meta table allows you to import meta-data from JSON/YAML/CSV/TSV files on disk. Editing the source properties and attributes of a study bidsmap is usually not necessary and considered `advanced usage <advanced.html>`__.
+In the main window, you can double-click the BIDS output name of a data sample or click the [Edit] button next to it (NB: the `*` in this button indicates that attention is required) to open a new window, as shown below. In this new window, the full bids-mapping info of the clicked data-sample (AKA run-item) is shown, with the filesystem ``Properties`` and file ``Attributes`` input on the left, and, most importantly, the associated BIDS ``Data type``, ``Data filename`` and ``Meta data`` output on the right. Editing the properties and attributes is usually not necessary and considered `advanced usage <advanced.html>`__, so you can focus on the BIDS output tables on the right. You should first make sure the BIDS ``Data type`` (drop down menu) and its ``suffix`` label (drop down menu) are set correctly, and then you should edit the (automatically generated) BIDS values that you think are not optimal or incorrect (double-click the cell). Each time an item is edited, a new ``Data filename`` preview is shown (green or red text indicates that the name is BIDS compliant or not). In the ``Meta data`` table (see the figure below) you can enter key-value pairs that you like to be stored as BIDS meta-data in the json sidecar file. Right-clicking the meta table allows you to import meta-data from JSON/YAML/CSV/TSV files on disk.
 
 If the preview of the BIDS filename and meta-data both look good, you can store the data in the bidsmap by clicking the [OK] button.
 
@@ -166,18 +171,16 @@ Step 2: Running the bidscoiner
 
 ::
 
-    usage: bidscoiner.py [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-f] [-s] [-b BIDSMAP]
-                         [-v]
+    usage: bidscoiner.py [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-b BIDSMAP] [-f]
                          sourcefolder bidsfolder
 
-    Converts ("coins") your source datasets to NIfTI / json / tsv BIDS datasets using
-    the information from the bidsmap.yaml file. Edit this bidsmap to your needs using the
-    bidseditor tool before running this function or (re-)run the bidsmapper whenever you
-    encounter unexpected data. You can run bidscoiner after all data has been collected,
-    or run / re-run it whenever new data has been added to your source folder (presuming
-    the scan protocol hasn't changed). Also, if you delete a subject/session folder from
-    the bidsfolder, it will simply be re-created from the sourcefolder the next time you
-    run the bidscoiner.
+    Converts ("coins") your source datasets to NIfTI/json/tsv BIDS datasets using the mapping
+    information from the bidsmap.yaml file. Edit this bidsmap to your needs using the bidseditor
+    tool before running this function or (re-)run the bidsmapper whenever you encounter unexpected
+    data. You can run bidscoiner after all data has been collected, or run / re-run it whenever
+    new data has been added to your source folder (presuming the scan protocol hasn't changed).
+    Also, if you delete a subject/session folder from the bidsfolder, it will simply be re-created
+    from the sourcefolder the next time you run the bidscoiner.
 
     The bidscoiner uses plugins, as stored in the bidsmap['Options'], to do the actual work
 
@@ -191,24 +194,20 @@ Step 2: Running the bidscoiner
     optional arguments:
       -h, --help            show this help message and exit
       -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
-                            Space separated list of selected sub-# names / folders to be processed (the
-                            sub- prefix can be removed). Otherwise all subjects in the sourcefolder
-                            will be selected
-      -f, --force           If this flag is given subjects will be processed, regardless of existing
-                            folders in the bidsfolder. Otherwise existing folders will be skipped
-      -s, --skip_participants
-                            If this flag is given those subjects that are in participants.tsv will not
-                            be processed (also when the --force flag is given). Otherwise the
-                            participants.tsv table is ignored
+                            Space separated list of selected sub-# names / folders to be
+                            processed (the sub- prefix can be removed). Otherwise all subjects in
+                            the sourcefolder will be selected
       -b BIDSMAP, --bidsmap BIDSMAP
-                            The study bidsmap file with the mapping heuristics. If the bidsmap filename
-                            is relative (i.e. no "/" in the name) then it is assumed to be located in
-                            bidsfolder/code/bidscoin. Default: bidsmap.yaml
-      -v, --version         Show the installed version and check for updates
+                            The study bidsmap file with the mapping heuristics. If the bidsmap
+                            filename is relative (i.e. no "/" in the name) then it is assumed to
+                            be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml
+      -f, --force           If this flag is given subjects will be processed, regardless of
+                            existing folders in the bidsfolder. Otherwise existing folders will
+                            be skipped
 
     examples:
-      bidscoiner /project/foo/raw /project/foo/bids
-      bidscoiner -f /project/foo/raw /project/foo/bids -p sub-009 sub-030
+      bidscoiner myproject/raw myproject/bids
+      bidscoiner -f myproject/raw myproject/bids -p sub-009 sub-030
 
 .. tip::
    * Always check the terminal output for possible warnings or errors (a summary of them is printed at the end)

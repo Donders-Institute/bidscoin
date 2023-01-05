@@ -12,7 +12,7 @@ You can use the ``bidscoin`` utility to list, install or uninstall BIDScoin plug
 Dcm2niix2bids: a plugin for DICOM and PAR/XML data
 --------------------------------------------------
 
-The 'dcm2niix2bids' plugin is a wrapper around the well-known pydicom, nibabel and (in particular) `dcm2niix <https://github.com/rordenlab/dcm2niix>`__ tools to interact with and convert DICOM and Philips PAR(/REC)/XML source data. Pydicom is used to read DICOM attributes, nibabel is used to read PAR/XML attribute values and dcm2niix is used to convert the DICOM and PAR/XML source data to NIfTI and create BIDS sidecar files.
+The 'dcm2niix2bids' plugin is a wrapper around the well-known pydicom, nibabel and (in particular) `dcm2niix <https://github.com/rordenlab/dcm2niix>`__ tools to interact with and convert DICOM and Philips PAR(/REC)/XML source data. Pydicom is used to read DICOM attributes, nibabel is used to read PAR/XML attribute values and dcm2niix is used to convert the DICOM and PAR/XML source data to NIfTI and create BIDS sidecar files. Personal data from the source header (e.g. Age, Sex) is added to the BIDS participants.tsv file.
 
 Spec2nii2bids: a plugin for MR spectroscopy data
 ------------------------------------------------

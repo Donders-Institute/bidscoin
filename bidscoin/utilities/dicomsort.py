@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-Sorts and / or renames DICOM files into local subfolders, e.g. with 3-digit SeriesNumber-SeriesDescription
+Sorts and/or renames DICOM files into local subfolders, e.g. with 3-digit SeriesNumber-SeriesDescription
 folder names (i.e. following the same listing as on the scanner console)
+
+Supports flat DICOM as well as multi-subject/session DICOMDIR file structures.
 """
 
 import re
@@ -220,7 +222,7 @@ def main():
                                      epilog='examples:\n'
                                             '  dicomsort sub-011/ses-mri01\n'
                                             '  dicomsort sub-011/ses-mri01/DICOMDIR -n {AcquisitionNumber:05d}_{InstanceNumber:05d}.dcm\n'
-                                            '  dicomsort myproject/raw/DICOMDIR --subprefix sub- --sesprefix ses-\n ')
+                                            '  dicomsort myproject/raw/DICOMDIR --subprefix pat^ --sesprefix\n ')
     parser.add_argument('dicomsource',          help='The root folder containing the dicomsource/[sub/][ses/] dicomfiles or the DICOMDIR file')
     parser.add_argument('-i','--subprefix',     help='Provide a prefix string for recursive sorting of dicomsource/subject subfolders (e.g. "sub-")')
     parser.add_argument('-j','--sesprefix',     help='Provide a prefix string for recursive sorting of dicomsource/subject/session subfolders (e.g. "ses-")')

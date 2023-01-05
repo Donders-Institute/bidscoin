@@ -1,16 +1,8 @@
-"""
-This module contains the interface with phys2bids for converting physiological data to BIDS:
-
-- test:                 A test routine for the plugin + its bidsmap options. Can also be called by the user from the bidseditor GUI
-- is_sourcefile:        A routine to assess whether the file is of a valid dataformat for this plugin
-- get_attribute:        A routine for reading an attribute from a sourcefile
-- bidsmapper_plugin:    A routine that can be called by the bidsmapper to make a bidsmap of the source data
-- bidscoiner_plugin:    A routine that can be called by the bidscoiner to convert the source data to bids
-
-See also:
-- https://github.com/physiopy/phys2bids
-- https://github.com/ohbm/hackathon2021/issues/12
-"""
+"""The 'phys2bidscoin' plugin is a wrapper around the phys2bids (https://phys2bids.readthedocs.io) Python library to
+interact with and convert physiological source data. Phys2bids currently supports the conversion of labchart
+(ADInstruments) and AcqKnowledge (BIOPAC) source files to compressed tab-separated value (``.tsv.gz``) files and
+create their json sidecar files, as per BIDS specifications. This plugin has been developed during the OHBM hackathon
+2021 (https://github.com/ohbm/hackathon2021/issues/12) and is **not yet functional**"""
 
 try:
     from phys2bids.phys2bids import phys2bids

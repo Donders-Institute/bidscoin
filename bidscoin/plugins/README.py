@@ -1,5 +1,4 @@
-"""
-This module contains placeholder code demonstrating the bidscoin plugin API, both for the bidsmapper and for
+"""This plugin contains placeholder code demonstrating the bidscoin plugin API, both for the bidsmapper and for
 the bidscoiner. The functions in this module are called if the basename of this module (when located in the
 plugins-folder; otherwise the full path must be provided) is listed in the bidsmap. The following plugin functions
 are expected to be present:
@@ -11,8 +10,7 @@ are expected to be present:
 - bidscoiner_plugin: A function to convert a single source data session to bids according to the specified BIDS-mappings
 
 To avoid code duplications and minimize plugin development time, various support functions are available in
-BIDScoin's library modules named 'bidscoin' and, most notably, 'bids'
-"""
+BIDScoin's library modules named 'bidscoin' and, most notably, 'bids'"""
 
 import logging
 from pathlib import Path

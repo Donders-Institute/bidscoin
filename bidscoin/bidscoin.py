@@ -32,6 +32,9 @@ from importlib.util import spec_from_file_location, module_from_spec
 from importlib.metadata import entry_points
 from typing import Tuple, Union, List
 from ruamel.yaml import YAML
+
+import bidscoin
+
 yaml = YAML()
 
 # Define the default paths
@@ -627,7 +630,7 @@ def main():
                                             '  bidscoin -t my_template_bidsmap\n'
                                             '  bidscoin -b my_study_bidsmap\n'
                                             '  bidscoin -i data/my_template_bidsmap.yaml downloads/my_plugin.py\n ')
-    parser.add_argument('-l', '--list',        help='List all bidscoin tools', action='store_true')
+    parser.add_argument('-l', '--list',        help='List all executables (i.e. the apps, bidsapps and utilities)', action='store_true')
     parser.add_argument('-p', '--plugins',     help='List all installed plugins and template bidsmaps', action='store_true')
     parser.add_argument('-i', '--install',     help='A list of template bidsmaps and/or bidscoin plugins to install', nargs='+')
     parser.add_argument('-u', '--uninstall',   help='A list of template bidsmaps and/or bidscoin plugins to uninstall', nargs='+')

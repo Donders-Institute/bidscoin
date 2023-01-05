@@ -39,9 +39,9 @@ My subject/session labels are wrong
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Everything seems to work but the ``sub-``/``ses-`` BIDS labels are not what I want. In the bidseditor main window, play around with the ``subject`` regular expressions
 
-Unexpected postfix / file conversion result
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This message means that the source data was not properly recognised / converted by the plugin. Please search and/or report it on `Github issue <https://github.com/Donders-Institute/bidscoin/issues?q=>`__ to resolve it
+I got an "Unexpected postfix / file conversion result"
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This bidscoiner warning message means that the source data was not properly recognised / converted by the plugin. Please search and/or report it on `Github issue <https://github.com/Donders-Institute/bidscoin/issues?q=>`__ to resolve it
 
 More help
 ---------

@@ -2,10 +2,10 @@
 """
 The bidsmapper scans your source data repository to identify different data types by matching
 them against the run-items in the template bidsmap. Once a match is found, a mapping to BIDS
-output data types is made and the run-item is added to the study bidsmap. You can check and edit
-these generated bids-mappings to your needs with the (automatically launched) bidseditor. Re-run
-the bidsmapper whenever something was changed in your data acquisition protocol and edit the new
-data type to your needs (your existing bidsmap will be re-used).
+output data types is made and the run-item is added to the study bidsmap. You can check and
+edit these generated bids-mappings to your needs with the (automatically launched) bidseditor.
+Re-run the bidsmapper whenever something was changed in your data acquisition protocol and
+edit the new data type to your needs (your existing bidsmap will be re-used).
 
 The bidsmapper uses plugins, as stored in the bidsmap['Options'], to do the actual work
 """

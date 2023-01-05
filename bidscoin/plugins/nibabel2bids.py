@@ -1,6 +1,6 @@
-"""
-This module contains the interface to convert the session NIfTI source-files into BIDS-valid NIfTI-files in the corresponding bidsfolder.
-"""
+"""The nibabel2bids plugin wraps around the flexible nibabel (https://nipy.org/nibabel) tool to convert a wide variety
+of data formats into NIfTI-files. Currently, the default template bidsmap is tailored to NIfTI source data only
+(but this can readily be extended), and BIDS sidecar files are not automatically produced by nibabel"""
 
 import logging
 import dateutil.parser

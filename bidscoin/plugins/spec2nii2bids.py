@@ -1,15 +1,7 @@
-"""
-This module contains the interface with spec2nii to convert MRS data to BIDS:
-
-- test:                 A test routine for the plugin + its bidsmap options. Can also be called by the user from the bidseditor GUI
-- is_sourcefile:        A routine to assess whether the file is of a valid dataformat for this plugin
-- get_attribute:        A routine for reading an attribute from a sourcefile
-- bidsmapper_plugin:    A routine that can be called by the bidsmapper to make a bidsmap of the source data
-- bidscoiner_plugin:    A routine that can be called by the bidscoiner to convert the source data to bids
-
-See also:
-- https://github.com/wexeee/spec2nii
-"""
+"""The 'spec2nii2bids' plugin is a wrapper around the recent spec2nii (https://github.com/wexeee/spec2nii) Python
+library to interact with and convert MR spectroscopy source data. Presently, the spec2nii2bids plugin is a first
+implementation that supports the conversion of Philips SPAR/SDAT files, Siemens Twix files and GE P-files to NIfTI,
+in conjunction with BIDS sidecar files"""
 
 import logging
 import shutil

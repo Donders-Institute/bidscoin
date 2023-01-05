@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-This application launches a graphical user interface for editing the bidsmap that is produced by
-the bidsmapper. You can edit the BIDS data types and entities until all run-items have a meaningful
-and nicely readable BIDS output name. The (saved) bidsmap.yaml output file will be used by the
-bidscoiner to do the conversion conversion of the source data to BIDS.
+This application launches a graphical user interface for editing the bidsmap that is produced
+by the bidsmapper. You can edit the BIDS data types and entities until all run-items have a
+meaningful and nicely readable BIDS output name. The (saved) bidsmap.yaml output file will be
+used by the bidscoiner to do the conversion of the source data to BIDS.
 
 You can hoover with your mouse over items to get help text (pop-up tooltips).
 """
@@ -62,9 +62,9 @@ bidsignore:   Semicolon-separated list of data types that are added to the .bids
               e.g. extra_data/;myfile.txt;yourfile.csv
 subprefix:    The subject prefix used in the source data folders (e.g. "Pt" is the subprefix if subject folders are named "Pt018", "Pt019", ...)
 sesprefix:    The session prefix used in the source data folders (e.g. "M_" is the subprefix if session folders are named "M_pre", "M_post", ...)
-datatypes:    Datatypes that are converted to BIDS
 unknowntypes: Datatypes that are not part of BIDS but that are converted to a BIDS-like entries in the BIDS folder
-ignoretypes:  Datatypes that are excluded / not converted"""
+ignoretypes:  Datatypes that are excluded / not converted
+unzip:        Wildcard pattern to select tarballed/zip-files in the sourcefolders that need to be unzipped (in a tempdir), e.g. '*.tar.gz'"""
 
 TOOLTIP_DCM2NIIX = """dcm2niix2bids
 command: Command to run dcm2niix from the terminal, such as:
@@ -606,12 +606,8 @@ class MainWindow(QMainWindow):
         delete_button.clicked.connect(partial(self.del_plugin, plugin))
         delete_button.setToolTip(f'Click to discard / stop using the "{plugin}" plugin')
         plugin_table.setCellWidget(1, 2, delete_button)
-        if plugin == 'dcm2niix2bids':
-            tooltip = TOOLTIP_DCM2NIIX
-        else:
-            tooltip = f"Here you can enter key-value data for the '{plugin}' plugin"
-        plugin_label.setToolTip(tooltip)
-        plugin_table.setToolTip(tooltip)
+        plugin_label.setToolTip(bidscoin.import_plugin(plugin).__doc__)
+        plugin_table.setToolTip(TOOLTIP_DCM2NIIX if plugin=='dcm2niix2bids' else f"Here you can enter key-value data for the '{plugin}' plugin")
         for n, (key, value) in enumerate(options.items()):
             plugin_table.setItem(n, 0, MyWidgetItem(key))
             plugin_table.setItem(n, 1, MyWidgetItem(value))
@@ -690,7 +686,7 @@ class MainWindow(QMainWindow):
         if not answer:
             return
 
-        # Check the selected plugin and get it's options
+        # Check the selected plugin and get its options
         plugin = dropdown.currentText()
         if plugin in self.output_bidsmap['Options']['plugins']:
             LOGGER.error(f"Cannot add the '{plugin}' plugin as it already exists in the bidsmap")
@@ -708,7 +704,7 @@ class MainWindow(QMainWindow):
         self.output_bidsmap['Options']['plugins'][plugin] = options
         self.datachanged = True
 
-        # Notify the user that the bidsmapper need to be re-runned
+        # Notify the user that the bidsmapper need to be re-run
         QMessageBox.information(self, 'Add plugin', f"The '{plugin}' plugin was added. Most likely you need to close the bidseditor now and re-run the bidsmapper to discover new source datatypes with the new plugin")
 
     def del_plugin(self, plugin: str):

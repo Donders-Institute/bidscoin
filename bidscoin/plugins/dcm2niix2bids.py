@@ -1,14 +1,8 @@
-"""
-This module contains the interface with dcm2niix to convert the session DICOM and PAR/REC source-files into BIDS-valid
-NIfTI-files in the corresponding bidsfolder and extract personals (e.g. Age, Sex) from the source header.
-
-NB: dcm2niix sometimes lead to appended suffixes to the filenames, which are automatically casted to the correct BIDS entities
-or, if that fails, appended to the `acq` entity (e.g. "sub-01_acq-MEMPRAGE_T1w_E1.nii" becoming "sub-01_acq-MEMPRAGEe1_T1w.nii")
-
-See also:
-- https://github.com/rordenlab/dcm2niix
-- https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage
-"""
+"""The 'dcm2niix2bids' plugin is a wrapper around the well-known pydicom, nibabel and (in particular) dcm2niix
+(https://github.com/rordenlab/dcm2niix) tools to interact with and convert DICOM and Philips PAR(/REC)/XML source data.
+Pydicom is used to read DICOM attributes, nibabel is used to read PAR/XML attribute values and dcm2niix is used to
+convert the DICOM and PAR/XML source data to NIfTI and create BIDS sidecar files. Personal data from the source header
+(e.g. Age, Sex) is added to the BIDS participants.tsv file."""
 
 import logging
 import dateutil.parser

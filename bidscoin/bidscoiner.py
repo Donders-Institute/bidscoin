@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """
-Converts ("coins") your source datasets to NIfTI / json / tsv BIDS datasets using
-the information from the bidsmap.yaml file. Edit this bidsmap to your needs using the
-bidseditor tool before running this function or (re-)run the bidsmapper whenever you
-encounter unexpected data. You can run bidscoiner after all data has been collected,
-or run / re-run it whenever new data has been added to your source folder (presuming
-the scan protocol hasn't changed). Also, if you delete a subject/session folder from
-the bidsfolder, it will simply be re-created from the sourcefolder the next time you
-run the bidscoiner.
+Converts ("coins") your source datasets to NIfTI/json/tsv BIDS datasets using the mapping
+information from the bidsmap.yaml file. Edit this bidsmap to your needs using the bidseditor
+tool before running this function or (re-)run the bidsmapper whenever you encounter unexpected
+data. You can run bidscoiner after all data has been collected, or run / re-run it whenever
+new data has been added to your source folder (presuming the scan protocol hasn't changed).
+Also, if you delete a subject/session folder from the bidsfolder, it will simply be re-created
+from the sourcefolder the next time you run the bidscoiner.
 
 The bidscoiner uses plugins, as stored in the bidsmap['Options'], to do the actual work
 
@@ -279,7 +278,7 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                         lowerbound = dateutil.parser.parse(scans_table.loc[prevfmap, 'acq_time'])   # Narrow the lower search limit down to the preceding fieldmap
                     if nextfmap in fmaps:
                         upperbound = dateutil.parser.parse(scans_table.loc[nextfmap, 'acq_time'])   # Narrow the upper search limit down to the succeeding fieldmap
-                except (ValueError, KeyError, dateutil.parser.ParserError) as acqtimeerror:
+                except (TypeError, ValueError, KeyError, dateutil.parser.ParserError) as acqtimeerror:
                     pass                                                                            # Raise this only if there are limits and matches, i.e. below
 
                 # Search with multiple patterns for matching NIfTI-files in all runs and store the relative path to the session folder

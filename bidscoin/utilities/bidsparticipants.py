@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-(Re)scans data sets in the source folder for subject meta data to populate the participants.tsv file in the bids
-directory, e.g. after you renamed (be careful there!), added or deleted data in the bids folder yourself.
+(Re)scans data sets in the source folder for subject meta data to populate the participants.tsv
+file in the bids directory, e.g. after you renamed (be careful there!), added or deleted data
+in the bids folder yourself.
 
 Provenance information, warnings and error messages are stored in the
 bidsfolder/code/bidscoin/bidsparticipants.log file.

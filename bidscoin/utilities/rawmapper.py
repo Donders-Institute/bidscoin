@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Maps out the values of a dicom attribute of all subjects in the sourcefolder, saves the result in a
-mapper-file and, optionally, uses the dicom values to rename the sub-/ses-id's of the subfolders. This
-latter option can be used, e.g. when an alternative subject id was entered in the [Additional info]
-field during subject registration at the scanner console (i.e. this data is stored in the dicom
-attribute named 'PatientComments')
+Maps out the values of a dicom attribute of all subjects in the sourcefolder, saves the result
+in a mapper-file and, optionally, uses the dicom values to rename the sub-/ses-id's of the
+subfolders. This latter option can be used, e.g. when an alternative subject id was entered in
+the [Additional info] field during subject registration at the scanner console (i.e. this data
+is stored in the dicom attribute named 'PatientComments')
 """
 
 import warnings

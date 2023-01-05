@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-A wrapper around FreeSurfer's 'synthstrip' skull stripping tool (https://surfer.nmr.mgh.harvard.edu/docs/synthstrip).
-Except for BIDS inheritances, this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS compliant output
+A wrapper around FreeSurfer's 'synthstrip' skull stripping tool
+(https://surfer.nmr.mgh.harvard.edu/docs/synthstrip). Except for BIDS inheritances,
+this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 
 The corresponding brain mask is saved in the bids/derivatives/synthstrip folder
 
-Assumes installation of FreeSurfer v7.3.2 or higher
+Assumes the installation of FreeSurfer v7.3.2 or higher
 """
 
 import shutil
