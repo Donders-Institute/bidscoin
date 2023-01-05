@@ -8,7 +8,7 @@ Out of the box, BIDScoin requires that the source data repository is organized a
 
 1. A DICOM Series organization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The ``data`` folder is organised in multiple series subfolders, each of which that contains a single data type that is typically acquired in a single run -- a.k.a 'Series' in DICOM speak. This is how users receive their data from the (Siemens) scanners at the `DCCN <https://www.ru.nl/donders/>`__::
+The ``data`` folder is organized in multiple series subfolders, each of which that contains a single data type that is typically acquired in a single run -- a.k.a 'Series' in DICOM speak. This is how users receive their data from the (Siemens) scanners at the `DCCN <https://www.ru.nl/donders/>`__::
 
     sourcedata
     |-- sub-001
