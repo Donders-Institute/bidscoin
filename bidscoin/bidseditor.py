@@ -558,6 +558,8 @@ class MainWindow(QMainWindow):
             samples_table = self.samples_table[dataformat]
             clicked       = self.focusWidget()
             rowindex      = samples_table.indexAt(clicked.pos()).row()
+            #TODO: the above row index is wrong, for PET it selects row -1, simply changing this to 0 (the value of rowindex when datatype is DICOM
+            #TODO: avoids crashing and pops up the editing window.
             datatype      = samples_table.item(rowindex, 2).text()
             provenance    = samples_table.item(rowindex, 5).text()
 
