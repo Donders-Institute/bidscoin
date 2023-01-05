@@ -183,11 +183,8 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)
 
-            # TODO: when this plugin is loaded and run we want to check and see if there are any PET dicoms that
-            # TODO: appear in the DICOM section of the bidsmap.yaml and if so we want to remove them from the DICOMs
-            # TODO: section of the bidsmap
-
-
+            # remove duplicates
+            deduplicate_pet_runs(bidsmap_new)
 
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
@@ -352,7 +349,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         participants_table.replace('', 'n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
 
-def deduplicate_pet_runs(bidsmap: dict, bidsmap_path: Path):
+def deduplicate_pet_runs(bidsmap: dict, bidsmap_path: Path=None):
     """
     Remove runs flagged as PET from other datatypes if the provenance matches. This removes duplicates
     in the case of dicoms that get picked up for conversion of dcm2niix when this plugin is installed.
@@ -365,8 +362,6 @@ def deduplicate_pet_runs(bidsmap: dict, bidsmap_path: Path):
     :rtype: tuple
     """
 
-    if bidsmap_path.is_dir():
-        bidsmap_path = bidsmap_path / 'bidsmap.yaml'
 
     # sometimes we find PET dicoms in the DICOM section, no no no no, if we're using this plugin
     # we don't want PET dicoms being converted by dcm2niix! We want to use dcm2niix4pet my dear Watson
@@ -391,7 +386,11 @@ def deduplicate_pet_runs(bidsmap: dict, bidsmap_path: Path):
                 if duplicate_pet_run:
                     bids.delete_run(bidsmap, duplicate_pet_run['provenance'], datatype='pet', dataformat=other_format)
 
-    # save deduplicated bidsmap to file
-    bids.save_bidsmap(bidsmap_path, bidsmap)
+    if bidsmap_path:
+        if bidsmap_path.is_dir():
+            bidsmap_path = bidsmap_path / 'bidsmap.yaml'
+
+        # save deduplicated bidsmap to file
+        bids.save_bidsmap(bidsmap_path, bidsmap)
 
     return bidsmap, bidsmap_path

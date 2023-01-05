@@ -2749,56 +2749,14 @@ PET:
 
   pet: # ----------------------- All PET runs ---------------------------
     - provenance:
-      attributes: &pet_dicomattr
-        Modality: PT
-        StudyDescription:
-        SeriesDescription:
-        SeriesType:
-        Radiopharmaceutical:
-        ReconstructionMethod:
-        ImageType:
-        NumberOfSlices:
-        NumberOfTimeSlices:
-        SliceThickness:
-        PixelSpacing:
-        Rows:
-        Columns:
-      bids: &pet_dicoment_pet             # See: schema/datatypes/pet.yaml
-        task: <SeriesDescription>
-        trc: <Radiopharmaceutical>
-        rec: [ '', acdyn, acstat, nacdyn, nacstat, 0 ]
-        run: <<1>>
-        suffix: pet
-      meta: &pet_meta
-        TracerName: <<Radiopharmaceutical>>
-        TracerRadionuclide:
-        InjectedRadioactivity: <<RadionuclideTotalDose>>
-        InjectedRadioactivityUnits:
-        InjectedMass:
-        InjectedMassUnits:
-        ModeOfAdministration:
-        SpecificRadioactivity:
-        SpecificRadioactivityUnits:
-        TimeZero: <<RadiopharmaceuticalStartTime>>
-        InjectionStart: <<ContrastBolusStartTime>>
-        FrameDuration: <<ActualFrameDuration>>
-        Units:
-    - provenance:
       attributes: *pet_dicomattr
-      bids: &PET_dicoment_events          # See: schema/datatypes/pet.yaml
-        task: <SeriesDescription>
-        trc: <Radiopharmaceutical>
-        rec: [ '', acdyn, acstat, nacdyn, nacstat, 0 ]
-        run: <<1>>
-        suffix: events
+      bids: *pet_dicoment_pet             # See: schema/datatypes/pet.yaml
       meta: *pet_meta
     - provenance:
       attributes: *pet_dicomattr
-      bids: &pet_dicoment_physio          # See: schema/datatypes/pet.yaml
-        task: <SeriesDescription>
-        trc: <Radiopharmaceutical>
-        rec: [ '', acdyn, acstat, nacdyn, nacstat, 0 ]
-        recording:
-        run: <<1>>
-        suffix: physio
+      bids: *pet_dicoment_events          # See: schema/datatypes/pet.yaml
+      meta: *pet_meta
+    - provenance:
+      attributes: *pet_dicomattr
+      bids: *pet_dicoment_physio          # See: schema/datatypes/pet.yaml
       meta: *pet_meta

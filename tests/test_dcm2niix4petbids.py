@@ -4,7 +4,7 @@ import tempfile
 import ruamel
 from pathlib import Path
 from bidscoin import bidscoin
-from bidscoin.bids import load_bidsmap, find_run
+from bidscoin.bids import load_bidsmap, find_run, check_bidsmap
 from bidscoin.plugins import dcm2niix4petbids
 
 # setup logger
@@ -15,8 +15,14 @@ class Dcm2niix4petbidsPlugin(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.template_bidsmap_path = Path('../bidscoin/heuristics/bidsmap_dccn.yaml')
         cls.bidsmap_path = Path('testdata/bidsmap.yaml')
         cls.full_bidsmap_path = Path(cls.bidsmap_path.resolve())
+
+    def test_template_bidsmap_is_valid(self):
+        template_bidsmap, _ = load_bidsmap(self.template_bidsmap_path)
+        is_valid = check_bidsmap(template_bidsmap)
+        self.assertEqual(is_valid, [None, None, None])
 
     def test_remove_duplicate_pet_runs(self):
         bidsmap, _ = load_bidsmap(self.full_bidsmap_path)
@@ -41,6 +47,8 @@ class Dcm2niix4petbidsPlugin(unittest.TestCase):
                     )
                     self.assertEqual(duplicate_pet_run, None)
 
+            bidsmap_validity = check_bidsmap(deduplicated)
+            self.assertEqual(bidsmap_validity, [None, None, None])
 
 
 if __name__ == '__main__':
