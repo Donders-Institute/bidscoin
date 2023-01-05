@@ -43,7 +43,7 @@ Run your pip install command as before with the additional ``--upgrade`` or ``--
 
 .. caution::
    - The bidsmaps are not garanteed to be compatible between different BIDScoin versions
-   - After a succesful BIDScoin installation or upgrade, it may be needed to (re)do any adjustments that were done on your `template bidsmap <advanced.html#customized-template-bidsmap>`__ (so make a back-up of it before you upgrade)
+   - After a succesful BIDScoin installation or upgrade, it may be needed to (re)do any adjustments that were done on your `template bidsmap <bidsmap.html#building-your-own-template-bidsmap>`__ (so make a back-up of it before you upgrade)
 
 .. _Options: options.html
 .. _virtual: https://docs.python.org/3.6/tutorial/venv.html

@@ -10,7 +10,6 @@
    bidsmap
    options
    plugins
-   advanced
    bidsapps
    utilities
    screenshots
