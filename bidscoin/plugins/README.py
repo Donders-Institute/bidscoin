@@ -88,7 +88,7 @@ BIDSMAP = {'DemoFormat':{
 
 def test(options: dict=OPTIONS) -> bool:
     """
-    This plugin function tests the working of the plugin + its bidsmap options
+    Performs a runtime/integration test of the working of the plugin + its bidsmap options
 
     :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['README']
     :return:        The errorcode (e.g 0 if the tool generated the expected result, > 0 if there was a tool error)

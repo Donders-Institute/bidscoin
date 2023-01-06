@@ -1,16 +1,122 @@
 import unittest
-import os
-import logging
 import tempfile
+import pytest
 import shutil
+import re
 from pathlib import Path
-from bidscoin import bidscoin
+from pydicom.data import get_testdata_file
+try:
+    from bidscoin import bidscoin, bids
+except ImportError:
+    import sys
+    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    import bidscoin, bids
 
-from bidscoin.bids import get_run, append_run, delete_run, update_bidsmap, \
-    match_runvalue, exist_run, get_matching_run, find_run, save_bidsmap, load_bidsmap
-
-LOGGER = logging.getLogger(__name__)
 bidscoin.setup_logging()
+
+
+@pytest.fixture(scope='module')
+def dcm_file():
+    return Path(get_testdata_file('MR_small.dcm'))
+
+
+@pytest.fixture(scope='module')
+def dicomdir():
+    return Path(get_testdata_file('DICOMDIR'))
+
+
+class TestDataSource:
+    """Test the bids.DataSource class"""
+
+    @pytest.fixture()
+    def datasource(self, dcm_file):
+        return bids.DataSource(dcm_file, {'dcm2niix2bids': {}}, 'DICOM')
+
+    def test_is_datasource(self, datasource):
+        assert datasource.is_datasource()
+        assert datasource.dataformat == 'DICOM'
+
+    def test_properties(self, datasource):
+        assert datasource.properties('filepath:.*/(.*?)_files/.*') == 'test'    # path = [..]/pydicom/data/test_files/MR_small.dcm'
+        assert datasource.properties('filename:MR_(.*?)\.dcm')     == 'small'
+        assert datasource.properties('filesize')                   == '9.60 kB'
+        assert datasource.properties('nrfiles')                    == 75
+
+    def test_attributes(self, datasource):
+        assert datasource.attributes('PatientName:.*\^(.*?)1') == 'MR'          # PatientName = 'CompressedSamples^MR1'
+
+    @pytest.mark.parametrize('subid',  ['sub-001', 'pat_visit'])
+    @pytest.mark.parametrize('sesid',  ['ses-01',  'visit_01', ''])
+    @pytest.mark.parametrize('subprefix', ['sub-', 'pat_', '*'])
+    @pytest.mark.parametrize('sesprefix', ['ses-', 'visit_', '*'])
+    def test_subid_sesid(self, subid, sesid, subprefix, sesprefix, tmp_path, dcm_file):
+        subsesdir     = tmp_path/'data'/subid/sesid
+        subsesdir.mkdir(parents=True)
+        subses_file   = shutil.copy(dcm_file, subsesdir)
+        subses_source = bids.DataSource(subses_file, {'dcm2niix2bids': {}}, 'DICOM', subprefix=subprefix, sesprefix=sesprefix)
+        resubprefix   = '' if subprefix == '*' else subprefix
+        resesprefix   = '' if sesprefix == '*' else sesprefix
+        sub, ses      = subses_source.subid_sesid(f"<<filepath:/data/{resubprefix}(.*?)/>>", f"<<filepath:/data/{resubprefix}.*?/{resesprefix}(.*?)/>>")
+        expected_sub  = 'sub-' + bids.cleanup_value(re.sub(f"^{subprefix if subprefix!='*' else ''}", '', subid) if subid.startswith(subprefix) or subprefix=='*' else '')  # NB: this expression is too complicated / resembles the actual code too much :-/
+        expected_ses  = 'ses-' + bids.cleanup_value(re.sub(f"^{sesprefix if sesprefix!='*' else ''}", '', sesid)) if (subid.startswith(subprefix) or subprefix=='*') and (sesid.startswith(sesprefix) or sesprefix=='*') and sesid else ''
+        print(f"[{subprefix}, {subid}] -> {sub}")
+        print(f"[{sesprefix}, {sesid}] -> {ses}")
+        assert (sub, ses) == (expected_sub, expected_ses)
+        assert subses_source.subid_sesid(f"<<PatientName:.*\^(.*?)1>>", '') == ('sub-MR', '')
+
+    def test_dynamicvalue(self, datasource):
+        assert datasource.dynamicvalue('PatientName:.*\^(.*?)1') == 'PatientName:.*\\^(.*?)1'
+        assert datasource.dynamicvalue('<PatientName:.*\^(.*?)1>') == 'MR'
+        assert datasource.dynamicvalue('<<PatientName:.*\^(.*?)1>>') == '<<PatientName:.*\\^(.*?)1>>'
+        assert datasource.dynamicvalue('<<PatientName:.*\^(.*?)1>>', runtime=True) == 'MR'
+        assert datasource.dynamicvalue('pat-<PatientName:.*\^(.*?)1>I<filename:MR_(.*?)\.dcm>') == 'patMRIsmall'
+
+
+def test_unpack(dicomdir, tmp_path):
+    unpacked = bids.unpack(dicomdir.parent, '', tmp_path)
+    assert unpacked[1]
+    assert len(unpacked[0]) == 6
+    for ses in unpacked[0]:
+        assert 'Doe^Archibald' in ses.parts or 'Doe^Peter' in ses.parts
+
+
+def test_is_dicomfile(dcm_file):
+    assert bids.is_dicomfile(dcm_file)
+
+
+def test_get_dicomfile(dcm_file, dicomdir):
+    assert bids.get_dicomfile(dcm_file.parent).name == '693_J2KI.dcm'
+    assert bids.get_dicomfile(dicomdir.parent).name == '6154'
+
+
+def test_get_datasource(dicomdir):
+    datasource = bids.get_datasource(dicomdir.parent, {'dcm2niix2bids': {}})
+    assert datasource.is_datasource()
+    assert datasource.dataformat == 'DICOM'
+
+
+@pytest.mark.parametrize('template', bidscoin.list_plugins()[1])
+def test_load_check_template(template):
+    bidsmap, _ = bids.load_bidsmap(template, check=(False,False,False))
+    assert isinstance(bidsmap, dict) and bidsmap
+    # assert bids.check_template(bidsmap)   # NB: Skip until the deprecated bids-entitities are removed from the BIDS schema
+
+
+def test_match_runvalue():
+    assert bids.match_runvalue('my_pulse_sequence_name', '_name')      == False
+    assert bids.match_runvalue('my_pulse_sequence_name', '^my.*name$') == True
+    assert bids.match_runvalue('T1_MPRage', '(?i).*(MPRAGE|T1w).*')    == True
+    assert bids.match_runvalue('', None)                               == True
+    assert bids.match_runvalue(None, '')                               == True
+    assert bids.match_runvalue(  [1, 2, 3],    [1,2,  3])              == True
+    assert bids.match_runvalue(  [1,2,  3],   '[1, 2, 3]')             == True
+    assert bids.match_runvalue(  [1, 2, 3],  '\[1, 2, 3\]')            == True
+    assert bids.match_runvalue( '[1, 2, 3]',  '[1, 2, 3]')             == True
+    assert bids.match_runvalue( '[1, 2, 3]', '\[1, 2, 3\]')            == True
+    assert bids.match_runvalue( '[1, 2, 3]',   [1, 2, 3])              == True
+    assert bids.match_runvalue( '[1,2,  3]',   [1,2,  3])              == False
+    assert bids.match_runvalue('\[1, 2, 3\]',  [1, 2, 3])              == False
+
 
 class TestBidsMappingFunctions(unittest.TestCase):
     @classmethod
@@ -20,34 +126,34 @@ class TestBidsMappingFunctions(unittest.TestCase):
 
     def test_load_bidsmap(self):
         # test loading with recommended arguments for load_bidsmap
-        full_arguments_map, return_path = load_bidsmap(Path(self.full_bidsmap_path.name), self.full_bidsmap_path.parent)
+        full_arguments_map, return_path = bids.load_bidsmap(Path(self.full_bidsmap_path.name), self.full_bidsmap_path.parent)
         self.assertIsInstance(full_arguments_map, dict)
         self.assertTrue(full_arguments_map)
 
         # test loading with no input folder0, should load default from heuristics folder
-        no_input_folder_map, _ = load_bidsmap(self.bidsmap_path)
+        no_input_folder_map, _ = bids.load_bidsmap(self.bidsmap_path)
         self.assertIsInstance(no_input_folder_map, dict)
         self.assertTrue(no_input_folder_map)
 
         # test loading with full path to only bidsmap file
-        full_path_to_bidsmap_map, _ = load_bidsmap(self.full_bidsmap_path)
+        full_path_to_bidsmap_map, _ = bids.load_bidsmap(self.full_bidsmap_path)
         self.assertIsInstance(full_path_to_bidsmap_map, dict)
         self.assertTrue(no_input_folder_map)
 
     def test_find_run(self):
         # load bidsmap
 
-        bidsmap, _ = load_bidsmap(self.full_bidsmap_path)
+        bidsmap, _ = bids.load_bidsmap(self.full_bidsmap_path)
         # collect provenance from bidsmap for anat, pet, and func
         anat_provenance = bidsmap['DICOM']['anat'][0]['provenance']
         func_provenance = bidsmap['DICOM']['func'][0]['provenance']
 
         # find run with partial provenance
-        not_found_run = find_run(bidsmap=bidsmap, provenance='sub-001', dataformat='DICOM')
+        not_found_run = bids.find_run(bidsmap=bidsmap, provenance='sub-001', dataformat='DICOM')
         self.assertFalse(not_found_run)
 
         # find run with full provenance
-        found_run = find_run(bidsmap=bidsmap, provenance=anat_provenance)
+        found_run = bids.find_run(bidsmap=bidsmap, provenance=anat_provenance)
 
         # create a duplicate provenance but in a different datatype
         bidsmap['PET'] = bidsmap['DICOM']
@@ -55,41 +161,26 @@ class TestBidsMappingFunctions(unittest.TestCase):
         tag = 123456789
         bidsmap['PET']['anat'][0]['properties']['nrfiles'] = tag
         # locate PET datatype run
-        pet_run = find_run(bidsmap, provenance=anat_provenance, dataformat='PET')
+        pet_run = bids.find_run(bidsmap, provenance=anat_provenance, dataformat='PET')
         self.assertEqual(
             pet_run['properties']['nrfiles'], tag
         )
 
     def test_delete_run(self):
-        # create a capy of the bidsmap
+        # create a copy of the bidsmap
         with tempfile.TemporaryDirectory() as tempdir:
             temp_bidsmap = Path(tempdir) / Path(self.full_bidsmap_path.name)
             shutil.copy(self.full_bidsmap_path, temp_bidsmap)
-            bidsmap, _ = load_bidsmap(temp_bidsmap)
+            bidsmap, _ = bids.load_bidsmap(temp_bidsmap)
             anat_provenance = bidsmap['DICOM']['anat'][0]['provenance']
             # now delete it from the bidsmap
-            delete_run(bidsmap, anat_provenance)
+            bids.delete_run(bidsmap, anat_provenance)
             self.assertEqual(len(bidsmap['DICOM']['anat']), 0)
             # verify this gets deleted when rewritten
-            save_bidsmap(_, bidsmap)
-            written_bidsmap, _ = load_bidsmap(_)
-            deleted_run = find_run(written_bidsmap, anat_provenance)
+            bids.save_bidsmap(_, bidsmap)
+            written_bidsmap, _ = bids.load_bidsmap(_)
+            deleted_run = bids.find_run(written_bidsmap, anat_provenance)
             self.assertFalse(deleted_run)
-
-
-# class TestBids(unittest.TestCase):
-#
-#     def test_version(self):
-#         v = version()
-#         with open('version.txt') as fp:
-#             v_from_file = fp.read().strip()
-#         self.assertEqual(v, v_from_file)
-#
-#     def test_bids_version(self):
-#         bids_v = bidsversion()
-#         with open('bidsversion.txt') as fp:
-#             bids_v_from_file = fp.read().strip()
-#         self.assertEqual(bids_v, bids_v_from_file)
 
 
 if __name__ == '__main__':

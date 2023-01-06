@@ -136,6 +136,35 @@ def setup_logging(logfile: Path=Path()):
     if debug: LOGGER.info('\t<<<<<<<<<< Running BIDScoin in DEBUG mode >>>>>>>>>>')
 
 
+def reporterrors() -> None:
+    """
+    Summarized the warning and errors from the logfile
+
+    :return:
+    """
+
+    # Find the filehandlers and report the errors and warnings
+    for handler in logging.getLogger().handlers:
+        if handler.name == 'errorhandler':
+
+            errorfile = Path(handler.baseFilename)
+            if errorfile.is_file():
+                if errorfile.stat().st_size:
+                    LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errorfile.read_text()}{40 * '<'}\n")
+
+                else:
+                    LOGGER.success(f'No BIDScoin errors or warnings were reported')
+                    LOGGER.info('')
+
+        elif handler.name == 'loghandler':
+            logfile = Path(handler.baseFilename)
+
+    # Final message
+    if 'logfile' in locals():
+        LOGGER.info(f"For the complete log see: {logfile}\n"
+                    f"NB: That folder may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
+
+
 def version(check: bool=False) -> Union[str, Tuple]:
     """
     Reads the BIDSCOIN version from the VERSION.TXT file and from pypi
@@ -170,34 +199,6 @@ def bidsversion() -> str:
     """
 
     return (schemafolder/'BIDS_VERSION').read_text().strip()
-
-
-def reporterrors() -> None:
-    """
-    Summarized the warning and errors from the logfile
-
-    :return:
-    """
-
-    # Find the filehandlers and report the errors and warnings
-    for handler in logging.getLogger().handlers:
-        if handler.name == 'errorhandler':
-
-            errorfile = Path(handler.baseFilename)
-            if errorfile.stat().st_size:
-                LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errorfile.read_text()}{40 * '<'}\n")
-
-            else:
-                LOGGER.success(f'No BIDScoin errors or warnings were reported')
-                LOGGER.info('')
-
-        elif handler.name == 'loghandler':
-            logfile = Path(handler.baseFilename)
-
-    # Final message
-    if 'logfile' in locals():
-        LOGGER.info(f"For the complete log see: {logfile}\n"
-                    f"NB: That folder may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
 
 
 def run_command(command: str) -> int:
@@ -428,7 +429,7 @@ def import_plugin(plugin: Union[Path,str], functions: tuple=()) -> module_from_s
 
 def test_plugin(plugin: Union[Path,str], options: dict) -> int:
     """
-    Performs import tests of the plug-in
+    Performs runtime tests of the plug-in
 
     :param plugin:  The name of the plugin that is being tested
     :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins'][plugin.stem]
@@ -442,17 +443,17 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> int:
     # First test to see if we can import the plugin
     module = import_plugin(plugin, ('bidsmapper_plugin','bidscoiner_plugin'))
     if not inspect.ismodule(module):
-        LOGGER.error(f"Could not import '{plugin}'")
+        LOGGER.error(f"Invalid plugin: '{plugin}'")
         return 1
 
     # Then run the plugin's own 'test' routine (if implemented)
     if 'test' in dir(module) and callable(getattr(module, 'test')):
         try:
             returncode = module.test(options)
-            if returncode:
-                LOGGER.warning(f"The'{plugin}' plugin did not function correctly")
-            else:
+            if returncode == 0:
                 LOGGER.success(f"The'{plugin}' plugin functioned correctly")
+            else:
+                LOGGER.warning(f"The'{plugin}' plugin did not function correctly")
             return returncode
         except Exception as pluginerror:
             LOGGER.error(f"Could not run {plugin}.test(options):\n{pluginerror}")
@@ -487,7 +488,8 @@ def test_bidsmap(bidsmapfile: str):
     else:
         bidsfolder  = Path()
     bidsmap, _ = bids.load_bidsmap(bidsmapfile, bidsfolder, check=(True,True,True))
-    bids.validate_bidsmap(bidsmap)
+
+    return bids.validate_bidsmap(bidsmap)
 
 
 def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins: bool=True, testgui: bool=True, testtemplate: bool=True) -> int:
@@ -565,14 +567,17 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
         list_plugins(True)
         for plugin in pluginfolder.glob('*.py'):
             if plugin.stem != '__init__':
-                success = not test_plugin(plugin.stem, options['plugins'].get(plugin.stem,{}) if options else {}) and success
+                errorcode = test_plugin(plugin.stem, options['plugins'].get(plugin.stem,{}) if options else {})
+                success   = not errorcode and success
+                if errorcode:
+                    LOGGER.warning(f"Failed test: {plugin.stem}")
 
-    if int:
-        LOGGER.warning('Not all plugins finished their test successfully')
+    if not success:
+        LOGGER.warning('Not all tests finishd successfully (this may be ok, but check the output above)')
     else:
-        LOGGER.success('All plugins finished their test successfully')
+        LOGGER.success('All tests finished successfully :-)')
 
-    return int(not success)
+    return not success
 
 
 def pulltutorialdata(tutorialfolder: str) -> None:

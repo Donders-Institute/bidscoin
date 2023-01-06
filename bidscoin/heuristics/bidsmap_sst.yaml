@@ -370,6 +370,8 @@ DICOM:
       mt:
       part: ['', mag, phase, real, imag, 0]
       suffix: MPM
+    meta:
+      EffectiveEchoTime: <<EffectiveEchoTime>>
   - provenance:
     attributes:
       <<: *anat_dicomattr

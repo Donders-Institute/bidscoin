@@ -14,7 +14,9 @@ from pathlib import Path
 try:
     from bidscoin import bidscoin, bids
 except ImportError:
-    import bidscoin, bids         # This should work if bidscoin was not pip-installed
+    import sys
+    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    import bidscoin, bids
 
 
 def rawmapper(rawfolder, outfolder: Path=Path(), sessions: tuple=(), rename: bool=False, force: bool=False, dicomfield: tuple=('PatientComments',), wildcard: str='*', subprefix: str='sub-', sesprefix: str='ses-', dryrun: bool=False) -> None:

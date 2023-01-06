@@ -13,7 +13,9 @@ from typing import List
 try:
     from bidscoin import bidscoin, bids
 except ImportError:
-    import bidscoin, bids         # This should work if bidscoin was not pip-installed
+    import sys
+    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    import bidscoin, bids
 
 LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ def construct_name(scheme: str, dicomfile: Path, force: bool) -> str:
         if not value and value != 0 and field in alternatives.keys():
             value = cleanup(bids.get_dicomfield(alternatives[field], dicomfile))
         if not value and value != 0 and not force:
-            LOGGER.error(f"Missing '{field}' DICOM field specified in the '{scheme}' folder/name scheme, cannot find a safe name for: {dicomfile}\n")
+            LOGGER.error(f"Missing '{field}' DICOM field specified in the '{scheme}' folder/naming scheme, cannot find a safe name for: {dicomfile}\n")
             return ''
         else:
             schemevalues[field] = value
@@ -113,13 +115,13 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
             if not subfolder:
                 LOGGER.error('Cannot create subfolders, aborting dicomsort()...')
                 return
-            pathname = sessionfolder/subfolder
             if subfolder not in subfolders:
                 subfolders.append(subfolder)
-                if not pathname.is_dir():
-                    LOGGER.info(f"   Creating:  {pathname}")
-                    if not dryrun:
-                        pathname.mkdir(parents=True)
+            pathname = sessionfolder/subfolder
+            if not pathname.is_dir():
+                LOGGER.info(f"   Creating:  {pathname}")
+                if not dryrun:
+                    pathname.mkdir(parents=True)
 
         # Move and/or rename the dicomfiles in(to) the (sub)folder
         if namescheme:
@@ -170,6 +172,7 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
     # Use the DICOMDIR file if it is there
     sessions = []       # Collect the sorted session-folders
     if (sourcefolder/'DICOMDIR').is_file():
+        LOGGER.info(f"Reading: {sourcefolder/'DICOMDIR'}")
         dicomdir = pydicom.dcmread(str(sourcefolder/'DICOMDIR'))
         for patient in dicomdir.patient_records:
             for n, study in enumerate(patient.children, 1):
@@ -181,6 +184,7 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
 
     # Do a recursive call if a sub- or ses-prefix is given
     elif subprefix or sesprefix:
+        LOGGER.info(f"Searching for subject/session folders in: {sourcefolder}")
         for subjectfolder in bidscoin.lsdirs(sourcefolder, subprefix + '*'):
             if sesprefix:
                 sessionfolders = bidscoin.lsdirs(subjectfolder, sesprefix + '*')
@@ -199,7 +203,7 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
         if dicomfiles:
             sortsession(sourcefolder, dicomfiles, folderscheme, namescheme, force, dryrun)
 
-    return list(set(sessions))
+    return sorted(set(sessions))
 
 
 def main():

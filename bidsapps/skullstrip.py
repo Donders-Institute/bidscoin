@@ -20,7 +20,9 @@ from pathlib import Path
 try:
     from bidscoin import bids, bidscoin
 except ImportError:
-    import bids, bidscoin               # This should work if bidscoin was not pip-installed
+    import sys
+    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    import bids, bidscoin
 
 
 def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: list[str], force: bool, args: str):

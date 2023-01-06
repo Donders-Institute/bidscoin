@@ -22,7 +22,9 @@ from pathlib import Path
 try:
     from bidscoin import bidscoin, bids
 except ImportError:
-    import bidscoin, bids     # This should work if bidscoin was not pip-installed
+    import sys
+    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    import bidscoin, bids
 
 LOGGER = logging.getLogger(__name__)
 

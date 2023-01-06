@@ -11,6 +11,7 @@ from bidscoin.plugins import dcm2niix4petbids
 LOGGER = logging.getLogger(__name__)
 bidscoin.setup_logging()
 
+
 class Dcm2niix4petbidsPlugin(unittest.TestCase):
 
     @classmethod

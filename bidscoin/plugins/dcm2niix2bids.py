@@ -20,9 +20,13 @@ from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
 try:
-    from bidscoin import bidscoin, bids, physio
+    from bidscoin import bidscoin, bids
+    from utilities import physio
 except ImportError:
-    import bidscoin, bids, physio     # This should work if bidscoin was not pip-installed
+    import sys
+    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    sys.path.append(str(Path(__file__).parents[1]/'utilities'))
+    import bidscoin, bids, physio
 
 LOGGER = logging.getLogger(__name__)
 
@@ -50,8 +54,9 @@ def test(options: dict=OPTIONS) -> int:
         LOGGER.warning(f"The expected 'args' key is not defined in the dcm2niix2bids options")
 
     # Test the dcm2niix installation
-    command = options.get('command', OPTIONS['command'])
-    return bidscoin.run_command(f"{command} -v")
+    errorcode = bidscoin.run_command(f"{options.get('command', OPTIONS['command'])} -v")
+
+    return errorcode if errorcode != 3 else 0
 
 
 def is_sourcefile(file: Path) -> str:
