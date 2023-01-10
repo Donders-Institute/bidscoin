@@ -367,6 +367,10 @@ def deduplicate_pet_runs(bidsmap: dict, bidsmap_path: Path=None):
     # we don't want PET dicoms being converted by dcm2niix! We want to use dcm2niix4pet my dear Watson
 
     pet_runs = bidsmap.get('PET', None)
+
+    if not pet_runs:
+        return pet_runs
+
     if len(pet_runs['pet']) > 0:
         LOGGER.info(f"Found PET data at:")
         for pet in pet_runs['pet']:
