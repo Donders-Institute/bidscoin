@@ -2751,9 +2751,13 @@ PET:
       meta: *pet_meta
     - provenance:
       attributes: *pet_dicomattr
-      bids: *pet_dicoment_events          # See: schema/datatypes/pet.yaml
+      bids:
+        <<: *pet_dicoment_pet
+        suffix: events
       meta: *pet_meta
-#    - provenance:
-#      attributes: *pet_dicomattr
-#      bids: *pet_dicoment_physio          # See: schema/datatypes/pet.yaml
-#      meta: *pet_meta
+    - provenance:
+      attributes: *pet_dicomattr
+      bids:
+        << : *pet_dicoment_pet
+        suffix: blood
+      meta: *pet_meta
