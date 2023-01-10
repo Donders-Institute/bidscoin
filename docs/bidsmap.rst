@@ -8,7 +8,7 @@ A central concept in BIDScoin is the so-called bidsmap. Generally speaking, a bi
 
 1. The provenance field contains the pathname of a source data sample that is representative for the run-item. The provenance data is not strictly necessary but very useful for deeper inspection of the source data and for tracing back the conversion process, e.g. in case of encountering unexpected results
 2. The properties dictionary contains file system properties of the data sample, i.e. the file path, the file name, the file size on disk and the number of files in the containing folder. Depending on your data management, this information allows or can help to identify different datatypes in your source data repository
-3. The attributes dictionary contains attributes from the source data itself, such as the 'ProtocolName' from the DICOM header. The source attributes are a very rich source of information of which a minimal subset is normally sufficient to identify the different datatypes in your source data repository. The attributes are firstly read from an accompanying json sidecar file (if present) or from the source data itself (by way of plugins)
+3. The attributes dictionary contains attributes from the source data itself, such as the 'ProtocolName' from the DICOM header. The source attributes are a very rich source of information of which a minimal subset is normally sufficient to identify the different datatypes in your source data repository. The attributes are read from (the header of) the source file itself or, if present, from an accompanying sidecar file. This sidecar file transparently extends the available source attributes and should have the same filename as the first associated source file, e.g. the ``001.dcm``, ``002.dcm``, ``003.dcm``, [..], DICOM source images can have a sidecar file in the same directory named ``001.json`` (e.g. containing metadata that is not available in the DICOM header or that must be overruled). BIDScoin `plugins <plugins.html>`__ will also copy the extended attribute data over to the json sidecar files in your BIDS output folder (in addition to the meta dictionary described in point 5 below)
 4. The bids dictionary contains the BIDS datatype and entities that determine the filename of the BIDS output data. The values in this dictionary are encouraged to be edited by the user
 5. The meta dictionary contains custom key-value pairs that are added to the json sidecar file by the BIDScoin plugins. Meta data may well vary from session to session, hence this dictionary often contains dynamic attribute values that are evaluated during bidscoiner runtime (see the `special features <#special-bidsmap-features>`__ below)
 
@@ -18,14 +18,14 @@ In sum, a run-item contains a single bids-mapping, which links the input diction
 
    A snippet of study bidsmap in YAML format. The bidsmap contains separate sections for each source data format (here 'DICOM') and sub-sections for the BIDS datatypes (here 'anat'). The arrow illustrates how the 'properties' and 'attributes' input dictionaries are mapped onto the 'bids' and 'meta' output dictionaries. Note that the 'part' value in the bids dictionary is a list, which is presented in the bidseditor GUI as a drop-down menu (with the first empty item being selected). Also note the special double bracket dynamic values (<<..>>), which are explained `below <#special-bidsmap-features>`__.
 
-At the root level, a bidsmap is hierarchically organised in data format sections, such as 'DICOM' and 'PAR', which in turn contain subsections for the 'participant_label' and 'session_label', subsections for the BIDS datatypes ('fmap', 'anat', 'func', 'perf', 'dwi', 'pet', 'meg', 'eeg', 'ieeg', 'beh') and for the 'extra_data' and 'exclude' datatypes. The particpicant- and session-label subsections are common to all run-items and contain key-value pairs that identify the subject and session labels. The datatype subsections contain the actual run-items. Next to the data format sections there is a general 'Options' section, that accommodates BIDScoin and plugin settings.
+At the root level, a bidsmap is hierarchically organized in data format sections, such as 'DICOM' and 'PAR', which in turn contain subsections for the 'participant_label' and 'session_label', subsections for the BIDS datatypes ('fmap', 'anat', 'func', 'perf', 'dwi', 'pet', 'meg', 'eeg', 'ieeg', 'beh') and for the 'extra_data' and 'exclude' datatypes. The particpicant- and session-label subsections are common to all run-items and contain key-value pairs that identify the subject and session labels. The datatype subsections contain the actual run-items. Next to the data format sections there is a general 'Options' section, that accommodates BIDScoin and plugin settings.
 
 When BIDScoin routines process source data, they will scan the entire repository and take samples of the data and compare them with the run-items in the bidsmap until they come across a run-item of which all (non-empty) properties and attribute values match with the values extracted from the data sample at hand. At that point a bidsmapping is established. Within a datatype, run-items are matched from top to bottom, and scan order between datatypes is: 'exclude', 'fmap', 'anat', 'func', 'perf', 'dwi', 'pet', 'meg', 'eeg', 'ieeg', 'beh' and 'extra_data'. The 'exclude' datatype contains run-items for source data that need to be omitted when converting the source data to BIDS and the 'extra_data' datatype contains run-items for including miscellaneous data that is not (yet) defined in the BIDS specifications. Bidsmaps can contain an unlimited number of run-items, including multiple run-items mapping onto the same BIDS target (e.g. when you renamed your DICOM scan protocol halfway your study and you don't want that irrelevant change to be reflected in the BIDS output).
 
 From template to study
 ----------------------
 
-In BIDScoin a bidsmap can either be a template bidsmap or a study bidsmap. The difference between the two is that a template bidsmap is a comprehensive set of pre-defined run-items and serves as an input for the bidsmapper (see below) to automatically generate a first instantiation of a study bidsmap, containing just the matched run-items. Empty attribute values of the matched run-item will be expanded with values from the data sample, making the run-item much more specific and sensitive to small changes in the scan protocol. Users normally don't have to know about or interact with the template bidsmap, but they can create their own `customized template <advanced.html#customized-template-bidsmap>`__. The study bidsmap can be interactively edited by the bidseditor before feeding it to the bidscoiner, but it is also possible (but not recommended) to skip the editing step and convert the data without any user interaction.
+In BIDScoin a bidsmap can either be a template bidsmap or a study bidsmap. The difference between the two is that a template bidsmap is a comprehensive set of pre-defined run-items and serves as an input for the bidsmapper (see below) to automatically generate a first instantiation of a study bidsmap, containing just the matched run-items. Empty attribute values of the matched run-item will be expanded with values from the data sample, making the run-item much more specific and sensitive to small changes in the scan protocol. Users normally don't have to know about or interact with the template bidsmap, but they can create their own `customized template <bidsmap.html#building-your-own-template-bidsmap>`__. The study bidsmap can be interactively edited by the bidseditor before feeding it to the bidscoiner, but it is also possible (but not recommended) to skip the editing step and convert the data without any user interaction.
 
 .. figure:: ./_static/bidsmap_flow.png
 
@@ -48,8 +48,90 @@ The dictionary values in a bidsmap are not simple strings but have some special 
 
    The ``IntendedFor`` field is a legacy way to deal with fieldmaps. Instead, it is recommended to use the ``B0FieldIdentifier`` and ``B0FieldSource`` fields that were `introduced with BIDS 1.7 <https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#using-b0fieldidentifier-metadata>`__
 
-* **Bids value lists**. Instead of a normal string, a bids dictionary value can also be a list of strings, with the last list item being the (zero-based) list index that selects the actual value from the list. For instance the list ``{part: ['', 'mag', 'phase', 'real', 'imag', 2]}`` would select 'phase' as the value belonging to 'part'. A bids value list is made visible in the bidseditor as a drop-down menu in which the user can select the value (i.e. set the list index).
+* **BIDS value lists**. Instead of a normal string, a bids dictionary value can also be a list of strings, with the last list item being the (zero-based) list index that selects the actual value from the list. For instance the list ``{part: ['', 'mag', 'phase', 'real', 'imag', 2]}`` would select 'phase' as the value belonging to 'part'. A bids value list is made visible in the bidseditor as a drop-down menu in which the user can select the value (i.e. set the list index).
 
 .. tip::
 
    In addition to DICOM attribute names, the more advanced / unambiguous pydicom-style `tag numbers <https://pydicom.github.io/pydicom/stable/old/base_element.html#tag>`__ can also be used for indexing a DICOM header. For instance, the ``PatientName``, ``0x00100010``, ``0x10,0x10``, ``(0x10, 0x10)``, and ``(0010, 0010)`` index keys are all equivalent.
+
+Building your own template bidsmap
+----------------------------------
+
+The run-items in the default 'bidsmap_dccn' template bidsmap have source dictionary values that are tailored to MRI acquisitions in the Donders Institute. Hence, if you are using different protocol parameters that do not match with these template values, then your runs will initially be data (mis)typed by the bidsmapper as miscellaneous 'extra_data' -- which you then need to correct afterwards yourself. To improve that initial data typing and further automate your workflow, you may consider creating your own customized template bidsmap.
+
+.. tip::
+   Make a copy of the DCCN template (``[path_to_bidscoin]/heuristics/bidsmap_dccn.yaml``) as a starting point for your own template bidsmap, and adapt it to your environment. You can test your bidsmap with ``bidscoin -t`` and install it with ``bidscoin -i``
+
+.. note::
+   If you want to use different source attributes than the default set to identify source data types, then beware that the attribute values should not vary between different repeats of the data acquision. Otherwise the number of run-items in the bidsmap will not be a unique shortlist of the acquisition protocols in your study, but will instead become a lengthy list that is proportional to the number of subjects and sessions.
+
+Editing the template bidsmap
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1. **Using the bidseditor**. While this is certainly not recommended for most use cases, the easiest (quick and dirty) way to create a bidsmap template is to use the bidseditor GUI. If you have a run item in your study that you would like to be automatically mapped in other / future studies you can simply append that run to the standard or to a custom template bidsmap by editing it to your needs and click the [Export] button (see below). Note that you should first clear the attribute values (e.g. 'EchoTime') that vary across repeats of the same or similar acquisitions. You can still add advanced features, such as `regular expression patterns <https://docs.python.org/3/library/re.html>`__ for the attribute values. You can also open the template bidsmap itself with the bidseditor and edit it directly. The main limitation of using the GUI is that the run items are simply appended to a bidsmap template, meaning that they are last in line (for that datatype) when the bidsmapper tries to find a matching run-item. Another limitation is that with the GUI you cannot make usage of YAML anchors and references, yielding a less clearly formatted bidsmap that is harder to maintain. Both limitations are overcome when directly editing the template bidsmap yourself using a text editor (see next point).
+
+.. figure:: ./_static/bidseditor_edit_tooltip.png
+
+   The edit window with the option to export the customized mapping of run a item, and featuring properties matching and dynamic meta-data values
+
+2. **Using a text editor**. This is the adviced and most powerful way to create or modify a bidsmap template but requires more knowledge of `YAML <http://yaml.org/>`__ and more `understanding of bidsmaps <bidsmap.html>`__. To organise and empower your template you can take the DCCN template bidsmap (``[path_to_bidscoin]/heuristics/bidsmap_dccn.yaml``) as an example and work from there. If you open that template with a text editor, there are a few handy things to take notice of (as shown in the template snippet below). First, you can see that the DCCN template makes use of YAML `anchors and aliases <https://blog.daemonl.com/2016/02/yaml.html>`__ (to make maintanance more sustainable). The second thing to notice is that, of the first run, all values of the attribute dictionary are empty, meaning that it won't match any run-item. In that way, however, the subsequent runs that dereference (e.g. with ``<<: *anatattributes_dicom``) this anchor (e.g. ``&anatattributes_dicom``) will inherit only the keys and can inject their own values, as shown in the second run. The first run of each modality sub-section (like ``anat``) also serves as the default bidsmapping when users manually overrule / change the bids modality using the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ GUI.
+
+.. tip::
+   - Run-items are matched from top to bottom. You can use this to your advantage by placing certain run-items above others
+   - The power of regular expressions is nearly unlimited, you can e.g. use `negative look aheads <https://docs.python.org/3/howto/regex.html#lookahead-assertions>`__ to **not** match (exclude) certain strings
+   - Use more attributes for more selective run-item matching. For instance, to distinguish an equally named SBRef DWI scan from the normal DWI scans, you can add ``DiffusionDirectionality: NONE`` to your attribute dictionary
+   - When creating new run-items, make sure to adhere to the format defined in the BIDS schema files (``[path_to_bidscoin]/bidscoin/schema/datatypes``).
+
+.. code-block:: yaml
+
+   anat:       # ----------------------- All anatomical runs --------------------
+   - provenance:                    # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+     properties: &fileattr          # This is an optional (stub) entry of filesystem matching (could be added to any run-item)
+       filepath:                    # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
+       filename:                    # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
+       filesize:                    # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
+       nrfiles:                     # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
+     attributes: &anat_dicomattr    # An empty / non-matching reference dictionary that can be derefenced in other run-items of this data type
+       Modality:
+       ProtocolName:
+       SeriesDescription:
+       ImageType:
+       SequenceName:
+       SequenceVariant:
+       ScanningSequence:
+       MRAcquisitionType:
+       SliceThickness:
+       FlipAngle:
+       EchoNumbers:
+       EchoTime:
+       RepetitionTime:
+       PhaseEncodingDirection:
+     bids: &anat_dicoment_nonparametric  # See: schema/datatypes/anat.yaml
+       acq: <SeriesDescription>     # This will be expanded by the bidsmapper (so the user can edit it in the bidseditor)
+       ce:
+       rec:
+       run: <<1>>                   # This will be updated dynamically during bidscoiner runtime (as it depends on the already existing files)
+       part: ['', 'mag', 'phase', 'real', 'imag', 0]    # This BIDS value list will be shown as a dropdown menu in the bidseditor with the first (empty) item selected (as indicated by the last item, i.e. 0)
+       suffix: T1w
+     meta:                          # This is an optional entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
+   - provenance:
+     properties:
+       <<: *fileattr
+       nrfiles: [1-3]/d/d           # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
+     attributes:
+       <<: *anat_dicomattr
+       ProtocolName: '(?i).*(MPRAGE|T1w).*'
+       MRAcquisitionType: '3D'
+     bids: *anat_dicoment_nonparametric
+     meta:
+       Comments: <<ImageComments>>  # This will be expanded dynamically during bidscoiner runtime (as it may vary from session to session)
+   - provenance:
+     attributes:
+       <<: *anat_dicomattr
+       ProtocolName: '(?i).*T2w.*'
+       SequenceVariant: '[''SK'', ''SP'']'       # NB: Uses a yaml single-quote escape
+     bids:
+       <<: *anat_dicoment_nonparametric
+       suffix: T2w
+
+*Snippet derived from the bidsmap_dccn template, showing a `DICOM` section with a void `anat` run-item and two normal run-items that dereference from the void item*

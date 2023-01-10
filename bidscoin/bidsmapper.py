@@ -2,10 +2,10 @@
 """
 The bidsmapper scans your source data repository to identify different data types by matching
 them against the run-items in the template bidsmap. Once a match is found, a mapping to BIDS
-output data types is made and the run-item is added to the study bidsmap. You can check and edit
-these generated bids-mappings to your needs with the (automatically launched) bidseditor. Re-run
-the bidsmapper whenever something was changed in your data acquisition protocol and edit the new
-data type to your needs (your existing bidsmap will be re-used).
+output data types is made and the run-item is added to the study bidsmap. You can check and
+edit these generated bids-mappings to your needs with the (automatically launched) bidseditor.
+Re-run the bidsmapper whenever something was changed in your data acquisition protocol and
+edit the new data type to your needs (your existing bidsmap will be re-used).
 
 The bidsmapper uses plugins, as stored in the bidsmap['Options'], to do the actual work
 """
@@ -17,6 +17,7 @@ import copy
 import logging
 import sys
 import shutil
+import re
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
@@ -30,11 +31,10 @@ except ImportError:
 localversion, versionmessage = bidscoin.version(check=True)
 
 
-def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, plugins: list, subprefix: str, sesprefix: str, unzip: str, store: bool=False, noedit: bool=False, force: bool=False) -> None:
+def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, plugins: list, subprefix: str, sesprefix: str, unzip: str, store: bool=False, noedit: bool=False, force: bool=False) -> dict:
     """
-    Main function that processes all the subjects and session in the sourcefolder
-    and that generates a maximally filled-in bidsmap.yaml file in bidsfolder/code/bidscoin.
-    Folders in sourcefolder are assumed to contain a single dataset.
+    Main function that processes all the subjects and session in the sourcefolder and that generates a fully filled-in bidsmap.yaml
+    file in bidsfolder/code/bidscoin. Folders in sourcefolder are assumed to contain a single dataset.
 
     :param rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
     :param bidsfolder:      The name of the BIDS root folder
@@ -47,7 +47,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     :param store:           If True, the provenance samples will be stored
     :param noedit:          The bidseditor will not be launched if True
     :param force:           If True, the previous bidsmap and logfiles will be deleted
-    :return:
+    :return:                The new bidsmap
     """
 
     # Input checking
@@ -56,8 +56,10 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     bidsmapfile    = Path(bidsmapfile)
     templatefile   = Path(templatefile)
     bidscoinfolder = bidsfolder/'code'/'bidscoin'
-    metasubprefix  = [char for char in subprefix or '' if char in ('^', '$', '+', '{', '}', '[', ']', '\\', '|', '(', ')')]
-    metasesprefix  = [char for char in sesprefix or '' if char in ('^', '$', '+', '{', '}', '[', ']', '\\', '|', '(', ')')]
+    if [char for char in subprefix or '' if char in ('^', '$', '+', '{', '}', '[', ']', '\\', '|', '(', ')')]:
+        LOGGER.debug(f"Regular expression metacharacters found in {subprefix}, this may cause errors later on...")
+    if [char for char in sesprefix or '' if char in ('^', '$', '+', '{', '}', '[', ']', '\\', '|', '(', ')')]:
+        LOGGER.debug(f"Regular expression metacharacters found in {sesprefix}, this may cause errors later on...")
 
     # Start logging
     if force:
@@ -67,18 +69,15 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     LOGGER.info('-------------- START BIDSmapper ------------')
     LOGGER.info(f">>> bidsmapper sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmapfile} "
                 f"template={templatefile} plugins={plugins} subprefix={subprefix} sesprefix={sesprefix} store={store} force={force}")
-    if metasubprefix:
-        LOGGER.warning(f"Regular expression metacharacters {metasubprefix} found in {subprefix}, this may cause errors later on...")
-    if metasesprefix:
-        LOGGER.warning(f"Regular expression metacharacters {metasesprefix} found in {sesprefix}, this may cause errors later on...")
 
-    # Get the heuristics for filling the new bidsmap
+    # Get the heuristics for filling the new bidsmap (NB: plugins are stored in the bidsmaps)
     bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile,  bidscoinfolder, plugins)
     template, _              = bids.load_bidsmap(templatefile, bidscoinfolder, plugins, check=(True,True,False))
 
     # Create the new bidsmap as a copy / bidsmap skeleton with no datatype entries (i.e. bidsmap with empty lists)
-    if force:
-        bidsmapfile.unlink(missing_ok=True)
+    if force and bidsmapfile.is_file():
+        LOGGER.info(f"Deleting previous bidsmap: {bidsmapfile}")
+        bidsmapfile.unlink()
         bidsmap_old = {}
     if bidsmap_old:
         bidsmap_new = copy.deepcopy(bidsmap_old)
@@ -113,13 +112,13 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         return
 
     # Loop over all subjects and sessions and built up the bidsmap entries
-    subjects = bidscoin.lsdirs(rawfolder, (subprefix if subprefix!='*' else '') + '*')
+    subjects = bidscoin.lsdirs(rawfolder, ('' if subprefix=='*' else subprefix) + '*')
     if not subjects:
         LOGGER.warning(f'No subjects found in: {rawfolder/subprefix}*')
     with logging_redirect_tqdm():
         for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
-            sessions = bidscoin.lsdirs(subject, (sesprefix if sesprefix!='*' else '') + '*')
+            sessions = bidscoin.lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
             if not sessions or (subject/'DICOMDIR').is_file():
                 sessions = [subject]
             for session in sessions:
@@ -175,6 +174,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
     bidscoin.reporterrors()
 
+    return bidsmap_new
+
 
 def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path) -> tuple:
     """
@@ -187,6 +188,7 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path) ->
     :return:            A (subprefix, sesprefix) tuple
     """
 
+    # Get/set the sub-/ses-prefixes in the 'Options'
     oldsubprefix = bidsmap['Options']['bidscoin'].get('subprefix','')
     oldsesprefix = bidsmap['Options']['bidscoin'].get('sesprefix','')
     if not subprefix:
@@ -196,32 +198,33 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path) ->
     bidsmap['Options']['bidscoin']['subprefix'] = subprefix
     bidsmap['Options']['bidscoin']['sesprefix'] = sesprefix
 
-    # Replace the glob wildcards with the regexp wildcards
-    oldresubprefix = oldsubprefix.replace('*', '.*').replace('?', '.')
-    oldresesprefix = oldsesprefix.replace('*', '.*').replace('?', '.')
-    resubprefix    = subprefix.replace('*', '' if subprefix=='*' else '.*').replace('?', '.')
-    resesprefix    = sesprefix.replace('*', '' if sesprefix=='*' else '.*').replace('?', '.')
+    # Update the bidsmap dataformat sections
+    reprefix = lambda prefix: '' if prefix=='*' else re.escape(prefix).replace('\-','-')
     for dataformat in bidsmap:
         if not bidsmap[dataformat] or dataformat=='Options': continue
-        if bidsmap[dataformat]['subject'].startswith('<<filepath:'):
-            if oldresubprefix:
-                bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace(oldresubprefix, resubprefix)
-            else:
-                LOGGER.warning(f"Could not update the bidsmap subject label expression: {bidsmap[dataformat]['subject']}")
-            if not bidsmap[dataformat]['subject'].startswith(f"<<filepath:.*/{rawfolder.name}"):    # NB: Don't prepend the fullpath of rawfolder because of potential data unpacking in /tmp
-                bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace('<<filepath:', f"<<filepath:.*/{rawfolder.name}")
-        if bidsmap[dataformat]['session'].startswith('<<filepath:'):
-            if oldresesprefix:
-                bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace(oldresubprefix, resubprefix).replace(oldresesprefix, resesprefix)
-            else:
-                LOGGER.warning(f"Could not update the bidsmap session label expression: {bidsmap[dataformat]['session']}")
-            if not bidsmap[dataformat]['session'].startswith(f"<<filepath:.*/{rawfolder.name}"):
-                bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace('<<filepath:', f"<<filepath:.*/{rawfolder.name}")
+
+        # Update the run-DataSources
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue  # E.g. 'subject' and 'session'
             for run in bidsmap[dataformat][datatype]:
                 run['datasource'].subprefix = subprefix
                 run['datasource'].sesprefix = sesprefix
+
+        # Replace the sub-/ses-prefixes in the dynamic filepath values of bidsmap[dataformat]['subject'] and ['session']
+        if bidsmap[dataformat]['subject'].startswith('<<filepath:'):
+            if oldsubprefix:
+                bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace(reprefix(oldsubprefix), reprefix(subprefix))    # TODO: Not very robust for short prefixes :-(
+            else:
+                LOGGER.warning(f"Could not update the bidsmap subject label expression: {bidsmap[dataformat]['subject']}")
+            if not bidsmap[dataformat]['subject'].startswith(f"<<filepath:/{rawfolder.name}"):    # NB: Don't prepend the fullpath of rawfolder because of potential data unpacking in /tmp
+                bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace('<<filepath:', f"<<filepath:/{rawfolder.name}")
+        if bidsmap[dataformat]['session'].startswith('<<filepath:'):
+            if oldsesprefix:
+                bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace(reprefix(oldsubprefix), reprefix(subprefix)).replace(reprefix(oldsesprefix), reprefix(sesprefix))       # TODO: Not very robust for short prefixes :-(
+            else:
+                LOGGER.warning(f"Could not update the bidsmap session label expression: {bidsmap[dataformat]['session']}")
+            if not bidsmap[dataformat]['session'].startswith(f"<<filepath:/{rawfolder.name}"):
+                bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace('<<filepath:', f"<<filepath:/{rawfolder.name}")
 
     return subprefix, sesprefix
 
@@ -243,12 +246,11 @@ def main():
     parser.add_argument('-t','--template',    help=f'The bidsmap template file with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: {bidscoin.bidsmap_template.stem}', default=bidscoin.bidsmap_template)
     parser.add_argument('-p','--plugins',     help='List of plugins to be used. Default: the plugin list of the study/template bidsmap)', nargs='+', default=[])
     parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders (e.g. 'Pt' is the subprefix if subject folders are named 'Pt018', 'Pt019', ...). Use '*' when your subject folders do not have a prefix. Default: the value of the study/template bidsmap, e.g. 'sub-'")
-    parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders (e.g. 'M_' is the subprefix if session folders are named 'M_pre', 'M_post', ...). Use '*' when your session folders do not have a prefix. Default: the value of the study/template bidsmap, e.g. 'ses-'")
-    parser.add_argument('-u', '--unzip',      help="Wildcard pattern to unpack tarballed/zip-files in the sub/ses sourcefolder that need to be unzipped (in a tempdir) to make the data readable. Default: the value of the study/template bidsmap")
+    parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders (e.g. 'M_' is the subprefix if session folders are named 'M_pre', 'M_post', ..). Use '*' when your session folders do not have a prefix. Default: the value of the study/template bidsmap, e.g. 'ses-'")
+    parser.add_argument('-u','--unzip',       help="Wildcard pattern to unpack tarballed/zip-files in the sub/ses sourcefolder that need to be unzipped (in a tempdir) to make the data readable. Default: the value of the study/template bidsmap")
     parser.add_argument('-s','--store',       help="Flag to store provenance data samples in the bidsfolder/'code'/'provenance' folder (useful for inspecting e.g. zipped or transfered datasets)", action='store_true')
     parser.add_argument('-a','--automated',   help="Flag to save the automatically generated bidsmap to disk and without interactively tweaking it with the bidseditor", action='store_true')
     parser.add_argument('-f','--force',       help='Flag to discard the previously saved bidsmap and logfile', action='store_true')
-    parser.add_argument('-v','--version',     help='Show the installed version and check for updates', action='version', version=f'BIDS-version:\t\t{bidscoin.bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}')
     args = parser.parse_args()
 
     bidsmapper(rawfolder    = args.sourcefolder,

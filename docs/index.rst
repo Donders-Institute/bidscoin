@@ -10,9 +10,9 @@
    bidsmap
    options
    plugins
-   advanced
    bidsapps
    utilities
    screenshots
    tutorial
+   troubleshooting
    CHANGELOG

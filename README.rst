@@ -10,15 +10,15 @@ BIDScoin: Coin your imaging data to BIDS
 
 .. raw:: html
 
-   <img name="bidscoin-logo" src="./bidscoin/bidscoin_logo.png" height="340px" align="right" alt=" " src="https://bidscoin.readthedocs.io">
+   <img name="bidscoin-logo" src="./bidscoin/bidscoin_logo.png" height="340px" align="right" alt=" ">
 
 |PyPI version| |BIDS| |PyPI - Python Version| |GPLv3| |RTD| |Tests| |DOI|
 
-BIDScoin is a user friendly `open-source <https://github.com/Donders-Institute/bidscoin>`__ Python application that converts ("coins") source-level (raw) neuroimaging data-sets to `nifti <https://nifti.nimh.nih.gov/>`__ / `json <https://www.json.org/>`__ / `tsv <https://en.wikipedia.org/wiki/Tab-separated_values>`__ data-sets that are organized according to the Brain Imaging Data Structure (`BIDS <http://bids.neuroimaging.io>`__) standard. Rather then depending on complex programmatic logic for source data-type identification, BIDScoin uses a mapping approach to discover the different source data types in your repository and convert them into BIDS data types. Different runs of source data are uniquely identified by their file system properties (e.g. file name or size) and by their attributes (e.g. ``ProtocolName`` from the DICOM header). Mapping information can be pre-specified (e.g. per site), allowing BIDScoin to make intelligent first suggestions on how to classify and convert the data. While this command-line procedure exploits all information available on disk, BIDScoin presents a `Graphical User Interface (GUI) <screenshots.html>`__ for researchers to check and edit these mappings -- bringing in the missing knowledge that often exists only in their heads.
+BIDScoin is a user friendly `open-source <https://github.com/Donders-Institute/bidscoin>`__ Python application that converts ("coins") source-level (raw) neuroimaging data-sets to standardized data-sets that are organized according to the Brain Imaging Data Structure (`BIDS <https://bids-specification.readthedocs.io>`__) specification. Rather then depending on complex programmatic logic for source data-type identification, BIDScoin uses a mapping approach to discover the different source data types in your repository and convert them into BIDS data types. Different runs of source data are uniquely identified by their file system properties (e.g. file name or size) and by their attributes (e.g. ``ProtocolName`` from the DICOM header). Mapping information can be pre-specified (e.g. per site), allowing BIDScoin to make intelligent first suggestions on how to classify and convert the data. While this command-line procedure exploits all information available on disk, BIDScoin presents a `Graphical User Interface (GUI) <screenshots.html>`__ for researchers to check and edit these mappings -- bringing in the missing knowledge that often exists only in their heads.
 
 Data conversions are performed within plugins, such as plugins that employ `dcm2niix <https://github.com/rordenlab/dcm2niix>`__, `spec2nii <https://github.com/wexeee/spec2nii>`__ or `nibabel <https://nipy.org/nibabel>`__.
 
-BIDScoin requires no programming knowledge in order to use it, but users can use regular expression and plug-ins to further enhance BIDScoin's power and flexibilty, and deal with a wider range of source data formats.
+BIDScoin requires no programming knowledge in order to use it, but users can use regular expression and plug-ins to further enhance BIDScoin's power and flexibilty, and readily handle a wide variety of source data types.
 
 BIDScoin is developed at the `Donders Institute <https://www.ru.nl/donders/>`__ of the `Radboud University <https://www.ru.nl/english/>`__.
 
@@ -57,7 +57,7 @@ Note:
 
    **For citation and more information, see our** `BIDScoin publication <https://www.frontiersin.org/articles/10.3389/fninf.2021.770608>`__ **in Frontiers in Neuroinformatics** (`doi: 10.3389/fninf.2021.770608 <https://doi.org/10.3389/fninf.2021.770608>`__)
 
-   **Issues can be reported at** `Github <https://github.com/Donders-Institute/bidscoin/issues>`__
+   **Issues or questions can be posted at** `Github <https://github.com/Donders-Institute/bidscoin/issues>`__
 
 .. |PyPI version| image:: https://img.shields.io/pypi/v/bidscoin?color=success
    :target: https://pypi.org/project/bidscoin

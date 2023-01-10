@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """
-A wrapper around the 'mecombine' multi-echo combination tool (https://github.com/Donders-Institute/multiecho).
+A wrapper around the 'mecombine' multi-echo combination tool
+(https://github.com/Donders-Institute/multiecho).
 
-Except for BIDS inheritances, this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS compliant output
+Except for BIDS inheritances, this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS
+compliant output
 """
 
 import argparse
@@ -17,7 +19,7 @@ try:
     from bidscoin import bidscoin, bids
 except ImportError:
     import sys
-    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
     import bidscoin, bids
 
 unknowndatatype = 'extra_data'
@@ -212,20 +214,13 @@ def main():
                                             '  echocombine myproject/bids func/*task-*echo-1* -o func\n'
                                             '  echocombine myproject/bids func/*task-*echo-1* -o derivatives -w 13 26 39 52\n'
                                             '  echocombine myproject/bids func/*task-*echo-1* -a PAID\n ')
-    parser.add_argument('bidsfolder', type=str,
-                        help='The bids-directory with the (multi-echo) subject data')
-    parser.add_argument('pattern', type=str,
-                        help="Globlike recursive search pattern (relative to the subject/session folder) to select the first echo of the images that need to be combined, e.g. '*task-*echo-1*'")
-    parser.add_argument('-p','--participant_label', type=str, nargs='+',
-                        help='Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed')
-    parser.add_argument('-o','--output', type=str, default='',
-                        help=f"A string that determines where the output is saved. It can be the name of a BIDS datatype folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output = [the name of the input datatype folder] then the original echo images are replaced by one combined image. If output is left empty then the combined image is saved in the input datatype folder and the original echo images are moved to the {unknowndatatype} folder")
-    parser.add_argument('-a','--algorithm', choices=['PAID', 'TE', 'average'], default='TE',
-                        help='Combination algorithm')
-    parser.add_argument('-w','--weights', nargs='*', default=None, type=list,
-                        help='Weights for each echo')
-    parser.add_argument('-f','--force', action='store_true',
-                        help='If this flag is given subjects will be processed, regardless of existing target files already exist. Otherwise the echo-combination will be skipped')
+    parser.add_argument('bidsfolder',               help='The bids-directory with the (multi-echo) subject data')
+    parser.add_argument('pattern',                  help="Globlike recursive search pattern (relative to the subject/session folder) to select the first echo of the images that need to be combined, e.g. '*task-*echo-1*'")
+    parser.add_argument('-p','--participant_label', help='Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed', nargs='+')
+    parser.add_argument('-o','--output',            help=f"A string that determines where the output is saved. It can be the name of a BIDS datatype folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output = [the name of the input datatype folder] then the original echo images are replaced by one combined image. If output is left empty then the combined image is saved in the input datatype folder and the original echo images are moved to the {unknowndatatype} folder", default='')
+    parser.add_argument('-a','--algorithm',         help='Combination algorithm', choices=['PAID', 'TE', 'average'], default='TE')
+    parser.add_argument('-w','--weights',           help='Weights for each echo', nargs='*', default=None, type=list)
+    parser.add_argument('-f','--force',             help='If this flag is given subjects will be processed, regardless of existing target files already exist. Otherwise the echo-combination will be skipped', action='store_true')
     args = parser.parse_args()
 
     echocombine(bidsdir   = args.bidsfolder,

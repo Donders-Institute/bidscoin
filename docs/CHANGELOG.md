@@ -4,20 +4,23 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
-## [3.8.0] - 2022-11-4
+## [3.8.0] - 2023-01-03
 
 ### Added
 - Support for BIDS 1.8.0
+- Support for handling of non-alphanumeric characters in sub/ses prefixes
+- A skullstrip tool (a bids-wrapper around synthstrip)
+- A unit/integration test & CI framework
 - A BIDSCOIN_DEBUG environment variable to run bidscoin in a more verbose debug mode
 - VERBOSE and SUCCESS logging levels
 - Checks using the bids-validator python module
-- Options to perform bidsmap tests with `bidscoin -t / -b`
+- Options to perform study/template bidsmap tests with `bidscoin -b / -t`
 - Option to list and install template bidsmaps
-- The skullstrip tool (a bids-wrapper around synthstrip)
 
 ### Changed
 - The default behaviour is now not to unzip data in the sourcefolders anymore. Instead, users can use the `--unzip` option in the bidsmapper
 - Removed BIDScoin's redundant/confusing `datatypes` option from the bidsmap
+- Removed the obsure `participants` option from bidscoiner
 
 ## [3.7.4] - 2022-10-21
 
@@ -65,7 +68,7 @@ All notable changes to this project will be documented in this file. The format 
 - IntendedFor can now be appended with a "bounding" term to deal with duplicated fieldmaps from interrupted sessions
 - The possibility to process subject folders without prefix
 - Support for BIDS 1.7 (e.g. for the new `B0FieldSource` and `B0FieldIdentifier` fieldmap meta fields)
-- A `nibabel2bids` plugin (e.g. to convert nifti datasets to BIDS)
+- A `nibabel2bids` plugin (e.g. to convert NIfTI datasets to BIDS)
 - Plugin `meta` option setting to enrich json sidecar files or add data that is not supported
 
 ### Changed
@@ -145,7 +148,7 @@ The bidscoiner no longer sometimes crashes when dcm2niix produces custom suffixe
 - Moved the 'pulltutorial' function over to the new 'bidscoin' function
 
 ### Removed
-- P7 and nifti support (it was never implemented anyhow)
+- P7 and NIfTI support (it was never implemented anyhow)
 - The option to edit new mappings on-the-fly in the bidsmapper (`-i 2`)
     
 ## [3.5.3] - 2021-04-13

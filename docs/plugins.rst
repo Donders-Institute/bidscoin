@@ -1,54 +1,58 @@
 Plugins
 =======
 
-As shown in the figure below, all interactions of BIDScoin routines with source data are done via a plugin layer that abstracts away differences between source data formats. The bidsmapper and bidscoiner tools loop over the subjects/sessions in your source data repository and then use the plugins listed in the bidsmap to do the actual work.
+As shown in the figure below, all interactions of BIDScoin routines with source data are done via a plugin layer that abstracts away differences between source data formats. The bidsmapper and bidscoiner tools loop over the subjects/sessions in your source data repository and then use the plugins that are listed in the bidsmap to do the actual work.
 
 .. figure:: ./_static/bidscoin_architecture.png
 
    The BIDScoin architecture and dataflow, showing different layers of abstraction. The BIDScoin layer interacts with the plugins using a single programming interface (API), which in turn interact with the source data in a dataformat dependent way. The BIDScoin layer also interacts with the metadata layer, where all prior knowledge and mapping information is stored.
 
-These plugins come pre-installed:
+You can use the ``bidscoin`` utility to list, install or uninstall BIDScoin plugins, but the following plugins come pre-installed:
 
 Dcm2niix2bids: a plugin for DICOM and PAR/XML data
 --------------------------------------------------
 
-The 'dcm2niix2bids' plugin is a wrapper around the well-known pydicom, nibabel and (in particular) `dcm2niix <https://github.com/rordenlab/dcm2niix>`__ tools to interact with and convert DICOM and Philips PAR(/REC)/XML source data. Pydicom is used to read DICOM attributes, nibabel is used to read PAR/XML attribute values and dcm2niix is used to convert the DICOM and PAR/XML source data to NIfTI  and create BIDS sidecar files. These sidecar files contain standard metadata but, to give more control to the user, this metadata is appended or overwritten by the data in the BIDS-mapping meta dictionary.
+The 'dcm2niix2bids' plugin is a wrapper around the well-known pydicom, nibabel and (in particular) `dcm2niix <https://github.com/rordenlab/dcm2niix>`__ tools to interact with and convert DICOM and Philips PAR(/REC)/XML source data. Pydicom is used to read DICOM attributes, nibabel is used to read PAR/XML attribute values and dcm2niix is used to convert the DICOM and PAR/XML source data to NIfTI and create BIDS sidecar files. Personal data from the source header (e.g. Age, Sex) is added to the BIDS participants.tsv file.
 
 Spec2nii2bids: a plugin for MR spectroscopy data
 ------------------------------------------------
 
-The 'spec2nii2bids' plugin is a wrapper around the recent `spec2nii <https://github.com/wexeee/spec2nii>`__ Python library to interact with and convert MR spectroscopy source data. Presently, the spec2nii2bids plugin is a first implementation that supports the conversion to BIDS for Philips SPAR/SDAT files, Siemens Twix files and GE P-files. As with the dcm2niix2bids plugin, the produced sidecar files already contain standard metadata that is complemented or overruled by the meta data that users specified in the bidseditor.
+The 'spec2nii2bids' plugin is a wrapper around the recent `spec2nii <https://github.com/wexeee/spec2nii>`__ Python library to interact with and convert MR spectroscopy source data. Presently, the spec2nii2bids plugin is a first implementation that supports the conversion of Philips SPAR/SDAT files, Siemens Twix files and GE P-files to NIfTI, in conjunction with BIDS sidecar files.
 
 Nibabel2bids: a generic plugin for imaging data
 -----------------------------------------------
 
-The nibabel2bids plugin wraps around the flexible `nibabel <https://nipy.org/nibabel>`__ tool to convert a wide variety of data formats into BIDS-valid nifti-files. Currently, the default template bidsmap is tailored to nifti source data only (but this can readily be extended), and the user has to provide the metadata (e.g. in the bidseditor GUI) for producing valid json sidecar files.
+The nibabel2bids plugin wraps around the flexible `nibabel <https://nipy.org/nibabel>`__ tool to convert a wide variety of data formats into NIfTI-files. Currently, the default template bidsmap is tailored to NIfTI source data only (but this can readily be extended), and BIDS sidecar files are not automatically produced by nibabel (but see the note further below).
 
 Phys2bidscoin: a plugin for physiological data
 ----------------------------------------------
 
-The 'phys2bidscoin' plugin is a wrapper around the `phys2bids <https://phys2bids.readthedocs.io>`__ Python library to interact with and convert physiological source data. Phys2bids currently supports the conversion of labchart (ADInstruments) and AcqKnowledge (BIOPAC) source files to compressed tab-separated value (``.tsv.gz``) files and create their json sidecar files, as per BIDS specifications. As in the other plugins, the sidecar files contain standard metadata that is overwritten by the user data entered in the bidseditor. This plugin has been developed during the `OHBM hackathon 2021 <https://github.com/ohbm/hackathon2021/issues/12>`__ and is still considered experimental.
+The 'phys2bidscoin' plugin is a wrapper around the `phys2bids <https://phys2bids.readthedocs.io>`__ Python library to interact with and convert physiological source data. Phys2bids currently supports the conversion of labchart (ADInstruments) and AcqKnowledge (BIOPAC) source files to compressed tab-separated value (``.tsv.gz``) files and create their json sidecar files, as per BIDS specifications. This plugin has been developed during the `OHBM hackathon 2021 <https://github.com/ohbm/hackathon2021/issues/12>`__ and is **not yet functional**.
 
-Plugin programming interface
-----------------------------
+.. note::
+   Out of the box, BIDScoin plugins typically produce sidecar files that contain metadata from the source headers. However, when such meta-data is missing (e.g. as for nibabel2bids), or when it needs to be appended or overruled, then users can add sidecar files to the source data (as explained `here <bidsmap.html>`__) or add that meta-data using the bidseditor (the latter takes precedence).
+
+The plugin programming interface
+--------------------------------
 
 This paragraph describes the requirements and structure of plugins in order to allow advanced users and developers to write their own plugin and extent or customize BIDScoin to their needs. As can be seen in the API code snippet below (but aso see the default plugins for reference implementation), a BIDScoin plugin is a Python module with the following programming interface (functions):
-
-.. note:: Run the ``bidscoin`` utility to list, install or uninstall BIDScoin plugins
 
 .. code-block:: python3
 
    """
    This module contains placeholder code demonstrating the bidscoin plugin API, both for the bidsmapper and for
    the bidscoiner. The functions in this module are called if the basename of this module (when located in the
-   plugins-folder; otherwise the full path must be provided) is listed in the bidsmap. The presence of the
-   plugin functions is optional but should be named:
+   plugins-folder; otherwise the full path must be provided) is listed in the bidsmap. The following plugin functions
+   are expected to be present:
 
-   - test:                 A test function for the plugin + its bidsmap options. Can be called in the bidseditor
+   - test:                 A test function for the plugin + its bidsmap options. Can be called by the user from the bidseditor and the bidscoin utility
    - is_sourcefile:        A function to assess whether a source file is supported by the plugin. The return value should correspond to a data format section in the bidsmap
    - get_attribute:        A function to read an attribute value from a source file
-   - bidsmapper_plugin:    A function to discover BIDS-mappings in a source data session. To avoid code duplications and minimize plugin development time, various support functions are available to the plugin programmer in BIDScoin's library module named 'bids'
-   - bidscoiner_plugin:    A function to convert a single source data session to bids according to the specified BIDS-mappings. Various support functions are available in the 'bids' library module
+   - bidsmapper_plugin:    A function to discover BIDS-mappings in a source data session
+   - bidscoiner_plugin:    A function to convert a single source data session to bids according to the specified BIDS-mappings
+
+   To avoid code duplications and minimize plugin development time, various support functions are available in
+   BIDScoin's library modules named 'bidscoin' and, most notably, 'bids'
    """
 
    import logging
@@ -62,8 +66,8 @@ This paragraph describes the requirements and structure of plugins in order to a
 
    # The default bids-mappings that are added when installing the plugin
    BIDSMAP = {'DemoFormat':{
-       'subject': '<<filepath:/sub-(.*?)/>>',     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-       'session': '<<filepath:/ses-(.*?)/>>',     # This filesystem property extracts the session label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+       'subject': '<<filepath:/sub-(.*?)/>>',          # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used, e.g. <PatientID>
+       'session': '<<filepath:/sub-.*?/ses-(.*?)/>>',  # This filesystem property extracts the session label from the source directory. NB: Any property or attribute can be used, e.g. <StudyID>
 
        'func': [                   # ----------------------- All functional runs --------------------
            {'provenance': '',      # The fullpath name of the source file from which the attributes and properties are read. Serves also as a look-up key to find a run in the bidsmap
@@ -128,17 +132,17 @@ This paragraph describes the requirements and structure of plugins in order to a
                 'TimeOffset': '<<time_offset>>'}}]}}
 
 
-   def test(options: dict) -> bool:
+   def test(options: dict=OPTIONS) -> bool:
        """
-       This plugin function tests the working of the plugin + its bidsmap options
+       Performs a runtime/integration test of the working of the plugin + its bidsmap options
 
-       :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']
-       :return:        True if the test was successful
+       :param options: A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']['README']
+       :return:        The errorcode (e.g 0 if the tool generated the expected result, > 0 if there was a tool error)
        """
 
-       LOGGER.debug(f'This is a demo-plugin test routine, validating its working with options: {options}')
+       LOGGER.info(f'This is a demo-plugin test routine, validating its working with options: {options}')
 
-       return True
+       return 0
 
 
    def is_sourcefile(file: Path) -> str:
@@ -151,13 +155,13 @@ This paragraph describes the requirements and structure of plugins in order to a
 
        if file.is_file():
 
-           LOGGER.debug(f'This is a demo-plugin is_sourcefile routine, assessing whether "{file}" has a valid dataformat')
-           return 'dataformat'
+           LOGGER.verbose(f'This is a demo-plugin is_sourcefile routine, assessing whether "{file}" has a valid dataformat')
+           return 'dataformat' if file == 'supportedformat' else ''
 
-       return ''
+        return ''
 
 
-   def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> Union[str, int]:
+   def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> str:
        """
        This plugin function reads attributes from the supported sourcefile
 
@@ -169,7 +173,7 @@ This paragraph describes the requirements and structure of plugins in order to a
        """
 
        if dataformat in ('DICOM','PAR'):
-           LOGGER.debug(f'This is a demo-plugin get_attribute routine, reading the {dataformat} "{attribute}" attribute value from "{sourcefile}"')
+           LOGGER.verbose(f'This is a demo-plugin get_attribute routine, reading the {dataformat} "{attribute}" attribute value from "{sourcefile}"')
 
        return ''
 
@@ -192,13 +196,13 @@ This paragraph describes the requirements and structure of plugins in order to a
        :return:
        """
 
-       LOGGER.debug(f'This is a bidsmapper demo-plugin working on: {session}')
+       LOGGER.verbose(f'This is a bidsmapper demo-plugin working on: {session}')
 
 
    def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
        """
        The plugin to convert the runs in the source folder and save them in the bids folder. Each saved datafile should be
-       accompanied with a json sidecar file. The bidsmap options for this plugin can be found in:
+       accompanied by a json sidecar file. The bidsmap options for this plugin can be found in:
 
        bidsmap_new/old['Options']['plugins']['README']
 

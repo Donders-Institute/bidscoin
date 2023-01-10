@@ -1,6 +1,6 @@
-"""
-This module contains the interface to convert the session nifti source-files into BIDS-valid nifti-files in the corresponding bidsfolder.
-"""
+"""The nibabel2bids plugin wraps around the flexible nibabel (https://nipy.org/nibabel) tool to convert a wide variety
+of data formats into NIfTI-files. Currently, the default template bidsmap is tailored to NIfTI source data only
+(but this can readily be extended), and BIDS sidecar files are not automatically produced by nibabel"""
 
 import logging
 import dateutil.parser
@@ -9,6 +9,7 @@ import ast
 import shutil
 import pandas as pd
 import nibabel as nib
+from nibabel.testing import data_path
 from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
@@ -16,7 +17,7 @@ try:
     from bidscoin import bids
 except ImportError:
     import sys
-    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    sys.path.append(str(Path(__file__).parents[1]))                 # This should work if bidscoin was not pip-installed
     import bids
 
 LOGGER = logging.getLogger(__name__)
@@ -38,14 +39,22 @@ def test(options: dict=OPTIONS) -> int:
 
     # Test the nibabel installation
     try:
+
         LOGGER.info(f"Nibabel version: {nib.info.VERSION}")
         if options.get('ext',OPTIONS['ext']) not in ('.nii', '.nii.gz'):
             LOGGER.error(f"The 'ext: {options.get('ext')}' value in the nibabel2bids options is not '.nii' or '.nii.gz'")
             return 2
+
         if not isinstance(options.get('meta',OPTIONS['meta']), list):
             LOGGER.error(f"The 'meta: {options.get('meta')}' value in the nibabel2bids options is not a list")
             return 3
+
+        niifile = Path(data_path)/'anatomical.nii'
+        assert is_sourcefile(niifile) == 'Nibabel'
+        assert str(get_attribute('Nibabel', niifile, 'descrip', options)) == "b'spm - 3D normalized'"
+
     except Exception as nibabelerror:
+
         LOGGER.error(f"Nibabel error:\n{nibabelerror}")
         return 1
 
@@ -79,7 +88,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
     """
 
     if dataformat == 'Nibabel':
-        return nib.load(sourcefile).header.get(attribute)
+        return nib.load(sourcefile).header.get(attribute).item()
 
 
 def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
@@ -135,7 +144,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     """
-    The bidscoiner plugin to convert the session Nibabel source-files into BIDS-valid nifti-files in the
+    The bidscoiner plugin to convert the session Nibabel source-files into BIDS-valid NIfTI-files in the
     corresponding bids session-folder
 
     :param session:     The full-path name of the subject/session source folder
@@ -213,7 +222,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             LOGGER.warning(f"{bidsfile}.* already exists and will be deleted -- check your results carefully!")
             bidsfile.with_suffix('').with_suffix(ext).unlink()
 
-        # Save the sourcefile as a BIDS nifti file
+        # Save the sourcefile as a BIDS NIfTI file
         nib.save(nib.load(sourcefile), bidsfile)
 
         # Copy over the source meta-data
@@ -227,9 +236,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 try: metaval = ast.literal_eval(str(metaval))            # E.g. convert stringified list or int back to list or int
                 except (ValueError, SyntaxError): pass
                 LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
-            if not metaval:
-                metaval = None
-            jsondata[metakey] = metaval
+            if jsondata.get(metakey) and jsondata.get(metakey)==metaval:
+                LOGGER.warning(f"Overruling {metakey} values in {jsonfile}: {jsondata[metakey]} -> {metaval}")
+            jsondata[metakey] = metaval if metaval else None
 
         # Remove unused (but added from the template) B0FieldIdentifiers/Sources
         if not jsondata.get('B0FieldSource'):     jsondata.pop('B0FieldSource', None)

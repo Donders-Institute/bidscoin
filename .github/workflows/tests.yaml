@@ -1,12 +1,14 @@
 name: CI
 on:
   push:
+  pull_request:
 jobs:
   tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ['3.8', '3.9', '3.10']
+        # os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
@@ -20,6 +22,7 @@ jobs:
           pip install pytest
       - name: Tests with pytest
         run: |
-          pytest tests/test_dicomsort.py
+          pytest tests/test_bidscoin.py
           pytest tests/test_bids.py
           pytest tests/test_bidsmapper.py
+          pytest tests/test_utilities.py

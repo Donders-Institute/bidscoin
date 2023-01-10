@@ -7,7 +7,7 @@ requirements  = (Path(__file__).parent/'requirements.txt').read_text().splitline
 phys2bidscoin = ['bioread>=1.0.5', 'pymatreader>=0.0.24', 'duecredit', 'phys2bids>=2.0.0,<3.0.0']
 spec2nii2bids = ['spec2nii']
 deface        = ['pydeface', 'drmaa']
-all_extras    = phys2bidscoin + spec2nii2bids + deface
+all_extras    = spec2nii2bids + deface # + phys2bidscoin
 
 setup(name                           = 'bidscoin',          # Required
       version                        = version,             # Required
@@ -23,15 +23,15 @@ setup(name                           = 'bidscoin',          # Required
                                                             'bidseditor       = bidscoin.bidseditor:main',
                                                             'bidsmapper       = bidscoin.bidsmapper:main',
                                                             'bidscoiner       = bidscoin.bidscoiner:main',
-                                                            'echocombine      = bidsapps.echocombine:main',
-                                                            'deface           = bidsapps.deface:main',
-                                                            'medeface         = bidsapps.medeface:main',
-                                                            'skullstrip       = bidsapps.skullstrip:main',
-                                                            'dicomsort        = utilities.dicomsort:main',
-                                                            'bidsparticipants = utilities.bidsparticipants:main',
-                                                            'rawmapper        = utilities.rawmapper:main',
-                                                            'physio2tsv       = utilities.physio2tsv:main',
-                                                            'plotphysio       = utilities.plotphysio:main']},
+                                                            'echocombine      = bidscoin.bidsapps.echocombine:main',
+                                                            'deface           = bidscoin.bidsapps.deface:main',
+                                                            'medeface         = bidscoin.bidsapps.medeface:main',
+                                                            'skullstrip       = bidscoin.bidsapps.skullstrip:main',
+                                                            'dicomsort        = bidscoin.utilities.dicomsort:main',
+                                                            'bidsparticipants = bidscoin.utilities.bidsparticipants:main',
+                                                            'rawmapper        = bidscoin.utilities.rawmapper:main',
+                                                            'physio2tsv       = bidscoin.utilities.physio2tsv:main',
+                                                            'plotphysio       = bidscoin.utilities.plotphysio:main']},
       classifiers                    = ['Programming Language :: Python :: 3.8',
                                         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
                                         'Operating System :: OS Independent'],

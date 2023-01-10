@@ -1,5 +1,5 @@
 # --------------------------------------------------------------------------------
-# This is a bidsmap YAML file with the key-value mappings for the different BIDS
+# This is a template bidsmap with the key-value mappings for the different BIDS
 # datatypes (anat, func, dwi, etc). The datatype attributes are the keys that map
 # onto the BIDS labels. The bidsmap data-structure should be 5 levels deep:
 #
@@ -7,9 +7,11 @@
 # dataformat : datatype : run-item : bidsmapping : mapping-data
 #
 # NB:
-# 1) Edit the bidsmap file to your needs before feeding it to bidscoiner.py
-# 2) (Institute) users may create their own bidsmap_[template].yaml or
-#    bidsmap_[sample].yaml file
+# 1) This bidsmap is intended to be used by the bidsmapper for data discovery.
+#    Although generally not recommended, it can also be used directly by the bidscoiner
+# 2) This bidsmap is tailored to standard data acquisitions at the Donders Centre for
+#    Cognitive Neuroimaging (DCCN). You may consider (Institute) users may create their
+#    own bidsmap_[template].yaml or bidsmap_[sample].yaml file
 #
 # For more information, see: https://bidscoin.readthedocs.io
 # --------------------------------------------------------------------------------
@@ -30,7 +32,7 @@ Options:
   plugins:                          # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
     dcm2niix2bids:                  # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
       command: dcm2niix             # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or 'C:\"Program Files"\dcm2niix\dcm2niix.exe' (use quotes to deal with whitespaces in the path)
-      args: -b y -z y -i n -l n     # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
+      args: -b y -z y -i n -l n     # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped NIfTI's, see dcm2niix -h for more information)
       anon: y                       # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
       meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata sourcefiles that are copied over to the BIDS sidecar files
     spec2nii2bids:                  # The settings for the spec2nii2bids plugin
@@ -77,11 +79,11 @@ DICOM:
       RepetitionTime:
       PhaseEncodingDirection:
     bids: &anat_dicoment_nonparametric  # See: schema/datatypes/anat.yaml
-      acq: <SeriesDescription>    # This will be expanded by the bidsmapper (so the user can edit it)
+      acq: <SeriesDescription>    # This will be expanded by the bidsmapper (so the user can edit it in the bidseditor)
       ce:
       rec:
-      run: <<1>>                  # This will be updated during bidscoiner runtime (as it depends on the already existing files)
-      part: ['', mag, phase, real, imag, 0]
+      run: <<1>>                  # This will be updated dynamically during bidscoiner runtime (as it depends on the already existing files)
+      part: ['', mag, phase, real, imag, 0]   # # This BIDS value list will be shown as a dropdown menu in the bidseditor with the first (empty) item selected (as indicated by the last item, i.e. 0)
       suffix: T1w
     meta:                         # This is an optional entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
   - provenance:
@@ -909,23 +911,16 @@ DICOM:
       Units:
   - provenance:
     attributes: *pet_dicomattr
-    bids: &pet_dicoment_events          # See: schema/datatypes/pet.yaml
-      task: <SeriesDescription>
-      trc: <Radiopharmaceutical>
-      rec: ['', acdyn, acstat, nacdyn, nacstat, 0]
-      run: <<1>>
+    bids:
+      <<: *pet_dicoment_pet
       suffix: events
     meta: *pet_meta
-#  - provenance:
-#    attributes: *pet_dicomattr
-#    bids: &pet_dicoment_physio          # See: schema/datatypes/pet.yaml
-#      task: <SeriesDescription>
-#      trc: <Radiopharmaceutical>
-#      rec: ['', acdyn, acstat, nacdyn, nacstat, 0]
-#      recording:
-#      run: <<1>>
-#      suffix: physio
-#    meta: *pet_meta
+  - provenance:
+    attributes: *pet_dicomattr
+    bids:
+      <<: *pet_dicoment_pet
+      suffix: blood
+    meta: *pet_meta
 
   eeg:        # ----------------------- All EEG data ---------------------------
   - provenance:
@@ -1049,7 +1044,7 @@ PAR:
 # --------------------------------------------------------------------------------
 # PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  subject: <<filepath:/sub-(.*?)/>>    # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
   session: <<filepath:/sub-.*?/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   anat:       # ----------------------- All anatomical runs --------------------
@@ -1759,7 +1754,7 @@ SPAR:
 # ---------------------------------------------------------------------------------
 # SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
 # ---------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  subject: <<filepath:/sub-(.*?)/>>    # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
   session: <<filepath:/sub-.*?/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   mrs:        # ---------------------- All spectroscopy runs ------------------
@@ -1803,7 +1798,7 @@ Twix:
 # ---------------------------------------------------------------------------------
 # SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
 # ---------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  subject: <<filepath:/sub-(.*?)/>>    # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
   session: <<filepath:/sub-.*?/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   mrs:        # ---------------------- All spectroscopy runs ------------------
@@ -1859,7 +1854,7 @@ Pfile:
 # ------------------------------------------------------------------------------
 # P-file key-value heuristics (GE MRS fields that are mapped to the BIDS labels)
 # ------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  subject: <<filepath:/sub-(.*?)/>>    # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
   session: <<filepath:/sub-.*?/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   mrs:        # ---------------------- All spectroscopy runs ------------------
@@ -1922,65 +1917,65 @@ Pfile:
     meta:
 
 
-Physio:
-# --------------------------------------------------------------------------------
-# Physio key-value heuristics (phys2bids -info data) that are mapped to the BIDS labels)
-# --------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-  session: <<filepath:/sub-.*?/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
-
-  func:       # ----------------------- All functional runs --------------------
-  - provenance:                         # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
-    properties: *fileprop               # This is an optional (stub) entry of properties matching (could be added to any run-item)
-    attributes: &attributes_physio      # The matching (regexp) criteria for the phys2bids -info data go in here
-      ch_num:
-      filetype:
-      freq:
-      ch_name:
-      units:
-      trigger_idx:
-    bids: &bids_physio
-      task: <descrip>
-      acq:
-      ce:
-      dir:
-      rec:
-      run: <<1>>                        # This will be updated during bidscoiner runtime (as it depends on the already existing files)
-      recording:
-      suffix: physio
-    meta:                               # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
-      TriggerChannel: <<trigger_idx>>
-      ExpectedTimepoints: <<num_timepoints_found>>
-      Pad: 9
-      ChannelNames: <<ch_name>>
-      Threshold: <<thr>>
-      TimeOffset: <<time_offset>>
-      StartTime: <<time_offset>>
-
-  extra_data: # ----------------------- All extra data -------------------------
-  - provenance:
-    attributes: *attributes_physio
-    bids: *bids_physio
-    meta:
-
-  exclude:    # ----------------------- Data that will be left out -------------
-  - provenance:
-    attributes:
-      ch_num:
-      filetype:
-      freq:
-      ch_name:
-      units:
-      trigger_idx:
-    bids: *bids_physio
-    meta:
+#Physio:
+## --------------------------------------------------------------------------------
+## Physio key-value heuristics (phys2bids -info data) that are mapped to the BIDS labels)
+## --------------------------------------------------------------------------------
+#  subject: <<filepath:/sub-(.*?)/>>    # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+#  session: <<filepath:/sub-.*?/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+#
+#  func:       # ----------------------- All functional runs --------------------
+#  - provenance:                         # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+#    properties: *fileprop               # This is an optional (stub) entry of properties matching (could be added to any run-item)
+#    attributes: &attributes_physio      # The matching (regexp) criteria for the phys2bids -info data go in here
+#      ch_num:
+#      filetype:
+#      freq:
+#      ch_name:
+#      units:
+#      trigger_idx:
+#    bids: &bids_physio
+#      task: <descrip>
+#      acq:
+#      ce:
+#      dir:
+#      rec:
+#      run: <<1>>                        # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+#      recording:
+#      suffix: physio
+#    meta:                               # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
+#      TriggerChannel: <<trigger_idx>>
+#      ExpectedTimepoints: <<num_timepoints_found>>
+#      Pad: 9
+#      ChannelNames: <<ch_name>>
+#      Threshold: <<thr>>
+#      TimeOffset: <<time_offset>>
+#      StartTime: <<time_offset>>
+#
+#  extra_data: # ----------------------- All extra data -------------------------
+#  - provenance:
+#    attributes: *attributes_physio
+#    bids: *bids_physio
+#    meta:
+#
+#  exclude:    # ----------------------- Data that will be left out -------------
+#  - provenance:
+#    attributes:
+#      ch_num:
+#      filetype:
+#      freq:
+#      ch_name:
+#      units:
+#      trigger_idx:
+#    bids: *bids_physio
+#    meta:
 
 
 Nibabel:
 # --------------------------------------------------------------------------------
 # Nibabel key-value heuristics (header fields that are mapped to the BIDS labels)
 # --------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  subject: <<filepath:/sub-(.*?)/>>    # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
   session: <<filepath:/sub-.*?/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   anat:       # ----------------------- All anatomical runs --------------------

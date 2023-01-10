@@ -1,15 +1,7 @@
-"""
-This module contains the interface with spec2nii to convert MRS data to BIDS:
-
-- test:                 A test routine for the plugin + its bidsmap options. Can also be called by the user from the bidseditor GUI
-- is_sourcefile:        A routine to assess whether the file is of a valid dataformat for this plugin
-- get_attribute:        A routine for reading an attribute from a sourcefile
-- bidsmapper_plugin:    A routine that can be called by the bidsmapper to make a bidsmap of the source data
-- bidscoiner_plugin:    A routine that can be called by the bidscoiner to convert the source data to bids
-
-See also:
-- https://github.com/wexeee/spec2nii
-"""
+"""The 'spec2nii2bids' plugin is a wrapper around the recent spec2nii (https://github.com/wexeee/spec2nii) Python
+library to interact with and convert MR spectroscopy source data. Presently, the spec2nii2bids plugin is a first
+implementation that supports the conversion of Philips SPAR/SDAT files, Siemens Twix files and GE P-files to NIfTI,
+in conjunction with BIDS sidecar files"""
 
 import logging
 import shutil
@@ -23,7 +15,7 @@ try:
     from bidscoin import bidscoin, bids
 except ImportError:
     import sys
-    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
     import bidscoin, bids
 
 LOGGER = logging.getLogger(__name__)
@@ -46,6 +38,9 @@ def test(options: dict=OPTIONS) -> int:
 
     LOGGER.info('Testing the spec2nii2bids installation:')
 
+    if 'get_twixfield' not in dir(bids) or 'get_sparfield' not in dir(bids) or 'get_p7field' not in dir(bids):
+        LOGGER.error("Could not import the expected 'get_twixfield', 'get_sparfield' and/or 'get_p7field' from the bids.py library")
+        return 1
     if 'command' not in {**OPTIONS, **options}:
         LOGGER.error(f"The expected 'command' key is not defined in the spec2nii2bids options")
         return 1
@@ -251,7 +246,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             for ext in ('.nii.gz', '.nii', '.json', '.bval', '.bvec', '.tsv.gz'):
                 (outfolder/bidsname).with_suffix(ext).unlink(missing_ok=True)
 
-        # Run spec2nii to convert the source-files in the run folder to nifti's in the BIDS-folder
+        # Run spec2nii to convert the source-files in the run folder to NIfTI's in the BIDS-folder
         arg  = ''
         args = options.get('args', OPTIONS['args'])
         if args is None:
@@ -270,16 +265,16 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         if bidscoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
             if not list(outfolder.glob(f"{bidsname}.nii*")): continue
 
-        # Load and adapt the newly produced json sidecar-file (NB: assumes every nifti-file comes with a json-file)
+        # Load and adapt the newly produced json sidecar-file (NB: assumes every NIfTI-file comes with a json-file)
         with jsonfile.open('r') as sidecar:
             jsondata = json.load(sidecar)
 
         # Copy over the source meta-data
         metadata = bids.copymetadata(sourcefile, outfolder/bidsname, options.get('meta', []))
         for metakey, metaval in metadata.items():
-            if jsondata.get(metakey) == metaval:
-                LOGGER.warning(f"Replacing {metakey} values in {jsonfile}: {jsondata[metakey]} -> {metaval}")
-            jsondata[metakey] = metaval
+            if jsondata.get(metakey) and jsondata.get(metakey) == metaval:
+                LOGGER.warning(f"Overruling {metakey} values in {jsonfile}: {jsondata[metakey]} -> {metaval}")
+            jsondata[metakey] = metaval if metaval else None
 
         # Add all the meta data to the json-file
         for metakey, metaval in run['meta'].items():
@@ -287,9 +282,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             try: metaval = ast.literal_eval(str(metaval))            # E.g. convert stringified list or int back to list or int
             except (ValueError, SyntaxError): pass
             LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
-            if not metaval:
-                metaval = None
-            jsondata[metakey] = metaval
+            if jsondata.get(metakey) and jsondata.get(metakey)==metaval:
+                LOGGER.warning(f"Overruling {metakey} values in {jsonfile}: {jsondata[metakey]} -> {metaval}")
+            jsondata[metakey] = metaval if metaval else None
 
         # Save the meta data to disk
         with jsonfile.open('w') as sidecar:

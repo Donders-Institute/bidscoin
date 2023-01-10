@@ -32,6 +32,9 @@ from importlib.util import spec_from_file_location, module_from_spec
 from importlib.metadata import entry_points
 from typing import Tuple, Union, List
 from ruamel.yaml import YAML
+
+import bidscoin
+
 yaml = YAML()
 
 # Define the default paths
@@ -228,7 +231,7 @@ def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
     :return:            A list with all directories in the folder
     """
 
-    return [fname for fname in sorted(folder.glob(wildcard)) if fname.is_dir() and not fname.name.startswith('.')]
+    return sorted([fname for fname in sorted(folder.glob(wildcard)) if fname.is_dir() and not fname.name.startswith('.')])
 
 
 def list_executables(show: bool=False) -> list:
@@ -508,13 +511,16 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
     # Test loading the template bidsmap
     success = True
     if isinstance(bidsmapfile, (str, Path)):
+        if not bidsmapfile.is_file():
+            LOGGER.info(f"Cannot find bidsmap-file: {bidsmapfile}")
+            return 1
         LOGGER.info(f"Running bidsmap checks:")
         try:            # Moving the import to the top of this module will cause circular import issues
             try:  from bidscoin import bids
             except ImportError: import bids         # This should work if bidscoin was not pip-installed
             bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile), check=(True,True,False))
         except Exception as bidsmaperror:
-            LOGGER.error(f"An error occurred when loading {bidsmapfile}:\n{bidsmaperror}")
+            LOGGER.error(f"An error occurred when loading {bidsmapfile}:\n{bidsmaperror}\nThis may be due to invalid YAML syntax. You can check this using a YAML validator (e.g. https://www.yamllint.com)")
             bidsmap = {'Options': {}}
             success = False
     else:
@@ -624,7 +630,7 @@ def main():
                                             '  bidscoin -t my_template_bidsmap\n'
                                             '  bidscoin -b my_study_bidsmap\n'
                                             '  bidscoin -i data/my_template_bidsmap.yaml downloads/my_plugin.py\n ')
-    parser.add_argument('-l', '--list',        help='List all bidscoin tools', action='store_true')
+    parser.add_argument('-l', '--list',        help='List all executables (i.e. the apps, bidsapps and utilities)', action='store_true')
     parser.add_argument('-p', '--plugins',     help='List all installed plugins and template bidsmaps', action='store_true')
     parser.add_argument('-i', '--install',     help='A list of template bidsmaps and/or bidscoin plugins to install', nargs='+')
     parser.add_argument('-u', '--uninstall',   help='A list of template bidsmaps and/or bidscoin plugins to uninstall', nargs='+')

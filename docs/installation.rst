@@ -15,7 +15,6 @@ To install BIDScoin on your system run one of the following commands in your com
 
    $ pip install bidscoin                           # Use this when you want to convert conventional MR imaging data with the dcm2niix2bids plugin
    $ pip install bidscoin[spec2nii2bids]            # Use this when you want to convert MR spectroscopy data with the spec2nii2bids plugin
-   $ pip install bidscoin[phys2bidscoin]            # Use this when you want to convert physiological data with the phys2bidscoin plugin -- EXPERIMENTAL!
    $ pip install bidscoin[deface]                   # Use this when you want to deface anatomical MRI scans. NB: Requires FSL to be installed on your system
    $ pip install bidscoin[deface,spec2nii2bids]     # Use this to install two extra packages of interest
    $ pip install bidscoin[all]                      # Use this to install all extra packages
@@ -32,9 +31,6 @@ If you do not have git (or any other version control system) installed you can `
 
    $ pip install ./bidscoin
 
-.. tip::
-   On certain (Linux) systems you may get an error message saying: 'Could not load the Qt platform plugin "xcb" in "" even though it was found'. This may be solved by downgrading your PyQt5 library, e.g. by running: ``pip install --upgrade pyqt5==5.14``
-
 Updating BIDScoin
 ^^^^^^^^^^^^^^^^^
 
@@ -47,7 +43,7 @@ Run your pip install command as before with the additional ``--upgrade`` or ``--
 
 .. caution::
    - The bidsmaps are not garanteed to be compatible between different BIDScoin versions
-   - After a succesful BIDScoin installation or upgrade, it may be needed to (re)do any adjustments that were done on your `template bidsmap <advanced.html#customized-template-bidsmap>`__ (so make a back-up of it before you upgrade)
+   - After a succesful BIDScoin installation or upgrade, it may be needed to (re)do any adjustments that were done on your `template bidsmap <bidsmap.html#building-your-own-template-bidsmap>`__ (so make a back-up of it before you upgrade)
 
 .. _Options: options.html
 .. _virtual: https://docs.python.org/3.6/tutorial/venv.html
@@ -57,7 +53,7 @@ Run your pip install command as before with the additional ``--upgrade`` or ``--
 Dcm2niix installation
 ---------------------
 
-Unfortunately the pip installer can only install Python software and the default 'dcm2niix2bids' plugin relies on an external application named `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ to convert DICOM and PAR/REC source data to nifti. To make use of the dcm2niix2bids plugin you should therefore download and install dcm2niix yourself according to the instructions. When done, make sure that the dcm2niix executable is on your user or system path (Windows users can add the path permanently, e.g. by running: ``setx path "%path%;C:\Program Files\dcm2niix"``). Otherwise, make sure that the command to run the dcm2niix executable (exactly as if you would run it yourself in your command terminal) is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
+Unfortunately the pip installer can only install Python software and the default 'dcm2niix2bids' plugin relies on an external application named `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ to convert DICOM and PAR/REC source data to NIfTI. To make use of the dcm2niix2bids plugin you should therefore download and install dcm2niix yourself according to the instructions. When done, make sure that the dcm2niix executable is on your user or system path (Windows users can add the path permanently, e.g. by running: ``setx path "%path%;C:\Program Files\dcm2niix"``). Otherwise, make sure that the command to run the dcm2niix executable (exactly as if you would run it yourself in your command terminal) is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
 
 1. Open your template bidsmap with a text editor and adjust the settings as needed. The default template bidsmap is located in the [path_to_bidscoin]/heuristics subfolder -- see the output of ``bidscoin -p`` for the fullpath location on your system.
 2. Go to the `Options`_ tab the first time the BIDScoin GUI is launched and adjust the settings as needed. Then click the [Set as default] button to save the settings to your default template bidsmap.
@@ -69,14 +65,12 @@ Unfortunately the pip installer can only install Python software and the default
 Testing BIDScoin
 ----------------
 
-You can run the 'bidscoin' utility to test the installation of your BIDScoin installation and settings:
+You can run the 'bidscoin' utility to test the installation of your BIDScoin installation and settings (see the `troubleshooting guide <troubleshooting.html#installation>`__ in case you get error messages):
 
 .. code-block:: console
 
    $ bidscoin -t                        # Test with the default template bidsmap
    $ bidscoin -t my_template_bidsmap    # Test with your custom template bidsmap
-
-Note that, as a test, dcm2niix inquires the internet for available updates. On some (e.g. Ubuntu) systems that may generate an (innocent) error because the ``curl`` aplication may not be installed (see also the singularity definition file). Please consult the documentation for your operating system if you like to install curl.
 
 Using a singularity container
 -----------------------------
@@ -155,18 +149,3 @@ To speed up building the Singularity image, you can change the ``apt`` servers t
 .. code-block:: console
 
    echo 'deb http://ftp.at.debian.org/debian stable main' > /etc/apt/sources.list
-
-Troubleshooting
-^^^^^^^^^^^^^^^
-
-The image didn't work after copying it to a CentOS 7 host system. The problem was kernel version older than 3.15. A working fix is to add the following line at the end of ``%post`` section of  ``singularity.def`` file.
-
-.. code-block:: console
-
-   strip --remove-section=.note.ABI-tag /usr/lib/x86_64-linux-gnu/libQt5Core.so.5
-
-The fix comes from these resources:
-
-* (Answer #3) https://answers.launchpad.net/yade/+question/696260/
-* https://github.com/wkhtmltopdf/wkhtmltopdf/issues/4497
-* https://stackoverflow.com/questions/58912268/singularity-container-python-pytorch-why-does-import-torch-work-on-arch-l

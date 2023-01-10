@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-A wrapper around FreeSurfer's 'synthstrip' skull stripping tool (https://surfer.nmr.mgh.harvard.edu/docs/synthstrip).
-Except for BIDS inheritances, this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS compliant output
+A wrapper around FreeSurfer's 'synthstrip' skull stripping tool
+(https://surfer.nmr.mgh.harvard.edu/docs/synthstrip). Except for BIDS inheritances,
+this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS compliant output
 
 The corresponding brain mask is saved in the bids/derivatives/synthstrip folder
 
-Assumes installation of FreeSurfer v7.3.2 or higher
+Assumes the installation of FreeSurfer v7.3.2 or higher
 """
 
 import shutil
@@ -21,11 +22,11 @@ try:
     from bidscoin import bids, bidscoin
 except ImportError:
     import sys
-    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
+    sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
     import bids, bidscoin
 
 
-def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: list[str], force: bool, args: str):
+def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: list, force: bool, args: str):
     """
 
     :param bidsdir:     The bids-directory with the subject data
