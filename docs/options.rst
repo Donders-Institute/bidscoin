@@ -50,7 +50,7 @@ To test the proper working of dcm2niix click [Test] and see the terminal output 
 spec2nii2bids - plugin
 ----------------------
 
-The `spec2nii2bids plugin <plugins.html#spec2nii2bids>`__ is a default bidscoiner plugin that converts Twix, SPAR/SDAT and P-file spectroscopy source data to BIDS-valid NIfTI- and json sidecar files. This plugin relies on `spec2nii <https://github.com/wexeee/spec2nii>`__, for which you can set the following options:
+The `spec2nii2bids plugin <plugins.html#spec2nii2bids>`__ is a default bidscoiner plugin that converts Twix, SPAR/SDAT and P-file spectroscopy source data to BIDS-valid NIfTI- and json sidecar files. This plugin relies on `spec2nii <https://github.com/wtclarke/spec2nii>`__, for which you can set the following options:
 
 - ``command``: Command to run spec2nii, such as:
 

@@ -7,11 +7,11 @@ A first step when encountering execution errors is to test whether your installa
 
 The "dcm2niix" command is not recognized
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This is an `installation <installation.html#dcm2niix>`__ problem and means that bidscoin can't find your dcm2niix executable (just carefully follow the installation instructions)
+This is an `installation <installation.html#dcm2niix-installation>`__ problem and means that bidscoin can't find your dcm2niix executable (just carefully follow the installation instructions)
 
 Could not load the Qt platform plugin "xcb"
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This error message may occur on certain Linux platforms when opening the bidseditor. This is an `installation <installation.html#bidscoin>`__ issue that may be solved by downgrading your PyQt5 library, e.g. by running ``pip install --upgrade pyqt5==5.14`` in your terminal environment
+This error message may occur on certain Linux platforms when opening the bidseditor. This is an `installation <installation.html#bidscoin-installation>`__ issue that may be solved by downgrading your PyQt5 library, e.g. by running ``pip install --upgrade pyqt5==5.14`` in your terminal environment
 
 My singularity container fails
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -23,7 +23,7 @@ When running singularity on on systems with an older Linux kernel (e.g. older th
 
 The fix comes from these resources:
 
-* (Answer #3) https://answers.launchpad.net/yade/+question/696260/
+* https://answers.launchpad.net/yade/+question/696260/ (Answer #3)
 * https://github.com/wkhtmltopdf/wkhtmltopdf/issues/4497
 * https://stackoverflow.com/questions/58912268/singularity-container-python-pytorch-why-does-import-torch-work-on-arch-l
 
@@ -33,7 +33,7 @@ The first step in troubleshooting is to look at the warnings and messages printe
 
 My bidsmap is empty
 ^^^^^^^^^^^^^^^^^^^
-After running the bidsmapper, the bidseditor shows an empty bidsmap (i.e no data samples). The most likely cause is that the structure of your raw data repository is not understood by BIDScoin (see `data preparation <peparation.html>`__ for more info). Another likely cause is that the sub-/ses- prefixes need to be adjusted to your foldernames (e.g. when your ). Install and/or add the plugin
+After running the bidsmapper, the bidseditor shows an empty bidsmap (i.e no data samples). The most likely cause is that the structure of your raw data repository is not understood by BIDScoin (see `data preparation <preparation.html>`__ for more info). Another likely cause is that the sub-/ses- prefixes need to be adjusted to your foldernames (e.g. when your ). Install and/or add the plugin
 
 My subject/session labels are wrong
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

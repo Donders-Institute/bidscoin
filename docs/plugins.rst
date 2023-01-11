@@ -17,7 +17,7 @@ The 'dcm2niix2bids' plugin is a wrapper around the well-known pydicom, nibabel a
 Spec2nii2bids: a plugin for MR spectroscopy data
 ------------------------------------------------
 
-The 'spec2nii2bids' plugin is a wrapper around the recent `spec2nii <https://github.com/wexeee/spec2nii>`__ Python library to interact with and convert MR spectroscopy source data. Presently, the spec2nii2bids plugin is a first implementation that supports the conversion of Philips SPAR/SDAT files, Siemens Twix files and GE P-files to NIfTI, in conjunction with BIDS sidecar files.
+The 'spec2nii2bids' plugin is a wrapper around the recent `spec2nii <https://github.com/wtclarke/spec2nii>`__ Python library to interact with and convert MR spectroscopy source data. Presently, the spec2nii2bids plugin is a first implementation that supports the conversion of Philips SPAR/SDAT files, Siemens Twix files and GE P-files to NIfTI, in conjunction with BIDS sidecar files.
 
 Nibabel2bids: a generic plugin for imaging data
 -----------------------------------------------

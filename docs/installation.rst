@@ -60,7 +60,7 @@ Unfortunately the pip installer can only install Python software and the default
 
 .. tip::
 
-   Install the `pigz <https://zlib.net/pigz/>`__ tool to speed-up dcm2niix. An easy way to install both dcm2niix and pigz at once, is to install  `MRIcroGL <https://www.nitrc.org/projects/mricrogl/>__
+   Install the `pigz <https://zlib.net/pigz/>`__ tool to speed-up dcm2niix. An easy way to install both dcm2niix and pigz at once, is to install  `MRIcroGL <https://www.nitrc.org/projects/mricrogl/>`__
 
 Testing BIDScoin
 ----------------
