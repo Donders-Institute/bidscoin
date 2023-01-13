@@ -199,7 +199,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     """
 
     # Get the subject identifiers and the BIDS root folder from the bidsses folder
-    if bidsses.name.startswith('ses-'):
+    if bidsses.name.startswith('ses-') and 'sub-003' in bidsses.parts:
+    #if bidsses.name.startswith('ses-'):
         bidsfolder = bidsses.parent.parent
         subid = bidsses.parent.name
         sesid = bidsses.name
@@ -228,9 +229,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     # read or create scans_table and tsv-file
     # Read or create a scans_table and tsv-file
     scans_tsv = bidsses / f"{subid}{'_' + sesid if sesid else ''}_scans.tsv"
+    scans_table = pd.DataFrame()
     if scans_tsv.is_file():
         scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
-    else:
+        print('debug')
+    if scans_table.empty:
         scans_table = pd.DataFrame(columns=['acq_time'], dtype='str')
         scans_table.index.name = 'filename'
 
@@ -294,15 +297,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
             # Convert the source-files in the run folder to nifti's in the BIDS-folder
             else:
-                command = f'{options["command"]} {source} -d {outfolder / bidsname}'
+                command = f'{options["command"]} "{source}" -d {outfolder / bidsname}'
                 if bidscoin.run_command(command):
                     if not list(outfolder.glob(f"{bidsname}.*nii*")): continue
 
-
-
-            # Copy over the source meta-data
-            # TODO make copy metadata accept xlsx and spreadsheet files or just load from xlsx
-            # metadata = bids.copymetadata(sourcefile, outfolder / bidsname, options.get('meta', []))
 
         # Collect personal data from a source header (PAR/XML does not contain personal info)
         personals = {}
