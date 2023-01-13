@@ -122,7 +122,7 @@ def test_match_runvalue():
 
 @pytest.fixture()
 def test_bidsmap_path():
-    bidsmap_path = Path('testdata/bidsmap.yaml')
+    bidsmap_path = Path('tests/test_data/bidsmap.yaml')
     full_bidsmap_path = Path(bidsmap_path.resolve())
     return full_bidsmap_path
 

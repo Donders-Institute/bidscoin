@@ -297,7 +297,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
             # Convert the source-files in the run folder to nifti's in the BIDS-folder
             else:
-                command = f'{options["command"]} "{source}" -d {outfolder / bidsname}'
+                command = f'{options["command"]} "{source}" -d {outfolder / bidsname / ".nii.gz"}'
                 if bidscoin.run_command(command):
                     if not list(outfolder.glob(f"{bidsname}.*nii*")): continue
 

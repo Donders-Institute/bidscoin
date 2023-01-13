@@ -11,3 +11,5 @@ python-dateutil
 nibabel
 pypet2bids
 bids_validator
+pydeface
+spec2nii

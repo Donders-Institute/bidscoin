@@ -1,0 +1,522 @@
+# --------------------------------------------------------------------------------
+# This is a bidsmap YAML file with the key-value mappings for the different BIDS
+# datatypes (anat, func, dwi, etc). The datatype attributes are the keys that map
+# onto the BIDS labels. The bidsmap data-structure should be 5 levels deep:
+#
+# dict       : dict     : list     : dict        : dict
+# dataformat : datatype : run-item : bidsmapping : mapping-data
+#
+# NB:
+# 1) Edit the bidsmap file to your needs before feeding it to bidscoiner.py
+# 2) (Institute) users may create their own bidsmap_[template].yaml or
+#    bidsmap_[sample].yaml file
+#
+# For more information, see: https://bidscoin.readthedocs.io
+# --------------------------------------------------------------------------------
+
+
+Options:
+# --------------------------------------------------------------------------------
+# General options and plugins
+# --------------------------------------------------------------------------------
+  bidscoin:
+    version: 3.8.0                  # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
+    bidsignore: mrs/;extra_data/    # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
+    subprefix: sub-                 # The subject prefix of the source data
+    sesprefix: ses-                 # The session prefix of the source data
+    unknowntypes: [mrs, extra_data] # A list of datatypes that are converted to BIDS-like datatype folders
+    ignoretypes: [exclude]          # A list of datatypes that are excluded / not converted to BIDS
+    unzip:                          # Wildcard pattern to select tarballed/zip-files in the sourcefolders that need to be unzipped (in a tempdir) to expose the data, e.g. '*.tar.gz'
+  plugins:                          # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
+    dcm2niix2bids:                  # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
+      command: dcm2niix             # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or 'C:\"Program Files"\dcm2niix\dcm2niix.exe' (use quotes to deal with whitespaces in the path)
+      args: -b y -z y -i n -l n     # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped nifti's, see dcm2niix -h for more information)
+      anon: y                       # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
+      meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata sourcefiles that are copied over to the BIDS sidecar files
+    spec2nii2bids:                  # The settings for the spec2nii2bids plugin
+      command: spec2nii             # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or 'C:\"Program Files"\spec2nii\spec2nii.exe' (note the quotes to deal with the whitespace)
+      args:                         # Argument string that is passed to spec2nii (see spec2nii -h for more information)
+      anon: y                       # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
+      meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata sourcefiles that are copied over to the BIDS sidecar files
+      multiraid: 2                  # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
+    dcm2niix4petbids:
+      command: dcm2niix4pet
+      args:
+      anon:
+      meta: [.json, .tsv]
+#    phys2bidscoin:                  # The settings for the phys2bidscoin plugin
+
+
+DICOM:
+# --------------------------------------------------------------------------------
+# DICOM key-value heuristics (DICOM fields that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
+  subject: <<filepath:.*/raw/sub-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+
+  anat:       # ----------------------- All anatomical runs --------------------
+  - provenance: /Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/007-t1_mprage_sag_ipat2_1p0iso/00001_1.3.12.2.1107.5.2.43.66068.2020042808523182387402502.IMA
+    properties:
+      filepath: ''
+      filename: ''
+      filesize: ''
+      nrfiles: ''
+    attributes:
+      ProtocolName: t1_mprage_sag_ipat2_1p0iso
+      MRAcquisitionType: 3D
+      Modality: MR
+      SeriesDescription: t1_mprage_sag_ipat2_1p0iso
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM']"
+      SequenceName: .tfl3d1_16ns
+      SequenceVariant: "['SK', 'SP', 'MP']"
+      ScanningSequence: "['GR', 'IR']"
+      SliceThickness: '1'
+      FlipAngle: '8'
+      EchoNumbers: '1'
+      EchoTime: '3.03'
+      RepetitionTime: '2300'
+      PhaseEncodingDirection: ''
+    bids:
+      acq: t1mpragesagipat21p0iso
+      ce:
+      rec:
+      run: <<1>>
+      part: ['', mag, phase, real, imag, 0]
+      suffix: T1w
+    meta: {}
+  func:       # ----------------------- All functional runs --------------------
+  - provenance: /Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/047-cmrr_2p4iso_mb8_TR0700_SBRef/00001_1.3.12.2.1107.5.2.43.66068.2020042810531713998841564.IMA
+    properties:
+      filepath: ''
+      filename: ''
+      filesize: ''
+      nrfiles: ''
+    attributes:
+      SeriesDescription: cmrr_2p4iso_mb8_TR0700_SBRef
+      Modality: MR
+      ProtocolName: cmrr_2p4iso_mb8_TR0700
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM', 'MOSAIC']"
+      SequenceName: epfid2d1_88
+      SequenceVariant: "['SK', 'SS']"
+      ScanningSequence: EP
+      MRAcquisitionType: 2D
+      SliceThickness: '2.4000000953674'
+      FlipAngle: '52'
+      EchoNumbers: '1'
+      EchoTime: '39'
+      RepetitionTime: '700'
+      PhaseEncodingDirection: ''
+    bids:
+      suffix: sbref
+      task: cmrr2p4isomb8TR0700
+      acq:
+      ce:
+      dir:
+      rec:
+      run: <<1>>
+      echo: '1'
+      part: &id001 ['', mag, phase, real, imag, 0]
+    meta:
+      TaskName:
+      B0FieldSource:
+      B0FieldIdentifier:
+  - provenance: /Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/048-cmrr_2p4iso_mb8_TR0700/00001_1.3.12.2.1107.5.2.43.66068.2020042810531742256741694.IMA
+    properties:
+      filepath: ''
+      filename: ''
+      filesize: ''
+      nrfiles: ''
+    attributes:
+      ProtocolName: cmrr_2p4iso_mb8_TR0700
+      Modality: MR
+      SeriesDescription: cmrr_2p4iso_mb8_TR0700
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'MB', 'ND', 'NORM', 'MOSAIC']"
+      SequenceName: epfid2d1_88
+      SequenceVariant: "['SK', 'SS']"
+      ScanningSequence: EP
+      MRAcquisitionType: 2D
+      SliceThickness: '2.4000000953674'
+      FlipAngle: '52'
+      EchoNumbers: '1'
+      EchoTime: '39'
+      RepetitionTime: '700'
+      PhaseEncodingDirection: ''
+    bids:
+      task: cmrr2p4isomb8TR0700
+      acq:
+      ce:
+      dir:
+      rec:
+      run: <<1>>
+      echo: '1'
+      part: *id001
+      suffix: bold
+    meta:
+      TaskName:
+      B0FieldSource:
+      B0FieldIdentifier:
+  - provenance: /Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/059-cmrr_2p5iso_mb3me3_TR1500_SBRef/00001_1.3.12.2.1107.5.2.43.66068.2020042810585076294853155.IMA
+    properties:
+      filepath: ''
+      filename: ''
+      filesize: ''
+      nrfiles: ''
+    attributes:
+      SeriesDescription: cmrr_2p5iso_mb3me3_TR1500_SBRef
+      Modality: MR
+      ProtocolName: cmrr_2p5iso_mb3me3_TR1500
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'TE1', 'ND', 'NORM', 'MOSAIC']"
+      SequenceName: epfid2d3_84
+      SequenceVariant: "['SK', 'SS']"
+      ScanningSequence: EP
+      MRAcquisitionType: 2D
+      SliceThickness: '2.5'
+      FlipAngle: '75'
+      EchoNumbers: '1'
+      EchoTime: '13.4'
+      RepetitionTime: '1500'
+      PhaseEncodingDirection: ''
+    bids:
+      suffix: sbref
+      task: cmrr2p5isomb3me3TR1500
+      acq:
+      ce:
+      dir:
+      rec:
+      run: <<1>>
+      echo: '1'
+      part: *id001
+    meta:
+      TaskName:
+      B0FieldSource:
+      B0FieldIdentifier:
+  - provenance: /Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/060-cmrr_2p5iso_mb3me3_TR1500/00001_1.3.12.2.1107.5.2.43.66068.2020042810585131207753573.IMA
+    properties:
+      filepath: ''
+      filename: ''
+      filesize: ''
+      nrfiles: ''
+    attributes:
+      ProtocolName: cmrr_2p5iso_mb3me3_TR1500
+      Modality: MR
+      SeriesDescription: cmrr_2p5iso_mb3me3_TR1500
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'MB', 'TE1', 'ND', 'NORM', 'MOSAIC']"
+      SequenceName: epfid2d3_84
+      SequenceVariant: "['SK', 'SS']"
+      ScanningSequence: EP
+      MRAcquisitionType: 2D
+      SliceThickness: '2.5'
+      FlipAngle: '75'
+      EchoNumbers: '1'
+      EchoTime: '13.4'
+      RepetitionTime: '1500'
+      PhaseEncodingDirection: ''
+    bids:
+      task: cmrr2p5isomb3me3TR1500
+      acq:
+      ce:
+      dir:
+      rec:
+      run: <<1>>
+      echo: '1'
+      part: *id001
+      suffix: bold
+    meta:
+      TaskName:
+      B0FieldSource:
+      B0FieldIdentifier:
+  perf: []     # ----------------------- All perfusion runs ---------------------
+  dwi: []     # ----------------------- All diffusion runs ---------------------
+  fmap:       # ----------------------- All fieldmap runs ----------------------
+  - provenance: /Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/049-field_map_2p4iso/00001_1.3.12.2.1107.5.2.43.66068.2020042810545563732043000.IMA
+    properties:
+      filepath: ''
+      filename: ''
+      filesize: ''
+      nrfiles: ''
+    attributes:
+      ProtocolName: field_map_2p4iso
+      ScanningSequence: GR
+      EchoNumbers: '1'
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'ND']"
+      Modality: MR
+      SeriesDescription: field_map_2p4iso
+      SequenceName: .fm2d2
+      SequenceVariant: SP
+      MRAcquisitionType: 2D
+      SliceThickness: '2.4000000953674'
+      FlipAngle: '60'
+      EchoTime: '4.92'
+      RepetitionTime: '614'
+      PhaseEncodingDirection: ''
+    bids:
+      suffix: magnitude1
+      acq: fieldmap2p4iso
+      run: <<1>>
+    meta:
+      B0FieldIdentifier:
+      IntendedFor:
+  - provenance: /Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/050-field_map_2p4iso/00001_1.3.12.2.1107.5.2.43.66068.2020042810545625307043255.IMA
+    properties:
+      filepath: ''
+      filename: ''
+      filesize: ''
+      nrfiles: ''
+    attributes:
+      ProtocolName: field_map_2p4iso
+      ScanningSequence: GR
+      EchoNumbers: '2'
+      ImageType: "['ORIGINAL', 'PRIMARY', 'P', 'ND']"
+      Modality: MR
+      SeriesDescription: field_map_2p4iso
+      SequenceName: .fm2d2
+      SequenceVariant: SP
+      MRAcquisitionType: 2D
+      SliceThickness: '2.4000000953674'
+      FlipAngle: '60'
+      EchoTime: '7.38'
+      RepetitionTime: '614'
+      PhaseEncodingDirection: ''
+    bids:
+      suffix: phasediff
+      acq: fieldmap2p4iso
+      run: <<1>>
+    meta:
+      B0FieldIdentifier:
+      IntendedFor:
+  - provenance: /Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/061-field_map_2p5iso/00001_1.3.12.2.1107.5.2.43.66068.2020042811000180097857226.IMA
+    properties:
+      filepath: ''
+      filename: ''
+      filesize: ''
+      nrfiles: ''
+    attributes:
+      ProtocolName: field_map_2p5iso
+      ScanningSequence: GR
+      EchoNumbers: '1'
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'ND']"
+      Modality: MR
+      SeriesDescription: field_map_2p5iso
+      SequenceName: .fm2d2
+      SequenceVariant: SP
+      MRAcquisitionType: 2D
+      SliceThickness: '2.5'
+      FlipAngle: '60'
+      EchoTime: '2.6'
+      RepetitionTime: '380'
+      PhaseEncodingDirection: ''
+    bids:
+      suffix: magnitude1
+      acq: fieldmap2p5iso
+      run: <<1>>
+    meta:
+      B0FieldIdentifier:
+      IntendedFor:
+  - provenance: /Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/062-field_map_2p5iso/00001_1.3.12.2.1107.5.2.43.66068.2020042811000218155657429.IMA
+    properties:
+      filepath: ''
+      filename: ''
+      filesize: ''
+      nrfiles: ''
+    attributes:
+      ProtocolName: field_map_2p5iso
+      ScanningSequence: GR
+      EchoNumbers: '2'
+      ImageType: "['ORIGINAL', 'PRIMARY', 'P', 'ND']"
+      Modality: MR
+      SeriesDescription: field_map_2p5iso
+      SequenceName: .fm2d2
+      SequenceVariant: SP
+      MRAcquisitionType: 2D
+      SliceThickness: '2.5'
+      FlipAngle: '60'
+      EchoTime: '5.06'
+      RepetitionTime: '380'
+      PhaseEncodingDirection: ''
+    bids:
+      suffix: phasediff
+      acq: fieldmap2p5iso
+      run: <<1>>
+    meta:
+      B0FieldIdentifier:
+      IntendedFor:
+  pet: []     # ----------------------- All PET runs ---------------------------
+  eeg: []     # ----------------------- All EEG data ---------------------------
+  ieeg: []     # ----------------------- All iEEG data --------------------------
+  extra_data: []     # ----------------------- All extra data -------------------------
+  exclude:    # ----------------------- Data that will be left out -------------
+  - provenance: /Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/001-localizer_32ch-head/00001_1.3.12.2.1107.5.2.43.66068.2020042808460132520200538.IMA
+    properties:
+      filepath: ''
+      filename: ''
+      filesize: ''
+      nrfiles: ''
+    attributes:
+      ProtocolName: localizer_32ch-head
+      Modality: MR
+      SeriesDescription: localizer_32ch-head
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM']"
+      SequenceName: .fl2d1
+      SequenceVariant: "['SP', 'OSP']"
+      ScanningSequence: GR
+      MRAcquisitionType: 2D
+      SliceThickness: '7'
+      FlipAngle: '20'
+      EchoNumbers: '1'
+      EchoTime: '4'
+      RepetitionTime: '8.6'
+      PhaseEncodingDirection: ''
+    bids:
+      acq: localizer32chhead
+      rec: ORIGINALPRIMARYMNDNORM
+      task: localizer32chhead
+      echo: '1'
+      mod: 2D
+      suffix: GR
+    meta: {}
+  - provenance: /Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/002-AAHead_Scout_32ch-head/00001_1.3.12.2.1107.5.2.43.66068.202004280846254557100752.IMA
+    properties:
+      filepath: ''
+      filename: ''
+      filesize: ''
+      nrfiles: ''
+    attributes:
+      ProtocolName: AAHead_Scout_32ch-head
+      Modality: MR
+      SeriesDescription: AAHead_Scout_32ch-head
+      ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'ND', 'NORM']"
+      SequenceName: .fl3d1_ns
+      SequenceVariant: SP
+      ScanningSequence: GR
+      MRAcquisitionType: 3D
+      SliceThickness: '1.6000000238419'
+      FlipAngle: '8'
+      EchoNumbers: '1'
+      EchoTime: '1.37'
+      RepetitionTime: '3.15'
+      PhaseEncodingDirection: ''
+    bids:
+      acq: AAHeadScout32chhead
+      rec: ORIGINALPRIMARYMNDNORM
+      task: AAHeadScout32chhead
+      echo: '1'
+      mod: 3D
+      suffix: GR
+    meta: {}
+PAR:
+# --------------------------------------------------------------------------------
+# PAR key-value heuristics (Philips PAR fields that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
+  subject: <<filepath:.*/raw/sub-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+
+  anat: []     # ----------------------- All anatomical runs --------------------
+  func: []     # ----------------------- All functional runs --------------------
+  perf: []     # ----------------------- All perfusion runs ---------------------
+  dwi: []     # ----------------------- All diffusion runs ---------------------
+  fmap: []     # ----------------------- All fieldmap runs ----------------------
+  extra_data: []     # ----------------------- All extra data -------------------------
+  exclude: []     # ----------------------- Data that will be left out -------------
+SPAR:
+# ---------------------------------------------------------------------------------
+# SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
+# ---------------------------------------------------------------------------------
+  subject: <<filepath:.*/raw/sub-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+
+  mrs: []     # ---------------------- All spectroscopy runs ------------------
+  extra_data: []     # ----------------------- All extra data -------------------------
+  exclude: []     # ----------------------- Data that will be left out -------------
+Twix:
+# ---------------------------------------------------------------------------------
+# SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
+# ---------------------------------------------------------------------------------
+  subject: <<filepath:.*/raw/sub-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+
+  mrs: []     # ---------------------- All spectroscopy runs ------------------
+  extra_data: []     # ----------------------- All extra data -------------------------
+  exclude: []     # ----------------------- Data that will be left out -------------
+Pfile:
+# ------------------------------------------------------------------------------
+# P-file key-value heuristics (GE MRS fields that are mapped to the BIDS labels)
+# ------------------------------------------------------------------------------
+  subject: <<filepath:.*/raw/sub-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+
+  mrs: []     # ---------------------- All spectroscopy runs ------------------
+  extra_data: []     # ----------------------- All extra data -------------------------
+  exclude: []     # ----------------------- Data that will be left out -------------
+Physio:
+# --------------------------------------------------------------------------------
+# Physio key-value heuristics (phys2bids -info data) that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
+  subject: <<filepath:.*/raw/sub-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+
+  func: []     # ----------------------- All functional runs --------------------
+  extra_data: []     # ----------------------- All extra data -------------------------
+  exclude: []     # ----------------------- Data that will be left out -------------
+Nibabel:
+# --------------------------------------------------------------------------------
+# Nibabel key-value heuristics (header fields that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
+  subject: <<filepath:.*/raw/sub-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+
+  anat: []     # ----------------------- All anatomical runs --------------------
+  func: []     # ----------------------- All functional runs --------------------
+  perf: []     # ----------------------- All perfusion runs ---------------------
+  dwi: []     # ----------------------- All diffusion runs ---------------------
+  fmap: []     # ----------------------- All fieldmap runs ----------------------
+  extra_data: []     # ----------------------- All extra data -------------------------
+  exclude: []     # ----------------------- Data that will be left out -------------
+PET:
+  # We use this to catalog PET files if they are preset, there is some overlap with
+  # pet in DICOM above, but we're going to worry about that later as we will only
+  # use this PET section if pypet2bids is installed
+  subject: <<filepath:.*/raw/sub-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>>
+
+  pet:    # ----------------------- All PET runs ---------------------------
+  - provenance: /var/folders/5t/0cjjt4t10hz5_qk4tts9gkv40000gs/T/tmpoxyx7mj2/Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-003/ses-01/30003-Phantom_PetAcquisition_AC
+      Images/X-CAL_7.PT.Kalibrering_xca.30003.1.2022.04.26.15.04.22.218.14689529.dcm
+    properties:
+      filepath: ''
+      filename: ''
+      filesize: ''
+      nrfiles: ''
+    attributes:
+      Modality: PT
+      StudyDescription: Kalibrering^xcal
+      SeriesDescription: .Phantom_PetAcquisition_AC Images
+      SeriesType: "['WHOLE BODY', 'IMAGE']"
+      Radiopharmaceutical: Fluorodeoxyglucose
+      ReconstructionMethod: OP-OSEM4i21s
+      ImageType: "['ORIGINAL', 'PRIMARY', 'STATIC', 'AC']"
+      NumberOfSlices: '127'
+      NumberOfTimeSlices: ''
+      SliceThickness: '2.03125'
+      PixelSpacing: '[0.834505, 0.834505]'
+      Rows: '344'
+      Columns: '344'
+    bids:
+      task: PhantomPetAcquisitionACImages
+      trc: Fluorodeoxyglucose
+      rec: ['', acdyn, acstat, nacdyn, nacstat, 0]
+      run: <<1>>
+      suffix: pet
+    meta:
+      TracerName: <<Radiopharmaceutical>>
+      TracerRadionuclide:
+      InjectedRadioactivity: <<RadionuclideTotalDose>>
+      InjectedRadioactivityUnits:
+      InjectedMass:
+      InjectedMassUnits:
+      ModeOfAdministration:
+      SpecificRadioactivity:
+      SpecificRadioactivityUnits:
+      TimeZero: <<RadiopharmaceuticalStartTime>>
+      InjectionStart: <<ContrastBolusStartTime>>
+      FrameDuration: <<ActualFrameDuration>>
+      Units:
