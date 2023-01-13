@@ -16,11 +16,11 @@ BIDScoin: Coin your imaging data to BIDS
 
 BIDScoin is a user friendly `open-source <https://github.com/Donders-Institute/bidscoin>`__ Python application that converts ("coins") source-level (raw) neuroimaging data-sets to standardized data-sets that are organized according to the Brain Imaging Data Structure (`BIDS <https://bids-specification.readthedocs.io>`__) specification. Rather then depending on complex programmatic logic for source data-type identification, BIDScoin uses a mapping approach to discover the different source data types in your repository and convert them into BIDS data types. Different runs of source data are uniquely identified by their file system properties (e.g. file name or size) and by their attributes (e.g. ``ProtocolName`` from the DICOM header). Mapping information can be pre-specified (e.g. per site), allowing BIDScoin to make intelligent first suggestions on how to classify and convert the data. While this command-line procedure exploits all information available on disk, BIDScoin presents a `Graphical User Interface (GUI) <screenshots.html>`__ for researchers to check and edit these mappings -- bringing in the missing knowledge that often exists only in their heads.
 
-Data conversions are performed within plugins, such as plugins that employ `dcm2niix <https://github.com/rordenlab/dcm2niix>`__, `spec2nii <https://github.com/wexeee/spec2nii>`__ or `nibabel <https://nipy.org/nibabel>`__.
+Data conversions are performed within plugins, such as plugins that employ `dcm2niix <https://github.com/rordenlab/dcm2niix>`__, `spec2nii <https://github.com/wtclarke/spec2nii>`__ or `nibabel <https://nipy.org/nibabel>`__.
 
 BIDScoin requires no programming knowledge in order to use it, but users can use regular expression and plug-ins to further enhance BIDScoin's power and flexibilty, and readily handle a wide variety of source data types.
 
-BIDScoin is developed at the `Donders Institute <https://www.ru.nl/donders/>`__ of the `Radboud University <https://www.ru.nl/english/>`__.
+BIDScoin is developed at the `Donders Institute <https://www.ru.nl/donders/>`__ of the `Radboud University <https://www.ru.nl/en>`__.
 
 BIDScoin functionality
 ----------------------
@@ -68,7 +68,7 @@ Note:
    :target: https://www.gnu.org/licenses/gpl-3.0
    :alt: GPL-v3.0 license
 .. |RTD| image:: https://readthedocs.org/projects/bidscoin/badge/?version=latest
-   :target: http://bidscoin.readthedocs.io/en/latest/?badge=latest
+   :target: https://bidscoin.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation status
 .. |DOI| image:: https://img.shields.io/badge/doi-10.3389%2Ffinf.2021.770608-informational.svg
    :target: https://www.frontiersin.org/articles/10.3389/fninf.2021.770608

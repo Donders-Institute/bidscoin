@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [dev]
 
@@ -86,7 +86,7 @@ All notable changes to this project will be documented in this file. The format 
 - Option to install extra packages, such as phys2bids
 - A bidseditor button to save the Options to a (default) template bidsmap
 - Sub-/ses-prefix settings and BIDS / extra_data / excluded datatypes in bidsmap['Options']['bidscoin']
-- Regular expressions for extracting property and attribute substrings from dynamic values via a <<key:regular_expression>> syntax
+- Regular expressions for extracting property and attribute substrings from dynamic values via a <\<key:regular_expression>> syntax
 - A plugin for spec2nii to convert MR spectroscopy data
 - An experimental plugin for phys2bids to convert physiological data
 - An experimental plugin for pet2bids to convert MR spectroscopy data
@@ -100,7 +100,7 @@ All notable changes to this project will be documented in this file. The format 
 ### Changed
 - Plugins should now have a `is_sourcefile` and a `get_attribute` function and have a simpler/changed API (-> DataSource class)
 - The intricate filtering of the `nrfiles` property by the other filesystem properties has been removed and is now a pure/unfiltered file-system property
-- The default `<<SourceFilePath>>` keyword has been replaced by the more flexible <<filepath:/sub-(.*?)/>> property to extract the subject / session label
+- The default `<<SourceFilePath>>` keyword has been replaced by the more flexible <\<filepath:/sub-(.*?)/>> property to extract the subject / session label
 - The dcm2bidsmap and the dcm2niix2bids plugins have been merged
 - The dicomsort utility has new naming-scheme functionality
 - Removed the obsolete bidsmap_template.yaml file

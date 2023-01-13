@@ -70,6 +70,7 @@ DICOM:
       FlipAngle:
       EchoNumbers:
       EchoTime:
+      EffectiveEchoTime:
       RepetitionTime:
       PhaseEncodingDirection:
     bids: &anat_dicoment_nonparametric  # See: schema/datatypes/anat.yaml
@@ -408,6 +409,7 @@ DICOM:
       FlipAngle:
       EchoNumbers:
       EchoTime:
+      EffectiveEchoTime:
       RepetitionTime:
       PhaseEncodingDirection:
     bids: &func_dicoment_func           # See: schema/datatypes/func.yaml
@@ -503,6 +505,7 @@ DICOM:
       FlipAngle:
       EchoNumbers:
       EchoTime:
+      EffectiveEchoTime:
       RepetitionTime:
       PhaseEncodingDirection:
     bids: &perf_dicoment_group1         # See: schema/datatypes/perf.yaml
@@ -579,6 +582,7 @@ DICOM:
       FlipAngle:
       EchoNumbers:
       EchoTime:
+      EffectiveEchoTime:
       RepetitionTime:
       PhaseEncodingDirection:
     bids: &dwi_dicoment_DWI             # See: schema/datatypes/dwi.yaml
@@ -648,6 +652,7 @@ DICOM:
       FlipAngle:
       EchoNumbers:
       EchoTime:
+      EffectiveEchoTime:
       RepetitionTime:
       PhaseEncodingDirection:
     bids: &fmap_dicoment_fieldmaps      # See: schema/datatypes/fmap.yaml
@@ -955,6 +960,7 @@ DICOM:
       FlipAngle:
       EchoNumbers:
       EchoTime:
+      EffectiveEchoTime:
       RepetitionTime:
       PhaseEncodingDirection:
     bids:
@@ -1010,6 +1016,7 @@ DICOM:
       FlipAngle:
       EchoNumbers:
       EchoTime:
+      EffectiveEchoTime:
       RepetitionTime:
       PhaseEncodingDirection:
     bids: &leaveout_bids_dicom
@@ -1804,7 +1811,7 @@ SPAR:
 
 Twix:
 # ---------------------------------------------------------------------------------
-# SPAR key-value heuristics (Philips MRS fields that are mapped to the BIDS labels)
+# Twix key-value heuristics (Siemens MRS fields that are mapped to the BIDS labels)
 # ---------------------------------------------------------------------------------
   subject: <<filepath:/sub-(.*?)/>>    # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
   session: <<filepath:/sub-.*?/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
@@ -1825,6 +1832,7 @@ Twix:
       FlipAngle:
       EchoNumbers:
       EchoTime:
+      EffectiveEchoTime:
       RepetitionTime:
     bids: &mrs_twixent                  # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
       task:
