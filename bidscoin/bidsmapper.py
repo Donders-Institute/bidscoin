@@ -199,7 +199,7 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path) ->
     bidsmap['Options']['bidscoin']['sesprefix'] = sesprefix
 
     # Update the bidsmap dataformat sections
-    reprefix = lambda prefix: '' if prefix=='*' else re.escape(prefix).replace('\-','-')
+    reprefix = lambda prefix: '' if prefix=='*' else re.escape(prefix).replace(r'\-','-')
     for dataformat in bidsmap:
         if not bidsmap[dataformat] or dataformat=='Options': continue
 

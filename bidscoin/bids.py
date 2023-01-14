@@ -84,11 +84,11 @@ class DataSource:
 
     def resubprefix(self) -> str:
         """Returns the subprefix with escaped regular expression characters (except '-'). A single '*' wildcard is returned as ''"""
-        return '' if self.subprefix=='*' else re.escape(self.subprefix).replace('\-','-')
+        return '' if self.subprefix=='*' else re.escape(self.subprefix).replace(r'\-','-')
 
     def resesprefix(self) -> str:
         """Returns the sesprefix with escaped regular expression characters (except '-'). A single '*' wildcard is returned as ''"""
-        return '' if self.sesprefix=='*' else re.escape(self.sesprefix).replace('\-','-')
+        return '' if self.sesprefix=='*' else re.escape(self.sesprefix).replace(r'\-','-')
 
     def is_datasource(self) -> bool:
         """Returns True is the datasource has a valid dataformat"""
