@@ -22,24 +22,22 @@ BIDScoin requires no programming knowledge in order to use it, but users can use
 
 BIDScoin is developed at the `Donders Institute <https://www.ru.nl/donders/>`__ of the `Radboud University <https://www.ru.nl/en>`__.
 
-BIDScoin functionality
-----------------------
+BIDScoin support 
+----------------
 
 -  [x] DICOM source data
--  [x] PAR / REC source data (Philips)
+-  [x] PAR/REC source data (Philips)
 -  [x] NIfTI source data
 -  [x] Physiological logging data\*
 -  [x] MR Spectroscopy data\*\*
--  [x] PET data\*
+-  [x] PET data
 -  [x] Fieldmaps\*
 -  [x] Multi-echo data\*
 -  [x] Multi-coil data\*
--  [ ] Stimulus / behavioural logfiles
--  [x] Multi-echo combination
--  [x] Defacing
+-  [ ] Stimulus/behavioural logfiles
 -  [x] Plug-ins
 
-   ``*  = Only DICOM source data / tested for Siemens``
+   ``*  = Only DICOM source data``
 
    ``** = Only Twix, SDAT/SPAR and P-file source data``
 

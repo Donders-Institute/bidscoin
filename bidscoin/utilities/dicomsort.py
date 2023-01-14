@@ -141,7 +141,7 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
 
 
 def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folderscheme: str='{SeriesNumber:03d}-{SeriesDescription}',
-                 namescheme: str='', pattern: str='.*\.(IMA|dcm)$', recursive: bool=True, force: bool=False, dryrun: bool=False) -> List[Path]:
+                 namescheme: str='', pattern: str=r'.*\.(IMA|dcm)$', recursive: bool=True, force: bool=False, dryrun: bool=False) -> List[Path]:
     """
     Wrapper around sortsession() to loop over subjects and sessions and map the session DICOM files
 
