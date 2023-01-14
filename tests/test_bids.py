@@ -41,13 +41,13 @@ class TestDataSource:
         assert datasource.dataformat == 'DICOM'
 
     def test_properties(self, datasource):
-        assert datasource.properties('filepath:.*/(.*?)_files/.*') == 'test'    # path = [..]/pydicom/data/test_files/MR_small.dcm'
-        assert datasource.properties('filename:MR_(.*?)\.dcm')     == 'small'
-        assert datasource.properties('filesize')                   == '9.60 kB'
-        assert datasource.properties('nrfiles')                    == 75
+        assert datasource.properties( 'filepath:.*/(.*?)_files/.*') == 'test'    # path = [..]/pydicom/data/test_files/MR_small.dcm'
+        assert datasource.properties(r'filename:MR_(.*?)\.dcm')     == 'small'
+        assert datasource.properties( 'filesize')                   == '9.60 kB'
+        assert datasource.properties( 'nrfiles')                    == 75
 
     def test_attributes(self, datasource):
-        assert datasource.attributes('PatientName:.*\^(.*?)1') == 'MR'          # PatientName = 'CompressedSamples^MR1'
+        assert datasource.attributes(r'PatientName:.*\^(.*?)1') == 'MR'         # PatientName = 'CompressedSamples^MR1'
 
     @pytest.mark.parametrize('subid',  ['sub-001', 'pat^visit'])
     @pytest.mark.parametrize('sesid',  ['ses-01',  'visit^01', ''])
@@ -63,14 +63,14 @@ class TestDataSource:
         expected_ses  = 'ses-' + bids.cleanup_value(re.sub(f"^{subses_source.resesprefix()}", '', sesid)) if (subid.startswith(subprefix) or subprefix=='*') and (sesid.startswith(sesprefix) or sesprefix=='*') and sesid else ''
         print(f"[{subprefix}, {subid}] -> {sub}\t\t[{sesprefix}, {sesid}] -> {ses}")
         assert (sub, ses) == (expected_sub, expected_ses)
-        assert subses_source.subid_sesid(f"<<PatientName:.*\^(.*?)1>>", '') == ('sub-MR', '')
+        assert subses_source.subid_sesid(r'<<PatientName:.*\^(.*?)1>>', '') == ('sub-MR', '')
 
     def test_dynamicvalue(self, datasource):
-        assert datasource.dynamicvalue('PatientName:.*\^(.*?)1')                                == 'PatientName:.*\\^(.*?)1'
-        assert datasource.dynamicvalue('<PatientName:.*\^(.*?)1>')                              == 'MR'
-        assert datasource.dynamicvalue('<<PatientName:.*\^(.*?)1>>')                            == '<<PatientName:.*\\^(.*?)1>>'
-        assert datasource.dynamicvalue('<<PatientName:.*\^(.*?)1>>', runtime=True)              == 'MR'
-        assert datasource.dynamicvalue('pat-<PatientName:.*\^(.*?)1>I<filename:MR_(.*?)\.dcm>') == 'patMRIsmall'
+        assert datasource.dynamicvalue(r'PatientName:.*\^(.*?)1')                                == r'PatientName:.*\^(.*?)1'
+        assert datasource.dynamicvalue(r'<PatientName:.*\^(.*?)1>')                              == 'MR'
+        assert datasource.dynamicvalue(r'<<PatientName:.*\^(.*?)1>>')                            == r'<<PatientName:.*\^(.*?)1>>'
+        assert datasource.dynamicvalue(r'<<PatientName:.*\^(.*?)1>>', runtime=True)              == 'MR'
+        assert datasource.dynamicvalue(r'pat-<PatientName:.*\^(.*?)1>I<filename:MR_(.*?)\.dcm>') == 'patMRIsmall'
 
 
 def test_unpack(dicomdir, tmp_path):
@@ -113,11 +113,11 @@ def test_match_runvalue():
     assert bids.match_runvalue('T1_MPRage', '(?i).*(MPRAGE|T1w).*')    == True
     assert bids.match_runvalue('', None)                               == True
     assert bids.match_runvalue(None, '')                               == True
-    assert bids.match_runvalue(  [1, 2, 3],    [1,2,  3])              == True
-    assert bids.match_runvalue(  [1,2,  3],   '[1, 2, 3]')             == True
-    assert bids.match_runvalue(  [1, 2, 3],  '\[1, 2, 3\]')            == True
-    assert bids.match_runvalue( '[1, 2, 3]',  '[1, 2, 3]')             == True
-    assert bids.match_runvalue( '[1, 2, 3]', '\[1, 2, 3\]')            == True
-    assert bids.match_runvalue( '[1, 2, 3]',   [1, 2, 3])              == True
-    assert bids.match_runvalue( '[1,2,  3]',   [1,2,  3])              == False
-    assert bids.match_runvalue('\[1, 2, 3\]',  [1, 2, 3])              == False
+    assert bids.match_runvalue(  [1, 2, 3],     [1,2,  3])             == True
+    assert bids.match_runvalue(  [1,2,  3],    '[1, 2, 3]')            == True
+    assert bids.match_runvalue(  [1, 2, 3],  r'\[1, 2, 3\]')           == True
+    assert bids.match_runvalue( '[1, 2, 3]',   '[1, 2, 3]')            == True
+    assert bids.match_runvalue( '[1, 2, 3]', r'\[1, 2, 3\]')           == True
+    assert bids.match_runvalue( '[1, 2, 3]',    [1, 2, 3])             == True
+    assert bids.match_runvalue( '[1,2,  3]',    [1,2,  3])             == False
+    assert bids.match_runvalue(r'\[1, 2, 3\]',  [1, 2, 3])             == False
