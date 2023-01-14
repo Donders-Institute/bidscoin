@@ -40,7 +40,7 @@ def test(options: dict=OPTIONS) -> int:
     # Test the nibabel installation
     try:
 
-        LOGGER.info(f"Nibabel version: {nib.info.VERSION}")
+        LOGGER.info(f"Nibabel version: {nib.__version__}")
         if options.get('ext',OPTIONS['ext']) not in ('.nii', '.nii.gz'):
             LOGGER.error(f"The 'ext: {options.get('ext')}' value in the nibabel2bids options is not '.nii' or '.nii.gz'")
             return 2
@@ -70,7 +70,7 @@ def is_sourcefile(file: Path) -> str:
     """
 
     ext = ''.join(file.suffixes)
-    if file.is_file() and ext.lower() in list(nib.ext_map.keys()) + ['.nii.gz']:
+    if file.is_file() and ext.lower() in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes),()) + ('.nii.gz',):
         return 'Nibabel'
 
     return ''
