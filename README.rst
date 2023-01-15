@@ -22,8 +22,8 @@ BIDScoin requires no programming knowledge in order to use it, but users can use
 
 BIDScoin is developed at the `Donders Institute <https://www.ru.nl/donders/>`__ of the `Radboud University <https://www.ru.nl/en>`__.
 
-BIDScoin support 
-----------------
+Features
+--------
 
 -  [x] DICOM source data
 -  [x] PAR/REC source data (Philips)
