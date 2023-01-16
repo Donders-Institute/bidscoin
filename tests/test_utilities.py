@@ -17,7 +17,10 @@ bidscoin.setup_logging()
 def test_dicomsort(tmp_path):
     shutil.copytree(Path(get_testdata_file('DICOMDIR')).parent, tmp_path, dirs_exist_ok=True)
     session = dicomsort.sortsessions(tmp_path/'DICOMDIR', folderscheme='{SeriesNumber:04d}-{SeriesDescription}', namescheme='{SeriesNumber:02d}_{SeriesDescription}_{AcquisitionNumber}_{InstanceNumber}.IMA', force=True)
-    assert dicomsort.sortsessions(tmp_path/'DICOMDIR', folderscheme='{SeriesNumber:04d]-{SeriesDescription}') == [] # Invalid scheme (clean return)
+    assert dicomsort.sortsessions(tmp_path/'DICOMDIR', folderscheme='{SeriesNumber:04d]-{SeriesDescription}') == [] # Invalid scheme -> clean return
+    assert dicomsort.validscheme('{foo:04d}-{123}') == True
+    assert dicomsort.validscheme('{foo:04d]-{bar}') == False
+    assert dicomsort.validscheme('{foo:04}-{bar}')  == False
     assert (tmp_path/'Doe^Peter').is_dir()                                                                          # Subject (Patient): 98890234 -> Doe^Peter
     assert (tmp_path/'Doe^Archibald').is_dir()                                                                      #                    77654033 -> Doe^Archibald
     assert len(list((tmp_path/'Doe^Archibald').rglob('*')))                 == 13                                   #  6 directories +  7 files

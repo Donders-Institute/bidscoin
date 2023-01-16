@@ -1446,7 +1446,7 @@ def match_runvalue(attribute, pattern) -> bool:
     Examples:
         match_runvalue('my_pulse_sequence_name', 'filename')   -> False
         match_runvalue([1,2,3], [1,2,3])                       -> True
-        match_runvalue([1,2,3], '\[1, 2, 3\]')                 -> True
+        match_runvalue([1,2,3], r'\[1, 2, 3\]')                -> True
         match_runvalue('my_pulse_sequence_name', '^my.*name$') -> True
         match_runvalue('T1_MPRage', '(?i).*(MPRAGE|T1w).*')    -> True
 
