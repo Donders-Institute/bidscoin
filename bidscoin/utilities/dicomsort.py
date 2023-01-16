@@ -8,8 +8,8 @@ Supports flat DICOM as well as multi-subject/session DICOMDIR file structures.
 
 import re
 import logging
-import pydicom
 import uuid
+from pydicom import fileset
 from pathlib import Path
 from typing import List
 try:
@@ -175,12 +175,14 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
     sessions = []       # Collect the sorted session-folders
     if (sourcefolder/'DICOMDIR').is_file():
         LOGGER.info(f"Reading: {sourcefolder/'DICOMDIR'}")
-        dicomdir = pydicom.dcmread(str(sourcefolder/'DICOMDIR'))
-        for patient in dicomdir.patient_records:
-            for n, study in enumerate(patient.children, 1):
-                dicomfiles = [sourcefolder.joinpath(*image.ReferencedFileID) for series in study.children for image in series.children]
+        dicomdir = fileset.FileSet(sourcefolder/'DICOMDIR')
+        for patientid in dicomdir.find_values('PatientID'):
+            patient = dicomdir.find(PatientID=patientid)
+            for n, studyuid in enumerate(dicomdir.find_values('StudyInstanceUID', instances=patient), 1):
+                study = dicomdir.find(PatientID=patientid, StudyInstanceUID=studyuid)
+                dicomfiles = [Path(instance.path) for instance in study]
                 if dicomfiles:
-                    sessionfolder = sourcefolder/f"{subprefix}{cleanup(patient.PatientName)}"/f"{sesprefix}{n:02}-{cleanup(study.StudyDescription)}"
+                    sessionfolder = sourcefolder/f"{subprefix}{cleanup(patient[0].PatientName)}"/f"{sesprefix}{n:02}-{cleanup(study[0].StudyDescription)}"
                     sortsession(sessionfolder, dicomfiles, folderscheme, namescheme, force, dryrun)
                     sessions.append(sessionfolder)
 
