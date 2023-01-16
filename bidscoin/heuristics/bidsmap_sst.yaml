@@ -72,7 +72,7 @@ DICOM:
       EchoTime:
       EffectiveEchoTime:
       RepetitionTime:
-      PhaseEncodingDirection:
+      InPlanePhaseEncodingDirection:
     bids: &anat_dicoment_nonparametric  # See: schema/datatypes/anat.yaml
       acq: <<filepath:/.*/...(.*)/.*/>>    # This will be expanded by the bidsmapper (so the user can edit it in the bidseditor)
       ce:
@@ -411,7 +411,7 @@ DICOM:
       EchoTime:
       EffectiveEchoTime:
       RepetitionTime:
-      PhaseEncodingDirection:
+      InPlanePhaseEncodingDirection:
     bids: &func_dicoment_func           # See: schema/datatypes/func.yaml
       task: <<filepath:/.*/...(.*)/.*/>>               # More consistent between SBREF and PHYSIO files
       acq:
@@ -507,7 +507,7 @@ DICOM:
       EchoTime:
       EffectiveEchoTime:
       RepetitionTime:
-      PhaseEncodingDirection:
+      InPlanePhaseEncodingDirection:
     bids: &perf_dicoment_group1         # See: schema/datatypes/perf.yaml
       acq: <<filepath:/.*/...(.*)/.*/>>
       rec: <SeriesDescription>
@@ -584,7 +584,7 @@ DICOM:
       EchoTime:
       EffectiveEchoTime:
       RepetitionTime:
-      PhaseEncodingDirection:
+      InPlanePhaseEncodingDirection:
     bids: &dwi_dicoment_DWI             # See: schema/datatypes/dwi.yaml
       acq: <<filepath:/.*/...(.*)/.*/>> # More consistent between SBREF and PHYSIO files
       rec:
@@ -654,7 +654,7 @@ DICOM:
       EchoTime:
       EffectiveEchoTime:
       RepetitionTime:
-      PhaseEncodingDirection:
+      InPlanePhaseEncodingDirection:
     bids: &fmap_dicoment_fieldmaps      # See: schema/datatypes/fmap.yaml
       acq: <<filepath:/.*/...(.*)/.*/>>
       run: <<1>>
@@ -962,7 +962,7 @@ DICOM:
       EchoTime:
       EffectiveEchoTime:
       RepetitionTime:
-      PhaseEncodingDirection:
+      InPlanePhaseEncodingDirection:
     bids:
       acq: <ProtocolName>
       inv:
@@ -1018,7 +1018,7 @@ DICOM:
       EchoTime:
       EffectiveEchoTime:
       RepetitionTime:
-      PhaseEncodingDirection:
+      InPlanePhaseEncodingDirection:
     bids: &leaveout_bids_dicom
       acq: <ProtocolName>
       rec: <ImageType>

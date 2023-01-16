@@ -110,7 +110,7 @@ Editing the template bidsmap
        EchoNumbers:
        EchoTime:
        RepetitionTime:
-       PhaseEncodingDirection:
+       InPlanePhaseEncodingDirection:
      bids: &anat_dicoment_nonparametric  # See: schema/datatypes/anat.yaml
        acq: <SeriesDescription>     # This will be expanded by the bidsmapper (so the user can edit it in the bidseditor)
        ce:

@@ -14,6 +14,7 @@ import tempfile
 import tarfile
 import zipfile
 import json
+import warnings
 import shutil
 import bids_validator
 from functools import lru_cache
@@ -524,40 +525,42 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
         value = ''
 
     else:
-        try:
-            if dicomfile != _DICOMFILE_CACHE:
-                dicomdata = dcmread(dicomfile, force=True)          # The DICM tag may be missing for anonymized DICOM files
-                _DICOMDICT_CACHE = dicomdata
-                _DICOMFILE_CACHE = dicomfile
-            else:
-                dicomdata = _DICOMDICT_CACHE
-
-            try:                                                    # Try Pydicom's hexadecimal tag number first
-                value = eval(f"dicomdata[{tagname}].value")
-            except (NameError, KeyError, SyntaxError):
-                value = dicomdata.get(tagname) if tagname in dicomdata else ''  # Then try and see if it is an attribute name. NB: Do not use dicomdata.get(tagname, '') to avoid using its class attributes (e.g. 'filename')
-
-            # Try a recursive search
-            if not value and value != 0:
-                for elem in dicomdata.iterall():
-                    if tagname in (elem.name, elem.keyword, str(elem.tag), str(elem.tag).replace(', ',',')):
-                        value = elem.value
-                        break
-
-            if not value and value!=0 and 'Modality' not in dicomdata:
-                raise ValueError(f"Missing mandatory DICOM 'Modality' field in: {dicomfile}")
-
-        except OSError as ioerror:
-            LOGGER.warning(f"Cannot read {tagname} from {dicomfile}\n{ioerror}")
-            value = ''
-
-        except Exception as dicomerror:
-            LOGGER.warning(f"Could not read {tagname} from {dicomfile}\n{dicomerror}")
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
             try:
-                value = parse_x_protocol(tagname, dicomfile)
-            except Exception as dicomerror:
-                LOGGER.warning(f'Could not parse {tagname} from {dicomfile}\n{dicomerror}')
+                if dicomfile != _DICOMFILE_CACHE:
+                    dicomdata = dcmread(dicomfile, force=True)          # The DICM tag may be missing for anonymized DICOM files
+                    _DICOMDICT_CACHE = dicomdata
+                    _DICOMFILE_CACHE = dicomfile
+                else:
+                    dicomdata = _DICOMDICT_CACHE
+
+                try:                                                    # Try Pydicom's hexadecimal tag number first
+                    value = eval(f"dicomdata[{tagname}].value")         # NB: This may generate e.g. UserWarning: Invalid value 'filepath' used with the 'in' operator: must be an element tag as a 2-tuple or int, or an element keyword
+                except (NameError, KeyError, SyntaxError):
+                    value = dicomdata.get(tagname) if tagname in dicomdata else ''  # Then try and see if it is an attribute name. NB: Do not use dicomdata.get(tagname, '') to avoid using its class attributes (e.g. 'filename')
+
+                # Try a recursive search
+                if not value and value != 0:
+                    for elem in dicomdata.iterall():
+                        if tagname in (elem.name, elem.keyword, str(elem.tag), str(elem.tag).replace(', ',',')):
+                            value = elem.value
+                            break
+
+                if not value and value!=0 and 'Modality' not in dicomdata:
+                    raise ValueError(f"Missing mandatory DICOM 'Modality' field in: {dicomfile}")
+
+            except OSError as ioerror:
+                LOGGER.warning(f"Cannot read {tagname} from {dicomfile}\n{ioerror}")
                 value = ''
+
+            except Exception as dicomerror:
+                LOGGER.warning(f"Could not read {tagname} from {dicomfile}\n{dicomerror}")
+                try:
+                    value = parse_x_protocol(tagname, dicomfile)
+                except Exception as dicomerror:
+                    LOGGER.warning(f'Could not parse {tagname} from {dicomfile}\n{dicomerror}')
+                    value = ''
 
     # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
     if isinstance(value, int):
