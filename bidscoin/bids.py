@@ -531,6 +531,8 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
             warnings.simplefilter('ignore', UserWarning)
             try:
                 if dicomfile != _DICOMFILE_CACHE:
+                    if dicomfile.name == 'DICOMDIR':
+                        LOGGER.bcdebug(f"Getting DICOM fields from {dicomfile} seems dysfunctional (will raise dcmread error below if pydicom => v3.0)")
                     dicomdata = dcmread(dicomfile, force=True)          # The DICM tag may be missing for anonymized DICOM files
                     _DICOMDICT_CACHE = dicomdata
                     _DICOMFILE_CACHE = dicomfile

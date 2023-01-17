@@ -1545,6 +1545,8 @@ class InspectWindow(QDialog):
         super().__init__()
 
         if bids.is_dicomfile(filename):
+            if filename.name == 'DICOMDIR':
+                LOGGER.bcdebug(f"Getting DICOM fields from {filename} will raise dcmread error below if pydicom => v3.0")
             text = str(dcmread(filename, force=True))
         elif bids.is_parfile(filename) or filename.suffix.lower() in ('.spar', '.txt', '.text'):
             text = filename.read_text()
