@@ -16,7 +16,7 @@ def test_bidscoiner(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
         (bidsmap_dicomdir.parent/'bidsmapper.errors').unlink(missing_ok=True)
     bidscoiner.bidscoiner(raw_dicomdir, bids_dicomdir)
     logs     = (bidsmap_dicomdir.parent/'bidscoiner.errors').read_text()
-    sidecars = sorted((bids_dicomdir/'sub-Peter'/'ses-03Brain'/'extra_data').glob('*TestSeriesDescription*.json'))
+    sidecars = sorted((bids_dicomdir/'sub-Peter'/'ses-03Brain'/'extra_data').glob('*TestExtAtrributes*.json'))
     (bidsmap_dicomdir.parent/'bidscoiner.errors').unlink(missing_ok=True)
     assert 'ERROR' not in logs
     # assert 'WARNING' not in logs
@@ -28,8 +28,8 @@ def test_bidscoiner(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
     assert sidecars[0].is_file()
     with sidecars[0].open('r') as json_fid:
         metadict = json.load(json_fid)
-    assert metadict.get('SeriesDescription') == 'TestSeriesDescription'
-    assert metadict.get('Comment')           == 'TestComment'
+    assert metadict.get('SeriesDescription') == 'TestExtAtrributes'
+    assert metadict.get('Comment')           == 'TestExtComment'
 
 # def test_addmetadata(bids_dicomdir, bidsmap_dicomdir):
 #     bidsmap, _ = bids.load_bidsmap(bidsmap_dicomdir)
