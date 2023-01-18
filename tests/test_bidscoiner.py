@@ -28,6 +28,7 @@ def test_bidscoiner(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
     assert sidecars[0].is_file()
     with sidecars[0].open('r') as json_fid:
         metadict = json.load(json_fid)
+    assert metadict.get('ProtocolName')      == 'T/S/C RF FAST PILOT'
     assert metadict.get('SeriesDescription') == 'TestExtAtrributes'
     assert metadict.get('Comment')           == 'TestExtComment'
 
