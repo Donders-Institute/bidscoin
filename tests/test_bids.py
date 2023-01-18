@@ -1,6 +1,7 @@
 import pytest
 import shutil
 import re
+import json
 from pathlib import Path
 from pydicom.data import get_testdata_file
 from nibabel.testing import data_path
@@ -36,18 +37,26 @@ class TestDataSource:
     def datasource(self, dcm_file):
         return bids.DataSource(dcm_file, {'dcm2niix2bids': {}}, 'DICOM')
 
+    @pytest.fixture()
+    def extdatasource(self, dcm_file, tmp_path):
+        ext_dcm_file = shutil.copyfile(dcm_file, tmp_path/dcm_file.name)
+        with ext_dcm_file.with_suffix('.json').open('w') as sidecar:
+            json.dump({'PatientName': 'ExtendedAttributesTest'}, sidecar)
+        return bids.DataSource(ext_dcm_file, {'dcm2niix2bids': {}}, 'DICOM')
+
     def test_is_datasource(self, datasource):
         assert datasource.is_datasource()
         assert datasource.dataformat == 'DICOM'
 
     def test_properties(self, datasource):
-        assert datasource.properties( 'filepath:.*/(.*?)_files/.*') == 'test'    # path = [..]/pydicom/data/test_files/MR_small.dcm'
+        assert datasource.properties( 'filepath:.*/(.*?)_files/.*') == 'test'   # path = [..]/pydicom/data/test_files/MR_small.dcm'
         assert datasource.properties(r'filename:MR_(.*?)\.dcm')     == 'small'
         assert datasource.properties( 'filesize')                   == '9.60 kB'
         assert datasource.properties( 'nrfiles')                    == 75
 
-    def test_attributes(self, datasource):
+    def test_attributes(self, datasource, extdatasource):
         assert datasource.attributes(r'PatientName:.*\^(.*?)1') == 'MR'         # PatientName = 'CompressedSamples^MR1'
+        assert extdatasource.attributes('PatientName')          == 'ExtendedAttributesTest'
 
     @pytest.mark.parametrize('subid',  ['sub-001', 'pat^visit'])
     @pytest.mark.parametrize('sesid',  ['ses-01',  'visit^01', ''])
@@ -66,6 +75,7 @@ class TestDataSource:
         assert subses_source.subid_sesid(r'<<PatientName:.*\^(.*?)1>>', '') == ('sub-MR', '')
 
     def test_dynamicvalue(self, datasource):
+        assert datasource.dynamicvalue(r'<PatientName>')                                         == 'CompressedSamplesMR1'
         assert datasource.dynamicvalue(r'PatientName:.*\^(.*?)1')                                == r'PatientName:.*\^(.*?)1'
         assert datasource.dynamicvalue(r'<PatientName:.*\^(.*?)1>')                              == 'MR'
         assert datasource.dynamicvalue(r'<<PatientName:.*\^(.*?)1>>')                            == r'<<PatientName:.*\^(.*?)1>>'
