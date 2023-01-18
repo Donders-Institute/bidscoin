@@ -1,5 +1,6 @@
 import pytest
 import shutil
+import json
 from pathlib import Path
 from pydicom.data import get_testdata_file
 try:
@@ -16,6 +17,9 @@ def raw_dicomdir(tmp_path_factory):
     shutil.copytree(Path(get_testdata_file('DICOMDIR')).parent, raw, dirs_exist_ok=True)
     shutil.rmtree(raw/'TINY_ALPHA')                                     # Does not contain normal DICOM fields / evokes warnings or errors
     dicomsort.sortsessions(raw/'DICOMDIR')                              # The bidsmapper/coiner are NOT picking up the multi-subject DICOMDIR data properly :-(
+    sourcesidecar = raw/'Doe^Peter'/'03-Brain'/'002-TSC RF FAST PILOT/4950.json'
+    with sourcesidecar.open('w') as sidecar:
+        json.dump({'SeriesDescription': 'TestSeriesDescription',  'Comment': 'TestComment'}, sidecar, indent=4)
     return raw
 
 
