@@ -9,7 +9,8 @@ All notable changes to this project will be documented in this file. The format 
 ### Added
 - Support for BIDS 1.8.0
 - Support for handling of non-alphanumeric characters in sub/ses prefixes
-- A skullstrip tool (a bids-wrapper around synthstrip)
+- A `skullstrip` tool (a bids-wrapper around FreeSurfer/synthstrip)
+- A `slicereport` QC tool (a bids-wrapper around FSL/slicesdir)
 - A unit/integration test & CI framework
 - A BIDSCOIN_DEBUG environment variable to run bidscoin in a more verbose debug mode
 - VERBOSE and SUCCESS logging levels

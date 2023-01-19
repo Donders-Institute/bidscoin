@@ -219,11 +219,49 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
                             skullstripped (i.e. if {'SkullStripped': True} in the json sidecar
                             file) (default: False)
       -a ARGS, --args ARGS  Additional arguments that are passed to synthstrip (NB: Use quotes
-                            and a leading space to prevent unintended argument parsing) (default:
-                            )
+                            and a leading space to prevent unintended argument parsing)
 
     examples:
       skullstrip myproject/bids anat/*_T1w*
       skullstrip myproject/bids anat/*_T1w* -p 001 003 -a ' --no-csf'
       skullstrip myproject/bids fmap/*_magnitude1* -m fmap/*_phasediff -o extra_data fmap
       skullstrip myproject/bids fmap/*_acq-mylabel*_magnitude1* -m fmap/*_acq-mylabel_* -o fmap
+
+Quality control
+---------------
+
+``Slicereport`` is a flexible QC tool for doing a quick visual inspection of your data
+
+::
+
+    usage: slicereport.py [-h] [-o OUTLINEPATTERN] [-p OVERLAYIMAGE] [-e EDGETHRESHOLD] [-s]
+                          bidsfolder pattern
+
+    A wrapper around the 'slicesdir' reporting tool (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Miscvis)
+    that generates a web page with a row of image slices for each subject in the BIDS repository.
+    In this way you can do a simple visual quality control of any datatype in your BIDS repository
+
+    Requires an existing installation of FSL/slicesdir
+
+    positional arguments:
+      bidsfolder            The bids-directory with the subject data
+      pattern               Globlike search pattern to select the images to be reported, e.g.
+                            'anat/*_T2starw*'
+
+    options:
+      -h, --help            show this help message and exit
+      -o OUTLINEPATTERN, --outlinepattern OUTLINEPATTERN
+                            Globlike search pattern to select red outline images. Need to yield the
+                            same number of images as 'pattern' (default: None)
+      -p OVERLAYIMAGE, --overlayimage OVERLAYIMAGE
+                            A common red-outline image that is projected on top of all images
+                            (default: None)
+      -e EDGETHRESHOLD, --edgethreshold EDGETHRESHOLD
+                            The specified threshold for edges (if >0 use this proportion of max-min,
+                            if <0, use the absolute value) (default: None)
+      -s, --secondslice     Output every second axial slice rather than just 9 ortho slices (default:
+                            False)
+
+    examples:
+      slicereport myproject/bids anat/*_T1w*
+      slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*
