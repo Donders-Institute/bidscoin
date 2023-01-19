@@ -226,3 +226,4 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
       skullstrip myproject/bids anat/*_T1w*
       skullstrip myproject/bids anat/*_T1w* -p 001 003 -a ' --no-csf'
       skullstrip myproject/bids fmap/*_magnitude1* -m fmap/*_phasediff -o extra_data fmap
+      skullstrip myproject/bids fmap/*_acq-mylabel*_magnitude1* -m fmap/*_acq-mylabel_* -o fmap
