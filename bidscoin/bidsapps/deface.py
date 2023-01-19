@@ -31,7 +31,6 @@ except ImportError:
 
 def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
     """
-
     :param bidsdir:     The bids-directory with the subject data
     :param pattern:     Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T1w*'
     :param subjects:    List of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
@@ -45,6 +44,9 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
 
     # Input checking
     bidsdir = Path(bidsdir).resolve()
+    if not bidsdir.is_dir():
+        print(f"Could not find the bids folder: {bidsdir}")
+        return
 
     # Start logging
     bidscoin.setup_logging(bidsdir/'code'/'bidscoin'/'deface.log')

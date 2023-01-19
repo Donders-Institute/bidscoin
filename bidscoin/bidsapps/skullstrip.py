@@ -28,7 +28,6 @@ except ImportError:
 
 def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: list, force: bool, args: str):
     """
-
     :param bidsdir:     The bids-directory with the subject data
     :param pattern:     Globlike search pattern (relative to the subject/session folder) to select the images that need to be skullstripped, e.g. 'anat/*_T1w*'
     :param subjects:    List of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
@@ -41,6 +40,9 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
 
     # Input checking
     bidsdir = Path(bidsdir).resolve()
+    if not bidsdir.is_dir():
+        print(f"Could not find the bids folder: {bidsdir}")
+        return
     if not output or len(output) == 0:
         output = ['derivatives']
     if len(output) == 1:

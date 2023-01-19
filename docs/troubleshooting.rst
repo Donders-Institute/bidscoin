@@ -47,8 +47,8 @@ I only see "_magnitude1" or "_magnitude2" run-items in my bidsmap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Siemens (and perhaps other manufacturers too) stores all fieldmap Series in a single Series folder. Hence, when BIDScoin takes a sample from that folder it only sees one of these Series. You don't need to worry about this, because the dcm2niix plugin will accomodate for this and will look-up the other samples during bidscoiner runtime.
 
-My sourcefile can no longer be found
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+My sourcefiles can no longer be found
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You may get the warning "Cannot reliably change the datatype and/or suffix because the source file '..' can no longer be found". This warning is generated when (1) your source data moved to a different location, or (2) your data is zipped or in DICOMDIR format. This warning can be ignored if you do not need to change the datatype of your run-items anymore (in the bidseditor), because in that case BIDScoin may need access to the source data (to read new properties or attributes). To restore data access for (1), move the data to it's original location and for (2) use the `--store` option of bidsmapper to store local copies of the source data samples in the bids output folder.
 
 I have duplicated fieldmaps because of an interrupted session
