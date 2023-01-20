@@ -85,7 +85,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
                 # Search for images that need to be skullstripped
                 sesid   = session.name if session.name.startswith('ses-') else ''
                 srcimgs = sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes])
-                addimgs = sorted([match for match in session.glob(masked)  if '.nii' in match.suffixes])
+                addimgs = sorted([match for match in session.glob(masked)  if '.nii' in match.suffixes]) if masked else []
                 if addimgs and len(srcimgs) > 1:
                     LOGGER.error(f"{len(srcimgs)} matches found for {session/pattern}, which is ambiguous (the {masked} masked option requires a single match)")
                     addimgs = []
