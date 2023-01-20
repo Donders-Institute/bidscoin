@@ -264,4 +264,5 @@ Quality control
 
     examples:
       slicereport myproject/bids anat/*_T1w*
+      slicereport myproject/bids/derivatives/deface anat/*_T1w*
       slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*

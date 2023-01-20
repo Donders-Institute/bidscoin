@@ -93,6 +93,7 @@ def main():
                                      description=__doc__,
                                      epilog='examples:\n'
                                             '  slicereport myproject/bids anat/*_T1w*\n'
+                                            '  slicereport myproject/bids/derivatives/deface anat/*_T1w*\n'
                                             '  slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*\n ')
     parser.add_argument('bidsfolder',               help='The bids-directory with the subject data')
     parser.add_argument('pattern',                  help="Globlike search pattern to select the images to be reported, e.g. 'anat/*_T2starw*'")
