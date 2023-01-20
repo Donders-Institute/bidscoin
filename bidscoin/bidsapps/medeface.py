@@ -104,7 +104,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                     continue
 
                 # Check the json "Defaced" field to see if it has already been defaced
-                if not force:
+                if not force and echofiles[0].with_suffix('').with_suffix('.json').is_file():
                     with echofiles[0].with_suffix('').with_suffix('.json').open('r') as fid:
                         jsondata = json.load(fid)
                     if jsondata.get('Defaced'):
@@ -130,6 +130,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                     pdu.deface_image(str(tmpfile), str(tmpfile), force=True, forcecleanup=True, **kwargs)
 
         if cluster:
+            LOGGER.info('')
             LOGGER.info('Waiting for the deface jobs to finish...')
             pbatch.synchronize(jobIds=[pbatch.JOB_IDS_SESSION_ALL], timeout=pbatch.TIMEOUT_WAIT_FOREVER, dispose=True)
             pbatch.deleteJobTemplate(jt)
@@ -181,8 +182,11 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                     # Add a json sidecar-file with the "Defaced" field
                     inputjson  = echofile.with_suffix('').with_suffix('.json')
                     outputjson = outputfile.with_suffix('').with_suffix('.json')
-                    with inputjson.open('r') as sidecar:
-                        metadata = json.load(sidecar)
+                    if inputjson.is_file():
+                        with inputjson.open('r') as sidecar:
+                            metadata = json.load(sidecar)
+                    else:
+                        metadata = {}
                     metadata['Defaced'] = True
                     with outputjson.open('w') as sidecar:
                         json.dump(metadata, sidecar, indent=4)

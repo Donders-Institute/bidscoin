@@ -128,8 +128,11 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
 
                         # Add a json sidecar-file with the "Defaced" field
                         inputjson = match.with_suffix('').with_suffix('.json')
-                        with inputjson.open('r') as sidecar:
-                            metadata = json.load(sidecar)
+                        if inputjson.is_file():
+                            with inputjson.open('r') as sidecar:
+                                metadata = json.load(sidecar)
+                        else:
+                            metadata = {}
                         metadata['Defaced'] = True
                         with outputjson.open('w') as sidecar:
                             json.dump(metadata, sidecar, indent=4)
@@ -145,6 +148,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                             scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
         if cluster:
+            LOGGER.info('')
             LOGGER.info('Waiting for the deface jobs to finish...')
             pbatch.synchronize(jobIds=[pbatch.JOB_IDS_SESSION_ALL], timeout=pbatch.TIMEOUT_WAIT_FOREVER, dispose=True)
             pbatch.deleteJobTemplate(jt)

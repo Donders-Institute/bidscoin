@@ -118,8 +118,11 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
 
                     # Add a json sidecar-file with the "SkullStripped" field
                     srcjson = srcimg.with_suffix('').with_suffix('.json')
-                    with srcjson.open('r') as sidecar:
-                        metadata = json.load(sidecar)
+                    if srcjson.is_file():
+                        with srcjson.open('r') as sidecar:
+                            metadata = json.load(sidecar)
+                    else:
+                        metadata = {}
                     metadata['SkullStripped'] = True
                     with outputjson.open('w') as sidecar:
                         json.dump(metadata, sidecar, indent=4)
@@ -160,8 +163,11 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
                             continue
 
                         # Add a json sidecar-file to the output image
-                        with addimg.with_suffix('').with_suffix('.json').open('r') as sidecar:
-                            metadata = json.load(sidecar)
+                        if addimg.with_suffix('').with_suffix('.json').is_file():
+                            with addimg.with_suffix('').with_suffix('.json').open('r') as sidecar:
+                                metadata = json.load(sidecar)
+                        else:
+                            metadata = {}
                         metadata['SkullStripped'] = True
                         with outputjson.open('w') as sidecar:
                             json.dump(metadata, sidecar, indent=4)
