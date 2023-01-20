@@ -95,7 +95,8 @@ def main():
                                             '  slicereport myproject/bids anat/*_T1w*\n'
                                             '  slicereport myproject/bids/derivatives/deface anat/*_T1w*\n'
                                             '  slicereport myproject/bids extra_data/*_T1w* -o anat/*_T1w* -e 0.05       # extra_data = defaced\n'
-                                            '  slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*\n ')
+                                            '  slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*\n'
+                                            '  slicereport myproject/bids/derivatives/fmriprep anat/*run-?_desc-preproc_T1w* -o anat/*run-?_label-GM*\n ')
     parser.add_argument('bidsfolder',               help='The bids-directory with the subject data')
     parser.add_argument('pattern',                  help="Globlike search pattern to select the images to be reported, e.g. 'anat/*_T2starw*'")
     parser.add_argument('-o','--outlinepattern',    help="Globlike search pattern to select red outline images. Need to yield the same number of images as 'pattern'")
