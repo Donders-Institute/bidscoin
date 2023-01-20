@@ -58,7 +58,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, overlayimage: s
             if outlinepattern:
                 outline = sorted([str(match) for match in session.glob(outlinepattern) if '.nii' in match.suffixes]) if outlinepattern else None
                 if len(outline) != len(images):
-                    LOGGER.error(f"Nr of outline images ({len(outline)}) should be the same as the number of underlying images ({len(images)})")
+                    LOGGER.error(f"Nr of outline images ({len(outline)}) in {session} should be the same as the number of underlying images ({len(images)})")
                     return
                 images = [item for pair in zip(images,outline) for item in pair]
 
@@ -94,6 +94,7 @@ def main():
                                      epilog='examples:\n'
                                             '  slicereport myproject/bids anat/*_T1w*\n'
                                             '  slicereport myproject/bids/derivatives/deface anat/*_T1w*\n'
+                                            '  slicereport myproject/bids extra_data/*_T1w* -o anat/*_T1w* -e 0.05       # extra_data = defaced\n'
                                             '  slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*\n ')
     parser.add_argument('bidsfolder',               help='The bids-directory with the subject data')
     parser.add_argument('pattern',                  help="Globlike search pattern to select the images to be reported, e.g. 'anat/*_T2starw*'")
