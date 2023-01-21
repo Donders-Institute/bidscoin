@@ -1987,7 +1987,7 @@ Nibabel:
       dim:
       dim_info:
       pixdim:
-      descrip:
+#      descrip:                         # Unfortunately dcm2niix save the AcquisitionTime in here :-(
       intent_name:
       Modality:
       ProtocolName:
