@@ -268,3 +268,7 @@ Quality control
       slicereport myproject/bids extra_data/*_T1w* -o anat/*_T1w* -e 0.05       # extra_data = defaced
       slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*
       slicereport myproject/bids/derivatives/fmriprep anat/*run-?_desc-preproc_T1w* -o anat/*run-?_label-GM*
+
+.. figure:: ./_static/slicereport.png
+
+   Snippet of a `slicereport` for doing quality control on `deface` output images (see examples above)

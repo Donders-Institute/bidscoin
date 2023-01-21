@@ -6,8 +6,8 @@ Supported source data structures
 
 Out of the box, BIDScoin requires that the source data repository is organized according to a ``subject/[session]/data`` structure (the ``session`` subfolder is always optional). The ``data`` folder(s) can be structured in various ways (depending on the plugin and/or dataformat), as illustrated by the following examples:
 
-1. A DICOM Series organization
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1. A DICOM Series layout
+^^^^^^^^^^^^^^^^^^^^^^^^
 The ``data`` folder is organized in multiple series subfolders, each of which that contains a single data type that is typically acquired in a single run -- a.k.a 'Series' in DICOM speak. This is how users receive their data from the (Siemens) scanners at the `DCCN <https://www.ru.nl/donders/>`__::
 
     sourcedata
@@ -41,8 +41,8 @@ The ``data`` folder is organized in multiple series subfolders, each of which th
     |       [..]
     [..]
 
-2. A DICOMDIR organization
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+2. A DICOMDIR layout
+^^^^^^^^^^^^^^^^^^^^
 The ``data`` folder contains a DICOMDIR file and multiple subfolders. A DICOMDIR is dictionary-file that indicates the various places where the DICOM files are stored. DICOMDIRs are often used in clinical settings and may look like this (example is without the optional session subfolders)::
 
     sourcedata
@@ -69,11 +69,11 @@ The ``data`` folder contains a DICOMDIR file and multiple subfolders. A DICOMDIR
     |   [..]
     [..]
 
-  The above organisation of one DICOMDIR file per subject or session is supported out of the box by the bidscoiner and bidsmapper. If you have a single multi-subject DICOMDIR file for your entire repository you can reorganize your data by running the `dicomsort <utilities.html#dicomsort>`__ utility beforehand.
+  The above organization of one DICOMDIR file per subject or session is supported out of the box by the bidscoiner and bidsmapper. If you have a single multi-subject DICOMDIR file for your entire repository you can reorganize your data by running the `dicomsort <utilities.html#dicomsort>`__ utility beforehand.
 
-3. A flat DICOM organization
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-In a flat DICOM organization the ``data`` folder contains all the DICOM files of all the different Series without any subfolders. This organization is sometimes used when exporting data in clinical settings (NB: in this example, non-default 'pat^' and 'ses^' subject/session prefixes are used)::
+3. A flat DICOM layout
+^^^^^^^^^^^^^^^^^^^^^^
+In a flat DICOM layout the ``data`` folder contains all the DICOM files of all the different Series without any subfolders. This layout is sometimes used when exporting data in clinical settings (NB: in this example, non-default 'pat^' and 'ses^' subject/session prefixes are used)::
 
     sourcedata
     |-- pat^001
@@ -91,9 +91,9 @@ In a flat DICOM organization the ``data`` folder contains all the DICOM files of
     |       [..]
     [..]
 
-4. A PAR/REC organization
-^^^^^^^^^^^^^^^^^^^^^^^^^
-All PAR/REC(/XML) files of all the different Series are contained in the ``data`` folder (without subfolders). This organization is how users often export their data from Philips scanners in research settings (optional json sidecar files were added in this example to complement the PAR-files)::
+4. A PAR/REC layout
+^^^^^^^^^^^^^^^^^^^
+All PAR/REC(/XML) files of all the different Series are contained in the ``data`` folder (without subfolders). This layout is how users often export their data from Philips scanners in research settings (optional json sidecar files were added in this example to complement the PAR-files)::
 
     sourcedata
     |-- sub-001
@@ -117,9 +117,9 @@ All PAR/REC(/XML) files of all the different Series are contained in the ``data`
     |       [..]
     [..]
 
-5. Miscellaneous organizations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The above organizations are supported by the (default) `dcm2niix2bids <plugins.html#dcm2niix2bids>`__ plugin. The other pre-installed plugins search the ``data`` folder recursively for source files. For instance, the nested mix of NIfTI and MRS source data in the example below can be converted to BIDS using the `nibabel2bids <plugins.html#nibabel2bids>`__ plugin in combination with the `spec2nii2bids <plugins.html#spec2nii2bids>`__ plugin (NB: example is with a non-default '' (empty) subject prefix)::
+5. Miscellaneous layouts
+^^^^^^^^^^^^^^^^^^^^^^^^
+The above layouts are supported by the (default) `dcm2niix2bids <plugins.html#dcm2niix2bids>`__ plugin. The other pre-installed plugins search the ``data`` folder recursively for source files. For instance, the nested mix of NIfTI and MRS source data in the example below can be converted to BIDS using the `nibabel2bids <plugins.html#nibabel2bids>`__ plugin in combination with the `spec2nii2bids <plugins.html#spec2nii2bids>`__ plugin (NB: example is with a non-default '' (empty) subject prefix)::
 
     sourcedata
     |-- 001
@@ -143,7 +143,7 @@ The above organizations are supported by the (default) `dcm2niix2bids <plugins.h
     [..]
 
 .. note::
-   You can store your session data in any of the above data organizations as zipped (``.zip``) or tarzipped (e.g. ``.tar.gz``) archive files. BIDScoin `workflow tools <workflow.html>`__ will automatically unpack/unzip those archive files in a temporary folder and then process your session data from there. For flat/DICOMDIR data, BIDScoin tools (i.e. the bidsmapper and the bidscoiner) will automatically run `dicomsort <utilities.html#dicomsort>`__ in a temporary folder to sort them in seriesfolders. Depending on the data and file system, repeatedly unzipping data in the workflow may come with a significant processing speed penalty.
+   You can store your session data in any of the above data layouts as zipped (``.zip``) or tarzipped (e.g. ``.tar.gz``) archive files. BIDScoin `workflow tools <workflow.html>`__ will automatically unpack/unzip those archive files in a temporary folder and then process your session data from there. For flat/DICOMDIR data, BIDScoin tools (i.e. the bidsmapper and the bidscoiner) will automatically run `dicomsort <utilities.html#dicomsort>`__ in a temporary folder to sort them in seriesfolders. Depending on the data and file system, repeatedly unzipping data in the workflow may come with a significant processing speed penalty.
 
 .. tip::
    BIDScoin plugins will typically skip (Linux-style hidden) files and folders of which the name starts with a ``.`` (dot) character. You can use this feature to flexibly omit subjects, sessions or runs from your bids repository, for instance when you restarted an MRI scan because something went wrong with the stimulus presentation and you don't want that data to be converted and enumerated as ``run-1``, ``run-2``.

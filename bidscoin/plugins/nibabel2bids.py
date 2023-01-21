@@ -97,7 +97,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
                 value = value.tolist()
 
         except Exception:
-            LOGGER.exception(f"Could not get the nibabel '{attribute}' attribute from {sourcefile}")
+            LOGGER.exception(f"Could not get the nibabel '{attribute}' attribute from {sourcefile} -> {value}")
 
     return value
 

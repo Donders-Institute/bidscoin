@@ -74,7 +74,7 @@ class DataSource:
             self.is_datasource()
         self.subprefix   = subprefix
         self.sesprefix   = sesprefix
-        self.metadata    = {}
+        self.metadata    = {}           # Contains the extended attribute data (TODO: currently only json is supported)
         jsonfile         = self.path.with_suffix('').with_suffix('.json') if self.path.name else self.path
         if jsonfile.is_file():
             with jsonfile.open('r') as json_fid:
@@ -1234,7 +1234,7 @@ def get_run_(provenance: Union[str, Path]='', dataformat: str='', datatype: str=
     """
     Get an empty run-item with the proper structure and provenance info
 
-    :param provenance:  The unique provenance that is use to identify the run
+    :param provenance:  The unique provenance that is used to identify the run
     :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
     :param datatype:    The bidsmap datatype that is used, e.g. 'anat'
     :param bidsmap:     The bidsmap, with all the bidscoin options in it
