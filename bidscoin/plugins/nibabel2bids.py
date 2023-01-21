@@ -76,7 +76,7 @@ def is_sourcefile(file: Path) -> str:
     return ''
 
 
-def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> Union[str, int, float]:
+def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> Union[str, int, float, list]:
     """
     This plugin supports reading attributes from DICOM and PAR dataformats
 
@@ -87,8 +87,19 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
     :return:            The attribute value
     """
 
+    value = None
+
     if dataformat == 'Nibabel':
-        return nib.load(sourcefile).header.get(attribute).item()
+
+        try:
+            value = nib.load(sourcefile).header.get(attribute)
+            if value is not None:
+                value = value.tolist()
+
+        except Exception:
+            LOGGER.exception(f"Could not get the nibabel '{attribute}' attribute from {sourcefile}")
+
+    return value
 
 
 def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
