@@ -1746,10 +1746,10 @@ PAR:
 
   exclude:    # ----------------------- Data that will be left out -------------
   - provenance:
-    attributes:
+    attributes: &leaveout_attributes_par
       series_type:
       exam_name:
-      protocol_name: (?i).*(Scout|localizer).*
+      protocol_name:
       tech:
       diffusion:
       fov:
@@ -1760,9 +1760,14 @@ PAR:
       max_echoes:
       repetition_time:
       prep_direction:
-    bids:
+    bids: &leaveout_bids_par
       acq: <protocol_name><exam_name>
       suffix: <series_type>
+  - provenance:
+    attributes:
+      <<: *leaveout_attributes_par
+      protocol_name: (?i).*(Scout|localizer).*
+    bids: *leaveout_bids_par
 
 
 SPAR:
@@ -2750,10 +2755,9 @@ Nibabel:
     attributes: *nibattr
     bids:
       acq: <ProtocolName>
-      rec: <ImageType>
+      rec: <descrip><ImageType>
       task: <SeriesDescription>
       echo: <EchoNumbers>
-      mod: <descrip>
       suffix: <ScanningSequence>
   - provenance:
     properties:
@@ -2762,8 +2766,7 @@ Nibabel:
     attributes: *nibattr
     bids:
       acq: <ProtocolName>
-      rec: <ImageType>
+      rec: <descrip><ImageType>
       task: <SeriesDescription>
       echo: <EchoNumbers>
-      mod: <descrip>
       suffix: <ScanningSequence>
