@@ -1983,6 +1983,7 @@ Nibabel:
 
   anat:       # ----------------------- All anatomical runs --------------------
   - provenance:                         # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    properties: *fileprop
     attributes: &nibattr                # An empty / non-matching reference dictionary that can be derefenced in other run-items of this data type
       dim:
       dim_info:
