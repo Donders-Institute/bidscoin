@@ -2746,10 +2746,24 @@ Nibabel:
 
   exclude:    # ----------------------- Data that will be left out -------------
   - provenance:
+    properties: *fileprop
+    attributes: *nibattr
+    bids:
+      acq: <ProtocolName>
+      rec: <ImageType>
+      task: <SeriesDescription>
+      echo: <EchoNumbers>
+      mod: <descrip>
+      suffix: <ScanningSequence>
+  - provenance:
     properties:
       <<: *fileprop
       filename: (?i).*(Scout|localizer|t2_haste_sag_ipat2).*
     attributes: *nibattr
     bids:
-      acq: <descrip>
-      suffix:
+      acq: <ProtocolName>
+      rec: <ImageType>
+      task: <SeriesDescription>
+      echo: <EchoNumbers>
+      mod: <descrip>
+      suffix: <ScanningSequence>
