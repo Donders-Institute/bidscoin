@@ -75,7 +75,7 @@ class DataSource:
         self.subprefix   = subprefix
         self.sesprefix   = sesprefix
         self.metadata    = {}           # Contains the extended attribute data (TODO: currently only json is supported)
-        jsonfile         = self.path.with_suffix('').with_suffix('.json') if self.path.name else self.path
+        jsonfile         = self.path.with_suffix('').with_suffix('.json')
         if jsonfile.is_file():
             with jsonfile.open('r') as json_fid:
                 self.metadata = json.load(json_fid)
