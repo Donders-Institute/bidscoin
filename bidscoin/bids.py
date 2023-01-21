@@ -74,14 +74,6 @@ class DataSource:
             self.is_datasource()
         self.subprefix   = subprefix
         self.sesprefix   = sesprefix
-        self.metadata    = {}           # Contains the extended attribute data (TODO: currently only json is supported)
-        jsonfile         = self.path.with_suffix('').with_suffix('.json') if self.path.name else Path()
-        if jsonfile.is_file():
-            with jsonfile.open('r') as json_fid:
-                self.metadata = json.load(json_fid)
-                if not isinstance(self.metadata, dict):
-                    LOGGER.warning(f"Skipping unexpectedly formatted meta-data in: {jsonfile}")
-                    self.metadata = {}
 
     def resubprefix(self) -> str:
         """Returns the subprefix with escaped regular expression characters (except '-'). A single '*' wildcard is returned as ''"""
@@ -174,7 +166,7 @@ class DataSource:
 
     def attributes(self, attributekey: str, validregexp: bool=False) -> str:
         """
-        Read the attribute value from the json sidecar file if it is there, else use the plugins to read it from the datasource
+        Read the attribute value from the extended attributes, or else use the plugins to read it from the datasource
 
         :param attributekey: The attribute key for which a value is read from the json-file or from the datasource. A colon-separated regular expression can be appended to the attribute key (same as for the `filepath` and `filename` properties)
         :param validregexp:  If True, the regexp meta-characters in the attribute value (e.g. '*') are replaced by '.',
@@ -190,8 +182,9 @@ class DataSource:
                 attributekey, pattern = attributekey.split(':', 1)
 
             # Read the attribute value from the sidecar file or from the datasource
-            if attributekey in self.metadata:
-                attributeval = str(self.metadata[attributekey]) if self.metadata[attributekey] is not None else ''
+            extattr = self._extattributes()
+            if attributekey in extattr:
+                attributeval = str(extattr[attributekey]) if extattr[attributekey] is not None else ''
             else:
                 for plugin, options in self.plugins.items():
                     module = bidscoin.import_plugin(plugin, ('get_attribute',))
@@ -222,6 +215,23 @@ class DataSource:
             LOGGER.warning(f"{ioerror}")
 
         return attributeval
+
+    def _extattributes(self) -> dict:
+        """
+        Read attributes from the json sidecar file if it is there
+
+        :return:    The attribute key-value dictionary
+        """
+        attributes = {}
+        jsonfile   = self.path.with_suffix('').with_suffix('.json') if self.path.name else Path()
+        if jsonfile.is_file():
+            LOGGER.bcdebug(f"Reading extended attributes from: {jsonfile}")
+            with jsonfile.open('r') as json_fid:
+                attributes = json.load(json_fid)
+            if not isinstance(attributes, dict):
+                LOGGER.warning(f"Skipping unexpectedly formatted meta-data in: {jsonfile}")
+
+        return attributes
 
     def subid_sesid(self, subid: str=None, sesid: str=None) -> Tuple[str, str]:
         """
@@ -1274,7 +1284,7 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
         if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
             # Get a clean run (remove comments to avoid overly complicated commentedMaps from ruamel.yaml)
-            run_ = get_run_(datasource.path, bidsmap=bidsmap)
+            run_ = get_run_(datasource.path, datasource.dataformat, datatype, bidsmap)
 
             for propkey, propvalue in run['properties'].items():
                 run_['properties'][propkey] = propvalue
@@ -1298,9 +1308,6 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
                     run_['meta'][metakey] = metavalue
                 else:
                     run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False)
-
-            run_['datasource']      = copy.deepcopy(run['datasource'])
-            run_['datasource'].path = datasource.path
 
             return run_
 
@@ -1390,8 +1397,8 @@ def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
         run = run_
 
     if not bidsmap.get(dataformat):
-        bidsmap[dataformat] = {}
-    elif not bidsmap.get(dataformat).get(datatype):
+        bidsmap[dataformat] = {datatype:[]}
+    if not bidsmap.get(dataformat).get(datatype):
         bidsmap[dataformat][datatype] = [run]
     else:
         bidsmap[dataformat][datatype].append(run)
@@ -1572,7 +1579,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
         for run in runs if runs else []:
 
             match = any([run[matching][attrkey] not in [None,''] for matching in ('properties','attributes') for attrkey in run[matching]])     # Normally match==True, but make match==False if all attributes are empty
-            run_  = get_run_(datasource.path, dataformat=datasource.dataformat, datatype=datatype, bidsmap=bidsmap)
+            run_  = get_run_(datasource.path, datasource.dataformat, datatype, bidsmap)
 
             # Try to see if the sourcefile matches all of the filesystem properties
             for propkey, propvalue in run['properties'].items():
@@ -1616,10 +1623,6 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
                     run_['meta'][metakey] = metavalue
                 else:
                     run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False, runtime=runtime)
-
-            # Copy the DataSource object
-            run_['datasource']      = copy.deepcopy(run['datasource'])
-            run_['datasource'].path = datasource.path
 
             # Stop searching the bidsmap if we have a match
             if match:
