@@ -74,6 +74,7 @@ class DataSource:
             self.is_datasource()
         self.subprefix   = subprefix
         self.sesprefix   = sesprefix
+        self._cache      = {}
 
     def resubprefix(self) -> str:
         """Returns the subprefix with escaped regular expression characters (except '-'). A single '*' wildcard is returned as ''"""
@@ -164,13 +165,14 @@ class DataSource:
 
         return ''
 
-    def attributes(self, attributekey: str, validregexp: bool=False) -> str:
+    def attributes(self, attributekey: str, validregexp: bool=False, cache: bool=False) -> str:
         """
         Read the attribute value from the extended attributes, or else use the plugins to read it from the datasource
 
         :param attributekey: The attribute key for which a value is read from the json-file or from the datasource. A colon-separated regular expression can be appended to the attribute key (same as for the `filepath` and `filename` properties)
         :param validregexp:  If True, the regexp meta-characters in the attribute value (e.g. '*') are replaced by '.',
                              e.g. to prevent compile errors in match_runvalue()
+        :param cache:        Try to read the attribute from self._cache first if cache=True, else ignore the cache
         :return:             The attribute value or '' if the attribute could not be read from the datasource. NB: values are always converted to strings
         """
 
@@ -181,10 +183,17 @@ class DataSource:
             if ':' in attributekey:
                 attributekey, pattern = attributekey.split(':', 1)
 
-            # Read the attribute value from the sidecar file or from the datasource
+            # See if we have the data in our cache
             extattr = self._extattributes()
-            if attributekey in extattr:
+            if cache and attributekey in self._cache:
+                attributeval = self._cache[attributekey]
+                LOGGER.bcdebug(f"Using cache: '{attributekey}' -> '{attributeval}'")
+
+            # Read the attribute value from the sidecar file or from the datasource
+            elif attributekey in extattr:
                 attributeval = str(extattr[attributekey]) if extattr[attributekey] is not None else ''
+
+            # Read the attribute value using the plugins
             else:
                 for plugin, options in self.plugins.items():
                     module = bidscoin.import_plugin(plugin, ('get_attribute',))
@@ -194,8 +203,12 @@ class DataSource:
                     if attributeval:
                         break
 
-            # Apply the regular expression to the attribute value
             if attributeval:
+
+                # Add the attributeval to the cache
+                self._cache[attributekey] = attributeval
+
+                # Apply the regular expression to the attribute value
                 if validregexp:
                     try:            # Strip meta-characters to prevent match_runvalue() errors
                         re.compile(attributeval)
@@ -230,6 +243,10 @@ class DataSource:
                 attributes = json.load(json_fid)
             if not isinstance(attributes, dict):
                 LOGGER.warning(f"Skipping unexpectedly formatted meta-data in: {jsonfile}")
+                return {}
+            for key, val in attributes.items():
+                if key not in self._cache:
+                    self._cache[key] = val
 
         return attributes
 
