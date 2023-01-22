@@ -186,7 +186,7 @@ class DataSource:
             # See if we have the data in our cache
             extattr = self._extattributes()
             if cache and attributekey in self._cache:
-                attributeval = self._cache[attributekey]
+                attributeval = str(self._cache[attributekey])
                 LOGGER.bcdebug(f"Using cache: '{attributekey}' -> '{attributeval}'")
 
             # Read the attribute value from the sidecar file or from the datasource
