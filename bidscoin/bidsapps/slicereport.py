@@ -99,7 +99,7 @@ def main():
                                             '  slicereport myproject/bids/derivatives/fmriprep anat/*run-?_desc-preproc_T1w* -o anat/*run-?_label-GM*\n ')
     parser.add_argument('bidsfolder',               help='The bids-directory with the subject data')
     parser.add_argument('pattern',                  help="Globlike search pattern to select the images to be reported, e.g. 'anat/*_T2starw*'")
-    parser.add_argument('-o','--outlinepattern',    help="Globlike search pattern to select red outline images. Need to yield the same number of images as 'pattern'")
+    parser.add_argument('-o','--outlinepattern',    help="Globlike search pattern to select red outline images that are projected on top of the corresponding images (i.e. 'outlinepattern' must yield the same number of images as 'pattern'")
     parser.add_argument('-p','--overlayimage',      help='A common red-outline image that is projected on top of all images')
     parser.add_argument('-e','--edgethreshold',     help='The specified threshold for edges (if >0 use this proportion of max-min, if <0, use the absolute value)')
     parser.add_argument('-s','--secondslice',       help='Output every second axial slice rather than just 9 ortho slices', action='store_true')

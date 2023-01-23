@@ -251,8 +251,9 @@ Quality control
     options:
       -h, --help            show this help message and exit
       -o OUTLINEPATTERN, --outlinepattern OUTLINEPATTERN
-                            Globlike search pattern to select red outline images. Need to yield the
-                            same number of images as 'pattern' (default: None)
+                            Globlike search pattern to select red outline images that are projected on
+                            top of the corresponding images (i.e. 'outlinepattern' must yield the same
+                            number of images as 'pattern' (default: None)
       -p OVERLAYIMAGE, --overlayimage OVERLAYIMAGE
                             A common red-outline image that is projected on top of all images
                             (default: None)
@@ -271,4 +272,7 @@ Quality control
 
 .. figure:: ./_static/slicereport.png
 
-   Snippet of a `slicereport` for doing quality control on `deface` output images (see examples above)
+   Snippet of a `slicereport` for doing quality control on `deface` output images (see above). This
+   example was generated with these two commands:
+   $ deface bids anat/*run-1_T1w* -o extra_data
+   $ slicereport bids extra_data/*run-1_T1w* -o anat/*run-1_T1w* -e 0.05
