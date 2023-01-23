@@ -22,7 +22,7 @@ except ImportError:
 def slicereport(bidsdir: str, pattern: str, outlinepattern: str, overlayimage: str, edgethreshold: str, secondslice: bool):
     """
     :param bidsdir:         The bids-directory with the subject data
-    :param pattern:         Globlike search pattern to select the images to be reported, e.g. 'anat/*_T1w*'
+    :param pattern:         Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T1w*'
     :param outlinepattern:  Globlike search pattern to select a common red-outline image on top of all images
     :param overlayimage:    A common red-outline image that is projected on top of all images
     :param edgethreshold:   The specified threshold for edges (if >0 use this proportion of max-min, if <0, use the absolute value)

@@ -320,12 +320,12 @@ def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> (List[P
     Unpacks and sorts DICOM files in sourcefolder to a temporary folder if sourcefolder contains a DICOMDIR file or .tar.gz, .gz or .zip files
 
     :param sourcefolder:    The full pathname of the folder with the source data
-    :param wildcard:        A glob search pattern to select the tarballed/zipped files (leave empty to skip unzipping)
+    :param wildcard:        A glob search pattern to select the tarball/zipped files (leave empty to skip unzipping)
     :param workfolder:      A root folder for temporary data
     :return:                Either ([unpacked and sorted session folders], True), or ([sourcefolder], False)
     """
 
-    # Search for zipped/tarballed files
+    # Search for zipped/tarball files
     tarzipfiles = list(sourcefolder.glob(wildcard)) if wildcard else []
 
     # See if we have a flat unsorted (DICOM) data organization, i.e. no directories, but DICOM-files
@@ -333,6 +333,11 @@ def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> (List[P
 
     # Check if we are going to do unpacking and/or sorting
     if tarzipfiles or flatDICOM or (sourcefolder/'DICOMDIR').is_file():
+
+        if tarzipfiles:
+            LOGGER.info(f"Found zipped/tarball data in: {sourcefolder}")
+        else:
+            LOGGER.info(f"Detected a {'flat' if flatDICOM else 'DICOMDIR'} data-structure in: {sourcefolder}")
 
         # Create a (temporary) sub/ses workfolder for unpacking the data
         if not workfolder:
@@ -346,7 +351,7 @@ def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> (List[P
         LOGGER.info(f"Making temporary copy: {sourcefolder} -> {worksubses}")
         shutil.copytree(sourcefolder, worksubses, dirs_exist_ok=True)
 
-        # Unpack the zip/tarballed files in the temporary folder
+        # Unpack the zip/tarball files in the temporary folder
         sessions  = []
         recursive = False
         for tarzipfile in [worksubses/tarzipfile.name for tarzipfile in tarzipfiles]:
@@ -1984,7 +1989,8 @@ def get_metahelp(metakey: str) -> str:
             if metakey == 'IntendedFor':    # IntendedFor is a special search-pattern field in BIDScoin
                 description += ('\nNB: These associated files can be dynamically searched for'
                                 '\nduring bidscoiner runtime with glob-style matching patterns,'
-                                '\n"such as <<Reward*_bold><Stop*_epi>>" (see documentation)')
+                                '\n"such as <<Reward*_bold><Stop*_epi>>" or <<dwi/*acq-highres*>>'
+                                '\n(see documentation)')
             return f"{metafields[field]['display_name']}\n{description}"
 
     return f"{metakey}\nAn unknown/private meta key"

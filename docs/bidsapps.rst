@@ -230,7 +230,7 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
 Quality control
 ---------------
 
-``Slicereport`` is a flexible QC tool for doing a quick visual inspection of your data
+``Slicereport`` is a flexible QC report generator for doing quick visual inspections of your data
 
 ::
 
@@ -245,7 +245,7 @@ Quality control
 
     positional arguments:
       bidsfolder            The bids-directory with the subject data
-      pattern               Globlike search pattern to select the images to be reported, e.g.
+      pattern               Globlike search pattern to select the images in bidsdir to be reported, e.g.
                             'anat/*_T2starw*'
 
     options:

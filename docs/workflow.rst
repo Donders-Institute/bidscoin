@@ -67,7 +67,7 @@ Step 1a: Running the bidsmapper
                             Use '*' when your session folders do not have a prefix. Default: the
                             value of the study/template bidsmap, e.g. 'ses-'
       -u UNZIP, --unzip UNZIP
-                            Wildcard pattern to unpack tarballed/zip-files in the sub/ses
+                            Wildcard pattern to unpack tarball/zip-files in the sub/ses
                             sourcefolder that need to be unzipped (in a tempdir) to make the data
                             readable. Default: the value of the study/template bidsmap
       -s, --store           Flag to store provenance data samples in the
@@ -81,7 +81,7 @@ Step 1a: Running the bidsmapper
       bidsmapper myproject/raw myproject/bids
       bidsmapper myproject/raw myproject/bids -t bidsmap_custom  # Uses a template bidsmap of choice
       bidsmapper myproject/raw myproject/bids -p nibabel2bids    # Uses a plugin of choice
-      bidsmapper myproject/raw myproject/bids -u '*.tar.gz'      # Unzip tarballed sourcefiles
+      bidsmapper myproject/raw myproject/bids -u '*.tar.gz'      # Unzip tarball sourcefiles
 
 After the source data has been scanned, the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__ to let the user check and edit the automatically generated study bidsmap. For a fully automated workflow users can skip this interactive step using the ``-i`` option (see above).
 
