@@ -8,13 +8,13 @@ from pathlib import Path
 
 try:
     from bidscoin import bidscoin, bids
-    from bidscoin.plugins import dcm2niix4petbids
+    from bidscoin.plugins import pet2bids
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))# This should work if bidscoin was not pip-installed
     sys.path.append(str(Path(__file__).parents[1]/'plugins'))# This should work if bidscoin was not pip-installed
     import bidscoin, bids
-    from plugins import dcm2niix4petbids
+    from plugins import pet2bids
 
 
 
@@ -43,7 +43,7 @@ def test_remove_duplicate_pet_runs(setup_bidsmaps):
     to_be_deduplicated = bidsmap.copy()
     with tempfile.TemporaryDirectory() as tempdir:
         to_be_deduplicated_path = Path(tempdir)
-        dcm2niix4petbids.deduplicate_pet_runs(to_be_deduplicated, to_be_deduplicated_path)
+        pet2bids.deduplicate_pet_runs(to_be_deduplicated, to_be_deduplicated_path)
 
         # reload deduplicated bidsmap
         deduplicated, _ = bids.load_bidsmap(to_be_deduplicated_path / 'bidsmap.yaml')
@@ -80,7 +80,7 @@ def test_remove_duplicate_pet_runs(setup_bidsmaps):
 #         to_be_deduplicated = bidsmap.copy()
 #         with tempfile.TemporaryDirectory() as tempdir:
 #             to_be_deduplicated_path = Path(tempdir)
-#             dcm2niix4petbids.deduplicate_pet_runs(to_be_deduplicated, to_be_deduplicated_path)
+#             pet2bids.deduplicate_pet_runs(to_be_deduplicated, to_be_deduplicated_path)
 #
 #             # reload deduplicated bidsmap
 #             deduplicated, _ = bids.load_bidsmap(to_be_deduplicated_path / 'bidsmap.yaml')

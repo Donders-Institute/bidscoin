@@ -118,7 +118,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     """
 
     # Get started
-    plugin     = {'dcm2niix4petbids': bidsmap_new['Options']['plugins']['dcm2niix4petbids']}
+    plugin     = {'pet2bids': bidsmap_new['Options']['plugins']['pet2bids']}
     datasource = bids.get_datasource(session, plugin)
     dataformat = datasource.dataformat
     if not dataformat:
@@ -210,8 +210,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         sesid = ''
 
     # Get started and see what data format we have
-    options = bidsmap['Options']['plugins']['dcm2niix4petbids']
-    datasource = bids.get_datasource(session, {'dcm2niix4petbids': options})
+    options = bidsmap['Options']['plugins']['pet2bids']
+    datasource = bids.get_datasource(session, {'pet2bids': options})
     dataformat = datasource.dataformat
     if not dataformat:
         LOGGER.info(f"No {__name__} sourcedata found in: {session}")
@@ -248,7 +248,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 continue
 
             # Get a matching run from the bidsmap
-            datasource = bids.DataSource(sourcefile, {'dcm2niix4petbids': options}, dataformat)
+            datasource = bids.DataSource(sourcefile, {'pet2bids': options}, dataformat)
             run, match = bids.get_matching_run(datasource, bidsmap, runtime=True)
 
             # Check if we should ignore this run
@@ -297,7 +297,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
             # Convert the source-files in the run folder to nifti's in the BIDS-folder
             else:
-                command = f'{options["command"]} "{source}" -d {outfolder / bidsname / ".nii.gz"}'
+                command = f'{options["command"]} "{source}" -d {outfolder / Path(bidsname).with_suffix(".nii.gz")}'
                 if bidscoin.run_command(command):
                     if not list(outfolder.glob(f"{bidsname}.*nii*")): continue
 
