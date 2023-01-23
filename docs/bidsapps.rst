@@ -274,5 +274,7 @@ Quality control
 
    Snippet of a `slicereport` for doing quality control on `deface` output images (see above). This
    example was generated with these two commands:
+
    $ deface bids anat/*run-1_T1w* -o extra_data
+
    $ slicereport bids extra_data/*run-1_T1w* -o anat/*run-1_T1w*
