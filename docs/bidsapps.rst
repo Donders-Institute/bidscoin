@@ -235,6 +235,7 @@ Quality control
 ::
 
     usage: slicereport.py [-h] [-o OUTLINEPATTERN] [-p OVERLAYIMAGE] [-e EDGETHRESHOLD] [-s]
+                          [-r REPORTFOLDER]
                           bidsfolder pattern
 
     A wrapper around the 'slicesdir' reporting tool (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Miscvis)
@@ -252,18 +253,17 @@ Quality control
       -h, --help            show this help message and exit
       -o OUTLINEPATTERN, --outlinepattern OUTLINEPATTERN
                             Globlike search pattern to select red outline images that are projected on
-                            top of the corresponding images (i.e. 'outlinepattern' must yield the same
+                            top of the reported images (i.e. 'outlinepattern' must yield the same
                             number of images as 'pattern'. Prepend `outlinedir:` if your outline
                             images are in `outlinedir` instead of `bidsdir` (see examples below)`
-                            (default: None)
       -p OVERLAYIMAGE, --overlayimage OVERLAYIMAGE
                             A common red-outline image that is projected on top of all images
-                            (default: None)
       -e EDGETHRESHOLD, --edgethreshold EDGETHRESHOLD
                             The specified threshold for edges (if >0 use this proportion of max-min,
-                            if <0, use the absolute value) (default: None)
-      -s, --secondslice     Output every second axial slice rather than just 9 ortho slices (default:
-                            False)
+                            if <0, use the absolute value)
+      -s, --secondslice     Output every second axial slice rather than just 9 ortho slices
+      -r REPORTFOLDER, --reportfolder REPORTFOLDER
+                            The folder where the report is saved (default: bidsfolder/'derivatives')
 
     examples:
       slicereport myproject/bids anat/*_T1w*

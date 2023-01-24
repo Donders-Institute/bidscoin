@@ -19,7 +19,7 @@ except ImportError:
     import bidscoin
 
 
-def slicereport(bidsdir: str, pattern: str, outlinepattern: str, overlayimage: str, edgethreshold: str, secondslice: bool):
+def slicereport(bidsdir: str, pattern: str, outlinepattern: str, overlayimage: str, edgethreshold: str, secondslice: bool, reportdir: str):
     """
     :param bidsdir:         The bids-directory with the subject data
     :param pattern:         Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T1w*'
@@ -27,12 +27,14 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, overlayimage: s
     :param overlayimage:    A common red-outline image that is projected on top of all images
     :param edgethreshold:   The specified threshold for edges (if >0 use this proportion of max-min, if <0, use the absolute value)
     :param secondslice:     Output every second axial slice rather than just 9 ortho slices
+    :param reportdir:       The folder where the report is saved
     :return:
     """
 
     # Input checking
     bidsdir = Path(bidsdir).resolve()
-    report  = bidsdir/'derivatives'/'slicesdir'
+    if not reportdir:
+        reportdir = bidsdir/'derivatives'
     if not bidsdir.is_dir():
         print(f"Could not find the bids folder: {bidsdir}")
         return
@@ -81,8 +83,8 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, overlayimage: s
                        f" {'-S'                if secondslice    else ''}"\
                        f" {' '.join(filelist)}"
     LOGGER.info(f"Running:\n{command}")
-    report.parent.mkdir(exist_ok=True)
-    process = subprocess.run(command, cwd=report.parent, shell=True, capture_output=True, text=True)
+    reportdir.mkdir(exist_ok=True)
+    process = subprocess.run(command, cwd=reportdir, shell=True, capture_output=True, text=True)
     if process.stderr or process.returncode != 0:
         LOGGER.error(f"Errorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
         return
@@ -93,9 +95,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, overlayimage: s
 def main():
     """Console script usage"""
 
-    class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter): pass
-
-    parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=__doc__,
                                      epilog='examples:\n'
                                             '  slicereport myproject/bids anat/*_T1w*\n'
@@ -108,6 +108,7 @@ def main():
     parser.add_argument('-p','--overlayimage',      help='A common red-outline image that is projected on top of all images')
     parser.add_argument('-e','--edgethreshold',     help='The specified threshold for edges (if >0 use this proportion of max-min, if <0, use the absolute value)')
     parser.add_argument('-s','--secondslice',       help='Output every second axial slice rather than just 9 ortho slices', action='store_true')
+    parser.add_argument('-r','--reportfolder',      help="The folder where the report is saved (default: bidsfolder/'derivatives')")
     args = parser.parse_args()
 
     slicereport(bidsdir        = args.bidsfolder,
@@ -115,7 +116,8 @@ def main():
                 outlinepattern = args.outlinepattern,
                 overlayimage   = args.overlayimage,
                 edgethreshold  = args.edgethreshold,
-                secondslice    = args.secondslice)
+                secondslice    = args.secondslice,
+                reportdir      = args.reportfolder)
 
 
 if __name__ == '__main__':
