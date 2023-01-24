@@ -23,7 +23,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, overlayimage: s
     """
     :param bidsdir:         The bids-directory with the subject data
     :param pattern:         Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T1w*'
-    :param outlinepattern:  Globlike search pattern to select red-outline images that are projected on top of the corresponding images. Prepend `outlinedir:` if your outline images are in `outlinedir` instead of `bidsdir`
+    :param outlinepattern:  Globlike search pattern to select red-outline images that are projected on top of the reported images. Prepend `outlinedir:` if your outline images are in `outlinedir` instead of `bidsdir`
     :param overlayimage:    A common red-outline image that is projected on top of all images
     :param edgethreshold:   The specified threshold for edges (if >0 use this proportion of max-min, if <0, use the absolute value)
     :param secondslice:     Output every second axial slice rather than just 9 ortho slices
@@ -104,7 +104,7 @@ def main():
                                             '  slicereport myproject/bids/derivatives/deface anat/*_T1w* -o myproject/bids:anat/*_T1w* -e 0.05\n ')
     parser.add_argument('bidsfolder',               help='The bids-directory with the subject data')
     parser.add_argument('pattern',                  help="Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T2starw*'")
-    parser.add_argument('-o','--outlinepattern',    help="Globlike search pattern to select red outline images that are projected on top of the corresponding images (i.e. 'outlinepattern' must yield the same number of images as 'pattern'. Prepend `outlinedir:` if your outline images are in `outlinedir` instead of `bidsdir` (see examples below)`")
+    parser.add_argument('-o','--outlinepattern',    help="Globlike search pattern to select red outline images that are projected on top of the reported images (i.e. 'outlinepattern' must yield the same number of images as 'pattern'. Prepend `outlinedir:` if your outline images are in `outlinedir` instead of `bidsdir` (see examples below)`")
     parser.add_argument('-p','--overlayimage',      help='A common red-outline image that is projected on top of all images')
     parser.add_argument('-e','--edgethreshold',     help='The specified threshold for edges (if >0 use this proportion of max-min, if <0, use the absolute value)')
     parser.add_argument('-s','--secondslice',       help='Output every second axial slice rather than just 9 ortho slices', action='store_true')
