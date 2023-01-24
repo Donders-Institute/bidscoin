@@ -245,15 +245,17 @@ Quality control
 
     positional arguments:
       bidsfolder            The bids-directory with the subject data
-      pattern               Globlike search pattern to select the images in bidsdir to be reported, e.g.
-                            'anat/*_T2starw*'
+      pattern               Globlike search pattern to select the images in bidsdir to be reported,
+                            e.g. 'anat/*_T2starw*'
 
     options:
       -h, --help            show this help message and exit
       -o OUTLINEPATTERN, --outlinepattern OUTLINEPATTERN
                             Globlike search pattern to select red outline images that are projected on
                             top of the corresponding images (i.e. 'outlinepattern' must yield the same
-                            number of images as 'pattern' (default: None)
+                            number of images as 'pattern'. Prepend `outlinedir:` if your outline
+                            images are in `outlinedir` instead of `bidsdir` (see examples below)`
+                            (default: None)
       -p OVERLAYIMAGE, --overlayimage OVERLAYIMAGE
                             A common red-outline image that is projected on top of all images
                             (default: None)
@@ -265,10 +267,9 @@ Quality control
 
     examples:
       slicereport myproject/bids anat/*_T1w*
-      slicereport myproject/bids/derivatives/deface anat/*_T1w*
-      slicereport myproject/bids extra_data/*_T1w* -o anat/*_T1w* -e 0.05       # extra_data = defaced
       slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*
       slicereport myproject/bids/derivatives/fmriprep anat/*run-?_desc-preproc_T1w* -o anat/*run-?_label-GM*
+      slicereport myproject/bids/derivatives/deface anat/*_T1w* -o myproject/bids:anat/*_T1w* -e 0.05
 
 .. figure:: ./_static/slicereport_deface.png
 

@@ -23,7 +23,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, overlayimage: s
     """
     :param bidsdir:         The bids-directory with the subject data
     :param pattern:         Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T1w*'
-    :param outlinepattern:  Globlike search pattern to select a common red-outline image on top of all images
+    :param outlinepattern:  Globlike search pattern to select red-outline images that are projected on top of the corresponding images. Prepend `outlinedir:` if your outline images are in `outlinedir` instead of `bidsdir`
     :param overlayimage:    A common red-outline image that is projected on top of all images
     :param edgethreshold:   The specified threshold for edges (if >0 use this proportion of max-min, if <0, use the absolute value)
     :param secondslice:     Output every second axial slice rather than just 9 ortho slices
@@ -39,6 +39,11 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, overlayimage: s
     if overlayimage and not Path(overlayimage).is_file():
         print(f"Could not find the common overlay image: {overlayimage}")
         return
+    if ':' in outlinepattern:
+        outlinedir, outlinepattern = outlinepattern.split(':',1)
+        outlinedir = Path(outlinedir).resolve()
+    else:
+        outlinedir = bidsdir
 
     # Start logging (no logfile)
     bidscoin.setup_logging()
@@ -56,11 +61,12 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, overlayimage: s
             LOGGER.info(f"Searching in: {session}")
             images = sorted([str(match) for match in session.glob(pattern) if '.nii' in match.suffixes])
             if outlinepattern:
-                outline = sorted([str(match) for match in session.glob(outlinepattern) if '.nii' in match.suffixes]) if outlinepattern else None
-                if len(outline) != len(images):
-                    LOGGER.error(f"Nr of outline images ({len(outline)}) in {session} should be the same as the number of underlying images ({len(images)})")
+                outlinesession = outlinedir/session.relative_to(bidsdir)
+                outlineimages  = sorted([str(match) for match in outlinesession.glob(outlinepattern) if '.nii' in match.suffixes]) if outlinepattern else None
+                if len(outlineimages) != len(images):
+                    LOGGER.error(f"Nr of outline images ({len(outlineimages)}) in {outlinesession} should be the same as the number of underlying images ({len(images)})")
                     return
-                images = [item for pair in zip(images,outline) for item in pair]
+                images = [item for pair in zip(images,outlineimages) for item in pair]
 
             filelist += images
 
@@ -93,13 +99,12 @@ def main():
                                      description=__doc__,
                                      epilog='examples:\n'
                                             '  slicereport myproject/bids anat/*_T1w*\n'
-                                            '  slicereport myproject/bids/derivatives/deface anat/*_T1w*\n'
-                                            '  slicereport myproject/bids extra_data/*_T1w* -o anat/*_T1w* -e 0.05       # extra_data = defaced\n'
                                             '  slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*\n'
-                                            '  slicereport myproject/bids/derivatives/fmriprep anat/*run-?_desc-preproc_T1w* -o anat/*run-?_label-GM*\n ')
+                                            '  slicereport myproject/bids/derivatives/fmriprep anat/*run-?_desc-preproc_T1w* -o anat/*run-?_label-GM*\n'
+                                            '  slicereport myproject/bids/derivatives/deface anat/*_T1w* -o myproject/bids:anat/*_T1w* -e 0.05\n ')
     parser.add_argument('bidsfolder',               help='The bids-directory with the subject data')
-    parser.add_argument('pattern',                  help="Globlike search pattern to select the images to be reported, e.g. 'anat/*_T2starw*'")
-    parser.add_argument('-o','--outlinepattern',    help="Globlike search pattern to select red outline images that are projected on top of the corresponding images (i.e. 'outlinepattern' must yield the same number of images as 'pattern'")
+    parser.add_argument('pattern',                  help="Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T2starw*'")
+    parser.add_argument('-o','--outlinepattern',    help="Globlike search pattern to select red outline images that are projected on top of the corresponding images (i.e. 'outlinepattern' must yield the same number of images as 'pattern'. Prepend `outlinedir:` if your outline images are in `outlinedir` instead of `bidsdir` (see examples below)`")
     parser.add_argument('-p','--overlayimage',      help='A common red-outline image that is projected on top of all images')
     parser.add_argument('-e','--edgethreshold',     help='The specified threshold for edges (if >0 use this proportion of max-min, if <0, use the absolute value)')
     parser.add_argument('-s','--secondslice',       help='Output every second axial slice rather than just 9 ortho slices', action='store_true')
