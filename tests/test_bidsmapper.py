@@ -24,6 +24,9 @@ def test_bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, subprefix, se
     assert bidsmap['Options']['bidscoin']['sesprefix'] == sesprefix
     assert bidsmap['DICOM']['subject']                 == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}(.*?)/>>"
     assert bidsmap['DICOM']['session']                 == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}.*?/{resesprefix}(.*?)/>>"
+    assert len(bidsmap['DICOM']['exclude'])            > 1
+    for run in bidsmap['DICOM']['exclude']:
+        assert 'LOCALIZER' in run['attributes']['SeriesDescription'] or 'DERIVED' in run['attributes']['ImageType']
     assert bidsmap_dicomdir.is_file()
     assert 'Doe^Archibald' in bidsmap_dicomdir.read_text()                                      # Make sure we have discovered `Archibald` samples (-> provenance)
     assert 'Doe^Peter' in bidsmap_dicomdir.read_text()                                          # Make sure we have discovered `Peter` samples (-> provenance)
