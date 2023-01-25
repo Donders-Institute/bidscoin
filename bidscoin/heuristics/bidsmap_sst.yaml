@@ -74,7 +74,7 @@ DICOM:
       RepetitionTime:
       InPlanePhaseEncodingDirection:
     bids: &anat_dicoment_nonparametric  # See: schema/datatypes/anat.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>    # This will be expanded by the bidsmapper (so the user can edit it in the bidseditor)
+      acq: <filepath:/.*/...(.*)/.*/>    # This will be expanded by the bidsmapper (so the user can edit it in the bidseditor)
       ce:
       rec:
       run: <<1>>                  # This will be updated dynamically during bidscoiner runtime (as it depends on the already existing files)
@@ -160,7 +160,7 @@ DICOM:
       <<: *anat_dicomattr
       ProtocolName: (?i).*T1.?map.*
     bids: &anat_dicoment_parametric     # See: schema/datatypes/anat.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
       run: <<1>>
@@ -282,7 +282,7 @@ DICOM:
   - provenance:
     attributes: *anat_dicomattr
     bids: &anat_dicoment_defacemask     # See: schema/datatypes/anat.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
       run: <<1>>
@@ -293,7 +293,7 @@ DICOM:
       <<: *anat_dicomattr
       ProtocolName: (?i).*ME.?SE.*
     bids: &anat_dicoment_multiecho      # See: schema/datatypes/anat.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
       run: <<1>>
@@ -312,7 +312,7 @@ DICOM:
       <<: *anat_dicomattr
       ProtocolName: (?i).*VFA.*
     bids: &anat_dicoment_multiflip      # See: schema/datatypes/anat.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
       echo: <EchoNumbers>
@@ -325,7 +325,7 @@ DICOM:
       <<: *anat_dicomattr
       ProtocolName: (?i).*IR.?T1.*
     bids: &anat_dicoment_multiinv       # See: schema/datatypes/anat.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
       run: <<1>>
@@ -339,7 +339,7 @@ DICOM:
       SeriesDescription: (?i).*INV1.*
       MRAcquisitionType: 3D
     bids: &anat_dicoment_mp2rage        # See: schema/datatypes/anat.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
       run: <<1>>
@@ -363,7 +363,7 @@ DICOM:
       ProtocolName: (?i).*MPM.*
       EffectiveEchoTime:
     bids: &anat_dicoment_vfamt          # See: schema/datatypes/anat.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
       run: <<1>>
@@ -386,7 +386,7 @@ DICOM:
       <<: *anat_dicomattr
       ProtocolName: (?i).*MTR.*
     bids: &anat_dicoment_mtr            # See: schema/datatypes/anat.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
       run: <<1>>
@@ -413,7 +413,7 @@ DICOM:
       RepetitionTime:
       InPlanePhaseEncodingDirection:
     bids: &func_dicoment_func           # See: schema/datatypes/func.yaml
-      task: <<filepath:/.*/...(.*)/.*/>>               # More consistent between SBREF and PHYSIO files
+      task: <filepath:/.*/...(.*)/.*/>
       acq:
       ce:
       dir:
@@ -423,7 +423,7 @@ DICOM:
       part: ['', mag, phase, real, imag, 0]
       suffix: bold
     meta: &func_meta
-      TaskName:
+      TaskName: <filepath:/.*/...(.*)/.*/>
       B0FieldSource:
       B0FieldIdentifier:
   - provenance:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
@@ -440,7 +440,7 @@ DICOM:
       ProtocolName: (?i).*(f.?MRI|task|BOLD|func|rest|RSN|CMRR.*_TR).*
       ImageType: .*'PHYSIO'.*
     bids: &func_dicoment_timeseries     # See: schema/datatypes/func.yaml
-      task: <<filepath:/.*/...(.*)/.*/>>
+      task: <filepath:/.*/...(.*)/.*/>
       acq:
       ce:
       dir:
@@ -449,7 +449,7 @@ DICOM:
       run: <<1>>
       suffix: physio
     meta:
-      TaskName: <ProtocolName>
+      TaskName: <filepath:/.*/...(.*)/.*/>
   - provenance:
     attributes:
       <<: *func_dicomattr
@@ -473,7 +473,7 @@ DICOM:
   - provenance:
     attributes: *func_dicomattr
     bids: &func_dicoment_events         # See: schema/datatypes/func.yaml
-      task: <<filepath:/.*/...(.*)/.*/>>         # NB: <ProtocolName> is consistent between SBREF and PHYSIO files but causes name clashes
+      task: <filepath:/.*/...(.*)/.*/>         # NB: <ProtocolName> is consistent between SBREF and PHYSIO files but causes name clashes
       acq:
       ce:
       dir:
@@ -481,14 +481,14 @@ DICOM:
       run: <<1>>
       suffix: events
     meta:
-      TaskName: <SeriesDescription>
+      TaskName: <filepath:/.*/...(.*)/.*/>
   - provenance:
     attributes: *func_dicomattr
     bids:
       <<: *func_dicoment_timeseries
       suffix: stim
     meta:
-      TaskName: <ProtocolName>
+      TaskName: <filepath:/.*/...(.*)/.*/>
 
   perf:       # ----------------------- All perfusion runs ---------------------
   - provenance:
@@ -509,7 +509,7 @@ DICOM:
       RepetitionTime:
       InPlanePhaseEncodingDirection:
     bids: &perf_dicoment_group1         # See: schema/datatypes/perf.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       rec: <SeriesDescription>
       dir:
       run: <<1>>
@@ -541,7 +541,7 @@ DICOM:
   - provenance:
     attributes: *perf_dicomattr
     bids: &perf_dicoment_group2         # See: schema/datatypes/perf.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       rec: <SeriesDescription>
       dir:
       run: <<1>>
@@ -550,7 +550,7 @@ DICOM:
   - provenance:
     attributes: *perf_dicomattr
     bids: &perf_dicoment_group3         # See: schema/datatypes/perf.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       rec: <SeriesDescription>
       run: <<1>>
       suffix: asllabeling
@@ -558,7 +558,7 @@ DICOM:
 #  - provenance:
 #    attributes: *perf_dicomattr
 #    bids: &perf_dicoment_physio         # See: schema/datatypes/perf.yaml
-#      acq: <<filepath:/.*/...(.*)/.*/>>
+#      acq: <filepath:/.*/...(.*)/.*/>
 #      rec:
 #      task: <SeriesDescription>
 #      recording:
@@ -586,7 +586,7 @@ DICOM:
       RepetitionTime:
       InPlanePhaseEncodingDirection:
     bids: &dwi_dicoment_DWI             # See: schema/datatypes/dwi.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>> # More consistent between SBREF and PHYSIO files
+      acq: <filepath:/.*/...(.*)/.*/> # More consistent between SBREF and PHYSIO files
       rec:
       dir:
       run: <<1>>
@@ -600,7 +600,7 @@ DICOM:
       <<: *dwi_dicomattr
       SeriesDescription: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*SBREF.*
     bids: &dwi_dicoment_sbref           # See: schema/datatypes/dwi.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       rec:
       dir:
       run: <<1>>
@@ -613,7 +613,7 @@ DICOM:
       ProtocolName: (?i).*(DWI|diffusion|HARDI|DTI|dMRI|DW.?MRI).*
       ImageType: .*'PHYSIO'.*
     bids: &dwi_dicoment_physio          # See: schema/datatypes/dwi.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       dir:
       run: <<1>>
       part: ['', mag, phase, real, imag, 0]
@@ -656,7 +656,7 @@ DICOM:
       RepetitionTime:
       InPlanePhaseEncodingDirection:
     bids: &fmap_dicoment_fieldmaps      # See: schema/datatypes/fmap.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       run: <<1>>
       suffix: magnitude1
     meta: &fmap_meta
@@ -741,7 +741,7 @@ DICOM:
       ProtocolName: (?i).*(inverted|pepolar|_inv).*
       ScanningSequence: EP
     bids: &fmap_dicoment_PEPolar        # See: schema/datatypes/fmap.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>          # NB: <ProtocolName> is consistent between SBREF and PHYSIO files but causes name clashes
+      acq: <filepath:/.*/...(.*)/.*/>          # NB: <ProtocolName> is consistent between SBREF and PHYSIO files but causes name clashes
       ce:
       dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
@@ -756,7 +756,7 @@ DICOM:
   - provenance:
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_TB1DAM         # See: schema/datatypes/fmap.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
       flip:
@@ -781,7 +781,7 @@ DICOM:
   - provenance:
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
       flip:
@@ -841,7 +841,7 @@ DICOM:
   - provenance:
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_TB1SRGE        # See: schema/datatypes/fmap.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
       flip:
@@ -857,7 +857,7 @@ DICOM:
       ProtocolName: (?i).*B1.?map.*
       ImageType: .*FLIP ANGLE MAP.*
     bids: &fmap_dicoment_parametric     # See: schema/datatypes/fmap.yaml
-      acq: <<filepath:/.*/...(.*)/.*/>>
+      acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
       run: <<1>>
@@ -889,7 +889,7 @@ DICOM:
       Rows:
       Columns:
     bids: &pet_dicoment_pet             # See: schema/datatypes/pet.yaml
-      task: <<filepath:/.*/...(.*)/.*/>>
+      task: <filepath:/.*/...(.*)/.*/>
       trc: <Radiopharmaceutical>
       rec: ['', acdyn, acstat, nacdyn, nacstat, 0]
       run: <<1>>

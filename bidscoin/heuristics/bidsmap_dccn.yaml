@@ -424,7 +424,7 @@ DICOM:
       part: ['', mag, phase, real, imag, 0]
       suffix: bold
     meta: &func_meta
-      TaskName:
+      TaskName: <ProtocolName>
       B0FieldSource:
       B0FieldIdentifier:
   - provenance:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
