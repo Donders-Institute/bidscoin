@@ -165,7 +165,7 @@ class DataSource:
 
         return ''
 
-    def attributes(self, attributekey: str, validregexp: bool=False, cache: bool=False) -> str:
+    def attributes(self, attributekey: str, validregexp: bool=False, cache: bool=True) -> str:
         """
         Read the attribute value from the extended attributes, or else use the plugins to read it from the datasource
 
@@ -184,29 +184,28 @@ class DataSource:
                 attributekey, pattern = attributekey.split(':', 1)
 
             # See if we have the data in our cache
-            extattr = self._extattributes()
-            if cache and attributekey in self._cache:
+            if attributekey in self._cache and cache:
                 attributeval = str(self._cache[attributekey])
-                LOGGER.bcdebug(f"Using cache: '{attributekey}' -> '{attributeval}'")
 
-            # Read the attribute value from the sidecar file or from the datasource
-            elif attributekey in extattr:
-                attributeval = str(extattr[attributekey]) if extattr[attributekey] is not None else ''
-
-            # Read the attribute value using the plugins
+            # Read the attribute value from the sidecar file or from the datasource (using the plugins)
             else:
-                for plugin, options in self.plugins.items():
-                    module = bidscoin.import_plugin(plugin, ('get_attribute',))
-                    if module:
-                        attributeval = module.get_attribute(self.dataformat, self.path, attributekey, options)
-                        attributeval = str(attributeval) if attributeval is not None else ''
-                    if attributeval:
-                        break
+                extattr = self._extattributes()
+                if attributekey in extattr:
+                    attributeval = str(extattr[attributekey]) if extattr[attributekey] is not None else ''
+
+                else:
+                    for plugin, options in self.plugins.items():
+                        module = bidscoin.import_plugin(plugin, ('get_attribute',))
+                        if module:
+                            attributeval = module.get_attribute(self.dataformat, self.path, attributekey, options)
+                            attributeval = str(attributeval) if attributeval is not None else ''
+                        if attributeval:
+                            break
+
+                # Add the attribute value to the cache
+                self._cache[attributekey] = attributeval
 
             if attributeval:
-
-                # Add the attributeval to the cache
-                self._cache[attributekey] = attributeval
 
                 # Apply the regular expression to the attribute value
                 if validregexp:
