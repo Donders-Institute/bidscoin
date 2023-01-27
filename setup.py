@@ -27,6 +27,7 @@ setup(name                           = 'bidscoin',          # Required
                                                             'deface           = bidscoin.bidsapps.deface:main',
                                                             'medeface         = bidscoin.bidsapps.medeface:main',
                                                             'skullstrip       = bidscoin.bidsapps.skullstrip:main',
+                                                            'slicereport      = bidscoin.bidsapps.slicereport:main',
                                                             'dicomsort        = bidscoin.utilities.dicomsort:main',
                                                             'bidsparticipants = bidscoin.utilities.bidsparticipants:main',
                                                             'rawmapper        = bidscoin.utilities.rawmapper:main',

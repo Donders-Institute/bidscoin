@@ -14,6 +14,7 @@ import tempfile
 import tarfile
 import zipfile
 import json
+import warnings
 import shutil
 import bids_validator
 from functools import lru_cache
@@ -73,22 +74,15 @@ class DataSource:
             self.is_datasource()
         self.subprefix   = subprefix
         self.sesprefix   = sesprefix
-        self.metadata    = {}
-        jsonfile         = self.path.with_suffix('').with_suffix('.json') if self.path.name else self.path
-        if jsonfile.is_file():
-            with jsonfile.open('r') as json_fid:
-                self.metadata = json.load(json_fid)
-                if not isinstance(self.metadata, dict):
-                    LOGGER.warning(f"Skipping unexpectedly formatted meta-data in: {jsonfile}")
-                    self.metadata = {}
+        self._cache      = {}
 
     def resubprefix(self) -> str:
         """Returns the subprefix with escaped regular expression characters (except '-'). A single '*' wildcard is returned as ''"""
-        return '' if self.subprefix=='*' else re.escape(self.subprefix).replace('\-','-')
+        return '' if self.subprefix=='*' else re.escape(self.subprefix).replace(r'\-','-')
 
     def resesprefix(self) -> str:
         """Returns the sesprefix with escaped regular expression characters (except '-'). A single '*' wildcard is returned as ''"""
-        return '' if self.sesprefix=='*' else re.escape(self.sesprefix).replace('\-','-')
+        return '' if self.sesprefix=='*' else re.escape(self.sesprefix).replace(r'\-','-')
 
     def is_datasource(self) -> bool:
         """Returns True is the datasource has a valid dataformat"""
@@ -171,13 +165,14 @@ class DataSource:
 
         return ''
 
-    def attributes(self, attributekey: str, validregexp: bool=False) -> str:
+    def attributes(self, attributekey: str, validregexp: bool=False, cache: bool=True) -> str:
         """
-        Read the attribute value from the json sidecar file if it is there, else use the plugins to read it from the datasource
+        Read the attribute value from the extended attributes, or else use the plugins to read it from the datasource
 
         :param attributekey: The attribute key for which a value is read from the json-file or from the datasource. A colon-separated regular expression can be appended to the attribute key (same as for the `filepath` and `filename` properties)
         :param validregexp:  If True, the regexp meta-characters in the attribute value (e.g. '*') are replaced by '.',
                              e.g. to prevent compile errors in match_runvalue()
+        :param cache:        Try to read the attribute from self._cache first if cache=True, else ignore the cache
         :return:             The attribute value or '' if the attribute could not be read from the datasource. NB: values are always converted to strings
         """
 
@@ -188,20 +183,31 @@ class DataSource:
             if ':' in attributekey:
                 attributekey, pattern = attributekey.split(':', 1)
 
-            # Read the attribute value from the sidecar file or from the datasource
-            if attributekey in self.metadata:
-                attributeval = str(self.metadata[attributekey]) if self.metadata[attributekey] is not None else ''
-            else:
-                for plugin, options in self.plugins.items():
-                    module = bidscoin.import_plugin(plugin, ('get_attribute',))
-                    if module:
-                        attributeval = module.get_attribute(self.dataformat, self.path, attributekey, options)
-                        attributeval = str(attributeval) if attributeval is not None else ''
-                    if attributeval:
-                        break
+            # See if we have the data in our cache
+            if attributekey in self._cache and cache:
+                attributeval = str(self._cache[attributekey])
 
-            # Apply the regular expression to the attribute value
+            # Read the attribute value from the sidecar file or from the datasource (using the plugins)
+            else:
+                extattr = self._extattributes()
+                if attributekey in extattr:
+                    attributeval = str(extattr[attributekey]) if extattr[attributekey] is not None else ''
+
+                else:
+                    for plugin, options in self.plugins.items():
+                        module = bidscoin.import_plugin(plugin, ('get_attribute',))
+                        if module:
+                            attributeval = module.get_attribute(self.dataformat, self.path, attributekey, options)
+                            attributeval = str(attributeval) if attributeval is not None else ''
+                        if attributeval:
+                            break
+
+                # Add the attribute value to the cache
+                self._cache[attributekey] = attributeval
+
             if attributeval:
+
+                # Apply the regular expression to the attribute value
                 if validregexp:
                     try:            # Strip meta-characters to prevent match_runvalue() errors
                         re.compile(attributeval)
@@ -221,6 +227,27 @@ class DataSource:
             LOGGER.warning(f"{ioerror}")
 
         return attributeval
+
+    def _extattributes(self) -> dict:
+        """
+        Read attributes from the json sidecar file if it is there
+
+        :return:    The attribute key-value dictionary
+        """
+        attributes = {}
+        jsonfile   = self.path.with_suffix('').with_suffix('.json') if self.path.name else Path()
+        if jsonfile.is_file():
+            LOGGER.bcdebug(f"Reading extended attributes from: {jsonfile}")
+            with jsonfile.open('r') as json_fid:
+                attributes = json.load(json_fid)
+            if not isinstance(attributes, dict):
+                LOGGER.warning(f"Skipping unexpectedly formatted meta-data in: {jsonfile}")
+                return {}
+            for key, val in attributes.items():
+                if key not in self._cache:
+                    self._cache[key] = val
+
+        return attributes
 
     def subid_sesid(self, subid: str=None, sesid: str=None) -> Tuple[str, str]:
         """
@@ -292,12 +319,12 @@ def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> (List[P
     Unpacks and sorts DICOM files in sourcefolder to a temporary folder if sourcefolder contains a DICOMDIR file or .tar.gz, .gz or .zip files
 
     :param sourcefolder:    The full pathname of the folder with the source data
-    :param wildcard:        A glob search pattern to select the tarballed/zipped files (leave empty to skip unzipping)
+    :param wildcard:        A glob search pattern to select the tarball/zipped files (leave empty to skip unzipping)
     :param workfolder:      A root folder for temporary data
     :return:                Either ([unpacked and sorted session folders], True), or ([sourcefolder], False)
     """
 
-    # Search for zipped/tarballed files
+    # Search for zipped/tarball files
     tarzipfiles = list(sourcefolder.glob(wildcard)) if wildcard else []
 
     # See if we have a flat unsorted (DICOM) data organization, i.e. no directories, but DICOM-files
@@ -305,6 +332,11 @@ def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> (List[P
 
     # Check if we are going to do unpacking and/or sorting
     if tarzipfiles or flatDICOM or (sourcefolder/'DICOMDIR').is_file():
+
+        if tarzipfiles:
+            LOGGER.info(f"Found zipped/tarball data in: {sourcefolder}")
+        else:
+            LOGGER.info(f"Detected a {'flat' if flatDICOM else 'DICOMDIR'} data-structure in: {sourcefolder}")
 
         # Create a (temporary) sub/ses workfolder for unpacking the data
         if not workfolder:
@@ -318,7 +350,7 @@ def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> (List[P
         LOGGER.info(f"Making temporary copy: {sourcefolder} -> {worksubses}")
         shutil.copytree(sourcefolder, worksubses, dirs_exist_ok=True)
 
-        # Unpack the zip/tarballed files in the temporary folder
+        # Unpack the zip/tarball files in the temporary folder
         sessions  = []
         recursive = False
         for tarzipfile in [worksubses/tarzipfile.name for tarzipfile in tarzipfiles]:
@@ -365,6 +397,8 @@ def is_dicomfile(file: Path) -> bool:
                 return True
         # Reading non-standard DICOM file
         if file.suffix.lower() in ('.ima','.dcm','.dicm','.dicom',''):           # Avoid memory problems when reading a very large (e.g. EEG) source file
+            if file.name == 'DICOMDIR':
+                return True
             dicomdata = dcmread(file, force=True)               # The DICM tag may be missing for anonymized DICOM files
             return 'Modality' in dicomdata
         # else:
@@ -524,40 +558,44 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
         value = ''
 
     else:
-        try:
-            if dicomfile != _DICOMFILE_CACHE:
-                dicomdata = dcmread(dicomfile, force=True)          # The DICM tag may be missing for anonymized DICOM files
-                _DICOMDICT_CACHE = dicomdata
-                _DICOMFILE_CACHE = dicomfile
-            else:
-                dicomdata = _DICOMDICT_CACHE
-
-            try:                                                    # Try Pydicom's hexadecimal tag number first
-                value = eval(f"dicomdata[{tagname}].value")
-            except (NameError, KeyError, SyntaxError):
-                value = dicomdata.get(tagname) if tagname in dicomdata else ''  # Then try and see if it is an attribute name. NB: Do not use dicomdata.get(tagname, '') to avoid using its class attributes (e.g. 'filename')
-
-            # Try a recursive search
-            if not value and value != 0:
-                for elem in dicomdata.iterall():
-                    if tagname in (elem.name, elem.keyword, str(elem.tag), str(elem.tag).replace(', ',',')):
-                        value = elem.value
-                        break
-
-            if not value and value!=0 and 'Modality' not in dicomdata:
-                raise ValueError(f"Missing mandatory DICOM 'Modality' field in: {dicomfile}")
-
-        except OSError as ioerror:
-            LOGGER.warning(f"Cannot read {tagname} from {dicomfile}\n{ioerror}")
-            value = ''
-
-        except Exception as dicomerror:
-            LOGGER.warning(f"Could not read {tagname} from {dicomfile}\n{dicomerror}")
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
             try:
-                value = parse_x_protocol(tagname, dicomfile)
-            except Exception as dicomerror:
-                LOGGER.warning(f'Could not parse {tagname} from {dicomfile}\n{dicomerror}')
+                if dicomfile != _DICOMFILE_CACHE:
+                    if dicomfile.name == 'DICOMDIR':
+                        LOGGER.bcdebug(f"Getting DICOM fields from {dicomfile} seems dysfunctional (will raise dcmread error below if pydicom => v3.0)")
+                    dicomdata = dcmread(dicomfile, force=True)          # The DICM tag may be missing for anonymized DICOM files
+                    _DICOMDICT_CACHE = dicomdata
+                    _DICOMFILE_CACHE = dicomfile
+                else:
+                    dicomdata = _DICOMDICT_CACHE
+
+                try:                                                    # Try Pydicom's hexadecimal tag number first
+                    value = eval(f"dicomdata[{tagname}].value")         # NB: This may generate e.g. UserWarning: Invalid value 'filepath' used with the 'in' operator: must be an element tag as a 2-tuple or int, or an element keyword
+                except (NameError, KeyError, SyntaxError):
+                    value = dicomdata.get(tagname) if tagname in dicomdata else ''  # Then try and see if it is an attribute name. NB: Do not use dicomdata.get(tagname, '') to avoid using its class attributes (e.g. 'filename')
+
+                # Try a recursive search
+                if not value and value != 0:
+                    for elem in dicomdata.iterall():
+                        if tagname in (elem.name, elem.keyword, str(elem.tag), str(elem.tag).replace(', ',',')):
+                            value = elem.value
+                            break
+
+                if not value and value!=0 and 'Modality' not in dicomdata:
+                    raise ValueError(f"Missing mandatory DICOM 'Modality' field in: {dicomfile}")
+
+            except OSError as ioerror:
+                LOGGER.warning(f"Cannot read {tagname} from {dicomfile}\n{ioerror}")
                 value = ''
+
+            except Exception as dicomerror:
+                LOGGER.warning(f"Could not read {tagname} from {dicomfile}\n{dicomerror}")
+                try:
+                    value = parse_x_protocol(tagname, dicomfile)
+                except Exception as dicomerror:
+                    LOGGER.warning(f'Could not parse {tagname} from {dicomfile}\n{dicomerror}')
+                    value = ''
 
     # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
     if isinstance(value, int):
@@ -1227,7 +1265,7 @@ def get_run_(provenance: Union[str, Path]='', dataformat: str='', datatype: str=
     """
     Get an empty run-item with the proper structure and provenance info
 
-    :param provenance:  The unique provenance that is use to identify the run
+    :param provenance:  The unique provenance that is used to identify the run
     :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
     :param datatype:    The bidsmap datatype that is used, e.g. 'anat'
     :param bidsmap:     The bidsmap, with all the bidscoin options in it
@@ -1267,7 +1305,7 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
         if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
             # Get a clean run (remove comments to avoid overly complicated commentedMaps from ruamel.yaml)
-            run_ = get_run_(datasource.path, bidsmap=bidsmap)
+            run_ = get_run_(datasource.path, datasource.dataformat, datatype, bidsmap)
 
             for propkey, propvalue in run['properties'].items():
                 run_['properties'][propkey] = propvalue
@@ -1291,9 +1329,6 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
                     run_['meta'][metakey] = metavalue
                 else:
                     run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False)
-
-            run_['datasource']      = copy.deepcopy(run['datasource'])
-            run_['datasource'].path = datasource.path
 
             return run_
 
@@ -1384,8 +1419,8 @@ def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
         run = run_
 
     if not bidsmap.get(dataformat):
-        bidsmap[dataformat] = {}
-    elif not bidsmap.get(dataformat).get(datatype):
+        bidsmap[dataformat] = {datatype:[]}
+    if not bidsmap.get(dataformat).get(datatype):
         bidsmap[dataformat][datatype] = [run]
     else:
         bidsmap[dataformat][datatype].append(run)
@@ -1447,7 +1482,6 @@ def match_runvalue(attribute, pattern) -> bool:
     Examples:
         match_runvalue('my_pulse_sequence_name', 'filename')   -> False
         match_runvalue([1,2,3], [1,2,3])                       -> True
-        match_runvalue([1,2,3], '\[1, 2, 3\]')                 -> True
         match_runvalue('my_pulse_sequence_name', '^my.*name$') -> True
         match_runvalue('T1_MPRage', '(?i).*(MPRAGE|T1w).*')    -> True
 
@@ -1567,7 +1601,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
         for run in runs if runs else []:
 
             match = any([run[matching][attrkey] not in [None,''] for matching in ('properties','attributes') for attrkey in run[matching]])     # Normally match==True, but make match==False if all attributes are empty
-            run_  = get_run_(datasource.path, dataformat=datasource.dataformat, datatype=datatype, bidsmap=bidsmap)
+            run_  = get_run_(datasource.path, datasource.dataformat, datatype, bidsmap)
 
             # Try to see if the sourcefile matches all of the filesystem properties
             for propkey, propvalue in run['properties'].items():
@@ -1611,10 +1645,6 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
                     run_['meta'][metakey] = metavalue
                 else:
                     run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False, runtime=runtime)
-
-            # Copy the DataSource object
-            run_['datasource']      = copy.deepcopy(run['datasource'])
-            run_['datasource'].path = datasource.path
 
             # Stop searching the bidsmap if we have a match
             if match:
@@ -1959,7 +1989,8 @@ def get_metahelp(metakey: str) -> str:
             if metakey == 'IntendedFor':    # IntendedFor is a special search-pattern field in BIDScoin
                 description += ('\nNB: These associated files can be dynamically searched for'
                                 '\nduring bidscoiner runtime with glob-style matching patterns,'
-                                '\n"such as <<Reward*_bold><Stop*_epi>>" (see documentation)')
+                                '\n"such as <<Reward*_bold><Stop*_epi>>" or <<dwi/*acq-highres*>>'
+                                '\n(see documentation)')
             return f"{metafields[field]['display_name']}\n{description}"
 
     return f"{metakey}\nAn unknown/private meta key"

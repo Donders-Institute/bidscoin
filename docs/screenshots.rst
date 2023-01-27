@@ -30,3 +30,10 @@ The bidscoiner
 .. figure:: ./_static/bidscoiner_terminal.png
 
    Snapshot of running `bidscoiner` in the terminal.
+
+BIDS-apps
+~~~~~~~~~
+
+.. figure:: ./_static/slicereport_skullstrip.png
+
+   Snippet of a `slicereport` for doing quality control on `skullstrip` output images.

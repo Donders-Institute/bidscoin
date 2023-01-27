@@ -149,10 +149,10 @@ Another command-line utility that can be helpful in organizing your source data 
       -c, --clobber         Flag to rename the directories, even if the target-directory already
                             exists (default: False)
       -n SUBPREFIX, --subprefix SUBPREFIX
-                            The prefix common for all the source subject-folders. Use a `*`
+                            The prefix common for all the source subject-folders. Use a '*'
                             wildcard if there is no prefix (default: sub-)
       -m [SESPREFIX], --sesprefix [SESPREFIX]
-                            The prefix common for all the source session-folders. Use a `*`
+                            The prefix common for all the source session-folders. Use a '*'
                             wildcard if there is no prefix or an empty value if there are no
                             sessions (default: ses-)
       -d, --dryrun          Add this flag to dryrun (test) the mapping or renaming of the sub-

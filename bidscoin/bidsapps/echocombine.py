@@ -27,7 +27,6 @@ unknowndatatype = 'extra_data'
 
 def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorithm: str, weights: list, force: bool=False):
     """
-
     :param bidsdir:     The bids-directory with the (multi-echo) subject data
     :param pattern:     Globlike recursive search pattern (relative to the subject/session folder) to select the first echo of the images that need to be combined, e.g. '*task-*echo-1*'
     :param subjects:    List of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
@@ -40,6 +39,9 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
 
     # Input checking
     bidsdir = Path(bidsdir).resolve()
+    if not bidsdir.is_dir():
+        print(f"Could not find the bids folder: {bidsdir}")
+        return
 
     # Start logging
     bidscoin.setup_logging(bidsdir/'code'/'bidscoin'/'echocombine.log')

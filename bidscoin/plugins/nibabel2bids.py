@@ -40,7 +40,7 @@ def test(options: dict=OPTIONS) -> int:
     # Test the nibabel installation
     try:
 
-        LOGGER.info(f"Nibabel version: {nib.info.VERSION}")
+        LOGGER.info(f"Nibabel version: {nib.__version__}")
         if options.get('ext',OPTIONS['ext']) not in ('.nii', '.nii.gz'):
             LOGGER.error(f"The 'ext: {options.get('ext')}' value in the nibabel2bids options is not '.nii' or '.nii.gz'")
             return 2
@@ -70,13 +70,13 @@ def is_sourcefile(file: Path) -> str:
     """
 
     ext = ''.join(file.suffixes)
-    if file.is_file() and ext.lower() in list(nib.ext_map.keys()) + ['.nii.gz']:
+    if file.is_file() and ext.lower() in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes),()) + ('.nii.gz',):
         return 'Nibabel'
 
     return ''
 
 
-def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> Union[str, int, float]:
+def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> Union[str, int, float, list]:
     """
     This plugin supports reading attributes from DICOM and PAR dataformats
 
@@ -87,8 +87,19 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
     :return:            The attribute value
     """
 
+    value = None
+
     if dataformat == 'Nibabel':
-        return nib.load(sourcefile).header.get(attribute).item()
+
+        try:
+            value = nib.load(sourcefile).header.get(attribute)
+            if value is not None:
+                value = value.tolist()
+
+        except Exception:
+            LOGGER.exception(f"Could not get the nibabel '{attribute}' attribute from {sourcefile} -> {value}")
+
+    return value
 
 
 def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:

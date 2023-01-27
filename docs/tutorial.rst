@@ -40,12 +40,12 @@ The new ``bidscointutorial`` folder contains a ``raw`` source-data folder and a 
    007-t1_mprage_sag_ipat2_1p0iso           An anatomical T1-weighted scan
    047-cmrr_2p4iso_mb8_TR0700_SBRef         A single-band reference scan of the subsequent multi-band functional MRI scan
    048-cmrr_2p4iso_mb8_TR0700               A multi-band functional MRI scan
-   049-field_map_2p4iso                     The fieldmap magnitude images of the first and second echo. Set as "magnitude1", bidscoiner will recognize the format. This fieldmap is intended for the previous functional MRI scan
-   050-field_map_2p4iso                     The fieldmap phase difference image of the first and second echo
+   049-field_map_2p4iso                     The field-map magnitude images of the first and second echo. Set as "magnitude1", bidscoiner will recognize the format. This field map is intended for the previous functional MRI scan
+   050-field_map_2p4iso                     The field-map phase difference image of the first and second echo
    059-cmrr_2p5iso_mb3me3_TR1500_SBRef      A single-band reference scan of the subsequent multi-echo functional MRI scan
    060-cmrr_2p5iso_mb3me3_TR1500            A multi-band multi-echo functional MRI scan
-   061-field_map_2p5iso                     Idem, the fieldmap magnitude images of the first and second echo, intended for the previous functional MRI scan
-   062-field_map_2p5iso                     Idem, the fieldmap phase difference image of the first and second echo
+   061-field_map_2p5iso                     Idem, the field-map magnitude images of the first and second echo, intended for the previous functional MRI scan
+   062-field_map_2p5iso                     Idem, the field-map phase difference image of the first and second echo
 
 Let's begin with inspecting this new raw data collection:
 
@@ -62,7 +62,7 @@ Now we can make a study bidsmap, i.e. the mapping from DICOM source-files to BID
    $ bidsmapper raw bids
 
 - In the GUI that appears at the end, edit the task and acquisition labels of the functional scans into something more readable, e.g. ``task-Reward`` for the ``acq-mb8`` scans and ``task-Stop`` for the ``acq-mb3me3 scans``. Also make the name of the T1 scan more user friendly, e.g. by naming the acquisition label simply ``acq-mprage``.
-- Add a search pattern to the ``IntendedFor`` field such that the first fieldmap will select your ``Reward`` runs and the second fieldmap your ``Stop`` runs (see the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ fieldmap notes for more details)
+- Add a search pattern to the ``IntendedFor`` field such that the first field map will select your ``Reward`` runs and the second field map your ``Stop`` runs (see the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ field map notes for more details)
 - Since for this dataset we only have one session per subject, remove the session label (and note how the output names simplify, omitting the session subfolders and labels)
 - When all done, go to the ``Options`` tab and change the ``dcm2niix`` settings to get non-zipped NIfTI output data (i.e. ``*.nii`` instead of ``*.nii.gz``). Test the tool to see if it can run and, as a final step, save your bidsmap. You can always go back later to change any of your edits by running the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ command line tool directly. Try that.
 
@@ -76,7 +76,7 @@ The next step, converting the source data into a BIDS collection, is very simple
    $ bidscoiner raw bids
 
 - Check your ``bids/code/bidscoin/bidscoiner.log`` (the complete terminal output) and ``bids/code/bidscoin/bidscoiner.errors`` (the summary that is also printed at the end) files for any errors or warnings. You shouldn't have any :-)
-- Compare the results in your ``bids/sub-*`` subject folders with the in ``bids_ref`` reference result. Are the file and foldernames the same (don't worry about the multi-echo images and the ``extra_data`` images, they are combined/generated as described below)? Also check the json sidecar files of the fieldmaps. Do they have the right ``EchoTime`` and ``IntendedFor`` fields?
+- Compare the results in your ``bids/sub-*`` subject folders with the in ``bids_ref`` reference result. Are the file and folder names the same (don't worry about the multi-echo images and the ``extra_data`` images, they are combined/generated as described below)? Also check the json sidecar files of the field maps. Do they have the right ``EchoTime`` and ``IntendedFor`` fields?
 - What happens if you re-run the ``bidscoiner`` command? Are the same subjects processed again? Re-run ``sub-001``.
 
 5. Finishing up

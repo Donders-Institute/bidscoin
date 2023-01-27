@@ -35,7 +35,6 @@ except ImportError:
 
 def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
     """
-
     :param bidsdir:     The bids-directory with the (multi-echo) subject data
     :param pattern:     Globlike search pattern (relative to the subject/session folder) to select the echo-images that need to be defaced, e.g. 'anat/*_T1w*'
     :param maskpattern: Globlike search pattern (relative to the subject/session folder) to select the images from which the defacemask is computed, e.g. 'anat/*_part-mag_*_T2starw*'. If not given then 'pattern' is used
@@ -50,6 +49,9 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
 
     # Input checking
     bidsdir = Path(bidsdir).resolve()
+    if not bidsdir.is_dir():
+        print(f"Could not find the bids folder: {bidsdir}")
+        return
     if not maskpattern:
         maskpattern = pattern
 
@@ -57,7 +59,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
     bidscoin.setup_logging(bidsdir/'code'/'bidscoin'/'medeface.log')
     LOGGER.info('')
     LOGGER.info('------------ START multi-echo deface ----------')
-    LOGGER.info(f">>> medeface bidsfolder={bidsdir} pattern={pattern} subjects={subjects} output={output}"
+    LOGGER.info(f">>> medeface bidsfolder={bidsdir} pattern={pattern} maskpattern={maskpattern} subjects={subjects} output={output}"
                 f" cluster={cluster} nativespec={nativespec} {kwargs}")
 
     # Get the list of subjects
@@ -102,7 +104,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                     continue
 
                 # Check the json "Defaced" field to see if it has already been defaced
-                if not force:
+                if not force and echofiles[0].with_suffix('').with_suffix('.json').is_file():
                     with echofiles[0].with_suffix('').with_suffix('.json').open('r') as fid:
                         jsondata = json.load(fid)
                     if jsondata.get('Defaced'):
@@ -128,6 +130,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                     pdu.deface_image(str(tmpfile), str(tmpfile), force=True, forcecleanup=True, **kwargs)
 
         if cluster:
+            LOGGER.info('')
             LOGGER.info('Waiting for the deface jobs to finish...')
             pbatch.synchronize(jobIds=[pbatch.JOB_IDS_SESSION_ALL], timeout=pbatch.TIMEOUT_WAIT_FOREVER, dispose=True)
             pbatch.deleteJobTemplate(jt)
@@ -179,8 +182,11 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                     # Add a json sidecar-file with the "Defaced" field
                     inputjson  = echofile.with_suffix('').with_suffix('.json')
                     outputjson = outputfile.with_suffix('').with_suffix('.json')
-                    with inputjson.open('r') as sidecar:
-                        metadata = json.load(sidecar)
+                    if inputjson.is_file():
+                        with inputjson.open('r') as sidecar:
+                            metadata = json.load(sidecar)
+                    else:
+                        metadata = {}
                     metadata['Defaced'] = True
                     with outputjson.open('w') as sidecar:
                         json.dump(metadata, sidecar, indent=4)

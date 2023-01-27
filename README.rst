@@ -18,28 +18,26 @@ BIDScoin is a user friendly `open-source <https://github.com/Donders-Institute/b
 
 Data conversions are performed within plugins, such as plugins that employ `dcm2niix <https://github.com/rordenlab/dcm2niix>`__, `spec2nii <https://github.com/wtclarke/spec2nii>`__ or `nibabel <https://nipy.org/nibabel>`__.
 
-BIDScoin requires no programming knowledge in order to use it, but users can use regular expression and plug-ins to further enhance BIDScoin's power and flexibilty, and readily handle a wide variety of source data types.
+BIDScoin requires no programming knowledge in order to use it, but users can use regular expression and plug-ins to further enhance BIDScoin's power and flexibility, and readily handle a wide variety of source data types.
 
 BIDScoin is developed at the `Donders Institute <https://www.ru.nl/donders/>`__ of the `Radboud University <https://www.ru.nl/en>`__.
 
-BIDScoin functionality
-----------------------
+Features
+--------
 
 -  [x] DICOM source data
--  [x] PAR / REC source data (Philips)
+-  [x] PAR/REC source data (Philips)
 -  [x] NIfTI source data
 -  [x] Physiological logging data\*
 -  [x] MR Spectroscopy data\*\*
--  [x] PET data\*
--  [x] Fieldmaps\*
+-  [x] PET data
+-  [x] Field maps\*
 -  [x] Multi-echo data\*
 -  [x] Multi-coil data\*
--  [ ] Stimulus / behavioural logfiles
--  [x] Multi-echo combination
--  [x] Defacing
+-  [ ] Stimulus/behavioural logfiles
 -  [x] Plug-ins
 
-   ``*  = Only DICOM source data / tested for Siemens``
+   ``*  = Only DICOM source data``
 
    ``** = Only Twix, SDAT/SPAR and P-file source data``
 

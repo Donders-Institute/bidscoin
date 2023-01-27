@@ -28,7 +28,6 @@ except ImportError:
 
 def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: list, force: bool, args: str):
     """
-
     :param bidsdir:     The bids-directory with the subject data
     :param pattern:     Globlike search pattern (relative to the subject/session folder) to select the images that need to be skullstripped, e.g. 'anat/*_T1w*'
     :param subjects:    List of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
@@ -41,6 +40,9 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
 
     # Input checking
     bidsdir = Path(bidsdir).resolve()
+    if not bidsdir.is_dir():
+        print(f"Could not find the bids folder: {bidsdir}")
+        return
     if not output or len(output) == 0:
         output = ['derivatives']
     if len(output) == 1:
@@ -83,7 +85,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
                 # Search for images that need to be skullstripped
                 sesid   = session.name if session.name.startswith('ses-') else ''
                 srcimgs = sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes])
-                addimgs = sorted([match for match in session.glob(masked)  if '.nii' in match.suffixes])
+                addimgs = sorted([match for match in session.glob(masked)  if '.nii' in match.suffixes]) if masked else []
                 if addimgs and len(srcimgs) > 1:
                     LOGGER.error(f"{len(srcimgs)} matches found for {session/pattern}, which is ambiguous (the {masked} masked option requires a single match)")
                     addimgs = []
@@ -116,8 +118,11 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
 
                     # Add a json sidecar-file with the "SkullStripped" field
                     srcjson = srcimg.with_suffix('').with_suffix('.json')
-                    with srcjson.open('r') as sidecar:
-                        metadata = json.load(sidecar)
+                    if srcjson.is_file():
+                        with srcjson.open('r') as sidecar:
+                            metadata = json.load(sidecar)
+                    else:
+                        metadata = {}
                     metadata['SkullStripped'] = True
                     with outputjson.open('w') as sidecar:
                         json.dump(metadata, sidecar, indent=4)
@@ -158,8 +163,11 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
                             continue
 
                         # Add a json sidecar-file to the output image
-                        with addimg.with_suffix('').with_suffix('.json').open('r') as sidecar:
-                            metadata = json.load(sidecar)
+                        if addimg.with_suffix('').with_suffix('.json').is_file():
+                            with addimg.with_suffix('').with_suffix('.json').open('r') as sidecar:
+                                metadata = json.load(sidecar)
+                        else:
+                            metadata = {}
                         metadata['SkullStripped'] = True
                         with outputjson.open('w') as sidecar:
                             json.dump(metadata, sidecar, indent=4)
@@ -228,7 +236,8 @@ def main():
                                      epilog='examples:\n'
                                             '  skullstrip myproject/bids anat/*_T1w*\n'
                                             '  skullstrip myproject/bids anat/*_T1w* -p 001 003 -a \' --no-csf\'\n'
-                                            '  skullstrip myproject/bids fmap/*_magnitude1* -m fmap/*_phasediff -o extra_data fmap\n ')
+                                            '  skullstrip myproject/bids fmap/*_magnitude1* -m fmap/*_phasediff -o extra_data fmap\n'
+                                            '  skullstrip myproject/bids fmap/*_acq-mylabel*_magnitude1* -m fmap/*_acq-mylabel_* -o fmap\n ')
     parser.add_argument('bidsfolder',               help="The bids-directory with the subject data", type=str)
     parser.add_argument('pattern',                  help="Globlike search pattern (relative to the subject/session folder) to select the (3D) images that need to be skullstripped, e.g. 'anat/*_T1w*'", type=str)
     parser.add_argument('-p','--participant_label', help="Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed", type=str, nargs='+')

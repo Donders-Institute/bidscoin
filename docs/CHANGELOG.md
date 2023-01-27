@@ -9,7 +9,8 @@ All notable changes to this project will be documented in this file. The format 
 ### Added
 - Support for BIDS 1.8.0
 - Support for handling of non-alphanumeric characters in sub/ses prefixes
-- A skullstrip tool (a bids-wrapper around synthstrip)
+- A `skullstrip` tool (a bids-wrapper around FreeSurfer/synthstrip)
+- A `slicereport` QC tool (a bids-wrapper around FSL/slicesdir)
 - A unit/integration test & CI framework
 - A BIDSCOIN_DEBUG environment variable to run bidscoin in a more verbose debug mode
 - VERBOSE and SUCCESS logging levels
@@ -20,7 +21,7 @@ All notable changes to this project will be documented in this file. The format 
 ### Changed
 - The default behaviour is now not to unzip data in the sourcefolders anymore. Instead, users can use the `--unzip` option in the bidsmapper
 - Removed BIDScoin's redundant/confusing `datatypes` option from the bidsmap
-- Removed the obsure `participants` option from bidscoiner
+- Removed the obscure `participants` option from bidscoiner
 
 ## [3.7.4] - 2022-10-21
 
@@ -65,9 +66,9 @@ All notable changes to this project will be documented in this file. The format 
 ## [3.7.1] - 2022-03-11
 
 ### Added
-- IntendedFor can now be appended with a "bounding" term to deal with duplicated fieldmaps from interrupted sessions
+- IntendedFor can now be appended with a "bounding" term to deal with duplicated field maps from interrupted sessions
 - The possibility to process subject folders without prefix
-- Support for BIDS 1.7 (e.g. for the new `B0FieldSource` and `B0FieldIdentifier` fieldmap meta fields)
+- Support for BIDS 1.7 (e.g. for the new `B0FieldSource` and `B0FieldIdentifier` field-map meta fields)
 - A `nibabel2bids` plugin (e.g. to convert NIfTI datasets to BIDS)
 - Plugin `meta` option setting to enrich json sidecar files or add data that is not supported
 
@@ -95,7 +96,7 @@ All notable changes to this project will be documented in this file. The format 
 - The possibility for plugins to set default bidsmappings and Options when installed
 - A Singularity container configuration file
 - Improved (more fine-grained) plugin installation procedures
-- The option to remove decimals from age and discard acquisition dates from the meta data
+- The option to remove decimals from age and discard acquisition dates from the metadata
 
 ### Changed
 - Plugins should now have a `is_sourcefile` and a `get_attribute` function and have a simpler/changed API (-> DataSource class)
@@ -154,7 +155,7 @@ The bidscoiner no longer sometimes crashes when dcm2niix produces custom suffixe
 ## [3.5.3] - 2021-04-13
 
 ### Fixed
-- Save non-standard fieldmaps in the derivative folder
+- Save non-standard field maps in the derivative folder
 - Add 'AcquisitionTime' to physio json-files and add the physio-files to the *_scans.tsv file 
     
 ## [3.5.2] - 2021-03-21
@@ -184,7 +185,7 @@ A significant rewrite and evolution of BIDScoin!
 - Validation of run-items and bidsmaps against the BIDS schema
 
 ### Changed
-- Use the dccn template bidsmap as the default
+- Use the DCCN template bidsmap as the default
 
 ### Fixed
 - Simplified and improved (hopefully) handling of fieldmaps
@@ -238,7 +239,7 @@ A significant rewrite and evolution of BIDScoin!
     
 ## [3.0] - 2020-04-01
 
-A Significant rewrite to make BIDScoin more robust, user friendly and feature-rich :-)
+A Significant rewrite to make BIDScoin more robust, user-friendly and feature-rich :-)
 
 ### Added
 * First support for Philips PAR / REC data format
@@ -249,7 +250,7 @@ A Significant rewrite to make BIDScoin more robust, user friendly and feature-ri
 ## [2.3.1] - 2019-09-12
 
 ### Fixed
-* a small but important bug that caused datasets without fieldmaps to crash (my test datasets all had fieldmaps :-))
+* a small but important bug that caused datasets without field maps to crash (my test datasets all had field maps :-))
     
 ## [2.3] - 2019-08-29
 
@@ -290,7 +291,7 @@ A lot of improvements have landed in 2.3, making it the best release of the 2-se
 * Editing of bidsmap Options
 
 ### Fixed
-* `IntendedFor` in fieldmap json sidecar files
+* `IntendedFor` in field map json sidecar files
 * Code redundancy
     
 ## [2.0] - 2019-06-18
@@ -321,7 +322,7 @@ A major release and rewrite with important user-facing improvements
 ## [1.4] - 2018-10-22
 
 ### Added
-* Cross platform support
+* Cross-platform support
 * Installation as a Python module
 * Improved version control
 * Improved BIDS compliance
@@ -337,7 +338,7 @@ A major release and rewrite with important user-facing improvements
 ## [1.2] - 2018-09-14
 
 ### Added
-* Improved fieldmap support
+* Improved field map support
 
 ### Changed
 * Yaml-syntax

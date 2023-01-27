@@ -64,7 +64,7 @@ subprefix:    The subject prefix used in the source data folders (e.g. "Pt" is t
 sesprefix:    The session prefix used in the source data folders (e.g. "M_" is the subprefix if session folders are named "M_pre", "M_post", ...)
 unknowntypes: Datatypes that are not part of BIDS but that are converted to a BIDS-like entries in the BIDS folder
 ignoretypes:  Datatypes that are excluded / not converted
-unzip:        Wildcard pattern to select tarballed/zip-files in the sourcefolders that need to be unzipped (in a tempdir), e.g. '*.tar.gz'"""
+unzip:        Wildcard pattern to select tarball/zip-files in the sourcefolders that need to be unzipped (in a tempdir), e.g. '*.tar.gz'"""
 
 TOOLTIP_DCM2NIIX = """dcm2niix2bids
 command: Command to run dcm2niix from the terminal, such as:
@@ -1545,6 +1545,8 @@ class InspectWindow(QDialog):
         super().__init__()
 
         if bids.is_dicomfile(filename):
+            if filename.name == 'DICOMDIR':
+                LOGGER.bcdebug(f"Getting DICOM fields from {filename} will raise dcmread error below if pydicom => v3.0")
             text = str(dcmread(filename, force=True))
         elif bids.is_parfile(filename) or filename.suffix.lower() in ('.spar', '.txt', '.text'):
             text = filename.read_text()

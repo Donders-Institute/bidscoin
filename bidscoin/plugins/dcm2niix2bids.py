@@ -74,7 +74,7 @@ def is_sourcefile(file: Path) -> str:
     :return:        The valid dataformat of the file for this plugin
     """
 
-    if bids.is_dicomfile(file):
+    if bids.is_dicomfile(file) and bids.get_dicomfield('Modality', file) != 'PT':
         return 'DICOM'
 
     if bids.is_parfile(file):

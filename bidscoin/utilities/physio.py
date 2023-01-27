@@ -204,7 +204,7 @@ def readphysio(fn: Union[str,Path]) -> dict:
     fn = Path(fn).resolve()
 
     # First, check if the input points to a valid DICOM file. If so, extract the physiological data
-    if fn.is_file():
+    if fn.is_file() and fn.name != 'DICOMDIR':
         LOGGER.info(f"Reading physio DICOM file: {fn}")
         dicomdata    = dcmread(fn, force=True)          # The DICM tag may be missing for anonymized DICOM files
         manufacturer = dicomdata.get('Manufacturer')
