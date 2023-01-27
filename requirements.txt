@@ -9,7 +9,7 @@ tqdm>=4.60.0
 multiecho>=0.25
 python-dateutil
 nibabel
-pypet2bids
+pypet2bids>=1.0.12
 bids_validator
 pydeface
 spec2nii
