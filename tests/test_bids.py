@@ -81,7 +81,11 @@ class TestDataSource:
         assert datasource.dynamicvalue(r'<<PatientName:.*\^(.*?)1>>')                            == r'<<PatientName:.*\^(.*?)1>>'
         assert datasource.dynamicvalue(r'<<PatientName:.*\^(.*?)1>>', runtime=True)              == 'MR'
         assert datasource.dynamicvalue(r'pat-<PatientName:.*\^(.*?)1>I<filename:MR_(.*?)\.dcm>') == 'patMRIsmall'
-
+        assert datasource.dynamicvalue(r"<Patient's Name>")                                      == 'CompressedSamplesMR1'    # Patient's Name, 0x00100010, 0x10,0x10, (0x10, 0x10), and (0010, 0010) index keys are all equivalent
+        assert datasource.dynamicvalue(r'<0x00100010>')                                          == 'CompressedSamplesMR1'
+        assert datasource.dynamicvalue(r'<0x10,0x10>')                                           == 'CompressedSamplesMR1'
+        assert datasource.dynamicvalue(r'<(0x10, 0x10)>')                                        == 'CompressedSamplesMR1'
+        assert datasource.dynamicvalue(r'<(0010, 0010)>')                                        == 'CompressedSamplesMR1'
 
 def test_unpack(dicomdir, tmp_path):
     unpacked = bids.unpack(dicomdir.parent, '', tmp_path)
