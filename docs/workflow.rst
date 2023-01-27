@@ -14,7 +14,7 @@ By default, when finished the bidsmapper automatically launches the bidseditor, 
     $ bidsmapper sourcefolder bidsfolder    # Scans your data and creates a study bidsmap
     $ bidscoiner sourcefolder bidsfolder    # Converts your data to BIDS using the study bidsmap
 
-If you add new subjects all you need to do is re-run the bidscoiner -- unless the scan protocol was changed, then you also need to first re-run the bidsmapper to add the new samples to the study bidsmap. The paragraphs below describe the BIDScoin worklow in more detail.
+If you add new subjects all you need to do is re-run the bidscoiner -- unless the scan protocol was changed, then you also need to first re-run the bidsmapper to add the new samples to the study bidsmap. The paragraphs below describe the BIDScoin workflow in more detail.
 
 .. tip::
    If you don't know what shell command to use or what to do, run the ``bidscoin`` command to give you a workflow overview
@@ -72,7 +72,7 @@ Step 1a: Running the bidsmapper
                             readable. Default: the value of the study/template bidsmap
       -s, --store           Flag to store provenance data samples in the
                             bidsfolder/'code'/'provenance' folder (useful for inspecting e.g.
-                            zipped or transfered datasets)
+                            zipped or transferred datasets)
       -a, --automated       Flag to save the automatically generated bidsmap to disk and without
                             interactively tweaking it with the bidseditor
       -f, --force           Flag to discard the previously saved bidsmap and logfile
@@ -125,7 +125,7 @@ Step 1b: Running the bidseditor
 Main window
 ^^^^^^^^^^^
 
-As shown below, the main window of the bidseditor opens with separate data mapping tabs for each data format that is present in the bidsmap (here ``DICOM mappings`` and ``PAR mappings``). The data mapping tabs consist of a ``Participant labels`` table and a ``Data samples`` table. By default, the participant table contains `dynamic <bidsmap.html#special-bidsmap-features>`__ ``<<filepath:regexp>>`` property values, which are used to extract the subject and session labels from the path of the source data during bidscoiner runtime. Alternatively, you can put a dynamic attribute value there (e.g. <<PatientName>>) if you want to extract that information from the source header. The data samples table shows a list of input files (left side) that uniquely represent all the different data types in the sourcedata repository, in conjunction with a preview of their ``BIDS output`` names (right side). The BIDS output names are shown in red if they are not BIDS compliant, striked-out gray when the runs will be ignored / skipped in the conversion to BIDS, otherwise it is colored green.
+As shown below, the main window of the bidseditor opens with separate data mapping tabs for each data format that is present in the bidsmap (here ``DICOM mappings`` and ``PAR mappings``). The data mapping tabs consist of a ``Participant labels`` table and a ``Data samples`` table. By default, the participant table contains `dynamic <bidsmap.html#special-bidsmap-features>`__ ``<<filepath:regexp>>`` property values, which are used to extract the subject and session labels from the path of the source data during bidscoiner runtime. Alternatively, you can put a dynamic attribute value there (e.g. <<PatientName>>) if you want to extract that information from the source header. The data samples table shows a list of input files (left side) that uniquely represent all the different data types in the sourcedata repository, in conjunction with a preview of their ``BIDS output`` names (right side). The BIDS output names are shown in red if they are not BIDS compliant, crossed-out gray when the runs will be ignored / skipped in the conversion to BIDS, otherwise it is colored green.
 
 .. figure:: ./_static/bidseditor_main.png
 
@@ -135,12 +135,12 @@ As shown below, the main window of the bidseditor opens with separate data mappi
    If the default subject/session expression (e.g. ``/sub-(.*?)/`` where ``sub-`` can be substituted by your prefix) fails to parse the subject or session label, try prepending (a part of) the sourcefolder path, e.g. if your data is in ``/project/sourcedata/s001/..`` and your subject prefix is ``s``, try ``<<filepath:/sourcedata/s(.*?)/>>`` for extracting the ``001`` subject label. This is especially useful if your subject folders have no or a very short prefix.
 
 .. tip::
-   Clear the ``session`` label field if you have data with only one session. This will remove the optional session label from the BIDS ouptput name
+   Clear the ``session`` label field if you have data with only one session. This will remove the optional session label from the BIDS output name
 
 Edit window
 ^^^^^^^^^^^
 
-In the main window, you can double-click the BIDS output name of a data sample or click the [Edit] button next to it (NB: the `*` in this button indicates that attention is required) to open a new window, as shown below. In this new window, the full bids-mapping info of the clicked data-sample (AKA run-item) is shown, with the filesystem ``Properties`` and file ``Attributes`` input on the left, and, most importantly, the associated BIDS ``Data type``, ``Data filename`` and ``Meta data`` output on the right. Editing the properties and attributes is usually not necessary and considered advanced usage, so you can focus on the BIDS output tables on the right. You should first make sure the BIDS ``Data type`` (drop down menu) and its ``suffix`` label (drop down menu) are set correctly, and then you should edit the (automatically generated) BIDS values that you think are not optimal or incorrect (double-click the cell). Each time an item is edited, a new ``Data filename`` preview is shown (green or red text indicates that the name is BIDS compliant or not). In the ``Meta data`` table (see the figure below) you can enter key-value pairs that you like to be stored as BIDS meta-data in the json sidecar file. Right-clicking the meta table allows you to import meta-data from JSON/YAML/CSV/TSV files on disk.
+In the main window, you can double-click the BIDS output name of a data sample or click the [Edit] button next to it (NB: the ``*`` in this button indicates that attention is required) to open a new window, as shown below. In this new window, the full bids-mapping info of the clicked data-sample (AKA run-item) is shown, with the filesystem ``Properties`` and file ``Attributes`` input on the left, and, most importantly, the associated BIDS ``Data type``, ``Data filename`` and ``Meta data`` output on the right. Editing the properties and attributes is usually not necessary and considered advanced usage, so you can focus on the BIDS output tables on the right. You should first make sure the BIDS ``Data type`` (drop down menu) and its ``suffix`` label (drop down menu) are set correctly, and then you should edit the (automatically generated) BIDS values that you think are not optimal or incorrect (double-click the cell). Each time an item is edited, a new ``Data filename`` preview is shown (green or red text indicates that the name is BIDS compliant or not). In the ``Meta data`` table (see the figure below) you can enter key-value pairs that you like to be stored as BIDS meta-data in the json sidecar file. Right-clicking the meta table allows you to import meta-data from JSON/YAML/CSV/TSV files on disk.
 
 If the preview of the BIDS filename and meta-data both look good, you can store the data in the bidsmap by clicking the [OK] button.
 
@@ -150,15 +150,15 @@ If the preview of the BIDS filename and meta-data both look good, you can store 
 
 Finally, if all BIDS output names in the main window are fine, you can click on the [Save] button and proceed with running the bidscoiner tool (step 2). Note that re-running the bidsmapper or bidseditor is always a safe thing to do since these tools will re-use the existing bidsmap yaml-file and will not delete or write anything to disk except to the bidsmap yaml-file.
 
-Fieldmaps
-`````````
+Field maps
+``````````
 
-Fieldmaps are acquired and stored in various (sequences and manufacturer dependent) ways and may require some special treatment. For instance, it could be that you have ``magnitude1`` and ``magnitude2`` data in one series-folder (which is what Siemens can do). In that case you should select the ``magnitude1`` suffix and let bidscoiner automatically pick up the ``magnitude2`` during runtime (or vice versa). The same holds for ``phase1`` and ``phase2`` data. The suffix ``magnitude`` can be selected for sequences that save fieldmaps directly. See the `BIDS specification <https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#fieldmap-data>`__ for more details on fieldmap suffixes.
+Field maps are acquired and stored in various (sequences and manufacturer dependent) ways and may require some special treatment. For instance, it could be that you have ``magnitude1`` and ``magnitude2`` data in one series-folder (which is what Siemens can do). In that case you should select the ``magnitude1`` suffix and let bidscoiner automatically pick up the ``magnitude2`` during runtime (or vice versa). The same holds for ``phase1`` and ``phase2`` data. The suffix ``magnitude`` can be selected for sequences that save field maps directly. See the `BIDS specification <https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#fieldmap-data>`__ for more details on field-map suffixes.
 
-Fieldmaps are typically acquired to be applied to specific other scans from the same session. The BIDS specification provides two `meta-data mechanisms <https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#expressing-the-mr-protocol-intent-for-fieldmaps>`__ to store this semantic meta data (NB: BIDS-apps may not use your fieldmap at all if you do not specify anything):
+Field maps are typically acquired to be applied to specific other scans from the same session. The BIDS specification provides two `meta-data mechanisms <https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#expressing-the-mr-protocol-intent-for-fieldmaps>`__ to store this semantic meta data (NB: BIDS-apps may not use your field map at all if you do not specify anything):
 
-1. First there is the older ``IntendedFor`` mechanism that can handle more basic use cases, i.e. it explicitly specifies the path of the target images to which the fieldmap should be applied, but it is left implicit from which images the fieldmap is to be computed. You can enter a dynamic ``IntendedFor`` search string in the ``Meta data`` table to have BIDScoin automatically fill out this field for you. For instance you can simply use ``task-Stop*_bold`` as a search pattern to specify all functional runs in the BIDS session that have ``task-Stop`` and ``_bold`` as part of their filename. For more advanced usage and explanation, see the `special bidsmap features <bidsmap.html#special-bidsmap-features>`__ section
-2. Second, there is the new and more flexible ``B0Fieldmap`` mechanism that uses a ``B0FieldIdentifier`` to group all the images from which the fieldmap can be computed, and a ``B0FieldSource`` to indicate which fieldmap should be used to correct the image. For instance, you could use ``{B0FieldIdentifier: sbref_fmap}`` in your ``AP`` and ``PA`` PE-polar ``sbref`` images, in conjunction with ``{B0FieldSource: sbref_fmap}`` in your associated ``AP`` PE-polar ``bold`` image.
+1. First there is the older ``IntendedFor`` mechanism that can handle more basic use cases, i.e. it explicitly specifies the path of the target images to which the field map should be applied, but it is left implicit from which images the field map is to be computed. You can enter a dynamic ``IntendedFor`` search string in the ``Meta data`` table to have BIDScoin automatically fill out this field for you. For instance you can simply use ``task-Stop*_bold`` as a search pattern to specify all functional runs in the BIDS session that have ``task-Stop`` and ``_bold`` as part of their filename. For more advanced usage and explanation, see the `special bidsmap features <bidsmap.html#special-bidsmap-features>`__ section
+2. Second, there is the new and more flexible ``B0Fieldmap`` mechanism that uses a ``B0FieldIdentifier`` to group all the images from which the field map can be computed, and a ``B0FieldSource`` to indicate which field map should be used to correct the image. For instance, you could use ``{B0FieldIdentifier: sbref_fmap}`` in your ``AP`` and ``PA`` PE-polar ``sbref`` images, in conjunction with ``{B0FieldSource: sbref_fmap}`` in your associated ``AP`` PE-polar ``bold`` image.
 
 .. tip::
    The BIDScoin GUI features several ways to help you setting the right values:
@@ -211,7 +211,7 @@ Step 2: Running the bidscoiner
 
 .. tip::
    * Always check the terminal output for possible warnings or errors (a summary of them is printed at the end)
-   * Check your json sidecar files of your fieldmaps, in particular see if they have the expected ``IntendedFor``/``B0FieldIdentifier`` values
+   * Check your json sidecar files of your field maps, in particular see if they have the expected ``IntendedFor``/``B0FieldIdentifier`` values
 
 .. note::
    The provenance of the produced BIDS data-sets is stored in the ``[bidsfolder]/code/bidscoin/bidscoiner.log`` file. This file is also very useful for debugging / tracking down bidscoin issues.

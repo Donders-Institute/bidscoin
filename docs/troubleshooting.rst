@@ -33,7 +33,7 @@ The first step in troubleshooting is to look at the warnings and messages printe
 
 My bidsmap is empty
 ^^^^^^^^^^^^^^^^^^^
-After running the bidsmapper, the bidseditor shows an empty bidsmap (i.e no data samples). The most likely cause is that the structure of your raw data repository is not understood by BIDScoin (see `data preparation <preparation.html>`__ for more info). Another likely cause is that the sub-/ses- prefixes need to be adjusted to your foldernames (e.g. when your ). Install and/or add the plugin.
+After running the bidsmapper, the bidseditor shows an empty bidsmap (i.e no data samples). The most likely cause is that the structure of your raw data repository is not understood by BIDScoin (see `data preparation <preparation.html>`__ for more info). Another likely cause is that the sub-/ses- prefixes need to be adjusted to your folder names (e.g. when your ). Install and/or add the plugin.
 
 My subject/session labels are wrong
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -45,19 +45,19 @@ This bidscoiner warning message means that the source data was not properly reco
 
 I only see "_magnitude1" or "_magnitude2" run-items in my bidsmap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Siemens (and perhaps other manufacturers too) stores all fieldmap Series in a single Series folder. Hence, when BIDScoin takes a sample from that folder it only sees one of these Series. You don't need to worry about this, because the dcm2niix plugin will accomodate for this and will look-up the other samples during bidscoiner runtime.
+Siemens (and perhaps other manufacturers too) stores all field-map Series in a single Series folder. Hence, when BIDScoin takes a sample from that folder it only sees one of these Series. You don't need to worry about this, because the dcm2niix plugin will accommodate for this and will look-up the other samples during bidscoiner runtime.
 
-My sourcefiles can no longer be found
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+My source-files can no longer be found
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You may get the warning "Cannot reliably change the datatype and/or suffix because the source file '..' can no longer be found". This warning is generated when (1) your source data moved to a different location, or (2) your data is zipped or in DICOMDIR format. This warning can be ignored if you do not need to change the datatype of your run-items anymore (in the bidseditor), because in that case BIDScoin may need access to the source data (to read new properties or attributes). To restore data access for (1), move the data to it's original location and for (2) use the `--store` option of bidsmapper to store local copies of the source data samples in the bids output folder.
 
-I have duplicated fieldmaps because of an interrupted session
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-It may happen that due to irregularities during data acquisition you had to reacquire your fieldmap for part of your data. In that case the `IntendedFor` and `B0FieldIdentifier`/'B0FieldSource` semantics become ambiguous. To handle this situation, you can use json sidecar files to extend the source attributes (see below) or use the limited `IntendedFor` search as described `here <bidsmap.html#intendedfor>`__ and `here <https://github.com/Donders-Institute/bidscoin/issues/123>`__.
+I have duplicated field maps because of an interrupted session
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+It may happen that due to irregularities during data acquisition you had to reacquire your field-map for part of your data. In that case the `IntendedFor` and `B0FieldIdentifier`/'B0FieldSource` semantics become ambiguous. To handle this situation, you can use json sidecar files to extend the source attributes (see below) or use the limited `IntendedFor` search as described `here <bidsmap.html#intendedfor>`__ and `here <https://github.com/Donders-Institute/bidscoin/issues/123>`__.
 
 The bidscoiner says that the IntendedFor search gave no results
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Even if you have specified the IntendedFor value in the bidseditor, you still get `Empty 'IntendedFor' fieldmap value in {..}: the search for {..} gave no results`. This may be because you hardcoded the IntendedFor value instead of providing a search pattern. Or it may be that you provided a correct search pattern but that for some subjects the target images were not acquired or could not be found (e.g. due to irregularities in the acquision). Check out the BIDS output session(s) mentioned in the warning(s) and see if and how you should update your IntendedFor search pattern accordingly.
+Even if you have specified the IntendedFor value in the bidseditor, you still get `Empty 'IntendedFor' field map value in {..}: the search for {..} gave no results`. This may be because you hardcoded the IntendedFor value instead of providing a search pattern. Or it may be that you provided a correct search pattern but that for some subjects the target images were not acquired or could not be found (e.g. due to irregularities in the acquisition). Check out the BIDS output session(s) mentioned in the warning(s) and see if and how you should update your IntendedFor search pattern accordingly.
 
 The data of some subjects need to be treated (mapped) differently
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

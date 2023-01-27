@@ -32,7 +32,7 @@ The bidscoiner
    Snapshot of running `bidscoiner` in the terminal.
 
 BIDS-apps
-^^^^^^^^^
+~~~~~~~~~
 
 .. figure:: ./_static/slicereport_skullstrip.png
 
