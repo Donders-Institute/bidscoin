@@ -5,6 +5,7 @@ import shutil
 import re
 import json
 from pathlib import Path
+from nibabel.testing import data_path
 
 import ruamel.yaml.comments
 from pydicom.data import get_testdata_file
