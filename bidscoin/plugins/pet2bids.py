@@ -76,9 +76,11 @@ def is_sourcefile(file: Path) -> str:
 
     if bids.is_dicomfile(file):
         # @Anthony: I don't think the first if-statement is the right way to go as BIDScoin always determines if a file is a sourcefile first, and only then tries to read attributes from it
-        if 'pt' in str.lower(get_attribute('DICOM', file, 'Modality')):
-            return 'DICOM'
-        elif 'pt' == bids.get_dicomfield('Modality', file).lower():
+        # if 'pt' in str.lower(get_attribute('DICOM', file, 'Modality')):
+        #     return 'DICOM'
+        # elif 'pt' == bids.get_dicomfield('Modality', file).lower():
+        #     return 'DICOM'
+        if 'pt' == bids.get_dicomfield('Modality', file).lower():
             return 'DICOM'
 
     return ''
