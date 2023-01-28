@@ -136,8 +136,8 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     for sourcefile in sourcefiles:
 
         # Input checks
-        if not sourcefile.name or (not template[dataformat] and not bidsmap_old[dataformat]):
-            LOGGER.error(f"No {dataformat} source information found in the bidsmap and template for: {sourcefile}")
+        if not template[dataformat] and not bidsmap_old[dataformat]:
+            LOGGER.error(f"No {dataformat} source information found in the study and template bidsmap for: {sourcefile}")
             return
 
         # See if we can find a matching run in the old bidsmap

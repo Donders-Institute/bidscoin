@@ -2763,26 +2763,27 @@ Nibabel:
       echo: <EchoNumbers>
       suffix: <ScanningSequence>
 
-PET:
-  # We use this to catalog PET files if they are preset, there is some overlap with
-  # pet in DICOM above, but we're going to worry about that later as we will only
-  # use this PET section if pet2bids is installed
+ECAT:
+# --------------------------------------------------------------------------------
+# We use this to catalog ECAT files if they are preset
+# --------------------------------------------------------------------------------
   subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
   session: <<filepath:/sub-.*?/ses-(.*?)/>>
 
   pet: # ----------------------- All PET runs ---------------------------
     - provenance:
-      attributes: *pet_dicomattr
+      attributes: &ecat_attr
+        somexlsfields:
       bids: *pet_dicoment_pet             # See: schema/datatypes/pet.yaml
       meta: *pet_meta
     - provenance:
-      attributes: *pet_dicomattr
+      attributes: *ecat_attr
       bids:
         <<: *pet_dicoment_pet
         suffix: events
       meta: *pet_meta
     - provenance:
-      attributes: *pet_dicomattr
+      attributes: *ecat_attr
       bids:
         << : *pet_dicoment_pet
         suffix: blood

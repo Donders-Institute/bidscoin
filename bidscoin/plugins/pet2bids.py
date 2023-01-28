@@ -75,32 +75,36 @@ def is_sourcefile(file: Path) -> str:
     #         return 'PETXLS'
 
     if bids.is_dicomfile(file):
+        # @Anthony: I don't think the first if-statement is the right way to go as BIDScoin always determines if a file is a sourcefile first, and only then tries to read attributes from it
         if 'pt' in str.lower(get_attribute('DICOM', file, 'Modality')):
-            return 'PET'
-        elif 'pt' == str.lower(pydicom.dcmread(file).Modality):
-            return 'PET'
+            return 'DICOM'
+        elif 'pt' == bids.get_dicomfield('Modality', file).lower():
+            return 'DICOM'
 
     return ''
 
 
 def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict = {}) -> Union[str, int]:
     """
-    This plugin supports reading attributes from the PET Excel file
+    This plugin supports reading attributes from the PET Excel sidecar file
 
-    :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. PETXLS
+    :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM
     :param sourcefile:  The sourcefile from which the attribute value should be read
     :param attribute:   The attribute key for which the value should be read
     :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap['Options']
     :return:            The attribute value
     """
-    # if dataformat == 'PETXLS':
-    #
-    #     data = pet.helper_functions.single_spreadsheet_reader(sourcefile)
-    #
-    #     return data.get(attribute)
 
-    if dataformat == 'PET' and bids.is_dicomfile(sourcefile):
+    for ext in options['meta']:
+        if sourcefile.with_suffix(ext).is_file():
+            LOGGER.warning(f"Reading metadata from an '{ext}' sidecar file is not implemented yet...")
+            #  data = pet.helper_functions.single_spreadsheet_reader(sourcefile)
+            #
+            #  return data.get(attribute)
+
+    if dataformat == 'DICOM':
         return bids.get_dicomfield(attribute, sourcefile)
+
     # TODO: add ecat support
 
     return ''
@@ -126,15 +130,15 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
     # Collect the different DICOM/PAR source files for all runs in the session
     sourcefiles = []
-    if dataformat == 'PET':
+    if dataformat == 'DICOM':
         for sourcedir in bidscoin.lsdirs(session, '**/*'):
             for n in range(1):      # Option: Use range(2) to scan two files and catch e.g. magnitude1/2 fieldmap files that are stored in one Series folder (but bidscoiner sees only the first file anyhow and it makes bidsmapper 2x slower :-()
                 sourcefile = bids.get_dicomfile(sourcedir, n)
                 if sourcefile.name:
-                    # more pet logic
-                    if 'pt' in str.lower(pydicom.dcmread(sourcefile).Modality):
-                        sourcefiles.append(sourcefile)
-    # # let's see if this manages to collect our pet spreadsheets
+                    sourcefiles.append(sourcefile)
+
+    # # @Anthony: I don't think this is the place to read attributes (using the DataSource() is meant for that)
+    # # let's see if this manages to collect our pet spreadsheets.
     # elif dataformat == 'PETXLS':
     #     extensions = ['.tsv', '.csv', '.xls', '.xlsx']
     #     for ext in extensions:
@@ -150,11 +154,8 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     for sourcefile in sourcefiles:
 
         # Input checks
-        # not 100% sure which bidsmap to load as it pulls the default from bidscoin/heuristics/*
-        # commenting out for the moment as we're going to make a new bidsmap if this plugin loads
-        #if not sourcefile.name or (not template[dataformat] and not bidsmap_old[dataformat]):
-        if not sourcefile.name:
-            LOGGER.error(f"No {dataformat} source information found in the bidsmap and template for: {sourcefile}")
+        if not template[dataformat] and not bidsmap_old[dataformat]:
+            LOGGER.error(f"No {dataformat} source information found in the study and template bidsmap for: {sourcefile}")
             return
 
         # See if we can find a matching run in the old bidsmap
@@ -183,9 +184,6 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)
 
-            # remove duplicates
-            deduplicate_pet_runs(bidsmap_new)
-
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     """
@@ -199,8 +197,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     """
 
     # Get the subject identifiers and the BIDS root folder from the bidsses folder
-    if bidsses.name.startswith('ses-') and 'sub-003' in bidsses.parts:
-    #if bidsses.name.startswith('ses-'):
+    if bidsses.name.startswith('ses-'):
         bidsfolder = bidsses.parent.parent
         subid = bidsses.parent.name
         sesid = bidsses.name
@@ -219,14 +216,13 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
     # make a list of all the data sources / runs
     manufacturer = 'UNKOWN'
-    sources =  []
-    if dataformat == 'PET':
+    sources = []
+    if dataformat == 'DICOM':
         sources = bidscoin.lsdirs(session, '**/*')
         manufacturer = datasource.attributes('Manufacturer')
     else:
         LOGGER.exception(f"Unsupported dataformat '{dataformat}'")
 
-    # read or create scans_table and tsv-file
     # Read or create a scans_table and tsv-file
     scans_tsv = bidsses / f"{subid}{'_' + sesid if sesid else ''}_scans.tsv"
     scans_table = pd.DataFrame()
@@ -242,7 +238,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         for source in sources:
 
             # Get a sourcefile
-            if dataformat == 'PET':
+            if dataformat == 'DICOM':
                 sourcefile = bids.get_dicomfile(source)
             if not sourcefile.name:
                 continue
@@ -259,16 +255,15 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
             # Check if we already know this run
             if not match:
-                LOGGER.error(
-                    f"--> Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+                LOGGER.error(f"--> Skipping unknown '{datasource.datatype}' run: {sourcefile}\n"
+                             f"Re-run the bidsmapper and delete {bidsses} to solve this warning")
                 continue
 
             LOGGER.info(f"--> Coining: {source}")
 
             # Create the BIDS session/datatype output folder
             if run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):
-                outfolder = bidsfolder / 'derivatives' / manufacturer.replace(' ',
-                                                                              '') / subid / sesid / datasource.datatype
+                outfolder = bidsfolder / 'derivatives' / manufacturer.replace(' ', '') / subid / sesid / datasource.datatype
             else:
                 outfolder = bidsses / datasource.datatype
             outfolder.mkdir(parents=True, exist_ok=True)
@@ -279,8 +274,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             runindex = str(runindex) if runindex else ''
             if runindex.startswith('<<') and runindex.endswith('>>'):
                 bidsname = bids.increment_runindex(outfolder, bidsname)
-            jsonfiles = [(outfolder / bidsname).with_suffix(
-                '.json')]  # List -> Collect the associated json-files (for updating them later) -- possibly > 1
+            jsonfiles = [(outfolder / bidsname).with_suffix('.json')]  # List -> Collect the associated json-files (for updating them later) -- possibly > 1
 
             # Check if the bidsname is valid
             bidstest = (Path('/') / subid / sesid / datasource.datatype / bidsname).with_suffix('.json').as_posix()
@@ -290,8 +284,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
             # Check if file already exists (-> e.g. when a static runindex is used)
             if (outfolder / bidsname).with_suffix('.json').is_file():
-                LOGGER.warning(
-                    f"{outfolder / bidsname}.* already exists and will be deleted -- check your results carefully!")
+                LOGGER.warning(f"{outfolder / bidsname}.* already exists and will be deleted -- check your results carefully!")
                 for ext in ('.nii.gz', '.nii', '.json', '.tsv', '.tsv.gz'):
                     (outfolder / bidsname).with_suffix(ext).unlink(missing_ok=True)
 
@@ -307,7 +300,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         if sesid and 'session_id' not in personals:
             personals['session_id'] = sesid
         personals['age'] = ''
-        if dataformat == 'PET':
+        if dataformat == 'DICOM':
             age = datasource.attributes(
                 'PatientAge')  # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
             if age.endswith('D'):
@@ -334,12 +327,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         else:
             participants_table = pd.DataFrame()
             participants_table.index.name = 'participant_id'
-        if subid in participants_table.index and 'session_id' in participants_table.keys() and participants_table.loc[
-            subid, 'session_id']:
+        if subid in participants_table.index and 'session_id' in participants_table.keys() and participants_table.loc[subid, 'session_id']:
             return  # Only take data from the first session -> BIDS specification
         for key in personals:  # TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
-            if key not in participants_table or participants_table[key].isnull().get(subid, True) or participants_table[
-                key].get(subid) == 'n/a':
+            if key not in participants_table or participants_table[key].isnull().get(subid, True) or participants_table[key].get(subid) == 'n/a':
                 participants_table.loc[subid, key] = personals[key]
 
         # Write the collected data to the participants tsv-file
@@ -349,6 +340,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
 def deduplicate_pet_runs(bidsmap: dict, bidsmap_path: Path=None):
     """
+    @Anthony: OBSOLETE function now???
+
     Remove runs flagged as PET from other datatypes if the provenance matches. This removes duplicates
     in the case of dicoms that get picked up for conversion of dcm2niix when this plugin is installed.
     if this plugin isn't installed or used there won't be any PET duplicates.
@@ -364,7 +357,7 @@ def deduplicate_pet_runs(bidsmap: dict, bidsmap_path: Path=None):
     # sometimes we find PET dicoms in the DICOM section, no no no no, if we're using this plugin
     # we don't want PET dicoms being converted by dcm2niix! We want to use dcm2niix4pet my dear Watson
 
-    pet_runs = bidsmap.get('PET', None)
+    pet_runs = bidsmap.get('DICOM', None)
 
     if not pet_runs:
         return pet_runs
@@ -375,7 +368,7 @@ def deduplicate_pet_runs(bidsmap: dict, bidsmap_path: Path=None):
             LOGGER.info(f"PET file {Path(pet['provenance']).name} located at {Path(pet['provenance']).parent}")
 
         # collect other data formats
-        other_data_formats = [fmt for fmt in bidsmap.keys() if fmt != 'Options' and fmt != 'PET']  # exclude options
+        other_data_formats = [fmt for fmt in bidsmap.keys() if fmt != 'Options' and fmt != 'DICOM']  # exclude options
 
         # check to see if there are PET datatypes contained within them
         for pet_run in pet_runs['pet']:
