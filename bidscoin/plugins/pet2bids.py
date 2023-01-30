@@ -279,6 +279,12 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             # Convert the source-files in the run folder to nifti's in the BIDS-folder
             else:
                 command = f'{options["command"]} "{source}" -d {outfolder / Path(bidsname).with_suffix(".nii.gz")}'
+                # pass in data added via bidseditor/bidsmap
+                if len(run.get('meta', {})) > 0:
+                    command += ' --kwargs '
+                for metadata_key, metadata_value in run.get('meta', {}).items():
+                    if metadata_value:
+                        command += f' {metadata_key}={metadata_value}'
                 if bidscoin.run_command(command):
                     if not list(outfolder.glob(f"{bidsname}.*nii*")): continue
 
