@@ -35,6 +35,8 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, overlayimage: s
     bidsdir = Path(bidsdir).resolve()
     if not reportdir:
         reportdir = bidsdir/'derivatives'
+    else:
+        reportdir = Path(reportdir).resolve()
     if not bidsdir.is_dir():
         print(f"Could not find the bids folder: {bidsdir}")
         return
@@ -83,7 +85,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, overlayimage: s
                        f" {'-S'                if secondslice    else ''}"\
                        f" {' '.join(filelist)}"
     LOGGER.info(f"Running:\n{command}")
-    reportdir.mkdir(exist_ok=True)
+    reportdir.mkdir(parents=True, exist_ok=True)
     process = subprocess.run(command, cwd=reportdir, shell=True, capture_output=True, text=True)
     if process.stderr or process.returncode != 0:
         LOGGER.error(f"Errorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")

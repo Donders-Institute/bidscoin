@@ -22,6 +22,7 @@ import pandas as pd
 import pydeface.utils as pdu
 import nibabel as nib
 import numpy as np
+import tempfile
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
@@ -72,6 +73,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
         subjects = [bidsdir/subject for subject in subjects if (bidsdir/subject).is_dir()]
 
     # Prepare the HPC pydeface job submission
+    tmp_combined = f"{next(tempfile._get_candidate_names())}_echocombined_deface.nii"
     if cluster:
         from drmaa import Session as drmaasession
     else:
@@ -115,7 +117,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                 echos = [nib.load(echofile) for echofile in echofiles]
 
                 # Create a temporary echo-combined image
-                tmpfile  = session/'tmp_echocombined_deface.nii'
+                tmpfile  = session/tmp_combined
                 combined = nib.Nifti1Image(np.mean([echo.get_fdata() for echo in echos], axis=0), echos[0].affine, echos[0].header)
                 combined.to_filename(tmpfile)
 
@@ -150,7 +152,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
 
                 # Read the temporary defacemask
                 sesid   = session.name if session.name.startswith('ses-') else ''
-                tmpfile = session/'tmp_echocombined_deface.nii'
+                tmpfile = session/tmp_combined
                 if not tmpfile.is_file():
                     LOGGER.info(f'No {tmpfile} file found')
                     continue
@@ -220,7 +222,7 @@ def main():
                                             '  medeface myproject/bids anat/*_FLAIR* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
     parser.add_argument('bidsfolder',               help='The bids-directory with the (multi-echo) subject data')
     parser.add_argument('pattern',                  help="Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T2starw*'")
-    parser.add_argument('-m', '--maskpattern',      help="Globlike search pattern (relative to the subject/session folder) to select the images from which the defacemask is computed, e.g. 'anat/*_part-mag_*_T2starw*'. If not given then 'pattern' is used")
+    parser.add_argument('-m','--maskpattern',       help="Globlike search pattern (relative to the subject/session folder) to select the images from which the defacemask is computed, e.g. 'anat/*_part-mag_*_T2starw*'. If not given then 'pattern' is used")
     parser.add_argument('-p','--participant_label', help='Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed', nargs='+')
     parser.add_argument('-o','--output',            help=f"A string that determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images")
     parser.add_argument('-c','--cluster',           help='Flag to submit the deface jobs to a high-performance compute (HPC) cluster', action='store_true')
