@@ -75,11 +75,6 @@ def is_sourcefile(file: Path) -> str:
     #         return 'PETXLS'
 
     if bids.is_dicomfile(file):
-        # @Anthony: I don't think the first if-statement is the right way to go as BIDScoin always determines if a file is a sourcefile first, and only then tries to read attributes from it
-        # if 'pt' in str.lower(get_attribute('DICOM', file, 'Modality')):
-        #     return 'DICOM'
-        # elif 'pt' == bids.get_dicomfield('Modality', file).lower():
-        #     return 'DICOM'
         if 'pt' == bids.get_dicomfield('Modality', file).lower():
             return 'DICOM'
 
@@ -111,6 +106,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
 
     return ''
 
+
 def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
     """
     All the logic to map the DICOM and spreadsheet source fields onto bids labels go into this function
@@ -138,16 +134,6 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
                 sourcefile = bids.get_dicomfile(sourcedir, n)
                 if sourcefile.name:
                     sourcefiles.append(sourcefile)
-
-    # # @Anthony: I don't think this is the place to read attributes (using the DataSource() is meant for that)
-    # # let's see if this manages to collect our pet spreadsheets.
-    # elif dataformat == 'PETXLS':
-    #     extensions = ['.tsv', '.csv', '.xls', '.xlsx']
-    #     for ext in extensions:
-    #         potential_pet_spreadsheets = session.glob(f'**/*{ext}')
-    #         for f in potential_pet_spreadsheets:
-    #             if is_sourcefile(f):
-    #                 sourcefiles.append(f)
 
     else:
         LOGGER.exception(f"Unsupported dataformat '{dataformat}'")
@@ -338,56 +324,3 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Write the collected data to the participants tsv-file
         LOGGER.verbose(f"Writing {subid} subject data to: {participants_tsv}")
         participants_table.replace('', 'n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
-
-
-def deduplicate_pet_runs(bidsmap: dict, bidsmap_path: Path=None):
-    """
-    @Anthony: OBSOLETE function now???
-
-    Remove runs flagged as PET from other datatypes if the provenance matches. This removes duplicates
-    in the case of dicoms that get picked up for conversion of dcm2niix when this plugin is installed.
-    if this plugin isn't installed or used there won't be any PET duplicates.
-    :param bidsmap: an opened bidsmap.yaml file
-    :type bidsmap: dict
-    :param bidsmap_path: this is the path that deduplicated bidsmap will be written to
-    :type bidsmap_path: pathlib.Path
-    :return: the updated bidsmap dictionary and the path it was written to
-    :rtype: tuple
-    """
-
-
-    # sometimes we find PET dicoms in the DICOM section, no no no no, if we're using this plugin
-    # we don't want PET dicoms being converted by dcm2niix! We want to use dcm2niix4pet my dear Watson
-
-    pet_runs = bidsmap.get('DICOM', None)
-
-    if not pet_runs:
-        return pet_runs
-
-    if len(pet_runs['pet']) > 0:
-        LOGGER.info(f"Found PET data at:")
-        for pet in pet_runs['pet']:
-            LOGGER.info(f"PET file {Path(pet['provenance']).name} located at {Path(pet['provenance']).parent}")
-
-        # collect other data formats
-        other_data_formats = [fmt for fmt in bidsmap.keys() if fmt != 'Options' and fmt != 'DICOM']  # exclude options
-
-        # check to see if there are PET datatypes contained within them
-        for pet_run in pet_runs['pet']:
-            for other_format in other_data_formats:
-                duplicate_pet_run = bids.find_run(
-                    bidsmap=bidsmap,
-                    provenance=pet_run['provenance'],
-                    dataformat=other_format
-                )
-                if duplicate_pet_run:
-                    bids.delete_run(bidsmap, duplicate_pet_run['provenance'], datatype='pet', dataformat=other_format)
-
-    if bidsmap_path:
-        if bidsmap_path.is_dir():
-            bidsmap_path = bidsmap_path / 'bidsmap.yaml'
-
-        # save deduplicated bidsmap to file
-        bids.save_bidsmap(bidsmap_path, bidsmap)
-
-    return bidsmap, bidsmap_path
