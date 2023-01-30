@@ -185,7 +185,7 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path) ->
     :param subprefix:   The subprefix (take value from bidsmap if empty)
     :param sesprefix:   The sesprefix (take value from bidsmap if empty)
     :param rawfolder:   The root folder-name of the sub/ses/data/file tree containing the source data files
-    :return:            A (subprefix, sesprefix) tuple. Values are taken from bidsmap when input values are empty
+    :return:            A (subprefix, sesprefix) tuple
     """
 
     # Get/set the sub-/ses-prefixes in the 'Options'
@@ -195,8 +195,6 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path) ->
         subprefix = oldsubprefix                                # Use the default value from the bidsmap
     if not sesprefix:
         sesprefix = oldsesprefix                                # Use the default value from the bidsmap
-    if subprefix == oldsubprefix and sesprefix == oldsubprefix:
-        return subprefix, sesprefix
     bidsmap['Options']['bidscoin']['subprefix'] = subprefix
     bidsmap['Options']['bidscoin']['sesprefix'] = sesprefix
 
@@ -213,14 +211,14 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path) ->
                 run['datasource'].sesprefix = sesprefix
 
         # Replace the sub-/ses-prefixes in the dynamic filepath values of bidsmap[dataformat]['subject'] and ['session']
-        if bidsmap[dataformat]['subject'].startswith('<<filepath:') and subprefix != oldsubprefix:
+        if bidsmap[dataformat]['subject'].startswith('<<filepath:'):
             if oldsubprefix:
                 bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace(reprefix(oldsubprefix), reprefix(subprefix))    # TODO: Not very robust for short prefixes :-(
             else:
                 LOGGER.warning(f"Could not update the bidsmap subject label expression: {bidsmap[dataformat]['subject']}")
             if not bidsmap[dataformat]['subject'].startswith(f"<<filepath:/{rawfolder.name}"):    # NB: Don't prepend the fullpath of rawfolder because of potential data unpacking in /tmp
                 bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace('<<filepath:', f"<<filepath:/{rawfolder.name}")
-        if bidsmap[dataformat]['session'].startswith('<<filepath:')  and sesprefix != oldsesprefix:
+        if bidsmap[dataformat]['session'].startswith('<<filepath:'):
             if oldsesprefix:
                 bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace(reprefix(oldsubprefix), reprefix(subprefix)).replace(reprefix(oldsesprefix), reprefix(sesprefix))       # TODO: Not very robust for short prefixes :-(
             else:
