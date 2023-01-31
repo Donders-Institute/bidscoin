@@ -174,7 +174,8 @@ examples:
   slicereport myproject/bids anat/*_T1w*
   slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*
   slicereport myproject/bids/derivatives/fmriprep anat/*run-?_desc-preproc_T1w* -o anat/*run-?_label-GM*
-  slicereport myproject/bids/derivatives/deface anat/*_T1w* -o myproject/bids:anat/*_T1w* --mainopts e 0.05\n """
+  slicereport myproject/bids/derivatives/deface anat/*_T1w* -o myproject/bids:anat/*_T1w* --mainopts L e 0.05
+  slicereport myproject/bids anat/*_T1w* --outputopts x 0.4 x 0.5 x 0.6 z 0.3 z 0.4 z 0.5 z 0.6 z 0.7\n """
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=__doc__, epilog=epilogue)
