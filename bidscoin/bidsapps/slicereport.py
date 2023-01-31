@@ -19,7 +19,7 @@ except ImportError:
     import bidscoin
 
 
-def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: str, mainopts: list, outputopts: list, reportdir: str):
+def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: str, subjects: list, mainopts: list, outputopts: list, reportdir: str):
     """
     :param bidsdir:         The bids-directory with the subject data
     :param pattern:         Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T1w*'
@@ -79,6 +79,16 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
         sliceimages = ['slice_tmp1.png']
         outputopts_ = f"-{' '.join(outputopts)} {sliceimages[0]}"
 
+    # Get the list of subjects
+    if not subjects:
+        subjects = bidscoin.lsdirs(bidsdir, 'sub-*')
+        if not subjects:
+            print(f"No subjects found in: {bidsdir/'sub-*'}")
+            return
+    else:
+        subjects = ['sub-' + subject.replace('sub-', '') for subject in subjects]               # Make sure there is a "sub-" prefix
+        subjects = [bidsdir/subject for subject in subjects if (bidsdir/subject).is_dir()]
+
     # Start logging
     reportdir.mkdir(parents=True, exist_ok=True)
     (reportdir/'slicereport.log').unlink(missing_ok=True)
@@ -89,8 +99,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     report = reportdir/'index.html'
     report.write_text(f'<HTML><TITLE>slicereport</TITLE><BODY BGCOLOR="#181818"><h3 style="color:#FFFFFF">Command: slicereport {" ".join(sys.argv[1:])}</h3><br>')
 
-    # Get the list of subjects/sessions
-    subjects = bidscoin.lsdirs(bidsdir, 'sub-*')
+    # Loop over the subject/session-directories
     for subject in subjects:
         sessions = bidscoin.lsdirs(subject, 'ses-*')
         if not sessions:
@@ -133,7 +142,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                     continue
 
                 # Add a row to the report
-                caption = f"{Path(image).relative_to(bidsdir)}{'&nbsp; &nbsp; &nbsp;['+str(Path(outline).relative_to(outlinedir))+']' if outline else ''}")
+                caption = f"{Path(image).relative_to(bidsdir)}{'&nbsp; &nbsp; &nbsp;['+str(Path(outline).relative_to(outlinedir))+']' if outline else ''}"
                 with report.open('a') as fid:
                     fid.write(f'<p style="color:#D1D1D1"><image src="{slicerow}"><br>{caption}</p>')
 
@@ -185,6 +194,7 @@ examples:
     parser.add_argument('pattern',                  help="Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T2starw*'")
     parser.add_argument('-o','--outlinepattern',    help="Globlike search pattern to select red outline images that are projected on top of the reported images (i.e. 'outlinepattern' must yield the same number of images as 'pattern'. Prepend `outlinedir:` if your outline images are in `outlinedir` instead of `bidsdir` (see examples below)`")
     parser.add_argument('-i','--outlineimage',      help='A common red-outline image that is projected on top of all images')
+    parser.add_argument('-p','--participant_label', help='Space separated list of sub-# identifiers to be processed (the sub- prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed', nargs='+')
     parser.add_argument('-r','--reportfolder',      help="The folder where the report is saved (default: bidsfolder/derivatives/slicereport)")
     parser.add_argument('--mainopts',               help='Main options of slicer (see below). (default: "s 1")', default=['s','1'], nargs='+')
     parser.add_argument('--outputopts',             help='Output options of slicer (see below). (default: "x 0.4 x 0.5 x 0.6 y 0.4 y 0.5 y 0.6 z 0.4 z 0.5 z 0.6")', default=['x','0.4','x','0.5','x','0.6','y','0.4','y','0.5','y','0.6','z','0.4','z','0.5','z','0.6'], nargs='+')
@@ -194,6 +204,7 @@ examples:
                 pattern        = args.pattern,
                 outlinepattern = args.outlinepattern,
                 outlineimage   = args.outlineimage,
+                subjects       = args.participant_label,
                 mainopts       = args.mainopts,
                 outputopts     = args.outputopts,
                 reportdir      = args.reportfolder)
