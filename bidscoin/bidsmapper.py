@@ -31,7 +31,7 @@ except ImportError:
 localversion, versionmessage = bidscoin.version(check=True)
 
 
-def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, plugins: list, subprefix: str, sesprefix: str, unzip: str, store: bool=False, noedit: bool=False, force: bool=False) -> dict:
+def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, plugins: list, subprefix: str, sesprefix: str, unzip: str, store: bool=False, noeditor: bool=False, force: bool=False, noupdate: bool=False) -> dict:
     """
     Main function that processes all the subjects and session in the sourcefolder and that generates a fully filled-in bidsmap.yaml
     file in bidsfolder/code/bidscoin. Folders in sourcefolder are assumed to contain a single dataset.
@@ -45,7 +45,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     :param sesprefix:       The prefix common for all source session-folders
     :param unzip:           Wildcard pattern to select tar/zip-files in the session folder. Leave empty to use the bidsmap value
     :param store:           If True, the provenance samples will be stored
-    :param noedit:          The bidseditor will not be launched if True
+    :param noeditor:        The bidseditor will not be launched if True
     :param force:           If True, the previous bidsmap and logfiles will be deleted
     :return:                The new bidsmap
     """
@@ -95,7 +95,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                 bidsmap_new[dataformat][datatype] = []
 
     # Store/retrieve the empty or user-defined sub-/ses-prefix
-    subprefix, sesprefix = setprefix(bidsmap_new, subprefix, sesprefix, rawfolder)
+    subprefix, sesprefix = setprefix(bidsmap_new, subprefix, sesprefix, rawfolder, update = not noupdate)
 
     # Start with an empty skeleton if we didn't have an old bidsmap
     if not bidsmap_old:
@@ -144,7 +144,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                         shutil.rmtree(sesfolder)
 
     # Save the new study bidsmap in the bidscoinfolder or launch the bidseditor UI_MainWindow
-    if noedit:
+    if noeditor:
         bids.save_bidsmap(bidsmapfile, bidsmap_new)
 
     else:
@@ -177,7 +177,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     return bidsmap_new
 
 
-def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path) -> tuple:
+def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path, update: bool=True) -> tuple:
     """
     Set the prefix in the Options, subject, session and in all the run['datasource'] objects
 
@@ -185,6 +185,7 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path) ->
     :param subprefix:   The subprefix (take value from bidsmap if empty)
     :param sesprefix:   The sesprefix (take value from bidsmap if empty)
     :param rawfolder:   The root folder-name of the sub/ses/data/file tree containing the source data files
+    :param update:      Update the prefixes in and prepend the rawfolder.name in the subject/session regexp: <<filepath:>> to <<filepath:/{rawfolder.name}>>
     :return:            A (subprefix, sesprefix) tuple
     """
 
@@ -211,14 +212,14 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path) ->
                 run['datasource'].sesprefix = sesprefix
 
         # Replace the sub-/ses-prefixes in the dynamic filepath values of bidsmap[dataformat]['subject'] and ['session']
-        if bidsmap[dataformat]['subject'].startswith('<<filepath:'):
+        if update and bidsmap[dataformat]['subject'].startswith('<<filepath:'):
             if oldsubprefix:
                 bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace(reprefix(oldsubprefix), reprefix(subprefix))    # TODO: Not very robust for short prefixes :-(
             else:
                 LOGGER.warning(f"Could not update the bidsmap subject label expression: {bidsmap[dataformat]['subject']}")
             if not bidsmap[dataformat]['subject'].startswith(f"<<filepath:/{rawfolder.name}"):    # NB: Don't prepend the fullpath of rawfolder because of potential data unpacking in /tmp
                 bidsmap[dataformat]['subject'] = bidsmap[dataformat]['subject'].replace('<<filepath:', f"<<filepath:/{rawfolder.name}")
-        if bidsmap[dataformat]['session'].startswith('<<filepath:'):
+        if update and bidsmap[dataformat]['session'].startswith('<<filepath:'):
             if oldsesprefix:
                 bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'].replace(reprefix(oldsubprefix), reprefix(subprefix)).replace(reprefix(oldsesprefix), reprefix(sesprefix))       # TODO: Not very robust for short prefixes :-(
             else:
@@ -242,15 +243,16 @@ def main():
                                             "  bidsmapper myproject/raw myproject/bids -u '*.tar.gz'      # Unzip tarball sourcefiles\n ")
     parser.add_argument('sourcefolder',       help='The study root folder containing the raw source data folders')
     parser.add_argument('bidsfolder',         help='The destination folder with the (future) bids data and the bidsfolder/code/bidscoin/bidsmap.yaml output file')
-    parser.add_argument('-b','--bidsmap',     help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
-    parser.add_argument('-t','--template',    help=f'The bidsmap template file with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: {bidscoin.bidsmap_template.stem}', default=bidscoin.bidsmap_template)
+    parser.add_argument('-b','--bidsmap',     help="The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no '/' in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml", default='bidsmap.yaml')
+    parser.add_argument('-t','--template',    help=f"The bidsmap template file with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no '/' in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: {bidscoin.bidsmap_template.stem}", default=bidscoin.bidsmap_template)
     parser.add_argument('-p','--plugins',     help='List of plugins to be used. Default: the plugin list of the study/template bidsmap)', nargs='+', default=[])
     parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders (e.g. 'Pt' is the subprefix if subject folders are named 'Pt018', 'Pt019', ...). Use '*' when your subject folders do not have a prefix. Default: the value of the study/template bidsmap, e.g. 'sub-'")
     parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders (e.g. 'M_' is the subprefix if session folders are named 'M_pre', 'M_post', ..). Use '*' when your session folders do not have a prefix. Default: the value of the study/template bidsmap, e.g. 'ses-'")
-    parser.add_argument('-u','--unzip',       help="Wildcard pattern to unpack tarball/zip-files in the sub/ses sourcefolder that need to be unzipped (in a tempdir) to make the data readable. Default: the value of the study/template bidsmap")
-    parser.add_argument('-s','--store',       help="Flag to store provenance data samples in the bidsfolder/'code'/'provenance' folder (useful for inspecting e.g. zipped or transfered datasets)", action='store_true')
-    parser.add_argument('-a','--automated',   help="Flag to save the automatically generated bidsmap to disk and without interactively tweaking it with the bidseditor", action='store_true')
-    parser.add_argument('-f','--force',       help='Flag to discard the previously saved bidsmap and logfile', action='store_true')
+    parser.add_argument('-u','--unzip',       help='Wildcard pattern to unpack tarball/zip-files in the sub/ses sourcefolder that need to be unzipped (in a tempdir) to make the data readable. Default: the value of the study/template bidsmap')
+    parser.add_argument('-s','--store',       help='Store provenance data samples in the bidsfolder/code/provenance folder (useful for inspecting e.g. zipped or transfered datasets)', action='store_true')
+    parser.add_argument('-a','--automated',   help='Save the automatically generated bidsmap to disk and without interactively tweaking it with the bidseditor', action='store_true')
+    parser.add_argument('-f','--force',       help='Discard the previously saved bidsmap and logfile', action='store_true')
+    parser.add_argument('--no-update',        help="Do not update any sub/sesprefixes in or prepend the sourcefolder name to the <<filepath:regexp>> expression that extracts the subject/session labels. This is normally done to make the extraction more robust, but could case problems for certain use cases", action='store_true')
     args = parser.parse_args()
 
     bidsmapper(rawfolder    = args.sourcefolder,
@@ -262,8 +264,9 @@ def main():
                sesprefix    = args.sesprefix,
                unzip        = args.unzip,
                store        = args.store,
-               noedit       = args.automated,
-               force        = args.force)
+               noeditor     = args.automated,
+               force        = args.force,
+               noupdate     = args.noupdate)
 
 
 if __name__ == "__main__":
