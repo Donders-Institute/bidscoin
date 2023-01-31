@@ -56,18 +56,20 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
             return
     else:
         outlinedir = bidsdir
+
+    # Format the slicer main options
     if mainopts[0] not in ('L','l','i','e','t','n','u','s','c'):
         print(f"Invalid MAINOPTS: {' '.join(mainopts)}")
         return
     mainopts = f"-{' '.join(mainopts)}"
-    for n, outputopt in enumerate(outputopts):
-        if not (outputopt in ('x', 'y', 'z', 'a', 'A', 'S') or outputopt.replace('.','').replace('-','').isdecimal()):
-            print(f"Invalid OUTPUTOPTS: {outputopts}")
-            return
 
     # Format the slicer output images and options
     sliceimages = []
     outputopts_ = ''
+    for n, outputopt in enumerate(outputopts):
+        if not (outputopt in ('x', 'y', 'z', 'a', 'A', 'S') or outputopt.replace('.','').replace('-','').isdecimal()):
+            print(f"Invalid OUTPUTOPTS: {outputopts}")
+            return
     if outputopts[0] in ('x', 'y', 'z'):
         for n, outputopt in enumerate(outputopts):
             if not n % 2:
@@ -156,22 +158,22 @@ def main():
     epilogue = """
 MAINOPTS:
   L                  : Label slices with slice number.
-  l [LUT]            : use a different colour map from that specified in the header.
-  i [MIN] [MAX]      : specify intensity min and max for display range.
-  e [THR]            : use the specified threshold for edges (if > 0 use this proportion of max-min,
+  l [LUT]            : Use a different colour map from that specified in the header.
+  i [MIN] [MAX]      : Specify intensity min and max for display range.
+  e [THR]            : Use the specified threshold for edges (if > 0 use this proportion of max-min,
                        if < 0, use the absolute value)
-  t                  : produce semi-transparent (dithered) edges.
-  n                  : use nearest-neighbour interpolation for output.
-  u                  : do not put left-right labels in output.
+  t                  : Produce semi-transparent (dithered) edges.
+  n                  : Use nearest-neighbour interpolation for output.
+  u                  : Do not put left-right labels in output.
   s                  : Scaling factor
-  c                  : add a red dot marker to top right of image
+  c                  : Add a red dot marker to top right of image
 
 OUTPUTOPTS:
-  x/y/z [SLICE] [..] : output sagittal, coronal or axial slice (if [SLICE] > 0 it is a
+  x/y/z [SLICE] [..] : Output sagittal, coronal or axial slice (if [SLICE] > 0 it is a
                        fraction of image dimension, if < 0, it is an absolute slice number)
-  a                  : output mid-sagittal, -coronal and -axial slices into one image
-  A [WIDTH]          : output _all_ axial slices into one image of _max_ width [WIDTH]
-  S [SAMPLE] [WIDTH] : as A but only include every [SAMPLE]'th slice
+  a                  : Output mid-sagittal, -coronal and -axial slices into one image
+  A [WIDTH]          : Output _all_ axial slices into one image of _max_ width [WIDTH]
+  S [SAMPLE] [WIDTH] : As `A` but only include every [SAMPLE]'th slice
 
 examples:
   slicereport myproject/bids anat/*_T1w*
