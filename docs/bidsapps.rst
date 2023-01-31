@@ -234,42 +234,63 @@ Quality control
 
 ::
 
-    usage: slicereport.py [-h] [-o OUTLINEPATTERN] [-p OVERLAYIMAGE] [-e EDGETHRESHOLD] [-s]
-                          [-r REPORTFOLDER]
+    usage: slicereport.py [-h] [-o OUTLINEPATTERN] [-i OUTLINEIMAGE] [-r REPORTFOLDER]
+                          [--mainopts MAINOPTS [MAINOPTS ...]] [--outputopts OUTPUTOPTS [OUTPUTOPTS ...]]
                           bidsfolder pattern
 
-    A wrapper around the 'slicesdir' reporting tool (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Miscvis)
+    A wrapper around the 'slicer' reporting tool (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Miscvis)
     that generates a web page with a row of image slices for each subject in the BIDS repository.
     In this way you can do a simple visual quality control of any datatype in your BIDS repository
 
-    Requires an existing installation of FSL/slicesdir
+    Requires an existing installation of FSL/slicer
 
     positional arguments:
       bidsfolder            The bids-directory with the subject data
-      pattern               Globlike search pattern to select the images in bidsdir to be reported,
-                            e.g. 'anat/*_T2starw*'
+      pattern               Globlike search pattern to select the images in bidsdir to be reported, e.g.
+                            'anat/*_T2starw*'
 
     options:
       -h, --help            show this help message and exit
       -o OUTLINEPATTERN, --outlinepattern OUTLINEPATTERN
-                            Globlike search pattern to select red outline images that are projected on
-                            top of the reported images (i.e. 'outlinepattern' must yield the same
-                            number of images as 'pattern'. Prepend `outlinedir:` if your outline
-                            images are in `outlinedir` instead of `bidsdir` (see examples below)`
-      -p OVERLAYIMAGE, --overlayimage OVERLAYIMAGE
+                            Globlike search pattern to select red outline images that are projected on top
+                            of the reported images (i.e. 'outlinepattern' must yield the same number of
+                            images as 'pattern'. Prepend `outlinedir:` if your outline images are in
+                            `outlinedir` instead of `bidsdir` (see examples below)`
+      -i OUTLINEIMAGE, --outlineimage OUTLINEIMAGE
                             A common red-outline image that is projected on top of all images
-      -e EDGETHRESHOLD, --edgethreshold EDGETHRESHOLD
-                            The specified threshold for edges (if >0 use this proportion of max-min,
-                            if <0, use the absolute value)
-      -s, --secondslice     Output every second axial slice rather than just 9 ortho slices
       -r REPORTFOLDER, --reportfolder REPORTFOLDER
-                            The folder where the report is saved (default: bidsfolder/'derivatives')
+                            The folder where the report is saved (default:
+                            bidsfolder/derivatives/slicereport)
+      --mainopts MAINOPTS [MAINOPTS ...]
+                            Main options of slicer (see below). (default: "s 1")
+      --outputopts OUTPUTOPTS [OUTPUTOPTS ...]
+                            Output options of slicer (see below). (default: "x 0.4 x 0.5 x 0.6 y 0.4 y 0.5
+                            y 0.6 z 0.4 z 0.5 z 0.6")
+
+    MAINOPTS:
+      L                  : Label slices with slice number.
+      l [LUT]            : use a different colour map from that specified in the header.
+      i [MIN] [MAX]      : specify intensity min and max for display range.
+      e [THR]            : use the specified threshold for edges (if > 0 use this proportion of max-min,
+                           if < 0, use the absolute value)
+      t                  : produce semi-transparent (dithered) edges.
+      n                  : use nearest-neighbour interpolation for output.
+      u                  : do not put left-right labels in output.
+      s                  : Scaling factor
+      c                  : add a red dot marker to top right of image
+
+    OUTPUTOPTS:
+      x/y/z [SLICE] [..] : output sagittal, coronal or axial slice (if [SLICE] > 0 it is a
+                           fraction of image dimension, if < 0, it is an absolute slice number)
+      a                  : output mid-sagittal, -coronal and -axial slices into one image
+      A [WIDTH]          : output _all_ axial slices into one image of _max_ width [WIDTH]
+      S [SAMPLE] [WIDTH] : as A but only include every [SAMPLE]'th slice
 
     examples:
       slicereport myproject/bids anat/*_T1w*
       slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*
       slicereport myproject/bids/derivatives/fmriprep anat/*run-?_desc-preproc_T1w* -o anat/*run-?_label-GM*
-      slicereport myproject/bids/derivatives/deface anat/*_T1w* -o myproject/bids:anat/*_T1w* -e 0.05
+      slicereport myproject/bids/derivatives/deface anat/*_T1w* -o myproject/bids:anat/*_T1w* --mainopts e 0.05
 
 .. figure:: ./_static/slicereport_deface.png
 

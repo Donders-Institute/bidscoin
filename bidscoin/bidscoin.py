@@ -69,7 +69,10 @@ class TqdmUpTo(tqdm):
 
 def setup_logging(logfile: Path=Path()):
     """
-    Setup the logging framework
+    Setup the logging framework:
+    1) Add a 'bcdebug', 'verbose' and a 'success' logging level
+    2) Add a console streamhandler
+    3) If logfile then add a normal log and a warning/error filehandler
 
     :param logfile:     Name of the logfile
     :return:
@@ -139,11 +142,11 @@ def setup_logging(logfile: Path=Path()):
     if debug: LOGGER.info('\t<<<<<<<<<< Running BIDScoin in DEBUG mode >>>>>>>>>>')
 
 
-def reporterrors() -> None:
+def reporterrors() -> str:
     """
     Summarized the warning and errors from the logfile
 
-    :return:
+    :return:    The errorlog
     """
 
     # Find the filehandlers and report the errors and warnings
@@ -153,9 +156,11 @@ def reporterrors() -> None:
             errorfile = Path(handler.baseFilename)
             if errorfile.is_file():
                 if errorfile.stat().st_size:
-                    LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errorfile.read_text()}{40 * '<'}\n")
+                    errors = errorfile.read_text()
+                    LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errors}{40 * '<'}\n")
 
                 else:
+                    errors = ''
                     LOGGER.success(f'No BIDScoin errors or warnings were reported')
                     LOGGER.info('')
 
@@ -166,6 +171,8 @@ def reporterrors() -> None:
     if 'logfile' in locals():
         LOGGER.info(f"For the complete log see: {logfile}\n"
                     f"NB: That folder may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
+
+    return errors
 
 
 def version(check: bool=False) -> Union[str, Tuple]:
