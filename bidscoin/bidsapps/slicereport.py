@@ -33,20 +33,20 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
 
     # Input checking
     bidsdir = Path(bidsdir).resolve()
+    if not bidsdir.is_dir():
+        print(f"Could not find the bids folder: {bidsdir}")
+        return
     if not reportdir:
         reportdir = bidsdir/'derivatives/slicereport'
     else:
         reportdir = Path(reportdir).resolve()
-    if not bidsdir.is_dir():
-        print(f"Could not find the bids folder: {bidsdir}")
-        return
     if outlineimage:
         if outlinepattern:
             print('The "--outlineimage" and "--outlinepattern" arguments are mutually exclusive, please specify one or the other')
             return
         outlineimage = Path(outlineimage).resolve()
         if not outlineimage.is_file():
-            print(f"Could not find the common overlay image: {outlineimage}")
+            print(f"Could not find the common outline image: {outlineimage}")
             return
     if outlinepattern and ':' in outlinepattern:
         outlinedir, outlinepattern = outlinepattern.split(':',1)
@@ -70,7 +70,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     outputopts_ = ''
     if outputopts[0] in ('x', 'y', 'z'):
         for n, outputopt in enumerate(outputopts):
-            if not n % 2:
+            if (n % 2) == 0:
                 sliceimages.append(f"slice_tmp{n}.png")
                 outputopts_ += f"-{outputopt} {outputopts[n+1]} {sliceimages[-1]} "
     elif outputopts[0].upper() in ('A', 'S'):
@@ -131,7 +131,9 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                     continue
 
                 # Add a row to the report
-                append_row(report, slicerow, f"{Path(image).relative_to(bidsdir)}{'&nbsp; &nbsp; &nbsp;['+str(Path(outline).relative_to(outlinedir))+']' if outline else ''}")
+                caption = f"{Path(image).relative_to(bidsdir)}{'&nbsp; &nbsp; &nbsp;['+str(Path(outline).relative_to(outlinedir))+']' if outline else ''}")
+                with report.open('a') as fid:
+                    fid.write(f'<p style="color:#D1D1D1"><image src="{slicerow}"><br>{caption}</p>')
 
     # Finish off
     errors = bidscoin.reporterrors().replace('\n', '<br>')
@@ -143,11 +145,6 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
         fid.write(f'<br>{message}<p style="color:#D1D1D1">{errors}</p></BODY></HTML>')
     LOGGER.info(' ')
     LOGGER.info(f"To view the report, point your web browser at:\n\n{report}\n ")
-
-
-def append_row(report: Path, imagesrc: str, text: str):
-   with report.open('a') as fid:
-       fid.write(f'<p style="color:#D1D1D1"><image src="{imagesrc}"><br>{text}</p>')
 
 
 def main():
