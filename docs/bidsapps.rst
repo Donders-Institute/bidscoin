@@ -281,7 +281,7 @@ Quality control
       t                  : Produce semi-transparent (dithered) edges.
       n                  : Use nearest-neighbour interpolation for output.
       u                  : Do not put left-right labels in output.
-      s                  : Scaling factor
+      s                  : Size scaling factor
       c                  : Add a red dot marker to top right of image
 
     OUTPUTOPTS:

@@ -34,57 +34,59 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     # Input checking
     bidsdir = Path(bidsdir).resolve()
     if not bidsdir.is_dir():
-        print(f"Could not find the bids folder: {bidsdir}")
-        return
+        print(f"Could not find the bids folder: {bidsdir}"); return
     if not reportdir:
         reportdir = bidsdir/'derivatives/slicereport'
     else:
         reportdir = Path(reportdir).resolve()
     if outlineimage:
         if outlinepattern:
-            print('The "--outlineimage" and "--outlinepattern" arguments are mutually exclusive, please specify one or the other')
-            return
+            print('The "--outlineimage" and "--outlinepattern" arguments are mutually exclusive, please specify one or the other'); return
         outlineimage = Path(outlineimage).resolve()
         if not outlineimage.is_file():
-            print(f"Could not find the common outline image: {outlineimage}")
-            return
+            print(f"Could not find the common outline image: {outlineimage}"); return
     if outlinepattern and ':' in outlinepattern:
         outlinedir, outlinepattern = outlinepattern.split(':',1)
         outlinedir = Path(outlinedir).resolve()
         if not outlinedir.is_dir():
-            print(f"Could not find the outline folder: {outlinedir}")
-            return
+            print(f"Could not find the outline folder: {outlinedir}"); return
     else:
         outlinedir = bidsdir
 
     # Format the slicer main options
-    if mainopts[0] not in ('L','l','i','e','t','n','u','s','c'):
-        print(f"Invalid MAINOPTS: {' '.join(mainopts)}")
-        return
-    mainopts = f"-{' '.join(mainopts)}"
+    isnumber = lambda arg: arg.replace('.','').replace('-','').isdecimal()
+    for n, mainopt in enumerate(mainopts):
+        if mainopts[n-1] == 'l': continue     # Skip checking the LUT string
+        if not (mainopt in ('L','l','i','e','t','n','u','s','c') or isnumber(mainopt)):
+            print(f"Invalid MAINOPTS: {' '.join(mainopts)}"); return
+        if mainopt.isalpha():
+            mainopts[n] = '-' + mainopts[n]
+    mainopts = f"{' '.join(mainopts)}"
 
-    # Format the slicer output images and options
+    # Format the slicer output options and images
     sliceimages = []
     outputopts_ = ''
     for n, outputopt in enumerate(outputopts):
-        if not (outputopt in ('x', 'y', 'z', 'a', 'A', 'S') or outputopt.replace('.','').replace('-','').isdecimal()):
-            print(f"Invalid OUTPUTOPTS: {outputopts}")
-            return
-    if outputopts[0] in ('x', 'y', 'z'):
-        for n, outputopt in enumerate(outputopts):
-            if (n % 2) == 0:
-                sliceimages.append(f"slice_tmp{n}.png")
+        if not (outputopt in ('x', 'y', 'z', 'a', 'A', 'S') or isnumber(outputopt)):
+            print(f"Invalid OUTPUTOPTS: '{outputopt}' in '{' '.join(outputopts)}'"); return
+        if outputopt.isalpha():
+            sliceimages.append(f"slice_tmp{n}.png")
+            if outputopt == 'a':
+                outputopts_ += f"-{outputopt} {sliceimages[-1]} "
+            elif outputopt in ('x', 'y', 'z', 'A'):
+                if not isnumber(outputopts[n+1]):
+                    print(f"Invalid OUTPUTOPTS: '{outputopts[n+1]}' in '{' '.join(outputopts)}'"); return
                 outputopts_ += f"-{outputopt} {outputopts[n+1]} {sliceimages[-1]} "
-    elif outputopts[0].upper() in ('A', 'S'):
-        sliceimages = ['slice_tmp1.png']
-        outputopts_ = f"-{' '.join(outputopts)} {sliceimages[0]}"
+            elif outputopt == 'S':
+                if not (isnumber(outputopts[n+1]) and isnumber(outputopts[n+2])):
+                    print(f"Invalid OUTPUTOPTS: {outputopt} >> '{' '.join(outputopts)}'"); return
+                outputopts_ += f"-{outputopt} {outputopts[n+1]} {outputopts[n+2]} {sliceimages[-1]} "
 
     # Get the list of subjects
     if not subjects:
         subjects = bidscoin.lsdirs(bidsdir, 'sub-*')
         if not subjects:
-            print(f"No subjects found in: {bidsdir/'sub-*'}")
-            return
+            print(f"No subjects found in: {bidsdir/'sub-*'}"); return
     else:
         subjects = ['sub-' + subject.replace('sub-', '') for subject in subjects]               # Make sure there is a "sub-" prefix
         subjects = [bidsdir/subject for subject in subjects if (bidsdir/subject).is_dir()]
@@ -126,6 +128,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 # Generate the slice image
                 outline = outlineimages[n] if outlinepattern else outlineimage
                 command = f"slicer {image} {outline} {mainopts} {outputopts_}"
+                LOGGER.bcdebug(f"Running: {command}")
                 process = subprocess.run(command, cwd=reportdir, shell=True, capture_output=True, text=True)
                 if process.stderr or process.returncode != 0:
                     LOGGER.error(f"{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
@@ -171,7 +174,7 @@ MAINOPTS:
   t                  : Produce semi-transparent (dithered) edges.
   n                  : Use nearest-neighbour interpolation for output.
   u                  : Do not put left-right labels in output.
-  s                  : Scaling factor
+  s                  : Size scaling factor
   c                  : Add a red dot marker to top right of image
 
 OUTPUTOPTS:
