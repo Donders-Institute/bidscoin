@@ -24,11 +24,12 @@ html_head = """<!DOCTYPE html>
 <head>
     <title>Slice report</title>
     <style>
-        body     { color: #D1D1D1; background-color: #181818; font-family: Arial; }
-        h1,h2,h3 { color: #FFFFFF; }
+        body     { color: #D1D1D1; background-color: #181818; font-family: Arial; margin-left: 15px }
+        h1       { color: Orange; font-size: 18px; display: inline-block; border: 1px solid orange;
+                   padding: 10px 20px; border-radius: 10px;}
         a        { color: inherit; text-decoration: none; }
-        a:hover  { color: orange; }
-        a:active { color: yellow; }
+        a:hover  { color: Orange; }
+        a:active { color: Yellow; }
     </style>
 </head>
 
@@ -155,11 +156,11 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     reportdir.mkdir(parents=True, exist_ok=True)
     (reportdir/'slicereport.log').unlink(missing_ok=True)
     bidscoin.setup_logging(reportdir/'slicereport.log')
-    LOGGER.info(f"Command: {' '.join(sys.argv)}")
+    LOGGER.info(f"Command: slicereport {' '.join(sys.argv[1:])}")
 
     # Create the report index file
     report = reportdir/'index.html'
-    report.write_text(f'{html_head}<h3><span style="color: orange">Command:</span> slicereport {" ".join(sys.argv[1:])}</h3><br>\n')
+    report.write_text(f'{html_head}<h1>Command:<span style="color: White"> slicereport {" ".join(sys.argv[1:])}</span></h1>\n')
 
     # Create a QC tsv-file
     qcfile = reportdir/'qcscores.tsv'
@@ -209,7 +210,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 appendslices(image, outline, mainopts, outputopts, reportses, slicerimages, slicerow)
 
                 # Add a row to the report
-                caption = f"{Path(image).relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;['+str(Path(outline).relative_to(outlinedir))+']' if outline else ''}"
+                caption = f"{Path(image).relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(Path(outline).relative_to(session))+' )' if outline else ''}"
                 with report.open('a') as fid:
                     fid.write(f'\n<p><a href="{subses + session.name}/index.html">'
                               f'<image src="{subses + session.name}/{slicerow}"><br>\n{caption}</a></p>\n')
@@ -218,15 +219,15 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 if suboutputopts:
                     slicerow = f"{Path(image).name}_s.png"
                     appendslices(image, outline, mainopts, suboutputopts, reportses, subslicerimages, slicerow)
-                (reportses/'index.html').write_text(f'{html_head}<h3>{caption}</h3>\n\n'
+                (reportses/'index.html').write_text(f'{html_head}<h1>{caption}</h1>\n\n'
                                                     f'<image src="{slicerow}">\n\n</body></html>')
 
     # Finish off
     errors = bidscoin.reporterrors().replace('\n', '<br>\n')
     if errors:
-        footer = '<h3 style="color:#EE4B2B">The following errors and warnings were reported:</h3>\n'
+        footer = '<h3 style="color: Red">The following errors and warnings were reported:</h3>\n'
     else:
-        footer = '<h3 style="color:#50C878">No errors or warnings were reported</h3>\n'
+        footer = '<h3 style="color: LimeGreen">No errors or warnings were reported</h3>\n'
     with report.open('a') as fid:
         fid.write(f'\n<br>{footer}<p>\n{errors}</p>\n\n</body></html>')
     if qccols:
