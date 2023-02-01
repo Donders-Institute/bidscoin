@@ -24,11 +24,11 @@ html_head = """<!DOCTYPE html>
 <head>
     <title>Slice report</title>
     <style>
-        body { background-color: #181818; font-family: Arial; }
-        h3   { color: #FFFFFF; }
-        p    { color: #D1D1D1; }
-        a    { color: #D1D1D1; text-decoration: none; }
-        a:hover, a:active { color: orange; }
+        body     { color: #D1D1D1; background-color: #181818; font-family: Arial; }
+        h1,h2,h3 { color: #FFFFFF; }
+        a        { color: inherit; text-decoration: none; }
+        a:hover  { color: orange; }
+        a:active { color: yellow; }
     </style>
 </head>
 
@@ -159,7 +159,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
 
     # Create the report index file
     report = reportdir/'index.html'
-    report.write_text(f'{html_head}<h3><span style="color: #D3D3D3">Command:</span> slicereport {" ".join(sys.argv[1:])}</h3><br>\n')
+    report.write_text(f'{html_head}<h3><span style="color: orange">Command:</span> slicereport {" ".join(sys.argv[1:])}</h3><br>\n')
 
     # Create a QC tsv-file
     qcfile = reportdir/'qcscores.tsv'
