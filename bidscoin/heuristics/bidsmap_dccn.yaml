@@ -42,6 +42,11 @@ Options:
       meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata sourcefiles that are copied over to the BIDS sidecar files
       multiraid: 2                  # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
 #    phys2bidscoin:                  # The settings for the phys2bidscoin plugin
+    pet2bids:
+      command: dcm2niix4pet
+      args:
+      anon:
+      meta: [.json, .tsv]
 
 
 DICOM:
@@ -2757,3 +2762,29 @@ Nibabel:
       task: <SeriesDescription>
       echo: <EchoNumbers>
       suffix: <ScanningSequence>
+
+ECAT:
+# --------------------------------------------------------------------------------
+# We use this to catalog ECAT files if they are preset
+# --------------------------------------------------------------------------------
+  subject: <<filepath:/sub-(.*?)/>>   # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:/sub-.*?/ses-(.*?)/>>
+
+  pet: # ----------------------- All PET runs ---------------------------
+    - provenance:
+      attributes: &ecat_attr
+        somexlsfields:
+      bids: *pet_dicoment_pet             # See: schema/datatypes/pet.yaml
+      meta: *pet_meta
+    - provenance:
+      attributes: *ecat_attr
+      bids:
+        <<: *pet_dicoment_pet
+        suffix: events
+      meta: *pet_meta
+    - provenance:
+      attributes: *ecat_attr
+      bids:
+        << : *pet_dicoment_pet
+        suffix: blood
+      meta: *pet_meta

@@ -558,9 +558,9 @@ class MainWindow(QMainWindow):
             samples_table = self.samples_table[dataformat]
             clicked       = self.focusWidget()
             rowindex      = samples_table.indexAt(clicked.pos()).row()
-            if rowindex < 0:                                        # This may happen on MacOS? (github issue #131)
+            if rowindex < 0:                                        # This may happen on MacOS (rowindex = -1)? (github issue #131)
                 LOGGER.bcdebug(f"User clicked on the [Edit] button (presumably) but PyQt returns pos={clicked.pos()} -> rowindex={rowindex}")
-                return
+                return                                              # TODO: Simply changing this to 0? (the value of rowindex when datatype is DICOM)
             datatype      = samples_table.item(rowindex, 2).text()
             provenance    = samples_table.item(rowindex, 5).text()
 
