@@ -236,7 +236,9 @@ Quality control
 
     usage: slicereport.py [-h] [-o OUTLINEPATTERN] [-i OUTLINEIMAGE]
                           [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-r REPORTFOLDER]
-                          [--mainopts MAINOPTS [MAINOPTS ...]] [--outputopts OUTPUTOPTS [OUTPUTOPTS ...]]
+                          [-q QCSCORES [QCSCORES ...]] [--mainopts MAINOPTS [MAINOPTS ...]]
+                          [--outputopts OUTPUTOPTS [OUTPUTOPTS ...]]
+                          [--suboutputopts SUBOUTPUTOPTS [SUBOUTPUTOPTS ...]]
                           bidsfolder pattern
 
     A wrapper around the 'slicer' reporting tool (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Miscvis)
@@ -253,24 +255,30 @@ Quality control
     options:
       -h, --help            show this help message and exit
       -o OUTLINEPATTERN, --outlinepattern OUTLINEPATTERN
-                            Globlike search pattern to select red outline images that are projected on
-                            top of the reported images (i.e. 'outlinepattern' must yield the same number
-                            of images as 'pattern'. Prepend `outlinedir:` if your outline images are in
+                            Globlike search pattern to select red outline images that are projected on top
+                            of the reported images (i.e. 'outlinepattern' must yield the same number of
+                            images as 'pattern'. Prepend `outlinedir:` if your outline images are in
                             `outlinedir` instead of `bidsdir` (see examples below)`
       -i OUTLINEIMAGE, --outlineimage OUTLINEIMAGE
                             A common red-outline image that is projected on top of all images
       -p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...], --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
-                            Space separated list of sub-# identifiers to be processed (the sub- prefix
-                            can be left out). If not specified then all sub-folders in the bidsfolder
-                            will be processed
+                            Space separated list of sub-# identifiers to be processed (the sub-prefix can
+                            be left out). If not specified then all sub-folders in the bidsfolder will be
+                            processed
       -r REPORTFOLDER, --reportfolder REPORTFOLDER
                             The folder where the report is saved (default:
                             bidsfolder/derivatives/slicereport)
+      -q QCSCORES [QCSCORES ...], --qcscores QCSCORES [QCSCORES ...]
+                            Column names for creating an accompanying tsv-file to store QC-rating scores
+                            (default: rating_overall)
       --mainopts MAINOPTS [MAINOPTS ...]
                             Main options of slicer (see below). (default: "s 1")
       --outputopts OUTPUTOPTS [OUTPUTOPTS ...]
-                            Output options of slicer (see below). (default: "x 0.4 x 0.5 x 0.6 y 0.4 y
-                            0.5 y 0.6 z 0.4 z 0.5 z 0.6")
+                            Output options of slicer (see below). (default: "x 0.4 x 0.5 x 0.6 y 0.4 y 0.5
+                            y 0.6 z 0.4 z 0.5 z 0.6")
+      --suboutputopts SUBOUTPUTOPTS [SUBOUTPUTOPTS ...]
+                            Output options of slicer for creating the subreports (same as OUTPUTOPTS, see
+                            below). (default: "S 4 1600")
 
     MAINOPTS:
       L                  : Label slices with slice number.

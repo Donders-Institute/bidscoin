@@ -163,11 +163,11 @@ def main():
     parser.add_argument('-f','--field',     help='The fieldname(s) of the dicom attribute(s) used to rename or map the subid/sesid foldernames', default=['PatientComments', 'ImageComments'], nargs='+')
     parser.add_argument('-w','--wildcard',  help='The Unix style pathname pattern expansion that is used to select the series from which the dicomfield is being mapped (can contain wildcards)', default='*')
     parser.add_argument('-o','--outfolder', help='The mapper-file is normally saved in sourcefolder or, when using this option, in outfolder')
-    parser.add_argument('-r','--rename',    help='If this flag is given sub-subid/ses-sesid directories in the sourcefolder will be renamed to sub-dcmval/ses-dcmval', action='store_true')
-    parser.add_argument('-c','--clobber',   help='Flag to rename the directories, even if the target-directory already exists', action='store_true')
+    parser.add_argument('-r','--rename',    help='Rename sub-subid/ses-sesid directories in the sourcefolder to sub-dcmval/ses-dcmval', action='store_true')
+    parser.add_argument('-c','--clobber',   help='Rename the sub/ses directories, even if the target-directory already exists', action='store_true')
     parser.add_argument('-n','--subprefix', help="The prefix common for all the source subject-folders. Use a '*' wildcard if there is no prefix", default='sub-')
     parser.add_argument('-m','--sesprefix', help="The prefix common for all the source session-folders. Use a '*' wildcard if there is no prefix or an empty value if there are no sessions", nargs='?', default='ses-')
-    parser.add_argument('-d','--dryrun',    help='Add this flag to dryrun (test) the mapping or renaming of the sub-subid/ses-sesid directories (i.e. nothing is stored on disk and directory names are not actually changed))', action='store_true')
+    parser.add_argument('-d','--dryrun',    help='Dryrun (test) the mapping or renaming of the sub-subid/ses-sesid directories (i.e. nothing is stored on disk and directory names are not actually changed))', action='store_true')
     args = parser.parse_args()
 
     rawmapper(rawfolder  = args.sourcefolder,

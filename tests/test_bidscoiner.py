@@ -12,7 +12,7 @@ bidscoin.setup_logging()
 
 def test_bidscoiner(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
     if not bidsmap_dicomdir.is_file():
-        bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidscoin.bidsmap_template, [], 'Doe^', '*', unzip='', noedit=True, force=True)
+        bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidscoin.bidsmap_template, [], 'Doe^', '*', unzip='', noeditor=True, force=True)
         (bidsmap_dicomdir.parent/'bidsmapper.errors').unlink(missing_ok=True)
     bidscoiner.bidscoiner(raw_dicomdir, bids_dicomdir)
     logs     = (bidsmap_dicomdir.parent/'bidscoiner.errors').read_text()

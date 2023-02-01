@@ -41,7 +41,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
     :param rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
     :param bidsfolder:      The name of the BIDS root folder
-    :param subjects:        List of selected subjects / participants (i.e. sub-# names / folders) to be processed (the sub- prefix can be removed). Otherwise all subjects in the sourcefolder will be selected
+    :param subjects:        List of selected subjects / participants (i.e. sub-# names / folders) to be processed (the sub-prefix can be removed). Otherwise all subjects in the sourcefolder will be selected
     :param force:           If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped
     :param bidsmapfile:     The name of the bidsmap YAML-file. If the bidsmap pathname is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin
     :return:                Nothing
@@ -363,9 +363,9 @@ def main():
                                             '  bidscoiner -f myproject/raw myproject/bids -p sub-009 sub-030\n ')
     parser.add_argument('sourcefolder',             help='The study root folder containing the raw source data')
     parser.add_argument('bidsfolder',               help='The destination / output folder with the bids data')
-    parser.add_argument('-p','--participant_label', help='Space separated list of selected sub-# names / folders to be processed (the sub- prefix can be removed). Otherwise all subjects in the sourcefolder will be selected', nargs='+')
+    parser.add_argument('-p','--participant_label', help='Space separated list of selected sub-# names / folders to be processed (the sub-prefix can be removed). Otherwise all subjects in the sourcefolder will be selected', nargs='+')
     parser.add_argument('-b','--bidsmap',           help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
-    parser.add_argument('-f','--force',             help='If this flag is given subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped', action='store_true')
+    parser.add_argument('-f','--force',             help='Process all subjects, regardless of existing subject folders in the bidsfolder. Otherwise these subject folders will be skipped', action='store_true')
     args = parser.parse_args()
 
     bidscoiner(rawfolder    = args.sourcefolder,
