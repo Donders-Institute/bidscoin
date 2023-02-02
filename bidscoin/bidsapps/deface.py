@@ -100,7 +100,9 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                             outputfile     = match
                             outputfile_rel = match_rel
                         elif output == 'derivatives':
-                            outputfile     = bidsdir/'derivatives'/'deface'/subid/sesid/match.parent.name/match.name
+                            srcent, suffix = match.with_suffix('').stem.rsplit('_', 1)  # Name without suffix, suffix
+                            ext = ''.join(match.suffixes)                               # Account for e.g. '.nii.gz'
+                            outputfile     = bidsdir/'derivatives'/'deface'/subid/sesid/match.parent.name/f"{srcent}_spc-orig_{suffix}{ext}"
                             outputfile_rel = outputfile.relative_to(bidsdir).as_posix()
                         else:
                             outputfile     = session/output/match.name

@@ -168,7 +168,9 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                         outputfile     = echofile
                         outputfile_rel = echofile_rel
                     elif output == 'derivatives':
-                        outputfile     = bidsdir/'derivatives'/'deface'/subid/sesid/echofile.parent.name/echofile.name
+                        srcent, suffix = echofile.with_suffix('').stem.rsplit('_', 1)   # Name without suffix, suffix
+                        ext = ''.join(echofile.suffixes)                                # Account for e.g. '.nii.gz'
+                        outputfile     = bidsdir/'derivatives'/'deface'/subid/sesid/echofile.parent.name/f"{srcent}_spc-orig_{suffix}{ext}"
                         outputfile_rel = outputfile.relative_to(bidsdir).as_posix()
                     else:
                         outputfile     = session/output/echofile.name
