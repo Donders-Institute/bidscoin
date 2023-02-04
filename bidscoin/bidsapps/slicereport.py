@@ -12,6 +12,7 @@ import logging
 import subprocess
 import sys
 import csv
+import tempfile
 from pathlib import Path
 try:
     from bidscoin import bidscoin
@@ -78,30 +79,28 @@ def parseoutputopts(opts: list, name: str) -> tuple:
     return outputopts, sliceimages
 
 
-def appendslices(inputimage, outlineimage, mainopts, outputopts, reportses, slicerimages, outputimage):
+def appendslices(inputimage, outlineimage, mainopts, outputopts, reportses, slicerimages, outputimage, cluster):
     """Run slicer and append the sliced images to a row"""
 
     # Slice the image
-    command = f"slicer {inputimage} {outlineimage} {mainopts} {outputopts}"
+    workdir = Path(reportses)/next(tempfile._get_candidate_names())
+    workdir.mkdir()
+    command = f"cd {workdir}\n" \
+              f"slicer {inputimage} {outlineimage} {mainopts} {outputopts}\n" \
+              f"pngappend {' + '.join(slicerimages)} {outputimage}\n" \
+              f"mv {outputimage} {reportses}\n" \
+              f"rm -r {workdir}"
+    if cluster:
+        command = f"qsub -l walltime=0:01:00,mem=2gb -N slicereport <<EOF\n{command}\nEOF"
+
     LOGGER.bcdebug(f"Running: {command}")
-    process = subprocess.run(command, cwd=reportses, shell=True, capture_output=True, text=True)
+    process = subprocess.run(command, shell=True, capture_output=True, text=True)
     if process.stderr or process.returncode!=0:
         LOGGER.error(f"{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
         sys.exit(process.returncode)
 
-    # Append the sliced images to a row
-    command = f"pngappend {' + '.join(slicerimages)} {outputimage}"
-    process = subprocess.run(command, cwd=reportses, shell=True, capture_output=True, text=True)
-    if process.stderr or process.returncode!=0:
-        LOGGER.error(f"{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
-        sys.exit(process.returncode)
 
-    # Clean up the intermediate slicer output images
-    for slicerimage in slicerimages:
-        (reportses/slicerimage).unlink()
-
-
-def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: str, subjects: list, reportdir: str, qccols: list, mainopts: list, outputopts: list, suboutputopts: list):
+def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: str, subjects: list, reportdir: str, qccols: list, cluster: bool, mainopts: list, outputopts: list, suboutputopts: list):
     """
     :param bidsdir:         The bids-directory with the subject data
     :param pattern:         Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T1w*'
@@ -110,6 +109,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     :param subjects:        Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
     :param reportdir:       The folder where the report is saved
     :param qccols:          Column names for creating an accompanying tsv-file to store QC-rating scores
+    :param cluster:         Use the DRMAA library to submit the slicer jobs to a high-performance compute (HPC) cluster
     :param mainopts:        Slicer main options
     :param outputopts:      Slicer output options
     :param suboutputopts:   Slicer output options for creating the subreports (same as OUTPUTOPTS)
@@ -174,9 +174,9 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
         sessions = bidscoin.lsdirs(subject, 'ses-*')
         if not sessions:
             sessions = [subject]
-            subses   = ''
+            sub      = ''
         else:
-            subses   = subject.name + '/'
+            sub      = subject.name + '/'
         for session in sessions:
 
             # Write a row in the QC tsv-file
@@ -205,20 +205,21 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
             for n, image in enumerate(images):
 
                 # Generate the sliced image row
+                subses   = sub  + session.name
                 outline  = outlineimages[n] if outlinepattern else outlineimage
                 slicerow = f"{Path(image).name}.png"
-                appendslices(image, outline, mainopts, outputopts, reportses, slicerimages, slicerow)
+                appendslices(image, outline, mainopts, outputopts, reportses, slicerimages, slicerow, cluster)
 
                 # Add a row to the report
                 caption = f"{Path(image).relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(Path(outline).relative_to(session))+' )' if outline else ''}"
                 with report.open('a') as fid:
-                    fid.write(f'\n<p><a href="{subses + session.name}/index.html">'
-                              f'<image src="{subses + session.name}/{slicerow}"><br>\n{caption}</a></p>\n')
+                    fid.write(f'\n<p><a href="{subses}/index.html">'
+                              f'<image src="{subses}/{slicerow}"><br>\n{caption}</a></p>\n')
 
                 # Add a subreport
                 if suboutputopts:
                     slicerow = f"{Path(image).name}_s.png"
-                    appendslices(image, outline, mainopts, suboutputopts, reportses, subslicerimages, slicerow)
+                    appendslices(image, outline, mainopts, suboutputopts, reportses, subslicerimages, slicerow, cluster)
                 (reportses/'index.html').write_text(f'{html_head}<h1>{caption}</h1>\n\n'
                                                     f'<image src="{slicerow}">\n\n</body></html>')
 
@@ -274,10 +275,11 @@ examples:
     parser.add_argument('bidsfolder',               help='The bids-directory with the subject data')
     parser.add_argument('pattern',                  help="Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T2starw*'")
     parser.add_argument('-o','--outlinepattern',    help="Globlike search pattern to select red outline images that are projected on top of the reported images (i.e. 'outlinepattern' must yield the same number of images as 'pattern'. Prepend `outlinedir:` if your outline images are in `outlinedir` instead of `bidsdir` (see examples below)`")
-    parser.add_argument('-i','--outlineimage',      help='A common red-outline image that is projected on top of all images')
+    parser.add_argument('-i','--outlineimage',      help='A common red-outline image that is projected on top of all images', default='')
     parser.add_argument('-p','--participant_label', help='Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed', nargs='+')
     parser.add_argument('-r','--reportfolder',      help="The folder where the report is saved (default: bidsfolder/derivatives/slicereport)")
     parser.add_argument('-q','--qcscores',          help="Column names for creating an accompanying tsv-file to store QC-rating scores (default: rating_overall)", default=['rating_overall'], nargs='+')
+    parser.add_argument('-c','--cluster',           help='Use the DRMAA library to submit the slicer jobs to a high-performance compute (HPC) cluster', action='store_true')
     parser.add_argument('--mainopts',               help='Main options of slicer (see below). (default: "s 1")', default=['s','1'], nargs='+')
     parser.add_argument('--outputopts',             help='Output options of slicer (see below). (default: "x 0.4 x 0.5 x 0.6 y 0.4 y 0.5 y 0.6 z 0.4 z 0.5 z 0.6")', default=['x','0.4','x','0.5','x','0.6','y','0.4','y','0.5','y','0.6','z','0.4','z','0.5','z','0.6'], nargs='+')
     parser.add_argument('--suboutputopts',          help='Output options of slicer for creating the subreports (same as OUTPUTOPTS, see below). (default: "S 4 1600")', default=['S', '4', '1600'], nargs='+')
@@ -290,6 +292,7 @@ examples:
                 subjects       = args.participant_label,
                 reportdir      = args.reportfolder,
                 qccols         = args.qcscores,
+                cluster        = args.cluster,
                 mainopts       = args.mainopts,
                 outputopts     = args.outputopts,
                 suboutputopts  = args.suboutputopts)
