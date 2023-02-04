@@ -91,7 +91,7 @@ def appendslices(inputimage, outlineimage, mainopts, outputopts, reportses, slic
               f"mv {outputimage} {reportses}\n" \
               f"rm -r {workdir}"
     if cluster:
-        command = f"qsub -l walltime=0:01:00,mem=2gb -N slicereport <<EOF\n{command}\nEOF"
+        command = f"qsub -l walltime=0:01:00,mem=1gb -N slicereport <<EOF\n{command}\nEOF"
 
     LOGGER.bcdebug(f"Running: {command}")
     process = subprocess.run(command, shell=True, capture_output=True, text=True)
@@ -238,6 +238,8 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     LOGGER.info(' ')
     LOGGER.info('To view the slice report, point your web browser at:')
     LOGGER.info(f"{report}\n ")
+    if cluster:
+        LOGGER.info('But first wait for your `slicereport`-jobs to finish... Use e.g.:\n\nqstat $(qselect -s RQ) | grep slicereport\n')
 
 
 def main():
