@@ -645,10 +645,7 @@ def main():
     parser.add_argument('-t', '--test',        help='Test the bidscoin installation and template bidsmap', nargs='?', const=bidsmap_template)
     parser.add_argument('-b', '--bidsmaptest', help='Test the run-items and their bidsnames of all normal runs in the study bidsmap. Provide the bids-folder or the bidsmap filepath')
     parser.add_argument('-v', '--version',     help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
-    if len(sys.argv) == 1:
-        parser.print_help()
-        return
-    args = parser.parse_args()
+    args = parser.parse_args(None if sys.argv[1:] else ['--help'])
 
     list_executables(show=args.list)
     list_plugins(show=args.plugins)
