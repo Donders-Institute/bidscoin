@@ -2,9 +2,9 @@
 """
 A wrapper around the 'slicer' imaging tool (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Miscvis)
 to generate a web page with a row of image slices for each subject in the BIDS repository, as
-well as individual sub-pages displaying more detailed information. The source images are
+well as individual sub-pages displaying more detailed information. The input images are
 selectable using wildcards, and the output images are configurable via various user options,
-allowing you to quickly create your own custom report to do visual quality control on any
+allowing you to quickly create a custom 'slicer' report to do visual quality control on any
 datatype in your repository.
 
 Requires an existing installation of FSL/slicer
@@ -278,7 +278,7 @@ examples:
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=__doc__, epilog=epilogue)
     parser.add_argument('bidsfolder',               help='The bids-directory with the subject data')
-    parser.add_argument('pattern',                  help="Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T2starw*'")
+    parser.add_argument('pattern',                  help="Globlike search pattern to select the images in bidsfolder to be reported, e.g. 'anat/*_T2starw*'")
     parser.add_argument('-o','--outlinepattern',    help="Globlike search pattern to select red outline images that are projected on top of the reported images (i.e. 'outlinepattern' must yield the same number of images as 'pattern'. Prepend `outlinedir:` if your outline images are in `outlinedir` instead of `bidsdir` (see examples below)`")
     parser.add_argument('-i','--outlineimage',      help='A common red-outline image that is projected on top of all images', default='')
     parser.add_argument('-p','--participant_label', help='Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed', nargs='+')

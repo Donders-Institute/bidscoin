@@ -252,7 +252,7 @@ Quality control
 
     positional arguments:
       bidsfolder            The bids-directory with the subject data
-      pattern               Globlike search pattern to select the images in bidsdir to be reported, e.g.
+      pattern               Globlike search pattern to select the images in bidsfolder to be reported, e.g.
                             'anat/*_T2starw*'
 
     options:
@@ -312,10 +312,10 @@ Quality control
 .. figure:: ./_static/slicereport_skullstrip.png
 
    Snippet of a ``slicereport`` for doing quality control on ``skullstrip`` output images (see above). The
-   background image shows the skull-extracted image in the `extra_data` folder, and the red outline image
-   projected on top shows the contours computed from the original image in the `anat` folder. Users can click
-   on an image to navigate to the individual (more detailed) slicereport of that subject. This example can be
-   generated from scratch with just these two commands:
+   background image shows the skull-stripped image in the `extra_data` folder, and the red outline image
+   on top shows the contours of the original image in the `anat` folder. Users can click on an image to
+   navigate to the individual (more detailed) slicereport of that subject. This example can be generated
+   from scratch with just two commands:
 
 .. code-block:: console
 
