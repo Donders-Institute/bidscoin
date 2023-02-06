@@ -236,7 +236,7 @@ def main():
                                      epilog='examples:\n'
                                             '  skullstrip myproject/bids anat/*_T1w*\n'
                                             '  skullstrip myproject/bids anat/*_T1w* -p 001 003 -a \' --no-csf\'\n'
-                                            '  skullstrip myproject/bids fmap/*_magnitude1* -m fmap/*_phasediff -o extra_data fmap\n'
+                                            '  skullstrip myproject/bids fmap/*_magnitude1* -m fmap/*_phasediff* -o extra_data fmap\n'
                                             '  skullstrip myproject/bids fmap/*_acq-mylabel*_magnitude1* -m fmap/*_acq-mylabel_* -o fmap\n ')
     parser.add_argument('bidsfolder',               help="The bids-directory with the subject data", type=str)
     parser.add_argument('pattern',                  help="Globlike search pattern (relative to the subject/session folder) to select the (3D) images that need to be skullstripped, e.g. 'anat/*_T1w*'", type=str)
