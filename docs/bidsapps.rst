@@ -206,7 +206,7 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
                             Globlike search pattern (relative to the subject/session folder) to
                             select additional (3D/4D) images from the same space that need to be
                             masked with the same mask, e.g. 'fmap/*_phasediff'. NB: This option
-                            can only be used if pattern yieds a single file per session (default:
+                            can only be used if pattern yields a single file per session (default:
                             None)
       -o OUTPUT [OUTPUT ...], --output OUTPUT [OUTPUT ...]
                             One or two output strings that determine where the skullstripped +
@@ -230,7 +230,7 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
 Quality control
 ---------------
 
-``Slicereport`` is a flexible QC report generator for doing quick visual inspections of your data
+``Slicereport`` is a very flexible QC report generator for doing visual inspections on your BIDS data.
 
 ::
 
@@ -241,9 +241,12 @@ Quality control
                           [--suboutputopts SUBOUTPUTOPTS [SUBOUTPUTOPTS ...]]
                           bidsfolder pattern
 
-    A wrapper around the 'slicer' reporting tool (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Miscvis)
-    that generates a web page with a row of image slices for each subject in the BIDS repository.
-    In this way you can do a simple visual quality control of any datatype in your BIDS repository
+    A wrapper around the 'slicer' imaging tool (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Miscvis)
+    to generate a web page with a row of image slices for each subject in the BIDS repository, as
+    well as individual sub-pages displaying more detailed information. The source images are
+    selectable using wildcards, and the output images are configurable via various user options,
+    allowing you to quickly create your own custom report to do visual quality control on any
+    datatype in your repository.
 
     Requires an existing installation of FSL/slicer
 
@@ -308,8 +311,11 @@ Quality control
 
 .. figure:: ./_static/slicereport_skullstrip.png
 
-   Snippet of a ``slicereport`` for doing quality control on ``skullstrip`` output images (see above). This
-   example was generated with these two commands:
+   Snippet of a ``slicereport`` for doing quality control on ``skullstrip`` output images (see above). The
+   background image shows the skull-extracted image in the `extra_data` folder, and the red outline image
+   projected on top shows the contours computed from the original image in the `anat` folder. Users can click
+   on an image to navigate to the individual (more detailed) slicereport of that subject. This example can be
+   generated from scratch with just these two commands:
 
 .. code-block:: console
 

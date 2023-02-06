@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
-A wrapper around the 'slicer' reporting tool (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Miscvis)
-that generates a web page with a row of image slices for each subject in the BIDS repository.
-In this way you can do a simple visual quality control of any datatype in your BIDS repository
+A wrapper around the 'slicer' imaging tool (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Miscvis)
+to generate a web page with a row of image slices for each subject in the BIDS repository, as
+well as individual sub-pages displaying more detailed information. The source images are
+selectable using wildcards, and the output images are configurable via various user options,
+allowing you to quickly create your own custom report to do visual quality control on any
+datatype in your repository.
 
 Requires an existing installation of FSL/slicer
 """
