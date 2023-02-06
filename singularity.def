@@ -11,7 +11,7 @@ OSVersion: stable
     git clone https://github.com/rordenlab/dcm2niix.git
     cd dcm2niix
     mkdir build && cd build
-    cmake ..
+    cmake -DZLIB_IMPLEMENTATION=Cloudflare -DUSE_JPEGLS=ON -DUSE_OPENJPEG=ON ..
     make install
 
     # Install curl (sometimes needed by dcm2niix)
