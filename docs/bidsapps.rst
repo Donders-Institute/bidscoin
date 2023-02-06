@@ -306,7 +306,7 @@ Quality control
       slicereport myproject/bids/derivatives/deface anat/*_T1w* -o myproject/bids:anat/*_T1w* --mainopts L e 0.05
       slicereport myproject/bids anat/*_T1w* --outputopts x 0.4 x 0.5 x 0.6 z 0.3 z 0.4 z 0.5 z 0.6 z 0.7
 
-.. figure:: ./_static/slicereport_deface.png
+.. figure:: ./_static/slicereport_skullstrip.png
 
    Snippet of a ``slicereport`` for doing quality control on ``skullstrip`` output images (see above). This
    example was generated with these two commands:
