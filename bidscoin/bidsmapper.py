@@ -266,7 +266,7 @@ def main():
                store        = args.store,
                noeditor     = args.automated,
                force        = args.force,
-               noupdate     = args.noupdate)
+               noupdate     = args.no_update)
 
 
 if __name__ == "__main__":
