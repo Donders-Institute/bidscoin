@@ -745,8 +745,10 @@ class MainWindow(QMainWindow):
     def validate_runs(self):
         """Test the runs in the study bidsmap"""
 
+        LOGGER.info(' ')
         bids.check_bidsmap(self.output_bidsmap)
-        bids.validate_bidsmap(self.output_bidsmap)
+        LOGGER.info(' ')
+        bids.validate_bidsmap(self.output_bidsmap, 1)
 
     def reset(self):
         """Reset button: reset the window with the original input BIDS map"""

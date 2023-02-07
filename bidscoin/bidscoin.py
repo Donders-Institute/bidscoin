@@ -499,7 +499,7 @@ def test_bidsmap(bidsmapfile: str):
         bidsfolder  = Path()
     bidsmap, _ = bids.load_bidsmap(bidsmapfile, bidsfolder, check=(True,True,True))
 
-    return bids.validate_bidsmap(bidsmap)
+    return bids.validate_bidsmap(bidsmap, 1)
 
 
 def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins: bool=True, testgui: bool=True, testtemplate: bool=True) -> int:
