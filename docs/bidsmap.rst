@@ -99,6 +99,7 @@ Editing the template bidsmap
 .. code-block:: yaml
 
    anat:       # ----------------------- All anatomical runs --------------------
+
    - provenance:                    # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
      properties: &fileattr          # This is an optional (stub) entry of filesystem matching (could be added to any run-item)
        filepath:                    # File folder, e.g. ".*Parkinson.*" or ".*(phantom|bottle).*"
@@ -128,6 +129,7 @@ Editing the template bidsmap
        part: ['', 'mag', 'phase', 'real', 'imag', 0]    # This BIDS value list will be shown as a dropdown menu in the bidseditor with the first (empty) item selected (as indicated by the last item, i.e. 0)
        suffix: T1w
      meta:                          # This is an optional entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
+
    - provenance:
      properties:
        <<: *fileattr
@@ -139,6 +141,7 @@ Editing the template bidsmap
      bids: *anat_dicoment_nonparametric
      meta:
        Comments: <<ImageComments>>  # This will be expanded dynamically during bidscoiner runtime (as it may vary from session to session)
+
    - provenance:
      attributes:
        <<: *anat_dicomattr
