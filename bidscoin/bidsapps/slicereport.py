@@ -214,7 +214,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 appendslices(image, outline, mainopts, outputopts, reportses, slicerimages, slicerow, cluster)
 
                 # Add a row to the report
-                caption = f"{Path(image).relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(Path(outline).relative_to(outlinesession))+' )' if outline else ''}"
+                caption = f"{Path(image).relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(Path(outline).relative_to(outlinesession))+' )' if outlinepattern else ''}"
                 with report.open('a') as fid:
                     fid.write(f'\n<p><a href="{subses}/index.html">'
                               f'<image src="{subses}/{slicerow}"><br>\n{caption}</a></p>\n')
