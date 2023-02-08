@@ -119,7 +119,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
                     maskimg.parent.mkdir(parents=True, exist_ok=True)
                     command = f"mri_synthstrip -i {srcimg} -o {outputimg} -m {maskimg} {args}"
                     if cluster:
-                        command = f"qsub -l walltime=0:05:00,mem=4gb -N skullstrip_{subid}_{sesid} <<EOF\n{command}\nEOF"
+                        command = f"qsub -l walltime=0:05:00,mem=8gb -N skullstrip_{subid}_{sesid} <<EOF\n{command}\nEOF"
                     if bidscoin.run_command(command):
                         continue
 
@@ -205,6 +205,8 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
 
     LOGGER.info('-------------- FINISHED! -------------')
     LOGGER.info('')
+    if cluster:
+        LOGGER.info('But first wait for your `skullstrip`-jobs to finish... Use e.g.:\n\nqstat $(qselect -s RQ) | grep skullstrip\n')
 
 
 def main():
