@@ -93,7 +93,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
 
                     # Construct the output filename and relative path names (for updating the IntendedFor list and scans.tsv file)
                     srcent, suffix = srcimg.with_suffix('').stem.rsplit('_',1)  # Name without suffix, suffix
-                    derent         = 'spc-orig_desc-brain'
+                    derent         = 'space-orig_desc-brain'
                     ext            = ''.join(srcimg.suffixes)                   # Account for e.g. '.nii.gz'
                     if output[0] == 'derivatives':
                         outputimg = bidsdir/'derivatives'/'skullstrip'/subid/sesid/srcimg.parent.name/f"{srcent}_{derent}_{suffix}{ext}"
