@@ -26,7 +26,7 @@ except ImportError:
     import bids, bidscoin
 
 
-def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: list, force: bool, args: str):
+def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: list, force: bool, args: str, cluster: bool):
     """
     :param bidsdir:     The bids-directory with the subject data
     :param pattern:     Globlike search pattern (relative to the subject/session folder) to select the images that need to be skullstripped, e.g. 'anat/*_T1w*'
@@ -35,6 +35,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
     :param masked:      Globlike search pattern (relative to the subject/session folder) to select additional images that need to be masked with the same mask, e.g. 'fmap/*_phasediff')
     :param output:      One or two output strings that determine where the skullstripped + additional masked images are saved. Each output string can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives' (default). If the output string is the same as the datatype then the original images are replaced by the skullstripped images
     :param args:        Additional arguments that are passed to synthstrip. See examples for usage
+    :param cluster:     Use qsub to submit the skullstrip jobs to a high-performance compute (HPC) cluster
     :return:
     """
 
@@ -52,6 +53,9 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
         return
     if not shutil.which('mri_synthstrip'):
         print("Could not find 'mri_synthstrip', skullstrip requires FreeSurfer v7.3.2 or higher")
+        return
+    if cluster and masked:
+        print("The `--cluster` option cannot be used in combination with `--masked`")
         return
 
     # Start logging
@@ -113,7 +117,10 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
                     # Skullstrip the image
                     maskimg = bidsdir/'derivatives'/'skullstrip'/subid/sesid/srcimg.parent.name/f"{srcent}_{derent}_mask{ext}"
                     maskimg.parent.mkdir(parents=True, exist_ok=True)
-                    if bidscoin.run_command(f"mri_synthstrip -i  {srcimg} -o {outputimg} -m {maskimg} {args}"):
+                    command = f"mri_synthstrip -i {srcimg} -o {outputimg} -m {maskimg} {args}"
+                    if cluster:
+                        command = f"qsub -l walltime=0:05:00,mem=4gb -N skullstrip_{subid}_{sesid} <<EOF\n{command}\nEOF"
+                    if bidscoin.run_command(command):
                         continue
 
                     # Add a json sidecar-file with the "SkullStripped" field
@@ -131,8 +138,8 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
                         json.dump(metadata, sidecar, indent=4)
 
                     # Apply the mask to the additional images and save it as output
-                    maskobj    = nib.load(maskimg)
-                    maskvol    = maskobj.get_fdata()
+                    maskobj    = nib.load(maskimg)   if addimgs else []
+                    maskvol    = maskobj.get_fdata() if addimgs else []
                     addoutimgs = []                # To be used for updating the IntendedFor list and the scans.tsv file
                     for addimg in addimgs:
 
@@ -171,32 +178,6 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
                         metadata['SkullStripped'] = True
                         with outputjson.open('w') as sidecar:
                             json.dump(metadata, sidecar, indent=4)
-
-                    # Update the IntendedFor fields of the fieldmaps (i.e. remove the old echos, add the echo-combined image and, optionally, the new echos)
-                    if (session/'fmap').is_dir():
-                        for fmap in (session/'fmap').glob('*.json'):
-
-                            # Load the IntendedFor data as a list
-                            with fmap.open('r') as fmap_fid:
-                                fmapdata = json.load(fmap_fid)
-                            intendedfor = fmapdata.get('IntendedFor')
-                            if not intendedfor or srcimg.relative_to(subject).as_posix() not in str(intendedfor):
-                                continue
-                            if isinstance(intendedfor, str):
-                                intendedfor = [intendedfor]
-
-                            # Add the output and additional images
-                            LOGGER.info(f"Updating 'IntendedFor' in {fmap}")
-                            for item in intendedfor:
-                                item_rel = item.split(f":{subid}/",1)[-1]     # NB: The BIDS v1.8 IntendedFor URI is relative to the bids instead of the subject folder (split it off)
-                                uri      = item.replace(item_rel, '')         # E.g. uri = 'bids::sub-01/ses-01/' or 'ses-01/' or ''
-                                for original, stripped in zip([srcimg] + addimgs, [outputimg] + addoutimgs):
-                                    if not stripped.name or 'derivatives' in stripped.parts: continue
-                                    if item_rel == original.relative_to(subject).as_posix() and item_rel != stripped.relative_to(subject).as_posix():
-                                        intendedfor.append(f"{uri}{stripped.relative_to(subject).as_posix()}")
-
-                            # Save the new IntendedFor data
-                            json.dump(fmapdata, fmap_fid, indent=4)
 
                     # Update the scans.tsv file
                     scans_tsv = session/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
@@ -245,6 +226,7 @@ def main():
     parser.add_argument('-o','--output',            help="One or two output strings that determine where the skullstripped + additional masked images are saved. Each output string can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives' (default). If the output string is the same as the datatype then the original images are replaced by the skullstripped images", nargs='+')
     parser.add_argument('-f','--force',             help="Process images, regardless whether images have already been skullstripped (i.e. if {'SkullStripped': True} in the json sidecar file)", action='store_true')
     parser.add_argument('-a','--args',              help="Additional arguments that are passed to synthstrip (NB: Use quotes and a leading space to prevent unintended argument parsing)", type=str, default='')
+    parser.add_argument('-c','--cluster',           help='Use `qsub` to submit the skullstrip jobs to a high-performance compute (HPC) cluster. Can only be used if `--masked` is left empty', action='store_true')
     args = parser.parse_args()
 
     skullstrip(bidsdir  = args.bidsfolder,
@@ -253,7 +235,8 @@ def main():
                masked   = args.masked,
                output   = args.output,
                force    = args.force,
-               args     = args.args)
+               args     = args.args,
+               cluster  = args.cluster)
 
 
 if __name__ == '__main__':
