@@ -1189,7 +1189,7 @@ class EditWindow(QDialog):
                 suffix_dropdown.currentIndexChanged.connect(self.suffix_dropdown_change)
                 suffix_dropdown.setToolTip('The suffix that sets the different run types apart. First make sure the "Data type" dropdown-menu is set correctly before chosing the right suffix here')
                 for n, suffix in enumerate(suffixes):
-                    suffix_dropdown.setItemData(n, bids.get_suffixhelp(suffix), QtCore.Qt.ToolTipRole)
+                    suffix_dropdown.setItemData(n, bids.get_suffixhelp(suffix, self.target_datatype), QtCore.Qt.ToolTipRole)
                 table.setCellWidget(i, 1, self.spacedwidget(suffix_dropdown))
                 continue
             for j, item in enumerate(row):

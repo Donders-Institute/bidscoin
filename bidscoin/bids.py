@@ -1934,7 +1934,7 @@ def get_datatypehelp(datatype: str) -> str:
     return f"{datatype}\nAn unknown/private datatype"
 
 
-def get_suffixhelp(suffix: str) -> str:
+def get_suffixhelp(suffix: str, datatype: str) -> str:
     """
     Reads the description of the suffix in the schema/objects/suffixes.yaml file
 
@@ -1945,9 +1945,13 @@ def get_suffixhelp(suffix: str) -> str:
     if not suffix:
         return "Please provide a suffix"
 
+    isderivative = ''
+    if suffix in get_derivatives(datatype):
+        isderivative = '\nNB: This is a BIDS derivatives datatype'
+
     # Return the description for the suffix or a default text
     if suffix in suffixes:
-        return f"{suffixes[suffix]['display_name']}\n{suffixes[suffix]['description']}"
+        return f"{suffixes[suffix]['display_name']}\n{suffixes[suffix]['description']}{isderivative}"
 
     return f"{suffix}\nAn unknown/private suffix"
 
