@@ -382,6 +382,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                         newbidsname = newbidsname.replace('_magnitude_e1',   '_magnitude')                      # Case 3 = One magnitude + one fieldmap image
                         if len(dcm2niixfiles) == 2:
                             newbidsname = newbidsname.replace('_fieldmap_e1', '_magnitude')                     # Case 3: One magnitude + one fieldmap image in one folder / datasource
+                            newbidsname = newbidsname.replace('_magnitude_fieldmaphz', '_fieldmap')
+                            newbidsname = newbidsname.replace('_fieldmap_fieldmaphz', '_fieldmap')
                         newbidsname = newbidsname.replace('_fieldmap_e1',    '_fieldmap')                       # Case 3
                         newbidsname = newbidsname.replace('_magnitude_ph',   '_fieldmap')                       # Case 3: One magnitude + one fieldmap image in one folder / datasource
                         newbidsname = newbidsname.replace('_fieldmap_ph',    '_fieldmap')                       # Case 3
