@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-(Re)scans data sets in the source folder for subject meta data to populate the participants.tsv
+(Re)scans data sets in the source folder for subject metadata to populate the participants.tsv
 file in the bids directory, e.g. after you renamed (be careful there!), added or deleted data
 in the bids folder yourself.
 
@@ -38,7 +38,7 @@ def scanpersonals(bidsmap: dict, session: Path, personals: dict) -> bool:
     datasource = bids.get_datasource(session, bidsmap['Options']['plugins'])
     dataformat = datasource.dataformat
     if not datasource.dataformat:
-        LOGGER.info(f"No supported datasources found in '{session}'")
+        LOGGER.info(f"No supported datasource found in '{session}'")
         return False
 
     # Collect personal data from a source header (PAR/XML does not contain personal info)

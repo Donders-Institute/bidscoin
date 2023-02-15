@@ -1,5 +1,5 @@
 """
-This module contains the interface with pet2bids to add or correct the PET meta data produced by dcm2niix.
+This module contains the interface with pet2bids to add or correct the PET metadata produced by dcm2niix.
 
 
 See also:
@@ -10,12 +10,10 @@ import logging
 import shutil
 import subprocess
 import pandas as pd
-import json
 from typing import Union
 from pathlib import Path
 from functools import lru_cache
 from bids_validator import BIDSValidator
-import pydicom
 
 try:
     from bidscoin import bidscoin, bids
@@ -31,7 +29,7 @@ OPTIONS = {'command': 'dcm2niix4pet',
            'meta': ['.json', '.tsv', '.xls', '.xlsx']}
 
 
-def test(options=None) -> bool:
+def test(options=None) -> int:
     """
     Performs shell tests of pypet2bids
 
@@ -130,7 +128,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     sourcefiles = []
     if dataformat == 'DICOM':
         for sourcedir in bidscoin.lsdirs(session, '**/*'):
-            for n in range(1):      # Option: Use range(2) to scan two files and catch e.g. magnitude1/2 fieldmap files that are stored in one Series folder (but bidscoiner sees only the first file anyhow and it makes bidsmapper 2x slower :-()
+            for n in range(1):      # Option: Use range(2) to scan two files and catch e.g. magnitude1/2 fieldmap files that are stored in one Series folder (but bidscoiner sees only the first file anyhow, and it makes bidsmapper 2x slower :-()
                 sourcefile = bids.get_dicomfile(sourcedir, n)
                 if sourcefile.name and is_sourcefile(sourcefile):
                     sourcefiles.append(sourcefile)
@@ -268,7 +266,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             bidstest = (Path('/') / subid / sesid / datasource.datatype / bidsname).with_suffix('.json').as_posix()
             isbids = BIDSValidator().is_bids(bidstest)
             if not isbids and not bidsignore:
-                LOGGER.warning(f"The '{bidstest}' ouput name did not pass the bids-validator test")
+                LOGGER.warning(f"The '{bidstest}' output name did not pass the bids-validator test")
 
             # Check if file already exists (-> e.g. when a static runindex is used)
             if (outfolder / bidsname).with_suffix('.json').is_file():

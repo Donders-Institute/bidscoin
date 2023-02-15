@@ -7,7 +7,7 @@ The basic workflow is to run these two tools:
   $ bidsmapper sourcefolder bidsfolder        # This produces a study bidsmap and launches a GUI
   $ bidscoiner sourcefolder bidsfolder        # This converts your data to BIDS according to the study bidsmap
 
-Set the environment variable BIDSCOIN_DEBUG=TRUE in your console to run BIDScoin in it's more verbose DEBUG logging mode
+Set the environment variable BIDSCOIN_DEBUG=TRUE in your console to run BIDScoin in its more verbose DEBUG logging mode
 
 For more documentation see: https://bidscoin.readthedocs.io
 """
@@ -32,8 +32,6 @@ from importlib.util import spec_from_file_location, module_from_spec
 from importlib.metadata import entry_points
 from typing import Tuple, Union, List
 from ruamel.yaml import YAML
-
-import bidscoin
 
 yaml = YAML()
 
@@ -69,7 +67,7 @@ class TqdmUpTo(tqdm):
 
 def setup_logging(logfile: Path=Path()):
     """
-    Setup the logging framework:
+    Set up the logging framework:
     1) Add a 'bcdebug', 'verbose' and a 'success' logging level
     2) Add a console streamhandler
     3) If logfile then add a normal log and a warning/error filehandler
@@ -150,6 +148,7 @@ def reporterrors() -> str:
     """
 
     # Find the filehandlers and report the errors and warnings
+    errors = ''
     for handler in logging.getLogger().handlers:
         if handler.name == 'errorhandler':
 
@@ -160,7 +159,6 @@ def reporterrors() -> str:
                     LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errors}{40 * '<'}\n")
 
                 else:
-                    errors = ''
                     LOGGER.success(f'No BIDScoin errors or warnings were reported')
                     LOGGER.info('')
 
@@ -300,7 +298,7 @@ def install_plugins(filenames: List[str]=()) -> None:
     with open(bidsmap_template, 'r') as stream:
         template = yaml.load(stream)
 
-    # Install the template bidsmaps and plugins the their targetfolder
+    # Install the template bidsmaps and plugins in their targetfolder
     for file in files:
 
         # Copy the file to their target folder
@@ -359,6 +357,8 @@ def uninstall_plugins(filenames: List[str]=(), wipe: bool=True) -> None:
         # First check if we can import the plugin
         if file.suffix == '.py':
             module = import_plugin(pluginfolder/file.name, ('bidsmapper_plugin', 'bidscoiner_plugin'))
+        else:
+            module = None
 
         # Remove the file from the target folder
         LOGGER.info(f"Uninstalling: '{file}'")

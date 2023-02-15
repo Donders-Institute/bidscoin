@@ -88,7 +88,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self, bidsfolder: Path, input_bidsmap: dict, template_bidsmap: dict, datasaved: bool=False, reset: bool=False):
 
-        # Set-up the main window
+        # Set up the main window
         if not reset:
             super().__init__()
             self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
@@ -118,7 +118,7 @@ class MainWindow(QMainWindow):
         self.ignoredatatypes   = input_bidsmap['Options']['bidscoin'].get('ignoretypes',[])
         self.bidsignore        = input_bidsmap['Options']['bidscoin'].get('bidsignore','')
 
-        # Set-up the tabs, add the tables and put the bidsmap data in them
+        # Set up the tabs, add the tables and put the bidsmap data in them
         tabwidget = self.tabwidget = QtWidgets.QTabWidget()
         tabwidget.setTabPosition(QtWidgets.QTabWidget.North)
         tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
@@ -135,7 +135,7 @@ class MainWindow(QMainWindow):
 
         self.datachanged = False        # Keep track of the bidsmap data status -> True if data has been edited. Do this after updating all the tables (which assigns datachanged = True)
 
-        # Set-up the buttons
+        # Set up the buttons
         buttonbox = QDialogButtonBox()
         buttonbox.setStandardButtons(QDialogButtonBox.Save | QDialogButtonBox.Reset | QDialogButtonBox.Help)
         buttonbox.helpRequested.connect(self.get_help)
@@ -149,7 +149,7 @@ class MainWindow(QMainWindow):
         validatebutton.setToolTip('Test the run-items and bidsname of all normal runs in the study bidsmap (see terminal output)')
         validatebutton.clicked.connect(self.validate_runs)
 
-        # Set-up the main layout
+        # Set up the main layout
         centralwidget = QtWidgets.QWidget()
         top_layout = QVBoxLayout(centralwidget)
         top_layout.addWidget(tabwidget)
@@ -222,7 +222,7 @@ class MainWindow(QMainWindow):
             self.open_editwindow(provenance, datatype)
 
     def set_menu_statusbar(self):
-        """Set-up the menu and statusbar"""
+        """Set up the menu and statusbar"""
 
         # Set the menus
         menubar  = QtWidgets.QMenuBar(self)
@@ -378,7 +378,7 @@ class MainWindow(QMainWindow):
             bidscoin_table.setItem(n, 1, MyWidgetItem(value))
         bidscoin_table.cellChanged.connect(self.options2bidsmap)
 
-        # Set-up the tab layout and add the bidscoin table
+        # Set up the tab layout and add the bidscoin table
         layout = self.options_layout = QVBoxLayout()
         layout.addWidget(bidscoin_label)
         layout.addWidget(bidscoin_table)
@@ -389,13 +389,13 @@ class MainWindow(QMainWindow):
             layout.addWidget(plugin_label)
             layout.addWidget(plugin_table)
 
-        # Add an 'Add' button below the tables at the right side
+        # Add an 'Add' button below the tables on the right side
         add_button = QPushButton('Add')
         add_button.clicked.connect(self.add_plugin)
         add_button.setToolTip(f'Click to add an installed plugin')
         layout.addWidget(add_button, alignment=QtCore.Qt.AlignRight)
 
-        # Add an 'Default' button below the tables at the left side
+        # Add an 'Default' button below the tables on the left side
         set_button = QPushButton('Set as default')
         set_button.clicked.connect(self.save_options)
         set_button.setToolTip(f'Click to store these options in your default template bidsmap, i.e. set them as default for all new studies')
@@ -674,7 +674,7 @@ class MainWindow(QMainWindow):
         buttonbox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttonbox.button(QDialogButtonBox.Ok).setToolTip('Adds the selected plugin to the bidsmap options')
 
-        # Set-up the dialog window and wait till the user has selected a plugin
+        # Set up the dialog window and wait till the user has selected a plugin
         layout = QVBoxLayout()
         layout.addWidget(label)
         layout.addWidget(dropdown)
@@ -768,7 +768,7 @@ class MainWindow(QMainWindow):
             if filehandler.name=='errorhandler' and Path(filehandler.baseFilename).stat().st_size:
                 errorfile = filehandler.baseFilename
                 LOGGER.verbose(f"Resetting {errorfile}")
-                with open(errorfile, 'w'): pass     # This works but it is a hack that somehow prefixes a lot of whitespace to the first LOGGER call
+                with open(errorfile, 'w'): pass     # This works, but it is a hack that somehow prefixes a lot of whitespace to the first LOGGER call
 
     def open_bidsmap(self):
         """Load a bidsmap from disk and open it the main window"""
@@ -817,7 +817,7 @@ class MainWindow(QMainWindow):
                 bids.yaml.dump(bidsmap, stream)
 
     def sample_doubleclicked(self, item):
-        """When source file is double clicked in the samples_table, show the inspect or edit window"""
+        """When source file is double-clicked in the samples_table, show the inspect- or edit-window"""
 
         dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
         datatype   = self.samples_table[dataformat].item(item.row(), 2).text()
@@ -830,7 +830,7 @@ class MainWindow(QMainWindow):
             self.open_editwindow(sourcefile, datatype)
 
     def open_inspectwindow(self, index: int):
-        """Opens the inspect or native application window when a data file in the file-tree tab is double-clicked"""
+        """Opens the inspect- or native application-window when a data file in the file-tree tab is double-clicked"""
 
         datafile = Path(self.model.fileInfo(index).absoluteFilePath())
         if bids.is_dicomfile(datafile) or bids.is_parfile(datafile):
@@ -894,7 +894,7 @@ class EditWindow(QDialog):
         sesid                  = bidsmap[self.dataformat]['session']
         self.subid, self.sesid = datasource.subid_sesid(subid, sesid if sesid else '')
 
-        # Set-up the window
+        # Set up the window
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
         self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowTitleHint & QtCore.Qt.WindowMinMaxButtonsHint & QtCore.Qt.WindowCloseButtonHint)
         self.setWindowTitle('Edit BIDS mapping')
@@ -903,7 +903,7 @@ class EditWindow(QDialog):
         # Get data for the tables
         data_properties, data_attributes, data_bids, data_meta = self.run2data()
 
-        # Set-up the properties table
+        # Set up the properties table
         self.properties_label = QLabel('Properties')
         self.properties_label.setToolTip(f"The filesystem properties that match with (identify) the source file. NB: Expert usage (e.g. using regular expressions, see documentation). Copy: Ctrl+C")
         self.properties_table = self.set_table(data_properties, 'properties')
@@ -911,14 +911,14 @@ class EditWindow(QDialog):
         self.properties_table.setToolTip(f"The filesystem property that matches with the source file")
         self.properties_table.cellDoubleClicked.connect(self.inspect_sourcefile)
 
-        # Set-up the attributes table
+        # Set up the attributes table
         self.attributes_label = QLabel(f"Attributes")
         self.attributes_label.setToolTip(f"The {self.dataformat} attributes that match with (identify) the source file. NB: Expert usage (e.g. using regular expressions, see documentation). Copy: Ctrl+C")
         self.attributes_table = self.set_table(data_attributes, 'attributes', minimum=False)
         self.attributes_table.cellChanged.connect(self.attributescell2run)
         self.attributes_table.setToolTip(f"The {self.dataformat} attribute that matches with the source file")
 
-        # Set-up the datatype dropdown menu
+        # Set up the datatype dropdown menu
         self.datatype_label = QLabel('Data type')
         self.datatype_label.setToolTip(f"The BIDS data type and entities for constructing the BIDS output filename. You are encouraged to change their default values to be more meaningful and readable")
         self.datatype_dropdown = QComboBox()
@@ -929,14 +929,14 @@ class EditWindow(QDialog):
         for n, datatype in enumerate(self.bidsdatatypes + self.unknowndatatypes):
             self.datatype_dropdown.setItemData(n, bids.get_datatypehelp(datatype), QtCore.Qt.ToolTipRole)
 
-        # Set-up the BIDS table
+        # Set up the BIDS table
         self.bids_label = QLabel('Entities')
         self.bids_label.setToolTip(f"The BIDS entities that are used to construct the BIDS output filename. You are encouraged to change their default values to be more meaningful and readable")
         self.bids_table = self.set_table(data_bids, 'bids')
         self.bids_table.setToolTip(f"The BIDS entity that is used to construct the BIDS output filename. You are encouraged to change its default value to be more meaningful and readable")
         self.bids_table.cellChanged.connect(self.bidscell2run)
 
-        # Set-up the meta table
+        # Set up the meta table
         self.meta_label = QLabel('Meta data')
         self.meta_label.setToolTip(f"Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
         self.meta_table = self.set_table(data_meta, 'meta', minimum=False)
@@ -1007,7 +1007,7 @@ class EditWindow(QDialog):
         buttonbox.helpRequested.connect(self.get_help)
         buttonbox.button(QDialogButtonBox.Reset).clicked.connect(self.reset)
 
-        # Set-up the main layout
+        # Set up the main layout
         layout_main = QVBoxLayout(self)
         layout_main.addLayout(layout_tables)
         layout_main.addWidget(buttonbox)
@@ -1508,7 +1508,7 @@ class EditWindow(QDialog):
             QMessageBox.information(self, 'Edit BIDS mapping', f"Successfully exported:\n\nbidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}")
 
     def inspect_sourcefile(self, rowindex: int=None, colindex: int=None):
-        """When double clicked, show popup window"""
+        """When double-clicked, show popup window"""
 
         if colindex in (0,2):
             if rowindex == 0:

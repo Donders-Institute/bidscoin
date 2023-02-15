@@ -30,7 +30,7 @@ LOGGER = logging.getLogger(__name__)
 OPTIONS = {}
 
 
-def test(options: dict) -> bool:
+def test(options: dict) -> int:
     """
     This plugin function tests the working of the plugin + its bidsmap options
 
@@ -161,7 +161,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     """
     This wrapper funtion around phys2bids converts the physio data in the session folder and saves it in the bidsfolder.
-    Each saved datafile should be accompanied with a json sidecar file. The bidsmap options for this plugin can be found in:
+    Each saved datafile should be accompanied by a json sidecar file. The bidsmap options for this plugin can be found in:
 
     bidsmap_new['Options']['plugins']['phys2bidscoin']
 

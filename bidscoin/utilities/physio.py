@@ -28,10 +28,10 @@ LOGGER = logging.getLogger(__name__)
 
 def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, expectedsamples: int=0) -> tuple:
     """
-    Read and parse physiologal traces from the DICOM data or from individual logfiles
+    Read and parse physiological traces from the DICOM data or from individual logfiles
 
     :param fn:              Physiological data from DICOM or the basename of the physiological logfiles
-    :param logdatatype:     Datatype that is extracted, e.g. 'ECG', 'RESP', 'PULS' or 'EXT'. Additional meta data is extracted if 'ACQUISITION_INFO'
+    :param logdatatype:     Datatype that is extracted, e.g. 'ECG', 'RESP', 'PULS' or 'EXT'. Additional metadata is extracted if 'ACQUISITION_INFO'
     :param firsttime:       Value from readparsefile('ACQUISITION_INFO', ..) that has to be passed for parsing other logdatatypes
     :param expectedsamples: Number of samples of the parsed traces
     :return:                traces, UUID[, scandate, nrslices, nrvolumes, firsttime, lasttime, nrechoes] ([..] if logdatatype=='ACQUISITION_INFO')
@@ -50,7 +50,7 @@ def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, exp
     else:
         LOGGER.error(f"Wrong input {fn}: {type(fn)}"); raise FileNotFoundError(fn)
 
-    # Extract the meta data and physiological traces
+    # Extract the metadata and physiological traces
     LOGGER.info(f"Parsing {logdatatype} data...")
     for line in [line for line in lines if line]:
 

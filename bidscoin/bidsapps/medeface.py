@@ -42,7 +42,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
     :param subjects:    List of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
     :param force:       If True then images will be processed, regardless if images have already been defaced (i.e. if {"Defaced": True} in the json sidecar file)
     :param output:      Determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images
-    :param cluster:     Flag to submit the deface jobs to the high-performance compute (HPC) cluster
+    :param cluster:     Flag to submit the-deface jobs to the high-performance compute (HPC) cluster
     :param nativespec:  DRMAA native specifications for submitting deface jobs to the HPC cluster
     :param kwargs:      Additional arguments (in dict/json-style) that are passed to pydeface. See examples for usage
     :return:
@@ -98,7 +98,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                 LOGGER.info('--------------------------------------')
                 LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
 
-                # Read the echo-images that will be combined to compute the deface mask
+                # Read the echo-images that will be combined to compute the deface-mask
                 sesid     = session.name if session.name.startswith('ses-') else ''
                 echofiles = sorted([match for match in session.glob(maskpattern) if '.nii' in match.suffixes])
                 if not echofiles:
@@ -137,7 +137,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
             pbatch.synchronize(jobIds=[pbatch.JOB_IDS_SESSION_ALL], timeout=pbatch.TIMEOUT_WAIT_FOREVER, dispose=True)
             pbatch.deleteJobTemplate(jt)
 
-    # Loop again over bids subject/session-directories to apply the deface masks and write meta-data
+    # Loop again over bids subject/session-directories to apply the deface-masks and write meta-data
     with logging_redirect_tqdm():
         for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
@@ -156,7 +156,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                 if not tmpfile.is_file():
                     LOGGER.info(f'No {tmpfile} file found')
                     continue
-                defacemask = nib.load(tmpfile).get_fdata() != 0     # The original defacemask is saved in a temporary folder so it may be deleted -> use the defaced image to infer the mask
+                defacemask = nib.load(tmpfile).get_fdata() != 0     # The original defacemask is saved in a temporary folder, so it may be deleted -> use the defaced image to infer the mask
                 tmpfile.unlink()
 
                 # Process the echo-images that need to be defaced

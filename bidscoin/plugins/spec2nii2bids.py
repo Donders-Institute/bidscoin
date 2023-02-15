@@ -23,8 +23,8 @@ LOGGER = logging.getLogger(__name__)
 # The default options that are set when installing the plugin
 OPTIONS = {'command': 'spec2nii',       # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or 'C:\"Program Files"\spec2nii\spec2nii.exe' (note the quotes to deal with the whitespace)
            'args': None,                # Argument string that is passed to spec2nii (see spec2nii -h for more information)
-           'anon': 'y',                 # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
-           'meta': ['.json', '.tsv', '.tsv.gz'],  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
+           'anon': 'y',                 # Set this anonymization flag to 'y' to round off age and discard acquisition date from the metadata
+           'meta': ['.json', '.tsv', '.tsv.gz'],  # The file extensions of the equally named metadata source files that are copied over as BIDS sidecar files
            'multiraid': 2}              # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
 
 
@@ -164,8 +164,8 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     """
-    This wrapper funtion around spec2nii converts the MRS data in the session folder and saves it in the bidsfolder.
-    Each saved datafile should be accompanied with a json sidecar file. The bidsmap options for this plugin can be found in:
+    This wrapper function around spec2nii converts the MRS data in the session folder and saves it in the bidsfolder.
+    Each saved datafile should be accompanied by a json sidecar file. The bidsmap options for this plugin can be found in:
 
     bidsmap_new['Options']['plugins']['spec2nii2bids']
 
@@ -261,6 +261,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             dformat = 'ge'
         else:
             LOGGER.exception(f"Unsupported dataformat: {dataformat}")
+            return
         command = options.get("command", "spec2nii")
         if bidscoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
             if not list(outfolder.glob(f"{bidsname}.nii*")): continue
@@ -276,7 +277,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 LOGGER.warning(f"Overruling {metakey} values in {jsonfile}: {jsondata[metakey]} -> {metaval}")
             jsondata[metakey] = metaval if metaval else None
 
-        # Add all the meta data to the json-file
+        # Add all the metadata to the json-file
         for metakey, metaval in run['meta'].items():
             metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
             try: metaval = ast.literal_eval(str(metaval))            # E.g. convert stringified list or int back to list or int

@@ -46,6 +46,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     :param unzip:           Wildcard pattern to select tar/zip-files in the session folder. Leave empty to use the bidsmap value
     :param store:           If True, the provenance samples will be stored
     :param noeditor:        The bidseditor will not be launched if True
+    :param noupdate:        Do not update any sub/sesprefixes in or prepend the rawfolder name to the <<filepath:regexp>> expression
     :param force:           If True, the previous bidsmap and logfiles will be deleted
     :return:                The new bidsmap
     """
@@ -109,7 +110,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         LOGGER.warning(f"The plugins listed in your bidsmap['Options'] did not have a usable `bidsmapper_plugin` function, nothing to do")
         LOGGER.info('-------------- FINISHED! ------------')
         LOGGER.info('')
-        return
+        return {}
 
     # Loop over all subjects and sessions and built up the bidsmap entries
     subjects = bidscoin.lsdirs(rawfolder, ('' if subprefix=='*' else subprefix) + '*')

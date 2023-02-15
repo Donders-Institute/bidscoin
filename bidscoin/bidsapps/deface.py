@@ -36,7 +36,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
     :param subjects:    List of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
     :param force:       If True then images will be processed, regardless if images have already been defaced (i.e. if {"Defaced": True} in the json sidecar file)
     :param output:      Determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images
-    :param cluster:     Flag to submit the deface jobs to the high-performance compute (HPC) cluster using the drmaa library
+    :param cluster:     Flag to submit the deface-jobs to the high-performance compute (HPC) cluster using the drmaa library
     :param nativespec:  DRMAA native specifications for submitting deface jobs to the HPC cluster
     :param kwargs:      Additional arguments (in dict/json-style) that are passed to pydeface. See examples for usage
     :return:

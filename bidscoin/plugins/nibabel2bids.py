@@ -240,7 +240,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         jsonfile = bidsfile.with_suffix('').with_suffix('.json')
         jsondata = bids.copymetadata(sourcefile, bidsfile, meta)
 
-        # Add all the meta data to the meta-data. NB: the dynamic `IntendedFor` value is handled separately later
+        # Add all the metadata to the meta-data. NB: the dynamic `IntendedFor` value is handled separately later
         for metakey, metaval in run['meta'].items():
             if metakey != 'IntendedFor':
                 metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)

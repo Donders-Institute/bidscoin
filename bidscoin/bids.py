@@ -534,7 +534,7 @@ def parse_x_protocol(pattern: str, dicomfile: Path) -> str:
     return ''
 
 
-# Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) _DICOMDICT_CACHE optimization
+# Profiling shows this is currently the most expensive function, therefore the (primitive but effective) _DICOMDICT_CACHE optimization
 _DICOMDICT_CACHE = None
 _DICOMFILE_CACHE = None
 @lru_cache(maxsize=4096)
@@ -606,7 +606,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
         return str(value)               # If it's a MultiValue type then flatten it
 
 
-# Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) cache optimization
+# Profiling shows this is currently the most expensive function, therefore the (primitive but effective) cache optimization
 _TWIXHDR_CACHE  = None
 _TWIXFILE_CACHE = None
 @lru_cache(maxsize=4096)
@@ -677,7 +677,7 @@ def get_twixfield(tagname: str, twixfile: Path, mraid: int=2) -> Union[str, int]
         return str(value)               # If it's a MultiValue type then flatten it
 
 
-# Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) _PARDICT_CACHE optimization
+# Profiling shows this is currently the most expensive function, therefore the (primitive but effective) _PARDICT_CACHE optimization
 _PARDICT_CACHE = None
 _PARFILE_CACHE = None
 @lru_cache(maxsize=4096)
@@ -729,7 +729,7 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
         return str(value)               # If it's a MultiValue type then flatten it
 
 
-# Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) cache optimization
+# Profiling shows this is currently the most expensive function, therefore the (primitive but effective) cache optimization
 _SPARHDR_CACHE  = None
 _SPARFILE_CACHE = None
 @lru_cache(maxsize=4096)
@@ -744,9 +744,9 @@ def get_sparfield(tagname: str, sparfile: Path) -> Union[str, int]:
 
     global _SPARHDR_CACHE, _SPARFILE_CACHE
 
+    value = ''
     if not sparfile.is_file():
         LOGGER.error(f"{sparfile} not found")
-        value = ''
 
     else:
         try:
@@ -767,11 +767,9 @@ def get_sparfield(tagname: str, sparfile: Path) -> Union[str, int]:
 
         except OSError:
             LOGGER.warning(f"Cannot read {tagname} from {sparfile}")
-            value = ''
 
         except Exception as sparerror:
             LOGGER.warning(f"Could not parse {tagname} from {sparfile}\n{sparerror}")
-            value = ''
 
     # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
     if isinstance(value, int):
@@ -782,7 +780,7 @@ def get_sparfield(tagname: str, sparfile: Path) -> Union[str, int]:
         return str(value)  # If it's a MultiValue type then flatten it
 
 
-# Profiling shows this is currently the most expensive function, so therefore the (primitive but effective) cache optimization
+# Profiling shows this is currently the most expensive function, therefore the (primitive but effective) cache optimization
 _P7HDR_CACHE  = None
 _P7FILE_CACHE = None
 @lru_cache(maxsize=4096)
@@ -797,9 +795,9 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
 
     global _P7HDR_CACHE, _P7FILE_CACHE
 
+    value = ''
     if not p7file.is_file():
         LOGGER.error(f"{p7file} not found")
-        value = ''
 
     else:
         try:
@@ -823,11 +821,9 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
 
         except OSError:
             LOGGER.warning(f'Cannot read {tagname} from {p7file}')
-            value = ''
 
         except Exception as p7error:
             LOGGER.warning(f'Could not parse {tagname} from {p7file}\n{p7error}')
-            value = ''
 
     # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
     if isinstance(value, int):
@@ -853,7 +849,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
     :param folder:      Only used when yamlfile=basename or None: yamlfile is then first searched for in folder and then falls back to the ./heuristics folder (useful for centrally managed template yaml-files)
     :param plugins:     List of plugins to be used (with default options, overrules the plugin list in the study/template bidsmaps). Leave empty to use all plugins in the bidsmap
     :param check:       Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
-    :return:            Tuple with (1) ruamel.yaml dict structure, with all options, BIDS mapping heuristics, labels and attributes, etc and (2) the fullpath yaml-file
+    :return:            Tuple with (1) ruamel.yaml dict structure, with all options, BIDS mapping heuristics, labels and attributes, etc. and (2) the fullpath yaml-file
     """
 
     # Input checking
@@ -958,7 +954,7 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
     NB: The run['datasource'] = DataSource objects are not saved
 
     :param filename:    Full pathname of the bidsmap file
-    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc.
     :return:
     """
 
@@ -986,7 +982,7 @@ def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
     """
     Test the bidsname of runs in the bidsmap using the bids-validator
 
-    :param bidsmap: Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap: Full bidsmap data structure, with all options, BIDS labels and attributes, etc.
     :param level:  (-2) as 2 but no logging reports,
                    (-1) as 1 but no logging reports,
                     (0) as 1 but only report invalid runs,
@@ -1033,7 +1029,7 @@ def check_bidsmap(bidsmap: dict, check: Tuple[bool, bool, bool]=(True, True, Tru
     """
     Check all the runs in the bidsmap for required and optional entities using the BIDS schema files
 
-    :param bidsmap: Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap: Full bidsmap data structure, with all options, BIDS labels and attributes, etc.
     :param check:   Booleans to check if all (bids-keys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
     :return:        False if the keys, suffixes and values are proven to be invalid, otherwise None or True
     """
@@ -1072,7 +1068,7 @@ def check_template(bidsmap: dict) -> bool:
     """
     Check all the datatypes in the template bidsmap for required and optional entities using the BIDS schema files
 
-    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc.
     :return:            True if the template bidsmap is valid, otherwise False
     """
 
@@ -1297,7 +1293,7 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
     """
     Find the (first) run in bidsmap[dataformat][bidsdatatype] with run['bids']['suffix_idx'] == suffix_idx
 
-    :param bidsmap:     This could be a template bidsmap, with all options, BIDS labels and attributes, etc
+    :param bidsmap:     This could be a template bidsmap, with all options, BIDS labels and attributes, etc.
     :param datatype:    The datatype in which a matching run is searched for (e.g. 'anat')
     :param suffix_idx:  The name of the suffix that is searched for (e.g. 'bold') or the datatype index number
     :param datasource:  The datasource with the provenance file from which the properties, attributes and dynamic values are read
@@ -1345,7 +1341,7 @@ def find_run(bidsmap: dict, provenance: str, dataformat: str='', datatype: str='
     """
     Find the (first) run in bidsmap[dataformat][bidsdatatype] with run['provenance'] == provenance
 
-    :param bidsmap:     This could be a template bidsmap, with all options, BIDS labels and attributes, etc
+    :param bidsmap:     This could be a template bidsmap, with all options, BIDS labels and attributes, etc.
     :param provenance:  The unique provenance that is used to identify the run
     :param dataformat:  The dataformat section in the bidsmap in which a matching run is searched for, e.g. 'DICOM'
     :param datatype:    The datatype in which a matching run is searched for (e.g. 'anat')
@@ -1371,9 +1367,10 @@ def delete_run(bidsmap: dict, provenance: Union[dict, str], datatype: str= '', d
     """
     Delete the first matching run from the BIDS map
 
-    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc.
     :param provenance:  The provenance identifier of/or the run-item that is deleted
     :param datatype:    The datatype that of the deleted run_item (can be different from run_item['datasource']), e.g. 'anat'
+    :param dataformat:  The dataformat section in the bidsmap in which the run is deleted, e.g. 'DICOM'
     :return:
     """
 
@@ -1399,7 +1396,7 @@ def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
     """
     Append a run to the BIDS map
 
-    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc.
     :param run:         The run (listitem) that is appended to the datatype
     :param clean:       A boolean to clean-up commentedMap fields
     :return:
@@ -1438,10 +1435,10 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, run: dict, clean: bool=T
     2. Append the (cleaned) target run to the target datatype section
 
     Else:
-    1. Use the provenance to look-up the index number in that datatype
+    1. Use the provenance to look up the index number in that datatype
     2. Replace the run
 
-    :param bidsmap:             Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap:             Full bidsmap data structure, with all options, BIDS labels and attributes, etc.
     :param source_datatype:     The current datatype name, e.g. 'anat'
     :param run:                 The run item that is being moved to run['datasource'].datatype
     :param clean:               A boolean that is passed to bids.append_run (telling it to clean-up commentedMap fields)
@@ -1523,7 +1520,7 @@ def exist_run(bidsmap: dict, datatype: str, run_item: dict, matchbidslabels: boo
     """
     Checks the bidsmap to see if there is already an entry in runlist with the same attributes and, optionally, bids values as in the input run
 
-    :param bidsmap:         Full bidsmap data structure, with all options, BIDS labels and attributes, etc
+    :param bidsmap:         Full bidsmap data structure, with all options, BIDS labels and attributes, etc.
     :param datatype:        The datatype in the source that is used, e.g. 'anat'. Empty values will search through all datatypes
     :param run_item:        The run-item that is searched for in the datatype
     :param matchbidslabels: If True, also matches the BIDS-keys, otherwise only run['attributes']
@@ -1608,7 +1605,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
             match = any([run[matching][attrkey] not in [None,''] for matching in ('properties','attributes') for attrkey in run[matching]])     # Normally match==True, but make match==False if all attributes are empty
             run_  = get_run_(datasource.path, datasource.dataformat, datatype, bidsmap)
 
-            # Try to see if the sourcefile matches all of the filesystem properties
+            # Try to see if the sourcefile matches all the filesystem properties
             for propkey, propvalue in run['properties'].items():
 
                 # Check if the attribute value matches with the info from the sourcefile
@@ -1616,10 +1613,10 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
                     sourcevalue = datasource.properties(propkey)
                     match       = match and match_runvalue(sourcevalue, propvalue)
 
-                # Don not fill the empty attribute with the info from the sourcefile but keep the matching expression
+                # Do not fill the empty attribute with the info from the sourcefile but keep the matching expression
                 run_['properties'][propkey] = propvalue
 
-            # Try to see if the sourcefile matches all of the attributes and fill all of them
+            # Try to see if the sourcefile matches all the attributes and fill all of them
             for attrkey, attrvalue in run['attributes'].items():
 
                 # Check if the attribute value matches with the info from the sourcefile
@@ -1693,13 +1690,12 @@ def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bo
         subid = cleanup_value(subid)
         sesid = cleanup_value(sesid)
 
-    # Compose a bidsname from valid BIDS entities only
+    # Compose the bidsname
     bidsname    = f"sub-{subid}{'_ses-'+sesid if sesid else ''}"                # Start with the subject/session identifier
-    entitiekeys = [entities[entity]['name'] for entity in entitiesorder]        # Use the keys from the BIDS schema
-    if not validkeys:                                                           # Use the (semi-ordered) keys from the run item
+    entitiekeys = [entities[entity]['name'] for entity in entitiesorder]        # Use the valid keys from the BIDS schema
+    if not validkeys:                                                           # Use the (ordered valid + invalid) keys from the run item
         entitiekeys = [key for key in entitiekeys if key in run['bids']] + \
                       [key for key in run['bids'] if key not in entitiekeys and key!='suffix']
-
     for entitykey in entitiekeys:
         bidsvalue = run['bids'].get(entitykey)                                  # Get the entity data from the run item
         if not bidsvalue:
@@ -1945,6 +1941,7 @@ def get_suffixhelp(suffix: str, datatype: str) -> str:
     Reads the description of the suffix in the schema/objects/suffixes.yaml file
 
     :param suffix:      The suffix for which the help text is obtained
+    :param datatype:    The datatype of the suffix
     :return:            The obtained help text
     """
 

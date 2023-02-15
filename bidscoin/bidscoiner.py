@@ -41,8 +41,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
     :param rawfolder:       The root folder-name of the sub/ses/data/file tree containing the source data files
     :param bidsfolder:      The name of the BIDS root folder
-    :param subjects:        List of selected subjects / participants (i.e. sub-# names / folders) to be processed (the sub-prefix can be removed). Otherwise all subjects in the sourcefolder will be selected
-    :param force:           If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise existing folders will be skipped
+    :param subjects:        List of selected subjects / participants (i.e. sub-# names / folders) to be processed (the sub-prefix can be removed). Otherwise, all subjects in the sourcefolder will be selected
+    :param force:           If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise, existing folders will be skipped
     :param bidsmapfile:     The name of the bidsmap YAML-file. If the bidsmap pathname is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin
     :return:                Nothing
     """
@@ -237,7 +237,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
 def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
     """
-    Adds the special fieldmap metadata (IntendedFor, B0FieldIdentifier, TE, etc)
+    Adds the special fieldmap metadata (IntendedFor, B0FieldIdentifier, TE, etc.)
 
     :param bidsses: The session folder with the BIDS session data
     :param subid:   The subject 'sub-label' identifier
