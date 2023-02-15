@@ -937,7 +937,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
                 run['datasource'] = DataSource(run['provenance'], bidsmap['Options']['plugins'], dataformat, datatype, subprefix, sesprefix)
 
                 # Add missing bids entities
-                for typegroup in datatyperules.get(datatype, {}):
+                for typegroup in datatyperules.get(datatype, {}):                                       # E.g. typegroup = 'nonparametric'
                     if run['bids']['suffix'] in datatyperules[datatype][typegroup]['suffixes']:         # run_found = True
                         for entity in datatyperules[datatype][typegroup]['entities']:
                             entitykey = entities[entity]['name']
@@ -1089,9 +1089,9 @@ def check_template(bidsmap: dict) -> bool:
     for dataformat in bidsmap:
         if dataformat == 'Options': continue
         for datatype in bidsmap[dataformat]:
-            if not isinstance(bidsmap[dataformat][datatype], list): continue        # No rules to check or datatype = 'subject'/'session'
+            if not isinstance(bidsmap[dataformat][datatype], list): continue        # Skip datatype = 'subject'/'session'
             if not (datatype in bidsdatatypesdef or datatype in ignoretypes or datatype in bidsignore):
-                LOGGER.warning(f"Invalid {dataformat} datatype: '{datatype}'")
+                LOGGER.warning(f"Invalid {dataformat} datatype: '{datatype}' (you may want to add it to the 'bidsignore' list)")
                 valid = False
             datatypesuffixes = []
             for run in bidsmap[dataformat][datatype]:
@@ -1101,8 +1101,7 @@ def check_template(bidsmap: dict) -> bool:
                         re.compile(str(val))
                     except re.error:
                         LOGGER.warning(f"Invalid regexp pattern in the {key} value '{val}' in: bidsmap[{dataformat}][{datatype}] -> {run['provenance']}\nThis may cause run-matching errors unless '{val}' is a literal attribute value")
-            if datatype not in datatyperules: continue                              # E.g. 'extra_data'
-            for typegroup in datatyperules[datatype]:
+            for typegroup in datatyperules.get(datatype, {}):
                 for suffix in datatyperules[datatype][typegroup]['suffixes']:
                     if suffix not in datatypesuffixes and '[DEPRECATED]' not in suffixes[suffix]['description'] and '**Change:** Removed from' not in suffixes[suffix]['description'] and '**Change:** Replaced by' not in suffixes[suffix]['description']:
                         LOGGER.warning(f"Missing '{suffix}' run-item in: bidsmap[{dataformat}][{datatype}] (NB: this may be fine / a deprecated item)")
@@ -1118,10 +1117,10 @@ def check_template(bidsmap: dict) -> bool:
 
 def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, False, False)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
     """
-    Check run for required and optional entitities using the BIDS schema files
+    Check run for required and optional entities using the BIDS schema files
 
     :param datatype:    The datatype that is checked, e.g. 'anat'
-    :param run:         The run (listitem) with bids entities that are checked against missing values & invalid keys
+    :param run:         The run (list-item) with bids entities that are checked against missing values & invalid keys
     :param check:       Booleans to report if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
     :return:            True/False if the keys, suffixes and values are bids-valid or None if they cannot be checked
     """
@@ -1182,7 +1181,7 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
 
             break
 
-    # Hack: There are physio, stim and events entities in the 'task'-rules, which can added to any datatype
+    # Hack: There are physio, stim and events entities in the 'task'-rules, which can be added to any datatype
     if run['bids'].get('suffix') in datatyperules['task']['events']['suffixes'] + datatyperules['task']['timeseries']['suffixes']:
         bidsname     = get_bidsname('sub-foo', '', run, False)
         run_suffixok = bids_validator.BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")  # NB: Using the BIDSValidator sounds nice but doesn't give any control over the BIDS-version
@@ -1695,11 +1694,12 @@ def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bo
         sesid = cleanup_value(sesid)
 
     # Compose a bidsname from valid BIDS entities only
-    bidsname = f"sub-{subid}{'_ses-'+sesid if sesid else ''}"                   # Start with the subject/session identifier
-    if validkeys:
-        entitiekeys = [entities[entity]['name'] for entity in entitiesorder]    # Use the keys from the BIDS schema
-    else:
-        entitiekeys = [key for key in run['bids'] if key!='suffix']             # Use the (unordered) keys from the run item
+    bidsname    = f"sub-{subid}{'_ses-'+sesid if sesid else ''}"                # Start with the subject/session identifier
+    entitiekeys = [entities[entity]['name'] for entity in entitiesorder]        # Use the keys from the BIDS schema
+    if not validkeys:                                                           # Use the (semi-ordered) keys from the run item
+        entitiekeys = [key for key in entitiekeys if key in run['bids']] + \
+                      [key for key in run['bids'] if key not in entitiekeys and key!='suffix']
+
     for entitykey in entitiekeys:
         bidsvalue = run['bids'].get(entitykey)                                  # Get the entity data from the run item
         if not bidsvalue:

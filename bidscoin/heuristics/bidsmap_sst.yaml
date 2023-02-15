@@ -27,7 +27,7 @@ Options:
     sesprefix: ses-                 # The session prefix of the source data
     unknowntypes: [mrs, extra_data] # A list of datatypes that are converted to BIDS-like datatype folders
     ignoretypes: [exclude]          # A list of datatypes that are excluded / not converted to BIDS
-    unzip:                          # Wildcard pattern to select tarball/zip-files in the sourcefolders that need to be unzipped (in a tempdir) to expose the data, e.g. '*.tar.gz'
+    unzip:                          # Wildcard pattern to select tarball/zip-files in the source folders that need to be unzipped (in a tempdir) to expose the data, e.g. '*.tar.gz'
   plugins:                          # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
     dcm2niix2bids:                  # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info
       command: dcm2niix             # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or 'C:\"Program Files"\dcm2niix\dcm2niix.exe' (use quotes to deal with whitespaces in the path)
@@ -918,6 +918,7 @@ DICOM:
     attributes: *pet_dicomattr
     bids:
       <<: *pet_dicoment_pet
+      recording:
       suffix: blood
     meta: *pet_meta
 
@@ -963,10 +964,10 @@ DICOM:
       EffectiveEchoTime:
       RepetitionTime:
       InPlanePhaseEncodingDirection:
-    bids:
+    bids: &extra_data_bids_dicom
       acq: <ProtocolName>
       inv:
-      rec: <MRAcquisitionType><ImageType>
+      rec:
       ce:
       task:
       echo: <EchoNumbers>
@@ -987,19 +988,8 @@ DICOM:
       part: ['', mag, phase, real, imag, 0]
       suffix: T2w
   - provenance:                         # The last item, taken if nothing else matches
-    attributes:
-      <<: *extra_data_attributes_dicom
-    bids:
-      acq: <ProtocolName>
-      rec: <MRAcquisitionType><ImageType>
-      ce:
-      task:
-      echo: <EchoNumbers>
-      dir:
-      run: <<1>>
-      mod: <SeriesDescription>
-      part: ['', mag, phase, real, imag, 0]
-      suffix: <ScanningSequence>
+    attributes: *extra_data_attributes_dicom
+    bids: *extra_data_bids_dicom
 
   exclude:    # ----------------------- Data that will be left out -------------
   - provenance:
@@ -1021,10 +1011,8 @@ DICOM:
       InPlanePhaseEncodingDirection:
     bids: &leaveout_bids_dicom
       acq: <ProtocolName>
-      rec: <ImageType>
       task: <SeriesDescription>
       echo: <EchoNumbers>
-      mod: <MRAcquisitionType>
       suffix: <ScanningSequence>
   - provenance:
     attributes:
