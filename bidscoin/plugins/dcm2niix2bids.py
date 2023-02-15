@@ -253,7 +253,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        bidsname  = bids.get_bidsname(subid, sesid, run, bidsignore, runtime=True)
+        bidsname  = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
         runindex  = run['bids'].get('run')
         runindex  = str(runindex) if runindex else ''
         if runindex.startswith('<<') and runindex.endswith('>>'):
@@ -383,7 +383,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                         if len(dcm2niixfiles) == 2:
                             newbidsname = newbidsname.replace('_fieldmap_e1', '_magnitude')                     # Case 3: One magnitude + one fieldmap image in one folder / datasource
                             newbidsname = newbidsname.replace('_magnitude_fieldmaphz', '_fieldmap')
-                            newbidsname = newbidsname.replace('_fieldmap_fieldmaphz', '_fieldmap')
+                            newbidsname = newbidsname.replace('_fieldmap_fieldmaphz',  '_fieldmap')
                         newbidsname = newbidsname.replace('_fieldmap_e1',    '_fieldmap')                       # Case 3
                         newbidsname = newbidsname.replace('_magnitude_ph',   '_fieldmap')                       # Case 3: One magnitude + one fieldmap image in one folder / datasource
                         newbidsname = newbidsname.replace('_fieldmap_ph',    '_fieldmap')                       # Case 3

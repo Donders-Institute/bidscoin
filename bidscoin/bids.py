@@ -48,7 +48,7 @@ with (bidscoin.schemafolder/'objects'/'entities.yaml').open('r') as _stream:
 with (bidscoin.schemafolder/'rules'/'entities.yaml').open('r') as _stream:
     entitiesorder = yaml.load(_stream)                                          # The order in which the entities should appear within filenames
 with (bidscoin.schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
-    metafields = yaml.load(_stream)                                               # The descriptions of the valid BIDS metadata fields
+    metafields = yaml.load(_stream)                                             # The descriptions of the valid BIDS metadata fields
 
 
 class DataSource:
@@ -1031,10 +1031,10 @@ def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
 
 def check_bidsmap(bidsmap: dict, check: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
     """
-    Check all the runs in the bidsmap for required and optional entitities using the BIDS schema files
+    Check all the runs in the bidsmap for required and optional entities using the BIDS schema files
 
     :param bidsmap: Full bidsmap data structure, with all options, BIDS labels and attributes, etc
-    :param check:   Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
+    :param check:   Booleans to check if all (bids-keys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
     :return:        False if the keys, suffixes and values are proven to be invalid, otherwise None or True
     """
 
@@ -1070,7 +1070,7 @@ def check_bidsmap(bidsmap: dict, check: Tuple[bool, bool, bool]=(True, True, Tru
 
 def check_template(bidsmap: dict) -> bool:
     """
-    Check all the datatypes in the template bidsmap for required and optional entitities using the BIDS schema files
+    Check all the datatypes in the template bidsmap for required and optional entities using the BIDS schema files
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc
     :return:            True if the template bidsmap is valid, otherwise False
@@ -1080,14 +1080,19 @@ def check_template(bidsmap: dict) -> bool:
         LOGGER.info('No bidsmap datatypes to check')
         return False
 
-    valid = True
+    valid       = True
+    ignoretypes = bidsmap['Options']['bidscoin'].get('ignoretypes', [])
+    bidsignore  = bidsmap['Options']['bidscoin'].get('bidsignore', '')
 
     # Check all the datatypes in the bidsmap
     LOGGER.info('Checking the bidsmap datatypes:')
     for dataformat in bidsmap:
         if dataformat == 'Options': continue
         for datatype in bidsmap[dataformat]:
-            if datatype not in datatyperules or not isinstance(bidsmap[dataformat][datatype], list): continue   # No rules to check or datatype = 'subject'/'session'
+            if not isinstance(bidsmap[dataformat][datatype], list): continue        # No rules to check or datatype = 'subject'/'session'
+            if not (datatype in bidsdatatypesdef or datatype in ignoretypes or datatype in bidsignore):
+                LOGGER.warning(f"Invalid {dataformat} datatype: '{datatype}'")
+                valid = False
             datatypesuffixes = []
             for run in bidsmap[dataformat][datatype]:
                 datatypesuffixes.append(run['bids']['suffix'])
@@ -1096,6 +1101,7 @@ def check_template(bidsmap: dict) -> bool:
                         re.compile(str(val))
                     except re.error:
                         LOGGER.warning(f"Invalid regexp pattern in the {key} value '{val}' in: bidsmap[{dataformat}][{datatype}] -> {run['provenance']}\nThis may cause run-matching errors unless '{val}' is a literal attribute value")
+            if datatype not in datatyperules: continue                              # E.g. 'extra_data'
             for typegroup in datatyperules[datatype]:
                 for suffix in datatyperules[datatype][typegroup]['suffixes']:
                     if suffix not in datatypesuffixes and '[DEPRECATED]' not in suffixes[suffix]['description'] and '**Change:** Removed from' not in suffixes[suffix]['description'] and '**Change:** Replaced by' not in suffixes[suffix]['description']:
@@ -1170,7 +1176,7 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
             entitykeys = [entities[entity]['name'] for entity in datatyperules[datatype][typegroup]['entities']]
             for bidskey in run['bids']:
                 if bidskey not in entitykeys + ['suffix']:
-                    if check[0]: LOGGER.warning(f'Invalid bidsmap: The "{bidskey}" is not allowed according to the BIDS standard ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
+                    if check[0]: LOGGER.warning(f'Invalid bidsmap: The "{bidskey}" key is not allowed according to the BIDS standard ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
                     run_keysok = False
                     if run_valsok: run_valsok = None
 
@@ -1691,9 +1697,9 @@ def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bo
     # Compose a bidsname from valid BIDS entities only
     bidsname = f"sub-{subid}{'_ses-'+sesid if sesid else ''}"                   # Start with the subject/session identifier
     if validkeys:
-        entitiekeys = [key for key in run['bids'] if key!='suffix']             # Use the keys from the run item
-    else:
         entitiekeys = [entities[entity]['name'] for entity in entitiesorder]    # Use the keys from the BIDS schema
+    else:
+        entitiekeys = [key for key in run['bids'] if key!='suffix']             # Use the (unordered) keys from the run item
     for entitykey in entitiekeys:
         bidsvalue = run['bids'].get(entitykey)                                  # Get the entity data from the run item
         if not bidsvalue:
@@ -1811,7 +1817,7 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, v
         run['bids'][bidskey] = newvalue
 
     # Compose the new filename
-    newbidsfile = (bidspath / get_bidsname(subid, sesid, run, validkeys, cleanup=False)).with_suffix(bidsext)
+    newbidsfile = (bidspath/get_bidsname(subid, sesid, run, validkeys, cleanup=False)).with_suffix(bidsext)
 
     if isinstance(bidsfile, str):
         newbidsfile = str(newbidsfile)

@@ -470,7 +470,7 @@ class MainWindow(QMainWindow):
                 subid        = output_bidsmap[dataformat]['subject']
                 sesid        = output_bidsmap[dataformat]['session']
                 subid, sesid = run['datasource'].subid_sesid(subid, sesid if sesid else '')
-                bidsname     = bids.get_bidsname(subid, sesid, run, datatype in self.bidsignore or datatype in self.ignoredatatypes)
+                bidsname     = bids.get_bidsname(subid, sesid, run, datatype not in self.bidsignore and datatype not in self.ignoredatatypes)
                 if run['bids'].get('suffix') in bids.get_derivatives(datatype):
                     session  = self.bidsfolder/'derivatives'/'[manufacturer]'/subid/sesid
                 else:
@@ -1400,7 +1400,7 @@ class EditWindow(QDialog):
         """Updates the bidsname with the current (edited) bids values"""
 
         ignore   = self.target_datatype in self.bidsignore or self.target_datatype in self.ignoredatatypes
-        bidsname = (Path(self.target_datatype)/bids.get_bidsname(self.subid, self.sesid, self.target_run, ignore)).with_suffix('.*')
+        bidsname = (Path(self.target_datatype)/bids.get_bidsname(self.subid, self.sesid, self.target_run, not ignore)).with_suffix('.*')
 
         font = self.bidsname_textbox.font()
         if self.target_datatype in self.bidsignore:
