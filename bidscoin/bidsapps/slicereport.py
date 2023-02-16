@@ -82,7 +82,7 @@ def parseoutputopts(opts: list, name: str) -> tuple:
     return outputopts, sliceimages
 
 
-def appendslices(inputimage, outlineimage, mainopts, outputopts, reportses, slicerimages, outputimage, cluster):
+def appendslices(inputimage, outlineimage, mainopts, outputopts, reportses, slicerimages, outputimage, cluster, append):
     """Run slicer and append the sliced images to a row"""
 
     # Slice the image
@@ -90,7 +90,7 @@ def appendslices(inputimage, outlineimage, mainopts, outputopts, reportses, slic
     workdir.mkdir()
     command = f"cd {workdir}\n" \
               f"slicer {inputimage} {outlineimage} {mainopts} {outputopts}\n" \
-              f"pngappend {' + '.join(slicerimages)} {outputimage}\n" \
+              f"pngappend {append.join(slicerimages)} {outputimage}\n" \
               f"mv {outputimage} {reportses}\n" \
               f"rm -r {workdir}"
     if cluster:
@@ -213,7 +213,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 subses   = sub  + session.name
                 outline  = outlineimages[n] if outlinepattern else outlineimage
                 slicerow = f"{Path(image).name}.png"
-                appendslices(image, outline, mainopts, outputopts, reportses, slicerimages, slicerow, cluster)
+                appendslices(image, outline, mainopts, outputopts, reportses, slicerimages, slicerow, cluster, ' + ')
 
                 # Add a row to the report
                 caption = f"{Path(image).relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(Path(outline).relative_to(outlinesession))+' )' if outlinepattern and outline else ''}"
@@ -224,7 +224,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 # Add a sub-report
                 if suboutputopts:
                     slicerow = f"{Path(image).name}_s.png"
-                    appendslices(image, outline, submainopts, suboutputopts, reportses, subslicerimages, slicerow, cluster)
+                    appendslices(image, outline, submainopts, suboutputopts, reportses, subslicerimages, slicerow, cluster, ' - ')
                 (reportses/'index.html').write_text(f'{html_head}<h1>{caption}</h1>\n\n'
                                                     f'<p><image src="{slicerow}"></p>\n\n</body></html>')
 
