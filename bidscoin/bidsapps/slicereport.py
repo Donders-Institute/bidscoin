@@ -103,7 +103,7 @@ def appendslices(inputimage, outlineimage, mainopts, outputopts, reportses, slic
         sys.exit(process.returncode)
 
 
-def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: str, subjects: list, reportdir: str, qccols: list, cluster: bool, mainopts: list, outputopts: list, suboutputopts: list):
+def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: str, subjects: list, reportdir: str, qccols: list, cluster: bool, mainopts: list, outputopts: list, submainopts: list, suboutputopts: list):
     """
     :param bidsdir:         The bids-directory with the subject data
     :param pattern:         Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T1w*'
@@ -115,7 +115,8 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     :param cluster:         Use qsub to submit the slicer jobs to a high-performance compute (HPC) cluster
     :param mainopts:        Slicer main options
     :param outputopts:      Slicer output options
-    :param suboutputopts:   Slicer output options for creating the subreports (same as OUTPUTOPTS)
+    :param submainopts:     Slicer main options for creating the sub-reports (same as MAINOPTS)
+    :param suboutputopts:   Slicer output options for creating the sub-reports (same as OUTPUTOPTS)
     :return:
     """
 
@@ -144,6 +145,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     # Format the slicer main and output options and sliced images
     mainopts                       = parsemainopts(mainopts)
     outputopts, slicerimages       = parseoutputopts(outputopts, 'OUTPUTOPTS')
+    submainopts                    = parsemainopts(submainopts)
     suboutputopts, subslicerimages = parseoutputopts(suboutputopts, 'SUBOUTPUTOPTS')
 
     # Get the list of subjects
@@ -219,12 +221,12 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                     fid.write(f'\n<p><a href="{subses}/index.html">'
                               f'<image src="{subses}/{slicerow}"><br>\n{caption}</a></p>\n')
 
-                # Add a subreport
+                # Add a sub-report
                 if suboutputopts:
                     slicerow = f"{Path(image).name}_s.png"
-                    appendslices(image, outline, mainopts, suboutputopts, reportses, subslicerimages, slicerow, cluster)
+                    appendslices(image, outline, submainopts, suboutputopts, reportses, subslicerimages, slicerow, cluster)
                 (reportses/'index.html').write_text(f'{html_head}<h1>{caption}</h1>\n\n'
-                                                    f'<image src="{slicerow}">\n\n</body></html>')
+                                                    f'<p><image src="{slicerow}"></p>\n\n</body></html>')
 
     # Finish off
     errors = bidscoin.reporterrors().replace('\n', '<br>\n')
@@ -287,7 +289,8 @@ examples:
     parser.add_argument('-c','--cluster',           help='Use `qsub` to submit the slicer jobs to a high-performance compute (HPC) cluster', action='store_true')
     parser.add_argument('--mainopts',               help='Main options of slicer (see below). (default: "s 1")', default=['s','1'], nargs='+')
     parser.add_argument('--outputopts',             help='Output options of slicer (see below). (default: "x 0.4 x 0.5 x 0.6 y 0.4 y 0.5 y 0.6 z 0.4 z 0.5 z 0.6")', default=['x','0.4','x','0.5','x','0.6','y','0.4','y','0.5','y','0.6','z','0.4','z','0.5','z','0.6'], nargs='+')
-    parser.add_argument('--suboutputopts',          help='Output options of slicer for creating the subreports (same as OUTPUTOPTS, see below). (default: "S 4 1600")', default=['S', '4', '1600'], nargs='+')
+    parser.add_argument('--submainopts',            help='Main options of slicer for creating the sub-reports (same as MAINOPTS, see below). (default: "s 1")', default=['s','1'], nargs='+')
+    parser.add_argument('--suboutputopts',          help='Output options of slicer for creating the sub-reports (same as OUTPUTOPTS, see below). (default: "S 4 1600")', default=['S', '4', '1600'], nargs='+')
     args = parser.parse_args()
 
     slicereport(bidsdir        = args.bidsfolder,
@@ -300,6 +303,7 @@ examples:
                 cluster        = args.cluster,
                 mainopts       = args.mainopts,
                 outputopts     = args.outputopts,
+                submainopts    = args.submainopts,
                 suboutputopts  = args.suboutputopts)
 
 
