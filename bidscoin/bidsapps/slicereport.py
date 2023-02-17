@@ -218,15 +218,14 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 # Add a row to the report
                 caption = f"{image.relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(Path(outline).relative_to(outlinesession))+' )' if outlinepattern and outline else ''}"
                 with report.open('a') as fid:
-                    fid.write(f'\n<p><a href="{subses}/index.html">'
-                              f'<image src="{subses}/{slicerow}"><br>\n{caption}</a></p>\n')
+                    fid.write(f'\n<p><a href="{subses}/index.html"><image src="{subses}/{slicerow}"><br>\n{caption}</a></p>\n')
 
                 # Add a sub-report
                 if suboutputopts:
                     slicerow = f"{image.with_suffix('').stem}_s.png"
                     appendslices(image, outline, submainopts, suboutputopts, reportses, subslicerimages, slicerow, cluster)
-                (reportses/'index.html').write_text(f'{html_head}<h1>{caption}</h1>\n\n'
-                                                    f'<p><image src="{slicerow}"></p>\n\n</body></html>')
+                    with (reportses/'index.html').open('wt') as fid:
+                        fid.write(f'{html_head}<h1>{caption}</h1>\n\n<p><image src="{slicerow}"></p>\n\n</body></html>')
 
     # Finish off
     errors = bidscoin.reporterrors().replace('\n', '<br>\n')
