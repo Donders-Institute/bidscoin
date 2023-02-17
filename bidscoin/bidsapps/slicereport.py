@@ -60,37 +60,37 @@ def parseoutputopts(opts: list, name: str) -> tuple:
 
     :return: (outputopts: str, outputimages: list)
     """
-    sliceimages = []
-    outputopts  = ''
-    isnumber    = lambda arg: arg.replace('.','').replace('-','').isdecimal()
+    slices     = []
+    outputopts = ''
+    isnumber   = lambda arg: arg.replace('.','').replace('-','').isdecimal()
     for n, outputopt in enumerate(opts):
-        if not (outputopt in ('x', 'y', 'z', 'a', 'A', 'S') or isnumber(outputopt)):
+        if not (outputopt in ('x', 'y', 'z', 'a', 'A', 'S', 'LF') or isnumber(outputopt)):
             print(f"Invalid {name}: '{outputopt}' in '{' '.join(opts)}'"); sys.exit(2)
-        if outputopt.isalpha():
-            sliceimages.append(f"slice_tmp{n}.png")
+        if outputopt.isalpha() and outputopt != 'LF':
+            slices.append(f"{'' if n==0 else '-' if opts[n-1]=='LF' else '+'} slice_tmp{n}.png")
             if outputopt == 'a':
-                outputopts += f"-{outputopt} {sliceimages[-1]} "
+                outputopts += f"-{outputopt} {slices[-1]} "
             elif outputopt in ('x', 'y', 'z', 'A'):
                 if not isnumber(opts[n+1]):
                     print(f"Invalid {name}: '{opts[n + 1]}' in '{' '.join(opts)}'"); sys.exit(2)
-                outputopts += f"-{outputopt} {opts[n+1]} {sliceimages[-1]} "
+                outputopts += f"-{outputopt} {opts[n+1]} {slices[-1]} "
             elif outputopt == 'S':
                 if not (isnumber(opts[n+1]) and isnumber(opts[n+2])):
                     print(f"Invalid {name}: {outputopt} >> '{' '.join(opts)}'"); sys.exit(2)
-                outputopts += f"-{outputopt} {opts[n+1]} {opts[n+2]} {sliceimages[-1]} "
+                outputopts += f"-{outputopt} {opts[n+1]} {opts[n+2]} {slices[-1]} "
 
-    return outputopts, sliceimages
+    return outputopts, slices
 
 
-def appendslices(inputimage, outlineimage, mainopts, outputopts, reportses, slicerimages, outputimage, cluster, append):
+def appendslices(inputimage, outlineimage, mainopts, outputopts, reportses, slicerimages, outputimage, cluster):
     """Run slicer and append the sliced images to a row"""
 
     # Slice the image
     workdir = Path(reportses)/next(tempfile._get_candidate_names())
     workdir.mkdir()
     command = f"cd {workdir}\n" \
-              f"slicer {inputimage} {outlineimage} {mainopts} {outputopts}\n" \
-              f"pngappend {append.join(slicerimages)} {outputimage}\n" \
+              f"slicer {inputimage} {outlineimage} {mainopts} {outputopts.replace('+ ','').replace('- ','')}\n" \
+              f"pngappend {' '.join(slicerimages)} {outputimage}\n" \
               f"mv {outputimage} {reportses}\n" \
               f"rm -r {workdir}"
     if cluster:
@@ -192,7 +192,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
 
             # Search for the image(s) to report
             LOGGER.info(f"Processing images in: {session.relative_to(bidsdir)}")
-            images = sorted([str(match.with_suffix('').with_suffix('')) for match in session.glob(pattern) if '.nii' in match.suffixes])
+            images = sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes])
             if not images:
                 LOGGER.warning(f"Could not find images using: {session.relative_to(bidsdir)}/{pattern}")
                 continue
@@ -212,19 +212,19 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 # Generate the sliced image row
                 subses   = sub  + session.name
                 outline  = outlineimages[n] if outlinepattern else outlineimage
-                slicerow = f"{Path(image).name}.png"
-                appendslices(image, outline, mainopts, outputopts, reportses, slicerimages, slicerow, cluster, ' + ')
+                slicerow = image.with_suffix('').with_suffix('.png').name
+                appendslices(image, outline, mainopts, outputopts, reportses, slicerimages, slicerow, cluster)
 
                 # Add a row to the report
-                caption = f"{Path(image).relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(Path(outline).relative_to(outlinesession))+' )' if outlinepattern and outline else ''}"
+                caption = f"{image.relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(Path(outline).relative_to(outlinesession))+' )' if outlinepattern and outline else ''}"
                 with report.open('a') as fid:
                     fid.write(f'\n<p><a href="{subses}/index.html">'
                               f'<image src="{subses}/{slicerow}"><br>\n{caption}</a></p>\n')
 
                 # Add a sub-report
                 if suboutputopts:
-                    slicerow = f"{Path(image).name}_s.png"
-                    appendslices(image, outline, submainopts, suboutputopts, reportses, subslicerimages, slicerow, cluster, ' - ')
+                    slicerow = f"{image.with_suffix('').stem}_s.png"
+                    appendslices(image, outline, submainopts, suboutputopts, reportses, subslicerimages, slicerow, cluster)
                 (reportses/'index.html').write_text(f'{html_head}<h1>{caption}</h1>\n\n'
                                                     f'<p><image src="{slicerow}"></p>\n\n</body></html>')
 
@@ -269,13 +269,14 @@ OUTPUTOPTS:
   a                  : Output mid-sagittal, -coronal and -axial slices into one image
   A [WIDTH]          : Output _all_ axial slices into one image of _max_ width [WIDTH]
   S [SAMPLE] [WIDTH] : As `A` but only include every [SAMPLE]'th slice
+  LF                 : Start a new line
 
 examples:
   slicereport myproject/bids anat/*_T1w*
   slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*
   slicereport myproject/bids/derivatives/fmriprep anat/*run-?_desc-preproc_T1w* -o anat/*run-?_label-GM*
   slicereport myproject/bids/derivatives/deface anat/*_T1w* -o myproject/bids:anat/*_T1w* --mainopts L e 0.05
-  slicereport myproject/bids anat/*_T1w* --outputopts x 0.4 x 0.5 x 0.6 z 0.3 z 0.4 z 0.5 z 0.6 z 0.7\n """
+  slicereport myproject/bids anat/*_T1w* --outputopts x 0.3 x 0.4 x 0.5 x 0.6 x 0.7 LF z 0.3 z 0.4 z 0.5 z 0.6 z 0.7\n """
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=__doc__, epilog=epilogue)
