@@ -18,10 +18,10 @@ import csv
 import tempfile
 from pathlib import Path
 try:
-    from bidscoin import bidscoin
+    from bidscoin import bidscoin, bids
 except ImportError:
     sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bidscoin
+    import bidscoin, bids
 
 html_head = """<!DOCTYPE html>
 <html lang="en">
@@ -217,15 +217,16 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 slicer_append(image, outline, options, outputs, reportses, sliceroutput, montage, cluster)
 
                 # Add the montage as a row to the report
-                caption = f"{image.relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(Path(outline).relative_to(outlinesession))+' )' if outlinepattern and outline else ''}"
+                caption   = f"{image.relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(Path(outline).relative_to(outlinesession))+' )' if outlinepattern and outline else ''}"
+                subreport = f"{bids.insert_bidskeyval(image, 'desc', 'subreport', False).with_suffix('').stem}.html"
                 with report.open('a') as fid:
-                    fid.write(f'\n<p><a href="{subses}/{image.with_suffix("").stem}_sub.html"><image src="{subses}/{montage}"><br>\n{caption}</a></p>\n')
+                    fid.write(f'\n<p><a href="{subses}/{subreport}"><image src="{subses}/{montage}"><br>\n{caption}</a></p>\n')
 
                 # Add a sub-report
                 if suboutputs:
-                    montage = f"{image.with_suffix('').stem}_sub.png"
+                    montage = f"{Path(subreport).with_suffix('.png')}"
                     slicer_append(image, outline, suboptions, suboutputs, reportses, subsliceroutput, montage, cluster)
-                with (reportses/f'{image.with_suffix("").stem}_sub.html').open('wt') as fid:
+                with (reportses/f"{subreport}").open('wt') as fid:
                     fid.write(f'{html_head}<h1>{caption}</h1>\n\n<p><image src="{montage}"></p>\n\n</body></html>')
 
     # Finish off
