@@ -251,7 +251,7 @@ def main():
     """Console script usage"""
 
     epilogue = """
-MAINOPTS:
+OPTIONS:
   L                  : Label slices with slice number.
   l [LUT]            : Use a different colour map from that specified in the header.
   i [MIN] [MAX]      : Specify intensity min and max for display range.
@@ -263,20 +263,20 @@ MAINOPTS:
   s                  : Size scaling factor
   c                  : Add a red dot marker to top right of image
 
-OUTPUTOPTS:
+OUTPUTS:
   x/y/z [SLICE] [..] : Output sagittal, coronal or axial slice (if [SLICE] > 0 it is a
                        fraction of image dimension, if < 0, it is an absolute slice number)
   a                  : Output mid-sagittal, -coronal and -axial slices into one image
   A [WIDTH]          : Output _all_ axial slices into one image of _max_ width [WIDTH]
   S [SAMPLE] [WIDTH] : As `A` but only include every [SAMPLE]'th slice
-  LF                 : Start a new line
+  LF                 : Start a new line (i.e. works like a row break)
 
 examples:
   slicereport myproject/bids anat/*_T1w*
   slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*
   slicereport myproject/bids/derivatives/fmriprep anat/*run-?_desc-preproc_T1w* -o anat/*run-?_label-GM*
   slicereport myproject/bids/derivatives/deface anat/*_T1w* -o myproject/bids:anat/*_T1w* --mainopts L e 0.05
-  slicereport myproject/bids anat/*_T1w* --outputopts x 0.3 x 0.4 x 0.5 x 0.6 x 0.7 LF z 0.3 z 0.4 z 0.5 z 0.6 z 0.7\n """
+  slicereport myproject/bids anat/*_T1w* --outputs x 0.3 x 0.4 x 0.5 x 0.6 x 0.7 LF z 0.3 z 0.4 z 0.5 z 0.6 z 0.7\n """
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=__doc__, epilog=epilogue)
@@ -288,10 +288,10 @@ examples:
     parser.add_argument('-r','--reportfolder',      help="The folder where the report is saved (default: bidsfolder/derivatives/slicereport)")
     parser.add_argument('-q','--qcscores',          help="Column names for creating an accompanying tsv-file to store QC-rating scores (default: rating_overall)", default=['rating_overall'], nargs='+')
     parser.add_argument('-c','--cluster',           help='Use `qsub` to submit the slicer jobs to a high-performance compute (HPC) cluster', action='store_true')
-    parser.add_argument('--mainopts',               help='Main options of slicer (see below). (default: "s 1")', default=['s','1'], nargs='+')
-    parser.add_argument('--outputopts',             help='Output options of slicer (see below). (default: "x 0.4 x 0.5 x 0.6 y 0.4 y 0.5 y 0.6 z 0.4 z 0.5 z 0.6")', default=['x','0.4','x','0.5','x','0.6','y','0.4','y','0.5','y','0.6','z','0.4','z','0.5','z','0.6'], nargs='+')
-    parser.add_argument('--submainopts',            help='Main options of slicer for creating the sub-reports (same as MAINOPTS, see below). (default: "s 1")', default=['s','1'], nargs='+')
-    parser.add_argument('--suboutputopts',          help='Output options of slicer for creating the sub-reports (same as OUTPUTOPTS, see below). (default: "S 4 1600")', default=['S', '4', '1600'], nargs='+')
+    parser.add_argument('--options',                help='Main options of slicer (see below). (default: "s 1")', default=['s','1'], nargs='+')
+    parser.add_argument('--outputs',                help='Output options of slicer (see below). (default: "x 0.4 x 0.5 x 0.6 y 0.4 y 0.5 y 0.6 z 0.4 z 0.5 z 0.6")', default=['x','0.4','x','0.5','x','0.6','y','0.4','y','0.5','y','0.6','z','0.4','z','0.5','z','0.6'], nargs='+')
+    parser.add_argument('--suboptions',             help='Main options of slicer for creating the sub-reports (same as OPTIONS, see below). (default: "s 1")', default=['s','1'], nargs='+')
+    parser.add_argument('--suboutputs',             help='Output options of slicer for creating the sub-reports (same as OUTPUTS, see below). (default: "S 4 1600")', default=['S', '4', '1600'], nargs='+')
     args = parser.parse_args()
 
     slicereport(bidsdir        = args.bidsfolder,
@@ -302,10 +302,10 @@ examples:
                 reportdir      = args.reportfolder,
                 qccols         = args.qcscores,
                 cluster        = args.cluster,
-                mainopts       = args.mainopts,
-                outputopts     = args.outputopts,
-                submainopts    = args.submainopts,
-                suboutputopts  = args.suboutputopts)
+                mainopts       = args.options,
+                outputopts     = args.outputs,
+                submainopts    = args.suboptions,
+                suboutputopts  = args.suboutputs)
 
 
 if __name__ == '__main__':
