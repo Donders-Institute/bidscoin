@@ -42,60 +42,61 @@ html_head = """<!DOCTYPE html>
 """
 
 
-def parsemainopts(mainopts: list) -> str:
-    """Check the MAINOPTS arguments and return them to a string that can be passed to slicer"""
-    for n, mainopt in enumerate(mainopts):
-        if mainopts[n-1] == 'l': continue                       # Skip checking the LUT string
-        if not (mainopt in ('L','l','i','e','t','n','u','s','c') or mainopt.replace('.','').replace('-','').isdecimal()):
-            print(f"Invalid MAINOPTS: {' '.join(mainopts)}"); sys.exit(2)
-        if mainopt.isalpha():
-            mainopts[n] = '-' + mainopts[n]
+def parse_options(options: list) -> str:
+    """Check the OPTIONS arguments and return them to a string that can be passed to slicer"""
+    for n, option in enumerate(options):
+        if options[n - 1] =='l': continue                       # Skip checking the LUT string
+        if not (option in ('L','l','i','e','t','n','u','s','c') or option.replace('.','').replace('-','').isdecimal()):
+            print(f"Invalid OPTIONS: {' '.join(options)}"); sys.exit(2)
+        if option.isalpha():
+            options[n] = '-' + options[n]
 
-    return  f"{' '.join(mainopts)}"
+    return  f"{' '.join(options)}"
 
 
-def parseoutputopts(opts: list, name: str) -> tuple:
+def parse_outputs(outputargs: list, name: str) -> tuple:
     """
-    Check the NAME arguments and append slicer output images to them
+    Check the OUTPUT arguments and construct slicer and pngappend input arguments
 
-    :return: (outputopts: str, outputimages: list)
+    :return: (slicer_outputopts: str, pngappend_slices: list)
     """
-    slices     = []
-    outputopts = ''
-    isnumber   = lambda arg: arg.replace('.','').replace('-','').isdecimal()
-    for n, outputopt in enumerate(opts):
-        if not (outputopt in ('x', 'y', 'z', 'a', 'A', 'S', 'LF') or isnumber(outputopt)):
-            print(f"Invalid {name}: '{outputopt}' in '{' '.join(opts)}'"); sys.exit(2)
-        if outputopt.isalpha() and outputopt != 'LF':
-            slices.append(f"{'' if n==0 else '-' if opts[n-1]=='LF' else '+'} slice_tmp{n}.png")
-            if outputopt == 'a':
-                outputopts += f"-{outputopt} slice_tmp{n}.png "
-            elif outputopt in ('x', 'y', 'z', 'A'):
-                if not isnumber(opts[n+1]):
-                    print(f"Invalid {name}: '{opts[n + 1]}' in '{' '.join(opts)}'"); sys.exit(2)
-                outputopts += f"-{outputopt} {opts[n+1]} slice_tmp{n}.png "
-            elif outputopt == 'S':
-                if not (isnumber(opts[n+1]) and isnumber(opts[n+2])):
-                    print(f"Invalid {name}: {outputopt} >> '{' '.join(opts)}'"); sys.exit(2)
-                outputopts += f"-{outputopt} {opts[n+1]} {opts[n+2]} slice_tmp{n}.png "
+    outputs  = ''       # This is an input argument for slicer
+    slices   = []       # These are input arguments for pngappend (i.e. the slicer output)
+    isnumber = lambda arg: arg.replace('.','').replace('-','').isdecimal()
+    for n, outputarg in enumerate(outputargs):
+        if not (outputarg in ('x', 'y', 'z', 'a', 'A', 'S', 'LF') or isnumber(outputarg)):
+            print(f"Invalid {name}: '{outputarg}' in '{' '.join(outputargs)}'"); sys.exit(2)
+        if outputarg.isalpha() and outputarg != 'LF':
+            slices.append(f"{'' if n==0 else '-' if outputargs[n - 1]=='LF' else '+'} slice_tmp{n}.png")
+            if outputarg == 'a':
+                outputs += f"-{outputarg} slice_tmp{n}.png "
+            elif outputarg in ('x', 'y', 'z', 'A'):
+                if not isnumber(outputargs[n + 1]):
+                    print(f"Invalid {name}: '{outputargs[n + 1]}' in '{' '.join(outputargs)}'"); sys.exit(2)
+                outputs += f"-{outputarg} {outputargs[n + 1]} slice_tmp{n}.png "
+            elif outputarg == 'S':
+                if not (isnumber(outputargs[n + 1]) and isnumber(outputargs[n + 2])):
+                    print(f"Invalid {name}: {outputarg} >> '{' '.join(outputargs)}'"); sys.exit(2)
+                outputs += f"-{outputarg} {outputargs[n + 1]} {outputargs[n + 2]} slice_tmp{n}.png "
 
-    return outputopts, slices
+    return outputs, slices
 
 
-def appendslices(inputimage, outlineimage, mainopts, outputopts, reportses, slicerimages, outputimage, cluster):
-    """Run slicer and append the sliced images to a row"""
+def slicer_append(inputimage, outlineimage, mainopts, outputopts, reportses, sliceroutput, montage, cluster):
+    """Run slicer and pngappend (locally or on the cluster) to create a montage of the sliced images"""
 
-    # Slice the image
+    # Create a workdir and the shell command
     workdir = Path(reportses)/next(tempfile._get_candidate_names())
     workdir.mkdir()
     command = f"cd {workdir}\n" \
               f"slicer {inputimage} {outlineimage} {mainopts} {outputopts}\n" \
-              f"pngappend {' '.join(slicerimages)} {outputimage}\n" \
-              f"mv {outputimage} {reportses}\n" \
+              f"pngappend {' '.join(sliceroutput)} {montage}\n" \
+              f"mv {montage} {reportses}\n" \
               f"rm -r {workdir}"
     if cluster:
         command = f"qsub -l walltime=0:01:00,mem=1gb -N slicereport <<EOF\n{command}\nEOF"
 
+    # Run the command
     LOGGER.bcdebug(f"Running: {command}")
     process = subprocess.run(command, shell=True, capture_output=True, text=True)
     if process.stderr or process.returncode!=0:
@@ -103,7 +104,7 @@ def appendslices(inputimage, outlineimage, mainopts, outputopts, reportses, slic
         sys.exit(process.returncode)
 
 
-def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: str, subjects: list, reportdir: str, qccols: list, cluster: bool, mainopts: list, outputopts: list, submainopts: list, suboutputopts: list):
+def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: str, subjects: list, reportdir: str, qccols: list, cluster: bool, options: list, outputs: list, suboptions: list, suboutputs: list):
     """
     :param bidsdir:         The bids-directory with the subject data
     :param pattern:         Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T1w*'
@@ -113,10 +114,10 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     :param reportdir:       The folder where the report is saved
     :param qccols:          Column names for creating an accompanying tsv-file to store QC-rating scores
     :param cluster:         Use qsub to submit the slicer jobs to a high-performance compute (HPC) cluster
-    :param mainopts:        Slicer main options
-    :param outputopts:      Slicer output options
-    :param submainopts:     Slicer main options for creating the sub-reports (same as MAINOPTS)
-    :param suboutputopts:   Slicer output options for creating the sub-reports (same as OUTPUTOPTS)
+    :param options:         Slicer main options
+    :param outputs:         Slicer output options
+    :param suboptions:      Slicer main options for creating the sub-reports (same as OPTIONS)
+    :param suboutputs:      Slicer output options for creating the sub-reports (same as OUTPUTS)
     :return:
     """
 
@@ -143,10 +144,10 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
         outlinedir = bidsdir
 
     # Format the slicer main and output options and sliced images
-    mainopts                       = parsemainopts(mainopts)
-    outputopts, slicerimages       = parseoutputopts(outputopts, 'OUTPUTOPTS')
-    submainopts                    = parsemainopts(submainopts)
-    suboutputopts, subslicerimages = parseoutputopts(suboutputopts, 'SUBOUTPUTOPTS')
+    options                     = parse_options(options)
+    outputs, sliceroutput       = parse_outputs(outputs, 'OUTPUTS')
+    suboptions                  = parse_options(suboptions)
+    suboutputs, subsliceroutput = parse_outputs(suboutputs, 'SUBOUTPUTS')
 
     # Get the list of subjects
     if not subjects:
@@ -209,23 +210,23 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
             reportses.mkdir(parents=True, exist_ok=True)
             for n, image in enumerate(images):
 
-                # Generate the sliced image row
-                subses   = sub  + session.name
-                outline  = outlineimages[n] if outlinepattern else outlineimage
-                slicerow = image.with_suffix('').with_suffix('.png').name
-                appendslices(image, outline, mainopts, outputopts, reportses, slicerimages, slicerow, cluster)
+                # Generate the sliced image montage
+                subses  = sub  + session.name
+                outline = outlineimages[n] if outlinepattern else outlineimage
+                montage = image.with_suffix('').with_suffix('.png').name
+                slicer_append(image, outline, options, outputs, reportses, sliceroutput, montage, cluster)
 
-                # Add a row to the report
+                # Add the montage as a row to the report
                 caption = f"{image.relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(Path(outline).relative_to(outlinesession))+' )' if outlinepattern and outline else ''}"
                 with report.open('a') as fid:
-                    fid.write(f'\n<p><a href="{subses}/index.html"><image src="{subses}/{slicerow}"><br>\n{caption}</a></p>\n')
+                    fid.write(f'\n<p><a href="{subses}/index.html"><image src="{subses}/{montage}"><br>\n{caption}</a></p>\n')
 
                 # Add a sub-report
-                if suboutputopts:
-                    slicerow = f"{image.with_suffix('').stem}_s.png"
-                    appendslices(image, outline, submainopts, suboutputopts, reportses, subslicerimages, slicerow, cluster)
+                if suboutputs:
+                    montage = f"{image.with_suffix('').stem}_s.png"
+                    slicer_append(image, outline, suboptions, suboutputs, reportses, subsliceroutput, montage, cluster)
                     with (reportses/'index.html').open('wt') as fid:
-                        fid.write(f'{html_head}<h1>{caption}</h1>\n\n<p><image src="{slicerow}"></p>\n\n</body></html>')
+                        fid.write(f'{html_head}<h1>{caption}</h1>\n\n<p><image src="{montage}"></p>\n\n</body></html>')
 
     # Finish off
     errors = bidscoin.reporterrors().replace('\n', '<br>\n')
@@ -301,10 +302,10 @@ examples:
                 reportdir      = args.reportfolder,
                 qccols         = args.qcscores,
                 cluster        = args.cluster,
-                mainopts       = args.options,
-                outputopts     = args.outputs,
-                submainopts    = args.suboptions,
-                suboutputopts  = args.suboutputs)
+                options        = args.options,
+                outputs        = args.outputs,
+                suboptions     = args.suboptions,
+                suboutputs     = args.suboutputs)
 
 
 if __name__ == '__main__':
