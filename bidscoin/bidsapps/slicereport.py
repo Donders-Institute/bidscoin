@@ -45,7 +45,7 @@ html_head = """<!DOCTYPE html>
 def parse_options(options: list) -> str:
     """Check the OPTIONS arguments and return them to a string that can be passed to slicer"""
     for n, option in enumerate(options):
-        if options[n - 1] =='l': continue                       # Skip checking the LUT string
+        if options[n-1] == 'l': continue                  # Skip checking the LUT string
         if not (option in ('L','l','i','e','t','n','u','s','c') or option.replace('.','').replace('-','').isdecimal()):
             print(f"Invalid OPTIONS: {' '.join(options)}"); sys.exit(2)
         if option.isalpha():
@@ -60,38 +60,38 @@ def parse_outputs(outputargs: list, name: str) -> tuple:
 
     :return: (slicer_outputopts: str, pngappend_slices: str)
     """
-    outputs  = ''       # This is an input argument for slicer
-    slices   = ''       # These are input arguments for pngappend (i.e. the slicer output)
+    outputs  = ''       # These are input arguments for slicer (i.e. the slicer output images)
+    slices   = ''       # These are input arguments for pngappend (i.e. the slicer output images)
     isnumber = lambda arg: arg.replace('.','').replace('-','').isdecimal()
     for n, outputarg in enumerate(outputargs):
         if not (outputarg in ('x', 'y', 'z', 'a', 'A', 'S', 'LF') or isnumber(outputarg)):
             print(f"Invalid {name}: '{outputarg}' in '{' '.join(outputargs)}'"); sys.exit(2)
         if outputarg.isalpha() and outputarg != 'LF':
-            slices += f"{'' if n==0 else '-' if outputargs[n - 1]=='LF' else '+'} slice_tmp{n}.png "
+            slices += f"{'' if n==0 else '-' if outputargs[n-1]=='LF' else '+'} slice_tmp{n}.png "
             if outputarg == 'a':
                 outputs += f"-{outputarg} slice_tmp{n}.png "
             elif outputarg in ('x', 'y', 'z', 'A'):
-                if not isnumber(outputargs[n + 1]):
-                    print(f"Invalid {name}: '{outputargs[n + 1]}' in '{' '.join(outputargs)}'"); sys.exit(2)
-                outputs += f"-{outputarg} {outputargs[n + 1]} slice_tmp{n}.png "
+                if not isnumber(outputargs[n+1]):
+                    print(f"Invalid {name}: '{outputargs[n+1]}' in '{' '.join(outputargs)}'"); sys.exit(2)
+                outputs += f"-{outputarg} {outputargs[n+1]} slice_tmp{n}.png "
             elif outputarg == 'S':
-                if not (isnumber(outputargs[n + 1]) and isnumber(outputargs[n + 2])):
+                if not (isnumber(outputargs[n+1]) and isnumber(outputargs[n+2])):
                     print(f"Invalid {name}: {outputarg} >> '{' '.join(outputargs)}'"); sys.exit(2)
-                outputs += f"-{outputarg} {outputargs[n + 1]} {outputargs[n + 2]} slice_tmp{n}.png "
+                outputs += f"-{outputarg} {outputargs[n+1]} {outputargs[n+2]} slice_tmp{n}.png "
 
     return outputs, slices
 
 
-def slicer_append(inputimage, outlineimage, mainopts, outputopts, reportses, sliceroutput, montage, cluster):
+def slicer_append(inputimage: Path, outlineimage: Path, mainopts: str, outputopts: str, sliceroutput: str, montage: Path, cluster: bool):
     """Run slicer and pngappend (locally or on the cluster) to create a montage of the sliced images"""
 
     # Create a workdir and the shell command
-    workdir = Path(reportses)/next(tempfile._get_candidate_names())
+    workdir = Path(montage.parent)/next(tempfile._get_candidate_names())
     workdir.mkdir()
     command = f"cd {workdir}\n" \
               f"slicer {inputimage} {outlineimage} {mainopts} {outputopts}\n" \
-              f"pngappend {sliceroutput} {montage}\n" \
-              f"mv {montage} {reportses}\n" \
+              f"pngappend {sliceroutput} {montage.name}\n" \
+              f"mv {montage.name} {montage.parent}\n" \
               f"rm -r {workdir}"
     if cluster:
         command = f"qsub -l walltime=0:01:00,mem=1gb -N slicereport <<EOF\n{command}\nEOF"
@@ -180,9 +180,6 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
         sessions = bidscoin.lsdirs(subject, 'ses-*')
         if not sessions:
             sessions = [subject]
-            sub      = ''
-        else:
-            sub      = subject.name + '/'
         for session in sessions:
 
             # Write a row in the QC tsv-file
@@ -200,34 +197,32 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
             outlineimages = [''] * len(images)
             if outlinepattern:
                 outlinesession = outlinedir/session.relative_to(bidsdir)
-                outlineimages  = sorted([str(match.with_suffix('').with_suffix('')) for match in outlinesession.glob(outlinepattern) if '.nii' in match.suffixes])
+                outlineimages  = sorted([match.with_suffix('').with_suffix('') for match in outlinesession.glob(outlinepattern) if '.nii' in match.suffixes])
                 if len(outlineimages) != len(images):
                     LOGGER.error(f"Nr of outline images ({len(outlineimages)}) in {outlinesession.relative_to(bidsdir)} should be the same as the number of underlying images ({len(images)})")
                     outlineimages = [''] * len(images)
 
-            # Generate the report row(s)
+            # Generate a report row and a sub-report for each session
             reportses = reportdir/session.relative_to(bidsdir)
             reportses.mkdir(parents=True, exist_ok=True)
             for n, image in enumerate(images):
 
                 # Generate the sliced image montage
-                subses  = sub  + session.name
                 outline = outlineimages[n] if outlinepattern else outlineimage
-                montage = image.with_suffix('').with_suffix('.png').name
-                slicer_append(image, outline, options, outputs, reportses, sliceroutput, montage, cluster)
+                montage = reportses/image.with_suffix('').with_suffix('.png').name
+                slicer_append(image, outline, options, outputs, sliceroutput, montage, cluster)
 
-                # Add the montage as a row to the report
-                caption   = f"{image.relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(Path(outline).relative_to(outlinesession))+' )' if outlinepattern and outline else ''}"
-                subreport = f"{bids.insert_bidskeyval(image, 'desc', 'subreport', False).with_suffix('').stem}.html"
+                # Add the montage as a (sub-report linked) row to the report
+                caption   = f"{image.relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(outline.relative_to(outlinesession))+' )' if outlinepattern and outline else ''}"
+                subreport = reportses/f"{bids.insert_bidskeyval(image, 'desc', 'subreport', False).with_suffix('').stem}.html"
                 with report.open('a') as fid:
-                    fid.write(f'\n<p><a href="{subses}/{subreport}"><image src="{subses}/{montage}"><br>\n{caption}</a></p>\n')
+                    fid.write(f'\n<p><a href="{subreport.relative_to(reportdir).as_posix()}"><image src="{montage.relative_to(reportdir).as_posix()}"><br>\n{caption}</a></p>\n')
 
-                # Add a sub-report
+                # Add the sub-report
                 if suboutputs:
-                    montage = f"{Path(subreport).with_suffix('.png')}"
-                    slicer_append(image, outline, suboptions, suboutputs, reportses, subsliceroutput, montage, cluster)
-                with (reportses/f"{subreport}").open('wt') as fid:
-                    fid.write(f'{html_head}<h1>{caption}</h1>\n\n<p><image src="{montage}"></p>\n\n</body></html>')
+                    montage = subreport.with_suffix('.png')
+                    slicer_append(image, outline, suboptions, suboutputs, subsliceroutput, montage, cluster)
+                subreport.write_text(f'{html_head}<h1>{caption}</h1>\n\n<p><image src="{montage.name}"></p>\n\n</body></html>')
 
     # Finish off
     errors = bidscoin.reporterrors().replace('\n', '<br>\n')
