@@ -58,16 +58,16 @@ def parse_outputs(outputargs: list, name: str) -> tuple:
     """
     Check the OUTPUT arguments and construct slicer and pngappend input arguments
 
-    :return: (slicer_outputopts: str, pngappend_slices: list)
+    :return: (slicer_outputopts: str, pngappend_slices: str)
     """
     outputs  = ''       # This is an input argument for slicer
-    slices   = []       # These are input arguments for pngappend (i.e. the slicer output)
+    slices   = ''       # These are input arguments for pngappend (i.e. the slicer output)
     isnumber = lambda arg: arg.replace('.','').replace('-','').isdecimal()
     for n, outputarg in enumerate(outputargs):
         if not (outputarg in ('x', 'y', 'z', 'a', 'A', 'S', 'LF') or isnumber(outputarg)):
             print(f"Invalid {name}: '{outputarg}' in '{' '.join(outputargs)}'"); sys.exit(2)
         if outputarg.isalpha() and outputarg != 'LF':
-            slices.append(f"{'' if n==0 else '-' if outputargs[n - 1]=='LF' else '+'} slice_tmp{n}.png")
+            slices += f"{'' if n==0 else '-' if outputargs[n - 1]=='LF' else '+'} slice_tmp{n}.png "
             if outputarg == 'a':
                 outputs += f"-{outputarg} slice_tmp{n}.png "
             elif outputarg in ('x', 'y', 'z', 'A'):
@@ -90,7 +90,7 @@ def slicer_append(inputimage, outlineimage, mainopts, outputopts, reportses, sli
     workdir.mkdir()
     command = f"cd {workdir}\n" \
               f"slicer {inputimage} {outlineimage} {mainopts} {outputopts}\n" \
-              f"pngappend {' '.join(sliceroutput)} {montage}\n" \
+              f"pngappend {sliceroutput} {montage}\n" \
               f"mv {montage} {reportses}\n" \
               f"rm -r {workdir}"
     if cluster:
@@ -219,14 +219,14 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 # Add the montage as a row to the report
                 caption = f"{image.relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(Path(outline).relative_to(outlinesession))+' )' if outlinepattern and outline else ''}"
                 with report.open('a') as fid:
-                    fid.write(f'\n<p><a href="{subses}/index.html"><image src="{subses}/{montage}"><br>\n{caption}</a></p>\n')
+                    fid.write(f'\n<p><a href="{subses}/{image.with_suffix("").stem}_sub.html"><image src="{subses}/{montage}"><br>\n{caption}</a></p>\n')
 
                 # Add a sub-report
                 if suboutputs:
-                    montage = f"{image.with_suffix('').stem}_s.png"
+                    montage = f"{image.with_suffix('').stem}_sub.png"
                     slicer_append(image, outline, suboptions, suboutputs, reportses, subsliceroutput, montage, cluster)
-                    with (reportses/'index.html').open('wt') as fid:
-                        fid.write(f'{html_head}<h1>{caption}</h1>\n\n<p><image src="{montage}"></p>\n\n</body></html>')
+                with (reportses/f'{image.with_suffix("").stem}_sub.html').open('wt') as fid:
+                    fid.write(f'{html_head}<h1>{caption}</h1>\n\n<p><image src="{montage}"></p>\n\n</body></html>')
 
     # Finish off
     errors = bidscoin.reporterrors().replace('\n', '<br>\n')
