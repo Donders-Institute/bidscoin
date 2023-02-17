@@ -236,24 +236,24 @@ Quality control
 
     usage: slicereport.py [-h] [-o OUTLINEPATTERN] [-i OUTLINEIMAGE]
                           [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-r REPORTFOLDER]
-                          [-q QCSCORES [QCSCORES ...]] [--mainopts MAINOPTS [MAINOPTS ...]]
-                          [--outputopts OUTPUTOPTS [OUTPUTOPTS ...]]
-                          [--suboutputopts SUBOUTPUTOPTS [SUBOUTPUTOPTS ...]]
+                          [-q QCSCORES [QCSCORES ...]] [-c] [--options OPTIONS [OPTIONS ...]]
+                          [--outputs OUTPUTS [OUTPUTS ...]] [--suboptions SUBOPTIONS [SUBOPTIONS ...]]
+                          [--suboutputs SUBOUTPUTS [SUBOUTPUTS ...]]
                           bidsfolder pattern
 
     A wrapper around the 'slicer' imaging tool (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Miscvis)
     to generate a web page with a row of image slices for each subject in the BIDS repository, as
-    well as individual sub-pages displaying more detailed information. The source images are
+    well as individual sub-pages displaying more detailed information. The input images are
     selectable using wildcards, and the output images are configurable via various user options,
-    allowing you to quickly create your own custom report to do visual quality control on any
+    allowing you to quickly create a custom 'slicer' report to do visual quality control on any
     datatype in your repository.
 
     Requires an existing installation of FSL/slicer
 
     positional arguments:
       bidsfolder            The bids-directory with the subject data
-      pattern               Globlike search pattern to select the images in bidsfolder to be reported, e.g.
-                            'anat/*_T2starw*'
+      pattern               Globlike search pattern to select the images in bidsfolder to be reported,
+                            e.g. 'anat/*_T2starw*'
 
     options:
       -h, --help            show this help message and exit
@@ -274,16 +274,21 @@ Quality control
       -q QCSCORES [QCSCORES ...], --qcscores QCSCORES [QCSCORES ...]
                             Column names for creating an accompanying tsv-file to store QC-rating scores
                             (default: rating_overall)
-      --mainopts MAINOPTS [MAINOPTS ...]
+      -c, --cluster         Use `qsub` to submit the slicer jobs to a high-performance compute (HPC)
+                            cluster
+      --options OPTIONS [OPTIONS ...]
                             Main options of slicer (see below). (default: "s 1")
-      --outputopts OUTPUTOPTS [OUTPUTOPTS ...]
+      --outputs OUTPUTS [OUTPUTS ...]
                             Output options of slicer (see below). (default: "x 0.4 x 0.5 x 0.6 y 0.4 y 0.5
                             y 0.6 z 0.4 z 0.5 z 0.6")
-      --suboutputopts SUBOUTPUTOPTS [SUBOUTPUTOPTS ...]
-                            Output options of slicer for creating the subreports (same as OUTPUTOPTS, see
+      --suboptions SUBOPTIONS [SUBOPTIONS ...]
+                            Main options of slicer for creating the sub-reports (same as OPTIONS, see
+                            below). (default: "s 1")
+      --suboutputs SUBOUTPUTS [SUBOUTPUTS ...]
+                            Output options of slicer for creating the sub-reports (same as OUTPUTS, see
                             below). (default: "S 4 1600")
 
-    MAINOPTS:
+    OPTIONS:
       L                  : Label slices with slice number.
       l [LUT]            : Use a different colour map from that specified in the header.
       i [MIN] [MAX]      : Specify intensity min and max for display range.
@@ -295,19 +300,20 @@ Quality control
       s                  : Size scaling factor
       c                  : Add a red dot marker to top right of image
 
-    OUTPUTOPTS:
+    OUTPUTS:
       x/y/z [SLICE] [..] : Output sagittal, coronal or axial slice (if [SLICE] > 0 it is a
                            fraction of image dimension, if < 0, it is an absolute slice number)
       a                  : Output mid-sagittal, -coronal and -axial slices into one image
       A [WIDTH]          : Output _all_ axial slices into one image of _max_ width [WIDTH]
       S [SAMPLE] [WIDTH] : As `A` but only include every [SAMPLE]'th slice
+      LF                 : Start a new line (i.e. works like a row break)
 
     examples:
       slicereport myproject/bids anat/*_T1w*
       slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*
       slicereport myproject/bids/derivatives/fmriprep anat/*run-?_desc-preproc_T1w* -o anat/*run-?_label-GM*
-      slicereport myproject/bids/derivatives/deface anat/*_T1w* -o myproject/bids:anat/*_T1w* --mainopts L e 0.05
-      slicereport myproject/bids anat/*_T1w* --outputopts x 0.4 x 0.5 x 0.6 z 0.3 z 0.4 z 0.5 z 0.6 z 0.7
+      slicereport myproject/bids/derivatives/deface anat/*_T1w* -o myproject/bids:anat/*_T1w* --options L e 0.05
+      slicereport myproject/bids anat/*_T1w* --outputs x 0.3 x 0.4 x 0.5 x 0.6 x 0.7 LF z 0.3 z 0.4 z 0.5 z 0.6 z 0.7
 
 .. figure:: ./_static/slicereport_skullstrip.png
 
