@@ -69,15 +69,15 @@ def parseoutputopts(opts: list, name: str) -> tuple:
         if outputopt.isalpha() and outputopt != 'LF':
             slices.append(f"{'' if n==0 else '-' if opts[n-1]=='LF' else '+'} slice_tmp{n}.png")
             if outputopt == 'a':
-                outputopts += f"-{outputopt} {slices[-1]} "
+                outputopts += f"-{outputopt} slice_tmp{n}.png "
             elif outputopt in ('x', 'y', 'z', 'A'):
                 if not isnumber(opts[n+1]):
                     print(f"Invalid {name}: '{opts[n + 1]}' in '{' '.join(opts)}'"); sys.exit(2)
-                outputopts += f"-{outputopt} {opts[n+1]} {slices[-1]} "
+                outputopts += f"-{outputopt} {opts[n+1]} slice_tmp{n}.png "
             elif outputopt == 'S':
                 if not (isnumber(opts[n+1]) and isnumber(opts[n+2])):
                     print(f"Invalid {name}: {outputopt} >> '{' '.join(opts)}'"); sys.exit(2)
-                outputopts += f"-{outputopt} {opts[n+1]} {opts[n+2]} {slices[-1]} "
+                outputopts += f"-{outputopt} {opts[n+1]} {opts[n+2]} slice_tmp{n}.png "
 
     return outputopts, slices
 
@@ -89,7 +89,7 @@ def appendslices(inputimage, outlineimage, mainopts, outputopts, reportses, slic
     workdir = Path(reportses)/next(tempfile._get_candidate_names())
     workdir.mkdir()
     command = f"cd {workdir}\n" \
-              f"slicer {inputimage} {outlineimage} {mainopts} {outputopts.replace('+ ','').replace('- ','')}\n" \
+              f"slicer {inputimage} {outlineimage} {mainopts} {outputopts}\n" \
               f"pngappend {' '.join(slicerimages)} {outputimage}\n" \
               f"mv {outputimage} {reportses}\n" \
               f"rm -r {workdir}"
