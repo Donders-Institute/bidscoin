@@ -36,9 +36,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install .[all]
+          make install
 
       - name: Tests with pytest
         run: |
-           pytest tests
-#          make test
+          make test

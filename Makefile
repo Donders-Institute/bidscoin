@@ -3,7 +3,7 @@ help:
 
 install: ## install python dependencies and bidscoin package
 	@pip install --upgrade pip
-	@pip install -e .
+	@pip install -e .[all]
 	@python setup.py install
 	@pip install pytest
 
