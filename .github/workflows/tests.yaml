@@ -40,4 +40,5 @@ jobs:
 
       - name: Tests with pytest
         run: |
-          make test
+           pytest tests
+#          make test
