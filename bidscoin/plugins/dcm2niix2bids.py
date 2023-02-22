@@ -225,7 +225,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             sourcefile = bids.get_dicomfile(source)
         elif dataformat == 'PAR':
             sourcefile = source
-        if not sourcefile.name and is_sourcefile(sourcefile):
+        if not sourcefile.name or not is_sourcefile(sourcefile):
             continue
 
         # Get a matching run from the bidsmap
