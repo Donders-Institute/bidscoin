@@ -9,11 +9,13 @@ See also:
 import logging
 import shutil
 import subprocess
+import json
 import pandas as pd
-from typing import Union
 from pathlib import Path
+from typing import Union
 from functools import lru_cache
 from bids_validator import BIDSValidator
+from pypet2bids import helper_functions
 
 try:
     from bidscoin import bidscoin, bids
@@ -52,25 +54,25 @@ def is_sourcefile(file: Path) -> str:
     :return:        The valid dataformat of the file for this plugin
     """
 
-    # if file.suffix.lower().startswith('.xls') or file.suffix.lower().startswith('.tsv') or file.suffix.lower().startswith('.csv'):
-    #     data = pet.helper_functions.single_spreadsheet_reader(file)
-    #     try:
-    #         with open(pet.helper_functions.pet_metadata_json, 'r') as pet_field_requirements_json:
-    #             pet_field_requirements = json.load(pet_field_requirements_json)
-    #     except (FileNotFoundError, json.JSONDecodeError) as error:
-    #         logging.error(f"Unable to load list of required, recommended, and optional PET BIDS fields from"
-    #                       f" {pet.helper_functions.pet_metadata_json}, will not be able to determine if {file} contains"
-    #                       f" PET BIDS specific metadata")
-    #         raise error
-    #
-    #     mandatory_fields = pet_field_requirements.get('mandatory', [])
-    #     recommended_fields = pet_field_requirements.get('recommended', [])
-    #     optional_fields = pet_field_requirements.get('optional', [])
-    #     intersection = set(mandatory_fields + recommended_fields + optional_fields) & set(data.keys())
-    #
-    #     # 3 seems like a reasonable amount of fields to determine whether the spreadsheet is a pet recording
-    #     if len(intersection) > 3:
-    #         return 'PETXLS'
+    if file.suffix.lower().startswith('.xls') or file.suffix.lower().startswith('.tsv') or file.suffix.lower().startswith('.csv'):
+        data = helper_functions.single_spreadsheet_reader(file)
+        try:
+            with open(helper_functions.pet_metadata_json, 'r') as pet_field_requirements_json:
+                pet_field_requirements = json.load(pet_field_requirements_json)
+        except (FileNotFoundError, json.JSONDecodeError) as error:
+            logging.error(f"Unable to load list of required, recommended, and optional PET BIDS fields from"
+                        f" {helper_functions.pet_metadata_json}, will not be able to determine if {file} contains"
+                        f" PET BIDS specific metadata")
+            raise error
+
+        mandatory_fields = pet_field_requirements.get('mandatory', [])
+        recommended_fields = pet_field_requirements.get('recommended', [])
+        optional_fields = pet_field_requirements.get('optional', [])
+        intersection = set(mandatory_fields + recommended_fields + optional_fields) & set(data.keys())
+
+        # 3 seems like a reasonable amount of fields to determine whether the spreadsheet is a pet recording
+        if len(intersection) > 3:
+            return 'PETXLS'
 
     if bids.is_dicomfile(file):
         if 'pt' == bids.get_dicomfield('Modality', file).lower():
@@ -90,7 +92,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
     :return:            The attribute value
     """
 
-    for ext in options['meta']:
+    for ext in options.get('meta', []):
         if sourcefile.with_suffix(ext).is_file():
             LOGGER.warning(f"Reading metadata from an '{ext}' sidecar file is not implemented yet...")
             #  data = pet.helper_functions.single_spreadsheet_reader(sourcefile)
@@ -99,6 +101,11 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
 
     if dataformat == 'DICOM':
         return bids.get_dicomfield(attribute, sourcefile)
+
+    if dataformat == 'PETXLS':
+        spreadsheet_data = helper_functions.single_spreadsheet_reader(sourcefile)
+
+        return spreadsheet_data.get(attribute)
 
     # TODO: add ecat support
 

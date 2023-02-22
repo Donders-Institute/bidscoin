@@ -1,7 +1,7 @@
 import unittest
 import logging
 import tempfile
-
+import datetime
 import pytest
 import ruamel
 from pathlib import Path
@@ -36,3 +36,24 @@ def test_template_bidsmap_is_valid(setup_bidsmaps):
     is_valid = bids.check_bidsmap(template_bidsmap)
     for each in is_valid:
         assert each is None
+
+
+@pytest.fixture()
+def setup_petxlsx():
+    petxlsx_path = Path('test_data/subject_metadata_multisheet_example.xlsx').resolve()
+    if petxlsx_path.exists():
+        return petxlsx_path
+    else:
+        petxlsx_path = Path('tests/test_data/subject_metadata_multisheet_example.xlsx').resolve()
+        if petxlsx_path.exists():
+            return petxlsx_path
+        else:
+            raise FileNotFoundError(petxlsx_path)
+def test_is_petxls_file(setup_petxlsx):
+    assert pet2bids.is_sourcefile(setup_petxlsx) == "PETXLS"
+
+def test_petxls_get_attribute(setup_petxlsx):
+    manufacturer = pet2bids.get_attribute('PETXLS', setup_petxlsx, 'Manufacturer')
+    time_zero = pet2bids.get_attribute('PETXLS', setup_petxlsx, 'TimeZero')
+    assert manufacturer == 'Siemens'
+    assert time_zero == datetime.time(12,12,12)
