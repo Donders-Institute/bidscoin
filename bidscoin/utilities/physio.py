@@ -371,7 +371,7 @@ def physio2tsv(physio: dict, tsvfile: Union[str, Path]):
     physiotable.to_csv(tsvfile.with_suffix('.tsv.gz'), header=False, index=False, sep='\t', compression='infer')
 
     # Write a json side-car file
-    version = (Path(__file__).parents[1]/'bidscoin'/'version.txt').read_text().strip()
+    version = (Path(__file__).parents[1]/'version.txt').read_text().strip()
     physio['Meta']['SamplingFrequency'] = physio['Freq']
     physio['Meta']['StartTime']         = starttime
     physio['Meta']['AcquisitionTime']   = dateutil.parser.parse(physio['ScanDate']).strftime('%H:%M:%S')
