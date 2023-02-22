@@ -226,7 +226,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             # Get a sourcefile
             if dataformat == 'DICOM':
                 sourcefile = bids.get_dicomfile(source)
-            if not sourcefile.name and is_sourcefile(sourcefile):
+            if not sourcefile.name or not is_sourcefile(sourcefile):
                 continue
 
             # Get a matching run from the bidsmap
