@@ -262,10 +262,11 @@ class DataSource:
         except ImportError as err:
             LOGGER.error(f'Unable to parse values from {spreadsheetfile}, is pypet2bids an installed plugin?')
 
-        # check if the xlsx is a pet file
-        if plugins.pet2bids.is_sourcefile(spreadsheetfile) == "PETXLS":
-            spreadsheet_key_pairs = helper_functions.single_spreadsheet_reader(spreadsheetfile)
-            attributes.update(spreadsheet_key_pairs)
+        # check if the spreadsheet is a pet file
+        if spreadsheetfile:
+            if plugins.pet2bids.is_sourcefile(spreadsheetfile) == "PETXLS":
+                spreadsheet_key_pairs = helper_functions.single_spreadsheet_reader(spreadsheetfile)
+                attributes.update(spreadsheet_key_pairs)
 
         return attributes
 
