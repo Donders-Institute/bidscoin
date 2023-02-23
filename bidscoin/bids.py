@@ -246,6 +246,26 @@ class DataSource:
             for key, val in attributes.items():
                 if key not in self._cache:
                     self._cache[key] = val
+        # check for Excel/spreadsheet files
+        spreadsheetfile = Path()
+
+        spreadsheet_suffixes = ['xlsx', 'xls', 'csv', 'tsv']
+        for suffix in spreadsheet_suffixes:
+            possible_spreadsheet_file = self.path.with_suffix('').with_suffix(suffix)
+            if possible_spreadsheet_file.is_file():
+                spreadsheetfile = possible_spreadsheet_file
+                break
+
+        try:
+            import plugins.pet2bids
+            import pypet2bids.helper_functions as helper_functions
+        except ImportError as err:
+            LOGGER.error(f'Unable to parse values from {spreadsheetfile}, is pypet2bids an installed plugin?')
+
+        # check if the xlsx is a pet file
+        if plugins.pet2bids.is_sourcefile(spreadsheetfile) == "PETXLS":
+            spreadsheet_key_pairs = helper_functions.single_spreadsheet_reader(spreadsheetfile)
+            attributes.update(spreadsheet_key_pairs)
 
         return attributes
 
