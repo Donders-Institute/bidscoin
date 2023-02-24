@@ -79,7 +79,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
             #
             #  return data.get(attribute)
 
-    if dataformat == 'DICOM':
+    if dataformat == '':
 
         if sourcefile.suffix.lower().startswith(('.xls', '.tsv', '.csv')):
             data = helper_functions.single_spreadsheet_reader(sourcefile)
@@ -102,13 +102,15 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
 
                 spreadsheet_data = helper_functions.single_spreadsheet_reader(sourcefile)
                 return spreadsheet_data.get(attribute)
+            else:
+                return ''
 
-        return bids.get_dicomfield(attribute, sourcefile)
+    elif dataformat == 'DICOM':
 
+            return bids.get_dicomfield(attribute, sourcefile)
 
-    # TODO: add ecat support
-
-    return ''
+    else:
+        return ''
 
 
 def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:

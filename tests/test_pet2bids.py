@@ -50,10 +50,10 @@ def setup_petxlsx():
         else:
             raise FileNotFoundError(petxlsx_path)
 def test_is_petxls_file(setup_petxlsx):
-    assert pet2bids.is_sourcefile(setup_petxlsx) == "PETXLS"
+    assert pet2bids.is_sourcefile(setup_petxlsx) == ""
 
 def test_petxls_get_attribute(setup_petxlsx):
-    manufacturer = pet2bids.get_attribute('PETXLS', setup_petxlsx, 'Manufacturer')
-    time_zero = pet2bids.get_attribute('PETXLS', setup_petxlsx, 'TimeZero')
+    manufacturer = pet2bids.get_attribute('', setup_petxlsx, 'Manufacturer')
+    time_zero = pet2bids.get_attribute('', setup_petxlsx, 'TimeZero')
     assert manufacturer == 'Siemens'
     assert time_zero == datetime.time(12,12,12)
