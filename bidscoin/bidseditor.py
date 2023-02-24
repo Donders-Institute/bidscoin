@@ -509,7 +509,7 @@ class MainWindow(QMainWindow):
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('green'))
                         samples_table.item(idx, 3).setToolTip(f"Green: This '{datatype}' data type is part of BIDS")
 
-                if validrun:
+                if validrun or datatype in self.bidsignore or datatype in self.ignoredatatypes:
                     edit_button = QPushButton('Edit')
                     edit_button.setToolTip('Click to see more details and edit the BIDS output name')
                 else:
@@ -1074,8 +1074,7 @@ class EditWindow(QDialog):
                     return
 
                 # Write all the meta-data to the target_run
-                for key, value in metadata.items():
-                    self.target_run['meta'][key] = value
+                self.target_run['meta'].update(metadata)
 
                 # Refresh the meta-table using the target_run
                 _, _, _, data_meta = self.run2data()

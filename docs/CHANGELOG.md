@@ -4,11 +4,12 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
-## [3.8.0] - 2023-01-03
+## [4.0.0] - 2023-03-01
 
 ### Added
 - Support for BIDS 1.8.0
 - Support for handling of non-alphanumeric characters in sub/ses prefixes
+- A new (optional) pet2bids plugin
 - A `skullstrip` tool (a bids-wrapper around FreeSurfer/synthstrip)
 - A `slicereport` QC tool (a bids-wrapper around FSL/slicesdir)
 - A unit/integration test & CI framework
@@ -17,11 +18,15 @@ All notable changes to this project will be documented in this file. The format 
 - Checks using the bids-validator python module
 - Options to perform study/template bidsmap tests with `bidscoin -b / -t`
 - Option to list and install template bidsmaps
+- Many bugfixes, user interface improvements and tweaks
 
 ### Changed
 - The default behaviour is now not to unzip data in the sourcefolders anymore. Instead, users can use the `--unzip` option in the bidsmapper
+- The spec2nii plugin is no longer added by default but is optional
+- The dcm2niix2bids plugin no longer handles PET data (this is now handeled by the pet2bids plugin)
 - Removed BIDScoin's redundant/confusing `datatypes` option from the bidsmap
 - Removed the obscure `participants` option from bidscoiner
+- Major code refactoring
 
 ## [3.7.4] - 2022-10-21
 
@@ -353,8 +358,8 @@ A first stable release of BIDScoin :-)
 ### To do
 * Add support for non-imaging data
 
-[dev]: https://github.com/Donders-Institute/bidscoin/compare/3.8.0...HEAD
-[3.8.0]: https://github.com/Donders-Institute/bidscoin/compare/3.7.4...3.8.0
+[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.0.0...HEAD
+[4.0.0]: https://github.com/Donders-Institute/bidscoin/compare/3.7.4...4.0.0
 [3.7.4]: https://github.com/Donders-Institute/bidscoin/compare/3.7.3...3.7.4
 [3.7.3]: https://github.com/Donders-Institute/bidscoin/compare/3.7.2...3.7.3
 [3.7.2]: https://github.com/Donders-Institute/bidscoin/compare/3.7.1...3.7.2

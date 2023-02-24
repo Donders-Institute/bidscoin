@@ -243,9 +243,7 @@ class DataSource:
             if not isinstance(attributes, dict):
                 LOGGER.warning(f"Skipping unexpectedly formatted meta-data in: {jsonfile}")
                 return {}
-            for key, val in attributes.items():
-                if key not in self._cache:
-                    self._cache[key] = val
+            self._cache.update(attributes)
 
         return attributes
 
@@ -1415,8 +1413,7 @@ def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
             if item == 'datasource':
                 run_['datasource'] = run['datasource']
                 continue
-            for key, value in run[item].items():
-                run_[item][key] = value
+            run_[item].update(run[item])
 
         run = run_
 
