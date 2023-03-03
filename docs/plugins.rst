@@ -24,10 +24,10 @@ Nibabel2bids: a generic plugin for imaging data
 
 The nibabel2bids plugin wraps around the flexible `nibabel <https://nipy.org/nibabel>`__ tool to convert a wide variety of data formats into NIfTI-files. Currently, the default template bidsmap is tailored to NIfTI source data only (but this can readily be extended), and BIDS sidecar files are not automatically produced by nibabel (but see the note further below).
 
-Phys2bidscoin: a plugin for physiological data
-----------------------------------------------
+Pet2bids: a plugin for PET data
+-------------------------------
 
-The 'phys2bidscoin' plugin is a wrapper around the `phys2bids <https://phys2bids.readthedocs.io>`__ Python library to interact with and convert physiological source data. Phys2bids currently supports the conversion of labchart (ADInstruments) and AcqKnowledge (BIOPAC) source files to compressed tab-separated value (``.tsv.gz``) files and create their json sidecar files, as per BIDS specifications. This plugin has been developed during the `OHBM hackathon 2021 <https://github.com/ohbm/hackathon2021/issues/12>`__ and is **not yet functional**.
+The 'pet2bids' plugin is a wrapper around the `PET2BIDS <https://github.com/openneuropet/PET2BIDS>`__ tool. PET2BIDS accepts PET imaging and blood data as inputs (e.g. DICOM, ECAT, spreadsheets) and delivers BIDS formatted outputs. An installation of dcm2niix (https://github.com/rordenlab/dcm2niix) is required to convert DICOM data.
 
 .. note::
    Out of the box, BIDScoin plugins typically produce sidecar files that contain metadata from the source headers. However, when such meta-data is missing (e.g. as for nibabel2bids), or when it needs to be appended or overruled, then users can add sidecar files to the source data (as explained `here <bidsmap.html>`__) or add that meta-data using the bidseditor (the latter takes precedence).
@@ -43,7 +43,7 @@ However, if you have a long list of extended attributes it can be cumbersome to 
 
 If a field is present in the metadata table and also in the metadata transferred by copymetadata, then the metadata table should take precedence (this should be implemented as such in the plugin), so that the user gets what he sees in the bidseditor (WYSIWYG).
 
-As can be seen in the API code snippet below (but aso see the default plugins for reference implementation), a BIDScoin plugin is a Python module with the following programming interface (functions):
+As can be seen in the API code snippet below (but also see the default plugins for reference implementation), a BIDScoin plugin is a Python module with the following programming interface (functions):
 
 .. code-block:: python3
 

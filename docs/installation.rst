@@ -169,7 +169,7 @@ The current image does not include this non-free software needed for some bidsap
 Building the image
 ^^^^^^^^^^^^^^^^^^
 
-Download the Singularity `definition file <https://github.com/Donders-Institute/bidscoin/blob/master/Dockerfile>`__ and execute the following command to build the BIDScoin image:
+Download the `Dockerfile <https://github.com/Donders-Institute/bidscoin/blob/master/Dockerfile>`__ and execute the following command to build the BIDScoin image:
 
 .. code-block:: console
 

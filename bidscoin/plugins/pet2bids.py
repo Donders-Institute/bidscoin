@@ -1,9 +1,11 @@
 """
-This module contains the interface with pet2bids to add or correct the PET metadata produced by dcm2niix.
+The 'pet2bids' plugin is a wrapper around the `PET2BIDS <https://github.com/openneuropet/PET2BIDS>`__ tool. PET2BIDS accepts
+PET imaging and blood data as inputs (e.g. DICOM, ECAT, spreadsheets) and delivers BIDS formatted outputs. An installation
+of dcm2niix (https://github.com/rordenlab/dcm2niix) is required to convert DICOM data.
 
 
 See also:
-- https://github.com/openneuropet/PET2BIDS
+- https://pet2bids.readthedocs.io
 """
 
 import logging
