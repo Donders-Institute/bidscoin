@@ -6,21 +6,28 @@ OSVersion: stable
     # Update apt
     apt-get -y update
 
+    # Install the latest stable dcm2niix release (= typically outdated on the base image)
+    # apt-get -y install dcm2niix
+
     # Install the latest dcm2niix from sources
     apt-get -y install git build-essential cmake
     git clone https://github.com/rordenlab/dcm2niix.git
     cd dcm2niix
     mkdir build && cd build
-    cmake -DZLIB_IMPLEMENTATION=Cloudflare -DUSE_JPEGLS=ON -DUSE_OPENJPEG=ON ..
+    cmake --target clean -DZLIB_IMPLEMENTATION=Cloudflare -DUSE_JPEGLS=ON -DUSE_OPENJPEG=ON ..
     make install
+    cd ..; rm -rf build
 
     # Install curl (sometimes needed by dcm2niix)
-    apt-get -y install curl
+    # apt-get -y install curl
 
     # Install pigz (to speed up dcm2niix)
     apt-get -y install pigz
 
     # Install the latest stable BIDScoin release from Python repository
     # NOTE: PyQt5 is installed as Debian package to solve dependencies issues occurring when installed with pip.
-    apt-get -y install python3-pip python3-pyqt5
+    apt-get -y install python3-pip python3-pyqt5 python3-pyqt5.qtx11extras
     pip3 install bidscoin[all]
+
+    # Uncomment the line blow if you get errors like: ImportError: libQt5Core.so.5: cannot open shared object file: No such file or directory
+    # strip --remove-section=.note.ABI-tag /usr/lib/x86_64-linux-gnu/libQt5Core.so.5
