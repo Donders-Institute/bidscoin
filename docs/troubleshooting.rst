@@ -11,7 +11,7 @@ This is an `installation <installation.html#dcm2niix-installation>`__ problem an
 
 Could not load the Qt platform plugin "xcb"
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This error message may occur on certain Linux platforms when opening the bidseditor. This is an `installation <installation.html#bidscoin-installation>`__ issue that may be solved by downgrading your PyQt5 library, e.g. by running ``pip install --upgrade pyqt5==5.14`` in your terminal environment
+This error message may occur on certain Linux platforms when opening the bidseditor. This is an `installation <installation.html#bidscoin-installation>`__ issue that may be solved by downgrading your PyQt5 library, e.g. by running ``pip install --upgrade pyqt5==5.14`` in your terminal environment. Another solution might be to use your Linux package manager to install PyQt5, e.g. like this: `apt-get install python3-pyqt5 python3-pyqt5.qtx11extras`
 
 My singularity container fails
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

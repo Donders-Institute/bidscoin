@@ -72,7 +72,7 @@ You can run the 'bidscoin' utility to test the installation of your BIDScoin ins
    $ bidscoin -t                        # Test with the default template bidsmap
    $ bidscoin -t my_template_bidsmap    # Test with your custom template bidsmap
 
-Using a singularity container
+Using a Singularity container
 -----------------------------
 
 An alternative for installing Python, BIDScoin and it's dependencies yourself is to execute BIDScoin commands using a `Singularity <https://singularity.hpcng.org/>`__ image. Read `Singularity documentation <https://singularity.hpcng.org/user-docs/master/>`__ for installation and usage instructions.
@@ -91,7 +91,7 @@ Dependencies:
 Building the image
 ^^^^^^^^^^^^^^^^^^
 
-Execute the following command to build the BIDScoin image.
+Download the Singularity `definition file <https://github.com/Donders-Institute/bidscoin/blob/master/singularity.def>`__ and execute the following command to build the BIDScoin image:
 
 .. code-block:: console
 
@@ -118,7 +118,7 @@ For example:
 
 .. code-block:: console
 
-   $ singularity exec --bind /my/data:/mnt bidscoin.sif bidscoiner /my/data/source /my/data/bids
+   $ singularity exec --bind /my/data bidscoin.sif bidscoiner /my/data/raw /my/data/bids
 
 .. tip::
 
@@ -149,3 +149,46 @@ To speed up building the Singularity image, you can change the ``apt`` servers t
 .. code-block:: console
 
    echo 'deb http://ftp.at.debian.org/debian stable main' > /etc/apt/sources.list
+
+Using a Docker container
+------------------------
+
+If the Singularity container is not working for you, it is also possible to use a `Docker <https://docs.docker.com>`__ image. Read the `Docker documentation <https://docs.docker.com>`__ for installation and usage instructions.
+
+The current image includes:
+
+* Debian Linux (see https://hub.docker.com/r/delameter/pyqt5)
+* the latest version of `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__
+* the latest stable release of BIDScoin and its plugins
+
+The current image does not include this non-free software needed for some bidsapps:
+
+* FSL (needed for `deface` and `slicereport`)
+* Freesurfer/synthstrip (needed for skullstrip)
+
+Building the image
+^^^^^^^^^^^^^^^^^^
+
+Download the Singularity `definition file <https://github.com/Donders-Institute/bidscoin/blob/master/Dockerfile>`__ and execute the following command to build the BIDScoin image:
+
+.. code-block:: console
+
+   $ sudo docker build -t bidscoin .
+
+Run BIDScoin tools from the image
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Similar to Singularity, executing BIDScoin commands via Docker is much less simple than running them directly on your host computer. For instance, it is needed to bind-mount your data folder(s) in the container and, for the bidseditor, to bind-mount an x-server socket to display the GUI in your host computer. The syntax to run dockerized bidscoin tools is:
+
+.. code-block:: console
+
+   $ sudo docker run --rm -v <bind_mount> bidscoin <bidscoin_tool> <bidscoin_tool_args>
+
+So for instance, instead of running `bidsmapper /my/data/raw /my/data/bids` and then `bidsmapper /my/data/raw /my/data/bids` you execute:
+
+.. code-block:: console
+
+   $ xhost +
+   $ sudo docker run --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v /my/data:/mnt bidscoin bidsmapper /my/data/raw /my/data/bids
+   $ xhost -
+   $ sudo docker run --rm -v /my/data:/my/data bidscoin bidscoiner /my/data/raw /my/data/bids
