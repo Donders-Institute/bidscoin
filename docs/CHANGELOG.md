@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
-## [4.0.0] - 2023-03-01
+## [4.0.0] - 2023-03-06
 
 ### Added
 - Support for BIDS 1.8.0
@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file. The format 
 - A `skullstrip` tool (a bids-wrapper around FreeSurfer/synthstrip)
 - A `slicereport` QC tool (a bids-wrapper around FSL/slicesdir)
 - A unit/integration test & CI framework
+- A new Dockerfile to run BIDScoin in a container
 - A BIDSCOIN_DEBUG environment variable to run bidscoin in a more verbose debug mode
 - VERBOSE and SUCCESS logging levels
 - Checks using the bids-validator python module

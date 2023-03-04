@@ -32,8 +32,12 @@ from importlib.util import spec_from_file_location, module_from_spec
 from importlib.metadata import entry_points
 from typing import Tuple, Union, List
 from ruamel.yaml import YAML
+from .due import due, Doi
 
 yaml = YAML()
+
+# Add the BIDScoin citation
+due.cite(Doi('10.3389/fninf.2021.770608'), description='A toolkit to convert source data to the Brain Imaging Data Structure (BIDS)', path='bidscoin')
 
 # Define the default paths
 tutorialurl      = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
