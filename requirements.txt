@@ -12,4 +12,3 @@ nibabel
 bids_validator
 pydeface
 pytest
-duecredit
