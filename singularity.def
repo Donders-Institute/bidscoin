@@ -6,7 +6,7 @@ OSVersion: stable
     # Update apt
     apt-get -y update
 
-    # Install the latest stable dcm2niix release (= typically outdated on the base image)
+    # Install the latest dcm2niix release from the base repository (= typically outdated)
     # apt-get -y install dcm2niix
 
     # Install the latest dcm2niix from sources
@@ -26,7 +26,7 @@ OSVersion: stable
 
     # Install the latest stable BIDScoin release from Python repository
     # NOTE: PyQt5 is installed as Debian package to solve dependencies issues occurring when installed with pip.
-    apt-get -y install python3-pip python3-pyqt5 python3-pyqt5.qtx11extras
+    apt-get -y install python3-pip python3-pyqt5 python3-pyqt5.qtx11extras && apt-get clean
     pip3 install bidscoin[all]
 
     # Uncomment the line blow if you get errors like: ImportError: libQt5Core.so.5: cannot open shared object file: No such file or directory
