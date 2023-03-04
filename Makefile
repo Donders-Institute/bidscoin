@@ -5,7 +5,6 @@ install: ## install python dependencies and bidscoin package
 	@pip install --upgrade pip
 	@pip install -e .[all]
 	@python setup.py install
-	@pip install pytest
 
 test: ## run all the tests in the tests folder
 	@pytest tests/
