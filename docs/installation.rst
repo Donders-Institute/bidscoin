@@ -157,14 +157,14 @@ If the Singularity container is not working for you, it is also possible to use 
 
 The current image includes:
 
-* Debian Linux (see https://hub.docker.com/r/delameter/pyqt5)
+* Debian Linux (see https://hub.docker.com/_/python)
 * the latest version of `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__
 * the latest stable release of BIDScoin and its plugins
 
-The current image does not include this non-free software needed for some bidsapps:
+The current image does not include this (non-free) software needed for some bidsapps:
 
-* FSL (needed for `deface` and `slicereport`)
-* Freesurfer/synthstrip (needed for skullstrip)
+* FSL (needed for ``deface`` and ``slicereport``)
+* Freesurfer/synthstrip (needed for ``skullstrip``)
 
 Building the image
 ^^^^^^^^^^^^^^^^^^

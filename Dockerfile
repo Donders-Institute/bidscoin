@@ -1,4 +1,4 @@
-FROM python:3.10
+FROM python:3.10-slim
 # FROM delameter/pyqt5  # Not official and older, but it results in a smaller image (and already has the apt-get pyqt5 packages)
 
 # Install the latest dcm2niix release (= typically outdated on the base image)
