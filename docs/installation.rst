@@ -85,6 +85,11 @@ The current image includes:
 * the latest version of `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__,
 * the latest stable release of BIDScoin and its spec2nii2bids and phys2bidscoin plugins.
 
+The current image does not include this (non-free) software needed for some bidsapps:
+
+* FSL (needed for ``deface`` and ``slicereport``)
+* Freesurfer/synthstrip (needed for ``skullstrip``)
+
 Dependencies:
 
 * Debian (or Debian-like, e.g., Ubuntu) host system,
