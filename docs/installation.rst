@@ -65,14 +65,14 @@ Unfortunately the pip installer can only install Python software and the default
 Testing BIDScoin
 ----------------
 
-You can run the 'bidscoin' utility to test the installation of your BIDScoin installation and settings (see the `troubleshooting guide <troubleshooting.html#installation>`__ in case you get error messages):
+You can run the 'bidscoin' utility to test the installation of your BIDScoin installation and settings:
 
 .. code-block:: console
 
    $ bidscoin -t                        # Test with the default template bidsmap
    $ bidscoin -t my_template_bidsmap    # Test with your custom template bidsmap
 
-See also the `Troubleshooting section <troubleshooting.html#installation>`__ for more information on installation issues.
+See also the `Troubleshooting guide <troubleshooting.html#installation>`__ for more information on potential installation issues.
 
 Using a Singularity container
 -----------------------------
