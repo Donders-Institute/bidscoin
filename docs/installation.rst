@@ -186,7 +186,7 @@ Similar to Singularity, executing BIDScoin commands via Docker is much less simp
 
    $ sudo docker run --rm -v <bind_mount> bidscoin <bidscoin_tool> <bidscoin_tool_args>
 
-So for instance, instead of running `bidsmapper /my/data/raw /my/data/bids` and then `bidsmapper /my/data/raw /my/data/bids` you execute:
+So for instance, instead of running ``bidsmapper /my/data/raw /my/data/bids`` and then ``bidsmapper /my/data/raw /my/data/bids`` you execute:
 
 .. code-block:: console
 
