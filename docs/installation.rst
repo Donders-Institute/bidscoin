@@ -72,6 +72,8 @@ You can run the 'bidscoin' utility to test the installation of your BIDScoin ins
    $ bidscoin -t                        # Test with the default template bidsmap
    $ bidscoin -t my_template_bidsmap    # Test with your custom template bidsmap
 
+See also the `Troubleshooting section <troubleshooting.html#installation>`__ for more information on installation issues.
+
 Using a Singularity container
 -----------------------------
 
