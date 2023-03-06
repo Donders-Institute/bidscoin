@@ -34,7 +34,7 @@ from typing import Tuple, Union, List
 from ruamel.yaml import YAML
 try:
     from .due import due, Doi
-except ImportError
+except ImportError:
     from due import due, Doi
 
 yaml = YAML()
