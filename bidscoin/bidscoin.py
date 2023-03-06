@@ -32,7 +32,10 @@ from importlib.util import spec_from_file_location, module_from_spec
 from importlib.metadata import entry_points
 from typing import Tuple, Union, List
 from ruamel.yaml import YAML
-from .due import due, Doi
+try:
+    from .due import due, Doi
+except ImportError
+    from due import due, Doi
 
 yaml = YAML()
 
