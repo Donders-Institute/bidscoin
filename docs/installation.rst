@@ -74,10 +74,10 @@ You can run the 'bidscoin' utility to test the installation of your BIDScoin ins
 
 See also the `Troubleshooting guide <troubleshooting.html#installation>`__ for more information on potential installation issues.
 
-Using a Singularity container
------------------------------
+Using an Apptainer (Singularity) container
+------------------------------------------
 
-An alternative for installing Python, BIDScoin and it's dependencies yourself is to execute BIDScoin commands using a `Singularity <https://singularity.hpcng.org/>`__ image. Read `Singularity documentation <https://singularity.hpcng.org/user-docs/master/>`__ for installation and usage instructions.
+An alternative for installing Python, BIDScoin and it's dependencies yourself is to execute BIDScoin commands using an `Apptainer <https://apptainer.org>`__ image. Read the `official documentation <https://apptainer.org/docs/user/latest>`__ for installation and usage instructions. NB: "Singularity" has been rebranded as "Apptainer", so Singularity users should replace ``apptainer`` for ``singularity`` in the commands given below.
 
 The current image includes:
 
@@ -98,11 +98,17 @@ Dependencies:
 Building the image
 ^^^^^^^^^^^^^^^^^^
 
-Download the Singularity `definition file <https://github.com/Donders-Institute/bidscoin/blob/master/singularity.def>`__ and execute the following command to build the BIDScoin image:
+Download the Apptainer `definition file <https://github.com/Donders-Institute/bidscoin/blob/master/apptainer.def>`__ and execute the following command to build the BIDScoin image:
 
 .. code-block:: console
 
-   $ sudo singularity build bidscoin.sif singularity.def
+   $ sudo apptainer build bidscoin.sif apptainer.def
+
+Alternatively, you can first build a Docker image (see instructions in the section below), save it to e.g. `bidscoin.tar` and then convert it into a Apptainer image using:
+
+.. code-block:: console
+
+   $ sudo apptainer build bidscoin.sif bidscoin.tar
 
 Run BIDScoin tools from the image
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -111,47 +117,30 @@ Execute BIDScoin tool using the following command:
 
 .. code-block:: console
 
-   $ singularity exec bidscoin.sif <bidscoin_tool> <bidscoin_tool_args>
+   $ apptainer exec bidscoin.sif <bidscoin_tool> <bidscoin_tool_args>
 
 Where ``<bidscoin_tool>`` is a BIDScoin tool (e.g., ``bidsmapper``, ``bidscoiner``, ``dicomsort``) and ``<bidscoin_tool_args>`` are the tool's arguments.
 
-If your data doesn't reside in home folder, add ``--bind`` Singularity argument which maps a folder from the host system to one inside the Singularity container.
+If your data doesn't reside in home folder, add a ``--bind`` Apptainer argument which maps a folder from the host system to one inside the Apptainer container.
 
 .. code-block:: console
 
-   $ singularity exec bidscoin.sif --bind <host_dir>:<container_dir> <bidscoin_tool> <bidscoin_tool_args>
+   $ apptainer exec bidscoin.sif --bind <host_dir>:<container_dir> <bidscoin_tool> <bidscoin_tool_args>
 
 For example:
 
 .. code-block:: console
 
-   $ singularity exec --bind /my/data bidscoin.sif bidscoiner /my/data/raw /my/data/bids
+   $ apptainer exec --bind /my/data bidscoin.sif bidscoiner /my/data/raw /my/data/bids
 
 .. tip::
 
    Since there is no fixed entry point to the container, you can also use it to execute dcm2niix.
 
-Latest develop release
-^^^^^^^^^^^^^^^^^^^^^^
-
-To install the latest develop release of BIDScoin, substitute
-
-.. code-block:: console
-
-   pip3 install bidscoin
-
-with
-
-.. code-block:: console
-
-   pip3 install git+https://github.com/Donders-Institute/bidscoin
-
-in the definition ``singularity.def`` file.
-
 Speed up building the image
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To speed up building the Singularity image, you can change the ``apt`` servers to download the packages from a location closer to you. For example, add the following line as the first command in the ``%post`` section of  ``singularity.def`` file to download the packages from Austria (`at`).
+To speed up building the Apptainer image, you can change the ``apt`` servers to download the packages from a location closer to you. For example, add the following line as the first command in the ``%post`` section of  ``apptainer.def`` file to download the packages from Austria (`at`).
 
 .. code-block:: console
 
@@ -160,7 +149,7 @@ To speed up building the Singularity image, you can change the ``apt`` servers t
 Using a Docker container
 ------------------------
 
-If the Singularity container is not working for you, it is also possible to use a `Docker <https://docs.docker.com>`__ image. Read the `Docker documentation <https://docs.docker.com>`__ for installation and usage instructions.
+If you prefer Docker or if the Apptainer container is not working for you, it is also possible to use a `Docker <https://docs.docker.com>`__ image. Read the `Docker documentation <https://docs.docker.com>`__ for installation and usage instructions.
 
 The current image includes:
 
@@ -185,7 +174,7 @@ Download the `Dockerfile <https://github.com/Donders-Institute/bidscoin/blob/mas
 Run BIDScoin tools from the image
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Similar to Singularity, executing BIDScoin commands via Docker is much less simple than running them directly on your host computer. For instance, it is needed to bind-mount your data folder(s) in the container and, for the bidseditor, to bind-mount an x-server socket to display the GUI in your host computer. The syntax to run dockerized bidscoin tools is:
+Similar to Apptainer, executing BIDScoin commands via Docker is much less simple than running them directly on your host computer. For instance, it is needed to bind-mount your data folder(s) in the container and, for the bidseditor, to bind-mount an x-server socket to display the GUI in your host computer. The syntax to run dockerized bidscoin tools is:
 
 .. code-block:: console
 
