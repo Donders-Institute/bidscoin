@@ -131,20 +131,10 @@ For example:
 
 .. code-block:: console
 
-   $ apptainer exec --bind /my/data bidscoin.sif bidscoiner /my/data/raw /my/data/bids
+   $ xhost +
+   $ apptainer exec --bind /my/data bidscoin.sif bidsmapper /my/data/raw /my/data/bids
 
-.. tip::
-
-   Since there is no fixed entry point to the container, you can also use it to execute dcm2niix.
-
-Speed up building the image
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To speed up building the Apptainer image, you can change the ``apt`` servers to download the packages from a location closer to you. For example, add the following line as the first command in the ``%post`` section of  ``apptainer.def`` file to download the packages from Austria (`at`).
-
-.. code-block:: console
-
-   echo 'deb http://ftp.at.debian.org/debian stable main' > /etc/apt/sources.list
+The `xhost +` command normally needs to be run once before launching GUI application, i.e. is needed for running the bidseditor.
 
 Using a Docker container
 ------------------------
@@ -174,7 +164,7 @@ Download the `Dockerfile <https://github.com/Donders-Institute/bidscoin/blob/mas
 Run BIDScoin tools from the image
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Similar to Apptainer, executing BIDScoin commands via Docker is much less simple than running them directly on your host computer. For instance, it is needed to bind-mount your data folder(s) in the container and, for the bidseditor, to bind-mount an x-server socket to display the GUI in your host computer. The syntax to run dockerized bidscoin tools is:
+Similar to Apptainer, executing BIDScoin commands via Docker is less simple than running them directly on your host computer. For instance, it is needed to bind-mount your data folder(s) in the container and, for the bidseditor, to bind-mount an x-server socket to display the GUI in your host computer. The syntax to run dockerized bidscoin tools is:
 
 .. code-block:: console
 

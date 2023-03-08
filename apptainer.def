@@ -23,7 +23,11 @@ Stage: final
 
     * Debian stable,
     * the latest version of dcm2niix (https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage)
-    * the latest stable release of BIDScoin and its plugins. For more information run (or similar):
+    * the latest stable release of BIDScoin and its plugins. The general form to run BIDScoin commands is:
+
+        apptainer exec bidscoin.sif <bidscoin_tool> <bidscoin_tool_args>
+
+    For more information run:
 
         apptainer run bidscoin.sif
 
@@ -31,6 +35,9 @@ Stage: final
 
     * FSL (needed for `deface` and `slicereport`)
     * Freesurfer/synthstrip (needed for `skullstrip`)
+
+    NB: 1) To run GUI applications (such as the bidseditor) you probably need to run `xhost +` first
+        2) In the commands above, Singularity users should replace `apptainer` with `singularity`
 
 %files from builder
     # Install dcm2niix
@@ -45,7 +52,8 @@ Stage: final
 
     # Install the latest stable BIDScoin release from Python repository
     # NOTE: PyQt5 is installed as Debian package to solve dependencies issues occurring when installed with pip
-    apt-get -y --no-install-recommends install pigz curl python3-pyqt5 python3-pyqt5.qtx11extras && apt-get clean
+    apt-get -y --no-install-recommends install python3-pyqt5 python3-pyqt5.qtx11extras && apt-get clean
+    pip install --upgrade pip
     pip install bidscoin[all]
 
     # Uncomment the line below if you get errors like: ImportError: libQt5Core.so.5: cannot open shared object file: No such file or directory
