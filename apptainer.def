@@ -1,49 +1,54 @@
-Bootstrap: debootstrap
-MirrorURL: http://deb.debian.org/debian
-OSVersion: stable
-
-%help
-This BIDScoin Apptainer image includes:
-
-* Debian stable,
-* the latest version of dcm2niix (https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage)
-* the latest stable release of BIDScoin and its plugins. For more information run:
-
-   singularity run bidscoin.sif
-
-The current image does not include this (non-free) software needed for some bidsapps:
-
-* FSL (needed for `deface` and `slicereport`)
-* Freesurfer/synthstrip (needed for `skullstrip`)
+Bootstrap: docker
+From: python:3.10-slim
+Stage: builder
 
 %post
-    # Update apt
-    apt-get update
-
     # Install the latest dcm2niix release from the base repository (= typically outdated)
-    # apt-get -y install dcm2niix
+    # apt-get update && apt-get -y install dcm2niix
 
     # Install the latest dcm2niix from sources
-    apt-get -y install git build-essential cmake
+    apt-get update && apt-get -y install git build-essential cmake
     git clone https://github.com/rordenlab/dcm2niix.git
-    cd dcm2niix
-    mkdir build && cd build
-    cmake --target clean -DZLIB_IMPLEMENTATION=Cloudflare -DUSE_JPEGLS=ON -DUSE_OPENJPEG=ON ..
+    cd dcm2niix; mkdir build && cd build
+    cmake -DZLIB_IMPLEMENTATION=Cloudflare -DUSE_JPEGLS=ON -DUSE_OPENJPEG=ON ..
     make install
-    cd ..; rm -rf build
 
-    # Install curl (sometimes needed by dcm2niix)
-    # apt-get -y install curl
 
-    # Install pigz (to speed up dcm2niix)
-    apt-get -y install pigz
+Bootstrap: docker
+From: python:3.10-slim
+Stage: final
+
+%help
+    This BIDScoin Apptainer image includes:
+
+    * Debian stable,
+    * the latest version of dcm2niix (https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage)
+    * the latest stable release of BIDScoin and its plugins. For more information run (or similar):
+
+        apptainer run bidscoin.sif
+
+    The current image does not include this (non-free) software needed for some bidsapps:
+
+    * FSL (needed for `deface` and `slicereport`)
+    * Freesurfer/synthstrip (needed for `skullstrip`)
+
+%files from builder
+    # Install dcm2niix
+    /usr/local/bin/dcm2niix /usr/local/bin/dcm2niix
+
+%environment
+    export PIP_NO_CACHE_DIR=off
+
+%post
+    # Install curl (sometimes needed by dcm2niix) and pigz (to speed up dcm2niix)
+    apt-get update && apt-get -y --no-install-recommends install pigz curl
 
     # Install the latest stable BIDScoin release from Python repository
-    # NOTE: PyQt5 is installed as Debian package to solve dependencies issues occurring when installed with pip.
-    apt-get -y --no-install-recommends install python3-pip python3-pyqt5 python3-pyqt5.qtx11extras && apt-get clean
-    pip3 install bidscoin[all]
+    # NOTE: PyQt5 is installed as Debian package to solve dependencies issues occurring when installed with pip
+    apt-get -y --no-install-recommends install pigz curl python3-pyqt5 python3-pyqt5.qtx11extras && apt-get clean
+    pip install bidscoin[all]
 
-    # Uncomment the line blow if you get errors like: ImportError: libQt5Core.so.5: cannot open shared object file: No such file or directory
+    # Uncomment the line below if you get errors like: ImportError: libQt5Core.so.5: cannot open shared object file: No such file or directory
     # strip --remove-section=.note.ABI-tag /usr/lib/x86_64-linux-gnu/libQt5Core.so.5
 
     # Finally, create the necessary links and cache to the most recent shared libraries (= best practise)
