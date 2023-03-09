@@ -77,28 +77,23 @@ See also the `Troubleshooting guide <troubleshooting.html#installation>`__ for m
 Using an Apptainer (Singularity) container
 ------------------------------------------
 
-An alternative for installing Python, BIDScoin and it's dependencies yourself is to execute BIDScoin commands using an `Apptainer <https://apptainer.org>`__ image. Read the `official documentation <https://apptainer.org/docs/user/latest>`__ for installation and usage instructions. NB: "Singularity" has been rebranded as "Apptainer", so Singularity users should replace ``apptainer`` for ``singularity`` in the commands given below.
+An alternative for installing Python, BIDScoin and it's dependencies yourself is to execute BIDScoin commands using an `Apptainer <https://apptainer.org>`__ container. Executing BIDScoin commands via a container is less simple than running them directly on your host computer, read the `official documentation <https://apptainer.org/docs/user/latest>`__ for installation and usage instructions. NB: "Singularity" has been rebranded as "Apptainer", so Singularity users should replace ``apptainer`` for ``singularity`` in the commands given below.
 
-The current image includes:
+The Apptainer current image includes:
 
-* Debian stable,
-* the latest version of `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__,
-* the latest stable release of BIDScoin and its spec2nii2bids and phys2bidscoin plugins.
+* Debian Linux (see https://hub.docker.com/_/python)
+* the latest version of `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__
+* the latest stable release of BIDScoin and its plugins
 
 The current image does not include this (non-free) software needed for some bidsapps:
 
 * FSL (needed for ``deface`` and ``slicereport``)
 * Freesurfer/synthstrip (needed for ``skullstrip``)
 
-Dependencies:
+Building the container image
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Debian (or Debian-like, e.g., Ubuntu) host system,
-* `debootstrap <https://packages.debian.org/bullseye/debootstrap>`__ package.
-
-Building the image
-^^^^^^^^^^^^^^^^^^
-
-Download the Apptainer `definition file <https://github.com/Donders-Institute/bidscoin/blob/master/apptainer.def>`__ and execute the following command to build the BIDScoin image:
+Download the Apptainer `definition file <https://github.com/Donders-Institute/bidscoin/blob/master/apptainer.def>`__ and execute the following command to build a BIDScoin container image:
 
 .. code-block:: console
 
@@ -110,67 +105,67 @@ Alternatively, you can first build a Docker image (see instructions in the secti
 
    $ sudo apptainer build bidscoin.sif bidscoin.tar
 
-Run BIDScoin tools from the image
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Run BIDScoin tools in the container
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Execute BIDScoin tool using the following command:
+You can use the following command syntax to execute BIDScoin tools in the container:
 
 .. code-block:: console
 
    $ apptainer exec bidscoin.sif <bidscoin_tool> <bidscoin_tool_args>
 
-Where ``<bidscoin_tool>`` is a BIDScoin tool (e.g., ``bidsmapper``, ``bidscoiner``, ``dicomsort``) and ``<bidscoin_tool_args>`` are the tool's arguments.
-
-If your data doesn't reside in home folder, add a ``--bind`` Apptainer argument which maps a folder from the host system to one inside the Apptainer container.
+Where ``<bidscoin_tool>`` is a BIDScoin tool (e.g., ``bidsmapper``, ``bidscoiner``, ``dicomsort``) and ``<bidscoin_tool_args>`` are the tool's arguments. If your data doesn't reside in your home folder, then you need to add a ``--bind`` Apptainer argument which maps a folder from the host system to a folder inside the Apptainer container:
 
 .. code-block:: console
 
    $ apptainer exec bidscoin.sif --bind <host_dir>:<container_dir> <bidscoin_tool> <bidscoin_tool_args>
 
-For example:
+So for instance, if you have source data in ``myhome/data/raw``, instead of running ``bidsmapper data/raw data/bids`` and then ``bidsmapper data/raw data/bids`` from your home directory, you now execute:
 
 .. code-block:: console
 
    $ xhost +
-   $ apptainer exec --bind /my/data bidscoin.sif bidsmapper /my/data/raw /my/data/bids
+   $ apptainer exec bidscoin.sif bidsmapper data/raw data/bids
+   $ xhost -
+   $ apptainer exec bidscoin.sif bidscoiner data/raw data/bids
 
-The `xhost +` command normally needs to be run once before launching GUI application, i.e. is needed for running the bidseditor.
+The `xhost +` command allows Apptainer to open a graphical display on your computer and normally needs to be run once before launching a GUI application, i.e. is needed for running the bidseditor. If your data resides elsewhere, say in ``/myproject/data/raw`` then you should add ``--bind /myproject`` as an additional input argument (see the documentation for usage and setting environment variables to automatically bind your root paths for all containers).
 
 Using a Docker container
 ------------------------
 
-If you prefer Docker or if the Apptainer container is not working for you, it is also possible to use a `Docker <https://docs.docker.com>`__ image. Read the `Docker documentation <https://docs.docker.com>`__ for installation and usage instructions.
+If the Apptainer container is not working for you, it is also possible to use a `Docker <https://docs.docker.com>`__ container. The Docker versus Apptainer image and container usage are very similar, and both have their pros and cons. A fundamental argument for using Apptainer is that it doesn't require root permission (admin rights), whereas a fundamental argument for using Docker is that it is not limited to Linux hosts.
 
-The current image includes:
+The current Docker image includes the same as the Apptainer image:
 
 * Debian Linux (see https://hub.docker.com/_/python)
 * the latest version of `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__
 * the latest stable release of BIDScoin and its plugins
 
-The current image does not include this (non-free) software needed for some bidsapps:
+Likewise, the current image does not include this (non-free) software needed for some bidsapps:
 
 * FSL (needed for ``deface`` and ``slicereport``)
 * Freesurfer/synthstrip (needed for ``skullstrip``)
 
-Building the image
-^^^^^^^^^^^^^^^^^^
+Building the container image
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Download the `Dockerfile <https://github.com/Donders-Institute/bidscoin/blob/master/Dockerfile>`__ and execute the following command to build the BIDScoin image:
+Download the `Dockerfile <https://github.com/Donders-Institute/bidscoin/blob/master/Dockerfile>`__ and execute the following command to build a BIDScoin container image:
 
 .. code-block:: console
 
    $ sudo docker build -t bidscoin .
 
-Run BIDScoin tools from the image
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Run BIDScoin tools in the container
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Similar to Apptainer, executing BIDScoin commands via Docker is less simple than running them directly on your host computer. For instance, it is needed to bind-mount your data folder(s) in the container and, for the bidseditor, to bind-mount an x-server socket to display the GUI in your host computer. The syntax to run dockerized bidscoin tools is:
+Executing BIDScoin commands via Docker is less simple than via Apptainer (and surely less simple than running them directly on your host computer). For instance, it is typically needed to bind-mount your data folder(s) in the container and, for the bidseditor, to bind-mount an x-server socket to display the GUI in your host computer. The syntax to run dockerized bidscoin tools is:
 
 .. code-block:: console
 
    $ docker run --rm -v <bind_mount> bidscoin <bidscoin_tool> <bidscoin_tool_args>
 
-So for instance, instead of running ``bidsmapper /my/data/raw /my/data/bids`` and then ``bidsmapper /my/data/raw /my/data/bids``, you now execute:
+If you have source data in ``/my/data/raw``, instead of running ``bidsmapper /my/data/raw /my/data/bids`` and then ``bidsmapper /my/data/raw /my/data/bids``, you now execute for instance:
 
 .. code-block:: console
 
@@ -178,3 +173,5 @@ So for instance, instead of running ``bidsmapper /my/data/raw /my/data/bids`` an
    $ sudo docker run --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v /my/data:/mnt bidscoin bidsmapper /my/data/raw /my/data/bids
    $ xhost -
    $ sudo docker run --rm -v /my/data:/my/data bidscoin bidscoiner /my/data/raw /my/data/bids
+
+As for Apptainer, the `xhost +` is normally needed to be launching a GUI application, but a few more arguments are now required, i.e. ``-e`` for setting the display number and ``-v`` for binding the data volume and for binding the x-server socket (see the documentation for usage and configuring bind propagation).

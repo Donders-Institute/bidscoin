@@ -13,9 +13,9 @@ Could not load the Qt platform plugin "xcb"
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 This error message may occur on certain Linux platforms when opening the bidseditor. This is an `installation <installation.html#bidscoin-installation>`__ issue that may be solved by downgrading your PyQt5 library, e.g. by running ``pip install --upgrade pyqt5==5.14`` in your terminal environment. Another solution might be to use your Linux package manager to install PyQt5, e.g. like this: `apt-get install python3-pyqt5 python3-pyqt5.qtx11extras`
 
-My singularity container fails
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-When running singularity on on systems with an older Linux kernel (e.g. older than 3.15) you may get errors such as ``ImportError: libQt5Core.so.5: cannot open shared object file: No such file or directory``. A working fix may be to add the following line at the end of ``%post`` section of  the `singularity.def <installation.html#using-a-singularity-container>`__ file.
+My Apptainer/Singularity container fails
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+When running apptainer/singularity on on systems with an older Linux kernel (e.g. older than 3.15) you may get errors such as ``ImportError: libQt5Core.so.5: cannot open shared object file: No such file or directory``. A working fix may be to add the following line at the end of ``%post`` section of  the `singularity.def <installation.html#using-a-singularity-container>`__ file.
 
 .. code-block:: console
 
