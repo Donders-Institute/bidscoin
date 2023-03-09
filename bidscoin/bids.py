@@ -23,31 +23,32 @@ from nibabel.parrec import parse_PAR_header
 from typing import Union, List, Tuple
 from pathlib import Path
 try:
-    from bidscoin import bidscoin
+    from bidscoin import bidscoin as bcoin
     from bidscoin.utilities import dicomsort
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parent/'utilities'))                     # This should work if bidscoin was not pip-installed
-    import bidscoin, dicomsort
+    import bidscoin as bcoin
+    import dicomsort
 from ruamel.yaml import YAML
 yaml = YAML()
 
 LOGGER = logging.getLogger(__name__)
 
 # Read the BIDS schema data
-with (bidscoin.schemafolder/'objects'/'datatypes.yaml').open('r') as _stream:
+with (bcoin.schemafolder/'objects'/'datatypes.yaml').open('r') as _stream:
     bidsdatatypesdef = yaml.load(_stream)                                       # The valid BIDS datatypes, along with their full names and descriptions
 datatyperules = {}
-for _datatypefile in (bidscoin.schemafolder/'rules'/'files'/'raw').glob('*.yaml'):
+for _datatypefile in (bcoin.schemafolder/'rules'/'files'/'raw').glob('*.yaml'):
     with _datatypefile.open('r') as _stream:
         datatyperules[_datatypefile.stem] = yaml.load(_stream)                  # The entities that can/should be present for each BIDS datatype
-with (bidscoin.schemafolder/'objects'/'suffixes.yaml').open('r') as _stream:
+with (bcoin.schemafolder/'objects'/'suffixes.yaml').open('r') as _stream:
     suffixes = yaml.load(_stream)                                               # The descriptions of the valid BIDS file suffixes
-with (bidscoin.schemafolder/'objects'/'entities.yaml').open('r') as _stream:
+with (bcoin.schemafolder/'objects'/'entities.yaml').open('r') as _stream:
     entities = yaml.load(_stream)                                               # The descriptions of the entities present in BIDS filenames
-with (bidscoin.schemafolder/'rules'/'entities.yaml').open('r') as _stream:
+with (bcoin.schemafolder/'rules'/'entities.yaml').open('r') as _stream:
     entitiesorder = yaml.load(_stream)                                          # The order in which the entities should appear within filenames
-with (bidscoin.schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
+with (bcoin.schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
     metafields = yaml.load(_stream)                                             # The descriptions of the valid BIDS metadata fields
 
 
@@ -91,7 +92,7 @@ class DataSource:
             return False
 
         for plugin, options in self.plugins.items():
-            module = bidscoin.import_plugin(plugin, ('is_sourcefile',))
+            module = bcoin.import_plugin(plugin, ('is_sourcefile',))
             if module:
                 try:
                     dataformat = module.is_sourcefile(self.path)
@@ -195,7 +196,7 @@ class DataSource:
 
                 else:
                     for plugin, options in self.plugins.items():
-                        module = bidscoin.import_plugin(plugin, ('get_attribute',))
+                        module = bcoin.import_plugin(plugin, ('get_attribute',))
                         if module:
                             attributeval = module.get_attribute(self.dataformat, self.path, attributekey, options)
                             attributeval = str(attributeval) if attributeval is not None else ''
@@ -326,7 +327,7 @@ def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> (List[P
     tarzipfiles = list(sourcefolder.glob(wildcard)) if wildcard else []
 
     # See if we have a flat unsorted (DICOM) data organization, i.e. no directories, but DICOM-files
-    flatDICOM = not bidscoin.lsdirs(sourcefolder) and get_dicomfile(sourcefolder).is_file()
+    flatDICOM = not bcoin.lsdirs(sourcefolder) and get_dicomfile(sourcefolder).is_file()
 
     # Check if we are going to do unpacking and/or sorting
     if tarzipfiles or flatDICOM or (sourcefolder/'DICOMDIR').is_file():
@@ -852,11 +853,11 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
 
     # Input checking
     if not folder.name or not folder.is_dir():
-        folder = bidscoin.heuristicsfolder
+        folder = bcoin.heuristicsfolder
     if not yamlfile.name:
         yamlfile = folder/'bidsmap.yaml'
         if not yamlfile.is_file():
-            yamlfile = bidscoin.bidsmap_template
+            yamlfile = bcoin.bidsmap_template
 
     # Add a standard file-extension if needed
     if not yamlfile.suffix:
@@ -867,7 +868,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
         if (folder/yamlfile).is_file():
             yamlfile = folder/yamlfile
         else:
-            yamlfile = bidscoin.heuristicsfolder/yamlfile
+            yamlfile = bcoin.heuristicsfolder/yamlfile
 
     if not yamlfile.is_file():
         LOGGER.verbose(f"No existing bidsmap file found: {yamlfile}")
@@ -886,10 +887,10 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
         bidsmapversion = bidsmap['Options']['version']
     else:
         bidsmapversion = 'Unknown'
-    if bidsmapversion.rsplit('.', 1)[0] != bidscoin.version().rsplit('.', 1)[0] and any(check):
-        LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created with version {bidsmapversion}, but this is version {bidscoin.version()}')
-    elif bidsmapversion != bidscoin.version() and any(check):
-        LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {bidscoin.version()}. This is normally ok but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
+    if bidsmapversion.rsplit('.', 1)[0] != bcoin.version().rsplit('.', 1)[0] and any(check):
+        LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created with version {bidsmapversion}, but this is version {bcoin.version()}')
+    elif bidsmapversion != bcoin.version() and any(check):
+        LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {bcoin.version()}. This is normally ok but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
 
     # Make sure we get a proper plugin options and dataformat sections (use plugin default bidsmappings when a template bidsmap is loaded)
     if not bidsmap['Options'].get('plugins'):
@@ -898,11 +899,11 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
         for plugin in [plugin for plugin in bidsmap['Options']['plugins'] if plugin not in plugins]:
             del bidsmap['Options']['plugins'][plugin]
     for plugin in plugins if plugins else bidsmap['Options']['plugins']:
-        module = bidscoin.import_plugin(plugin)
+        module = bcoin.import_plugin(plugin)
         if not bidsmap['Options']['plugins'].get(plugin):
             LOGGER.info(f"Adding default bidsmap options from the {plugin} plugin")
             bidsmap['Options']['plugins'][plugin] = module.OPTIONS if 'OPTIONS' in dir(module) else {}
-        if 'BIDSMAP' in dir(module) and yamlfile.parent == bidscoin.heuristicsfolder:
+        if 'BIDSMAP' in dir(module) and yamlfile.parent == bcoin.heuristicsfolder:
             for dataformat, bidsmappings in module.BIDSMAP.items():
                 if dataformat not in bidsmap:
                     LOGGER.info(f"Adding default bidsmappings from the {plugin} plugin")
