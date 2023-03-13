@@ -56,11 +56,11 @@ rawmapper        = 'bidscoin.utilities.rawmapper:main'
 physio2tsv       = 'bidscoin.utilities.physio2tsv:main'
 plotphysio       = 'bidscoin.utilities.plotphysio:main'
 
-[tool.setuptools.dynamic]
-version          = {file = 'bidscoin/version.txt'}
-
 [tool.setuptools]
 packages         = ['bidscoin']
+
+[tool.setuptools.dynamic]
+version          = {file = 'bidscoin/version.txt'}
 
 [tool.setuptools.package-data]
 bidscoin         = ['version.txt', '*VERSION', '*.yaml', 'bidscoin_logo.png', 'bidscoin.ico', 'rightarrow.png']       #  package names should match these glob patterns (["*"] by default)
