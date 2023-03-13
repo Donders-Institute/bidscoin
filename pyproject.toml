@@ -56,8 +56,8 @@ rawmapper        = 'bidscoin.utilities.rawmapper:main'
 physio2tsv       = 'bidscoin.utilities.physio2tsv:main'
 plotphysio       = 'bidscoin.utilities.plotphysio:main'
 
-[tool.setuptools]
-packages         = ['bidscoin']
+[tool.setuptools.packages]
+find             = {}
 
 [tool.setuptools.dynamic]
 version          = {file = 'bidscoin/version.txt'}
