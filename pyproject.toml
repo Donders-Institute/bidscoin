@@ -59,6 +59,9 @@ plotphysio       = 'bidscoin.utilities.plotphysio:main'
 [tool.setuptools.dynamic]
 version          = {file = 'bidscoin/version.txt'}
 
+[tool.setuptools.packages.find]
+where            = ['bidscoin']
+
 [tool.setuptools.package-data]
 '*'              = ['version.txt', '*VERSION', '*.yaml', 'bidscoin_logo.png', 'bidscoin.ico', 'rightarrow.png']       #  package names should match these glob patterns (["*"] by default)
 
