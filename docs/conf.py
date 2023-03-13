@@ -16,7 +16,7 @@ from pathlib import Path
 # -- Project information -----------------------------------------------------
 
 project   = 'BIDScoin'
-copyright = '2021, Marcel Zwiers'
+copyright = '2023, Marcel Zwiers'
 author    = 'Marcel Zwiers'
 
 # The full version, including alpha/beta/rc tags from file

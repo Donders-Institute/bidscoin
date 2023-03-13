@@ -1,8 +1,66 @@
 [build-system]
-requires = ['setuptools', 'wheel']
-build-backend = 'setuptools.build_meta'
+requires         = ['setuptools >= 61.0.0', 'wheel']
+build-backend    = 'setuptools.build_meta'
+
+[project]
+name             = 'bidscoin'
+description      = 'Converts and organises raw MRI data-sets according to the Brain Imaging Data Structure (BIDS)'
+dynamic          = ['version']
+readme           = 'README.rst'
+requires-python  = '>= 3.8'
+license          = {file = 'LICENSE.txt'}
+keywords         = ['bids','mri','imaging','neuroimaging','dicom','par','rec','nifti','defacing','echo-combination','skull-stripping']
+authors          = [{email = 'm.zwiers@donders.ru.nl'}, {name = 'Marcel Zwiers'}]
+classifiers      = ['Programming Language :: Python :: 3',
+                    'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+                    'Operating System :: OS Independent']
+dependencies     = ['pandas',
+                    'matplotlib',
+                    'numpy',
+                    'pydicom >= 2',
+                    'PyQt5 >= 5.12.1',
+                    'ruamel.yaml >= 0.15.35',
+                    'coloredlogs',
+                    'tqdm >= 4.60.0',
+                    'multiecho >= 0.25',
+                    'python-dateutil',
+                    'nibabel',
+                    'bids_validator',
+                    'pydeface',
+                    'pytest']
+
+[project.optional-dependencies]
+spec2nii2bids    = ['spec2nii']
+deface           = ['pydeface', 'drmaa']
+pet2bids         = ['pypet2bids >= 1.0.12']
+phys2bidscoin    = ['bioread >= 1.0.5', 'pymatreader >= 0.0.24', 'duecredit', 'phys2bids >= 2.0.0, < 3.0.0']
+all              = ['bidscoin[spec2nii2bids, deface, pet2bids]']        # + phys2bidscoin
+
+[project.urls]
+documentation    = 'https://bidscoin.readthedocs.io'
+repository       = 'https://github.com/Donders-Institute/bidscoin'
+
+[project.scripts]
+bidscoin         = 'bidscoin.bidscoin:main'
+bidseditor       = 'bidscoin.bidseditor:main'
+bidsmapper       = 'bidscoin.bidsmapper:main'
+bidscoiner       = 'bidscoin.bidscoiner:main'
+echocombine      = 'bidscoin.bidsapps.echocombine:main'
+deface           = 'bidscoin.bidsapps.deface:main'
+medeface         = 'bidscoin.bidsapps.medeface:main'
+skullstrip       = 'bidscoin.bidsapps.skullstrip:main'
+slicereport      = 'bidscoin.bidsapps.slicereport:main'
+dicomsort        = 'bidscoin.utilities.dicomsort:main'
+bidsparticipants = 'bidscoin.utilities.bidsparticipants:main'
+rawmapper        = 'bidscoin.utilities.rawmapper:main'
+physio2tsv       = 'bidscoin.utilities.physio2tsv:main'
+plotphysio       = 'bidscoin.utilities.plotphysio:main'
+
+[tool.setuptools.dynamic]
+version          = {file = 'bidscoin/version.txt'}
+
+[tool.setuptools.package-data]
+bidscoin         = ['version.txt', '*VERSION', '*.yaml', 'bidscoin_logo.png', 'bidscoin.ico', 'rightarrow.png']       #  package names should match these glob patterns (["*"] by default)
 
 [tool.pytest.ini_options]
-testpaths = [
-    'tests',
-]
+testpaths        = ['tests']
