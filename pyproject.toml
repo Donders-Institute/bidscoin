@@ -4,7 +4,6 @@ build-backend    = 'setuptools.build_meta'
 
 [project]
 name             = 'bidscoin'
-packages         = ['bidscoin']
 description      = 'Converts and organises raw MRI data-sets according to the Brain Imaging Data Structure (BIDS)'
 dynamic          = ['version']
 readme           = 'README.rst'
@@ -59,6 +58,9 @@ plotphysio       = 'bidscoin.utilities.plotphysio:main'
 
 [tool.setuptools.dynamic]
 version          = {file = 'bidscoin/version.txt'}
+
+[tool.setuptools]
+packages         = ['bidscoin']
 
 [tool.setuptools.package-data]
 bidscoin         = ['version.txt', '*VERSION', '*.yaml', 'bidscoin_logo.png', 'bidscoin.ico', 'rightarrow.png']       #  package names should match these glob patterns (["*"] by default)
