@@ -10,7 +10,7 @@ are expected to be present:
 - bidscoiner_plugin: A function to convert a single source data session to bids according to the specified BIDS-mappings
 
 To avoid code duplications and minimize plugin development time, various support functions are available in
-BIDScoin's library modules named 'bidscoin' and, most notably, 'bids'"""
+BIDScoin's library modules named 'bcoin' and, most notably, 'bids'"""
 
 import logging
 from pathlib import Path

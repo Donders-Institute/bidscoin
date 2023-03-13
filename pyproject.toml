@@ -41,7 +41,7 @@ documentation    = 'https://bidscoin.readthedocs.io'
 repository       = 'https://github.com/Donders-Institute/bidscoin'
 
 [project.scripts]
-bidscoin         = 'bidscoin.bcoin:main'
+bcoin            = 'bidscoin.bcoin:main'
 bidseditor       = 'bidscoin.bidseditor:main'
 bidsmapper       = 'bidscoin.bidsmapper:main'
 bidscoiner       = 'bidscoin.bidscoiner:main'
