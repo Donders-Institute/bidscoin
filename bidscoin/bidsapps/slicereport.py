@@ -18,12 +18,10 @@ import csv
 import tempfile
 from pathlib import Path
 try:
-    from bidscoin import bidscoin as bcoin
-    from bidscoin import bids
+    from bidscoin import bcoin, bids
 except ImportError:
     sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bidscoin as bcoin
-    import bids
+    import bcoin, bids
 
 html_head = """<!DOCTYPE html>
 <html lang="en">

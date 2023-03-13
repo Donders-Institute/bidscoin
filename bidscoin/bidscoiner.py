@@ -27,11 +27,9 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 try:
-    from bidscoin import bidscoin as bcoin
-    from bidscoin import bids
+    from bidscoin import bcoin, bids
 except ImportError:
-    import bidscoin as bcoin        # This should work if bidscoin was not pip-installed
-    import bids
+    import bcoin, bids      # This should work if bidscoin was not pip-installed
 
 localversion, _ = bcoin.version(check=True)
 

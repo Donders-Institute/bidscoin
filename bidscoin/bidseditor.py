@@ -30,11 +30,9 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileD
                              QPushButton, QComboBox, QAction)
 
 try:
-    from bidscoin import bidscoin as bcoin
-    from bidscoin import bids
+    from bidscoin import bcoin, bids
 except ImportError:
-    import bidscoin as bcoin            # This should work if bidscoin was not pip-installed
-    import bids
+    import bcoin, bids          # This should work if bidscoin was not pip-installed
 
 
 ROW_HEIGHT       = 22

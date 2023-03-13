@@ -18,11 +18,9 @@ from functools import lru_cache
 from bids_validator import BIDSValidator
 
 try:
-    from bidscoin import bidscoin as bcoin
-    from bidscoin import bids
+    from bidscoin import bcoin, bids
 except ImportError:
-    import bidscoin as bcoin    # This should work if bidscoin was not pip-installed
-    import bids
+    import bcoin, bids      # This should work if bidscoin was not pip-installed
 
 LOGGER = logging.getLogger(__name__)
 

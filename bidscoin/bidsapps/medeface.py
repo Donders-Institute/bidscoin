@@ -27,11 +27,11 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 try:
-    from bidscoin import bidscoin as bcoin
+    from bidscoin import bcoin
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bidscoin as bcoin
+    import bcoin
 
 
 def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):

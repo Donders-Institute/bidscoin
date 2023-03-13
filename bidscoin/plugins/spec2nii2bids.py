@@ -12,13 +12,11 @@ import ast
 from bids_validator import BIDSValidator
 from pathlib import Path
 try:
-    from bidscoin import bidscoin as bcoin
-    from bidscoin import bids
+    from bidscoin import bcoin, bids
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bidscoin as bcoin
-    import bids
+    import bcoin, bids
 
 LOGGER = logging.getLogger(__name__)
 

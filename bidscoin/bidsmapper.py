@@ -24,11 +24,9 @@ from pathlib import Path
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QMessageBox
 try:
-    from bidscoin import bidscoin as bcoin
-    from bidscoin import bids, bidseditor
+    from bidscoin import bcoin, bids, bidseditor
 except ImportError:
-    import bidscoin as bcoin        # This should work if bidscoin was not pip-installed
-    import bids, bidseditor
+    import bcoin, bids, bidseditor      # This should work if bidscoin was not pip-installed
 
 localversion, versionmessage = bcoin.version(check=True)
 

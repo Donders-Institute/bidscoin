@@ -7,15 +7,13 @@ import ruamel
 from pathlib import Path
 
 try:
-    from bidscoin import bidscoin as bcoin
-    from bidscoin import bids
+    from bidscoin import bcoin, bids
     from bidscoin.plugins import pet2bids
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))# This should work if bidscoin was not pip-installed
     sys.path.append(str(Path(__file__).parents[1]/'plugins'))# This should work if bidscoin was not pip-installed
-    import bidscoin as bcoin
-    import bids
+    import bcoin, bids
     from plugins import pet2bids
 
 

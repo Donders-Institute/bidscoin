@@ -10,13 +10,11 @@ from nibabel.testing import data_path
 import ruamel.yaml.comments
 from pydicom.data import get_testdata_file
 try:
-    from bidscoin import bidscoin as bcoin
-    from bidscoin import bids
+    from bidscoin import bcoin, bids
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
-    import bidscoin as bcoin
-    import bids
+    import bcoin, bids
 
 bcoin.setup_logging()
 

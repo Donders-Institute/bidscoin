@@ -2,15 +2,13 @@ from pathlib import Path
 import pytest
 import re
 try:
-    from bidscoin import bidscoin as bcoin
-    from bidscoin import bids, bidsmapper
+    from bidscoin import bcoin, bids, bidsmapper
     from bidscoin.utilities import dicomsort
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'/'utilities'))
-    import bidscoin as bcoin
-    import bids, bidsmapper, dicomsort
+    import bcoin, bids, bidsmapper, dicomsort
 
 bcoin.setup_logging()
 

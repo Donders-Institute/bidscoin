@@ -23,12 +23,12 @@ from nibabel.parrec import parse_PAR_header
 from typing import Union, List, Tuple
 from pathlib import Path
 try:
-    from bidscoin import bidscoin as bcoin
+    from bidscoin import main as bcoin
     from bidscoin.utilities import dicomsort
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parent/'utilities'))                     # This should work if bidscoin was not pip-installed
-    import bidscoin as bcoin
+    import main as bcoin
     import dicomsort
 from ruamel.yaml import YAML
 yaml = YAML()

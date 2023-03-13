@@ -1,13 +1,11 @@
 import json
 from pathlib import Path
 try:
-    from bidscoin import bidscoin as bcoin
-    from bidscoin import bidsmapper, bidscoiner
+    from bidscoin import bcoin, bidsmapper, bidscoiner
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))      # This should work if bidscoin was not pip-installed
-    import bidscoin as bcoin
-    import bidsmapper, bidscoiner
+    import bcoin, bidsmapper, bidscoiner
 
 bcoin.setup_logging()
 
