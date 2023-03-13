@@ -56,14 +56,11 @@ rawmapper        = 'bidscoin.utilities.rawmapper:main'
 physio2tsv       = 'bidscoin.utilities.physio2tsv:main'
 plotphysio       = 'bidscoin.utilities.plotphysio:main'
 
-[tool.setuptools.packages]
-find             = {}
-
 [tool.setuptools.dynamic]
 version          = {file = 'bidscoin/version.txt'}
 
 [tool.setuptools.package-data]
-bidscoin         = ['version.txt', '*VERSION', '*.yaml', 'bidscoin_logo.png', 'bidscoin.ico', 'rightarrow.png']       #  package names should match these glob patterns (["*"] by default)
+'*'              = ['version.txt', '*VERSION', '*.yaml', 'bidscoin_logo.png', 'bidscoin.ico', 'rightarrow.png']       #  package names should match these glob patterns (["*"] by default)
 
 [tool.pytest.ini_options]
 testpaths        = ['tests']
