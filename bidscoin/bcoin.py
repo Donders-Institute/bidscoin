@@ -24,7 +24,6 @@ import inspect
 import subprocess
 import urllib.request
 import json
-from PyQt5.QtWidgets import QApplication, QPushButton
 from tqdm import tqdm
 from pathlib import Path
 from functools import lru_cache
@@ -553,6 +552,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
     if testgui:
         LOGGER.info('Testing the PyQt GUI setup:')
         try:
+            from PyQt5.QtWidgets import QApplication, QPushButton
             app = QApplication(sys.argv)
             window = QPushButton('Minimal GUI test: OK')
             window.show()
