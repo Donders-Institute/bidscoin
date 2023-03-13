@@ -24,7 +24,7 @@ def test_bidsversion():
 
 
 def test_runcommand():
-    assert bcoin.run_command('bcoin') == 0
+    assert bcoin.run_command('bidscoin') == 0
 
 
 def test_list_executables():

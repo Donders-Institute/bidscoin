@@ -41,7 +41,7 @@ documentation    = 'https://bidscoin.readthedocs.io'
 repository       = 'https://github.com/Donders-Institute/bidscoin'
 
 [project.scripts]
-bcoin            = 'bidscoin.bcoin:main'
+bidscoin         = 'bidscoin.bcoin:main'
 bidseditor       = 'bidscoin.bidseditor:main'
 bidsmapper       = 'bidscoin.bidsmapper:main'
 bidscoiner       = 'bidscoin.bidscoiner:main'
@@ -58,9 +58,6 @@ plotphysio       = 'bidscoin.utilities.plotphysio:main'
 
 [tool.setuptools.dynamic]
 version          = {file = 'bidscoin/version.txt'}
-
-[tool.setuptools.packages.find]
-where            = ['bidscoin']
 
 [tool.setuptools.package-data]
 '*'              = ['version.txt', '*VERSION', '*.yaml', 'bidscoin_logo.png', 'bidscoin.ico', 'rightarrow.png']       #  package names should match these glob patterns (["*"] by default)
