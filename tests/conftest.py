@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from pydicom.data import get_testdata_file
 try:
+    import bidscoin
     from bidscoin.utilities import dicomsort
 except ImportError:
     import sys
