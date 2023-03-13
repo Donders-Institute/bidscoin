@@ -2,15 +2,17 @@ from pathlib import Path
 import pytest
 import re
 try:
-    from bidscoin import bids, bidscoin, bidsmapper
+    from bidscoin import bidscoin as bcoin
+    from bidscoin import bids, bidsmapper
     from bidscoin.utilities import dicomsort
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'/'utilities'))
-    import bidscoin, bids, bidsmapper, dicomsort
+    import bidscoin as bcoin
+    import bids, bidsmapper, dicomsort
 
-bidscoin.setup_logging()
+bcoin.setup_logging()
 
 
 @pytest.mark.parametrize('subprefix', ['Doe', 'Doe^', '*'])
@@ -19,7 +21,7 @@ bidscoin.setup_logging()
 def test_bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, subprefix, sesprefix, store):
     resubprefix = '' if subprefix=='*' else re.escape(subprefix).replace(r'\-','-')
     resesprefix = '' if sesprefix=='*' else re.escape(sesprefix).replace(r'\-','-')
-    bidsmap     = bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidscoin.bidsmap_template, [], subprefix, sesprefix, unzip='', store=store, noeditor=True, force=True)
+    bidsmap     = bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bcoin.bidsmap_template, [], subprefix, sesprefix, unzip='', store=store, noeditor=True, force=True)
     assert bidsmap['Options']['bidscoin']['subprefix'] == subprefix
     assert bidsmap['Options']['bidscoin']['sesprefix'] == sesprefix
     assert bidsmap['DICOM']['subject']                 == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}(.*?)/>>"

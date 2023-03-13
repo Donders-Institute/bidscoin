@@ -13,11 +13,13 @@ from pydicom import fileset
 from pathlib import Path
 from typing import List
 try:
-    from bidscoin import bidscoin, bids
+    from bidscoin import bidscoin as bcoin
+    from bidscoin import bids
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bidscoin, bids
+    import bidscoin as bcoin
+    import bids
 
 LOGGER = logging.getLogger(__name__)
 
@@ -189,9 +191,9 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
     # Do a recursive call if a sub- or ses-prefix is given
     elif subprefix or sesprefix:
         LOGGER.info(f"Searching for subject/session folders in: {sourcefolder}")
-        for subjectfolder in bidscoin.lsdirs(sourcefolder, subprefix + '*'):
+        for subjectfolder in bcoin.lsdirs(sourcefolder, subprefix + '*'):
             if sesprefix:
-                sessionfolders = bidscoin.lsdirs(subjectfolder, sesprefix + '*')
+                sessionfolders = bcoin.lsdirs(subjectfolder, sesprefix + '*')
             else:
                 sessionfolders = [subjectfolder]
             for sessionfolder in sessionfolders:
@@ -236,7 +238,7 @@ def main():
     args = parser.parse_args()
 
     # Set-up logging
-    bidscoin.setup_logging()
+    bcoin.setup_logging()
 
     sortsessions(sourcefolder = args.dicomsource,
                  subprefix    = args.subprefix,

@@ -15,13 +15,15 @@ from typing import Union
 from pathlib import Path
 from nibabel.testing import data_path
 try:
-    from bidscoin import bidscoin, bids
+    from bidscoin import bidscoin as bcoin
+    from bidscoin import bids
     from bidscoin.utilities import physio
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))         # This should work if bidscoin was not pip-installed
     sys.path.append(str(Path(__file__).parents[1]/'utilities'))
-    import bidscoin, bids, physio
+    import bidscoin as bcoin
+    import bids, physio
 
 LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +54,7 @@ def test(options: dict=OPTIONS) -> int:
         LOGGER.warning(f"The expected 'args' key is not defined in the dcm2niix2bids options")
 
     # Test the dcm2niix installation
-    errorcode = bidscoin.run_command(f"{options.get('command', OPTIONS['command'])} -v")
+    errorcode = bcoin.run_command(f"{options.get('command', OPTIONS['command'])} -v")
 
     # Test reading an attribute from a PAR-file
     parfile = Path(data_path)/'phantom_EPI_asc_CLEAR_2_1.PAR'
@@ -122,7 +124,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     # Collect the different DICOM/PAR source files for all runs in the session
     sourcefiles = []
     if dataformat == 'DICOM':
-        for sourcedir in bidscoin.lsdirs(session, '**/*'):
+        for sourcedir in bcoin.lsdirs(session, '**/*'):
             for n in range(1):      # Option: Use range(2) to scan two files and catch e.g. magnitude1/2 fieldmap files that are stored in one Series folder (but bidscoiner sees only the first file anyhow and it makes bidsmapper 2x slower :-()
                 sourcefile = bids.get_dicomfile(sourcedir, n)
                 if sourcefile.name and is_sourcefile(sourcefile):
@@ -200,7 +202,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     manufacturer = 'UNKNOWN'
     sources      = []
     if dataformat == 'DICOM':
-        sources      = bidscoin.lsdirs(session, '**/*')
+        sources      = bcoin.lsdirs(session, '**/*')
         manufacturer = datasource.attributes('Manufacturer')
     elif dataformat == 'PAR':
         sources      = bids.get_parfiles(session)
@@ -291,7 +293,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 filename  = bidsname,
                 outfolder = outfolder,
                 source    = source)
-            if bidscoin.run_command(command):
+            if bcoin.run_command(command):
                 if not list(outfolder.glob(f"{bidsname}.*nii*")): continue
 
             # Handle the ABCD GE pepolar sequence

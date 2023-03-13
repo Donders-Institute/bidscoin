@@ -11,11 +11,13 @@ import warnings
 import shutil
 from pathlib import Path
 try:
-    from bidscoin import bidscoin, bids
+    from bidscoin import bidscoin as bcoin
+    from bidscoin import bids
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bidscoin, bids
+    import bidscoin as bcoin
+    import bids
 
 
 def rawmapper(rawfolder, outfolder: str='', sessions: tuple=(), rename: bool=False, force: bool=False, dicomfield: tuple=('PatientComments',), wildcard: str='*', subprefix: str='sub-', sesprefix: str='ses-', dryrun: bool=False) -> None:
@@ -77,7 +79,7 @@ def rawmapper(rawfolder, outfolder: str='', sessions: tuple=(), rename: bool=Fal
         sesid      = datasource.dynamicvalue(f"<filepath:/{datasource.resubprefix()}.*?/{datasource.resesprefix()}(.*?)/>", cleanup=False) if sesprefix else ''
 
         # Parse the new subject and session identifiers from the dicomfield
-        series = bidscoin.lsdirs(session, wildcard)
+        series = bcoin.lsdirs(session, wildcard)
         if not series:
             series    = Path()
             dicomfile = bids.get_dicomfile(session)     # Try and see if there is a DICOM file in the root of the session folder

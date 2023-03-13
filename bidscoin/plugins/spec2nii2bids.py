@@ -12,11 +12,13 @@ import ast
 from bids_validator import BIDSValidator
 from pathlib import Path
 try:
-    from bidscoin import bidscoin, bids
+    from bidscoin import bidscoin as bcoin
+    from bidscoin import bids
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bidscoin, bids
+    import bidscoin as bcoin
+    import bids
 
 LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +50,7 @@ def test(options: dict=OPTIONS) -> int:
         LOGGER.warning(f"The expected 'args' key is not defined in the spec2nii2bids options")
 
     # Test the spec2nii installation
-    return bidscoin.run_command(f"{options.get('command',OPTIONS['command'])} -v")
+    return bcoin.run_command(f"{options.get('command',OPTIONS['command'])} -v")
 
 
 def is_sourcefile(file: Path) -> str:
@@ -263,7 +265,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             LOGGER.exception(f"Unsupported dataformat: {dataformat}")
             return
         command = options.get("command", "spec2nii")
-        if bidscoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
+        if bcoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
             if not list(outfolder.glob(f"{bidsname}.nii*")): continue
 
         # Load and adapt the newly produced json sidecar-file (NB: assumes every NIfTI-file comes with a json-file)

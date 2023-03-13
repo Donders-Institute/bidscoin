@@ -10,13 +10,15 @@ from nibabel.testing import data_path
 import ruamel.yaml.comments
 from pydicom.data import get_testdata_file
 try:
-    from bidscoin import bidscoin, bids
+    from bidscoin import bidscoin as bcoin
+    from bidscoin import bids
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
-    import bidscoin, bids
+    import bidscoin as bcoin
+    import bids
 
-bidscoin.setup_logging()
+bcoin.setup_logging()
 
 
 @pytest.fixture(scope='module')
@@ -118,7 +120,7 @@ def test_get_datasource(dicomdir):
     assert datasource.dataformat == 'DICOM'
 
 
-@pytest.mark.parametrize('template', bidscoin.list_plugins()[1])
+@pytest.mark.parametrize('template', bcoin.list_plugins()[1])
 def test_load_check_template(template):
     bidsmap, _ = bids.load_bidsmap(template, check=(False,False,False))
     assert isinstance(bidsmap, dict) and bidsmap

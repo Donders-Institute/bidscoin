@@ -27,11 +27,13 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 try:
-    from bidscoin import bidscoin, bids
+    from bidscoin import bidscoin as bcoin
+    from bidscoin import bids
 except ImportError:
-    import bidscoin, bids         # This should work if bidscoin was not pip-installed
+    import bidscoin as bcoin        # This should work if bidscoin was not pip-installed
+    import bids
 
-localversion, _ = bidscoin.version(check=True)
+localversion, _ = bcoin.version(check=True)
 
 
 def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=False, bidsmapfile: str='bidsmap.yaml') -> None:
@@ -53,9 +55,9 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     bidsmapfile = Path(bidsmapfile)
 
     # Start logging
-    bidscoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidscoiner.log')
+    bcoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidscoiner.log')
     LOGGER.info('')
-    LOGGER.info(f"-------------- START BIDScoiner {localversion}: BIDS {bidscoin.bidsversion()} ------------")
+    LOGGER.info(f"-------------- START BIDScoiner {localversion}: BIDS {bcoin.bidsversion()} ------------")
     LOGGER.info(f">>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} subjects={subjects} force={force} bidsmap={bidsmapfile}")
 
     # Create a code/bidscoin subfolder
@@ -68,7 +70,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         LOGGER.info(f"Creating dataset description file: {dataset_file}")
         dataset_description = {"Name":                  "REQUIRED. Name of the dataset",
                                "GeneratedBy":           generatedby,
-                               "BIDSVersion":           str(bidscoin.bidsversion()),
+                               "BIDSVersion":           str(bcoin.bidsversion()),
                                "DatasetType":           "raw",
                                "License":               "RECOMMENDED. The license for the dataset. The use of license name abbreviations is RECOMMENDED for specifying a license. The corresponding full license text MAY be specified in an additional LICENSE file",
                                "Authors":               ["OPTIONAL. List of individuals who contributed to the creation/curation of the dataset"],
@@ -109,7 +111,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         return
 
     # Load the data conversion plugins
-    plugins = [bidscoin.import_plugin(plugin, ('bidscoiner_plugin',)) for plugin,options in bidsmap['Options']['plugins'].items()]
+    plugins = [bcoin.import_plugin(plugin, ('bidscoiner_plugin',)) for plugin,options in bidsmap['Options']['plugins'].items()]
     plugins = [plugin for plugin in plugins if plugin]          # Filter the empty items from the list
     if not plugins:
         LOGGER.warning(f"The plugins listed in your bidsmap['Options'] did not have a usable `bidscoiner_plugin` function, nothing to do")
@@ -141,7 +143,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     subprefix = bidsmap['Options']['bidscoin']['subprefix'].replace('*','')
     sesprefix = bidsmap['Options']['bidscoin']['sesprefix'].replace('*','')
     if not subjects:
-        subjects = bidscoin.lsdirs(rawfolder, (subprefix if subprefix!='*' else '') + '*')
+        subjects = bcoin.lsdirs(rawfolder, (subprefix if subprefix!='*' else '') + '*')
         if not subjects:
             LOGGER.warning(f"No subjects found in: {rawfolder/subprefix}*")
     else:
@@ -156,7 +158,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                 LOGGER.error(f"The '{subject}' subject folder does not exist")
                 continue
 
-            sessions = bidscoin.lsdirs(subject, (sesprefix if sesprefix!='*' else '') + '*')
+            sessions = bcoin.lsdirs(subject, (sesprefix if sesprefix!='*' else '') + '*')
             if not sessions or (subject/'DICOMDIR').is_file():
                 sessions = [subject]
             for session in sessions:
@@ -177,7 +179,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     if not force and bidssession.is_dir():
                         datatypes = []
                         for dataformat in dataformats:
-                            for datatype in bidscoin.lsdirs(bidssession):                               # See what datatypes we already have in the bids session-folder
+                            for datatype in bcoin.lsdirs(bidssession):                               # See what datatypes we already have in the bids session-folder
                                 if list(datatype.iterdir()) and bidsmap[dataformat].get(datatype.name): # See if we are going to add data for this datatype
                                     datatypes.append(datatype.name)
                         if datatypes:
@@ -232,7 +234,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     LOGGER.info('-------------- FINISHED! ------------')
     LOGGER.info('')
 
-    bidscoin.reporterrors()
+    bcoin.reporterrors()
 
 
 def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:

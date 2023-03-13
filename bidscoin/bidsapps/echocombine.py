@@ -16,11 +16,13 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 from multiecho import combination as me
 from pathlib import Path
 try:
-    from bidscoin import bidscoin, bids
+    from bidscoin import bidscoin as bcoin
+    from bidscoin import bids
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bidscoin, bids
+    import bidscoin as bcoin
+    import bids
 
 unknowndatatype = 'extra_data'
 
@@ -44,7 +46,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
         return
 
     # Start logging
-    bidscoin.setup_logging(bidsdir/'code'/'bidscoin'/'echocombine.log')
+    bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'echocombine.log')
     LOGGER.info('')
     LOGGER.info(f"--------- START echocombine ---------")
     LOGGER.info(f">>> echocombine bidsfolder={bidsdir} pattern={pattern} subjects={subjects} output={output}"
@@ -52,7 +54,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
 
     # Get the list of subjects
     if not subjects:
-        subjects = bidscoin.lsdirs(bidsdir, 'sub-*')
+        subjects = bcoin.lsdirs(bidsdir, 'sub-*')
         if not subjects:
             LOGGER.warning(f"No subjects found in: {bidsdir/'sub-*'}")
     else:
@@ -64,7 +66,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
         for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
             subid    = subject.name
-            sessions = bidscoin.lsdirs(subject, 'ses-*')
+            sessions = bcoin.lsdirs(subject, 'ses-*')
             if not sessions:
                 sessions = [subject]
             for session in sessions:

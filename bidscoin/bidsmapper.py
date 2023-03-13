@@ -24,11 +24,13 @@ from pathlib import Path
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QMessageBox
 try:
-    from bidscoin import bidscoin, bids, bidseditor
+    from bidscoin import bidscoin as bcoin
+    from bidscoin import bids, bidseditor
 except ImportError:
-    import bidscoin, bids, bidseditor         # This should work if bidscoin was not pip-installed
+    import bidscoin as bcoin        # This should work if bidscoin was not pip-installed
+    import bids, bidseditor
 
-localversion, versionmessage = bidscoin.version(check=True)
+localversion, versionmessage = bcoin.version(check=True)
 
 
 def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, plugins: list, subprefix: str, sesprefix: str, unzip: str, store: bool=False, noeditor: bool=False, force: bool=False, noupdate: bool=False) -> dict:
@@ -65,7 +67,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     # Start logging
     if force:
         (bidscoinfolder/'bidsmapper.log').unlink(missing_ok=True)
-    bidscoin.setup_logging(bidscoinfolder/'bidsmapper.log')
+    bcoin.setup_logging(bidscoinfolder/'bidsmapper.log')
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSmapper ------------')
     LOGGER.info(f">>> bidsmapper sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmapfile} "
@@ -104,7 +106,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         bidsmapfile = bidscoinfolder/'bidsmap.yaml'
 
     # Import the data scanning plugins
-    plugins = [bidscoin.import_plugin(plugin, ('bidsmapper_plugin',)) for plugin in bidsmap_new['Options']['plugins']]
+    plugins = [bcoin.import_plugin(plugin, ('bidsmapper_plugin',)) for plugin in bidsmap_new['Options']['plugins']]
     plugins = [plugin for plugin in plugins if plugin]          # Filter the empty items from the list
     if not plugins:
         LOGGER.warning(f"The plugins listed in your bidsmap['Options'] did not have a usable `bidsmapper_plugin` function, nothing to do")
@@ -113,13 +115,13 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         return {}
 
     # Loop over all subjects and sessions and built up the bidsmap entries
-    subjects = bidscoin.lsdirs(rawfolder, ('' if subprefix=='*' else subprefix) + '*')
+    subjects = bcoin.lsdirs(rawfolder, ('' if subprefix=='*' else subprefix) + '*')
     if not subjects:
         LOGGER.warning(f'No subjects found in: {rawfolder/subprefix}*')
     with logging_redirect_tqdm():
         for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
-            sessions = bidscoin.lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
+            sessions = bcoin.lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
             if not sessions or (subject/'DICOMDIR').is_file():
                 sessions = [subject]
             for session in sessions:
@@ -173,7 +175,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     LOGGER.info('-------------- FINISHED! -------------------')
     LOGGER.info('')
 
-    bidscoin.reporterrors()
+    bcoin.reporterrors()
 
     return bidsmap_new
 
@@ -245,7 +247,7 @@ def main():
     parser.add_argument('sourcefolder',       help='The study root folder containing the raw source data folders')
     parser.add_argument('bidsfolder',         help='The destination folder with the (future) bids data and the bidsfolder/code/bidscoin/bidsmap.yaml output file')
     parser.add_argument('-b','--bidsmap',     help="The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no '/' in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml", default='bidsmap.yaml')
-    parser.add_argument('-t','--template',    help=f"The bidsmap template file with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no '/' in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: {bidscoin.bidsmap_template.stem}", default=bidscoin.bidsmap_template)
+    parser.add_argument('-t','--template',    help=f"The bidsmap template file with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no '/' in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: {bcoin.bidsmap_template.stem}", default=bcoin.bidsmap_template)
     parser.add_argument('-p','--plugins',     help='List of plugins to be used. Default: the plugin list of the study/template bidsmap)', nargs='+', default=[])
     parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders (e.g. 'Pt' is the subprefix if subject folders are named 'Pt018', 'Pt019', ...). Use '*' when your subject folders do not have a prefix. Default: the value of the study/template bidsmap, e.g. 'sub-'")
     parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders (e.g. 'M_' is the subprefix if session folders are named 'M_pre', 'M_post', ..). Use '*' when your session folders do not have a prefix. Default: the value of the study/template bidsmap, e.g. 'ses-'")

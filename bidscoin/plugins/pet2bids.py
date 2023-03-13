@@ -18,9 +18,11 @@ from functools import lru_cache
 from bids_validator import BIDSValidator
 
 try:
-    from bidscoin import bidscoin, bids
+    from bidscoin import bidscoin as bcoin
+    from bidscoin import bids
 except ImportError:
-    import bidscoin, bids     # This should work if bidscoin was not pip-installed
+    import bidscoin as bcoin    # This should work if bidscoin was not pip-installed
+    import bids
 
 LOGGER = logging.getLogger(__name__)
 
@@ -129,7 +131,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     # Collect the different DICOM/PAR source files for all runs in the session
     sourcefiles = []
     if dataformat == 'DICOM':
-        for sourcedir in bidscoin.lsdirs(session, '**/*'):
+        for sourcedir in bcoin.lsdirs(session, '**/*'):
             for n in range(1):      # Option: Use range(2) to scan two files and catch e.g. magnitude1/2 fieldmap files that are stored in one Series folder (but bidscoiner sees only the first file anyhow, and it makes bidsmapper 2x slower :-()
                 sourcefile = bids.get_dicomfile(sourcedir, n)
                 if sourcefile.name and is_sourcefile(sourcefile):
@@ -206,7 +208,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     manufacturer = 'UNKOWN'
     sources = []
     if dataformat == 'DICOM':
-        sources = bidscoin.lsdirs(session, '**/*')
+        sources = bcoin.lsdirs(session, '**/*')
         manufacturer = datasource.attributes('Manufacturer')
     else:
         LOGGER.exception(f"Unsupported dataformat '{dataformat}'")
@@ -285,7 +287,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 for metadata_key, metadata_value in run.get('meta', {}).items():
                     if metadata_value:
                         command += f' {metadata_key}={metadata_value}'
-                if bidscoin.run_command(command):
+                if bcoin.run_command(command):
                     if not list(outfolder.glob(f"{bidsname}.*nii*")): continue
 
 

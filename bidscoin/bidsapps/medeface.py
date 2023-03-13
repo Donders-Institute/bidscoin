@@ -27,11 +27,11 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 try:
-    from bidscoin import bidscoin
+    from bidscoin import bidscoin as bcoin
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bidscoin
+    import bidscoin as bcoin
 
 
 def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
@@ -57,7 +57,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
         maskpattern = pattern
 
     # Start logging
-    bidscoin.setup_logging(bidsdir/'code'/'bidscoin'/'medeface.log')
+    bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'medeface.log')
     LOGGER.info('')
     LOGGER.info('------------ START multi-echo deface ----------')
     LOGGER.info(f">>> medeface bidsfolder={bidsdir} pattern={pattern} maskpattern={maskpattern} subjects={subjects} output={output}"
@@ -65,7 +65,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
 
     # Get the list of subjects
     if not subjects:
-        subjects = bidscoin.lsdirs(bidsdir, 'sub-*')
+        subjects = bcoin.lsdirs(bidsdir, 'sub-*')
         if not subjects:
             LOGGER.warning(f"No subjects found in: {bidsdir/'sub-*'}")
     else:
@@ -90,7 +90,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
         for n, subject in enumerate(subjects, 1):
 
             subid    = subject.name
-            sessions = bidscoin.lsdirs(subject, 'ses-*')
+            sessions = bcoin.lsdirs(subject, 'ses-*')
             if not sessions:
                 sessions = [subject]
             for session in sessions:
@@ -142,7 +142,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
         for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
             subid    = subject.name
-            sessions = bidscoin.lsdirs(subject, 'ses-*')
+            sessions = bcoin.lsdirs(subject, 'ses-*')
             if not sessions:
                 sessions = [subject]
             for session in sessions:

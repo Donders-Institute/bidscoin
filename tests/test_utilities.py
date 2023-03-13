@@ -3,15 +3,16 @@ import csv
 from pydicom.data import get_testdata_file
 from pathlib import Path
 try:
-    from bidscoin import bidscoin
+    from bidscoin import bidscoin as bcoin
     from bidscoin.utilities import dicomsort, rawmapper, bidsparticipants
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'/'utilities'))
-    import bidscoin, dicomsort, rawmapper, bidsparticipants
+    import bidscoin as bcoin
+    import dicomsort, rawmapper, bidsparticipants
 
-bidscoin.setup_logging()
+bcoin.setup_logging()
 
 
 def test_dicomsort(tmp_path):

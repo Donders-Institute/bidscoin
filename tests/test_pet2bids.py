@@ -7,20 +7,22 @@ import ruamel
 from pathlib import Path
 
 try:
-    from bidscoin import bidscoin, bids
+    from bidscoin import bidscoin as bcoin
+    from bidscoin import bids
     from bidscoin.plugins import pet2bids
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))# This should work if bidscoin was not pip-installed
     sys.path.append(str(Path(__file__).parents[1]/'plugins'))# This should work if bidscoin was not pip-installed
-    import bidscoin, bids
+    import bidscoin as bcoin
+    import bids
     from plugins import pet2bids
 
 
 
 # setup logger
 LOGGER = logging.getLogger(__name__)
-bidscoin.setup_logging()
+bcoin.setup_logging()
 
 
 @pytest.fixture()

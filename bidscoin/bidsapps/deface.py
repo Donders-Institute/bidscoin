@@ -22,11 +22,11 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 try:
-    from bidscoin import bidscoin
+    from bidscoin import bidscoin as bcoin
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bidscoin
+    import bidscoin as bcoin
 
 
 def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
@@ -49,7 +49,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
         return
 
     # Start logging
-    bidscoin.setup_logging(bidsdir/'code'/'bidscoin'/'deface.log')
+    bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'deface.log')
     LOGGER.info('')
     LOGGER.info('------------ START deface ------------')
     LOGGER.info(f">>> deface bidsfolder={bidsdir} pattern={pattern} subjects={subjects} output={output}"
@@ -57,7 +57,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
 
     # Get the list of subjects
     if not subjects:
-        subjects = bidscoin.lsdirs(bidsdir, 'sub-*')
+        subjects = bcoin.lsdirs(bidsdir, 'sub-*')
         if not subjects:
             LOGGER.warning(f"No subjects found in: {bidsdir/'sub-*'}")
     else:
@@ -82,7 +82,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
             for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
                 subid    = subject.name
-                sessions = bidscoin.lsdirs(subject, 'ses-*')
+                sessions = bcoin.lsdirs(subject, 'ses-*')
                 if not sessions:
                     sessions = [subject]
                 for session in sessions:

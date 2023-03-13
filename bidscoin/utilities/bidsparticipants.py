@@ -16,11 +16,13 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 try:
-    from bidscoin import bidscoin, bids
+    from bidscoin import bidscoin as bcoin
+    from bidscoin import bids
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bidscoin, bids
+    import bidscoin as bcoin
+    import bids
 
 
 def scanpersonals(bidsmap: dict, session: Path, personals: dict) -> bool:
@@ -79,11 +81,11 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
 
     # Start logging
     if dryrun:
-        bidscoin.setup_logging()
+        bcoin.setup_logging()
     else:
-        bidscoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidsparticipants.log')
+        bcoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidsparticipants.log')
     LOGGER.info('')
-    LOGGER.info(f"-------------- START bidsparticipants {bidscoin.version()} ------------")
+    LOGGER.info(f"-------------- START bidsparticipants {bcoin.version()} ------------")
     LOGGER.info(f">>> bidsparticipants sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmapfile}")
 
     # Get the bidsmap sub-/ses-prefix from the bidsmap YAML-file
@@ -110,7 +112,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
         participants_dict = {'participant_id': {'Description': 'Unique participant identifier'}}
 
     # Get the list of subjects
-    subjects = bidscoin.lsdirs(bidsfolder, 'sub-*')
+    subjects = bcoin.lsdirs(bidsfolder, 'sub-*')
     if not subjects:
         LOGGER.warning(f"No subjects found in: {bidsfolder}")
 
@@ -126,7 +128,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
             LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
             personals = {}
             subject   = rawfolder/subject.name.replace('sub-', subprefix.replace('*',''))     # TODO: This assumes e.g. that the subject-ids in the rawfolder did not contain BIDS-invalid characters (such as '_')
-            sessions  = bidscoin.lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
+            sessions  = bcoin.lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
             if not subject.is_dir():
                 LOGGER.error(f"Could not find source-folder: {subject}")
                 continue
@@ -181,7 +183,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
     LOGGER.info('-------------- FINISHED! ------------')
     LOGGER.info('')
 
-    bidscoin.reporterrors()
+    bcoin.reporterrors()
 
 
 def main():
@@ -200,7 +202,7 @@ def main():
     parser.add_argument('-k','--keys',      help="Space separated list of the participants.tsv columns. Default: 'session_id' 'age' 'sex' 'size' 'weight'", nargs='+', default=['age', 'sex', 'size', 'weight'])    # NB: session_id is default
     parser.add_argument('-d','--dryrun',    help='Do not save anything, only print the participants info on screen', action='store_true')
     parser.add_argument('-b','--bidsmap',   help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
-    parser.add_argument('-v','--version',   help='Show the BIDS and BIDScoin version', action='version', version=f"BIDS-version:\t\t{bidscoin.bidsversion()}\nBIDScoin-version:\t{bidscoin.version()}")
+    parser.add_argument('-v','--version',   help='Show the BIDS and BIDScoin version', action='version', version=f"BIDS-version:\t\t{bcoin.bidsversion()}\nBIDScoin-version:\t{bcoin.version()}")
     args = parser.parse_args()
 
     bidsparticipants(rawfolder   = args.sourcefolder,

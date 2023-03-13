@@ -18,10 +18,12 @@ import csv
 import tempfile
 from pathlib import Path
 try:
-    from bidscoin import bidscoin, bids
+    from bidscoin import bidscoin as bcoin
+    from bidscoin import bids
 except ImportError:
     sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bidscoin, bids
+    import bidscoin as bcoin
+    import bids
 
 html_head = """<!DOCTYPE html>
 <html lang="en">
@@ -151,7 +153,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
 
     # Get the list of subjects
     if not subjects:
-        subjects = bidscoin.lsdirs(bidsdir, 'sub-*')
+        subjects = bcoin.lsdirs(bidsdir, 'sub-*')
         if not subjects:
             print(f"No subjects found in: {bidsdir/'sub-*'}"); return
     else:
@@ -161,7 +163,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     # Start logging
     reportdir.mkdir(parents=True, exist_ok=True)
     (reportdir/'slicereport.log').unlink(missing_ok=True)
-    bidscoin.setup_logging(reportdir/'slicereport.log')
+    bcoin.setup_logging(reportdir/'slicereport.log')
     LOGGER.info(f"Command: slicereport {' '.join(sys.argv[1:])}")
 
     # Create the report index file
@@ -177,7 +179,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
 
     # Loop over the subject/session-directories
     for subject in subjects:
-        sessions = bidscoin.lsdirs(subject, 'ses-*')
+        sessions = bcoin.lsdirs(subject, 'ses-*')
         if not sessions:
             sessions = [subject]
         for session in sessions:
@@ -225,7 +227,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 subreport.write_text(f'{html_head}<h1>{caption}</h1>\n\n<p><image src="{montage.name}"></p>\n\n</body></html>')
 
     # Finish off
-    errors = bidscoin.reporterrors().replace('\n', '<br>\n')
+    errors = bcoin.reporterrors().replace('\n', '<br>\n')
     if errors:
         footer = '<h3 style="color: Red">The following errors and warnings were reported:</h3>\n'
     else:

@@ -8,23 +8,25 @@ import pytest
 import inspect
 from pathlib import Path
 try:
-    from bidscoin import bidscoin, bids
+    from bidscoin import bidscoin as bcoin
+    from bidscoin import bids
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
-    import bidscoin, bids
+    import bidscoin as bcoin
+    import bids
 
-bidscoin.setup_logging()
-template, _ = bids.load_bidsmap(bidscoin.bidsmap_template, check=(False,False,False))
+bcoin.setup_logging()
+template, _ = bids.load_bidsmap(bcoin.bidsmap_template, check=(False,False,False))
 
 
 # Test all plugins using the template & default options
-@pytest.mark.parametrize('plugin', bidscoin.list_plugins()[0])
+@pytest.mark.parametrize('plugin', bcoin.list_plugins()[0])
 @pytest.mark.parametrize('options', [template['Options']['plugins'], {}])
 def test_plugin(plugin, options):
 
     # First test to see if we can import the plugin
-    module = bidscoin.import_plugin(plugin, ('bidsmapper_plugin', 'bidscoiner_plugin'))
+    module = bcoin.import_plugin(plugin, ('bidsmapper_plugin', 'bidscoiner_plugin'))
     if not inspect.ismodule(module):
         raise ImportError(f"Invalid plugin: '{plugin}'")
 

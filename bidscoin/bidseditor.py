@@ -30,9 +30,11 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileD
                              QPushButton, QComboBox, QAction)
 
 try:
-    from bidscoin import bidscoin, bids
+    from bidscoin import bidscoin as bcoin
+    from bidscoin import bids
 except ImportError:
-    import bidscoin, bids             # This should work if bidscoin was not pip-installed
+    import bidscoin as bcoin            # This should work if bidscoin was not pip-installed
+    import bids
 
 
 ROW_HEIGHT       = 22
@@ -41,7 +43,7 @@ BIDSCOIN_ICON    = Path(__file__).parent/'bidscoin.ico'
 RIGHTARROW       = Path(__file__).parent/'rightarrow.png'
 
 MAIN_HELP_URL    = f"https://bidscoin.readthedocs.io/en/{bidscoin.version()}"
-HELP_URL_DEFAULT = f"https://bids-specification.readthedocs.io/en/v{bidscoin.bidsversion()}"
+HELP_URL_DEFAULT = f"https://bids-specification.readthedocs.io/en/v{bcoin.bidsversion()}"
 HELP_URLS        = {
     'anat': f"{HELP_URL_DEFAULT}/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#anatomy-imaging-data",
     'dwi' : f"{HELP_URL_DEFAULT}/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#diffusion-imaging-data",
@@ -609,7 +611,7 @@ class MainWindow(QMainWindow):
         delete_button.clicked.connect(partial(self.del_plugin, plugin))
         delete_button.setToolTip(f'Click to discard / stop using the "{plugin}" plugin')
         plugin_table.setCellWidget(1, 2, delete_button)
-        plugin_label.setToolTip(bidscoin.import_plugin(plugin).__doc__)
+        plugin_label.setToolTip(bcoin.import_plugin(plugin).__doc__)
         plugin_table.setToolTip(TOOLTIP_DCM2NIIX if plugin=='dcm2niix2bids' else f"Here you can enter key-value data for the '{plugin}' plugin")
         for n, (key, value) in enumerate(options.items()):
             plugin_table.setItem(n, 0, MyWidgetItem(key))
@@ -665,7 +667,7 @@ class MainWindow(QMainWindow):
 
         # Set-up a plugin dropdown menu
         label     = QLabel('Select a plugin that you would like to add')
-        plugins,_ = bidscoin.list_plugins()
+        plugins,_ = bcoin.list_plugins()
         dropdown  = QComboBox()
         dropdown.addItems([plugin.stem for plugin in plugins])
 
@@ -694,7 +696,7 @@ class MainWindow(QMainWindow):
         if plugin in self.output_bidsmap['Options']['plugins']:
             LOGGER.error(f"Cannot add the '{plugin}' plugin as it already exists in the bidsmap")
             return
-        module  = bidscoin.import_plugin(plugin)
+        module  = bcoin.import_plugin(plugin)
         options = self.input_bidsmap[   'Options']['plugins'].get(plugin,
                   self.template_bidsmap['Options']['plugins'].get(plugin,
                   module.OPTIONS if 'OPTIONS' in dir(module) else {}))
@@ -728,7 +730,7 @@ class MainWindow(QMainWindow):
     def test_plugin(self, plugin: str):
         """Test the plugin and show the result in a pop-up window"""
 
-        status = bidscoin.test_plugin(Path(plugin), self.output_bidsmap['Options']['plugins'].get(plugin,{}))
+        status = bcoin.test_plugin(Path(plugin), self.output_bidsmap['Options']['plugins'].get(plugin,{}))
         if not status or (status==3 and plugin=='dcm2niix2bids'):
             QMessageBox.information(self, 'Plugin test', f"Import of {plugin}: Passed\nSee terminal output for more info")
         else:
@@ -737,7 +739,7 @@ class MainWindow(QMainWindow):
     def test_bidscoin(self):
         """Test the bidsmap tool and show the result in a pop-up window"""
 
-        if not bidscoin.test_bidscoin(self.input_bidsmap, options=self.output_bidsmap['Options'], testplugins=False, testgui=False, testtemplate=False):
+        if not bcoin.test_bidscoin(self.input_bidsmap, options=self.output_bidsmap['Options'], testplugins=False, testgui=False, testtemplate=False):
             QMessageBox.information(self, 'Tool test', f"BIDScoin test: Passed\nSee terminal output for more info")
         else:
             QMessageBox.warning(self, 'Tool test', f"BIDScoin test: Failed\nSee terminal output for more info")
@@ -807,7 +809,7 @@ class MainWindow(QMainWindow):
         """Export the options to a template bidsmap on disk"""
 
         yamlfile, _ = QFileDialog.getOpenFileName(self, 'Select the (default) template bidsmap to save the options in',
-                        str(bidscoin.bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
+                        str(bcoin.bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if yamlfile:
             LOGGER.info(f"Saving bidsmap['Options'] in: {yamlfile}")
             with open(yamlfile, 'r') as stream:
@@ -843,7 +845,7 @@ class MainWindow(QMainWindow):
     def show_about(self):
         """Shows a pop-up window with the BIDScoin version"""
 
-        version, message = bidscoin.version(check=True)
+        version, message = bcoin.version(check=True)
         # QMessageBox.about(self, 'About', f"BIDS editor {version}\n\n{message}")    # Has an ugly / small icon image
         messagebox = QMessageBox(self)
         messagebox.setText(f"\n\nBIDS editor {version}\n\n{message}")
@@ -1497,7 +1499,7 @@ class EditWindow(QDialog):
         """Export the editted run to a (e.g. template) bidsmap on disk"""
 
         yamlfile, _ = QFileDialog.getOpenFileName(self, 'Export run item to (template) bidsmap',
-                                                  str(bidscoin.bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
+                                                  str(bcoin.bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if yamlfile:
             LOGGER.info(f'Exporting run item: bidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}')
             yamlfile   = Path(yamlfile)
@@ -1665,7 +1667,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='') -> No
     templatefile = Path(templatefile)
 
     # Start logging
-    bidscoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidseditor.log')
+    bcoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidseditor.log')
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSeditor ------------')
     LOGGER.info(f">>> bidseditor bidsfolder={bidsfolder} bidsmap={bidsmapfile} template={templatefile}")
@@ -1678,7 +1680,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='') -> No
 
     # Start the Qt-application
     app = QApplication(sys.argv)
-    app.setApplicationName(f"{bidsmapfile} - BIDS editor {bidscoin.version()}")
+    app.setApplicationName(f"{bidsmapfile} - BIDS editor {bcoin.version()}")
     mainwin = MainWindow(bidsfolder, input_bidsmap, template_bidsmap, datasaved=True)
     mainwin.show()
     app.exec()
@@ -1686,7 +1688,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='') -> No
     LOGGER.info('-------------- FINISHED! -------------------')
     LOGGER.info('')
 
-    bidscoin.reporterrors()
+    bcoin.reporterrors()
 
 
 def main():
@@ -1703,7 +1705,7 @@ def main():
 
     parser.add_argument('bidsfolder',           help='The destination folder with the (future) bids data')
     parser.add_argument('-b','--bidsmap',       help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
-    parser.add_argument('-t','--template',      help=f'The template bidsmap file with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: {bidscoin.bidsmap_template.stem}', default=bidscoin.bidsmap_template)
+    parser.add_argument('-t','--template',      help=f'The template bidsmap file with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: {bcoin.bidsmap_template.stem}', default=bcoin.bidsmap_template)
     args = parser.parse_args()
 
     bidseditor(bidsfolder   = args.bidsfolder,

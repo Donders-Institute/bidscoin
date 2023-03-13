@@ -1,18 +1,20 @@
 import json
 from pathlib import Path
 try:
-    from bidscoin import bidscoin, bidsmapper, bidscoiner
+    from bidscoin import bidscoin as bcoin
+    from bidscoin import bidsmapper, bidscoiner
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))      # This should work if bidscoin was not pip-installed
-    import bidscoin, bidsmapper, bidscoiner
+    import bidscoin as bcoin
+    import bidsmapper, bidscoiner
 
-bidscoin.setup_logging()
+bcoin.setup_logging()
 
 
 def test_bidscoiner(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
     if not bidsmap_dicomdir.is_file():
-        bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidscoin.bidsmap_template, [], 'Doe^', '*', unzip='', noeditor=True, force=True)
+        bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bcoin.bidsmap_template, [], 'Doe^', '*', unzip='', noeditor=True, force=True)
         (bidsmap_dicomdir.parent/'bidsmapper.errors').unlink(missing_ok=True)
     bidscoiner.bidscoiner(raw_dicomdir, bids_dicomdir)
     logs     = (bidsmap_dicomdir.parent/'bidscoiner.errors').read_text()
