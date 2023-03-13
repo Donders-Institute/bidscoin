@@ -4,6 +4,7 @@ build-backend    = 'setuptools.build_meta'
 
 [project]
 name             = 'bidscoin'
+packages         = 'bidscoin'
 description      = 'Converts and organises raw MRI data-sets according to the Brain Imaging Data Structure (BIDS)'
 dynamic          = ['version']
 readme           = 'README.rst'
