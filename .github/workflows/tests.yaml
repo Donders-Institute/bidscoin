@@ -38,10 +38,11 @@ jobs:
 
       - name: Install dcm2niix windows
         if: runner.os == 'Windows'
+        shell: pwsh
         run: |
           curl -fLO https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_win.zip
-          powershell -command 'Expand-Archive dcm2niix_win.zip'
-          powershell -command 'setx PATH `"%PATH%;${{ github.workspace }}\dcm2niix_win`"'
+          Expand-Archive dcm2niix_win.zip
+          setx PATH "%PATH%;${{ github.workspace }}\dcm2niix_win"
 
       - name: Tests with pytest
         run: |
