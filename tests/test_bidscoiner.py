@@ -13,11 +13,17 @@ bcoin.setup_logging()
 def test_bidscoiner(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
     if not bidsmap_dicomdir.is_file():
         bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bcoin.bidsmap_template, [], 'Doe^', '*', unzip='', noeditor=True, force=True)
-        (bidsmap_dicomdir.parent/'bidsmapper.errors').unlink(missing_ok=True)
+        try:
+            (bidsmap_dicomdir.parent/'bidsmapper.errors').unlink(missing_ok=True)
+        except Exception:
+            pass
     bidscoiner.bidscoiner(raw_dicomdir, bids_dicomdir)
     logs     = (bidsmap_dicomdir.parent/'bidscoiner.errors').read_text()
     sidecars = sorted((bids_dicomdir/'sub-Peter'/'ses-03Brain'/'extra_data').glob('*TestExtAtrributes*.json'))
-    (bidsmap_dicomdir.parent/'bidscoiner.errors').unlink(missing_ok=True)
+    try:
+        (bidsmap_dicomdir.parent/'bidscoiner.errors').unlink(missing_ok=True)
+    except Exception:
+        pass
     assert 'ERROR' not in logs
     # assert 'WARNING' not in logs
     # assert (bidsmap_dicomdir.parent/'bidscoiner.errors').stat().st_size == 0

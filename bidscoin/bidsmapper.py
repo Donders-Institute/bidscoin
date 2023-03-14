@@ -64,7 +64,10 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
     # Start logging
     if force:
-        (bidscoinfolder/'bidsmapper.log').unlink(missing_ok=True)
+        try:
+            (bidscoinfolder/'bidsmapper.log').unlink(missing_ok=True)
+        except IOError as unlinkerr:
+            LOGGER.debug(f"Could not delete: {bidscoinfolder/'bidsmapper.log'}\n{unlinkerr}")
     bcoin.setup_logging(bidscoinfolder/'bidsmapper.log')
     LOGGER.info('')
     LOGGER.info('-------------- START BIDSmapper ------------')

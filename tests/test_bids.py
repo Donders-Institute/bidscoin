@@ -143,9 +143,7 @@ def test_match_runvalue():
 
 @pytest.fixture()
 def test_bidsmap_path():
-    bidsmap_path = Path('tests/test_data/bidsmap.yaml')
-    full_bidsmap_path = Path(bidsmap_path.resolve())
-    return full_bidsmap_path
+    return Path(__file__).parent/'test_data'/'bidsmap.yaml'
 
 def test_load_bidsmap(test_bidsmap_path):
     # test loading with recommended arguments for load_bidsmap
@@ -166,9 +164,10 @@ def test_load_bidsmap(test_bidsmap_path):
 
 
 def test_find_run(test_bidsmap_path):
-    # load bidsmap
 
+    # load bidsmap
     bidsmap, _ = bids.load_bidsmap(test_bidsmap_path)
+
     # collect provenance from bidsmap for anat, pet, and func
     anat_provenance = bidsmap['DICOM']['anat'][0]['provenance']
     func_provenance = bidsmap['DICOM']['func'][0]['provenance']
