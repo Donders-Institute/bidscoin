@@ -135,6 +135,9 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
         crossdirs = [crossdirs]
     elif crossdirs is None:
         crossdirs = []
+    for crossdir in crossdirs:
+        if not Path(crossdir).is_dir():
+            print(f"Could not find: {crossdir}"); return
     if outlineimage:
         if outlinepattern:
             print('The "--outlineimage" and "--outlinepattern" arguments are mutually exclusive, please specify one or the other'); return
@@ -231,7 +234,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 crossreports = ''
                 for crossdir in crossdirs:
                     for crossreport in (Path(crossdir)/session.relative_to(bidsdir)).glob('*.html'):
-                        crossreports += f'\n<br><a href="{crossreport.resolve()}">{crossreport}</a>'
+                        crossreports += f'\n<br><a href="{crossreport.resolve()}">&#8618; {crossreport}</a>'
                 if subreport.with_suffix('.json').is_file():
                     with open(subreport.with_suffix('.json'), 'r') as meta_fid:
                         metadata = f"\n\n<p>{json.load(meta_fid)}</p>"
