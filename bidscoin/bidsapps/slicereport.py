@@ -228,15 +228,16 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 if suboutputs:
                     montage = subreport.with_suffix('.png')
                     slicer_append(image, outline, suboptions, suboutputs, subsliceroutput, montage, cluster)
-                crossreport = ''
+                crossreports = ''
                 for crossdir in crossdirs:
-                    crossreport += f'\n<br><a href="{Path(crossdir).resolve()/subreport.relative_to(reportdir)}">{Path(crossdir)/subreport.relative_to(reportdir)}</a>'
+                    for crossreport in (Path(crossdir)/session.relative_to(bidsdir)).glob('*.html'):
+                        crossreports += f'\n<br><a href="{crossreport.resolve()}">{crossreport}</a>'
                 if subreport.with_suffix('.json').is_file():
                     with open(subreport.with_suffix('.json'), 'r') as meta_fid:
                         metadata = f"\n\n<p>{json.load(meta_fid)}</p>"
                 else:
                     metadata = ''
-                subreport.write_text(f'{html_head}<h1>{caption}</h1>\n{crossreport}\n<p><image src="{montage.name}"></p>{metadata}\n\n</body></html>')
+                subreport.write_text(f'{html_head}<h1>{caption}</h1>\n{crossreports}\n<p><image src="{montage.name}"></p>{metadata}\n\n</body></html>')
 
     # Finish off
     errors = bcoin.reporterrors().replace('\n', '<br>\n')
