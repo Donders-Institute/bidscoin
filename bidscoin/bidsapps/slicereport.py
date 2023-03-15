@@ -230,7 +230,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                     slicer_append(image, outline, suboptions, suboutputs, subsliceroutput, montage, cluster)
                 crossreport = ''
                 for crossdir in crossdirs:
-                    crossreport += f'\n<br><a href="{Path(crossdir).resolve()/subreport.relative_to(reportdir)}"</a>'
+                    crossreport += f'\n<br><a href="{Path(crossdir).resolve()/subreport.relative_to(reportdir)}">{Path(crossdir)/subreport.relative_to(reportdir)}</a>'
                 if subreport.with_suffix('.json').is_file():
                     with open(subreport.with_suffix('.json'), 'r') as meta_fid:
                         metadata = f"\n\n<p>{json.load(meta_fid)}</p>"
@@ -283,6 +283,7 @@ OUTPUTS:
 
 examples:
   slicereport myproject/bids anat/*_T1w*
+  slicereport myproject/bids anat/*_T2w* -r myproject/QC/slicereport_T2 -x myproject/QC/slicereport_T1
   slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*
   slicereport myproject/bids/derivatives/fmriprep anat/*run-?_desc-preproc_T1w* -o anat/*run-?_label-GM*
   slicereport myproject/bids/derivatives/deface anat/*_T1w* -o myproject/bids:anat/*_T1w* --options L e 0.05

@@ -314,6 +314,7 @@ Quality control
 
     examples:
       slicereport myproject/bids anat/*_T1w*
+      slicereport myproject/bids anat/*_T2w* -r myproject/QC/slicereport_T2 -x myproject/QC/slicereport_T1
       slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*
       slicereport myproject/bids/derivatives/fmriprep anat/*run-?_desc-preproc_T1w* -o anat/*run-?_label-GM*
       slicereport myproject/bids/derivatives/deface anat/*_T1w* -o myproject/bids:anat/*_T1w* --options L e 0.05
