@@ -133,6 +133,8 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
         reportdir = Path(reportdir).resolve()
     if isinstance(crossdirs, str):
         crossdirs = [crossdirs]
+    elif crossdirs is None:
+        crossdirs = []
     if outlineimage:
         if outlinepattern:
             print('The "--outlineimage" and "--outlinepattern" arguments are mutually exclusive, please specify one or the other'); return
