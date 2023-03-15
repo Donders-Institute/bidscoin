@@ -13,24 +13,24 @@ For more documentation see: https://bidscoin.readthedocs.io
 """
 
 import argparse
-import textwrap
-import tarfile
-import shutil
-import sys
-import os
-import logging
 import coloredlogs
 import inspect
-import subprocess
-import urllib.request
 import json
-from tqdm import tqdm
-from pathlib import Path
+import logging
+import os
+import shutil
+import subprocess
+import sys
+import tarfile
+import textwrap
+import urllib.request
 from functools import lru_cache
-from importlib.util import spec_from_file_location, module_from_spec
 from importlib.metadata import entry_points
+from importlib.util import spec_from_file_location, module_from_spec
+from pathlib import Path
 from typing import Tuple, Union, List
 from ruamel.yaml import YAML
+from tqdm import tqdm
 try:
     from .due import due, Doi
 except ImportError:

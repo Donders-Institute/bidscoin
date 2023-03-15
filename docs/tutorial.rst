@@ -9,8 +9,10 @@ A good starting point to learn more about BIDS and BIDScoin is to watch `this pr
 BIDScoin tutorial
 -----------------
 
-1. Getting started
-~~~~~~~~~~~~~~~~~~
+The tutorial below was written for an older version of BIDScoin with the DCCN user in mind. Nevertheless, the main principles still apply, and you are encouraged to try out the assignments
+
+1. Setting up the environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Depending on how BIDScoin was installed, you may have to set your Python environment settings before you can run BIDScoin commands from your command-line interface / shell. In the DCCN compute cluster example below it is assumed that an `environment module <https://modules.sourceforge.net/>`__ is used to load your Linux Anaconda Python installation and that BIDScoin is installed in a `conda environment <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands>`__ named "bidscoin". Run or adjust these commands to your computer system if needed:
 
@@ -19,7 +21,7 @@ Depending on how BIDScoin was installed, you may have to set your Python environ
    $ module add bidscoin                # Load the DCCN bidscoin module with the PATH settings and Anaconda environment
    $ source activate /opt/bidscoin      # Activate the Python virtual environment with the BIDScoin Python packages
 
-Now you should be able to execute BIDScoin commands. Test this by running ``bidscoin`` to get a general overview. Can you generate a list of all BIDScoin tools? What about the plugins?
+Now you should be able to execute BIDScoin commands. Test this by running ``bidscoin`` to get a general workflow overview. Can you generate a list of all BIDScoin tools? What about the plugins?
 
 2. Data preparation
 ~~~~~~~~~~~~~~~~~~~

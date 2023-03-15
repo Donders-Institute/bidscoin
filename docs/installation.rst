@@ -114,13 +114,7 @@ You can use the following command syntax to execute BIDScoin tools in the contai
 
    $ apptainer exec bidscoin.sif <bidscoin_tool> <bidscoin_tool_args>
 
-Where ``<bidscoin_tool>`` is a BIDScoin tool (e.g., ``bidsmapper``, ``bidscoiner``, ``dicomsort``) and ``<bidscoin_tool_args>`` are the tool's arguments. If your data doesn't reside in your home folder, then you need to add a ``--bind`` Apptainer argument which maps a folder from the host system to a folder inside the Apptainer container:
-
-.. code-block:: console
-
-   $ apptainer exec bidscoin.sif --bind <host_dir>:<container_dir> <bidscoin_tool> <bidscoin_tool_args>
-
-So for instance, if you have source data in ``myhome/data/raw``, instead of running ``bidsmapper data/raw data/bids`` and then ``bidsmapper data/raw data/bids`` from your home directory, you now execute:
+Where ``<bidscoin_tool>`` is a BIDScoin tool (e.g., ``bidsmapper``, ``bidscoiner``, ``dicomsort``) and ``<bidscoin_tool_args>`` are the tool's arguments. So for instance, if you have source data in ``myhome/data/raw``, instead of running ``bidsmapper data/raw data/bids`` and then ``bidsmapper data/raw data/bids`` from your home directory, you now execute:
 
 .. code-block:: console
 
@@ -129,7 +123,15 @@ So for instance, if you have source data in ``myhome/data/raw``, instead of runn
    $ xhost -
    $ apptainer exec bidscoin.sif bidscoiner data/raw data/bids
 
-The `xhost +` command allows Apptainer to open a graphical display on your computer and normally needs to be run once before launching a GUI application, i.e. is needed for running the bidseditor. If your data resides elsewhere, say in ``/myproject/data/raw`` then you should add ``--bind /myproject`` as an additional input argument (see the documentation for usage and setting environment variables to automatically bind your root paths for all containers).
+The `xhost +` command allows Apptainer to open a graphical display on your computer and normally needs to be run once before launching a GUI application, i.e. is needed for running the bidseditor.
+
+If your data doesn't reside in your home folder, then you need to add a ``--bind <host_dir>:<container_dir>`` Apptainer argument which maps a folder from the host system to a folder inside the Apptainer container. So if yuor data is in ``/myproject/raw``, you run:
+
+.. code-block:: console
+
+   $ apptainer exec bidscoin.sif --bind /myproject <bidscoin_tool> <bidscoin_tool_args>
+
+See the documentation for usage and setting environment variables to automatically bind your root paths for all containers.
 
 Using a Docker container
 ------------------------

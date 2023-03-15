@@ -220,6 +220,8 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
                             file) (default: False)
       -a ARGS, --args ARGS  Additional arguments that are passed to synthstrip (NB: Use quotes
                             and a leading space to prevent unintended argument parsing)
+      -c, --cluster         Use `qsub` to submit the skullstrip jobs to a high-performance compute
+                            (HPC) cluster. Can only be used if `--masked` is left empty (default: False)
 
     examples:
       skullstrip myproject/bids anat/*_T1w*
@@ -274,8 +276,7 @@ Quality control
       -q QCSCORES [QCSCORES ...], --qcscores QCSCORES [QCSCORES ...]
                             Column names for creating an accompanying tsv-file to store QC-rating scores
                             (default: rating_overall)
-      -c, --cluster         Use `qsub` to submit the slicer jobs to a high-performance compute (HPC)
-                            cluster
+      -c, --cluster         Use `qsub` to submit the slicer jobs to a high-performance compute (HPC) cluster
       --options OPTIONS [OPTIONS ...]
                             Main options of slicer (see below). (default: "s 1")
       --outputs OUTPUTS [OUTPUTS ...]

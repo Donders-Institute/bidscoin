@@ -6,7 +6,7 @@ BIDScoin has different options and settings (see below) that can be adjusted per
 .. figure:: ./_static/bidseditor_options.png
    :scale: 75%
 
-   The bidseditor options window with the different settings for BIDScoin and its plugins. The user can manage the plugins that will be used with the [Add] and [Remove] buttons, and save the current options to the template bidsmap by using the [Set as default] button.
+   The bidseditor options window with the different settings for BIDScoin and its plugins. The user can manage the plugins that will be used with the [Add] (as shown here) and [Remove] buttons, and save the current options to the template bidsmap by using the [Set as default] button.
 
 BIDScoin
 --------
@@ -22,12 +22,12 @@ These setting can be used by all the BIDScoin tools:
 - ``ignoretypes``: Datatypes that are excluded / not converted"""
 - ``zip``: Wildcard pattern to select tarball/zip-files in the source folders that need to be unzipped (in a tempdir) to expose the data. Use for instance '*.tar.gz' if your source data looks like `sub-01\01_MPRAGE\dcmfiles.tar.gz`, etc
 
-The core working of BIDScoin can be tested by clicking the [Test] button and inspection of the terminal output.
+The core working of BIDScoin and its plugins can be tested by clicking the corresponding [Test] button and inspection of the terminal output.
 
 dcm2niix2bids - plugin
 ----------------------
 
-The `dcm2niix2bids plugin <plugins.html#dcm2niix2bids>`__ is the default bidscoiner plugin that converts DICOM and PAR/REC source data to BIDS-valid NIfTI- and json sidecar files. This plugin relies on `dcm2niix <https://github.com/rordenlab/dcm2niix>`__, for which you can set the following options:
+The `dcm2niix2bids plugin <plugins.html#dcm2niix2bids>`__ is the default bidscoiner plugin that converts DICOM and PAR/REC data to BIDS. It relies on `dcm2niix <https://github.com/rordenlab/dcm2niix>`__, for which you can set the following options:
 
 - ``command``: Command to run dcm2niix from the terminal, such as:
 
@@ -41,8 +41,6 @@ The `dcm2niix2bids plugin <plugins.html#dcm2niix2bids>`__ is the default bidscoi
 - ``anon``: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
 - ``meta``: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as BIDS (sidecar) files, such as ``['.json', '.tsv', '.tsv.gz']``. You can use this to enrich json sidecar files or add data that is not supported by this plugin. For instance, with each PET DICOM image you can put a small json file with key-value pairs that are not contained in the DICOM header (such as ``{InjectedRadioactivity: 400, InjectedMass: 10}``). NB: Data entered in the meta table of the bidseditor GUI always has priority over data in source json files, which itself has priority over dcm2niix-generated json data.
 
-To test the proper working of dcm2niix click [Test] and see the terminal output for more helptext on its input arguments
-
 .. tip::
    - Use the [Set as default] button to put your custom dcm2niix command in your template bidsmap so that you don't have to adjust it anymore for every new study
    - SPM users may want to use '-z n', which produces unzipped NIfTI's
@@ -51,32 +49,31 @@ To test the proper working of dcm2niix click [Test] and see the terminal output 
 spec2nii2bids - plugin
 ----------------------
 
-The `spec2nii2bids plugin <plugins.html#spec2nii2bids>`__ is a default bidscoiner plugin that converts Twix, SPAR/SDAT and P-file spectroscopy source data to BIDS-valid NIfTI- and json sidecar files. This plugin relies on `spec2nii <https://github.com/wtclarke/spec2nii>`__, for which you can set the following options:
+The `spec2nii2bids plugin <plugins.html#spec2nii2bids>`__ is an optional bidscoiner plugin for spectroscopy data. It relies on `spec2nii <https://github.com/wtclarke/spec2nii>`__, for which you can set the following options:
 
-- ``command``: Command to run spec2nii, such as:
-
-  - ``dcm2niix`` (normal usage, i.e. the executable is already present on your path)
-  - ``module add spec2nii; spec2nii`` (if you use a module system)
-  - ``PATH=/opt/spec2nii/bin:$PATH; spec2nii`` (prepend the path to your executable)
-  - ``/opt/spec2nii/bin/spec2nii`` (specify the fullpath to the executable)
-  - ``C:\"Program Files"\spec2nii\spec2nii.exe`` (use quotes to deal with whitespaces in your fullpath)
-
+- ``command``: Command to run spec2nii, such as ``spec2nii`` (see the dcm2niix plugin for more examples to set the path)
 - ``args``: Argument string that is passed as input to spec2nii to customize its behavior
 - ``anon``: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
 - ``meta``: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as BIDS (sidecar) files, such as ``['.json', '.tsv', '.tsv.gz']``. You can use this to enrich json sidecar files or add data that is not supported by this plugin. NB: Data entered in the meta table of the bidseditor GUI always has priority over data in source json files, which itself has priority over dcm2niix-generated json data.
 - ``multiraid``: The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
 
-To test the proper working of spec2nii click [Test] and see the terminal output for more helptext on its input arguments
+pet2bids - plugin
+-----------------
+
+The `pet2bids plugin <plugins.html#pet2bids>`__ is an optional bidscoiner plugin for PET data that is still under development. It relies on `PET2BIDS <https://github.com/openneuropet/PET2BIDS>`__, for which you can set the following options:
+
+- ``command``: Command to run pet2bids, such as ``dcm2niix4pet`` (see the dcm2niix plugin for more examples to set the path)
+- ``args``: Reserved for future releases
+- ``anon``: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
+- ``meta``: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as BIDS (sidecar) files, such as ``['.json', '.tsv', '.xls', '.xlsx']``. You can use this to enrich json sidecar files or add data that is not supported by this plugin. NB: Data entered in the meta table of the bidseditor GUI always has priority over data in source json files, which itself has priority over dcm2niix-generated json data.
 
 nibabel2bids - plugin
 ---------------------
 
-The `nibabel2bids plugin <plugins.html#nibabel2bids>`__ is an optional bidscoiner plugin that converts the wide variety of `nibabel <https://nipy.org/nibabel>`__ datatypes to BIDS-valid NIfTI- and json sidecar files. The following options can be set:
+The `nibabel2bids plugin <plugins.html#nibabel2bids>`__ is an optional bidscoiner plugin that converts the wide variety of `nibabel <https://nipy.org/nibabel>`__ datatypes to BIDS. The following options can be set:
 
 - ``ext``: The (nibabel) file extension of the output data, i.e. ``.nii.gz`` or ``.nii``
 - ``meta``: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as BIDS (sidecar) files, such as ``['.json', '.tsv', '.tsv.gz', '.bval', '.bvec']``. You can use this to enrich json sidecar files or add data that is not supported by this plugin. For instance, in this way you can still convert a NIfTI dataset that was previously created with dcm2niix to BIDS. NB: Data entered in the meta table of the bidseditor GUI always has priority over data in source json files, which itself has priority over dcm2niix-generated json data.
-
-To test the proper working of nibabel click [Test] and see the terminal output for more helptext on its input arguments
 
 .. note::
    Typically, nibabel2bids does not produce any json sidecar files, so as a user you need to provide for that yourself. You can look up the fields required by the BIDS specification and enter that information in the meta data tables of the bidseditor or put it in json files next to your source data.

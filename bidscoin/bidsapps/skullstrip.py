@@ -19,11 +19,11 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 try:
-    from bidscoin import bids, bidscoin
+    from bidscoin import bcoin, bids
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bids, bidscoin
+    import bcoin, bids
 
 
 def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: list, force: bool, args: str, cluster: bool):
@@ -59,14 +59,14 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
         return
 
     # Start logging
-    bidscoin.setup_logging(bidsdir/'code'/'bidscoin'/'skullstrip.log')
+    bcoin.setup_logging(bidsdir/'code'/'bidscoin'/'skullstrip.log')
     LOGGER.info('')
     LOGGER.info('------------ START skullstrip ------------')
     LOGGER.info(f">>> skullstrip bidsfolder={bidsdir} pattern={pattern} subjects={subjects} masked={masked} output={output} force={force} {args}")
 
     # Get the list of subjects
     if not subjects:
-        subjects = bidscoin.lsdirs(bidsdir, 'sub-*')
+        subjects = bcoin.lsdirs(bidsdir, 'sub-*')
         if not subjects:
             LOGGER.warning(f"No subjects found in: {bidsdir/'sub-*'}")
     else:
@@ -78,7 +78,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
         for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
             subid    = subject.name
-            sessions = bidscoin.lsdirs(subject, 'ses-*')
+            sessions = bcoin.lsdirs(subject, 'ses-*')
             if not sessions:
                 sessions = [subject]
             for session in sessions:
@@ -124,7 +124,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
                     command = f"mri_synthstrip -i {srcimg} -o {outputimg} -m {maskimg} {args}"
                     if cluster:
                         command = f"qsub -l walltime=0:05:00,mem=8gb -N skullstrip_{subid}_{sesid} <<EOF\n{command}\nEOF"
-                    if bidscoin.run_command(command):
+                    if bcoin.run_command(command):
                         continue
 
                     # Add a json sidecar-file with the "SkullStripped" field

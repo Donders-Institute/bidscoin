@@ -7,21 +7,21 @@ https://github.com/dangom/dac2bids/blob/master/dac2bids.py
 @author: Marcel Zwiers
 """
 
-import copy
-import re
-import logging
-import tempfile
-import tarfile
-import zipfile
-import json
-import warnings
-import shutil
 import bids_validator
+import copy
+import json
+import logging
+import re
+import shutil
+import tarfile
+import tempfile
+import warnings
+import zipfile
 from functools import lru_cache
-from pydicom import dcmread, fileset, datadict
-from nibabel.parrec import parse_PAR_header
-from typing import Union, List, Tuple
 from pathlib import Path
+from typing import Union, List, Tuple
+from nibabel.parrec import parse_PAR_header
+from pydicom import dcmread, fileset, datadict
 try:
     from bidscoin import bcoin
     from bidscoin.utilities import dicomsort
