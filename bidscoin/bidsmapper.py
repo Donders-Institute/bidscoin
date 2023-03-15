@@ -21,12 +21,10 @@ import re
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
-from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QApplication, QMessageBox
 try:
-    from bidscoin import bcoin, bids, bidseditor
+    from bidscoin import bcoin, bids
 except ImportError:
-    import bcoin, bids, bidseditor      # This should work if bidscoin was not pip-installed
+    import bcoin, bids          # This should work if bidscoin was not pip-installed
 
 localversion, versionmessage = bcoin.version(check=True)
 
@@ -153,6 +151,12 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
     else:
         LOGGER.info('Opening the bidseditor')
+        from PyQt5 import QtCore, QtGui
+        from PyQt5.QtWidgets import QApplication, QMessageBox
+        try:
+            from bidscoin import bidseditor
+        except ImportError:
+            import bidseditor       # This should work if bidscoin was not pip-installed
         app = QApplication(sys.argv)
         app.setApplicationName(f"{bidsmapfile} - BIDS editor {localversion}")
 
