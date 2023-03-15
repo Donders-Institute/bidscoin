@@ -15,6 +15,7 @@ import logging
 import subprocess
 import sys
 import csv
+import json
 import tempfile
 from pathlib import Path
 try:
@@ -104,7 +105,7 @@ def slicer_append(inputimage: Path, outlineimage: Path, mainopts: str, outputopt
         sys.exit(process.returncode)
 
 
-def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: str, subjects: list, reportdir: str, qccols: list, cluster: bool, options: list, outputs: list, suboptions: list, suboutputs: list):
+def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: str, subjects: list, reportdir: str, crossdirs: str, qccols: list, cluster: bool, options: list, outputs: list, suboptions: list, suboutputs: list):
     """
     :param bidsdir:         The bids-directory with the subject data
     :param pattern:         Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T1w*'
@@ -112,6 +113,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     :param outlineimage:    A common red-outline image that is projected on top of all images
     :param subjects:        Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed
     :param reportdir:       The folder where the report is saved
+    :param crossdirs:       A (list of) folder(s) with cross-linked sub-reports
     :param qccols:          Column names for creating an accompanying tsv-file to store QC-rating scores
     :param cluster:         Use qsub to submit the slicer jobs to a high-performance compute (HPC) cluster
     :param options:         Slicer main options
@@ -129,6 +131,8 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
         reportdir = bidsdir/'derivatives/slicereport'
     else:
         reportdir = Path(reportdir).resolve()
+    if isinstance(crossdirs, str):
+        crossdirs = [crossdirs]
     if outlineimage:
         if outlinepattern:
             print('The "--outlineimage" and "--outlinepattern" arguments are mutually exclusive, please specify one or the other'); return
@@ -222,7 +226,15 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 if suboutputs:
                     montage = subreport.with_suffix('.png')
                     slicer_append(image, outline, suboptions, suboutputs, subsliceroutput, montage, cluster)
-                subreport.write_text(f'{html_head}<h1>{caption}</h1>\n\n<p><image src="{montage.name}"></p>\n\n</body></html>')
+                crossreport = ''
+                for crossdir in crossdirs:
+                    crossreport += f'\n<br><a href="{Path(crossdir).resolve()/subreport.relative_to(reportdir)}</a>'
+                if subreport.with_suffix('.json').is_file():
+                    with open(subreport.with_suffix('.json'), 'r') as meta_fid:
+                        metadata = f"\n\n<p>{json.load(meta_fid)}</p>"
+                else:
+                    metadata = ''
+                subreport.write_text(f'{html_head}<h1>{caption}</h1>\n{crossreport}\n<p><image src="{montage.name}"></p>{metadata}\n\n</body></html>')
 
     # Finish off
     errors = bcoin.reporterrors().replace('\n', '<br>\n')
@@ -282,6 +294,7 @@ examples:
     parser.add_argument('-i','--outlineimage',      help='A common red-outline image that is projected on top of all images', default='')
     parser.add_argument('-p','--participant_label', help='Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed', nargs='+')
     parser.add_argument('-r','--reportfolder',      help="The folder where the report is saved (default: bidsfolder/derivatives/slicereport)")
+    parser.add_argument('-x','--xlinkfolder',       help="A (list of) QC report folder(s) with cross-linkable sub-reports, e.g. bidsfolder/derivatives/mriqc", nargs='+')
     parser.add_argument('-q','--qcscores',          help="Column names for creating an accompanying tsv-file to store QC-rating scores (default: rating_overall)", default=['rating_overall'], nargs='+')
     parser.add_argument('-c','--cluster',           help='Use `qsub` to submit the slicer jobs to a high-performance compute (HPC) cluster', action='store_true')
     parser.add_argument('--options',                help='Main options of slicer (see below). (default: "s 1")', default=['s','1'], nargs='+')
@@ -296,6 +309,7 @@ examples:
                 outlineimage   = args.outlineimage,
                 subjects       = args.participant_label,
                 reportdir      = args.reportfolder,
+                crossdirs      = args.xlinkfolder,
                 qccols         = args.qcscores,
                 cluster        = args.cluster,
                 options        = args.options,

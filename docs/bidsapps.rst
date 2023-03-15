@@ -273,6 +273,9 @@ Quality control
       -r REPORTFOLDER, --reportfolder REPORTFOLDER
                             The folder where the report is saved (default:
                             bidsfolder/derivatives/slicereport)
+      -x XLINKFOLDER [XLINKFOLDER ...], --xlinkfolder XLINKFOLDER [XLINKFOLDER ...]
+                            A (list of) QC report folder(s) with cross-linkable sub-reports, e.g.
+                            bidsfolder/derivatives/mriqc
       -q QCSCORES [QCSCORES ...], --qcscores QCSCORES [QCSCORES ...]
                             Column names for creating an accompanying tsv-file to store QC-rating scores
                             (default: rating_overall)
