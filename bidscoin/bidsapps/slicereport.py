@@ -230,7 +230,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                     slicer_append(image, outline, suboptions, suboutputs, subsliceroutput, montage, cluster)
                 crossreport = ''
                 for crossdir in crossdirs:
-                    crossreport += f'\n<br><a href="{Path(crossdir).resolve()/subreport.relative_to(reportdir)}</a>'
+                    crossreport += f'\n<br><a href="{Path(crossdir).resolve()/subreport.relative_to(reportdir)}"</a>'
                 if subreport.with_suffix('.json').is_file():
                     with open(subreport.with_suffix('.json'), 'r') as meta_fid:
                         metadata = f"\n\n<p>{json.load(meta_fid)}</p>"
