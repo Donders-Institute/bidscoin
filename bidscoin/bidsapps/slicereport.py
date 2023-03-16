@@ -151,6 +151,8 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
             print(f"Could not find the outline folder: {outlinedir}"); return
     else:
         outlinedir = bidsdir
+    if not suboptions:
+        suboptions = options
 
     # Format the slicer main and output options and sliced images
     options                     = parse_options(options)
@@ -306,8 +308,8 @@ examples:
     parser.add_argument('-c','--cluster',           help='Use `qsub` to submit the slicer jobs to a high-performance compute (HPC) cluster', action='store_true')
     parser.add_argument('--options',                help='Main options of slicer (see below). (default: "s 1")', default=['s','1'], nargs='+')
     parser.add_argument('--outputs',                help='Output options of slicer (see below). (default: "x 0.4 x 0.5 x 0.6 y 0.4 y 0.5 y 0.6 z 0.4 z 0.5 z 0.6")', default=['x','0.4','x','0.5','x','0.6','y','0.4','y','0.5','y','0.6','z','0.4','z','0.5','z','0.6'], nargs='+')
-    parser.add_argument('--suboptions',             help='Main options of slicer for creating the sub-reports (same as OPTIONS, see below). (default: "s 1")', default=['s','1'], nargs='+')
-    parser.add_argument('--suboutputs',             help='Output options of slicer for creating the sub-reports (same as OUTPUTS, see below). (default: "S 4 1600")', default=['S', '4', '1600'], nargs='+')
+    parser.add_argument('--suboptions',             help='Main options of slicer for creating the sub-reports (same as OPTIONS, see below). (default: OPTIONS)', nargs='+')
+    parser.add_argument('--suboutputs',             help='Output options of slicer for creating the sub-reports (same as OUTPUTS, see below). (default: "S 4 1600")', default=['S','4','1600'], nargs='+')
     args = parser.parse_args()
 
     slicereport(bidsdir        = args.bidsfolder,
