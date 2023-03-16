@@ -17,6 +17,7 @@ import sys
 import csv
 import json
 import tempfile
+from copy import copy
 from pathlib import Path
 try:
     from bidscoin import bcoin, bids
@@ -152,7 +153,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     else:
         outlinedir = bidsdir
     if not suboptions:
-        suboptions = options
+        suboptions = copy(options)
 
     # Format the slicer main and output options and sliced images
     options                     = parse_options(options)
