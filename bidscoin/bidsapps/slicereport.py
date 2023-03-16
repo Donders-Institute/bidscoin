@@ -241,6 +241,9 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 if subreport.with_suffix('.json').is_file():
                     with open(subreport.with_suffix('.json'), 'r') as meta_fid:
                         metadata = f"\n\n<p>{json.load(meta_fid)}</p>"
+                elif image.with_suffix('').with_suffix('.json').is_file():
+                    with open(image.with_suffix('').with_suffix('.json'), 'r') as meta_fid:
+                        metadata = f"\n\n<p>{json.load(meta_fid)}</p>"
                 else:
                     metadata = ''
                 subreport.write_text(f'{html_head}<h1>{caption}</h1>\n{crossreports}\n<p><image src="{montage.name}"></p>{metadata}\n\n</body></html>')

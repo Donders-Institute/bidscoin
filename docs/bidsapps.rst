@@ -287,7 +287,7 @@ Quality control
                             y 0.6 z 0.4 z 0.5 z 0.6")
       --suboptions SUBOPTIONS [SUBOPTIONS ...]
                             Main options of slicer for creating the sub-reports (same as OPTIONS, see
-                            below). (default: "s 1")
+                            below). (default: OPTIONS)
       --suboutputs SUBOUTPUTS [SUBOUTPUTS ...]
                             Output options of slicer for creating the sub-reports (same as OUTPUTS, see
                             below). (default: "S 4 1600")
