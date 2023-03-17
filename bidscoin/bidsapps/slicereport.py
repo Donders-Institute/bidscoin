@@ -248,6 +248,13 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                     metadata = ''
                 subreport.write_text(f'{html_head}<h1>{caption}</h1>\n{crossreports}\n<p><image src="{montage.name}"></p>{metadata}\n\n</body></html>')
 
+    # Create a dataset description file if it does not exist
+    dataset = reportdir/'dataset_description.json'
+    if not dataset.is_file():
+        description = {"GeneratedBy": [{"Name":"BIDScoin", "Version":bcoin.version(), "CodeURL":"https://github.com/Donders-Institute/bidscoin"}]}
+        with dataset.open('w') as fid:
+            json.dump(description, fid, indent=4)
+
     # Finish off
     errors = bcoin.reporterrors().replace('\n', '<br>\n')
     if errors:
