@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
-## [4.0.0] - 2023-03-06
+## [4.0.0] - 2023-03-18
 
 ### Added
 - Support for BIDS 1.8.0
