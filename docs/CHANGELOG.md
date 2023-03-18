@@ -22,9 +22,9 @@ All notable changes to this project will be documented in this file. The format 
 - Many bugfixes, user interface improvements and tweaks
 
 ### Changed
-- The default behaviour is now not to unzip data in the sourcefolders anymore. Instead, users can use the `--unzip` option in the bidsmapper
+- The default behaviour is now to **not** unzip data in the sourcefolders anymore. Instead, users can use the `--unzip` option in the bidsmapper
 - The spec2nii plugin is no longer added by default but is optional
-- The dcm2niix2bids plugin no longer handles PET data (this is now handeled by the pet2bids plugin)
+- The dcm2niix2bids plugin no longer handles PET data (this is now handled by the pet2bids plugin)
 - Removed BIDScoin's redundant/confusing `datatypes` option from the bidsmap
 - Removed the obscure `participants` option from bidscoiner
 - Major code refactoring
