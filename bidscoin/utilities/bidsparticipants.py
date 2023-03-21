@@ -117,7 +117,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
     # Remove obsolete participants from the participants table
     for participant in participants_table.index:
         if participant not in [sub.name for sub in subjects]:
-            participants_table = participants_table.drop(participant)
+            participants_table.drop(participant, inplace=True)
 
     # Loop over all subjects in the bids-folder and add them to the participants table
     with logging_redirect_tqdm():

@@ -304,8 +304,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                     ext     = ''.join(extrafile[0].suffixes)
                     invfile = bids.get_bidsvalue(outfolder/(bidsname+ext), 'dir', bids.get_bidsvalue(bidsname,'dir') + jsondata['PhaseEncodingPolarityGE'])
                     LOGGER.verbose(f"Renaming GE reversed polarity image: {extrafile[0]} -> {invfile}")
-                    extrafile[0].rename(invfile)
-                    extrafile[0].with_suffix('').with_suffix('.json').rename(invfile.with_suffix('').with_suffix('.json'))
+                    extrafile[0].replace(invfile)
+                    extrafile[0].with_suffix('').with_suffix('.json').replace(invfile.with_suffix('').with_suffix('.json'))
                     jsonfiles.append(invfile.with_suffix('').with_suffix('.json'))
                 else:
                     LOGGER.warning(f"Unexpected variants of {outfolder/bidsname}* were produced by dcm2niix. Possibly this can be remedied by using the dcm2niix -i option (to ignore derived, localizer and 2D images) or by clearing the BIDS folder before running bidscoiner")

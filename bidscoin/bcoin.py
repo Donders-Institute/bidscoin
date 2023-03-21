@@ -223,7 +223,7 @@ def run_command(command: str) -> int:
     :return:        Errorcode (i.e. 0 if the command was successfully executed (no errors), > 0 otherwise)
     """
 
-    LOGGER.info(f"Running: {command}")
+    LOGGER.info(f"Command:\n{command}")
     process = subprocess.run(command, shell=True, capture_output=True, text=True)
     if process.stderr or process.returncode != 0:
         LOGGER.error(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")

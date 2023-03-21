@@ -96,10 +96,10 @@ def slicer_append(inputimage: Path, outlineimage: Path, mainopts: str, outputopt
               f"mv {montage.name} {montage.parent}\n" \
               f"rm -r {workdir}"
     if cluster:
-        command = f"qsub -l walltime=0:01:00,mem=1gb -N slicereport <<EOF\n{command}\nEOF"
+        command = f"qsub -l walltime=0:01:00,mem=1gb -N slicereport -e {tempfile.gettempdir()} -o {tempfile.gettempdir()}<<EOF\n{command}\nEOF"
 
     # Run the command
-    LOGGER.bcdebug(f"Running: {command}")
+    LOGGER.bcdebug(f"Command: {command}")
     process = subprocess.run(command, shell=True, capture_output=True, text=True)
     if process.stderr or process.returncode!=0:
         LOGGER.error(f"{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
@@ -251,7 +251,10 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     # Create a dataset description file if it does not exist
     dataset = reportdir/'dataset_description.json'
     if not dataset.is_file():
-        description = {"GeneratedBy": [{"Name":"BIDScoin", "Version":bcoin.version(), "CodeURL":"https://github.com/Donders-Institute/bidscoin"}]}
+        description = {"Name": "Slicereport - A visual inspection report",
+                       "BIDSVersion": bcoin.bidsversion(),
+                       "DatasetType": "derivative",
+                       "GeneratedBy": [{"Name":"BIDScoin", "Version":bcoin.version(), "CodeURL":"https://github.com/Donders-Institute/bidscoin"}]}
         with dataset.open('w') as fid:
             json.dump(description, fid, indent=4)
 
