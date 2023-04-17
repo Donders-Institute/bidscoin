@@ -101,9 +101,9 @@ def slicer_append(inputimage: Path, outlineimage: Path, mainopts: str, outputopt
     # Run the command
     LOGGER.bcdebug(f"Command: {command}")
     process = subprocess.run(command, shell=True, capture_output=True, text=True)
-    if process.stderr or process.returncode!=0:
+    if process.stderr or process.returncode != 0:
         LOGGER.warning(f"{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
-    if process.returncode!=0:
+    if process.returncode != 0:
         sys.exit(process.returncode)
 
 
@@ -237,7 +237,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                     slicer_append(image, outline, suboptions, suboutputs, subsliceroutput, montage, cluster)
                 crossreports = ''
                 for crossdir in crossdirs:          # Include niprep reports
-                    for crossreport in sorted(Path(crossdir).glob(f"{subject.name.split('_')[0]}*.html")) + sorted(Path(crossdir)/session.relative_to(bidsdir).glob('*.html')):
+                    for crossreport in sorted(Path(crossdir).glob(f"{subject.name.split('_')[0]}*.html")) + sorted((Path(crossdir)/session.relative_to(bidsdir)).glob('*.html')):
                         crossreports += f'\n<br><a href="{crossreport.resolve()}">&#8618; {crossreport}</a>'
                 if subreport.with_suffix('.json').is_file():
                     with open(subreport.with_suffix('.json'), 'r') as meta_fid:
