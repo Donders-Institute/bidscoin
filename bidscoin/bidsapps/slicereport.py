@@ -235,8 +235,8 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                     montage = subreport.with_suffix('.png')
                     slicer_append(image, outline, suboptions, suboutputs, subsliceroutput, montage, cluster)
                 crossreports = ''
-                for crossdir in crossdirs:
-                    for crossreport in (Path(crossdir)/session.relative_to(bidsdir)).glob('*.html'):
+                for crossdir in crossdirs:          # Include niprep reports
+                    for crossreport in sorted(Path(crossdir).glob(f"{subject.name.split('_')[0]}*.html")) + sorted(Path(crossdir)/session.relative_to(bidsdir).glob('*.html')):
                         crossreports += f'\n<br><a href="{crossreport.resolve()}">&#8618; {crossreport}</a>'
                 if subreport.with_suffix('.json').is_file():
                     with open(subreport.with_suffix('.json'), 'r') as meta_fid:
