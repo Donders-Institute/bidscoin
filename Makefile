@@ -2,7 +2,7 @@ help:
 	@egrep -h '\s##\s' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m  %-30s\033[0m %s\n", $$1, $$2}'
 
 install: ## install python dependencies and bidscoin package
-	@pip install --upgrade pip
+	@python -m pip install --upgrade pip
 	@pip install .[all]
 
 test: ## run all the tests in the tests folder
