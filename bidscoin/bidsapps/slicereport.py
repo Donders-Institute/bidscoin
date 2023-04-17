@@ -102,7 +102,8 @@ def slicer_append(inputimage: Path, outlineimage: Path, mainopts: str, outputopt
     LOGGER.bcdebug(f"Command: {command}")
     process = subprocess.run(command, shell=True, capture_output=True, text=True)
     if process.stderr or process.returncode!=0:
-        LOGGER.error(f"{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
+        LOGGER.warning(f"{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
+    if process.returncode!=0:
         sys.exit(process.returncode)
 
 
