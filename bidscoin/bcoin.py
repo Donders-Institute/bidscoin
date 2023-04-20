@@ -233,6 +233,21 @@ def run_command(command: str) -> int:
     return process.returncode
 
 
+def is_hidden(path: Path) -> bool:
+    """
+    Checks if a path contains a hiden folder.
+
+    :param path:    The path to be checked.
+    :return:        True if a part of the path starts with a '.', otherwise False.
+    """
+
+    if any([p.name.startswith('.') for p in path.parents]):
+        LOGGER.verbose(f"Path '{path.absolute()}' is hidden.")
+        return True
+    else:
+        return False
+
+
 def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
     """
     Gets all directories in a folder, ignores files
@@ -242,7 +257,7 @@ def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
     :return:            A list with all directories in the folder
     """
 
-    return sorted([fname for fname in sorted(folder.glob(wildcard)) if fname.is_dir() and not fname.name.startswith('.')])
+    return sorted([fname for fname in sorted(folder.glob(wildcard)) if fname.is_dir() and not is_hidden(fname.relative_to(folder))])
 
 
 def list_executables(show: bool=False) -> list:
