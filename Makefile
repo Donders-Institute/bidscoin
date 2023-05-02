@@ -3,7 +3,7 @@ help:
 
 install: ## install python dependencies and bidscoin package
 	@python -m pip install --upgrade pip
-	@pip install .[all]
+	@python -m pip install .[all]
 
 test: ## run all the tests in the tests folder
 	@pytest tests/
