@@ -87,6 +87,12 @@ def parse_outputs(outputargs: list, name: str) -> tuple:
 def slicer_append(inputimage: Path, outlineimage: Path, mainopts: str, outputopts: str, sliceroutput: str, montage: Path, cluster: bool):
     """Run slicer and pngappend (locally or on the cluster) to create a montage of the sliced images"""
 
+    # Check if we have a large (e.g. 4D) input image
+    if inputimage.stat().st_size > 50 * 1024**2:
+        mem = '8gb'
+    else:
+        mem = '1gb'
+
     # Create a workdir and the shell command
     workdir = Path(montage.parent)/next(tempfile._get_candidate_names())
     workdir.mkdir()
@@ -96,7 +102,7 @@ def slicer_append(inputimage: Path, outlineimage: Path, mainopts: str, outputopt
               f"mv {montage.name} {montage.parent}\n" \
               f"rm -r {workdir}"
     if cluster:
-        command = f"qsub -l walltime=0:01:00,mem=1gb -N slicereport -e {tempfile.gettempdir()} -o {tempfile.gettempdir()}<<EOF\n{command}\nEOF"
+        command = f"qsub -l walltime=0:02:00,mem={mem} -N slicereport -e {tempfile.gettempdir()} -o {tempfile.gettempdir()}<<EOF\n{command}\nEOF"
 
     # Run the command
     LOGGER.bcdebug(f"Command: {command}")
@@ -275,7 +281,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     LOGGER.info('To view the slice report, point your web browser at:')
     LOGGER.info(f"{report}\n ")
     if cluster:
-        LOGGER.info('But first wait for your `slicereport`-jobs to finish... Use e.g.:\n\nqstat $(qselect -s RQ) | grep slicereport\n')
+        LOGGER.info(f"But first wait for your `slicereport`-jobs to finish... Use e.g.:\n\nqstat $(qselect -s RQ) | grep slicereport\n\n(Standard error/output files are written to: {tempfile.gettempdir()})\n")
 
 
 def main():
