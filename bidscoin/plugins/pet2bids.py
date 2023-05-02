@@ -284,7 +284,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                     command += ' --kwargs '
                 for metadata_key, metadata_value in run.get('meta', {}).items():
                     if metadata_value:
-                        command += f' {metadata_key}={metadata_value}'
+                        command += f" {metadata_key}='{metadata_value}'"
                 if bcoin.run_command(command):
                     if not list(outfolder.glob(f"{bidsname}.*nii*")): continue
 
