@@ -34,7 +34,7 @@ def construct_name(scheme: str, dicomfile: Path, force: bool) -> str:
     """
 
     # Alternative field names based on earlier DICOM versions or on other reasons
-    alternatives = {'PatientName':'PatientsName', 'SeriesDescription':'ProtocolName', 'InstanceNumber':'ImageNumber',
+    alternatives = {'PatientName':'PatientsName', 'SeriesDescription':'ProtocolName', 'InstanceNumber':'ImageNumber', 'SeriesNumber':'SeriesInstanceUID',
                     'PatientsName':'PatientName', 'ProtocolName':'SeriesDescription', 'ImageNumber':'InstanceNumber'}
 
     schemevalues = {}
