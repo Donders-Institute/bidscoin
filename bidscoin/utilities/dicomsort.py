@@ -42,6 +42,8 @@ def construct_name(scheme: str, dicomfile: Path, force: bool) -> str:
         value = cleanup(bids.get_dicomfield(field, dicomfile))
         if not value and value != 0 and field in alternatives.keys():
             value = cleanup(bids.get_dicomfield(alternatives[field], dicomfile))
+            if field == 'SeriesNumber':
+                value = int(value.replace('.',''))      # Convert the SeriesInstanceUID to an int
         if not value and value != 0 and not force:
             LOGGER.error(f"Missing '{field}' DICOM field specified in the '{scheme}' folder/naming scheme, cannot find a safe name for: {dicomfile}\n")
             return ''
