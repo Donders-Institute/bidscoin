@@ -61,7 +61,7 @@ def validscheme(scheme: str) -> bool:
     :return:
     """
 
-    if not re.fullmatch(r'(({[a-zA-Z0-9]+(:\d+d)?})|([a-zA-Z0-9_.-]+))*', scheme):
+    if not re.fullmatch(r'(({[a-zA-Z0-9]+(:\d+[d-gD-Gn])?})|([a-zA-Z0-9_.-]+))*', scheme):
         LOGGER.error(f"Bad naming scheme: {scheme}. Only alphanumeric characters could be used for the field names (with the optional number of digits afterwards,"
                       "e.g. '{InstanceNumber:05d}'), and only alphanumeric characters, dots, and dashes + underscores could be used as separators.")
         return False
