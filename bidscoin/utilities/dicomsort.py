@@ -38,7 +38,7 @@ def construct_name(scheme: str, dicomfile: Path, force: bool) -> str:
                     'PatientsName':'PatientName', 'ProtocolName':'SeriesDescription', 'ImageNumber':'InstanceNumber'}
 
     schemevalues = {}
-    for field in re.findall(r'(?<={)([a-zA-Z0-9]+)(?::\d+d)?(?=})', scheme):
+    for field in re.findall(r'(?<={)([a-zA-Z0-9]+)(?::\d+[d-gD-Gn])?(?=})', scheme):
         value = cleanup(bids.get_dicomfield(field, dicomfile))
         if not value and value != 0 and field in alternatives.keys():
             value = cleanup(bids.get_dicomfield(alternatives[field], dicomfile))
