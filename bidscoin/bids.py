@@ -923,6 +923,16 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
                 if not run.get('provenance'):
                     run['provenance'] = str(Path(f"{subprefix.replace('*','')}-unknown/{sesprefix.replace('*','')}-unknown/{dataformat}_{datatype}_id{index+1:03}"))
 
+                # Update the provenance store paths if needed (e.g. when the bids-folder was moved)
+                provenance = Path(run['provenance'])
+                if not provenance.is_file():
+                    for n, part in enumerate(provenance.parts):
+                        if part == 'bidscoin' and provenance.parts[n-1] == 'code':
+                            store = folder/provenance.relative_to(*provenance.parts[0:n+1])
+                            if store.is_file():
+                                LOGGER.debug(f"Updating provenance: {provenance} -> {store}")
+                                run['provenance'] = str(store)
+
                 # Add missing run dictionaries (e.g. "meta" or "properties")
                 for key, val in run_.items():
                     if key not in run or not run[key]:
