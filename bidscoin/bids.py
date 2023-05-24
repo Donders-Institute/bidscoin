@@ -927,7 +927,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
                 provenance = Path(run['provenance'])
                 if not provenance.is_file():
                     for n, part in enumerate(provenance.parts):
-                        if part == 'bidscoin' and provenance.parts[n-1] == 'code':
+                        if part == 'bidscoin' and provenance.parts[n+1] == 'provenance':
                             store = folder/provenance.relative_to(*provenance.parts[0:n+1])
                             if store.is_file():
                                 LOGGER.debug(f"Updating provenance: {provenance} -> {store}")
@@ -1524,15 +1524,13 @@ def match_runvalue(attribute, pattern) -> bool:
     return match is not None
 
 
-def exist_run(bidsmap: dict, datatype: str, run_item: dict, matchbidslabels: bool=False, matchmetalabels: bool=False) -> bool:
+def exist_run(bidsmap: dict, datatype: str, run_item: dict) -> bool:
     """
-    Checks the bidsmap to see if there is already an entry in runlist with the same attributes and, optionally, bids values as in the input run
+    Checks the bidsmap to see if there is already an entry in runlist with the same properties and attributes as in the input run
 
     :param bidsmap:         Full bidsmap data structure, with all options, BIDS labels and attributes, etc.
     :param datatype:        The datatype in the source that is used, e.g. 'anat'. Empty values will search through all datatypes
     :param run_item:        The run-item that is searched for in the datatype
-    :param matchbidslabels: If True, also matches the BIDS-keys, otherwise only run['attributes']
-    :param matchmetalabels: If True, also matches the meta-keys, otherwise only run['attributes']
     :return:                True if the run exists in runlist, otherwise False
     """
 
@@ -1540,7 +1538,7 @@ def exist_run(bidsmap: dict, datatype: str, run_item: dict, matchbidslabels: boo
     if not datatype:
         for datatype in bidsmap.get(dataformat,{}):
             if not isinstance(bidsmap[dataformat][datatype], list): continue  # E.g. 'subject' and 'session'
-            if exist_run(bidsmap, datatype, run_item, matchbidslabels):
+            if exist_run(bidsmap, datatype, run_item):
                 return True
 
     if not bidsmap.get(dataformat, {}).get(datatype):
@@ -1556,22 +1554,6 @@ def exist_run(bidsmap: dict, datatype: str, run_item: dict, matchbidslabels: boo
             for itemkey, itemvalue in run_item[matching].items():
                 value = run[matching].get(itemkey)          # Matching bids-labels which exist in one datatype but not in the other -> None
                 match = match and match_runvalue(itemvalue, value)
-                if not match:
-                    break                                   # There is no point in searching further within the run_item now that we've found a mismatch
-
-        # See if the bidskeys also all match. This is probably not very useful, but maybe one day...
-        if matchbidslabels and match:
-            for itemkey, itemvalue in run_item['bids'].items():
-                value = run['bids'].get(itemkey)            # Matching bids-labels which exist in one datatype but not in the other -> None
-                match = match and value==itemvalue
-                if not match:
-                    break                                   # There is no point in searching further within the run_item now that we've found a mismatch
-
-        # See if the metakeys also all match. This is probably not very useful, but maybe one day...
-        if matchmetalabels and match:
-            for itemkey, itemvalue in run_item['meta'].items():
-                value = run['meta'].get(itemkey)            # Matching bids-labels which exist in one datatype but not in the other -> None
-                match = match and value==itemvalue
                 if not match:
                     break                                   # There is no point in searching further within the run_item now that we've found a mismatch
 
