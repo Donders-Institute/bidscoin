@@ -43,10 +43,10 @@ Features
 
 ::
 
-   Are you a Python programmer with an interest in BIDS who knows all about GE and / or Philips data?
+   Are you a Python programmer with an interest in BIDS who knows about GE and / or Philips data?
    Are you experienced with parsing stimulus presentation log-files? Or do you have ideas to improve
-   this toolkit or its documentation? Have you come across bugs? Then you are highly encouraged to
-   provide feedback or contribute to this project on https://github.com/Donders-Institute/bidscoin.
+   this toolkit or its documentation? Have you come across bugs? In any case, you are highly encouraged
+   to provide feedback or contribute to this project on https://github.com/Donders-Institute/bidscoin.
 
 Note:
 -----
