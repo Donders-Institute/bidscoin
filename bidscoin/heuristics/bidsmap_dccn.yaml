@@ -68,8 +68,10 @@ DICOM:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
+      EchoPulseSequence:          # Enhanced DICOM
       MRAcquisitionType:
       SliceThickness:
       FlipAngle:
@@ -105,8 +107,6 @@ DICOM:
       <<: *anat_dicomattr
       ProtocolName: (?i).*TSE.*vfl.*
       ImageType: .*'NORM'.*             # NB: The non-NORM image is saved in 'extra_data'
-      SequenceVariant: "['SK', 'SP']"
-      ScanningSequence: SE
     bids:
       <<: *anat_dicoment_nonparametric
       suffix: T2w
@@ -128,7 +128,6 @@ DICOM:
     attributes:
       <<: *anat_dicomattr
       ProtocolName: (?i).*FLAIR.*
-      ScanningSequence: .*'?IR'?.*
     bids:
       <<: *anat_dicoment_nonparametric
       suffix: FLAIR
@@ -407,8 +406,10 @@ DICOM:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
+      EchoPulseSequence:                # Enhanced DICOM
       MRAcquisitionType:
       SliceThickness:
       FlipAngle:
@@ -503,8 +504,10 @@ DICOM:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
+      EchoPulseSequence:                # Enhanced DICOM
       MRAcquisitionType:
       SliceThickness:
       FlipAngle:
@@ -580,8 +583,10 @@ DICOM:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
+      EchoPulseSequence:                # Enhanced DICOM
       MRAcquisitionType:
       SliceThickness:
       FlipAngle:
@@ -650,12 +655,15 @@ DICOM:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
+      EchoPulseSequence:                # Enhanced DICOM
       MRAcquisitionType:
       SliceThickness:
       FlipAngle:
       EchoNumbers:
+      (0021,1106):                      # Contains echonumber in XA30 enhanced DICOM (i.e. ICE-dims, see https://github.com/rordenlab/dcm2niix/blob/master/Siemens/README.md)
       EchoTime:
       EffectiveEchoTime:
       RepetitionTime:
@@ -678,12 +686,34 @@ DICOM:
       <<: *fmap_dicoment_fieldmaps
       suffix: phasediff
     meta: *fmap_meta
+  - provenance:                         # Siemens XA30 enhanced DICOM
+    attributes:
+      <<: *fmap_dicomattr
+      ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
+      EchoPulseSequence: GRADIENT
+      (0021,1106): '^._2_.*'
+      ImageType: .*'P'.*
+    bids:
+      <<: *fmap_dicoment_fieldmaps
+      suffix: phasediff
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
       ScanningSequence: GR
       EchoNumbers: '1'
+      ImageType: .*'M'.*
+    bids:
+      <<: *fmap_dicoment_fieldmaps
+      suffix: magnitude1
+    meta: *fmap_meta
+  - provenance:                         # Siemens XA30 enhanced DICOM
+    attributes:
+      <<: *fmap_dicomattr
+      ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
+      EchoPulseSequence: GRADIENT
+      (0021,1106): '^._1_.*'
       ImageType: .*'M'.*
     bids:
       <<: *fmap_dicoment_fieldmaps
@@ -700,12 +730,34 @@ DICOM:
       <<: *fmap_dicoment_fieldmaps
       suffix: magnitude2
     meta: *fmap_meta
+  - provenance:                         # Siemens XA30 enhanced DICOM
+    attributes:
+      <<: *fmap_dicomattr
+      ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
+      EchoPulseSequence: GRADIENT
+      (0021,1106): '^._2_.*'
+      ImageType: .*'M'.*
+    bids:
+      <<: *fmap_dicoment_fieldmaps
+      suffix: magnitude2
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
       ScanningSequence: GR
       EchoNumbers: '1'
+      ImageType: .*'P'.*
+    bids:
+      <<: *fmap_dicoment_fieldmaps
+      suffix: phase1
+    meta: *fmap_meta
+  - provenance:                         # Siemens XA30 enhanced DICOM
+    attributes:
+      <<: *fmap_dicomattr
+      ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
+      EchoPulseSequence: GRADIENT
+      (0021,1106): '^._1_.*'
       ImageType: .*'P'.*
     bids:
       <<: *fmap_dicoment_fieldmaps
@@ -722,11 +774,21 @@ DICOM:
       <<: *fmap_dicoment_fieldmaps
       suffix: phase2
     meta: *fmap_meta
+  - provenance:                         # Siemens XA30 enhanced DICOM
+    attributes:
+      <<: *fmap_dicomattr
+      ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
+      EchoPulseSequence: GRADIENT
+      (0021,1106): '^._2_.*'
+      ImageType: .*'P'.*
+    bids:
+      <<: *fmap_dicoment_fieldmaps
+      suffix: phase2
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
-      ScanningSequence: GR
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: fieldmap
@@ -735,7 +797,6 @@ DICOM:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
-      ScanningSequence: GR
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: magnitude
@@ -750,6 +811,15 @@ DICOM:
       ce:
       dir: <InPlanePhaseEncodingDirection>
       run: <<1>>
+      suffix: epi
+    meta: *fmap_meta
+  - provenance:                         # Siemens XA30 enhanced DICOM
+    attributes:
+      <<: *fmap_dicomattr
+      ProtocolName: (?i).*(inverted|pepolar|_inv).*
+      EchoPlanarPulseSequence: YES
+    bids:
+      <<: *fmap_dicoment_PEPolar
       suffix: epi
     meta: *fmap_meta
   - provenance:
@@ -800,7 +870,6 @@ DICOM:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*B1.?map.*
-      SequenceName: .*tfl.*
       ImageType: .*FLIP ANGLE MAP.*
     bids:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml & https://bids-specification.readthedocs.io/en/stable/99-appendices/11-qmri.html#tb1tfl-and-tb1rfm-specific-notes
@@ -811,7 +880,6 @@ DICOM:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*B1map.*
-      SequenceName: .*tfl.*
       ImageType: .*'M'.*
     bids:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
@@ -959,6 +1027,7 @@ DICOM:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
       MRAcquisitionType:
@@ -985,9 +1054,7 @@ DICOM:
     attributes:
       <<: *anat_dicomattr
       ProtocolName: (?i).*TSE.*vfl.*
-      ImageType:                        # Make an exception for this non-NORM TSE T2w-image (i.e. ['ORIGINAL', 'PRIMARY', 'M', 'ND'], the filtered 'NORM' version is saved in 'anat')
-      SequenceVariant: .*'SK', 'SP'.*
-      ScanningSequence: SE
+      ImageType: ((?!NORM).)*           # Make an exception for this non-NORM TSE T2w-image (i.e. ['ORIGINAL', 'PRIMARY', 'M', 'ND'], the filtered 'NORM' version is saved in 'anat')
     bids:
       <<: *anat_dicoment_nonparametric
       part: ['', mag, phase, real, imag, 0]
@@ -1004,6 +1071,7 @@ DICOM:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
       MRAcquisitionType:
@@ -1024,6 +1092,14 @@ DICOM:
       <<: *leaveout_attributes_dicom
       ProtocolName: (?i).*(Scout|localizer|t2_haste_sag_ipat2).*
     bids: *leaveout_bids_dicom
+  - provenance:
+    attributes:
+      <<: *leaveout_attributes_dicom
+      ImageType: .*'CSA REPORT'.*
+      ProtocolName: .*Phoenix.*
+    bids:
+      <<: *leaveout_bids_dicom
+      rec: REPORT
   - provenance:
     attributes:
       <<: *leaveout_attributes_dicom
@@ -1809,6 +1885,7 @@ Twix:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
       MRAcquisitionType:
@@ -1992,6 +2069,7 @@ Nibabel:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
       MRAcquisitionType:
