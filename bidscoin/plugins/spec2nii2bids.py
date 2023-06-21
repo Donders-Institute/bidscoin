@@ -213,7 +213,6 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
             LOGGER.info(f"--> Leaving out: {sourcefile}")
             continue
-        bidsignore = datasource.datatype in bidsmap['Options']['bidscoin']['bidsignore']
 
         # Check that we know this run
         if index is None:
@@ -227,12 +226,14 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        bidsname = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
-        runindex = run['bids'].get('run')
-        runindex = str(runindex) if runindex else ''
+        bidsignore = bids.check_ignore(datasource.datatype, bidsmap['Options']['bidscoin']['bidsignore'])
+        bidsname   = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
+        bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap['Options']['bidscoin']['bidsignore'], 'file')
+        runindex   = run['bids'].get('run')
+        runindex   = str(runindex) if runindex else ''
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(outfolder, bidsname)
-        jsonfile = (outfolder/bidsname).with_suffix('.json')
+        jsonfile   = (outfolder/bidsname).with_suffix('.json')
 
         # Check if the bidsname is valid
         bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.json').as_posix()

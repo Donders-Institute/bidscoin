@@ -23,7 +23,7 @@ Options:
 # --------------------------------------------------------------------------------
   bidscoin:
     version: 4.0.0                  # BIDScoin version (should correspond with the version in ../bidscoin/version.txt)
-    bidsignore: mrs/;extra_data/    # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
+    bidsignore: mrs/;extra_data/;sub-*_ct.*    # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
     subprefix: sub-                 # The subject prefix of the source data
     sesprefix: ses-                 # The session prefix of the source data
     unknowntypes: [mrs, extra_data] # A list of datatypes that are converted to BIDS-like datatype folders
@@ -397,6 +397,23 @@ DICOM:
       mt:
       part: ['', mag, phase, real, imag, 0]
       suffix: MTR
+  - provenance:                         # ----------- Experimental CT support (see BEP024) -------------
+    attributes: &ct_dicomattr           # An empty / non-matching reference dictionary that can be derefenced in other run-items of this data type
+      Modality: CT
+      ProtocolName:
+      SeriesDescription:
+      ImageType:
+      PixelSpacing:
+      Rows:
+      Columns:
+      SliceThickness:
+    bids: &ct_dicoment_nonparametric
+      acq: <SeriesDescription>          # This will be expanded by the bidsmapper (so the user can edit it in the bidseditor)
+      ce:
+      rec:
+      run: <<1>>                        # This will be updated dynamically during bidscoiner runtime (as it depends on the already existing files)
+      suffix: ct
+    meta:                               # This is an optional entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
 
   func:       # ----------------------- All functional runs --------------------
   - provenance:                         # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = bold

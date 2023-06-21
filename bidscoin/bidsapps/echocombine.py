@@ -178,7 +178,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
 
                         # Add the echo-combined image
                         bidsignore = (bidsdir/'.bidsignore').read_text().splitlines() if (bidsdir/'.bidsignore').is_file() else [unknowndatatype+'/']
-                        if output+'/' not in bidsignore + ['derivatives/'] and cefile.parent.name in bids.datatyperules:
+                        if not bids.check_ignore(output, bidsignore) and cefile.parent.name in bids.datatyperules:
                             LOGGER.info(f"Adding '{cefile_rel}' to '{scans_tsv}'")
                             scans_table.loc[cefile_rel] = scans_table.loc['dummyrow']
 

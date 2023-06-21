@@ -17,6 +17,7 @@ import tarfile
 import tempfile
 import warnings
 import zipfile
+import fnmatch
 from functools import lru_cache
 from pathlib import Path
 from typing import Union, List, Tuple
@@ -1016,15 +1017,16 @@ def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
         if not bidsmap[dataformat]: continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue        # E.g. 'subject' and 'session'
-            ignore_1 = datatype in ignoretypes or datatype in bidsignore
-            ignore_2 = datatype in ignoretypes
             for run in bidsmap[dataformat][datatype]:
                 bidsname = get_bidsname(dataformat, '', run, False)
+                ignore   = check_ignore(datatype, bidsignore) or check_ignore(bidsname+'.json', bidsignore, 'file')
+                ignore_1 = datatype in ignoretypes or ignore
+                ignore_2 = datatype in ignoretypes
                 bidstest = bids_validator.BIDSValidator().is_bids(f"/sub-{cleanup_value(dataformat)}/{datatype}/{bidsname}.json")
                 if level==3 or (abs(level)==2 and not ignore_2) or (-2<level<2 and not ignore_1):
                     valid = valid and bidstest
                 if (level==0 and not bidstest) or level>0:
-                    LOGGER.info(f"{bidstest}{'*' if datatype in bidsignore else ''}:\t{datatype}/{bidsname}.*")
+                    LOGGER.info(f"{bidstest}{'*' if ignore else ''}:\t{datatype}/{bidsname}.*")
 
     if valid:
         LOGGER.success('All generated bidsnames are BIDS-valid')
@@ -1095,7 +1097,7 @@ def check_template(bidsmap: dict) -> bool:
         if dataformat == 'Options': continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue        # Skip datatype = 'subject'/'session'
-            if not (datatype in bidsdatatypesdef or datatype in ignoretypes or datatype in bidsignore):
+            if not (datatype in bidsdatatypesdef or datatype in ignoretypes or check_ignore(datatype, bidsignore)):
                 LOGGER.warning(f"Invalid {dataformat} datatype: '{datatype}' (you may want to add it to the 'bidsignore' list)")
                 valid = False
             datatypesuffixes = []
@@ -1108,7 +1110,10 @@ def check_template(bidsmap: dict) -> bool:
                         LOGGER.warning(f"Invalid regexp pattern in the {key} value '{val}' in: bidsmap[{dataformat}][{datatype}] -> {run['provenance']}\nThis may cause run-matching errors unless '{val}' is a literal attribute value")
             for typegroup in datatyperules.get(datatype, {}):
                 for suffix in datatyperules[datatype][typegroup]['suffixes']:
-                    if suffix not in datatypesuffixes and '[DEPRECATED]' not in suffixes[suffix]['description'] and '**Change:** Removed from' not in suffixes[suffix]['description'] and '**Change:** Replaced by' not in suffixes[suffix]['description']:
+                    if not (suffix in datatypesuffixes or suffix in bidsignore or
+                            '[DEPRECATED]'             in suffixes[suffix]['description'] or
+                            '**Change:** Removed from' in suffixes[suffix]['description'] or
+                            '**Change:** Replaced by'  in suffixes[suffix]['description']):
                         LOGGER.warning(f"Missing '{suffix}' run-item in: bidsmap[{dataformat}][{datatype}] (NB: this may be fine / a deprecated item)")
                         valid = False
 
@@ -1198,6 +1203,42 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
         LOGGER.bcdebug(f"Run['bids']:\n{run['bids']}")
 
     return run_keysok, run_suffixok, run_valsok
+
+
+def check_ignore(entry: str, bidsignore: Union[str,list], type: str='dir') -> bool:
+    """
+    A rudimentary check whether `entry` should be BIDS-ignored. This function should eventually be replaced by bids_validator functionality
+    See also https://github.com/bids-standard/bids-specification/issues/131
+
+    :param entry:       The entry that is checked against the bidsignore (e.g. a directory/datatype such as `anat` or a file such as `sub-001_ct.nii.gz`)
+    :param bidsignore:  The list or semicolon separated bidsignore pattern (e.g. from the bidscoin Options such as `mrs/;extra_data/;sub-*_ct.*`)
+    :param type:        The entry type, i.e. 'dir' or 'file', that can be used to limit the check
+    :return:            True if the entry should be ignored, else False
+    """
+
+    # Parse bidsignore to be a list
+    if isinstance(bidsignore, str):
+        bidsignore = bidsignore.split(';')
+
+    # Add the default ignore items
+    if 'code/' not in bidsignore:
+        bidsignore += ['code/']
+    if 'sourcedata/' not in bidsignore:
+        bidsignore += ['sourcedata/']
+    if 'derivatives/' not in bidsignore:
+        bidsignore += ['derivatives/']
+
+    ignore = False
+    for item in bidsignore:
+        if type == 'dir' and not item.endswith('/'): continue
+        if type == 'file'    and item.endswith('/'): continue
+        if item.endswith('/'):
+            item = item[0:-1]
+        if fnmatch.fnmatch(entry, item):
+            ignore = True
+            break
+
+    return ignore
 
 
 def strip_suffix(run: dict) -> dict:

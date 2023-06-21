@@ -22,11 +22,11 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 try:
-    from bidscoin import bcoin
+    from bidscoin import bcoin, bids
 except ImportError:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bcoin
+    import bcoin, bids
 
 
 def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
@@ -142,7 +142,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                         # Update the scans.tsv file
                         scans_tsv  = session/f"{subid}{'_'+sesid if sesid else ''}_scans.tsv"
                         bidsignore = (bidsdir/'.bidsignore').read_text().splitlines() if (bidsdir/'.bidsignore').is_file() else ['extra_data/']
-                        if output and output+'/' not in bidsignore + ['derivatives/'] and scans_tsv.is_file():
+                        if output and not bids.check_ignore(output, bidsignore) and scans_tsv.is_file():
                             LOGGER.info(f"Adding {outputfile_rel} to {scans_tsv}")
                             scans_table                     = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
                             scans_table.loc[outputfile_rel] = scans_table.loc[match_rel]

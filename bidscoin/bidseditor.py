@@ -470,7 +470,8 @@ class MainWindow(QMainWindow):
                 subid        = output_bidsmap[dataformat]['subject']
                 sesid        = output_bidsmap[dataformat]['session']
                 subid, sesid = run['datasource'].subid_sesid(subid, sesid if sesid else '')
-                bidsname     = bids.get_bidsname(subid, sesid, run, datatype not in self.bidsignore and datatype not in self.ignoredatatypes)
+                bidsname     = bids.get_bidsname(subid, sesid, run, not bids.check_ignore(datatype,self.bidsignore) and datatype not in self.ignoredatatypes)
+                ignore       = bids.check_ignore(datatype, self.bidsignore) or bids.check_ignore(bidsname+'.json', self.bidsignore, 'file')
                 if run['bids'].get('suffix') in bids.get_derivatives(datatype):
                     session  = self.bidsfolder/'derivatives'/'[manufacturer]'/subid/sesid
                 else:
@@ -492,7 +493,7 @@ class MainWindow(QMainWindow):
                 samples_table.item(idx, 3).setStatusTip(str(session) + str(Path('/')))
 
                 if samples_table.item(idx, 3):
-                    if datatype in self.bidsignore:
+                    if ignore:
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('darkorange'))
                         samples_table.item(idx, 3).setToolTip(f"Orange: This {datatype} item is ignored by BIDS-apps and BIDS-validators")
                     elif datatype in self.ignoredatatypes:
@@ -509,7 +510,7 @@ class MainWindow(QMainWindow):
                         samples_table.item(idx, 3).setForeground(QtGui.QColor('green'))
                         samples_table.item(idx, 3).setToolTip(f"Green: This '{datatype}' data type is part of BIDS")
 
-                if validrun or datatype in self.bidsignore or datatype in self.ignoredatatypes:
+                if validrun or ignore or datatype in self.ignoredatatypes:
                     edit_button = QPushButton('Edit')
                     edit_button.setToolTip('Click to see more details and edit the BIDS output name')
                 else:
@@ -1126,7 +1127,8 @@ class EditWindow(QDialog):
                                     {'value': value, 'iseditable': True}])
 
         data_bids = []
-        if self.target_datatype in self.bidsignore or self.target_datatype in self.ignoredatatypes:
+        bidsname  = bids.get_bidsname(self.subid, self.sesid, run, False) + '.json'
+        if bids.check_ignore(self.target_datatype, self.bidsignore) or bids.check_ignore(bidsname, self.bidsignore, 'file') or self.target_datatype in self.ignoredatatypes:
             bidskeys = run['bids'].keys()
         else:
             bidskeys = [bids.entities[entity]['name'] for entity in bids.entitiesorder if entity not in ('subject','session')] + ['suffix']   # Impose the BIDS-specified order + suffix
@@ -1398,11 +1400,11 @@ class EditWindow(QDialog):
     def refresh_bidsname(self):
         """Updates the bidsname with the current (edited) bids values"""
 
-        ignore   = self.target_datatype in self.bidsignore or self.target_datatype in self.ignoredatatypes
+        ignore   = bids.check_ignore(self.target_datatype,self.bidsignore) or self.target_datatype in self.ignoredatatypes
         bidsname = (Path(self.target_datatype)/bids.get_bidsname(self.subid, self.sesid, self.target_run, not ignore)).with_suffix('.*')
 
         font = self.bidsname_textbox.font()
-        if self.target_datatype in self.bidsignore:
+        if bids.check_ignore(self.target_datatype, self.bidsignore) or bids.check_ignore(bidsname.name, self.bidsignore, 'file'):
             self.bidsname_textbox.setToolTip(f"Orange: This '{self.target_datatype}' data type is ignored by BIDS-apps and BIDS-validators")
             self.bidsname_textbox.setTextColor(QtGui.QColor('darkorange'))
             font.setStrikeOut(False)
@@ -1458,9 +1460,9 @@ class EditWindow(QDialog):
         """Save the changes to the target_bidsmap and send it back to the main window: Finished!"""
 
         # Check if the bidsname is valid
-        bidsname = self.bidsname_textbox.toPlainText()
+        bidsname = Path(self.bidsname_textbox.toPlainText())
         validrun = False not in bids.check_run(self.target_datatype, self.target_run, check=(False, False, False))[1:3]
-        if self.target_datatype not in self.bidsignore and self.target_datatype not in self.ignoredatatypes:
+        if not (bids.check_ignore(self.target_datatype,self.bidsignore) or bids.check_ignore(bidsname.name,self.bidsignore,'file') or self.target_datatype in self.ignoredatatypes):
             bidsvalid = BIDSValidator().is_bids((Path('/')/self.subid/self.sesid/bidsname).with_suffix('.json').as_posix())
         else:
             bidsvalid = validrun

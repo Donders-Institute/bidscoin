@@ -191,7 +191,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
                         scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
                         bidsignore  = (bidsdir/'.bidsignore').read_text().splitlines() if (bidsdir/'.bidsignore').is_file() else ['extra_data/']
                         for original, stripped in zip([srcimg] + addimgs, [outputimg] + addoutimgs):
-                            if not stripped.name or 'derivatives' in stripped.parts or stripped.parent.name+'/' in bidsignore:
+                            if not stripped.name or 'derivatives' in stripped.parts or bids.check_ignore(stripped.parent.name, bidsignore):
                                 continue
                             original_rel = original.relative_to(session).as_posix()
                             stripped_rel = stripped.relative_to(session).as_posix()
