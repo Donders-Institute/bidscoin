@@ -1018,7 +1018,7 @@ def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue        # E.g. 'subject' and 'session'
             for run in bidsmap[dataformat][datatype]:
-                bidsname = get_bidsname(dataformat, '', run, False)
+                bidsname = get_bidsname('sub-foo', '', run, False)
                 ignore   = check_ignore(datatype, bidsignore) or check_ignore(bidsname+'.json', bidsignore, 'file')
                 ignore_1 = datatype in ignoretypes or ignore
                 ignore_2 = datatype in ignoretypes
@@ -1061,7 +1061,10 @@ def check_bidsmap(bidsmap: dict, check: Tuple[bool, bool, bool]=(True, True, Tru
         if not bidsmap[dataformat]:             continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue        # E.g. 'subject' and 'session'
+            if check_ignore(datatype, bidsmap['Options']['bidscoin']['bidsignore']): continue
             for run in bidsmap[dataformat][datatype]:
+                bidsname = get_bidsname('sub-foo', '', run, False)
+                if check_ignore(bidsname+'.json', bidsmap['Options']['bidscoin']['bidsignore'], 'file'): continue
                 checks = check_run(datatype, run, check)
                 valid  = [val and chck for val,chck in zip(valid,checks)]
 
