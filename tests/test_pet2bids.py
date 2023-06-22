@@ -1,22 +1,15 @@
-import unittest
 import logging
-import tempfile
-
 import pytest
-import ruamel
 from pathlib import Path
-
 try:
     from bidscoin import bcoin, bids
     from bidscoin.plugins import pet2bids
 except ImportError:
     import sys
-    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))# This should work if bidscoin was not pip-installed
-    sys.path.append(str(Path(__file__).parents[1]/'plugins'))# This should work if bidscoin was not pip-installed
+    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))  # This should work if bidscoin was not pip-installed
+    sys.path.append(str(Path(__file__).parents[1]/'plugins'))   # This should work if bidscoin was not pip-installed
     import bcoin, bids
     from plugins import pet2bids
-
-
 
 # setup logger
 LOGGER = logging.getLogger(__name__)
