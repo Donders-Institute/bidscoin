@@ -267,11 +267,17 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         if not isbids and not bidsignore:
             LOGGER.warning(f"The '{bidstest}' ouput name did not pass the bids-validator test")
 
-        # Check if file already exists (-> e.g. when a static runindex is used)
+        # Check if the output file already exists (-> e.g. when a static runindex is used)
         if (outfolder/bidsname).with_suffix('.json').is_file():
             LOGGER.warning(f"{outfolder/bidsname}.* already exists and will be deleted -- check your results carefully!")
             for ext in ('.nii.gz', '.nii', '.json', '.tsv', '.tsv.gz', '.bval', '.bvec'):
                 (outfolder/bidsname).with_suffix(ext).unlink(missing_ok=True)
+
+        # Check if the source files all have the same size
+        for file in source.iterdir():
+            if file.stat().st_size != sourcefile.stat().st_size and file.suffix == sourcefile.suffix:
+                LOGGER.warning(f"Not all {file.suffix}-files in '{source}' have the same size. This may be ok but can also be indicative of a truncated acquisition or file corruption(s)")
+                break
 
         # Convert physiological log files (dcm2niix can't handle these)
         if run['bids']['suffix'] == 'physio':
