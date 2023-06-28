@@ -1155,11 +1155,12 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
         return run_keysok, run_suffixok, run_valsok         # We cannot check anything
     for typegroup in datatyperules[datatype]:
 
-        run_suffixok = False                                # We can now check the suffix
-
         suffix = run['bids'].get('suffix')
         if 'datasource' in run:
             suffix = run['datasource'].dynamicvalue(suffix, True, True)
+        if '<' not in suffix or '>' not in suffix:
+            run_suffixok = False                            # We can now check the suffix
+
         if suffix in datatyperules[datatype][typegroup]['suffixes']:
 
             run_keysok   = True                             # We can now check the key
