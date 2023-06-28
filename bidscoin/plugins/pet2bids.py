@@ -249,7 +249,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             LOGGER.info(f"--> Coining: {source}")
 
             # Create the BIDS session/datatype output folder
-            if run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):
+            suffix = datasource.dynamicvalue(run['bids']['suffix'], True, True)
+            if suffix in bids.get_derivatives(datasource.datatype):
                 outfolder = bidsfolder / 'derivatives' / manufacturer.replace(' ', '') / subid / sesid / datasource.datatype
             else:
                 outfolder = bidsses / datasource.datatype

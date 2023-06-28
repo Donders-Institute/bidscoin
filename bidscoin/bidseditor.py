@@ -1092,7 +1092,7 @@ class EditWindow(QDialog):
         for datatype in self.bidsdatatypes + self.unknowndatatypes + self.ignoredatatypes:
             allowed_suffixes[datatype] = []
             for run in self.template_bidsmap[self.dataformat].get(datatype, []):
-                suffix = self.datasource.dynamicvalue(run['bids'].get('suffix'), True)
+                suffix = self.datasource.dynamicvalue(run['bids'].get('suffix'), True, True)
                 if suffix and suffix not in allowed_suffixes.get(datatype, []):
                     allowed_suffixes[datatype].append(suffix)
 
@@ -1183,10 +1183,11 @@ class EditWindow(QDialog):
             key = row[0]['value']
             if table.objectName()=='bids' and key=='suffix' and self.target_datatype in self.bidsdatatypes:
                 table.setItem(i, 0, MyWidgetItem('suffix', iseditable=False))
+                suffix   = self.datasource.dynamicvalue(self.target_run['bids'].get('suffix',''))
                 suffixes = self.allowed_suffixes.get(self.target_datatype, [''])
                 suffix_dropdown = self.suffix_dropdown = QComboBox()
                 suffix_dropdown.addItems(suffixes)
-                suffix_dropdown.setCurrentIndex(suffix_dropdown.findText(self.target_run['bids'].get('suffix','')))
+                suffix_dropdown.setCurrentIndex(suffix_dropdown.findText(suffix))
                 suffix_dropdown.currentIndexChanged.connect(self.suffix_dropdown_change)
                 suffix_dropdown.setToolTip('The suffix that sets the different run types apart. First make sure the "Data type" dropdown-menu is set correctly before chosing the right suffix here')
                 for n, suffix in enumerate(suffixes):

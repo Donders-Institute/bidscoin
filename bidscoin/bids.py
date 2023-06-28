@@ -943,12 +943,13 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
                 run['datasource'] = DataSource(run['provenance'], bidsmap['Options']['plugins'], dataformat, datatype, subprefix, sesprefix)
 
                 # Add missing bids entities
-                for typegroup in datatyperules.get(datatype, {}):                                       # E.g. typegroup = 'nonparametric'
-                    if run['bids']['suffix'] in datatyperules[datatype][typegroup]['suffixes']:         # run_found = True
+                suffix = run['datasource'].dynamicvalue(run['bids'].get('suffix'), True, True)
+                for typegroup in datatyperules.get(datatype, {}):                               # E.g. typegroup = 'nonparametric'
+                    if suffix in datatyperules[datatype][typegroup]['suffixes']:                # run_found = True
                         for entity in datatyperules[datatype][typegroup]['entities']:
                             entitykey = entities[entity]['name']
                             if entitykey not in run['bids'] and entitykey not in ('sub','ses'):
-                                LOGGER.info(f"Adding missing {dataformat}>{datatype}>{run['bids']['suffix']} bidsmap entity key: {entitykey}")
+                                LOGGER.info(f"Adding missing {dataformat}>{datatype}>{suffix} bidsmap entity key: {entitykey}")
                                 run['bids'][entitykey] = ''
 
     # Validate the bidsmap entries
@@ -1743,9 +1744,7 @@ def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bo
             if cleanup:
                 bidsvalue = cleanup_value(bidsvalue)
             bidsname = f"{bidsname}_{entitykey}-{bidsvalue}"                    # Append the key-value data to the bidsname
-    suffix = run['datasource'].dynamicvalue(run['bids'].get('suffix'), cleanup=True)
-    if cleanup and suffix:
-        suffix = cleanup_value(suffix)
+    suffix   = run['datasource'].dynamicvalue(run['bids'].get('suffix'), cleanup=True, runtime=runtime)
     bidsname = f"{bidsname}{'_'+suffix if suffix else ''}"                      # And end with the suffix
 
     return bidsname

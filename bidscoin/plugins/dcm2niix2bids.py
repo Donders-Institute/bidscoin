@@ -245,7 +245,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         LOGGER.info(f"--> Coining: {source}")
 
         # Create the BIDS session/datatype output folder
-        if run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):
+        suffix = datasource.dynamicvalue(run['bids']['suffix'], True, True)
+        if suffix in bids.get_derivatives(datasource.datatype):
             outfolder = bidsfolder/'derivatives'/manufacturer.replace(' ','')/subid/sesid/datasource.datatype
         else:
             outfolder = bidsses/datasource.datatype
@@ -280,7 +281,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 break
 
         # Convert physiological log files (dcm2niix can't handle these)
-        if run['bids']['suffix'] == 'physio':
+        if suffix == 'physio':
             if bids.get_dicomfile(source, 2).name:                  # TODO: issue warning or support PAR
                 LOGGER.warning(f"Found > 1 DICOM file in {source}, using: {sourcefile}")
             try:
@@ -363,7 +364,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                             newbidsname = bids.insert_bidskeyval(newbidsname, 'part', 'imag', bidsignore)
 
                     # Patch fieldmap images (NB: datatype=='fmap' is too broad, see the fmap.yaml file)
-                    elif run['bids']['suffix'] in bids.datatyperules['fmap']['fieldmaps']['suffixes']:          # i.e. in ('magnitude','magnitude1','magnitude2','phase1','phase2','phasediff','fieldmap')
+                    elif suffix in bids.datatyperules['fmap']['fieldmaps']['suffixes']:                         # i.e. in ('magnitude','magnitude1','magnitude2','phase1','phase2','phasediff','fieldmap')
                         if len(dcm2niixfiles) not in (1, 2, 3, 4):                                              # Phase / echo data may be stored in the same data source / run folder
                             LOGGER.verbose(f"Unknown fieldmap {outfolder/bidsname} for '{postfix}'")
                         newbidsname = newbidsname.replace('_magnitude1a',    '_magnitude2')                     # First catch this potential weird / rare case
@@ -468,7 +469,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             outputfile = [file for file in jsonfile.parent.glob(jsonfile.stem + '.*') if file.suffix in ('.nii','.gz')]     # Find the corresponding NIfTI/tsv.gz file (there should be only one, let's not make assumptions about the .gz extension)
             if not outputfile:
                 LOGGER.exception(f"No data-file found with {jsonfile} when updating {scans_tsv}")
-            elif not bidsignore and not run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):
+            elif not bidsignore and not suffix in bids.get_derivatives(datasource.datatype):
                 acq_time = ''
                 if dataformat == 'DICOM':
                     acq_time = f"{datasource.attributes('AcquisitionDate')}T{datasource.attributes('AcquisitionTime')}"

@@ -293,7 +293,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             json.dump(jsondata, sidecar, indent=4)
 
         # Parse the acquisition time from the source header or else from the json file (NB: assuming the source file represents the first acquisition)
-        if not bidsignore and not run['bids']['suffix'] in bids.get_derivatives(datasource.datatype):
+        suffix = datasource.dynamicvalue(run['bids']['suffix'], True, True)
+        if not bidsignore and not suffix in bids.get_derivatives(datasource.datatype):
             acq_time = ''
             if dataformat == 'SPAR':
                 acq_time = datasource.attributes('scan_date')
