@@ -2,7 +2,16 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
-## [dev]
+## [4.1.0-dev]
+
+### Added
+- Use SeriesInstanceUID in dicomsort as a fallback
+- Update the paths in the provenance store if the bidsfolder was moved
+- A template bidsmap entry to support CT (BEP024)
+
+### Changed
+- Template bidsmap tweaks to support (XA30) enhanced DICOM
+- Skip all subfolders of hidden folders
 
 ## [4.0.0] - 2023-03-18
 

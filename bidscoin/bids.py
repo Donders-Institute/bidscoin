@@ -1157,7 +1157,9 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
 
         run_suffixok = False                                # We can now check the suffix
 
-        suffix = run['datasource'].dynamicvalue(run['bids'].get('suffix'), True, True)
+        suffix = run['bids'].get('suffix')
+        if 'datasource' in run:
+            suffix = run['datasource'].dynamicvalue(suffix, True, True)
         if suffix in datatyperules[datatype][typegroup]['suffixes']:
 
             run_keysok   = True                             # We can now check the key
@@ -1744,7 +1746,11 @@ def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bo
             if cleanup:
                 bidsvalue = cleanup_value(bidsvalue)
             bidsname = f"{bidsname}_{entitykey}-{bidsvalue}"                    # Append the key-value data to the bidsname
-    suffix   = run['datasource'].dynamicvalue(run['bids'].get('suffix'), cleanup=True, runtime=runtime)
+    suffix = run['bids'].get('suffix')
+    if runtime:
+        suffix = run['datasource'].dynamicvalue(suffix, runtime=runtime)
+    if cleanup:
+        suffix = cleanup_value(suffix)
     bidsname = f"{bidsname}{'_'+suffix if suffix else ''}"                      # And end with the suffix
 
     return bidsname

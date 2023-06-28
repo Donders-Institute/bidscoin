@@ -30,7 +30,7 @@ Features
 -  [x] NIfTI source data
 -  [x] Physiological logging data\*
 -  [x] MR Spectroscopy data\*\*
--  [x] PET data
+-  [x] PET/CT data
 -  [x] Field maps\*
 -  [x] Multi-echo data\*
 -  [x] Multi-coil data\*
@@ -43,9 +43,9 @@ Features
 
 ::
 
-   Are you a Python programmer with an interest in BIDS who knows about GE and / or Philips data?
+   Are you a Python programmer with an interest in BIDS who knows about GE and/or Philips data?
    Are you experienced with parsing stimulus presentation log-files? Or do you have ideas to improve
-   this toolkit or its documentation? Have you come across bugs? In any case, you are highly encouraged
+   BIDScoin or its documentation? Have you come across bugs? In any case, you are highly encouraged
    to provide feedback or contribute to this project on https://github.com/Donders-Institute/bidscoin.
 
 Note:
