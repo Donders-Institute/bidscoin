@@ -1092,7 +1092,7 @@ class EditWindow(QDialog):
         for datatype in self.bidsdatatypes + self.unknowndatatypes + self.ignoredatatypes:
             allowed_suffixes[datatype] = []
             for run in self.template_bidsmap[self.dataformat].get(datatype, []):
-                suffix = bids.cleanup_value(self.datasource.dynamicvalue(run['bids'].get('suffix')))
+                suffix = self.datasource.dynamicvalue(run['bids'].get('suffix',''), True)
                 if suffix and suffix not in allowed_suffixes.get(datatype, []):
                     allowed_suffixes[datatype].append(suffix)
 
