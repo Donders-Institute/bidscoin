@@ -1156,7 +1156,8 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
 
         run_suffixok = False                                # We can now check the suffix
 
-        if run['bids'].get('suffix') in datatyperules[datatype][typegroup]['suffixes']:
+        suffix = run['datasource'].dynamicvalue(run['bids'].get('suffix'), True, True)
+        if suffix in datatyperules[datatype][typegroup]['suffixes']:
 
             run_keysok   = True                             # We can now check the key
             run_suffixok = True                             # The suffix is valid
@@ -1195,7 +1196,7 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
             break
 
     # Hack: There are physio, stim and events entities in the 'task'-rules, which can be added to any datatype
-    if run['bids'].get('suffix') in datatyperules['task']['events']['suffixes'] + datatyperules['task']['timeseries']['suffixes']:
+    if suffix in datatyperules['task']['events']['suffixes'] + datatyperules['task']['timeseries']['suffixes']:
         bidsname     = get_bidsname('sub-foo', '', run, False)
         run_suffixok = bids_validator.BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")  # NB: Using the BIDSValidator sounds nice but doesn't give any control over the BIDS-version
         run_valsok   = run_suffixok
@@ -1742,7 +1743,7 @@ def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bo
             if cleanup:
                 bidsvalue = cleanup_value(bidsvalue)
             bidsname = f"{bidsname}_{entitykey}-{bidsvalue}"                    # Append the key-value data to the bidsname
-    suffix = run['bids'].get('suffix')
+    suffix = run['datasource'].dynamicvalue(run['bids'].get('suffix'), cleanup=True)
     if cleanup and suffix:
         suffix = cleanup_value(suffix)
     bidsname = f"{bidsname}{'_'+suffix if suffix else ''}"                      # And end with the suffix

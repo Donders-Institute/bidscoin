@@ -472,7 +472,7 @@ class MainWindow(QMainWindow):
                 subid, sesid = run['datasource'].subid_sesid(subid, sesid if sesid else '')
                 bidsname     = bids.get_bidsname(subid, sesid, run, not bids.check_ignore(datatype,self.bidsignore) and datatype not in self.ignoredatatypes)
                 ignore       = bids.check_ignore(datatype, self.bidsignore) or bids.check_ignore(bidsname+'.json', self.bidsignore, 'file')
-                if run['bids'].get('suffix') in bids.get_derivatives(datatype):
+                if self.datasource.dynamicvalue(run['bids'].get('suffix'), True, True) in bids.get_derivatives(datatype):
                     session  = self.bidsfolder/'derivatives'/'[manufacturer]'/subid/sesid
                 else:
                     session  = self.bidsfolder/subid/sesid
@@ -1092,7 +1092,7 @@ class EditWindow(QDialog):
         for datatype in self.bidsdatatypes + self.unknowndatatypes + self.ignoredatatypes:
             allowed_suffixes[datatype] = []
             for run in self.template_bidsmap[self.dataformat].get(datatype, []):
-                suffix = self.datasource.dynamicvalue(run['bids'].get('suffix',''), True)
+                suffix = self.datasource.dynamicvalue(run['bids'].get('suffix'), True)
                 if suffix and suffix not in allowed_suffixes.get(datatype, []):
                     allowed_suffixes[datatype].append(suffix)
 
