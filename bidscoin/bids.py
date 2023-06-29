@@ -1201,7 +1201,7 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
 
     # Hack: There are physio, stim and events entities in the 'task'-rules, which can be added to any datatype
     if suffix in datatyperules['task']['events']['suffixes'] + datatyperules['task']['timeseries']['suffixes']:
-        bidsname     = get_bidsname('sub-foo', '', run, False)
+        bidsname     = get_bidsname('sub-foo', '', run, False, True)
         run_suffixok = bids_validator.BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")  # NB: Using the BIDSValidator sounds nice but doesn't give any control over the BIDS-version
         run_valsok   = run_suffixok
         LOGGER.bcdebug(f"{run_suffixok} bidsname: /sub-foo/{datatype}/{bidsname}.json")
