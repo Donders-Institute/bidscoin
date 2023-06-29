@@ -1147,17 +1147,19 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
     if all(check) and not run['provenance']:
         LOGGER.info(f'No provenance info found for {datatype}/*_{run["bids"]["suffix"]}')
 
-    # Use the suffix to find the right typegroup
+    # Check if we have a suffix and datatype rules
     if 'suffix' not in run['bids']:
         if check[1]: LOGGER.warning(f'Invalid bidsmap: The {datatype} "suffix" key is missing ({datatype} -> {run["provenance"]})')
         return run_keysok, False, run_valsok                # The suffix is not BIDS-valid, we cannot check the keys and values
     if datatype not in datatyperules:
         return run_keysok, run_suffixok, run_valsok         # We cannot check anything
+
+    # Use the suffix to find the right typegroup
+    suffix = run['bids'].get('suffix')
+    if 'datasource' in run:
+        suffix = run['datasource'].dynamicvalue(suffix, True, True)
     for typegroup in datatyperules[datatype]:
 
-        suffix = run['bids'].get('suffix')
-        if 'datasource' in run:
-            suffix = run['datasource'].dynamicvalue(suffix, True, True)
         if '<' not in suffix or '>' not in suffix:
             run_suffixok = False                            # We can now check the suffix
 
@@ -1201,7 +1203,7 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
 
     # Hack: There are physio, stim and events entities in the 'task'-rules, which can be added to any datatype
     if suffix in datatyperules['task']['events']['suffixes'] + datatyperules['task']['timeseries']['suffixes']:
-        bidsname     = get_bidsname('sub-foo', '', run, False, True)
+        bidsname     = get_bidsname('sub-foo', '', run, False)
         run_suffixok = bids_validator.BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")  # NB: Using the BIDSValidator sounds nice but doesn't give any control over the BIDS-version
         run_valsok   = run_suffixok
         LOGGER.bcdebug(f"{run_suffixok} bidsname: /sub-foo/{datatype}/{bidsname}.json")
