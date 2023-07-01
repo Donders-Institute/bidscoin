@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 [build-system]
 requires         = ['setuptools >= 61.0.0', 'wheel']
 build-backend    = 'setuptools.build_meta'
@@ -12,7 +14,7 @@ license          = {file = 'LICENSE.txt'}
 keywords         = ['bids','mri','imaging','neuroimaging','dicom','par','rec','nifti','defacing','echo-combination','skull-stripping']
 authors          = [{email = 'm.zwiers@donders.ru.nl'}, {name = 'Marcel Zwiers'}]
 classifiers      = ['Programming Language :: Python :: 3',
-                    'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+                    'License :: OSI Approved :: GNU General Public License v3 or later',
                     'Operating System :: OS Independent']
 dependencies     = ['pandas',
                     'matplotlib',
