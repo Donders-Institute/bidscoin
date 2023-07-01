@@ -10,6 +10,8 @@ The `bids` library module can be used to build plugins and interact with bidsmap
 used as a library as well from the commandline to get help and perform generic management tasks.
 
 For more documentation see: https://bidscoin.readthedocs.io
+
+SPDX-License-Identifier: GPL-3.0-or-later
 """
 
 from pathlib import Path
