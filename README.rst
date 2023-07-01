@@ -51,7 +51,7 @@ Features
 Note:
 -----
 
-   **All source code is hosted at** `github <https://github.com/Donders-Institute/bidscoin>`__ **and freely available under the GPL-3.0-or-later** `license <LICENSE.txt>`__.
+   **All source code is hosted at** `Github <https://github.com/Donders-Institute/bidscoin>`__ **and freely available under the GPL-3.0-or-later** `license <https://spdx.org/licenses/GPL-3.0-or-later.html>`__.
 
    **The full BIDScoin documentation is hosted at** `Read the Docs <https://bidscoin.readthedocs.io>`__
 
