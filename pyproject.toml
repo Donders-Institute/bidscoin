@@ -28,14 +28,13 @@ dependencies     = ['pandas',
                     'python-dateutil',
                     'nibabel',
                     'bids_validator',
-                    'pydeface',
                     'pytest']
 
 [project.optional-dependencies]
 spec2nii2bids    = ['spec2nii']
 deface           = ['pydeface', 'drmaa']
 pet2bids         = ['pypet2bids >= 1.0.12']
-phys2bidscoin    = ['bioread >= 1.0.5', 'pymatreader >= 0.0.24', 'duecredit', 'phys2bids >= 2.0.0, < 3.0.0']
+# phys2bidscoin    = ['bioread >= 1.0.5', 'pymatreader >= 0.0.24', 'duecredit', 'phys2bids >= 2.0.0, < 3.0.0']
 all              = ['bidscoin[spec2nii2bids, deface, pet2bids]']        # + phys2bidscoin
 
 [project.urls]
