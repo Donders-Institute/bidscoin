@@ -24,5 +24,5 @@ except ModuleNotFoundError:
 try:
     __version__ = version('bidscoin')
 except Exception:
-    with open(Path(__file__).parent/'pyproject.toml', 'rb') as fid:
+    with open(Path(__file__).parents[1]/'pyproject.toml', 'rb') as fid:
         __version__ = tomllib.load(fid)['project']['version']

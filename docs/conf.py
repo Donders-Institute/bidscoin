@@ -24,7 +24,7 @@ copyright = '2023, Marcel Zwiers'
 author    = 'Marcel Zwiers'
 
 # The full version, including alpha/beta/rc tags from file
-with open(Path(__file__).parent / 'pyproject.toml', 'rb') as fid:
+with open(Path(__file__).parents[1]/'pyproject.toml', 'rb') as fid:
     release = tomllib.load(fid)['project']['version']
 
 

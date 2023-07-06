@@ -193,7 +193,7 @@ def version(check: bool=False) -> Union[str, Tuple]:
     try:
         localversion = libversion('bidscoin')
     except Exception:
-        with open(Path(__file__).parent/'pyproject.toml', 'rb') as fid:
+        with open(Path(__file__).parents[1]/'pyproject.toml', 'rb') as fid:
             localversion = tomllib.load(fid)['project']['version']
 
     # Check pypi for the latest version number
