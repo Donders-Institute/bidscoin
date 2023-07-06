@@ -21,7 +21,6 @@ import os
 import shutil
 import subprocess
 import sys
-import tarfile
 import textwrap
 import urllib.request
 from functools import lru_cache
@@ -635,12 +634,14 @@ def pulltutorialdata(tutorialfolder: str) -> None:
         urllib.request.urlretrieve(tutorialurl, tutorialtargz, reporthook=t.update_to)  # NB: Much faster than requests.get(url, stream=True). In case of ssl certificate issues use: with urllib.request.urlopen(tutorialurl, context=ssl.SSLContext()) as data, open(tutorialtargz, 'wb') as targz_fid: shutil.copyfileobj(data, targz_fid)
 
     # Unzip the data in the target folder
-    LOGGER.info(f"Unzipping the downloaded data in: {tutorialfolder}")
-    with tarfile.open(tutorialtargz, 'r') as targz_fid:
-        for member in tqdm(iterable=targz_fid.getmembers(), total=len(targz_fid.getmembers()), leave=False):
-            targz_fid.extract(member, tutorialfolder)
+    LOGGER.info(f"Unpacking the downloaded data in: {tutorialfolder}")
+    try:
+        shutil.unpack_archive(tutorialtargz, tutorialfolder)
+        LOGGER.success(f"Done")
+    except Exception as unpackerror:
+        LOGGER.error(f"Could not unpack: {tutorialtargz}\n{unpackerror}")
+
     tutorialtargz.unlink()
-    LOGGER.success(f"Done")
 
 
 def main():

@@ -13,10 +13,8 @@ import json
 import logging
 import re
 import shutil
-import tarfile
 import tempfile
 import warnings
-import zipfile
 import fnmatch
 from functools import lru_cache
 from pathlib import Path
@@ -355,13 +353,11 @@ def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> Tuple[L
         recursive = False
         for tarzipfile in [worksubses/tarzipfile.name for tarzipfile in tarzipfiles]:
             LOGGER.info(f"Unpacking: {tarzipfile.name} -> {worksubses}")
-            ext = tarzipfile.suffixes
-            if ext and ext[-1] == '.zip':
-                with zipfile.ZipFile(tarzipfile, 'r') as zip_fid:
-                    zip_fid.extractall(worksubses)
-            elif '.tar' in ext:
-                with tarfile.open(tarzipfile, 'r') as tar_fid:
-                    tar_fid.extractall(worksubses)
+            try:
+                shutil.unpack_archive(tarzipfile, worksubses)
+            except Exception as unpackerror:
+                LOGGER.warning(f"Could not unpack: {tarzipfile}\n{unpackerror}")
+                continue
 
             # Sort the DICOM files in the worksubses rootfolder immediately (to avoid name collisions)
             if not (worksubses/'DICOMDIR').is_file():
