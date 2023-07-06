@@ -10,7 +10,12 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
+from pathlib import Path
 from importlib.metadata import version
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 
 # -- Project information -----------------------------------------------------
@@ -20,7 +25,11 @@ copyright = '2023, Marcel Zwiers'
 author    = 'Marcel Zwiers'
 
 # The full version, including alpha/beta/rc tags from file
-release = version('bidscoin')
+try:
+    release = version('bidscoin')
+except Exception:
+    with open(Path(__file__).parent/'pyproject.toml', 'rb') as fid:
+        release = tomllib.load(fid)['project']['version']
 
 
 # -- General configuration ---------------------------------------------------
