@@ -74,9 +74,8 @@ def is_sourcefile(file: Path) -> str:
     #     if len(intersection) > 3:
     #         return 'PETXLS'
 
-    if bids.is_dicomfile(file):
-        if 'pt' == bids.get_dicomfield('Modality', file).lower():
-            return 'DICOM'
+    if bids.is_dicomfile(file) and bids.get_dicomfield('Modality', file) == 'PT':
+        return 'DICOM'
 
     return ''
 

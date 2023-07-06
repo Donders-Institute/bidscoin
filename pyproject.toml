@@ -40,6 +40,7 @@ all              = ['bidscoin[spec2nii2bids, deface, pet2bids]']        # + phys
 
 [project.urls]
 documentation    = 'https://bidscoin.readthedocs.io'
+homepage         = 'https://github.com/Donders-Institute/bidscoin'
 repository       = 'https://github.com/Donders-Institute/bidscoin'
 
 [project.scripts]

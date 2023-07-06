@@ -939,7 +939,9 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
                 run['datasource'] = DataSource(run['provenance'], bidsmap['Options']['plugins'], dataformat, datatype, subprefix, sesprefix)
 
                 # Add missing bids entities
-                suffix = run['datasource'].dynamicvalue(run['bids'].get('suffix'), True, True)
+                suffix = run['bids'].get('suffix')
+                if run['datasource'].is_datasource():
+                    suffix = run['datasource'].dynamicvalue(suffix, True, True)
                 for typegroup in datatyperules.get(datatype, {}):                               # E.g. typegroup = 'nonparametric'
                     if suffix in datatyperules[datatype][typegroup]['suffixes']:                # run_found = True
                         for entity in datatyperules[datatype][typegroup]['entities']:
