@@ -15,5 +15,14 @@ SPDX-License-Identifier: GPL-3.0-or-later
 """
 
 from pathlib import Path
+from importlib.metadata import version
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
-__version__ = (Path(__file__).parent/'version.txt').read_text().strip()
+try:
+    __version__ = version('bidscoin')
+except Exception:
+    with open(Path(__file__).parent/'pyproject.toml', 'rb') as fid:
+        __version__ = tomllib.load(fid)['project']['version']

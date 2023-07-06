@@ -9,8 +9,8 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-from pathlib import Path
+
+from importlib.metadata import version
 
 
 # -- Project information -----------------------------------------------------
@@ -20,8 +20,7 @@ copyright = '2023, Marcel Zwiers'
 author    = 'Marcel Zwiers'
 
 # The full version, including alpha/beta/rc tags from file
-with open(Path(__file__).parents[1]/'bidscoin'/'version.txt') as fid:
-    release = fid.read().strip()
+release = version('bidscoin')
 
 
 # -- General configuration ---------------------------------------------------

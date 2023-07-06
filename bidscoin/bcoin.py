@@ -24,12 +24,16 @@ import sys
 import textwrap
 import urllib.request
 from functools import lru_cache
-from importlib.metadata import entry_points
+from importlib.metadata import entry_points, version as libversion
 from importlib.util import spec_from_file_location, module_from_spec
 from pathlib import Path
 from typing import Tuple, Union, List
 from ruamel.yaml import YAML
 from tqdm import tqdm
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 try:
     from .due import due, Doi
 except ImportError:
@@ -186,7 +190,11 @@ def version(check: bool=False) -> Union[str, Tuple]:
     :return:        The version number or (version number, checking message) if check=True
     """
 
-    localversion = (bidscoinfolder/'version.txt').read_text().strip()
+    try:
+        localversion = libversion('bidscoin')
+    except Exception:
+        with open(Path(__file__).parent/'pyproject.toml', 'rb') as fid:
+            localversion = tomllib.load(fid)['project']['version']
 
     # Check pypi for the latest version number
     if check:
@@ -637,11 +645,10 @@ def pulltutorialdata(tutorialfolder: str) -> None:
     LOGGER.info(f"Unpacking the downloaded data in: {tutorialfolder}")
     try:
         shutil.unpack_archive(tutorialtargz, tutorialfolder)
+        tutorialtargz.unlink()
         LOGGER.success(f"Done")
     except Exception as unpackerror:
         LOGGER.error(f"Could not unpack: {tutorialtargz}\n{unpackerror}")
-
-    tutorialtargz.unlink()
 
 
 def main():

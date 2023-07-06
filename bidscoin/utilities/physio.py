@@ -14,6 +14,7 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 import dateutil.parser
+from importlib.metadata import version
 from typing import Union
 from pydicom import dcmread, tag, multival
 from pathlib import Path
@@ -371,12 +372,15 @@ def physio2tsv(physio: dict, tsvfile: Union[str, Path]):
     physiotable.to_csv(tsvfile.with_suffix('.tsv.gz'), header=False, index=False, sep='\t', compression='infer')
 
     # Write a json side-car file
-    version = (Path(__file__).parents[1]/'version.txt').read_text().strip()
+    try:
+        bidscoinversion = version('bidscoin')
+    except Exception:
+        bidscoinversion = 'n/a'
     physio['Meta']['SamplingFrequency'] = physio['Freq']
     physio['Meta']['StartTime']         = starttime
     physio['Meta']['AcquisitionTime']   = dateutil.parser.parse(physio['ScanDate']).strftime('%H:%M:%S')
     physio['Meta']['Columns']           = physiotable.columns.to_list()
-    physio['Meta']['GeneratedBy']       = [{'name':'BIDScoin', 'Version':version, 'CodeURL':'https://github.com/Donders-Institute/bidscoin'}]
+    physio['Meta']['GeneratedBy']       = [{'name':'BIDScoin', 'Version':bidscoinversion, 'CodeURL':'https://github.com/Donders-Institute/bidscoin'}]
     with tsvfile.with_suffix('.json').open('w') as json_fid:
         json.dump(physio['Meta'], json_fid, indent=4)
 

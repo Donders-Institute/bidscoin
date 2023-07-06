@@ -7,7 +7,7 @@ build-backend    = 'setuptools.build_meta'
 [project]
 name             = 'bidscoin'
 description      = 'Converts and organises raw MRI data-sets according to the Brain Imaging Data Structure (BIDS)'
-dynamic          = ['version']
+version          = '4.1.0'
 readme           = 'README.rst'
 requires-python  = '>= 3.8'
 license          = {file = 'LICENSE.txt'}
@@ -22,6 +22,7 @@ dependencies     = ['pandas',
                     'pydicom >= 2',
                     'PyQt5 >= 5.12.1',
                     'ruamel.yaml >= 0.15.35',
+                    'tomli >= 1.1.0 ; python_version < "3.11"',
                     'coloredlogs',
                     'tqdm >= 4.60.0',
                     'multiecho >= 0.25',
@@ -57,11 +58,8 @@ rawmapper        = 'bidscoin.utilities.rawmapper:main'
 physio2tsv       = 'bidscoin.utilities.physio2tsv:main'
 plotphysio       = 'bidscoin.utilities.plotphysio:main'
 
-[tool.setuptools.dynamic]
-version          = {file = 'bidscoin/version.txt'}
-
 [tool.setuptools.package-data]
-'*'              = ['version.txt', '*VERSION', '*.yaml', 'bidscoin_logo.png', 'bidscoin.ico', 'rightarrow.png']       #  package names should match these glob patterns (["*"] by default)
+'*'              = ['*VERSION', '*.yaml', 'bidscoin_logo.png', 'bidscoin.ico', 'rightarrow.png']       #  package names should match these glob patterns (["*"] by default)
 
 [tool.pytest.ini_options]
 testpaths        = ['tests']
