@@ -31,8 +31,9 @@ def test_list_executables():
     assert 'deface' in executables
     for executable in executables:
         assert bcoin.run_command(f"{executable} -h") == 0
-        manpage = (Path(sys.executable).parents[1]/'share'/'man'/'man1'/f"{executable}.1").read_text()
-        assert executable in manpage
+        if not sys.platform.startswith('win'):
+            manpage = (Path(sys.executable).parents[1]/'share'/'man'/'man1'/f"{executable}.1").read_text()
+            assert executable in manpage
 
 
 def test_list_plugins():
