@@ -1,16 +1,6 @@
 #!/usr/bin/env python3
-"""
-A wrapper around the 'slicer' imaging tool (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Miscvis)
-to generate a web page with a row of image slices for each subject in the BIDS repository, as
-well as individual sub-pages displaying more detailed information. The input images are
-selectable using wildcards, and the output images are configurable via various user options,
-allowing you to quickly create a custom 'slicer' report to do visual quality control on any
-datatype in your repository.
+"""A wrapper around the 'slicer' imaging tool (See also cli/_slicereport.py)"""
 
-Requires an existing installation of FSL/slicer
-"""
-
-import argparse
 import logging
 import subprocess
 import sys
@@ -19,11 +9,10 @@ import json
 import tempfile
 from copy import copy
 from pathlib import Path
-try:
-    from bidscoin import bcoin, bids
-except ImportError:
-    sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bcoin, bids
+from importlib.util import find_spec
+if find_spec('bidscoin') is None:
+    sys.path.append(str(Path(__file__).parents[2]))
+from bidscoin import bcoin, bids, bidsversion, __version__
 
 html_head = """<!DOCTYPE html>
 <html lang="en">
@@ -259,9 +248,9 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     dataset = reportdir/'dataset_description.json'
     if not dataset.is_file():
         description = {"Name": "Slicereport - A visual inspection report",
-                       "BIDSVersion": bcoin.bidsversion(),
+                       "BIDSVersion": bidsversion(),
                        "DatasetType": "derivative",
-                       "GeneratedBy": [{"Name":"BIDScoin", "Version":bcoin.version(), "CodeURL":"https://github.com/Donders-Institute/bidscoin"}]}
+                       "GeneratedBy": [{"Name":"BIDScoin", "Version":__version__, "CodeURL":"https://github.com/Donders-Institute/bidscoin"}]}
         with dataset.open('w') as fid:
             json.dump(description, fid, indent=4)
 
@@ -287,52 +276,9 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
 def main():
     """Console script usage"""
 
-    epilogue = """
-OPTIONS:
-  L                  : Label slices with slice number.
-  l [LUT]            : Use a different colour map from that specified in the header.
-  i [MIN] [MAX]      : Specify intensity min and max for display range.
-  e [THR]            : Use the specified threshold for edges (if > 0 use this proportion of max-min,
-                       if < 0, use the absolute value)
-  t                  : Produce semi-transparent (dithered) edges.
-  n                  : Use nearest-neighbour interpolation for output.
-  u                  : Do not put left-right labels in output.
-  s                  : Size scaling factor
-  c                  : Add a red dot marker to top right of image
+    from bidscoin.cli._slicereport import get_parser
 
-OUTPUTS:
-  x/y/z [SLICE] [..] : Output sagittal, coronal or axial slice (if [SLICE] > 0 it is a
-                       fraction of image dimension, if < 0, it is an absolute slice number)
-  a                  : Output mid-sagittal, -coronal and -axial slices into one image
-  A [WIDTH]          : Output _all_ axial slices into one image of _max_ width [WIDTH]
-  S [SAMPLE] [WIDTH] : As `A` but only include every [SAMPLE]'th slice
-  LF                 : Start a new line (i.e. works like a row break)
-
-examples:
-  slicereport myproject/bids anat/*_T1w*
-  slicereport myproject/bids anat/*_T2w* -r myproject/QC/slicereport_T2 -x myproject/QC/slicereport_T1
-  slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*
-  slicereport myproject/bids/derivatives/fmriprep anat/*run-?_desc-preproc_T1w* -o anat/*run-?_label-GM*
-  slicereport myproject/bids/derivatives/deface anat/*_T1w* -o myproject/bids:anat/*_T1w* --options L e 0.05
-  slicereport myproject/bids anat/*_T1w* --outputs x 0.3 x 0.4 x 0.5 x 0.6 x 0.7 LF z 0.3 z 0.4 z 0.5 z 0.6 z 0.7\n """
-
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     description=__doc__, epilog=epilogue)
-    parser.add_argument('bidsfolder',               help='The bids-directory with the subject data')
-    parser.add_argument('pattern',                  help="Globlike search pattern to select the images in bidsfolder to be reported, e.g. 'anat/*_T2starw*'")
-    parser.add_argument('-o','--outlinepattern',    help="Globlike search pattern to select red outline images that are projected on top of the reported images (i.e. 'outlinepattern' must yield the same number of images as 'pattern'. Prepend `outlinedir:` if your outline images are in `outlinedir` instead of `bidsdir` (see examples below)`")
-    parser.add_argument('-i','--outlineimage',      help='A common red-outline image that is projected on top of all images', default='')
-    parser.add_argument('-p','--participant_label', help='Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed', nargs='+')
-    parser.add_argument('-r','--reportfolder',      help="The folder where the report is saved (default: bidsfolder/derivatives/slicereport)")
-    parser.add_argument('-x','--xlinkfolder',       help="A (list of) QC report folder(s) with cross-linkable sub-reports, e.g. bidsfolder/derivatives/mriqc", nargs='+')
-    parser.add_argument('-q','--qcscores',          help="Column names for creating an accompanying tsv-file to store QC-rating scores (default: rating_overall)", default=['rating_overall'], nargs='+')
-    parser.add_argument('-c','--cluster',           help='Use `qsub` to submit the slicer jobs to a high-performance compute (HPC) cluster', action='store_true')
-    parser.add_argument('--options',                help='Main options of slicer (see below). (default: "s 1")', default=['s','1'], nargs='+')
-    parser.add_argument('--outputs',                help='Output options of slicer (see below). (default: "x 0.4 x 0.5 x 0.6 y 0.4 y 0.5 y 0.6 z 0.4 z 0.5 z 0.6")', default=['x','0.4','x','0.5','x','0.6','y','0.4','y','0.5','y','0.6','z','0.4','z','0.5','z','0.6'], nargs='+')
-    parser.add_argument('--suboptions',             help='Main options of slicer for creating the sub-reports (same as OPTIONS, see below). (default: OPTIONS)', nargs='+')
-    parser.add_argument('--suboutputs',             help='Output options of slicer for creating the sub-reports (same as OUTPUTS, see below). (default: "S 4 1600")', default=['S','4','1600'], nargs='+')
-    args = parser.parse_args()
-
+    args = get_parser().parse_args()
     slicereport(bidsdir        = args.bidsfolder,
                 pattern        = args.pattern,
                 outlinepattern = args.outlinepattern,

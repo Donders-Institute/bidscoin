@@ -6,13 +6,7 @@ Run the plugin test routines
 
 import pytest
 import inspect
-from pathlib import Path
-try:
-    from bidscoin import bcoin, bids
-except ImportError:
-    import sys
-    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
-    import bcoin, bids
+from bidscoin import bcoin, bids
 
 bcoin.setup_logging()
 template, _ = bids.load_bidsmap(bcoin.bidsmap_template, check=(False,False,False))

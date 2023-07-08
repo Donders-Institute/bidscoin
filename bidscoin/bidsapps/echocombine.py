@@ -1,13 +1,6 @@
 #!/usr/bin/env python3
-"""
-A wrapper around the 'mecombine' multi-echo combination tool
-(https://github.com/Donders-Institute/multiecho).
+"""A bidsapp that wraps around the multi-echo combination tool (See also cli/_echocombine.py)"""
 
-Except for BIDS inheritances, this wrapper is BIDS-aware (a 'bidsapp') and writes BIDS
-compliant output
-"""
-
-import argparse
 import json
 import logging
 import pandas as pd
@@ -15,12 +8,11 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from multiecho import combination as me
 from pathlib import Path
-try:
-    from bidscoin import bcoin, bids
-except ImportError:
+from importlib.util import find_spec
+if find_spec('bidscoin') is None:
     import sys
-    sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bcoin, bids
+    sys.path.append(str(Path(__file__).parents[2]))
+from bidscoin import bcoin, bids
 
 unknowndatatype = 'extra_data'
 
@@ -206,25 +198,10 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
 def main():
     """Console script usage"""
 
-    class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter): pass
+    from bidscoin.cli._echocombine import get_parser
 
-    parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
-                                     description=__doc__,
-                                     epilog='examples:\n'
-                                            '  echocombine myproject/bids func/*task-stroop*echo-1*\n'
-                                            '  echocombine myproject/bids *task-stroop*echo-1* -p 001 003\n'
-                                            '  echocombine myproject/bids func/*task-*echo-1* -o func\n'
-                                            '  echocombine myproject/bids func/*task-*echo-1* -o derivatives -w 13 26 39 52\n'
-                                            '  echocombine myproject/bids func/*task-*echo-1* -a PAID\n ')
-    parser.add_argument('bidsfolder',               help='The bids-directory with the (multi-echo) subject data')
-    parser.add_argument('pattern',                  help="Globlike recursive search pattern (relative to the subject/session folder) to select the first echo of the images that need to be combined, e.g. '*task-*echo-1*'")
-    parser.add_argument('-p','--participant_label', help='Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed', nargs='+')
-    parser.add_argument('-o','--output',            help=f"A string that determines where the output is saved. It can be the name of a BIDS datatype folder, such as 'func', or of the derivatives folder, i.e. 'derivatives'. If output = [the name of the input datatype folder] then the original echo images are replaced by one combined image. If output is left empty then the combined image is saved in the input datatype folder and the original echo images are moved to the {unknowndatatype} folder", default='')
-    parser.add_argument('-a','--algorithm',         help='Combination algorithm', choices=['PAID', 'TE', 'average'], default='TE')
-    parser.add_argument('-w','--weights',           help='Weights for each echo', nargs='*', default=None, type=list)
-    parser.add_argument('-f','--force',             help='Process all images, regardless whether target images already exist. Otherwise the echo-combination will be skipped', action='store_true')
-    args = parser.parse_args()
-
+    # Parse the input arguments and run bidscoiner(args)
+    args = get_parser().parse_args()
     echocombine(bidsdir   = args.bidsfolder,
                 pattern   = args.pattern,
                 subjects  = args.participant_label,

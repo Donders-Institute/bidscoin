@@ -14,14 +14,8 @@ from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
 from nibabel.testing import data_path
-try:
-    from bidscoin import bcoin, bids
-    from bidscoin.utilities import physio
-except ImportError:
-    import sys
-    sys.path.append(str(Path(__file__).parents[1]))         # This should work if bidscoin was not pip-installed
-    sys.path.append(str(Path(__file__).parents[1]/'utilities'))
-    import bcoin, bids, physio
+from bidscoin import bcoin, bids
+from bidscoin.utilities import physio
 
 LOGGER = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 [build-system]
-requires         = ['setuptools >= 61.0.0', 'wheel']
+requires         = ['setuptools >= 61.0.0', 'wheel', 'argparse-manpage[setuptools]', 'tomli >= 1.1.0 ; python_version < "3.11"']
 build-backend    = 'setuptools.build_meta'
 
 [project]
@@ -59,8 +59,24 @@ rawmapper        = 'bidscoin.utilities.rawmapper:main'
 physio2tsv       = 'bidscoin.utilities.physio2tsv:main'
 plotphysio       = 'bidscoin.utilities.plotphysio:main'
 
+[tool.build_manpages]
+manpages         = ['man/bidscoin.1:function=get_parser:pyfile=bidscoin/cli/_bcoin.py',
+                    'man/bidseditor.1:function=get_parser:pyfile=bidscoin/cli/_bidseditor.py',
+                    'man/bidsmapper.1:function=get_parser:pyfile=bidscoin/cli/_bidsmapper.py',
+                    'man/bidscoiner.1:function=get_parser:pyfile=bidscoin/cli/_bidscoiner.py',
+                    'man/echocombine.1:function=get_parser:pyfile=bidscoin/cli/_echocombine.py',
+                    'man/deface.1:function=get_parser:pyfile=bidscoin/cli/_deface.py',
+                    'man/medeface.1:function=get_parser:pyfile=bidscoin/cli/_medeface.py',
+                    'man/skullstrip.1:function=get_parser:pyfile=bidscoin/cli/_skullstrip.py',
+                    'man/slicereport.1:function=get_parser:pyfile=bidscoin/cli/_slicereport.py',
+                    'man/dicomsort.1:function=get_parser:pyfile=bidscoin/cli/_dicomsort.py',
+                    'man/bidsparticipants.1:function=get_parser:pyfile=bidscoin/cli/_bidsparticipants.py',
+                    'man/rawmapper.1:function=get_parser:pyfile=bidscoin/cli/_rawmapper.py',
+                    'man/physio2tsv.1:function=get_parser:pyfile=bidscoin/cli/_physio2tsv.py',
+                    'man/plotphysio.1:function=get_parser:pyfile=bidscoin/cli/_plotphysio.py']
+
 [tool.setuptools.package-data]
-'*'              = ['*VERSION', '*.yaml', 'bidscoin_logo.png', 'bidscoin.ico', 'rightarrow.png']       #  package names should match these glob patterns (["*"] by default)
+'*'              = ['*.yaml', 'BIDS_VERSION', 'bidscoin.ico', 'bidscoin_logo.png', 'rightarrow.png']       #  package names should match these glob patterns (["*"] by default)
 
 [tool.pytest.ini_options]
 testpaths        = ['tests']

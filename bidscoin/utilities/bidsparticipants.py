@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
-"""
-(Re)scans data sets in the source folder for subject metadata to populate the participants.tsv
-file in the bids directory, e.g. after you renamed (be careful there!), added or deleted data
-in the bids folder yourself.
-
-Provenance information, warnings and error messages are stored in the
-bidsfolder/code/bidscoin/bidsparticipants.log file.
-"""
+"""(Re)scans data sets in the source folder for subject metadata (See also cli/_bidsparticipants.py)"""
 
 import pandas as pd
 import json
@@ -15,12 +8,11 @@ import shutil
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
-try:
-    from bidscoin import bcoin, bids
-except ImportError:
+from importlib.util import find_spec
+if find_spec('bidscoin') is None:
     import sys
-    sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bcoin, bids
+    sys.path.append(str(Path(__file__).parents[2]))
+from bidscoin import bcoin, bids, __version__
 
 
 def scanpersonals(bidsmap: dict, session: Path, personals: dict) -> bool:
@@ -83,7 +75,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
     else:
         bcoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidsparticipants.log')
     LOGGER.info('')
-    LOGGER.info(f"-------------- START bidsparticipants {bcoin.version()} ------------")
+    LOGGER.info(f"-------------- START bidsparticipants {__version__} ------------")
     LOGGER.info(f">>> bidsparticipants sourcefolder={rawfolder} bidsfolder={bidsfolder} bidsmap={bidsmapfile}")
 
     # Get the bidsmap sub-/ses-prefix from the bidsmap YAML-file
@@ -187,22 +179,9 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
 def main():
     """Console script usage"""
 
-    # Parse the input arguments and run bidsparticipants(args)
-    import argparse
-    import textwrap
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     description=textwrap.dedent(__doc__),
-                                     epilog='examples:\n'
-                                            '  bidsparticipants myproject/raw myproject/bids\n'
-                                            '  bidsparticipants myproject/raw myproject/bids -k participant_id age sex\n ')
-    parser.add_argument('sourcefolder',     help='The study root folder containing the raw source data folders')
-    parser.add_argument('bidsfolder',       help='The destination / output folder with the bids data')
-    parser.add_argument('-k','--keys',      help="Space separated list of the participants.tsv columns. Default: 'session_id' 'age' 'sex' 'size' 'weight'", nargs='+', default=['age', 'sex', 'size', 'weight'])    # NB: session_id is default
-    parser.add_argument('-d','--dryrun',    help='Do not save anything, only print the participants info on screen', action='store_true')
-    parser.add_argument('-b','--bidsmap',   help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
-    parser.add_argument('-v','--version',   help='Show the BIDS and BIDScoin version', action='version', version=f"BIDS-version:\t\t{bcoin.bidsversion()}\nBIDScoin-version:\t{bcoin.version()}")
-    args = parser.parse_args()
+    from bidscoin.cli._bidsparticipants import get_parser
 
+    args = get_parser().parse_args()
     bidsparticipants(rawfolder   = args.sourcefolder,
                      bidsfolder  = args.bidsfolder,
                      keys        = args.keys,

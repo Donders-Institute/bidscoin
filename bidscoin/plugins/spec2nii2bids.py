@@ -11,12 +11,7 @@ import dateutil.parser
 import ast
 from bids_validator import BIDSValidator
 from pathlib import Path
-try:
-    from bidscoin import bcoin, bids
-except ImportError:
-    import sys
-    sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bcoin, bids
+from bidscoin import bcoin, bids
 
 LOGGER = logging.getLogger(__name__)
 

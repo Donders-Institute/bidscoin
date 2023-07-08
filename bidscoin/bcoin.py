@@ -1,56 +1,31 @@
 #!/usr/bin/env python3
 """
-BIDScoin is a toolkit to convert and organize raw data-sets according to the Brain Imaging Data Structure (BIDS)
+A BIDScoin library and application with utilities to perform generic management tasks (See also cli/_bcoin.py)
 
-The basic workflow is to run these two tools:
-
-  $ bidsmapper sourcefolder bidsfolder        # This produces a study bidsmap and launches a GUI
-  $ bidscoiner sourcefolder bidsfolder        # This converts your data to BIDS according to the study bidsmap
-
-Set the environment variable BIDSCOIN_DEBUG=TRUE in your console to run BIDScoin in its more verbose DEBUG logging mode
-
-For more documentation see: https://bidscoin.readthedocs.io
+@author: Marcel Zwiers
 """
 
-import argparse
 import coloredlogs
 import inspect
-import json
 import logging
 import os
 import shutil
 import subprocess
 import sys
-import textwrap
 import urllib.request
 from functools import lru_cache
-from importlib.metadata import entry_points, version as libversion
+from importlib.metadata import entry_points
 from importlib.util import spec_from_file_location, module_from_spec
 from pathlib import Path
 from typing import Tuple, Union, List
 from ruamel.yaml import YAML
 from tqdm import tqdm
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
-try:
-    from .due import due, Doi
-except ImportError:
-    from due import due, Doi
+from importlib.util import find_spec
+if find_spec('bidscoin') is None:
+    sys.path.append(str(Path(__file__).parents[1]))
+from bidscoin import heuristicsfolder, pluginfolder, bidsmap_template, tutorialurl
 
 yaml = YAML()
-
-# Add the BIDScoin citation
-due.cite(Doi('10.3389/fninf.2021.770608'), description='A toolkit to convert source data to the Brain Imaging Data Structure (BIDS)', path='bidscoin')
-
-# Define the default paths
-tutorialurl      = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
-bidscoinfolder   = Path(__file__).parent
-schemafolder     = bidscoinfolder/'schema'
-heuristicsfolder = bidscoinfolder/'heuristics'
-pluginfolder     = bidscoinfolder/'plugins'
-bidsmap_template = heuristicsfolder/'bidsmap_dccn.yaml'     # Default template bidsmap TODO: make it a user setting (in $HOME)?
 
 # Get the BIDSCOIN_DEBUG environment variable to set the log-messages and logging level, etc
 debug  = os.environ.get('BIDSCOIN_DEBUG')
@@ -180,46 +155,6 @@ def reporterrors() -> str:
                     f"NB: That folder may contain privacy sensitive information, e.g. pathnames in logfiles and provenance data samples")
 
     return errors
-
-
-def version(check: bool=False) -> Union[str, Tuple]:
-    """
-    Reads the BIDSCOIN version from the VERSION.TXT file and from pypi
-
-    :param check:   Check if the current version is up-to-date
-    :return:        The version number or (version number, checking message) if check=True
-    """
-
-    try:
-        localversion = libversion('bidscoin')
-    except Exception:
-        with open(Path(__file__).parents[1]/'pyproject.toml', 'rb') as fid:
-            localversion = tomllib.load(fid)['project']['version']
-
-    # Check pypi for the latest version number
-    if check:
-        try:
-            stream      = urllib.request.urlopen('https://pypi.org/pypi/bidscoin/json').read()
-            pypiversion = json.loads(stream)['info']['version']
-        except Exception as pypierror:
-            LOGGER.info(f"Checking BIDScoin version on https://pypi.org/pypi/bidscoin failed:\n{pypierror}")
-            return localversion, "(Could not check for new BIDScoin versions)"
-        if localversion != pypiversion:
-            return localversion, f"NB: Your BIDScoin version is NOT up-to-date: {localversion} -> {pypiversion}"
-        else:
-            return localversion, "Your BIDScoin version is up-to-date :-)"
-
-    return localversion
-
-
-def bidsversion() -> str:
-    """
-    Reads the BIDS version from the BIDSVERSION.TXT file
-
-    :return:    The BIDS version number
-    """
-
-    return (schemafolder/'BIDS_VERSION').read_text().strip()
 
 
 def run_command(command: str) -> int:
@@ -654,28 +589,12 @@ def pulltutorialdata(tutorialfolder: str) -> None:
 def main():
     """Console script usage"""
 
+    from bidscoin.cli._bcoin import get_parser
+
     setup_logging()
-    localversion, versionmessage = version(check=True)
 
     # Parse the input arguments and run bidscoiner(args)
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     description=textwrap.dedent(__doc__),
-                                     epilog='examples:\n'
-                                            '  bidscoin -l\n'
-                                            '  bidscoin -d data/bidscoin_tutorial\n'
-                                            '  bidscoin -t\n'
-                                            '  bidscoin -t my_template_bidsmap\n'
-                                            '  bidscoin -b my_study_bidsmap\n'
-                                            '  bidscoin -i data/my_template_bidsmap.yaml downloads/my_plugin.py\n ')
-    parser.add_argument('-l', '--list',        help='List all executables (i.e. the apps, bidsapps and utilities)', action='store_true')
-    parser.add_argument('-p', '--plugins',     help='List all installed plugins and template bidsmaps', action='store_true')
-    parser.add_argument('-i', '--install',     help='A list of template bidsmaps and/or bidscoin plugins to install', nargs='+')
-    parser.add_argument('-u', '--uninstall',   help='A list of template bidsmaps and/or bidscoin plugins to uninstall', nargs='+')
-    parser.add_argument('-d', '--download',    help='Download folder. If given, tutorial MRI data will be downloaded here')
-    parser.add_argument('-t', '--test',        help='Test the bidscoin installation and template bidsmap', nargs='?', const=bidsmap_template)
-    parser.add_argument('-b', '--bidsmaptest', help='Test the run-items and their bidsnames of all normal runs in the study bidsmap. Provide the bids-folder or the bidsmap filepath')
-    parser.add_argument('-v', '--version',     help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
-    args = parser.parse_args(None if sys.argv[1:] else ['--help'])
+    args = get_parser().parse_args(None if sys.argv[1:] else ['--help'])
 
     list_executables(show=args.list)
     list_plugins(show=args.plugins)

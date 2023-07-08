@@ -1,22 +1,7 @@
 #!/usr/bin/env python3
-"""
-Converts ("coins") your source datasets to NIfTI/json/tsv BIDS datasets using the mapping
-information from the bidsmap.yaml file. Edit this bidsmap to your needs using the bidseditor
-tool before running this function or (re-)run the bidsmapper whenever you encounter unexpected
-data. You can run bidscoiner after all data has been collected, or run / re-run it whenever
-new data has been added to your source folder (presuming the scan protocol hasn't changed).
-Also, if you delete a subject/session folder from the bidsfolder, it will simply be re-created
-from the sourcefolder the next time you run the bidscoiner.
+"""A BIDScoin application to convert source data to BIDS (See also cli/_bidscoiner.py)"""
 
-The bidscoiner uses plugins, as stored in the bidsmap['Options'], to do the actual work
-
-Provenance information, warnings and error messages are stored in the
-bidsfolder/code/bidscoin/bidscoiner.log file.
-"""
-
-import argparse
 import dateutil.parser
-import textwrap
 import re
 import pandas as pd
 import json
@@ -26,12 +11,11 @@ import urllib.request
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
-try:
-    from bidscoin import bcoin, bids
-except ImportError:
-    import bcoin, bids      # This should work if bidscoin was not pip-installed
-
-localversion, _ = bcoin.version(check=True)
+from importlib.util import find_spec
+if find_spec('bidscoin') is None:
+    import sys
+    sys.path.append(str(Path(__file__).parents[1]))
+from bidscoin import bcoin, bids, bidsversion, __version__
 
 
 def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=False, bidsmapfile: str='bidsmap.yaml') -> None:
@@ -55,7 +39,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     # Start logging
     bcoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidscoiner.log')
     LOGGER.info('')
-    LOGGER.info(f"-------------- START BIDScoiner {localversion}: BIDS {bcoin.bidsversion()} ------------")
+    LOGGER.info(f"-------------- START BIDScoiner {__version__}: BIDS {bidsversion()} ------------")
     LOGGER.info(f">>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} subjects={subjects} force={force} bidsmap={bidsmapfile}")
 
     # Create a code/bidscoin subfolder
@@ -63,12 +47,12 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
     # Create a dataset description file if it does not exist
     dataset_file = bidsfolder/'dataset_description.json'
-    generatedby  = [{"Name":"BIDScoin", "Version":localversion, "CodeURL":"https://github.com/Donders-Institute/bidscoin"}]
+    generatedby  = [{"Name":"BIDScoin", "Version":__version__, "CodeURL":"https://github.com/Donders-Institute/bidscoin"}]
     if not dataset_file.is_file():
         LOGGER.info(f"Creating dataset description file: {dataset_file}")
         dataset_description = {"Name":                  "REQUIRED. Name of the dataset",
                                "GeneratedBy":           generatedby,
-                               "BIDSVersion":           str(bcoin.bidsversion()),
+                               "BIDSVersion":           str(bidsversion()),
                                "DatasetType":           "raw",
                                "License":               "RECOMMENDED. The license for the dataset. The use of license name abbreviations is RECOMMENDED for specifying a license. The corresponding full license text MAY be specified in an additional LICENSE file",
                                "Authors":               ["OPTIONAL. List of individuals who contributed to the creation/curation of the dataset"],
@@ -97,7 +81,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             readme_file.write_text(
                 f"A free form text ( README ) describing the dataset in more details that SHOULD be provided. For an example, see e.g.:\n"
                 f"https://github.com/bids-standard/bids-starter-kit/blob/main/templates/README.MD\n\n"
-                f"The raw BIDS data was created using BIDScoin {localversion}\n"
+                f"The raw BIDS data was created using BIDScoin {__version__}\n"
                 f"All provenance information and settings can be found in ./code/bidscoin\n"
                 f"For more information see: https://github.com/Donders-Institute/bidscoin\n")
 
@@ -355,24 +339,15 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
 def main():
     """Console script usage"""
 
-    # Parse the input arguments and run bidscoiner(args)
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     description=textwrap.dedent(__doc__),
-                                     epilog='examples:\n'
-                                            '  bidscoiner myproject/raw myproject/bids\n'
-                                            '  bidscoiner -f myproject/raw myproject/bids -p sub-009 sub-030\n ')
-    parser.add_argument('sourcefolder',             help='The study root folder containing the raw source data')
-    parser.add_argument('bidsfolder',               help='The destination / output folder with the bids data')
-    parser.add_argument('-p','--participant_label', help='Space separated list of selected sub-# names / folders to be processed (the sub-prefix can be removed). Otherwise all subjects in the sourcefolder will be selected', nargs='+')
-    parser.add_argument('-b','--bidsmap',           help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
-    parser.add_argument('-f','--force',             help='Process all subjects, regardless of existing subject folders in the bidsfolder. Otherwise these subject folders will be skipped', action='store_true')
-    args = parser.parse_args()
+    from bidscoin.cli._bidscoiner import get_parser
 
-    bidscoiner(rawfolder    = args.sourcefolder,
-               bidsfolder   = args.bidsfolder,
-               subjects     = args.participant_label,
-               force        = args.force,
-               bidsmapfile  = args.bidsmap)
+    # Parse the input arguments and run bidscoiner(args)
+    args = get_parser().parse_args()
+    bidscoiner(rawfolder   = args.sourcefolder,
+               bidsfolder  = args.bidsfolder,
+               subjects    = args.participant_label,
+               force       = args.force,
+               bidsmapfile = args.bidsmap)
 
 
 if __name__ == "__main__":

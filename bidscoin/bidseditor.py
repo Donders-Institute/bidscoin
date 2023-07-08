@@ -1,16 +1,7 @@
 #!/usr/bin/env python3
-"""
-This application launches a graphical user interface for editing the bidsmap that is produced
-by the bidsmapper. You can edit the BIDS data types and entities until all run-items have a
-meaningful and nicely readable BIDS output name. The (saved) bidsmap.yaml output file will be
-used by the bidscoiner to do the conversion of the source data to BIDS.
-
-You can hoover with your mouse over items to get help text (pop-up tooltips).
-"""
+"""A BIDScoin application with a graphical user interface for editing the bidsmap (See also cli/_bidseditor.py)"""
 
 import sys
-import argparse
-import textwrap
 import logging
 import copy
 import webbrowser
@@ -28,11 +19,10 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileD
                              QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog, QMessageBox,
                              QTableWidget, QTableWidgetItem, QHeaderView, QGroupBox, QTextBrowser,
                              QPushButton, QComboBox, QAction)
-
-try:
-    from bidscoin import bcoin, bids
-except ImportError:
-    import bcoin, bids          # This should work if bidscoin was not pip-installed
+from importlib.util import find_spec
+if find_spec('bidscoin') is None:
+    sys.path.append(str(Path(__file__).parents[1]))
+from bidscoin import bcoin, bids, bidsversion, version, __version__
 
 
 ROW_HEIGHT       = 22
@@ -40,8 +30,8 @@ BIDSCOIN_LOGO    = Path(__file__).parent/'bidscoin_logo.png'
 BIDSCOIN_ICON    = Path(__file__).parent/'bidscoin.ico'
 RIGHTARROW       = Path(__file__).parent/'rightarrow.png'
 
-MAIN_HELP_URL    = f"https://bidscoin.readthedocs.io/en/{bcoin.version()}"
-HELP_URL_DEFAULT = f"https://bids-specification.readthedocs.io/en/v{bcoin.bidsversion()}"
+MAIN_HELP_URL    = f"https://bidscoin.readthedocs.io/en/{__version__}"
+HELP_URL_DEFAULT = f"https://bids-specification.readthedocs.io/en/v{bidsversion()}"
 HELP_URLS        = {
     'anat': f"{HELP_URL_DEFAULT}/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#anatomy-imaging-data",
     'dwi' : f"{HELP_URL_DEFAULT}/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#diffusion-imaging-data",
@@ -844,10 +834,10 @@ class MainWindow(QMainWindow):
     def show_about(self):
         """Shows a pop-up window with the BIDScoin version"""
 
-        version, message = bcoin.version(check=True)
-        # QMessageBox.about(self, 'About', f"BIDS editor {version}\n\n{message}")    # Has an ugly / small icon image
+        _, message = version(check=True)
+        # QMessageBox.about(self, 'About', f"BIDS editor {__version__}\n\n{message}")    # Has an ugly / small icon image
         messagebox = QMessageBox(self)
-        messagebox.setText(f"\n\nBIDS editor {version}\n\n{message}")
+        messagebox.setText(f"\n\nBIDS editor {__version__}\n\n{message}")
         messagebox.setWindowTitle('About')
         messagebox.setIconPixmap(QtGui.QPixmap(str(BIDSCOIN_LOGO)).scaled(150, 150, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
         messagebox.show()
@@ -1681,7 +1671,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='') -> No
 
     # Start the Qt-application
     app = QApplication(sys.argv)
-    app.setApplicationName(f"{bidsmapfile} - BIDS editor {bcoin.version()}")
+    app.setApplicationName(f"{bidsmapfile} - BIDS editor {__version__}")
     mainwin = MainWindow(bidsfolder, input_bidsmap, template_bidsmap, datasaved=True)
     mainwin.show()
     app.exec()
@@ -1695,20 +1685,10 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str='') -> No
 def main():
     """Console script usage"""
 
+    from bidscoin.cli._bidseditor import get_parser
+
     # Parse the input arguments and run bidseditor
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     description=textwrap.dedent(__doc__),
-                                     epilog=textwrap.dedent("""
-                                         examples:
-                                           bidseditor myproject/bids
-                                           bidseditor myproject/bids -t bidsmap_dccn.yaml
-                                           bidseditor myproject/bids -b my/custom/bidsmap.yaml"""))
-
-    parser.add_argument('bidsfolder',           help='The destination folder with the (future) bids data')
-    parser.add_argument('-b','--bidsmap',       help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
-    parser.add_argument('-t','--template',      help=f'The template bidsmap file with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: {bcoin.bidsmap_template.stem}', default=bcoin.bidsmap_template)
-    args = parser.parse_args()
-
+    args = get_parser().parse_args()
     bidseditor(bidsfolder   = args.bidsfolder,
                bidsmapfile  = args.bidsmap,
                templatefile = args.template)
