@@ -62,7 +62,7 @@ Step 1a: Running the bidsmapper
                             your subject folders do not have a prefix. Default: the value of the
                             study/template bidsmap, e.g. 'sub-'
       -m SESPREFIX, --sesprefix SESPREFIX
-                            The prefix common for all the source session-folders (e.g. 'M_' is the
+                            The prefix common for all the source session-folders (e.g. `M_` is the
                             subprefix if session folders are named 'M_pre', 'M_post', ..). Use '*' when
                             your session folders do not have a prefix. Default: the value of the
                             study/template bidsmap, e.g. 'ses-'

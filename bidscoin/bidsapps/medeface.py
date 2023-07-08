@@ -1,21 +1,8 @@
 #!/usr/bin/env python3
-"""
-A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface) that
-computes a defacing mask on a (temporary) echo-combined image and then applies it to each
-individual echo-image.
-
-Except for BIDS inheritances and IntendedFor usage, this wrapper is BIDS-aware (a 'bidsapp')
-and writes BIDS compliant output
-
-Linux users can distribute the computations to their HPC compute cluster if the DRMAA
-libraries are installed and the DRMAA_LIBRARY_PATH environment variable set
-
-For single-echo data see `deface`
-"""
+"""A bidsapp that combines echos and wraps around the 'pydeface' defacing tool (See also cli/_medeface.py)"""
 
 import os
 import shutil
-import argparse
 import json
 import logging
 import pandas as pd
@@ -26,12 +13,11 @@ import tempfile
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
-try:
-    from bidscoin import bcoin, bids
-except ImportError:
+from importlib.util import find_spec
+if find_spec('bidscoin') is None:
     import sys
-    sys.path.append(str(Path(__file__).parents[1]))             # This should work if bidscoin was not pip-installed
-    import bcoin, bids
+    sys.path.append(str(Path(__file__).parents[2]))
+from bidscoin import bcoin, bids
 
 
 def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
@@ -212,27 +198,9 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
 def main():
     """Console script usage"""
 
-    class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter): pass
+    from bidscoin.cli._medeface import get_parser
 
-    parser = argparse.ArgumentParser(formatter_class=CustomFormatter,
-                                     description=__doc__,
-                                     epilog='examples:\n'
-                                            '  medeface myproject/bids anat/*_T1w*\n'
-                                            '  medeface myproject/bids anat/*_T1w* -p 001 003 -o derivatives\n'
-                                            '  medeface myproject/bids anat/*_T1w* -c -n "-l walltime=00:60:00,mem=4gb"\n'
-                                            '  medeface myproject/bids anat/*acq-GRE* -m anat/*acq-GRE*magnitude*"\n'
-                                            '  medeface myproject/bids anat/*_FLAIR* -a \'{"cost": "corratio", "verbose": ""}\'\n ')
-    parser.add_argument('bidsfolder',               help='The bids-directory with the (multi-echo) subject data')
-    parser.add_argument('pattern',                  help="Globlike search pattern (relative to the subject/session folder) to select the images that need to be defaced, e.g. 'anat/*_T2starw*'")
-    parser.add_argument('-m','--maskpattern',       help="Globlike search pattern (relative to the subject/session folder) to select the images from which the defacemask is computed, e.g. 'anat/*_part-mag_*_T2starw*'. If not given then 'pattern' is used")
-    parser.add_argument('-p','--participant_label', help='Space separated list of sub-# identifiers to be processed (the sub-prefix can be left out). If not specified then all sub-folders in the bidsfolder will be processed', nargs='+')
-    parser.add_argument('-o','--output',            help=f"A string that determines where the defaced images are saved. It can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives'. If output is left empty then the original images are replaced by the defaced images")
-    parser.add_argument('-c','--cluster',           help='Submit the deface jobs to a high-performance compute (HPC) cluster', action='store_true')
-    parser.add_argument('-n','--nativespec',        help='DRMAA native specifications for submitting deface jobs to the HPC cluster', default='-l walltime=00:30:00,mem=2gb')
-    parser.add_argument('-a','--args',              help='Additional arguments (in dict/json-style) that are passed to pydeface. See examples for usage', type=json.loads, default={})
-    parser.add_argument('-f','--force',             help='Process all images, regardless if images have already been defaced (i.e. if {"Defaced": True} in the json sidecar file)', action='store_true')
-    args = parser.parse_args()
-
+    args = get_parser().parse_args()
     medeface(bidsdir     = args.bidsfolder,
              pattern     = args.pattern,
              maskpattern = args.maskpattern,

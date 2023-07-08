@@ -1,26 +1,23 @@
+import sys
+import bidscoin
+from bidscoin import bcoin
 from pathlib import Path
-try:
-    from bidscoin import bcoin
-except ImportError:
-    import sys
-    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'))         # This should work if bidscoin was not pip-installed
-    import bcoin
 
 bcoin.setup_logging()
 
-assert bcoin.schemafolder.is_dir()
-assert bcoin.heuristicsfolder.is_dir()
-assert bcoin.pluginfolder.is_dir()
-assert bcoin.bidsmap_template.is_file()
+assert bidscoin.schemafolder.is_dir()
+assert bidscoin.heuristicsfolder.is_dir()
+assert bidscoin.pluginfolder.is_dir()
+assert bidscoin.bidsmap_template.is_file()
 
 
 def test_version():
-    assert isinstance(bcoin.version(False), str)
-    assert isinstance(bcoin.version(True), tuple)
+    assert isinstance(bidscoin.version(False), str)
+    assert isinstance(bidscoin.version(True), tuple)
 
 
 def test_bidsversion():
-    assert isinstance(bcoin.bidsversion(), str)
+    assert isinstance(bidscoin.bidsversion(), str)
 
 
 def test_runcommand():
@@ -34,6 +31,9 @@ def test_list_executables():
     assert 'deface' in executables
     for executable in executables:
         assert bcoin.run_command(f"{executable} -h") == 0
+        if not sys.platform.startswith('win'):
+            manpage = (Path(sys.executable).parents[1]/'share'/'man'/'man1'/f"{executable}.1").read_text()
+            assert executable in manpage.splitlines()       # Tests if manpage NAME == argparse prog for each console script
 
 
 def test_list_plugins():

@@ -16,11 +16,7 @@ from typing import Union
 from pathlib import Path
 from functools import lru_cache
 from bids_validator import BIDSValidator
-
-try:
-    from bidscoin import bcoin, bids
-except ImportError:
-    import bcoin, bids      # This should work if bidscoin was not pip-installed
+from bidscoin import bcoin, bids
 
 LOGGER = logging.getLogger(__name__)
 

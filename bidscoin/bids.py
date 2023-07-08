@@ -1,5 +1,5 @@
 """
-Module with helper functions
+BIDScoin module with bids/bidsmap related helper functions
 
 Some functions are derived from dac2bids.py from Daniel Gomez 29.08.2016
 https://github.com/dangom/dac2bids/blob/master/dac2bids.py
@@ -21,33 +21,31 @@ from pathlib import Path
 from typing import Union, List, Tuple
 from nibabel.parrec import parse_PAR_header
 from pydicom import dcmread, fileset, datadict
-try:
-    from bidscoin import bcoin
-    from bidscoin.utilities import dicomsort
-except ImportError:
+from importlib.util import find_spec
+if find_spec('bidscoin') is None:
     import sys
-    sys.path.append(str(Path(__file__).parent/'utilities'))                     # This should work if bidscoin was not pip-installed
-    import bcoin
-    import dicomsort
+    sys.path.append(str(Path(__file__).parents[1]))
+from bidscoin import bcoin, schemafolder, __version__
+from bidscoin.utilities import dicomsort
 from ruamel.yaml import YAML
 yaml = YAML()
 
 LOGGER = logging.getLogger(__name__)
 
 # Read the BIDS schema data
-with (bcoin.schemafolder/'objects'/'datatypes.yaml').open('r') as _stream:
+with (schemafolder/'objects'/'datatypes.yaml').open('r') as _stream:
     bidsdatatypesdef = yaml.load(_stream)                                       # The valid BIDS datatypes, along with their full names and descriptions
 datatyperules = {}
-for _datatypefile in (bcoin.schemafolder/'rules'/'files'/'raw').glob('*.yaml'):
+for _datatypefile in (schemafolder/'rules'/'files'/'raw').glob('*.yaml'):
     with _datatypefile.open('r') as _stream:
         datatyperules[_datatypefile.stem] = yaml.load(_stream)                  # The entities that can/should be present for each BIDS datatype
-with (bcoin.schemafolder/'objects'/'suffixes.yaml').open('r') as _stream:
+with (schemafolder/'objects'/'suffixes.yaml').open('r') as _stream:
     suffixes = yaml.load(_stream)                                               # The descriptions of the valid BIDS file suffixes
-with (bcoin.schemafolder/'objects'/'entities.yaml').open('r') as _stream:
+with (schemafolder/'objects'/'entities.yaml').open('r') as _stream:
     entities = yaml.load(_stream)                                               # The descriptions of the entities present in BIDS filenames
-with (bcoin.schemafolder/'rules'/'entities.yaml').open('r') as _stream:
+with (schemafolder/'rules'/'entities.yaml').open('r') as _stream:
     entitiesorder = yaml.load(_stream)                                          # The order in which the entities should appear within filenames
-with (bcoin.schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
+with (schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
     metafields = yaml.load(_stream)                                             # The descriptions of the valid BIDS metadata fields
 
 
@@ -884,10 +882,10 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
         bidsmapversion = bidsmap['Options']['version']
     else:
         bidsmapversion = 'Unknown'
-    if bidsmapversion.rsplit('.', 1)[0] != bcoin.version().rsplit('.', 1)[0] and any(check):
-        LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created with version {bidsmapversion}, but this is version {bcoin.version()}')
-    elif bidsmapversion != bcoin.version() and any(check):
-        LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {bcoin.version()}. This is normally ok but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
+    if bidsmapversion.rsplit('.', 1)[0] != __version__.rsplit('.', 1)[0] and any(check):
+        LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}')
+    elif bidsmapversion != __version__ and any(check):
+        LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}. This is normally ok but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
 
     # Make sure we get a proper plugin options and dataformat sections (use plugin default bidsmappings when a template bidsmap is loaded)
     if not bidsmap['Options'].get('plugins'):
@@ -1213,14 +1211,14 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
     return run_keysok, run_suffixok, run_valsok
 
 
-def check_ignore(entry: str, bidsignore: Union[str,list], type: str='dir') -> bool:
+def check_ignore(entry: str, bidsignore: Union[str,list], datatype: str= 'dir') -> bool:
     """
     A rudimentary check whether `entry` should be BIDS-ignored. This function should eventually be replaced by bids_validator functionality
     See also https://github.com/bids-standard/bids-specification/issues/131
 
     :param entry:       The entry that is checked against the bidsignore (e.g. a directory/datatype such as `anat` or a file such as `sub-001_ct.nii.gz`)
     :param bidsignore:  The list or semicolon separated bidsignore pattern (e.g. from the bidscoin Options such as `mrs/;extra_data/;sub-*_ct.*`)
-    :param type:        The entry type, i.e. 'dir' or 'file', that can be used to limit the check
+    :param datatype:    The entry datatype, i.e. 'dir' or 'file', that can be used to limit the check
     :return:            True if the entry should be ignored, else False
     """
 
@@ -1238,8 +1236,8 @@ def check_ignore(entry: str, bidsignore: Union[str,list], type: str='dir') -> bo
 
     ignore = False
     for item in bidsignore:
-        if type == 'dir' and not item.endswith('/'): continue
-        if type == 'file'    and item.endswith('/'): continue
+        if datatype =='dir' and not item.endswith('/'): continue
+        if datatype =='file'    and item.endswith('/'): continue
         if item.endswith('/'):
             item = item[0:-1]
         if fnmatch.fnmatch(entry, item):

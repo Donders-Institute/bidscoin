@@ -1,18 +1,7 @@
 #!/usr/bin/env python3
-"""
-The bidsmapper scans your source data repository to identify different data types by matching
-them against the run-items in the template bidsmap. Once a match is found, a mapping to BIDS
-output data types is made and the run-item is added to the study bidsmap. You can check and
-edit these generated bids-mappings to your needs with the (automatically launched) bidseditor.
-Re-run the bidsmapper whenever something was changed in your data acquisition protocol and
-edit the new data type to your needs (your existing bidsmap will be re-used).
-
-The bidsmapper uses plugins, as stored in the bidsmap['Options'], to do the actual work
-"""
+"""A BIDScoin application to create a study bidsmap (See also cli/_bidsmapper.py)"""
 
 # Global imports (plugin modules may be imported when needed)
-import argparse
-import textwrap
 import copy
 import logging
 import sys
@@ -21,12 +10,12 @@ import re
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
-try:
-    from bidscoin import bcoin, bids
-except ImportError:
-    import bcoin, bids          # This should work if bidscoin was not pip-installed
+from importlib.util import find_spec
+if find_spec('bidscoin') is None:
+    sys.path.append(str(Path(__file__).parents[1]))
+from bidscoin import bcoin, bids, version
 
-localversion, versionmessage = bcoin.version(check=True)
+localversion, versionmessage = version(check=True)
 
 
 def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, plugins: list, subprefix: str, sesprefix: str, unzip: str, store: bool=False, noeditor: bool=False, force: bool=False, noupdate: bool=False) -> dict:
@@ -241,28 +230,10 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path, up
 def main():
     """Console script usage"""
 
-    # Parse the input arguments and run bidsmapper(args)
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     description=textwrap.dedent(__doc__),
-                                     epilog='examples:\n'
-                                            '  bidsmapper myproject/raw myproject/bids\n'
-                                            '  bidsmapper myproject/raw myproject/bids -t bidsmap_custom  # Uses a template bidsmap of choice\n'
-                                            '  bidsmapper myproject/raw myproject/bids -p nibabel2bids    # Uses a plugin of choice\n'
-                                            "  bidsmapper myproject/raw myproject/bids -u '*.tar.gz'      # Unzip tarball sourcefiles\n ")
-    parser.add_argument('sourcefolder',       help='The study root folder containing the raw source data folders')
-    parser.add_argument('bidsfolder',         help='The destination folder with the (future) bids data and the bidsfolder/code/bidscoin/bidsmap.yaml output file')
-    parser.add_argument('-b','--bidsmap',     help="The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no '/' in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml", default='bidsmap.yaml')
-    parser.add_argument('-t','--template',    help=f"The bidsmap template file with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no '/' in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: {bcoin.bidsmap_template.stem}", default=bcoin.bidsmap_template)
-    parser.add_argument('-p','--plugins',     help='List of plugins to be used. Default: the plugin list of the study/template bidsmap)', nargs='+', default=[])
-    parser.add_argument('-n','--subprefix',   help="The prefix common for all the source subject-folders (e.g. 'Pt' is the subprefix if subject folders are named 'Pt018', 'Pt019', ...). Use '*' when your subject folders do not have a prefix. Default: the value of the study/template bidsmap, e.g. 'sub-'")
-    parser.add_argument('-m','--sesprefix',   help="The prefix common for all the source session-folders (e.g. 'M_' is the subprefix if session folders are named 'M_pre', 'M_post', ..). Use '*' when your session folders do not have a prefix. Default: the value of the study/template bidsmap, e.g. 'ses-'")
-    parser.add_argument('-u','--unzip',       help='Wildcard pattern to unpack tarball/zip-files in the sub/ses sourcefolder that need to be unzipped (in a tempdir) to make the data readable. Default: the value of the study/template bidsmap')
-    parser.add_argument('-s','--store',       help='Store provenance data samples in the bidsfolder/code/provenance folder (useful for inspecting e.g. zipped or transfered datasets)', action='store_true')
-    parser.add_argument('-a','--automated',   help='Save the automatically generated bidsmap to disk and without interactively tweaking it with the bidseditor', action='store_true')
-    parser.add_argument('-f','--force',       help='Discard the previously saved bidsmap and logfile', action='store_true')
-    parser.add_argument('--no-update',        help="Do not update any sub/sesprefixes in or prepend the sourcefolder name to the <<filepath:regexp>> expression that extracts the subject/session labels. This is normally done to make the extraction more robust, but could case problems for certain use cases", action='store_true')
-    args = parser.parse_args()
+    from bidscoin.cli._bidsmapper import get_parser
 
+    # Parse the input arguments and run bidsmapper(args)
+    args = get_parser().parse_args()
     bidsmapper(rawfolder    = args.sourcefolder,
                bidsfolder   = args.bidsfolder,
                bidsmapfile  = args.bidsmap,

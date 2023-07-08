@@ -3,12 +3,11 @@ import shutil
 import json
 from pathlib import Path
 from pydicom.data import get_testdata_file
-try:
-    from bidscoin.utilities import dicomsort
-except ImportError:
+from importlib.util import find_spec
+if find_spec('bidscoin') is None:
     import sys
-    sys.path.append(str(Path(__file__).parents[1]/'bidscoin'/'utilities'))         # This should work if bidscoin was not pip-installed
-    import dicomsort
+    sys.path.append(str(Path(__file__).parents[2]))
+from bidscoin.utilities import dicomsort
 
 
 @pytest.fixture(scope='session')
