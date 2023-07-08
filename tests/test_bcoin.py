@@ -33,7 +33,7 @@ def test_list_executables():
         assert bcoin.run_command(f"{executable} -h") == 0
         if not sys.platform.startswith('win'):
             manpage = (Path(sys.executable).parents[1]/'share'/'man'/'man1'/f"{executable}.1").read_text()
-            assert executable in manpage
+            assert executable in manpage.splitlines()       # Tests if manpage NAME == argparse prog for each console script
 
 
 def test_list_plugins():
