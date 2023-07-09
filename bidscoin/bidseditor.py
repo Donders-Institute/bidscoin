@@ -22,7 +22,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileD
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import bcoin, bids, bidsversion, version, __version__
+from bidscoin import bcoin, bids, bidsversion, version, bidsmap_template, __version__
 
 
 ROW_HEIGHT       = 22
@@ -798,7 +798,7 @@ class MainWindow(QMainWindow):
         """Export the options to a template bidsmap on disk"""
 
         yamlfile, _ = QFileDialog.getOpenFileName(self, 'Select the (default) template bidsmap to save the options in',
-                        str(bcoin.bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
+                        str(bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if yamlfile:
             LOGGER.info(f"Saving bidsmap['Options'] in: {yamlfile}")
             with open(yamlfile, 'r') as stream:
@@ -1490,7 +1490,7 @@ class EditWindow(QDialog):
         """Export the editted run to a (e.g. template) bidsmap on disk"""
 
         yamlfile, _ = QFileDialog.getOpenFileName(self, 'Export run item to (template) bidsmap',
-                                                  str(bcoin.bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
+                                                  str(bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
         if yamlfile:
             LOGGER.info(f'Exporting run item: bidsmap[{self.dataformat}][{self.target_datatype}] -> {yamlfile}')
             yamlfile   = Path(yamlfile)
