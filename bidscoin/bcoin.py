@@ -177,14 +177,14 @@ def run_command(command: str) -> int:
 
 def is_hidden(path: Path) -> bool:
     """
-    Checks if a path contains a hiden folder.
+    Checks if a path contains a hidden folder.
 
     :param path:    The path to be checked.
     :return:        True if a part of the path starts with a '.', otherwise False.
     """
 
     if any([p.name.startswith('.') for p in path.parents]):
-        LOGGER.verbose(f"Path '{path.absolute()}' is hidden.")
+        LOGGER.verbose(f"Path '{path.absolute()}' is hidden")
         return True
     else:
         return False
@@ -204,7 +204,8 @@ def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
 
 def list_executables(show: bool=False) -> list:
     """
-    :return:            List of BIDScoin console scripts
+    :param show:    Print the installed console scripts if True
+    :return:        List of BIDScoin console scripts
     """
 
     if show: LOGGER.info('Executable BIDScoin tools:')
@@ -447,10 +448,8 @@ def test_bidsmap(bidsmapfile: str):
     if not bidsmapfile:
         return
 
-    try:  # Include the import in the test + moving the import to the top of this module will cause circular import issues
-        from bidscoin import bids
-    except ImportError:
-        import bids  # This should work if bidscoin was not pip-installed
+    # Include the import in the test + moving the import to the top of this module will cause circular import issues
+    from bidscoin import bids
 
     LOGGER.info('--------- Testing bidsmap runs and their bids-names ---------')
 
@@ -486,8 +485,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
             return 1
         LOGGER.info(f"Running bidsmap checks:")
         try:            # Moving the import to the top of this module will cause circular import issues
-            try:  from bidscoin import bids
-            except ImportError: import bids         # This should work if bidscoin was not pip-installed
+            from bidscoin import bids
             bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile), check=(True,True,False))
         except Exception as bidsmaperror:
             LOGGER.error(f"An error occurred when loading {bidsmapfile}:\n{bidsmaperror}\nThis may be due to invalid YAML syntax. You can check this using a YAML validator (e.g. https://www.yamllint.com)")
@@ -499,8 +497,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
     # Check if all entities of each datatype in the bidsmap are present
     if testtemplate:
         try:                # Moving the import to the top of this module will cause circular import issues
-            try:  from bidscoin import bids
-            except ImportError: import bids  # This should work if bidscoin was not pip-installed
+            from bidscoin import bids
             success = bids.check_template(bidsmap) and success
         except ImportError:
             LOGGER.info(f"Could not fully test: {bidsmap}")

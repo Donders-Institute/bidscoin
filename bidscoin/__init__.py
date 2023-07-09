@@ -14,6 +14,7 @@ For more documentation see: https://bidscoin.readthedocs.io
 SPDX-License-Identifier: GPL-3.0-or-later
 """
 
+# Imports from the standard library only (as these are imported during the cli/manpage build process)
 import urllib.request
 import json
 from pathlib import Path

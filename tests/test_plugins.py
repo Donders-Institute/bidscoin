@@ -6,10 +6,10 @@ Run the plugin test routines
 
 import pytest
 import inspect
-from bidscoin import bcoin, bids
+from bidscoin import bcoin, bids, bidsmap_template
 
 bcoin.setup_logging()
-template, _ = bids.load_bidsmap(bcoin.bidsmap_template, check=(False,False,False))
+template, _ = bids.load_bidsmap(bidsmap_template, check=(False,False,False))
 
 
 # Test all plugins using the template & default options

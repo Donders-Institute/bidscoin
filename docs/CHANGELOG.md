@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file. The format 
 - Use SeriesInstanceUID in dicomsort as a fallback
 - Update the paths in the provenance store if the bidsfolder was moved
 - A template bidsmap entry to support CT (BEP024)
+- Manpages (not on Windows)
 
 ### Changed
 - Template bidsmap tweaks to support (XA30) enhanced DICOM

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 [build-system]
-requires         = ['setuptools >= 62.2.0', 'wheel', 'argparse-manpage[setuptools]', 'tomli >= 1.1.0 ; python_version < "3.11"']
+requires         = ['setuptools >= 62.2.0', 'wheel', 'argparse-manpage[setuptools]', 'tomli >= 1.1.0 ; python_version < 3.11']
 build-backend    = 'setuptools.build_meta'
 
 [project]
@@ -14,29 +14,30 @@ license          = {file = 'LICENSE.txt'}
 keywords         = ['bids','mri','imaging','neuroimaging','dicom','par','rec','nifti','defacing','echo-combination','skull-stripping']
 authors          = [{email = 'm.zwiers@donders.ru.nl'}, {name = 'Marcel Zwiers'}]
 classifiers      = ['Programming Language :: Python :: 3',
-                    'License :: OSI Approved :: GNU General Public License v3 or later',
-                    'Operating System :: OS Independent']
+                    'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+                    'Operating System :: OS Independent',
+                    'Intended Audience :: Science/Research']
 dependencies     = ['pandas',
                     'matplotlib',
                     'numpy',
                     'pydicom >= 2',
                     'PyQt5 >= 5.12.1',
                     'ruamel.yaml >= 0.15.35',
-                    'tomli >= 1.1.0 ; python_version < "3.11"',
+                    'tomli >= 1.1.0 ; python_version < 3.11',
                     'coloredlogs',
                     'tqdm >= 4.60.0',
                     'multiecho >= 0.25',
                     'python-dateutil',
                     'nibabel',
-                    'bids_validator',
-                    'pytest']
+                    'bids_validator']
 
 [project.optional-dependencies]
 spec2nii2bids    = ['spec2nii']
 deface           = ['pydeface', 'drmaa']
 pet2bids         = ['pypet2bids >= 1.0.12']
 # phys2bidscoin    = ['bioread >= 1.0.5', 'pymatreader >= 0.0.24', 'duecredit', 'phys2bids >= 2.0.0, < 3.0.0']
-all              = ['bidscoin[spec2nii2bids, deface, pet2bids]']        # + phys2bidscoin
+all              = ['bidscoin[spec2nii2bids, deface, pet2bids]']                    # + phys2bidscoin
+dev              = ['bidscoin[spec2nii2bids, deface, pet2bids]', 'tox', 'pytest']   # + phys2bidscoin
 
 [project.urls]
 documentation    = 'https://bidscoin.readthedocs.io'

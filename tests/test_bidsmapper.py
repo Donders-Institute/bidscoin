@@ -1,6 +1,6 @@
 import pytest
 import re
-from bidscoin import bcoin, bidsmapper
+from bidscoin import bcoin, bidsmapper, bidsmap_template
 
 bcoin.setup_logging()
 
@@ -11,7 +11,7 @@ bcoin.setup_logging()
 def test_bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, subprefix, sesprefix, store):
     resubprefix = '' if subprefix=='*' else re.escape(subprefix).replace(r'\-','-')
     resesprefix = '' if sesprefix=='*' else re.escape(sesprefix).replace(r'\-','-')
-    bidsmap     = bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bcoin.bidsmap_template, [], subprefix, sesprefix, unzip='', store=store, noeditor=True, force=True)
+    bidsmap     = bidsmapper.bidsmapper(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir, bidsmap_template, [], subprefix, sesprefix, unzip='', store=store, noeditor=True, force=True)
     assert bidsmap['Options']['bidscoin']['subprefix'] == subprefix
     assert bidsmap['Options']['bidscoin']['sesprefix'] == sesprefix
     assert bidsmap['DICOM']['subject']                 == f"<<filepath:/{raw_dicomdir.name}/{resubprefix}(.*?)/>>"
