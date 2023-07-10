@@ -175,7 +175,7 @@ def test_check_bidsmap(test_bidsmap):
     for each, check in zip(is_valid, checks):
         assert each in (None, True, False)
         if check:
-            assert each in (None, True)
+            assert each == True
 
 
 def test_find_run(test_bidsmap):

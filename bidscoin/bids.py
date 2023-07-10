@@ -1035,7 +1035,7 @@ def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
 
 def check_bidsmap(bidsmap: dict, checks: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
     """
-    Check all the runs in the bidsmap for required and optional entities using the BIDS schema files
+    Check all non-ignored runs in the bidsmap for required and optional entities using the BIDS schema files
 
     :param bidsmap: Full bidsmap data structure, with all options, BIDS labels and attributes, etc.
     :param checks:  Booleans to check if all (bids-keys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
@@ -1057,8 +1057,11 @@ def check_bidsmap(bidsmap: dict, checks: Tuple[bool, bool, bool]=(True, True, Tr
         if dataformat in ('Options','PlugIns'): continue    # Handle legacy bidsmaps (-> 'PlugIns'). TODO: Check Options
         if not bidsmap[dataformat]:             continue
         for datatype in bidsmap[dataformat]:
-            if not isinstance(bidsmap[dataformat][datatype], list): continue        # E.g. 'subject' and 'session'
+            if not isinstance(bidsmap[dataformat][datatype], list):                  continue   # E.g. 'subject' and 'session'
+            if datatype in bidsmap['Options']['bidscoin']['ignoretypes']:            continue   # E.g. 'exclude'
             if check_ignore(datatype, bidsmap['Options']['bidscoin']['bidsignore']): continue
+            if bidsmap[dataformat][datatype] and results == (None, None, None):
+                results = (True, True, True)                # We can now check the bidsmap
             for run in bidsmap[dataformat][datatype]:
                 bidsname = get_bidsname('sub-foo', '', run, False)
                 if check_ignore(bidsname+'.json', bidsmap['Options']['bidscoin']['bidsignore'], 'file'): continue
@@ -1100,6 +1103,7 @@ def check_template(bidsmap: dict) -> bool:
             if not (datatype in bidsdatatypesdef or datatype in ignoretypes or check_ignore(datatype, bidsignore)):
                 LOGGER.warning(f"Invalid {dataformat} datatype: '{datatype}' (you may want to add it to the 'bidsignore' list)")
                 valid = False
+            if datatype in ignoretypes: continue
             datatypesuffixes = []
             for run in bidsmap[dataformat][datatype]:
                 datatypesuffixes.append(run['bids']['suffix'])
