@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 [build-system]
-requires         = ['setuptools >= 62.2.0', 'wheel', 'argparse-manpage[setuptools]', 'tomli >= 1.1.0 ; python_version < 3.11']
+requires         = ['setuptools >= 62.2.0', 'wheel', 'argparse-manpage[setuptools]', 'tomli >= 1.1.0 ; python_version < "3.11"']
 build-backend    = 'setuptools.build_meta'
 
 [project]
@@ -23,7 +23,7 @@ dependencies     = ['pandas',
                     'pydicom >= 2',
                     'PyQt5 >= 5.12.1',
                     'ruamel.yaml >= 0.15.35',
-                    'tomli >= 1.1.0 ; python_version < 3.11',
+                    'tomli >= 1.1.0 ; python_version < "3.11"',
                     'coloredlogs',
                     'tqdm >= 4.60.0',
                     'multiecho >= 0.25',
