@@ -7,7 +7,7 @@ import ruamel.yaml.comments
 from pathlib import Path
 from nibabel.testing import data_path
 from pydicom.data import get_testdata_file
-from bidscoin import bcoin, bids
+from bidscoin import bcoin, bids, bidsmap_template
 
 bcoin.setup_logging()
 
@@ -25,6 +25,11 @@ def dicomdir():
 @pytest.fixture(scope='module')
 def par_file():
     return Path(data_path)/'phantom_EPI_asc_CLEAR_2_1.PAR'
+
+
+@pytest.fixture(scope='module')
+def test_bidsmap():
+    return Path(__file__).parent/'test_data'/'bidsmap.yaml'
 
 
 class TestDataSource:
@@ -113,7 +118,7 @@ def test_get_datasource(dicomdir):
 
 @pytest.mark.parametrize('template', bcoin.list_plugins()[1])
 def test_load_check_template(template):
-    bidsmap, _ = bids.load_bidsmap(template, check=(False,False,False))
+    bidsmap, _ = bids.load_bidsmap(template, checks=(False, False, False))
     assert isinstance(bidsmap, dict) and bidsmap
     assert bids.check_template(bidsmap)
 
@@ -134,32 +139,49 @@ def test_match_runvalue():
     assert bids.match_runvalue(r'\[1, 2, 3\]',  [1, 2, 3])             == False
 
 
-@pytest.fixture()
-def test_bidsmap_path():
-    return Path(__file__).parent/'test_data'/'bidsmap.yaml'
+def test_load_bidsmap(test_bidsmap):
 
-def test_load_bidsmap(test_bidsmap_path):
     # test loading with recommended arguments for load_bidsmap
-    full_arguments_map, return_path = bids.load_bidsmap(Path(test_bidsmap_path.name),
-                                                        test_bidsmap_path.parent)
+    full_arguments_map, return_path = bids.load_bidsmap(Path(test_bidsmap.name), test_bidsmap.parent)
     assert type(full_arguments_map) == ruamel.yaml.comments.CommentedMap
     assert full_arguments_map is not []
 
     # test loading with no input folder0, should load default from heuristics folder
-    no_input_folder_map, _ = bids.load_bidsmap(test_bidsmap_path)
+    no_input_folder_map, _ = bids.load_bidsmap(test_bidsmap)
     assert type(no_input_folder_map) == ruamel.yaml.comments.CommentedMap
     assert no_input_folder_map is not []
 
     # test loading with full path to only bidsmap file
-    full_path_to_bidsmap_map, _ = bids.load_bidsmap(test_bidsmap_path)
+    full_path_to_bidsmap_map, _ = bids.load_bidsmap(test_bidsmap)
     assert type(full_path_to_bidsmap_map) == ruamel.yaml.comments.CommentedMap
     assert no_input_folder_map is not []
 
 
-def test_find_run(test_bidsmap_path):
+def test_check_bidsmap(test_bidsmap):
+
+    template_bidsmap, _ = bids.load_bidsmap(bidsmap_template, checks=(True, True, False))
+    study_bidsmap, _    = bids.load_bidsmap(test_bidsmap)
+
+    # Test the output of the template bidsmap
+    checks   = (True, True, False)
+    is_valid = bids.check_bidsmap(template_bidsmap, checks)
+    for each, check in zip(is_valid, checks):
+        assert each in (None, True, False)
+        if check:
+            assert each in (None, True)
+
+    # Test the output of the study bidsmap
+    is_valid = bids.check_bidsmap(study_bidsmap, checks)
+    for each, check in zip(is_valid, checks):
+        assert each in (None, True, False)
+        if check:
+            assert each in (None, True)
+
+
+def test_find_run(test_bidsmap):
 
     # load bidsmap
-    bidsmap, _ = bids.load_bidsmap(test_bidsmap_path)
+    bidsmap, _ = bids.load_bidsmap(test_bidsmap)
 
     # collect provenance from bidsmap for anat, pet, and func
     anat_provenance = bidsmap['DICOM']['anat'][0]['provenance']
@@ -175,24 +197,29 @@ def test_find_run(test_bidsmap_path):
 
     # create a duplicate provenance but in a different datatype
     bidsmap['PET'] = bidsmap['DICOM']
+
     # mark the entry in the PET section to make sure we're getting the right one
     tag = 123456789
     bidsmap['PET']['anat'][0]['properties']['nrfiles'] = tag
+
     # locate PET datatype run
     pet_run = bids.find_run(bidsmap, provenance=anat_provenance, dataformat='PET')
     assert pet_run['properties']['nrfiles'] == tag
 
 
-def test_delete_run(test_bidsmap_path):
+def test_delete_run(test_bidsmap):
+
     # create a copy of the bidsmap
     with tempfile.TemporaryDirectory() as tempdir:
-        temp_bidsmap = Path(tempdir) / Path(test_bidsmap_path.name)
-        shutil.copy(test_bidsmap_path, temp_bidsmap)
+        temp_bidsmap = Path(tempdir)/test_bidsmap.name
+        shutil.copy(test_bidsmap, temp_bidsmap)
         bidsmap, _ = bids.load_bidsmap(temp_bidsmap)
         anat_provenance = bidsmap['DICOM']['anat'][0]['provenance']
+
         # now delete it from the bidsmap
         bids.delete_run(bidsmap, anat_provenance)
         assert len(bidsmap['DICOM']['anat']) == 0
+
         # verify this gets deleted when rewritten
         bids.save_bidsmap(_, bidsmap)
         written_bidsmap, _ = bids.load_bidsmap(_)

@@ -63,7 +63,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
     # Get the heuristics for filling the new bidsmap (NB: plugins are stored in the bidsmaps)
     bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile,  bidscoinfolder, plugins)
-    template, _              = bids.load_bidsmap(templatefile, bidscoinfolder, plugins, check=(True,True,False))
+    template, _              = bids.load_bidsmap(templatefile, bidscoinfolder, plugins, checks=(True, True, False))
 
     # Create the new bidsmap as a copy / bidsmap skeleton with no datatype entries (i.e. bidsmap with empty lists)
     if force and bidsmapfile.is_file():

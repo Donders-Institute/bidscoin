@@ -425,9 +425,9 @@ def test_plugin(plugin: Union[Path,str], options: dict) -> int:
         try:
             returncode = module.test(options)
             if returncode == 0:
-                LOGGER.success(f"The'{plugin}' plugin functioned correctly")
+                LOGGER.success(f"The '{plugin}' plugin functioned correctly")
             else:
-                LOGGER.warning(f"The'{plugin}' plugin did not function correctly")
+                LOGGER.warning(f"The '{plugin}' plugin did not function correctly")
             return returncode
         except Exception as pluginerror:
             LOGGER.error(f"Could not run {plugin}.test(options):\n{pluginerror}")
@@ -459,7 +459,7 @@ def test_bidsmap(bidsmapfile: str):
         bidsmapfile = Path()
     else:
         bidsfolder  = Path()
-    bidsmap, _ = bids.load_bidsmap(bidsmapfile, bidsfolder, check=(True,True,True))
+    bidsmap, _ = bids.load_bidsmap(bidsmapfile, bidsfolder, checks=(True, True, True))
 
     return bids.validate_bidsmap(bidsmap, 1)
 
@@ -480,13 +480,14 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
     # Test loading the template bidsmap
     success = True
     if isinstance(bidsmapfile, (str, Path)):
+        bidsmapfile = Path(bidsmapfile)
         if not bidsmapfile.is_file():
             LOGGER.info(f"Cannot find bidsmap-file: {bidsmapfile}")
             return 1
         LOGGER.info(f"Running bidsmap checks:")
         try:            # Moving the import to the top of this module will cause circular import issues
             from bidscoin import bids
-            bidsmap, _ = bids.load_bidsmap(Path(bidsmapfile), check=(True,True,False))
+            bidsmap, _ = bids.load_bidsmap(bidsmapfile, checks=(True, True, False))
         except Exception as bidsmaperror:
             LOGGER.error(f"An error occurred when loading {bidsmapfile}:\n{bidsmaperror}\nThis may be due to invalid YAML syntax. You can check this using a YAML validator (e.g. https://www.yamllint.com)")
             bidsmap = {'Options': {}}

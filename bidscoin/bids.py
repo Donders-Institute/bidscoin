@@ -831,7 +831,7 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
 # ---------------- All function below this point are bidsmap related. TODO: make a class out of them -------------------
 
 
-def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=(), check: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[dict, Path]:
+def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=(), checks: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[dict, Path]:
     """
     Read the mapping heuristics from the bidsmap yaml-file. If yamlfile is not fullpath, then 'folder' is first searched before
     the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, then 'bidsmap_template'. So fullpath
@@ -842,7 +842,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
     :param yamlfile:    The full pathname or basename of the bidsmap yaml-file. If None, the default bidsmap_template file in the heuristics folder is used
     :param folder:      Only used when yamlfile=basename or None: yamlfile is then first searched for in folder and then falls back to the ./heuristics folder (useful for centrally managed template yaml-files)
     :param plugins:     List of plugins to be used (with default options, overrules the plugin list in the study/template bidsmaps). Leave empty to use all plugins in the bidsmap
-    :param check:       Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
+    :param checks:      Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
     :return:            Tuple with (1) ruamel.yaml dict structure, with all options, BIDS mapping heuristics, labels and attributes, etc. and (2) the fullpath yaml-file
     """
 
@@ -868,7 +868,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
     if not yamlfile.is_file():
         LOGGER.verbose(f"No existing bidsmap file found: {yamlfile}")
         return {}, yamlfile
-    elif any(check):
+    elif any(checks):
         LOGGER.info(f"Reading: {yamlfile}")
 
     # Read the heuristics from the bidsmap file
@@ -882,9 +882,9 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
         bidsmapversion = bidsmap['Options']['version']
     else:
         bidsmapversion = 'Unknown'
-    if bidsmapversion.rsplit('.', 1)[0] != __version__.rsplit('.', 1)[0] and any(check):
+    if bidsmapversion.rsplit('.', 1)[0] != __version__.rsplit('.', 1)[0] and any(checks):
         LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}')
-    elif bidsmapversion != __version__ and any(check):
+    elif bidsmapversion != __version__ and any(checks):
         LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}. This is normally ok but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
 
     # Make sure we get a proper plugin options and dataformat sections (use plugin default bidsmappings when a template bidsmap is loaded)
@@ -949,7 +949,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
                                 run['bids'][entitykey] = ''
 
     # Validate the bidsmap entries
-    check_bidsmap(bidsmap, check)
+    check_bidsmap(bidsmap, checks)
 
     return bidsmap, yamlfile
 
@@ -1015,14 +1015,14 @@ def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue        # E.g. 'subject' and 'session'
             for run in bidsmap[dataformat][datatype]:
-                bidsname = get_bidsname('sub-foo', '', run, False)
+                bidsname = get_bidsname(f"sub-{cleanup_value(dataformat)}", '', run, False)
                 ignore   = check_ignore(datatype, bidsignore) or check_ignore(bidsname+'.json', bidsignore, 'file')
                 ignore_1 = datatype in ignoretypes or ignore
                 ignore_2 = datatype in ignoretypes
                 bidstest = bids_validator.BIDSValidator().is_bids(f"/sub-{cleanup_value(dataformat)}/{datatype}/{bidsname}.json")
                 if level==3 or (abs(level)==2 and not ignore_2) or (-2<level<2 and not ignore_1):
                     valid = valid and bidstest
-                if (level==0 and not bidstest) or level>0:
+                if (level==0 and not bidstest) or (level==1 and not ignore_1) or (level==2 and not ignore_2) or level==3:
                     LOGGER.info(f"{bidstest}{'*' if ignore else ''}:\t{datatype}/{bidsname}.*")
 
     if valid:
@@ -1033,23 +1033,23 @@ def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
     return valid
 
 
-def check_bidsmap(bidsmap: dict, check: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
+def check_bidsmap(bidsmap: dict, checks: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
     """
     Check all the runs in the bidsmap for required and optional entities using the BIDS schema files
 
     :param bidsmap: Full bidsmap data structure, with all options, BIDS labels and attributes, etc.
-    :param check:   Booleans to check if all (bids-keys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
-    :return:        False if the keys, suffixes and values are proven to be invalid, otherwise None or True
+    :param checks:  Booleans to check if all (bids-keys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
+    :return:        False if the keys, suffixes or values are proven to be invalid, otherwise None or True
     """
 
-    valid = (None, None, None)
+    results = (None, None, None)
 
-    if not any(check):
-        return valid
+    if not any(checks):
+        return results
 
     if not bidsmap:
         LOGGER.info('No bidsmap run-items to check')
-        return valid
+        return results
 
     # Check all the runs in the bidsmap
     LOGGER.info('Checking the bidsmap run-items:')
@@ -1062,17 +1062,17 @@ def check_bidsmap(bidsmap: dict, check: Tuple[bool, bool, bool]=(True, True, Tru
             for run in bidsmap[dataformat][datatype]:
                 bidsname = get_bidsname('sub-foo', '', run, False)
                 if check_ignore(bidsname+'.json', bidsmap['Options']['bidscoin']['bidsignore'], 'file'): continue
-                checks = check_run(datatype, run, check)
-                valid  = [val and chck for val,chck in zip(valid,checks)]
+                isvalid = check_run(datatype, run, checks)
+                results = [result and valid for result, valid in zip(results, isvalid)]
 
-    if all([val==True for val,chck in zip(valid,check) if chck is True]):
+    if all([result==True for result, check in zip(results, checks) if check is True]):
         LOGGER.success('All run-items in the bidsmap are valid')
-    elif any([val==False for val,chck in zip(valid,check) if chck is True]):
+    elif any([result==False for result, check in zip(results, checks) if check is True]):
         LOGGER.warning('Not all run-items in the bidsmap are valid')
     else:
         LOGGER.info('Could not validate every run-item in the bidsmap')
 
-    return valid
+    return results
 
 
 def check_template(bidsmap: dict) -> bool:
@@ -1125,14 +1125,14 @@ def check_template(bidsmap: dict) -> bool:
     return valid
 
 
-def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, False, False)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
+def check_run(datatype: str, run: dict, checks: Tuple[bool, bool, bool]=(False, False, False)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
     """
     Check run for required and optional entities using the BIDS schema files
 
     :param datatype:    The datatype that is checked, e.g. 'anat'
     :param run:         The run (list-item) with bids entities that are checked against missing values & invalid keys
-    :param check:       Booleans to report if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
-    :return:            True/False if the keys, suffixes and values are bids-valid or None if they cannot be checked
+    :param checks:      Booleans to report if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
+    :return:            True/False if the keys, suffixes or values are bids-valid or None if they cannot be checked
     """
 
     run_keysok   = None
@@ -1140,12 +1140,12 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
     run_valsok   = None
 
     # Check if we have provenance info
-    if all(check) and not run['provenance']:
+    if all(checks) and not run['provenance']:
         LOGGER.info(f'No provenance info found for {datatype}/*_{run["bids"]["suffix"]}')
 
     # Check if we have a suffix and datatype rules
     if 'suffix' not in run['bids']:
-        if check[1]: LOGGER.warning(f'Invalid bidsmap: The {datatype} "suffix" key is missing ({datatype} -> {run["provenance"]})')
+        if checks[1]: LOGGER.warning(f'Invalid bidsmap: The {datatype} "suffix" key is missing ({datatype} -> {run["provenance"]})')
         return run_keysok, False, run_valsok                # The suffix is not BIDS-valid, we cannot check the keys and values
     if datatype not in datatyperules:
         return run_keysok, run_suffixok, run_valsok         # We cannot check anything
@@ -1175,23 +1175,23 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
                 if isinstance(bidsvalue, list):
                     bidsvalue = bidsvalue[bidsvalue[-1]]    # Get the selected item
                 if entitykey not in run['bids']:
-                    if check[0]: LOGGER.warning(f'Invalid bidsmap: The "{entitykey}" key is missing ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
+                    if checks[0]: LOGGER.warning(f'Invalid bidsmap: The "{entitykey}" key is missing ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
                     run_keysok = False
                 if bidsvalue and not dynamicvalue and bidsvalue!=cleanup_value(bidsvalue):
-                    if check[2]: LOGGER.warning(f'Invalid {entitykey} value: "{bidsvalue}" ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
+                    if checks[2]: LOGGER.warning(f'Invalid {entitykey} value: "{bidsvalue}" ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
                     run_valsok = False
                 elif not bidsvalue and datatyperules[datatype][typegroup]['entities'][entity]=='required':
-                    if check[2]: LOGGER.warning(f'Required "{entitykey}" value is missing ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
+                    if checks[2]: LOGGER.warning(f'Required "{entitykey}" value is missing ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
                     run_valsok = False
                 if bidsvalue and not dynamicvalue and entityformat=='index' and not str(bidsvalue).isnumeric():
-                    if check[2]: LOGGER.warning(f'Invalid {entitykey}-index: "{bidsvalue}" is not a number ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
+                    if checks[2]: LOGGER.warning(f'Invalid {entitykey}-index: "{bidsvalue}" is not a number ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
                     run_valsok = False
 
             # Check if all the bids-keys are present in the schema file
             entitykeys = [entities[entity]['name'] for entity in datatyperules[datatype][typegroup]['entities']]
             for bidskey in run['bids']:
                 if bidskey not in entitykeys + ['suffix']:
-                    if check[0]: LOGGER.warning(f'Invalid bidsmap: The "{bidskey}" key is not allowed according to the BIDS standard ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
+                    if checks[0]: LOGGER.warning(f'Invalid bidsmap: The "{bidskey}" key is not allowed according to the BIDS standard ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
                     run_keysok = False
                     if run_valsok: run_valsok = None
 
@@ -1202,11 +1202,17 @@ def check_run(datatype: str, run: dict, check: Tuple[bool, bool, bool]=(False, F
         bidsname     = get_bidsname('sub-foo', '', run, False, 'datasource' in run and run['datasource'].path.is_file())
         run_suffixok = bids_validator.BIDSValidator().is_bids(f"/sub-foo/{datatype}/{bidsname}.json")  # NB: Using the BIDSValidator sounds nice but doesn't give any control over the BIDS-version
         run_valsok   = run_suffixok
-        LOGGER.bcdebug(f"{run_suffixok} bidsname: /sub-foo/{datatype}/{bidsname}.json")
+        LOGGER.bcdebug(f"bidsname={run_suffixok}: /sub-foo/{datatype}/{bidsname}.json")
 
-    if check[1] and run_suffixok is False:
+    if checks[0] and run_keysok in (None, False):
+        LOGGER.bcdebug(f'Invalid "{run_keysok}" key-checks in run-item: "{run["bids"]["suffix"]}" ({datatype} -> {run["provenance"]})\nRun["bids"]:\n{run["bids"]}')
+
+    if checks[1] and run_suffixok is False:
         LOGGER.warning(f'Invalid run-item with suffix: "{run["bids"]["suffix"]}" ({datatype} -> {run["provenance"]})')
         LOGGER.bcdebug(f"Run['bids']:\n{run['bids']}")
+
+    if checks[2] and run_valsok in (None, False):
+        LOGGER.bcdebug(f'Invalid "{run_valsok}" val-checks in run-item: "{run["bids"]["suffix"]}" ({datatype} -> {run["provenance"]})\nRun["bids"]:\n{run["bids"]}')
 
     return run_keysok, run_suffixok, run_valsok
 
