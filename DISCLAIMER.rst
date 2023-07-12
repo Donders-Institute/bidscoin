@@ -1,4 +1,4 @@
-Copyright and disclaimer notice
+Disclaimer and copyright notice
 ===============================
 
 This file and all files in this repository are part of BIDScoin
@@ -9,7 +9,7 @@ as published by the Free Software Foundation, either version 3 of the License, o
 BIDScoin is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
 warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with this program.
+You should have received a copy of the GNU General Public License along with BIDScoin.
 If not, see `https://www.gnu.org/licenses <https://www.gnu.org/licenses/>`__
 
 SPDX-License-Identifier: GPL-3.0-or-later
