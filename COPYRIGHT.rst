@@ -1,4 +1,4 @@
-Disclaimer and copyright notice
+Copyright and disclaimer notice
 ===============================
 
 This file and all files in this repository are part of `BIDScoin <https://github.com/Donders-Institute/bidscoin>`__.
