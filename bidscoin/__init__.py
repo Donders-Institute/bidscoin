@@ -11,7 +11,11 @@ used as a library as well from the commandline to get help and perform generic m
 
 For more documentation see: https://bidscoin.readthedocs.io
 
+----------------------------------------------------------------------------
+License and copyright notice for this and all other files in this repository
+
 SPDX-License-Identifier: GPL-3.0-or-later
+Copyright (c): Marcel Zwiers
 """
 
 # Imports from the standard library only (as these are imported during the cli/manpage build process)
