@@ -746,7 +746,7 @@ def get_sparfield(tagname: str, sparfile: Path) -> Union[str, int]:
         try:
             if sparfile != _SPARFILE_CACHE:
 
-                from spec2nii.philips import read_spar
+                from spec2nii.Philips import read_spar
 
                 hdr = read_spar(sparfile)
                 _SPARHDR_CACHE  = hdr
