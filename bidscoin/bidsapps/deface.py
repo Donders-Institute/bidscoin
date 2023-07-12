@@ -148,7 +148,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
 
 
 def main():
-    """Console script usage"""
+    """Console script entry point"""
 
     from bidscoin.cli._deface import get_parser
 

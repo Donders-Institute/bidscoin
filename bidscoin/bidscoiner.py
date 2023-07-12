@@ -337,7 +337,7 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
 
 
 def main():
-    """Console script usage"""
+    """Console script entry point"""
 
     from bidscoin.cli._bidscoiner import get_parser
 

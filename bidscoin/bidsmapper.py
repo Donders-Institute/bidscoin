@@ -228,7 +228,7 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path, up
 
 
 def main():
-    """Console script usage"""
+    """Console script entry point"""
 
     from bidscoin.cli._bidsmapper import get_parser
 

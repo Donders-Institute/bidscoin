@@ -196,7 +196,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
 
 
 def main():
-    """Console script usage"""
+    """Console script entry point"""
 
     from bidscoin.cli._echocombine import get_parser
 

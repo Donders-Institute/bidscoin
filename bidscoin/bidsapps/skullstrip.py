@@ -204,7 +204,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
 
 
 def main():
-    """Console script usage"""
+    """Console script entry point"""
 
     from bidscoin.cli._skullstrip import get_parser
 

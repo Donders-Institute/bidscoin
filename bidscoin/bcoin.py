@@ -33,6 +33,7 @@ debug  = True if debug and debug.upper() not in ('0', 'FALSE', 'N', 'NO', 'NONE'
 
 LOGGER = logging.getLogger(__name__)
 
+
 class TqdmUpTo(tqdm):
 
     def update_to(self, b=1, bsize=1, tsize=None):
@@ -585,7 +586,7 @@ def pulltutorialdata(tutorialfolder: str) -> None:
 
 
 def main():
-    """Console script usage"""
+    """Console script entry point"""
 
     from bidscoin.cli._bcoin import get_parser
 

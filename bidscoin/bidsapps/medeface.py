@@ -196,7 +196,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
 
 
 def main():
-    """Console script usage"""
+    """Console script entry point"""
 
     from bidscoin.cli._medeface import get_parser
 

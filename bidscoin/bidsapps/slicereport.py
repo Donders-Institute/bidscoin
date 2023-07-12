@@ -274,7 +274,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
 
 
 def main():
-    """Console script usage"""
+    """Console script entry point"""
 
     from bidscoin.cli._slicereport import get_parser
 

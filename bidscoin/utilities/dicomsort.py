@@ -207,7 +207,7 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
 
 
 def main():
-    """Console script usage"""
+    """Console script entry point"""
 
     from bidscoin.cli._dicomsort import get_parser
 

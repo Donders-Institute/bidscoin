@@ -17,7 +17,7 @@ if not LOGGER.handlers:
 
 
 def main():
-    """Console script usage"""
+    """Console script entry point"""
 
     from bidscoin.cli._plotphysio import get_parser
 

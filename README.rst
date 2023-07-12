@@ -64,7 +64,7 @@ Note:
    :alt: BIDScoin
 .. |PyPI - Python Version| image:: https://img.shields.io/pypi/pyversions/bidscoin.svg
    :alt: Python 3
-.. |GPLv3| image:: https://img.shields.io/badge/License-GPLv3-blue.svg
+.. |GPLv3| image:: https://img.shields.io/badge/License-GPLv3+-blue.svg
    :target: https://www.gnu.org/licenses/gpl-3.0
    :alt: GPL-v3.0 license
 .. |RTD| image:: https://readthedocs.org/projects/bidscoin/badge/?version=latest
