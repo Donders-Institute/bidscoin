@@ -1,7 +1,7 @@
 Disclaimer and copyright notice
 ===============================
 
-This file and all files in this repository are part of BIDScoin
+This file and all files in this repository are part of `BIDScoin <https://github.com/Donders-Institute/bidscoin>`__.
 
 BIDScoin is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
