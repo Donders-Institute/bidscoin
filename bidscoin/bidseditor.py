@@ -175,7 +175,7 @@ class MainWindow(QMainWindow):
             super(MainWindow, self).closeEvent(event)
         else:                               # User pressed alt-X (= menu action) -> normal close()
             self.close()
-        QApplication.quit()                 # TODO: Do not use class method but self.something?
+        QApplication.quit()
 
     @QtCore.pyqtSlot(QtCore.QPoint)
     def show_contextmenu(self, pos):

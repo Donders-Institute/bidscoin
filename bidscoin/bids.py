@@ -968,8 +968,8 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
     # Remove the added DataSource object
     bidsmap = copy.deepcopy(bidsmap)
     for dataformat in bidsmap:
-        if dataformat in ('Options','PlugIns'): continue        # Handle legacy bidsmaps (-> 'PlugIns')
-        if not bidsmap[dataformat]:             continue
+        if dataformat == 'Options': continue
+        if not bidsmap[dataformat]: continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue    # E.g. 'subject' and 'session'
             for run in bidsmap[dataformat][datatype]:
@@ -1054,8 +1054,8 @@ def check_bidsmap(bidsmap: dict, checks: Tuple[bool, bool, bool]=(True, True, Tr
     # Check all the runs in the bidsmap
     LOGGER.info('Checking the bidsmap run-items:')
     for dataformat in bidsmap:
-        if dataformat in ('Options','PlugIns'): continue    # Handle legacy bidsmaps (-> 'PlugIns'). TODO: Check Options
-        if not bidsmap[dataformat]:             continue
+        if dataformat == 'Options': continue    # TODO: Check Options
+        if not bidsmap[dataformat]: continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list):                  continue   # E.g. 'subject' and 'session'
             if datatype in bidsmap['Options']['bidscoin']['ignoretypes']:            continue   # E.g. 'exclude'

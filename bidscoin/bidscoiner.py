@@ -87,7 +87,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
     bidsmap, _  = bids.load_bidsmap(bidsmapfile, bidsfolder/'code'/'bidscoin')
-    dataformats = [dataformat for dataformat in bidsmap if dataformat and dataformat not in ('Options','PlugIns')]     # Handle legacy bidsmaps (-> 'PlugIns')
+    dataformats = [dataformat for dataformat in bidsmap if dataformat and dataformat != 'Options']
     if not bidsmap:
         LOGGER.error(f"No bidsmap file found in {bidsfolder}. Please run the bidsmapper first and/or use the correct bidsfolder")
         return
