@@ -13,9 +13,13 @@ import shutil
 from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
-from nibabel.testing import data_path
 from bidscoin import bcoin, bids
 from bidscoin.utilities import physio
+try:
+    from nibabel.testing import data_path
+except ImportError:
+    from importlib.resources import files           # PY38: from importlib_resources import files ???
+    data_path = files('nibabel')/'tests'/'data'
 
 LOGGER = logging.getLogger(__name__)
 
