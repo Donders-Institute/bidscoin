@@ -1293,7 +1293,7 @@ def cleanup_value(label: str) -> str:
     :return:        The cleaned-up / BIDS-valid label
     """
 
-    if label is None:
+    if label is None or label == '':
         return ''
     if not isinstance(label, str):
         return label
@@ -1752,11 +1752,9 @@ def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bo
             bidsvalue = bidsvalue[bidsvalue[-1]]                                # Get the selected item
         elif runtime and not (entitykey=='run' and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == "<<>>")):
             bidsvalue = run['datasource'].dynamicvalue(bidsvalue, cleanup=True, runtime=runtime)
+        if cleanup:
+            bidsvalue = cleanup_value(bidsvalue)
         if bidsvalue:
-            if cleanup:
-                bidsvalue = cleanup_value(bidsvalue)
-                if not bidsvalue:
-                    continue
             bidsname = f"{bidsname}_{entitykey}-{bidsvalue}"                    # Append the key-value data to the bidsname
     suffix = run['bids'].get('suffix')
     if runtime:
