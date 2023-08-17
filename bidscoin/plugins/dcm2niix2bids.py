@@ -14,7 +14,6 @@ from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
 from bidscoin import bcoin, bids
-from bidscoin.bids import add_run1_keyval
 from bidscoin.utilities import physio
 try:
     from nibabel.testing import data_path
@@ -260,7 +259,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(outfolder, bidsname)
             if runindex == "<<>>" and "run-2" in bidsname:
-                add_run1_keyval(outfolder, bidsname, scans_table, bidsses)
+                bids.add_run1_keyval(outfolder, bidsname, scans_table, bidsses)
         jsonfiles  = [(outfolder/bidsname).with_suffix('.json')]     # List -> Collect the associated json-files (for updating them later) -- possibly > 1
 
         # Check if the bidsname is valid
@@ -413,7 +412,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 if runindex.startswith('<<') and runindex.endswith('>>'):
                     newbidsname = bids.increment_runindex(outfolder, newbidsname, '')                           # Update the runindex now that the acq-label has changed
                     if runindex == "<<>>" and "run-2" in bidsname:
-                        add_run1_keyval(outfolder, bidsname, scans_table, bidsses)
+                        bids.add_run1_keyval(outfolder, bidsname, scans_table, bidsses)
                 newbidsfile = outfolder/newbidsname
                 LOGGER.verbose(f"Found dcm2niix {postfixes} postfixes, renaming\n{dcm2niixfile} ->\n{newbidsfile}")
                 if newbidsfile.is_file():
