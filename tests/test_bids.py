@@ -230,16 +230,6 @@ def test_delete_run(test_bidsmap):
         assert deleted_run is None
 
 
-@pytest.mark.parametrize('bidsname, expected_bidsname',  [
-    ('sub-01_T1w', 'sub-01_T1w'),
-    ('sub-01_run-01_T2w', 'sub-01_T2w'),
-    ('sub-01_ses-01_run-01_rec-norm_T1w', 'sub-01_ses-01_rec-norm_T1w'),
-])
-def test_remove_run_keyval(bidsname, expected_bidsname):
-    result_bidsname = bids.remove_run_keyval(bidsname)
-    assert result_bidsname == expected_bidsname
-
-
 @patch.object(Path, 'glob')
 @patch.object(Path, 'rename')
 def test_add_run1_keyval(rename_mock: Mock, glob_mock: Mock):

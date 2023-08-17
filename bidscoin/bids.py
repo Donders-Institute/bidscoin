@@ -1870,18 +1870,6 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, v
     return newbidsfile
 
 
-def remove_run_keyval(bidsname: str) -> str:
-    """
-    Removes run keyval from bidsname if it is there, otherwise leaves unchanged.
-
-    :param bidsname:    The bidsname with or without run keyval
-    :return:            Bidsname without run keyval
-    """
-    pattern = "_run-\d+"
-    new_bidsname = re.sub(pattern, "", bidsname)
-    return new_bidsname
-
-
 def add_run1_keyval(outfolder: Union[Path, str], bidsname: str, scans_table: DataFrame, bidsses: Path) -> None:
     """
     Adds run-1 key to files with bidsname that don't have run index. Updates scans respectively.
@@ -1892,7 +1880,7 @@ def add_run1_keyval(outfolder: Union[Path, str], bidsname: str, scans_table: Dat
     :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
     :return:            Nothing
     """
-    old_bidsname = remove_run_keyval(bidsname)
+    old_bidsname = insert_bidskeyval(bidsname, 'run', '', False)
     new_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
     scanpath = outfolder.relative_to(bidsses)
     for file in outfolder.glob(old_bidsname + '.*'):
