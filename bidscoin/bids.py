@@ -6,7 +6,6 @@ https://github.com/dangom/dac2bids/blob/master/dac2bids.py
 
 @author: Marcel Zwiers
 """
-import os
 
 import bids_validator
 import copy
@@ -1899,8 +1898,8 @@ def add_run1_keyval(outfolder: Union[Path, str], bidsname: str, scans_table: Dat
     new_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
     scanpath = outfolder.relative_to(bidsses)
     for ext in ('.nii.gz', '.nii', '.json', '.tsv', '.tsv.gz', '.bval', '.bvec'):
-        if os.path.exists((outfolder / old_bidsname).with_suffix(ext)):
-            os.rename((outfolder / old_bidsname).with_suffix(ext), (outfolder / new_bidsname).with_suffix(ext))
+        if (outfolder / old_bidsname).with_suffix(ext).exists():
+            (outfolder / old_bidsname).with_suffix(ext).rename((outfolder / new_bidsname).with_suffix(ext))
             # change row name in scans
             if ext in ('.nii.gz', '.nii'):
                 scans_table.rename(
