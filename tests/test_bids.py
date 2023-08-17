@@ -1,5 +1,5 @@
 import tempfile
-from unittest.mock import call, MagicMock, patch
+from unittest.mock import call, patch, Mock
 
 import pandas as pd
 import pytest
@@ -240,14 +240,18 @@ def test_remove_run_keyval(bidsname, expected_bidsname):
     assert result_bidsname == expected_bidsname
 
 
-@patch("os.path.exists", side_effect=[True, False, True, False, False, False, False])
-@patch("os.rename")
-def test_add_run1_keyval(rename_mock: MagicMock, exists_mock: MagicMock):
+@patch.object(Path, 'glob')
+@patch.object(Path, 'rename')
+def test_add_run1_keyval(rename_mock: Mock, glob_mock: Mock):
     input_bidsname = "sub-01_run-2_T1w"
     old_bidsname = "sub-01_T1w"
     new_bidsname = "sub-01_run-1_T1w"
     outfolder = Path.home() / "mock-dataset" / "sub-01" / "anat"
     bidsses = Path.home() / "mock-dataset" / "sub-01"
+    glob_mock.return_value = [
+            (outfolder / old_bidsname).with_suffix(".nii.gz"),
+            (outfolder / old_bidsname).with_suffix(".json"),
+        ]
     scans_data = {
         "filename": ["anat/sub-01_rec-norm_T1w.nii.gz", "anat/sub-01_T1w.nii.gz"],
         "acq_time": ["mock-acq1", "mock-acq2"],
@@ -264,8 +268,8 @@ def test_add_run1_keyval(rename_mock: MagicMock, exists_mock: MagicMock):
     bids.add_run1_keyval(outfolder, input_bidsname, scans_table, bidsses)
 
     expected_calls = [
-        call(outfolder / f"{old_bidsname}.nii.gz", outfolder / f"{new_bidsname}.nii.gz"),
-        call(outfolder / f"{old_bidsname}.json", outfolder / f"{new_bidsname}.json"),
+        call(outfolder / f"{new_bidsname}.nii.gz"),
+        call(outfolder / f"{new_bidsname}.json"),
     ]
     rename_mock.assert_has_calls(expected_calls)
     assert result_scans_table.equals(scans_table)

@@ -1895,14 +1895,14 @@ def add_run1_keyval(outfolder: Union[Path, str], bidsname: str, scans_table: Dat
     old_bidsname = remove_run_keyval(bidsname)
     new_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
     scanpath = outfolder.relative_to(bidsses)
-    for ext in ('.nii.gz', '.nii', '.json', '.tsv', '.tsv.gz', '.bval', '.bvec'):
-        if (outfolder / old_bidsname).with_suffix(ext).exists():
-            (outfolder / old_bidsname).with_suffix(ext).rename((outfolder / new_bidsname).with_suffix(ext))
-            # change row name in scans
-            if ext in ('.nii.gz', '.nii'):
-                scans_table.rename(
-                    index={(scanpath / old_bidsname).with_suffix(ext).as_posix(): (scanpath / new_bidsname).with_suffix(ext).as_posix()},
-                    inplace=True)
+    for file in outfolder.glob(old_bidsname + '.*'):
+        ext = ''.join(file.suffixes)
+        file.rename((outfolder / new_bidsname).with_suffix(ext))
+        # change row name in scans
+        if ext in ('.nii.gz', '.nii'):
+            scans_table.rename(
+                index={(scanpath / old_bidsname).with_suffix(ext).as_posix(): (scanpath / new_bidsname).with_suffix(ext).as_posix()},
+                inplace=True)
 
 
 def increment_runindex(bidsfolder: Path, bidsname: str, ext: str='.*') -> Union[Path, str]:
