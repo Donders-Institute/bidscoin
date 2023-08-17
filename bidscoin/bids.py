@@ -1386,7 +1386,7 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
 
             # Replace the dynamic bids values, except the dynamic run-index (e.g. <<1>>)
             for bidskey, bidsvalue in run['bids'].items():
-                if bidskey == 'run' and bidsvalue and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == "<<>>"):
+                if bidskey == 'run' and bidsvalue and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == '<<>>'):
                     run_['bids'][bidskey] = bidsvalue
                 else:
                     run_['bids'][bidskey] = datasource.dynamicvalue(bidsvalue)
@@ -1679,7 +1679,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
             for bidskey, bidsvalue in run['bids'].items():
 
                 # Replace the dynamic bids values, except the dynamic run-index (e.g. <<1>>)
-                if bidskey == 'run' and bidsvalue and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == "<<>>"):
+                if bidskey == 'run' and bidsvalue and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == '<<>>'):
                     run_['bids'][bidskey] = bidsvalue
                 else:
                     run_['bids'][bidskey] = datasource.dynamicvalue(bidsvalue, runtime=runtime)
@@ -1750,7 +1750,7 @@ def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bo
             bidsvalue = ''
         if isinstance(bidsvalue, list):
             bidsvalue = bidsvalue[bidsvalue[-1]]                                # Get the selected item
-        elif runtime and not (entitykey=='run' and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == "<<>>")):
+        elif runtime and not (entitykey=='run' and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == '<<>>')):
             bidsvalue = run['datasource'].dynamicvalue(bidsvalue, cleanup=True, runtime=runtime)
         if cleanup:
             bidsvalue = cleanup_value(bidsvalue)
@@ -1903,7 +1903,7 @@ def increment_runindex(bidsfolder: Path, bidsname: str, ext: str='.*') -> Union[
     :param ext:         The file extension for which the runindex is incremented (default = '.*')
     :return:            The bidsname with the incremented runindex
     """
-    if "run" not in bidsname:  # (default bidsname for dynamic value <<>> is without run)
+    if 'run' not in bidsname:  # (default bidsname for dynamic value <<>> is without run)
         run1_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
         if list(bidsfolder.glob(run1_bidsname + ext)):
             bidsname = run1_bidsname  # run1 exists

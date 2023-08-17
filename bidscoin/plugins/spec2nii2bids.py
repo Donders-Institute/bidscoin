@@ -229,7 +229,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         runindex   = str(runindex) if runindex else ''
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(outfolder, bidsname)
-            if runindex == "<<>>" and "run-2" in bidsname:
+            if runindex == '<<>>' and 'run-2' in bidsname:
                 add_run1_keyval(outfolder, bidsname, scans_table, bidsses)
         jsonfile   = (outfolder/bidsname).with_suffix('.json')
 

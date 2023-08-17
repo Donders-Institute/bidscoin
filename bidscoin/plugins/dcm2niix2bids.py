@@ -258,7 +258,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         runindex   = str(runindex) if runindex else ''
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(outfolder, bidsname)
-            if runindex == "<<>>" and "run-2" in bidsname:
+            if runindex == '<<>>' and 'run-2' in bidsname:
                 bids.add_run1_keyval(outfolder, bidsname, scans_table, bidsses)
         jsonfiles  = [(outfolder/bidsname).with_suffix('.json')]     # List -> Collect the associated json-files (for updating them later) -- possibly > 1
 
@@ -411,7 +411,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 # Save the NIfTI file with the newly constructed name
                 if runindex.startswith('<<') and runindex.endswith('>>'):
                     newbidsname = bids.increment_runindex(outfolder, newbidsname, '')                           # Update the runindex now that the acq-label has changed
-                    if runindex == "<<>>" and "run-2" in bidsname:
+                    if runindex == '<<>>' and 'run-2' in bidsname:
                         bids.add_run1_keyval(outfolder, bidsname, scans_table, bidsses)
                 newbidsfile = outfolder/newbidsname
                 LOGGER.verbose(f"Found dcm2niix {postfixes} postfixes, renaming\n{dcm2niixfile} ->\n{newbidsfile}")
