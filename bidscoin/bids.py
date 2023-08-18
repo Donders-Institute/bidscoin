@@ -20,6 +20,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Union, List, Tuple
 from nibabel.parrec import parse_PAR_header
+from pandas import DataFrame
 from pydicom import dcmread, fileset, datadict
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
@@ -1292,7 +1293,7 @@ def cleanup_value(label: str) -> str:
     :return:        The cleaned-up / BIDS-valid label
     """
 
-    if label is None:
+    if label is None or label == '':
         return ''
     if not isinstance(label, str):
         return label
@@ -1385,7 +1386,7 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
 
             # Replace the dynamic bids values, except the dynamic run-index (e.g. <<1>>)
             for bidskey, bidsvalue in run['bids'].items():
-                if bidskey == 'run' and bidsvalue and bidsvalue.replace('<','').replace('>','').isdecimal():
+                if bidskey == 'run' and bidsvalue and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == '<<>>'):
                     run_['bids'][bidskey] = bidsvalue
                 else:
                     run_['bids'][bidskey] = datasource.dynamicvalue(bidsvalue)
@@ -1678,7 +1679,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
             for bidskey, bidsvalue in run['bids'].items():
 
                 # Replace the dynamic bids values, except the dynamic run-index (e.g. <<1>>)
-                if bidskey == 'run' and bidsvalue and bidsvalue.replace('<','').replace('>','').isdecimal():
+                if bidskey == 'run' and bidsvalue and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == '<<>>'):
                     run_['bids'][bidskey] = bidsvalue
                 else:
                     run_['bids'][bidskey] = datasource.dynamicvalue(bidsvalue, runtime=runtime)
@@ -1749,11 +1750,11 @@ def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bo
             bidsvalue = ''
         if isinstance(bidsvalue, list):
             bidsvalue = bidsvalue[bidsvalue[-1]]                                # Get the selected item
-        elif runtime and not (entitykey=='run' and bidsvalue.replace('<','').replace('>','').isdecimal()):
+        elif runtime and not (entitykey=='run' and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == '<<>>')):
             bidsvalue = run['datasource'].dynamicvalue(bidsvalue, cleanup=True, runtime=runtime)
+        if cleanup:
+            bidsvalue = cleanup_value(bidsvalue)
         if bidsvalue:
-            if cleanup:
-                bidsvalue = cleanup_value(bidsvalue)
             bidsname = f"{bidsname}_{entitykey}-{bidsvalue}"                    # Append the key-value data to the bidsname
     suffix = run['bids'].get('suffix')
     if runtime:
@@ -1869,25 +1870,52 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, v
     return newbidsfile
 
 
+def add_run1_keyval(outfolder: Union[Path, str], bidsname: str, scans_table: DataFrame, bidsses: Path) -> None:
+    """
+    Adds run-1 key to files with bidsname that don't have run index. Updates scans respectively.
+
+    :param outfolder:   The path where files with bidsname without run index are searched for
+    :param bidsname:    The bidsname of files to search for, has runindex
+    :param scans_table: Scans dataframe
+    :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
+    :return:            Nothing
+    """
+    old_bidsname = insert_bidskeyval(bidsname, 'run', '', False)
+    new_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
+    scanpath = outfolder.relative_to(bidsses)
+    for file in outfolder.glob(old_bidsname + '.*'):
+        ext = ''.join(file.suffixes)
+        file.rename((outfolder / new_bidsname).with_suffix(ext))
+        # change row name in scans
+        if ext in ('.nii.gz', '.nii'):
+            scans_table.rename(
+                index={(scanpath / old_bidsname).with_suffix(ext).as_posix(): (scanpath / new_bidsname).with_suffix(ext).as_posix()},
+                inplace=True)
+
+
 def increment_runindex(bidsfolder: Path, bidsname: str, ext: str='.*') -> Union[Path, str]:
     """
-    Checks if a file with the same the bidsname already exists in the folder and then increments the runindex (if any)
-    until no such file is found
+    Checks if a file with the same bidsname already exists in the folder and then increments the runindex (if any)
+    until no such file is found. If file already exists but has no run index, starts with run-2.
 
     :param bidsfolder:  The full pathname of the bidsfolder
     :param bidsname:    The bidsname with a provisional runindex
     :param ext:         The file extension for which the runindex is incremented (default = '.*')
     :return:            The bidsname with the incremented runindex
     """
+    if 'run' not in bidsname:  # (default bidsname for dynamic value <<>> is without run)
+        run1_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
+        if list(bidsfolder.glob(run1_bidsname + ext)):
+            bidsname = run1_bidsname  # run1 exists
 
     while list(bidsfolder.glob(bidsname + ext)):
 
         runindex = get_bidsvalue(bidsname, 'run')
-        if runindex:
-            bidsname = get_bidsvalue(bidsname, 'run', str(int(runindex) + 1))
+        if not runindex:
+            # bidsname (run-1) doesn't have run index yet, start with run-2 for this one
+            bidsname = insert_bidskeyval(bidsname, 'run', '2', False)
         else:
-            LOGGER.error(f"Could not increment run-index in: {bidsfolder/bidsname}")
-            break
+            bidsname = get_bidsvalue(bidsname, 'run', str(int(runindex) + 1))
 
     return bidsname
 
