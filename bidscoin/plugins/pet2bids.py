@@ -207,7 +207,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         LOGGER.exception(f"Unsupported dataformat '{dataformat}'")
 
     # Read or create a scans_table and tsv-file
-    scans_tsv = bidsses / f"{subid}{'_' + sesid if sesid else ''}_scans.tsv"
+    scans_tsv = bidsses/f"{subid}{'_' + sesid if sesid else ''}_scans.tsv"
     scans_table = pd.DataFrame()
     if scans_tsv.is_file():
         scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
@@ -246,37 +246,32 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             # Create the BIDS session/datatype output folder
             suffix = datasource.dynamicvalue(run['bids']['suffix'], True, True)
             if suffix in bids.get_derivatives(datasource.datatype):
-                outfolder = bidsfolder / 'derivatives' / manufacturer.replace(' ', '') / subid / sesid / datasource.datatype
+                outfolder = bidsfolder/'derivatives'/manufacturer.replace(' ', '')/subid/sesid/datasource.datatype
             else:
-                outfolder = bidsses / datasource.datatype
+                outfolder = bidsses/datasource.datatype
             outfolder.mkdir(parents=True, exist_ok=True)
 
             # Compose the BIDS filename using the matched run
             bidsignore = bids.check_ignore(datasource.datatype, bidsmap['Options']['bidscoin']['bidsignore'])
             bidsname   = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
             bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap['Options']['bidscoin']['bidsignore'], 'file')
-            runindex   = run['bids'].get('run')
-            runindex   = str(runindex) if runindex else ''
-            if runindex.startswith('<<') and runindex.endswith('>>'):
-                bidsname = bids.increment_runindex(outfolder, bidsname)
-                if runindex == '<<>>' and 'run-2' in bidsname:
-                    bids.add_run1_keyval(outfolder, bidsname, scans_table, bidsses)
+            bidsname   = bids.increment_runindex(outfolder, bidsname, run, scans_table)
 
             # Check if the bidsname is valid
-            bidstest = (Path('/') / subid / sesid / datasource.datatype / bidsname).with_suffix('.json').as_posix()
+            bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.json').as_posix()
             isbids = BIDSValidator().is_bids(bidstest)
             if not isbids and not bidsignore:
                 LOGGER.warning(f"The '{bidstest}' output name did not pass the bids-validator test")
 
             # Check if file already exists (-> e.g. when a static runindex is used)
-            if (outfolder / bidsname).with_suffix('.json').is_file():
-                LOGGER.warning(f"{outfolder / bidsname}.* already exists and will be deleted -- check your results carefully!")
+            if (outfolder/bidsname).with_suffix('.json').is_file():
+                LOGGER.warning(f"{outfolder/bidsname}.* already exists and will be deleted -- check your results carefully!")
                 for ext in ('.nii.gz', '.nii', '.json', '.tsv', '.tsv.gz'):
-                    (outfolder / bidsname).with_suffix(ext).unlink(missing_ok=True)
+                    (outfolder/bidsname).with_suffix(ext).unlink(missing_ok=True)
 
             # Convert the source-files in the run folder to nifti's in the BIDS-folder
             else:
-                command = f'{options["command"]} "{source}" -d {outfolder / Path(bidsname).with_suffix(".nii.gz")}'
+                command = f'{options["command"]} "{source}" -d {outfolder/Path(bidsname).with_suffix(".nii.gz")}'
                 # pass in data added via bidseditor/bidsmap
                 if len(run.get('meta', {})) > 0:
                     command += ' --kwargs '
@@ -312,7 +307,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             personals['weight'] = datasource.attributes('PatientWeight')
 
         # Store the collected personals in the participants_table
-        participants_tsv = bidsfolder / 'participants.tsv'
+        participants_tsv = bidsfolder/'participants.tsv'
         if participants_tsv.is_file():
             participants_table = pd.read_csv(participants_tsv, sep='\t', dtype=str)
             participants_table.set_index(['participant_id'], verify_integrity=True, inplace=True)

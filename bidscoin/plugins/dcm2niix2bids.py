@@ -254,12 +254,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         bidsignore = bids.check_ignore(datasource.datatype, bidsmap['Options']['bidscoin']['bidsignore'])
         bidsname   = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
         bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap['Options']['bidscoin']['bidsignore'], 'file')
-        runindex   = run['bids'].get('run')
-        runindex   = str(runindex) if runindex else ''
-        if runindex.startswith('<<') and runindex.endswith('>>'):
-            bidsname = bids.increment_runindex(outfolder, bidsname)
-            if runindex == '<<>>' and 'run-2' in bidsname:
-                bids.add_run1_keyval(outfolder, bidsname, scans_table, bidsses)
+        bidsname   = bids.increment_runindex(outfolder, bidsname, run, scans_table)
         jsonfiles  = [(outfolder/bidsname).with_suffix('.json')]     # List -> Collect the associated json-files (for updating them later) -- possibly > 1
 
         # Check if the bidsname is valid
@@ -409,10 +404,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                         LOGGER.warning(f"The {newbidsname} image is a derivate / not BIDS-compliant -- you can probably delete it safely and update {scans_tsv}")
 
                 # Save the NIfTI file with the newly constructed name
-                if runindex.startswith('<<') and runindex.endswith('>>'):
-                    newbidsname = bids.increment_runindex(outfolder, newbidsname, '')                           # Update the runindex now that the acq-label has changed
-                    if runindex == '<<>>' and 'run-2' in bidsname:
-                        bids.add_run1_keyval(outfolder, bidsname, scans_table, bidsses)
+                newbidsname = bids.increment_runindex(outfolder, newbidsname, run, scans_table)                 # Update the runindex now that the acq-label has changed
                 newbidsfile = outfolder/newbidsname
                 LOGGER.verbose(f"Found dcm2niix {postfixes} postfixes, renaming\n{dcm2niixfile} ->\n{newbidsfile}")
                 if newbidsfile.is_file():

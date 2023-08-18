@@ -16,6 +16,7 @@ import shutil
 import tempfile
 import warnings
 import fnmatch
+import pandas as pd
 from functools import lru_cache
 from pathlib import Path
 from typing import Union, List, Tuple
@@ -1870,52 +1871,52 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, v
     return newbidsfile
 
 
-def add_run1_keyval(outfolder: Union[Path, str], bidsname: str, scans_table: DataFrame, bidsses: Path) -> None:
+def increment_runindex(outfolder: Path, bidsname: str, run: dict, scans_table: DataFrame=pd.DataFrame()) -> Union[Path, str]:
     """
-    Adds run-1 key to files with bidsname that don't have run index. Updates scans respectively.
+    Checks if a file with the same bidsname already exists in the folder and then increments the dynamic runindex
+    (if any) until no such file is found. If file already exists but has no run index, starts with run-2 and adds
+    run-1 key to run-1 files with bidsname that don't have run index. Updates scans table respectively
 
-    :param outfolder:   The path where files with bidsname without run index are searched for
-    :param bidsname:    The bidsname of files to search for, has runindex
-    :param scans_table: Scans dataframe
-    :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
-    :return:            Nothing
-    """
-    old_bidsname = insert_bidskeyval(bidsname, 'run', '', False)
-    new_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
-    scanpath = outfolder.relative_to(bidsses)
-    for file in outfolder.glob(old_bidsname + '.*'):
-        ext = ''.join(file.suffixes)
-        file.rename((outfolder / new_bidsname).with_suffix(ext))
-        # change row name in scans
-        if ext in ('.nii.gz', '.nii'):
-            scans_table.rename(
-                index={(scanpath / old_bidsname).with_suffix(ext).as_posix(): (scanpath / new_bidsname).with_suffix(ext).as_posix()},
-                inplace=True)
-
-
-def increment_runindex(bidsfolder: Path, bidsname: str, ext: str='.*') -> Union[Path, str]:
-    """
-    Checks if a file with the same bidsname already exists in the folder and then increments the runindex (if any)
-    until no such file is found. If file already exists but has no run index, starts with run-2.
-
-    :param bidsfolder:  The full pathname of the bidsfolder
+    :param outfolder:   The full pathname of the bids output folder
     :param bidsname:    The bidsname with a provisional runindex
-    :param ext:         The file extension for which the runindex is incremented (default = '.*')
-    :return:            The bidsname with the incremented runindex
+    :param run:         The run mapping with the BIDS key-value pairs
+    :param scans_table: BIDS scans.tsv dataframe with all filenames and acquisition timestamps
+    :return:            The bidsname with the original or incremented runindex
     """
-    if 'run' not in bidsname:  # (default bidsname for dynamic value <<>> is without run)
+
+    # Check input
+    runval = run['bids'].get('run')
+    runval = str(runval) if runval else ''
+    if not runval.startswith('<<') and not runval.endswith('>>'):
+        return bidsname
+
+    # Catch run-less bidsnames from <<>> dynamic run-values
+    if 'run' not in bidsname:
         run1_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
-        if list(bidsfolder.glob(run1_bidsname + ext)):
-            bidsname = run1_bidsname  # run1 exists
+        if list(outfolder.glob(f"{run1_bidsname.split('.')[0]}.*")):
+            bidsname = run1_bidsname        # There is more than 1 run, i.e. run-1 exists and should be incremented
 
-    while list(bidsfolder.glob(bidsname + ext)):
-
+    # Increment the run-index if the bidsfile already exists
+    while list(outfolder.glob(f"{bidsname.split('.')[0]}.*")):
         runindex = get_bidsvalue(bidsname, 'run')
         if not runindex:
             # bidsname (run-1) doesn't have run index yet, start with run-2 for this one
             bidsname = insert_bidskeyval(bidsname, 'run', '2', False)
         else:
             bidsname = get_bidsvalue(bidsname, 'run', str(int(runindex) + 1))
+
+    # Adds run-1 key to files with bidsname that don't have run index. Updates scans respectively
+    if runval == '<<>>' and 'run-2' in bidsname:
+        old_bidsname = insert_bidskeyval(bidsname, 'run', '', False)
+        new_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
+        for file in outfolder.glob(f"{old_bidsname}.*"):
+            ext = ''.join(file.suffixes)
+            file.rename((outfolder/new_bidsname).with_suffix(ext))
+
+            # Change row name in the scans table
+            if ext in ('.nii.gz', '.nii') and f"{outfolder.name}/{old_bidsname}{ext}" in scans_table.index:
+                scans_table.rename(index={f"{outfolder.name}/{old_bidsname}{ext}":
+                                          f"{outfolder.name}/{new_bidsname}{ext}"}, inplace=True)   # NB: '/' as_posix
 
     return bidsname
 

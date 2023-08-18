@@ -212,13 +212,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         bidsignore = bids.check_ignore(datasource.datatype, bidsmap['Options']['bidscoin']['bidsignore'])
         bidsname   = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
         bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap['Options']['bidscoin']['bidsignore'], 'file')
-        runindex   = run['bids'].get('run')
-        runindex   = str(runindex) if runindex else ''
-        if runindex.startswith('<<') and runindex.endswith('>>'):
-            bidsname = bids.increment_runindex(outfolder, bidsname)
-            if runindex == '<<>>' and 'run-2' in bidsname:
-                bids.add_run1_keyval(outfolder, bidsname, scans_table, bidsses)
-        bidsfile = (outfolder/bidsname).with_suffix(ext)
+        bidsname   = bids.increment_runindex(outfolder, bidsname, run, scans_table)
+        bidsfile   = (outfolder/bidsname).with_suffix(ext)
 
         # Check if the bidsname is valid
         bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.json').as_posix()
