@@ -80,7 +80,7 @@ DICOM:
       acq: t1mpragesagipat21p0iso
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       part: ['', mag, phase, real, imag, 0]
       suffix: T1w
     meta: {}
@@ -113,7 +113,7 @@ DICOM:
       ce:
       dir:
       rec:
-      run: <<1>>
+      run: <<>>
       echo: '1'
       part: &id001 ['', mag, phase, real, imag, 0]
     meta:
@@ -147,7 +147,7 @@ DICOM:
       ce:
       dir:
       rec:
-      run: <<1>>
+      run: <<>>
       echo: '1'
       part: *id001
       suffix: bold
@@ -183,7 +183,7 @@ DICOM:
       ce:
       dir:
       rec:
-      run: <<1>>
+      run: <<>>
       echo: '1'
       part: *id001
     meta:
@@ -217,7 +217,7 @@ DICOM:
       ce:
       dir:
       rec:
-      run: <<1>>
+      run: <<>>
       echo: '1'
       part: *id001
       suffix: bold
@@ -252,7 +252,7 @@ DICOM:
     bids:
       suffix: magnitude1
       acq: fieldmap2p4iso
-      run: <<1>>
+      run: <<>>
     meta:
       B0FieldIdentifier:
       IntendedFor:
@@ -280,7 +280,7 @@ DICOM:
     bids:
       suffix: phasediff
       acq: fieldmap2p4iso
-      run: <<1>>
+      run: <<>>
     meta:
       B0FieldIdentifier:
       IntendedFor:
@@ -308,7 +308,7 @@ DICOM:
     bids:
       suffix: magnitude1
       acq: fieldmap2p5iso
-      run: <<1>>
+      run: <<>>
     meta:
       B0FieldIdentifier:
       IntendedFor:
@@ -336,7 +336,7 @@ DICOM:
     bids:
       suffix: phasediff
       acq: fieldmap2p5iso
-      run: <<1>>
+      run: <<>>
     meta:
       B0FieldIdentifier:
       IntendedFor:
@@ -504,7 +504,7 @@ PET:
       task: PhantomPetAcquisitionACImages
       trc: Fluorodeoxyglucose
       rec: ['', acdyn, acstat, nacdyn, nacstat, 0]
-      run: <<1>>
+      run: <<>>
       suffix: pet
     meta:
       TracerName: <<Radiopharmaceutical>>

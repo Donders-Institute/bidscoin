@@ -62,8 +62,10 @@ DICOM:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
+      EchoPulseSequence:          # Enhanced DICOM
       MRAcquisitionType:
       SliceThickness:
       FlipAngle:
@@ -76,7 +78,7 @@ DICOM:
       acq: <filepath:/.*/...(.*)/.*/>    # This will be expanded by the bidsmapper (so the user can edit it in the bidseditor)
       ce:
       rec:
-      run: <<1>>                  # This will be updated dynamically during bidscoiner runtime (as it depends on the already existing files)
+      run: <<>>                   # This will be updated dynamically during bidscoiner runtime (as it depends on the already existing files)
       part: ['', mag, phase, real, imag, 0]   # # This BIDS value list will be shown as a dropdown menu in the bidseditor with the first (empty) item selected (as indicated by the last item, i.e. 0)
       suffix: T1w
     meta:                         # This is an optional entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
@@ -99,8 +101,6 @@ DICOM:
       <<: *anat_dicomattr
       ProtocolName: (?i).*TSE.*vfl.*
       ImageType: .*'NORM'.*             # NB: The non-NORM image is saved in 'extra_data'
-      SequenceVariant: "['SK', 'SP']"
-      ScanningSequence: SE
     bids:
       <<: *anat_dicoment_nonparametric
       suffix: T2w
@@ -122,7 +122,6 @@ DICOM:
     attributes:
       <<: *anat_dicomattr
       ProtocolName: (?i).*FLAIR.*
-      ScanningSequence: .*'?IR'?.*
     bids:
       <<: *anat_dicoment_nonparametric
       suffix: FLAIR
@@ -162,7 +161,7 @@ DICOM:
       acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       suffix: T1map
   - provenance:
     attributes:
@@ -284,7 +283,7 @@ DICOM:
       acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       mod:
       suffix: defacemask
   - provenance:
@@ -295,7 +294,7 @@ DICOM:
       acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       echo: <EchoNumbers>
       part: ['', mag, phase, real, imag, 0]
       suffix: MESE
@@ -315,7 +314,7 @@ DICOM:
       ce:
       rec:
       echo: <EchoNumbers>
-      run: <<1>>
+      run: <<>>
       flip:
       part: ['', mag, phase, real, imag, 0]
       suffix: VFA
@@ -327,7 +326,7 @@ DICOM:
       acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       inv:
       part: ['', mag, phase, real, imag, 0]
       suffix: IRT1
@@ -341,7 +340,7 @@ DICOM:
       acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       echo:
       flip:
       inv: 1
@@ -365,7 +364,7 @@ DICOM:
       acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       echo:
       flip:
       mt:
@@ -388,7 +387,7 @@ DICOM:
       acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       mt:
       part: ['', mag, phase, real, imag, 0]
       suffix: MTR
@@ -401,8 +400,10 @@ DICOM:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
+      EchoPulseSequence:                # Enhanced DICOM
       MRAcquisitionType:
       SliceThickness:
       FlipAngle:
@@ -417,7 +418,7 @@ DICOM:
       ce:
       dir:
       rec:
-      run: <<1>>
+      run: <<>>
       echo: <EchoNumbers>
       part: ['', mag, phase, real, imag, 0]
       suffix: bold
@@ -445,7 +446,7 @@ DICOM:
       dir:
       rec:
       recording:
-      run: <<1>>
+      run: <<>>
       suffix: physio
     meta:
       TaskName: <filepath:/.*/...(.*)/.*/>
@@ -477,7 +478,7 @@ DICOM:
       ce:
       dir:
       rec:
-      run: <<1>>
+      run: <<>>
       suffix: events
     meta:
       TaskName: <filepath:/.*/...(.*)/.*/>
@@ -497,8 +498,10 @@ DICOM:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
+      EchoPulseSequence:                # Enhanced DICOM
       MRAcquisitionType:
       SliceThickness:
       FlipAngle:
@@ -511,7 +514,7 @@ DICOM:
       acq: <filepath:/.*/...(.*)/.*/>
       rec: <SeriesDescription>
       dir:
-      run: <<1>>
+      run: <<>>
       suffix: asl
     meta: &perf_meta
       ArterialSpinLabelingType: "CASL / PCASL / PASL"
@@ -543,7 +546,7 @@ DICOM:
       acq: <filepath:/.*/...(.*)/.*/>
       rec: <SeriesDescription>
       dir:
-      run: <<1>>
+      run: <<>>
       suffix: aslcontext
     meta: *perf_meta
   - provenance:
@@ -551,7 +554,7 @@ DICOM:
     bids: &perf_dicoment_group3         # See: schema/datatypes/perf.yaml
       acq: <filepath:/.*/...(.*)/.*/>
       rec: <SeriesDescription>
-      run: <<1>>
+      run: <<>>
       suffix: asllabeling
     meta: *perf_meta
 #  - provenance:
@@ -562,7 +565,7 @@ DICOM:
 #      task: <SeriesDescription>
 #      recording:
 #      dir:
-#      run: <<1>>
+#      run: <<>>
 #      suffix: physio
 #    meta: *perf_meta
 
@@ -574,8 +577,10 @@ DICOM:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
+      EchoPulseSequence:                # Enhanced DICOM
       MRAcquisitionType:
       SliceThickness:
       FlipAngle:
@@ -588,7 +593,7 @@ DICOM:
       acq: <filepath:/.*/...(.*)/.*/> # More consistent between SBREF and PHYSIO files
       rec:
       dir:
-      run: <<1>>
+      run: <<>>
       part: ['', mag, phase, real, imag, 0]
       suffix: dwi
     meta: &dwi_meta
@@ -602,7 +607,7 @@ DICOM:
       acq: <filepath:/.*/...(.*)/.*/>
       rec:
       dir:
-      run: <<1>>
+      run: <<>>
       part: ['', mag, phase, real, imag, 0]
       suffix: sbref
     meta: *dwi_meta
@@ -614,7 +619,7 @@ DICOM:
     bids: &dwi_dicoment_physio          # See: schema/datatypes/dwi.yaml
       acq: <filepath:/.*/...(.*)/.*/>
       dir:
-      run: <<1>>
+      run: <<>>
       part: ['', mag, phase, real, imag, 0]
       recording:
       suffix: physio
@@ -644,19 +649,22 @@ DICOM:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
+      EchoPulseSequence:                # Enhanced DICOM
       MRAcquisitionType:
       SliceThickness:
       FlipAngle:
       EchoNumbers:
+      (0021,1106):                      # Contains echonumber in XA30 enhanced DICOM (i.e. ICE-dims, see https://github.com/rordenlab/dcm2niix/blob/master/Siemens/README.md)
       EchoTime:
       EffectiveEchoTime:
       RepetitionTime:
       InPlanePhaseEncodingDirection:
     bids: &fmap_dicoment_fieldmaps      # See: schema/datatypes/fmap.yaml
       acq: <filepath:/.*/...(.*)/.*/>
-      run: <<1>>
+      run: <<>>
       suffix: magnitude1
     meta: &fmap_meta
       B0FieldIdentifier:
@@ -667,6 +675,17 @@ DICOM:
       ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
       ScanningSequence: GR
       EchoNumbers: '2'
+      ImageType: .*'P'.*
+    bids:
+      <<: *fmap_dicoment_fieldmaps
+      suffix: phasediff
+    meta: *fmap_meta
+  - provenance:                         # Siemens XA30 enhanced DICOM
+    attributes:
+      <<: *fmap_dicomattr
+      ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
+      EchoPulseSequence: GRADIENT
+      (0021,1106): '^._2_.*'
       ImageType: .*'P'.*
     bids:
       <<: *fmap_dicoment_fieldmaps
@@ -683,12 +702,34 @@ DICOM:
       <<: *fmap_dicoment_fieldmaps
       suffix: magnitude1
     meta: *fmap_meta
+  - provenance:                         # Siemens XA30 enhanced DICOM
+    attributes:
+      <<: *fmap_dicomattr
+      ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
+      EchoPulseSequence: GRADIENT
+      (0021,1106): '^._1_.*'
+      ImageType: .*'M'.*
+    bids:
+      <<: *fmap_dicoment_fieldmaps
+      suffix: magnitude1
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
       ScanningSequence: GR
       EchoNumbers: '2'
+      ImageType: .*'M'.*
+    bids:
+      <<: *fmap_dicoment_fieldmaps
+      suffix: magnitude2
+    meta: *fmap_meta
+  - provenance:                         # Siemens XA30 enhanced DICOM
+    attributes:
+      <<: *fmap_dicomattr
+      ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
+      EchoPulseSequence: GRADIENT
+      (0021,1106): '^._2_.*'
       ImageType: .*'M'.*
     bids:
       <<: *fmap_dicoment_fieldmaps
@@ -705,6 +746,17 @@ DICOM:
       <<: *fmap_dicoment_fieldmaps
       suffix: phase1
     meta: *fmap_meta
+  - provenance:                         # Siemens XA30 enhanced DICOM
+    attributes:
+      <<: *fmap_dicomattr
+      ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
+      EchoPulseSequence: GRADIENT
+      (0021,1106): '^._1_.*'
+      ImageType: .*'P'.*
+    bids:
+      <<: *fmap_dicoment_fieldmaps
+      suffix: phase1
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -716,11 +768,21 @@ DICOM:
       <<: *fmap_dicoment_fieldmaps
       suffix: phase2
     meta: *fmap_meta
+  - provenance:                         # Siemens XA30 enhanced DICOM
+    attributes:
+      <<: *fmap_dicomattr
+      ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
+      EchoPulseSequence: GRADIENT
+      (0021,1106): '^._2_.*'
+      ImageType: .*'P'.*
+    bids:
+      <<: *fmap_dicoment_fieldmaps
+      suffix: phase2
+    meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
-      ScanningSequence: GR
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: fieldmap
@@ -729,7 +791,6 @@ DICOM:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*(fmap|field.?map|B0.?map).*
-      ScanningSequence: GR
     bids:
       <<: *fmap_dicoment_fieldmaps
       suffix: magnitude
@@ -743,7 +804,16 @@ DICOM:
       acq: <filepath:/.*/...(.*)/.*/>          # NB: <ProtocolName> is consistent between SBREF and PHYSIO files but causes name clashes
       ce:
       dir: <InPlanePhaseEncodingDirection>
-      run: <<1>>
+      run: <<>>
+      suffix: epi
+    meta: *fmap_meta
+  - provenance:                         # Siemens XA30 enhanced DICOM
+    attributes:
+      <<: *fmap_dicomattr
+      ProtocolName: (?i).*(inverted|pepolar|_inv).*
+      EchoPlanarPulseSequence: YES
+    bids:
+      <<: *fmap_dicoment_PEPolar
       suffix: epi
     meta: *fmap_meta
   - provenance:
@@ -761,7 +831,7 @@ DICOM:
       flip:
       inv:
       part: ['', mag, phase, real, imag, 0]
-      run: <<1>>
+      run: <<>>
       suffix: TB1DAM
     meta: *fmap_meta
   - provenance:
@@ -774,7 +844,7 @@ DICOM:
       echo:
       inv:
       part: ['', mag, phase, real, imag, 0]
-      run: <<1>>
+      run: <<>>
       suffix: TB1EPI
     meta: *fmap_meta
   - provenance:
@@ -787,14 +857,13 @@ DICOM:
       echo:
       inv:
       part: ['', mag, phase, real, imag, 0]
-      run: <<1>>
+      run: <<>>
       suffix: TB1AFI
     meta: *fmap_meta
   - provenance:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*B1.?map.*
-      SequenceName: .*tfl.*
       ImageType: .*FLIP ANGLE MAP.*
     bids:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml & https://bids-specification.readthedocs.io/en/stable/99-appendices/11-qmri.html#tb1tfl-and-tb1rfm-specific-notes
@@ -805,7 +874,6 @@ DICOM:
     attributes:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*B1map.*
-      SequenceName: .*tfl.*
       ImageType: .*'M'.*
     bids:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
@@ -847,7 +915,7 @@ DICOM:
       echo:
       inv:
       part: ['', mag, phase, real, imag, 0]
-      run: <<1>>
+      run: <<>>
       suffix: TB1SRGE
     meta: *fmap_meta
   - provenance:
@@ -859,7 +927,7 @@ DICOM:
       acq: <filepath:/.*/...(.*)/.*/>
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       suffix: TB1map
     meta: *fmap_meta
   - provenance:
@@ -891,7 +959,7 @@ DICOM:
       task: <filepath:/.*/...(.*)/.*/>
       trc: <Radiopharmaceutical>
       rec: ['', acdyn, acstat, nacdyn, nacstat, 0]
-      run: <<1>>
+      run: <<>>
       suffix: pet
     meta: &pet_meta
       TracerName: <<Radiopharmaceutical>>
@@ -930,7 +998,7 @@ DICOM:
     bids:                               # See: schema/datatypes/eeg.yaml
       acq: <ProtocolName>
       task: <SeriesDescription>
-      run: <<1>>
+      run: <<>>
       suffix: eeg
 
   ieeg:       # ----------------------- All iEEG data --------------------------
@@ -942,7 +1010,7 @@ DICOM:
     bids:                               # See: schema/datatypes/ieeg.yaml
       acq: <ProtocolName>
       task: <SeriesDescription>
-      run: <<1>>
+      run: <<>>
       suffix: ieeg
 
   extra_data: # ----------------------- All extra data -------------------------
@@ -953,6 +1021,7 @@ DICOM:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
       MRAcquisitionType:
@@ -971,7 +1040,7 @@ DICOM:
       task:
       echo: <EchoNumbers>
       dir:
-      run: <<1>>
+      run: <<>>
       mod: <SeriesDescription>
       part: ['', mag, phase, real, imag, 0]
       suffix: <ScanningSequence>
@@ -979,9 +1048,7 @@ DICOM:
     attributes:
       <<: *anat_dicomattr
       ProtocolName: (?i).*TSE.*vfl.*
-      ImageType:                        # Make an exception for this non-NORM TSE T2w-image (i.e. ['ORIGINAL', 'PRIMARY', 'M', 'ND'], the filtered 'NORM' version is saved in 'anat')
-      SequenceVariant: .*'SK', 'SP'.*
-      ScanningSequence: SE
+      ImageType: ((?!NORM).)*           # Make an exception for this non-NORM TSE T2w-image (i.e. ['ORIGINAL', 'PRIMARY', 'M', 'ND'], the filtered 'NORM' version is saved in 'anat')
     bids:
       <<: *anat_dicoment_nonparametric
       part: ['', mag, phase, real, imag, 0]
@@ -998,6 +1065,7 @@ DICOM:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
       MRAcquisitionType:
@@ -1021,11 +1089,11 @@ DICOM:
   - provenance:
     attributes:
       <<: *leaveout_attributes_dicom
-      ImageType: .*'DERIVED'.*
-      ProtocolName: (?i)((?!MP2RAGE).)*     # Make an exception for DERIVED 3D MP2RAGE UNI-images
+      ImageType: .*'CSA REPORT'.*
+      ProtocolName: .*Phoenix.*
     bids:
       <<: *leaveout_bids_dicom
-      rec: DERIVED
+      rec: REPORT
   - provenance:
     attributes:
       <<: *leaveout_attributes_dicom
@@ -1069,7 +1137,7 @@ PAR:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
-      run: <<1>>
+      run: <<>>
       part: ['', mag, phase, real, imag, 0]
       suffix: T1w
   - provenance:
@@ -1141,7 +1209,7 @@ PAR:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
-      run: <<1>>
+      run: <<>>
       suffix: T1map
   - provenance:
     attributes:
@@ -1262,7 +1330,7 @@ PAR:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
-      run: <<1>>
+      run: <<>>
       mod:
       suffix: defacemask
   - provenance:
@@ -1273,7 +1341,7 @@ PAR:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
-      run: <<1>>
+      run: <<>>
       echo:
       part: ['', mag, phase, real, imag, 0]
       suffix: MESE
@@ -1293,7 +1361,7 @@ PAR:
       ce:
       rec: <exam_name>
       echo:
-      run: <<1>>
+      run: <<>>
       flip:
       part: ['', mag, phase, real, imag, 0]
       suffix: VFA
@@ -1305,7 +1373,7 @@ PAR:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
-      run: <<1>>
+      run: <<>>
       inv:
       part: ['', mag, phase, real, imag, 0]
       suffix: IRT1
@@ -1317,7 +1385,7 @@ PAR:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
-      run: <<1>>
+      run: <<>>
       echo:
       flip:
       inv: 1
@@ -1338,7 +1406,7 @@ PAR:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
-      run: <<1>>
+      run: <<>>
       echo:
       flip:
       mt:
@@ -1359,7 +1427,7 @@ PAR:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
-      run: <<1>>
+      run: <<>>
       mt:
       part: ['', mag, phase, real, imag, 0]
       suffix: MTR
@@ -1386,7 +1454,7 @@ PAR:
       ce:
       dir:
       rec:
-      run: <<1>>
+      run: <<>>
       echo:
       part: ['', mag, phase, real, imag, 0]
       suffix: bold
@@ -1423,7 +1491,7 @@ PAR:
       ce:
       dir:
       rec:
-      run: <<1>>
+      run: <<>>
       suffix: events
     meta:
       TaskName: <exam_name>
@@ -1436,7 +1504,7 @@ PAR:
       dir:
       rec:
       recording:
-      run: <<1>>
+      run: <<>>
       suffix: physio
     meta:
       TaskName: <exam_name>
@@ -1468,7 +1536,7 @@ PAR:
       acq: <protocol_name>
       rec: <exam_name>
       dir:
-      run: <<1>>
+      run: <<>>
       suffix: asl
     meta: *perf_meta
   - provenance:
@@ -1491,7 +1559,7 @@ PAR:
       acq: <protocol_name>
       rec: <exam_name>
       dir:
-      run: <<1>>
+      run: <<>>
       suffix: aslcontext
     meta: *perf_meta
   - provenance:
@@ -1499,7 +1567,7 @@ PAR:
     bids: &perf_parent_group3           # See: schema/datatypes/perf.yaml
       acq: <protocol_name>
       rec: <exam_name>
-      run: <<1>>
+      run: <<>>
       suffix: asllabeling
     meta: *perf_meta
 
@@ -1523,7 +1591,7 @@ PAR:
       acq: <protocol_name>
       rec:
       dir:
-      run: <<1>>
+      run: <<>>
       part: ['', mag, phase, real, imag, 0]
       suffix: dwi
     meta: *dwi_meta
@@ -1535,7 +1603,7 @@ PAR:
       acq: <protocol_name>
       rec:
       dir:
-      run: <<1>>
+      run: <<>>
       part: ['', mag, phase, real, imag, 0]
       suffix: sbref
   - provenance:                         # Then catch the normal DWI runs
@@ -1563,7 +1631,7 @@ PAR:
       prep_direction:
     bids: &fmap_parent_fieldmaps        # See: schema/datatypes/fmap.yaml
       acq: <protocol_name>
-      run: <<1>>
+      run: <<>>
       suffix: magnitude1
     meta: *fmap_meta
   - provenance:
@@ -1608,7 +1676,7 @@ PAR:
       acq: <protocol_name>
       ce:
       dir:
-      run: <<1>>
+      run: <<>>
       suffix: epi
     meta: *fmap_meta
   - provenance:
@@ -1626,7 +1694,7 @@ PAR:
       flip:
       inv:
       part: ['', mag, phase, real, imag, 0]
-      run: <<1>>
+      run: <<>>
       suffix: TB1DAM
     meta: *fmap_meta
   - provenance:
@@ -1639,7 +1707,7 @@ PAR:
       echo:
       inv:
       part: ['', mag, phase, real, imag, 0]
-      run: <<1>>
+      run: <<>>
       suffix: TB1EPI
     meta: *fmap_meta
   - provenance:
@@ -1652,7 +1720,7 @@ PAR:
       echo:
       inv:
       part: ['', mag, phase, real, imag, 0]
-      run: <<1>>
+      run: <<>>
       suffix: TB1AFI
     meta: *fmap_meta
   - provenance:
@@ -1683,7 +1751,7 @@ PAR:
       echo:
       inv:
       part: ['', mag, phase, real, imag, 0]
-      run: <<1>>
+      run: <<>>
       suffix: TB1SRGE
     meta: *fmap_meta
   - provenance:
@@ -1692,7 +1760,7 @@ PAR:
       acq: <protocol_name>
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       suffix: TB1map
     meta: *fmap_meta
   - provenance:
@@ -1726,7 +1794,7 @@ PAR:
       task:
       echo:
       dir:
-      run: <<1>>
+      run: <<>>
       mod:
       part: ['', mag, phase, real, imag, 0]
       suffix: <exam_name>
@@ -1784,7 +1852,7 @@ SPAR:
       nuc:
       vox:
       type:
-      run: <<1>>                        # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      run: <<>>                         # This will be updated during bidscoiner runtime (as it depends on the already existing files)
       suffix: press
     meta:                               # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
 
@@ -1805,7 +1873,7 @@ Twix:
 # ---------------------------------------------------------------------------------
 # Twix key-value heuristics (Siemens MRS fields that are mapped to the BIDS labels)
 # ---------------------------------------------------------------------------------
-  subject: <<filepath:/sub-(.*?)/>>    # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  subject: <<filepath:/sub-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
   session: <<filepath:/sub-.*?/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
 
   mrs:        # ---------------------- All spectroscopy runs ------------------
@@ -1817,6 +1885,7 @@ Twix:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
       MRAcquisitionType:
@@ -1833,7 +1902,7 @@ Twix:
       nuc:
       vox:
       type:
-      run: <<1>>                        # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      run: <<>>                         # This will be updated during bidscoiner runtime (as it depends on the already existing files)
       suffix: mrs
     meta:                               # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
   - provenance:
@@ -1900,7 +1969,7 @@ Pfile:
       nuc:
       vox:
       type:
-      run: <<1>>                        # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      run: <<>>                         # This will be updated during bidscoiner runtime (as it depends on the already existing files)
       suffix: mrs
     meta:                               # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
   - provenance:                         # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
@@ -1948,7 +2017,7 @@ Pfile:
 #      ce:
 #      dir:
 #      rec:
-#      run: <<1>>                        # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+#      run: <<>>                         # This will be updated during bidscoiner runtime (as it depends on the already existing files)
 #      recording:
 #      suffix: physio
 #    meta:                               # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
@@ -2000,6 +2069,7 @@ Nibabel:
       SeriesDescription:
       ImageType:
       SequenceName:
+      PulseSequenceName:
       SequenceVariant:
       ScanningSequence:
       MRAcquisitionType:
@@ -2012,7 +2082,7 @@ Nibabel:
       acq: <descrip>                    # This will be expanded by the bidsmapper (so the user can edit it)
       ce:
       rec:
-      run: <<1>>                        # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      run: <<>>                        # This will be updated during bidscoiner runtime (as it depends on the already existing files)
       part: ['', mag, phase, real, imag, 0]
       suffix: T1w
     meta:                               # This is an optional entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
@@ -2095,7 +2165,7 @@ Nibabel:
       acq: <descrip>
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       suffix: T1map
   - provenance:
     properties:
@@ -2232,7 +2302,7 @@ Nibabel:
       acq: <descrip>
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       mod:
       suffix: defacemask
   - provenance:
@@ -2244,7 +2314,7 @@ Nibabel:
       acq: <descrip>
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       echo:
       part: ['', mag, phase, real, imag, 0]
       suffix: MESE
@@ -2266,7 +2336,7 @@ Nibabel:
       ce:
       rec:
       echo:
-      run: <<1>>
+      run: <<>>
       flip:
       part: ['', mag, phase, real, imag, 0]
       suffix: VFA
@@ -2279,7 +2349,7 @@ Nibabel:
       acq: <descrip>
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       inv:
       part: ['', mag, phase, real, imag, 0]
       suffix: IRT1
@@ -2292,7 +2362,7 @@ Nibabel:
       acq: <descrip>
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       echo:
       flip:
       inv: 1
@@ -2315,7 +2385,7 @@ Nibabel:
       acq: <descrip>
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       echo:
       flip:
       mt:
@@ -2338,7 +2408,7 @@ Nibabel:
       acq: <SeriesDescription>
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       mt:
       part: ['', mag, phase, real, imag, 0]
       suffix: MTR
@@ -2353,7 +2423,7 @@ Nibabel:
       ce:
       dir:
       rec:
-      run: <<1>>
+      run: <<>>
       echo:
       part: ['', mag, phase, real, imag, 0]
       suffix: bold
@@ -2377,7 +2447,7 @@ Nibabel:
       dir:
       rec:
       recording:
-      run: <<1>>
+      run: <<>>
       suffix: physio
     meta:
       TaskName:
@@ -2406,7 +2476,7 @@ Nibabel:
       ce:
       dir:
       rec:
-      run: <<1>>
+      run: <<>>
       suffix: events
     meta:
       TaskName:
@@ -2427,7 +2497,7 @@ Nibabel:
       acq: <descrip>
       rec:
       dir:
-      run: <<1>>
+      run: <<>>
       suffix: asl
     meta: *perf_meta
   - provenance:
@@ -2453,7 +2523,7 @@ Nibabel:
       acq: <descrip>
       rec:
       dir:
-      run: <<1>>
+      run: <<>>
       suffix: aslcontext
     meta: *perf_meta
   - provenance:
@@ -2462,7 +2532,7 @@ Nibabel:
     bids: &perf_nibent_group3           # See: schema/datatypes/perf.yaml
       acq: <descrip>
       rec:
-      run: <<1>>
+      run: <<>>
       suffix: asllabeling
     meta: *perf_meta
 #  - provenance:
@@ -2474,7 +2544,7 @@ Nibabel:
 #      rec:
 #      recording:
 #      dir:
-#      run: <<1>>
+#      run: <<>>
 #      suffix: physio
 #    meta: *perf_meta
 
@@ -2486,7 +2556,7 @@ Nibabel:
       acq: <descrip>
       rec:
       dir:
-      run: <<1>>
+      run: <<>>
       part: ['', mag, phase, real, imag, 0]
       suffix: dwi
     meta: *dwi_meta
@@ -2499,7 +2569,7 @@ Nibabel:
       acq: <descrip>
       rec:
       dir:
-      run: <<1>>
+      run: <<>>
       part: ['', mag, phase, real, imag, 0]
       suffix: sbref
     meta: *dwi_meta
@@ -2516,7 +2586,7 @@ Nibabel:
     bids: &dwi_nibent_physio            # See: schema/datatypes/dwi.yaml
       acq: <descrip>
       dir:
-      run: <<1>>
+      run: <<>>
       part: ['', mag, phase, real, imag, 0]
       recording:
       suffix: physio
@@ -2529,7 +2599,7 @@ Nibabel:
     attributes: *nibattr
     bids: &fmap_nibent_fieldmaps        # See: schema/datatypes/fmap.yaml
       acq: <descrip>
-      run: <<1>>
+      run: <<>>
       suffix: magnitude1
     meta: *fmap_meta
   - provenance:
@@ -2593,7 +2663,7 @@ Nibabel:
       acq: <descrip>
       ce:
       dir:
-      run: <<1>>
+      run: <<>>
       suffix: epi
     meta: *fmap_meta
   - provenance:
@@ -2617,7 +2687,7 @@ Nibabel:
       flip:
       inv:
       part: ['', mag, phase, real, imag, 0]
-      run: <<1>>
+      run: <<>>
       suffix: TB1DAM
     meta: *fmap_meta
   - provenance:
@@ -2633,7 +2703,7 @@ Nibabel:
       echo:
       inv:
       part: ['', mag, phase, real, imag, 0]
-      run: <<1>>
+      run: <<>>
       suffix: TB1EPI
     meta: *fmap_meta
   - provenance:
@@ -2649,7 +2719,7 @@ Nibabel:
       echo:
       inv:
       part: ['', mag, phase, real, imag, 0]
-      run: <<1>>
+      run: <<>>
       suffix: TB1AFI
     meta: *fmap_meta
   - provenance:
@@ -2694,7 +2764,7 @@ Nibabel:
       echo:
       inv:
       part: ['', mag, phase, real, imag, 0]
-      run: <<1>>
+      run: <<>>
       suffix: TB1SRGE
     meta: *fmap_meta
   - provenance:
@@ -2706,7 +2776,7 @@ Nibabel:
       acq: <descrip>
       ce:
       rec:
-      run: <<1>>
+      run: <<>>
       suffix: TB1map
     meta: *fmap_meta
   - provenance:
@@ -2731,7 +2801,7 @@ Nibabel:
       task:
       echo:
       dir:
-      run: <<1>>
+      run: <<>>
       mod:
       part: ['', mag, phase, real, imag, 0]
       suffix:

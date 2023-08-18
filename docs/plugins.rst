@@ -97,7 +97,7 @@ As can be seen in the API code snippet below (but also see the default plugins f
                 'ce': '',
                 'dir': '',
                 'rec': '',
-                'run': '<<1>>',    # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+                'run': '<<>>',    # This will be updated during bidscoiner runtime (as it depends on the already existing files)
                 'recording': '',
                 'suffix': 'physio'},
             'meta':                # This is an optional entry for meta-data dictionary that are appended to the json sidecar files
@@ -129,7 +129,7 @@ As can be seen in the API code snippet below (but also see the default plugins f
                 'ce': '',
                 'dir': '',
                 'rec': '',
-                'run': '<<1>>',
+                'run': '<<>>',
                 'recording': '',
                 'suffix': 'physio'},
             'meta':

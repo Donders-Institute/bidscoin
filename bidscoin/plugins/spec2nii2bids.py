@@ -12,7 +12,6 @@ import ast
 from bids_validator import BIDSValidator
 from pathlib import Path
 from bidscoin import bcoin, bids
-from bidscoin.bids import add_run1_keyval
 
 LOGGER = logging.getLogger(__name__)
 
@@ -230,7 +229,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         if runindex.startswith('<<') and runindex.endswith('>>'):
             bidsname = bids.increment_runindex(outfolder, bidsname)
             if runindex == '<<>>' and 'run-2' in bidsname:
-                add_run1_keyval(outfolder, bidsname, scans_table, bidsses)
+                bids.add_run1_keyval(outfolder, bidsname, scans_table, bidsses)
         jsonfile   = (outfolder/bidsname).with_suffix('.json')
 
         # Check if the bidsname is valid

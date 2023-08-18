@@ -39,6 +39,13 @@ My subject/session labels are wrong
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Everything seems to work but the ``sub-``/``ses-`` BIDS labels are not what I want. In the bidseditor main window, play around with the ``subject`` regular expressions.
 
+Could not parse required sub-/ses- label
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+You may get the error "Could not parse required sub- label from [..]". This error can have multiple causes, the most probable ones are:
+
+1) Your subject source folders are named in an inconsistent way, i.e. the filepath is not parseable by your ``subject`` regular expression. The best remedy is to open the bidsmap in the bidseditor and update the path in the ``subject`` and/or ``session`` regular expression(s). If that is not working out, then you should rename your subject/session source folders and make them all consistent
+2) Your source data moved to a different location. The solution is to either move the data back to the original location or to open the bidsmap in the bidseditor and update the path in the ``subject`` and/or ``session`` field(s). Alternatively, to avoid this specific issue, you can use bidsmapper's ``--no-update`` option (the first time you run it on the raw folder). The downside of this (non-default) approach is that the subject/session label parsing may be less robust (especially if you have no or a very short subject/session prefix)
+
 I got an "Unexpected postfix / file conversion result"
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 This bidscoiner warning message means that the source data was not properly recognised / converted by the plugin. Please search and/or report it on `Github issue <https://github.com/Donders-Institute/bidscoin/issues?q=>`__ to resolve it.
@@ -49,7 +56,7 @@ Siemens (and perhaps other manufacturers too) stores all field-map Series in a s
 
 My source-files can no longer be found
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-You may get the warning "Cannot reliably change the datatype and/or suffix because the source file '..' can no longer be found". This warning is generated when (1) your source data moved to a different location, or (2) your data is zipped or in DICOMDIR format. This warning can be ignored if you do not need to change the datatype of your run-items anymore (in the bidseditor), because in that case BIDScoin may need access to the source data (to read new properties or attributes). To restore data access for (1), move the data to it's original location and for (2) use the `--store` option of bidsmapper to store local copies of the source data samples in the bids output folder.
+You may get the warning "Cannot reliably change the datatype and/or suffix because the source file '..' can no longer be found". This warning is generated when (1) your source data moved to a different location, or (2) your data is zipped or in DICOMDIR format. This warning can be ignored if you do not need to change the datatype of your run-items anymore (in the bidseditor), because in that case BIDScoin may need access to the source data (to read new properties or attributes). To restore data access for (1), move the data to it's original location and for (2) use the ``--store`` option of bidsmapper to store local copies of the source data samples in the bids output folder.
 
 I have duplicated field maps because of an interrupted session
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

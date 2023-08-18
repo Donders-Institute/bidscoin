@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. The format 
 - Update the paths in the provenance store if the bidsfolder was moved
 - A template bidsmap entry to support CT (BEP024)
 - Manpages (not on Windows)
+- A new `<<>>` dynamic run-index (default), that behaves the same as `<<1>>` when multiple runs are acquired, otherwise it is omitted/void (PR #195)
 
 ### Changed
 - Template bidsmap tweaks to support (XA30) enhanced DICOM

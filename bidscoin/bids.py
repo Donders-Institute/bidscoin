@@ -266,7 +266,7 @@ class DataSource:
         subid_ = self.dynamicvalue(subid, runtime=True)
         sesid  = self.dynamicvalue(sesid, runtime=True)
         if not subid_:
-            LOGGER.error(f"Could not parse required sub-<label> information from {self.path} using: {subid} -> 'sub-'")
+            LOGGER.error(f"Could not parse required sub-<label> label from {self.path} using: {subid} -> 'sub-'")
         subid = subid_
 
         # Add sub- and ses- prefixes if they are not there
@@ -1384,7 +1384,7 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
                 else:
                     run_['attributes'][attrkey] = attrvalue
 
-            # Replace the dynamic bids values, except the dynamic run-index (e.g. <<1>>)
+            # Replace the dynamic bids values, except the dynamic run-index (e.g. <<>>)
             for bidskey, bidsvalue in run['bids'].items():
                 if bidskey == 'run' and bidsvalue and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == '<<>>'):
                     run_['bids'][bidskey] = bidsvalue
@@ -1678,7 +1678,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
             # Try to fill the bids-labels
             for bidskey, bidsvalue in run['bids'].items():
 
-                # Replace the dynamic bids values, except the dynamic run-index (e.g. <<1>>)
+                # Replace the dynamic bids values, except the dynamic run-index (e.g. <<>>)
                 if bidskey == 'run' and bidsvalue and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == '<<>>'):
                     run_['bids'][bidskey] = bidsvalue
                 else:
