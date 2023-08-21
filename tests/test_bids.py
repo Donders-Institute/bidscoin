@@ -5,7 +5,6 @@ import shutil
 import re
 import json
 import ruamel.yaml.comments
-from unittest.mock import call, patch, Mock
 from pathlib import Path
 from nibabel.testing import data_path
 from pydicom.data import get_testdata_file
@@ -229,82 +228,69 @@ def test_delete_run(test_bidsmap):
         assert deleted_run is None
 
 
-@patch.object(Path, 'glob')
-@patch.object(Path, 'rename')
-def test_add_run1_keyval(rename_mock: Mock, glob_mock: Mock):
-    input_bidsname = 'sub-01_run-2_T1w'
-    old_bidsname   = 'sub-01_T1w'
-    new_bidsname   = 'sub-01_run-1_T1w'
-    outfolder      = Path.home()/'mock-dataset'/'sub-01'/'anat'
-    glob_mock.return_value = [
-        (outfolder/old_bidsname).with_suffix('.nii.gz'),
-        (outfolder/old_bidsname).with_suffix('.json'),
-    ]
-    scans_data = {
-        'filename': ['anat/sub-01_rec-norm_T1w.nii.gz', 'anat/sub-01_T1w.nii.gz'],
-        'acq_time': ['mock-acq1', 'mock-acq2'],
-    }
-    result_scans_data = {
-        "filename": ['anat/sub-01_rec-norm_T1w.nii.gz', 'anat/sub-01_run-1_T1w.nii.gz'],
-        "acq_time": ['mock-acq1', 'mock-acq2'],
-    }
+def test_increment_runindex_no_run1(tmp_path):
+    """Test if run-index is preserved or added to the bidsname"""
+
+    # Test runindex is <<>>, so no run is added to the bidsname
+    outfolder = tmp_path/'bids'/'sub-01'/'anat'
+    bidsname  = bids.increment_runindex(outfolder, 'sub-01_T1w', {'bids': {'run': '<<>>'}})
+    assert bidsname == 'sub-01_T1w'
+
+    # Test runindex is <<1>>, so run-1 is preserved in the bidsname
+    bidsname = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '<<1>>'}})
+    assert bidsname == 'sub-01_run-1_T1w'
+
+    # Test runindex is <<2>>, so run-2 is preserved in the bidsname
+    bidsname = bids.increment_runindex(outfolder, 'sub-01_run-2_T1w', {'bids': {'run': '<<2>>'}})
+    assert bidsname == 'sub-01_run-2_T1w'
+
+
+def test_increment_runindex_rename_run1(tmp_path):
+    """Test runindex is <<>>, so run-2 is added to the bidsname and existing run-less files are renamed to run-1"""
+
+    # Create the run-less files
+    old_run1name = 'sub-01_T1w'
+    new_run1name = 'sub-01_run-1_T1w'
+    outfolder    = tmp_path/'bids'/'sub-01'/'anat'
+    outfolder.mkdir(parents=True)
+    for suffix in ('.nii.gz', '.json'):
+        (outfolder/old_run1name).with_suffix(suffix).touch()
+
+    # Create the scans table
+    scans_data         = {'filename': ['anat/sub-01_T2w.nii.gz', f"anat/{old_run1name}.nii.gz"], 'acq_time': ['acq1', 'acq2']}  # One matching run-less file
+    result_scans_data  = {'filename': ['anat/sub-01_T2w.nii.gz', f"anat/{new_run1name}.nii.gz"], 'acq_time': ['acq1', 'acq2']}  # One matching run-1 file
     scans_table        = pd.DataFrame(scans_data).set_index('filename')
     result_scans_table = pd.DataFrame(result_scans_data).set_index('filename')
 
-    bids.increment_runindex(outfolder, input_bidsname, {'bids': {'run': '<<>>'}}, scans_table)
+    # Increment the run-index
+    bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w', {'bids': {'run': '<<>>'}}, scans_table)
 
-    expected_calls = [
-        call(outfolder/f'{new_bidsname}.nii.gz'),
-        call(outfolder/f'{new_bidsname}.json'),
-    ]
-    rename_mock.assert_has_calls(expected_calls)
+    # Check the results
+    assert bidsname == 'sub-01_run-2_T1w'
     assert result_scans_table.equals(scans_table)
+    for suffix in ('.nii.gz', '.json'):
+        assert (outfolder/old_run1name).with_suffix(suffix).is_file() == False
+        assert (outfolder/new_run1name).with_suffix(suffix).is_file() == True
 
 
-@patch.object(Path, 'glob', autospec=True, return_value=[])
-def test_increment_runindex_no_run1(_):
-    bidsname          = 'sub-01_run-1_T1w'
-    expected_bidsname = 'sub-01_run-1_T1w'
-    bidsfolder        = Path.home()/'mock-dataset'/'sub-01'/'anat'
-    result_bidsname   = bids.increment_runindex(bidsfolder, bidsname, {'bids': {'run': '<<>>'}})
-    assert result_bidsname == expected_bidsname
+def test_increment_runindex_run1_run2_exists(tmp_path):
+    """Test if run-3 is added to the bidsname"""
 
+    # Create the run-1 and run-2 files
+    outfolder = tmp_path/'bids'/'sub-01'/'anat'
+    outfolder.mkdir(parents=True)
+    for suffix in ('.nii.gz', '.json'):
+        (outfolder/'sub-01_run-1_T1w').with_suffix(suffix).touch()
+        (outfolder/'sub-01_run-2_T1w').with_suffix(suffix).touch()
 
-@patch.object(Path, 'glob', autospec=True, side_effect=[['sub-01_run-1_T1w'], ['sub-01_run-2_T1w'], []])
-def test_increment_runindex_run1_run2_exists(_):
-    bidsname          = 'sub-01_run-1_T1w'
-    expected_bidsname = 'sub-01_run-3_T1w'
-    bidsfolder        = Path.home()/'mock-dataset'/'sub-01'/'anat'
-    result_bidsname   = bids.increment_runindex(bidsfolder, bidsname, {'bids': {'run': '<<>>'}})
-    assert result_bidsname == expected_bidsname
+    # Test run-index is <<>>, so the run-index is incremented
+    bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w', {'bids': {'run': '<<>>'}})
+    assert bidsname == 'sub-01_run-3_T1w'
 
+    # Test run-index is <<1>>, so the run-index is incremented
+    bidsname = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '<<1>>'}})
+    assert bidsname == 'sub-01_run-3_T1w'
 
-@patch.object(Path, 'glob', autospec=True, return_value=[])
-def test_increment_runindex_empty_dynamic_finds_run1(_):
-    bidsname          = 'sub-01_T1w'        # runindex is <<>> so no run is added to bidsname
-    expected_bidsname = 'sub-01_T1w'
-    bidsfolder        = Path.home()/'mock-dataset'/'sub-01'/'anat'
-    result_bidsname   = bids.increment_runindex(bidsfolder, bidsname, {'bids': {'run': '<<>>'}})
-    assert result_bidsname == expected_bidsname
-
-
-@patch.object(Path, 'glob', autospec=True)
-def test_increment_runindex_empty_dynamic_finds_run2(mock_glob):
-    bidsname          = 'sub-01_T1w'        # runindex is <<>> so no run is added to bidsname
-    expected_bidsname = 'sub-01_run-2_T1w'
-    bidsfolder        = Path.home()/'mock-dataset'/'sub-01'/'anat'
-    # [no run1 (default without run keyval), sub-01_T1w exists (run1), no run2]
-    mock_glob.side_effect = [[], ['sub-01_T1w'], [], []]
-    result_bidsname = bids.increment_runindex(bidsfolder, bidsname, {'bids': {'run': '<<>>'}})
-    assert result_bidsname == expected_bidsname
-
-
-@patch.object(Path, 'glob', autospec=True)
-def test_increment_runindex_empty_dynamic_finds_run3(mock_glob):
-    bidsname          = 'sub-01_T1w'        # runindex is <<>> so no run is added to bidsname
-    expected_bidsname = 'sub-01_run-3_T1w'
-    bidsfolder        = Path.home()/'mock-dataset'/'sub-01'/'anat'
-    # [run1 exists, run1 exists, run2 exists, no run3)
-    mock_glob.side_effect = [['sub-01_run-1_T1w'], ['sub-01_run-1_T1w'], ['sub-01_run-2_T1w'], []]
-    result_bidsname = bids.increment_runindex(bidsfolder, bidsname, {'bids': {'run': '<<>>'}})
-    assert result_bidsname == expected_bidsname
+    # Test run-index is 1, so the run-index is untouched
+    bidsname  = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '1'}})
+    assert bidsname == 'sub-01_run-1_T1w'
