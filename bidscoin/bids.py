@@ -1895,11 +1895,11 @@ def increment_runindex(outfolder: Path, bidsname: str, run: dict, scans_table: D
 
     # Catch run-less bidsnames from <<>> dynamic run-values
     run2_bidsname = insert_bidskeyval(bidsname, 'run', '2', False)
-    if '_run-' not in bidsname and (outfolder/run2_bidsname).with_suffix('.json').is_file():
+    if '_run-' not in bidsname and list(outfolder.glob(f"{run2_bidsname}.*")):
         bidsname = run2_bidsname            # There is more than 1 run, i.e. run-2 already exists and should be normally incremented
 
     # Increment the run-index if the bidsfile already exists
-    while (outfolder/bidsname).with_suffix('.json').is_file():
+    while list(outfolder.glob(f"{bidsname}.*")):
         runindex = get_bidsvalue(bidsname, 'run')
         if not runindex:                    # The run-less bids file already exists -> start with run-2
             bidsname = run2_bidsname
