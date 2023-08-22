@@ -73,7 +73,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
                         echonr      = bids.get_bidsvalue(match, 'echo')
                         mepattern   = bids.get_bidsvalue(match, 'echo', '*')                        # The pattern that selects all echos
                         cename      = match.name.replace(f"_echo-{echonr}", '')                     # The combined-echo output filename
-                    elif '_acq-' in match.name and bids.get_bidsvalue(match, 'acq').split('e')[-1].isnumeric():
+                    elif '_acq-' in match.name and bids.get_bidsvalue(match, 'acq').split('e')[-1].isdecimal():
                         acq, echonr = bids.get_bidsvalue(match, 'acq').rsplit('e',1)
                         mepattern   = bids.get_bidsvalue(match, 'acq', acq + 'e*')                  # The pattern that selects all echos
                         cename      = match.name.replace(f"_acq-{acq}e{echonr}", f"_acq-{acq}")     # The combined-echo output filename

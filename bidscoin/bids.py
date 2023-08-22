@@ -1912,7 +1912,7 @@ def increment_runindex(outfolder: Path, bidsname: str, run: dict, scans_table: D
         new_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
         for file in outfolder.glob(f"{old_bidsname}.*"):
             ext = ''.join(file.suffixes)
-            file.rename((outfolder/new_bidsname).with_suffix(ext))
+            file.replace((outfolder/new_bidsname).with_suffix(ext))
 
             # Change row name in the scans table
             if f"{outfolder.name}/{old_bidsname}{ext}" in scans_table.index:

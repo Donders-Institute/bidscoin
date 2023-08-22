@@ -270,7 +270,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 (outfolder/bidsname).with_suffix(ext).unlink(missing_ok=True)
 
         # Check if the source files all have the same size
-        for file in source.iterdir():
+        for file in source.iterdir() if source.is_dir() else []:
             if file.stat().st_size != sourcefile.stat().st_size and file.suffix == sourcefile.suffix:
                 LOGGER.warning(f"Not all {file.suffix}-files in '{source}' have the same size. This may be ok but can also be indicative of a truncated acquisition or file corruption(s)")
                 break
@@ -318,7 +318,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 for dcm2niixfile in sorted(outfolder.glob(bidsname + '*_Crop_*')):                              # e.g. *_Crop_1.nii.gz
                     ext         = ''.join(dcm2niixfile.suffixes)
                     newbidsfile = str(dcm2niixfile).rsplit(ext,1)[0].rsplit('_Crop_',1)[0] + ext
-                    LOGGER.info(f"Found dcm2niix _Crop_ postfix, replacing original file\n{dcm2niixfile} ->\n{newbidsfile}")
+                    LOGGER.verbose(f"Found dcm2niix _Crop_ postfix, replacing original file\n{dcm2niixfile} ->\n{newbidsfile}")
                     dcm2niixfile.replace(newbidsfile)
 
             # Rename all files that got additional postfixes from dcm2niix. See: https://github.com/rordenlab/dcm2niix/blob/master/FILENAMING.md
@@ -339,9 +339,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                         echonr = f"_{postfix}".replace('_e','')                                                 # E.g. postfix='e1'
                         if not echonr:
                             echonr = '1'
-                        if echonr.isnumeric():
+                        if echonr.isdecimal():
                             newbidsname = bids.insert_bidskeyval(newbidsname, 'echo', echonr.lstrip('0'), bidsignore)       # In contrast to other labels, run and echo labels MUST be integers. Those labels MAY include zero padding, but this is NOT RECOMMENDED to maintain their uniqueness
-                        elif echonr[0:-1].isnumeric():
+                        elif echonr[0:-1].isdecimal():
                             LOGGER.verbose(f"Splitting off echo-number {echonr[0:-1]} from the '{postfix}' postfix")
                             newbidsname = bids.insert_bidskeyval(newbidsname, 'echo', echonr[0:-1].lstrip('0'), bidsignore) # Strip of the 'a', 'b', etc. from `e1a`, `e1b`, etc
                             newbidsname = bids.get_bidsvalue(newbidsname, 'dummy', echonr[-1])                  # Append the 'a' to the acq-label
