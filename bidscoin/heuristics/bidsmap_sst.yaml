@@ -419,7 +419,7 @@ DICOM:
       dir:
       rec:
       run: <<>>
-      echo: <EchoNumbers>
+      echo:                             # Or use <EchoNumbers>
       part: ['', mag, phase, real, imag, 0]
       suffix: bold
     meta: &func_meta
@@ -2082,7 +2082,7 @@ Nibabel:
       acq: <descrip>                    # This will be expanded by the bidsmapper (so the user can edit it)
       ce:
       rec:
-      run: <<>>                        # This will be updated during bidscoiner runtime (as it depends on the already existing files)
+      run: <<>>                         # This will be updated during bidscoiner runtime (as it depends on the already existing files)
       part: ['', mag, phase, real, imag, 0]
       suffix: T1w
     meta:                               # This is an optional entry for meta-data that will be appended to the json sidecar files produced by dcm2niix

@@ -442,7 +442,7 @@ DICOM:
       dir:
       rec:
       run: <<>>
-      echo: <EchoNumbers>
+      echo:                             # Or use <EchoNumbers>
       part: ['', mag, phase, real, imag, 0]
       suffix: bold
     meta: &func_meta
