@@ -1317,8 +1317,8 @@ def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
     """
 
     provenance = []
-    for datatype in bidsmap.get(dataformat):
-        if not isinstance(bidsmap[dataformat][datatype], list): continue  # E.g. 'subject' and 'session'
+    for datatype in bidsmap.get(dataformat, []):
+        if not isinstance(bidsmap[dataformat].get(datatype), list): continue  # E.g. 'subject' and 'session'
         for run in bidsmap[dataformat][datatype]:
             if not run['provenance']:
                 LOGGER.warning(f'The bidsmap run {datatype} run does not contain provenance data')
@@ -1411,8 +1411,8 @@ def find_run(bidsmap: dict, provenance: str, dataformat: str='', datatype: str='
 
     :param bidsmap:     This could be a template bidsmap, with all options, BIDS labels and attributes, etc.
     :param provenance:  The unique provenance that is used to identify the run
-    :param dataformat:  The dataformat section in the bidsmap in which a matching run is searched for, e.g. 'DICOM'
-    :param datatype:    The datatype in which a matching run is searched for (e.g. 'anat')
+    :param dataformat:  The dataformat section in the bidsmap in which a matching run is searched for, e.g. 'DICOM'. Otherwise, all dataformats are searched
+    :param datatype:    The datatype in which a matching run is searched for (e.g. 'anat'). Otherwise, all datatypes are searched
     :return:            The (unfilled) run item from the bidsmap[dataformat][bidsdatatype]
     """
 
@@ -1426,9 +1426,12 @@ def find_run(bidsmap: dict, provenance: str, dataformat: str='', datatype: str='
         else:
             datatypes = [item for item in bidsmap[dataformat] if item not in ('subject','session') and bidsmap[dataformat][item]]
         for dtype in datatypes:
-            for run in bidsmap[dataformat][dtype]:
+            for run in bidsmap[dataformat].get(dtype,[]):
                 if Path(run['provenance']) == Path(provenance):
                     return run
+
+    LOGGER.debug(f"Could not find this [{dataformat}][{datatype}] run: '{provenance}")
+    return {}
 
 
 def delete_run(bidsmap: dict, provenance: Union[dict, str], datatype: str= '', dataformat: str='') -> None:
@@ -1444,20 +1447,23 @@ def delete_run(bidsmap: dict, provenance: Union[dict, str], datatype: str= '', d
 
     if isinstance(provenance, str):
         run_item = find_run(bidsmap, provenance, dataformat)
+        if not run_item:
+            return
     else:
-        run_item = provenance
+        run_item   = provenance
         provenance = run_item['provenance']
 
     if not dataformat:
         dataformat = run_item['datasource'].dataformat
     if not datatype:
         datatype = run_item['datasource'].datatype
-    for index, run in enumerate(bidsmap[dataformat].get(datatype,[])):
-        if Path(run['provenance']) == Path(provenance):
-            del bidsmap[dataformat][datatype][index]
-            return
+    if dataformat in bidsmap:
+        for index, run in enumerate(bidsmap[dataformat].get(datatype,[])):
+            if Path(run['provenance']) == Path(provenance):
+                del bidsmap[dataformat][datatype][index]
+                return
 
-    LOGGER.error(f"Could not find (and delete) this '{datatype}' run: '{provenance}")
+    LOGGER.error(f"Could not find (and delete) this [{dataformat}][{datatype}] run: '{provenance}")
 
 
 def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
@@ -1488,7 +1494,7 @@ def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
         run = run_
 
     if not bidsmap.get(dataformat):
-        bidsmap[dataformat] = {datatype:[]}
+        bidsmap[dataformat] = {datatype: []}
     if not bidsmap.get(dataformat).get(datatype):
         bidsmap[dataformat][datatype] = [run]
     else:
@@ -1512,18 +1518,18 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, run: dict, clean: bool=T
     :return:
     """
 
-    dataformat  = run['datasource'].dataformat
-    datatype    = run['datasource'].datatype
-    num_runs_in = len(dir_bidsmap(bidsmap, dataformat))
+    dataformat   = run['datasource'].dataformat
+    run_datatype = run['datasource'].datatype
+    num_runs_in  = len(dir_bidsmap(bidsmap, dataformat))
 
     # Assert that the target datatype is known
-    if not datatype:
+    if not run_datatype:
         LOGGER.error(f'The datatype of the run cannot be determined...')
 
     # Warn the user if the target run already exists when the run is moved to another datatype
-    if source_datatype != datatype:
-        if exist_run(bidsmap, datatype, run):
-            LOGGER.error(f'The "{source_datatype}" run already exists in {datatype}...')
+    if source_datatype != run_datatype:
+        if exist_run(bidsmap, run_datatype, run):
+            LOGGER.error(f'The "{source_datatype}" run already exists in {run_datatype}...')
 
         # Delete the source run
         delete_run(bidsmap, run, source_datatype)
@@ -1532,9 +1538,9 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, run: dict, clean: bool=T
         append_run(bidsmap, run, clean)
 
     else:
-        for index, run_ in enumerate(bidsmap[dataformat][datatype]):
+        for index, run_ in enumerate(bidsmap[dataformat][run_datatype]):
             if Path(run_['provenance']) == Path(run['provenance']):
-                bidsmap[dataformat][datatype][index] = run
+                bidsmap[dataformat][run_datatype][index] = run
                 break
 
     num_runs_out = len(dir_bidsmap(bidsmap, dataformat))
@@ -1595,9 +1601,9 @@ def exist_run(bidsmap: dict, datatype: str, run_item: dict) -> bool:
 
     dataformat = run_item['datasource'].dataformat
     if not datatype:
-        for datatype in bidsmap.get(dataformat,{}):
-            if not isinstance(bidsmap[dataformat][datatype], list): continue  # E.g. 'subject' and 'session'
-            if exist_run(bidsmap, datatype, run_item):
+        for dtype in bidsmap.get(dataformat,{}):
+            if not isinstance(bidsmap[dataformat][dtype], list): continue   # E.g. 'subject' and 'session'
+            if exist_run(bidsmap, dtype, run_item):
                 return True
 
     if not bidsmap.get(dataformat, {}).get(datatype):

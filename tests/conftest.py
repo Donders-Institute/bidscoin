@@ -12,6 +12,7 @@ from bidscoin.utilities import dicomsort
 
 @pytest.fixture(scope='session')
 def raw_dicomdir(tmp_path_factory):
+    """The dicomsorted DICOMDIR data from pydicom"""
     raw = tmp_path_factory.mktemp('raw_dicomdir')
     shutil.copytree(Path(get_testdata_file('DICOMDIR')).parent, raw, dirs_exist_ok=True)
     shutil.rmtree(raw/'TINY_ALPHA')                                     # Does not contain normal DICOM fields / evokes warnings or errors
@@ -24,9 +25,11 @@ def raw_dicomdir(tmp_path_factory):
 
 @pytest.fixture(scope='session')
 def bids_dicomdir(tmp_path_factory):
+    """The bids directory created from 'raw_dicomdir'"""
     return tmp_path_factory.mktemp('bids_dicomdir')
 
 
 @pytest.fixture()
 def bidsmap_dicomdir(bids_dicomdir):
+    """The bidsmap file in 'bids_dicomdir' (created from 'raw_dicomdir')"""
     return bids_dicomdir/'code'/'bidscoin'/'bidsmap.yaml'

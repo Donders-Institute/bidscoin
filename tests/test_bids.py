@@ -1,4 +1,4 @@
-import tempfile
+import copy
 import pandas as pd
 import pytest
 import shutil
@@ -30,6 +30,7 @@ def par_file():
 
 @pytest.fixture(scope='module')
 def test_bidsmap():
+    """The path to the study bidsmap `test_data/bidsmap.yaml`"""
     return Path(__file__).parent/'test_data'/'bidsmap.yaml'
 
 
@@ -181,51 +182,101 @@ def test_check_bidsmap(test_bidsmap):
 
 def test_find_run(test_bidsmap):
 
-    # load bidsmap
-    bidsmap, _ = bids.load_bidsmap(test_bidsmap)
+    # Load a bidsmap and create a duplicate dataformat section
+    bidsmap, _     = bids.load_bidsmap(test_bidsmap)
+    bidsmap['PET'] = copy.deepcopy(bidsmap['DICOM'])
 
-    # collect provenance from bidsmap for anat, pet, and func
-    anat_provenance = bidsmap['DICOM']['anat'][0]['provenance']
-    func_provenance = bidsmap['DICOM']['func'][0]['provenance']
+    # Collect provenance of the first anat run-item
+    provenance                              = bidsmap['DICOM']['anat'][0]['provenance']
+    tag                                     = '123456789'
+    bidsmap['PET']['anat'][0]['provenance'] = tag
 
-    # find run with partial provenance
-    not_found_run = bids.find_run(bidsmap=bidsmap, provenance='sub-001', dataformat='DICOM')
-    assert not_found_run is None
+    # Find run with the wrong dataformat
+    run = bids.find_run(bidsmap, provenance, dataformat='PET')
+    assert run == {}
 
-    # find run with full provenance
-    found_run = bids.find_run(bidsmap=bidsmap, provenance=anat_provenance)
-    assert found_run is not None
+    # Find run with the wrong datatype
+    run = bids.find_run(bidsmap, provenance, datatype='func')
+    assert run == {}
 
-    # create a duplicate provenance but in a different datatype
-    bidsmap['PET'] = bidsmap['DICOM']
+    # Find run with partial provenance
+    run = bids.find_run(bidsmap, 'sub-001')
+    assert run == {}
 
-    # mark the entry in the PET section to make sure we're getting the right one
-    tag = 123456789
-    bidsmap['PET']['anat'][0]['properties']['nrfiles'] = tag
-
-    # locate PET datatype run
-    pet_run = bids.find_run(bidsmap, provenance=anat_provenance, dataformat='PET')
-    assert pet_run['properties']['nrfiles'] == tag
+    # Find run with full provenance
+    run = bids.find_run(bidsmap, provenance)
+    assert isinstance(run, dict)
+    run = bids.find_run(bidsmap, tag, dataformat='PET', datatype='anat')
+    assert run.get('provenance') == tag
 
 
 def test_delete_run(test_bidsmap):
 
-    # create a copy of the bidsmap
-    with tempfile.TemporaryDirectory() as tempdir:
-        temp_bidsmap = Path(tempdir)/test_bidsmap.name
-        shutil.copy(test_bidsmap, temp_bidsmap)
-        bidsmap, _ = bids.load_bidsmap(temp_bidsmap)
-        anat_provenance = bidsmap['DICOM']['anat'][0]['provenance']
+    # Load a study bidsmap and delete one anat run
+    bidsmap, _ = bids.load_bidsmap(test_bidsmap)
+    nritems    = len(bidsmap['DICOM']['anat'])
+    provenance = bidsmap['DICOM']['anat'][0]['provenance']
+    bids.delete_run(bidsmap, provenance)
 
-        # now delete it from the bidsmap
-        bids.delete_run(bidsmap, anat_provenance)
-        assert len(bidsmap['DICOM']['anat']) == 0
+    assert len(bidsmap['DICOM']['anat']) == nritems - 1
+    assert bids.find_run(bidsmap, provenance) == {}
 
-        # verify this gets deleted when rewritten
-        bids.save_bidsmap(_, bidsmap)
-        written_bidsmap, _ = bids.load_bidsmap(_)
-        deleted_run = bids.find_run(written_bidsmap, anat_provenance)
-        assert deleted_run is None
+
+def test_append_run(test_bidsmap):
+
+    # Load a study bidsmap and delete one anat run
+    bidsmap, _ = bids.load_bidsmap(test_bidsmap)
+
+    # Collect and modify the first anat run-item
+    run                          = copy.deepcopy(bidsmap['DICOM']['anat'][0])
+    run['datasource'].dataformat = 'Foo'
+    run['datasource'].datatype   = 'Bar'
+
+    # Append the run elsewhere in the bidsmap
+    bids.append_run(bidsmap, run)
+    assert bidsmap['Foo']['Bar'][0]['provenance'] == run['provenance']
+
+
+def test_update_bidsmap(test_bidsmap):
+
+    # Load a study bidsmap and move the first run-item from func to anat
+    bidsmap, _ = bids.load_bidsmap(test_bidsmap)
+
+    # Collect and modify the first anat run-item
+    run                        = copy.deepcopy(bidsmap['DICOM']['func'][0])
+    run['datasource'].datatype = 'anat'
+
+    # Update the bidsmap
+    bids.update_bidsmap(bidsmap, 'func', run)
+    assert bidsmap['DICOM']['anat'][-1]['provenance'] == run['provenance']
+    assert bidsmap['DICOM']['func'] [0]['provenance'] != run['provenance']
+
+    # Modify the first anat run-item and update the bidsmap
+    run['bids']['foo'] = 'bar'
+    bids.update_bidsmap(bidsmap, 'anat', run)
+    assert bidsmap['DICOM']['anat'][-1]['bids']['foo'] == 'bar'
+
+
+def test_exist_run(test_bidsmap):
+
+    # Load a bidsmap
+    bidsmap, _ = bids.load_bidsmap(test_bidsmap)
+
+    # Collect the first anat run-item
+    run = copy.deepcopy(bidsmap['DICOM']['anat'][0])
+
+    # Find the run in the wrong datatype
+    assert bids.exist_run(bidsmap, 'func', run) == False
+
+    # Find run with in the right datatype and in all datatypes
+    assert bids.exist_run(bidsmap, 'anat', run) == True
+    assert bids.exist_run(bidsmap, '',     run) == True
+
+    # Find the wrong run in all datatypes
+    run['attributes']['ProtocolName'] = 'abcdefg'
+    assert bids.exist_run(bidsmap, '', run)     == False
+    run['attributes']['ProtocolName'] = ''
+    assert bids.exist_run(bidsmap, '', run)     == False
 
 
 def test_increment_runindex_no_run1(tmp_path):
@@ -298,3 +349,30 @@ def test_increment_runindex_run1_run2_exists(tmp_path):
     # Test run-index is 1, so the run-index is untouched
     bidsname  = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '1'}})
     assert bidsname == 'sub-01_run-1_T1w'
+
+
+def test_get_bidsname(raw_dicomdir):
+
+    dicomfile   = raw_dicomdir/'Doe^Archibald'/'01-XR C Spine Comp Min 4 Views'/'001-Cervical LAT'/'6154'
+    run         = {'datasource': bids.DataSource(dicomfile, {'dcm2niix2bids': {}}, 'DICOM')}
+    run['bids'] = {'acq':'py#dicom', 'foo@':'bar#123', 'run':'<<SeriesNumber>>', 'suffix':'T0w'}
+
+    bidsname = bids.get_bidsname('sub-001', 'ses-01', run, validkeys=False, cleanup=False)  # Test default: runtime=False
+    assert bidsname == 'sub-001_ses-01_acq-py#dicom_run-<<SeriesNumber>>_foo@-bar#123_T0w'
+
+    bidsname = bids.get_bidsname('sub-001', 'ses-01', run, validkeys=False, runtime=False, cleanup=True)
+    assert bidsname == 'sub-001_ses-01_acq-pydicom_run-SeriesNumber_foo@-bar123_T0w'
+
+    bidsname = bids.get_bidsname('sub-001', 'ses-01', run, validkeys=False, runtime=True,  cleanup=False)
+    assert bidsname == 'sub-001_ses-01_acq-py#dicom_run-1_foo@-bar#123_T0w'
+
+    bidsname = bids.get_bidsname('sub-001', 'ses-01', run, validkeys=True,  runtime=True,  cleanup=False)
+    assert bidsname == 'sub-001_ses-01_acq-py#dicom_run-1_T0w'
+
+    run['bids']['run'] = '<<1>>'
+    bidsname = bids.get_bidsname('sub-001', '', run, validkeys=True, runtime=True)          # Test default: cleanup=True
+    assert bidsname == 'sub-001_acq-pydicom_run-1_T0w'
+
+    run['bids']['run'] = '<<>>'
+    bidsname = bids.get_bidsname('sub-001', '', run, validkeys=True, runtime=True)          # Test default: cleanup=True
+    assert bidsname == 'sub-001_acq-pydicom_T0w'
