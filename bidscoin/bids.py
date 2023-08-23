@@ -1189,7 +1189,7 @@ def check_run(datatype: str, run: dict, checks: Tuple[bool, bool, bool]=(False, 
                 elif not bidsvalue and datatyperules[datatype][typegroup]['entities'][entity]=='required':
                     if checks[2]: LOGGER.warning(f'Required "{entitykey}" value is missing ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
                     run_valsok = False
-                if bidsvalue and not dynamicvalue and entityformat=='index' and not str(bidsvalue).isnumeric():
+                if bidsvalue and not dynamicvalue and entityformat=='index' and not str(bidsvalue).isdecimal():
                     if checks[2]: LOGGER.warning(f'Invalid {entitykey}-index: "{bidsvalue}" is not a number ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
                     run_valsok = False
 
@@ -1890,7 +1890,7 @@ def increment_runindex(outfolder: Path, bidsname: str, run: dict, scans_table: D
     # Check input
     runval = run['bids'].get('run')
     runval = str(runval) if runval else ''
-    if not runval.startswith('<<') and not runval.endswith('>>'):
+    if not (runval.startswith('<<') and runval.endswith('>>') and (runval.replace('<','').replace('>','').isdecimal() or runval == '<<>>')):
         return bidsname
 
     # Catch run-less bidsnames from <<>> dynamic run-values

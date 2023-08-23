@@ -291,6 +291,10 @@ def test_increment_runindex_run1_run2_exists(tmp_path):
     bidsname = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '<<1>>'}})
     assert bidsname == 'sub-01_run-3_T1w'
 
+    # Test run-index is <<AttrKey>>, so the run-index is untouched
+    bidsname  = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '<<AttrKey>>'}})
+    assert bidsname == 'sub-01_run-1_T1w'
+
     # Test run-index is 1, so the run-index is untouched
     bidsname  = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '1'}})
     assert bidsname == 'sub-01_run-1_T1w'
