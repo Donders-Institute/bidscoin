@@ -159,6 +159,12 @@ def test_load_bidsmap(test_bidsmap):
     assert no_input_folder_map is not []
 
 
+def test_validate_bidsmap(test_bidsmap):
+
+    bidsmap, _ = bids.load_bidsmap(test_bidsmap)
+    assert bids.validate_bidsmap(bidsmap) == True
+
+
 def test_check_bidsmap(test_bidsmap):
 
     template_bidsmap, _ = bids.load_bidsmap(bidsmap_template, checks=(True, True, False))
@@ -178,6 +184,57 @@ def test_check_bidsmap(test_bidsmap):
         assert each in (None, True, False)
         if check:
             assert each == True
+
+
+def test_check_run(test_bidsmap):
+
+    # Load a bidsmap
+    bidsmap, _ = bids.load_bidsmap(test_bidsmap)
+
+    # Collect the first func run-item
+    checks = (True, True, True)             # = (keys, suffixes, values)
+    run    = bidsmap['DICOM']['func'][0]
+
+    # Check datatype
+    assert bids.check_run('func', run, checks) == (True, True, True)
+    assert bids.check_run('anat', run, checks) == (None, False, None)
+    assert bids.check_run('foo',  run, checks) == (None, None, None)
+
+    # Check bids-keys
+    run['bids']['flip'] = 'foo'     # Add a false key
+    assert bids.check_run('func', run, checks) == (False, True, None)
+    del run['bids']['flip']
+    del run['bids']['acq']          # Remove a valid key
+    assert bids.check_run('func', run, checks) == (False, True, True)
+    run['bids']['acq'] = 'foo'
+
+    # Check bids-suffix
+    run['bids']['suffix'] = 'T1w'   # Set an invalid suffix
+    assert bids.check_run('func', run, checks) == (None, False, None)
+    run['bids']['suffix'] = 'bold'
+
+    # Check bids-values
+    run['bids']['task'] = ''        # Remove an required value
+    assert bids.check_run('func', run, checks) == (True, True, False)
+    run['bids']['task'] = 'f##'     # Add invalid characters
+    assert bids.check_run('func', run, checks) == (True, True, False)
+    run['bids']['task'] = 'foo'
+    run['bids']['run']  = 'a'       # Add an invalid (non-numeric) index
+    assert bids.check_run('func', run, checks) == (True, True, False)
+
+
+def test_check_ignore():
+
+    bidsignore = 'mrs/;sub-*_foo.*;*foo/sub-*_bar.*'
+
+    assert bids.check_ignore('mrs',                bidsignore)         == True      # Test default: datatype = 'dir'
+    assert bids.check_ignore('mrs',                bidsignore, 'file') == False
+    assert bids.check_ignore('mrs/sub-01_foo.nii', bidsignore, 'dir')  == False
+    assert bids.check_ignore('mrs/sub-01_bar.nii', bidsignore, 'file') == False
+    assert bids.check_ignore('foo/sub-01_bar.nii', bidsignore, 'file') == True
+    assert bids.check_ignore('bar/sub-01_bar.nii', bidsignore, 'file') == False
+    assert bids.check_ignore('bar/sub-01_foo.nii', bidsignore, 'file') == False
+    assert bids.check_ignore('sub-01_foo.nii',     bidsignore, 'file') == True
 
 
 def test_find_run(test_bidsmap):
@@ -242,7 +299,7 @@ def test_update_bidsmap(test_bidsmap):
     # Load a study bidsmap and move the first run-item from func to anat
     bidsmap, _ = bids.load_bidsmap(test_bidsmap)
 
-    # Collect and modify the first anat run-item
+    # Collect and modify the first func run-item
     run                        = copy.deepcopy(bidsmap['DICOM']['func'][0])
     run['datasource'].datatype = 'anat'
 
@@ -251,7 +308,7 @@ def test_update_bidsmap(test_bidsmap):
     assert bidsmap['DICOM']['anat'][-1]['provenance'] == run['provenance']
     assert bidsmap['DICOM']['func'] [0]['provenance'] != run['provenance']
 
-    # Modify the first anat run-item and update the bidsmap
+    # Modify the last anat run-item and update the bidsmap
     run['bids']['foo'] = 'bar'
     bids.update_bidsmap(bidsmap, 'anat', run)
     assert bidsmap['DICOM']['anat'][-1]['bids']['foo'] == 'bar'
