@@ -120,9 +120,20 @@ def test_get_datasource(dicomdir):
 
 @pytest.mark.parametrize('template', bcoin.list_plugins()[1])
 def test_load_check_template(template):
+
+    # Load a valid template
     bidsmap, _ = bids.load_bidsmap(template, checks=(False, False, False))
     assert isinstance(bidsmap, dict) and bidsmap
-    assert bids.check_template(bidsmap)
+    assert bids.check_template(bidsmap) == True
+
+    # Add an invalid datatype
+    bidsmap['DICOM']['foo'] = bidsmap['DICOM']['extra_data']
+    assert bids.check_template(bidsmap) == False
+    del bidsmap['DICOM']['foo']
+
+    # Remove a valid suffix (BIDS-entity)
+    bidsmap['DICOM']['anat'].pop(-2)        # NB: Assumes CT is the last item, MTR the second last
+    assert bids.check_template(bidsmap) == False
 
 
 def test_match_runvalue():
@@ -143,17 +154,17 @@ def test_match_runvalue():
 
 def test_load_bidsmap(test_bidsmap):
 
-    # test loading with recommended arguments for load_bidsmap
+    # Test loading with recommended arguments for load_bidsmap
     full_arguments_map, return_path = bids.load_bidsmap(Path(test_bidsmap.name), test_bidsmap.parent)
     assert type(full_arguments_map) == ruamel.yaml.comments.CommentedMap
     assert full_arguments_map is not []
 
-    # test loading with no input folder0, should load default from heuristics folder
+    # Test loading with no input folder0, should load default from heuristics folder
     no_input_folder_map, _ = bids.load_bidsmap(test_bidsmap)
     assert type(no_input_folder_map) == ruamel.yaml.comments.CommentedMap
     assert no_input_folder_map is not []
 
-    # test loading with full path to only bidsmap file
+    # Test loading with full path to only bidsmap file
     full_path_to_bidsmap_map, _ = bids.load_bidsmap(test_bidsmap)
     assert type(full_path_to_bidsmap_map) == ruamel.yaml.comments.CommentedMap
     assert no_input_folder_map is not []
@@ -161,12 +172,37 @@ def test_load_bidsmap(test_bidsmap):
 
 def test_validate_bidsmap(test_bidsmap):
 
+    # Load a BIDS-valid study bidsmap
     bidsmap, _ = bids.load_bidsmap(test_bidsmap)
+    run        = bidsmap['DICOM']['func'][0]
     assert bids.validate_bidsmap(bidsmap) == True
+
+    # Validate the bids-keys
+    run['bids']['flip'] = 'foo'     # Add a false key
+    assert bids.validate_bidsmap(bidsmap) == False
+    del run['bids']['flip']
+    del run['bids']['task']         # Remove a required key
+    assert bids.validate_bidsmap(bidsmap) == False
+    run['bids']['task'] = 'foo'
+
+    # Check bids-suffix
+    run['bids']['suffix'] = 'T1w'   # Set an invalid suffix
+    assert bids.validate_bidsmap(bidsmap) == False
+    run['bids']['suffix'] = 'bold'
+
+    # Check bids-values
+    run['bids']['task'] = ''        # Remove a required value
+    assert bids.validate_bidsmap(bidsmap) == False
+    run['bids']['task'] = 'f##'     # Add invalid characters (they are cleaned out)
+    assert bids.validate_bidsmap(bidsmap) == True
+    run['bids']['task'] = 'foo'
+    run['bids']['run']  = 'a'       # Add an invalid (non-numeric) index
+    assert bids.validate_bidsmap(bidsmap) == False
 
 
 def test_check_bidsmap(test_bidsmap):
 
+    # Load a template and a study bidsmap
     template_bidsmap, _ = bids.load_bidsmap(bidsmap_template, checks=(True, True, False))
     study_bidsmap, _    = bids.load_bidsmap(test_bidsmap)
 
@@ -214,7 +250,7 @@ def test_check_run(test_bidsmap):
     run['bids']['suffix'] = 'bold'
 
     # Check bids-values
-    run['bids']['task'] = ''        # Remove an required value
+    run['bids']['task'] = ''        # Remove a required value
     assert bids.check_run('func', run, checks) == (True, True, False)
     run['bids']['task'] = 'f##'     # Add invalid characters
     assert bids.check_run('func', run, checks) == (True, True, False)
