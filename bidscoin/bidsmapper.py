@@ -140,8 +140,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
     else:
         LOGGER.info('Opening the bidseditor')
-        from PyQt5 import QtCore, QtGui
-        from PyQt5.QtWidgets import QApplication, QMessageBox
+        from PyQt6 import QtCore, QtGui
+        from PyQt6.QtWidgets import QApplication, QMessageBox
         try:
             from bidscoin import bidseditor
         except ImportError:
@@ -160,8 +160,8 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
                            f"bidsmapper or by just running the bidseditor tool\n\n"
                            f"{versionmessage}")
         messagebox.setWindowTitle('About the BIDS-mapping workflow')
-        messagebox.setIconPixmap(QtGui.QPixmap(str(bidseditor.BIDSCOIN_LOGO)).scaled(150, 150, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
-        messagebox.setWindowFlags(messagebox.windowFlags() & ~QtCore.Qt.WindowMinMaxButtonsHint)
+        messagebox.setIconPixmap(QtGui.QPixmap(str(bidseditor.BIDSCOIN_LOGO)).scaled(150, 150, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
+        messagebox.setWindowFlags(messagebox.windowFlags() & ~QtCore.Qt.WindowType.WindowMinMaxButtonsHint)
         messagebox.show()
 
         app.exec()

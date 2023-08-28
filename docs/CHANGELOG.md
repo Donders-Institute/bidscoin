@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file. The format 
 ### Changed
 - Template bidsmap tweaks to support (XA30) enhanced DICOM
 - Skip all subfolders of hidden folders
+- GUI upgraded from Qt5 to Qt6 (supporting the new Apple silicon)
 
 ## [4.0.0] - 2023-03-18
 
