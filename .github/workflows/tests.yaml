@@ -20,6 +20,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install dependencies
+        run: |
+          make install
+
       - name: Install dcm2niix posix
         if: runner.os != 'Windows'
         run: |
@@ -39,10 +43,6 @@ jobs:
           curl -fLO https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_win.zip
           Expand-Archive dcm2niix_win.zip
           Add-Content $env:GITHUB_PATH "${{ github.workspace }}/dcm2niix_win/"
-
-      - name: Install dependencies
-        run: |
-          make install
 
       - name: Tests with pytest
         run: |
