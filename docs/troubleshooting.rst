@@ -13,6 +13,14 @@ Could not load the Qt platform plugin "xcb"
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 This error message may occur on certain Linux platforms when opening the bidseditor. This is an `installation <installation.html#bidscoin-installation>`__ issue that may occur if you have installed a ``+qt5`` build of BIDScoin (e.g. because your system does not support Qt6). Sometimes this error can be solved by downgrading your PyQt5 library, e.g. by running ``pip install --upgrade pyqt5==5.14`` in your terminal environment. Another solution might be to use your Linux package manager to install PyQt5, e.g. like this: ``apt-get install python3-pyqt5 python3-pyqt5.qtx11extras``
 
+ImportError: libEGL.so.1: cannot open shared object file: No such file or directory
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This may error message may be reported on Linux systems that do not support Qt6 out of the box. On Debian/Ubuntu systems this may be solved by running:
+
+.. code-block::
+
+   sudo apt install qt6-base-dev
+
 My Apptainer/Singularity container fails
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 When running apptainer/singularity on on systems with an older Linux kernel (e.g. older than 3.15) you may get errors such as ``ImportError: libQt5Core.so.5: cannot open shared object file: No such file or directory``. A working fix may be to add the following line at the end of ``%post`` section of  the `singularity.def <installation.html#using-a-singularity-container>`__ file.
