@@ -57,6 +57,7 @@ try:
 except Exception:
     with open(Path(__file__).parents[1]/'pyproject.toml', 'rb') as fid:
         __version__ = tomllib.load(fid)['project']['version']
+__version__ = __version__.split('+')[0]
 
 
 def version(check: bool=False) -> Union[str, Tuple]:
