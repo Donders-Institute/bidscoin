@@ -2,7 +2,9 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
-## [4.1.0-dev]
+## [dev]
+
+## [4.1.0] - 2023-08-29
 
 ### Added
 - Use SeriesInstanceUID in dicomsort as a fallback
@@ -371,7 +373,8 @@ A first stable release of BIDScoin :-)
 ### To do
 * Add support for non-imaging data
 
-[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.0.0...HEAD
+[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.1.0...HEAD
+[4.1.0]: https://github.com/Donders-Institute/bidscoin/compare/4.0.0...4.1.0
 [4.0.0]: https://github.com/Donders-Institute/bidscoin/compare/3.7.4...4.0.0
 [3.7.4]: https://github.com/Donders-Institute/bidscoin/compare/3.7.3...3.7.4
 [3.7.3]: https://github.com/Donders-Institute/bidscoin/compare/3.7.2...3.7.3
