@@ -17,7 +17,7 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
-            sudo apt-get update && apt-get install python3-pyqt6
+            sudo apt update && apt install python3-pyqt6
             mkdir dcm2niix_install/ && cd dcm2niix_install/
             curl -fLO https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_lnx.zip
             unzip dcm2niix*.zip
