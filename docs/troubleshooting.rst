@@ -11,7 +11,7 @@ This is an `installation <installation.html#dcm2niix-installation>`__ problem an
 
 Could not load the Qt platform plugin "xcb"
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This error message may occur on certain Linux platforms when opening the bidseditor. This is an `installation <installation.html#bidscoin-installation>`__ issue that may occur if you have installed a ``+qt5`` build of BIDScoin (e.g. because your system does not support Qt6). Sometimes this error can be solved by downgrading your PyQt5 library, e.g. by running ``pip install --upgrade pyqt5==5.14`` in your terminal environment. Another solution might be to use your Linux package manager to install PyQt5, e.g. like this: ``apt-get install python3-pyqt5 python3-pyqt5.qtx11extras``
+This error message may occur on certain Linux platforms when opening the bidseditor. This is an `installation <installation.html#bidscoin-installation>`__ issue that may occur if you have installed the ``+qt5`` build of BIDScoin (e.g. because your system does not support Qt6). Sometimes this error can be solved by downgrading your PyQt5 library, e.g. by running ``pip install --upgrade pyqt5==5.14`` in your terminal environment. Another solution might be to use your Linux package manager to install PyQt5, e.g. like this: ``apt install python3-pyqt5 python3-pyqt5.qtx11extras``
 
 ImportError: libEGL.so.1: cannot open shared object file: No such file or directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -19,7 +19,11 @@ This may error message may be reported on Linux systems that do not support Qt6 
 
 .. code-block::
 
-   sudo apt install qt6-base-dev
+   sudo apt install qt6-base
+   sudo apt install qt6-base-dev     # If the above package cannot be located
+   sudo apt install python3-pyqt6    # If the above commands do not solve the issue
+
+An alternative solution may be to install the ``+qt5`` build of BIDScoin (see `installation <installation.html#bidscoin-installation>`__)
 
 My Apptainer/Singularity container fails
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

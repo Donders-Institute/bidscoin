@@ -4,10 +4,10 @@ Stage: builder
 
 %post
     # Install the latest dcm2niix release from the base repository (= typically outdated)
-    # apt-get update && apt-get -y install dcm2niix
+    # apt update && apt -y install dcm2niix
 
     # Install the latest dcm2niix from sources
-    apt-get update && apt-get -y install git build-essential cmake
+    apt update && apt -y install git build-essential cmake
     git clone https://github.com/rordenlab/dcm2niix.git
     cd dcm2niix; mkdir build && cd build
     cmake -DZLIB_IMPLEMENTATION=Cloudflare -DUSE_JPEGLS=ON -DUSE_OPENJPEG=ON ..
@@ -23,7 +23,7 @@ Stage: final
 
     * Debian stable,
     * the latest version of dcm2niix (https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage)
-    * the latest stable release of BIDScoin and its plugins. The general form to run BIDScoin commands is:
+    * the latest stable release (4.1.0+qt5) of BIDScoin and its plugins. The general form to run BIDScoin commands is:
 
         apptainer exec bidscoin.sif <bidscoin_tool> <bidscoin_tool_args>
 
@@ -48,11 +48,11 @@ Stage: final
 
 %post
     # Install curl (sometimes needed by dcm2niix) and pigz (to speed up dcm2niix)
-    apt-get update && apt-get -y --no-install-recommends install pigz curl
+    apt update && apt -y --no-install-recommends install pigz curl
 
     # Install the latest stable BIDScoin release from Python repository
     # NOTE: PyQt5 is installed as Debian package to solve dependencies issues occurring when installed with pip
-    apt-get -y --no-install-recommends install python3-pyqt5 python3-pyqt5.qtx11extras git && apt-get clean
+    apt -y --no-install-recommends install python3-pyqt5 python3-pyqt5.qtx11extras git && apt clean
     pip install --upgrade pip
     pip install bidscoin[all]@git+https://github.com/Donders-Institute/bidscoin@4.1.0+qt5
 
