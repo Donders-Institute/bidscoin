@@ -679,7 +679,7 @@ _PARFILE_CACHE = None
 @lru_cache(maxsize=4096)
 def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
     """
-    Extracts the value from a PAR/XML field
+    Uses nibabel to extract the value from a PAR field (NB: nibabel does not yet support XML)
 
     :param tagname: Name of the PAR/XML field
     :param parfile: The full pathname of the PAR/XML file

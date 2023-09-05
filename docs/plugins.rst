@@ -9,10 +9,10 @@ As shown in the figure below, all interactions of BIDScoin routines with source 
 
 You can use the ``bidscoin`` utility to list, install or uninstall BIDScoin plugins, but the following plugins come pre-installed:
 
-Dcm2niix2bids: a plugin for DICOM and PAR/XML data
+Dcm2niix2bids: a plugin for DICOM and PAR/REC data
 --------------------------------------------------
 
-The 'dcm2niix2bids' plugin is a wrapper around the well-known pydicom, nibabel and (in particular) `dcm2niix <https://github.com/rordenlab/dcm2niix>`__ tools to interact with and convert DICOM and Philips PAR(/REC)/XML source data. Pydicom is used to read DICOM attributes, nibabel is used to read PAR/XML attribute values and dcm2niix is used to convert the DICOM and PAR/XML source data to NIfTI and create BIDS sidecar files. Personal data from the source header (e.g. Age, Sex) is added to the BIDS participants.tsv file.
+The 'dcm2niix2bids' plugin is a wrapper around the well-known pydicom, nibabel and (in particular) `dcm2niix <https://github.com/rordenlab/dcm2niix>`__ tools to interact with and convert DICOM and Philips SPAR/REC source data. Pydicom is used to read DICOM attributes, nibabel is used to read PAR attribute values and dcm2niix is used to convert the DICOM and PAR/REC source data to NIfTI and create BIDS sidecar files. Personal data from the source header (e.g. Age, Sex) is added to the BIDS participants.tsv file.
 
 Spec2nii2bids: a plugin for MR spectroscopy data
 ------------------------------------------------
@@ -188,7 +188,7 @@ As can be seen in the API code snippet below (but also see the default plugins f
 
    def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
        """
-       All the logic to map the Philips PAR/XML fields onto bids labels go into this plugin function. The function is
+       All the logic to map the Philips PAR/REC fields onto bids labels go into this plugin function. The function is
        expecte to update / append new runs to the bidsmap_new data structure. The bidsmap options for this plugin can
        be found in:
 

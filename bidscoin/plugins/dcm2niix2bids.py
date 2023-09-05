@@ -1,7 +1,7 @@
 """The 'dcm2niix2bids' plugin is a wrapper around the well-known pydicom, nibabel and (in particular) dcm2niix
-(https://github.com/rordenlab/dcm2niix) tools to interact with and convert DICOM and Philips PAR(/REC)/XML source data.
-Pydicom is used to read DICOM attributes, nibabel is used to read PAR/XML attribute values and dcm2niix is used to
-convert the DICOM and PAR/XML source data to NIfTI and create BIDS sidecar files. Personal data from the source header
+(https://github.com/rordenlab/dcm2niix) tools to interact with and convert DICOM and Philips PAR/REC source data.
+Pydicom is used to read DICOM attributes, nibabel is used to read PAR attribute values and dcm2niix is used to
+convert the DICOM and PAR source data to NIfTI and create BIDS sidecar files. Personal data from the source header
 (e.g. Age, Sex) is added to the BIDS participants.tsv file."""
 
 import logging
@@ -487,7 +487,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
     scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
-    # Collect personal data from a source header (PAR/XML does not contain personal info)
+    # Collect personal data from a source header (PAR does not contain personal info)
     personals = {}
     if sesid and 'session_id' not in personals:
         personals['session_id'] = sesid

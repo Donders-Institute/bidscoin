@@ -282,7 +282,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                     if not list(outfolder.glob(f"{bidsname}.*nii*")): continue
 
 
-        # Collect personal data from a source header (PAR/XML does not contain personal info)
+        # Collect personal data from a source header
         personals = {}
         if sesid and 'session_id' not in personals:
             personals['session_id'] = sesid

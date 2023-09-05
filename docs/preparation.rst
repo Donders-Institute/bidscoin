@@ -91,9 +91,9 @@ In a flat DICOM layout the ``data`` folder contains all the DICOM files of all t
     |       [..]
     [..]
 
-4. A PAR/REC layout
-^^^^^^^^^^^^^^^^^^^
-All PAR/REC(/XML) files of all the different Series are contained in the ``data`` folder (without subfolders). This layout is how users often export their data from Philips scanners in research settings (optional json sidecar files were added in this example to complement the PAR-files)::
+4. A (S)PAR/REC layout
+^^^^^^^^^^^^^^^^^^^^^^
+All SPAR(XML)/PAR/REC files of all the different Series are contained in the ``data`` folder (without subfolders). This layout is how users often export their data from Philips scanners in research settings (optional json sidecar files were added in this example to complement the (S)PAR-files)::
 
     sourcedata
     |-- sub-001
