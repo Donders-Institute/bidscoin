@@ -446,6 +446,10 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
     :return:        The filename of the first dicom-file in the folder.
     """
 
+    if folder.name.startswith('.'):
+        LOGGER.verbose(f'Ignoring hidden folder: {folder}')
+        return Path()
+
     if (folder/'DICOMDIR').is_file():
         dicomdir = fileset.FileSet(folder/'DICOMDIR')
         files    = [Path(file.path) for file in dicomdir]
@@ -474,6 +478,10 @@ def get_parfiles(folder: Path) -> List[Path]:
     :return:        The filenames of the PAR-files in the folder.
     """
 
+    if folder.name.startswith('.'):
+        LOGGER.verbose(f'Ignoring hidden folder: {folder}')
+        return []
+
     parfiles = []
     for file in sorted(folder.iterdir()):
         if file.stem.startswith('.'):
@@ -491,7 +499,7 @@ def get_datasource(session: Path, plugins: dict, recurse: int=2) -> DataSource:
     datasource = DataSource()
     for item in sorted(session.iterdir()):
         if item.stem.startswith('.'):
-            LOGGER.verbose(f'Ignoring hidden file: {item}')
+            LOGGER.verbose(f'Ignoring hidden datasource: {item}')
             continue
         if item.is_dir() and recurse:
             datasource = get_datasource(item, plugins, recurse-1)
@@ -536,7 +544,10 @@ _DICOMFILE_CACHE = None
 @lru_cache(maxsize=4096)
 def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
     """
-    Robustly extracts a DICOM attribute/tag value from a dictionary or from vendor specific fields
+    Robustly extracts a DICOM attribute/tag value from a dictionary or from vendor specific fields.
+
+    NB: One XA-30 enhanced DICOM hack is made, i.e. if `EchoNumbers` is empty then an attempt is made to
+    read it from the ICE dims (see https://github.com/rordenlab/dcm2niix/blob/master/Siemens/README.md)
 
     :param tagname:     DICOM attribute name (e.g. 'SeriesNumber') or Pydicom-style tag number (e.g. '0x00200011', '(0x20,0x11)', '(0020, 0011)', '(20, 11)', '20,11')
     :param dicomfile:   The full pathname of the dicom-file
@@ -580,6 +591,12 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
                 if not value and value!=0 and 'Modality' not in dicomdata:
                     raise ValueError(f"Missing mandatory DICOM 'Modality' field in: {dicomfile}")
+
+                # XA-30 enhanced DICOM hack: Catch missing EchoNumbers from ice-dims
+                if tagname == 'EchoNumbers' and not value:
+                    ice_dims = get_dicomfield('(0021,1106)', dicomfile)
+                    if ice_dims:
+                        value = ice_dims.split('_')[1]
 
             except OSError as ioerror:
                 LOGGER.warning(f"Cannot read {tagname} from {dicomfile}\n{ioerror}")
@@ -1650,6 +1667,8 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
     bidsdatatypes    = [dtype for dtype in bidsmap.get(datasource.dataformat) if dtype not in unknowndatatypes + ignoredatatypes + ['subject', 'session']]
 
     # Loop through all datatypes and runs; all info goes cleanly into run_ (to avoid formatting problem of the CommentedMap)
+    if 'fmap' in bidsdatatypes:
+        bidsdatatypes.insert(0, bidsdatatypes.pop(bidsdatatypes.index('fmap'))) # Put fmap at the front (to catch inverted polarity scans first
     run_ = get_run_(datasource.path, dataformat=datasource.dataformat, bidsmap=bidsmap)
     for datatype in ignoredatatypes + bidsdatatypes + unknowndatatypes:         # The ordered datatypes in which a matching run is searched for
 
