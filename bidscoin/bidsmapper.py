@@ -15,7 +15,7 @@ if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import bcoin, bids, version
 
-localversion, versionmessage = version(check=True)
+localversion, uptodate, versionmessage = version(check=True)
 
 
 def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, plugins: list, subprefix: str, sesprefix: str, unzip: str, store: bool=False, noeditor: bool=False, force: bool=False, noupdate: bool=False) -> dict:
@@ -152,17 +152,18 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         mainwin = bidseditor.MainWindow(bidsfolder, bidsmap_new, template)
         mainwin.show()
 
-        messagebox = QMessageBox(mainwin)
-        messagebox.setText(f"The bidsmapper has finished scanning {rawfolder}\n\n"
-                           f"Please carefully check all the different BIDS output names "
-                           f"and BIDScoin options and (re)edit them to your needs.\n\n"
-                           f"You can always redo this step later by re-running the "
-                           f"bidsmapper or by just running the bidseditor tool\n\n"
-                           f"{versionmessage}")
-        messagebox.setWindowTitle('About the BIDS-mapping workflow')
-        messagebox.setIconPixmap(QtGui.QPixmap(str(bidseditor.BIDSCOIN_LOGO)).scaled(150, 150, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
-        messagebox.setWindowFlags(messagebox.windowFlags() & ~QtCore.Qt.WindowType.WindowMinMaxButtonsHint)
-        messagebox.show()
+        if not bidsmapfile.is_file() or not uptodate:
+            messagebox = QMessageBox(mainwin)
+            messagebox.setText(f"The bidsmapper has finished scanning {rawfolder}\n\n"
+                               f"Please carefully check all the different BIDS output names "
+                               f"and BIDScoin options and (re)edit them to your needs.\n\n"
+                               f"You can always redo this step later by re-running the "
+                               f"bidsmapper or by just running the bidseditor tool\n\n"
+                               f"{versionmessage}")
+            messagebox.setWindowTitle('About the BIDS-mapping workflow')
+            messagebox.setIconPixmap(QtGui.QPixmap(str(bidseditor.BIDSCOIN_LOGO)).scaled(150, 150, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
+            messagebox.setWindowFlags(messagebox.windowFlags() & ~QtCore.Qt.WindowType.WindowMinMaxButtonsHint)
+            messagebox.show()
 
         app.exec()
 

@@ -837,7 +837,7 @@ class MainWindow(QMainWindow):
     def show_about(self):
         """Shows a pop-up window with the BIDScoin version"""
 
-        _, message = version(check=True)
+        _, _, message = version(check=True)
         # QMessageBox.about(self, 'About', f"BIDS editor {__version__}\n\n{message}")    # Has an ugly / small icon image
         messagebox = QMessageBox(self)
         messagebox.setText(f"\n\nBIDS editor {__version__}\n\n{message}")

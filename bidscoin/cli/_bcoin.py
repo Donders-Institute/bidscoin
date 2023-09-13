@@ -25,7 +25,7 @@ from bidscoin import version, bidsversion, bidsmap_template
 def get_parser() -> argparse.ArgumentParser:
     """Build an argument parser with input arguments for bcoin.py"""
 
-    localversion, versionmessage = version(check=True)
+    localversion, uptodate, versionmessage = version(check=True)
 
     parser = argparse.ArgumentParser(prog='bidscoin',
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
