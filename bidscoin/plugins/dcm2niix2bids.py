@@ -269,9 +269,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             for ext in ('.nii.gz', '.nii', '.json', '.tsv', '.tsv.gz', '.bval', '.bvec'):
                 (outfolder/bidsname).with_suffix(ext).unlink(missing_ok=True)
 
-        # Check if the source files all have the same size
+        # Check if the source files all have approximately the same size (difference < 50kB)
         for file in source.iterdir() if source.is_dir() else []:
-            if file.stat().st_size != sourcefile.stat().st_size and file.suffix == sourcefile.suffix:
+            if abs(file.stat().st_size - sourcefile.stat().st_size) > 1024 * 50 and file.suffix == sourcefile.suffix:
                 LOGGER.warning(f"Not all {file.suffix}-files in '{source}' have the same size. This may be ok but can also be indicative of a truncated acquisition or file corruption(s)")
                 break
 
@@ -427,8 +427,16 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Copy over the source meta-data
         metadata = bids.copymetadata(sourcefile, outfolder/bidsname, options.get('meta', []))
 
-        # Loop over and adapt all the newly produced json sidecar-files and write to the scans.tsv file (NB: assumes every NIfTI-file comes with a json-file)
+        # Loop over all the newly produced json sidecar-files and adapt the data (NB: assumes every NIfTI-file comes with a json-file)
         for jsonfile in sorted(set(jsonfiles)):
+
+            # Remove the bval/bvec files of sbref- and inv-images (produced by dcm2niix but not allowed by the BIDS specifications)
+            if (datasource.datatype=='dwi' and suffix=='sbref') or (datasource.datatype=='fmap' and suffix=='epi'):
+                for ext in ('.bval', '.bvec'):
+                    bfile = jsonfile.with_suffix(ext)
+                    if bfile.is_file():
+                        LOGGER.verbose(f"Removing BIDS-invalid file(s): {bfile}")
+                        bfile.unlink()
 
             # Load the json meta-data
             with jsonfile.open('r') as json_fid:
