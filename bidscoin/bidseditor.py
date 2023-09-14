@@ -14,11 +14,11 @@ from typing import Union
 from pydicom import dcmread
 from pathlib import Path
 from functools import partial
-from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtGui import QAction, QFileSystemModel
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QFileDialog, QDialogButtonBox, QTreeView,
-                             QHBoxLayout, QVBoxLayout, QLabel, QDialog, QMessageBox, QTableWidget,
-                             QTableWidgetItem, QHeaderView, QGroupBox, QTextBrowser, QPushButton, QComboBox)
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileSystemModel, QFileDialog, QDialogButtonBox,
+                             QTreeView, QHBoxLayout, QVBoxLayout, QLabel, QDialog, QMessageBox,
+                             QTableWidget, QTableWidgetItem, QHeaderView, QGroupBox, QTextBrowser,
+                             QPushButton, QComboBox, QAction)
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
@@ -110,8 +110,8 @@ class MainWindow(QMainWindow):
 
         # Set up the tabs, add the tables and put the bidsmap data in them
         tabwidget = self.tabwidget = QtWidgets.QTabWidget()
-        tabwidget.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
-        tabwidget.setTabShape(QtWidgets.QTabWidget.TabShape.Rounded)
+        tabwidget.setTabPosition(QtWidgets.QTabWidget.North)
+        tabwidget.setTabShape(QtWidgets.QTabWidget.Rounded)
 
         self.subses_table       = {}
         self.samples_table      = {}
@@ -127,14 +127,14 @@ class MainWindow(QMainWindow):
 
         # Set up the buttons
         buttonbox = QDialogButtonBox()
-        buttonbox.setStandardButtons(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Reset | QDialogButtonBox.StandardButton.Help)
+        buttonbox.setStandardButtons(QDialogButtonBox.Save | QDialogButtonBox.Reset | QDialogButtonBox.Help)
         buttonbox.helpRequested.connect(self.get_help)
-        buttonbox.button(QDialogButtonBox.StandardButton.Help).setToolTip('Go to the online BIDScoin documentation')
-        buttonbox.button(QDialogButtonBox.StandardButton.Save).setToolTip('Save the bidsmap to disk if you are satisfied with all the BIDS output names')
-        buttonbox.button(QDialogButtonBox.StandardButton.Reset).setToolTip('Reset all the Options and BIDS mappings')
-        buttonbox.button(QDialogButtonBox.StandardButton.Reset).clicked.connect(self.reset)
-        buttonbox.button(QDialogButtonBox.StandardButton.Save).clicked.connect(self.save_bidsmap)
-        validatebutton = buttonbox.addButton('Validate', QDialogButtonBox.ButtonRole.ActionRole)
+        buttonbox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDScoin documentation')
+        buttonbox.button(QDialogButtonBox.Save).setToolTip('Save the bidsmap to disk if you are satisfied with all the BIDS output names')
+        buttonbox.button(QDialogButtonBox.Reset).setToolTip('Reset all the Options and BIDS mappings')
+        buttonbox.button(QDialogButtonBox.Reset).clicked.connect(self.reset)
+        buttonbox.button(QDialogButtonBox.Save).clicked.connect(self.save_bidsmap)
+        validatebutton = buttonbox.addButton('Validate', QDialogButtonBox.ActionRole)
         validatebutton.setIcon(QtGui.QIcon.fromTheme('tools-check-spelling'))
         validatebutton.setToolTip('Test the run-items and bidsname of all normal runs in the study bidsmap (see terminal output)')
         validatebutton.clicked.connect(self.validate_runs)
@@ -150,25 +150,22 @@ class MainWindow(QMainWindow):
 
         # Center the main window to the center point of screen
         if not reset:
-            center   = QtGui.QScreen.availableGeometry(QApplication.primaryScreen()).center()
-            geometry = self.frameGeometry()
-            geometry.moveCenter(center)
-            self.move(geometry.topLeft())
+            self.move(QApplication.desktop().screen().rect().center() - self.rect().center())
 
         # Restore the samples_table stretching after the main window has been sized / current tabindex has been set (otherwise the main window can become too narrow)
         for dataformat in self.dataformats:
             header = self.samples_table[dataformat].horizontalHeader()
-            header.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)
+            header.setSectionResizeMode(1, QHeaderView.Interactive)
 
     def closeEvent(self, event):
         """Handle exit of the main window -> check if data has been saved"""
 
         if not self.datasaved or self.datachanged:
             answer = QMessageBox.question(self, 'Closing the BIDS editor', 'Do you want to save the bidsmap to disk?',
-                                          QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Yes)
-            if answer == QMessageBox.StandardButton.Yes:
+                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
+            if answer == QMessageBox.Yes:
                 self.save_bidsmap()
-            elif answer == QMessageBox.StandardButton.Cancel:
+            elif answer == QMessageBox.Cancel:
                 if event: event.ignore()    # User clicked the 'X'-button or pressed alt-F4 -> drop signal
                 return
             self.datasaved   = True         # Prevent re-entering this if-statement after close() -> closeEvent()
@@ -203,8 +200,8 @@ class MainWindow(QMainWindow):
         if action == delete_run:
             answer = QMessageBox.question(self, f"Remove {dataformat} mapping",
                                           f'Only delete mappings for obsolete data (unless you are an expert user). Do you really want to remove this mapping"?',
-                                          QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Cancel)
-            if answer == QMessageBox.StandardButton.Yes:
+                                          QMessageBox.Yes | QMessageBox.Cancel, QMessageBox.Cancel)
+            if answer == QMessageBox.Yes:
                 LOGGER.warning(f"Expert usage: User has removed run-item {dataformat}[{datatype}]: {provenance}")
                 bids.delete_run(self.output_bidsmap, bids.find_run(self.output_bidsmap, provenance, dataformat, datatype))
                 self.update_subses_samples(self.output_bidsmap, dataformat)
@@ -297,8 +294,8 @@ class MainWindow(QMainWindow):
         subses_table.setColumnCount(2)
         horizontal_header = subses_table.horizontalHeader()
         horizontal_header.setVisible(False)
-        horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        horizontal_header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
         subses_table.cellChanged.connect(self.subsescell2bidsmap)
         self.subses_table[dataformat] = subses_table
 
@@ -322,16 +319,16 @@ class MainWindow(QMainWindow):
         samples_table.setRowCount(num_files)
         samples_table.setHorizontalHeaderLabels(['', f'{dataformat} input', 'BIDS data type', 'BIDS output', 'Action', 'Provenance'])
         samples_table.setSortingEnabled(True)
-        samples_table.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
+        samples_table.sortByColumn(0, QtCore.Qt.AscendingOrder)
         samples_table.setColumnHidden(2, True)
         samples_table.setColumnHidden(5, True)
         samples_table.itemDoubleClicked.connect(self.sample_doubleclicked)
-        samples_table.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        samples_table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         samples_table.customContextMenuRequested.connect(self.show_contextmenu)
         header = samples_table.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)      # Temporarily set it to Stretch to have Qt set the right window width -> set to Interactive in setupUI -> not reset
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.Stretch)                 # Temporarily set it to Stretch to have Qt set the right window width -> set to Interactive in setupUI -> not reset
+        header.setSectionResizeMode(3, QHeaderView.Stretch)
 
         layout = QVBoxLayout()
         layout.addWidget(subses_label)
@@ -358,9 +355,9 @@ class MainWindow(QMainWindow):
         bidscoin_table.setColumnCount(3)                        # columns: [key] [value] [testbutton]
         bidscoin_table.setToolTip(TOOLTIP_BIDSCOIN)
         horizontal_header = bidscoin_table.horizontalHeader()
-        horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        horizontal_header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        horizontal_header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
+        horizontal_header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         horizontal_header.setVisible(False)
         test_button = QPushButton('Test')                       # Add a test-button
         test_button.clicked.connect(self.test_bidscoin)
@@ -386,14 +383,14 @@ class MainWindow(QMainWindow):
         add_button = QPushButton('Add')
         add_button.clicked.connect(self.add_plugin)
         add_button.setToolTip(f'Click to add an installed plugin')
-        layout.addWidget(add_button, alignment=QtCore.Qt.AlignmentFlag.AlignRight)
+        layout.addWidget(add_button, alignment=QtCore.Qt.AlignRight)
 
         # Add an 'Default' button below the tables on the left side
         set_button = QPushButton('Set as default')
         set_button.clicked.connect(self.save_options)
         set_button.setToolTip(f'Click to store these options in your default template bidsmap, i.e. set them as default for all new studies')
         layout.addStretch()
-        layout.addWidget(set_button, alignment=QtCore.Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(set_button, alignment=QtCore.Qt.AlignLeft)
 
         tab = QtWidgets.QWidget()
         tab.setLayout(layout)
@@ -409,16 +406,16 @@ class MainWindow(QMainWindow):
 
         model = self.model = QFileSystemModel()
         model.setRootPath(rootfolder)
-        model.setFilter(QtCore.QDir.Filter.NoDotAndDotDot | QtCore.QDir.Filter.AllDirs | QtCore.QDir.Filter.Files)
+        model.setFilter(QtCore.QDir.NoDotAndDotDot | QtCore.QDir.AllDirs | QtCore.QDir.Files)
         tree = QTreeView()
         tree.setModel(model)
         tree.setRootIndex(model.index(rootfolder))
         tree.setAnimated(False)
         tree.setSortingEnabled(True)
-        tree.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
+        tree.sortByColumn(0, QtCore.Qt.AscendingOrder)
         tree.setExpanded(model.index(str(self.bidsfolder)), True)
-        tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        tree.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        tree.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        tree.header().setSectionResizeMode(0, QHeaderView.Stretch)
         tree.header().setStretchLastSection(False)
         tree.doubleClicked.connect(self.open_inspectwindow)
 
@@ -477,10 +474,10 @@ class MainWindow(QMainWindow):
                 samples_table.setItem(idx, 3, MyWidgetItem(Path(datatype)/(bidsname + '.*')))
                 samples_table.setItem(idx, 5, MyWidgetItem(provenance))                         # Hidden column
 
-                samples_table.item(idx, 0).setFlags(QtCore.Qt.ItemFlag.NoItemFlags)
-                samples_table.item(idx, 1).setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
-                samples_table.item(idx, 2).setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
-                samples_table.item(idx, 3).setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
+                samples_table.item(idx, 0).setFlags(QtCore.Qt.NoItemFlags)
+                samples_table.item(idx, 1).setFlags(QtCore.Qt.ItemIsEnabled)
+                samples_table.item(idx, 2).setFlags(QtCore.Qt.ItemIsEnabled)
+                samples_table.item(idx, 3).setFlags(QtCore.Qt.ItemIsEnabled)
                 samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information')
                 samples_table.item(idx, 1).setStatusTip(str(provenance.parent) + str(Path('/')))
                 samples_table.item(idx, 3).setStatusTip(str(session) + str(Path('/')))
@@ -591,9 +588,9 @@ class MainWindow(QMainWindow):
         plugin_table.setRowCount(max(len(options.keys()) + 1, 2))           # Add an extra row for new key-value pairs
         plugin_table.setColumnCount(3)                                      # columns: [key] [value] [testbutton]
         horizontal_header = plugin_table.horizontalHeader()
-        horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        horizontal_header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        horizontal_header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        horizontal_header.setSectionResizeMode(1, QHeaderView.Stretch)
+        horizontal_header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         horizontal_header.setVisible(False)
         test_button = QPushButton('Test')                                   # Add a test-button
         test_button.clicked.connect(partial(self.test_plugin, plugin))
@@ -665,8 +662,8 @@ class MainWindow(QMainWindow):
 
         # Set-up OK/Cancel buttons
         buttonbox = QDialogButtonBox()
-        buttonbox.setStandardButtons(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        buttonbox.button(QDialogButtonBox.StandardButton.Ok).setToolTip('Adds the selected plugin to the bidsmap options')
+        buttonbox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttonbox.button(QDialogButtonBox.Ok).setToolTip('Adds the selected plugin to the bidsmap options')
 
         # Set up the dialog window and wait till the user has selected a plugin
         layout = QVBoxLayout()
@@ -769,10 +766,10 @@ class MainWindow(QMainWindow):
 
         if not self.datasaved or self.datachanged:
             answer = QMessageBox.question(self, 'Opening a new bidsmap', 'Do you want to save the current bidsmap to disk?',
-                                          QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Yes)
-            if answer == QMessageBox.StandardButton.Yes:
+                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
+            if answer == QMessageBox.Yes:
                 self.save_bidsmap()
-            elif answer == QMessageBox.StandardButton.Cancel:
+            elif answer == QMessageBox.Cancel:
                 return
 
         filename, _ = QFileDialog.getOpenFileName(self, 'Open File', str(self.bidsfolder/'code'/'bidscoin'/'bidsmap.yaml'), 'YAML Files (*.yaml *.yml);;All Files (*)')
@@ -842,7 +839,7 @@ class MainWindow(QMainWindow):
         messagebox = QMessageBox(self)
         messagebox.setText(f"\n\nBIDS editor {__version__}\n\n{message}")
         messagebox.setWindowTitle('About')
-        messagebox.setIconPixmap(QtGui.QPixmap(str(BIDSCOIN_LOGO)).scaled(150, 150, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
+        messagebox.setIconPixmap(QtGui.QPixmap(str(BIDSCOIN_LOGO)).scaled(150, 150, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
         messagebox.show()
 
     @staticmethod
@@ -890,7 +887,7 @@ class EditWindow(QDialog):
 
         # Set up the window
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
-        self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowType.WindowTitleHint & QtCore.Qt.WindowType.WindowMinMaxButtonsHint & QtCore.Qt.WindowType.WindowCloseButtonHint)
+        self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowTitleHint & QtCore.Qt.WindowMinMaxButtonsHint & QtCore.Qt.WindowCloseButtonHint)
         self.setWindowTitle('Edit BIDS mapping')
         self.setWhatsThis(f"BIDScoin mapping of {self.dataformat} properties and attributes to BIDS output data")
 
@@ -921,7 +918,7 @@ class EditWindow(QDialog):
         self.datatype_dropdown.currentIndexChanged.connect(self.datatype_dropdown_change)
         self.datatype_dropdown.setToolTip('The BIDS data type. First make sure this one is correct, then choose the right suffix')
         for n, datatype in enumerate(self.bidsdatatypes + self.unknowndatatypes):
-            self.datatype_dropdown.setItemData(n, bids.get_datatypehelp(datatype), QtCore.Qt.ItemDataRole.ToolTipRole)
+            self.datatype_dropdown.setItemData(n, bids.get_datatypehelp(datatype), QtCore.Qt.ToolTipRole)
 
         # Set up the BIDS table
         self.bids_label = QLabel('Entities')
@@ -935,7 +932,7 @@ class EditWindow(QDialog):
         self.meta_label.setToolTip(f"Key-value pairs that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
         self.meta_table = self.set_table(data_meta, 'meta', minimum=False)
         self.meta_table.setShowGrid(True)
-        self.meta_table.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.meta_table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.meta_table.customContextMenuRequested.connect(self.show_contextmenu)
         self.meta_table.cellChanged.connect(self.metacell2run)
         self.meta_table.setToolTip(f"The key-value pair that will be appended to the (e.g. dcm2niix-produced) json sidecar file")
@@ -944,13 +941,13 @@ class EditWindow(QDialog):
         self.bidsname_label = QLabel('Data filename')
         self.bidsname_label.setToolTip(f"Preview of the BIDS output name for this data type")
         self.bidsname_textbox = QTextBrowser()
-        self.bidsname_textbox.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
-        self.bidsname_textbox.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
+        self.bidsname_textbox.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.bidsname_textbox.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.bidsname_textbox.setMinimumHeight(ROW_HEIGHT + 2)
         self.refresh_bidsname()
 
         # Group the tables in boxes
-        sizepolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+        sizepolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizepolicy.setHorizontalStretch(1)
 
         groupbox1 = QGroupBox(self.dataformat + ' input')
@@ -966,7 +963,7 @@ class EditWindow(QDialog):
         groupbox2.setSizePolicy(sizepolicy)
         layout2 = QVBoxLayout()
         layout2.addWidget(self.datatype_label)
-        layout2.addWidget(self.datatype_dropdown, alignment=QtCore.Qt.AlignmentFlag.AlignLeft)
+        layout2.addWidget(self.datatype_dropdown, alignment=QtCore.Qt.AlignLeft)
         # layout2.addWidget(self.bids_label)
         layout2.addWidget(self.bids_table)
         layout2.addWidget(self.bidsname_label)
@@ -977,7 +974,7 @@ class EditWindow(QDialog):
 
         # Add a box1 -> box2 arrow
         arrow = QLabel()
-        arrow.setPixmap(QtGui.QPixmap(str(RIGHTARROW)).scaled(30, 30, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
+        arrow.setPixmap(QtGui.QPixmap(str(RIGHTARROW)).scaled(30, 30, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
 
         # Add the boxes to the layout
         layout_tables = QHBoxLayout()
@@ -987,19 +984,19 @@ class EditWindow(QDialog):
 
         # Set-up buttons
         buttonbox    = QDialogButtonBox()
-        exportbutton = buttonbox.addButton('Export', QDialogButtonBox.ButtonRole.ActionRole)
+        exportbutton = buttonbox.addButton('Export', QDialogButtonBox.ActionRole)
         exportbutton.setIcon(QtGui.QIcon.fromTheme('document-save'))
         exportbutton.setToolTip('Export this run item to an existing (template) bidsmap')
         exportbutton.clicked.connect(self.export_run)
-        buttonbox.setStandardButtons(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Reset | QDialogButtonBox.StandardButton.Help)
-        buttonbox.button(QDialogButtonBox.StandardButton.Reset).setToolTip('Reset the edits you made')
-        buttonbox.button(QDialogButtonBox.StandardButton.Ok).setToolTip('Apply the edits you made and close this window')
-        buttonbox.button(QDialogButtonBox.StandardButton.Cancel).setToolTip('Discard the edits you made and close this window')
-        buttonbox.button(QDialogButtonBox.StandardButton.Help).setToolTip('Go to the online BIDS specification for more info')
+        buttonbox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Reset | QDialogButtonBox.Help)
+        buttonbox.button(QDialogButtonBox.Reset).setToolTip('Reset the edits you made')
+        buttonbox.button(QDialogButtonBox.Ok).setToolTip('Apply the edits you made and close this window')
+        buttonbox.button(QDialogButtonBox.Cancel).setToolTip('Discard the edits you made and close this window')
+        buttonbox.button(QDialogButtonBox.Help).setToolTip('Go to the online BIDS specification for more info')
         buttonbox.accepted.connect(self.accept_run)
         buttonbox.rejected.connect(partial(self.reject, False))
         buttonbox.helpRequested.connect(self.get_help)
-        buttonbox.button(QDialogButtonBox.StandardButton.Reset).clicked.connect(self.reset)
+        buttonbox.button(QDialogButtonBox.Reset).clicked.connect(self.reset)
 
         # Set up the main layout
         layout_main = QVBoxLayout(self)
@@ -1012,15 +1009,15 @@ class EditWindow(QDialog):
         if confirm and re.sub('<(?!.*<).*? object at .*?>','',str(self.target_run)) != re.sub('<(?!.*<).*? object at .*?>','',str(self.source_run)):    # Ignore the memory address of the datasource object
             self.raise_()
             answer = QMessageBox.question(self, 'Edit BIDS mapping', 'Closing window, do you want to save the changes you made?',
-                                          QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Yes)
-            if answer == QMessageBox.StandardButton.Yes:
+                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
+            if answer == QMessageBox.Yes:
                 self.accept_run()
                 return
-            if answer == QMessageBox.StandardButton.No:
+            if answer == QMessageBox.No:
                 self.done(2)
                 LOGGER.verbose(f'User has discarded the edit')
                 return
-            if answer == QMessageBox.StandardButton.Cancel:
+            if answer == QMessageBox.Cancel:
                 return
 
         LOGGER.verbose(f'User has canceled the edit')
@@ -1154,8 +1151,8 @@ class EditWindow(QDialog):
         table.setObjectName(name)                       # NB: Serves to identify the tables in fill_table()
         table.setHorizontalHeaderLabels(('key', 'value'))
         horizontal_header = table.horizontalHeader()
-        horizontal_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        horizontal_header.setSectionResizeMode(nrcolumns-1, QHeaderView.ResizeMode.Stretch)
+        horizontal_header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        horizontal_header.setSectionResizeMode(nrcolumns-1, QHeaderView.Stretch)
         horizontal_header.setVisible(False)
 
         self.fill_table(table, data)
@@ -1184,7 +1181,7 @@ class EditWindow(QDialog):
                 suffix_dropdown.currentIndexChanged.connect(self.suffix_dropdown_change)
                 suffix_dropdown.setToolTip('The suffix that sets the different run types apart. First make sure the "Data type" dropdown-menu is set correctly before chosing the right suffix here')
                 for n, suffix in enumerate(suffixes):
-                    suffix_dropdown.setItemData(n, bids.get_suffixhelp(suffix, self.target_datatype), QtCore.Qt.ItemDataRole.ToolTipRole)
+                    suffix_dropdown.setItemData(n, bids.get_suffixhelp(suffix, self.target_datatype), QtCore.Qt.ToolTipRole)
                 table.setCellWidget(i, 1, self.spacedwidget(suffix_dropdown))
                 continue
             for j, item in enumerate(row):
@@ -1229,8 +1226,8 @@ class EditWindow(QDialog):
             if key and value != oldvalue:
                 answer = QMessageBox.question(self, f"Edit {self.dataformat} properties",
                                               f'It is discouraged to change {self.dataformat} property values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
-                                              QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
-                if answer == QMessageBox.StandardButton.Yes:
+                                              QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if answer == QMessageBox.Yes:
                     LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                     self.target_run['properties'][key] = value
                 else:
@@ -1253,8 +1250,8 @@ class EditWindow(QDialog):
             if key and value!=oldvalue:
                 answer = QMessageBox.question(self, f"Edit {self.dataformat} attributes",
                                               f'It is discouraged to change {self.dataformat} attribute values unless you are an expert user. Do you really want to change "{oldvalue}" to "{value}"?',
-                                              QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
-                if answer == QMessageBox.StandardButton.Yes:
+                                              QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if answer == QMessageBox.Yes:
                     LOGGER.warning(f"Expert usage: User has set {self.dataformat}['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                     self.target_run['attributes'][key] = value
                 else:
@@ -1288,8 +1285,8 @@ class EditWindow(QDialog):
                 if key == 'run' and value and '<<' in oldvalue and '>>' in oldvalue and not ('<<' in value and '>>' in value):
                     answer = QMessageBox.question(self, f"Edit bids entities",
                                                   f'It is discouraged to remove the <<dynamic>> run-index. Do you really want to change "{oldvalue}" to "{value}"?',
-                                                  QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
-                    if answer == QMessageBox.StandardButton.Yes:
+                                                  QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                    if answer == QMessageBox.Yes:
                         LOGGER.warning(f"Expert usage: User has set bids['{key}'] from '{oldvalue}' to '{value}' for {self.target_run['provenance']}")
                     else:
                         value = oldvalue
@@ -1475,8 +1472,8 @@ class EditWindow(QDialog):
             message = f'The "B0FieldIdentifier/IntendedFor" meta-data is left empty for {bidsname} (not recommended)'
         if message:
             answer = QMessageBox.question(self, 'Edit BIDS mapping', f'WARNING:\n{message}\n\nDo you want to go back and edit the run?',
-                                          QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
-            if answer == QMessageBox.StandardButton.Yes: return
+                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            if answer == QMessageBox.Yes: return
             LOGGER.warning(message)
 
         LOGGER.verbose(f'User has approved the edit')
@@ -1567,21 +1564,21 @@ class InspectWindow(QDialog):
 
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
         self.setWindowTitle(str(filename))
-        self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowType.WindowContextHelpButtonHint & QtCore.Qt.WindowType.WindowMinMaxButtonsHint & QtCore.Qt.WindowType.WindowCloseButtonHint)
+        self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowContextHelpButtonHint & QtCore.Qt.WindowMinMaxButtonsHint & QtCore.Qt.WindowCloseButtonHint)
 
         layout = QVBoxLayout(self)
 
         textbrowser = QTextBrowser(self)
         textbrowser.setFont(QtGui.QFont("Courier New"))
         textbrowser.insertPlainText(text)
-        textbrowser.setLineWrapMode(QtWidgets.QTextEdit.LineWrapMode.NoWrap)
+        textbrowser.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
         textbrowser.setWhatsThis(f"This window displays all available source attributes")
         self.scrollbar = textbrowser.verticalScrollBar()        # For setting the slider to the top (can only be done after self.show()
         layout.addWidget(textbrowser)
 
         buttonbox = QDialogButtonBox(self)
-        buttonbox.setStandardButtons(QDialogButtonBox.StandardButton.Ok)
-        buttonbox.button(QDialogButtonBox.StandardButton.Ok).setToolTip('Close this window')
+        buttonbox.setStandardButtons(QDialogButtonBox.Ok)
+        buttonbox.button(QDialogButtonBox.Ok).setToolTip('Close this window')
         buttonbox.accepted.connect(self.close)
         layout.addWidget(buttonbox)
 
@@ -1602,7 +1599,7 @@ class MyQTableWidget(QTableWidget):
         self.verticalHeader().setVisible(False)
         self.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
         self.setMinimumHeight(2 * (ROW_HEIGHT + 8))
-        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
 
         self.minimizeheight(minimum)
 
@@ -1612,9 +1609,9 @@ class MyQTableWidget(QTableWidget):
         self.minimum = minimum
 
         if minimum:
-            self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
+            self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         else:
-            self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+            self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
 
 class MyWidgetItem(QTableWidgetItem):
@@ -1640,9 +1637,9 @@ class MyWidgetItem(QTableWidgetItem):
         self.iseditable = iseditable
 
         if iseditable:
-            self.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEditable)
+            self.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
         else:
-            self.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
+            self.setFlags(QtCore.Qt.ItemIsEnabled)
             self.setForeground(QtGui.QColor('gray'))
 
 
