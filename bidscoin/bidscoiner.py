@@ -282,7 +282,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
                     # Run the bidscoiner plugins
                     for module in plugins:
-                        LOGGER.verbose(f"Executing plugin: {Path(module.__file__).name}")
+                        LOGGER.verbose(f"Executing plugin: {Path(module.__file__).stem}")
+                        trackusage(Path(module.__file__).stem)
                         personals = module.bidscoiner_plugin(sesfolder, bidsmap, bidssession)
 
                         # Add a subject row to the participants table (if there is any data)
