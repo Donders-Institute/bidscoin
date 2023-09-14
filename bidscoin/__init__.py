@@ -75,7 +75,7 @@ def version(check: bool=False) -> Union[str, Tuple]:
         except Exception as pypierror:
             print(pypierror)
             return __version__, None, '(Could not check https://pypi.org/pypi/bidscoin for new BIDScoin versions)'
-        if __version__ != pypiversion:
+        if __version__.split('+')[0] != pypiversion:
             return __version__, False, f"NB: Your BIDScoin version is NOT up-to-date: {__version__} -> {pypiversion}"
         else:
             return __version__, True, 'Your BIDScoin version is up-to-date :-)'
