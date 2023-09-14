@@ -508,7 +508,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
     if testgui:
         LOGGER.info('Testing the PyQt GUI setup:')
         try:
-            from PyQt6.QtWidgets import QApplication, QPushButton
+            from PyQt5.QtWidgets import QApplication, QPushButton
             app = QApplication(sys.argv)
             window = QPushButton('Minimal GUI test: OK')
             window.show()
