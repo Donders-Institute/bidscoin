@@ -20,4 +20,4 @@ COPY --from=builder /usr/local/bin/dcm2niix /usr/local/bin/dcm2niix
 ENV PIP_NO_CACHE_DIR=off
 RUN apt update && apt -y --no-install-recommends install pigz curl python3-pyqt5 python3-pyqt5.qtx11extras git && apt clean; \
     pip install --upgrade pip; \
-    pip install bidscoin[all]@git+https://github.com/Donders-Institute/bidscoin@4.1.0+qt5
+    pip install bidscoin[all]@git+https://github.com/Donders-Institute/bidscoin@v4.1.1+qt5

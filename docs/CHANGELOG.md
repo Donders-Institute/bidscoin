@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
+## [4.1.1] - 2023-09-13
+
+### Changed
+- Bugfixes to support (XA30) enhanced DICOM
+- Prioritize fmap data discovery
+- Remove invalid bval/bvec files
+- Reduce filesize warnings
+- Skip all hidden folders and files
+
 ## [4.1.0] - 2023-08-29
 
 ### Added
@@ -373,7 +382,8 @@ A first stable release of BIDScoin :-)
 ### To do
 * Add support for non-imaging data
 
-[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.1.0...HEAD
+[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.1.1...HEAD
+[4.1.1]: https://github.com/Donders-Institute/bidscoin/compare/4.1.0...4.1.1
 [4.1.0]: https://github.com/Donders-Institute/bidscoin/compare/4.0.0...4.1.0
 [4.0.0]: https://github.com/Donders-Institute/bidscoin/compare/3.7.4...4.0.0
 [3.7.4]: https://github.com/Donders-Institute/bidscoin/compare/3.7.3...3.7.4

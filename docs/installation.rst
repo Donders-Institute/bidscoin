@@ -35,7 +35,7 @@ If you are installing BIDScoin on an older system and you are getting Qt6 errors
 
 .. code-block:: console
 
-   $ pip install bidscoin[all]@git+https://github.com/Donders-Institute/bidscoin@4.1.0+qt5
+   $ pip install bidscoin[all]@git+https://github.com/Donders-Institute/bidscoin@v4.1.1+qt5
 
 Updating BIDScoin
 ^^^^^^^^^^^^^^^^^
