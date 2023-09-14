@@ -22,7 +22,7 @@ Options:
 # General options and plugins
 # --------------------------------------------------------------------------------
   bidscoin:
-    version: 4.1.1+qt5                  # BIDScoin version (should correspond with the version in pyproject.toml)
+    version: 4.1.1                  # BIDScoin version (should correspond with the version in pyproject.toml)
     bidsignore: mrs/;extra_data/;sub-*_ct.*    # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
     subprefix: sub-                 # The subject prefix of the source data
     sesprefix: ses-                 # The session prefix of the source data
