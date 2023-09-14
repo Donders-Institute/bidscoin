@@ -31,7 +31,7 @@ If you do not have git (or any other version control system) installed you can `
 
    $ pip install ./bidscoin
 
-If you are installing BIDScoin on an older system and you are getting Qt6 errors, you can try to install a ``+qt5`` build, e.g. for version 4.1.0:
+If you are installing BIDScoin on an older system and you are getting Qt6 errors, you can try to install a ``+qt5`` build, e.g. for version 4.1.1:
 
 .. code-block:: console
 
