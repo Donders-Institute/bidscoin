@@ -428,8 +428,8 @@ def test_increment_runindex_run1_run2_exists(tmp_path):
         (outfolder/'sub-01_run-2_T1w').with_suffix(suffix).touch()
 
     # Test run-index is <<>>, so the run-index is incremented
-    bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w', {'bids': {'run': '<<>>'}})
-    assert bidsname == 'sub-01_run-3_T1w'
+    bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w.nii.gz', {'bids': {'run': '<<>>'}})
+    assert bidsname == 'sub-01_run-3_T1w.nii.gz'
 
     # Test run-index is <<1>>, so the run-index is incremented
     bidsname = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '<<1>>'}})
@@ -439,8 +439,8 @@ def test_increment_runindex_run1_run2_exists(tmp_path):
     bidsname  = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '<<AttrKey>>'}})
     assert bidsname == 'sub-01_run-1_T1w'
 
-    # Test run-index is 1, so the run-index is untouched
-    bidsname  = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '1'}})
+    # Test run-index is 2, so the run-index is untouched
+    bidsname  = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '2'}})
     assert bidsname == 'sub-01_run-1_T1w'
 
 
