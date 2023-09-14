@@ -20,7 +20,7 @@ except ModuleNotFoundError:
 # -- Project information -----------------------------------------------------
 
 project   = 'BIDScoin'
-copyright = '2023, Marcel Zwiers'
+copyright = '2018-2023, Marcel Zwiers'
 author    = 'Marcel Zwiers'
 
 # The full version, including alpha/beta/rc tags from file

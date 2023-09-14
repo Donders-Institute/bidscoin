@@ -4,14 +4,16 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
-## [4.1.1] - 2023-09-13
+## [4.1.1] - 2023-09-14
 
 ### Changed
 - Bugfixes to support (XA30) enhanced DICOM
+- Bugfix to catch multi-echo series with dynamic runindex <<>>
 - Prioritize fmap data discovery
 - Remove invalid bval/bvec files
 - Reduce filesize warnings
 - Skip all hidden folders and files
+- Tutorial update
 
 ## [4.1.0] - 2023-08-29
 
