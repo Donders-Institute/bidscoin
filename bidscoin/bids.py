@@ -1918,6 +1918,11 @@ def increment_runindex(outfolder: Path, bidsname: str, run: dict, scans_table: D
     if not (runval.startswith('<<') and runval.endswith('>>') and (runval.replace('<','').replace('>','').isdecimal() or runval == '<<>>')):
         return bidsname
 
+    # Catch file extensions
+    suffixes = ''
+    if '.' in bidsname:
+        bidsname, suffixes = bidsname.split('.', 1)
+
     # Catch run-less bidsnames from <<>> dynamic run-values
     run2_bidsname = insert_bidskeyval(bidsname, 'run', '2', False)
     if '_run-' not in bidsname and list(outfolder.glob(f"{run2_bidsname}.*")):
@@ -1945,7 +1950,7 @@ def increment_runindex(outfolder: Path, bidsname: str, run: dict, scans_table: D
                 scans_table.rename(index={f"{outfolder.name}/{old_bidsname}{ext}":
                                           f"{outfolder.name}/{new_bidsname}{ext}"}, inplace=True)   # NB: '/' as_posix
 
-    return bidsname
+    return f"{bidsname}.{suffixes}" if suffixes else bidsname
 
 
 def copymetadata(metasource: Path, metatarget: Path, extensions: list) -> dict:
