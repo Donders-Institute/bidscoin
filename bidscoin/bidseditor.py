@@ -22,7 +22,7 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QFileDialog, QDialogButt
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import bcoin, bids, bidsversion, version, bidsmap_template, __version__
+from bidscoin import bcoin, bids, bidsversion, check_version, bidsmap_template, __version__
 
 
 ROW_HEIGHT       = 22
@@ -837,7 +837,7 @@ class MainWindow(QMainWindow):
     def show_about(self):
         """Shows a pop-up window with the BIDScoin version"""
 
-        _, _, message = version(check=True)
+        _, _, message = check_version()
         # QMessageBox.about(self, 'About', f"BIDS editor {__version__}\n\n{message}")    # Has an ugly / small icon image
         messagebox = QMessageBox(self)
         messagebox.setText(f"\n\nBIDS editor {__version__}\n\n{message}")

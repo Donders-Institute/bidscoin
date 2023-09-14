@@ -59,28 +59,24 @@ except Exception:
         __version__ = tomllib.load(fid)['project']['version']
 
 
-def version(check: bool=False) -> Union[str, Tuple]:
+def check_version() -> Tuple[str, Union[bool, None], str]:
     """
-    Reads the BIDSCOIN version from the local metadata and from the remote pypi repository
+    Compares the BIDSCOIN version from the local metadata to the remote pypi repository
 
-    :param check:   Check if the local version is up-to-date with the latest pypi version
-    :return:        The version number or (version number, checking message) if check=True
+    :return:    A `(pypi version number, up-to-date-boolean, checking message)` tuple
     """
 
     # Check pypi for the latest version number
-    if check:
-        try:
-            stream      = urllib.request.urlopen('https://pypi.org/pypi/bidscoin/json').read()
-            pypiversion = json.loads(stream)['info']['version']
-        except Exception as pypierror:
-            print(pypierror)
-            return __version__, None, '(Could not check https://pypi.org/pypi/bidscoin for new BIDScoin versions)'
-        if __version__ != pypiversion:
-            return __version__, False, f"NB: Your BIDScoin version is NOT up-to-date: {__version__} -> {pypiversion}"
-        else:
-            return __version__, True, 'Your BIDScoin version is up-to-date :-)'
-
-    return __version__
+    try:
+        stream      = urllib.request.urlopen('https://pypi.org/pypi/bidscoin/json').read()
+        pypiversion = json.loads(stream)['info']['version']
+    except Exception as pypierror:
+        print(pypierror)
+        return '', None, '(Could not check https://pypi.org/pypi/bidscoin for new BIDScoin versions)'
+    if __version__.split('+')[0] != pypiversion:
+        return pypiversion, False, f"NB: Your BIDScoin version is NOT up-to-date: {__version__} -> {pypiversion}"
+    else:
+        return pypiversion, True, 'Your BIDScoin version is up-to-date :-)'
 
 
 def bidsversion() -> str:

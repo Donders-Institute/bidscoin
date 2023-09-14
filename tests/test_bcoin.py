@@ -11,9 +11,11 @@ assert bidscoin.pluginfolder.is_dir()
 assert bidscoin.bidsmap_template.is_file()
 
 
-def test_version():
-    assert isinstance(bidscoin.version(False), str)
-    assert isinstance(bidscoin.version(True), tuple)
+def test_check_version():
+    version, uptodate, message = bidscoin.check_version()
+    assert isinstance(version, str)
+    assert isinstance(uptodate, bool) or version is None
+    assert isinstance(message, str)
 
 
 def test_bidsversion():

@@ -13,9 +13,9 @@ from pathlib import Path
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import bcoin, bids, version
+from bidscoin import bcoin, bids, check_version, __version__
 
-localversion, uptodate, versionmessage = version(check=True)
+_, uptodate, versionmessage = check_version()
 
 
 def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: str, plugins: list, subprefix: str, sesprefix: str, unzip: str, store: bool=False, noeditor: bool=False, force: bool=False, noupdate: bool=False) -> dict:
@@ -147,7 +147,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         except ImportError:
             import bidseditor       # This should work if bidscoin was not pip-installed
         app = QApplication(sys.argv)
-        app.setApplicationName(f"{bidsmapfile} - BIDS editor {localversion}")
+        app.setApplicationName(f"{bidsmapfile} - BIDS editor {__version__}")
 
         mainwin = bidseditor.MainWindow(bidsfolder, bidsmap_new, template)
         mainwin.show()
