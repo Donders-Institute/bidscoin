@@ -451,6 +451,15 @@ DICOM:
       <<: *func_dicoment_func
       suffix: sbref
     meta: *func_meta
+  - provenance:
+    attributes:
+      <<: *func_dicomattr
+      ImageType: .*'FMRI'.*             # XA-30 Enhanced DICOM
+      SeriesDescription: (?i).*SBREF.*
+    bids:
+      <<: *func_dicoment_func
+      suffix: sbref
+    meta: *func_meta
   - provenance:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
     attributes:
       <<: *func_dicomattr
@@ -477,6 +486,12 @@ DICOM:
     attributes:
       <<: *func_dicomattr
       ProtocolName: (?i).*(f.?MRI|task|BOLD|func|rest|RSN|CMRR.*_TR).*
+    bids: *func_dicoment_func
+    meta: *func_meta
+  - provenance:
+    attributes:
+      <<: *func_dicomattr
+      ImageType: .*'FMRI'.*             # XA-30 Enhanced DICOM
     bids: *func_dicoment_func
     meta: *func_meta
   - provenance:
