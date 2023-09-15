@@ -430,17 +430,18 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Loop over all the newly produced json sidecar-files and adapt the data (NB: assumes every NIfTI-file comes with a json-file)
         for jsonfile in sorted(set(jsonfiles)):
 
+            # Load the json meta-data
+            with jsonfile.open('r') as json_fid:
+                jsondata = json.load(json_fid)
+
             # Remove the bval/bvec files of sbref- and inv-images (produced by dcm2niix but not allowed by the BIDS specifications)
             if (datasource.datatype=='dwi' and suffix=='sbref') or (datasource.datatype=='fmap' and suffix=='epi'):
                 for ext in ('.bval', '.bvec'):
                     bfile = jsonfile.with_suffix(ext)
                     if bfile.is_file():
                         LOGGER.verbose(f"Removing BIDS-invalid file(s): {bfile}")
+                        jsondata[ext[1:]] = pd.read_csv(bfile, header=None).values.tolist()
                         bfile.unlink()
-
-            # Load the json meta-data
-            with jsonfile.open('r') as json_fid:
-                jsondata = json.load(json_fid)
 
             # Add all the source meta data to the meta-data
             for metakey, metaval in metadata.items():
