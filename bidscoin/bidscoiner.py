@@ -15,7 +15,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import bcoin, bids, bidsversion, __version__
+from bidscoin import bcoin, bids, lsdirs, bidsversion, __version__
 
 
 def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=False, bidsmapfile: str='bidsmap.yaml') -> None:
@@ -125,7 +125,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     subprefix = bidsmap['Options']['bidscoin']['subprefix'].replace('*','')
     sesprefix = bidsmap['Options']['bidscoin']['sesprefix'].replace('*','')
     if not subjects:
-        subjects = bcoin.lsdirs(rawfolder, (subprefix if subprefix!='*' else '') + '*')
+        subjects = lsdirs(rawfolder, (subprefix if subprefix!='*' else '') + '*')
         if not subjects:
             LOGGER.warning(f"No subjects found in: {rawfolder/subprefix}*")
     else:
@@ -140,7 +140,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                 LOGGER.error(f"The '{subject}' subject folder does not exist")
                 continue
 
-            sessions = bcoin.lsdirs(subject, (sesprefix if sesprefix!='*' else '') + '*')
+            sessions = lsdirs(subject, (sesprefix if sesprefix!='*' else '') + '*')
             if not sessions or (subject/'DICOMDIR').is_file():
                 sessions = [subject]
             for session in sessions:
@@ -161,7 +161,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     if not force and bidssession.is_dir():
                         datatypes = []
                         for dataformat in dataformats:
-                            for datatype in bcoin.lsdirs(bidssession):                               # See what datatypes we already have in the bids session-folder
+                            for datatype in lsdirs(bidssession):                               # See what datatypes we already have in the bids session-folder
                                 if list(datatype.iterdir()) and bidsmap[dataformat].get(datatype.name): # See if we are going to add data for this datatype
                                     datatypes.append(datatype.name)
                         if datatypes:

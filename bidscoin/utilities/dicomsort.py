@@ -11,7 +11,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids
+from bidscoin import bcoin, bids, lsdirs
 
 LOGGER = logging.getLogger(__name__)
 
@@ -185,9 +185,9 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
     # Do a recursive call if a sub- or ses-prefix is given
     elif subprefix or sesprefix:
         LOGGER.info(f"Searching for subject/session folders in: {sourcefolder}")
-        for subjectfolder in bcoin.lsdirs(sourcefolder, subprefix + '*'):
+        for subjectfolder in lsdirs(sourcefolder, subprefix + '*'):
             if sesprefix:
-                sessionfolders = bcoin.lsdirs(subjectfolder, sesprefix + '*')
+                sessionfolders = lsdirs(subjectfolder, sesprefix + '*')
             else:
                 sessionfolders = [subjectfolder]
             for sessionfolder in sessionfolders:

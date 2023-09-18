@@ -17,7 +17,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids
+from bidscoin import bcoin, bids, lsdirs
 
 
 def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
@@ -51,7 +51,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
 
     # Get the list of subjects
     if not subjects:
-        subjects = bcoin.lsdirs(bidsdir, 'sub-*')
+        subjects = lsdirs(bidsdir, 'sub-*')
         if not subjects:
             LOGGER.warning(f"No subjects found in: {bidsdir/'sub-*'}")
     else:
@@ -76,7 +76,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
         for n, subject in enumerate(subjects, 1):
 
             subid    = subject.name
-            sessions = bcoin.lsdirs(subject, 'ses-*')
+            sessions = lsdirs(subject, 'ses-*')
             if not sessions:
                 sessions = [subject]
             for session in sessions:
@@ -128,7 +128,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
         for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
             subid    = subject.name
-            sessions = bcoin.lsdirs(subject, 'ses-*')
+            sessions = lsdirs(subject, 'ses-*')
             if not sessions:
                 sessions = [subject]
             for session in sessions:

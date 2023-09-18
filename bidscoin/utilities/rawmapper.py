@@ -8,7 +8,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids
+from bidscoin import lsdirs, bids
 
 
 def rawmapper(rawfolder, outfolder: str='', sessions: tuple=(), rename: bool=False, force: bool=False, dicomfield: tuple=('PatientComments',), wildcard: str='*', subprefix: str='sub-', sesprefix: str='ses-', dryrun: bool=False) -> None:
@@ -70,7 +70,7 @@ def rawmapper(rawfolder, outfolder: str='', sessions: tuple=(), rename: bool=Fal
         sesid      = datasource.dynamicvalue(f"<filepath:/{datasource.resubprefix()}.*?/{datasource.resesprefix()}(.*?)/>", cleanup=False) if sesprefix else ''
 
         # Parse the new subject and session identifiers from the dicomfield
-        series = bcoin.lsdirs(session, wildcard)
+        series = lsdirs(session, wildcard)
         if not series:
             series    = Path()
             dicomfile = bids.get_dicomfile(session)     # Try and see if there is a DICOM file in the root of the session folder

@@ -13,7 +13,7 @@ import shutil
 from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
-from bidscoin import bcoin, bids
+from bidscoin import bcoin, bids, lsdirs
 from bidscoin.utilities import physio
 try:
     from nibabel.testing import data_path
@@ -120,7 +120,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     # Collect the different DICOM/PAR source files for all runs in the session
     sourcefiles = []
     if dataformat == 'DICOM':
-        for sourcedir in bcoin.lsdirs(session, '**/*'):
+        for sourcedir in lsdirs(session, '**/*'):
             for n in range(1):      # Option: Use range(2) to scan two files and catch e.g. magnitude1/2 fieldmap files that are stored in one Series folder (but bidscoiner sees only the first file anyhow and it makes bidsmapper 2x slower :-()
                 sourcefile = bids.get_dicomfile(sourcedir, n)
                 if sourcefile.name and is_sourcefile(sourcefile):
@@ -198,7 +198,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     manufacturer = 'UNKNOWN'
     sources      = []
     if dataformat == 'DICOM':
-        sources      = bcoin.lsdirs(session, '**/*')
+        sources      = lsdirs(session, '**/*')
         manufacturer = datasource.attributes('Manufacturer')
     elif dataformat == 'PAR':
         sources      = bids.get_parfiles(session)

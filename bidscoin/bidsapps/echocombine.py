@@ -12,7 +12,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids
+from bidscoin import bcoin, bids, lsdirs
 
 unknowndatatype = 'extra_data'
 
@@ -44,7 +44,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
 
     # Get the list of subjects
     if not subjects:
-        subjects = bcoin.lsdirs(bidsdir, 'sub-*')
+        subjects = lsdirs(bidsdir, 'sub-*')
         if not subjects:
             LOGGER.warning(f"No subjects found in: {bidsdir/'sub-*'}")
     else:
@@ -56,7 +56,7 @@ def echocombine(bidsdir: str, pattern: str, subjects: list, output: str, algorit
         for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
             subid    = subject.name
-            sessions = bcoin.lsdirs(subject, 'ses-*')
+            sessions = lsdirs(subject, 'ses-*')
             if not sessions:
                 sessions = [subject]
             for session in sessions:

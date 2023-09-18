@@ -13,7 +13,7 @@ from pathlib import Path
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import bcoin, bids, check_version, __version__
+from bidscoin import bcoin, bids, lsdirs, check_version, __version__
 
 _, uptodate, versionmessage = check_version()
 
@@ -103,13 +103,13 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         return {}
 
     # Loop over all subjects and sessions and built up the bidsmap entries
-    subjects = bcoin.lsdirs(rawfolder, ('' if subprefix=='*' else subprefix) + '*')
+    subjects = lsdirs(rawfolder, ('' if subprefix=='*' else subprefix) + '*')
     if not subjects:
         LOGGER.warning(f'No subjects found in: {rawfolder/subprefix}*')
     with logging_redirect_tqdm():
         for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
 
-            sessions = bcoin.lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
+            sessions = lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
             if not sessions or (subject/'DICOMDIR').is_file():
                 sessions = [subject]
             for session in sessions:

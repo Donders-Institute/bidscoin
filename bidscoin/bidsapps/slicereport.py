@@ -12,7 +12,7 @@ from pathlib import Path
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids, bidsversion, __version__
+from bidscoin import bcoin, bids, lsdirs, bidsversion, __version__
 
 html_head = """<!DOCTYPE html>
 <html lang="en">
@@ -159,7 +159,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
 
     # Get the list of subjects
     if not subjects:
-        subjects = bcoin.lsdirs(bidsdir, 'sub-*')
+        subjects = lsdirs(bidsdir, 'sub-*')
         if not subjects:
             print(f"No subjects found in: {bidsdir/'sub-*'}"); return
     else:
@@ -185,7 +185,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
 
     # Loop over the subject/session-directories
     for subject in subjects:
-        sessions = bcoin.lsdirs(subject, 'ses-*')
+        sessions = lsdirs(subject, 'ses-*')
         if not sessions:
             sessions = [subject]
         for session in sessions:

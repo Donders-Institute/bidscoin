@@ -27,7 +27,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import bcoin, schemafolder, heuristicsfolder, bidsmap_template, __version__
+from bidscoin import bcoin, schemafolder, heuristicsfolder, bidsmap_template, is_hidden, lsdirs
 from bidscoin.utilities import dicomsort
 from ruamel.yaml import YAML
 yaml = YAML()
@@ -326,7 +326,7 @@ def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> Tuple[L
     tarzipfiles = list(sourcefolder.glob(wildcard)) if wildcard else []
 
     # See if we have a flat unsorted (DICOM) data organization, i.e. no directories, but DICOM-files
-    flatDICOM = not bcoin.lsdirs(sourcefolder) and get_dicomfile(sourcefolder).is_file()
+    flatDICOM = not lsdirs(sourcefolder) and get_dicomfile(sourcefolder).is_file()
 
     # Check if we are going to do unpacking and/or sorting
     if tarzipfiles or flatDICOM or (sourcefolder/'DICOMDIR').is_file():
@@ -385,8 +385,6 @@ def is_dicomfile(file: Path) -> bool:
     """
 
     if file.is_file():
-        if file.stem.startswith('.'):
-            LOGGER.verbose(f'File is hidden: {file}')
         with file.open('rb') as dicomfile:
             dicomfile.seek(0x80, 1)
             if dicomfile.read(4) == b'DICM':
@@ -446,8 +444,8 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
     :return:        The filename of the first dicom-file in the folder.
     """
 
-    if folder.name.startswith('.'):
-        LOGGER.verbose(f'Ignoring hidden folder: {folder}')
+    if is_hidden(folder):
+        LOGGER.verbose(f"Ignoring hidden folder: {folder}")
         return Path()
 
     if (folder/'DICOMDIR').is_file():
@@ -458,8 +456,8 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
 
     idx = 0
     for file in files:
-        if file.stem.startswith('.'):
-            LOGGER.verbose(f'Ignoring hidden file: {file}')
+        if is_hidden(file):
+            LOGGER.verbose(f"Ignoring hidden file: {file}")
             continue
         if is_dicomfile(file):
             if idx == index:
@@ -478,14 +476,14 @@ def get_parfiles(folder: Path) -> List[Path]:
     :return:        The filenames of the PAR-files in the folder.
     """
 
-    if folder.name.startswith('.'):
-        LOGGER.verbose(f'Ignoring hidden folder: {folder}')
+    if is_hidden(folder):
+        LOGGER.verbose(f"Ignoring hidden folder: {folder}")
         return []
 
     parfiles = []
     for file in sorted(folder.iterdir()):
-        if file.stem.startswith('.'):
-            LOGGER.verbose(f'Ignoring hidden file: {file}')
+        if is_hidden(file):
+            LOGGER.verbose(f"Ignoring hidden file: {file}")
             continue
         if is_parfile(file):
             parfiles.append(file)
@@ -498,8 +496,8 @@ def get_datasource(session: Path, plugins: dict, recurse: int=2) -> DataSource:
 
     datasource = DataSource()
     for item in sorted(session.iterdir()):
-        if item.stem.startswith('.'):
-            LOGGER.verbose(f'Ignoring hidden datasource: {item}')
+        if is_hidden(item):
+            LOGGER.verbose(f"Ignoring hidden data-source: {item}")
             continue
         if item.is_dir() and recurse:
             datasource = get_datasource(item, plugins, recurse-1)
@@ -901,10 +899,10 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
         bidsmapversion = bidsmap['Options']['version']
     else:
         bidsmapversion = 'Unknown'
-    if bidsmapversion.rsplit('.', 1)[0] != __version__.rsplit('.', 1)[0] and any(checks):
-        LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}')
-    elif bidsmapversion != __version__ and any(checks):
-        LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}. This is normally ok but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
+    if bidsmapversion.rsplit('.', 1)[0] != bidscoinversion.rsplit('.', 1)[0] and any(checks):
+        LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created with version {bidsmapversion}, but this is version {bidscoinversion}')
+    elif bidsmapversion != bidscoinversion and any(checks):
+        LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {bidscoinversion}. This is normally ok but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
 
     # Make sure we get a proper plugin options and dataformat sections (use plugin default bidsmappings when a template bidsmap is loaded)
     if not bidsmap['Options'].get('plugins'):

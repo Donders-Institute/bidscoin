@@ -12,7 +12,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids, __version__
+from bidscoin import bcoin, bids, lsdirs, __version__
 
 
 def scanpersonals(bidsmap: dict, session: Path, personals: dict) -> bool:
@@ -102,7 +102,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
         participants_dict = {'participant_id': {'Description': 'Unique participant identifier'}}
 
     # Get the list of subjects
-    subjects = bcoin.lsdirs(bidsfolder, 'sub-*')
+    subjects = lsdirs(bidsfolder, 'sub-*')
     if not subjects:
         LOGGER.warning(f"No subjects found in: {bidsfolder}")
 
@@ -118,7 +118,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
             LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
             personals = {}
             subject   = rawfolder/subject.name.replace('sub-', subprefix.replace('*',''))     # TODO: This assumes e.g. that the subject-ids in the rawfolder did not contain BIDS-invalid characters (such as '_')
-            sessions  = bcoin.lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
+            sessions  = lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
             if not subject.is_dir():
                 LOGGER.error(f"Could not find source-folder: {subject}")
                 continue
