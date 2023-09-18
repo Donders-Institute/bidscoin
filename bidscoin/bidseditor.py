@@ -1283,7 +1283,7 @@ class EditWindow(QDialog):
                 # Validate user input against BIDS or replace the (dynamic) bids-value if it is a run attribute
                 self.bids_table.blockSignals(True)
                 if isinstance(value, str) and ('<<' not in value or '>>' not in value):
-                    value = bids.cleanup_value(self.datasource.dynamicvalue(value))
+                    value = bids.sanitize(self.datasource.dynamicvalue(value))
                     self.bids_table.item(rowindex, 1).setText(value)
                 if key == 'run' and value and '<<' in oldvalue and '>>' in oldvalue and not ('<<' in value and '>>' in value):
                     answer = QMessageBox.question(self, f"Edit bids entities",

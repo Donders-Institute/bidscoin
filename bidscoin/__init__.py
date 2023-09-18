@@ -89,27 +89,16 @@ def bidsversion() -> str:
     return (schemafolder/'BIDS_VERSION').read_text().strip()
 
 
-def is_hidden(path: Path) -> bool:
-    """
-    Checks if a path is or contains a hidden rootfolder.
-
-    :param path:    The path to be checked
-    :return:        True if a part of the path starts with a '.', otherwise False
-    """
-
-    if any([p.startswith('.') for p in path.parts]):
-        return True
-    else:
-        return False
-
-
 def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
     """
-    Gets all directories in a folder, ignores files. Foldernames and files starting with a dot are considered hidden and will be skipped
+    Gets all directories in a folder, ignores files. Foldernames starting with a dot are considered hidden and will be skipped
 
     :param folder:      The full pathname of the folder
     :param wildcard:    Simple (glob.glob) shell-style wildcards. Use '**/wildcard for recursive search'
     :return:            A list with all directories in the folder
     """
+
+    # Checks if a path is or contains a hidden rootfolder
+    is_hidden = lambda path: any([part.startswith('.') for part in path.parts])
 
     return sorted([item for item in sorted(folder.glob(wildcard)) if item.is_dir() and not is_hidden(item.relative_to(folder))])

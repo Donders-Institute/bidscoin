@@ -271,8 +271,8 @@ class DataSource:
         subid = subid_
 
         # Add sub- and ses- prefixes if they are not there
-        subid =  'sub-' + cleanup_value(re.sub(f"^{self.resubprefix()}", '', subid))
-        sesid = ('ses-' + cleanup_value(re.sub(f"^{self.resesprefix()}", '', sesid))) if sesid else ''
+        subid =  'sub-' + sanitize(re.sub(f"^{self.resubprefix()}", '', subid))
+        sesid = ('ses-' + sanitize(re.sub(f"^{self.resesprefix()}", '', sesid))) if sesid else ''
 
         return subid, sesid
 
@@ -307,7 +307,7 @@ class DataSource:
                 sourcevalue += val[-1]      # The last element is always the non-dynamic part in val
             value = sourcevalue
             if cleanup:
-                value = cleanup_value(value)
+                value = sanitize(value)
 
         return value
 
@@ -1032,11 +1032,11 @@ def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue        # E.g. 'subject' and 'session'
             for run in bidsmap[dataformat][datatype]:
-                bidsname = get_bidsname(f"sub-{cleanup_value(dataformat)}", '', run, False)
+                bidsname = get_bidsname(f"sub-{sanitize(dataformat)}", '', run, False)
                 ignore   = check_ignore(datatype, bidsignore) or check_ignore(bidsname+'.json', bidsignore, 'file')
                 ignore_1 = datatype in ignoretypes or ignore
                 ignore_2 = datatype in ignoretypes
-                bidstest = bids_validator.BIDSValidator().is_bids(f"/sub-{cleanup_value(dataformat)}/{datatype}/{bidsname}.json")
+                bidstest = bids_validator.BIDSValidator().is_bids(f"/sub-{sanitize(dataformat)}/{datatype}/{bidsname}.json")
                 if level==3 or (abs(level)==2 and not ignore_2) or (-2<level<2 and not ignore_1):
                     valid = valid and bidstest
                 if (level==0 and not bidstest) or (level==1 and not ignore_1) or (level==2 and not ignore_2) or level==3:
@@ -1198,7 +1198,7 @@ def check_run(datatype: str, run: dict, checks: Tuple[bool, bool, bool]=(False, 
                 if entitykey not in run['bids']:
                     if checks[0]: LOGGER.warning(f'Invalid bidsmap: The "{entitykey}" key is missing ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
                     run_keysok = False
-                if bidsvalue and not dynamicvalue and bidsvalue!=cleanup_value(bidsvalue):
+                if bidsvalue and not dynamicvalue and bidsvalue!=sanitize(bidsvalue):
                     if checks[2]: LOGGER.warning(f'Invalid {entitykey} value: "{bidsvalue}" ({datatype}/*_{run["bids"]["suffix"]} -> {run["provenance"]})')
                     run_valsok = False
                 elif not bidsvalue and datatyperules[datatype][typegroup]['entities'][entity]=='required':
@@ -1299,7 +1299,7 @@ def strip_suffix(run: dict) -> dict:
     return run
 
 
-def cleanup_value(label: str) -> str:
+def sanitize(label: str) -> str:
     """
     Converts a given label to a cleaned-up label that can be used as a BIDS label. Remove leading and trailing spaces;
     convert other spaces, special BIDS characters and anything that is not an alphanumeric to a ''. This will for
@@ -1759,8 +1759,8 @@ def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bo
     subid = re.sub(f'^sub-', '', subid)
     sesid = re.sub(f'^ses-', '', sesid) if sesid else ''                        # Catch sesid = None
     if cleanup:
-        subid = cleanup_value(subid)
-        sesid = cleanup_value(sesid)
+        subid = sanitize(subid)
+        sesid = sanitize(sesid)
 
     # Compose the bidsname
     bidsname    = f"sub-{subid}{'_ses-'+sesid if sesid else ''}"                # Start with the subject/session identifier
@@ -1777,14 +1777,14 @@ def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bo
         elif runtime and not (entitykey=='run' and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == '<<>>')):
             bidsvalue = run['datasource'].dynamicvalue(bidsvalue, cleanup=True, runtime=runtime)
         if cleanup:
-            bidsvalue = cleanup_value(bidsvalue)
+            bidsvalue = sanitize(bidsvalue)
         if bidsvalue:
             bidsname = f"{bidsname}_{entitykey}-{bidsvalue}"                    # Append the key-value data to the bidsname
     suffix = run['bids'].get('suffix')
     if runtime:
         suffix = run['datasource'].dynamicvalue(suffix, runtime=runtime)
     if cleanup:
-        suffix = cleanup_value(suffix)
+        suffix = sanitize(suffix)
     bidsname = f"{bidsname}{'_'+suffix if suffix else ''}"                      # And end with the suffix
 
     return bidsname
@@ -1798,7 +1798,7 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') ->
 
     :param bidsfile:    The bidsname (e.g. as returned from get_bidsname or fullpath)
     :param bidskey:     The name of the bidskey, e.g. 'echo' or 'suffix'
-    :param newvalue:    The new bidsvalue. NB: remove non-BIDS compliant characters beforehand (e.g. using cleanup_value)
+    :param newvalue:    The new bidsvalue. NB: remove non-BIDS compliant characters beforehand (e.g. using sanitize)
     :return:            The bidsname with the new bidsvalue or, if newvalue is empty, the existing bidsvalue
     """
 
