@@ -17,7 +17,7 @@ import urllib.request
 import json
 from pathlib import Path
 from importlib import metadata
-from typing import Tuple, Union
+from typing import Tuple, Union, List
 try:
     import tomllib
 except ModuleNotFoundError:
