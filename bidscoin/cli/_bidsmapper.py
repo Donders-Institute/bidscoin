@@ -9,6 +9,7 @@ edit the new data type to your needs (your existing bidsmap will be re-used).
 The bidsmapper uses plugins, as stored in the bidsmap['Options'], to do the actual work
 """
 
+# Imports from the standard library only (as these are imported during the cli/manpage build process)
 import argparse
 import textwrap
 from importlib.util import find_spec

@@ -8,6 +8,7 @@ The corresponding brain mask is saved in the bids/derivatives/synthstrip folder
 Assumes the installation of FreeSurfer v7.3.2 or higher
 """
 
+# Imports from the standard library only (as these are imported during the cli/manpage build process)
 import argparse
 
 

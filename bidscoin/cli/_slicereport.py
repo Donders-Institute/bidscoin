@@ -9,6 +9,7 @@ datatype in your repository.
 Requires an existing installation of FSL/slicer
 """
 
+# Imports from the standard library only (as these are imported during the cli/manpage build process)
 import argparse
 
 

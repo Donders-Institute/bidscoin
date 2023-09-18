@@ -7,6 +7,7 @@ used by the bidscoiner to do the conversion of the source data to BIDS.
 You can hoover with your mouse over items to get help text (pop-up tooltips).
 """
 
+# Imports from the standard library only (as these are imported during the cli/manpage build process)
 import argparse
 import textwrap
 from importlib.util import find_spec

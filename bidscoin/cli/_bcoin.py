@@ -12,6 +12,7 @@ Set the environment variable BIDSCOIN_DEBUG=TRUE in your console to run BIDScoin
 For more documentation see: https://bidscoin.readthedocs.io
 """
 
+# Imports from the standard library only (as these are imported during the cli/manpage build process)
 import argparse
 import textwrap
 from importlib.util import find_spec
@@ -19,13 +20,13 @@ if find_spec('bidscoin') is None:
     import sys
     from pathlib import Path
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import version, bidsversion, bidsmap_template
+from bidscoin import check_version, __version__, bidsversion, bidsmap_template
 
 
 def get_parser() -> argparse.ArgumentParser:
     """Build an argument parser with input arguments for bcoin.py"""
 
-    localversion, uptodate, versionmessage = version(check=True)
+    _, _, versionmessage = check_version()
 
     parser = argparse.ArgumentParser(prog='bidscoin',
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -44,6 +45,6 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('-d', '--download',    help='Download folder. If given, tutorial MRI data will be downloaded here')
     parser.add_argument('-t', '--test',        help='Test the bidscoin installation and template bidsmap', nargs='?', const=bidsmap_template)
     parser.add_argument('-b', '--bidsmaptest', help='Test the run-items and their bidsnames of all normal runs in the study bidsmap. Provide the bids-folder or the bidsmap filepath')
-    parser.add_argument('-v', '--version',     help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidsversion()}\nBIDScoin-version:\t{localversion}, {versionmessage}")
+    parser.add_argument('-v', '--version',     help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidsversion()}\nBIDScoin-version:\t{__version__}, {versionmessage}")
 
     return parser

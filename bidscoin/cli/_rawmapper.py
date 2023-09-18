@@ -6,6 +6,7 @@ the [Additional info] field during subject registration at the scanner console (
 is stored in the dicom attribute named 'PatientComments')
 """
 
+# Imports from the standard library only (as these are imported during the cli/manpage build process)
 import argparse
 import textwrap
 

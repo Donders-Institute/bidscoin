@@ -13,6 +13,7 @@ Provenance information, warnings and error messages are stored in the
 bidsfolder/code/bidscoin/bidscoiner.log file.
 """
 
+# Imports from the standard library only (as these are imported during the cli/manpage build process)
 import argparse
 import textwrap
 

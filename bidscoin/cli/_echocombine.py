@@ -6,6 +6,7 @@ Except for BIDS inheritances, this wrapper is BIDS-aware (a 'bidsapp') and write
 compliant output
 """
 
+# Imports from the standard library only (as these are imported during the cli/manpage build process)
 import argparse
 
 

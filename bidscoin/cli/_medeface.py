@@ -12,6 +12,7 @@ libraries are installed and the DRMAA_LIBRARY_PATH environment variable set
 For single-echo data see `deface`
 """
 
+# Imports from the standard library only (as these are imported during the cli/manpage build process)
 import argparse
 import json
 

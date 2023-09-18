@@ -5,6 +5,7 @@ folder names (i.e. following the same listing as on the scanner console)
 Supports flat DICOM as well as multi-subject/session DICOMDIR file structures.
 """
 
+# Imports from the standard library only (as these are imported during the cli/manpage build process)
 import argparse
 import textwrap
 

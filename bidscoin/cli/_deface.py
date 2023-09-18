@@ -10,6 +10,7 @@ libraries are installed and the DRMAA_LIBRARY_PATH environment variable set
 For multi-echo data see `medeface`
 """
 
+# Imports from the standard library only (as these are imported during the cli/manpage build process)
 import argparse
 import json
 
