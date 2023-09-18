@@ -27,7 +27,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import bcoin, schemafolder, heuristicsfolder, bidsmap_template, is_hidden, lsdirs, __version__
+from bidscoin import bcoin, schemafolder, heuristicsfolder, bidsmap_template, lsdirs, __version__
 from bidscoin.utilities import dicomsort
 from ruamel.yaml import YAML
 yaml = YAML()
@@ -444,7 +444,7 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
     :return:        The filename of the first dicom-file in the folder.
     """
 
-    if is_hidden(folder):
+    if folder.name.startswith('.'):
         LOGGER.verbose(f"Ignoring hidden folder: {folder}")
         return Path()
 
@@ -456,7 +456,7 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
 
     idx = 0
     for file in files:
-        if is_hidden(file):
+        if file.name.startswith('.'):
             LOGGER.verbose(f"Ignoring hidden file: {file}")
             continue
         if is_dicomfile(file):
@@ -476,13 +476,13 @@ def get_parfiles(folder: Path) -> List[Path]:
     :return:        The filenames of the PAR-files in the folder.
     """
 
-    if is_hidden(folder):
+    if folder.name.startswith('.'):
         LOGGER.verbose(f"Ignoring hidden folder: {folder}")
         return []
 
     parfiles = []
     for file in sorted(folder.iterdir()):
-        if is_hidden(file):
+        if file.name.startswith('.'):
             LOGGER.verbose(f"Ignoring hidden file: {file}")
             continue
         if is_parfile(file):
@@ -496,7 +496,7 @@ def get_datasource(session: Path, plugins: dict, recurse: int=2) -> DataSource:
 
     datasource = DataSource()
     for item in sorted(session.iterdir()):
-        if is_hidden(item):
+        if item.name.startswith('.'):
             LOGGER.verbose(f"Ignoring hidden data-source: {item}")
             continue
         if item.is_dir() and recurse:
