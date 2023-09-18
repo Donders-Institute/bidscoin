@@ -27,7 +27,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import bcoin, schemafolder, heuristicsfolder, bidsmap_template, is_hidden, lsdirs
+from bidscoin import bcoin, schemafolder, heuristicsfolder, bidsmap_template, is_hidden, lsdirs, __version__
 from bidscoin.utilities import dicomsort
 from ruamel.yaml import YAML
 yaml = YAML()
@@ -899,10 +899,10 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
         bidsmapversion = bidsmap['Options']['version']
     else:
         bidsmapversion = 'Unknown'
-    if bidsmapversion.rsplit('.', 1)[0] != bidscoinversion.rsplit('.', 1)[0] and any(checks):
-        LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created with version {bidsmapversion}, but this is version {bidscoinversion}')
-    elif bidsmapversion != bidscoinversion and any(checks):
-        LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {bidscoinversion}. This is normally ok but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
+    if bidsmapversion.rsplit('.', 1)[0] != __version__.rsplit('.', 1)[0] and any(checks):
+        LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}')
+    elif bidsmapversion != __version__ and any(checks):
+        LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}. This is normally ok but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
 
     # Make sure we get a proper plugin options and dataformat sections (use plugin default bidsmappings when a template bidsmap is loaded)
     if not bidsmap['Options'].get('plugins'):
