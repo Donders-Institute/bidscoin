@@ -32,12 +32,13 @@ dependencies     = ['pandas',
                     'bids_validator']
 
 [project.optional-dependencies]
+dcm2niix2bids    = ['dcm2niix']
 spec2nii2bids    = ['spec2nii >= 0.6.1']
 deface           = ['pydeface', 'drmaa']
 pet2bids         = ['pypet2bids >= 1.0.12']
 # phys2bidscoin    = ['bioread >= 1.0.5', 'pymatreader >= 0.0.24', 'duecredit', 'phys2bids >= 2.0.0, < 3.0.0']
-all              = ['bidscoin[spec2nii2bids, deface, pet2bids]']                    # + phys2bidscoin
-dev              = ['bidscoin[spec2nii2bids, deface, pet2bids]', 'tox', 'pytest']   # + phys2bidscoin
+all              = ['bidscoin[dcm2niix2bids,spec2nii2bids,deface,pet2bids]']    # + phys2bidscoin
+dev              = ['bidscoin[spec2nii2bids,deface,pet2bids]', 'tox', 'pytest'] # + phys2bidscoin
 
 [project.urls]
 documentation    = 'https://bidscoin.readthedocs.io'

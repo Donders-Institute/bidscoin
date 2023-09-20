@@ -13,29 +13,31 @@ To install BIDScoin on your system run one of the following commands in your com
 
 .. code-block:: console
 
-   $ pip install bidscoin                       # Use this when you want to convert conventional MR imaging data with the dcm2niix2bids plugin
+   $ pip install bidscoin                       # Use this to install the BIDScoin-framework only and independently install the software dependencies of the plugin(s) (such as dcm2niix)
+   $ pip install bidscoin[dcm2niix2bids]        # Use this when you want to convert conventional MR imaging data with the dcm2niix2bids plugin and would like to have dcm2niix pip-installed
    $ pip install bidscoin[spec2nii2bids]        # Use this when you want to convert MR spectroscopy data with the spec2nii2bids plugin
    $ pip install bidscoin[deface]               # Use this when you want to deface anatomical MRI scans. NB: Requires FSL to be installed on your system
    $ pip install bidscoin[deface,pet2bids]      # Use this when you want to deface anatomical MRI scans and convert PET data with the pet2bids plugin
    $ pip install bidscoin[all]                  # Use this to install all extra packages
 
-These install commands can be run independently and will give you the latest stable release of BIDScoin and its `plugins <options.html#dcm2niix2bids-plugin>`__. Alternatively, if you need to use the very latest (development / unstable) version of the software, you can also install BIDScoin directly from the github source code repository:
+These install commands can be run independently and will give you the latest stable release of BIDScoin and its `plugins <options.html#dcm2niix2bids-plugin>`__. Alternatively, if you need to use the very latest (development / unstable) version of the software, you can also install BIDScoin directly from the github source code repository, e.g. like this:
 
 .. code-block:: console
 
-   $ pip install git+https://github.com/Donders-Institute/bidscoin
+   $ pip install git+https://github.com/Donders-Institute/bidscoin                          # The BIDScoin-framework only
+   $ pip install bidscoin[dcm2niix2bids]@git+https://github.com/Donders-Institute/bidscoin  # The BIDScoin-framework + dcm2niix2bids plugin
 
 If you do not have git (or any other version control system) installed you can `download`_ and unzip the code yourself in a folder named e.g. 'bidscoin' and run:
 
 .. code-block:: console
 
-   $ pip install ./bidscoin
+   $ pip install ./bidscoin[dcm2niix2bids]
 
 If you are installing BIDScoin on an older system and you are getting Qt6 errors, you can try to install a ``+qt5`` build, e.g. for version 4.1.1:
 
 .. code-block:: console
 
-   $ pip install bidscoin[all]@git+https://github.com/Donders-Institute/bidscoin@v4.1.1+qt5
+   $ pip install bidscoin[dcm2niix2bids]@git+https://github.com/Donders-Institute/bidscoin@v4.1.1+qt5
 
 Updating BIDScoin
 ^^^^^^^^^^^^^^^^^
@@ -59,7 +61,7 @@ Run your pip install command as before with the additional ``--upgrade`` or ``--
 Dcm2niix installation
 ---------------------
 
-Unfortunately the pip installer can only install Python software and the default 'dcm2niix2bids' plugin relies on an external application named `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ to convert DICOM and PAR/REC source data to NIfTI. To make use of the dcm2niix2bids plugin you should therefore download and install dcm2niix yourself according to the instructions. When done, make sure that the dcm2niix executable is on your user or system path (Windows users can add the path permanently, e.g. by running: ``setx path "%path%;C:\Program Files\dcm2niix"``). Otherwise, make sure that the command to run the dcm2niix executable (exactly as if you would run it yourself in your command terminal) is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
+The default 'dcm2niix2bids' plugin relies on an external application named `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ for converting DICOM and PAR/REC source data to NIfTI. To use the plugin you must pip-install dcm2niix when installing BIDScoin or install it yourself (e.g. when pip-installing dcm2niix does not work for your platform) as explained in the `dcm2niix installation instructions <https://github.com/rordenlab/dcm2niix#install>`__. When done, make sure that the dcm2niix executable is on your user or system path (Windows users can add the path permanently, e.g. by running: ``setx path "%path%;C:\Program Files\dcm2niix"``). Otherwise (for instance when you want to use the linux module system or fixate the software version), make sure that the command to run the dcm2niix executable (exactly as if you would run it yourself in your command terminal) is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
 
 1. Open your template bidsmap with a text editor and adjust the settings as needed. The default template bidsmap is located in the [path_to_bidscoin]/heuristics subfolder -- see the output of ``bidscoin -p`` for the fullpath location on your system.
 2. Go to the `Options`_ tab the first time the BIDScoin GUI is launched and adjust the settings as needed. Then click the [Set as default] button to save the settings to your default template bidsmap.

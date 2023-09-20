@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [dev]
 
+### Added
+- The option to pip-install dcm2niix as `extras`
+
 ## [4.1.1] - 2023-09-14
 
 ### Changed

@@ -12,7 +12,7 @@ RUN apt update && apt -y install git build-essential cmake; \
 
 FROM python:3.10-slim
 
-# Install the dcm2niix build
+# Install the dcm2niix build. NB: Obsolete with the new `pip install bidscoin[dcm2niix2bids]` extras option
 COPY --from=builder /usr/local/bin/dcm2niix /usr/local/bin/dcm2niix
 
 # First install pyqt5 as Debian package to solve dependencies issues occurring when installed with pip
@@ -20,4 +20,4 @@ COPY --from=builder /usr/local/bin/dcm2niix /usr/local/bin/dcm2niix
 ENV PIP_NO_CACHE_DIR=off
 RUN apt update && apt -y --no-install-recommends install pigz curl python3-pyqt5 python3-pyqt5.qtx11extras git && apt clean; \
     pip install --upgrade pip; \
-    pip install bidscoin[all]@git+https://github.com/Donders-Institute/bidscoin@v4.1.1+qt5
+    pip install bidscoin[spec2nii2bids,deface,pet2bids]@git+https://github.com/Donders-Institute/bidscoin@v4.1.1+qt5
