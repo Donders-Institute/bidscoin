@@ -27,6 +27,13 @@ try:
 except ImportError:
     from due import due, Doi
 
+# Get the BIDScoin version
+try:
+    __version__ = metadata.version('bidscoin')
+except Exception:
+    with open(Path(__file__).parents[1]/'pyproject.toml', 'rb') as fid:
+        __version__ = tomllib.load(fid)['project']['version']
+
 # Add license metadata
 __license__    = 'GNU General Public License v3 or later (GPLv3+)'
 __copyright__  = '2018-2023, Marcel Zwiers'
@@ -49,14 +56,7 @@ pluginfolder     = bidscoinfolder/'plugins'
 bidsmap_template = heuristicsfolder/'bidsmap_dccn.yaml'     # Default template bidsmap TODO: make it a user setting (in $HOME)?
 
 # Register the BIDScoin citation
-due.cite(Doi('10.3389/fninf.2021.770608'), description='A toolkit to convert source data to the Brain Imaging Data Structure (BIDS)', path='bidscoin')
-
-# Get the BIDScoin version
-try:
-    __version__ = metadata.version('bidscoin')
-except Exception:
-    with open(Path(__file__).parents[1]/'pyproject.toml', 'rb') as fid:
-        __version__ = tomllib.load(fid)['project']['version']
+due.cite(Doi('10.3389/fninf.2021.770608'), description='A versatile toolkit to convert source data to the Brain Imaging Data Structure (BIDS)', path='bidscoin', version=__version__)
 
 
 def check_version() -> Tuple[str, Union[bool, None], str]:
