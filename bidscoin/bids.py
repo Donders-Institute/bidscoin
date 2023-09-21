@@ -1984,6 +1984,49 @@ def copymetadata(metasource: Path, metatarget: Path, extensions: list) -> dict:
     return metadict
 
 
+def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: dict=None) -> pd.DataFrame:
+    """
+    Read/create and/or add a participant to the participants.tsv file
+
+    :param participants_tsv:    The participants.tsv file
+    :param subid:               The subject label
+    :param sesid:               The session label
+    :param data:                Personal data such as sex or age
+    :return:                    The participants table
+    """
+
+    # TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
+
+    data = data or {}
+
+    # Read the participants table
+    if participants_tsv.is_file():
+        table = pd.read_csv(participants_tsv, sep='\t', dtype=str)
+        table.set_index(['participant_id'], verify_integrity=True, inplace=True)
+    else:
+        table = pd.DataFrame()
+        table.index.name = 'participant_id'
+
+    # Add the participant row
+    data_added = False
+    if subid:
+        if subid not in table.index:
+            table.append(pd.Series(name=subid))
+        if sesid and 'session_id' not in data:
+            data['session_id'] = sesid
+        for key in data:
+            if key not in table or pd.isnull(table.loc[subid, key]) or table.loc[subid, key] == 'n/a':
+                table.loc[subid, key] = data[key]
+                data_added = True
+
+        # Write the data to the participants tsv-file
+        if data_added:
+            LOGGER.verbose(f"Writing {subid} subject data to: {participants_tsv}")
+            table.replace('', 'n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
+
+    return table
+
+
 def get_propertieshelp(propertieskey: str) -> str:
     """
     Reads the description of a matching attributes key in the source dictionary

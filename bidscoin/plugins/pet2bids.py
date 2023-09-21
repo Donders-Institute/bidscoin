@@ -281,45 +281,18 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 if bcoin.run_command(command):
                     if not list(outfolder.glob(f"{bidsname}.*nii*")): continue
 
-
-        # Collect personal data from a source header
+    # Collect personal data from a source header and store it in the participants.tsv file
+    if dataformat == 'DICOM':
         personals = {}
-        if sesid and 'session_id' not in personals:
-            personals['session_id'] = sesid
-        personals['age'] = ''
-        if dataformat == 'DICOM':
-            age = datasource.attributes(
-                'PatientAge')  # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
-            if age.endswith('D'):
-                age = float(age.rstrip('D')) / 365.2524
-            elif age.endswith('W'):
-                age = float(age.rstrip('W')) / 52.1775
-            elif age.endswith('M'):
-                age = float(age.rstrip('M')) / 12
-            elif age.endswith('Y'):
-                age = float(age.rstrip('Y'))
-            if age:
-                if options.get('anon', 'y') in ('y', 'yes'):
-                    age = int(float(age))
-                personals['age'] = str(age)
-            personals['sex'] = datasource.attributes('PatientSex')
-            personals['size'] = datasource.attributes('PatientSize')
-            personals['weight'] = datasource.attributes('PatientWeight')
-
-        # Store the collected personals in the participants_table
-        participants_tsv = bidsfolder/'participants.tsv'
-        if participants_tsv.is_file():
-            participants_table = pd.read_csv(participants_tsv, sep='\t', dtype=str)
-            participants_table.set_index(['participant_id'], verify_integrity=True, inplace=True)
-        else:
-            participants_table = pd.DataFrame()
-            participants_table.index.name = 'participant_id'
-        if subid in participants_table.index and 'session_id' in participants_table.keys() and participants_table.loc[subid, 'session_id']:
-            return  # Only take data from the first session -> BIDS specification
-        for key in personals:  # TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
-            if key not in participants_table or participants_table[key].isnull().get(subid, True) or participants_table[key].get(subid) == 'n/a':
-                participants_table.loc[subid, key] = personals[key]
-
-        # Write the collected data to the participants tsv-file
-        LOGGER.verbose(f"Writing {subid} subject data to: {participants_tsv}")
-        participants_table.replace('', 'n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
+        age       = datasource.attributes('PatientAge')     # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
+        if   age.endswith('D'): age = float(age.rstrip('D')) / 365.2524
+        elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
+        elif age.endswith('M'): age = float(age.rstrip('M')) / 12
+        elif age.endswith('Y'): age = float(age.rstrip('Y'))
+        if age and options.get('anon','y') in ('y','yes'):
+            age = int(float(age))
+        personals['age']    = str(age)
+        personals['sex']    = datasource.attributes('PatientSex')
+        personals['size']   = datasource.attributes('PatientSize')
+        personals['weight'] = datasource.attributes('PatientWeight')
+        bids.addparticipant(bidsfolder/'participants.tsv', subid, sesid, personals)

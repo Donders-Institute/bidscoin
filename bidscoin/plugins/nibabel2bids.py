@@ -161,13 +161,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
     # Get the subject identifiers and the BIDS root folder from the bidsses folder
     if bidsses.name.startswith('ses-'):
-        bidsfolder = bidsses.parent.parent
-        subid      = bidsses.parent.name
-        sesid      = bidsses.name
+        subid = bidsses.parent.name
+        sesid = bidsses.name
     else:
-        bidsfolder = bidsses.parent
-        subid      = bidsses.name
-        sesid      = ''
+        subid = bidsses.name
+        sesid = ''
 
     # Get started
     options     = bidsmap['Options']['plugins']['nibabel2bids']
@@ -259,19 +257,3 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing data to: {scans_tsv}")
     scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
-
-    # Add an (empty) entry to the participants_table (we don't have useful data to put there)
-    participants_tsv = bidsfolder/'participants.tsv'
-    if participants_tsv.is_file():
-        participants_table = pd.read_csv(participants_tsv, sep='\t', dtype=str)
-        participants_table.set_index(['participant_id'], verify_integrity=True, inplace=True)
-    else:
-        participants_table = pd.DataFrame()
-        participants_table.index.name = 'participant_id'
-    if subid in participants_table.index and 'session_id' in participants_table.keys() and participants_table.loc[subid, 'session_id']:
-        return                                          # Only take data from the first session -> BIDS specification
-    participants_table.loc[subid, 'session_id'] = sesid if sesid else None
-
-    # Write the collected data to the participants tsv-file
-    LOGGER.verbose(f"Writing {subid} subject data to: {participants_tsv}")
-    participants_table.replace('','n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')

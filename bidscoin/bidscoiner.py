@@ -112,15 +112,6 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             for item in set(bidsignore_items):
                 bidsignore.write(item + '\n')
 
-    # Get the table & dictionary of the subjects that have been processed
-    participants_tsv = bidsfolder/'participants.tsv'
-    if participants_tsv.is_file():
-        participants_table = pd.read_csv(participants_tsv, sep='\t')
-        participants_table.set_index(['participant_id'], verify_integrity=True, inplace=True)
-    else:
-        participants_table = pd.DataFrame()
-        participants_table.index.name = 'participant_id'
-
     # Get the list of subjects
     subprefix = bidsmap['Options']['bidscoin']['subprefix'].replace('*','')
     sesprefix = bidsmap['Options']['bidscoin']['sesprefix'].replace('*','')
@@ -185,29 +176,33 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     if unpacked:
                         shutil.rmtree(sesfolder)
 
-    # Re-read the participants_table (the plugins may have changed it) and store the collected personals in the json sidecar-file
-    if participants_tsv.is_file():
-        participants_table = pd.read_csv(participants_tsv, sep='\t')
-        participants_table.set_index(['participant_id'], verify_integrity=True, inplace=True)
-    participants_json = participants_tsv.with_suffix('.json')
-    participants_dict = {}
+            # Add a subject row to the participants table if the plugin(s) haven't done so (if there is data)
+            if next(subject.rglob('*.json'), None):
+                bids.addparticipant(bidsfolder/'participants.tsv', subid, sesid)
+
+    # Create/write to the json participants table sidecar file
+    participants_table = bids.addparticipant(bidsfolder/'participants.tsv')
+    participants_json  = bidsfolder/'participants.json'
+    participants_dict  = {}
+    newkey             = False
     if participants_json.is_file():
         with participants_json.open('r') as json_fid:
             participants_dict = json.load(json_fid)
     if not participants_dict.get('participant_id'):
         participants_dict['participant_id'] = {'Description': 'Unique participant identifier'}
+        newkey                              = True
     if not participants_dict.get('session_id') and 'session_id' in participants_table.columns:
         participants_dict['session_id'] = {'Description': 'Session identifier'}
-    newkey = False
+        newkey                          = True
     for col in participants_table.columns:
         if col not in participants_dict:
-            newkey = True
+            newkey                 = True
             participants_dict[col] = dict(LongName    = 'Long (unabbreviated) name of the column',
                                           Description = 'Description of the the column',
                                           Levels      = dict(Key='Value (This is for categorical variables: a dictionary of possible values (keys) and their descriptions (values))'),
                                           Units       = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is RECOMMENDED')
 
-    # Write the collected data to the participant files
+    # Write the data to the participant sidecar file
     if newkey:
         LOGGER.info(f"Writing subject meta data to: {participants_json}")
         with participants_json.open('w') as json_fid:

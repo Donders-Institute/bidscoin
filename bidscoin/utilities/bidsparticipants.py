@@ -87,14 +87,9 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
     sesprefix = bidsmap['Options']['bidscoin']['sesprefix']
 
     # Get the table & dictionary of the subjects that have been processed
-    participants_tsv  = bidsfolder/'participants.tsv'
-    participants_json = participants_tsv.with_suffix('.json')
-    if participants_tsv.is_file():
-        participants_table = pd.read_csv(participants_tsv, sep='\t')
-        participants_table.set_index(['participant_id'], verify_integrity=True, inplace=True)
-    else:
-        participants_table = pd.DataFrame()
-        participants_table.index.name = 'participant_id'
+    participants_tsv   = bidsfolder/'participants.tsv'
+    participants_json  = participants_tsv.with_suffix('.json')
+    participants_table = bids.addparticipant(participants_tsv)
     if participants_json.is_file():
         with participants_json.open('r') as json_fid:
             participants_dict = json.load(json_fid)
