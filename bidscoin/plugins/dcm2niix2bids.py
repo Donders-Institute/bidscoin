@@ -439,8 +439,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 for ext in ('.bval', '.bvec'):
                     bfile = jsonfile.with_suffix(ext)
                     if bfile.is_file():
-                        LOGGER.verbose(f"Removing BIDS-invalid file(s): {bfile}")
-                        jsondata[ext[1:]] = pd.read_csv(bfile, header=None).values.tolist()
+                        bdata = pd.read_csv(bfile, header=None)
+                        if bdata.any(axis=None):
+                            LOGGER.warning(f"Storing unexpected non-zero values from {bfile} -> {jsonfile}")
+                            jsondata[ext[1:]] = bdata.values.tolist()
+                        LOGGER.verbose(f"Removing BIDS-invalid file: {bfile}")
                         bfile.unlink()
 
             # Add all the source meta data to the meta-data
