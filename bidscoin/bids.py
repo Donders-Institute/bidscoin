@@ -2011,7 +2011,7 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
     data_added = False
     if subid:
         if subid not in table.index:
-            table.loc[subid] = None
+            table.loc[subid, 'group'] = None
         if sesid and 'session_id' not in data:
             data['session_id'] = sesid
         for key in data:
