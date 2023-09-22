@@ -176,9 +176,9 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     if unpacked:
                         shutil.rmtree(sesfolder)
 
-            # Add a subject row to the participants table if the plugin(s) haven't done so (if there is data)
-            if next(subject.rglob('*.json'), None):
-                bids.addparticipant(bidsfolder/'participants.tsv', subid, sesid)
+                    # Add a subject row to the participants table if the plugin(s) haven't done so (if there is data)
+                    if next(bidssession.rglob('*.json'), None):
+                        bids.addparticipant(bidsfolder/'participants.tsv', subid, sesid)
 
     # Create/write to the json participants table sidecar file
     participants_table = bids.addparticipant(bidsfolder/'participants.tsv')
@@ -194,6 +194,9 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     if not participants_dict.get('session_id') and 'session_id' in participants_table.columns:
         participants_dict['session_id'] = {'Description': 'Session identifier'}
         newkey                          = True
+    if not participants_dict.get('group') and 'group' in participants_table.columns:
+        participants_dict['group'] = {'Description': 'Group identifier'}
+        newkey                     = True
     for col in participants_table.columns:
         if col not in participants_dict:
             newkey                 = True
