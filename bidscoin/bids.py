@@ -1989,9 +1989,9 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
     Read/create and/or add a participant to the participants.tsv file
 
     :param participants_tsv:    The participants.tsv file
-    :param subid:               The subject label
+    :param subid:               The subject label. Leave empty to just read the participants table (add nothing)
     :param sesid:               The session label
-    :param data:                Personal data such as sex or age
+    :param data:                Personal data of the participant, such as sex or age
     :return:                    The participants table
     """
 
@@ -2011,13 +2011,14 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
     data_added = False
     if subid:
         if subid not in table.index:
+            if sesid and 'session_id' not in data:
+                table.loc[subid, 'session_id'] = sesid
             table.loc[subid, 'group'] = None
-        if sesid and 'session_id' not in data:
-            data['session_id'] = sesid
+            data_added                = True
         for key in data:
             if key not in table or pd.isnull(table.loc[subid, key]) or table.loc[subid, key] == 'n/a':
                 table.loc[subid, key] = data[key]
-                data_added = True
+                data_added            = True
 
         # Write the data to the participants tsv-file
         if data_added:
