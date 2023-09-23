@@ -77,11 +77,6 @@ manpages         = ['man/bidscoin.1:function=get_parser:pyfile=bidscoin/cli/_bco
                     'man/physio2tsv.1:function=get_parser:pyfile=bidscoin/cli/_physio2tsv.py',
                     'man/plotphysio.1:function=get_parser:pyfile=bidscoin/cli/_plotphysio.py']
 
-[tool.setuptools.cmdclass]
-build_py         = "build_manpages.build_py"
-install          = "build_manpages.install"
-build_manpages   = "build_manpages.build_manpages"
-
 [tool.setuptools.package-data]
 '*'              = ['*.yaml', 'BIDS_VERSION', 'bidscoin.ico', 'bidscoin_logo.png', 'rightarrow.png']       #  package names should match these glob patterns (["*"] by default)
 
