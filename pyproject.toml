@@ -22,14 +22,14 @@ dependencies     = ['pandas',
                     'numpy',
                     'pydicom >= 2',
                     'PyQt6',
-                    'ruamel.yaml >= 0.15.35',
+                    'ruamel-yaml >= 0.15.35',
                     'tomli >= 1.1.0 ; python_version < "3.11"',
                     'coloredlogs',
                     'tqdm >= 4.60.0',
                     'multiecho >= 0.25',
                     'python-dateutil',
                     'nibabel',
-                    'bids_validator']
+                    'bids-validator']
 
 [project.optional-dependencies]
 dcm2niix2bids    = ['dcm2niix']
