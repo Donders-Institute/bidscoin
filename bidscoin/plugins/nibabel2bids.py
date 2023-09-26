@@ -5,7 +5,6 @@ of data formats into NIfTI-files. Currently, the default template bidsmap is tai
 import logging
 import dateutil.parser
 import json
-import ast
 import shutil
 import pandas as pd
 import nibabel as nib
@@ -169,7 +168,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
     # Get started
     options     = bidsmap['Options']['plugins']['nibabel2bids']
-    ext         = options.get('ext', OPTIONS['ext'])
+    ext         = options.get('ext', '')
     meta        = options.get('meta', [])
     sourcefiles = [file for file in session.rglob('*') if is_sourcefile(file)]
     if not sourcefiles:
@@ -227,31 +226,20 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Save the sourcefile as a BIDS NIfTI file
         nib.save(nib.load(sourcefile), bidsfile)
 
-        # Copy over the source meta-data
-        jsonfile = bidsfile.with_suffix('').with_suffix('.json')
-        jsondata = bids.copymetadata(sourcefile, bidsfile, meta)
-
-        # Add all the metadata to the meta-data. NB: the dynamic `IntendedFor` value is handled separately later
-        for metakey, metaval in run['meta'].items():
-            if metakey != 'IntendedFor':
-                metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
-                try: metaval = ast.literal_eval(str(metaval))            # E.g. convert stringified list or int back to list or int
-                except (ValueError, SyntaxError): pass
-                LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
-            if jsondata.get(metakey) and jsondata.get(metakey)==metaval:
-                LOGGER.warning(f"Overruling {metakey} values in {jsonfile}: {jsondata[metakey]} -> {metaval}")
-            jsondata[metakey] = metaval if metaval else None
+        # Load / copy over the source meta-data
+        sidecar  = bidsfile.with_suffix('').with_suffix('.json')
+        metadata = bids.poolmetadata(sourcefile, sidecar, run['meta'], meta, datasource)
 
         # Remove unused (but added from the template) B0FieldIdentifiers/Sources
-        if not jsondata.get('B0FieldSource'):     jsondata.pop('B0FieldSource', None)
-        if not jsondata.get('B0FieldIdentifier'): jsondata.pop('B0FieldIdentifier', None)
+        if not metadata.get('B0FieldSource'):     metadata.pop('B0FieldSource',     None)
+        if not metadata.get('B0FieldIdentifier'): metadata.pop('B0FieldIdentifier', None)
 
         # Save the meta-data to the json sidecar-file
-        with jsonfile.open('w') as json_fid:
-            json.dump(jsondata, json_fid, indent=4)
+        with sidecar.open('w') as json_fid:
+            json.dump(metadata, json_fid, indent=4)
 
         # Add an entry to the scans_table (we typically don't have useful data to put there)
-        acq_time = dateutil.parser.parse(f"1925-01-01T{jsondata.get('AcquisitionTime', '')}")
+        acq_time = dateutil.parser.parse(f"1925-01-01T{metadata.get('AcquisitionTime', '')}")
         scans_table.loc[bidsfile.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time.isoformat()
 
     # Write the scans_table to disk

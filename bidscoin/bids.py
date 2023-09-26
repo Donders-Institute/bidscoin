@@ -17,6 +17,7 @@ import tempfile
 import warnings
 import fnmatch
 import pandas as pd
+import ast
 from functools import lru_cache
 from pathlib import Path
 from typing import Union, List, Tuple
@@ -282,7 +283,7 @@ class DataSource:
         '<' and end with '>', but not with '<<' and '>>' unless runtime = True
 
         :param value:       The dynamic value that contains source attribute or filesystem property key(s)
-        :param cleanup:     Removes non-BIDS-compliant characters from the retrieved dynamic value if True
+        :param cleanup:     Sanitizes non-BIDS-compliant characters from the retrieved dynamic value if True
         :param runtime:     Replaces dynamic values if True
         :return:            Updated value
         """
@@ -1751,7 +1752,7 @@ def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bo
     :param run:         The run mapping with the BIDS key-value pairs
     :param validkeys:   Removes non-BIDS-compliant bids-keys if True
     :param runtime:     Replaces dynamic bidsvalues if True
-    :param cleanup:     Removes non-BIDS-compliant characters if True
+    :param cleanup:     Sanitizes non-BIDS-compliant characters from the filename if True
     :return:            The composed BIDS file-name (without file-extension)
     """
 
@@ -1951,37 +1952,68 @@ def increment_runindex(outfolder: Path, bidsname: str, run: dict, scans_table: D
     return f"{bidsname}.{suffixes}" if suffixes else bidsname
 
 
-def copymetadata(metasource: Path, metatarget: Path, extensions: list) -> dict:
+def poolmetadata(sourcemeta: Path, targetmeta: Path, usermeta: dict, extensions: list, datasource: DataSource) -> dict:
     """
-    Copies over or, in case of json-files, returns the content of 'metasource' data files
+    Load the metadata from the target (json sidecar), then add metadata from the source (json sidecar) and finally add
+    the user metadata (meta table). Source metadata other than json sidecars are copied over to the target folder
 
-    NB: In future versions this function could also support returning the content of e.g. csv- or Excel-files
+    NB: In future versions this function could also support more source metadata formats, e.g. yaml, csv- or Excel-files
 
-    :param metasource:  The filepath of the source-data file with associated/equally named meta-data files
-    :param metatarget:  The filepath of the source-data file to with the (non-json) meta-data files are copied over
-    :param extensions:  A list of file extensions of the meta-data files
-    :return:            The meta-data of the json-file
+    :param sourcemeta:  The filepath of the source data file with associated/equally named meta-data files (name may include wildcards)
+    :param targetmeta:  The filepath of the target data file with meta-data
+    :param usermeta:    A user metadata dict, e.g. the meta table from a run-item
+    :param extensions:  A list of file extensions of the source metadata files, e.g. as specified in bidsmap['Options']['plugins']['plugin']['meta']
+    :param datasource:  The data source from which dynamic values are read
+    :return:            The combined target + source + user metadata
     """
 
-    metadict = {}
+    metapool = {}
+
+    # Add the target metadata to the metadict
+    if targetmeta.is_file():
+        with targetmeta.open('r') as json_fid:
+            metapool = json.load(json_fid)
+
+    # Add the source metadata to the metadict or copy it over
     for ext in extensions:
-        metasource = metasource.with_suffix('').with_suffix(ext)
-        metatarget = metatarget.with_suffix('').with_suffix(ext)
-        if metasource.is_file():
-            LOGGER.info(f"Copying source data from: '{metasource}''")
-            if ext == '.json':
-                with metasource.open('r') as json_fid:
-                    metadict = json.load(json_fid)
-                if not isinstance(metadict, dict):
-                    LOGGER.error(f"Skipping unexpectedly formatted meta-data in: {metasource}")
-                    metadict = {}
-            else:
-                if metatarget.is_file():
-                    LOGGER.warning(f"Deleting unexpected existing data-file: {metatarget}")
-                    metatarget.unlink()
-                shutil.copy2(metasource, metatarget)
+        for sourcefile in sourcemeta.parent.glob(sourcemeta.with_suffix('').with_suffix(ext).name):
+            LOGGER.info(f"Copying source data from: '{sourcefile}''")
 
-    return metadict
+            # Put the metadata in metadict
+            if ext == '.json':
+                with sourcefile.open('r') as json_fid:
+                    metadata = json.load(json_fid)
+                if not isinstance(metadata, dict):
+                    LOGGER.error(f"Skipping unexpectedly formatted meta-data in: {sourcefile}")
+                    continue
+                for metakey, metaval in metadata.items():
+                    if metapool.get(metakey) and metapool.get(metakey) != metaval:
+                        LOGGER.info(f"Overruling {metakey} values in {targetmeta}: {metapool[metakey]} -> {metaval}")
+                    else:
+                        LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
+                    metapool[metakey] = metaval if metaval else None
+
+            # Or just copy over the metadata file
+            else:
+                targetfile = targetmeta.parent/sourcefile.name
+                if not targetfile.is_file():
+                    shutil.copy2(sourcefile, targetfile)
+
+    # Add all the metadata to the metadict. NB: the dynamic `IntendedFor` value is handled separately later
+    for metakey, metaval in usermeta.items():
+        if metakey != 'IntendedFor':
+            metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
+            try:
+                metaval = ast.literal_eval(str(metaval))  # E.g. convert stringified list or int back to list or int
+            except (ValueError, SyntaxError):
+                pass
+        if metapool.get(metakey) and metapool.get(metakey) != metaval:
+            LOGGER.info(f"Overruling {metakey} values in {targetmeta}: {metapool[metakey]} -> {metaval}")
+        else:
+            LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
+        metapool[metakey] = metaval if metaval else None
+
+    return metapool
 
 
 def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: dict=None) -> pd.DataFrame:

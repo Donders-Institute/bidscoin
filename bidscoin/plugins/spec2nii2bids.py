@@ -8,7 +8,6 @@ import shutil
 import json
 import pandas as pd
 import dateutil.parser
-import ast
 from bids_validator import BIDSValidator
 from pathlib import Path
 from bidscoin import bcoin, bids
@@ -225,7 +224,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         bidsname   = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
         bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap['Options']['bidscoin']['bidsignore'], 'file')
         bidsname   = bids.increment_runindex(outfolder, bidsname, run, scans_table)
-        jsonfile   = (outfolder/bidsname).with_suffix('.json')
+        sidecar    = (outfolder/bidsname).with_suffix('.json')
 
         # Check if the bidsname is valid
         bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.json').as_posix()
@@ -234,10 +233,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             LOGGER.warning(f"The '{bidstest}' ouput name did not pass the bids-validator test")
 
         # Check if file already exists (-> e.g. when a static runindex is used)
-        if jsonfile.is_file():
+        if sidecar.is_file():
             LOGGER.warning(f"{outfolder/bidsname}.* already exists and will be deleted -- check your results carefully!")
-            for ext in ('.nii.gz', '.nii', '.json', '.bval', '.bvec', '.tsv.gz'):
-                (outfolder/bidsname).with_suffix(ext).unlink(missing_ok=True)
+            for ext in ('.nii.gz', '.nii', '.json', '.tsv', '.tsv.gz', '.bval', '.bvec'):
+                sidecar.with_suffix(ext).unlink(missing_ok=True)
 
         # Run spec2nii to convert the source-files in the run folder to NIfTI's in the BIDS-folder
         arg  = ''
@@ -259,30 +258,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         if bcoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
             if not list(outfolder.glob(f"{bidsname}.nii*")): continue
 
-        # Load and adapt the newly produced json sidecar-file (NB: assumes every NIfTI-file comes with a json-file)
-        with jsonfile.open('r') as sidecar:
-            jsondata = json.load(sidecar)
-
-        # Copy over the source meta-data
-        metadata = bids.copymetadata(sourcefile, outfolder/bidsname, options.get('meta', []))
-        for metakey, metaval in metadata.items():
-            if jsondata.get(metakey) and jsondata.get(metakey) == metaval:
-                LOGGER.warning(f"Overruling {metakey} values in {jsonfile}: {jsondata[metakey]} -> {metaval}")
-            jsondata[metakey] = metaval if metaval else None
-
-        # Add all the metadata to the json-file
-        for metakey, metaval in run['meta'].items():
-            metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
-            try: metaval = ast.literal_eval(str(metaval))            # E.g. convert stringified list or int back to list or int
-            except (ValueError, SyntaxError): pass
-            LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
-            if jsondata.get(metakey) and jsondata.get(metakey)==metaval:
-                LOGGER.warning(f"Overruling {metakey} values in {jsonfile}: {jsondata[metakey]} -> {metaval}")
-            jsondata[metakey] = metaval if metaval else None
-
-        # Save the meta data to disk
-        with jsonfile.open('w') as sidecar:
-            json.dump(jsondata, sidecar, indent=4)
+        # Load / copy over and adapt the newly produced json sidecar-file (NB: assumes every NIfTI-file comes with a json-file)
+        metadata = bids.poolmetadata(sourcefile, sidecar, run['meta'], options['meta'], datasource)
+        with sidecar.open('w') as json_fid:
+            json.dump(metadata, json_fid, indent=4)
 
         # Parse the acquisition time from the source header or else from the json file (NB: assuming the source file represents the first acquisition)
         suffix = datasource.dynamicvalue(run['bids']['suffix'], True, True)
@@ -295,7 +274,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             elif dataformat == 'Pfile':
                 acq_time = f"{datasource.attributes('rhr_rh_scan_date')}T{datasource.attributes('rhr_rh_scan_time')}"
             if not acq_time or acq_time == 'T':
-                acq_time = f"1925-01-01T{jsondata.get('AcquisitionTime','')}"
+                acq_time = f"1925-01-01T{metadata.get('AcquisitionTime','')}"
             try:
                 acq_time = dateutil.parser.parse(acq_time)
                 if options.get('anon',OPTIONS['anon']) in ('y','yes'):
@@ -304,7 +283,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             except Exception as jsonerror:
                 LOGGER.warning(f"Could not parse the acquisition time from: {sourcefile}\n{jsonerror}")
                 acq_time = 'n/a'
-            scans_table.loc[jsonfile.with_suffix('.nii.gz').relative_to(bidsses).as_posix(), 'acq_time'] = acq_time
+            scans_table.loc[sidecar.with_suffix('.nii.gz').relative_to(bidsses).as_posix(), 'acq_time'] = acq_time
 
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing acquisition time data to: {scans_tsv}")

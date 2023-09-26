@@ -12,6 +12,7 @@ import logging
 import shutil
 import subprocess
 import pandas as pd
+import json
 from typing import Union
 from pathlib import Path
 from functools import lru_cache
@@ -271,7 +272,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
             # Convert the source-files in the run folder to nifti's in the BIDS-folder
             else:
-                command = f'{options["command"]} "{source}" -d {outfolder/Path(bidsname).with_suffix(".nii.gz")}'
+                command = f'{options["command"]} "{source}" -d {(outfolder/bidsname).with_suffix(".nii.gz")}'
                 # pass in data added via bidseditor/bidsmap
                 if len(run.get('meta', {})) > 0:
                     command += ' --kwargs '
@@ -280,6 +281,12 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                         command += f' {metadata_key}="{metadata_value}"'
                 if bcoin.run_command(command):
                     if not list(outfolder.glob(f"{bidsname}.*nii*")): continue
+
+            # Load / copy over the source meta-data
+            sidecar  = (outfolder/bidsname).with_suffix('.json')
+            metadata = bids.poolmetadata(sourcefile, sidecar, run['meta'], options['meta'], datasource)
+            with sidecar.open('w') as json_fid:
+                json.dump(metadata, json_fid, indent=4)
 
     # Collect personal data from a source header and store it in the participants.tsv file
     if dataformat == 'DICOM':

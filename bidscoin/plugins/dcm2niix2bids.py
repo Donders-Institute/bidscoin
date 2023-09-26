@@ -8,7 +8,6 @@ import logging
 import dateutil.parser
 import pandas as pd
 import json
-import ast
 import shutil
 from bids_validator import BIDSValidator
 from typing import Union
@@ -424,15 +423,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 for oldfile in outfolder.glob(dcm2niixfile.with_suffix('').stem + '.*'):
                     oldfile.replace(newjsonfile.with_suffix(''.join(oldfile.suffixes)))
 
-        # Copy over the source meta-data
-        metadata = bids.copymetadata(sourcefile, outfolder/bidsname, options.get('meta', []))
-
         # Loop over all the newly produced json sidecar-files and adapt the data (NB: assumes every NIfTI-file comes with a json-file)
         for jsonfile in sorted(set(jsonfiles)):
 
-            # Load the json meta-data
-            with jsonfile.open('r') as json_fid:
-                jsondata = json.load(json_fid)
+            # Load / copy over the source meta-data
+            metadata = bids.poolmetadata(sourcefile, jsonfile, run['meta'], options['meta'], datasource)
 
             # Remove the bval/bvec files of sbref- and inv-images (produced by dcm2niix but not allowed by the BIDS specifications)
             if (datasource.datatype=='dwi' and suffix=='sbref') or (datasource.datatype=='fmap' and suffix=='epi'):
@@ -442,34 +437,17 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                         bdata = pd.read_csv(bfile, header=None)
                         if bdata.any(axis=None):
                             LOGGER.warning(f"Storing unexpected non-zero values from {bfile} -> {jsonfile}")
-                            jsondata[ext[1:]] = bdata.values.tolist()
+                            metadata[ext[1:]] = bdata.values.tolist()
                         LOGGER.verbose(f"Removing BIDS-invalid file: {bfile}")
                         bfile.unlink()
 
-            # Add all the source meta data to the meta-data
-            for metakey, metaval in metadata.items():
-                if jsondata.get(metakey) and jsondata.get(metakey) == metaval:
-                    LOGGER.warning(f"Overruling {metakey} values in {jsonfile}: {jsondata[metakey]} -> {metaval}")
-                jsondata[metakey] = metaval if metaval else None
-
-            # Add all the run meta data to the meta-data. NB: the dynamic `IntendedFor` value is handled separately later
-            for metakey, metaval in run['meta'].items():
-                if metakey != 'IntendedFor':
-                    metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
-                    try: metaval = ast.literal_eval(str(metaval))            # E.g. convert stringified list or int back to list or int
-                    except (ValueError, SyntaxError): pass
-                    LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {jsonfile}")
-                if jsondata.get(metakey) and jsondata.get(metakey) == metaval:
-                    LOGGER.warning(f"Overruling {metakey} values in {jsonfile}: {jsondata[metakey]} -> {metaval}")
-                jsondata[metakey] = metaval if metaval else None
-
             # Remove unused (but added from the template) B0FieldIdentifiers/Sources
-            if not jsondata.get('B0FieldSource'):     jsondata.pop('B0FieldSource', None)
-            if not jsondata.get('B0FieldIdentifier'): jsondata.pop('B0FieldIdentifier', None)
+            if not metadata.get('B0FieldSource'):     metadata.pop('B0FieldSource', None)
+            if not metadata.get('B0FieldIdentifier'): metadata.pop('B0FieldIdentifier', None)
 
             # Save the meta-data to the json sidecar-file
             with jsonfile.open('w') as json_fid:
-                json.dump(jsondata, json_fid, indent=4)
+                json.dump(metadata, json_fid, indent=4)
 
             # Parse the acquisition time from the source header or else from the json file (NB: assuming the source file represents the first acquisition)
             outputfile = [file for file in jsonfile.parent.glob(jsonfile.stem + '.*') if file.suffix in ('.nii','.gz')]     # Find the corresponding NIfTI/tsv.gz file (there should be only one, let's not make assumptions about the .gz extension)
@@ -482,7 +460,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                 elif dataformat == 'PAR':
                     acq_time = datasource.attributes('exam_date')
                 if not acq_time or acq_time == 'T':
-                    acq_time = f"1925-01-01T{jsondata.get('AcquisitionTime','')}"
+                    acq_time = f"1925-01-01T{metadata.get('AcquisitionTime','')}"
                 try:
                     acq_time = dateutil.parser.parse(acq_time)
                     if options.get('anon','y') in ('y','yes'):
