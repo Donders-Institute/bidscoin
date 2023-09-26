@@ -469,3 +469,36 @@ def test_get_bidsname(raw_dicomdir):
     run['bids']['run'] = '<<>>'
     bidsname = bids.get_bidsname('sub-001', '', run, validkeys=True, runtime=True)          # Test default: cleanup=True
     assert bidsname == 'sub-001_acq-pydicom_T0w'
+
+
+def test_poolmetadata(dcm_file, tmp_path):
+    """Test if metadata is added to the dictionary and copied over"""
+
+    # Create the extended datasource
+    sourcefile = shutil.copyfile(dcm_file, tmp_path/dcm_file.name)
+    sourcefile.with_suffix('.jsn').touch()
+    with sourcefile.with_suffix('.json').open('w') as fid:
+        json.dump({'PatientName': 'SourceTest'}, fid)
+    extdatasource = bids.DataSource(sourcefile, {'dcm2niix2bids': {}}, 'DICOM')
+
+    # Create the metadata sidecar file
+    outfolder = tmp_path/'bids'/'sub-01'/'anat'
+    outfolder.mkdir(parents=True)
+    sidecar = outfolder/'sidecar.json'
+    with sidecar.open('w') as fid:
+        json.dump({'PatientName': 'SidecarTest'}, fid)
+
+    # Test if the user metadata takes precedence
+    metadata = bids.poolmetadata(sourcefile, sidecar, {'PatientName': 'UserTest', 'DynamicName': '<<(0010, 0010)>>'}, ['.json'], extdatasource)
+    assert metadata['PatientName'] == 'UserTest'
+    assert metadata['DynamicName'] == 'CompressedSamples^MR1'
+    assert not (outfolder/sourcefile.with_suffix('.jsn').name).is_file()
+
+    # Test if the source metadata takes precedence
+    metadata = bids.poolmetadata(sourcefile, sidecar, {}, ['.jsn', '.json'], extdatasource)
+    assert metadata['PatientName'] == 'SourceTest'
+    assert (outfolder/sourcefile.with_suffix('.jsn').name).is_file()
+
+    # Test if the sidecar metadata takes precedence
+    metadata = bids.poolmetadata(sourcefile, sidecar, {}, [], extdatasource)
+    assert metadata['PatientName'] == 'SidecarTest'
