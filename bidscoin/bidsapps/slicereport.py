@@ -12,7 +12,7 @@ from pathlib import Path
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids, lsdirs, bidsversion, __version__
+from bidscoin import bcoin, bids, lsdirs, bidsversion, trackusage, __version__
 
 html_head = """<!DOCTYPE html>
 <html lang="en">
@@ -277,6 +277,8 @@ def main():
     """Console script entry point"""
 
     from bidscoin.cli._slicereport import get_parser
+
+    trackusage('slicereport')
 
     args = get_parser().parse_args()
     slicereport(bidsdir        = args.bidsfolder,

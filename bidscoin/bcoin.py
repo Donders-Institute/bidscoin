@@ -23,13 +23,9 @@ from tqdm import tqdm
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import heuristicsfolder, pluginfolder, bidsmap_template, tutorialurl
+from bidscoin import heuristicsfolder, pluginfolder, bidsmap_template, tutorialurl, trackusage, tracking, configfile, config
 
 yaml = YAML()
-
-# Get the BIDSCOIN_DEBUG environment variable to set the log-messages and logging level, etc
-debug  = os.environ.get('BIDSCOIN_DEBUG')
-debug  = True if debug and debug.upper() not in ('0', 'FALSE', 'N', 'NO', 'NONE') else False
 
 LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +56,10 @@ def setup_logging(logfile: Path=Path()):
     :param logfile:     Name of the logfile
     :return:
      """
+
+    # Get the BIDSCOIN_DEBUG environment variable to set the log-messages and logging level, etc
+    debug = os.environ.get('BIDSCOIN_DEBUG')
+    debug = True if debug and debug.upper() not in ('0', 'FALSE', 'N', 'NO', 'NONE') else False
 
     # Set the default formats
     if debug:
@@ -102,27 +102,27 @@ def setup_logging(logfile: Path=Path()):
     coloredlogs.install(level='BCDEBUG' if debug else 'VERBOSE' if not logfile.name else 'INFO', fmt=cfmt, datefmt=datefmt)   # NB: Using tqdm sets the streamhandler level to 0, see: https://github.com/tqdm/tqdm/pull/1235
     coloredlogs.DEFAULT_LEVEL_STYLES['verbose']['color'] = 245  # = Gray
 
-    if not logfile.name:
-        if debug: LOGGER.info('\t<<<<<<<<<< Running BIDScoin in DEBUG mode >>>>>>>>>>')
-        return
+    if logfile.name:
 
-    # Add the log filehandler
-    logfile.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
-    formatter  = logging.Formatter(fmt=fmt, datefmt=datefmt)
-    loghandler = logging.FileHandler(logfile)
-    loghandler.setLevel('BCDEBUG')
-    loghandler.setFormatter(formatter)
-    loghandler.set_name('loghandler')
-    logger.addHandler(loghandler)
+        # Add the log filehandler
+        logfile.parent.mkdir(parents=True, exist_ok=True)      # Create the log dir if it does not exist
+        formatter  = logging.Formatter(fmt=fmt, datefmt=datefmt)
+        loghandler = logging.FileHandler(logfile)
+        loghandler.setLevel('BCDEBUG')
+        loghandler.setFormatter(formatter)
+        loghandler.set_name('loghandler')
+        logger.addHandler(loghandler)
 
-    # Add the error/warnings filehandler
-    errorhandler = logging.FileHandler(logfile.with_suffix('.errors'), mode='w')
-    errorhandler.setLevel('WARNING')
-    errorhandler.setFormatter(formatter)
-    errorhandler.set_name('errorhandler')
-    logger.addHandler(errorhandler)
+        # Add the error/warnings filehandler
+        errorhandler = logging.FileHandler(logfile.with_suffix('.errors'), mode='w')
+        errorhandler.setLevel('WARNING')
+        errorhandler.setFormatter(formatter)
+        errorhandler.set_name('errorhandler')
+        logger.addHandler(errorhandler)
 
-    if debug: LOGGER.info('\t<<<<<<<<<< Running BIDScoin in DEBUG mode >>>>>>>>>>')
+    if debug:
+        LOGGER.info('\t<<<<<<<<<< Running BIDScoin in DEBUG mode >>>>>>>>>>')
+        settracking('show')
 
 
 def reporterrors() -> str:
@@ -142,6 +142,7 @@ def reporterrors() -> str:
                 if errorfile.stat().st_size:
                     errors = errorfile.read_text()
                     LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errors}{40 * '<'}\n")
+                    trackusage(f"{errorfile.stem}_{'error' if 'ERROR' in errors else 'warning'}")
 
                 else:
                     LOGGER.success(f'No BIDScoin errors or warnings were reported')
@@ -546,7 +547,7 @@ def pulltutorialdata(tutorialfolder: str) -> None:
     # Download the data
     LOGGER.info(f"Downloading the tutorial dataset...")
     with TqdmUpTo(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc=tutorialtargz.name) as t:
-        urllib.request.urlretrieve(tutorialurl, tutorialtargz, reporthook=t.update_to)  # NB: Much faster than requests.get(url, stream=True). In case of ssl certificate issues use: with urllib.request.urlopen(tutorialurl, context=ssl.SSLContext()) as data, open(tutorialtargz, 'wb') as targz_fid: shutil.copyfileobj(data, targz_fid)
+        urllib.request.urlretrieve(tutorialurl, tutorialtargz, reporthook=t.update_to)  # NB: In case of ssl certificate issues use: with urllib.request.urlopen(tutorialurl, context=ssl.SSLContext()) as data, open(tutorialtargz, 'wb') as targz_fid: shutil.copyfileobj(data, targz_fid)
 
     # Unzip the data in the target folder
     LOGGER.info(f"Unpacking the downloaded data in: {tutorialfolder}")
@@ -558,10 +559,35 @@ def pulltutorialdata(tutorialfolder: str) -> None:
         LOGGER.error(f"Could not unpack: {tutorialtargz}\n{unpackerror}")
 
 
+def settracking(value: str):
+
+    if not value: return
+
+    setting = config['bidscoin']['trackusage']
+    if value == 'show':
+        data = trackusage('bidscoin', dryrun=True)
+        show = '{\n' + '\n'.join([f"   {key}:\t{val}" for key, val in data.items()]) + '\n}'
+        LOGGER.info(f"trackusage = '{setting}'\t# Upload anonymous usage data if 'yes' (maximally 1 upload every {tracking['sleep']} hour)\n"
+                    f"Data upload example: -> {tracking['url']}\n{show}")
+
+    elif setting != value:
+        data = configfile.read_text().splitlines()
+        for n, line in enumerate(data):
+            if line.startswith('trackusage'):
+                data[n] = line.replace(f"'{setting}'", f"'{value}'")
+                LOGGER.info(f"Writing: [{data[n]}] -> {configfile}")
+        configfile.write_text('\n'.join(data) + '\n')
+
+    else:
+        LOGGER.verbose(f"Usage tracking is already set to '{value}'")
+
+
 def main():
     """Console script entry point"""
 
     from bidscoin.cli._bcoin import get_parser
+
+    trackusage('bidscoin')
 
     setup_logging()
 
@@ -575,6 +601,7 @@ def main():
     pulltutorialdata(tutorialfolder=args.download)
     test_bidscoin(bidsmapfile=args.test)
     test_bidsmap(bidsmapfile=args.bidsmaptest)
+    settracking(value=args.tracking)
 
 
 if __name__ == "__main__":

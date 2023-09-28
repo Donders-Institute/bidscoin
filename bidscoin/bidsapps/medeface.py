@@ -17,7 +17,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids, lsdirs
+from bidscoin import bcoin, bids, lsdirs, trackusage
 
 
 def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
@@ -199,6 +199,8 @@ def main():
     """Console script entry point"""
 
     from bidscoin.cli._medeface import get_parser
+
+    trackusage('medeface')
 
     args = get_parser().parse_args()
     medeface(bidsdir     = args.bidsfolder,

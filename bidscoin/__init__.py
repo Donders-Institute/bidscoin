@@ -13,8 +13,14 @@ For more documentation see: https://bidscoin.readthedocs.io
 """
 
 # Imports from the standard library only (as these are imported during the cli/manpage build process)
-import urllib.request
+import urllib.request, urllib.parse, urllib.error
 import json
+import getpass
+import platform
+import hashlib
+import tempfile
+import shelve
+import datetime
 from pathlib import Path
 from importlib import metadata
 from typing import Tuple, Union, List
@@ -48,12 +54,23 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Gen
 """
 
 # Define the default paths
+configfile       = Path.home()/'.bidscoin.toml'
+# tracking         = {'url': 'https://bidscoin.dccn.nl/tracking', 'sleep': 1}         # Sleep = Nr of sleeping hours during which usage is not tracked
+tracking         = {'url': 'https://fbox.luchoulee.nl/bidscoin', 'sleep': 1}         # Sleep = Nr of sleeping hours during which usage is not tracked
 tutorialurl      = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
 bidscoinfolder   = Path(__file__).parent
 schemafolder     = bidscoinfolder/'schema'
 heuristicsfolder = bidscoinfolder/'heuristics'
 pluginfolder     = bidscoinfolder/'plugins'
-bidsmap_template = heuristicsfolder/'bidsmap_dccn.yaml'     # Default template bidsmap TODO: make it a user setting (in $HOME)?
+
+# Load the BIDScoin user configuration settings
+if not configfile.is_file():
+    configfile.write_text(f"[bidscoin]\n"
+                          f"bidsmap_template = '{heuristicsfolder}/bidsmap_dccn.yaml'   # The default template bidsmap\n"
+                          f"trackusage       = 'yes'\t# Upload anonymous usage data if 'yes' (maximally 1 upload every {tracking['sleep']} hour) (see `bidscoin --tracking show`)\n")
+with configfile.open('+rb') as fid:
+    config = tomllib.load(fid)
+bidsmap_template = Path(config['bidscoin']['bidsmap_template'])
 
 # Register the BIDScoin citation
 due.cite(Doi('10.3389/fninf.2021.770608'), description='A versatile toolkit to convert source data to the Brain Imaging Data Structure (BIDS)', path='bidscoin', version=__version__)
@@ -68,7 +85,7 @@ def check_version() -> Tuple[str, Union[bool, None], str]:
 
     # Check pypi for the latest version number
     try:
-        stream      = urllib.request.urlopen('https://pypi.org/pypi/bidscoin/json').read()
+        stream      = urllib.request.urlopen('https://pypi.org/pypi/bidscoin/json', timeout=5).read()
         pypiversion = json.loads(stream)['info']['version']
     except Exception as pypierror:
         print(pypierror)
@@ -102,3 +119,42 @@ def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
     is_hidden = lambda path: any([part.startswith('.') for part in path.parts])
 
     return sorted([item for item in sorted(folder.glob(wildcard)) if item.is_dir() and not is_hidden(item.relative_to(folder))])
+
+
+def trackusage(event: str, dryrun: bool=False) -> dict:
+    """Sends a url GET request with usage data parameters (if tracking is allowed and we are not asleep)
+
+    :param event:  A label that describes the tracking event
+    :param dryrun: Collect the usage data but don't actually send anything
+    :return:       The usage data
+    """
+
+    data = {'event':    event,
+            'bidscoin': __version__,
+            'python':   platform.python_version(),
+            'system':   platform.system(),
+            'release':  platform.release(),
+            'userid':   hashlib.md5(getpass.getuser().encode('utf8')).hexdigest(),
+            'hostid':   hashlib.md5(platform.node().encode('utf8')).hexdigest()}
+
+    # Check if the user allows tracking or if it is a dry/test run
+    if not config['bidscoin'].get('trackusage', 'yes') == 'yes' or dryrun or "PYTEST_CURRENT_TEST" in platform.os.environ:
+        return data
+
+    # Check if we are not asleep
+    trackfile = Path(tempfile.gettempdir())/f"bidscoin_{data['userid']}_{data['hostid']}"
+    with shelve.open(str(trackfile), 'c') as tracked:
+        now    = datetime.datetime.now()
+        before = tracked.get(event, now.replace(year=2000))
+        if (now - before).total_seconds() < tracking['sleep'] * 60 * 60:
+            return data
+        tracked[event] = now
+
+    # Upload the usage data
+    try:
+        req = urllib.request.Request(f"{tracking['url']}?{urllib.parse.urlencode(data)}", headers={'User-agent': 'bidscoin-telemetry'})
+        with urllib.request.urlopen(req, timeout=5) as f: pass
+    except urllib.error.URLError as urlerror:
+        print(urlerror)
+
+    return data

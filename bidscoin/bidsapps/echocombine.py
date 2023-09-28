@@ -12,7 +12,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids, lsdirs
+from bidscoin import bcoin, bids, lsdirs, trackusage
 
 unknowndatatype = 'extra_data'
 
@@ -199,6 +199,8 @@ def main():
     """Console script entry point"""
 
     from bidscoin.cli._echocombine import get_parser
+
+    trackusage('echocombine')
 
     # Parse the input arguments and run bidscoiner(args)
     args = get_parser().parse_args()

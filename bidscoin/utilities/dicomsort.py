@@ -11,7 +11,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids, lsdirs
+from bidscoin import bcoin, bids, lsdirs, trackusage
 
 LOGGER = logging.getLogger(__name__)
 
@@ -161,6 +161,9 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
         else:
             LOGGER.error(f"Unexpected dicomsource argument '{sourcefolder}', aborting dicomsort()...")
             return []
+    elif not sourcefolder.is_dir():
+        print(f"Sourcefolder '{sourcefolder}' not found")
+        return []
     if (folderscheme and not validscheme(folderscheme)) or (namescheme and not validscheme(namescheme)):
         LOGGER.error('Wrong scheme input argument(s), aborting dicomsort()...')
         return []
@@ -210,6 +213,8 @@ def main():
     """Console script entry point"""
 
     from bidscoin.cli._dicomsort import get_parser
+
+    trackusage('dicomsort')
 
     # Set-up logging
     bcoin.setup_logging()

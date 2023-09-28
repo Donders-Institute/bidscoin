@@ -13,7 +13,7 @@ from pathlib import Path
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import bcoin, bids, lsdirs, check_version, __version__
+from bidscoin import bcoin, bids, lsdirs, trackusage, check_version, __version__
 
 _, uptodate, versionmessage = check_version()
 
@@ -48,6 +48,9 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
         LOGGER.debug(f"Regular expression metacharacters found in {subprefix}, this may cause errors later on...")
     if [char for char in sesprefix or '' if char in ('^', '$', '+', '{', '}', '[', ']', '\\', '|', '(', ')')]:
         LOGGER.debug(f"Regular expression metacharacters found in {sesprefix}, this may cause errors later on...")
+    if not rawfolder.is_dir():
+        print(f"Rawfolder '{rawfolder}' not found")
+        return {}
 
     # Start logging
     if force:
@@ -235,6 +238,9 @@ def main():
 
     # Parse the input arguments and run bidsmapper(args)
     args = get_parser().parse_args()
+
+    trackusage('bidsmapper')
+
     bidsmapper(rawfolder    = args.sourcefolder,
                bidsfolder   = args.bidsfolder,
                bidsmapfile  = args.bidsmap,

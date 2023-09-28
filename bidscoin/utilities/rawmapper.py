@@ -8,7 +8,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import lsdirs, bids
+from bidscoin import lsdirs, bids, trackusage
 
 
 def rawmapper(rawfolder, outfolder: str='', sessions: tuple=(), rename: bool=False, force: bool=False, dicomfield: tuple=('PatientComments',), wildcard: str='*', subprefix: str='sub-', sesprefix: str='ses-', dryrun: bool=False) -> None:
@@ -28,6 +28,9 @@ def rawmapper(rawfolder, outfolder: str='', sessions: tuple=(), rename: bool=Fal
 
     # Input checking
     rawfolder = Path(rawfolder).resolve()
+    if not rawfolder.is_dir():
+        print(f"Rawfolder '{rawfolder}' not found")
+        return
     print(f"Mapping: {rawfolder}")
     if not outfolder or not Path(outfolder).name:
         outfolder = rawfolder
@@ -137,6 +140,8 @@ def main():
     """Console script entry point"""
 
     from bidscoin.cli._rawmapper import get_parser
+
+    trackusage('rawmapper')
 
     args = get_parser().parse_args()
     rawmapper(rawfolder  = args.sourcefolder,

@@ -13,7 +13,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids, lsdirs
+from bidscoin import bcoin, bids, lsdirs, trackusage
 
 
 def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: list, force: bool, args: str, cluster: bool):
@@ -207,6 +207,8 @@ def main():
     """Console script entry point"""
 
     from bidscoin.cli._skullstrip import get_parser
+
+    trackusage('skullstrip')
 
     args = get_parser().parse_args()
     skullstrip(bidsdir  = args.bidsfolder,

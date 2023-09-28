@@ -22,7 +22,7 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QFileDialog, QDialogButt
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import bcoin, bids, bidsversion, check_version, bidsmap_template, __version__
+from bidscoin import bcoin, bids, bidsversion, check_version, trackusage, bidsmap_template, __version__
 
 
 ROW_HEIGHT       = 22
@@ -1691,6 +1691,9 @@ def main():
 
     # Parse the input arguments and run bidseditor
     args = get_parser().parse_args()
+
+    trackusage('bidseditor')
+
     bidseditor(bidsfolder   = args.bidsfolder,
                bidsmapfile  = args.bidsmap,
                templatefile = args.template)

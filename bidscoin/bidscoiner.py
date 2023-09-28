@@ -7,7 +7,7 @@ import pandas as pd
 import json
 import logging
 import shutil
-import urllib.request
+import urllib.request, urllib.error
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
@@ -15,7 +15,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import bcoin, bids, lsdirs, bidsversion, __version__
+from bidscoin import bcoin, bids, lsdirs, bidsversion, trackusage, __version__
 
 
 def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=False, bidsmapfile: str='bidsmap.yaml') -> None:
@@ -35,6 +35,9 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     rawfolder   = Path(rawfolder).resolve()
     bidsfolder  = Path(bidsfolder).resolve()
     bidsmapfile = Path(bidsmapfile)
+    if not rawfolder.is_dir():
+        print(f"Rawfolder '{rawfolder}' not found")
+        return
 
     # Start logging
     bcoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidscoiner.log')
@@ -341,6 +344,9 @@ def main():
 
     # Parse the input arguments and run bidscoiner(args)
     args = get_parser().parse_args()
+
+    trackusage('bidscoiner')
+
     bidscoiner(rawfolder   = args.sourcefolder,
                bidsfolder  = args.bidsfolder,
                subjects    = args.participant_label,

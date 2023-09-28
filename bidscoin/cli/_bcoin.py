@@ -37,14 +37,16 @@ def get_parser() -> argparse.ArgumentParser:
                                             '  bidscoin -t\n'
                                             '  bidscoin -t my_template_bidsmap\n'
                                             '  bidscoin -b my_study_bidsmap\n'
-                                            '  bidscoin -i data/my_template_bidsmap.yaml downloads/my_plugin.py\n ')
+                                            '  bidscoin -i data/my_template_bidsmap.yaml downloads/my_plugin.py\n'
+                                            '  bidscoin --tracking show\n ')
     parser.add_argument('-l', '--list',        help='List all executables (i.e. the apps, bidsapps and utilities)', action='store_true')
     parser.add_argument('-p', '--plugins',     help='List all installed plugins and template bidsmaps', action='store_true')
     parser.add_argument('-i', '--install',     help='A list of template bidsmaps and/or bidscoin plugins to install', nargs='+')
     parser.add_argument('-u', '--uninstall',   help='A list of template bidsmaps and/or bidscoin plugins to uninstall', nargs='+')
-    parser.add_argument('-d', '--download',    help='Download folder. If given, tutorial MRI data will be downloaded here')
+    parser.add_argument('-d', '--download',    help='Download tutorial MRI data to the DOWNLOAD folder')
     parser.add_argument('-t', '--test',        help='Test the bidscoin installation and template bidsmap', nargs='?', const=bidsmap_template)
     parser.add_argument('-b', '--bidsmaptest', help='Test the run-items and their bidsnames of all normal runs in the study bidsmap. Provide the bids-folder or the bidsmap filepath')
+    parser.add_argument(      '--tracking',    help='Show the usage tracking info [show], or set usage tracking to [yes] or [no]', choices=['yes','no','show'])
     parser.add_argument('-v', '--version',     help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidsversion()}\nBIDScoin-version:\t{__version__}, {versionmessage}")
 
     return parser

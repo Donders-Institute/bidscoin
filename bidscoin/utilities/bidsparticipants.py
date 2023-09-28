@@ -12,7 +12,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids, lsdirs, __version__
+from bidscoin import bcoin, bids, lsdirs, trackusage, __version__
 
 
 def scanpersonals(bidsmap: dict, session: Path, personals: dict) -> bool:
@@ -68,6 +68,12 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
     # Input checking & defaults
     rawfolder  = Path(rawfolder).resolve()
     bidsfolder = Path(bidsfolder).resolve()
+    if not rawfolder.is_dir():
+        print(f"Rawfolder '{rawfolder}' not found")
+        return
+    if not bidsfolder.is_dir():
+        print(f"Bidsfolder '{bidsfolder}' not found")
+        return
 
     # Start logging
     if dryrun:
@@ -175,6 +181,8 @@ def main():
     """Console script entry point"""
 
     from bidscoin.cli._bidsparticipants import get_parser
+
+    trackusage('bidsparticipants')
 
     args = get_parser().parse_args()
     bidsparticipants(rawfolder   = args.sourcefolder,
