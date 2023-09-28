@@ -148,3 +148,6 @@ Editing the template bidsmap
        suffix: T2w
 
 *Snippet derived from the bidsmap_dccn template, showing a "DICOM" section with a void "anat" run-item and two normal run-items that dereference the first run-item* (e.g. the ``&anatattributes_dicom`` anchor is dereferenced with the ``<<: *anatattributes_dicom`` alias)
+
+.. tip::
+   The path of the default template bidsmap is set in the ``.bidscoin'/version/'config.toml`` file in your home directory

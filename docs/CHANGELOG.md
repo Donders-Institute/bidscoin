@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Added
 - The option to pip-install dcm2niix as `extras`
+- A user config file (github issue #197)
+- Optional usage tracking (github issue #200)
 
 ## [4.1.1] - 2023-09-14
 

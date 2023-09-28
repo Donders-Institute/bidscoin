@@ -54,7 +54,7 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Gen
 """
 
 # Define the default paths
-configfile       = Path.home()/'.bidscoin.toml'
+configfile       = Path.home()/'.bidscoin'/__version__/'config.toml'
 # tracking         = {'url': 'https://bidscoin.dccn.nl/tracking', 'sleep': 1}         # Sleep = Nr of sleeping hours during which usage is not tracked
 tracking         = {'url': 'https://fbox.luchoulee.nl/bidscoin', 'sleep': 1}         # Sleep = Nr of sleeping hours during which usage is not tracked
 tutorialurl      = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
@@ -65,6 +65,7 @@ pluginfolder     = bidscoinfolder/'plugins'
 
 # Load the BIDScoin user configuration settings
 if not configfile.is_file():
+    configfile.parent.mkdir(parents=True, exist_ok=True)
     configfile.write_text(f"[bidscoin]\n"
                           f"bidsmap_template = '{heuristicsfolder}/bidsmap_dccn.yaml'   # The default template bidsmap\n"
                           f"trackusage       = 'yes'\t# Upload anonymous usage data if 'yes' (maximally 1 upload every {tracking['sleep']} hour) (see `bidscoin --tracking show`)\n")

@@ -569,6 +569,8 @@ def settracking(value: str):
         show = '{\n' + '\n'.join([f"   {key}:\t{val}" for key, val in data.items()]) + '\n}'
         LOGGER.info(f"trackusage = '{setting}'\t# Upload anonymous usage data if 'yes' (maximally 1 upload every {tracking['sleep']} hour)\n"
                     f"Data upload example: -> {tracking['url']}\n{show}")
+        print('\nNB: As you can see above, BIDScoin does NOT upload any identifying details about you nor information about the data. '
+              'Uploaded data is used to generate usage and error statistics, and helps the developers to improve BIDScoin\n')
 
     elif setting != value:
         data = configfile.read_text().splitlines()
