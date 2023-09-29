@@ -152,17 +152,22 @@ def main():
 
     from bidscoin.cli._deface import get_parser
 
-    trackusage('deface')
-
     args = get_parser().parse_args()
-    deface(bidsdir    = args.bidsfolder,
-           pattern    = args.pattern,
-           subjects   = args.participant_label,
-           force      = args.force,
-           output     = args.output,
-           cluster    = args.cluster,
-           nativespec = args.nativespec,
-           kwargs     = args.args)
+
+    trackusage('deface')
+    try:
+        deface(bidsdir    = args.bidsfolder,
+               pattern    = args.pattern,
+               subjects   = args.participant_label,
+               force      = args.force,
+               output     = args.output,
+               cluster    = args.cluster,
+               nativespec = args.nativespec,
+               kwargs     = args.args)
+
+    except Exception:
+        trackusage('deface_exception')
+        raise
 
 
 if __name__ == '__main__':

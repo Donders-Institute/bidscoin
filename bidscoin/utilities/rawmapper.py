@@ -141,19 +141,24 @@ def main():
 
     from bidscoin.cli._rawmapper import get_parser
 
-    trackusage('rawmapper')
-
     args = get_parser().parse_args()
-    rawmapper(rawfolder  = args.sourcefolder,
-              outfolder  = args.outfolder,
-              sessions   = args.sessions,
-              rename     = args.rename,
-              force      = args.clobber,
-              dicomfield = args.field,
-              wildcard   = args.wildcard,
-              subprefix  = args.subprefix,
-              sesprefix  = args.sesprefix,
-              dryrun     = args.dryrun)
+
+    trackusage('rawmapper')
+    try:
+        rawmapper(rawfolder  = args.sourcefolder,
+                  outfolder  = args.outfolder,
+                  sessions   = args.sessions,
+                  rename     = args.rename,
+                  force      = args.clobber,
+                  dicomfield = args.field,
+                  wildcard   = args.wildcard,
+                  subprefix  = args.subprefix,
+                  sesprefix  = args.sesprefix,
+                  dryrun     = args.dryrun)
+
+    except Exception:
+        trackusage('rawmapper_exception')
+        raise
 
 
 if __name__ == "__main__":

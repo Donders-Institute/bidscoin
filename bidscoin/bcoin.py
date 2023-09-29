@@ -524,6 +524,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
 
     if not success:
         LOGGER.warning('Not all tests finishd successfully (this may be ok, but check the output above)')
+        trackusage('bidscoin_error')
     else:
         LOGGER.success('All tests finished successfully :-)')
 
@@ -557,6 +558,7 @@ def pulltutorialdata(tutorialfolder: str) -> None:
         LOGGER.success(f"Done")
     except Exception as unpackerror:
         LOGGER.error(f"Could not unpack: {tutorialtargz}\n{unpackerror}")
+        trackusage('bidscoin_error')
 
 
 def settracking(value: str):
@@ -596,14 +598,19 @@ def main():
     # Parse the input arguments and run bidscoiner(args)
     args = get_parser().parse_args(None if sys.argv[1:] else ['--help'])
 
-    list_executables(show=args.list)
-    list_plugins(show=args.plugins)
-    uninstall_plugins(filenames=args.uninstall)
-    install_plugins(filenames=args.install)
-    pulltutorialdata(tutorialfolder=args.download)
-    test_bidscoin(bidsmapfile=args.test)
-    test_bidsmap(bidsmapfile=args.bidsmaptest)
-    settracking(value=args.tracking)
+    try:
+        list_executables(show=args.list)
+        list_plugins(show=args.plugins)
+        uninstall_plugins(filenames=args.uninstall)
+        install_plugins(filenames=args.install)
+        pulltutorialdata(tutorialfolder=args.download)
+        test_bidscoin(bidsmapfile=args.test)
+        test_bidsmap(bidsmapfile=args.bidsmaptest)
+        settracking(value=args.tracking)
+
+    except Exception:
+        trackusage('bidscoin_exception')
+        raise
 
 
 if __name__ == "__main__":

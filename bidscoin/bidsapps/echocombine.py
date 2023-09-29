@@ -200,17 +200,22 @@ def main():
 
     from bidscoin.cli._echocombine import get_parser
 
-    trackusage('echocombine')
-
     # Parse the input arguments and run bidscoiner(args)
     args = get_parser().parse_args()
-    echocombine(bidsdir   = args.bidsfolder,
-                pattern   = args.pattern,
-                subjects  = args.participant_label,
-                output    = args.output,
-                algorithm = args.algorithm,
-                weights   = args.weights,
-                force     = args.force)
+
+    trackusage('echocombine')
+    try:
+        echocombine(bidsdir   = args.bidsfolder,
+                    pattern   = args.pattern,
+                    subjects  = args.participant_label,
+                    output    = args.output,
+                    algorithm = args.algorithm,
+                    weights   = args.weights,
+                    force     = args.force)
+
+    except Exception:
+        trackusage('echocombine_exception')
+        raise
 
 
 if __name__ == '__main__':

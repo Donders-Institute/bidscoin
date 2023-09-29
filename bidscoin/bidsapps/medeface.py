@@ -200,18 +200,23 @@ def main():
 
     from bidscoin.cli._medeface import get_parser
 
-    trackusage('medeface')
-
     args = get_parser().parse_args()
-    medeface(bidsdir     = args.bidsfolder,
-             pattern     = args.pattern,
-             maskpattern = args.maskpattern,
-             subjects    = args.participant_label,
-             force       = args.force,
-             output      = args.output,
-             cluster     = args.cluster,
-             nativespec  = args.nativespec,
-             kwargs      = args.args)
+
+    trackusage('medeface')
+    try:
+        medeface(bidsdir     = args.bidsfolder,
+                 pattern     = args.pattern,
+                 maskpattern = args.maskpattern,
+                 subjects    = args.participant_label,
+                 force       = args.force,
+                 output      = args.output,
+                 cluster     = args.cluster,
+                 nativespec  = args.nativespec,
+                 kwargs      = args.args)
+
+    except Exception:
+        trackusage('medeface_exception')
+        raise
 
 
 if __name__ == '__main__':

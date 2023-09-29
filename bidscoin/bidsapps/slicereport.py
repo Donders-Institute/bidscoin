@@ -278,22 +278,27 @@ def main():
 
     from bidscoin.cli._slicereport import get_parser
 
-    trackusage('slicereport')
-
     args = get_parser().parse_args()
-    slicereport(bidsdir        = args.bidsfolder,
-                pattern        = args.pattern,
-                outlinepattern = args.outlinepattern,
-                outlineimage   = args.outlineimage,
-                subjects       = args.participant_label,
-                reportdir      = args.reportfolder,
-                crossdirs      = args.xlinkfolder,
-                qccols         = args.qcscores,
-                cluster        = args.cluster,
-                options        = args.options,
-                outputs        = args.outputs,
-                suboptions     = args.suboptions,
-                suboutputs     = args.suboutputs)
+
+    trackusage('slicereport')
+    try:
+        slicereport(bidsdir        = args.bidsfolder,
+                    pattern        = args.pattern,
+                    outlinepattern = args.outlinepattern,
+                    outlineimage   = args.outlineimage,
+                    subjects       = args.participant_label,
+                    reportdir      = args.reportfolder,
+                    crossdirs      = args.xlinkfolder,
+                    qccols         = args.qcscores,
+                    cluster        = args.cluster,
+                    options        = args.options,
+                    outputs        = args.outputs,
+                    suboptions     = args.suboptions,
+                    suboutputs     = args.suboutputs)
+
+    except Exception:
+        trackusage('slicereport_exception')
+        raise
 
 
 if __name__ == '__main__':

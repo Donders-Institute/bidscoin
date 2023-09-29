@@ -182,14 +182,19 @@ def main():
 
     from bidscoin.cli._bidsparticipants import get_parser
 
-    trackusage('bidsparticipants')
-
     args = get_parser().parse_args()
-    bidsparticipants(rawfolder   = args.sourcefolder,
-                     bidsfolder  = args.bidsfolder,
-                     keys        = args.keys,
-                     bidsmapfile = args.bidsmap,
-                     dryrun      = args.dryrun)
+
+    trackusage('bidsparticipants')
+    try:
+        bidsparticipants(rawfolder   = args.sourcefolder,
+                         bidsfolder  = args.bidsfolder,
+                         keys        = args.keys,
+                         bidsmapfile = args.bidsmap,
+                         dryrun      = args.dryrun)
+
+    except Exception:
+        trackusage('bidsparticipants_exception')
+        raise
 
 
 if __name__ == "__main__":

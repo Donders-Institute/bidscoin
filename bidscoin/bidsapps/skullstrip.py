@@ -208,17 +208,22 @@ def main():
 
     from bidscoin.cli._skullstrip import get_parser
 
-    trackusage('skullstrip')
-
     args = get_parser().parse_args()
-    skullstrip(bidsdir  = args.bidsfolder,
-               pattern  = args.pattern,
-               subjects = args.participant_label,
-               masked   = args.masked,
-               output   = args.output,
-               force    = args.force,
-               args     = args.args,
-               cluster  = args.cluster)
+
+    trackusage('skullstrip')
+    try:
+        skullstrip(bidsdir  = args.bidsfolder,
+                   pattern  = args.pattern,
+                   subjects = args.participant_label,
+                   masked   = args.masked,
+                   output   = args.output,
+                   force    = args.force,
+                   args     = args.args,
+                   cluster  = args.cluster)
+
+    except Exception:
+        trackusage('skullstrip_exception')
+        raise
 
 
 if __name__ == '__main__':

@@ -346,12 +346,16 @@ def main():
     args = get_parser().parse_args()
 
     trackusage('bidscoiner')
+    try:
+        bidscoiner(rawfolder   = args.sourcefolder,
+                   bidsfolder  = args.bidsfolder,
+                   subjects    = args.participant_label,
+                   force       = args.force,
+                   bidsmapfile = args.bidsmap)
 
-    bidscoiner(rawfolder   = args.sourcefolder,
-               bidsfolder  = args.bidsfolder,
-               subjects    = args.participant_label,
-               force       = args.force,
-               bidsmapfile = args.bidsmap)
+    except Exception:
+        trackusage('bidscoiner_exception')
+        raise
 
 
 if __name__ == "__main__":

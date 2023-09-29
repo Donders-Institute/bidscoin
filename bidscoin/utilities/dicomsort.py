@@ -40,6 +40,7 @@ def construct_name(scheme: str, dicomfile: Path, force: bool) -> str:
                 value = int(value.replace('.',''))      # Convert the SeriesInstanceUID to an int
         if not value and value != 0 and not force:
             LOGGER.error(f"Missing '{field}' DICOM field specified in the '{scheme}' folder/naming scheme, cannot find a safe name for: {dicomfile}\n")
+            trackusage('dicomsort_error')
             return ''
         else:
             schemevalues[field] = value
@@ -112,6 +113,7 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
             subfolder = construct_name(folderscheme, dicomfile, force)
             if not subfolder:
                 LOGGER.error('Cannot create subfolders, aborting dicomsort()...')
+                trackusage('dicomsort_error')
                 return
             if subfolder not in subfolders:
                 subfolders.append(subfolder)
@@ -162,7 +164,7 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
             LOGGER.error(f"Unexpected dicomsource argument '{sourcefolder}', aborting dicomsort()...")
             return []
     elif not sourcefolder.is_dir():
-        print(f"Sourcefolder '{sourcefolder}' not found")
+        LOGGER.error(f"Sourcefolder '{sourcefolder}' not found")
         return []
     if (folderscheme and not validscheme(folderscheme)) or (namescheme and not validscheme(namescheme)):
         LOGGER.error('Wrong scheme input argument(s), aborting dicomsort()...')
@@ -214,20 +216,25 @@ def main():
 
     from bidscoin.cli._dicomsort import get_parser
 
-    trackusage('dicomsort')
+    args = get_parser().parse_args()
 
     # Set-up logging
     bcoin.setup_logging()
 
-    args = get_parser().parse_args()
-    sortsessions(sourcefolder = args.dicomsource,
-                 subprefix    = args.subprefix,
-                 sesprefix    = args.sesprefix,
-                 folderscheme = args.folderscheme,
-                 namescheme   = args.namescheme,
-                 pattern      = args.pattern,
-                 force        = args.force,
-                 dryrun       = args.dryrun)
+    trackusage('dicomsort')
+    try:
+        sortsessions(sourcefolder = args.dicomsource,
+                     subprefix    = args.subprefix,
+                     sesprefix    = args.sesprefix,
+                     folderscheme = args.folderscheme,
+                     namescheme   = args.namescheme,
+                     pattern      = args.pattern,
+                     force        = args.force,
+                     dryrun       = args.dryrun)
+
+    except Exception:
+        trackusage('dicomsort_exception')
+        raise
 
 
 if __name__ == "__main__":

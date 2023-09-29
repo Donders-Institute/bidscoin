@@ -1693,10 +1693,14 @@ def main():
     args = get_parser().parse_args()
 
     trackusage('bidseditor')
+    try:
+        bidseditor(bidsfolder   = args.bidsfolder,
+                   bidsmapfile  = args.bidsmap,
+                   templatefile = args.template)
 
-    bidseditor(bidsfolder   = args.bidsfolder,
-               bidsmapfile  = args.bidsmap,
-               templatefile = args.template)
+    except Exception:
+        trackusage('bidseditor_exception')
+        raise
 
 
 if __name__ == '__main__':

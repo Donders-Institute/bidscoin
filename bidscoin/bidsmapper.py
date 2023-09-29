@@ -240,19 +240,23 @@ def main():
     args = get_parser().parse_args()
 
     trackusage('bidsmapper')
+    try:
+        bidsmapper(rawfolder    = args.sourcefolder,
+                   bidsfolder   = args.bidsfolder,
+                   bidsmapfile  = args.bidsmap,
+                   templatefile = args.template,
+                   plugins      = args.plugins,
+                   subprefix    = args.subprefix,
+                   sesprefix    = args.sesprefix,
+                   unzip        = args.unzip,
+                   store        = args.store,
+                   noeditor     = args.automated,
+                   force        = args.force,
+                   noupdate     = args.no_update)
 
-    bidsmapper(rawfolder    = args.sourcefolder,
-               bidsfolder   = args.bidsfolder,
-               bidsmapfile  = args.bidsmap,
-               templatefile = args.template,
-               plugins      = args.plugins,
-               subprefix    = args.subprefix,
-               sesprefix    = args.sesprefix,
-               unzip        = args.unzip,
-               store        = args.store,
-               noeditor     = args.automated,
-               force        = args.force,
-               noupdate     = args.no_update)
+    except Exception:
+        trackusage('bidsmapper_exception')
+        raise
 
 
 if __name__ == "__main__":
