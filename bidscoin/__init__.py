@@ -21,6 +21,8 @@ import hashlib
 import tempfile
 import shelve
 import datetime
+import shutil
+import warnings
 from pathlib import Path
 from importlib import metadata
 from typing import Tuple, Union, List
@@ -54,24 +56,28 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Gen
 """
 
 # Define the default paths
-configfile       = Path.home()/'.bidscoin'/__version__/'config.toml'
-# tracking         = {'url': 'https://bidscoin.dccn.nl/tracking', 'sleep': 1}         # Sleep = Nr of sleeping hours during which usage is not tracked
-tracking         = {'url': 'https://fbox.luchoulee.nl/bidscoin', 'sleep': 1}         # Sleep = Nr of sleeping hours during which usage is not tracked
+tracking         = {'url': 'https://telemetry.donders.ru.nl/bidscoin', 'sleep': 1}                  # Sleep = Nr of sleeping hours during which usage is not tracked
 tutorialurl      = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
 bidscoinfolder   = Path(__file__).parent
 schemafolder     = bidscoinfolder/'schema'
-heuristicsfolder = bidscoinfolder/'heuristics'
 pluginfolder     = bidscoinfolder/'plugins'
 
-# Load the BIDScoin user configuration settings
+# Create a BIDScoin user configuration directory if needed and load the BIDScoin user settings
+configfile       = Path.home()/'.bidscoin'/__version__/'config.toml'
+heuristicsfolder = configfile.parent/'templates'
+heuristicsfolder.mkdir(parents=True, exist_ok=True)
 if not configfile.is_file():
-    configfile.parent.mkdir(parents=True, exist_ok=True)
     configfile.write_text(f"[bidscoin]\n"
-                          f"bidsmap_template = '{heuristicsfolder}/bidsmap_dccn.yaml'   # The default template bidsmap\n"
+                          f"bidsmap_template = '{configfile.parent}/templates/bidsmap_dccn.yaml'    # The default template bidsmap\n"
                           f"trackusage       = 'yes'\t# Upload anonymous usage data if 'yes' (maximally 1 upload every {tracking['sleep']} hour) (see `bidscoin --tracking show`)\n")
+for template in (bidscoinfolder/'heuristics').glob('*.yaml'):
+    if not (heuristicsfolder/template.name).is_file():
+        shutil.copyfile(template, heuristicsfolder/template.name)
 with configfile.open('+rb') as fid:
     config = tomllib.load(fid)
 bidsmap_template = Path(config['bidscoin']['bidsmap_template'])
+if not bidsmap_template.is_file():
+    warnings.warn(f"Missing template bidsmap: {bidsmap_template} (see {configfile})", RuntimeWarning)
 
 # Register the BIDScoin citation
 due.cite(Doi('10.3389/fninf.2021.770608'), description='A versatile toolkit to convert source data to the Brain Imaging Data Structure (BIDS)', path='bidscoin', version=__version__)

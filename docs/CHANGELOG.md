@@ -9,6 +9,9 @@ All notable changes to this project will be documented in this file. The format 
 - A user config file (github issue #197)
 - Optional usage tracking (github issue #200)
 
+### Changed
+- The template bidsmaps are now stored in `[home]/.bidscoin/templates`
+
 ## [4.1.1] - 2023-09-14
 
 ### Changed

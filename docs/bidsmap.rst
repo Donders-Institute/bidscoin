@@ -81,7 +81,7 @@ The run-items in the default 'bidsmap_dccn' template bidsmap have values that ar
 - Finally, it is a good practice for the first run-item in each BIDS datatype section of your template bidsmap to have all empty `properties` and `attributes` values. The benefit of this is that you can dereference ('copy') it in other run-items (see the editing section below), and in this way improve your consistency and reduce the maintenance burden of keeping your template bidsmap up-to-date. The first run-item is also the item that is selected when a user manually sets the run-item to this BIDS datatype in the bidseditor GUI.
 
 .. tip::
-   - Make a copy of the DCCN template (``[path_to_bidscoin]/heuristics/bidsmap_dccn.yaml``) as a starting point for your own template bidsmap, and adapt it to your needs.
+   - Make a copy of the DCCN template (``[home]/.bidscoin/templates/bidsmap_dccn.yaml``) as a starting point for your own template bidsmap, and adapt it to your needs. You can set your copy as the new default by editing the ``[home]/.bidscoin/config.toml`` file.
    - The power of regular expressions is nearly unlimited, you can e.g. use `negative look aheads <https://docs.python.org/3/howto/regex.html#lookahead-assertions>`__ to **not** match (exclude) certain strings
    - When creating new run-items, make sure to adhere to the YAML format and to the definitions in the BIDS schema files (``[path_to_bidscoin]/bidscoin/schema/datatypes``). You can test your YAML syntax using an online `YAML-validator <https://www.yamllint.com>`__ and your compliance with the BIDS standard with ``bidscoin -t your_template_bidsmap``. If all seems well you can install it using ``bidscoin -i your_template_bidsmap``.
 

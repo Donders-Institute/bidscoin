@@ -51,7 +51,7 @@ Run your pip install command as before with the additional ``--upgrade`` or ``--
 
 .. caution::
    - The bidsmaps are not guaranteed to be compatible between different BIDScoin versions
-   - After a successful BIDScoin installation or upgrade, it may be needed to (re)do any adjustments that were done on your `template bidsmap <bidsmap.html#building-your-own-template-bidsmap>`__ (so make a back-up of it before you upgrade)
+   - After a successful BIDScoin installation or upgrade, it may be needed to (re)do any adjustments that were done on your `template bidsmap <bidsmap.html#building-your-own-template-bidsmap>`__
 
 .. _Options: options.html
 .. _virtual: https://docs.python.org/3/tutorial/venv.html
@@ -63,7 +63,7 @@ Dcm2niix installation
 
 The default 'dcm2niix2bids' plugin relies on an external application named `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ for converting DICOM and PAR/REC source data to NIfTI. To use the plugin you must pip-install dcm2niix when installing BIDScoin or install it yourself (e.g. when pip-installing dcm2niix does not work for your platform) as explained in the `dcm2niix installation instructions <https://github.com/rordenlab/dcm2niix#install>`__. When done, make sure that the dcm2niix executable is on your user or system path (Windows users can add the path permanently, e.g. by running: ``setx path "%path%;C:\Program Files\dcm2niix"``). Otherwise (for instance when you want to use the linux module system or fixate the software version), make sure that the command to run the dcm2niix executable (exactly as if you would run it yourself in your command terminal) is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
 
-1. Open your template bidsmap with a text editor and adjust the settings as needed. The default template bidsmap is located in the [path_to_bidscoin]/heuristics subfolder -- see the output of ``bidscoin -p`` for the fullpath location on your system.
+1. Open your template bidsmap with a text editor and adjust the settings as needed. The default template bidsmap is located in your ``[home]/.bidscoin/templates`` folder (see the output of ``bidscoin -p`` for the fullpath location on your system).
 2. Go to the `Options`_ tab the first time the BIDScoin GUI is launched and adjust the settings as needed. Then click the [Set as default] button to save the settings to your default template bidsmap.
 
 .. tip::
