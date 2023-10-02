@@ -17,7 +17,7 @@ ImportError: libEGL.so.1: cannot open shared object file: No such file or direct
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 This may error message may be reported on Linux systems that do not support Qt6 out of the box. On Debian/Ubuntu systems this may be solved by running:
 
-.. code-block::
+.. code-block:: console
 
    sudo apt install qt6-base
    sudo apt install qt6-base-dev     # If the above package cannot be located
