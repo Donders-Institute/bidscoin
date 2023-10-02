@@ -1997,7 +1997,7 @@ def poolmetadata(sourcemeta: Path, targetmeta: Path, usermeta: dict, extensions:
             else:
                 targetfile = targetmeta.parent/sourcefile.name
                 if not targetfile.is_file():
-                    shutil.copy2(sourcefile, targetfile)
+                    shutil.copyfile(sourcefile, targetfile)
 
     # Add all the metadata to the metadict. NB: the dynamic `IntendedFor` value is handled separately later
     for metakey, metaval in usermeta.items():

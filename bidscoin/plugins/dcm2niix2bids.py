@@ -157,7 +157,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
                 targetfile             = store['target']/sourcefile.relative_to(store['source'])
                 targetfile.parent.mkdir(parents=True, exist_ok=True)
                 LOGGER.verbose(f"Storing the discovered {dataformat} sample as: {targetfile}")
-                run['provenance']      = str(shutil.copy2(sourcefile, targetfile))
+                run['provenance']      = str(shutil.copyfile(sourcefile, targetfile))
                 run['datasource'].path = targetfile
 
             # Copy the filled-in run over to the new bidsmap
