@@ -33,9 +33,7 @@ Create a tutorial playground folder by executing these shell commands:
    $ bidscoin --download .              # Download the tutorial data (use a "." for the current folder or a pathname of choice to save it elsewhere)
    $ cd ./bidscointutorial              # Go to the downloaded data (replace "." with the full pathname if your data was saved elsewhere)
 
-The new ``bidscointutorial`` folder contains a ``raw`` source-data folder and a ``bids_ref`` reference BIDS folder, i.e. the intended end product of this tutorial. In the raw folder you will find these DICOM series (aka "runs"):
-
-::
+The new ``bidscointutorial`` folder contains a ``raw`` source-data folder and a ``bids_ref`` reference BIDS folder, i.e. the intended end product of this tutorial. In the raw folder you will find these DICOM series (aka "runs")::
 
    001-localizer_32ch-head                  A localizer scan that is not scientifically relevant and can be left out of the BIDS dataset
    002-AAHead_Scout_32ch-head               A localizer scan that is not scientifically relevant and can be left out of the BIDS dataset
@@ -52,9 +50,7 @@ The new ``bidscointutorial`` folder contains a ``raw`` source-data folder and a 
 Let's begin with inspecting this new raw data collection:
 
 - Are the DICOM files for all the ``bids/sub-*`` folders organized in series-subfolders (e.g. ``sub-001/ses-01/003-T1MPRAGE/0001.dcm`` etc)? Use `dicomsort <utilities.html#dicomsort>`__ if this is not the case (hint: it's not the case). A help text for all BIDScoin tools is available by running the tool with the ``-h`` or ``--help`` flag (e.g. ``rawmapper -h``)
-- Use the `rawmapper <utilities.html#rawmapper>`__ command to print out the values of the "EchoTime", "PatientSex" and "AcquisitionDate" DICOM fields (hint: use ``-f``) of the fMRI series in the ``raw`` folder (hint: use ``-w``). You should find this result (NB: unfortunately in this tutorial sub-001 and sub-002 are identical phantoms):
-
-::
+- Use the `rawmapper <utilities.html#rawmapper>`__ command to print out the values of the "EchoTime", "PatientSex" and "AcquisitionDate" DICOM fields (hint: use ``-f``) of the fMRI series in the ``raw`` folder (hint: use ``-w``). You should find this result (NB: unfortunately in this tutorial sub-001 and sub-002 are identical phantoms)::
 
    subid    sesid   seriesname                        EchoTime  PatientSex  AcquisitionDate
    sub-001  ses-01  047-cmrr_2p4iso_mb8_TR0700_SBRef  39        O           20200428
