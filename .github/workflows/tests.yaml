@@ -22,7 +22,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          make install
+          pip --upgrade pip
+          pip install .[all]
 
       - name: Install dcm2niix posix
         if: runner.os != 'Windows'
@@ -46,4 +47,4 @@ jobs:
 
       - name: Tests with pytest
         run: |
-          make test
+          pytest tests
