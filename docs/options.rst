@@ -9,7 +9,7 @@ BIDScoin has different options and settings (see below) that can be adjusted per
    The bidseditor options window with the different settings for BIDScoin and its plugins. The user can manage the plugins that will be used with the [Add] (as shown here) and [Remove] buttons, and save the current options to the template bidsmap by using the [Set as default] button.
 
 .. note::
-   A few more adjustable global settings can be found in the ``.bidscoin'/version/'config.toml`` file in your home directory
+   A few more adjustable global settings can be found in your ``[home]/.bidscoin'/[version]/'config.toml`` file (the original file will be automatically recreated from source when deleted)
 
 BIDScoin
 --------

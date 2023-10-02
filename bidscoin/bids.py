@@ -28,7 +28,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import bcoin, schemafolder, heuristicsfolder, bidsmap_template, lsdirs, __version__
+from bidscoin import bcoin, schemafolder, templatefolder, bidsmap_template, lsdirs, __version__
 from bidscoin.utilities import dicomsort
 from ruamel.yaml import YAML
 yaml = YAML()
@@ -866,7 +866,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
 
     # Input checking
     if not folder.name or not folder.is_dir():
-        folder = heuristicsfolder
+        folder = templatefolder
     if not yamlfile.name:
         yamlfile = folder/'bidsmap.yaml'
         if not yamlfile.is_file():
@@ -881,7 +881,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
         if (folder/yamlfile).is_file():
             yamlfile = folder/yamlfile
         else:
-            yamlfile = heuristicsfolder/yamlfile
+            yamlfile = templatefolder/yamlfile
 
     if not yamlfile.is_file():
         LOGGER.verbose(f"No existing bidsmap file found: {yamlfile}")
@@ -916,7 +916,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
         if not bidsmap['Options']['plugins'].get(plugin):
             LOGGER.info(f"Adding default bidsmap options from the {plugin} plugin")
             bidsmap['Options']['plugins'][plugin] = module.OPTIONS if 'OPTIONS' in dir(module) else {}
-        if 'BIDSMAP' in dir(module) and yamlfile.parent == heuristicsfolder:
+        if 'BIDSMAP' in dir(module) and yamlfile.parent == templatefolder:
             for dataformat, bidsmappings in module.BIDSMAP.items():
                 if dataformat not in bidsmap:
                     LOGGER.info(f"Adding default bidsmappings from the {plugin} plugin")

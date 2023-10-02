@@ -6,7 +6,7 @@ from pathlib import Path
 bcoin.setup_logging()
 
 assert bidscoin.schemafolder.is_dir()
-assert bidscoin.heuristicsfolder.is_dir()
+assert bidscoin.templatefolder.is_dir()
 assert bidscoin.pluginfolder.is_dir()
 assert bidscoin.bidsmap_template.is_file()
 

@@ -7,7 +7,8 @@ The basic workflow is to run these two tools:
   $ bidsmapper sourcefolder bidsfolder        # This produces a study bidsmap and launches a GUI
   $ bidscoiner sourcefolder bidsfolder        # This converts your data to BIDS according to the study bidsmap
 
-Set the environment variable BIDSCOIN_DEBUG=TRUE in your console to run BIDScoin in its more verbose DEBUG logging mode
+Set the environment variable BIDSCOIN_DEBUG=TRUE in your console to run BIDScoin in its more verbose DEBUG logging mode.
+Default setting are stored in the ".bidscoin" folder in your home directory
 
 For more documentation see: https://bidscoin.readthedocs.io
 """
@@ -46,7 +47,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('-d', '--download',    help='Download tutorial MRI data to the DOWNLOAD folder')
     parser.add_argument('-t', '--test',        help='Test the bidscoin installation and template bidsmap', nargs='?', const=bidsmap_template)
     parser.add_argument('-b', '--bidsmaptest', help='Test the run-items and their bidsnames of all normal runs in the study bidsmap. Provide the bids-folder or the bidsmap filepath')
-    parser.add_argument(      '--tracking',    help='Show the usage tracking info [show], or set usage tracking to [yes] or [no]', choices=['yes','no','show'])
+    parser.add_argument(      '--tracking',    help='Show the usage tracking info {show}, or set usage tracking to {yes} or {no}', choices=['yes','no','show'])
     parser.add_argument('-v', '--version',     help='Show the installed version and check for updates', action='version', version=f"BIDS-version:\t\t{bidsversion()}\nBIDScoin-version:\t{__version__}, {versionmessage}")
 
     return parser

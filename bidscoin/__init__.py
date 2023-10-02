@@ -56,23 +56,23 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Gen
 """
 
 # Define the default paths
-tracking         = {'url': 'https://telemetry.donders.ru.nl/bidscoin', 'sleep': 1}                  # Sleep = Nr of sleeping hours during which usage is not tracked
-tutorialurl      = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
-bidscoinfolder   = Path(__file__).parent
-schemafolder     = bidscoinfolder/'schema'
-pluginfolder     = bidscoinfolder/'plugins'
+tracking       = {'url': 'https://telemetry.donders.ru.nl/bidscoin', 'sleep': 1}        # Sleep = Nr of sleeping hours during which usage is not tracked
+tutorialurl    = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
+bidscoinfolder = Path(__file__).parent
+schemafolder   = bidscoinfolder/'schema'
+pluginfolder   = bidscoinfolder/'plugins'
 
 # Create a BIDScoin user configuration directory if needed and load the BIDScoin user settings
-configfile       = Path.home()/'.bidscoin'/__version__/'config.toml'
-heuristicsfolder = configfile.parent/'templates'
-heuristicsfolder.mkdir(parents=True, exist_ok=True)
+configfile     = Path.home()/'.bidscoin'/__version__/'config.toml'
+templatefolder = configfile.parent/'templates'
+templatefolder.mkdir(parents=True, exist_ok=True)
 if not configfile.is_file():
     configfile.write_text(f"[bidscoin]\n"
-                          f"bidsmap_template = '{configfile.parent}/templates/bidsmap_dccn.yaml'    # The default template bidsmap\n"
-                          f"trackusage       = 'yes'\t# Upload anonymous usage data if 'yes' (maximally 1 upload every {tracking['sleep']} hour) (see `bidscoin --tracking show`)\n")
+                          f"bidsmap_template = '{templatefolder}/bidsmap_dccn.yaml'     # The default template bidsmap (change to use a different default)\n"
+                          f"trackusage       = 'yes'     # Upload anonymous usage data if 'yes' (maximally 1 upload every {tracking['sleep']} hour) (see `bidscoin --tracking show`)\n")
 for template in (bidscoinfolder/'heuristics').glob('*.yaml'):
-    if not (heuristicsfolder/template.name).is_file():
-        shutil.copyfile(template, heuristicsfolder/template.name)
+    if not (templatefolder/template.name).is_file():
+        shutil.copyfile(template, templatefolder/template.name)
 with configfile.open('+rb') as fid:
     config = tomllib.load(fid)
 bidsmap_template = Path(config['bidscoin']['bidsmap_template'])
@@ -162,6 +162,6 @@ def trackusage(event: str, dryrun: bool=False) -> dict:
         req = urllib.request.Request(f"{tracking['url']}?{urllib.parse.urlencode(data)}", headers={'User-agent': 'bidscoin-telemetry'})
         with urllib.request.urlopen(req, timeout=5) as f: pass
     except urllib.error.URLError as urlerror:
-        print(urlerror)
+        print(f"{tracking['url']}:\n{urlerror}")
 
     return data

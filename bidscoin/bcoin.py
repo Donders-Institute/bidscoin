@@ -23,7 +23,7 @@ from tqdm import tqdm
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import heuristicsfolder, pluginfolder, bidsmap_template, tutorialurl, trackusage, tracking, configfile, config
+from bidscoin import templatefolder, pluginfolder, bidsmap_template, tutorialurl, trackusage, tracking, configfile, config
 
 yaml = YAML()
 
@@ -204,9 +204,9 @@ def list_plugins(show: bool=False) -> Tuple[List[Path], List[Path]]:
     :return:     List of the installed plugins and template bidsmaps
     """
 
-    if show: LOGGER.info(f"Installed template bidsmaps ({heuristicsfolder}):")
+    if show: LOGGER.info(f"Installed template bidsmaps ({templatefolder}):")
     templates = []
-    for template in heuristicsfolder.glob('*.yaml'):
+    for template in templatefolder.glob('*.yaml'):
         if template.stem != '__init__':
             templates.append(template)
             if show: LOGGER.info(f"- {template.stem}{' (default)' if template.samefile(bidsmap_template) else ''}")
@@ -241,7 +241,7 @@ def install_plugins(filenames: List[str]=()) -> None:
     for file in files:
 
         # Copy the file to their target folder
-        targetfolder = heuristicsfolder if file.suffix == '.yaml' else pluginfolder
+        targetfolder = templatefolder if file.suffix == '.yaml' else pluginfolder
         LOGGER.info(f"Installing: '{file}'")
         try:
             shutil.copyfile(file, targetfolder/file.name)
@@ -301,7 +301,7 @@ def uninstall_plugins(filenames: List[str]=(), wipe: bool=True) -> None:
 
         # Remove the file from the target folder
         LOGGER.info(f"Uninstalling: '{file}'")
-        sourcefolder = heuristicsfolder if file.suffix == '.yaml' else pluginfolder
+        sourcefolder = templatefolder if file.suffix == '.yaml' else pluginfolder
         try:
             (sourcefolder/file.name).unlink()
         except IOError as uninstall_error:
