@@ -49,8 +49,8 @@ The new ``bidscointutorial`` folder contains a ``raw`` source-data folder and a 
 
 Let's begin with inspecting this new raw data collection:
 
-- Are the DICOM files for all the ``bids/sub-*`` folders organized in series-subfolders (e.g. ``sub-001/ses-01/003-T1MPRAGE/0001.dcm`` etc)? Use `dicomsort <utilities.html#dicomsort>`__ if this is not the case (hint: it's not the case). A help text for all BIDScoin tools is available by running the tool with the ``-h`` or ``--help`` flag (e.g. ``rawmapper -h``)
-- Use the `rawmapper <utilities.html#rawmapper>`__ command to print out the values of the "EchoTime", "PatientSex" and "AcquisitionDate" DICOM fields (hint: use ``-f``) of the fMRI series in the ``raw`` folder (hint: use ``-w``). You should find this result (NB: unfortunately in this tutorial sub-001 and sub-002 are identical phantoms)::
+- Are the DICOM files for all the ``bids/sub-*`` folders organized in series-subfolders (e.g. ``sub-001/ses-01/003-T1MPRAGE/0001.dcm`` etc)? Use `dicomsort <./utilities.html#dicomsort>`__ if this is not the case (hint: it's not the case). A help text for all BIDScoin tools is available by running the tool with the ``-h`` or ``--help`` flag (e.g. ``rawmapper -h``)
+- Use the `rawmapper <./utilities.html#rawmapper>`__ command to print out the values of the "EchoTime", "PatientSex" and "AcquisitionDate" DICOM fields (hint: use ``-f``) of the fMRI series in the ``raw`` folder (hint: use ``-w``). You should find this result (NB: unfortunately in this tutorial sub-001 and sub-002 are identical phantoms)::
 
    subid    sesid   seriesname                        EchoTime  PatientSex  AcquisitionDate
    sub-001  ses-01  047-cmrr_2p4iso_mb8_TR0700_SBRef  39        O           20200428
@@ -59,7 +59,7 @@ Let's begin with inspecting this new raw data collection:
 3. BIDS mapping
 ~~~~~~~~~~~~~~~
 
-Now we can make a study bidsmap, i.e. the mapping from DICOM source-files to BIDS target-files. To that end, scan all folders in the raw data collection by running the `bidsmapper <workflow.html#step-1a-running-the-bidsmapper>`__ command:
+Now we can make a study bidsmap, i.e. the mapping from DICOM source-files to BIDS target-files. To that end, scan all folders in the raw data collection by running the `bidsmapper <./workflow.html#step-1a-running-the-bidsmapper>`__ command:
 
 .. code-block:: console
 
@@ -67,13 +67,13 @@ Now we can make a study bidsmap, i.e. the mapping from DICOM source-files to BID
 
 - We only have one session per subject, so in the main GUI that appears (when all raw data has been scanned), remove the session label (and note how the output names simplify, omitting the session subfolders and labels)
 - Edit the task and acquisition labels of the functional scans into something more readable, e.g. ``task-Reward`` for the ``mb8`` scans and ``task-Stop`` for the ``mb3me3`` scans. Also make the name of the T1 scan more user friendly, e.g. by naming the acquisition label simply ``acq-mprage``.
-- Make the fieldmap scans more user friendly, e.g. by naming the acquisition label simply ``acq-2p4iso`` and ``acq-2p5iso``, and add a search pattern to the ``IntendedFor`` field such that the first field map will select your ``Reward`` runs and the second field map your ``Stop`` runs (see the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ field map notes for more details)
-- When all done, go to the ``Options`` tab and change the ``dcm2niix`` settings to get non-zipped NIfTI output data (i.e. ``*.nii`` instead of ``*.nii.gz``). Test the tool to see if it can run and, as a final step, save your bidsmap. You can always go back later to change any of your edits by running the `bidseditor <workflow.html#step-1b-running-the-bidseditor>`__ command line tool directly. Try that.
+- Make the fieldmap scans more user friendly, e.g. by naming the acquisition label simply ``acq-2p4iso`` and ``acq-2p5iso``, and add a search pattern to the ``IntendedFor`` field such that the first field map will select your ``Reward`` runs and the second field map your ``Stop`` runs (see the `bidseditor <./workflow.html#step-1b-running-the-bidseditor>`__ field map notes for more details)
+- When all done, go to the ``Options`` tab and change the ``dcm2niix`` settings to get non-zipped NIfTI output data (i.e. ``*.nii`` instead of ``*.nii.gz``). Test the tool to see if it can run and, as a final step, save your bidsmap. You can always go back later to change any of your edits by running the `bidseditor <./workflow.html#step-1b-running-the-bidseditor>`__ command line tool directly. Try that.
 
 4. BIDS coining
 ~~~~~~~~~~~~~~~
 
-The next step, converting the source data into a BIDS collection, is very simple to do (and can be repeated whenever new data has come in). To do this run the `bidscoiner <workflow.html#step-2-running-the-bidscoiner>`__ command-line tool (note that the input is the same as for the bidsmapper):
+The next step, converting the source data into a BIDS collection, is very simple to do (and can be repeated whenever new data has come in). To do this run the `bidscoiner <./workflow.html#step-2-running-the-bidscoiner>`__ command-line tool (note that the input is the same as for the bidsmapper):
 
 .. code-block:: console
 
@@ -88,9 +88,9 @@ The next step, converting the source data into a BIDS collection, is very simple
 
 Now that you have converted the data to BIDS, you still need to do work to make it fully ready for data analysis and sharing. For instance:
 
-- Combine the echos using the `echocombine <bidsapps.html#multi-echo-combination>`__ tool (see ``echocombine --help`` examples), such that the individual echo images are **replaced** by the echo-combined image
-- Deface the anatomical scans of ``sub-001`` using the `deface <bidsapps.html#defacing>`__ tool. This will take a while, but will obviously not work well for our phantom dataset. Therefore store the 'defaced' output in the ``derivatives`` folder (instead of e.g. overwriting the existing images)
-- Generate a QC report of the anatomical scans using the `slicereport <bidsapps.html#quality-control>`__ tool and open the ``bids/derivatives/slicereport/index.html`` file in your browser.
+- Combine the echos using the `echocombine <./bidsapps.html#multi-echo-combination>`__ tool (see ``echocombine --help`` examples), such that the individual echo images are **replaced** by the echo-combined image
+- Deface the anatomical scans of ``sub-001`` using the `deface <./bidsapps.html#defacing>`__ tool. This will take a while, but will obviously not work well for our phantom dataset. Therefore store the 'defaced' output in the ``derivatives`` folder (instead of e.g. overwriting the existing images)
+- Generate a QC report of the anatomical scans using the `slicereport <./bidsapps.html#quality-control>`__ tool and open the ``bids/derivatives/slicereport/index.html`` file in your browser.
 - Inspect the ``bids/participants.tsv`` file and decide if it is ok.
 - Update the ``dataset_description.json`` and ``README`` files in your ``bids`` folder
 - As a final step, run the `bids-validator <https://bids-standard.github.io/bids-validator/>`__ on your ``bidscointutorial/bids`` folder. Are you completely ready now to share this dataset?

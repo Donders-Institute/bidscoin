@@ -10,11 +10,11 @@ BIDScoin: Coin your imaging data to BIDS
 
 .. raw:: html
 
-   <img name="bidscoin-logo" src="./bidscoin/bidscoin_logo.png" height="340px" align="right" alt=" ">
+   <img name="bidscoin-logo" src="https://github.com/Donders-Institute/bidscoin/blob/master/bidscoin/bidscoin_logo.png" height="340px" align="right" alt=" ">
 
 |PyPI version| |BIDS| |PyPI - Python Version| |GPLv3| |RTD| |Tests| |DOI|
 
-BIDScoin is a user-friendly Python application suite that converts ("coins") source-level (raw) neuroimaging data sets to standardized data sets that are organized according to the Brain Imaging Data Structure (`BIDS <https://bids-specification.readthedocs.io>`__) specification. Rather than depending on complex programmatic logic for source data-type identification, BIDScoin uses a mapping approach to discover the different source data types in your repository and convert them into BIDS data types. Different runs of source data are uniquely identified by their file system properties (e.g. file name or size) and by their attributes (e.g. ``ProtocolName`` from the DICOM header). Mapping information can be pre-specified (e.g. per site), allowing BIDScoin to make intelligent first suggestions on how to classify and convert the data. While this command-line procedure exploits all information available on disk, BIDScoin presents a `Graphical User Interface (GUI) <screenshots.html>`__ for researchers to check and edit these mappings -- bringing in the missing knowledge that often exists only in their heads.
+BIDScoin is a user-friendly Python application suite that converts ("coins") source-level (raw) neuroimaging data sets to standardized data sets that are organized according to the Brain Imaging Data Structure (`BIDS <https://bids-specification.readthedocs.io>`__) specification. Rather than depending on complex programmatic logic for source data-type identification, BIDScoin uses a mapping approach to discover the different source data types in your repository and convert them into BIDS data types. Different runs of source data are uniquely identified by their file system properties (e.g. file name or size) and by their attributes (e.g. ``ProtocolName`` from the DICOM header). Mapping information can be pre-specified (e.g. per site), allowing BIDScoin to make intelligent first suggestions on how to classify and convert the data. While this command-line procedure exploits all information available on disk, BIDScoin presents a `Graphical User Interface (GUI) <./screenshots.html>`__ for researchers to check and edit these mappings -- bringing in the missing knowledge that often exists only in their heads.
 
 Data conversions are performed within plugins, such as plugins that employ `dcm2niix <https://github.com/rordenlab/dcm2niix>`__, `spec2nii <https://github.com/wtclarke/spec2nii>`__ or `nibabel <https://nipy.org/nibabel>`__.
 
@@ -41,23 +41,12 @@ Features
 
    ``** = Only Twix, SDAT/SPAR and P-file source data``
 
-::
+.. note::
 
-   Are you a Python programmer with an interest in BIDS who knows about GE and/or Philips data?
-   Are you experienced with parsing stimulus presentation log-files? Or do you have ideas to improve
-   BIDScoin or its documentation? Have you come across bugs? In any case, you are highly encouraged
-   to provide feedback or contribute to this project on https://github.com/Donders-Institute/bidscoin.
-
-Note:
------
-
-   **All source code is hosted at** `Github <https://github.com/Donders-Institute/bidscoin>`__ **and freely available under the GPL-3.0-or-later** `license <https://spdx.org/licenses/GPL-3.0-or-later.html>`__.
-
-   **The full BIDScoin documentation is hosted at** `Read the Docs <https://bidscoin.readthedocs.io>`__
-
-   **For citation and more information, see our** `BIDScoin publication <https://www.frontiersin.org/articles/10.3389/fninf.2021.770608>`__ **in Frontiers in Neuroinformatics** (`doi: 10.3389/fninf.2021.770608 <https://doi.org/10.3389/fninf.2021.770608>`__)
-
-   **Issues or questions can be posted at** `Github <https://github.com/Donders-Institute/bidscoin/issues>`__
+   * All **source code** is hosted at `Github <https://github.com/Donders-Institute/bidscoin>`__ and **freely available** under the GPL-3.0-or-later `license <https://spdx.org/licenses/GPL-3.0-or-later.html>`__.
+   * The full BIDScoin **documentation** is hosted at `Read the Docs <https://bidscoin.readthedocs.io>`__
+   * For citation and more information, see our `BIDScoin publication <https://www.frontiersin.org/articles/10.3389/fninf.2021.770608>`__ in **Frontiers in Neuroinformatics** (`doi: 10.3389/fninf.2021.770608 <https://doi.org/10.3389/fninf.2021.770608>`__)
+   * You are encouraged to **post issues or questions at** `Github <https://github.com/Donders-Institute/bidscoin/issues>`__ or `NeuroStars <https://neurostars.org/tag/bidscoin>`__
 
 .. |PyPI version| image:: https://img.shields.io/pypi/v/bidscoin?color=success
    :target: https://pypi.org/project/bidscoin
@@ -79,3 +68,12 @@ Note:
 .. |Tests| image:: https://github.com/Donders-Institute/bidscoin/actions/workflows/tests.yaml/badge.svg
    :target: https://github.com/Donders-Institute/bidscoin/actions
    :alt: Pytest results
+
+How to contribute
+-----------------
+
+Are you a Python programmer with an interest in BIDS who knows about GE and/or Philips data?
+Are you experienced with parsing stimulus presentation log-files? Or do you have ideas to improve
+BIDScoin or its documentation? Have you come across bugs? In any case, you are more than welcome
+to provide feedback and to `contribute <https://github.com/Donders-Institute/bidscoin/blob/master/CONTRIBUTING.rst>`__
+to this project.

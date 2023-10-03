@@ -20,7 +20,7 @@ To install BIDScoin on your system run one of the following commands in your com
    $ pip install bidscoin[deface,pet2bids]      # Use this when you want to deface anatomical MRI scans and convert PET data with the pet2bids plugin
    $ pip install bidscoin[all]                  # Use this to install all extra packages
 
-These install commands can be run independently and will give you the latest stable release of BIDScoin and its `plugins <options.html#dcm2niix2bids-plugin>`__. Alternatively, if you need to use the very latest (development / unstable) version of the software, you can also install BIDScoin directly from the github source code repository, e.g. like this:
+These install commands can be run independently and will give you the latest stable release of BIDScoin and its `plugins <./options.html#dcm2niix2bids-plugin>`__. Alternatively, if you need to use the very latest (development / unstable) version of the software, you can also install BIDScoin directly from the github source code repository, e.g. like this:
 
 .. code-block:: console
 
@@ -51,7 +51,7 @@ Run your pip install command as before with the additional ``--upgrade`` or ``--
 
 .. caution::
    - The bidsmaps are not guaranteed to be compatible between different BIDScoin versions
-   - After a successful BIDScoin installation or upgrade, it may be needed to (re)do any adjustments that were done on your `template bidsmap <bidsmap.html#building-your-own-template-bidsmap>`__
+   - After a successful BIDScoin installation or upgrade, it may be needed to (re)do any adjustments that were done on your `template bidsmap <./bidsmap.html#building-your-own-template-bidsmap>`__
 
 .. _Options: options.html
 .. _virtual: https://docs.python.org/3/tutorial/venv.html
@@ -80,7 +80,7 @@ You can run the 'bidscoin' utility to test the installation of your BIDScoin ins
    $ bidscoin -t                        # Test with the default template bidsmap
    $ bidscoin -t my_template_bidsmap    # Test with your custom template bidsmap
 
-See also the `Troubleshooting guide <troubleshooting.html#installation>`__ for more information on potential installation issues.
+See also the `Troubleshooting guide <./troubleshooting.html#installation>`__ for more information on potential installation issues.
 
 Using an Apptainer (Singularity) container
 ------------------------------------------

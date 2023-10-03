@@ -1,7 +1,7 @@
 The BIDScoin workflow
 =====================
 
-With a sufficiently `organized source data folder <preparation.html>`__, the data conversion to BIDS can be performed by running the `(1a) <#step-1a-running-the-bidsmapper>`__ the bidsmapper, `(1b) <#step-1b-running-the-bidseditor>`__ the bidseditor and `(2) <#step-2-running-the-bidscoiner>`__ the bidscoiner command-line tools. The bidsmapper starts by building a map of the different kind of data types (scans) in your source dataset, which you can then edit with the bidseditor. The bidscoiner reads this so-called study bidsmap, which tells it how exactly to convert ("coin") the source data into a BIDS data repository.
+With a sufficiently `organized source data folder <./preparation.html>`__, the data conversion to BIDS can be performed by running the `(1a) <#step-1a-running-the-bidsmapper>`__ the bidsmapper, `(1b) <#step-1b-running-the-bidseditor>`__ the bidseditor and `(2) <#step-2-running-the-bidscoiner>`__ the bidscoiner command-line tools. The bidsmapper starts by building a map of the different kind of data types (scans) in your source dataset, which you can then edit with the bidseditor. The bidscoiner reads this so-called study bidsmap, which tells it how exactly to convert ("coin") the source data into a BIDS data repository.
 
 .. figure:: ./_static/bidsmap_flow.png
 
@@ -89,7 +89,7 @@ Step 1a: Running the bidsmapper
 After the source data has been scanned, the bidsmapper will automatically launch `step 1b <#step-1b-running-the-bidseditor>`__ to let the user check and edit the automatically generated study bidsmap. For a fully automated workflow users can skip this interactive step using the ``-i`` option (see above).
 
 .. tip::
-   The default template bidsmap (``-t bidsmap_dccn``) is customized for acquisitions at the DCCN. If this bidsmap is not working well for you, consider `adapting it to your needs <bidsmap.html#building-your-own-template-bidsmap>`__ so that the bidsmapper can recognize more of your scans and automatically map them to BIDS the way you prefer.
+   The default template bidsmap (``-t bidsmap_dccn``) is customized for acquisitions at the DCCN. If this bidsmap is not working well for you, consider `adapting it to your needs <./bidsmap.html#building-your-own-template-bidsmap>`__ so that the bidsmapper can recognize more of your scans and automatically map them to BIDS the way you prefer.
 
 Step 1b: Running the bidseditor
 -------------------------------
@@ -128,11 +128,11 @@ Step 1b: Running the bidseditor
 Main window
 ^^^^^^^^^^^
 
-As shown below, the main window of the bidseditor opens with separate data mapping tabs for each data format that is present in the bidsmap (here ``DICOM mappings`` and ``PAR mappings``). The data mapping tabs consist of a ``Participant labels`` table and a ``Data samples`` table. By default, the participant table contains `dynamic <bidsmap.html#special-bidsmap-features>`__ ``<<filepath:regexp>>`` property values, which are used to extract the subject and session labels from the path of the source data during bidscoiner runtime. Alternatively, you can put a dynamic attribute value there (e.g. <<PatientName>>) if you want to extract that information from the source header. The data samples table shows a list of input files (left side) that uniquely represent all the different data types in the sourcedata repository, in conjunction with a preview of their ``BIDS output`` names (right side). The BIDS output names are shown in red if they are not BIDS compliant, crossed-out gray when the runs will be ignored / skipped in the conversion to BIDS, otherwise it is colored green.
+As shown below, the main window of the bidseditor opens with separate data mapping tabs for each data format that is present in the bidsmap (here ``DICOM mappings`` and ``PAR mappings``). The data mapping tabs consist of a ``Participant labels`` table and a ``Data samples`` table. By default, the participant table contains `dynamic <./bidsmap.html#special-bidsmap-features>`__ ``<<filepath:regexp>>`` property values, which are used to extract the subject and session labels from the path of the source data during bidscoiner runtime. Alternatively, you can put a dynamic attribute value there (e.g. <<PatientName>>) if you want to extract that information from the source header. The data samples table shows a list of input files (left side) that uniquely represent all the different data types in the sourcedata repository, in conjunction with a preview of their ``BIDS output`` names (right side). The BIDS output names are shown in red if they are not BIDS compliant, crossed-out gray when the runs will be ignored / skipped in the conversion to BIDS, otherwise it is colored green.
 
 .. figure:: ./_static/bidseditor_main.png
 
-   The main window with the ``DICOM mappings`` tab, an ``Options`` tab and a ``Data browser`` tab. The selected ``DICOM mappings`` tab shows an overview of how DICOM source data types (left) are mapped to BIDS output data (right). The BIDScoin settings used for this study can be adjusted in the `Options <options.html>`__ tab and the ``Data browser`` tab can be used to inspect the source data structure.
+   The main window with the ``DICOM mappings`` tab, an ``Options`` tab and a ``Data browser`` tab. The selected ``DICOM mappings`` tab shows an overview of how DICOM source data types (left) are mapped to BIDS output data (right). The BIDScoin settings used for this study can be adjusted in the `Options <./options.html>`__ tab and the ``Data browser`` tab can be used to inspect the source data structure.
 
 .. tip::
    If the default subject/session expression (e.g. ``/sub-(.*?)/`` where ``sub-`` can be substituted by your prefix) fails to parse the subject or session label, try prepending (a part of) the sourcefolder path, e.g. if your data is in ``/project/sourcedata/s001/..`` and your subject prefix is ``s``, try ``<<filepath:/sourcedata/s(.*?)/>>`` for extracting the ``001`` subject label. This is especially useful if your subject folders have no or a very short prefix.
@@ -160,7 +160,7 @@ Field maps are acquired and stored in various (sequences and manufacturer depend
 
 Field maps are typically acquired to be applied to specific other scans from the same session. The BIDS specification provides two `meta-data mechanisms <https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#expressing-the-mr-protocol-intent-for-fieldmaps>`__ to store this semantic meta data (NB: BIDS-apps may not use your field map at all if you do not specify anything):
 
-1. First there is the older ``IntendedFor`` mechanism that can handle more basic use cases, i.e. it explicitly specifies the path of the target images to which the field map should be applied, but it is left implicit from which images the field map is to be computed. You can enter a dynamic ``IntendedFor`` search string in the ``Meta data`` table to have BIDScoin automatically fill out this field for you. For instance you can simply use ``task-Stop*_bold`` as a search pattern to specify all functional runs in the BIDS session that have ``task-Stop`` and ``_bold`` as part of their filename. For more advanced usage and explanation, see the `special bidsmap features <bidsmap.html#special-bidsmap-features>`__ section
+1. First there is the older ``IntendedFor`` mechanism that can handle more basic use cases, i.e. it explicitly specifies the path of the target images to which the field map should be applied, but it is left implicit from which images the field map is to be computed. You can enter a dynamic ``IntendedFor`` search string in the ``Meta data`` table to have BIDScoin automatically fill out this field for you. For instance you can simply use ``task-Stop*_bold`` as a search pattern to specify all functional runs in the BIDS session that have ``task-Stop`` and ``_bold`` as part of their filename. For more advanced usage and explanation, see the `special bidsmap features <./bidsmap.html#special-bidsmap-features>`__ section
 2. Second, there is the new and more flexible ``B0Fieldmap`` mechanism that uses a ``B0FieldIdentifier`` to group all the images from which the field map can be computed, and a ``B0FieldSource`` to indicate which field map should be used to correct the image. For instance, you could use ``{B0FieldIdentifier: sbref_fmap}`` in your ``AP`` and ``PA`` PE-polar ``sbref`` images, in conjunction with ``{B0FieldSource: sbref_fmap}`` in your associated ``AP`` PE-polar ``bold`` image.
 
 .. tip::
@@ -217,7 +217,7 @@ Step 2: Running the bidscoiner
 
 .. note::
    * The provenance of the produced BIDS data-sets is stored in the ``[bidsfolder]/code/bidscoin/bidscoiner.log`` file. This file is also very useful for debugging / tracking down bidscoin issues
-   * Privacy-sensitive source data samples may be stored in ``[bidsfolder]/code/bidscoin/provenance`` (see the ``-s`` option in the `bidsmapper <workflow.html#step-1a-running-the-bidsmapper>`__)
+   * Privacy-sensitive source data samples may be stored in ``[bidsfolder]/code/bidscoin/provenance`` (see the ``-s`` option in the `bidsmapper <./workflow.html#step-1a-running-the-bidsmapper>`__)
    * Small anonymized data snippets are send to the BIDScoin developers to generate usage and error statistics. For more information and opt-out run ``bidscoin --tracking show``
 
 Finishing up
@@ -227,7 +227,7 @@ After a successful run of bidscoiner, the work to convert your data in a fully c
 
 Adding more meta-data
 ^^^^^^^^^^^^^^^^^^^^^
-To make your dataset reproducable and shareable, you should add study-level meta-data in the modality agnostic BIDS files (BIDScoin saves stub versions of them). For instance, you should update the content of the ``dataset_description.json`` and ``README`` files in your bids folder and you may need to provide e.g. additional ``*_sessions.tsv`` or ``participants.json`` files (see the `BIDS specification <https://bids-specification.readthedocs.io/en/stable/03-modality-agnostic-files.html>`__ for more information). Moreover, if you have behavioural log-files you will find that BIDScoin does not (yet) support converting these into BIDS compliant ``*_events.tsv/json`` files (advanced users are encouraged to use the bidscoiner `plug-in <plugins.html>`__ option and write their own log-file parser).
+To make your dataset reproducable and shareable, you should add study-level meta-data in the modality agnostic BIDS files (BIDScoin saves stub versions of them). For instance, you should update the content of the ``dataset_description.json`` and ``README`` files in your bids folder and you may need to provide e.g. additional ``*_sessions.tsv`` or ``participants.json`` files (see the `BIDS specification <https://bids-specification.readthedocs.io/en/stable/03-modality-agnostic-files.html>`__ for more information). Moreover, if you have behavioural log-files you will find that BIDScoin does not (yet) support converting these into BIDS compliant ``*_events.tsv/json`` files (advanced users are encouraged to use the bidscoiner `plug-in <./plugins.html>`__ option and write their own log-file parser).
 
 BIDS validation
 ^^^^^^^^^^^^^^^

@@ -7,11 +7,11 @@ A first step when encountering execution errors is to test whether your installa
 
 The "dcm2niix" command is not recognized
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This is an `installation <installation.html#dcm2niix-installation>`__ problem and means that bidscoin can't find your dcm2niix executable (just carefully follow the installation instructions)
+This is an `installation <./installation.html#dcm2niix-installation>`__ problem and means that bidscoin can't find your dcm2niix executable (just carefully follow the installation instructions)
 
 Could not load the Qt platform plugin "xcb"
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This error message may occur on certain Linux platforms when opening the bidseditor. This is an `installation <installation.html#bidscoin-installation>`__ issue that may occur if you have installed the ``+qt5`` build of BIDScoin (e.g. because your system does not support Qt6). Sometimes this error can be solved by downgrading your PyQt5 library, e.g. by running ``pip install --upgrade pyqt5==5.14`` in your terminal environment. Another solution might be to use your Linux package manager to install PyQt5, e.g. like this: ``apt install python3-pyqt5 python3-pyqt5.qtx11extras``
+This error message may occur on certain Linux platforms when opening the bidseditor. This is an `installation <./installation.html#bidscoin-installation>`__ issue that may occur if you have installed the ``+qt5`` build of BIDScoin (e.g. because your system does not support Qt6). Sometimes this error can be solved by downgrading your PyQt5 library, e.g. by running ``pip install --upgrade pyqt5==5.14`` in your terminal environment. Another solution might be to use your Linux package manager to install PyQt5, e.g. like this: ``apt install python3-pyqt5 python3-pyqt5.qtx11extras``
 
 ImportError: libEGL.so.1: cannot open shared object file: No such file or directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -23,11 +23,11 @@ This may error message may be reported on Linux systems that do not support Qt6 
    sudo apt install qt6-base-dev     # If the above package cannot be located
    sudo apt install python3-pyqt6    # If the above commands do not solve the issue
 
-An alternative solution may be to install the ``+qt5`` build of BIDScoin (see `installation <installation.html#bidscoin-installation>`__)
+An alternative solution may be to install the ``+qt5`` build of BIDScoin (see `installation <./installation.html#bidscoin-installation>`__)
 
 My Apptainer/Singularity container fails
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-When running apptainer/singularity on on systems with an older Linux kernel (e.g. older than 3.15) you may get errors such as ``ImportError: libQt5Core.so.5: cannot open shared object file: No such file or directory``. A working fix may be to add the following line at the end of ``%post`` section of  the `singularity.def <installation.html#using-a-singularity-container>`__ file.
+When running apptainer/singularity on on systems with an older Linux kernel (e.g. older than 3.15) you may get errors such as ``ImportError: libQt5Core.so.5: cannot open shared object file: No such file or directory``. A working fix may be to add the following line at the end of ``%post`` section of  the `singularity.def <./installation.html#using-a-singularity-container>`__ file.
 
 .. code-block:: console
 
@@ -45,7 +45,7 @@ The first step in troubleshooting is to look at the warnings and messages printe
 
 My bidsmap is empty
 ^^^^^^^^^^^^^^^^^^^
-After running the bidsmapper, the bidseditor shows an empty bidsmap (i.e no data samples). The most likely cause is that the structure of your raw data repository is not understood by BIDScoin (see `data preparation <preparation.html>`__ for more info). Another likely cause is that the sub-/ses- prefixes need to be adjusted to your folder names (e.g. when your ). Install and/or add the plugin.
+After running the bidsmapper, the bidseditor shows an empty bidsmap (i.e no data samples). The most likely cause is that the structure of your raw data repository is not understood by BIDScoin (see `data preparation <./preparation.html>`__ for more info). Another likely cause is that the sub-/ses- prefixes need to be adjusted to your folder names (e.g. when your ). Install and/or add the plugin.
 
 My subject/session labels are wrong
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -72,7 +72,7 @@ You may get the warning "Cannot reliably change the datatype and/or suffix becau
 
 I have duplicated field maps because of an interrupted session
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-It may happen that due to irregularities during data acquisition you had to reacquire your field-map for part of your data. In that case the `IntendedFor` and `B0FieldIdentifier`/'B0FieldSource` semantics become ambiguous. To handle this situation, you can use json sidecar files to extend the source attributes (see below) or use the limited `IntendedFor` search as described `here <bidsmap.html#intendedfor>`__ and `here <https://github.com/Donders-Institute/bidscoin/issues/123>`__.
+It may happen that due to irregularities during data acquisition you had to reacquire your field-map for part of your data. In that case the `IntendedFor` and `B0FieldIdentifier`/'B0FieldSource` semantics become ambiguous. To handle this situation, you can use json sidecar files to extend the source attributes (see below) or use the limited `IntendedFor` search as described `here <./bidsmap.html#intendedfor>`__ and `here <https://github.com/Donders-Institute/bidscoin/issues/123>`__.
 
 The bidscoiner says that the IntendedFor search gave no results
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -80,7 +80,7 @@ Even if you have specified the IntendedFor value in the bidseditor, you still ge
 
 The data of some subjects need to be treated (mapped) differently
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Sometimes you may have irregularities in your data that make that you would like make exceptions for run-items of certain subjects. There are different ways to do this but most likely the best way to do this is to add a json sidecar file to the source data of those run-items. In the json sidecar file you can store an attribute key-value pair to `overrule or extend the original attribute value of the source data <bidsmap.html#structure-and-content>`__. For instance, if your fmri run was acquired with the wrong task presentation, e.g. `task2` instead of `task1`, you can add `SeriesDescription: task2` to the sidecar file to overrule `SeriesDescription: task1` in the DICOM header (to make a more specific exception that shows up as a new run-item in the bidsmap you can change it to e.g. `task1_exception`).
+Sometimes you may have irregularities in your data that make that you would like make exceptions for run-items of certain subjects. There are different ways to do this but most likely the best way to do this is to add a json sidecar file to the source data of those run-items. In the json sidecar file you can store an attribute key-value pair to `overrule or extend the original attribute value of the source data <./bidsmap.html#structure-and-content>`__. For instance, if your fmri run was acquired with the wrong task presentation, e.g. `task2` instead of `task1`, you can add `SeriesDescription: task2` to the sidecar file to overrule `SeriesDescription: task1` in the DICOM header (to make a more specific exception that shows up as a new run-item in the bidsmap you can change it to e.g. `task1_exception`).
 
 More help
 ---------
