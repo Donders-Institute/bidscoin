@@ -37,9 +37,9 @@ Features
 - [x] Plug-ins
 - [ ] Stimulus/behavioural logfiles
 
-  ``*  = Only DICOM source data``
+  ``\*  = Only DICOM source data``
 
-  ``** = Only Twix, SDAT/SPAR and P-file source data``
+  ``\*\* = Only Twix, SDAT/SPAR and P-file source data``
 
 .. note::
 
