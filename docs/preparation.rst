@@ -1,5 +1,5 @@
-Data preparation
-================
+Data organization
+=================
 
 Supported source data structures
 --------------------------------

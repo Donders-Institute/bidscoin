@@ -124,7 +124,7 @@ Another command-line utility that can be helpful in organizing your source data 
 
     positional arguments:
       sourcefolder          The source folder with the raw data in sub-#/ses-#/series
-                            organisation
+                            organization
 
     optional arguments:
       -h, --help            show this help message and exit
