@@ -87,3 +87,26 @@ build_manpages   = "build_manpages.build_manpages"
 
 [tool.pytest.ini_options]
 testpaths        = ['tests']
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+min_version      = 4.0
+envlist          = py38, py39, py310, py311, docs
+
+[testenv]
+extras           = all
+deps             = pytest
+                   argparse-manpage[setuptools]
+commands         = pytest
+
+[testenv:docs]
+deps             = sphinx
+                   sphinx-rtd-theme
+                   myst-parser
+                   linkchecker
+                   tomli >= 1.1.0 ; python_version < "3.11"
+allowlist_externals = make
+commands         = make -C docs html
+                   linkchecker docs/_build/html/index.html
+"""

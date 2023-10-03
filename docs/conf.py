@@ -33,7 +33,8 @@ with open(Path(__file__).parents[1]/'pyproject.toml', 'rb') as fid:
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions     = ['recommonmark']
+nitpicky       = True
+extensions     = ['myst_parser']
 source_suffix  = {'.rst': 'restructuredtext',
                   '.md': 'markdown'}
 
@@ -61,4 +62,4 @@ html_static_path   = ['_static']
 master_doc         = 'index'
 highlight_language = "none"
 html_favicon       = "./_static/bidscoin_logo.png"
-# html_logo          = "./_static/bidscoin_logo.png"
+# html_logo          = "./_static/bidscoin_logo_small.png"
