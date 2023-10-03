@@ -23,7 +23,7 @@ These setting can be used by all the BIDScoin tools:
 - ``datatypes``: Datatypes that are converted to BIDS. This can be useful for ignoring / excluding specific datatypes (without changing their mappings)
 - ``unknowntypes``: Datatypes that are not part of BIDS but that are converted to a BIDS-like entries in the BIDS folder
 - ``ignoretypes``: Datatypes that are excluded / not converted"""
-- ``zip``: Wildcard pattern to select tarball/zip-files in the source folders that need to be unzipped (in a tempdir) to expose the data. Use for instance '*.tar.gz' if your source data looks like ``sub-01\01_MPRAGE\dcmfiles.tar.gz``, etc
+- ``zip``: Wildcard pattern to select tarball/zip-files in the source folders that need to be unzipped (in a tempdir) to expose the data. Use for instance '\*.tar.gz' if your source data looks like ``sub-01\01_MPRAGE\dcmfiles.tar.gz``, etc
 
 The core working of BIDScoin and its plugins can be tested by clicking the corresponding [Test] button and inspection of the terminal output.
 
