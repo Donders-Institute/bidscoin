@@ -15,4 +15,3 @@
    screenshots
    tutorial
    troubleshooting
-   CHANGELOG
