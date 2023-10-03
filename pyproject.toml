@@ -101,7 +101,7 @@ deps             = pytest
 commands         = pytest
 
 [testenv:docs]
-deps             = sphinx
+deps             = sphinx >= 2.1
                    sphinx-rtd-theme
                    myst-parser
                    linkchecker

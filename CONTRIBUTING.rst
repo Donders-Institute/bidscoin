@@ -12,15 +12,15 @@ Project organization
   - ``heuristics/`` - Pre-installed template bidsmaps
   - ``plugins/`` - Pre-installed plugins
   - ``schema/`` - Schema files from the `BIDS specifications <https://github.com/bids-standard/bids-specification/tree/master/src/schema>`__
-  - ``utilities/`` -
+  - ``utilities/`` - A set of useful helper tools
 
 * `docs/ <./docs>`_ - The Sphinx `RTD <https://bidscoin.readthedocs.io>`__ documentation repository
-* `tests/ <./tests>`_ - The collection of test modules for the `CI development <https://github.com/features/actions>`__ of BIDScoin
+* `tests/ <./tests>`_ - The collection of (py)test modules for the `CI development <https://github.com/features/actions>`__ of BIDScoin
 
 How to contribute code
 ----------------------
 
-The preferred way to contribute to the BIDScoin code base or documentation is to fork the `main repository <https://github.com/Donders-Institute/bidscoin>`_ on GitHub. If you are unsure what that means, here is a set-up workflow you may wish to follow:
+The preferred way to contribute to the BIDScoin code base or documentation is use a `forking wokflow <https://www.atlassian.com/git/tutorials/comparing-workflows/forking-workflow>`__, i.e. fork the `main repository <https://github.com/Donders-Institute/bidscoin>`__, create a feature branch, and submit a pull request. If you are unsure what that means, here is a set-up workflow you may wish to follow:
 
 0. Fork the `project repository <https://github.com/Donders-Institute/bidscoin>`_ on GitHub, by clicking on the “Fork” button near the top of the page — this will create a personal copy of the repository.
 
@@ -49,7 +49,7 @@ It is recommended to check that your contribution complies with the following ru
 
 * CLI applications (i.e. Python modules that have an entrypoint + manpage in ``pyproject.toml``) should have informative docstrings and arguments, with usage examples presented as argparse epilogues. All CLIs and plugins should be described in the Sphinx RTD documentation.
 * Docstrings are formatted in `Sphinx style <https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html>`__
-* New modules or functionality should be accompanied with type annotations and new (py)tests
+* New modules or functionality should be accompanied with `type hints <https://docs.python.org/3/library/typing.html>`__ and new (py)tests
 * All tests performed with `tox <https://tox.wiki>`__ must pass (python environments can be skipped, if at least one of them is checked)
 * Screens are wide nowadays, so the PEP directives for short code lines is considered outdated and does not have to be respected
 * To improve code readability, minor comments can (should) be appended at the end of the code lines they apply to
