@@ -25,28 +25,37 @@ BIDScoin is developed at the `Donders Institute <https://www.ru.nl/donders/>`__ 
 Features
 --------
 
--  [x] DICOM source data
--  [x] PAR/REC source data (Philips)
--  [x] NIfTI source data
--  [x] Physiological logging data\*
--  [x] MR Spectroscopy data\*\*
--  [x] PET/CT data
--  [x] Field maps\*
--  [x] Multi-echo data\*
--  [x] Multi-coil data\*
--  [ ] Stimulus/behavioural logfiles
--  [x] Plug-ins
+- [x] DICOM source data
+- [x] PAR/REC source data (Philips)
+- [x] NIfTI source data
+- [x] Physiological logging data\*
+- [x] MR Spectroscopy data\*\*
+- [x] PET/CT data
+- [x] Field maps\*
+- [x] Multi-echo data\*
+- [x] Multi-coil data\*
+- [ ] Stimulus/behavioural logfiles
+- [x] Plug-ins
 
-   ``*  = Only DICOM source data``
+  ``*  = Only DICOM source data``
 
-   ``** = Only Twix, SDAT/SPAR and P-file source data``
+  ``** = Only Twix, SDAT/SPAR and P-file source data``
 
 .. note::
 
-   * All **source code** is hosted at `Github <https://github.com/Donders-Institute/bidscoin>`__ and **freely available** under the GPL-3.0-or-later `license <https://spdx.org/licenses/GPL-3.0-or-later.html>`__.
-   * The full BIDScoin **documentation** is hosted at `Read the Docs <https://bidscoin.readthedocs.io>`__
-   * For citation and more information, see our `BIDScoin publication <https://www.frontiersin.org/articles/10.3389/fninf.2021.770608>`__ in **Frontiers in Neuroinformatics** (`doi: 10.3389/fninf.2021.770608 <https://doi.org/10.3389/fninf.2021.770608>`__)
-   * You are encouraged to **post issues or questions at** `Github <https://github.com/Donders-Institute/bidscoin/issues>`__ or `NeuroStars <https://neurostars.org/tag/bidscoin>`__
+  * All **source code** is hosted at `Github <https://github.com/Donders-Institute/bidscoin>`__ and **freely available** under the GPL-3.0-or-later `license <https://spdx.org/licenses/GPL-3.0-or-later.html>`__.
+  * The full BIDScoin **documentation** is hosted at `Read the Docs <https://bidscoin.readthedocs.io>`__
+  * For citation and more information, see our `BIDScoin publication <https://www.frontiersin.org/articles/10.3389/fninf.2021.770608>`__ in **Frontiers in Neuroinformatics** (`doi: 10.3389/fninf.2021.770608 <https://doi.org/10.3389/fninf.2021.770608>`__)
+  * You are encouraged to **post issues or questions at** `Github <https://github.com/Donders-Institute/bidscoin/issues>`__ or `NeuroStars <https://neurostars.org/tag/bidscoin>`__
+
+How to contribute
+-----------------
+
+Are you a Python programmer with an interest in BIDS who knows about GE and/or Philips data?
+Are you experienced with parsing stimulus presentation log-files? Or do you have ideas to improve
+BIDScoin or its documentation? Have you come across bugs? In any case, you are more than welcome
+to provide feedback and to `contribute <https://github.com/Donders-Institute/bidscoin/blob/master/CONTRIBUTING.rst>`__
+to this project.
 
 .. |PyPI version| image:: https://img.shields.io/pypi/v/bidscoin?color=success
    :target: https://pypi.org/project/bidscoin
@@ -68,12 +77,3 @@ Features
 .. |Tests| image:: https://github.com/Donders-Institute/bidscoin/actions/workflows/tests.yaml/badge.svg
    :target: https://github.com/Donders-Institute/bidscoin/actions
    :alt: Pytest results
-
-How to contribute
------------------
-
-Are you a Python programmer with an interest in BIDS who knows about GE and/or Philips data?
-Are you experienced with parsing stimulus presentation log-files? Or do you have ideas to improve
-BIDScoin or its documentation? Have you come across bugs? In any case, you are more than welcome
-to provide feedback and to `contribute <https://github.com/Donders-Institute/bidscoin/blob/master/CONTRIBUTING.rst>`__
-to this project.
