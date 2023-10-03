@@ -101,8 +101,7 @@ deps             = pytest
 commands         = pytest
 
 [testenv:docs]
-deps             = sphinx >= 2.1
-                   sphinx-rtd-theme
+deps             = sphinx-rtd-theme
                    myst-parser
                    linkchecker
                    tomli >= 1.1.0 ; python_version < "3.11"
