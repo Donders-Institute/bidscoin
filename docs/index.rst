@@ -2,17 +2,27 @@
 
 .. toctree::
    :maxdepth: 3
-   :hidden:
+   :caption: Getting started
 
    installation
    preparation
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Usage
+
    workflow
    bidsmap
    options
    plugins
    bidsapps
    utilities
-   screenshots
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Miscellaneous
+
    tutorial
    troubleshooting
+   screenshots
    CHANGELOG

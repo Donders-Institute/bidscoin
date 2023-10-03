@@ -11,6 +11,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 from pathlib import Path
+from datetime import date
 try:
     import tomllib
 except ModuleNotFoundError:
@@ -19,9 +20,10 @@ except ModuleNotFoundError:
 
 # -- Project information -----------------------------------------------------
 
-project   = 'BIDScoin'
-copyright = '2018-2023, Marcel Zwiers'
-author    = 'Marcel Zwiers'
+project    = 'BIDScoin'
+copyright  = f"2018-{date.today().year}, Marcel Zwiers"
+author     = 'Marcel Zwiers'
+master_doc = 'index'
 
 # The full version, including alpha/beta/rc tags from file
 with open(Path(__file__).parents[1]/'pyproject.toml', 'rb') as fid:
@@ -33,10 +35,10 @@ with open(Path(__file__).parents[1]/'pyproject.toml', 'rb') as fid:
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-nitpicky       = True
-extensions     = ['myst_parser']
-source_suffix  = {'.rst': 'restructuredtext',
-                  '.md': 'markdown'}
+nitpicky      = True
+extensions    = ['myst_parser']
+source_suffix = {'.rst': 'restructuredtext',
+                 '.md': 'markdown'}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -52,14 +54,13 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 
-html_theme = 'sphinx_rtd_theme'
+html_theme         = 'sphinx_rtd_theme'
+highlight_language = "none"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 
-html_static_path   = ['_static']
-master_doc         = 'index'
-highlight_language = "none"
-html_favicon       = "./_static/bidscoin_logo.png"
-# html_logo          = "./_static/bidscoin_logo_small.png"
+html_static_path = ['_static']
+html_favicon     = "./_static/bidscoin_logo.png"
+# html_logo        = "./_static/bidscoin_logo_small.png"
