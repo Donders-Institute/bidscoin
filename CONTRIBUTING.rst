@@ -26,19 +26,19 @@ The preferred way to contribute to the BIDScoin code base or documentation is to
 
 1. Set up a clone of the repository on your local machine and connect it to both the “official” and your copy of the repository on GitHub::
 
-   git clone git://github.com/Donders-Institute/bidscoin
-   cd bidscoin
-   git remote rename origin official
-   git remote add origin git://github.com/[YOUR_GITHUB_USERNAME]/bidscoin
+    git clone git://github.com/Donders-Institute/bidscoin
+    cd bidscoin
+    git remote rename origin official
+    git remote add origin git://github.com/[YOUR_GITHUB_USERNAME]/bidscoin
 
 2. When you wish to start a new contribution, create a new branch::
 
-   git checkout -b [topic_of_your_contribution]
+    git checkout -b [topic_of_your_contribution]
 
 3. When you are done making the changes you wish to contribute, commit and push them to GitHub::
 
-   git commit -am "[A SHORT DESCRIPTION OF THE CHANGES]"  # Run this command every time you have made a set of changes that belong together
-   git push -u origin topic_of_your_contribution
+    git commit -am "[A SHORT DESCRIPTION OF THE CHANGES]"  # Run this command every time you have made a set of changes that belong together
+    git push -u origin topic_of_your_contribution
 
 Git will provide you with a link which you can click to initiate a pull request (if any of the above seems overwhelming, you can look up the `Git <http://git-scm.com/documentation>`__ or `GitHub <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request>`__ documentation on the web)
 
