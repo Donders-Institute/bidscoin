@@ -47,11 +47,11 @@ Coding guidelines
 
 It is recommended to check that your contribution complies with the following rules before submitting a pull request:
 
-* CLI applications (i.e. Python modules that have an entrypoint + manpage in `pyproject.toml <./pyproject.toml>`__) should have informative docstrings and arguments, with usage examples presented as argparse epilogues. All CLIs and plugins should be described in the Sphinx RTD documentation.
-* Docstrings are formatted in `Sphinx style <https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html>`__
-* New modules or functionality should be accompanied with `type hints <https://docs.python.org/3/library/typing.html>`__ and new (py)tests
-* All tests performed with `tox <https://tox.wiki>`__ must pass (python environments can be skipped, if at least one of them is checked)
+* CLI applications (i.e. Python modules that have an entrypoint + manpage in `pyproject.toml <./pyproject.toml>`__) should have informative docstrings and arguments, with usage examples presented as argparse epilogues. All CLIs and plugins must be described in the Sphinx RTD documentation
+* Docstrings should be formatted in `Sphinx style <https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html>`__
+* New modules, classes or functionality should be accompanied with `type hints <https://docs.python.org/3/library/typing.html>`__ and new (py)tests
+* All tests performed with `tox <https://tox.wiki>`__ must pass (python environments may be skipped, if at least one of them is checked)
 * Screens are wide nowadays, so the PEP directives for short code lines is considered outdated and does not have to be respected
-* To improve code readability, minor comments can (should) be appended at the end of the code lines they apply to
+* To improve code readability, minor comments can (should) be appended at the end of the code lines they apply to (even if that means right scrolling)
 * Horizontal space is not limited, so multi-line readability is preferred, e.g. the vertical alignment of ``=`` operators (i.e. padded horizontally with whitespaces)
-* Vertical space should not be readily wasted to promote better overviews and minimize the need for scrolling
+* Vertical space should not be readily wasted to promote better overviews and minimize the need for vertical scrolling

@@ -51,11 +51,7 @@ Features
 How to contribute
 -----------------
 
-Are you a Python programmer with an interest in BIDS who knows about GE and/or Philips data?
-Are you experienced with parsing stimulus presentation log-files? Or do you have ideas to improve
-BIDScoin or its documentation? Have you come across bugs? In any case, you are more than welcome
-to provide feedback and to `contribute <https://github.com/Donders-Institute/bidscoin/blob/master/CONTRIBUTING.rst>`__
-to this project.
+Are you a Python programmer with an interest in BIDS who knows about GE and/or Philips data? Are you experienced with parsing stimulus presentation log-files? Or do you have ideas to improve BIDScoin or its documentation? Have you come across bugs? In any case, you are more than welcome to provide feedback and to `contribute to this project <https://github.com/Donders-Institute/bidscoin/blob/master/CONTRIBUTING.rst>`__.
 
 .. |PyPI version| image:: https://img.shields.io/pypi/v/bidscoin?color=success
    :target: https://pypi.org/project/bidscoin
