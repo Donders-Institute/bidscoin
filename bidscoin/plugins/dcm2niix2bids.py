@@ -129,13 +129,20 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     else:
         LOGGER.exception(f"Unsupported dataformat '{dataformat}'")
 
+    # Extra bidsmap check
+    if not template[dataformat] and not bidsmap_old[dataformat]:
+        LOGGER.error(f"No {dataformat} source information found in the study and template bidsmap")
+        return
+
     # Update the bidsmap with the info from the source files
     for sourcefile in sourcefiles:
 
-        # Input checks
-        if not template[dataformat] and not bidsmap_old[dataformat]:
-            LOGGER.error(f"No {dataformat} source information found in the study and template bidsmap for: {sourcefile}")
-            return
+        # Check if the source files all have approximately the same size (difference < 50kB)
+        if dataformat == 'DICOM':
+            for file in sourcefile.parent.iterdir():
+                if abs(file.stat().st_size - sourcefile.stat().st_size) > 1024 * 50 and file.suffix == sourcefile.suffix:
+                    LOGGER.warning(f"Not all {file.suffix}-files in '{sourcefile.parent}' have the same size. This may be ok but can also be indicative of a truncated acquisition or file corruption(s)")
+                    break
 
         # See if we can find a matching run in the old bidsmap
         datasource = bids.DataSource(sourcefile, plugin, dataformat)
