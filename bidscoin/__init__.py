@@ -67,11 +67,13 @@ configfile     = Path.home()/'.bidscoin'/__version__/'config.toml'
 templatefolder = configfile.parent/'templates'
 templatefolder.mkdir(parents=True, exist_ok=True)
 if not configfile.is_file():
+    print(f"Creating BIDScoin configuration:\n-> {configfile}")
     configfile.write_text(f"[bidscoin]\n"
                           f"bidsmap_template = '{templatefolder}/bidsmap_dccn.yaml'     # The default template bidsmap (change to use a different default)\n"
                           f"trackusage       = 'yes'     # Upload anonymous usage data if 'yes' (maximally 1 upload every {tracking['sleep']} hour) (see `bidscoin --tracking show`)\n")
 for template in (bidscoinfolder/'heuristics').glob('*.yaml'):
     if not (templatefolder/template.name).is_file():
+        print(f"-> {templatefolder/template.name}")
         shutil.copyfile(template, templatefolder/template.name)
 with configfile.open('+rb') as fid:
     config = tomllib.load(fid)

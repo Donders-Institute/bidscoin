@@ -110,8 +110,8 @@ class DataSource:
 
     def properties(self, tagname: str, run: dict=None) -> Union[str, int]:
         """
-        Gets the 'filepath[:regexp]', 'filename[:regexp]', 'filesize' or 'nrfiles' filesystem property. The filepath (with trailing "/")
-        and filename can be parsed using an optional regular expression re.findall(regexp, filepath/filename). The last match is returned
+        Gets the 'filepath[:regex]', 'filename[:regex]', 'filesize' or 'nrfiles' filesystem property. The filepath (with trailing "/")
+        and filename can be parsed using an optional regular expression re.findall(regex, filepath/filename). The last match is returned
         for the filepath, the first match for the filename
 
         :param tagname: The name of the filesystem property key, e.g. 'filename', 'filename:sub-(.*?)_' or 'nrfiles'
@@ -171,7 +171,7 @@ class DataSource:
         Read the attribute value from the extended attributes, or else use the plugins to read it from the datasource
 
         :param attributekey: The attribute key for which a value is read from the json-file or from the datasource. A colon-separated regular expression can be appended to the attribute key (same as for the `filepath` and `filename` properties)
-        :param validregexp:  If True, the regexp meta-characters in the attribute value (e.g. '*') are replaced by '.',
+        :param validregexp:  If True, the regex meta-characters in the attribute value (e.g. '*') are replaced by '.',
                              e.g. to prevent compile errors in match_runvalue()
         :param cache:        Try to read the attribute from self._cache first if cache=True, else ignore the cache
         :return:             The attribute value or '' if the attribute could not be read from the datasource. NB: values are always converted to strings
@@ -253,12 +253,12 @@ class DataSource:
         Extract the cleaned-up subid and sesid from the datasource properties or attributes
 
         :param subid:   The subject identifier, i.e. name of the subject folder (e.g. 'sub-001' or just '001') or a dynamic source attribute.
-                        Can be left empty/None to use the default <<filepath:regexp>> extraction
-        :param sesid:   The optional session identifier, same as subid
+                        Can be left unspecified/None (but not '') to use the default <<filepath:regex>> extraction
+        :param sesid:   The optional session identifier, same as subid, except that sesid='' will return sesid='' instead of sesid='ses-'
         :return:        Updated (subid, sesid) tuple, including the BIDS-compliant 'sub-'/'ses-' prefixes
         """
 
-        # Add the default value for subid and sesid if not given
+        # Add the default value for subid and sesid if unspecified / None
         if subid is None:
             subid = f"<<filepath:/{self.resubprefix()})(.*?)/>>"
         if sesid is None:
@@ -516,7 +516,7 @@ def parse_x_protocol(pattern: str, dicomfile: Path) -> str:
     This structure is necessary to recreate a scanning protocol from a DICOM,
     since the DICOM information alone wouldn't be sufficient.
 
-    :param pattern:     A regexp expression: '^' + pattern + '\t = \t(.*)\\n'
+    :param pattern:     A regular expression: '^' + pattern + '\t = \t(.*)\\n'
     :param dicomfile:   The full pathname of the dicom-file
     :return:            The string extracted values from the dicom-file according to the given pattern
     """
@@ -1129,7 +1129,7 @@ def check_template(bidsmap: dict) -> bool:
                     try:
                         re.compile(str(val))
                     except re.error:
-                        LOGGER.warning(f"Invalid regexp pattern in the {key} value '{val}' in: bidsmap[{dataformat}][{datatype}] -> {run['provenance']}\nThis may cause run-matching errors unless '{val}' is a literal attribute value")
+                        LOGGER.warning(f"Invalid regex pattern in the {key} value '{val}' in: bidsmap[{dataformat}][{datatype}] -> {run['provenance']}\nThis may cause run-matching errors unless '{val}' is a literal attribute value")
             for typegroup in datatyperules.get(datatype, {}):
                 for suffix in datatyperules[datatype][typegroup]['suffixes']:
                     if not (suffix in datatypesuffixes or suffix in bidsignore or
@@ -1566,7 +1566,7 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, run: dict, clean: bool=T
 
 def match_runvalue(attribute, pattern) -> bool:
     """
-    Match the value items with the attribute string using regexp. If both attribute
+    Match the value items with the attribute string using regex. If both attribute
     and values are a list then they are directly compared as is, else they are converted
     to a string
 
@@ -1590,9 +1590,7 @@ def match_runvalue(attribute, pattern) -> bool:
         return False
 
     # Make sure we start with proper string types
-    if attribute is None:
-        attribute = ''
-    attribute = str(attribute).strip()
+    attribute = str(attribute or '').strip()
     pattern   = str(pattern).strip()
 
     # See if the pattern matches the source attribute
@@ -1991,7 +1989,7 @@ def poolmetadata(sourcemeta: Path, targetmeta: Path, usermeta: dict, extensions:
                         LOGGER.info(f"Overruling {metakey} values in {targetmeta}: {metapool[metakey]} -> {metaval}")
                     else:
                         LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
-                    metapool[metakey] = metaval if metaval else None
+                    metapool[metakey] = metaval or None
 
             # Or just copy over the metadata file
             else:
@@ -2011,7 +2009,7 @@ def poolmetadata(sourcemeta: Path, targetmeta: Path, usermeta: dict, extensions:
             LOGGER.info(f"Overruling {metakey} values in {targetmeta}: {metapool[metakey]} -> {metaval}")
         else:
             LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
-        metapool[metakey] = metaval if metaval else None
+        metapool[metakey] = metaval or None
 
     return metapool
 
@@ -2070,13 +2068,13 @@ def get_propertieshelp(propertieskey: str) -> str:
 
     # Return the description from the DICOM dictionary or a default text
     if propertieskey == 'filepath':
-        return 'The path of the source file that is matched against the (regexp) pattern'
+        return 'The path of the source file that is matched against the (regex) pattern'
     if propertieskey == 'filename':
-        return 'The name of the source file that is matched against the (regexp) pattern'
+        return 'The name of the source file that is matched against the (regex) pattern'
     if propertieskey == 'filesize':
-        return 'The size of the source file that is matched against the (regexp) pattern'
+        return 'The size of the source file that is matched against the (regex) pattern'
     if propertieskey == 'nrfiles':
-        return 'The nr of similar files in the folder that matched against the properties (regexp) patterns'
+        return 'The nr of similar files in the folder that matched against the properties (regex) patterns'
 
     return f"{propertieskey} is not a valid property-key"
 

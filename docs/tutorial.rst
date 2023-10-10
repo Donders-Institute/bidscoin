@@ -33,19 +33,20 @@ Create a tutorial playground folder by executing these shell commands:
    $ bidscoin --download .              # Download the tutorial data (use a "." for the current folder or a pathname of choice to save it elsewhere)
    $ cd ./bidscointutorial              # Go to the downloaded data (replace "." with the full pathname if your data was saved elsewhere)
 
-The new ``bidscointutorial`` folder contains a ``raw`` source-data folder and a ``bids_ref`` reference BIDS folder, i.e. the intended end product of this tutorial. In the raw folder you will find these DICOM series (aka "runs")::
+The new ``bidscointutorial`` folder contains a ``raw`` source-data folder and a ``bids_ref`` reference BIDS folder, i.e. the intended end product of this tutorial. In the raw folder you will find these DICOM Series folders (aka "runs")::
 
-   001-localizer_32ch-head                  A localizer scan that is not scientifically relevant and can be left out of the BIDS dataset
-   002-AAHead_Scout_32ch-head               A localizer scan that is not scientifically relevant and can be left out of the BIDS dataset
-   007-t1_mprage_sag_ipat2_1p0iso           An anatomical T1-weighted scan
-   047-cmrr_2p4iso_mb8_TR0700_SBRef         A single-band reference scan of the subsequent multi-band functional MRI scan
-   048-cmrr_2p4iso_mb8_TR0700               A multi-band functional MRI scan
-   049-field_map_2p4iso                     The field-map magnitude images of the first and second echo. Set as "magnitude1", bidscoiner will recognize the format. This field map is intended for the previous functional MRI scan
-   050-field_map_2p4iso                     The field-map phase difference image of the first and second echo
-   059-cmrr_2p5iso_mb3me3_TR1500_SBRef      A single-band reference scan of the subsequent multi-echo functional MRI scan
-   060-cmrr_2p5iso_mb3me3_TR1500            A multi-band multi-echo functional MRI scan
-   061-field_map_2p5iso                     Idem, the field-map magnitude images of the first and second echo, intended for the previous functional MRI scan
-   062-field_map_2p5iso                     Idem, the field-map phase difference image of the first and second echo
+   bidscointutorial/raw/sub-001/ses-01/
+   ├─ 001-localizer_32ch-head               A localizer scan that is not scientifically relevant and can be left out
+   ├─ 002-AAHead_Scout_32ch-head            A localizer scan that is not scientifically relevant and can be left out
+   ├─ 007-t1_mprage_sag_ipat2_1p0iso        An anatomical T1-weighted scan
+   ├─ 047-cmrr_2p4iso_mb8_TR0700_SBRef      A single-band reference scan of the subsequent multi-band fMRI scan
+   ├─ 048-cmrr_2p4iso_mb8_TR0700            A multi-band fMRI scan
+   ├─ 049-field_map_2p4iso                  The field-map "magnitude1" images (intended for the previous fMRI scan)
+   ├─ 050-field_map_2p4iso                  The field-map phase difference image
+   ├─ 059-cmrr_2p5iso_mb3me3_TR1500_SBRef   A single-band reference scan of the subsequent multi-echo fMRI scan
+   ├─ 060-cmrr_2p5iso_mb3me3_TR1500         A multi-band multi-echo fMRI scan
+   ├─ 061-field_map_2p5iso                  Idem, the field-map "magnitude1" images (intended for the previous fMRI scan)
+   └─ 062-field_map_2p5iso                  Idem, the field-map phase difference image
 
 Let's begin with inspecting this new raw data collection:
 

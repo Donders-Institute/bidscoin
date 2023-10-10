@@ -240,9 +240,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
         # Run spec2nii to convert the source-files in the run folder to NIfTI's in the BIDS-folder
         arg  = ''
-        args = options.get('args', OPTIONS['args'])
-        if args is None:
-            args = ''
+        args = options.get('args', OPTIONS['args']) or ''
         if dataformat == 'SPAR':
             dformat = 'philips'
             arg     = f'"{sourcefile.with_suffix(".SDAT")}"'

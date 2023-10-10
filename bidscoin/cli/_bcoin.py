@@ -7,8 +7,10 @@ The basic workflow is to run these two tools:
   $ bidsmapper sourcefolder bidsfolder        # This produces a study bidsmap and launches a GUI
   $ bidscoiner sourcefolder bidsfolder        # This converts your data to BIDS according to the study bidsmap
 
-Set the environment variable BIDSCOIN_DEBUG=TRUE in your console to run BIDScoin in its more verbose DEBUG logging mode.
-Default setting are stored in the ".bidscoin" folder in your home directory
+Default settings and template bidsmaps are stored in the ".bidscoin" folder in your home directory (you can modify
+them to your needs with any plain text editor)
+
+Set the environment variable BIDSCOIN_DEBUG=TRUE in your console to run BIDScoin in its more verbose DEBUG logging mode
 
 For more documentation see: https://bidscoin.readthedocs.io
 """

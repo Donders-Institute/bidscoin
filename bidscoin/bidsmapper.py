@@ -33,7 +33,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     :param unzip:           Wildcard pattern to select tar/zip-files in the session folder. Leave empty to use the bidsmap value
     :param store:           If True, the provenance samples will be stored
     :param noeditor:        The bidseditor will not be launched if True
-    :param noupdate:        Do not update any sub/sesprefixes in or prepend the rawfolder name to the <<filepath:regexp>> expression
+    :param noupdate:        Do not update any sub/sesprefixes in or prepend the rawfolder name to the <<filepath:regex>> expression
     :param force:           If True, the previous bidsmap and logfiles will be deleted
     :return:                The new bidsmap
     """
@@ -186,7 +186,7 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path, up
     :param subprefix:   The subprefix (take value from bidsmap if empty)
     :param sesprefix:   The sesprefix (take value from bidsmap if empty)
     :param rawfolder:   The root folder-name of the sub/ses/data/file tree containing the source data files
-    :param update:      Update the prefixes in and prepend the rawfolder.name in the subject/session regexp: <<filepath:>> to <<filepath:/{rawfolder.name}>>
+    :param update:      Update the prefixes in and prepend the rawfolder.name in the subject/session regex: <<filepath:>> to <<filepath:/{rawfolder.name}>>
     :return:            A (subprefix, sesprefix) tuple
     """
 

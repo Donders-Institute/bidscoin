@@ -1,0 +1,1 @@
+"""A package of applications that can process BIDS or BIDS-like data folders"""

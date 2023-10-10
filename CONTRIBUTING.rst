@@ -7,12 +7,12 @@ Project organization
 
 * `bidscoin/ <./bidscoin>`__ - The main module with the core libraries and applications, as well as some submodules:
 
-  - ``bidsapps/`` - Applications that can process BIDS or BIDS-like data folders
+  - ``bidsapps/`` - A package of applications that can process BIDS or BIDS-like data folders
   - ``cli/`` - Argument parsers for generating BIDScoin manpages and Command Line Interfaces (CLI)
   - ``heuristics/`` - Pre-installed template bidsmaps
   - ``plugins/`` - Pre-installed plugins
   - ``schema/`` - Schema files from the `BIDS specifications <https://github.com/bids-standard/bids-specification/tree/master/src/schema>`__
-  - ``utilities/`` - A set of useful helper tools
+  - ``utilities/`` - A package of useful helper tools
 
 * `docs/ <./docs>`_ - The Sphinx `RTD <https://bidscoin.readthedocs.io>`__ documentation repository
 * `tests/ <./tests>`_ - The collection of (py)test modules for the `CI development <https://github.com/features/actions>`__ of BIDScoin
@@ -31,11 +31,18 @@ The preferred way to contribute to the BIDScoin code base or documentation is to
     git remote rename origin official
     git remote add origin git://github.com/[YOUR_GITHUB_USERNAME]/bidscoin
 
-2. When you wish to start a new contribution, create a new branch::
+2. Set up a virtual environment and install BIDScoin's dependencies::
+
+    python -m venv venv         # Or use any other tool (such as conda). Use Python < 3.11.2 (due to pypet4bids)
+    source venv/bin/activate    # On Linux, see the documentation for other operating systems
+    pip install bidscoin[dev]   # Unfortunately pyproject.toml has no way to install BIDScoin's dependencies only
+    pip uninstall bidscoin      # Hence we need to remove BIDScoin from site-packages
+
+3. When you wish to start a new contribution, create a new branch::
 
     git checkout -b [topic_of_your_contribution]
 
-3. When you are done making the changes you wish to contribute, commit and push them to GitHub::
+4. When you are done making the changes you wish to contribute, commit and push them to GitHub::
 
     git commit -am "[A SHORT DESCRIPTION OF THE CHANGES]"  # Run this command every time you have made a set of changes that belong together
     git push -u origin topic_of_your_contribution
@@ -50,7 +57,7 @@ It is recommended to check that your contribution complies with the following ru
 * CLI applications (i.e. Python modules that have an entrypoint + manpage in `pyproject.toml <./pyproject.toml>`__) should have informative docstrings and arguments, with usage examples presented as argparse epilogues. All CLIs and plugins must be described in the Sphinx RTD documentation
 * Docstrings should be formatted in `Sphinx style <https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html>`__
 * New modules, classes or functionality should be accompanied with `type hints <https://docs.python.org/3/library/typing.html>`__ and new (py)tests
-* All tests performed with `tox <https://tox.wiki>`__ must pass (python environments may be skipped, if at least one of them is checked)
+* All tests performed with `tox <https://tox.wiki>`__ must pass (python environments may be skipped, if at least one of them is tested)
 * Screens are wide nowadays, so the PEP directives for short code lines is considered outdated and does not have to be respected
 * To improve code readability, minor comments can (should) be appended at the end of the code lines they apply to (even if that means right scrolling)
 * Horizontal space is not limited, so multi-line readability is preferred, e.g. the vertical alignment of ``=`` operators (i.e. padded horizontally with whitespaces)

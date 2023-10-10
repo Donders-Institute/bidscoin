@@ -1,0 +1,1 @@
+"""Pre-installed template bidsmaps"""

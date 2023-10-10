@@ -151,7 +151,7 @@
 ## [3.6.3] - 2021-06-14
 
 ### Fixed
-Remove regular expression metacharacters from the source attribute if needed (could cause a regexp compile error)
+Remove regular expression metacharacters from the source attribute if needed (could cause a regex compile error)
 Fixed for list of dynamic <<Intendended><For>> fields
 
 ## [3.6.2] - 2021-05-31

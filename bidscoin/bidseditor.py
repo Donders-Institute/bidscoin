@@ -462,7 +462,7 @@ class MainWindow(QMainWindow):
                 provenance   = Path(run['provenance'])
                 subid        = output_bidsmap[dataformat]['subject']
                 sesid        = output_bidsmap[dataformat]['session']
-                subid, sesid = run['datasource'].subid_sesid(subid, sesid if sesid else '')
+                subid, sesid = run['datasource'].subid_sesid(subid, sesid or '')
                 bidsname     = bids.get_bidsname(subid, sesid, run, not bids.check_ignore(datatype,self.bidsignore) and datatype not in self.ignoredatatypes)
                 ignore       = bids.check_ignore(datatype, self.bidsignore) or bids.check_ignore(bidsname+'.json', self.bidsignore, 'file')
                 if run['datasource'].dynamicvalue(run['bids']['suffix'], True, True) in bids.get_derivatives(datatype):
@@ -886,7 +886,7 @@ class EditWindow(QDialog):
         self.get_allowed_suffixes()                     # Set the possible suffixes the user can select for a given datatype
         subid                  = bidsmap[self.dataformat]['subject']
         sesid                  = bidsmap[self.dataformat]['session']
-        self.subid, self.sesid = datasource.subid_sesid(subid, sesid if sesid else '')
+        self.subid, self.sesid = datasource.subid_sesid(subid, sesid or '')
 
         # Set up the window
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
@@ -1201,7 +1201,7 @@ class EditWindow(QDialog):
                     value_item = MyWidgetItem(value, iseditable=item['iseditable'])
                     if table.objectName() == 'properties':
                         if j == 1:
-                            value_item.setToolTip('The (regexp) matching pattern that for this property')
+                            value_item.setToolTip('The (regex) matching pattern that for this property')
                         if j == 2:
                             value_item.setToolTip(bids.get_propertieshelp(key))
                     elif table.objectName()=='attributes' and j==0:

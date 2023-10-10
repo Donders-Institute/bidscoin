@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 [build-system]
-requires         = ['setuptools >= 62.2.0', 'wheel', 'argparse-manpage[setuptools]', 'tomli >= 1.1.0 ; python_version < "3.11"']
+requires         = ['setuptools >= 62.2.0', 'wheel', 'argparse-manpage[setuptools]', 'tomli >= 1.1.0 ; python_version < "3.11.2"']
 build-backend    = 'setuptools.build_meta'
 
 [project]
@@ -13,7 +13,7 @@ requires-python  = '>= 3.8'
 license          = {file = 'LICENSE.txt'}
 keywords         = ['bids','mri','imaging','neuroimaging','dicom','par','rec','nifti','defacing','echo-combination','skull-stripping']
 authors          = [{email = 'm.zwiers@donders.ru.nl'}, {name = 'Marcel Zwiers'}]
-classifiers      = ['Programming Language :: Python :: 3',
+classifiers      = ['Programming Language :: Python :: 3.8',
                     'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
                     'Operating System :: OS Independent',
                     'Intended Audience :: Science/Research']

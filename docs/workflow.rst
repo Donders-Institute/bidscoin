@@ -24,9 +24,9 @@ Step 1a: Running the bidsmapper
 
 ::
 
-    usage: bidsmapper.py [-h] [-b BIDSMAP] [-t TEMPLATE] [-p PLUGINS [PLUGINS ...]] [-n SUBPREFIX]
-                         [-m SESPREFIX] [-u UNZIP] [-s] [-a] [-f] [--no-update]
-                         sourcefolder bidsfolder
+    usage: bidsmapper [-h] [-b BIDSMAP] [-t TEMPLATE] [-p PLUGINS [PLUGINS ...]] [-n SUBPREFIX]
+                      [-m SESPREFIX] [-u UNZIP] [-s] [-a] [-f] [--no-update]
+                      sourcefolder bidsfolder
 
     The bidsmapper scans your source data repository to identify different data types by matching
     them against the run-items in the template bidsmap. Once a match is found, a mapping to BIDS
@@ -76,7 +76,7 @@ Step 1a: Running the bidsmapper
                             tweaking it with the bidseditor
       -f, --force           Discard the previously saved bidsmap and logfile
       --no-update           Do not update any sub/sesprefixes in or prepend the sourcefolder name to the
-                            <<filepath:regexp>> expression that extracts the subject/session labels. This
+                            <<filepath:regex>> expression that extracts the subject/session labels. This
                             is normally done to make the extraction more robust, but could cause problems
                             for certain use cases
 
@@ -96,7 +96,7 @@ Step 1b: Running the bidseditor
 
 ::
 
-    usage: bidseditor.py [-h] [-b BIDSMAP] [-t TEMPLATE] bidsfolder
+    usage: bidseditor [-h] [-b BIDSMAP] [-t TEMPLATE] bidsfolder
 
     This application launches a graphical user interface for editing the bidsmap that is produced
     by the bidsmapper. You can edit the BIDS data types and entities until all run-items have a
@@ -128,7 +128,7 @@ Step 1b: Running the bidseditor
 Main window
 ^^^^^^^^^^^
 
-As shown below, the main window of the bidseditor opens with separate data mapping tabs for each data format that is present in the bidsmap (here ``DICOM mappings`` and ``PAR mappings``). The data mapping tabs consist of a ``Participant labels`` table and a ``Data samples`` table. By default, the participant table contains `dynamic <./bidsmap.html#special-bidsmap-features>`__ ``<<filepath:regexp>>`` property values, which are used to extract the subject and session labels from the path of the source data during bidscoiner runtime. Alternatively, you can put a dynamic attribute value there (e.g. <<PatientName>>) if you want to extract that information from the source header. The data samples table shows a list of input files (left side) that uniquely represent all the different data types in the sourcedata repository, in conjunction with a preview of their ``BIDS output`` names (right side). The BIDS output names are shown in red if they are not BIDS compliant, crossed-out gray when the runs will be ignored / skipped in the conversion to BIDS, otherwise it is colored green.
+As shown below, the main window of the bidseditor opens with separate data mapping tabs for each data format that is present in the bidsmap (here ``DICOM mappings`` and ``PAR mappings``). The data mapping tabs consist of a ``Participant labels`` table and a ``Data samples`` table. By default, the participant table contains `dynamic <./bidsmap.html#special-bidsmap-features>`__ ``<<filepath:regex>>`` property values, which are used to extract the subject and session labels from the path of the source data during bidscoiner runtime. Alternatively, you can put a dynamic attribute value there (e.g. <<PatientName>>) if you want to extract that information from the source header. The data samples table shows a list of input files (left side) that uniquely represent all the different data types in the sourcedata repository, in conjunction with a preview of their ``BIDS output`` names (right side). The BIDS output names are shown in red if they are not BIDS compliant, crossed-out gray when the runs will be ignored / skipped in the conversion to BIDS, otherwise it is colored green.
 
 .. figure:: ./_static/bidseditor_main.png
 
@@ -174,8 +174,8 @@ Step 2: Running the bidscoiner
 
 ::
 
-    usage: bidscoiner.py [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-b BIDSMAP] [-f]
-                         sourcefolder bidsfolder
+    usage: bidscoiner [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-b BIDSMAP] [-f]
+                      sourcefolder bidsfolder
 
     Converts ("coins") your source datasets to NIfTI/json/tsv BIDS datasets using the mapping
     information from the bidsmap.yaml file. Edit this bidsmap to your needs using the bidseditor

@@ -1806,7 +1806,7 @@ SPAR:
   mrs:        # ---------------------- All spectroscopy runs ------------------
   - provenance:                         # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     properties: *fileprop               # This is an optional (stub) entry of properties matching (could be added to any run-item)
-    attributes: &mrs_sparattr           # The matching (regexp) criteria for the phys2bids -info data go in here
+    attributes: &mrs_sparattr           # The matching (regex) criteria for the phys2bids -info data go in here
       examination_name:
       scan_id:
       echo_time:
@@ -1850,7 +1850,7 @@ Twix:
   mrs:        # ---------------------- All spectroscopy runs ------------------
   - provenance:                         # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     properties: *fileprop               # This is an optional (stub) entry of properties matching (could be added to any run-item)
-    attributes: &mrs_twixattr           # The matching (regexp) criteria for the phys2bids -info data go in here
+    attributes: &mrs_twixattr           # The matching (regex) criteria for the phys2bids -info data go in here
       Modality:
       ProtocolName:
       SeriesDescription:
@@ -1907,7 +1907,7 @@ Pfile:
 
   mrs:        # ---------------------- All spectroscopy runs ------------------
   - provenance:                         # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
-    attributes: &mrs_p7attr             # The matching (regexp) criteria for spec2nii2bids go in here
+    attributes: &mrs_p7attr             # The matching (regex) criteria for spec2nii2bids go in here
       rhr_rh_logo:                      # INVALIDNMR
       rhr_rh_navs:                      # 8
       rhr_rh_nframes:                   # 14
@@ -1945,7 +1945,7 @@ Pfile:
     meta:                               # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
   - provenance:                         # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     attributes:
-      <<: *mrs_p7attr                   # The matching (regexp) criteria for spec2nii2bids go in here
+      <<: *mrs_p7attr                   # The matching (regex) criteria for spec2nii2bids go in here
       rhs_se_desc: .*PRESS.*
     bids:
       <<: *mrs_p7fileent                # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
@@ -1975,7 +1975,7 @@ Pfile:
 #  func:       # ----------------------- All functional runs --------------------
 #  - provenance:                         # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
 #    properties: *fileprop               # This is an optional (stub) entry of properties matching (could be added to any run-item)
-#    attributes: &attributes_physio      # The matching (regexp) criteria for the phys2bids -info data go in here
+#    attributes: &attributes_physio      # The matching (regex) criteria for the phys2bids -info data go in here
 #      ch_num:
 #      filetype:
 #      freq:

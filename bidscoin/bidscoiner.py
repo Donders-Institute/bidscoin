@@ -150,7 +150,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                         continue
                     subid        = bidsmap[datasource.dataformat]['subject']
                     sesid        = bidsmap[datasource.dataformat]['session']
-                    subid, sesid = datasource.subid_sesid(subid, sesid if sesid else '')
+                    subid, sesid = datasource.subid_sesid(subid, sesid or '')
                     bidssession  = bidsfolder/subid/sesid       # TODO: Support DICOMDIR with multiple subjects (as in PYDICOMDIR)
                     if not force and bidssession.is_dir():
                         datatypes = []

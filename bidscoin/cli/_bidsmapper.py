@@ -42,6 +42,6 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('-s','--store',       help='Store provenance data samples in the bidsfolder/code/provenance folder (useful for inspecting e.g. zipped or transfered datasets)', action='store_true')
     parser.add_argument('-a','--automated',   help='Save the automatically generated bidsmap to disk and without interactively tweaking it with the bidseditor', action='store_true')
     parser.add_argument('-f','--force',       help='Discard the previously saved bidsmap and logfile', action='store_true')
-    parser.add_argument('--no-update',        help="Do not update any sub/sesprefixes in or prepend the sourcefolder name to the <<filepath:regexp>> expression that extracts the subject/session labels. This is normally done to make the extraction more robust, but could case problems for certain use cases", action='store_true')
+    parser.add_argument('--no-update',        help="Do not update any sub/sesprefixes in or prepend the sourcefolder name to the <<filepath:regex>> expression that extracts the subject/session labels. This is normally done to make the extraction more robust, but could cause problems for certain use cases", action='store_true')
 
     return parser
