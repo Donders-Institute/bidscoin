@@ -33,32 +33,34 @@ The preferred way to contribute to the BIDScoin code base or documentation is to
 
 2. Set up a virtual environment and install BIDScoin's dependencies::
 
-    python -m venv venv         # Or use any other tool (such as conda). Use Python < 3.11.2 (due to pypet4bids)
+    python -m venv venv         # Or use any other tool (such as conda). NB: Use Python < 3.11.2 (due to pypet4bids)
     source venv/bin/activate    # On Linux, see the documentation for other operating systems
     pip install bidscoin[dev]   # Unfortunately pyproject.toml has no way to install BIDScoin's dependencies only
-    pip uninstall bidscoin      # Hence we need to remove BIDScoin from site-packages
+    pip uninstall bidscoin      # Hence we need to retrospectively remove BIDScoin from site-packages
+    # NB: Install dcm2niix yourself (see the online installation instructions)
 
 3. When you wish to start a new contribution, create a new branch::
 
     git checkout -b [topic_of_your_contribution]
 
-4. When you are done making the changes you wish to contribute, commit and push them to GitHub::
+4. When you are done making the changes you wish to contribute, test, commit and push them to GitHub::
 
-    git commit -am "[A SHORT DESCRIPTION OF THE CHANGES]"  # Run this command every time you have made a set of changes that belong together
-    git push -u origin topic_of_your_contribution
+    tox                                                  # Run this command from the bidscoin directory (make sure the venv is activated)
+    git commit -am "A SHORT DESCRIPTION OF THE CHANGES"  # Run this command every time you have made a set of changes that belong together
+    git push -u origin topic_of_your_contribution        # Run this command when you are done and the tox tests are passing
 
 Git will provide you with a link which you can click to initiate a pull request (if any of the above seems overwhelming, you can look up the `Git <http://git-scm.com/documentation>`__ or `GitHub <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request>`__ documentation on the web)
 
 Coding guidelines
 -----------------
 
-It is recommended to check that your contribution complies with the following rules before submitting a pull request:
+Please check that your contribution complies with the following rules before submitting a pull request:
 
 * CLI applications (i.e. Python modules that have an entrypoint + manpage in `pyproject.toml <./pyproject.toml>`__) should have informative docstrings and arguments, with usage examples presented as argparse epilogues. All CLIs and plugins must be described in the Sphinx RTD documentation
 * Docstrings should be formatted in `Sphinx style <https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html>`__
 * New modules, classes or functionality should be accompanied with `type hints <https://docs.python.org/3/library/typing.html>`__ and new (py)tests
 * All tests performed with `tox <https://tox.wiki>`__ must pass (python environments may be skipped, if at least one of them is tested)
-* Screens are wide nowadays, so the PEP directives for short code lines is considered outdated and does not have to be respected
+* Screens are wide nowadays, so the PEP directives for short code lines is considered outdated and does not have to be respected. Otherwise use PEP coding styles
 * To improve code readability, minor comments can (should) be appended at the end of the code lines they apply to (even if that means right scrolling)
 * Horizontal space is not limited, so multi-line readability is preferred, e.g. the vertical alignment of ``=`` operators (i.e. padded horizontally with whitespaces)
 * Vertical space should not be readily wasted to promote better overviews and minimize the need for vertical scrolling
