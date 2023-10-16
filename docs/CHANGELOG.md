@@ -4,6 +4,8 @@
 
 ## [dev]
 
+## [4.2.0] - 2023-10-16
+
 ### Added
 - The option to pip-install dcm2niix as `extras`
 - A user config file (github issue #197)
@@ -251,14 +253,14 @@ A significant rewrite and evolution of BIDScoin!
 ## [3.0.4] - 2020-05-14
 
 ### Added
-* `Export` function in the bidseditor to allow for adding run items to existing (template) bidsmaps
-* Support for Unix-shell style wildcards for matching run items in the bidsmap
+- `Export` function in the bidseditor to allow for adding run items to existing (template) bidsmaps
+- Support for Unix-shell style wildcards for matching run items in the bidsmap
 
 ### Changed
-* Improved DCCN example template bidsmap
+- Improved DCCN example template bidsmap
 
 ### Fixed
-* Various minor bugs
+- Various minor bugs
     
 ## [3.0.3] - 2020-04-14
 
@@ -281,118 +283,119 @@ A significant rewrite and evolution of BIDScoin!
 A Significant rewrite to make BIDScoin more robust, user-friendly and feature-rich :-)
 
 ### Added
-* First support for Philips PAR / REC data format
-* A BIDS compliant defacing tool
-* A BIDS compliant multi-echo combination tool
-* Much improved documentation (https://bidscoin.readthedocs.io)
+- First support for Philips PAR / REC data format
+- A BIDS compliant defacing tool
+- A BIDS compliant multi-echo combination tool
+- Much improved documentation (https://bidscoin.readthedocs.io)
     
 ## [2.3.1] - 2019-09-12
 
 ### Fixed
-* a small but important bug that caused datasets without field maps to crash (my test datasets all had field maps :-))
+- a small but important bug that caused datasets without field maps to crash (my test datasets all had field maps :-))
     
 ## [2.3] - 2019-08-29
 
 A lot of improvements have landed in 2.3, making it the best release of the 2-series by far!
 
 ### Added
-* The possibility to edit Participant labels
-* Various tests and checks in Options to ensure creating good working bidsmaps / BIDS output data
-* Upgraded compliance with bids v1.2.1
-* The possibility to leave-out certain data types / runs
+- The possibility to edit Participant labels
+- Various tests and checks in Options to ensure creating good working bidsmaps / BIDS output data
+- Upgraded compliance with bids v1.2.1
+- The possibility to leave-out certain data types / runs
 
 ### Changed
-* A new workflow that is easier and more consistent
-* Greatly improved graphical user interface and error/warning reporting
-* Improved bidsmap_dccn template
+- A new workflow that is easier and more consistent
+- Greatly improved graphical user interface and error/warning reporting
+- Improved bidsmap_dccn template
 
 ### Fixed
-* Significant code refactoring to squash a number of important bugs and make the code more robust and maintainable
+- Significant code refactoring to squash a number of important bugs and make the code more robust and maintainable
     
 ## [2.2] - 2019-07-11
 
 ### Added
-* Options tab to edit and test the bidscoin Options
-* A leave-out option (to ignore runs / prevent them from showing up in the BIDS directory)
-* A graphical interface to the bidsmapper
-* Improved logging
-* Improved the DICOM attribute *wildcard* feature
+- Options tab to edit and test the bidscoin Options
+- A leave-out option (to ignore runs / prevent them from showing up in the BIDS directory)
+- A graphical interface to the bidsmapper
+- Improved logging
+- Improved the DICOM attribute *wildcard* feature
 
 ### Changed
-* New layout of the main and edit windows
+- New layout of the main and edit windows
 
 ### Fixed
-* Various bugfixes
+- Various bugfixes
     
 ## [2.1] - 2019-06-23
 
 ### Added
-* Editing of bidsmap Options
+- Editing of bidsmap Options
 
 ### Fixed
-* `IntendedFor` in field map json sidecar files
-* Code redundancy
+- `IntendedFor` in field map json sidecar files
+- Code redundancy
     
 ## [2.0] - 2019-06-18
 
 A major release and rewrite with important user-facing improvements
 
 ### Added
-* A shiny GUI :-)
-* A new and much easier workflow
+- A shiny GUI :-)
+- A new and much easier workflow
 
 ### Fixed
-* Various bugfixes
+- Various bugfixes
     
 ## [1.5] - 2019-03-06
 
 ### Added
-* Support for PET scans
-* Support for DICOMDIR data
-* Saving of template sidecar files in the bids output directory
+- Support for PET scans
+- Support for DICOMDIR data
+- Saving of template sidecar files in the bids output directory
 
 ### Changed
-* increased flexibility for renaming / reorganising the raw (input) data structure
-* Added provenance data to the bidsmap/yaml files
+- increased flexibility for renaming / reorganising the raw (input) data structure
+- Added provenance data to the bidsmap/yaml files
 
 ### Fixed
-* various bugfixes
+- various bugfixes
     
 ## [1.4] - 2018-10-22
 
 ### Added
-* Cross-platform support
-* Installation as a Python module
-* Improved version control
-* Improved BIDS compliance
+- Cross-platform support
+- Installation as a Python module
+- Improved version control
+- Improved BIDS compliance
     
 ## [1.3] - 2018-09-28
 
 ### Changed
-* Refactored bidsmap naming
+- Refactored bidsmap naming
 
 ### Fixed
-* Various bugs
+- Various bugs
     
 ## [1.2] - 2018-09-14
 
 ### Added
-* Improved field map support
+- Improved field map support
 
 ### Changed
-* Yaml-syntax
+- Yaml-syntax
 
 ## 1.0 - 2018-07-04
 
 A first stable release of BIDScoin :-)
 
 ### Added
-* Support the conversion of organised sub/ses DICOM folders to BIDS
+- Support the conversion of organised sub/ses DICOM folders to BIDS
 
 ### To do
-* Add support for non-imaging data
+- Add support for non-imaging data
 
-[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.1.1...HEAD
+[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.2.0...HEAD
+[4.2.0]: https://github.com/Donders-Institute/bidscoin/compare/4.1.1...4.2.0
 [4.1.1]: https://github.com/Donders-Institute/bidscoin/compare/4.1.0...4.1.1
 [4.1.0]: https://github.com/Donders-Institute/bidscoin/compare/4.0.0...4.1.0
 [4.0.0]: https://github.com/Donders-Institute/bidscoin/compare/3.7.4...4.0.0
