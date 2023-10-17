@@ -8,11 +8,15 @@ import json
 import shutil
 import pandas as pd
 import nibabel as nib
-from nibabel.testing import data_path
 from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
 from bidscoin import bids
+try:
+    from nibabel.testing import data_path
+except ImportError:
+    from importlib.resources import files           # PY38: from importlib_resources import files ???
+    data_path = files('nibabel')/'tests'/'data'
 
 LOGGER = logging.getLogger(__name__)
 
