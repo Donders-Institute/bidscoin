@@ -12,7 +12,7 @@ BIDScoin: Coin your imaging data to BIDS
 
    <img name="bidscoin-logo" src="https://github.com/Donders-Institute/bidscoin/blob/master/bidscoin/bidscoin_logo.png" height="340px" align="right" alt=" ">
 
-|PyPI version| |NeuroDesk| |BIDS| |PyPI - Python Version| |GPLv3| |RTD| |Tests| |DOI|
+|PyPI version| |Neurodesk| |BIDS| |PyPI - Python Version| |GPLv3| |RTD| |Tests| |DOI|
 
 BIDScoin is a user-friendly Python application suite that converts ("coins") source-level (raw) neuroimaging data sets to standardized data sets that are organized according to the Brain Imaging Data Structure (`BIDS <https://bids-specification.readthedocs.io>`__) specification. Rather than depending on complex programmatic logic for source data-type identification, BIDScoin uses a mapping approach to discover the different source data types in your repository and convert them into BIDS data types. Different runs of source data are uniquely identified by their file system properties (e.g. file name or size) and by their attributes (e.g. ``ProtocolName`` from the DICOM header). Mapping information can be pre-specified (e.g. per site), allowing BIDScoin to make intelligent first suggestions on how to classify and convert the data. While this command-line procedure exploits all information available on disk, BIDScoin presents a `Graphical User Interface (GUI) <./screenshots.html>`__ for researchers to check and edit these mappings -- bringing in the missing knowledge that often exists only in their heads.
 
@@ -58,9 +58,9 @@ Are you a Python programmer with an interest in BIDS who knows about GE and/or P
    :alt: BIDScoin
 .. |PyPI - Python Version| image:: https://img.shields.io/pypi/pyversions/bidscoin.svg
    :alt: Python 3
-.. |NeuroDesk| image:: https://img.shields.io/badge/NeuroDesk-v4.2.0-green
+.. |Neurodesk| image:: https://img.shields.io/badge/Neurodesk-v4.2.0-green
    :target: https://www.neurodesk.org/docs/overview/applications/
-   :alt: NeuroDesk
+   :alt: Neurodesk
 .. |GPLv3| image:: https://img.shields.io/badge/License-GPLv3+-blue.svg
    :target: https://www.gnu.org/licenses/gpl-3.0
    :alt: GPL-v3.0 license

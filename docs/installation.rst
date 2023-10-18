@@ -1,7 +1,7 @@
 Installation
 ============
 
-BIDScoin can be installed directly on your operating system, or in a so-called container. Direct installation is arguably simpler and lighter, but containerized installations are better guaranteed to always work and be reproducible. Below you find instructions for direct installation, followed by instructions for installation in a container. Alternatively, if you like to use a container but don't like the complexity of its overhead, you can install `NeuroDesk <https://www.neurodesk.org/>`__ and use its pre-installed BIDScoin container without needing to know anything about containers.
+BIDScoin can be installed directly on your operating system, or in a so-called container. Direct installation is arguably simpler and lighter, but containerized installations are better guaranteed to always work and be reproducible. Below you find instructions for direct installation, followed by instructions for installation in a container. Alternatively, if you like to use a container but don't like the complexity of its overhead, you can install `Neurodesk <https://www.neurodesk.org/>`__ and use its pre-installed transparent BIDScoin container without needing to know anything about containers.
 
 Python installation
 -------------------
@@ -168,7 +168,7 @@ Download the `Dockerfile <https://github.com/Donders-Institute/bidscoin/blob/mas
 
    $ sudo docker build -t bidscoin .
 
-Alternatively, you can pull a pre-build image from `Docker hub <https://hub.docker.com/repository/docker/marcelzwiers/bidscoin/>`__
+Alternatively, you can pull a pre-build image from `Docker Hub <https://hub.docker.com/repository/docker/marcelzwiers/bidscoin/>`__
 
 .. code-block:: console
 
@@ -182,7 +182,7 @@ Executing BIDScoin commands via Docker is less simple than via Apptainer (and su
 .. code-block:: console
 
    $ docker run --rm -v <bind_mount> bidscoin <bidscoin_tool> <bidscoin_tool_args>                          # If you built the image from the Dockerfile
-   $ docker run --rm -v <bind_mount> marcelzwiers/bidscoin:<version> <bidscoin_tool> <bidscoin_tool_args>   # If you pulled the image from Docker hub
+   $ docker run --rm -v <bind_mount> marcelzwiers/bidscoin:<version> <bidscoin_tool> <bidscoin_tool_args>   # If you pulled the image from Docker Hub
 
 If you have source data in ``/my/data/raw``, instead of running ``bidsmapper /my/data/raw /my/data/bids`` and then ``bidsmapper /my/data/raw /my/data/bids``, you now execute for instance:
 
