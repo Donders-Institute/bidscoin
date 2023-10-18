@@ -168,7 +168,7 @@ Download the `Dockerfile <https://github.com/Donders-Institute/bidscoin/blob/mas
 
    $ sudo docker build -t bidscoin .
 
-Alternatively, you can pull a pre-build image from Docker hub
+Alternatively, you can pull a pre-build image from `Docker hub <https://hub.docker.com/repository/docker/marcelzwiers/bidscoin/>`__
 
 .. code-block:: console
 
