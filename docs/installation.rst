@@ -1,6 +1,8 @@
 Installation
 ============
 
+BIDScoin can be installed directly on your operating system, or can be installed in a so-called container. Direct installation is arguably simpler and lighter, but containerized installations are better guaranteed to always work and be reproducible. Below you find instructions for direct installation, followed by instructions for installation in a container. Alternatively, if you like to use a container but don't like the complexity of its overhead, you can install `NeuroDesk <https://www.neurodesk.org/>`__ and use the pre-installed BIDScoin container without needing to know anything about containers.
+
 Python installation
 -------------------
 
