@@ -2775,7 +2775,7 @@ Nibabel:
       run: <<>>
       mod:
       part: ['', mag, phase, real, imag, 0]
-      suffix:
+      suffix: unknown
 
   exclude:    # ----------------------- Data that will be left out -------------
   - provenance:

@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BIDScoin bidsmap",
+  "type": "object",
+  "required": ["Options"],
+  "properties": {
+    "Options": {
+      "type": "object",
+      "required": ["bidscoin", "plugins"],
+      "properties": {
+
+        "bidscoin": {
+          "type": "object",
+          "properties": {
+            "version": { "type": ["string", "null"] },
+            "bidsignore": { "type": ["string", "null"] },
+            "subprefix": { "type": ["string", "null"] },
+            "sesprefix": { "type": ["string", "null"] },
+            "unknowntypes": { "type": ["array", "null"] },
+            "ignoretypes": { "type": ["array", "null"] },
+            "unzip": { "type": ["string", "null"] }
+          },
+          "additionalProperties": false
+        },
+
+        "plugins": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "command": { "type": ["string", "null"] },
+              "args": { "type": ["string", "null"] },
+              "anon": { "type": ["string", "null"] },
+              "meta": { "type": ["array", "null"] }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+
+  "additionalProperties": {
+    "type": "object",
+    "required": ["subject", "session"],
+
+    "properties": {
+      "subject": { "type": "string" },
+      "session": { "type": ["string", "integer", "null"] }
+    },
+
+    "additionalProperties": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["bids"],
+        "properties": {
+          "provenance": { "type": ["string", "null"] },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "filepath": { "type": ["string", "null"] },
+              "filename": { "type": ["string", "null"] },
+              "filesize": { "type": ["string", "null"] },
+              "nrfiles": { "type": ["integer", "null"] }
+            },
+            "additionalProperties": false
+          },
+          "attributes": { "type": ["object", "null"] },
+          "bids": {
+            "type": "object",
+            "required": ["suffix"],
+            "properties": {
+              "part": { "type": "array" },
+              "suffix": { "type": "string" }
+            }
+          },
+          "meta": { "type": ["object", "null"] }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

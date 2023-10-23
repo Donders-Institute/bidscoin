@@ -38,7 +38,7 @@ deface           = ['pydeface', 'drmaa']
 pet2bids         = ['pypet2bids >= 1.0.12']
 # phys2bidscoin    = ['bioread >= 1.0.5', 'pymatreader >= 0.0.24', 'duecredit', 'phys2bids >= 2.0.0, < 3.0.0']
 all              = ['bidscoin[dcm2niix2bids,spec2nii2bids,deface,pet2bids]']    # + phys2bidscoin
-dev              = ['bidscoin[spec2nii2bids,deface,pet2bids]', 'tox', 'pytest', 'sphinx-rtd-theme', 'myst-parser'] # + phys2bidscoin
+dev              = ['bidscoin[spec2nii2bids,deface,pet2bids]', 'tox', 'pytest', 'jsonschema', 'sphinx-rtd-theme', 'myst-parser'] # + phys2bidscoin
 
 [project.urls]
 documentation    = 'https://bidscoin.readthedocs.io'
@@ -83,7 +83,7 @@ install          = "build_manpages.install"
 build_manpages   = "build_manpages.build_manpages"
 
 [tool.setuptools.package-data]
-'*'              = ['*.yaml', 'BIDS_VERSION', 'bidscoin.ico', 'bidscoin_logo.png', 'rightarrow.png']       #  package names should match these glob patterns (["*"] by default)
+'*'              = ['*.yaml', 'schema.json', 'BIDS_VERSION', 'bidscoin.ico', 'bidscoin_logo.png', 'rightarrow.png']       #  package names should match these glob patterns (["*"] by default)
 
 [tool.pytest.ini_options]
 testpaths        = ['tests']
@@ -97,6 +97,7 @@ envlist          = py38, py39, py310, py311, docs
 [testenv]
 extras           = all
 deps             = pytest
+                   jsonschema
                    argparse-manpage[setuptools]
 commands         = pytest
 
