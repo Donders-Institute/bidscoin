@@ -71,7 +71,7 @@ if not configfile.is_file():
     configfile.write_text(f"[bidscoin]\n"
                           f"bidsmap_template = '{templatefolder}/bidsmap_dccn.yaml'     # The default template bidsmap (change to use a different default)\n"
                           f"trackusage       = 'yes'     # Upload anonymous usage data if 'yes' (maximally 1 upload every {tracking['sleep']} hour) (see `bidscoin --tracking show`)\n")
-for template in (bidscoinfolder/'heuristics').glob('*.yaml'):
+for template in list((bidscoinfolder/'heuristics').glob('*.yaml')) + [bidscoinfolder/'heuristics'/'schema.json']:
     if not (templatefolder/template.name).is_file():
         print(f"-> {templatefolder/template.name}")
         shutil.copyfile(template, templatefolder/template.name)

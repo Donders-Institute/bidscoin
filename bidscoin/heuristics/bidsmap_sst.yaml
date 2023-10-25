@@ -15,14 +15,15 @@
 # For more information, see: https://bidscoin.readthedocs.io
 # --------------------------------------------------------------------------------
 
+$schema: schema.json
 
 Options:
 # --------------------------------------------------------------------------------
-# General options and plugins
+# General BIDScoin and plugin options
 # --------------------------------------------------------------------------------
   bidscoin:
     version: 4.2.0                  # BIDScoin version (should correspond with the version in pyproject.toml)
-    bidsignore: mrs/;extra_data/    # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
+    bidsignore: [mrs/, extra_data/, sub-*_ct.*]    # list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. [extra_data/, pet/, myfile.txt, yourfile.csv]
     subprefix: sub-                 # The subject prefix of the source data
     sesprefix: ses-                 # The session prefix of the source data
     unknowntypes: [mrs, extra_data] # A list of datatypes that are converted to BIDS-like datatype folders
@@ -56,7 +57,7 @@ DICOM:
       filename:                   # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
       filesize:                   # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
       nrfiles:                    # Number of files in the folder
-    attributes: &anat_dicomattr   # An empty / non-matching reference dictionary that can be derefenced in other run-items of this data type
+    attributes: &anat_dicomattr   # An empty / non-matching reference dictionary that can be dereferenced in other run-items of this data type
       Modality:
       ProtocolName:
       SeriesDescription:
@@ -81,7 +82,7 @@ DICOM:
       run: <<>>                   # This will be updated dynamically during bidscoiner runtime (as it depends on the already existing files)
       part: ['', mag, phase, real, imag, 0]   # # This BIDS value list will be shown as a dropdown menu in the bidseditor with the first (empty) item selected (as indicated by the last item, i.e. 0)
       suffix: T1w
-    meta:                         # This is an optional entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
+    meta: {}                      # This is an optional entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
   - provenance:
     attributes:
       <<: *anat_dicomattr
@@ -392,7 +393,7 @@ DICOM:
       part: ['', mag, phase, real, imag, 0]
       suffix: MTR
   - provenance:                         # ----------- Experimental CT support (see BEP024) -------------
-    attributes: &ct_dicomattr           # An empty / non-matching reference dictionary that can be derefenced in other run-items of this data type
+    attributes: &ct_dicomattr           # An empty / non-matching reference dictionary that can be dereferenced in other run-items of this data type
       Modality: CT
       ProtocolName:
       SeriesDescription:
@@ -407,7 +408,6 @@ DICOM:
       rec:
       run: <<>>                         # This will be updated dynamically during bidscoiner runtime (as it depends on the already existing files)
       suffix: ct
-    meta:                               # This is an optional entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
 
   func:       # ----------------------- All functional runs --------------------
   - provenance:                         # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = bold
@@ -1825,19 +1825,16 @@ SPAR:
       type:
       run: <<>>                         # This will be updated during bidscoiner runtime (as it depends on the already existing files)
       suffix: press
-    meta:                               # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance:
     attributes: *mrs_sparattr
     bids: *mrs_sparent
-    meta:
 
   exclude:    # ----------------------- Data that will be left out -------------
   - provenance:
     attributes: *mrs_sparattr
     bids: *mrs_sparent
-    meta:
 
 
 Twix:
@@ -1875,7 +1872,6 @@ Twix:
       type:
       run: <<>>                         # This will be updated during bidscoiner runtime (as it depends on the already existing files)
       suffix: mrs
-    meta:                               # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
   - provenance:
     attributes:
       <<: *mrs_twixattr
@@ -1883,19 +1879,16 @@ Twix:
     bids:
       <<: *mrs_twixent
       suffix: press
-    meta:
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance:
     attributes: *mrs_twixattr
     bids: *mrs_twixent
-    meta:
 
   exclude:    # ----------------------- Data that will be left out -------------
   - provenance:
     attributes: *mrs_twixattr
     bids: *mrs_twixent
-    meta:
 
 
 Pfile:
@@ -1942,7 +1935,6 @@ Pfile:
       type:
       run: <<>>                         # This will be updated during bidscoiner runtime (as it depends on the already existing files)
       suffix: mrs
-    meta:                               # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
   - provenance:                         # The fullpath name of the source file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     attributes:
       <<: *mrs_p7attr                   # The matching (regex) criteria for spec2nii2bids go in here
@@ -1950,19 +1942,16 @@ Pfile:
     bids:
       <<: *mrs_p7fileent                # See: https://docs.google.com/document/d/1pWCb02YNv5W-UZZja24fZrdXLm4X7knXMiZI7E2z7mY/
       suffix: press
-    meta:                               # This is an optional entry for meta-data dictionary that will be appended to the json sidecar files produced by dcm2niix
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance:
     attributes: *mrs_p7attr
     bids: *mrs_p7fileent
-    meta:
 
   exclude:    # ----------------------- Data that will be left out -------------
   - provenance:
     attributes: *mrs_p7attr
     bids: *mrs_p7fileent
-    meta:
 
 
 #Physio:
@@ -2004,7 +1993,6 @@ Pfile:
 #  - provenance:
 #    attributes: *attributes_physio
 #    bids: *bids_physio
-#    meta:
 #
 #  exclude:    # ----------------------- Data that will be left out -------------
 #  - provenance:
@@ -2016,7 +2004,6 @@ Pfile:
 #      units:
 #      trigger_idx:
 #    bids: *bids_physio
-#    meta:
 
 
 Nibabel:
@@ -2029,7 +2016,7 @@ Nibabel:
   anat:       # ----------------------- All anatomical runs --------------------
   - provenance:                         # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
     properties: *fileprop
-    attributes: &nibattr                # An empty / non-matching reference dictionary that can be derefenced in other run-items of this data type
+    attributes: &nibattr                # An empty / non-matching reference dictionary that can be dereferenced in other run-items of this data type
       dim:
       dim_info:
       pixdim:
@@ -2056,7 +2043,6 @@ Nibabel:
       run: <<>>                         # This will be updated during bidscoiner runtime (as it depends on the already existing files)
       part: ['', mag, phase, real, imag, 0]
       suffix: T1w
-    meta:                               # This is an optional entry for meta-data that will be appended to the json sidecar files produced by dcm2niix
   - provenance:
     properties:
       <<: *fileprop

@@ -90,7 +90,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
     bidsmap, _  = bids.load_bidsmap(bidsmapfile, bidsfolder/'code'/'bidscoin')
-    dataformats = [dataformat for dataformat in bidsmap if dataformat and dataformat != 'Options']
+    dataformats = [dataformat for dataformat in bidsmap if dataformat and dataformat not in ('$schema','Options')]
     if not bidsmap:
         LOGGER.error(f"No bidsmap file found in {bidsfolder}. Please run the bidsmapper first and/or use the correct bidsfolder")
         return
@@ -105,7 +105,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         return
 
     # Append options to the .bidsignore file
-    bidsignore_items = [item.strip() for item in bidsmap['Options']['bidscoin']['bidsignore'].split(';')]
+    bidsignore_items = bidsmap['Options']['bidscoin']['bidsignore']
     bidsignore_file  = bidsfolder/'.bidsignore'
     if bidsignore_items:
         LOGGER.verbose(f"Writing {bidsignore_items} entries to {bidsignore_file}")

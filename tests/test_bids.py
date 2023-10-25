@@ -261,7 +261,7 @@ def test_check_run(test_bidsmap):
 
 def test_check_ignore():
 
-    bidsignore = 'mrs/;sub-*_foo.*;*foo/sub-*_bar.*'
+    bidsignore = ['mrs/', 'sub-*_foo.*', '*foo/sub-*_bar.*']
 
     assert bids.check_ignore('mrs',                bidsignore)         == True      # Test default: datatype = 'dir'
     assert bids.check_ignore('mrs',                bidsignore, 'file') == False

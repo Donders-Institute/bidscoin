@@ -1,84 +1,102 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "BIDScoin bidsmap",
-  "type": "object",
-  "required": ["Options"],
-  "properties": {
-    "Options": {
-      "type": "object",
-      "required": ["bidscoin", "plugins"],
-      "properties": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "http://bidscoin.templates/schema.json",
+   "title": "Schema for validating template bidsmaps",
+   "type": "object",
+   "required": ["Options"],
+   "properties": {
+      "$schema": { "type": "string" },
+      "Options": {
+         "description": "General BIDScoin and plugin options",
+         "type": "object",
+         "required": ["bidscoin", "plugins"],
+         "properties": {
 
-        "bidscoin": {
-          "type": "object",
-          "properties": {
-            "version": { "type": ["string", "null"] },
-            "bidsignore": { "type": ["string", "null"] },
-            "subprefix": { "type": ["string", "null"] },
-            "sesprefix": { "type": ["string", "null"] },
-            "unknowntypes": { "type": ["array", "null"] },
-            "ignoretypes": { "type": ["array", "null"] },
-            "unzip": { "type": ["string", "null"] }
-          },
-          "additionalProperties": false
-        },
+            "bidscoin": {
+               "type": "object",
+               "required": ["version", "bidsignore", "subprefix", "sesprefix", "unknowntypes", "ignoretypes", "unzip"],
+               "properties": {
+                  "version": { "type": "string" },
+                  "bidsignore": { "type": "array" },
+                  "subprefix": { "type": ["string", "null"] },
+                  "sesprefix": { "type": ["string", "null"] },
+                  "unknowntypes": { "type": ["array"] },
+                  "ignoretypes": { "type": ["array"] },
+                  "unzip": { "type": ["string", "null"] }
+               },
+               "additionalProperties": false
+            },
 
-        "plugins": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "object",
-            "properties": {
-              "command": { "type": ["string", "null"] },
-              "args": { "type": ["string", "null"] },
-              "anon": { "type": ["string", "null"] },
-              "meta": { "type": ["array", "null"] }
+            "plugins": {
+               "type": "object",
+               "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                     "command": { "type": "string" },
+                     "args": { "type": ["string", "null"] },
+                     "anon": { "type": ["string", "null"] },
+                     "meta": { "type": ["array"] }
+                  }
+               }
             }
-          }
-        }
+         },
+         "additionalProperties": false
+      }
+   },
+
+   "additionalProperties": {
+      "description": "Dataformat (should match with the output of the associated plugin's `is_sourcefile()` function)",
+      "type": "object",
+      "required": ["subject", "session"],
+
+      "properties": {
+         "subject": { "type": "string" },
+         "session": { "type": ["string", "integer", "null"] }
       },
-      "additionalProperties": false
-    }
-  },
 
-  "additionalProperties": {
-    "type": "object",
-    "required": ["subject", "session"],
-
-    "properties": {
-      "subject": { "type": "string" },
-      "session": { "type": ["string", "integer", "null"] }
-    },
-
-    "additionalProperties": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["bids"],
-        "properties": {
-          "provenance": { "type": ["string", "null"] },
-          "properties": {
+      "additionalProperties": {
+         "description": "Datatype (e.g. 'anat' or 'dwi')",
+         "type": "array",
+         "items": {
+            "description": "Run-item (containing the bidsmappings)",
             "type": "object",
+            "required": ["bids"],
             "properties": {
-              "filepath": { "type": ["string", "null"] },
-              "filename": { "type": ["string", "null"] },
-              "filesize": { "type": ["string", "null"] },
-              "nrfiles": { "type": ["integer", "null"] }
+               "provenance": {
+                  "description": "The fullpath name of the data source. Serves also as a look-up key to find a run-item in the bidsmap",
+                  "type": ["string", "null"]
+               },
+               "properties": {
+                  "description": "The filesystem properties that are matched against the properties extracted from the data source",
+                  "type": "object",
+                  "properties": {
+                     "filepath": { "type": ["string", "null"] },
+                     "filename": { "type": ["string", "null"] },
+                     "filesize": { "type": ["string", "null"] },
+                     "nrfiles": { "type": ["integer", "null"] }
+                  },
+                  "additionalProperties": false
+               },
+               "attributes": {
+                  "description": "The data attributes that are matched against the attributes extracted from the data source",
+                  "type": "object"
+               },
+               "bids": {
+                  "description": "The BIDS entities used for generating the output filename",
+                  "type": "object",
+                  "required": ["suffix"],
+                  "properties": {
+                     "part": { "type": "array" },
+                     "suffix": { "type": "string" }
+                  }
+               },
+               "meta": {
+                  "description": "The meta-data that will be appended to the json sidecar files produced by the plugin",
+                  "type": "object"
+               }
             },
             "additionalProperties": false
-          },
-          "attributes": { "type": ["object", "null"] },
-          "bids": {
-            "type": "object",
-            "required": ["suffix"],
-            "properties": {
-              "part": { "type": "array" },
-              "suffix": { "type": "string" }
-            }
-          },
-          "meta": { "type": ["object", "null"] }
-        },
-        "additionalProperties": false
+         }
       }
-    }
-  }
+   }
 }

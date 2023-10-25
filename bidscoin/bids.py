@@ -927,7 +927,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
     subprefix = bidsmap['Options']['bidscoin'].get('subprefix','')
     sesprefix = bidsmap['Options']['bidscoin'].get('sesprefix','')
     for dataformat in bidsmap:
-        if dataformat == 'Options': continue
+        if dataformat in ('$schema', 'Options'): continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue    # E.g. 'subject', 'session' and empty datatypes
             for index, run in enumerate(bidsmap[dataformat][datatype]):
@@ -986,7 +986,7 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
     # Remove the added DataSource object
     bidsmap = copy.deepcopy(bidsmap)
     for dataformat in bidsmap:
-        if dataformat == 'Options': continue
+        if dataformat in ('$schema', 'Options'): continue
         if not bidsmap[dataformat]: continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue    # E.g. 'subject' and 'session'
@@ -1028,7 +1028,7 @@ def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
     # Test all the runs in the bidsmap
     LOGGER.info(f"bids-validator {bids_validator.__version__} test results (* = in .bidsignore):")
     for dataformat in bidsmap:
-        if dataformat == 'Options': continue
+        if dataformat in ('$schema', 'Options'): continue
         if not bidsmap[dataformat]: continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue        # E.g. 'subject' and 'session'
@@ -1072,7 +1072,7 @@ def check_bidsmap(bidsmap: dict, checks: Tuple[bool, bool, bool]=(True, True, Tr
     # Check all the runs in the bidsmap
     LOGGER.info('Checking the bidsmap run-items:')
     for dataformat in bidsmap:
-        if dataformat == 'Options': continue    # TODO: Check Options
+        if dataformat in ('$schema', 'Options'): continue    # TODO: Check Options
         if not bidsmap[dataformat]: continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list):                  continue   # E.g. 'subject' and 'session'
@@ -1115,7 +1115,7 @@ def check_template(bidsmap: dict) -> bool:
     # Check all the datatypes in the bidsmap
     LOGGER.info('Checking the bidsmap datatypes:')
     for dataformat in bidsmap:
-        if dataformat == 'Options': continue
+        if dataformat in ('$schema', 'Options'): continue
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue        # Skip datatype = 'subject'/'session'
             if not (datatype in bidsdatatypesdef or datatype in ignoretypes or check_ignore(datatype, bidsignore)):
@@ -1132,7 +1132,7 @@ def check_template(bidsmap: dict) -> bool:
                         LOGGER.warning(f"Invalid regex pattern in the {key} value '{val}' in: bidsmap[{dataformat}][{datatype}] -> {run['provenance']}\nThis may cause run-matching errors unless '{val}' is a literal attribute value")
             for typegroup in datatyperules.get(datatype, {}):
                 for suffix in datatyperules[datatype][typegroup]['suffixes']:
-                    if not (suffix in datatypesuffixes or suffix in bidsignore or
+                    if not (suffix in datatypesuffixes or suffix in str(bidsignore) or
                             '[DEPRECATED]'             in suffixes[suffix]['description'] or
                             '**Change:** Removed from' in suffixes[suffix]['description'] or
                             '**Change:** Replaced by'  in suffixes[suffix]['description']):
@@ -1250,7 +1250,7 @@ def check_ignore(entry: str, bidsignore: Union[str,list], datatype: str= 'dir') 
     :return:            True if the entry should be ignored, else False
     """
 
-    # Parse bidsignore to be a list
+    # Parse bidsignore to be a list (legacy bidsmaps)
     if isinstance(bidsignore, str):
         bidsignore = bidsignore.split(';')
 
@@ -1435,7 +1435,7 @@ def find_run(bidsmap: dict, provenance: str, dataformat: str='', datatype: str='
     if dataformat:
         dataformats = (dataformat,)
     else:
-        dataformats = [item for item in bidsmap if item not in ('Options','PlugIns') and bidsmap[item]]
+        dataformats = [item for item in bidsmap if item not in ('$schema','Options') and bidsmap[item]]
     for dataformat in dataformats:
         if datatype:
             datatypes = (datatype,)

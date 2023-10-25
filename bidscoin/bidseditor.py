@@ -48,7 +48,7 @@ HELP_URLS        = {
 
 TOOLTIP_BIDSCOIN = """BIDScoin
 version:      Used to check for version conflicts 
-bidsignore:   Semicolon-separated list of data types that are added to the .bidsignore file,
+bidsignore:   List of data types that are added to the .bidsignore file,
               e.g. extra_data/;myfile.txt;yourfile.csv
 subprefix:    The subject prefix used in the source data folders (e.g. "Pt" is the subprefix if subject folders are named "Pt018", "Pt019", ...)
 sesprefix:    The session prefix used in the source data folders (e.g. "M_" is the subprefix if session folders are named "M_pre", "M_post", ...)
@@ -103,10 +103,10 @@ class MainWindow(QMainWindow):
         self.output_bidsmap    = copy.deepcopy(input_bidsmap)   # The edited bidsmap
         self.template_bidsmap  = template_bidsmap               # The bidsmap from which new datatype run-items are taken
         self.datasaved         = datasaved                      # True if data has been saved on disk
-        self.dataformats       = [dataformat for dataformat in input_bidsmap if dataformat and dataformat not in ('Options', 'PlugIns') and bids.dir_bidsmap(input_bidsmap, dataformat)]
+        self.dataformats       = [dataformat for dataformat in input_bidsmap if dataformat and dataformat not in ('$schema','Options') and bids.dir_bidsmap(input_bidsmap, dataformat)]
         self.unknowndatatypes  = input_bidsmap['Options']['bidscoin'].get('unknowntypes',[])
         self.ignoredatatypes   = input_bidsmap['Options']['bidscoin'].get('ignoretypes',[])
-        self.bidsignore        = input_bidsmap['Options']['bidscoin'].get('bidsignore','')
+        self.bidsignore        = input_bidsmap['Options']['bidscoin'].get('bidsignore',[])
 
         # Set up the tabs, add the tables and put the bidsmap data in them
         tabwidget = self.tabwidget = QtWidgets.QTabWidget()
@@ -641,7 +641,7 @@ class MainWindow(QMainWindow):
                 self.output_bidsmap['Options']['bidscoin'] = newoptions
                 self.unknowndatatypes  = newoptions.get('unknowntypes', [])
                 self.ignoredatatypes   = newoptions.get('ignoretypes', [])
-                self.bidsignore        = newoptions.get('bidsignore', '')
+                self.bidsignore        = newoptions.get('bidsignore', [])
                 for dataformat in self.dataformats:
                     self.update_subses_samples(self.output_bidsmap, dataformat)
             else:
@@ -877,7 +877,7 @@ class EditWindow(QDialog):
         self.unknowndatatypes  = [datatype for datatype in bidsmap['Options']['bidscoin'].get('unknowntypes',[]) if datatype in template_bidsmap[self.dataformat]]
         self.ignoredatatypes   = [datatype for datatype in bidsmap['Options']['bidscoin'].get('ignoretypes', []) if datatype in template_bidsmap[self.dataformat]]
         self.bidsdatatypes     = [datatype for datatype in template_bidsmap[self.dataformat] if datatype not in self.unknowndatatypes + self.ignoredatatypes + ['subject', 'session']]
-        self.bidsignore        = bidsmap['Options']['bidscoin'].get('bidsignore','')
+        self.bidsignore        = bidsmap['Options']['bidscoin'].get('bidsignore',[])
         self.source_bidsmap    = bidsmap                # The bidsmap at the start of the edit = output_bidsmap in the MainWindow
         self.target_bidsmap    = copy.deepcopy(bidsmap) # The edited bidsmap -> will be returned as output_bidsmap in the MainWindow
         self.template_bidsmap  = template_bidsmap       # The bidsmap from which new datatype run-items are taken

@@ -444,7 +444,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
                         bdata = pd.read_csv(bfile, header=None)
                         if bdata.any(axis=None):
                             LOGGER.warning(f"Found unexpected non-zero b-values in: {bfile} -> .bidsignore")
-                            bidsmap['Options']['bidscoin']['bidsignore'] += f";**/{datasource.datatype}/sub*{suffix}{ext}"
+                            bidsmap['Options']['bidscoin']['bidsignore'] += [f"**/{datasource.datatype}/sub*{suffix}{ext}"]
                         else:
                             LOGGER.verbose(f"Removing BIDS-invalid b0-file: {bfile} -> {jsonfile}")
                             metadata[ext[1:]] = bdata.values.tolist()

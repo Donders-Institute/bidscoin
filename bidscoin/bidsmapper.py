@@ -83,7 +83,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     else:
         unzip = bidsmap_new['Options']['bidscoin'].get('unzip','')
     for dataformat in bidsmap_new:
-        if dataformat == 'Options': continue
+        if dataformat in ('$schema', 'Options'): continue
         for datatype in bidsmap_new[dataformat]:
             if datatype not in ('subject', 'session'):
                 bidsmap_new[dataformat][datatype] = []
@@ -203,7 +203,7 @@ def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path, up
     # Update the bidsmap dataformat sections
     reprefix = lambda prefix: '' if prefix=='*' else re.escape(prefix).replace(r'\-','-')
     for dataformat in bidsmap:
-        if not bidsmap[dataformat] or dataformat=='Options': continue
+        if not bidsmap[dataformat] or dataformat in ('$schema','Options'): continue
 
         # Update the run-DataSources
         for datatype in bidsmap[dataformat]:
