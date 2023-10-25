@@ -1254,18 +1254,10 @@ def check_ignore(entry: str, bidsignore: Union[str,list], datatype: str= 'dir') 
     if isinstance(bidsignore, str):
         bidsignore = bidsignore.split(';')
 
-    # Add the default ignore items
-    if 'code/' not in bidsignore:
-        bidsignore += ['code/']
-    if 'sourcedata/' not in bidsignore:
-        bidsignore += ['sourcedata/']
-    if 'derivatives/' not in bidsignore:
-        bidsignore += ['derivatives/']
-
     ignore = False
-    for item in bidsignore:
-        if datatype =='dir' and not item.endswith('/'): continue
-        if datatype =='file'    and item.endswith('/'): continue
+    for item in set(bidsignore + ['code/', 'sourcedata/', 'derivatives/']):
+        if datatype == 'dir' and not item.endswith('/'): continue
+        if datatype == 'file'    and item.endswith('/'): continue
         if item.endswith('/'):
             item = item[0:-1]
         if fnmatch.fnmatch(entry, item):
