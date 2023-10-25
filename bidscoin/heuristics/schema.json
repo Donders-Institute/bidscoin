@@ -45,7 +45,7 @@
    },
 
    "additionalProperties": {
-      "description": "Dataformat (should match with the output of the associated plugin's `is_sourcefile()` function)",
+      "description": "Dataformat key (this key is issued by the output of the handling plugin's `is_sourcefile()` function)",
       "type": "object",
       "required": ["subject", "session"],
 
@@ -55,7 +55,7 @@
       },
 
       "additionalProperties": {
-         "description": "Datatype (e.g. 'anat' or 'dwi')",
+         "description": "BIDS datatype (e.g. 'anat' or 'dwi')",
          "type": "array",
          "items": {
             "description": "Run-item (containing the bidsmappings)",
