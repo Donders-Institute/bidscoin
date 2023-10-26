@@ -212,12 +212,17 @@ def readphysio(fn: Union[str,Path]) -> dict:
         physiotag    = tag.Tag(0x7fe1, 0x1010)          # A private Siemens tag
         if manufacturer and manufacturer != 'SIEMENS':
             LOGGER.warning(f"Unsupported manufacturer: '{manufacturer}', this function is designed for SIEMENS advanced physiological logging data")
-        if dicomdata.get('ImageType')==['ORIGINAL','PRIMARY','RAWDATA','PHYSIO'] and dicomdata.get(physiotag).private_creator=='SIEMENS CSA NON-IMAGE':
-            physiodata = dicomdata[physiotag].value
-            rows       = int(dicomdata.AcquisitionNumber)
-            columns    = len(physiodata)/rows
-            nrfiles    = columns/1024
-            if columns%1 or nrfiles%1:
+        if (dicomdata.get('ImageType')==['ORIGINAL','PRIMARY','RAWDATA','PHYSIO'] and dicomdata.get(physiotag).private_creator=='SIEMENS CSA NON-IMAGE') or \
+           (dicomdata.get('ImageType')==['ORIGINAL','PRIMARY','RAWDATA',  'NONE'] and dicomdata.get('SpectroscopyData')) or \
+           (dicomdata.get('ImageType') in (['ORIGINAL','PRIMARY','RAWDATA','NONE'], ['ORIGINAL','PRIMARY','OTHER','NONE']) and dicomdata.get(physiotag).private_creator=='SIEMENS MR IMA'):
+            if dicomdata.get('SpectroscopyData'):
+                physiodata = struct.unpack('<B', dicomdata['SpectroscopyData'].value)[0]
+            else:
+                physiodata = dicomdata[physiotag].value
+            rows    = int(dicomdata.AcquisitionNumber)
+            columns = len(physiodata)/rows
+            nrfiles = columns/1024
+            if columns % 1 or nrfiles % 1:
                 LOGGER.error(f"Invalid image size: [rows x columns] = [{rows} x {columns}]"); raise ValueError
             # Encoded DICOM format: columns = 1024*nrfiles
             #                       first row: uint32 datalen, uint32 filenamelen, char[filenamelen] filename
