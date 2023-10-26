@@ -56,7 +56,7 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Gen
 """
 
 # Define the default paths
-tracking       = {'url': 'https://telemetry.donders.ru.nl/bidscoin', 'sleep': 1}        # Sleep = Nr of sleeping hours during which usage is not tracked
+tracking       = {'url': 'https://telemetry.dccn.nl/bidscoin', 'sleep': 1}              # Sleep = Nr of sleeping hours during which usage is not tracked
 tutorialurl    = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
 bidscoinfolder = Path(__file__).parent
 schemafolder   = bidscoinfolder/'schema'
