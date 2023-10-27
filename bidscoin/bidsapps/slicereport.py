@@ -88,9 +88,9 @@ def slicer_append(inputimage: Path, outlineimage: Path, mainopts: str, outputopt
     # Wrap the command
     mem = '8' if inputimage.stat().st_size > 50 * 1024**2 else '1'  # Ask for more resources if we have a large (e.g. 4D) input image
     if cluster == 'torque':
-        command = f"qsub -l walltime=0:02:00,mem={mem}gb -N slicereport -e {tempfile.gettempdir()} -o {tempfile.gettempdir()} << EOF\n{command}\nEOF"
+        command = f"qsub -l walltime=0:02:00,mem={mem}gb -N slicereport -e {tempfile.gettempdir()} -o {tempfile.gettempdir()} << EOF\n#!/bin/bash\n{command}\nEOF"
     elif cluster == 'slurm':
-        command = f"sbatch --time=0:02:00 --mem={mem}G --job-name slicereport -o {tempfile.gettempdir()}/slurm-%j.out << EOF\n{command}\nEOF"
+        command = f"sbatch --time=0:02:00 --mem={mem}G --job-name slicereport -o {tempfile.gettempdir()}/slurm-%j.out << EOF\n#!/bin/bash\n{command}\nEOF"
     elif cluster:
         LOGGER.error(f"Invalid cluster manager `{cluster}`")
         exit(1)

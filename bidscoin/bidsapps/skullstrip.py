@@ -113,9 +113,9 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
                     maskimg.parent.mkdir(parents=True, exist_ok=True)
                     command = f"mri_synthstrip -i {srcimg} -o {outputimg} -m {maskimg} {args}"
                     if cluster == 'torque':
-                        command = f"qsub -l walltime=0:05:00,mem=8gb -N skullstrip_{subid}_{sesid} << EOF\n{command}\nEOF"
+                        command = f"qsub -l walltime=0:05:00,mem=8gb -N skullstrip_{subid}_{sesid} << EOF\n#!/bin/bash\n{command}\nEOF"
                     elif cluster == 'slurm':
-                        command = f"sbatch --time=0:05:00 --mem=8G --job-name=skullstrip_{subid}_{sesid} << EOF\n{command}\nEOF"
+                        command = f"sbatch --time=0:05:00 --mem=8G --job-name=skullstrip_{subid}_{sesid} << EOF\n#!/bin/bash\n{command}\nEOF"
                     elif cluster:
                         LOGGER.error(f"Invalid cluster manager `{cluster}`")
                         exit(1)
