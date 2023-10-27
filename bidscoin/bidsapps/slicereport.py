@@ -73,7 +73,7 @@ def parse_outputs(outputargs: list, name: str) -> tuple:
     return outputs, slices
 
 
-def slicer_append(inputimage: Path, outlineimage: Path, mainopts: str, outputopts: str, sliceroutput: str, montage: Path, cluster: bool):
+def slicer_append(inputimage: Path, outlineimage: Path, mainopts: str, outputopts: str, sliceroutput: str, montage: Path, cluster: str):
     """Run slicer and pngappend (locally or on the cluster) to create a montage of the sliced images"""
 
     # Create a workdir and the shell command
@@ -86,12 +86,14 @@ def slicer_append(inputimage: Path, outlineimage: Path, mainopts: str, outputopt
               f"rm -r {workdir}"
 
     # Wrap the command
-    if cluster:
-        if inputimage.stat().st_size > 50 * 1024**2:
-            mem = '8gb'         # Ask for more resources if we have a large (e.g. 4D) input image
-        else:
-            mem = '1gb'
-        command = f"qsub -l walltime=0:02:00,mem={mem} -N slicereport -e {tempfile.gettempdir()} -o {tempfile.gettempdir()}<<EOF\n{command}\nEOF"
+    mem = '8' if inputimage.stat().st_size > 50 * 1024**2 else '1'  # Ask for more resources if we have a large (e.g. 4D) input image
+    if cluster == 'torque':
+        command = f"qsub -l walltime=0:02:00,mem={mem}gb -N slicereport -e {tempfile.gettempdir()} -o {tempfile.gettempdir()} << EOF\n{command}\nEOF"
+    elif cluster == 'slurm':
+        command = f"sbatch --time=0:02:00 --mem={mem}G --job-name slicereport -o {tempfile.gettempdir()}/slurm-%j.out << EOF\n{command}\nEOF"
+    elif cluster:
+        LOGGER.error(f"Invalid cluster manager `{cluster}`")
+        exit(1)
 
     # Run the command
     LOGGER.bcdebug(f"Command: {command}")
@@ -102,7 +104,7 @@ def slicer_append(inputimage: Path, outlineimage: Path, mainopts: str, outputopt
         sys.exit(process.returncode)
 
 
-def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: str, subjects: list, reportdir: str, crossdirs: str, qccols: list, cluster: bool, options: list, outputs: list, suboptions: list, suboutputs: list):
+def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: str, subjects: list, reportdir: str, crossdirs: str, qccols: list, cluster: str, options: list, outputs: list, suboptions: list, suboutputs: list):
     """
     :param bidsdir:         The bids-directory with the subject data
     :param pattern:         Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T1w*'
@@ -112,7 +114,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     :param reportdir:       The folder where the report is saved
     :param crossdirs:       A (list of) folder(s) with cross-linked sub-reports
     :param qccols:          Column names for creating an accompanying tsv-file to store QC-rating scores
-    :param cluster:         Use qsub to submit the slicer jobs to a high-performance compute (HPC) cluster
+    :param cluster:         Use `torque` or `slurm` to submit the slicer jobs to a high-performance compute (HPC) cluster. Leave empty to run slicer on your local computer
     :param options:         Slicer main options
     :param outputs:         Slicer output options
     :param suboptions:      Slicer main options for creating the sub-reports (same as OPTIONS)

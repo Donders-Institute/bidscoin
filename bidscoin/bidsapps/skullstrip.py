@@ -16,7 +16,7 @@ if find_spec('bidscoin') is None:
 from bidscoin import bcoin, bids, lsdirs, trackusage
 
 
-def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: list, force: bool, args: str, cluster: bool):
+def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: list, force: bool, args: str, cluster: str):
     """
     :param bidsdir:     The bids-directory with the subject data
     :param pattern:     Globlike search pattern (relative to the subject/session folder) to select the images that need to be skullstripped, e.g. 'anat/*_T1w*'
@@ -25,7 +25,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
     :param masked:      Globlike search pattern (relative to the subject/session folder) to select additional images that need to be masked with the same mask, e.g. 'fmap/*_phasediff')
     :param output:      One or two output strings that determine where the skullstripped + additional masked images are saved. Each output string can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives' (default). If the output string is the same as the datatype then the original images are replaced by the skullstripped images
     :param args:        Additional arguments that are passed to synthstrip. See examples for usage
-    :param cluster:     Use qsub to submit the skullstrip jobs to a high-performance compute (HPC) cluster
+    :param cluster:     Use `torque` or `slurm` to submit the skullstrip jobs to a high-performance compute (HPC) cluster. Leave empty to run skullstrip on your local computer
     :return:
     """
 
@@ -112,8 +112,13 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
                     maskimg = bidsdir/'derivatives'/'skullstrip'/subid/sesid/srcimg.parent.name/f"{srcent}_{derent}_mask{ext}"
                     maskimg.parent.mkdir(parents=True, exist_ok=True)
                     command = f"mri_synthstrip -i {srcimg} -o {outputimg} -m {maskimg} {args}"
-                    if cluster:
-                        command = f"qsub -l walltime=0:05:00,mem=8gb -N skullstrip_{subid}_{sesid} <<EOF\n{command}\nEOF"
+                    if cluster == 'torque':
+                        command = f"qsub -l walltime=0:05:00,mem=8gb -N skullstrip_{subid}_{sesid} << EOF\n{command}\nEOF"
+                    elif cluster == 'slurm':
+                        command = f"sbatch --time=0:05:00 --mem=8G --job-name=skullstrip_{subid}_{sesid} << EOF\n{command}\nEOF"
+                    elif cluster:
+                        LOGGER.error(f"Invalid cluster manager `{cluster}`")
+                        exit(1)
                     if bcoin.run_command(command):
                         continue
 
