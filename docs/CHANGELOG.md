@@ -4,12 +4,12 @@
 
 ## [dev]
 
-## [4.2.1] - 2023-10-28
+## [4.2.1] - 2023-10-30
 
 ### Added
 - A bidsmap schema file
 - Enhanced DICOM (XA-30) support for physiological data (backported from the CMRR repository)
-- Slurm support for some bidsapps
+- Slurm support for the `skullstrip` and `slicereport` bidsapps
 
 ### Changed
 - Use a true list (instead of a semi-colon separated string) for the bidsmap's `bidsignore` field
