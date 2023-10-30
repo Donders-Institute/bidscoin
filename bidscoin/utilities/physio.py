@@ -210,7 +210,7 @@ def readphysio(fn: Union[str,Path]) -> dict:
         dicomdata    = dcmread(fn, force=True)          # The DICM tag may be missing for anonymized DICOM files
         manufacturer = dicomdata.get('Manufacturer')
         physiotag    = tag.Tag(0x7fe1, 0x1010)          # A private Siemens tag
-        if manufacturer and manufacturer != 'SIEMENS':
+        if manufacturer and 'SIEMENS' not in manufacturer.upper():
             LOGGER.warning(f"Unsupported manufacturer: '{manufacturer}', this function is designed for SIEMENS advanced physiological logging data")
         if (dicomdata.get('ImageType')==['ORIGINAL','PRIMARY','RAWDATA','PHYSIO'] and dicomdata.get(physiotag).private_creator=='SIEMENS CSA NON-IMAGE') or \
            (dicomdata.get('ImageType')==['ORIGINAL','PRIMARY','RAWDATA',  'NONE'] and dicomdata.get('SpectroscopyData')) or \
@@ -414,7 +414,7 @@ def plotphysio(physio:dict, showsamples: int=1000):
         trace    = physio[logdatatype][starttick:endtick]
         mintrace = int(min(trace))      # type(ACQ)==bool
         maxtrace = int(max(trace))
-        if scale and (miny != mintrace or maxy != maxtrace):
+        if scale and (miny != mintrace or maxy != maxtrace) and mintrace != maxtrace:
             trace = (trace - mintrace) * (maxy - miny)/(maxtrace - mintrace) + miny
         else:
             miny = min(miny, mintrace)  # Update the (non-local) minimum
