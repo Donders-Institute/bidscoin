@@ -4,6 +4,17 @@
 
 ## [dev]
 
+## [4.2.1] - 2023-10-28
+
+### Added
+- A bidsmap schema file
+- Enhanced DICOM (XA-30) support for physiological data (backported from the CMRR repository)
+- Slurm support for some bidsapps
+
+### Changed
+- Use a true list (instead of a semi-colon separated string) for the bidsmap's `bidsignore` field
+- The telemetry url
+
 ## [4.2.0] - 2023-10-16
 
 ### Added
@@ -394,7 +405,8 @@ A first stable release of BIDScoin :-)
 ### To do
 - Add support for non-imaging data
 
-[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.2.0...HEAD
+[dev]: https://github.com/Donders-Institute/bidscoin/compare/4.2.1...HEAD
+[4.2.1]: https://github.com/Donders-Institute/bidscoin/compare/4.2.0...4.2.1
 [4.2.0]: https://github.com/Donders-Institute/bidscoin/compare/4.1.1...4.2.0
 [4.1.1]: https://github.com/Donders-Institute/bidscoin/compare/4.1.0...4.1.1
 [4.1.0]: https://github.com/Donders-Institute/bidscoin/compare/4.0.0...4.1.0
