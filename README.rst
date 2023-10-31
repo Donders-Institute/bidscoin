@@ -58,7 +58,7 @@ Are you a Python programmer with an interest in BIDS who knows about GE and/or P
    :alt: BIDScoin
 .. |PyPI - Python Version| image:: https://img.shields.io/pypi/pyversions/bidscoin.svg
    :alt: Python 3
-.. |Neurodesk| image:: https://img.shields.io/badge/Neurodesk-v4.2.0-green
+.. |Neurodesk| image:: https://img.shields.io/badge/Neurodesk-v4.2.1-green
    :target: https://www.neurodesk.org/docs/overview/applications/
    :alt: Neurodesk
 .. |GPLv3| image:: https://img.shields.io/badge/License-GPLv3+-blue.svg
