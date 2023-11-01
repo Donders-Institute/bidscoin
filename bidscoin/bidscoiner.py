@@ -1,24 +1,27 @@
 #!/usr/bin/env python3
 """A BIDScoin application to convert source data to BIDS (See also cli/_bidscoiner.py)"""
 
+import time
 import dateutil.parser
 import re
 import pandas as pd
 import json
 import logging
+import os
 import shutil
 import urllib.request, urllib.error
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 from importlib.util import find_spec
+from drmaa import Session as drmaasession
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import bcoin, bids, lsdirs, bidsversion, trackusage, __version__
 
 
-def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=False, bidsmapfile: str='bidsmap.yaml') -> None:
+def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=False, bidsmapfile: str='bidsmap.yaml', cluster: bool=False, nativespec: str='') -> None:
     """
     Main function that processes all the subjects and session in the sourcefolder and uses the
     bidsmap.yaml file in bidsfolder/code/bidscoin to cast the data into the BIDS folder.
@@ -28,6 +31,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     :param subjects:        List of selected subjects / participants (i.e. sub-# names / folders) to be processed (the sub-prefix can be removed). Otherwise, all subjects in the sourcefolder will be selected
     :param force:           If True, subjects will be processed, regardless of existing folders in the bidsfolder. Otherwise, existing folders will be skipped
     :param bidsmapfile:     The name of the bidsmap YAML-file. If the bidsmap pathname is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin
+    :param cluster:         Use the DRMAA library to submit the bidscoiner jobs to a high-performance compute (HPC) cluster
+    :param nativespec:      DRMAA native specifications for submitting bidscoiner jobs to the HPC cluster. See cli/_bidscoiner() for default
     :return:                Nothing
     """
 
@@ -89,8 +94,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                 f"For more information see: https://github.com/Donders-Institute/bidscoin\n")
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
-    bidsmap, _  = bids.load_bidsmap(bidsmapfile, bidsfolder/'code'/'bidscoin')
-    dataformats = [dataformat for dataformat in bidsmap if dataformat and dataformat not in ('$schema','Options')]
+    bidsmap, bidsmapfile = bids.load_bidsmap(bidsmapfile, bidsfolder/'code'/'bidscoin')
+    dataformats          = [dataformat for dataformat in bidsmap if dataformat and dataformat not in ('$schema','Options')]
     if not bidsmap:
         LOGGER.error(f"No bidsmap file found in {bidsfolder}. Please run the bidsmapper first and/or use the correct bidsfolder")
         return
@@ -124,6 +129,72 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             LOGGER.warning(f"No subjects found in: {rawfolder/subprefix}*")
     else:
         subjects = [rawfolder/(subprefix + re.sub(f"^{'' if subprefix=='*' else re.escape(subprefix)}",'',subject)) for subject in subjects]   # Make sure there is a sub-prefix
+
+    # Run individual subjects on the HPC
+    if cluster:
+
+        # Run individual subject jobs in temporary bids subfolders
+        LOGGER.info('============== HPC START ==============')
+        LOGGER.info('')
+        with drmaasession() as pbatch:
+            jt                     = pbatch.createJobTemplate()
+            jt.jobEnvironment      = os.environ
+            jt.remoteCommand       = shutil.which('bidscoiner') or __file__
+            jt.nativeSpecification = nativespec
+            jt.joinFiles           = True
+            for subject in subjects:
+                bidsfolder_tmp     = bidsfolder/'HPC'/f"bids_{subject.name}"
+                bidsfolder_tmp.mkdir(parents=True, exist_ok=True)
+                (bidsfolder_tmp/'README')                  .symlink_to(bidsfolder/'README')
+                (bidsfolder_tmp/'dataset_description.json').symlink_to(bidsfolder/'dataset_description.json')
+                (bidsfolder_tmp/'.bidsignore')             .symlink_to(bidsfolder/'.bidsignore')
+                jt.args             = [rawfolder, bidsfolder_tmp, '-p', subject.name, '-b', bidsmapfile] + ['-f'] if force else []
+                jt.jobName          = f"bidscoiner_{subject.name}"
+                jobid               = pbatch.runJob(jt)
+                LOGGER.info(f"Your {jt.jobName} job has been submitted with ID: {jobid}")
+            LOGGER.info('')
+            LOGGER.info('Waiting for the bidscoiner jobs to finish...')
+            pbatch.synchronize(jobIds=[pbatch.JOB_IDS_SESSION_ALL], timeout=pbatch.TIMEOUT_WAIT_FOREVER, dispose=True)
+            pbatch.deleteJobTemplate(jt)
+            time.sleep(20)      # Give NAS systems some time to fully synchronize
+
+        # Merge the bids subfolders
+        participants_table = bids.addparticipant(bidsfolder/'participants.tsv')
+        errors = ''
+        for subject in subjects:
+
+            # Move the subject + derived data + logfiles
+            bidsfolder_tmp = bidsfolder/'HPC'/f"bids_{subject.name}"
+            LOGGER.verbose(f"Moving: {subject.name} -> {bidsfolder}")
+            shutil.move(bidsfolder_tmp/subject.name, bidsfolder)
+            if (bidsfolder_tmp/'derivatives').is_dir():
+                for derivative in (bidsfolder_tmp/'derivatives').iterdir():
+                    for item in derivative.iterdir():
+                        (bidsfolder/'derivatives'/derivative).mkdir(parents=True, exist_ok=True)
+                        LOGGER.verbose(f"Moving: {item} -> {bidsfolder}")
+                        shutil.move(item, bidsfolder/'derivatives'/derivative)
+            for logfile in (bidsfolder/'HPC'/f"bids_{subject.name}"/'code'/'bidscoin').glob('bidscoiner.*'):
+                shutil.move(logfile, bidsfolder/'code'/'bidscoin'/f"{logfile.stem}_{subject.name}.{logfile.suffix}")
+                if logfile.suffix == '.errors' and logfile.stat().st_size:
+                    errors += f"{logfile.read_text()}\n"
+
+            # Merge the participant data
+            if subject.name not in participants_table.index:
+                LOGGER.verbose(f"Merging: participants.tsv -> {bidsfolder/'participants.tsv'}")
+                participant_table  = bids.addparticipant(bidsfolder_tmp/'participants.tsv')
+                participants_table = pd.concat([participants_table, participant_table])
+
+        participants_table.replace('', 'n/a').to_csv(bidsfolder/'participants.tsv', sep='\t', encoding='utf-8', na_rep='n/a')
+
+        shutil.rmtree(bidsfolder/'HPC')
+
+        LOGGER.info('============== HPC FINISH =============')
+        LOGGER.info('')
+
+        if errors:
+            LOGGER.info(f"The following BIDScoin errors and warnings were reported:\n\n{40 * '>'}\n{errors}{40 * '<'}\n")
+
+        return
 
     # Loop over all subjects and sessions and convert them using the bidsmap entries
     with logging_redirect_tqdm():
@@ -350,7 +421,9 @@ def main():
                    bidsfolder  = args.bidsfolder,
                    subjects    = args.participant_label,
                    force       = args.force,
-                   bidsmapfile = args.bidsmap)
+                   bidsmapfile = args.bidsmap,
+                   cluster     = args.cluster,
+                   nativespec  = args.nativespec)
 
     except Exception:
         trackusage('bidscoiner_exception')
