@@ -2008,7 +2008,7 @@ def poolmetadata(sourcemeta: Path, targetmeta: Path, usermeta: dict, extensions:
 
 def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: dict=None) -> pd.DataFrame:
     """
-    Read/create and/or add a participant to the participants.tsv file
+    Read/create and/or add (if it's not there yet) a participant to the participants.tsv file
 
     :param participants_tsv:    The participants.tsv file
     :param subid:               The subject label. Leave empty to just read the participants table (add nothing)

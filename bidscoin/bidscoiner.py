@@ -170,7 +170,11 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     # Run the bidscoiner plugins
                     for module in plugins:
                         LOGGER.verbose(f"Executing plugin: {Path(module.__file__).name}")
-                        module.bidscoiner_plugin(sesfolder, bidsmap, bidssession)
+                        personals = module.bidscoiner_plugin(sesfolder, bidsmap, bidssession)
+
+                        # Add a subject row to the participants table (if there is any data)
+                        if next(bidssession.rglob('*.json'), None):
+                            participants_table = bids.addparticipant(bidsfolder/'participants.tsv', subid, sesid, personals)
 
                     # Add the special fieldmap metadata (IntendedFor, B0FieldIdentifier, TE, etc)
                     addmetadata(bidssession, subid, sesid)
@@ -179,15 +183,10 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     if unpacked:
                         shutil.rmtree(sesfolder)
 
-                    # Add a subject row to the participants table if the plugin(s) haven't done so (if there is data)
-                    if next(bidssession.rglob('*.json'), None):
-                        bids.addparticipant(bidsfolder/'participants.tsv', subid, sesid)
-
     # Create/write to the json participants table sidecar file
-    participants_table = bids.addparticipant(bidsfolder/'participants.tsv')
-    participants_json  = bidsfolder/'participants.json'
-    participants_dict  = {}
-    newkey             = False
+    participants_json = bidsfolder/'participants.json'
+    participants_dict = {}
+    newkey            = False
     if participants_json.is_file():
         with participants_json.open('r') as json_fid:
             participants_dict = json.load(json_fid)

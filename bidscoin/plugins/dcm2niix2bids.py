@@ -171,7 +171,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
             bids.append_run(bidsmap_new, run)
 
 
-def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
+def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None, dict]:
     """
     The bidscoiner plugin to convert the session DICOM and PAR/REC source-files into BIDS-valid NIfTI-files in the
     corresponding bids session-folder and extract personals (e.g. Age, Sex) from the source header
@@ -179,7 +179,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     :param session:     The full-path name of the subject/session source folder
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
     :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
-    :return:            Nothing
+    :return:            A dictionary with personal data for the participants.tsv file (such as sex or age)
     """
 
     # Get the subject identifiers and the BIDS root folder from the bidsses folder
@@ -486,7 +486,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
     scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
-    # Collect personal data from a source header and store it in the participants.tsv file
+    # Collect personal data for the participants.tsv file
     if dataformat == 'DICOM':                               # PAR does not contain personal info
         personals = {}
         age       = datasource.attributes('PatientAge')     # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
@@ -500,4 +500,5 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         personals['sex']    = datasource.attributes('PatientSex')
         personals['size']   = datasource.attributes('PatientSize')
         personals['weight'] = datasource.attributes('PatientWeight')
-        bids.addparticipant(bidsfolder/'participants.tsv', subid, sesid, personals)
+
+        return personals

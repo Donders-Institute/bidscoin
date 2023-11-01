@@ -173,7 +173,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
             bids.append_run(bidsmap_new, run)
 
 
-def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
+def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None, dict]:
     """
     The bidscoiner plugin to run dcm2niix4pet, this will run dcm2niix4pet on session folders
     containing PET dicoms and include metadata from meta-dataspreadsheets if present
@@ -181,7 +181,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     :param session:     The full-path name of the subject/session source folder
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
     :param bidsses:     The full-path name of the BIDS output `ses-` folder
-    :return:            Nothing
+    :return:            A dictionary with personal data for the participants.tsv file (such as sex or age)
     """
 
     # Get the subject identifiers and the BIDS root folder from the bidsses folder
@@ -292,7 +292,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             with sidecar.open('w') as json_fid:
                 json.dump(metadata, json_fid, indent=4)
 
-    # Collect personal data from a source header and store it in the participants.tsv file
+    # Collect personal data for the participants.tsv file
     if dataformat == 'DICOM':
         personals = {}
         age       = datasource.attributes('PatientAge')     # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
@@ -306,4 +306,5 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         personals['sex']    = datasource.attributes('PatientSex')
         personals['size']   = datasource.attributes('PatientSize')
         personals['weight'] = datasource.attributes('PatientWeight')
-        bids.addparticipant(bidsfolder/'participants.tsv', subid, sesid, personals)
+
+        return personals

@@ -8,6 +8,7 @@ import shutil
 import json
 import pandas as pd
 import dateutil.parser
+from typing import Union
 from bids_validator import BIDSValidator
 from pathlib import Path
 from bidscoin import bcoin, bids
@@ -156,7 +157,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
             bids.append_run(bidsmap_new, run)
 
 
-def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
+def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None, dict]:
     """
     This wrapper function around spec2nii converts the MRS data in the session folder and saves it in the bidsfolder.
     Each saved datafile should be accompanied by a json sidecar file. The bidsmap options for this plugin can be found in:
@@ -166,7 +167,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     :param session:     The full-path name of the subject/session raw data source folder
     :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
     :param bidsses:     The full-path name of the BIDS output `sub-/ses-` folder
-    :return:            Nothing
+    :return:            A dictionary with personal data for the participants.tsv file (such as sex or age)
     """
 
     # Get the subject identifiers and the BIDS root folder from the bidsses folder
@@ -288,7 +289,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
     scans_table.sort_values(by=['acq_time','filename'], inplace=True)
     scans_table.replace('','n/a').to_csv(scans_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
-    # Collect personal data from a source header
+    # Collect personal data for the participants.tsv file
     personals = {}
     age       = ''
     if dataformat == 'Twix':
@@ -315,6 +316,4 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             age = int(float(age))
         personals['age'] = str(age)
 
-    # Store the collected personals in the participants_table
-    if personals:
-        bids.addparticipant(bidsfolder/'participants.tsv', subid, sesid, personals)
+    return personals

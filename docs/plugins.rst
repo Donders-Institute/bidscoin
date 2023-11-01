@@ -207,7 +207,7 @@ As can be seen in the API code snippet below (but also see the default plugins f
        LOGGER.verbose(f'This is a bidsmapper demo-plugin working on: {session}')
 
 
-   def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
+   def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None, dict]:
        """
        The plugin to convert the runs in the source folder and save them in the bids folder. Each saved datafile should be
        accompanied by a json sidecar file. The bidsmap options for this plugin can be found in:
@@ -219,7 +219,7 @@ As can be seen in the API code snippet below (but also see the default plugins f
        :param session:     The full-path name of the subject/session source folder
        :param bidsmap:     The full mapping heuristics from the bidsmap YAML-file
        :param bidsses:     The full-path name of the BIDS output 'ses-' folder
-       :return:            Nothing
+       :return:            A dictionary with personal data for the participants.tsv file (such as sex or age)
        """
 
        LOGGER.debug(f'This is a bidscoiner demo-plugin working on: {session} -> {bidsfolder}')
