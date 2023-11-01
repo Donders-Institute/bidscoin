@@ -14,7 +14,6 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 from importlib.util import find_spec
-from drmaa import Session as drmaasession
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))
@@ -132,6 +131,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
     # Run individual subjects on the HPC
     if cluster:
+
+        from drmaa import Session as drmaasession
 
         # Run individual subject jobs in temporary bids subfolders
         LOGGER.info('============== HPC START ==============')
