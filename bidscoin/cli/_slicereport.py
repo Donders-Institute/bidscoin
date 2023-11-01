@@ -30,11 +30,11 @@ OPTIONS:
   c                  : Add a red dot marker to top right of image
 
 OUTPUTS:
-  x/y/z [SLICE] [..] : Output sagittal, coronal or axial slice (if [SLICE] > 0 it is a
-                       fraction of image dimension, if < 0, it is an absolute slice number)
+  x/y/z [SLICE] [..] : Output sagittal, coronal or axial slice (if SLICE > 0 it is a fraction of
+                       image dimension, if < 0, it is an absolute slice number)
   a                  : Output mid-sagittal, -coronal and -axial slices into one image
-  A [WIDTH]          : Output _all_ axial slices into one image of _max_ width [WIDTH]
-  S [SAMPLE] [WIDTH] : As `A` but only include every [SAMPLE]'th slice
+  A [WIDTH]          : Output _all_ axial slices into one image of _max_ width WIDTH
+  S [SAMPLE] [WIDTH] : As `A` but only include every SAMPLE'th slice
   LF                 : Start a new line (i.e. works like a row break)
 
 examples:

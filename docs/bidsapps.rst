@@ -147,8 +147,8 @@ This utility is very similar to the `deface <#defacing>`__ utility above, except
                             name of a BIDS datatype folder, such as 'anat', or of the derivatives folder,
                             i.e. 'derivatives'. If output is left empty then the original images are
                             replaced by the defaced images (default: None)
-      -c, --cluster         Submit the deface jobs to a high-performance compute (HPC) cluster (default:
-                            False)
+      -c, --cluster         Use the DRMAA library to submit the deface jobs to a high-performance compute
+                            (HPC) cluster (default: False)
       -n NATIVESPEC, --nativespec NATIVESPEC
                             DRMAA native specifications for submitting deface jobs to the HPC cluster
                             (default: -l walltime=00:30:00,mem=2gb)
@@ -230,9 +230,9 @@ Quality control
 
     usage: slicereport [-h] [-o OUTLINEPATTERN] [-i OUTLINEIMAGE]
                        [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-r REPORTFOLDER]
-                       [-x XLINKFOLDER [XLINKFOLDER ...]] [-q QCSCORES [QCSCORES ...]] [-c]
-                       [--options OPTIONS [OPTIONS ...]] [--outputs OUTPUTS [OUTPUTS ...]]
-                       [--suboptions SUBOPTIONS [SUBOPTIONS ...]]
+                       [-x XLINKFOLDER [XLINKFOLDER ...]] [-q QCSCORES [QCSCORES ...]]
+                       [-c {torque,slurm}] [--options OPTIONS [OPTIONS ...]]
+                       [--outputs OUTPUTS [OUTPUTS ...]] [--suboptions SUBOPTIONS [SUBOPTIONS ...]]
                        [--suboutputs SUBOUTPUTS [SUBOUTPUTS ...]]
                        bidsfolder pattern
 
@@ -275,7 +275,6 @@ Quality control
       -c {torque,slurm}, --cluster {torque,slurm}
                             Use `torque` or `slurm` to submit the slicereport jobs to a high-performance
                             compute (HPC) cluster
-      -c, --cluster         Use `qsub` to submit the slicer jobs to a high-performance compute (HPC) cluster
       --options OPTIONS [OPTIONS ...]
                             Main options of slicer (see below). (default: "s 1")
       --outputs OUTPUTS [OUTPUTS ...]
@@ -301,11 +300,11 @@ Quality control
       c                  : Add a red dot marker to top right of image
 
     OUTPUTS:
-      x/y/z [SLICE] [..] : Output sagittal, coronal or axial slice (if [SLICE] > 0 it is a
-                           fraction of image dimension, if < 0, it is an absolute slice number)
+      x/y/z [SLICE] [..] : Output sagittal, coronal or axial slice (if SLICE > 0 it is a fraction of
+                           image dimension, if < 0, it is an absolute slice number)
       a                  : Output mid-sagittal, -coronal and -axial slices into one image
-      A [WIDTH]          : Output _all_ axial slices into one image of _max_ width [WIDTH]
-      S [SAMPLE] [WIDTH] : As `A` but only include every [SAMPLE]'th slice
+      A [WIDTH]          : Output _all_ axial slices into one image of _max_ width WIDTH
+      S [SAMPLE] [WIDTH] : As `A` but only include every SAMPLE'th slice
       LF                 : Start a new line (i.e. works like a row break)
 
     examples:
