@@ -7,6 +7,7 @@ import sys
 import csv
 import json
 import tempfile
+import nibabel as nib
 from copy import copy
 from pathlib import Path
 from importlib.util import find_spec
@@ -78,9 +79,11 @@ def slicer_append(inputimage: Path, outlineimage: Path, mainopts: str, outputopt
 
     # Create a workdir and the shell command
     workdir = Path(montage.parent)/next(tempfile._get_candidate_names())
-    workdir.mkdir()
-    command = f"cd {workdir}\n" \
-              f"slicer {inputimage} {outlineimage} {mainopts} {outputopts}\n" \
+    fourdim = True if nib.load(inputimage).header['dim'][0] == 4 else False
+    meanimg = f"fslmaths {inputimage} -Tmean meanimg\n" if fourdim else ''
+    command = f"mkdir {workdir}; cd {workdir}\n" \
+              f"{meanimg}" \
+              f"slicer {'meanimg' if fourdim else inputimage} {outlineimage} {mainopts} {outputopts}\n" \
               f"pngappend {sliceroutput} {montage.name}\n" \
               f"mv {montage.name} {montage.parent}\n" \
               f"rm -r {workdir}"

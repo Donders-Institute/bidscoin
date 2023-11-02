@@ -241,7 +241,7 @@ Quality control
     well as individual sub-pages displaying more detailed information. The input images are
     selectable using wildcards, and the output images are configurable via various user options,
     allowing you to quickly create a custom 'slicer' report to do visual quality control on any
-    datatype in your repository.
+    3D/4D imagetype in your repository.
 
     Requires an existing installation of FSL/slicer
 
@@ -311,7 +311,8 @@ Quality control
       slicereport myproject/bids anat/*_T1w*
       slicereport myproject/bids anat/*_T2w* -r myproject/QC/slicereport_T2 -x myproject/QC/slicereport_T1
       slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*
-      slicereport myproject/bids/derivatives/fmriprep anat/*run-?_desc-preproc_T1w* -o anat/*run-?_label-GM*
+      slicereport myproject/bids/derivatives/fmriprep func/*desc-preproc_bold*
+      slicereport myproject/bids/derivatives/fmriprep anat/*desc-preproc_T1w* -o anat/*label-GM*
       slicereport myproject/bids/derivatives/deface anat/*_T1w* -o myproject/bids:anat/*_T1w* --options L e 0.05
       slicereport myproject/bids anat/*_T1w* --outputs x 0.3 x 0.4 x 0.5 x 0.6 x 0.7 LF z 0.3 z 0.4 z 0.5 z 0.6 z 0.7
 
