@@ -56,11 +56,11 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Gen
 """
 
 # Define the default paths
-tracking       = {'url': 'https://telemetry.dccn.nl/bidscoin', 'sleep': 1}              # Sleep = Nr of sleeping hours during which usage is not tracked
-tutorialurl    = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
-bidscoinfolder = Path(__file__).parent
-schemafolder   = bidscoinfolder/'schema'
-pluginfolder   = bidscoinfolder/'plugins'
+tracking     = {'url': 'https://telemetry.dccn.nl/bidscoin', 'sleep': 1}              # Sleep = Nr of sleeping hours during which usage is not tracked
+tutorialurl  = 'https://surfdrive.surf.nl/files/index.php/s/HTxdUbykBZm2cYM/download'
+bidscoinroot = Path(__file__).parent
+schemafolder = bidscoinroot/'schema'
+pluginfolder = bidscoinroot/'plugins'
 
 # Create a BIDScoin user configuration directory if needed and load the BIDScoin user settings
 configfile     = Path.home()/'.bidscoin'/__version__/'config.toml'
@@ -71,7 +71,7 @@ if not configfile.is_file():
     configfile.write_text(f"[bidscoin]\n"
                           f"bidsmap_template = '{templatefolder}/bidsmap_dccn.yaml'     # The default template bidsmap (change to use a different default)\n"
                           f"trackusage       = 'yes'     # Upload anonymous usage data if 'yes' (maximally 1 upload every {tracking['sleep']} hour) (see `bidscoin --tracking show`)\n")
-for template in list((bidscoinfolder/'heuristics').glob('*.yaml')) + [bidscoinfolder/'heuristics'/'schema.json']:
+for template in list((bidscoinroot/'heuristics').glob('*.yaml')) + [bidscoinroot/'heuristics'/'schema.json']:
     if not (templatefolder/template.name).is_file():
         print(f"-> {templatefolder/template.name}")
         shutil.copyfile(template, templatefolder/template.name)
@@ -151,8 +151,9 @@ def trackusage(event: str, dryrun: bool=False) -> dict:
         return data
 
     # Check if we are not asleep
-    trackfile = Path(tempfile.gettempdir())/f"bidscoin_{data['userid']}_{data['hostid']}"
-    with shelve.open(str(trackfile), 'c') as tracked:
+    trackfile = configfile.parent/'usage'/f"bidscoin_{data['userid']}_{data['hostid']}"
+    trackfile.parent.mkdir(parents=True, exist_ok=True)
+    with shelve.open(str(trackfile), 'c', writeback=True) as tracked:
         now    = datetime.datetime.now()
         before = tracked.get(event, now.replace(year=2000))
         if (now - before).total_seconds() < tracking['sleep'] * 60 * 60:
