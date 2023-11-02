@@ -41,7 +41,7 @@ with (schemafolder/'objects'/'datatypes.yaml').open('r') as _stream:
 datatyperules = {}
 for _datatypefile in (schemafolder/'rules'/'files'/'raw').glob('*.yaml'):
     with _datatypefile.open('r') as _stream:
-        datatyperules[_datatypefile.stem] = yaml.load(_stream)                  # The entities that can/should be present for each BIDS datatype
+        datatyperules[_datatypefile.stem] = yaml.load(_stream)                  # The entities that can/should be present for each BIDS data type
 with (schemafolder/'objects'/'suffixes.yaml').open('r') as _stream:
     suffixes = yaml.load(_stream)                                               # The descriptions of the valid BIDS file suffixes
 with (schemafolder/'objects'/'entities.yaml').open('r') as _stream:
@@ -55,12 +55,12 @@ with (schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
 class DataSource:
     def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str='', subprefix: str='', sesprefix: str=''):
         """
-        A source datatype (e.g. DICOM or PAR) that can be converted to BIDS by the plugins
+        A source data type (e.g. DICOM or PAR) that can be converted to BIDS by the plugins
 
         :param provenance:  The full path of a representative file for this data source
-        :param plugins:     The plugins that are used to interact with the source datatype
+        :param plugins:     The plugins that are used to interact with the source data type
         :param dataformat:  The dataformat name in the bidsmap, e.g. DICOM or PAR
-        :param datatype:    The intended BIDS datatype of the data source TODO: move to a separate BidsTarget/Mapping class
+        :param datatype:    The intended BIDS data type of the data source TODO: move to a separate BidsTarget/Mapping class
         :param subprefix:   The subprefix used in the sourcefolder
         :param sesprefix:   The sesprefix used in the sourcefolder
         """
@@ -609,7 +609,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                     LOGGER.warning(f'Could not parse {tagname} from {dicomfile}\n{dicomerror}')
                     value = ''
 
-    # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
+    # Cast the dicom data type to int or str (i.e. to something that yaml.dump can handle)
     if isinstance(value, int):
         return int(value)
     elif value is None:
@@ -680,7 +680,7 @@ def get_twixfield(tagname: str, twixfile: Path, mraid: int=2) -> Union[str, int]
             LOGGER.warning(f'Could not parse {tagname} from {twixfile}\n{twixerror}')
             value = ''
 
-    # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
+    # Cast the dicom data type to int or str (i.e. to something that yaml.dump can handle)
     if isinstance(value, int):
         return int(value)
     elif value is None:
@@ -732,7 +732,7 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
             LOGGER.warning(f'Could not parse {tagname} from {parfile}\n{parerror}')
             value = ''
 
-    # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
+    # Cast the dicom data type to int or str (i.e. to something that yaml.dump can handle)
     if isinstance(value, int):
         return int(value)
     elif value is None:
@@ -783,7 +783,7 @@ def get_sparfield(tagname: str, sparfile: Path) -> Union[str, int]:
         except Exception as sparerror:
             LOGGER.warning(f"Could not parse {tagname} from {sparfile}\n{sparerror}")
 
-    # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
+    # Cast the dicom data type to int or str (i.e. to something that yaml.dump can handle)
     if isinstance(value, int):
         return int(value)
     elif value is None:
@@ -837,7 +837,7 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
         except Exception as p7error:
             LOGGER.warning(f'Could not parse {tagname} from {p7file}\n{p7error}')
 
-    # Cast the dicom datatype to int or str (i.e. to something that yaml.dump can handle)
+    # Cast the dicom data type to int or str (i.e. to something that yaml.dump can handle)
     if isinstance(value, int):
         return int(value)
     elif value is None:

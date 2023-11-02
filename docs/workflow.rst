@@ -238,4 +238,4 @@ To make your dataset reproducable and shareable, you should add study-level meta
 BIDS validation
 ^^^^^^^^^^^^^^^
 
-If all of the above work is done, you can (and should) run the web-based `bidsvalidator <https://bids-standard.github.io/bids-validator/>`__ to check for inconsistencies or missing files in your bids data-set (NB: the bidsvalidator also exists as a `command-line tool <https://github.com/bids-standard/bids-validator>`__).
+If all of the above work is done, you can (and should) run the web-based `BIDS Validator <https://bids-standard.github.io/bids-validator/>`__ to check for inconsistencies or missing files in your bids data-set (NB: the BIDS Validator also exists as a `command-line tool <https://github.com/bids-standard/bids-validator>`__).

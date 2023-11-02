@@ -308,13 +308,13 @@ Quality control
       LF                 : Start a new line (i.e. works like a row break)
 
     examples:
-      slicereport myproject/bids anat/*_T1w*
-      slicereport myproject/bids anat/*_T2w* -r myproject/QC/slicereport_T2 -x myproject/QC/slicereport_T1
-      slicereport myproject/bids fmap/*_phasediff* -o fmap/*_magnitude1*
-      slicereport myproject/bids/derivatives/fmriprep func/*desc-preproc_bold*
-      slicereport myproject/bids/derivatives/fmriprep anat/*desc-preproc_T1w* -o anat/*label-GM*
-      slicereport myproject/bids/derivatives/deface anat/*_T1w* -o myproject/bids:anat/*_T1w* --options L e 0.05
-      slicereport myproject/bids anat/*_T1w* --outputs x 0.3 x 0.4 x 0.5 x 0.6 x 0.7 LF z 0.3 z 0.4 z 0.5 z 0.6 z 0.7
+      slicereport bids anat/*_T1w*
+      slicereport bids anat/*_T2w* -r QC/slicereport_T2 -x QC/slicereport_T1
+      slicereport bids fmap/*_phasediff* -o fmap/*_magnitude1*
+      slicereport bids/derivatives/fmriprep func/*desc-preproc_bold*
+      slicereport bids/derivatives/fmriprep anat/*desc-preproc_T1w* -o anat/*label-GM* -x bids/derivatives/fmriprep
+      slicereport bids/derivatives/deface anat/*_T1w* -o bids:anat/*_T1w* --options L e 0.05
+      slicereport bids anat/*_T1w* --outputs x 0.3 x 0.4 x 0.5 x 0.6 x 0.7 LF z 0.3 z 0.4 z 0.5 z 0.6 z 0.7
 
 .. figure:: ./_static/slicereport_skullstrip.png
 

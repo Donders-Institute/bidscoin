@@ -68,7 +68,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile,  bidscoinfolder, plugins)
     template, _              = bids.load_bidsmap(templatefile, bidscoinfolder, plugins, checks=(True, True, False))
 
-    # Create the new bidsmap as a copy / bidsmap skeleton with no datatype entries (i.e. bidsmap with empty lists)
+    # Create the new bidsmap as a copy / bidsmap skeleton with no data type entries (i.e. bidsmap with empty lists)
     if force and bidsmapfile.is_file():
         LOGGER.info(f"Deleting previous bidsmap: {bidsmapfile}")
         bidsmapfile.unlink()

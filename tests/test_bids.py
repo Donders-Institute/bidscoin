@@ -126,7 +126,7 @@ def test_load_check_template(template):
     assert isinstance(bidsmap, dict) and bidsmap
     assert bids.check_template(bidsmap) == True
 
-    # Add an invalid datatype
+    # Add an invalid data type
     bidsmap['DICOM']['foo'] = bidsmap['DICOM']['extra_data']
     assert bids.check_template(bidsmap) == False
     del bidsmap['DICOM']['foo']
@@ -231,7 +231,7 @@ def test_check_run(test_bidsmap):
     checks = (True, True, True)             # = (keys, suffixes, values)
     run    = bidsmap['DICOM']['func'][0]
 
-    # Check datatype
+    # Check data type
     assert bids.check_run('func', run, checks) == (True, True, True)
     assert bids.check_run('anat', run, checks) == (None, False, None)
     assert bids.check_run('foo',  run, checks) == (None, None, None)
@@ -288,7 +288,7 @@ def test_find_run(test_bidsmap):
     run = bids.find_run(bidsmap, provenance, dataformat='PET')
     assert run == {}
 
-    # Find run with the wrong datatype
+    # Find run with the wrong data type
     run = bids.find_run(bidsmap, provenance, datatype='func')
     assert run == {}
 
@@ -358,10 +358,10 @@ def test_exist_run(test_bidsmap):
     # Collect the first anat run-item
     run = copy.deepcopy(bidsmap['DICOM']['anat'][0])
 
-    # Find the run in the wrong datatype
+    # Find the run in the wrong data type
     assert bids.exist_run(bidsmap, 'func', run) == False
 
-    # Find run with in the right datatype and in all datatypes
+    # Find run with in the right data type and in all datatypes
     assert bids.exist_run(bidsmap, 'anat', run) == True
     assert bids.exist_run(bidsmap, '',     run) == True
 

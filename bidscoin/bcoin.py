@@ -470,7 +470,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
     else:
         bidsmap = bidsmapfile
 
-    # Check if all entities of each datatype in the bidsmap are present
+    # Check if all entities of each data type in the bidsmap are present
     if testtemplate:
         try:                # Moving the import to the top of this module will cause circular import issues
             from bidscoin import bids

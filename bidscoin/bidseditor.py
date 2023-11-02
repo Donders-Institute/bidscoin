@@ -101,7 +101,7 @@ class MainWindow(QMainWindow):
         self.bidsfolder        = Path(bidsfolder)               # The folder where the bids data is / will be stored
         self.input_bidsmap     = input_bidsmap                  # The original / unedited bidsmap
         self.output_bidsmap    = copy.deepcopy(input_bidsmap)   # The edited bidsmap
-        self.template_bidsmap  = template_bidsmap               # The bidsmap from which new datatype run-items are taken
+        self.template_bidsmap  = template_bidsmap               # The bidsmap from which new data type run-items are taken
         self.datasaved         = datasaved                      # True if data has been saved on disk
         self.dataformats       = [dataformat for dataformat in input_bidsmap if dataformat and dataformat not in ('$schema','Options') and bids.dir_bidsmap(input_bidsmap, dataformat)]
         self.unknowndatatypes  = input_bidsmap['Options']['bidscoin'].get('unknowntypes',[])
@@ -554,11 +554,11 @@ class MainWindow(QMainWindow):
             rowindex      = samples_table.indexAt(clicked.pos()).row()
             if rowindex < 0:                                        # This may happen on MacOS (rowindex = -1)? (github issue #131)
                 LOGGER.bcdebug(f"User clicked on the [Edit] button (presumably) but PyQt returns pos={clicked.pos()} -> rowindex={rowindex}")
-                return                                              # TODO: Simply changing this to 0? (the value of rowindex when datatype is DICOM)
+                return                                              # TODO: Simply changing this to 0? (the value of rowindex when data type is DICOM)
             datatype      = samples_table.item(rowindex, 2).text()
             provenance    = samples_table.item(rowindex, 5).text()
 
-        # Check for open edit window, find the right datatype index and open the edit window
+        # Check for open edit window, find the right data type index and open the edit window
         if not self.editwindow_opened:
             # Find the source index of the run in the list of runs (using the provenance) and open the edit window
             for run in self.output_bidsmap[dataformat][datatype]:
@@ -871,8 +871,8 @@ class EditWindow(QDialog):
         datasource: bids.DataSource = run['datasource']
         self.datasource        = datasource
         self.dataformat        = datasource.dataformat  # The data format of the run-item being edited (bidsmap[dataformat][datatype][run-item])
-        self.source_datatype   = datasource.datatype    # The BIDS datatype of the original run-item
-        self.target_datatype   = datasource.datatype    # The BIDS datatype that the edited run-item is being changed into
+        self.source_datatype   = datasource.datatype    # The BIDS data type of the original run-item
+        self.target_datatype   = datasource.datatype    # The BIDS data type that the edited run-item is being changed into
         self.current_datatype  = datasource.datatype    # The BIDS datatype of the run-item just before it is being changed (again)
         self.unknowndatatypes  = [datatype for datatype in bidsmap['Options']['bidscoin'].get('unknowntypes',[]) if datatype in template_bidsmap[self.dataformat]]
         self.ignoredatatypes   = [datatype for datatype in bidsmap['Options']['bidscoin'].get('ignoretypes', []) if datatype in template_bidsmap[self.dataformat]]
