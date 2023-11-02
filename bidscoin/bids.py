@@ -159,7 +159,7 @@ class DataSource:
                     return len(list(self.path.parent.iterdir()))
 
         except re.error as patternerror:
-            LOGGER.error(f"Cannot compile regular expression pattern '{tagname}': {patternerror}")
+            LOGGER.error(f"Cannot compile regular expression property pattern '{tagname}': {patternerror}")
 
         except OSError as ioerror:
             LOGGER.warning(f"{ioerror}")
@@ -222,7 +222,7 @@ class DataSource:
                     attributeval = match[0] if match else ''    # The first match is most likely the most informative (?)
 
         except re.error as patternerror:
-            LOGGER.error(f"Cannot compile regular expression pattern '{pattern}': {patternerror}")
+            LOGGER.error(f"Cannot compile regular expression attribute pattern '{pattern}': {patternerror}")
 
         except OSError as ioerror:
             LOGGER.warning(f"{ioerror}")
@@ -260,9 +260,9 @@ class DataSource:
 
         # Add the default value for subid and sesid if unspecified / None
         if subid is None:
-            subid = f"<<filepath:/{self.resubprefix()})(.*?)/>>"
+            subid = f"<<filepath:/{self.resubprefix()}(.*?)/>>"
         if sesid is None:
-            sesid = f"<<filepath:/{self.resesprefix()})(.*?)/>>"
+            sesid = f"<<filepath:/{self.resubprefix()}.*?/{self.resesprefix()}(.*?)/>>"
 
         # Parse the sub-/ses-id's
         subid_ = self.dynamicvalue(subid, runtime=True)
@@ -2006,20 +2006,22 @@ def poolmetadata(sourcemeta: Path, targetmeta: Path, usermeta: dict, extensions:
     return metapool
 
 
-def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: dict=None) -> pd.DataFrame:
+def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: dict=None, dryrun: bool=False) -> Tuple[pd.DataFrame, dict]:
     """
-    Read/create and/or add (if it's not there yet) a participant to the participants.tsv file
+    Read/create and/or add (if it's not there yet) a participant to the participants.tsv/.json file
 
     :param participants_tsv:    The participants.tsv file
     :param subid:               The subject label. Leave empty to just read the participants table (add nothing)
     :param sesid:               The session label
     :param data:                Personal data of the participant, such as sex or age
+    :param dryrun:              Boolean to just display the participants info
     :return:                    The participants table
     """
 
     # TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
 
     data = data or {}
+    participants_dict = {}
 
     # Read the participants table
     if participants_tsv.is_file():
@@ -2045,9 +2047,40 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
         # Write the data to the participants tsv-file
         if data_added:
             LOGGER.verbose(f"Writing {subid} subject data to: {participants_tsv}")
-            table.replace('', 'n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
+            if not dryrun:
+                table.replace('', 'n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
 
-    return table
+            # Create/write to the json participants table sidecar file
+            participants_json = participants_tsv.with_suffix('.json')
+            key_added         = False
+            if participants_json.is_file():
+                with participants_json.open('r') as json_fid:
+                    participants_dict = json.load(json_fid)
+            if not participants_dict.get('participant_id'):
+                participants_dict['participant_id'] = {'Description': 'Unique participant identifier'}
+                key_added                           = True
+            if not participants_dict.get('session_id') and 'session_id' in table.columns:
+                participants_dict['session_id'] = {'Description': 'Session identifier'}
+                key_added                       = True
+            if not participants_dict.get('group') and 'group' in table.columns:
+                participants_dict['group'] = {'Description': 'Group identifier'}
+                key_added                  = True
+            for col in table.columns:
+                if col not in participants_dict:
+                    key_added              = True
+                    participants_dict[col] = dict(LongName    = 'Long (unabbreviated) name of the column',
+                                                  Description = 'Description of the the column',
+                                                  Levels      = dict(Key='Value (This is for categorical variables: a dictionary of possible values (keys) and their descriptions (values))'),
+                                                  Units       = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is RECOMMENDED')
+
+            # Write the data to the participant sidecar file
+            if key_added:
+                LOGGER.info(f"Writing subject meta data to: {participants_json}")
+                if not dryrun:
+                    with participants_json.open('w') as json_fid:
+                        json.dump(participants_dict, json_fid, indent=4)
+
+    return table, participants_dict
 
 
 def get_propertieshelp(propertieskey: str) -> str:

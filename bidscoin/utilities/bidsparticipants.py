@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """(Re)scans data sets in the source folder for subject metadata (See also cli/_bidsparticipants.py)"""
 
-import pandas as pd
-import json
 import logging
 import shutil
 from tqdm import tqdm
@@ -15,7 +13,7 @@ if find_spec('bidscoin') is None:
 from bidscoin import bcoin, bids, lsdirs, trackusage, __version__
 
 
-def scanpersonals(bidsmap: dict, session: Path, personals: dict) -> bool:
+def scanpersonals(bidsmap: dict, session: Path, personals: dict, keys: list) -> bool:
     """
     Converts the session source-files into BIDS-valid NIfTI-files in the corresponding bidsfolder and
     extracts personals (e.g. Age, Sex) from the source header
@@ -23,6 +21,7 @@ def scanpersonals(bidsmap: dict, session: Path, personals: dict) -> bool:
     :param bidsmap:     The study bidsmap with the mapping heuristics
     :param session:     The full-path name of the subject/session source file/folder
     :param personals:   The dictionary with the personal information
+    :param keys:        The keys that are extracted from the source data when populating the participants.tsv file
     :return:            True if successful
     """
 
@@ -36,19 +35,19 @@ def scanpersonals(bidsmap: dict, session: Path, personals: dict) -> bool:
     # Collect personal data from a source header (PAR/XML does not contain personal info)
     if dataformat not in ('DICOM', 'Twix'): return False
 
-    personals['sex']    = datasource.attributes('PatientSex')
-    personals['size']   = datasource.attributes('PatientSize')
-    personals['weight'] = datasource.attributes('PatientWeight')
-
-    age = datasource.attributes('PatientAge')                   # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
-    if   age.endswith('D'): age = float(age.rstrip('D')) / 365.2524
-    elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
-    elif age.endswith('M'): age = float(age.rstrip('M')) / 12
-    elif age.endswith('Y'): age = float(age.rstrip('Y'))
-    if age:
-        if bidsmap['Options']['plugins']['dcm2niix2bids'].get('anon', 'y') in ('y','yes'):
-            age = int(float(age))
-        personals['age'] = str(age)
+    if 'sex'    in keys: personals['sex']    = datasource.attributes('PatientSex')
+    if 'size'   in keys: personals['size']   = datasource.attributes('PatientSize')
+    if 'weight' in keys: personals['weight'] = datasource.attributes('PatientWeight')
+    if 'age' in keys:
+        age = datasource.attributes('PatientAge')       # A string of characters with one of the following formats: nnnD, nnnW, nnnM, nnnY
+        if   age.endswith('D'): age = float(age.rstrip('D')) / 365.2524
+        elif age.endswith('W'): age = float(age.rstrip('W')) / 52.1775
+        elif age.endswith('M'): age = float(age.rstrip('M')) / 12
+        elif age.endswith('Y'): age = float(age.rstrip('Y'))
+        if age:
+            if bidsmap['Options']['plugins']['dcm2niix2bids'].get('anon', 'y') in ('y','yes'):
+                age = int(float(age))
+            personals['age'] = str(age)
 
     return True
 
@@ -93,14 +92,8 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
     sesprefix = bidsmap['Options']['bidscoin']['sesprefix']
 
     # Get the table & dictionary of the subjects that have been processed
-    participants_tsv   = bidsfolder/'participants.tsv'
-    participants_json  = participants_tsv.with_suffix('.json')
-    participants_table = bids.addparticipant(participants_tsv)
-    if participants_json.is_file():
-        with participants_json.open('r') as json_fid:
-            participants_dict = json.load(json_fid)
-    else:
-        participants_dict = {'participant_id': {'Description': 'Unique participant identifier'}}
+    participants_tsv                      = bidsfolder/'participants.tsv'
+    participants_table, participants_dict = bids.addparticipant(participants_tsv)
 
     # Get the list of subjects
     subjects = lsdirs(bidsfolder, 'sub-*')
@@ -129,9 +122,6 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
 
                 success      = False            # Only take data from the first session -> BIDS specification
                 subid, sesid = bids.DataSource(session/'dum.my', subprefix=subprefix, sesprefix=sesprefix).subid_sesid()
-                if sesid and 'session_id' not in personals:
-                    personals['session_id']         = sesid
-                    participants_dict['session_id'] = {'Description': 'Session identifier'}
 
                 # Unpack the data in a temporary folder if it is tarballed/zipped and/or contains a DICOMDIR file
                 sesfolders, unpacked = bids.unpack(session, bidsmap['Options']['bidscoin'].get('unzip',''))
@@ -139,7 +129,7 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
 
                     # Update / append the personal source data
                     LOGGER.info(f"Scanning session: {sesfolder}")
-                    success = scanpersonals(bidsmap, sesfolder, personals)
+                    success = scanpersonals(bidsmap, sesfolder, personals, keys)
 
                     # Clean-up the temporary unpacked data
                     if unpacked:
@@ -150,24 +140,8 @@ def bidsparticipants(rawfolder: str, bidsfolder: str, keys: list, bidsmapfile: s
                 if success: break
 
             # Store the collected personals in the participant_table. TODO: Check that only values that are consistent over sessions go in the participants.tsv file, otherwise put them in a sessions.tsv file
-            for key in keys:
-                if key not in participants_dict:
-                    participants_dict[key] = dict(LongName    = 'Long (unabbreviated) name of the column',
-                                                  Description = 'Description of the the column',
-                                                  Levels      = dict(Key='Value (This is for categorical variables: a dictionary of possible values (keys) and their descriptions (values))'),
-                                                  Units       = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is RECOMMENDED')
-
-                participants_table.loc[subid, key] = personals.get(key)
-
-    # Write the collected data to the participant files
-    LOGGER.info(f"Writing subject data to: {participants_tsv}")
-    if not dryrun:
-        participants_table.replace('','n/a').to_csv(participants_tsv, sep='\t', encoding='utf-8', na_rep='n/a')
-
-    LOGGER.info(f"Writing subject data dictionary to: {participants_json}")
-    if not dryrun:
-        with participants_json.open('w') as json_fid:
-            json.dump(participants_dict, json_fid, indent=4)
+            if sessions:
+                participants_table,_ = bids.addparticipant(participants_tsv, subid, sesid, personals, dryrun)
 
     print(participants_table)
 
