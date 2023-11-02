@@ -142,16 +142,13 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             jt.jobEnvironment      = os.environ
             jt.remoteCommand       = shutil.which('bidscoiner') or __file__
             jt.nativeSpecification = nativespec
-            jt.joinFiles           = True
+            jt.outputPath          = str(bidsfolder/'HPC')
+            jt.errorPath           = str(bidsfolder/'HPC')
             for subject in subjects:
                 bidsfolder_tmp     = bidsfolder/'HPC'/f"bids_{subject.name}"
-                bidsfolder_tmp.mkdir(parents=True, exist_ok=True)
-                (bidsfolder_tmp/'README')                  .symlink_to(bidsfolder/'README')
-                (bidsfolder_tmp/'dataset_description.json').symlink_to(bidsfolder/'dataset_description.json')
-                (bidsfolder_tmp/'.bidsignore')             .symlink_to(bidsfolder/'.bidsignore')
-                jt.args             = [rawfolder, bidsfolder_tmp, '-p', subject.name, '-b', bidsmapfile] + ['-f'] if force else []
-                jt.jobName          = f"bidscoiner_{subject.name}"
-                jobid               = pbatch.runJob(jt)
+                jt.args            = [rawfolder, bidsfolder_tmp, '-p', subject.name, '-b', bidsmapfile] + (['-f'] if force else [])
+                jt.jobName         = f"bidscoiner_{subject.name}"
+                jobid              = pbatch.runJob(jt)
                 LOGGER.info(f"Your {jt.jobName} job has been submitted with ID: {jobid}")
             LOGGER.info('')
             LOGGER.info('Waiting for the bidscoiner jobs to finish...')
@@ -160,12 +157,15 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             time.sleep(20)      # Give NAS systems some time to fully synchronize
 
         # Merge the bids subfolders
-        participants_table = bids.addparticipant(bidsfolder/'participants.tsv')
+        participants_table, participants_dict = bids.addparticipant(bidsfolder/'participants.tsv')
         errors = ''
         for subject in subjects:
 
             # Move the subject + derived data + logfiles
             bidsfolder_tmp = bidsfolder/'HPC'/f"bids_{subject.name}"
+            if not (bidsfolder_tmp/subject.name).is_dir():
+                LOGGER.debug(f"Missing data: {bidsfolder_tmp/subject.name}")
+                continue
             LOGGER.verbose(f"Moving: {subject.name} -> {bidsfolder}")
             shutil.move(bidsfolder_tmp/subject.name, bidsfolder)
             if (bidsfolder_tmp/'derivatives').is_dir():
@@ -174,21 +174,27 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                         (bidsfolder/'derivatives'/derivative).mkdir(parents=True, exist_ok=True)
                         LOGGER.verbose(f"Moving: {item} -> {bidsfolder}")
                         shutil.move(item, bidsfolder/'derivatives'/derivative)
-            for logfile in (bidsfolder/'HPC'/f"bids_{subject.name}"/'code'/'bidscoin').glob('bidscoiner.*'):
-                shutil.move(logfile, bidsfolder/'code'/'bidscoin'/f"{logfile.stem}_{subject.name}.{logfile.suffix}")
-                if logfile.suffix == '.errors' and logfile.stat().st_size:
-                    errors += f"{logfile.read_text()}\n"
+            for logfile_tmp in (bidsfolder/'HPC'/f"bids_{subject.name}"/'code'/'bidscoin').glob('bidscoiner.*'):
+                logfile = bidsfolder/'code'/'bidscoin'/f"{logfile_tmp.name}"
+                logfile.write_text(f"{logfile.read_text()}\n{logfile_tmp.read_text()}")
+                if logfile_tmp.suffix == '.errors' and logfile_tmp.stat().st_size:
+                    errors += f"{logfile_tmp.read_text()}\n"
 
             # Merge the participant data
             if subject.name not in participants_table.index:
                 LOGGER.verbose(f"Merging: participants.tsv -> {bidsfolder/'participants.tsv'}")
-                participant_table  = bids.addparticipant(bidsfolder_tmp/'participants.tsv')
-                participants_table = pd.concat([participants_table, participant_table])
+                participant_table, participant_dict = bids.addparticipant(bidsfolder_tmp/'participants.tsv')
+                participants_table                  = pd.concat([participants_table, participant_table])
+                participants_dict.update(participant_dict)
 
+        # Save the participants data to disk
         participants_table.replace('', 'n/a').to_csv(bidsfolder/'participants.tsv', sep='\t', encoding='utf-8', na_rep='n/a')
+        with (bidsfolder/'participants.json').open('w') as fid:
+            json.dump(participants_dict, fid, indent=4)
 
         shutil.rmtree(bidsfolder/'HPC')
 
+        LOGGER.info('')
         LOGGER.info('============== HPC FINISH =============')
         LOGGER.info('')
 
@@ -246,7 +252,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
                         # Add a subject row to the participants table (if there is any data)
                         if next(bidssession.rglob('*.json'), None):
-                            participants_table = bids.addparticipant(bidsfolder/'participants.tsv', subid, sesid, personals)
+                            bids.addparticipant(bidsfolder/'participants.tsv', subid, sesid, personals)
 
                     # Add the special fieldmap metadata (IntendedFor, B0FieldIdentifier, TE, etc)
                     addmetadata(bidssession, subid, sesid)
@@ -254,36 +260,6 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     # Clean-up the temporary unpacked data
                     if unpacked:
                         shutil.rmtree(sesfolder)
-
-    # Create/write to the json participants table sidecar file
-    participants_json = bidsfolder/'participants.json'
-    participants_dict = {}
-    newkey            = False
-    if participants_json.is_file():
-        with participants_json.open('r') as json_fid:
-            participants_dict = json.load(json_fid)
-    if not participants_dict.get('participant_id'):
-        participants_dict['participant_id'] = {'Description': 'Unique participant identifier'}
-        newkey                              = True
-    if not participants_dict.get('session_id') and 'session_id' in participants_table.columns:
-        participants_dict['session_id'] = {'Description': 'Session identifier'}
-        newkey                          = True
-    if not participants_dict.get('group') and 'group' in participants_table.columns:
-        participants_dict['group'] = {'Description': 'Group identifier'}
-        newkey                     = True
-    for col in participants_table.columns:
-        if col not in participants_dict:
-            newkey                 = True
-            participants_dict[col] = dict(LongName    = 'Long (unabbreviated) name of the column',
-                                          Description = 'Description of the the column',
-                                          Levels      = dict(Key='Value (This is for categorical variables: a dictionary of possible values (keys) and their descriptions (values))'),
-                                          Units       = 'Measurement units. [<prefix symbol>]<unit symbol> format following the SI standard is RECOMMENDED')
-
-    # Write the data to the participant sidecar file
-    if newkey:
-        LOGGER.info(f"Writing subject meta data to: {participants_json}")
-        with participants_json.open('w') as json_fid:
-            json.dump(participants_dict, json_fid, indent=4)
 
     LOGGER.info('-------------- FINISHED! ------------')
     LOGGER.info('')

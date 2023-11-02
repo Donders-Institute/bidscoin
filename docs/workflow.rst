@@ -174,7 +174,8 @@ Step 2: Running the bidscoiner
 
 ::
 
-    usage: bidscoiner [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-b BIDSMAP] [-f]
+    usage: bidscoiner [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-b BIDSMAP] [-f] [-c]
+                      [-n NATIVESPEC]
                       sourcefolder bidsfolder
 
     Converts ("coins") your source datasets to NIfTI/json/tsv BIDS datasets using the mapping
@@ -206,6 +207,11 @@ Step 2: Running the bidscoiner
                             bidsfolder/code/bidscoin. Default: bidsmap.yaml
       -f, --force           Process all subjects, regardless of existing subject folders in the
                             bidsfolder. Otherwise these subject folders will be skipped
+      -c, --cluster         Use the DRMAA library to submit the bidscoiner jobs to a high-performance
+                            compute (HPC) cluster
+      -n NATIVESPEC, --nativespec NATIVESPEC
+                            DRMAA native specifications for submitting bidscoiner jobs to the HPC cluster
+                            (default: -l walltime=00:30:00,mem=4gb)
 
     examples:
       bidscoiner myproject/raw myproject/bids
