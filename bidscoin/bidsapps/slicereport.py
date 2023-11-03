@@ -74,19 +74,19 @@ def parse_outputs(outputargs: list, name: str) -> tuple:
     return outputs, slices
 
 
-def slicer_append(inputimage: Path, outlineimage: Path, mainopts: str, outputopts: str, sliceroutput: str, montage: Path, cluster: str):
-    """Run slicer and pngappend (locally or on the cluster) to create a montage of the sliced images"""
+def slicer_append(inputimage: Path, operator: str, outlineimage: Path, mainopts: str, outputopts: str, sliceroutput: str, montage: Path, cluster: str):
+    """Run fslmaths, slicer and pngappend (locally or on the cluster) to create a montage of the sliced images"""
 
     # Create a workdir and the shell command
-    workdir = Path(montage.parent)/next(tempfile._get_candidate_names())
-    fourdim = True if nib.load(inputimage).header['dim'][0] == 4 else False
-    meanimg = f"fslmaths {inputimage} -Tmean meanimg\n" if fourdim else ''
-    command = f"mkdir {workdir}; cd {workdir}\n" \
-              f"{meanimg}" \
-              f"slicer {'meanimg' if fourdim else inputimage} {outlineimage} {mainopts} {outputopts}\n" \
-              f"pngappend {sliceroutput} {montage.name}\n" \
-              f"mv {montage.name} {montage.parent}\n" \
-              f"rm -r {workdir}"
+    workdir  = Path(montage.parent)/next(tempfile._get_candidate_names())
+    threedim = True if nib.load(inputimage).header['dim'][0] == 3 else False
+    mathsimg = f"fslmaths {inputimage} -{operator} mathsimg\n" if not (threedim and operator=='Tmean') else ''
+    command  = f"mkdir {workdir}; cd {workdir}\n" \
+               f"{mathsimg}" \
+               f"slicer {'mathsimg' if mathsimg else inputimage} {outlineimage} {mainopts} {outputopts}\n" \
+               f"pngappend {sliceroutput} {montage.name}\n" \
+               f"mv {montage.name} {montage.parent}\n" \
+               f"rm -r {workdir}"
 
     # Wrap the command
     mem = '8' if inputimage.stat().st_size > 50 * 1024**2 else '1'  # Ask for more resources if we have a large (e.g. 4D) input image
@@ -107,7 +107,7 @@ def slicer_append(inputimage: Path, outlineimage: Path, mainopts: str, outputopt
         sys.exit(process.returncode)
 
 
-def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: str, subjects: list, reportdir: str, crossdirs: str, qccols: list, cluster: str, options: list, outputs: list, suboptions: list, suboutputs: list):
+def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: str, subjects: list, reportdir: str, crossdirs: str, qccols: list, cluster: str, operator: str, suboperator: str, options: list, outputs: list, suboptions: list, suboutputs: list):
     """
     :param bidsdir:         The bids-directory with the subject data
     :param pattern:         Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T1w*'
@@ -118,6 +118,8 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     :param crossdirs:       A (list of) folder(s) with cross-linked sub-reports
     :param qccols:          Column names for creating an accompanying tsv-file to store QC-rating scores
     :param cluster:         Use `torque` or `slurm` to submit the slicer jobs to a high-performance compute (HPC) cluster. Leave empty to run slicer on your local computer
+    :param operator:        The fslmath operation performed on the input image: fslmaths inputimage OPERATOR reportimage
+    :param suboperator:     The fslmath operation performed on the input image: fslmaths inputimage SUBOPERATOR subreportimage
     :param options:         Slicer main options
     :param outputs:         Slicer output options
     :param suboptions:      Slicer main options for creating the sub-reports (same as OPTIONS)
@@ -223,7 +225,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 # Generate the sliced image montage
                 outline = outlineimages[n] if outlinepattern else outlineimage
                 montage = reportses/image.with_suffix('').with_suffix('.png').name
-                slicer_append(image, outline, options, outputs, sliceroutput, montage, cluster)
+                slicer_append(image, operator, outline, options, outputs, sliceroutput, montage, cluster)
 
                 # Add the montage as a (sub-report linked) row to the report
                 caption   = f"{image.relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(outline.relative_to(outlinesession))+' )' if outlinepattern and outline else ''}"
@@ -234,7 +236,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 # Add the sub-report
                 if suboutputs:
                     montage = subreport.with_suffix('.png')
-                    slicer_append(image, outline, suboptions, suboutputs, subsliceroutput, montage, cluster)
+                    slicer_append(image, suboperator, outline, suboptions, suboutputs, subsliceroutput, montage, cluster)
                 crossreports = ''
                 for crossdir in crossdirs:          # Include niprep reports
                     for crossreport in sorted(Path(crossdir).glob(f"{subject.name.split('_')[0]}*.html")) + sorted((Path(crossdir)/session.relative_to(bidsdir)).glob('*.html')):
@@ -296,6 +298,8 @@ def main():
                     crossdirs      = args.xlinkfolder,
                     qccols         = args.qcscores,
                     cluster        = args.cluster,
+                    operator       = args.operator,
+                    suboperator    = args.suboperator,
                     options        = args.options,
                     outputs        = args.outputs,
                     suboptions     = args.suboptions,
