@@ -134,7 +134,6 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
         from drmaa import Session as drmaasession
 
-        # Run individual subject jobs in temporary bids subfolders
         LOGGER.info('============== HPC START ==============')
         LOGGER.info('')
         with drmaasession() as pbatch:
@@ -144,12 +143,25 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             jt.nativeSpecification = nativespec
             jt.outputPath          = str(bidsfolder/'HPC')
             jt.errorPath           = str(bidsfolder/'HPC')
+
+            # Run individual subject jobs in temporary bids subfolders
             for subject in subjects:
-                bidsfolder_tmp     = bidsfolder/'HPC'/f"bids_{subject.name}"
+
+                # Check if we should skip the session-folder
+                datasource = bids.get_datasource(subject, bidsmap['Options']['plugins'])
+                subid,_    = datasource.subid_sesid(bidsmap[datasource.dataformat]['subject'], bidsmap[datasource.dataformat]['session'])
+                if (bidsfolder/subid).is_dir() and not force:
+                    LOGGER.info(f">>> Skipping already processed subject: {bidsfolder/subid} (you can use the -f option to overrule)")
+                    continue
+
+                # Create the job arguments and add it to the batch
+                bidsfolder_tmp     = bidsfolder/'HPC'/f"bids_{subid}"
+                bidsfolder_tmp.mkdir(parents=True, exist_ok=True)
                 jt.args            = [rawfolder, bidsfolder_tmp, '-p', subject.name, '-b', bidsmapfile] + (['-f'] if force else [])
                 jt.jobName         = f"bidscoiner_{subject.name}"
                 jobid              = pbatch.runJob(jt)
                 LOGGER.info(f"Your {jt.jobName} job has been submitted with ID: {jobid}")
+
             LOGGER.info('')
             LOGGER.info('Waiting for the bidscoiner jobs to finish...')
             pbatch.synchronize(jobIds=[pbatch.JOB_IDS_SESSION_ALL], timeout=pbatch.TIMEOUT_WAIT_FOREVER, dispose=True)
@@ -157,31 +169,39 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             time.sleep(20)      # Give NAS systems some time to fully synchronize
 
         # Merge the bids subfolders
-        participants_table, participants_dict = bids.addparticipant(bidsfolder/'participants.tsv')
         errors = ''
-        for subject in subjects:
+        participants_table, participants_dict = bids.addparticipant(bidsfolder/'participants.tsv')
+        for bidsfolder_tmp in (bidsfolder/'HPC').glob('bids_*'):
 
-            # Move the subject + derived data + logfiles
-            bidsfolder_tmp = bidsfolder/'HPC'/f"bids_{subject.name}"
-            if not (bidsfolder_tmp/subject.name).is_dir():
-                LOGGER.debug(f"Missing data: {bidsfolder_tmp/subject.name}")
+            subid = bidsfolder_tmp.name[5:]
+
+            # Check if the data already exist (-> unpacked data)
+            if (bidsfolder/subid).is_dir():
+                LOGGER.verbose(f"Processed data already exists: {bidsfolder/subid}")
                 continue
-            LOGGER.verbose(f"Moving: {subject.name} -> {bidsfolder}")
-            shutil.move(bidsfolder_tmp/subject.name, bidsfolder)
+
+            # Move the subject + derived data
+            LOGGER.verbose(f"Moving: {subid} -> {bidsfolder}")
+            shutil.move(bidsfolder_tmp/subid, bidsfolder)
             if (bidsfolder_tmp/'derivatives').is_dir():
                 for derivative in (bidsfolder_tmp/'derivatives').iterdir():
                     for item in derivative.iterdir():
-                        (bidsfolder/'derivatives'/derivative).mkdir(parents=True, exist_ok=True)
+                        if (bidsfolder/item.relative_to(bidsfolder_tmp)).exists():
+                            LOGGER.verbose(f"Processed data already exists: {item.relative_to(bidsfolder_tmp)}")
+                            continue
+                        (bidsfolder/'derivatives'/derivative.name).mkdir(parents=True, exist_ok=True)
                         LOGGER.verbose(f"Moving: {item} -> {bidsfolder}")
-                        shutil.move(item, bidsfolder/'derivatives'/derivative)
-            for logfile_tmp in (bidsfolder/'HPC'/f"bids_{subject.name}"/'code'/'bidscoin').glob('bidscoiner.*'):
+                        shutil.move(item, bidsfolder/item.relative_to(bidsfolder_tmp))
+
+            # Copy over the logfiles content
+            for logfile_tmp in (bidsfolder_tmp/'code'/'bidscoin').glob('bidscoiner.*'):
                 logfile = bidsfolder/'code'/'bidscoin'/f"{logfile_tmp.name}"
                 logfile.write_text(f"{logfile.read_text()}\n{logfile_tmp.read_text()}")
                 if logfile_tmp.suffix == '.errors' and logfile_tmp.stat().st_size:
                     errors += f"{logfile_tmp.read_text()}\n"
 
-            # Merge the participant data
-            if subject.name not in participants_table.index:
+            # Update the participants table + dictionary
+            if subid not in participants_table.index:
                 LOGGER.verbose(f"Merging: participants.tsv -> {bidsfolder/'participants.tsv'}")
                 participant_table, participant_dict = bids.addparticipant(bidsfolder_tmp/'participants.tsv')
                 participants_table                  = pd.concat([participants_table, participant_table])
@@ -224,7 +244,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     # Check if we should skip the session-folder
                     datasource = bids.get_datasource(sesfolder, bidsmap['Options']['plugins'])
                     if not datasource.dataformat:
-                        LOGGER.info(f">>> No coinable datasources found in '{sesfolder}'")
+                        LOGGER.info(f">>> No datasources found in '{sesfolder}'")
                         continue
                     subid        = bidsmap[datasource.dataformat]['subject']
                     sesid        = bidsmap[datasource.dataformat]['session']

@@ -6,7 +6,7 @@ selectable using wildcards, and the output images are configurable via various u
 allowing you to quickly create a custom 'slicer' report to do visual quality control on any
 3D/4D imagetype in your repository.
 
-Requires an existing installation of FSL/slicer
+Requires an existing installation of FSL
 """
 
 # Imports from the standard library only (as these are imported during the cli/manpage build process)
@@ -58,8 +58,8 @@ examples:
     parser.add_argument('-x','--xlinkfolder',       help="A (list of) QC report folder(s) with cross-linkable sub-reports, e.g. bidsfolder/derivatives/mriqc", nargs='+')
     parser.add_argument('-q','--qcscores',          help="Column names for creating an accompanying tsv-file to store QC-rating scores (default: rating_overall)", default=['rating_overall'], nargs='+')
     parser.add_argument('-c','--cluster',           help='Use `torque` or `slurm` to submit the slicereport jobs to a high-performance compute (HPC) cluster', choices=['torque','slurm'])
-    parser.add_argument('--operator',               help='The fslmaths operation performed on the input image (before slicing it): fslmaths inputimage OPERATOR reportimage', default='Tmean')
-    parser.add_argument('--suboperator',            help='The same as OPERATOR but then for the subreport instead of the main report: fslmaths inputimage SUBOPERATOR subreportimage', default='Tmean')
+    parser.add_argument('--operator',               help='The fslmaths operation performed on the input image (before slicing it): fslmaths inputimage OPERATOR reportimage (default: Tmean)', default='Tmean')
+    parser.add_argument('--suboperator',            help='The same as OPERATOR but then for the sub-report instead of the main report: fslmaths inputimage SUBOPERATOR subreportimage (default: Tmean)', default='Tmean')
     parser.add_argument('--options',                help='Main options of slicer (see below). (default: "s 1")', default=['s','1'], nargs='+')
     parser.add_argument('--outputs',                help='Output options of slicer (see below). (default: "x 0.4 x 0.5 x 0.6 y 0.4 y 0.5 y 0.6 z 0.4 z 0.5 z 0.6")', default=['x','0.4','x','0.5','x','0.6','y','0.4','y','0.5','y','0.6','z','0.4','z','0.5','z','0.6'], nargs='+')
     parser.add_argument('--suboptions',             help='Main options of slicer for creating the sub-reports (same as OPTIONS, see below). (default: OPTIONS)', nargs='+')

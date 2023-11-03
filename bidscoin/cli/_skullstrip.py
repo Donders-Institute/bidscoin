@@ -31,7 +31,7 @@ def get_parser():
     parser.add_argument('-m','--masked',            help="Globlike search pattern (relative to the subject/session folder) to select additional (3D/4D) images from the same space that need to be masked with the same mask, e.g. 'fmap/*_phasediff'. NB: This option can only be used if pattern yields a single file per session", type=str)
     parser.add_argument('-o','--output',            help="One or two output strings that determine where the skullstripped + additional masked images are saved. Each output string can be the name of a BIDS datatype folder, such as 'anat', or of the derivatives folder, i.e. 'derivatives' (default). If the output string is the same as the datatype then the original images are replaced by the skullstripped images", nargs='+')
     parser.add_argument('-f','--force',             help="Process images, regardless whether images have already been skullstripped (i.e. if {'SkullStripped': True} in the json sidecar file)", action='store_true')
-    parser.add_argument('-a','--args',              help="Additional arguments that are passed to synthstrip (NB: Use quotes and a leading space to prevent unintended argument parsing)", type=str, default='')
+    parser.add_argument('-a','--args',              help="Additional arguments that are passed to synthstrip (NB: Use quotes and include at least one space character to prevent overearly parsing)", type=str, default='')
     parser.add_argument('-c','--cluster',           help='Use `torque` or `slurm` to submit the skullstrip jobs to a high-performance compute (HPC) cluster. Can only be used if `--masked` is left empty', choices=['torque','slurm'])
 
     return parser

@@ -26,13 +26,14 @@ def get_parser():
                                      description=textwrap.dedent(__doc__),
                                      epilog='examples:\n'
                                             '  bidscoiner myproject/raw myproject/bids\n'
-                                            '  bidscoiner -f myproject/raw myproject/bids -p sub-009 sub-030\n ')
+                                            '  bidscoiner -f myproject/raw myproject/bids -p sub-009 sub-030\n'
+                                            '  bidscoiner -f myproject/raw myproject/bids -c -n "--time=00:30:00 --mem=4000"\n ')
     parser.add_argument('sourcefolder',             help='The study root folder containing the raw source data')
     parser.add_argument('bidsfolder',               help='The destination / output folder with the bids data')
     parser.add_argument('-p','--participant_label', help='Space separated list of selected sub-# names / folders to be processed (the sub-prefix can be removed). Otherwise all subjects in the sourcefolder will be selected', nargs='+')
     parser.add_argument('-b','--bidsmap',           help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
     parser.add_argument('-f','--force',             help='Process all subjects, regardless of existing subject folders in the bidsfolder. Otherwise these subject folders will be skipped', action='store_true')
     parser.add_argument('-c','--cluster',           help='Use the DRMAA library to submit the bidscoiner jobs to a high-performance compute (HPC) cluster', action='store_true')
-    parser.add_argument('-n','--nativespec',        help='DRMAA native specifications for submitting bidscoiner jobs to the HPC cluster (default: -l walltime=00:30:00,mem=4gb)', default='-l walltime=00:30:00,mem=4gb')
+    parser.add_argument('-n','--nativespec',        help='Opaque DRMAA argument with native specifications for submitting bidscoiner jobs to the HPC cluster (default: "-l walltime=00:30:00,mem=4gb")', default='-l walltime=00:30:00,mem=4gb')
 
     return parser

@@ -91,8 +91,8 @@ Before sharing or pre-processing their images, users may want to deface their an
       -c, --cluster         Use the DRMAA library to submit the deface jobs to a high-performance compute
                             (HPC) cluster (default: False)
       -n NATIVESPEC, --nativespec NATIVESPEC
-                            DRMAA native specifications for submitting deface jobs to the HPC cluster
-                            (default: -l walltime=00:30:00,mem=2gb)
+                            Opaque DRMAA argument with native specifications for submitting deface jobs
+                            to the HPC cluster (default: "-l walltime=00:30:00,mem=2gb")
       -a ARGS, --args ARGS  Additional arguments (in dict/json-style) that are passed to pydeface. See
                             examples for usage (default: {})
       -f, --force           Deface all images, regardless if they have already been defaced (i.e. if
@@ -150,8 +150,8 @@ This utility is very similar to the `deface <#defacing>`__ utility above, except
       -c, --cluster         Use the DRMAA library to submit the deface jobs to a high-performance compute
                             (HPC) cluster (default: False)
       -n NATIVESPEC, --nativespec NATIVESPEC
-                            DRMAA native specifications for submitting deface jobs to the HPC cluster
-                            (default: -l walltime=00:30:00,mem=2gb)
+                            Opaque DRMAA argument with native specifications for submitting deface jobs
+                            to the HPC cluster (default: "-l walltime=00:30:00,mem=2gb")
       -a ARGS, --args ARGS  Additional arguments (in dict/json-style) that are passed to pydeface. See
                             examples for usage (default: {})
       -f, --force           Process all images, regardless if images have already been defaced (i.e. if
@@ -208,8 +208,8 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
                             None)
       -f, --force           Process images, regardless whether images have already been skullstripped
                             (i.e. if {'SkullStripped': True} in the json sidecar file) (default: False)
-      -a ARGS, --args ARGS  Additional arguments that are passed to synthstrip (NB: Use quotes and a
-                            leading space to prevent unintended argument parsing) (default: )
+      -a ARGS, --args ARGS  Additional arguments that are passed to synthstrip (NB: Use quotes and include
+                            at least one space character to prevent overearly parsing) (default: )
       -c {torque,slurm}, --cluster {torque,slurm}
                             Use `torque` or `slurm` to submit the skullstrip jobs to a high-performance
                             compute (HPC) cluster. Can only be used if `--masked` is left empty (default:

@@ -4,6 +4,13 @@
 
 ## [dev]
 
+### Added
+- fslmaths preprocessing on slicereport input images
+- A `--cluster` option for running bidscoiner in parallel on a (DRMAA enabled) HPC
+
+### Changed
+- `bidscoiner_plugin()` API: you can just return a personals dict instead of writing it to `participants.tsv`
+
 ## [4.2.1] - 2023-10-30
 
 ### Added

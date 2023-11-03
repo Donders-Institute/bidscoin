@@ -210,12 +210,13 @@ Step 2: Running the bidscoiner
       -c, --cluster         Use the DRMAA library to submit the bidscoiner jobs to a high-performance
                             compute (HPC) cluster
       -n NATIVESPEC, --nativespec NATIVESPEC
-                            DRMAA native specifications for submitting bidscoiner jobs to the HPC cluster
-                            (default: -l walltime=00:30:00,mem=4gb)
+                            Opaque DRMAA argument with native specifications for submitting bidscoiner
+                            jobs to the HPC cluster (default: "-l walltime=00:30:00,mem=4gb")
 
     examples:
       bidscoiner myproject/raw myproject/bids
       bidscoiner -f myproject/raw myproject/bids -p sub-009 sub-030
+      bidscoiner -f myproject/raw myproject/bids -c -n "--time=00:30:00 --mem=4000"
 
 .. tip::
    * Always check the terminal output for possible warnings or errors (a summary of them is printed at the end)
