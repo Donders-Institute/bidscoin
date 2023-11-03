@@ -230,8 +230,8 @@ Quality control
 
     usage: slicereport [-h] [-o OUTLINEPATTERN] [-i OUTLINEIMAGE]
                        [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-r REPORTFOLDER]
-                       [-x XLINKFOLDER [XLINKFOLDER ...]] [-q QCSCORES [QCSCORES ...]]
-                       [-c {torque,slurm}] [--options OPTIONS [OPTIONS ...]]
+                       [-x XLINKFOLDER [XLINKFOLDER ...]] [-q QCSCORES [QCSCORES ...]] [-c {torque,slurm}]
+                       [--operator OPERATOR] [--suboperator SUBOPERATOR] [--options OPTIONS [OPTIONS ...]]
                        [--outputs OUTPUTS [OUTPUTS ...]] [--suboptions SUBOPTIONS [SUBOPTIONS ...]]
                        [--suboutputs SUBOUTPUTS [SUBOUTPUTS ...]]
                        bidsfolder pattern
@@ -247,15 +247,15 @@ Quality control
 
     positional arguments:
       bidsfolder            The bids-directory with the subject data
-      pattern               Globlike search pattern to select the images in bidsfolder to be reported,
-                            e.g. 'anat/*_T2starw*'
+      pattern               Globlike search pattern to select the images in bidsfolder to be reported, e.g.
+                            'anat/*_T2starw*'
 
     options:
       -h, --help            show this help message and exit
       -o OUTLINEPATTERN, --outlinepattern OUTLINEPATTERN
-                            Globlike search pattern to select red outline images that are projected on
-                            top of the reported images (i.e. 'outlinepattern' must yield the same number
-                            of images as 'pattern'. Prepend `outlinedir:` if your outline images are in
+                            Globlike search pattern to select red outline images that are projected on top
+                            of the reported images (i.e. 'outlinepattern' must yield the same number of
+                            images as 'pattern'. Prepend `outlinedir:` if your outline images are in
                             `outlinedir` instead of `bidsdir` (see examples below)`
       -i OUTLINEIMAGE, --outlineimage OUTLINEIMAGE
                             A common red-outline image that is projected on top of all images
@@ -275,6 +275,11 @@ Quality control
       -c {torque,slurm}, --cluster {torque,slurm}
                             Use `torque` or `slurm` to submit the slicereport jobs to a high-performance
                             compute (HPC) cluster
+      --operator OPERATOR   The fslmaths operation performed on the input image (before slicing it):
+                            fslmaths inputimage OPERATOR reportimage
+      --suboperator SUBOPERATOR
+                            The same as OPERATOR but then for the subreport instead of the main report:
+                            fslmaths inputimage SUBOPERATOR subreportimage
       --options OPTIONS [OPTIONS ...]
                             Main options of slicer (see below). (default: "s 1")
       --outputs OUTPUTS [OUTPUTS ...]
@@ -311,7 +316,7 @@ Quality control
       slicereport bids anat/*_T1w*
       slicereport bids anat/*_T2w* -r QC/slicereport_T2 -x QC/slicereport_T1
       slicereport bids fmap/*_phasediff* -o fmap/*_magnitude1*
-      slicereport bids/derivatives/fmriprep func/*desc-preproc_bold*
+      slicereport bids/derivatives/fmriprep func/*desc-preproc_bold* --suboperator Tstd
       slicereport bids/derivatives/fmriprep anat/*desc-preproc_T1w* -o anat/*label-GM* -x bids/derivatives/fmriprep
       slicereport bids/derivatives/deface anat/*_T1w* -o bids:anat/*_T1w* --options L e 0.05
       slicereport bids anat/*_T1w* --outputs x 0.3 x 0.4 x 0.5 x 0.6 x 0.7 LF z 0.3 z 0.4 z 0.5 z 0.6 z 0.7
