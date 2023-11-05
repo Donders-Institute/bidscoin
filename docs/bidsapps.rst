@@ -333,3 +333,5 @@ Quality control
 
    $ skullstrip bids anat/*run-1_T1w* -o extra_data
    $ slicereport bids extra_data/*run-1_T1w* -o anat/*run-1_T1w*
+
+Click `here <_static/slicereport/index.html>`__ to view a sample slicereport
