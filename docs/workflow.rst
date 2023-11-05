@@ -211,7 +211,8 @@ Step 2: Running the bidscoiner
                             compute (HPC) cluster
       -n NATIVESPEC, --nativespec NATIVESPEC
                             Opaque DRMAA argument with native specifications for submitting bidscoiner
-                            jobs to the HPC cluster (default: "-l walltime=00:30:00,mem=4gb")
+                            jobs to the HPC cluster. NB: Use quotes and include at least one space
+                            character to prevent overearly parsing (default: -l walltime=00:30:00,mem=4gb)
 
     examples:
       bidscoiner myproject/raw myproject/bids

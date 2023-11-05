@@ -212,7 +212,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         with (bidsfolder/'participants.json').open('w') as fid:
             json.dump(participants_dict, fid, indent=4)
 
-        shutil.rmtree(bidsfolder/'HPC')
+        # shutil.rmtree(bidsfolder/'HPC')
 
         LOGGER.info('')
         LOGGER.info('============== HPC FINISH =============')

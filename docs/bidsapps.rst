@@ -92,9 +92,10 @@ Before sharing or pre-processing their images, users may want to deface their an
                             (HPC) cluster (default: False)
       -n NATIVESPEC, --nativespec NATIVESPEC
                             Opaque DRMAA argument with native specifications for submitting deface jobs
-                            to the HPC cluster (default: "-l walltime=00:30:00,mem=2gb")
-      -a ARGS, --args ARGS  Additional arguments (in dict/json-style) that are passed to pydeface. See
-                            examples for usage (default: {})
+                            to the HPC cluster (NB: Use quotes and include at least one space character
+                            to prevent overearly parsing) (default: -l walltime=00:30:00,mem=2gb)
+      -a ARGS, --args ARGS  Additional arguments (in dict/json-style) that are passed to pydeface (NB:
+                            Use quotes). See examples for usage (default: {})
       -f, --force           Deface all images, regardless if they have already been defaced (i.e. if
                             {"Defaced": True} in the json sidecar file) (default: False)
 
@@ -151,9 +152,10 @@ This utility is very similar to the `deface <#defacing>`__ utility above, except
                             (HPC) cluster (default: False)
       -n NATIVESPEC, --nativespec NATIVESPEC
                             Opaque DRMAA argument with native specifications for submitting deface jobs
-                            to the HPC cluster (default: "-l walltime=00:30:00,mem=2gb")
-      -a ARGS, --args ARGS  Additional arguments (in dict/json-style) that are passed to pydeface. See
-                            examples for usage (default: {})
+                            to the HPC cluster (NB: Use quotes and include at least one space character
+                            to prevent overearly parsing) (default: -l walltime=00:30:00,mem=2gb)
+      -a ARGS, --args ARGS  Additional arguments (in dict/json-style) that are passed to pydeface (NB:
+                            Use quotes). See examples for usage (default: {})
       -f, --force           Process all images, regardless if images have already been defaced (i.e. if
                             {"Defaced": True} in the json sidecar file) (default: False)
 
@@ -172,7 +174,7 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
 ::
 
     usage: skullstrip [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-m MASKED]
-                      [-o OUTPUT [OUTPUT ...]] [-f] [-a ARGS] [-c]
+                      [-o OUTPUT [OUTPUT ...]] [-f] [-a ARGS] [-c {torque,slurm}]
                       bidsfolder pattern
 
     A wrapper around FreeSurfer's 'synthstrip' skull stripping tool
@@ -208,12 +210,11 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
                             None)
       -f, --force           Process images, regardless whether images have already been skullstripped
                             (i.e. if {'SkullStripped': True} in the json sidecar file) (default: False)
-      -a ARGS, --args ARGS  Additional arguments that are passed to synthstrip (NB: Use quotes and include
-                            at least one space character to prevent overearly parsing) (default: )
+      -a ARGS, --args ARGS  Additional arguments that are passed to synthstrip (NB: Use quotes and
+                            include at least one space character to prevent overearly parsing)
       -c {torque,slurm}, --cluster {torque,slurm}
                             Use `torque` or `slurm` to submit the skullstrip jobs to a high-performance
-                            compute (HPC) cluster. Can only be used if `--masked` is left empty (default:
-                            None)
+                            compute (HPC) cluster. Can only be used if `--masked` is left empty
 
     examples:
       skullstrip myproject/bids anat/*_T1w*
@@ -231,8 +232,9 @@ Quality control
     usage: slicereport [-h] [-o OUTLINEPATTERN] [-i OUTLINEIMAGE]
                        [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-r REPORTFOLDER]
                        [-x XLINKFOLDER [XLINKFOLDER ...]] [-q QCSCORES [QCSCORES ...]] [-c {torque,slurm}]
-                       [--operator OPERATOR] [--suboperator SUBOPERATOR] [--options OPTIONS [OPTIONS ...]]
-                       [--outputs OUTPUTS [OUTPUTS ...]] [--suboptions SUBOPTIONS [SUBOPTIONS ...]]
+                       [--operations OPERATIONS] [--suboperations SUBOPERATIONS]
+                       [--options OPTIONS [OPTIONS ...]] [--outputs OUTPUTS [OUTPUTS ...]]
+                       [--suboptions SUBOPTIONS [SUBOPTIONS ...]]
                        [--suboutputs SUBOUTPUTS [SUBOUTPUTS ...]]
                        bidsfolder pattern
 
@@ -243,12 +245,12 @@ Quality control
     allowing you to quickly create a custom 'slicer' report to do visual quality control on any
     3D/4D imagetype in your repository.
 
-    Requires an existing installation of FSL/slicer
+    Requires an existing installation of FSL
 
     positional arguments:
       bidsfolder            The bids-directory with the subject data
-      pattern               Globlike search pattern to select the images in bidsfolder to be reported, e.g.
-                            'anat/*_T2starw*'
+      pattern               Globlike search pattern to select the images in bidsfolder to be reported,
+                            e.g. 'anat/*_T2starw*'
 
     options:
       -h, --help            show this help message and exit
@@ -275,11 +277,15 @@ Quality control
       -c {torque,slurm}, --cluster {torque,slurm}
                             Use `torque` or `slurm` to submit the slicereport jobs to a high-performance
                             compute (HPC) cluster
-      --operator OPERATOR   The fslmaths operation performed on the input image (before slicing it):
-                            fslmaths inputimage OPERATOR reportimage
-      --suboperator SUBOPERATOR
-                            The same as OPERATOR but then for the subreport instead of the main report:
-                            fslmaths inputimage SUBOPERATOR subreportimage
+      --operations OPERATIONS
+                            One or more fslmaths operations that are performed on the input image (before
+                            slicing it for the report). OPERATIONS is opaquely passed as is: `fslmaths
+                            inputimage OPERATIONS reportimage`. NB: Use quotes and include at least one
+                            space character to prevent overearly parsing, e.g. " -Tmean" or "-Tstd -s 3"
+                            (default: -Tmean)
+      --suboperations SUBOPERATIONS
+                            The same as OPERATIONS but then for the sub-report instead of the main report:
+                            `fslmaths inputimage SUBOPERATIONS subreportimage` (default: -Tmean)
       --options OPTIONS [OPTIONS ...]
                             Main options of slicer (see below). (default: "s 1")
       --outputs OUTPUTS [OUTPUTS ...]
@@ -316,7 +322,7 @@ Quality control
       slicereport bids anat/*_T1w*
       slicereport bids anat/*_T2w* -r QC/slicereport_T2 -x QC/slicereport_T1
       slicereport bids fmap/*_phasediff* -o fmap/*_magnitude1*
-      slicereport bids/derivatives/fmriprep func/*desc-preproc_bold* --suboperator Tstd
+      slicereport bids/derivatives/fmriprep func/*desc-preproc_bold* --suboperations " -Tstd"
       slicereport bids/derivatives/fmriprep anat/*desc-preproc_T1w* -o anat/*label-GM* -x bids/derivatives/fmriprep
       slicereport bids/derivatives/deface anat/*_T1w* -o bids:anat/*_T1w* --options L e 0.05
       slicereport bids anat/*_T1w* --outputs x 0.3 x 0.4 x 0.5 x 0.6 x 0.7 LF z 0.3 z 0.4 z 0.5 z 0.6 z 0.7
