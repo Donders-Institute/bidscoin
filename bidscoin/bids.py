@@ -905,6 +905,10 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
     elif bidsmapversion != __version__ and any(checks):
         LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}. This is normally ok but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
 
+    # Make sure bidsignore is a list
+    if 'bidsignore' in bidsmap['Options'].get('bidscoin') and isinstance(bidsmap['Options']['bidscoin'].get('bidsignore'), str):
+        bidsmap['Options']['bidscoin']['bidsignore'] = bidsmap['Options']['bidscoin']['bidsignore'].split(';')
+
     # Make sure we get a proper plugin options and dataformat sections (use plugin default bidsmappings when a template bidsmap is loaded)
     if not bidsmap['Options'].get('plugins'):
         bidsmap['Options']['plugins'] = {}
@@ -1023,7 +1027,7 @@ def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
 
     valid       = True
     ignoretypes = bidsmap['Options']['bidscoin'].get('ignoretypes', [])
-    bidsignore  = bidsmap['Options']['bidscoin'].get('bidsignore', '')
+    bidsignore  = bidsmap['Options']['bidscoin'].get('bidsignore', [])
 
     # Test all the runs in the bidsmap
     LOGGER.info(f"bids-validator {bids_validator.__version__} test results (* = in .bidsignore):")
@@ -1110,7 +1114,7 @@ def check_template(bidsmap: dict) -> bool:
 
     valid       = True
     ignoretypes = bidsmap['Options']['bidscoin'].get('ignoretypes', [])
-    bidsignore  = bidsmap['Options']['bidscoin'].get('bidsignore', '')
+    bidsignore  = bidsmap['Options']['bidscoin'].get('bidsignore', [])
 
     # Check all the datatypes in the bidsmap
     LOGGER.info('Checking the bidsmap datatypes:')

@@ -141,8 +141,6 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             jt.jobEnvironment      = os.environ
             jt.remoteCommand       = shutil.which('bidscoiner') or __file__
             jt.nativeSpecification = nativespec
-            jt.outputPath          = str(bidsfolder/'HPC')
-            jt.errorPath           = str(bidsfolder/'HPC')
 
             # Run individual subject jobs in temporary bids subfolders
             for subject in subjects:
@@ -155,18 +153,20 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     continue
 
                 # Create the job arguments and add it to the batch
-                bidsfolder_tmp     = bidsfolder/'HPC'/f"bids_{subid}"
+                bidsfolder_tmp = bidsfolder/'HPC'/f"bids_{subid}"
                 bidsfolder_tmp.mkdir(parents=True, exist_ok=True)
-                jt.args            = [rawfolder, bidsfolder_tmp, '-p', subject.name, '-b', bidsmapfile] + (['-f'] if force else [])
-                jt.jobName         = f"bidscoiner_{subject.name}"
-                jobid              = pbatch.runJob(jt)
+                jt.args        = [rawfolder, bidsfolder_tmp, '-p', subject.name, '-b', bidsmapfile] + (['-f'] if force else [])
+                jt.jobName     = f"bidscoiner_{subject.name}"
+                jt.outputPath  = f"{os.getenv('HOSTNAME')}:{bidsfolder_tmp}/{jt.jobName}.out"
+                jt.errorPath   = f"{os.getenv('HOSTNAME')}:{bidsfolder_tmp}/{jt.jobName}.err"
+                jobid          = pbatch.runJob(jt)
                 LOGGER.info(f"Your {jt.jobName} job has been submitted with ID: {jobid}")
 
             LOGGER.info('')
             LOGGER.info('Waiting for the bidscoiner jobs to finish...')
             pbatch.synchronize(jobIds=[pbatch.JOB_IDS_SESSION_ALL], timeout=pbatch.TIMEOUT_WAIT_FOREVER, dispose=True)
             pbatch.deleteJobTemplate(jt)
-            time.sleep(20)      # Give NAS systems some time to fully synchronize
+            time.sleep(15)              # Give NAS systems some time to fully synchronize
 
         # Merge the bids subfolders
         errors = ''
@@ -175,7 +175,10 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
             subid = bidsfolder_tmp.name[5:]
 
-            # Check if the data already exist (-> unpacked data)
+            # Check if data was produced or if it already exists (-> unpacked data)
+            if not (bidsfolder_tmp/subid).is_dir() :
+                LOGGER.info(f"No HPC data found for: {subid}")
+                continue
             if (bidsfolder/subid).is_dir():
                 LOGGER.verbose(f"Processed data already exists: {bidsfolder/subid}")
                 continue
@@ -212,7 +215,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         with (bidsfolder/'participants.json').open('w') as fid:
             json.dump(participants_dict, fid, indent=4)
 
-        # shutil.rmtree(bidsfolder/'HPC')
+        shutil.rmtree(bidsfolder/'HPC')
 
         LOGGER.info('')
         LOGGER.info('============== HPC FINISH =============')
