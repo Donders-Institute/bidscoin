@@ -7,6 +7,7 @@ import json
 import logging
 import pandas as pd
 import pydeface.utils as pdu
+import tempfile
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
@@ -14,7 +15,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids, lsdirs, trackusage
+from bidscoin import bcoin, bids, lsdirs, trackusage, DEBUG
 
 
 def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
@@ -109,9 +110,10 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                         # Deface the image
                         LOGGER.info(f"Defacing: {match_rel} -> {outputfile_rel}")
                         if cluster:
-                            jt.args    = [str(match), '--outfile', str(outputfile), '--force'] + [item for pair in [[f"--{key}",val] for key,val in kwargs.items()] for item in pair]
-                            jt.jobName = f"pydeface_{subid}_{sesid}"
-                            jobid      = pbatch.runJob(jt)
+                            jt.args       = [str(match), '--outfile', str(outputfile), '--force'] + [item for pair in [[f"--{key}",val] for key,val in kwargs.items()] for item in pair]
+                            jt.jobName    = f"deface_{subid}_{sesid}"
+                            jt.outputPath = f"{os.getenv('HOSTNAME')}:{Path.cwd() if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
+                            jobid         = pbatch.runJob(jt)
                             LOGGER.info(f"Your deface job has been submitted with ID: {jobid}")
                         else:
                             pdu.deface_image(str(match), str(outputfile), force=True, forcecleanup=True, **kwargs)

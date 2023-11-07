@@ -17,7 +17,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import bcoin, bids, lsdirs, bidsversion, trackusage, __version__
+from bidscoin import bcoin, bids, lsdirs, bidsversion, trackusage, __version__, DEBUG
 
 
 def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=False, bidsmapfile: str='bidsmap.yaml', cluster: bool=False, nativespec: str='') -> None:
@@ -129,10 +129,10 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     else:
         subjects = [rawfolder/(subprefix + re.sub(f"^{'' if subprefix=='*' else re.escape(subprefix)}",'',subject)) for subject in subjects]   # Make sure there is a sub-prefix
 
-    # Run individual subjects on the HPC
+    # Recursively call bidscoiner to run individual subjects on the HPC
     if cluster:
 
-        from drmaa import Session as drmaasession
+        from drmaa import Session as drmaasession           # NB: Importing drmaa for non-HPC users may cause import errors
 
         LOGGER.info('============== HPC START ==============')
         LOGGER.info('')
@@ -141,6 +141,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             jt.jobEnvironment      = os.environ
             jt.remoteCommand       = shutil.which('bidscoiner') or __file__
             jt.nativeSpecification = nativespec
+            jt.joinFiles           = True
 
             # Run individual subject jobs in temporary bids subfolders
             for subject in subjects:
@@ -153,12 +154,11 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     continue
 
                 # Create the job arguments and add it to the batch
-                bidsfolder_tmp = bidsfolder/'HPC'/f"bids_{subid}"
+                bidsfolder_tmp = bidsfolder/'HPC_work'/f"bids_{subid}"      # NB: f"bids_{subid}" is used later, don't change
                 bidsfolder_tmp.mkdir(parents=True, exist_ok=True)
                 jt.args        = [rawfolder, bidsfolder_tmp, '-p', subject.name, '-b', bidsmapfile] + (['-f'] if force else [])
                 jt.jobName     = f"bidscoiner_{subject.name}"
                 jt.outputPath  = f"{os.getenv('HOSTNAME')}:{bidsfolder_tmp}/{jt.jobName}.out"
-                jt.errorPath   = f"{os.getenv('HOSTNAME')}:{bidsfolder_tmp}/{jt.jobName}.err"
                 jobid          = pbatch.runJob(jt)
                 LOGGER.info(f"Your {jt.jobName} job has been submitted with ID: {jobid}")
 
@@ -171,12 +171,12 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         # Merge the bids subfolders
         errors = ''
         participants_table, participants_dict = bids.addparticipant(bidsfolder/'participants.tsv')
-        for bidsfolder_tmp in (bidsfolder/'HPC').glob('bids_*'):
+        for bidsfolder_tmp in (bidsfolder/'HPC_work').glob('bids_*'):
 
-            subid = bidsfolder_tmp.name[5:]
+            subid = bidsfolder_tmp.name[5:]         # Uses name = f"bids_{subid}" (as defined above)
 
             # Check if data was produced or if it already exists (-> unpacked data)
-            if not (bidsfolder_tmp/subid).is_dir() :
+            if not (bidsfolder_tmp/subid).is_dir():
                 LOGGER.info(f"No HPC data found for: {subid}")
                 continue
             if (bidsfolder/subid).is_dir():
@@ -215,7 +215,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
         with (bidsfolder/'participants.json').open('w') as fid:
             json.dump(participants_dict, fid, indent=4)
 
-        shutil.rmtree(bidsfolder/'HPC')
+        if not DEBUG:
+            shutil.rmtree(bidsfolder/'HPC_work', ignore_errors=True)
 
         LOGGER.info('')
         LOGGER.info('============== HPC FINISH =============')

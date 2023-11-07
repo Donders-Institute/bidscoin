@@ -6,6 +6,7 @@ import json
 import logging
 import pandas as pd
 import nibabel as nib
+import tempfile
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
@@ -13,7 +14,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids, lsdirs, trackusage
+from bidscoin import bcoin, bids, lsdirs, trackusage, DEBUG
 
 
 def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: list, force: bool, args: str, cluster: str):
@@ -112,10 +113,11 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
                     maskimg = bidsdir/'derivatives'/'skullstrip'/subid/sesid/srcimg.parent.name/f"{srcent}_{derent}_mask{ext}"
                     maskimg.parent.mkdir(parents=True, exist_ok=True)
                     command = f"mri_synthstrip -i {srcimg} -o {outputimg} -m {maskimg} {args}"
+                    outpath = f"{Path.cwd() if DEBUG else tempfile.gettempdir()}"
                     if cluster == 'torque':
-                        command = f"qsub -l walltime=0:05:00,mem=8gb -N skullstrip_{subid}_{sesid} << EOF\n#!/bin/bash\n{command}\nEOF"
+                        command = f"qsub -l walltime=0:05:00,mem=8gb -N skullstrip_{subid}_{sesid} -j oe -o {outpath} << EOF\n#!/bin/bash\n{command}\nEOF"
                     elif cluster == 'slurm':
-                        command = f"sbatch --time=0:05:00 --mem=8G --job-name=skullstrip_{subid}_{sesid} << EOF\n#!/bin/bash\n{command}\nEOF"
+                        command = f"sbatch --time=0:05:00 --mem=8G --job-name=skullstrip_{subid}_{sesid} -o {outpath}/slurm-%x-%j.out << EOF\n#!/bin/bash\n{command}\nEOF"
                     elif cluster:
                         LOGGER.error(f"Invalid cluster manager `{cluster}`")
                         exit(1)

@@ -7,6 +7,8 @@ allowing you to quickly create a custom 'slicer' report to do visual quality con
 3D/4D imagetype in your repository.
 
 Requires an existing installation of FSL
+
+Set the environment variable BIDSCOIN_DEBUG=TRUE to save intermediate data
 """
 
 # Imports from the standard library only (as these are imported during the cli/manpage build process)

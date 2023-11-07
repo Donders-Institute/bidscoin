@@ -8,7 +8,6 @@ A BIDScoin library and application with utilities to perform generic management 
 import coloredlogs
 import inspect
 import logging
-import os
 import shutil
 import subprocess
 import sys
@@ -23,7 +22,7 @@ from tqdm import tqdm
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import templatefolder, pluginfolder, bidsmap_template, tutorialurl, trackusage, tracking, configfile, config
+from bidscoin import templatefolder, pluginfolder, bidsmap_template, tutorialurl, trackusage, tracking, configfile, config, DEBUG
 
 yaml = YAML()
 
@@ -57,12 +56,8 @@ def setup_logging(logfile: Path=Path()):
     :return:
      """
 
-    # Get the BIDSCOIN_DEBUG environment variable to set the log-messages and logging level, etc
-    debug = os.environ.get('BIDSCOIN_DEBUG')
-    debug = True if debug and debug.upper() not in ('0', 'FALSE', 'N', 'NO', 'NONE') else False
-
     # Set the default formats
-    if debug:
+    if DEBUG:
         fmt  = '%(asctime)s - %(name)s - %(levelname)s | %(message)s'
         cfmt = '%(levelname)s - %(name)s | %(message)s'
     else:
@@ -96,10 +91,10 @@ def setup_logging(logfile: Path=Path()):
 
     # Set the root logging level
     logger = logging.getLogger()
-    logger.setLevel('BCDEBUG' if debug else 'VERBOSE')
+    logger.setLevel('BCDEBUG' if DEBUG else 'VERBOSE')
 
     # Add the console streamhandler and bring some color to those boring logs! :-)
-    coloredlogs.install(level='BCDEBUG' if debug else 'VERBOSE' if not logfile.name else 'INFO', fmt=cfmt, datefmt=datefmt)   # NB: Using tqdm sets the streamhandler level to 0, see: https://github.com/tqdm/tqdm/pull/1235
+    coloredlogs.install(level='BCDEBUG' if DEBUG else 'VERBOSE' if not logfile.name else 'INFO', fmt=cfmt, datefmt=datefmt)   # NB: Using tqdm sets the streamhandler level to 0, see: https://github.com/tqdm/tqdm/pull/1235
     coloredlogs.DEFAULT_LEVEL_STYLES['verbose']['color'] = 245  # = Gray
 
     if logfile.name:
@@ -120,7 +115,7 @@ def setup_logging(logfile: Path=Path()):
         errorhandler.set_name('errorhandler')
         logger.addHandler(errorhandler)
 
-    if debug:
+    if DEBUG:
         LOGGER.info('\t<<<<<<<<<< Running BIDScoin in DEBUG mode >>>>>>>>>>')
         settracking('show')
 

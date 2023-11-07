@@ -17,7 +17,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids, lsdirs, trackusage
+from bidscoin import bcoin, bids, lsdirs, trackusage, DEBUG
 
 
 def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
@@ -110,9 +110,10 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                 # Deface the echo-combined image
                 LOGGER.info(f"Creating a deface-mask from the echo-combined image: {tmpfile}")
                 if cluster:
-                    jt.args    = [str(tmpfile), '--outfile', str(tmpfile), '--force'] + [item for pair in [[f"--{key}", val] for key,val in kwargs.items()] for item in pair]
-                    jt.jobName = f"pydeface_{subid}_{sesid}"
-                    jobid      = pbatch.runJob(jt)
+                    jt.args       = [str(tmpfile), '--outfile', str(tmpfile), '--force'] + [item for pair in [[f"--{key}", val] for key,val in kwargs.items()] for item in pair]
+                    jt.jobName    = f"medeface_{subid}_{sesid}"
+                    jt.outputPath = f"{os.getenv('HOSTNAME')}:{Path.cwd() if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
+                    jobid         = pbatch.runJob(jt)
                     LOGGER.info(f"Your deface job has been submitted with ID: {jobid}")
                 else:
                     pdu.deface_image(str(tmpfile), str(tmpfile), force=True, forcecleanup=True, **kwargs)

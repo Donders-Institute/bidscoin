@@ -13,7 +13,7 @@ from pathlib import Path
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[2]))
-from bidscoin import bcoin, bids, lsdirs, bidsversion, trackusage, __version__
+from bidscoin import bcoin, bids, lsdirs, bidsversion, trackusage, __version__, DEBUG
 
 html_head = """<!DOCTYPE html>
 <html lang="en">
@@ -78,22 +78,24 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
     """Run fslmaths, slicer and pngappend (locally or on the cluster) to create a montage of the sliced images"""
 
     # Create a workdir and the shell command
-    workdir  = Path(montage.parent)/next(tempfile._get_candidate_names())
+    workdir  = montage.parent/next(tempfile._get_candidate_names())
+    workdir.mkdir()
     inputdim = nib.load(inputimage).header['dim'][0]
     mathsimg = f"fslmaths {inputimage} {operations} mathsimg\n" if not (inputdim==3 and operations.strip()=='-Tmean') else ''
-    command  = f"mkdir {workdir}; cd {workdir}\n" \
+    command  = f"cd {workdir}\n" \
                f"{mathsimg}" \
                f"slicer {'mathsimg' if mathsimg else inputimage} {outlineimage} {mainopts} {outputopts}\n" \
                f"pngappend {sliceroutput} {montage.name}\n" \
                f"mv {montage.name} {montage.parent}\n" \
-               f"rm -r {workdir}"
+               + (f"rm -r {workdir}" if not DEBUG else '')
 
-    # Wrap the command
-    mem = '8' if inputimage.stat().st_size > 50 * 1024**2 else '1'  # Ask for more resources if we have a large (e.g. 4D) input image
+    # Wrap the shell command with a cluster submit command
+    mem     = '8' if inputimage.stat().st_size > 50 * 1024**2 else '1'  # Ask for more resources if we have a large (e.g. 4D) input image
+    outpath = workdir if DEBUG else tempfile.gettempdir()
     if cluster == 'torque':
-        command = f"qsub -l walltime=0:02:00,mem={mem}gb -N slicereport -e {tempfile.gettempdir()} -o {tempfile.gettempdir()} << EOF\n#!/bin/bash\n{command}\nEOF"
+        command = f"qsub -l walltime=0:02:00,mem={mem}gb -N slicereport -j oe -o {outpath} << EOF\n#!/bin/bash\n{command}\nEOF"
     elif cluster == 'slurm':
-        command = f"sbatch --time=0:02:00 --mem={mem}G --job-name slicereport -o {tempfile.gettempdir()}/slurm-%j.out << EOF\n#!/bin/bash\n{command}\nEOF"
+        command = f"sbatch --time=0:02:00 --mem={mem}G --job-name slicereport -o {outpath}/slurm-%x-%j.out << EOF\n#!/bin/bash\n{command}\nEOF"
     elif cluster:
         LOGGER.error(f"Invalid cluster manager `{cluster}`")
         exit(1)
@@ -277,7 +279,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     LOGGER.info('To view the slice report, point your web browser at:')
     LOGGER.info(f"{report}\n ")
     if cluster:
-        LOGGER.info(f"But first wait for your `slicereport`-jobs to finish... Use e.g.:\n\nqstat $(qselect -s RQ) | grep slicereport\n\n(Standard error/output files are written to: {tempfile.gettempdir()})\n")
+        LOGGER.info('But first wait for your `slicereport`-jobs to finish... Use e.g.:\n\nqstat $(qselect -s RQ) | grep slicereport\n')
 
 
 def main():
