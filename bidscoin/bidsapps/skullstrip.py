@@ -66,7 +66,7 @@ def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: 
 
     # Loop over bids subject/session-directories
     with logging_redirect_tqdm():
-        for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
+        for n, subject in enumerate(tqdm(subjects, unit='subject', colour='green', leave=False), 1):
 
             subid    = subject.name
             sessions = lsdirs(subject, 'ses-*')

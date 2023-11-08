@@ -68,7 +68,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
 
         # Loop over bids subject/session-directories
         with logging_redirect_tqdm():
-            for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
+            for n, subject in enumerate(tqdm(subjects, unit='subject', colour='green', leave=False), 1):
 
                 subid    = subject.name
                 sessions = lsdirs(subject, 'ses-*')
@@ -108,13 +108,14 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                                 continue
 
                         # Deface the image
+                        jobids = []
                         LOGGER.info(f"Defacing: {match_rel} -> {outputfile_rel}")
                         if cluster:
                             jt.args       = [str(match), '--outfile', str(outputfile), '--force'] + [item for pair in [[f"--{key}",val] for key,val in kwargs.items()] for item in pair]
                             jt.jobName    = f"deface_{subid}_{sesid}"
                             jt.outputPath = f"{os.getenv('HOSTNAME')}:{Path.cwd() if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
-                            jobid         = pbatch.runJob(jt)
-                            LOGGER.info(f"Your deface job has been submitted with ID: {jobid}")
+                            jobids.append(pbatch.runJob(jt))
+                            LOGGER.info(f"Your deface job has been submitted with ID: {jobids[-1]}")
                         else:
                             pdu.deface_image(str(match), str(outputfile), force=True, forcecleanup=True, **kwargs)
 
@@ -139,10 +140,10 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                             scans_table.sort_values(by=['acq_time','filename'], inplace=True)
                             scans_table.to_csv(scans_tsv, sep='\t', encoding='utf-8')
 
-        if cluster:
+        if cluster and jobids:
             LOGGER.info('')
             LOGGER.info('Waiting for the deface jobs to finish...')
-            pbatch.synchronize(jobIds=[pbatch.JOB_IDS_SESSION_ALL], timeout=pbatch.TIMEOUT_WAIT_FOREVER, dispose=True)
+            bcoin.synchronize(pbatch, jobids, wait=0)
             pbatch.deleteJobTemplate(jt)
 
     LOGGER.info('-------------- FINISHED! -------------')

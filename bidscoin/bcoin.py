@@ -12,13 +12,17 @@ import shutil
 import subprocess
 import sys
 import urllib.request
+import time
 from functools import lru_cache
 from importlib.metadata import entry_points
 from importlib.util import spec_from_file_location, module_from_spec
 from pathlib import Path
 from typing import Tuple, Union, List
+
+import drmaa.session
 from ruamel.yaml import YAML
 from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
@@ -43,6 +47,39 @@ class TqdmUpTo(tqdm):
         if tsize is not None:
             self.total = tsize
         self.update(b * bsize - self.n)  # will also set self.n = b * bsize
+
+
+def synchronize(pbatch: drmaa.session.Session, jobids: list, wait: int=15):
+    """
+    Shows tqdm progress bars for queued and running DRMAA jobs. Waits until all jobs have finished +
+    some extra wait time to give NAS systems the opportunity to fully synchronize
+
+    :param pbatch: The DRMAA session
+    :param jobids: The job ids
+    :param wait:   The extra sync time for the NAS
+    :return:
+    """
+
+    with logging_redirect_tqdm():
+
+        qbar = tqdm(total=len(jobids), desc='Queued ', unit='job', leave=False)
+        rbar = tqdm(total=len(jobids), desc='Running', unit='job', leave=False, colour='green')
+        done = 0
+        while done < len(jobids):
+            jobs   = [pbatch.jobStatus(jobid) for jobid in jobids]
+            done   = sum([status in ('done', 'failed', 'undetermined') for status in jobs])
+            qbar.n = sum([status == 'queued_active'                    for status in jobs])
+            rbar.n = sum([status == 'running'                          for status in jobs])
+            qbar.refresh(), rbar.refresh()
+            time.sleep(2)
+        qbar.close(), rbar.close()
+
+        if any([pbatch.jobStatus(jobid)=='failed' for jobid in jobids]):
+            LOGGER.error('One or more HPC jobs failed to run')
+
+        # Give NAS systems some time to fully synchronize
+        for t in tqdm(range(wait*100), desc='synchronizing', leave=False):
+            time.sleep(.01)
 
 
 def setup_logging(logfile: Path=Path()):
@@ -162,12 +199,12 @@ def run_command(command: str) -> int:
     :return:        Errorcode (i.e. 0 if the command was successfully executed (no errors), > 0 otherwise)
     """
 
-    LOGGER.info(f"Command:\n{command}")
+    LOGGER.verbose(f"Command:\n{command}")
     process = subprocess.run(command, shell=True, capture_output=True, text=True)
     if process.stderr or process.returncode != 0:
         LOGGER.error(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
     else:
-        LOGGER.info(f"Output:\n{process.stdout}")
+        LOGGER.verbose(f"Output:\n{process.stdout}")
 
     return process.returncode
 
@@ -493,7 +530,8 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
         LOGGER.info('Testing the DRMAA setup:')
         try:
             import drmaa
-            LOGGER.success('The DRMAA library was successfully imported')
+            with drmaa.Session() as s:
+                LOGGER.success(f"The {s.drmaaImplementation} library was successfully imported")
         except (RuntimeError, OSError, FileNotFoundError, ModuleNotFoundError, ImportError) as drmaaerror:
             LOGGER.warning(f"The DRMAA library could not be imported. This is OK if you want to run pydeface locally and not use the option to distribute jobs on a compute cluster\n{drmaaerror}")
     except ModuleNotFoundError:

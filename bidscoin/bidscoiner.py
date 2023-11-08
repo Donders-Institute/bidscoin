@@ -142,6 +142,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             jt.remoteCommand       = shutil.which('bidscoiner') or __file__
             jt.nativeSpecification = nativespec
             jt.joinFiles           = True
+            jobids                 = []
 
             # Run individual subject jobs in temporary bids subfolders
             for subject in subjects:
@@ -159,14 +160,19 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                 jt.args        = [rawfolder, bidsfolder_tmp, '-p', subject.name, '-b', bidsmapfile] + (['-f'] if force else [])
                 jt.jobName     = f"bidscoiner_{subject.name}"
                 jt.outputPath  = f"{os.getenv('HOSTNAME')}:{bidsfolder_tmp}/{jt.jobName}.out"
-                jobid          = pbatch.runJob(jt)
-                LOGGER.info(f"Your {jt.jobName} job has been submitted with ID: {jobid}")
+                jobids.append(pbatch.runJob(jt))
+                LOGGER.info(f"Your {jt.jobName} job has been submitted with ID: {jobids[-1]}")
+
+            pbatch.deleteJobTemplate(jt)
 
             LOGGER.info('')
+            if not jobids:
+                LOGGER.info('============== HPC FINISH =============')
+                LOGGER.info('')
+                return
+
             LOGGER.info('Waiting for the bidscoiner jobs to finish...')
-            pbatch.synchronize(jobIds=[pbatch.JOB_IDS_SESSION_ALL], timeout=pbatch.TIMEOUT_WAIT_FOREVER, dispose=True)
-            pbatch.deleteJobTemplate(jt)
-            time.sleep(15)              # Give NAS systems some time to fully synchronize
+            bcoin.synchronize(pbatch, jobids)
 
         # Merge the bids subfolders
         errors = ''
@@ -229,7 +235,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
     # Loop over all subjects and sessions and convert them using the bidsmap entries
     with logging_redirect_tqdm():
-        for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
+        for n, subject in enumerate(tqdm(subjects, unit='subject', colour='green', leave=False), 1):
 
             LOGGER.info(f"------------------- Subject {n}/{len(subjects)} -------------------")
             if not subject.is_dir():

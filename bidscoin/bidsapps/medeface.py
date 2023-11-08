@@ -108,25 +108,26 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
                 combined.to_filename(tmpfile)
 
                 # Deface the echo-combined image
+                jobids = []
                 LOGGER.info(f"Creating a deface-mask from the echo-combined image: {tmpfile}")
                 if cluster:
                     jt.args       = [str(tmpfile), '--outfile', str(tmpfile), '--force'] + [item for pair in [[f"--{key}", val] for key,val in kwargs.items()] for item in pair]
                     jt.jobName    = f"medeface_{subid}_{sesid}"
                     jt.outputPath = f"{os.getenv('HOSTNAME')}:{Path.cwd() if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
-                    jobid         = pbatch.runJob(jt)
-                    LOGGER.info(f"Your deface job has been submitted with ID: {jobid}")
+                    jobids.append(pbatch.runJob(jt))
+                    LOGGER.info(f"Your deface job has been submitted with ID: {jobids[-1]}")
                 else:
                     pdu.deface_image(str(tmpfile), str(tmpfile), force=True, forcecleanup=True, **kwargs)
 
-        if cluster:
+        if cluster and jobids:
             LOGGER.info('')
             LOGGER.info('Waiting for the deface jobs to finish...')
-            pbatch.synchronize(jobIds=[pbatch.JOB_IDS_SESSION_ALL], timeout=pbatch.TIMEOUT_WAIT_FOREVER, dispose=True)
+            bcoin.synchronize(pbatch, jobids)
             pbatch.deleteJobTemplate(jt)
 
     # Loop again over bids subject/session-directories to apply the deface-masks and write meta-data
     with logging_redirect_tqdm():
-        for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
+        for n, subject in enumerate(tqdm(subjects, unit='subject', colour='green', leave=False), 1):
 
             subid    = subject.name
             sessions = lsdirs(subject, 'ses-*')

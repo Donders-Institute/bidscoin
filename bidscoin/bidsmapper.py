@@ -110,7 +110,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     if not subjects:
         LOGGER.warning(f'No subjects found in: {rawfolder/subprefix}*')
     with logging_redirect_tqdm():
-        for n, subject in enumerate(tqdm(subjects, unit='subject', leave=False), 1):
+        for n, subject in enumerate(tqdm(subjects, unit='subject', colour='green', leave=False), 1):
 
             sessions = lsdirs(subject, ('' if sesprefix=='*' else sesprefix) + '*')
             if not sessions or (subject/'DICOMDIR').is_file():

@@ -1095,7 +1095,7 @@ def check_bidsmap(bidsmap: dict, checks: Tuple[bool, bool, bool]=(True, True, Tr
     elif any([result==False for result, check in zip(results, checks) if check is True]):
         LOGGER.warning('Not all run-items in the bidsmap are valid')
     else:
-        LOGGER.info('Could not validate every run-item in the bidsmap')
+        LOGGER.verbose('Could not validate every run-item in the bidsmap')
 
     return results
 
