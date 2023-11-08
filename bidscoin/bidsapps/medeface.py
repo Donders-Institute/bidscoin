@@ -65,6 +65,7 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
     else:
         from contextlib import nullcontext as drmaasession                                      # Use a dummy context manager
     with drmaasession() as pbatch:
+        jobids = []
         if cluster:
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
@@ -73,51 +74,51 @@ def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force
             jt.joinFiles           = True
 
         # Loop over bids subject/session-directories to first get all the echo-combined deface masks
-        for n, subject in enumerate(subjects, 1):
+        with logging_redirect_tqdm():
+            for n, subject in enumerate(tqdm(subjects, unit='subject', colour='yellow', leave=False), 1):
 
-            subid    = subject.name
-            sessions = lsdirs(subject, 'ses-*')
-            if not sessions:
-                sessions = [subject]
-            for session in sessions:
+                subid    = subject.name
+                sessions = lsdirs(subject, 'ses-*')
+                if not sessions:
+                    sessions = [subject]
+                for session in sessions:
 
-                LOGGER.info('--------------------------------------')
-                LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
+                    LOGGER.info('--------------------------------------')
+                    LOGGER.info(f"Processing ({n}/{len(subjects)}): {session}")
 
-                # Read the echo-images that will be combined to compute the deface-mask
-                sesid     = session.name if session.name.startswith('ses-') else ''
-                echofiles = sorted([match for match in session.glob(maskpattern) if '.nii' in match.suffixes])
-                if not echofiles:
-                    LOGGER.info(f'No mask files found for: {session}/{maskpattern}')
-                    continue
-
-                # Check the json "Defaced" field to see if it has already been defaced
-                if not force and echofiles[0].with_suffix('').with_suffix('.json').is_file():
-                    with echofiles[0].with_suffix('').with_suffix('.json').open('r') as fid:
-                        jsondata = json.load(fid)
-                    if jsondata.get('Defaced'):
-                        LOGGER.info(f"Skipping already defaced images: {[str(echofile) for echofile in echofiles]}")
+                    # Read the echo-images that will be combined to compute the deface-mask
+                    sesid     = session.name if session.name.startswith('ses-') else ''
+                    echofiles = sorted([match for match in session.glob(maskpattern) if '.nii' in match.suffixes])
+                    if not echofiles:
+                        LOGGER.info(f'No mask files found for: {session}/{maskpattern}')
                         continue
 
-                LOGGER.info(f'Loading mask files: {[str(echofile) for echofile in echofiles]}')
-                echos = [nib.load(echofile) for echofile in echofiles]
+                    # Check the json "Defaced" field to see if it has already been defaced
+                    if not force and echofiles[0].with_suffix('').with_suffix('.json').is_file():
+                        with echofiles[0].with_suffix('').with_suffix('.json').open('r') as fid:
+                            jsondata = json.load(fid)
+                        if jsondata.get('Defaced'):
+                            LOGGER.info(f"Skipping already defaced images: {[str(echofile) for echofile in echofiles]}")
+                            continue
 
-                # Create a temporary echo-combined image
-                tmpfile  = session/tmp_combined
-                combined = nib.Nifti1Image(np.mean([echo.get_fdata() for echo in echos], axis=0), echos[0].affine, echos[0].header)
-                combined.to_filename(tmpfile)
+                    LOGGER.info(f'Loading mask files: {[str(echofile) for echofile in echofiles]}')
+                    echos = [nib.load(echofile) for echofile in echofiles]
 
-                # Deface the echo-combined image
-                jobids = []
-                LOGGER.info(f"Creating a deface-mask from the echo-combined image: {tmpfile}")
-                if cluster:
-                    jt.args       = [str(tmpfile), '--outfile', str(tmpfile), '--force'] + [item for pair in [[f"--{key}", val] for key,val in kwargs.items()] for item in pair]
-                    jt.jobName    = f"medeface_{subid}_{sesid}"
-                    jt.outputPath = f"{os.getenv('HOSTNAME')}:{Path.cwd() if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
-                    jobids.append(pbatch.runJob(jt))
-                    LOGGER.info(f"Your deface job has been submitted with ID: {jobids[-1]}")
-                else:
-                    pdu.deface_image(str(tmpfile), str(tmpfile), force=True, forcecleanup=True, **kwargs)
+                    # Create a temporary echo-combined image
+                    tmpfile  = session/tmp_combined
+                    combined = nib.Nifti1Image(np.mean([echo.get_fdata() for echo in echos], axis=0), echos[0].affine, echos[0].header)
+                    combined.to_filename(tmpfile)
+
+                    # Deface the echo-combined image
+                    LOGGER.info(f"Creating a deface-mask from the echo-combined image: {tmpfile}")
+                    if cluster:
+                        jt.args       = [str(tmpfile), '--outfile', str(tmpfile), '--force'] + [item for pair in [[f"--{key}", val] for key,val in kwargs.items()] for item in pair]
+                        jt.jobName    = f"medeface_{subid}_{sesid}"
+                        jt.outputPath = f"{os.getenv('HOSTNAME')}:{Path.cwd() if DEBUG else tempfile.gettempdir()}/{jt.jobName}.out"
+                        jobids.append(pbatch.runJob(jt))
+                        LOGGER.info(f"Your deface job has been submitted with ID: {jobids[-1]}")
+                    else:
+                        pdu.deface_image(str(tmpfile), str(tmpfile), force=True, forcecleanup=True, **kwargs)
 
         if cluster and jobids:
             LOGGER.info('')

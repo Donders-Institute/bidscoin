@@ -54,7 +54,7 @@ def synchronize(pbatch, jobids: list, wait: int=15):
 
     :param pbatch: The DRMAA session
     :param jobids: The job ids
-    :param wait:   The extra sync time for the NAS
+    :param wait:   The extra wait time for the NAS
     :return:
     """
 

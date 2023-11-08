@@ -59,6 +59,7 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
     else:
         from contextlib import nullcontext as drmaasession                                      # Use a dummy context manager
     with drmaasession() as pbatch:
+        jobids = []
         if cluster:
             jt                     = pbatch.createJobTemplate()
             jt.jobEnvironment      = os.environ
@@ -108,7 +109,6 @@ def deface(bidsdir: str, pattern: str, subjects: list, force: bool, output: str,
                                 continue
 
                         # Deface the image
-                        jobids = []
                         LOGGER.info(f"Defacing: {match_rel} -> {outputfile_rel}")
                         if cluster:
                             jt.args       = [str(match), '--outfile', str(outputfile), '--force'] + [item for pair in [[f"--{key}",val] for key,val in kwargs.items()] for item in pair]
