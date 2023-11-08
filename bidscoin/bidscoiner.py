@@ -134,6 +134,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
         from drmaa import Session as drmaasession           # NB: Importing drmaa for non-HPC users may cause import errors
 
+        LOGGER.info('')
         LOGGER.info('============== HPC START ==============')
         LOGGER.info('')
         with drmaasession() as pbatch:

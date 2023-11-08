@@ -18,8 +18,6 @@ from importlib.metadata import entry_points
 from importlib.util import spec_from_file_location, module_from_spec
 from pathlib import Path
 from typing import Tuple, Union, List
-
-import drmaa.session
 from ruamel.yaml import YAML
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
@@ -49,7 +47,7 @@ class TqdmUpTo(tqdm):
         self.update(b * bsize - self.n)  # will also set self.n = b * bsize
 
 
-def synchronize(pbatch: drmaa.session.Session, jobids: list, wait: int=15):
+def synchronize(pbatch, jobids: list, wait: int=15):
     """
     Shows tqdm progress bars for queued and running DRMAA jobs. Waits until all jobs have finished +
     some extra wait time to give NAS systems the opportunity to fully synchronize
