@@ -18,7 +18,7 @@ def get_parser():
                                      description=__doc__,
                                      epilog='examples:\n'
                                             '  physio2tsv myproject/sub-001/MR000000.dcm myproject/bids/sub-001/func/sub-001_physio\n'
-                                            '  physio2tsv myproject/sub-001/Physio_20200428_142451_007e910e-02d9-4d7a-8fdb-8e3568be8322 myproject/bids/sub-001/func/sub-001_physio\n\n'
+                                            '  physio2tsv myproject/sub-001/Physio_20200428 myproject/bids/sub-001/func/sub-001_physio\n\n'
                                             '@author: Marcel Zwiers\n ')
     parser.add_argument('physiofile', help="Either the fullpath of the DICOM file or the basename of the PHYSIO logfiles (fullpath without suffix and file extension, e.g. 'foo/bar/Physio_DATE_TIME_UUID'")
     parser.add_argument('tsvfile',    help="The fullpath of the BIDS filenames, e.g. 'foo/bids/sub-001/func/sub-001_physio'")

@@ -3,7 +3,7 @@ Converts ("coins") your source datasets to NIfTI/json/tsv BIDS datasets using th
 information from the bidsmap.yaml file. Edit this bidsmap to your needs using the bidseditor
 tool before running this function or (re-)run the bidsmapper whenever you encounter unexpected
 data. You can run bidscoiner after all data has been collected, or run / re-run it whenever
-new data has been added to your source folder (presuming the scan protocol hasn't changed).
+new data has been added to your source folder (presuming the scan protocol has not changed).
 Also, if you delete a subject/session folder from the bidsfolder, it will simply be re-created
 from the sourcefolder the next time you run the bidscoiner.
 

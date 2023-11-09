@@ -23,4 +23,20 @@ matrix:
   dictionary:
     wordlists:
     - docs/_static/dictionary-custom.txt
-    output: docs/_build/dictionary.dic
+    output: docs/_build/dictionary-html.dic
+
+- name: cli
+  pipeline:
+  - pyspelling.filters.python:
+      comments: false
+  sources:
+  - bidscoin/cli/*.py
+  hunspell:
+    d: en_US
+  aspell:
+    lang: en
+    d: en_US
+  dictionary:
+    wordlists:
+    - docs/_static/dictionary-custom.txt
+    output: docs/_build/dictionary-cli.dic

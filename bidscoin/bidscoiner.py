@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """A BIDScoin application to convert source data to BIDS (See also cli/_bidscoiner.py)"""
 
-import time
 import dateutil.parser
 import re
 import pandas as pd

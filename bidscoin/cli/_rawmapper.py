@@ -1,9 +1,9 @@
 """
-Maps out the values of a dicom attribute of all subjects in the sourcefolder, saves the result
-in a mapper-file and, optionally, uses the dicom values to rename the sub-/ses-id's of the
+Maps out the values of a DICOM attribute of all subjects in the sourcefolder, saves the result
+in a mapper-file and, optionally, uses the DICOM values to rename the sub-/ses-id's of the
 subfolders. This latter option can be used, e.g. when an alternative subject id was entered in
 the [Additional info] field during subject registration at the scanner console (i.e. this data
-is stored in the dicom attribute named 'PatientComments')
+is stored in the DICOM attribute named 'PatientComments')
 """
 
 # Imports from the standard library only (as these are imported during the cli/manpage build process)
@@ -28,7 +28,7 @@ def get_parser():
                                             '  rawmapper -f EchoTime -w *fMRI* myproject/raw\n ')
     parser.add_argument('sourcefolder',     help='The source folder with the raw data in sub-#/ses-#/series organization')
     parser.add_argument('-s','--sessions',  help='Space separated list of selected sub-#/ses-# names / folders to be processed. Otherwise all sessions in the bidsfolder will be selected', nargs='+')
-    parser.add_argument('-f','--field',     help='The fieldname(s) of the dicom attribute(s) used to rename or map the subid/sesid foldernames', default=['PatientComments', 'ImageComments'], nargs='+')
+    parser.add_argument('-f','--field',     help='The fieldname(s) of the DICOM attribute(s) used to rename or map the subid/sesid foldernames', default=['PatientComments', 'ImageComments'], nargs='+')
     parser.add_argument('-w','--wildcard',  help='The Unix style pathname pattern expansion that is used to select the series from which the dicomfield is being mapped (can contain wildcards)', default='*')
     parser.add_argument('-o','--outfolder', help='The mapper-file is normally saved in sourcefolder or, when using this option, in outfolder')
     parser.add_argument('-r','--rename',    help='Rename sub-subid/ses-sesid directories in the sourcefolder to sub-dcmval/ses-dcmval', action='store_true')
