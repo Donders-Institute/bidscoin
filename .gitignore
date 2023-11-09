@@ -3,6 +3,7 @@
 *.IMA
 dist
 build
+docs/_build
 bidscoin.egg-info
 .coverage
 .vscode
@@ -13,7 +14,6 @@ __pycache__
 .tox
 tests/testdata/*.log
 tests/testdata/*.errors
-tests/testdata/bidsmap_output.yaml
 bidscointutorial*/
 .DS_Store
-!/tests/testdata/
+Thumbs.db

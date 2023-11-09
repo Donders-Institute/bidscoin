@@ -23,3 +23,4 @@ matrix:
   dictionary:
     wordlists:
     - docs/_static/dictionary-custom.txt
+    output: docs/_build/dictionary.dic
