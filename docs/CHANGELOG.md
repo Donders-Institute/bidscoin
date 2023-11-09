@@ -10,12 +10,13 @@
 
 ### Changed
 - `bidscoiner_plugin()` API: you can just return a personals dict instead of writing it to `participants.tsv`
+- Using DRMAA library for skullstrip (instead of qsub/sbatch)
 
 ## [4.2.1] - 2023-10-30
 
 ### Added
 - A bidsmap schema file
-- Enhanced DICOM (XA-30) support for physiological data (backported from the CMRR repository)
+- Enhanced DICOM (XA30) support for physiological data (backported from the CMRR repository)
 - Slurm support for the `skullstrip` and `slicereport` bidsapps
 
 ### Changed
@@ -91,7 +92,7 @@
  
 ### Changed
 - Remove the DCCN specific dcm2niix module usage in the bidsmap template
-- Add `-l n` to the dcm2niix arguments to revert old UIN16 -> INT16 behaviour (otherwise fmriprep outputs are twice as large)
+- Add `-l n` to the dcm2niix arguments to revert old UINT16 -> INT16 behaviour (otherwise fmriprep outputs are twice as large)
 - No longer enforce BIDS compliance on `.bidsignore` datatypes
 
 ### Fixed
@@ -372,7 +373,7 @@ A major release and rewrite with important user-facing improvements
 - Saving of template sidecar files in the bids output directory
 
 ### Changed
-- increased flexibility for renaming / reorganising the raw (input) data structure
+- increased flexibility for renaming / reorganizing the raw (input) data structure
 - Added provenance data to the bidsmap/yaml files
 
 ### Fixed
@@ -400,14 +401,14 @@ A major release and rewrite with important user-facing improvements
 - Improved field map support
 
 ### Changed
-- Yaml-syntax
+- YAML-syntax
 
 ## 1.0 - 2018-07-04
 
 A first stable release of BIDScoin :-)
 
 ### Added
-- Support the conversion of organised sub/ses DICOM folders to BIDS
+- Support the conversion of organized sub/ses DICOM folders to BIDS
 
 ### To do
 - Add support for non-imaging data

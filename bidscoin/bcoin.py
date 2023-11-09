@@ -60,8 +60,8 @@ def synchronize(pbatch, jobids: list, wait: int=15):
 
     with logging_redirect_tqdm():
 
-        qbar = tqdm(total=len(jobids), desc='Queued ', unit='job', leave=False)
-        rbar = tqdm(total=len(jobids), desc='Running', unit='job', leave=False, colour='green')
+        qbar = tqdm(total=len(jobids), desc='Queued ', unit='job', leave=False, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}]')
+        rbar = tqdm(total=len(jobids), desc='Running', unit='job', leave=False, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}]', colour='green')
         done = 0
         while done < len(jobids):
             jobs   = [pbatch.jobStatus(jobid) for jobid in jobids]
@@ -76,7 +76,7 @@ def synchronize(pbatch, jobids: list, wait: int=15):
             LOGGER.error('One or more HPC jobs failed to run')
 
         # Give NAS systems some time to fully synchronize
-        for t in tqdm(range(wait*100), desc='synchronizing', leave=False):
+        for t in tqdm(range(wait*100), desc='synchronizing', leave=False, bar_format='{l_bar}{bar}| [{elapsed}]'):
             time.sleep(.01)
 
 

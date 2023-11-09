@@ -56,7 +56,7 @@ The bidscoin command-line utility serves as a central starting point to test and
 dicomsort
 ---------
 
-The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-organized files (see `above <#required-source-data-structure>`__) into a 'seriesfolder' organization. This can be useful to organise your source data in a more convenient and human readable way (DICOMDIR or flat DICOM directories can often be hard to comprehend). The BIDScoin tools will run dicomsort in a temporary folder if your data is not already organized in series-folders, so in principle you don't really need to run it yourself (unless when you have a single multi-subject DICOMDIR file for your entire repository). Running dicomsort beforehand does, however, give you more flexibility in handling special cases that are not handled properly and it can also give you a speed benefit. If dicomsort do not satisfy your needs, then have a look at this `reorganize\_dicom\_files <https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md>`__ tool.
+The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-organized files (see `above <#required-source-data-structure>`__) into a 'seriesfolder' organization. This can be useful to organize your source data in a more convenient and human readable way (DICOMDIR or flat DICOM directories can often be hard to comprehend). The BIDScoin tools will run dicomsort in a temporary folder if your data is not already organized in series-folders, so in principle you don't really need to run it yourself (unless when you have a single multi-subject DICOMDIR file for your entire repository). Running dicomsort beforehand does, however, give you more flexibility in handling special cases that are not handled properly and it can also give you a speed benefit. If dicomsort do not satisfy your needs, then have a look at this `DICOM reorganize <https://github.com/robertoostenveld/bids-tools/blob/master/doc/reorganize_dicom_files.md>`__ tool.
 
 ::
 
@@ -97,7 +97,7 @@ The ``dicomsort`` command-line tool is a utility to move your flat- or DICOMDIR-
                             default names (default: None)
       -p PATTERN, --pattern PATTERN
                             The regular expression pattern used in re.match(pattern, dicomfile) to select
-                            the dicom files (default: .*\.(IMA|dcm)$)
+                            the DICOM files (default: .*\.(IMA|dcm)$)
       --force               Sort the DICOM data even the DICOM fields of the folder/name scheme are not
                             in the data (default: False)
       -d, --dryrun          Only print the dicomsort commands without actually doing anything (default:
@@ -120,11 +120,11 @@ Another command-line utility that can be helpful in organizing your source data 
                      [-o OUTFOLDER] [-r] [-c] [-n SUBPREFIX] [-m [SESPREFIX]] [-d]
                      sourcefolder
 
-    Maps out the values of a dicom attribute of all subjects in the sourcefolder, saves the result
-    in a mapper-file and, optionally, uses the dicom values to rename the sub-/ses-id's of the
+    Maps out the values of a DICOM attribute of all subjects in the sourcefolder, saves the result
+    in a mapper-file and, optionally, uses the DICOM values to rename the sub-/ses-id's of the
     subfolders. This latter option can be used, e.g. when an alternative subject id was entered in
     the [Additional info] field during subject registration at the scanner console (i.e. this data
-    is stored in the dicom attribute named 'PatientComments')
+    is stored in the DICOM attribute named 'PatientComments')
 
     positional arguments:
       sourcefolder          The source folder with the raw data in sub-#/ses-#/series organization
@@ -135,7 +135,7 @@ Another command-line utility that can be helpful in organizing your source data 
                             Space separated list of selected sub-#/ses-# names / folders to be processed.
                             Otherwise all sessions in the bidsfolder will be selected (default: None)
       -f FIELD [FIELD ...], --field FIELD [FIELD ...]
-                            The fieldname(s) of the dicom attribute(s) used to rename or map the
+                            The fieldname(s) of the DICOM attribute(s) used to rename or map the
                             subid/sesid foldernames (default: ['PatientComments', 'ImageComments'])
       -w WILDCARD, --wildcard WILDCARD
                             The Unix style pathname pattern expansion that is used to select the series

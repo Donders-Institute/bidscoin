@@ -1,0 +1,25 @@
+spellchecker: hunspell
+
+matrix:
+- name: html
+  pipeline:
+  - pyspelling.filters.html:
+      comments: false
+      attributes:
+      - title
+      - alt
+      ignores:
+      - :matches(code, pre)
+      - a:matches(.magiclink-compare, .magiclink-commit)
+      - span.keys
+      - :matches(.MathJax_Preview, .md-nav__link, .md-footer-custom-text, .md-source__repository, .headerlink, .md-icon)
+  sources:
+  - docs/_build/html/*.html
+  hunspell:
+    d: en_US
+  aspell:
+    lang: en
+    d: en_US
+  dictionary:
+    wordlists:
+    - docs/_static/dictionary-custom.txt

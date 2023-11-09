@@ -107,7 +107,9 @@ deps             = sphinx-rtd-theme
                    myst-parser
                    linkchecker
                    tomli >= 1.1.0 ; python_version < "3.11"
+                   pyspelling
 allowlist_externals = make
 commands         = make -C docs html
                    linkchecker docs/_build/html/index.html
+                   pyspelling -c docs/.pyspelling.yml
 """

@@ -63,7 +63,7 @@ Run your pip install command as before with the additional ``--upgrade`` or ``--
 Dcm2niix installation
 ---------------------
 
-The default 'dcm2niix2bids' plugin relies on an external application named `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ for converting DICOM and PAR/REC source data to NIfTI. To use the plugin you must pip-install dcm2niix when installing BIDScoin or install it yourself (e.g. when pip-installing dcm2niix does not work for your platform) as explained in the `dcm2niix installation instructions <https://github.com/rordenlab/dcm2niix#install>`__. When done, make sure that the dcm2niix executable is on your user or system path (Windows users can add the path permanently, e.g. by running: ``setx path "%path%;C:\Program Files\dcm2niix"``). Otherwise (for instance when you want to use the linux module system or fixate the software version), make sure that the command to run the dcm2niix executable (exactly as if you would run it yourself in your command terminal) is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
+The default 'dcm2niix2bids' plugin relies on an external application named `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__ for converting DICOM and PAR/REC source data to NIfTI. To use the plugin you must pip-install dcm2niix when installing BIDScoin or install it yourself (e.g. when pip-installing dcm2niix does not work for your platform) as explained in the `dcm2niix installation instructions <https://github.com/rordenlab/dcm2niix#install>`__. When done, make sure that the dcm2niix executable is on your user or system path (Windows users can add the path permanently, e.g. by running: ``setx path "%path%;C:\Program Files\dcm2niix"``). Otherwise (for instance when you want to use the Linux module system or fixate the software version), make sure that the command to run the dcm2niix executable (exactly as if you would run it yourself in your command terminal) is set correctly in the `Options`_ section in your bidsmap. This can be done in two ways:
 
 1. Open your template bidsmap with a text editor and adjust the settings as needed. The default template bidsmap is located in your ``[home]/.bidscoin/[version]/templates`` folder (see the output of ``bidscoin -p`` for the fullpath location on your system).
 2. Go to the `Options`_ tab the first time the BIDScoin GUI is launched and adjust the settings as needed. Then click the [Set as default] button to save the settings to your default template bidsmap.
@@ -98,7 +98,7 @@ The Apptainer current image includes:
 The current image does not include this (non-free) software needed for some bidsapps:
 
 * FSL (needed for ``deface`` and ``slicereport``)
-* Freesurfer/synthstrip (needed for ``skullstrip``)
+* FreeSurfer/synthstrip (needed for ``skullstrip``)
 
 Building the container image
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -135,7 +135,7 @@ Where ``<bidscoin_tool>`` is a BIDScoin tool (e.g., ``bidsmapper``, ``bidscoiner
 
 The `xhost +` command allows Apptainer to open a graphical display on your computer and normally needs to be run once before launching a GUI application, i.e. is needed for running the bidseditor.
 
-If your data doesn't reside in your home folder, then you need to add a ``--bind <host_dir>:<container_dir>`` Apptainer argument which maps a folder from the host system to a folder inside the Apptainer container. So if yuor data is in ``/myproject/raw``, you run:
+If your data does not reside in your home folder, then you need to add a ``--bind <host_dir>:<container_dir>`` Apptainer argument which maps a folder from the host system to a folder inside the Apptainer container. So if your data is in ``/myproject/raw``, you run:
 
 .. code-block:: console
 
@@ -146,7 +146,7 @@ See the documentation for usage and setting environment variables to automatical
 Using a Docker container
 ------------------------
 
-If the Apptainer container is not working for you, it is also possible to use a `Docker <https://docs.docker.com>`__ container. The Docker versus Apptainer image and container usage are very similar, and both have their pros and cons. A fundamental argument for using Apptainer is that it doesn't require root permission (admin rights), whereas a fundamental argument for using Docker is that it is not limited to Linux hosts.
+If the Apptainer container is not working for you, it is also possible to use a `Docker <https://docs.docker.com>`__ container. The Docker versus Apptainer image and container usage are very similar, and both have their pros and cons. A fundamental argument for using Apptainer is that it does not require root permission (admin rights), whereas a fundamental argument for using Docker is that it is not limited to Linux hosts.
 
 The current Docker image includes the same as the Apptainer image:
 
@@ -157,7 +157,7 @@ The current Docker image includes the same as the Apptainer image:
 Likewise, the current image does not include this (non-free) software needed for some bidsapps:
 
 * FSL (needed for ``deface`` and ``slicereport``)
-* Freesurfer/synthstrip (needed for ``skullstrip``)
+* FreeSurfer/synthstrip (needed for ``skullstrip``)
 
 Building the container image
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

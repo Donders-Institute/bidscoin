@@ -41,7 +41,7 @@ The fix comes from these resources:
 
 Workflow
 --------
-The first step in troubleshooting is to look at the warnings and messages printed out in the terminal (they are also save to disk in the ``bidsfolder/code/bidscoin`` output folder). Make sure you are ok with the warnings (they are meaningful and not to be ignored) and do not continue with a next step until all errors are resolved.
+The first step in troubleshooting is to look at the warnings and messages printed out in the terminal (they are also save to disk in the ``bidsfolder/code/bidscoin`` output folder). Make sure you are OK with the warnings (they are meaningful and not to be ignored) and do not continue with a next step until all errors are resolved.
 
 My bidsmap is empty
 ^^^^^^^^^^^^^^^^^^^
@@ -55,12 +55,12 @@ Could not parse required sub-/ses- label
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You may get the error "Could not parse required sub- label from [..]". This error can have multiple causes, the most probable ones are:
 
-1) Your subject source folders are named in an inconsistent way, i.e. the filepath is not parseable by your ``subject`` regular expression. The best remedy is to open the bidsmap in the bidseditor and update the path in the ``subject`` and/or ``session`` regular expression(s). If that is not working out, then you should rename your subject/session source folders and make them all consistent
+1) Your subject source folders are named in an inconsistent way, i.e. the filepath is not parsable by your ``subject`` regular expression. The best remedy is to open the bidsmap in the bidseditor and update the path in the ``subject`` and/or ``session`` regular expression(s). If that is not working out, then you should rename your subject/session source folders and make them all consistent
 2) Your source data moved to a different location. The solution is to either move the data back to the original location or to open the bidsmap in the bidseditor and update the path in the ``subject`` and/or ``session`` field(s). Alternatively, to avoid this specific issue, you can use bidsmapper's ``--no-update`` option (the first time you run it on the raw folder). The downside of this (non-default) approach is that the subject/session label parsing may be less robust (especially if you have no or a very short subject/session prefix)
 
 I got an "Unexpected postfix / file conversion result"
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This bidscoiner warning message means that the source data was not properly recognised / converted by the plugin. Please search and/or report it on `Github issue <https://github.com/Donders-Institute/bidscoin/issues?q=>`__ to resolve it.
+This bidscoiner warning message means that the source data was not properly recognized / converted by the plugin. Please search and/or report it on `Github issue <https://github.com/Donders-Institute/bidscoin/issues?q=>`__ to resolve it.
 
 I only see "_magnitude1" or "_magnitude2" run-items in my bidsmap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -80,8 +80,8 @@ Even if you have specified the IntendedFor value in the bidseditor, you still ge
 
 The data of some subjects need to be treated (mapped) differently
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Sometimes you may have irregularities in your data that make that you would like make exceptions for run-items of certain subjects. There are different ways to do this but most likely the best way to do this is to add a json sidecar file to the source data of those run-items. In the json sidecar file you can store an attribute key-value pair to `overrule or extend the original attribute value of the source data <./bidsmap.html#structure-and-content>`__. For instance, if your fmri run was acquired with the wrong task presentation, e.g. `task2` instead of `task1`, you can add `SeriesDescription: task2` to the sidecar file to overrule `SeriesDescription: task1` in the DICOM header (to make a more specific exception that shows up as a new run-item in the bidsmap you can change it to e.g. `task1_exception`).
+Sometimes you may have irregularities in your data that make that you would like make exceptions for run-items of certain subjects. There are different ways to do this but most likely the best way to do this is to add a json sidecar file to the source data of those run-items. In the json sidecar file you can store an attribute key-value pair to `overrule or extend the original attribute value of the source data <./bidsmap.html#structure-and-content>`__. For instance, if your fMRI run was acquired with the wrong task presentation, e.g. `task2` instead of `task1`, you can add `SeriesDescription: task2` to the sidecar file to overrule `SeriesDescription: task1` in the DICOM header (to make a more specific exception that shows up as a new run-item in the bidsmap you can change it to e.g. `task1_exception`).
 
 More help
 ---------
-If this guide doesn't help to solve your problem, then you can `search on github <https://github.com/Donders-Institute/bidscoin/issues?q=>`__ for open and/or closed issues to see if anyone else has encountered similar problems before. If not, feel free to help yourself and others by opening a new github issue.
+If this guide does not help to solve your problem, then you can `search on github <https://github.com/Donders-Institute/bidscoin/issues?q=>`__ for open and/or closed issues to see if anyone else has encountered similar problems before. If not, feel free to help yourself and others by opening a new github issue.

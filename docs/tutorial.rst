@@ -21,7 +21,7 @@ Depending on how BIDScoin was installed, you may have to set your Python environ
    $ module add bidscoin                # Load the DCCN bidscoin module with the PATH settings and Anaconda environment
    $ source activate /opt/bidscoin      # Activate the Python virtual environment with the BIDScoin Python packages
 
-Now you should be able to execute BIDScoin commands. Test this by running ``bidscoin`` to get a general workflow overview. Can you generate a list of all BIDScoin tools? What about the plugins? Test the bidscoin installation and make sure everything is ok
+Now you should be able to execute BIDScoin commands. Test this by running ``bidscoin`` to get a general workflow overview. Can you generate a list of all BIDScoin tools? What about the plugins? Test the bidscoin installation and make sure everything is OK
 
 2. Data preparation
 ~~~~~~~~~~~~~~~~~~~
@@ -80,7 +80,7 @@ The next step, converting the source data into a BIDS collection, is very simple
 
    $ bidscoiner raw bids
 
-- Check your ``bids/code/bidscoin/bidscoiner.log`` (the complete terminal output) and ``bids/code/bidscoin/bidscoiner.errors`` (the summary that is also printed at the end) files for any errors or warnings. You shouldn't have any :-)
+- Check your ``bids/code/bidscoin/bidscoiner.log`` (the complete terminal output) and ``bids/code/bidscoin/bidscoiner.errors`` (the summary that is also printed at the end) files for any errors or warnings. You should not have any :-)
 - Compare the results in your ``bids/sub-*`` subject folders with the in ``bids_ref`` reference result. Are the file and folder names the same (don't worry about missing individual echo images, they are combined/generated as described below)? Also check the json sidecar files of the field maps. Do they have the right ``EchoTime`` and ``IntendedFor`` fields?
 - What happens if you re-run the ``bidscoiner`` command? Are the same subjects processed again? Delete the ``bids/sub-001`` folder and re-run the ``bidscoiner`` command to recreate ``bids/sub-001``.
 
@@ -92,6 +92,6 @@ Now that you have converted the data to BIDS, you still need to do work to make 
 - Combine the echos using the `echocombine <./bidsapps.html#multi-echo-combination>`__ tool (see ``echocombine --help`` examples), such that the individual echo images are **replaced** by the echo-combined image
 - Deface the anatomical scans of ``sub-001`` using the `deface <./bidsapps.html#defacing>`__ tool. This will take a while, but will obviously not work well for our phantom dataset. Therefore store the 'defaced' output in the ``derivatives`` folder (instead of e.g. overwriting the existing images)
 - Generate a QC report of the anatomical scans using the `slicereport <./bidsapps.html#quality-control>`__ tool and open the ``bids/derivatives/slicereport/index.html`` file in your browser.
-- Inspect the ``bids/participants.tsv`` file and decide if it is ok.
+- Inspect the ``bids/participants.tsv`` file and decide if it is OK.
 - Update the ``dataset_description.json`` and ``README`` files in your ``bids`` folder
 - As a final step, run the `bids-validator <https://bids-standard.github.io/bids-validator/>`__ on your ``bidscointutorial/bids`` folder. Are you completely ready now to share this dataset?
