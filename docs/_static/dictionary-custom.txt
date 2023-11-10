@@ -197,6 +197,7 @@ importlib
 inputimage
 iso
 imagetype
+jneumeth
 json
 libEGL
 logfiles
@@ -215,6 +216,7 @@ metadata
 mis
 modality
 mprage
+mrm
 multi
 multiraid
 mylabel
@@ -306,3 +308,4 @@ workflow
 xcb
 xhost
 yaml
+zenodo
