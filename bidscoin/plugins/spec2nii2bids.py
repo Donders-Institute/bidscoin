@@ -12,6 +12,7 @@ from typing import Union
 from bids_validator import BIDSValidator
 from pathlib import Path
 from bidscoin import bcoin, bids
+from ..due import due, Doi
 
 LOGGER = logging.getLogger(__name__)
 
@@ -157,6 +158,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
             bids.append_run(bidsmap_new, run)
 
 
+@due.dcite(Doi('10.1002/mrm.29418'), description='Multi-format in vivo MR spectroscopy conversion to NIFTI')
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None, dict]:
     """
     This wrapper function around spec2nii converts the MRS data in the session folder and saves it in the bidsfolder.
@@ -172,11 +174,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
 
     # Get the subject identifiers and the BIDS root folder from the bidsses folder
     if bidsses.name.startswith('ses-'):
-        bidsfolder = bidsses.parent.parent
         subid      = bidsses.parent.name
         sesid      = bidsses.name
     else:
-        bidsfolder = bidsses.parent
         subid      = bidsses.name
         sesid      = ''
 

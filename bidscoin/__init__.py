@@ -26,14 +26,11 @@ import warnings
 from pathlib import Path
 from importlib import metadata
 from typing import Tuple, Union, List
+from .due import due, Doi
 try:
     import tomllib
 except ModuleNotFoundError:
     import tomli as tomllib
-try:
-    from .due import due, Doi
-except ImportError:
-    from due import due, Doi
 
 # Get the BIDScoin version
 try:

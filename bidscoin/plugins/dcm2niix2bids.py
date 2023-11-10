@@ -14,6 +14,7 @@ from typing import Union
 from pathlib import Path
 from bidscoin import bcoin, bids, lsdirs
 from bidscoin.utilities import physio
+from ..due import due, Doi
 try:
     from nibabel.testing import data_path
 except ImportError:
@@ -171,6 +172,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
             bids.append_run(bidsmap_new, run)
 
 
+@due.dcite(Doi('10.1016/j.jneumeth.2016.03.001'), description='dcm2niix: DICOM to NIfTI converter')
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None, dict]:
     """
     The bidscoiner plugin to convert the session DICOM and PAR/REC source-files into BIDS-valid NIfTI-files in the

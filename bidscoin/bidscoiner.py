@@ -53,21 +53,21 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
     # Create a dataset description file if it does not exist
     dataset_file = bidsfolder/'dataset_description.json'
-    generatedby  = [{"Name":"BIDScoin", "Version":__version__, "CodeURL":"https://github.com/Donders-Institute/bidscoin"}]
+    generatedby  = [{"Name":"BIDScoin", 'Version':__version__, 'Description:':'A flexible GUI application suite that converts source datasets to BIDS', 'CodeURL':'https://github.com/Donders-Institute/bidscoin'}]
     if not dataset_file.is_file():
         LOGGER.info(f"Creating dataset description file: {dataset_file}")
-        dataset_description = {"Name":                  "REQUIRED. Name of the dataset",
-                               "GeneratedBy":           generatedby,
-                               "BIDSVersion":           str(bidsversion()),
-                               "DatasetType":           "raw",
-                               "License":               "RECOMMENDED. The license for the dataset. The use of license name abbreviations is RECOMMENDED for specifying a license. The corresponding full license text MAY be specified in an additional LICENSE file",
-                               "Authors":               ["OPTIONAL. List of individuals who contributed to the creation/curation of the dataset"],
-                               "Acknowledgements":      "OPTIONAL. Text acknowledging contributions of individuals or institutions beyond those listed in Authors or Funding",
-                               "HowToAcknowledge":      "OPTIONAL. Instructions how researchers using this dataset should acknowledge the original authors. This field can also be used to define a publication that should be cited in publications that use the dataset",
-                               "Funding":               ["OPTIONAL. List of sources of funding (grant numbers)"],
-                               "EthicsApprovals":    	["OPTIONAL. List of ethics committee approvals of the research protocols and/or protocol identifiers"],
-                               "ReferencesAndLinks":    ["OPTIONAL. List of references to publication that contain information on the dataset, or links", "https://github.com/Donders-Institute/bidscoin"],
-                               "DatasetDOI":            "OPTIONAL. The Document Object Identifier of the dataset (not the corresponding paper)"}
+        dataset_description = {'Name':                  'REQUIRED. Name of the dataset',
+                               'GeneratedBy':           generatedby,
+                               'BIDSVersion':           str(bidsversion()),
+                               'DatasetType':           'raw',
+                               'License':               'RECOMMENDED. The license for the dataset. The use of license name abbreviations is RECOMMENDED for specifying a license. The corresponding full license text MAY be specified in an additional LICENSE file',
+                               'Authors':               ['OPTIONAL. List of individuals who contributed to the creation/curation of the dataset'],
+                               'Acknowledgements':      'OPTIONAL. Text acknowledging contributions of individuals or institutions beyond those listed in Authors or Funding',
+                               'HowToAcknowledge':      'OPTIONAL. Instructions how researchers using this dataset should acknowledge the original authors. This field can also be used to define a publication that should be cited in publications that use the dataset',
+                               'Funding':               ['OPTIONAL. List of sources of funding (grant numbers)'],
+                               'EthicsApprovals':    	['OPTIONAL. List of ethics committee approvals of the research protocols and/or protocol identifiers'],
+                               'ReferencesAndLinks':    ['OPTIONAL. List of references to publication that contain information on the dataset, or links', 'https://github.com/Donders-Institute/bidscoin'],
+                               'DatasetDOI':            'OPTIONAL. The Document Object Identifier of the dataset (not the corresponding paper)'}
     else:
         with dataset_file.open('r') as fid:
             dataset_description = json.load(fid)
