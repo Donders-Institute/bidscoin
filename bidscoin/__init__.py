@@ -131,6 +131,7 @@ def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
     return sorted([item for item in sorted(folder.glob(wildcard)) if item.is_dir() and not is_hidden(item.relative_to(folder))])
 
 
+@due.dcite(Doi('10.3389/fninf.2021.770608'), description='A versatile toolkit to convert source data to the Brain Imaging Data Structure (BIDS)', version=__version__)
 def trackusage(event: str, dryrun: bool=False) -> dict:
     """Sends a url GET request with usage data parameters (if tracking is allowed and we are not asleep)
 
