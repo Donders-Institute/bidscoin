@@ -82,9 +82,6 @@ if not bidsmap_template.is_file():
 DEBUG = os.environ.get('BIDSCOIN_DEBUG')
 DEBUG = True if DEBUG and DEBUG.upper() not in ('0', 'FALSE', 'N', 'NO', 'NONE') else False
 
-# Register the BIDScoin citation
-due.cite(Doi('10.3389/fninf.2021.770608'), description='A versatile toolkit to convert source data to the Brain Imaging Data Structure (BIDS)', path='bidscoin', version=__version__)
-
 
 def check_version() -> Tuple[str, Union[bool, None], str]:
     """
