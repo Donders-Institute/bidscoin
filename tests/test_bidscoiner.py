@@ -35,15 +35,14 @@ def test_bidscoiner(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
     assert metadict.get('SeriesDescription') == 'TestExtAtrributes'
     assert metadict.get('Comment')           == 'TestExtComment'
 
-    if os.getenv('DUECREDIT_ENABLE') == 'yes':
-        with Path('./.duecredit.p').open('rb') as fid:
-            credits = pickle.load(fid)
-        assert '10.3389/fninf.2021.770608' in [key.entry_key for key in credits.citations.keys()]
-        for key, val in credits.citations.items():
-            if key.entry_key == '10.3389/fninf.2021.770608':
-                assert val.cite_module == True
-                assert val.path        == 'bidscoin'
-                assert val.version     == __version__
+    with Path('./.duecredit.p').open('rb') as fid:
+        credits = pickle.load(fid)
+    assert '10.3389/fninf.2021.770608' in [key.entry_key for key in credits.citations.keys()]
+    for key, val in credits.citations.items():
+        if key.entry_key == '10.3389/fninf.2021.770608':
+            assert val.cite_module == True
+            assert val.path        == 'bidscoin'
+            assert val.version     == __version__
 
 
 # def test_addmetadata(bids_dicomdir, bidsmap_dicomdir):
