@@ -14,6 +14,7 @@ BIDScoin's library modules named 'bcoin' and, most notably, 'bids'"""
 
 import logging
 from pathlib import Path
+from ..due import due, Doi
 
 LOGGER = logging.getLogger(__name__)
 
@@ -154,6 +155,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     LOGGER.verbose(f'This is a bidsmapper demo-plugin working on: {session}')
 
 
+@due.dcite(Doi('put.your/doi.here'), description='This is an optional duecredit decorator for citing your paper(s)', tags=['implementation', 'use'])
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None, dict]:
     """
     The plugin to convert the runs in the source folder and save them in the bids folder. Each saved datafile should be

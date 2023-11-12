@@ -12,9 +12,8 @@ import shutil
 from bids_validator import BIDSValidator
 from typing import Union
 from pathlib import Path
-from bidscoin import bcoin, bids, lsdirs
+from bidscoin import bcoin, bids, lsdirs, due, Doi
 from bidscoin.utilities import physio
-from ..due import due, Doi
 try:
     from nibabel.testing import data_path
 except ImportError:

@@ -11,8 +11,7 @@ import dateutil.parser
 from typing import Union
 from bids_validator import BIDSValidator
 from pathlib import Path
-from bidscoin import bcoin, bids
-from ..due import due, Doi
+from bidscoin import bcoin, bids, due, Doi
 
 LOGGER = logging.getLogger(__name__)
 

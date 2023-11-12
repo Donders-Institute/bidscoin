@@ -170,6 +170,7 @@ dev
 dicomsort
 dm2niix
 dockerized
+duecredit
 echocombine
 executables
 fMRI

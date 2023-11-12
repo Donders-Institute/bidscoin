@@ -1,8 +1,9 @@
 import json
-import pickle
-from pathlib import Path
+import os
+import warnings
+
 from bidscoin import bcoin, bidsmapper, bidscoiner, bidsmap_template, __version__
-from duecredit.config import DUECREDIT_FILE
+from duecredit.io import PickleOutput
 
 bcoin.setup_logging()
 
@@ -35,14 +36,16 @@ def test_bidscoiner(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
     assert metadict.get('SeriesDescription') == 'TestExtAtrributes'
     assert metadict.get('Comment')           == 'TestExtComment'
 
-    with Path(f"./{DUECREDIT_FILE}").open('rb') as fid:
-        credits = pickle.load(fid)
-    assert '10.3389/fninf.2021.770608' in [key.entry_key for key in credits.citations.keys()]
-    for key, val in credits.citations.items():
-        if key.entry_key == '10.3389/fninf.2021.770608':
-            assert val.cite_module == True
-            assert val.path        == 'bidscoin'
-            assert val.version     == __version__
+    if os.getenv('DUECREDIT_ENABLE','').lower() in ('1', 'yes', 'true'):
+        credits = PickleOutput.load()
+        assert '10.3389/fninf.2021.770608' in [key.entry_key for key in credits.citations.keys()]
+        for (path, entry_key), citation in credits.citations.items():
+            if entry_key == '10.3389/fninf.2021.770608':
+                assert path                 == 'bidscoin'
+                assert citation.cite_module == True
+                assert citation.version     == __version__
+    else:
+        warnings.warn('Could not test bidscoin citation: DUECREDIT_ENABLE=False', RuntimeWarning)
 
 
 # def test_addmetadata(bids_dicomdir, bidsmap_dicomdir):
