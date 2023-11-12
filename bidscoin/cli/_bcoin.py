@@ -10,7 +10,8 @@ The basic workflow is to run these two tools:
 Default settings and template bidsmaps are stored in the ".bidscoin" folder in your home directory (you can modify
 them to your needs with any plain text editor)
 
-Set the environment variable BIDSCOIN_DEBUG=TRUE in your console to run BIDScoin in its more verbose DEBUG logging mode
+Set the environment variable BIDSCOIN_DEBUG=TRUE in your console to run BIDScoin in its more verbose DEBUG logging mode.
+A custom-made citation report can be generated with the help of duecredit (https://github.com/duecredit/duecredit)
 
 For more documentation see: https://bidscoin.readthedocs.io
 """
