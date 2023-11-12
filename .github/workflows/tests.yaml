@@ -47,5 +47,9 @@ jobs:
 
       - name: Tests with pytest
         run: |
-          export DUECREDIT_ENABLE=yes
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            set DUECREDIT_ENABLE=yes
+          else
+            export DUECREDIT_ENABLE=yes
+          fi
           pytest tests
