@@ -47,7 +47,6 @@ jobs:
 
       - name: Tests with pytest
         run: |
-          fi
           pytest tests
         env:
           DUECREDIT_ENABLE: yes
