@@ -46,12 +46,8 @@ jobs:
           Add-Content $env:GITHUB_PATH "${{ github.workspace }}/dcm2niix_win/"
 
       - name: Tests with pytest
-        if: runner.os == 'Windows'
         run: |
-          pytest tests
-
-      - name: Tests with pytest
-        if: runner.os != 'Windows'
-        run: |
-          export DUECREDIT_ENABLE=yes
+          if [ "$RUNNER_OS" == "Linux" ] || [ "$RUNNER_OS" == "macOS" ]; then
+            export DUECREDIT_ENABLE=yes
+          fi
           pytest tests
