@@ -48,8 +48,6 @@ jobs:
       - name: Tests with pytest
         if: runner.os == 'Windows'
         run: |
-          setx DUECREDIT_ENABLE yes
-          set DUECREDIT_ENABLE=yes
           pytest tests
 
       - name: Tests with pytest
