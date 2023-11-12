@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install .[all] jsonschema pytest
+          pip install .[all] jsonschema pytest duecredit
 
       - name: Install dcm2niix posix
         if: runner.os != 'Windows'
@@ -47,4 +47,5 @@ jobs:
 
       - name: Tests with pytest
         run: |
+          export DUECREDIT_ENABLE=yes
           pytest tests

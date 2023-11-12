@@ -1,4 +1,6 @@
 import json
+import pickle
+from pathlib import Path
 from bidscoin import bcoin, bidsmapper, bidscoiner, bidsmap_template
 
 bcoin.setup_logging()
@@ -31,6 +33,12 @@ def test_bidscoiner(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
     assert metadict.get('ProtocolName')      == 'T/S/C RF FAST PILOT'
     assert metadict.get('SeriesDescription') == 'TestExtAtrributes'
     assert metadict.get('Comment')           == 'TestExtComment'
+
+    with Path('./.duecredit.p').open('rb') as fid:
+        credits = pickle.load(fid)
+    keys = list(credits.citations.keys())
+    assert '10.3389/fninf.2021.770608' in [key.entry_key for key in keys]
+
 
 # def test_addmetadata(bids_dicomdir, bidsmap_dicomdir):
 #     bidsmap, _ = bids.load_bidsmap(bidsmap_dicomdir)

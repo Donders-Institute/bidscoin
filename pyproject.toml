@@ -100,7 +100,9 @@ extras           = all
 deps             = pytest
                    jsonschema
                    argparse-manpage[setuptools]
+                   duecredit
 commands         = pytest
+setenv           = DUECREDIT_ENABLE=yes
 
 [testenv:docs]
 deps             = sphinx-rtd-theme
