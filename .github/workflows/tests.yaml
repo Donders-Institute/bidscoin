@@ -54,5 +54,5 @@ jobs:
       - name: Tests with pytest
         if: runner.os != 'Windows'
         run: |
-          export DUECREDIT_ENABLE=yes
+          export DUECREDIT_ENABLE yes
           pytest tests
