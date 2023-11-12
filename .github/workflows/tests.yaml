@@ -47,9 +47,11 @@ jobs:
 
       - name: Tests with pytest
         run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            setx DUECREDIT_ENABLE=yes
-          else
+          if [ "$RUNNER_OS" == "Linux" ]; then
             export DUECREDIT_ENABLE=yes
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            export DUECREDIT_ENABLE=yes
+          else
+            set DUECREDIT_ENABLE=yes
           fi
           pytest tests
