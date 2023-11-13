@@ -16,8 +16,10 @@ if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
 from bidscoin import bcoin, bids, lsdirs, trackusage, DEBUG
+from ..due import due, Doi
 
 
+@due.dcite(Doi('10.1016/j.neuroimage.2022.119474'), description='Robust, universal skull-stripping for brain images of any type', tags=['reference-implementation', 'use'])
 def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: list, force: bool, args: str, cluster: bool, nativespec: str):
     """
     :param bidsdir:     The bids-directory with the subject data

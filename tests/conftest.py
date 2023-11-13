@@ -9,6 +9,8 @@ if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[2]))
 from bidscoin.utilities import dicomsort
 
+Path('./.duecredit.p').unlink(missing_ok=True)
+
 
 @pytest.fixture(scope='session')
 def raw_dicomdir(tmp_path_factory):

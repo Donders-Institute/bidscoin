@@ -18,7 +18,6 @@ import json
 import getpass
 import platform
 import hashlib
-import os
 import shelve
 import datetime
 import shutil
@@ -79,8 +78,7 @@ if not bidsmap_template.is_file():
     warnings.warn(f"Missing template bidsmap: {bidsmap_template} (see {configfile})", RuntimeWarning)
 
 # Get the BIDSCOIN_DEBUG environment variable to set the log-messages and logging level, etc
-DEBUG = os.environ.get('BIDSCOIN_DEBUG')
-DEBUG = True if DEBUG and DEBUG.upper() not in ('0', 'FALSE', 'N', 'NO', 'NONE') else False
+DEBUG = platform.os.getenv('BIDSCOIN_DEBUG','').upper() in ('1', 'TRUE', 'Y', 'YES')
 
 # Register the BIDScoin citation
 due.cite(Doi('10.3389/fninf.2021.770608'), description='A versatile toolkit to convert source data to the Brain Imaging Data Structure (BIDS)',

@@ -49,7 +49,7 @@ def test(options: dict=OPTIONS) -> int:
         LOGGER.warning(f"The expected 'args' key is not defined in the dcm2niix2bids options")
 
     # Test the dcm2niix installation
-    errorcode = bcoin.run_command(f"{options.get('command', OPTIONS['command'])} -v")
+    errorcode = bcoin.run_command(f"{options.get('command', OPTIONS['command'])} -v", (0,3))
 
     # Test reading an attribute from a PAR-file
     parfile = Path(data_path)/'phantom_EPI_asc_CLEAR_2_1.PAR'

@@ -189,17 +189,18 @@ def reporterrors() -> str:
     return errors
 
 
-def run_command(command: str) -> int:
+def run_command(command: str, success: tuple=(0,None)) -> int:
     """
     Runs a command in a shell using subprocess.run(command, ..)
 
     :param command: The command that is executed
-    :return:        Errorcode (i.e. 0 if the command was successfully executed (no errors), > 0 otherwise)
+    :param success: The return codes for successful operation (e,g, for dcm2niix it is (0,3))
+    :return:        The return code (e.g. 0 if the command was successfully executed (no errors), > 0 otherwise)
     """
 
     LOGGER.verbose(f"Command:\n{command}")
     process = subprocess.run(command, shell=True, capture_output=True, text=True)
-    if process.stderr or process.returncode != 0:
+    if process.stderr or process.returncode not in success:
         LOGGER.error(f"Failed to run:\n{command}\nErrorcode {process.returncode}:\n{process.stdout}\n{process.stderr}")
     else:
         LOGGER.verbose(f"Output:\n{process.stdout}")

@@ -1,7 +1,6 @@
 import json
 import os
 import warnings
-
 from bidscoin import bcoin, bidsmapper, bidscoiner, bidsmap_template, __version__
 from duecredit.io import PickleOutput
 
