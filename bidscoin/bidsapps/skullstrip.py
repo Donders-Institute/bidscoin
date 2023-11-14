@@ -19,7 +19,7 @@ from bidscoin import bcoin, bids, lsdirs, trackusage, DEBUG
 from ..due import due, Doi
 
 
-@due.dcite(Doi('10.1016/j.neuroimage.2022.119474'), description='Robust, universal skull-stripping for brain images of any type', tags=['reference-implementation', 'use'])
+@due.dcite(Doi('10.1016/j.neuroimage.2022.119474'), description='Robust, universal skull-stripping for brain images of any type', tags=['reference-implementation'])
 def skullstrip(bidsdir: str, pattern: str, subjects: list, masked: str, output: list, force: bool, args: str, cluster: bool, nativespec: str):
     """
     :param bidsdir:     The bids-directory with the subject data

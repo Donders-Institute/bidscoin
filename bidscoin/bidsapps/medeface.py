@@ -21,7 +21,7 @@ from bidscoin import bcoin, bids, lsdirs, trackusage, DEBUG
 from ..due import due, Doi
 
 
-@due.dcite(Doi('10.5281/zenodo.3524400'), description='A tool to remove facial structure from MRI images', tags=['reference-implementation', 'use'])
+@due.dcite(Doi('10.5281/zenodo.3524400'), description='A tool to remove facial structure from MRI images', tags=['reference-implementation'])
 def medeface(bidsdir: str, pattern: str, maskpattern: str, subjects: list, force: bool, output: str, cluster: bool, nativespec: str, kwargs: dict):
     """
     :param bidsdir:     The bids-directory with the (multi-echo) subject data

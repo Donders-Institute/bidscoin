@@ -157,7 +157,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
             bids.append_run(bidsmap_new, run)
 
 
-@due.dcite(Doi('10.1002/mrm.29418'), description='Multi-format in vivo MR spectroscopy conversion to NIFTI', tags=['reference-implementation', 'use'])
+@due.dcite(Doi('10.1002/mrm.29418'), description='Multi-format in vivo MR spectroscopy conversion to NIFTI', tags=['reference-implementation'])
 def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None, dict]:
     """
     This wrapper function around spec2nii converts the MRS data in the session folder and saves it in the bidsfolder.
