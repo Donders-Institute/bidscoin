@@ -905,9 +905,16 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
     elif bidsmapversion != __version__ and any(checks):
         LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}. This is normally ok but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
 
-    # Make sure bidsignore is a list
-    if 'bidsignore' in bidsmap['Options'].get('bidscoin') and isinstance(bidsmap['Options']['bidscoin'].get('bidsignore'), str):
+    # Make sure subprefix and sesprefix are strings
+    subprefix = bidsmap['Options']['bidscoin']['subprefix'] = bidsmap['Options']['bidscoin']['subprefix'] or ''
+    sesprefix = bidsmap['Options']['bidscoin']['sesprefix'] = bidsmap['Options']['bidscoin']['sesprefix'] or ''
+
+    # Make sure bidsignore, unknowntypes and ignoretypes are lists
+    if isinstance(bidsmap['Options']['bidscoin'].get('bidsignore'), str):
         bidsmap['Options']['bidscoin']['bidsignore'] = bidsmap['Options']['bidscoin']['bidsignore'].split(';')
+    bidsmap['Options']['bidscoin']['bidsignore']   = bidsmap['Options']['bidscoin'].get('bidsignore') or []
+    bidsmap['Options']['bidscoin']['unknowntypes'] = bidsmap['Options']['bidscoin'].get('unknowntypes') or []
+    bidsmap['Options']['bidscoin']['ignoretypes']  = bidsmap['Options']['bidscoin'].get('ignoretypes') or []
 
     # Make sure we get a proper plugin options and dataformat sections (use plugin default bidsmappings when a template bidsmap is loaded)
     if not bidsmap['Options'].get('plugins'):
@@ -927,11 +934,10 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
                     bidsmap[dataformat] = bidsmappings
 
     # Add missing provenance info, run dictionaries and bids entities
-    run_      = get_run_()
-    subprefix = bidsmap['Options']['bidscoin'].get('subprefix','')
-    sesprefix = bidsmap['Options']['bidscoin'].get('sesprefix','')
+    run_ = get_run_()
     for dataformat in bidsmap:
         if dataformat in ('$schema', 'Options'): continue
+        bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'] or ''   # Session-less data repositories
         for datatype in bidsmap[dataformat]:
             if not isinstance(bidsmap[dataformat][datatype], list): continue    # E.g. 'subject', 'session' and empty datatypes
             for index, run in enumerate(bidsmap[dataformat][datatype]):
