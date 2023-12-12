@@ -24,9 +24,9 @@ Options:
 # --------------------------------------------------------------------------------
   bidscoin:
     version: 4.2.1                  # BIDScoin version (should correspond with the version in pyproject.toml)
-    bidsignore: [mrs/, extra_data/, sub-*_ct.*]    # List of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. [extra_data/, pet/, myfile.txt, yourfile.csv]
     subprefix: sub-                 # The subject prefix of the source data
     sesprefix: ses-                 # The session prefix of the source data
+    bidsignore: [mrs/, extra_data/, sub-*_ct.*]    # List of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. [extra_data/, pet/, myfile.txt, yourfile.csv]
     unknowntypes: [mrs, extra_data] # A list of datatypes that are converted to BIDS-like datatype folders
     ignoretypes: [exclude]          # A list of datatypes that are excluded / not converted to BIDS
     unzip:                          # Wildcard pattern to select tarball/zip-files in the source folders that need to be unzipped (in a tempdir) to expose the data, e.g. '*.tar.gz'
@@ -810,7 +810,8 @@ DICOM:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
       suffix: TB1DAM
-    meta: *fmap_meta
+    meta: &fmap_meta_B0Field
+      B0FieldIdentifier:
   - provenance:
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_TB1EPI         # See: schema/datatypes/fmap.yaml
@@ -823,7 +824,7 @@ DICOM:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
       suffix: TB1EPI
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
@@ -836,7 +837,7 @@ DICOM:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
       suffix: TB1AFI
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -846,7 +847,7 @@ DICOM:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml & https://bids-specification.readthedocs.io/en/stable/99-appendices/11-qmri.html#tb1tfl-and-tb1rfm-specific-notes
       acq: famp
       suffix: TB1TFL
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -856,7 +857,7 @@ DICOM:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
       acq: anat
       suffix: TB1TFL
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -866,7 +867,7 @@ DICOM:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
       acq: anat
       suffix: TB1RFM
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -875,13 +876,13 @@ DICOM:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
       acq: famp
       suffix: TB1RFM
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     attributes: *fmap_dicomattr
     bids:
       <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
       suffix: RB1COR
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_TB1SRGE        # See: schema/datatypes/fmap.yaml
@@ -894,7 +895,7 @@ DICOM:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
       suffix: TB1SRGE
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -906,7 +907,7 @@ DICOM:
       rec:
       run: <<>>
       suffix: TB1map
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     attributes:
       <<: *fmap_dicomattr
@@ -914,7 +915,7 @@ DICOM:
     bids:
       <<: *fmap_dicoment_parametric
       suffix: RB1map
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
 
   pet:        # ----------------------- All PET runs ---------------------------
   - provenance:
@@ -1667,7 +1668,7 @@ PAR:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
       suffix: TB1DAM
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     attributes: *fmap_parattr
     bids: &fmap_parent_TB1EPI           # See: schema/datatypes/fmap.yaml
@@ -1680,7 +1681,7 @@ PAR:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
       suffix: TB1EPI
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     attributes: *fmap_parattr
     bids: &fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
@@ -1693,25 +1694,25 @@ PAR:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
       suffix: TB1AFI
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
       suffix: TB1TFL
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
       suffix: TB1RFM
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
       suffix: RB1COR
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     attributes: *fmap_parattr
     bids: &fmap_parent_TB1SRGE          # See: schema/datatypes/fmap.yaml
@@ -1724,7 +1725,7 @@ PAR:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
       suffix: TB1SRGE
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     attributes: *fmap_parattr
     bids: &fmap_parent_parametric
@@ -1733,13 +1734,13 @@ PAR:
       rec:
       run: <<>>
       suffix: TB1map
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     attributes: *fmap_parattr
     bids:
       <<: *fmap_parent_parametric
       suffix: RB1map
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance:
@@ -2646,7 +2647,7 @@ Nibabel:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
       suffix: TB1DAM
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     properties:
       <<: *fileprop
@@ -2662,7 +2663,7 @@ Nibabel:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
       suffix: TB1EPI
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     properties:
       <<: *fileprop
@@ -2678,7 +2679,7 @@ Nibabel:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
       suffix: TB1AFI
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     properties:
       <<: *fileprop
@@ -2688,7 +2689,7 @@ Nibabel:
       <<: *fmap_nibent_RFFieldMaps     # See: schema/datatypes/fmap.yaml & https://bids-specification.readthedocs.io/en/stable/99-appendices/11-qmri.html#tb1tfl-and-tb1rfm-specific-notes
       acq: famp
       suffix: TB1TFL
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     properties:
       <<: *fileprop
@@ -2698,7 +2699,7 @@ Nibabel:
       <<: *fmap_nibent_RFFieldMaps    # See: schema/datatypes/fmap.yaml
       acq: anat
       suffix: TB1RFM
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     properties:
       <<: *fileprop
@@ -2707,7 +2708,7 @@ Nibabel:
     bids:
       <<: *fmap_nibent_RFFieldMaps    # See: schema/datatypes/fmap.yaml
       suffix: RB1COR
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     properties:
       <<: *fileprop
@@ -2723,7 +2724,7 @@ Nibabel:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
       suffix: TB1SRGE
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     properties:
       <<: *fileprop
@@ -2735,7 +2736,7 @@ Nibabel:
       rec:
       run: <<>>
       suffix: TB1map
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
   - provenance:
     properties:
       <<: *fileprop
@@ -2744,7 +2745,7 @@ Nibabel:
     bids:
       <<: *fmap_nibent_parametric
       suffix: RB1map
-    meta: *fmap_meta
+    meta: *fmap_meta_B0Field
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance:
