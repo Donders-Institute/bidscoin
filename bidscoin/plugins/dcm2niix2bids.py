@@ -17,8 +17,12 @@ from bidscoin.utilities import physio
 try:
     from nibabel.testing import data_path
 except ImportError:
-    from importlib.resources import files           # PY38: from importlib_resources import files ???
-    data_path = files('nibabel')/'tests'/'data'
+    try:
+        from importlib.resources import files
+        data_path = files('nibabel')/'tests'/'data'
+    except ImportError:           # PY38. Alternative: from importlib_resources import files
+        import nibabel as nib
+        data_path = (Path(nib.__file__).parent/'tests'/'data')
 
 LOGGER = logging.getLogger(__name__)
 
