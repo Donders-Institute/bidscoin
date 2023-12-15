@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 """A BIDScoin application to convert source data to BIDS (See also cli/_bidscoiner.py)"""
 
+# NB: Set os.environ['DUECREDIT'] values as early as possible to capture all credits
+import os
+import sys
+if __name__ == "__main__" and os.getenv('DUECREDIT_ENABLE','').lower() not in ('1', 'yes', 'true'):    # Ideally the due state (`self.__active=True`) should also be checked (but that's impossible)
+    os.environ['DUECREDIT_ENABLE'] = 'yes'
+    os.environ['DUECREDIT_FILE']   = os.path.join(sys.argv[2], 'code', 'bidscoin', '.duecredit_bidscoiner.p')   # NB: argv[2] = bidsfolder
+
 import dateutil.parser
 import re
 import pandas as pd
 import json
 import logging
-import os
 import shutil
 import urllib.request, urllib.error
 from tqdm import tqdm
@@ -14,7 +20,6 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 from pathlib import Path
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
-    import sys
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import bcoin, bids, lsdirs, bidsversion, trackusage, __version__, DEBUG
 

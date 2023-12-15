@@ -13,6 +13,8 @@ import subprocess
 import sys
 import urllib.request
 import time
+import argparse
+from duecredit.cmdline import cmd_summary
 from functools import lru_cache
 from importlib.metadata import entry_points
 from importlib.util import spec_from_file_location, module_from_spec
@@ -593,7 +595,31 @@ def pulltutorialdata(tutorialfolder: str) -> None:
         trackusage('bidscoin_error')
 
 
-def settracking(value: str):
+def reportcredits(args: list) -> None:
+    """Shows the duecredit summary of all reports in the bidsfolder"""
+
+    if not args:
+        return
+    elif not len(args) % 2:
+        LOGGER.warning(f"Unexpected additional `-c/--credits` arguments: {args[1:]}")
+
+    parser = argparse.ArgumentParser()
+    cmd_summary.setup_parser(parser)
+    dueargs = parser.parse_args([arg if n%2 else '--'+arg for n,arg in enumerate(args[1:])])    # Assumes key-value pairs, e.g. args[1] = 'style', args[2] = 'apa'
+    for report in (Path(args[0])/'code'/'bidscoin').glob('.duecredit_*'):                       # args[0] = bidsfolder
+        LOGGER.info(f"DueCredit report for {report.stem.replace('.duecredit_', '')}:")
+        dueargs.filename = report
+        cmd_summary.run(dueargs)
+        print(f"{'-'*40}\n")
+
+
+def settracking(value: str) -> None:
+    """
+    Set or show usage tracking
+
+    :param value: Shows the tracking data if value == 'show', else write the tracking setting to the BIDScoin config file
+    :return:
+    """
 
     if not value: return
 
@@ -639,6 +665,7 @@ def main():
         test_bidscoin(bidsmapfile=args.test)
         test_bidsmap(bidsmapfile=args.bidsmaptest)
         settracking(value=args.tracking)
+        reportcredits(args=args.credits)
 
     except Exception:
         trackusage('bidscoin_exception')

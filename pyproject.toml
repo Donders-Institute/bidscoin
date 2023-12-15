@@ -30,16 +30,17 @@ dependencies     = ['pandas',
                     'python-dateutil',
                     'nibabel',
                     'bids-validator',
-                    'drmaa']
+                    'drmaa',
+                    'duecredit']
 
 [project.optional-dependencies]
 dcm2niix2bids    = ['dcm2niix']
 spec2nii2bids    = ['spec2nii >= 0.6.1']
 deface           = ['pydeface']
 pet2bids         = ['pypet2bids >= 1.0.12']
-# phys2bidscoin    = ['bioread >= 1.0.5', 'pymatreader >= 0.0.24', 'duecredit', 'phys2bids >= 2.0.0, < 3.0.0']
+# phys2bidscoin    = ['bioread >= 1.0.5', 'pymatreader >= 0.0.24', 'phys2bids >= 2.0.0, < 3.0.0']
 all              = ['bidscoin[dcm2niix2bids,spec2nii2bids,deface,pet2bids]']    # + phys2bidscoin
-dev              = ['bidscoin[spec2nii2bids,deface,pet2bids]', 'tox', 'pytest', 'jsonschema', 'sphinx-rtd-theme', 'myst-parser', 'duecredit'] # + phys2bidscoin
+dev              = ['bidscoin[spec2nii2bids,deface,pet2bids]', 'tox', 'pytest', 'jsonschema', 'sphinx-rtd-theme', 'myst-parser'] # + phys2bidscoin
 
 [project.urls]
 documentation    = 'https://bidscoin.readthedocs.io'
@@ -100,12 +101,11 @@ extras           = all
 deps             = pytest
                    jsonschema
                    argparse-manpage[setuptools]
-                   duecredit
 allowlist_externals = rm
+setenv           = DUECREDIT_ENABLE=yes
 commands         = rm -f .duecredit.p
                    pytest
                    rm .duecredit.p
-setenv           = DUECREDIT_ENABLE=yes
 
 [testenv:docs]
 deps             = sphinx-rtd-theme

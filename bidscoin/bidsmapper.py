@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """A BIDScoin application to create a study bidsmap (See also cli/_bidsmapper.py)"""
 
-# Global imports (plugin modules may be imported when needed)
+# NB: Set os.environ['DUECREDIT'] values as early as possible to capture all credits
+import os
+import sys
+if __name__ == "__main__" and os.getenv('DUECREDIT_ENABLE','').lower() not in ('1', 'yes', 'true'):    # Ideally the due state (`self.__active=True`) should also be checked (but that's impossible)
+    os.environ['DUECREDIT_ENABLE'] = 'yes'
+    os.environ['DUECREDIT_FILE']   = os.path.join(sys.argv[2], 'code', 'bidscoin', '.duecredit_bidsmapper.p')   # NB: argv[2] = bidsfolder
+
 import copy
 import logging
-import sys
 import shutil
 import re
 from tqdm import tqdm

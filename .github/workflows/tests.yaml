@@ -49,4 +49,4 @@ jobs:
         run: |
           pytest tests
         env:
-          DUECREDIT_ENABLE: yes
+          DUECREDIT_ENABLE: no

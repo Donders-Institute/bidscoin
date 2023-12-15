@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 """A bidsapp that wraps around the multi-echo combination tool (See also cli/_echocombine.py)"""
 
+# NB: Set os.environ['DUECREDIT'] values as early as possible to capture all credits
+import os
+import sys
+if __name__ == "__main__" and os.getenv('DUECREDIT_ENABLE','').lower() not in ('1', 'yes', 'true'):    # Ideally the due state (`self.__active=True`) should also be checked (but that's impossible)
+    os.environ['DUECREDIT_ENABLE'] = 'yes'
+    os.environ['DUECREDIT_FILE']   = os.path.join(sys.argv[1], 'code', 'bidscoin', '.duecredit_echocombine.p')   # NB: argv[2] = bidsfolder
+
 import json
 import logging
 import pandas as pd
@@ -10,7 +17,6 @@ from multiecho import combination as me
 from pathlib import Path
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
-    import sys
     sys.path.append(str(Path(__file__).parents[2]))
 from bidscoin import bcoin, bids, lsdirs, trackusage
 
