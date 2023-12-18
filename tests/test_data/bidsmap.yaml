@@ -20,7 +20,7 @@ Options:
 # General options and plugins
 # --------------------------------------------------------------------------------
   bidscoin:
-    version: 4.2.1                  # BIDScoin version (should correspond with the version in pyproject.toml)
+    version: 4.3.0                  # BIDScoin version (should correspond with the version in pyproject.toml)
     bidsignore: mrs/;extra_data/    # Semicolon-separated list of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. extra_data/;pet/;myfile.txt;yourfile.csv
     subprefix: sub-                 # The subject prefix of the source data
     sesprefix: ses-                 # The session prefix of the source data
@@ -77,11 +77,14 @@ DICOM:
       RepetitionTime: '2300'
       PhaseEncodingDirection: ''
     bids:
+      task:
       acq: t1mpragesagipat21p0iso
       ce:
       rec:
       run: <<>>
+      echo:
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: T1w
     meta: {}
   func:       # ----------------------- All functional runs --------------------
@@ -116,6 +119,7 @@ DICOM:
       run: <<>>
       echo: '1'
       part: &id001 ['', mag, phase, real, imag, 0]
+      chunk:
     meta:
       TaskName:
       B0FieldSource:
@@ -150,6 +154,7 @@ DICOM:
       run: <<>>
       echo: '1'
       part: *id001
+      chunk:
       suffix: bold
     meta:
       TaskName:
@@ -186,6 +191,7 @@ DICOM:
       run: <<>>
       echo: '1'
       part: *id001
+      chunk:
     meta:
       TaskName:
       B0FieldSource:
@@ -220,6 +226,7 @@ DICOM:
       run: <<>>
       echo: '1'
       part: *id001
+      chunk:
       suffix: bold
     meta:
       TaskName:
@@ -253,6 +260,7 @@ DICOM:
       suffix: magnitude1
       acq: fieldmap2p4iso
       run: <<>>
+      chunk:
     meta:
       B0FieldIdentifier:
       IntendedFor:
@@ -281,6 +289,7 @@ DICOM:
       suffix: phasediff
       acq: fieldmap2p4iso
       run: <<>>
+      chunk:
     meta:
       B0FieldIdentifier:
       IntendedFor:
@@ -309,6 +318,7 @@ DICOM:
       suffix: magnitude1
       acq: fieldmap2p5iso
       run: <<>>
+      chunk:
     meta:
       B0FieldIdentifier:
       IntendedFor:
@@ -337,6 +347,7 @@ DICOM:
       suffix: phasediff
       acq: fieldmap2p5iso
       run: <<>>
+      chunk:
     meta:
       B0FieldIdentifier:
       IntendedFor:

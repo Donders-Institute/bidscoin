@@ -1,24 +1,25 @@
 ---
-MEGChannels:
+motionChannels:
   selectors:
-    - datatype == "meg"
+    - datatype == "motion"
     - suffix == "channels"
     - extension == ".tsv"
   initial_columns:
     - name__channels
+    - component
     - type__channels
-    - units
+    - tracked_point__channels
+    - units__motion
   columns:
     name__channels: required
+    component: required
     type__channels: required
-    units: required
+    tracked_point__channels: required
+    units__motion: required
+    placement__motion: recommended
+    reference_frame: recommended
     description: optional
     sampling_frequency: optional
-    low_cutoff: optional
-    high_cutoff: optional
-    notch: optional
-    software_filters: optional
     status: optional
     status_description: optional
-  index_columns: [name__channels]
   additional_columns: allowed_if_defined

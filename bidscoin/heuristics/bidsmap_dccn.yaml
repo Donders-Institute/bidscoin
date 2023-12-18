@@ -82,11 +82,14 @@ DICOM:
       RepetitionTime:
       InPlanePhaseEncodingDirection:
     bids: &anat_dicoment_nonparametric  # See: schema/datatypes/anat.yaml
+      task:
       acq: <SeriesDescription>    # This will be expanded by the bidsmapper (so the user can edit it in the bidseditor)
       ce:
       rec:
       run: <<>>                   # This will be updated dynamically during bidscoiner runtime (as it depends on the already existing files)
+      echo:
       part: ['', mag, phase, real, imag, 0]   # # This BIDS value list will be shown as a dropdown menu in the bidseditor with the first (empty) item selected (as indicated by the last item, i.e. 0)
+      chunk:
       suffix: T1w
     meta: {}                      # This is an optional entry for meta-data that will be appended to the json sidecar files produced by the plugin
   - provenance:
@@ -165,10 +168,12 @@ DICOM:
       <<: *anat_dicomattr
       ProtocolName: (?i).*T1.?map.*
     bids: &anat_dicoment_parametric     # See: schema/datatypes/anat.yaml
+      task:
       acq: <ProtocolName>
       ce:
       rec:
       run: <<>>
+      chunk:
       suffix: T1map
   - provenance:
     attributes:
@@ -259,13 +264,6 @@ DICOM:
   - provenance:
     attributes:
       <<: *anat_dicomattr
-      ProtocolName: (?i).*PDT2.?map.*
-    bids:
-      <<: *anat_dicoment_parametric
-      suffix: PDT2map
-  - provenance:
-    attributes:
-      <<: *anat_dicomattr
       ProtocolName: (?i).*Chi.?map.*
     bids:
       <<: *anat_dicoment_parametric
@@ -287,23 +285,27 @@ DICOM:
   - provenance:
     attributes: *anat_dicomattr
     bids: &anat_dicoment_defacemask     # See: schema/datatypes/anat.yaml
+      task:
       acq: <SeriesDescription>
       ce:
       rec:
       run: <<>>
       mod:
+      chunk:
       suffix: defacemask
   - provenance:
     attributes:
       <<: *anat_dicomattr
       ProtocolName: (?i).*ME.?SE.*
     bids: &anat_dicoment_multiecho      # See: schema/datatypes/anat.yaml
+      task:
       acq: <SeriesDescription>
       ce:
       rec:
       run: <<>>
       echo: <EchoNumbers>
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: MESE
   - provenance:
     attributes:
@@ -317,6 +319,7 @@ DICOM:
       <<: *anat_dicomattr
       ProtocolName: (?i).*VFA.*
     bids: &anat_dicoment_multiflip      # See: schema/datatypes/anat.yaml
+      task:
       acq: <SeriesDescription>
       ce:
       rec:
@@ -324,18 +327,21 @@ DICOM:
       run: <<>>
       flip:
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: VFA
   - provenance:
     attributes:
       <<: *anat_dicomattr
       ProtocolName: (?i).*IR.?T1.*
     bids: &anat_dicoment_multiinv       # See: schema/datatypes/anat.yaml
+      task:
       acq: <SeriesDescription>
       ce:
       rec:
       run: <<>>
       inv:
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: IRT1
   - provenance:
     attributes:
@@ -344,6 +350,7 @@ DICOM:
       SeriesDescription: (?i).*INV1.*
       MRAcquisitionType: 3D
     bids: &anat_dicoment_mp2rage        # See: schema/datatypes/anat.yaml
+      task:
       acq: <ProtocolName>
       ce:
       rec:
@@ -352,6 +359,7 @@ DICOM:
       flip:
       inv: 1
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: MP2RAGE
   - provenance:
     attributes:
@@ -368,6 +376,7 @@ DICOM:
       ProtocolName: (?i).*MPM.*
       EffectiveEchoTime:
     bids: &anat_dicoment_vfamt          # See: schema/datatypes/anat.yaml
+      task:
       acq: <SeriesDescription>
       ce:
       rec:
@@ -376,6 +385,7 @@ DICOM:
       flip:
       mt:
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: MPM
     meta:
       EffectiveEchoTime: <<EffectiveEchoTime>>
@@ -391,12 +401,14 @@ DICOM:
       <<: *anat_dicomattr
       ProtocolName: (?i).*MTR.*
     bids: &anat_dicoment_mtr            # See: schema/datatypes/anat.yaml
+      task:
       acq: <SeriesDescription>
       ce:
       rec:
       run: <<>>
       mt:
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: MTR
   - provenance:                         # ----------- Experimental CT support (see BEP024) -------------
     attributes: &ct_dicomattr           # An empty / non-matching reference dictionary that can be dereferenced in other run-items of this data type
@@ -413,6 +425,7 @@ DICOM:
       ce:
       rec:
       run: <<>>                         # This will be updated dynamically during bidscoiner runtime (as it depends on the already existing files)
+      chunk:
       suffix: ct
 
   func:       # ----------------------- All functional runs --------------------
@@ -439,11 +452,12 @@ DICOM:
       task: <ProtocolName>              # More consistent between SBREF and PHYSIO files
       acq:
       ce:
-      dir:
+      dir: <RectilinearPhaseEncodeReordering> # = GE (<InPlanePhaseEncodingDirection> only gives COLUMN or ROW)
       rec:
       run: <<>>
       echo:                             # Or use <EchoNumbers>
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: bold
     meta: &func_meta
       TaskName: <ProtocolName>
@@ -479,6 +493,7 @@ DICOM:
       rec:
       recording:
       run: <<>>
+      chunk:
       suffix: physio
     meta:
       TaskName: <ProtocolName>
@@ -517,6 +532,7 @@ DICOM:
       dir:
       rec:
       run: <<>>
+      chunk:
       suffix: events
     meta:
       TaskName: <SeriesDescription>
@@ -551,7 +567,7 @@ DICOM:
     bids: &perf_dicoment_group1         # See: schema/datatypes/perf.yaml
       acq: <ProtocolName>
       rec: <SeriesDescription>
-      dir:
+      dir: <RectilinearPhaseEncodeReordering> # = GE (<InPlanePhaseEncodingDirection> only gives COLUMN or ROW)
       run: <<>>
       suffix: asl
     meta: &perf_meta
@@ -630,9 +646,10 @@ DICOM:
     bids: &dwi_dicoment_DWI             # See: schema/datatypes/dwi.yaml
       acq: <ProtocolName>               # More consistent between SBREF and PHYSIO files
       rec:
-      dir:
+      dir: <RectilinearPhaseEncodeReordering> # = GE (<InPlanePhaseEncodingDirection> only gives COLUMN or ROW)
       run: <<>>
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: dwi
     meta: &dwi_meta
       B0FieldSource:
@@ -644,9 +661,10 @@ DICOM:
     bids: &dwi_dicoment_sbref           # See: schema/datatypes/dwi.yaml
       acq: <SeriesDescription>
       rec:
-      dir:
+      dir: <RectilinearPhaseEncodeReordering> # = GE (<InPlanePhaseEncodingDirection> only gives COLUMN or ROW)
       run: <<>>
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: sbref
     meta: *dwi_meta
   - provenance:                         # Then match the PHYSIO runs (the normal bold runs don't have PHYSIO in the seriesdescription)
@@ -660,6 +678,7 @@ DICOM:
       run: <<>>
       part: ['', mag, phase, real, imag, 0]
       recording:
+      chunk:
       suffix: physio
   - provenance:
     attributes:
@@ -702,6 +721,7 @@ DICOM:
     bids: &fmap_dicoment_fieldmaps      # See: schema/datatypes/fmap.yaml
       acq: <SeriesDescription>
       run: <<>>
+      chunk:
       suffix: magnitude1
     meta: &fmap_meta
       B0FieldIdentifier:
@@ -780,8 +800,9 @@ DICOM:
     bids: &fmap_dicoment_PEPolar        # See: schema/datatypes/fmap.yaml
       acq: <SeriesDescription>          # NB: <ProtocolName> is consistent between SBREF and PHYSIO files but causes name clashes
       ce:
-      dir:                              # <InPlanePhaseEncodingDirection> only gives COLUMN or ROW
+      dir: <RectilinearPhaseEncodeReordering> # = GE (<InPlanePhaseEncodingDirection> only gives COLUMN or ROW)
       run: <<>>
+      chunk:
       suffix: epi
     meta: *fmap_meta
   - provenance:                         # Siemens XA30 enhanced DICOM
@@ -809,6 +830,7 @@ DICOM:
       inv:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
+      chunk:
       suffix: TB1DAM
     meta: &fmap_meta_B0Field
       B0FieldIdentifier:
@@ -823,6 +845,7 @@ DICOM:
       inv:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
+      chunk:
       suffix: TB1EPI
     meta: *fmap_meta_B0Field
   - provenance:
@@ -836,6 +859,7 @@ DICOM:
       inv:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
+      chunk:
       suffix: TB1AFI
     meta: *fmap_meta_B0Field
   - provenance:
@@ -844,7 +868,7 @@ DICOM:
       ProtocolName: (?i).*B1.?map.*
       ImageType: .*FLIP ANGLE MAP.*
     bids:
-      <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml & https://bids-specification.readthedocs.io/en/stable/99-appendices/11-qmri.html#tb1tfl-and-tb1rfm-specific-notes
+      <<: *fmap_dicoment_RFFieldMaps    # See: https://bids-specification.readthedocs.io/en/stable/99-appendices/11-qmri.html#tb1tfl-and-tb1rfm-specific-notes
       acq: famp
       suffix: TB1TFL
     meta: *fmap_meta_B0Field
@@ -854,7 +878,7 @@ DICOM:
       ProtocolName: (?i).*B1map.*
       ImageType: .*'M'.*
     bids:
-      <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      <<: *fmap_dicoment_RFFieldMaps
       acq: anat
       suffix: TB1TFL
     meta: *fmap_meta_B0Field
@@ -864,7 +888,7 @@ DICOM:
       ProtocolName: (?i).*RF.?map.*
       ImageType: .*'M'.*
     bids:
-      <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      <<: *fmap_dicoment_RFFieldMaps
       acq: anat
       suffix: TB1RFM
     meta: *fmap_meta_B0Field
@@ -873,14 +897,14 @@ DICOM:
       <<: *fmap_dicomattr
       ProtocolName: (?i).*RF.?map.*
     bids:
-      <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      <<: *fmap_dicoment_RFFieldMaps
       acq: famp
       suffix: TB1RFM
     meta: *fmap_meta_B0Field
   - provenance:
     attributes: *fmap_dicomattr
     bids:
-      <<: *fmap_dicoment_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      <<: *fmap_dicoment_RFFieldMaps
       suffix: RB1COR
     meta: *fmap_meta_B0Field
   - provenance:
@@ -894,6 +918,7 @@ DICOM:
       inv:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
+      chunk:
       suffix: TB1SRGE
     meta: *fmap_meta_B0Field
   - provenance:
@@ -906,6 +931,7 @@ DICOM:
       ce:
       rec:
       run: <<>>
+      chunk:
       suffix: TB1map
     meta: *fmap_meta_B0Field
   - provenance:
@@ -1017,10 +1043,11 @@ DICOM:
       ce:
       task:
       echo: <EchoNumbers>
-      dir:
+      dir: <RectilinearPhaseEncodeReordering> # = GE (<InPlanePhaseEncodingDirection> only gives COLUMN or ROW)
       run: <<>>
       mod: <SeriesDescription>
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: <ScanningSequence>
   - provenance:
     attributes:
@@ -1106,11 +1133,14 @@ PAR:
       repetition_time:
       prep_direction:
     bids: &anat_parent_nonparametric    # See: schema/datatypes/anat.yaml
+      task:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
       run: <<>>
-      part: ['', mag, phase, real, imag, 0]
+      echo:
+      part: ['', mag, phase, real, imag, 0]   # This BIDS value list will be shown as a dropdown menu in the bidseditor with the first (empty) item selected (as indicated by the last item, i.e. 0)
+      chunk:
       suffix: T1w
   - provenance:
     attributes:
@@ -1178,10 +1208,12 @@ PAR:
       <<: *anat_parattr
       protocol_name: (?i).*T1.?map.*
     bids: &anat_parent_parametric       # See: schema/datatypes/anat.yaml
+      task:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
       run: <<>>
+      chunk:
       suffix: T1map
   - provenance:
     attributes:
@@ -1271,13 +1303,6 @@ PAR:
   - provenance:
     attributes:
       <<: *anat_parattr
-      protocol_name: (?i).*PDT2.?map.*
-    bids:
-      <<: *anat_parent_parametric
-      suffix: PDT2map
-  - provenance:
-    attributes:
-      <<: *anat_parattr
       protocol_name: (?i).*Chi.?map.*
     bids:
       <<: *anat_parent_parametric
@@ -1299,23 +1324,27 @@ PAR:
   - provenance:
     attributes: *anat_parattr
     bids: &anat_parent_defacemask       # See: schema/datatypes/anat.yaml
+      task:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
       run: <<>>
       mod:
+      chunk:
       suffix: defacemask
   - provenance:
     attributes:
       <<: *anat_parattr
       protocol_name: (?i).*ME.?SE.*
     bids: &anat_parent_multiecho        # See: schema/datatypes/anat.yaml
+      task:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
       run: <<>>
       echo:
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: MESE
   - provenance:
     attributes:
@@ -1329,6 +1358,7 @@ PAR:
       <<: *anat_parattr
       protocol_name: (?i).*VFA.*
     bids: &anat_parent_multiflip        # See: schema/datatypes/anat.yaml
+      task:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
@@ -1336,24 +1366,28 @@ PAR:
       run: <<>>
       flip:
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: VFA
   - provenance:
     attributes:
       <<: *anat_parattr
       protocol_name: (?i).*IR.?T1.*
     bids: &anat_parent_multiinv         # See: schema/datatypes/anat.yaml
+      task:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
       run: <<>>
       inv:
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: IRT1
   - provenance:
     attributes:
       <<: *anat_parattr
       protocol_name: (?i).*3DTFE.*INV1.*
     bids: &anat_parent_mp2rage          # See: schema/datatypes/anat.yaml
+      task:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
@@ -1362,6 +1396,7 @@ PAR:
       flip:
       inv: 1
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: MP2RAGE
   - provenance:
     attributes:
@@ -1375,6 +1410,7 @@ PAR:
       <<: *anat_parattr
       protocol_name: (?i).*MPM.*
     bids: &anat_parent_vfamt            # See: schema/datatypes/anat.yaml
+      task:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
@@ -1383,6 +1419,7 @@ PAR:
       flip:
       mt:
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: MPM
   - provenance:
     attributes:
@@ -1396,12 +1433,14 @@ PAR:
       <<: *anat_parattr
       protocol_name: (?i).*MTR.*
     bids: &anat_parent_mtr              # See: schema/datatypes/anat.yaml
+      task:
       acq: <protocol_name>
       ce:
       rec: <exam_name>
       run: <<>>
       mt:
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: MTR
 
   func:       # ----------------------- All functional runs --------------------
@@ -1429,6 +1468,7 @@ PAR:
       run: <<>>
       echo:
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: bold
     meta:
       <<: *func_meta
@@ -1464,6 +1504,7 @@ PAR:
       dir:
       rec:
       run: <<>>
+      chunk:
       suffix: events
     meta:
       TaskName: <exam_name>
@@ -1477,6 +1518,7 @@ PAR:
       rec:
       recording:
       run: <<>>
+      chunk:
       suffix: physio
     meta:
       TaskName: <exam_name>
@@ -1565,6 +1607,7 @@ PAR:
       dir:
       run: <<>>
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: dwi
     meta: *dwi_meta
   - provenance:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
@@ -1577,6 +1620,7 @@ PAR:
       dir:
       run: <<>>
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: sbref
   - provenance:                         # Then catch the normal DWI runs
     attributes:
@@ -1604,6 +1648,7 @@ PAR:
     bids: &fmap_parent_fieldmaps        # See: schema/datatypes/fmap.yaml
       acq: <protocol_name>
       run: <<>>
+      chunk:
       suffix: magnitude1
     meta: *fmap_meta
   - provenance:
@@ -1649,6 +1694,7 @@ PAR:
       ce:
       dir:
       run: <<>>
+      chunk:
       suffix: epi
     meta: *fmap_meta
   - provenance:
@@ -1667,6 +1713,7 @@ PAR:
       inv:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
+      chunk:
       suffix: TB1DAM
     meta: *fmap_meta_B0Field
   - provenance:
@@ -1680,6 +1727,7 @@ PAR:
       inv:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
+      chunk:
       suffix: TB1EPI
     meta: *fmap_meta_B0Field
   - provenance:
@@ -1693,6 +1741,7 @@ PAR:
       inv:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
+      chunk:
       suffix: TB1AFI
     meta: *fmap_meta_B0Field
   - provenance:
@@ -1724,15 +1773,17 @@ PAR:
       inv:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
+      chunk:
       suffix: TB1SRGE
     meta: *fmap_meta_B0Field
   - provenance:
     attributes: *fmap_parattr
-    bids: &fmap_parent_parametric
+    bids: &fmap_parent_parametric       # See: schema/datatypes/fmap.yaml
       acq: <protocol_name>
       ce:
       rec:
       run: <<>>
+      chunk:
       suffix: TB1map
     meta: *fmap_meta_B0Field
   - provenance:
@@ -2038,11 +2089,14 @@ Nibabel:
       RepetitionTime:
       InPlanePhaseEncodingDirectionDICOM:
     bids: &anat_nibent_nonparametric    # See: schema/datatypes/anat.yaml
+      task:
       acq: <descrip>                    # This will be expanded by the bidsmapper (so the user can edit it)
       ce:
       rec:
       run: <<>>                         # This will be updated during bidscoiner runtime (as it depends on the already existing files)
-      part: ['', mag, phase, real, imag, 0]
+      echo:
+      part: ['', mag, phase, real, imag, 0]   # This BIDS value list will be shown as a dropdown menu in the bidseditor with the first (empty) item selected (as indicated by the last item, i.e. 0)
+      chunk:
       suffix: T1w
   - provenance:
     properties:
@@ -2120,10 +2174,12 @@ Nibabel:
       filename: (?i).*T1.?map.*
     attributes: *nibattr
     bids: &anat_nibent_parametric       # See: schema/datatypes/anat.yaml
+      task:
       acq: <descrip>
       ce:
       rec:
       run: <<>>
+      chunk:
       suffix: T1map
   - provenance:
     properties:
@@ -2224,14 +2280,6 @@ Nibabel:
   - provenance:
     properties:
       <<: *fileprop
-      filename: (?i).*PDT2.?map.*
-    attributes: *nibattr
-    bids:
-      <<: *anat_nibent_parametric
-      suffix: PDT2map
-  - provenance:
-    properties:
-      <<: *fileprop
       filename: (?i).*Chi.?map.*
     attributes: *nibattr
     bids:
@@ -2257,11 +2305,13 @@ Nibabel:
     properties: *fileprop
     attributes: *nibattr
     bids: &anat_nibent_defacemask       # See: schema/datatypes/anat.yaml
+      task:
       acq: <descrip>
       ce:
       rec:
       run: <<>>
       mod:
+      chunk:
       suffix: defacemask
   - provenance:
     properties:
@@ -2269,12 +2319,14 @@ Nibabel:
       filename: (?i).*ME.?SE.*
     attributes: *nibattr
     bids: &anat_nibent_multiecho        # See: schema/datatypes/anat.yaml
+      task:
       acq: <descrip>
       ce:
       rec:
       run: <<>>
       echo:
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: MESE
   - provenance:
     properties:
@@ -2290,6 +2342,7 @@ Nibabel:
       filename: (?i).*VFA.*
     attributes: *nibattr
     bids: &anat_nibent_multiflip        # See: schema/datatypes/anat.yaml
+      task:
       acq: <descrip>
       ce:
       rec:
@@ -2297,6 +2350,7 @@ Nibabel:
       run: <<>>
       flip:
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: VFA
   - provenance:
     properties:
@@ -2304,12 +2358,14 @@ Nibabel:
       filename: (?i).*IR.?T1.*
     attributes: *nibattr
     bids: &anat_nibent_multiinv         # See: schema/datatypes/anat.yaml
+      task:
       acq: <descrip>
       ce:
       rec:
       run: <<>>
       inv:
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: IRT1
   - provenance:
     properties:
@@ -2317,6 +2373,7 @@ Nibabel:
       filename: (?i).*(MP2RAGE|INV1).*
     attributes: *nibattr
     bids: &anat_nibent_mp2rage           # See: schema/datatypes/anat.yaml
+      task:
       acq: <descrip>
       ce:
       rec:
@@ -2325,6 +2382,7 @@ Nibabel:
       flip:
       inv: 1
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: MP2RAGE
   - provenance:
     properties:
@@ -2340,6 +2398,7 @@ Nibabel:
       filename: (?i).*MPM.*
     attributes: *nibattr
     bids: &anat_nibent_vfamt            # See: schema/datatypes/anat.yaml
+      task:
       acq: <descrip>
       ce:
       rec:
@@ -2348,6 +2407,7 @@ Nibabel:
       flip:
       mt:
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: MPM
   - provenance:
     properties:
@@ -2363,12 +2423,14 @@ Nibabel:
       filename: (?i).*MTR.*
     attributes: *nibattr
     bids: &anat_nibent_mtr              # See: schema/datatypes/anat.yaml
+      task:
       acq: <SeriesDescription>
       ce:
       rec:
       run: <<>>
       mt:
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: MTR
 
   func:       # ----------------------- All functional runs --------------------
@@ -2384,6 +2446,7 @@ Nibabel:
       run: <<>>
       echo:
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: bold
     meta: *func_meta
   - provenance:                         # First match the SBREF bold runs (the normal bold runs won't have SBREF in the name)
@@ -2406,6 +2469,7 @@ Nibabel:
       rec:
       recording:
       run: <<>>
+      chunk:
       suffix: physio
     meta:
       TaskName:
@@ -2435,6 +2499,7 @@ Nibabel:
       dir:
       rec:
       run: <<>>
+      chunk:
       suffix: events
     meta:
       TaskName:
@@ -2516,6 +2581,7 @@ Nibabel:
       dir:
       run: <<>>
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: dwi
     meta: *dwi_meta
   - provenance:                         # First catch the SBREF runs
@@ -2529,6 +2595,7 @@ Nibabel:
       dir:
       run: <<>>
       part: ['', mag, phase, real, imag, 0]
+      chunk:
       suffix: sbref
     meta: *dwi_meta
   - provenance:                         # Then catch the normal DWI runs
@@ -2547,6 +2614,7 @@ Nibabel:
       run: <<>>
       part: ['', mag, phase, real, imag, 0]
       recording:
+      chunk:
       suffix: physio
 
   fmap:       # ----------------------- All fieldmap runs ----------------------
@@ -2558,6 +2626,7 @@ Nibabel:
     bids: &fmap_nibent_fieldmaps        # See: schema/datatypes/fmap.yaml
       acq: <descrip>
       run: <<>>
+      chunk:
       suffix: magnitude1
     meta: *fmap_meta
   - provenance:
@@ -2622,6 +2691,7 @@ Nibabel:
       ce:
       dir:
       run: <<>>
+      chunk:
       suffix: epi
     meta: *fmap_meta
   - provenance:
@@ -2646,6 +2716,7 @@ Nibabel:
       inv:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
+      chunk:
       suffix: TB1DAM
     meta: *fmap_meta_B0Field
   - provenance:
@@ -2662,6 +2733,7 @@ Nibabel:
       inv:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
+      chunk:
       suffix: TB1EPI
     meta: *fmap_meta_B0Field
   - provenance:
@@ -2678,6 +2750,7 @@ Nibabel:
       inv:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
+      chunk:
       suffix: TB1AFI
     meta: *fmap_meta_B0Field
   - provenance:
@@ -2723,6 +2796,7 @@ Nibabel:
       inv:
       part: ['', mag, phase, real, imag, 0]
       run: <<>>
+      chunk:
       suffix: TB1SRGE
     meta: *fmap_meta_B0Field
   - provenance:
@@ -2735,6 +2809,7 @@ Nibabel:
       ce:
       rec:
       run: <<>>
+      chunk:
       suffix: TB1map
     meta: *fmap_meta_B0Field
   - provenance:
