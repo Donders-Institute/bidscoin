@@ -257,7 +257,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
             if not list(outfolder.glob(f"{bidsname}.nii*")): continue
 
         # Load / copy over and adapt the newly produced json sidecar-file (NB: assumes every NIfTI-file comes with a json-file)
-        metadata = bids.poolmetadata(sourcefile, sidecar, run['meta'], options['meta'], datasource)
+        metadata = bids.updatemetadata(sourcefile, sidecar, run['meta'], options['meta'], datasource)
         with sidecar.open('w') as json_fid:
             json.dump(metadata, json_fid, indent=4)
 

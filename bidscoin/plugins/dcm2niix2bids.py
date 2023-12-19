@@ -75,7 +75,7 @@ def is_sourcefile(file: Path) -> str:
     :return:        The valid dataformat of the file for this plugin
     """
 
-    if bids.is_dicomfile(file) and bids.get_dicomfield('Modality', file) != 'PT':
+    if bids.is_dicomfile(file):     # To support pet2bids add: and bids.get_dicomfield('Modality', file) != 'PT'
         return 'DICOM'
 
     if bids.is_parfile(file):
@@ -439,7 +439,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
         for jsonfile in sorted(set(jsonfiles)):
 
             # Load / copy over the source meta-data
-            metadata = bids.poolmetadata(sourcefile, jsonfile, run['meta'], options['meta'], datasource)
+            metadata = bids.updatemetadata(sourcefile, jsonfile, run['meta'], options['meta'], datasource)
 
             # Remove the bval/bvec files of sbref- and inv-images (produced by dcm2niix but not allowed by the BIDS specifications)
             if (datasource.datatype=='dwi' and suffix=='sbref') or (datasource.datatype=='fmap' and suffix=='epi'):
@@ -454,10 +454,6 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                             LOGGER.verbose(f"Removing BIDS-invalid b0-file: {bfile} -> {jsonfile}")
                             metadata[ext[1:]] = bdata.values.tolist()
                             bfile.unlink()
-
-            # Remove unused (but added from the template) B0FieldIdentifiers/Sources
-            if not metadata.get('B0FieldSource'):     metadata.pop('B0FieldSource', None)
-            if not metadata.get('B0FieldIdentifier'): metadata.pop('B0FieldIdentifier', None)
 
             # Save the meta-data to the json sidecar-file
             with jsonfile.open('w') as json_fid:

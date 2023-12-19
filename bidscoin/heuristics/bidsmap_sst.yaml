@@ -22,7 +22,7 @@ Options:
 # General BIDScoin and plugin options
 # --------------------------------------------------------------------------------
   bidscoin:
-    version: 4.2.1                  # BIDScoin version (should correspond with the version in pyproject.toml)
+    version: 4.3.0                  # BIDScoin version (should correspond with the version in pyproject.toml)
     subprefix: sub-                 # The subject prefix of the source data
     sesprefix: ses-                 # The session prefix of the source data
     bidsignore: [mrs/, extra_data/, sub-*_ct.*]    # List of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. [extra_data/, pet/, myfile.txt, yourfile.csv]
@@ -455,8 +455,8 @@ DICOM:
       suffix: bold
     meta: &func_meta
       TaskName: <filepath:/.*/...(.*)/.*/>
-      B0FieldSource:
-      B0FieldIdentifier:
+      B0FieldSource: <<session>>
+      B0FieldIdentifier: <<session>>
   - provenance:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
     attributes:
       <<: *func_dicomattr
@@ -572,8 +572,8 @@ DICOM:
       RepetitionTimePreparation:
       VascularCrushing:
       AcquisitionVoxelSize:
-      B0FieldSource:
-      B0FieldIdentifier:
+      B0FieldSource: <<session>>
+      B0FieldIdentifier: <<session>>
   - provenance:
     attributes:
       <<: *perf_dicomattr
@@ -646,8 +646,8 @@ DICOM:
       chunk:
       suffix: dwi
     meta: &dwi_meta
-      B0FieldSource:
-      B0FieldIdentifier:
+      B0FieldSource: <<session>>
+      B0FieldIdentifier: <<session>>
   - provenance:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
     attributes:
       <<: *dwi_dicomattr
@@ -718,7 +718,7 @@ DICOM:
       chunk:
       suffix: magnitude1
     meta: &fmap_meta
-      B0FieldIdentifier:
+      B0FieldIdentifier: <<session>>
       IntendedFor: <<bold>>
   - provenance:
     attributes:
@@ -827,7 +827,7 @@ DICOM:
       chunk:
       suffix: TB1DAM
     meta: &fmap_meta_B0Field
-      B0FieldIdentifier:
+      B0FieldIdentifier: <<session>>
   - provenance:
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_TB1EPI         # See: schema/datatypes/fmap.yaml

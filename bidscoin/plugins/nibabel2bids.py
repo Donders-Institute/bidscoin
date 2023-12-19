@@ -232,13 +232,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
         # Load / copy over the source meta-data
         sidecar  = bidsfile.with_suffix('').with_suffix('.json')
-        metadata = bids.poolmetadata(sourcefile, sidecar, run['meta'], meta, datasource)
-
-        # Remove unused (but added from the template) B0FieldIdentifiers/Sources
-        if not metadata.get('B0FieldSource'):     metadata.pop('B0FieldSource',     None)
-        if not metadata.get('B0FieldIdentifier'): metadata.pop('B0FieldIdentifier', None)
-
-        # Save the meta-data to the json sidecar-file
+        metadata = bids.updatemetadata(sourcefile, sidecar, run['meta'], meta, datasource)
         with sidecar.open('w') as json_fid:
             json.dump(metadata, json_fid, indent=4)
 

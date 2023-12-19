@@ -1414,6 +1414,8 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
             for metakey, metavalue in run['meta'].items():
                 if metakey == 'IntendedFor':
                     run_['meta'][metakey] = metavalue
+                elif metakey in ('B0FieldSource', 'B0FieldIdentifier') and '<<session>>' in (metavalue or ''):
+                    run_['meta'][metakey] = metavalue
                 else:
                     run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False)
 
@@ -1718,6 +1720,8 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
                 # Replace the dynamic meta values, except the IntendedFor value (e.g. <<task>>)
                 if metakey == 'IntendedFor':
                     run_['meta'][metakey] = metavalue
+                elif metakey in ('B0FieldSource', 'B0FieldIdentifier') and '<<session>>' in (metavalue or ''):
+                    run_['meta'][metakey] = metavalue
                 else:
                     run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False, runtime=runtime)
 
@@ -1952,10 +1956,11 @@ def increment_runindex(outfolder: Path, bidsname: str, run: dict, scans_table: D
     return f"{bidsname}.{suffixes}" if suffixes else bidsname
 
 
-def poolmetadata(sourcemeta: Path, targetmeta: Path, usermeta: dict, extensions: list, datasource: DataSource) -> dict:
+def updatemetadata(sourcemeta: Path, targetmeta: Path, usermeta: dict, extensions: list, datasource: DataSource) -> dict:
     """
     Load the metadata from the target (json sidecar), then add metadata from the source (json sidecar) and finally add
-    the user metadata (meta table). Source metadata other than json sidecars are copied over to the target folder
+    the user metadata (meta table). Source metadata other than json sidecars are copied over to the target folder. Special
+    dynamic <<session>> values are replaced with the session label, and unused B0-field tags are removed
 
     NB: In future versions this function could also support more source metadata formats, e.g. yaml, csv- or Excel-files
 
@@ -2001,7 +2006,7 @@ def poolmetadata(sourcemeta: Path, targetmeta: Path, usermeta: dict, extensions:
 
     # Add all the metadata to the metadict. NB: the dynamic `IntendedFor` value is handled separately later
     for metakey, metaval in usermeta.items():
-        if metakey != 'IntendedFor':
+        if metakey != 'IntendedFor' and not (metakey in ('B0FieldSource', 'B0FieldIdentifier') and '<<session>>' in (metaval or '')):
             metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
             try:
                 metaval = ast.literal_eval(str(metaval))  # E.g. convert stringified list or int back to list or int
@@ -2012,6 +2017,16 @@ def poolmetadata(sourcemeta: Path, targetmeta: Path, usermeta: dict, extensions:
         else:
             LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
         metapool[metakey] = metaval or None
+
+    # Update B0FieldIdentifiers / Sources
+    if '<<session>>' in (metapool.get('B0FieldSource') or ''):
+        metapool['B0FieldSource']     = metapool['B0FieldSource'].replace('<<session>>', get_bidsvalue(targetmeta, 'ses'))
+    if '<<session>>' in (metapool.get('B0FieldIdentifier') or ''):
+        metapool['B0FieldIdentifier'] = metapool['B0FieldIdentifier'].replace('<<session>>', get_bidsvalue(targetmeta, 'ses'))
+
+    # Remove unused (but added from the template) B0FieldIdentifiers / Sources
+    if not metapool.get('B0FieldSource'):     metapool.pop('B0FieldSource', None)
+    if not metapool.get('B0FieldIdentifier'): metapool.pop('B0FieldIdentifier', None)
 
     return metapool
 
@@ -2214,11 +2229,16 @@ def get_metahelp(metakey: str) -> str:
     for field in metafields:
         if metakey == metafields[field].get('name'):
             description = metafields[field]['description']
-            if metakey == 'IntendedFor':    # IntendedFor is a special search-pattern field in BIDScoin
+            if metakey == 'IntendedFor':                            # IntendedFor is a special search-pattern field in BIDScoin
                 description += ('\nNB: These associated files can be dynamically searched for'
                                 '\nduring bidscoiner runtime with glob-style matching patterns,'
                                 '\n"such as <<Reward*_bold><Stop*_epi>>" or <<dwi/*acq-highres*>>'
                                 '\n(see documentation)')
+            if metakey in ('B0FieldIdentifier', 'B0FieldSource'):   # <<session>> is a special dynamic value in BIDScoin
+                description += ('\nNB: The `<<session>>` (sub)string will be replaced by the'
+                                '\nsession label during bidscoiner runtime. In this way you can'
+                                '\ncreate session-specific B0FieldIdentifier/Source tags (recommended)')
+
             return f"{metafields[field]['display_name']}\n{description}"
 
     return f"{metakey}\nAn unknown/private meta key"

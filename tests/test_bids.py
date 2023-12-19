@@ -471,7 +471,7 @@ def test_get_bidsname(raw_dicomdir):
     assert bidsname == 'sub-001_acq-pydicom_T0w'
 
 
-def test_poolmetadata(dcm_file, tmp_path):
+def test_updatemetadata(dcm_file, tmp_path):
     """Test if metadata is added to the dictionary and copied over"""
 
     # Create the extended datasource
@@ -482,23 +482,31 @@ def test_poolmetadata(dcm_file, tmp_path):
     extdatasource = bids.DataSource(sourcefile, {'dcm2niix2bids': {}}, 'DICOM')
 
     # Create the metadata sidecar file
-    outfolder = tmp_path/'bids'/'sub-01'/'anat'
+    outfolder = tmp_path/'bids'/'sub-001'/'ses-01'/'anat'
     outfolder.mkdir(parents=True)
-    sidecar = outfolder/'sidecar.json'
+    sidecar = outfolder/'sub-001_ses-01_sidecar.json'
     with sidecar.open('w') as fid:
         json.dump({'PatientName': 'SidecarTest'}, fid)
 
+    # Create the user metadata
+    usermeta = {'PatientName':       'UserTest',
+                'DynamicName':       '<<(0010, 0010)>>',
+                'B0FieldSource':     'Source_<<session>>',
+                'B0FieldIdentifier': 'Identifier_<<session>>'}
+
     # Test if the user metadata takes precedence
-    metadata = bids.poolmetadata(sourcefile, sidecar, {'PatientName': 'UserTest', 'DynamicName': '<<(0010, 0010)>>'}, ['.json'], extdatasource)
-    assert metadata['PatientName'] == 'UserTest'
-    assert metadata['DynamicName'] == 'CompressedSamples^MR1'
+    metadata = bids.updatemetadata(sourcefile, sidecar, usermeta, ['.json'], extdatasource)
+    assert metadata['PatientName']       == 'UserTest'
+    assert metadata['DynamicName']       == 'CompressedSamples^MR1'
+    assert metadata['B0FieldSource']     == 'Source_01'
+    assert metadata['B0FieldIdentifier'] == 'Identifier_01'
     assert not (outfolder/sourcefile.with_suffix('.jsn').name).is_file()
 
     # Test if the source metadata takes precedence
-    metadata = bids.poolmetadata(sourcefile, sidecar, {}, ['.jsn', '.json'], extdatasource)
+    metadata = bids.updatemetadata(sourcefile, sidecar, {}, ['.jsn', '.json'], extdatasource)
     assert metadata['PatientName'] == 'SourceTest'
     assert (outfolder/sourcefile.with_suffix('.jsn').name).is_file()
 
     # Test if the sidecar metadata takes precedence
-    metadata = bids.poolmetadata(sourcefile, sidecar, {}, [], extdatasource)
+    metadata = bids.updatemetadata(sourcefile, sidecar, {}, [], extdatasource)
     assert metadata['PatientName'] == 'SidecarTest'
