@@ -6,7 +6,7 @@ import os
 import sys
 if __name__ == "__main__" and os.getenv('DUECREDIT_ENABLE','').lower() not in ('1', 'yes', 'true'):    # Ideally the due state (`self.__active=True`) should also be checked (but that's impossible)
     os.environ['DUECREDIT_ENABLE'] = 'yes'
-    os.environ['DUECREDIT_FILE']   = os.path.join(sys.argv[1], 'code', 'bidscoin', '.duecredit_skullstrip.p')   # NB: argv[2] = bidsfolder
+    os.environ['DUECREDIT_FILE']   = os.path.join(sys.argv[1], 'code', 'bidscoin', '.duecredit_skullstrip.p')   # NB: argv[1] = bidsfolder
 
 import shutil
 import json

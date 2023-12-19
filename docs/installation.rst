@@ -35,11 +35,11 @@ If you do not have git (or any other version control system) installed you can `
 
    $ pip install ./bidscoin[dcm2niix2bids]
 
-If you are installing BIDScoin on an older system and you are getting Qt6 errors, you can try to install a ``+qt5`` build, e.g. for version 4.2.1:
+If you are installing BIDScoin on an older system and you are getting Qt6 errors, you can try to install a ``+qt5`` build, e.g. for version 4.3.0:
 
 .. code-block:: console
 
-   $ pip install bidscoin[dcm2niix2bids]@git+https://github.com/Donders-Institute/bidscoin@v4.2.0+qt5
+   $ pip install bidscoin[dcm2niix2bids]@git+https://github.com/Donders-Institute/bidscoin@v4.3.0+qt5
 
 Updating BIDScoin
 ^^^^^^^^^^^^^^^^^

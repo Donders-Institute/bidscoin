@@ -606,11 +606,12 @@ def reportcredits(args: list) -> None:
     parser = argparse.ArgumentParser()
     cmd_summary.setup_parser(parser)
     dueargs = parser.parse_args([arg if n%2 else '--'+arg for n,arg in enumerate(args[1:])])    # Assumes key-value pairs, e.g. args[1] = 'style', args[2] = 'apa'
-    for report in (Path(args[0])/'code'/'bidscoin').glob('.duecredit_*'):                       # args[0] = bidsfolder
-        LOGGER.info(f"DueCredit report for {report.stem.replace('.duecredit_', '')}:")
+    for report in sorted((Path(args[0])/'code'/'bidscoin').glob('.duecredit_*')):               # args[0] = bidsfolder
+        print(f"\n{'-'*42}")
+        LOGGER.info(f"DueCredit summary for {report.stem.replace('.duecredit_', '').upper()}():")
+        print(f"{'-'*42}")
         dueargs.filename = report
         cmd_summary.run(dueargs)
-        print(f"{'-'*40}\n")
 
 
 def settracking(value: str) -> None:

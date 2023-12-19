@@ -33,7 +33,7 @@ The preferred way to contribute to the BIDScoin code base or documentation is to
 
 2. Set up a virtual environment and install BIDScoin's dependencies::
 
-    python -m venv venv         # Or use any other tool (such as conda). NB: Use Python < 3.11.2 (due to pypet4bids)
+    python -m venv venv         # Or use any other tool (such as conda)
     source venv/bin/activate    # On Linux, see the documentation for other operating systems
     pip install bidscoin[dev]   # Unfortunately pyproject.toml has no way to install BIDScoin's dependencies only
     pip uninstall bidscoin      # Hence we need to retrospectively remove BIDScoin from site-packages

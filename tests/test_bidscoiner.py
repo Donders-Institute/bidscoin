@@ -27,7 +27,6 @@ def test_bidscoiner(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
     assert (bids_dicomdir/'sub-Peter'/'ses-01').is_dir()
     assert (bids_dicomdir/'sub-Peter'/'ses-04BrainMRA').is_dir()
     assert len(list(bids_dicomdir.rglob('*.nii*'))) > 3             # Exact number (10) is a bit arbitrary (depends on what dcm2niix can convert)
-    assert sidecars[0].is_file()
     with sidecars[0].open('r') as json_fid:
         metadict = json.load(json_fid)
     assert metadict.get('ProtocolName')      == 'T/S/C RF FAST PILOT'

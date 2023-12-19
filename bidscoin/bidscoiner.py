@@ -289,7 +289,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                         if next(bidssession.rglob('*.json'), None):
                             bids.addparticipant(bidsfolder/'participants.tsv', subid, sesid, personals)
 
-                    # Add the special fieldmap metadata (IntendedFor, B0FieldIdentifier, TE, etc)
+                    # Add the special fieldmap metadata (IntendedFor, TE, etc)
                     addmetadata(bidssession, subid, sesid)
 
                     # Clean-up the temporary unpacked data
@@ -304,7 +304,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
 def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
     """
-    Adds the special fieldmap metadata (IntendedFor, B0FieldIdentifier, TE, etc.)
+    Adds the special fieldmap metadata (IntendedFor, TE, etc.)
 
     :param bidsses: The session folder with the BIDS session data
     :param subid:   The subject 'sub-label' identifier
