@@ -44,7 +44,6 @@ Options:
       args:
       anon:
       meta: [.json, .tsv]
-#    phys2bidscoin:                  # The settings for the phys2bidscoin plugin
 
 
 DICOM:
@@ -458,16 +457,6 @@ Pfile:
   mrs: []     # ---------------------- All spectroscopy runs ------------------
   extra_data: []     # ----------------------- All extra data -------------------------
   exclude: []     # ----------------------- Data that will be left out -------------
-Physio:
-# --------------------------------------------------------------------------------
-# Physio key-value heuristics (phys2bids -info data) that are mapped to the BIDS labels)
-# --------------------------------------------------------------------------------
-  subject: <<filepath:.*/raw/sub-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-  session: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
-
-  func: []     # ----------------------- All functional runs --------------------
-  extra_data: []     # ----------------------- All extra data -------------------------
-  exclude: []     # ----------------------- Data that will be left out -------------
 Nibabel:
 # --------------------------------------------------------------------------------
 # Nibabel key-value heuristics (header fields that are mapped to the BIDS labels)
@@ -482,52 +471,3 @@ Nibabel:
   fmap: []     # ----------------------- All fieldmap runs ----------------------
   extra_data: []     # ----------------------- All extra data -------------------------
   exclude: []     # ----------------------- Data that will be left out -------------
-PET:
-  # We use this to catalog PET files if they are preset, there is some overlap with
-  # pet in DICOM above, but we're going to worry about that later as we will only
-  # use this PET section if pypet2bids is installed
-  subject: <<filepath:.*/raw/sub-(.*?)/>> # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
-  session: <<filepath:.*/raw/sub-.*?/ses-(.*?)/>>
-
-  pet:    # ----------------------- All PET runs ---------------------------
-  - provenance: /var/folders/5t/0cjjt4t10hz5_qk4tts9gkv40000gs/T/tmpoxyx7mj2/Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-003/ses-01/30003-Phantom_PetAcquisition_AC
-      Images/X-CAL_7.PT.Kalibrering_xca.30003.1.2022.04.26.15.04.22.218.14689529.dcm
-    properties:
-      filepath: ''
-      filename: ''
-      filesize: ''
-      nrfiles: ''
-    attributes:
-      Modality: PT
-      StudyDescription: Kalibrering^xcal
-      SeriesDescription: .Phantom_PetAcquisition_AC Images
-      SeriesType: "['WHOLE BODY', 'IMAGE']"
-      Radiopharmaceutical: Fluorodeoxyglucose
-      ReconstructionMethod: OP-OSEM4i21s
-      ImageType: "['ORIGINAL', 'PRIMARY', 'STATIC', 'AC']"
-      NumberOfSlices: '127'
-      NumberOfTimeSlices: ''
-      SliceThickness: '2.03125'
-      PixelSpacing: '[0.834505, 0.834505]'
-      Rows: '344'
-      Columns: '344'
-    bids:
-      task: PhantomPetAcquisitionACImages
-      trc: Fluorodeoxyglucose
-      rec: ['', acdyn, acstat, nacdyn, nacstat, 0]
-      run: <<>>
-      suffix: pet
-    meta:
-      TracerName: <<Radiopharmaceutical>>
-      TracerRadionuclide:
-      InjectedRadioactivity: <<RadionuclideTotalDose>>
-      InjectedRadioactivityUnits:
-      InjectedMass:
-      InjectedMassUnits:
-      ModeOfAdministration:
-      SpecificRadioactivity:
-      SpecificRadioactivityUnits:
-      TimeZero: <<RadiopharmaceuticalStartTime>>
-      InjectionStart: <<ContrastBolusStartTime>>
-      FrameDuration: <<ActualFrameDuration>>
-      Units:
