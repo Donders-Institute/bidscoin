@@ -497,6 +497,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                 scanpath = outputfile[0].relative_to(bidsses)
                 scans_table.loc[scanpath.as_posix(), 'acq_time'] = acq_time
 
+    # Handle dynamic index for run-1
+    bids.rename_runless_to_run1(bids_mappings, scans_table)
+
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing acquisition time data to: {scans_tsv}")
     scans_table.sort_values(by=['acq_time','filename'], inplace=True)

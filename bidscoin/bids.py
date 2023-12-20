@@ -1970,6 +1970,48 @@ def increment_runindex(outfolder: Path, bidsname: str, run: dict) -> Union[Path,
     return f"{bidsname}.{suffixes}" if suffixes else bidsname
 
 
+def rename_runless_to_run1(bids_mappings: List[BidsMapping], scans_table: pd.DataFrame) -> None:
+    """
+    Adds run-1 label to run-less files that use dynamic index (<<>>) in matched bidsmap entry and for which other runs
+    exist in the output folder. Additionally, 'scans_table' is updated based on the changes.
+    :param bids_mappings:   Bids mappings of source to BIDS targets
+    :param scans_table:     BIDS scans.tsv dataframe with all filenames and acquisition timestamps
+    """
+    for bids_mapping in bids_mappings:
+        if bids_mapping.run.get('bids', {}).get('run') != '<<>>':
+            continue
+
+        for bids_target in bids_mapping.targets.copy():  # copy: avoid problems with removing items within loop
+            bidsname = bids_target.name
+            suffixes = ''
+            if '.' in bidsname:
+                bidsname, suffixes = bidsname.split('.', 1)
+                if suffixes:
+                    suffixes = '.' + suffixes
+            if get_bidsvalue(bidsname, 'run') == '':
+                run2_bidsname = insert_bidskeyval(bidsname, 'run', '2', False)
+                outfolder = bids_target.parent
+                if list(outfolder.glob(f"{run2_bidsname}.*")):
+                    # add run-1 to run-less bidsname files because run-2 exists
+                    run1_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
+                    for runless_file in outfolder.glob(f"{bidsname}.*"):
+                        ext = ''.join(runless_file.suffixes)
+                        run1_file = (runless_file.parent / run1_bidsname).with_suffix(ext)
+                        LOGGER.info(f"Found run-2 files for <<>> index, renaming\n{runless_file} ->\n{run1_file}")
+                        runless_file.replace(run1_file)
+
+                        # Change row name in the scans table
+                        if f"{outfolder.name}/{bidsname}{ext}" in scans_table.index:
+                            LOGGER.verbose(f"Renaming scans entry:\n{outfolder.name}/{bidsname}{ext} ->\n{outfolder.name}/{run1_bidsname}{ext}")
+                            scans_table.rename(
+                                index={f"{outfolder.name}/{bidsname}{ext}": f"{outfolder.name}/{run1_bidsname}{ext}"},
+                                inplace=True
+                            )  # NB: '/' as_posix
+                    # change bids_target from run-less to run-1
+                    bids_mapping.targets.remove(bids_target)
+                    bids_mapping.targets.add((outfolder / run1_bidsname).with_suffix(suffixes))
+
+
 def updatemetadata(sourcemeta: Path, targetmeta: Path, usermeta: dict, extensions: list, datasource: DataSource) -> dict:
     """
     Load the metadata from the target (json sidecar), then add metadata from the source (json sidecar) and finally add

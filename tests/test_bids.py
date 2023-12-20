@@ -9,6 +9,7 @@ from pathlib import Path
 from nibabel.testing import data_path
 from pydicom.data import get_testdata_file
 from bidscoin import bcoin, bids, bidsmap_template
+from bidscoin.bids import BidsMapping
 
 bcoin.setup_logging()
 
@@ -455,6 +456,46 @@ def test_increment_runindex__run2_no_longer_valid(tmp_path):
     outfolder = tmp_path/'bids'/'sub-01'/'anat'
     bidsname  = bids.increment_runindex(outfolder, 'sub-01_run-2_T1w', {'bids': {'run': '<<>>'}})
     assert bidsname == 'sub-01_T1w'
+
+
+def test_rename_runless_to_run1(tmp_path):
+    """Test <<>> index renaming run-less files to run-1 files."""
+
+    # Create data
+    run                  = {'bids': {'run': '<<>>'}}
+    bids_mappings        = []
+    old_runless_bidsname = 'sub-01_T1w'
+    new_run1_bidsname    = 'sub-01_run-1_T1w'
+    run2_bidsname        = 'sub-01_run-2_T1w'
+    outfolder            = tmp_path/'bids'/'sub-01'/'anat'
+    outfolder.mkdir(parents=True)
+    for suffix in ('.nii.gz', '.json'):
+        for file_name in (old_runless_bidsname, run2_bidsname):
+            outfile = (outfolder/file_name).with_suffix(suffix)
+            outfile.touch()
+            if suffix == '.nii.gz':
+                bids_mappings.append(BidsMapping(Path("dummy_source"), {outfile}, 'anat', run))
+
+    # Create the scans table
+    scans_data = {
+        'filename': ['anat/sub-01_T2w.nii.gz', f"anat/{old_runless_bidsname}.nii.gz", f"anat/{run2_bidsname}.nii.gz"],
+        'acq_time': ['acq1', 'acq2', 'acq3'],
+    }
+    result_scans_data = {
+        'filename': ['anat/sub-01_T2w.nii.gz', f"anat/{new_run1_bidsname}.nii.gz", f"anat/{run2_bidsname}.nii.gz"],
+        'acq_time': ['acq1', 'acq2', 'acq3'],
+    }
+    scans_table        = pd.DataFrame(scans_data).set_index('filename')
+    result_scans_table = pd.DataFrame(result_scans_data).set_index('filename')
+
+    # Run the function
+    bids.rename_runless_to_run1(bids_mappings, scans_table)
+
+    # Check the results
+    assert result_scans_table.equals(scans_table)
+    for suffix in ('.nii.gz', '.json'):
+        assert (outfolder/old_runless_bidsname).with_suffix(suffix).is_file() is False
+        assert (outfolder/new_run1_bidsname).with_suffix(suffix).is_file() is True
 
 
 def test_get_bidsname(raw_dicomdir):
