@@ -372,7 +372,7 @@ def test_exist_run(test_bidsmap):
     assert bids.exist_run(bidsmap, '', run)     == False
 
 
-def test_increment_runindex_no_run1(tmp_path):
+def test_increment_runindex__no_run1(tmp_path):
     """Test if run-index is preserved or added to the bidsname"""
 
     # Test runindex is <<>>, so no run is added to the bidsname
@@ -389,35 +389,43 @@ def test_increment_runindex_no_run1(tmp_path):
     assert bidsname == 'sub-01_run-2_T1w'
 
 
-def test_increment_runindex_rename_run1(tmp_path):
-    """Test runindex is <<>>, so run-2 is added to the bidsname and existing run-less files are renamed to run-1"""
+def test_increment_runindex__runless_exist(tmp_path):
+    """Test run-index is <<>>, so run-2 is added to the bidsname"""
 
     # Create the run-less files
-    old_run1name = 'sub-01_T1w'
-    new_run1name = 'sub-01_run-1_T1w'
-    outfolder    = tmp_path/'bids'/'sub-01'/'anat'
+    outfolder = tmp_path/'bids'/'sub-01'/'anat'
     outfolder.mkdir(parents=True)
     for suffix in ('.nii.gz', '.json'):
-        (outfolder/old_run1name).with_suffix(suffix).touch()
+        (outfolder/'sub-01_T1w').with_suffix(suffix).touch()
 
-    # Create the scans table
-    scans_data         = {'filename': ['anat/sub-01_T2w.nii.gz', f"anat/{old_run1name}.nii.gz"], 'acq_time': ['acq1', 'acq2']}  # One matching run-less file
-    result_scans_data  = {'filename': ['anat/sub-01_T2w.nii.gz', f"anat/{new_run1name}.nii.gz"], 'acq_time': ['acq1', 'acq2']}  # One matching run-1 file
-    scans_table        = pd.DataFrame(scans_data).set_index('filename')
-    result_scans_table = pd.DataFrame(result_scans_data).set_index('filename')
-
-    # Increment the run-index
-    bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w', {'bids': {'run': '<<>>'}}, scans_table)
+    # Test run-index is <<>>, so the run-index is incremented
+    bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w', {'bids': {'run': '<<>>'}})
 
     # Check the results
     assert bidsname == 'sub-01_run-2_T1w'
-    assert result_scans_table.equals(scans_table)
+    assert (outfolder / 'sub-01_T1w').with_suffix(suffix).is_file() is True
+
+
+def test_increment_runindex__runless_run2_exist(tmp_path):
+    """Test run-index is <<>>, so run-3 is added to the bidsname"""
+
+    # Create the files
+    outfolder = tmp_path/'bids'/'sub-01'/'anat'
+    outfolder.mkdir(parents=True)
     for suffix in ('.nii.gz', '.json'):
-        assert (outfolder/old_run1name).with_suffix(suffix).is_file() == False
-        assert (outfolder/new_run1name).with_suffix(suffix).is_file() == True
+        (outfolder/'sub-01_T1w').with_suffix(suffix).touch()
+        (outfolder/'sub-01_run-2_T1w').with_suffix(suffix).touch()
+
+    # Test run-index is <<>>, so the run-index is incremented
+    bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w.nii.gz', {'bids': {'run': '<<>>'}})
+
+    # Check the results
+    assert bidsname == 'sub-01_run-3_T1w.nii.gz'
+    assert (outfolder / 'sub-01_T1w').with_suffix(suffix).is_file() is True
+    assert (outfolder / 'sub-01_run-2_T1w').with_suffix(suffix).is_file() is True
 
 
-def test_increment_runindex_run1_run2_exists(tmp_path):
+def test_increment_runindex__run1_run2_exist(tmp_path):
     """Test if run-3 is added to the bidsname"""
 
     # Create the run-1 and run-2 files
@@ -426,10 +434,6 @@ def test_increment_runindex_run1_run2_exists(tmp_path):
     for suffix in ('.nii.gz', '.json'):
         (outfolder/'sub-01_run-1_T1w').with_suffix(suffix).touch()
         (outfolder/'sub-01_run-2_T1w').with_suffix(suffix).touch()
-
-    # Test run-index is <<>>, so the run-index is incremented
-    bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w.nii.gz', {'bids': {'run': '<<>>'}})
-    assert bidsname == 'sub-01_run-3_T1w.nii.gz'
 
     # Test run-index is <<1>>, so the run-index is incremented
     bidsname = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '<<1>>'}})
@@ -442,6 +446,15 @@ def test_increment_runindex_run1_run2_exists(tmp_path):
     # Test run-index is 2, so the run-index is untouched
     bidsname  = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '2'}})
     assert bidsname == 'sub-01_run-1_T1w'
+
+
+def test_increment_runindex__run2_no_longer_valid(tmp_path):
+    """Test <<>> run-index when run is no longer needed although bidsname contains it (dcm2niix postfixes changed)."""
+
+    # Test runindex is <<>>, run is deleted from bidsname as no run-less or run files with that bidsname exist
+    outfolder = tmp_path/'bids'/'sub-01'/'anat'
+    bidsname  = bids.increment_runindex(outfolder, 'sub-01_run-2_T1w', {'bids': {'run': '<<>>'}})
+    assert bidsname == 'sub-01_T1w'
 
 
 def test_get_bidsname(raw_dicomdir):

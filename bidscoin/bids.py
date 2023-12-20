@@ -1929,19 +1929,17 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, v
     return newbidsfile
 
 
-def increment_runindex(outfolder: Path, bidsname: str, run: dict, scans_table: DataFrame=pd.DataFrame()) -> Union[Path, str]:
+def increment_runindex(outfolder: Path, bidsname: str, run: dict) -> Union[Path, str]:
     """
     Checks if a file with the same bidsname already exists in the folder and then increments the dynamic runindex
     (if any) until no such file is found.
 
     Important side effect for <<>> dynamic value:
-    If the run-less file already exists, start with run-2 and rename the existing run-less files to run-index 1.
-    Also update the scans table accordingly
+    If the run-less file already exists, start with run-2, run-1 will be added later to run-less files
 
     :param outfolder:   The full pathname of the bids output folder
     :param bidsname:    The bidsname with a provisional runindex
     :param run:         The run mapping with the BIDS key-value pairs
-    :param scans_table: BIDS scans.tsv dataframe with all filenames and acquisition timestamps
     :return:            The bidsname with the original or incremented runindex
     """
 
@@ -1956,32 +1954,18 @@ def increment_runindex(outfolder: Path, bidsname: str, run: dict, scans_table: D
     if '.' in bidsname:
         bidsname, suffixes = bidsname.split('.', 1)
 
-    # Catch run-less bidsnames from <<>> dynamic run-values
-    run2_bidsname = insert_bidskeyval(bidsname, 'run', '2', False)
-    if '_run-' not in bidsname and list(outfolder.glob(f"{run2_bidsname}.*")):
-        bidsname = run2_bidsname            # There is more than 1 run, i.e. run-2 already exists and should be normally incremented
+    # Delete runindex from bidsname if no runless files (run-1) exist (e.g. dcm2niix postfixes changed name)
+    runless_bidsname = insert_bidskeyval(bidsname, 'run', '', False)
+    if runval == '<<>>' and '_run-' in bidsname and not list(outfolder.glob(f"{runless_bidsname}.*")):
+        return runless_bidsname
 
     # Increment the run-index if the bidsfile already exists
     while list(outfolder.glob(f"{bidsname}.*")):
         runindex = get_bidsvalue(bidsname, 'run')
         if not runindex:                    # The run-less bids file already exists -> start with run-2
-            bidsname = run2_bidsname
+            bidsname = insert_bidskeyval(bidsname, 'run', '2', False)
         else:                               # Do the normal increment
             bidsname = get_bidsvalue(bidsname, 'run', str(int(runindex) + 1))
-
-    # Adds run-1 key to files with bidsname that don't have run index. Updates scans table respectively
-    if runval == '<<>>' and bidsname == run2_bidsname:
-        old_bidsname = insert_bidskeyval(bidsname, 'run', '', False)
-        new_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
-        for file in outfolder.glob(f"{old_bidsname}.*"):
-            ext = ''.join(file.suffixes)
-            file.replace((outfolder/new_bidsname).with_suffix(ext))
-
-            # Change row name in the scans table
-            if f"{outfolder.name}/{old_bidsname}{ext}" in scans_table.index:
-                LOGGER.verbose(f"Renaming:\n{outfolder/old_bidsname}.* ->\n{outfolder/new_bidsname}.*")
-                scans_table.rename(index={f"{outfolder.name}/{old_bidsname}{ext}":
-                                          f"{outfolder.name}/{new_bidsname}{ext}"}, inplace=True)   # NB: '/' as_posix
 
     return f"{bidsname}.{suffixes}" if suffixes else bidsname
 
