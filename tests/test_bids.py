@@ -528,11 +528,13 @@ def test_add_bids_mappings__new(tmp_path):
             "subject": ["sub-01", "sub-01", "sub-01"],
             "session": ['NaN', 'NaN', 'NaN'],
             "SeriesDescription": ["t1", "bold", "bold"],
-            "source": ["sub-01/anat_source", "sub-01/func_source", "sub-01/func_source"],
+            "source": [str(Path("sub-01") / src) for src in ["anat_source", "func_source", "func_source"]],
             "BIDS_mapping": [
-                "anat/sub-01_T1w.nii.gz",
-                "func/sub-01_task-dummy_bold.nii.gz",
-                "func/sub-01_task-dummy_part-phase_bold.nii.gz"
+                str(Path(outdir) / file) for outdir, file in [
+                    ("anat", "sub-01_T1w.nii.gz"),
+                    ("func", "sub-01_task-dummy_bold.nii.gz"),
+                    ("func", "sub-01_task-dummy_part-phase_bold.nii.gz")
+                ]
             ]
         }
     )
@@ -560,11 +562,13 @@ def test_add_bids_mappings__combined(tmp_path):
         {
             "subject": ["sub-01", "sub-01", "sub-01"],
             "SeriesDescription": ["t1", "bold", "bold"],
-            "source": ["sub-01/anat_source", "sub-01/func_source", "sub-01/func_source"],
+            "source": [str(Path("sub-01") / src) for src in ["anat_source", "func_source", "func_source"]],
             "BIDS_mapping": [
-                "anat/sub-01_T1w.nii.gz",
-                "func/sub-01_task-dummy_bold.nii.gz",
-                "func/sub-01_task-dummy_part-phase_bold.nii.gz"
+                str(Path(outdir) / file) for outdir, file in [
+                    ("anat", "sub-01_T1w.nii.gz"),
+                    ("func", "sub-01_task-dummy_bold.nii.gz"),
+                    ("func", "sub-01_task-dummy_part-phase_bold.nii.gz")
+                ]
             ]
         }
     )
@@ -594,14 +598,25 @@ def test_add_bids_mappings__combined(tmp_path):
             "subject": ["sub-01", "sub-01", "sub-01", "sub-02", "sub-02", "sub-02"],
             "session": ['NaN', 'NaN', 'NaN', 'NaN', 'NaN', 'NaN'],
             "SeriesDescription": ["t1", "bold", "bold", "t1", "bold", "bold"],
-            "source": ["sub-01/anat_source", "sub-01/func_source", "sub-01/func_source", "sub-02/anat_source", "sub-02/func_source", "sub-02/func_source"],
+            "source": [
+                str(Path(outdir) / file) for outdir, file in [
+                    ("sub-01", "anat_source"),
+                    ("sub-01", "func_source"),
+                    ("sub-01", "func_source"),
+                    ("sub-02", "anat_source"),
+                    ("sub-02", "func_source"),
+                    ("sub-02", "func_source"),
+                ]
+            ],
             "BIDS_mapping": [
-                "anat/sub-01_T1w.nii.gz",
-                "func/sub-01_task-dummy_bold.nii.gz",
-                "func/sub-01_task-dummy_part-phase_bold.nii.gz",
-                "anat/sub-02_T1w.nii.gz",
-                "func/sub-02_task-dummy_bold.nii.gz",
-                "func/sub-02_task-dummy_part-phase_bold.nii.gz"
+                str(Path(outdir) / file) for outdir, file in [
+                    ("anat", "sub-01_T1w.nii.gz"),
+                    ("func", "sub-01_task-dummy_bold.nii.gz"),
+                    ("func", "sub-01_task-dummy_part-phase_bold.nii.gz"),
+                    ("anat", "sub-02_T1w.nii.gz"),
+                    ("func", "sub-02_task-dummy_bold.nii.gz"),
+                    ("func", "sub-02_task-dummy_part-phase_bold.nii.gz")
+                ]
             ]
         }
     )
@@ -646,11 +661,13 @@ def test_add_bids_mappings__session(tmp_path):
             "subject": ["sub-01", "sub-01", "sub-01"],
             "session": ['ses-01', 'ses-01', 'ses-01'],
             "SeriesDescription": ["t1", "bold", "bold"],
-            "source": ["ses-01/anat_source", "ses-01/func_source", "ses-01/func_source"],
+            "source": [str(Path("ses-01") / src) for src in ["anat_source", "func_source", "func_source"]],
             "BIDS_mapping": [
-                "anat/sub-01_ses-01_T1w.nii.gz",
-                "func/sub-01_ses-01_task-dummy_bold.nii.gz",
-                "func/sub-01_ses-01_task-dummy_part-phase_bold.nii.gz"
+                str(Path(outdir) / file) for outdir, file in [
+                    ("anat", "sub-01_ses-01_T1w.nii.gz"),
+                    ("func", "sub-01_ses-01_task-dummy_bold.nii.gz"),
+                    ("func", "sub-01_ses-01_task-dummy_part-phase_bold.nii.gz")
+                ]
             ]
         }
     )
@@ -672,11 +689,13 @@ def test_drop_session_from_bids_mappings__session_dropped(tmp_path):
             "subject": ["sub-01", "sub-01", "sub-01"],
             "session": [None, None, None],
             "SeriesDescription": ["t1", "bold", "bold"],
-            "source": ["sub-01/anat_source", "sub-01/func_source", "sub-01/func_source"],
+            "source": [str(Path("sub-01") / src) for src in ["anat_source", "func_source", "func_source"]],
             "BIDS_mapping": [
-                "anat/sub-01_T1w.nii.gz",
-                "func/sub-01_task-dummy_bold.nii.gz",
-                "func/sub-01_task-dummy_part-phase_bold.nii.gz"
+                str(Path(outdir) / file) for outdir, file in [
+                    ("anat", "sub-01_T1w.nii.gz"),
+                    ("func", "sub-01_task-dummy_bold.nii.gz"),
+                    ("func", "sub-01_task-dummy_part-phase_bold.nii.gz")
+                ]
             ]
         }
     )
@@ -686,11 +705,13 @@ def test_drop_session_from_bids_mappings__session_dropped(tmp_path):
         {
             "subject": ["sub-01", "sub-01", "sub-01"],
             "SeriesDescription": ["t1", "bold", "bold"],
-            "source": ["sub-01/anat_source", "sub-01/func_source", "sub-01/func_source"],
+            "source": [str(Path("sub-01") / src) for src in ["anat_source", "func_source", "func_source"]],
             "BIDS_mapping": [
-                "anat/sub-01_T1w.nii.gz",
-                "func/sub-01_task-dummy_bold.nii.gz",
-                "func/sub-01_task-dummy_part-phase_bold.nii.gz"
+                str(Path(outdir) / file) for outdir, file in [
+                    ("anat", "sub-01_T1w.nii.gz"),
+                    ("func", "sub-01_task-dummy_bold.nii.gz"),
+                    ("func", "sub-01_task-dummy_part-phase_bold.nii.gz")
+                ]
             ]
         }
     )
@@ -710,13 +731,15 @@ def test_drop_session_from_bids_mappings__session_not_dropped(tmp_path):
     expected_df = pd.DataFrame(
         {
             "subject": ["sub-01", "sub-01", "sub-01"],
-            "session": ['ses-1', 'ses-1', 'ses-1'],
+            "session": ['ses-01', 'ses-01', 'ses-01'],
             "SeriesDescription": ["t1", "bold", "bold"],
-            "source": ["sub-01/anat_source", "sub-01/func_source", "sub-01/func_source"],
+            "source": [str(Path("ses-01") / src) for src in ["anat_source", "func_source", "func_source"]],
             "BIDS_mapping": [
-                "anat/sub-01_T1w.nii.gz",
-                "func/sub-01_task-dummy_bold.nii.gz",
-                "func/sub-01_task-dummy_part-phase_bold.nii.gz"
+                str(Path(outdir) / file) for outdir, file in [
+                    ("anat", "sub-01_ses-01_T1w.nii.gz"),
+                    ("func", "sub-01_ses-01_task-dummy_bold.nii.gz"),
+                    ("func", "sub-01_ses-01_task-dummy_part-phase_bold.nii.gz")
+                ]
             ]
         }
     )
