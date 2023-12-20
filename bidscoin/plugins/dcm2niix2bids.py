@@ -404,9 +404,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                         newbidsname = newbidsname.replace('_magnitude_ph',   '_fieldmap')                       # Case 3: One magnitude + one fieldmap image in one folder / datasource
                         newbidsname = newbidsname.replace('_fieldmap_ph',    '_fieldmap')                       # Case 3
 
-                    # Append the dcm2niix info to acq-label, may need to be improved / elaborated for future BIDS standards, supporting multi-coil data
+                    # Append the dcm2niix info to acq-label if it is not defined, may need to be improved / elaborated for future BIDS standards, supporting multi-coil data
                     else:
-                        newbidsname = bids.get_bidsvalue(newbidsname, 'dummy', postfix)
+                        if not bids.get_bidsvalue(dcm2niixfile.name, 'acq'):
+                            newbidsname = bids.get_bidsvalue(newbidsname, 'dummy', postfix)
 
                     # Remove the added postfix from the new bidsname
                     newbidsname = newbidsname.replace(f"_{postfix}_",'_')                                       # If it is not last
