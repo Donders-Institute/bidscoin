@@ -2212,6 +2212,18 @@ def add_bids_mappings(bids_mappings: List[BidsMapping], session: Path, bidsfolde
     df_combined.to_csv(out, sep='\t', index=False)
 
 
+def drop_session_from_bids_mappings(bids_mappings_file: Path) -> None:
+    """
+    Drops session column from bids_mappings.tsv if no session.
+    :param bids_mappings_file:   Path to bids_mappings.tsv
+    """
+    if bids_mappings_file.exists():
+        df_mappings = pd.read_csv(bids_mappings_file, sep='\t')
+        if df_mappings["session"].isna().all():
+            df_mappings.drop(columns="session", inplace=True)
+            df_mappings.to_csv(bids_mappings_file, sep='\t', index=False)
+
+
 def get_propertieshelp(propertieskey: str) -> str:
     """
     Reads the description of a matching attributes key in the source dictionary

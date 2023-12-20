@@ -664,6 +664,74 @@ def test_add_bids_mappings__session(tmp_path):
     assert result_df.equals(expected_df)
 
 
+def test_drop_session_from_bids_mappings__session_dropped(tmp_path):
+
+    out = tmp_path / 'bids' / "code" / "bidscoin" / "bids_mappings.tsv"
+    existing_df = pd.DataFrame(
+        {
+            "subject": ["sub-01", "sub-01", "sub-01"],
+            "session": [None, None, None],
+            "SeriesDescription": ["t1", "bold", "bold"],
+            "source": ["sub-01/anat_source", "sub-01/func_source", "sub-01/func_source"],
+            "BIDS_mapping": [
+                "anat/sub-01_T1w.nii.gz",
+                "func/sub-01_task-dummy_bold.nii.gz",
+                "func/sub-01_task-dummy_part-phase_bold.nii.gz"
+            ]
+        }
+    )
+    out.parent.mkdir(parents=True)
+    existing_df.to_csv(out, sep='\t', index=False)
+    expected_df = pd.DataFrame(
+        {
+            "subject": ["sub-01", "sub-01", "sub-01"],
+            "SeriesDescription": ["t1", "bold", "bold"],
+            "source": ["sub-01/anat_source", "sub-01/func_source", "sub-01/func_source"],
+            "BIDS_mapping": [
+                "anat/sub-01_T1w.nii.gz",
+                "func/sub-01_task-dummy_bold.nii.gz",
+                "func/sub-01_task-dummy_part-phase_bold.nii.gz"
+            ]
+        }
+    )
+
+    # Run the function
+    bids.drop_session_from_bids_mappings(out)
+
+    # Check the results
+    assert out.is_file() is True
+    result_df = pd.read_csv(out, sep='\t')
+    assert result_df.equals(expected_df)
+
+
+def test_drop_session_from_bids_mappings__session_not_dropped(tmp_path):
+
+    out = tmp_path / 'bids' / "code" / "bidscoin" / "bids_mappings.tsv"
+    expected_df = pd.DataFrame(
+        {
+            "subject": ["sub-01", "sub-01", "sub-01"],
+            "session": ['ses-1', 'ses-1', 'ses-1'],
+            "SeriesDescription": ["t1", "bold", "bold"],
+            "source": ["sub-01/anat_source", "sub-01/func_source", "sub-01/func_source"],
+            "BIDS_mapping": [
+                "anat/sub-01_T1w.nii.gz",
+                "func/sub-01_task-dummy_bold.nii.gz",
+                "func/sub-01_task-dummy_part-phase_bold.nii.gz"
+            ]
+        }
+    )
+    out.parent.mkdir(parents=True)
+    expected_df.to_csv(out, sep='\t', index=False)
+
+    # Run the function
+    bids.drop_session_from_bids_mappings(out)
+
+    # Check the results
+    assert out.is_file() is True
+    result_df = pd.read_csv(out, sep='\t')
+    assert result_df.equals(expected_df)
+
+
 def test_get_bidsname(raw_dicomdir):
 
     dicomfile   = raw_dicomdir/'Doe^Archibald'/'01-XR C Spine Comp Min 4 Views'/'001-Cervical LAT'/'6154'
