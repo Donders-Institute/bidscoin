@@ -20,7 +20,7 @@ import pandas as pd
 import ast
 from functools import lru_cache
 from pathlib import Path
-from typing import Union, List, Tuple
+from typing import Dict, List, Set, Tuple, Union
 from nibabel.parrec import parse_PAR_header
 from pandas import DataFrame
 from pydicom import dcmread, fileset, datadict
@@ -311,6 +311,32 @@ class DataSource:
                 value = sanitize(value)
 
         return value
+
+
+class BidsMapping:
+    """
+    Represents a mapping of BIDS target files from source data.
+    :param source:      Path to source data
+    :param targets:     BIDS target files converted from source data
+    :param datatype:    The BIDS data type of the data source and targets
+    :param run:         Bidsmap run used for conversion
+    """
+    def __init__(self, source: Path, targets: Set[Path], datatype: str, run: Dict):
+        """
+        Initialize BidsMapping.
+        :param source:      Path to source data
+        :param targets:     BIDS target files converted from source data
+        :param datatype:    The BIDS data type of the data source and targets
+        :param run:         Bidsmap run used for conversion
+        """
+        self.source = source
+        self.targets = targets
+        self.datatype = datatype
+        self.run = run
+
+    def __repr__(self):
+        return (f"BidsMapping(source={self.source!r}, targets={self.targets!r}, "
+                f"datatype={self.datatype!r})")
 
 
 def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> Tuple[List[Path], bool]:
