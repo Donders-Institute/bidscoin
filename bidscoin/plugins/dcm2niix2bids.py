@@ -10,9 +10,10 @@ import pandas as pd
 import json
 import shutil
 from bids_validator import BIDSValidator
-from typing import Union
+from typing import Union, List
 from pathlib import Path
 from bidscoin import bcoin, bids, lsdirs, due, Doi
+from bidscoin.bids import BidsMapping
 from bidscoin.utilities import physio
 try:
     from nibabel.testing import data_path
@@ -228,6 +229,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
         scans_table.index.name = 'filename'
 
     # Process all the source files or run subfolders
+    bids_mappings: List[BidsMapping] = []
     sourcefile = Path()
     for source in sources:
 
@@ -246,14 +248,18 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
             LOGGER.info(f"--> Leaving out: {source}")
+            bids_mappings.append(BidsMapping(source, {Path(bidsses / 'X')}, datasource.datatype, run))
             continue
 
         # Check if we already know this run
         if not match:
             LOGGER.error(f"--> Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+            bids_mappings.append(BidsMapping(source, {Path(bidsses / 'skipped')}, datasource.datatype, run))
             continue
 
         LOGGER.info(f"--> Coining: {source}")
+        bids_mapping = BidsMapping(source, set(), datasource.datatype, run)
+        bids_mappings.append(bids_mapping)
 
         # Create the BIDS session/datatype output folder
         suffix = datasource.dynamicvalue(run['bids']['suffix'], True, True)
@@ -296,6 +302,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                 physiodata = physio.readphysio(sourcefile)
                 physio.physio2tsv(physiodata, outfolder/bidsname)
                 jsonfiles.update(outfolder.glob(f"{bidsname}.json"))  # add existing created json files: bidsname.json
+                bids_mapping.targets.add((outfolder / bidsname).with_suffix('.tsv.gz'))
             except Exception as physioerror:
                 LOGGER.error(f"Could not read/convert physiological file: {sourcefile}\n{physioerror}")
                 continue
@@ -312,6 +319,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                 if not list(outfolder.glob(f"{bidsname}.*nii*")): continue
 
             jsonfiles.update(outfolder.glob(f"{bidsname}.json"))  # add existing created json files: bidsname.json
+            bids_mapping.targets.update(outfolder.glob(f"{bidsname}.*[!json]"))
 
             # Handle the ABCD GE pepolar sequence
             extrafile = list(outfolder.glob(f"{bidsname}a.nii*"))
@@ -425,6 +433,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                 if newbidsfile.is_file():
                     LOGGER.warning(f"Overwriting existing {newbidsfile} file -- check your results carefully!")
                 dcm2niixfile.replace(newbidsfile)
+                bids_mapping.targets.add(newbidsfile)
 
                 # Rename all associated files (i.e. the json-, bval- and bvec-files)
                 oldjsonfile = dcm2niixfile.with_suffix('').with_suffix('.json')
@@ -458,6 +467,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                             LOGGER.verbose(f"Removing BIDS-invalid b0-file: {bfile} -> {jsonfile}")
                             metadata[ext[1:]] = bdata.values.tolist()
                             bfile.unlink()
+                            if bfile in bids_mapping.targets:
+                                bids_mapping.targets.remove(bfile)
 
             # Save the meta-data to the json sidecar-file
             with jsonfile.open('w') as json_fid:
