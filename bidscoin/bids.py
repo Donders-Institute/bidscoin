@@ -2168,6 +2168,50 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
     return table, meta
 
 
+def add_bids_mappings(bids_mappings: List[BidsMapping], session: Path, bidsfolder: Path, bidsses: Path) -> None:
+    """
+    Create and/or add (if it's not there yet) bids mappings of session to the code/bidscoin/bids_mappings.tsv file
+    :param bids_mappings:       Bids mappings of source to BIDS targets to be added to bids_mappings.tsv
+    :param session:             The full-path name of the subject/session source folder
+    :param bidsfolder:          The name of the BIDS root folder
+    :param bidsses:             The full-path name of the BIDS output `sub-/ses-` folder
+    :return:                    None
+    """
+    # Write mappings
+    out = bidsfolder / "code" / "bidscoin" / "bids_mappings.tsv"
+    if out.is_file():
+        df_existing = pd.read_csv(out, sep='\t')
+        if 'session' not in df_existing.columns:
+            df_existing.insert(1, 'session', None)
+    else:
+        df_existing = pd.DataFrame(columns=['subject', 'session', 'SeriesDescription', 'source', 'BIDS_mapping'])
+
+    # Convert bids_mappings to DataFrame
+    entries = []
+    for bids_mapping in bids_mappings:
+        for target in sorted(bids_mapping.targets):
+            if bidsses.name.startswith('ses-'):
+                target_subject = bidsses.parent.name
+                target_session = bidsses.name
+            else:
+                target_subject = bidsses.name
+                target_session = None
+            new_entry = {
+                "subject": target_subject,
+                "session": target_session,
+                'SeriesDescription': bids_mapping.run.get("attributes", {}).get("SeriesDescription"),
+                'source': bids_mapping.source.relative_to(session.parent),
+                'BIDS_mapping': target.relative_to(bidsses),
+            }
+            entries.append(new_entry)
+    df_mappings = pd.DataFrame(entries)
+    df_combined = pd.concat([df_existing, df_mappings], ignore_index=True)
+
+    # save bids mappings
+    out.parent.mkdir(parents=True, exist_ok=True)
+    df_combined.to_csv(out, sep='\t', index=False)
+
+
 def get_propertieshelp(propertieskey: str) -> str:
     """
     Reads the description of a matching attributes key in the source dictionary
