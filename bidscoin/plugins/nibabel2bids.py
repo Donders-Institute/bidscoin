@@ -9,9 +9,11 @@ import shutil
 import pandas as pd
 import nibabel as nib
 from bids_validator import BIDSValidator
-from typing import Union
+from typing import List, Union
 from pathlib import Path
 from bidscoin import bids
+from bidscoin.bids import BidsMapping
+
 try:
     from nibabel.testing import data_path
 except ImportError:
@@ -164,9 +166,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
     # Get the subject identifiers and the BIDS root folder from the bidsses folder
     if bidsses.name.startswith('ses-'):
+        bidsfolder = bidsses.parent.parent
         subid = bidsses.parent.name
         sesid = bidsses.name
     else:
+        bidsfolder = bidsses.parent
         subid = bidsses.name
         sesid = ''
 
@@ -188,6 +192,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         scans_table.index.name = 'filename'
 
     # Collect the different Nibabel source files for all files in the session
+    bids_mappings: List[BidsMapping] = []
     for sourcefile in sourcefiles:
 
         datasource = bids.DataSource(sourcefile, {'nibabel2bids':options})
@@ -196,14 +201,18 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
             LOGGER.info(f"--> Leaving out: {sourcefile}")
+            bids_mappings.append(BidsMapping(sourcefile, {Path(bidsses / 'X')}, datasource.datatype, run))
             continue
 
         # Check if we already know this run
         if not match:
             LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+            bids_mappings.append(BidsMapping(sourcefile, {Path(bidsses / 'skipped')}, datasource.datatype, run))
             continue
 
         LOGGER.info(f"--> Coining: {sourcefile}")
+        bids_mapping = BidsMapping(sourcefile, set(), datasource.datatype, run)
+        bids_mappings.append(bids_mapping)
 
         # Create the BIDS session/datatype output folder
         outfolder = bidsses/datasource.datatype
@@ -229,6 +238,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
         # Save the sourcefile as a BIDS NIfTI file
         nib.save(nib.load(sourcefile), bidsfile)
+        bids_mapping.targets.add(bidsfile)
 
         # Load / copy over the source meta-data
         sidecar  = bidsfile.with_suffix('').with_suffix('.json')
@@ -239,6 +249,11 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         # Add an entry to the scans_table (we typically don't have useful data to put there)
         acq_time = dateutil.parser.parse(f"1925-01-01T{metadata.get('AcquisitionTime', '')}")
         scans_table.loc[bidsfile.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time.isoformat()
+
+    # Handle dynamic index for run-1
+    bids.rename_runless_to_run1(bids_mappings, scans_table)
+    # Write bids mappings
+    bids.add_bids_mappings(bids_mappings, session, bidsfolder, bidsses)
 
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing data to: {scans_tsv}")
