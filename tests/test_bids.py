@@ -681,6 +681,42 @@ def test_add_bids_mappings__session(tmp_path):
     assert result_df.equals(expected_df)
 
 
+def test_add_bids_mappings__derivatives(tmp_path):
+    """Test creating 'bids_mappings.tsv' with derivatives."""
+
+    sessionfolder = tmp_path / 'source' / 'sub-01'
+    bidsfolder = tmp_path / 'bids'
+    bidsses = tmp_path / 'bids' / 'sub-01'
+    out = bidsfolder / "code" / "bidscoin" / "bids_mappings.tsv"
+
+    bids_mappings = [
+        BidsMapping(
+            sessionfolder / 'fmap_source',
+            {bidsfolder / 'derivatives' / 'SIEMENS' / 'fmap' / 'sub-01_TB1RFM.nii.gz'},
+            'fmap',
+            {'bids': {'run': '<<>>'}, 'attributes': {'SeriesDescription': 't1'}}
+        )
+    ]
+    expected_df = pd.DataFrame(
+        {
+            "subject": ["sub-01"],
+            "session": ['NaN'],
+            "SeriesDescription": ["t1"],
+            "source": [str(Path("sub-01") / "fmap_source")],
+            "BIDS_mapping": [str(Path("derivatives") / "SIEMENS" / "fmap" / "sub-01_TB1RFM.nii.gz")]
+        }
+    )
+
+    # Run the function
+    bids.add_bids_mappings(bids_mappings, sessionfolder, bidsfolder, bidsses)
+
+    # Check the results
+    assert out.is_file() is True
+    result_df = pd.read_csv(out, sep='\t')
+    result_df['session'].fillna('NaN', inplace=True)
+    assert result_df.equals(expected_df)
+
+
 def test_drop_session_from_bids_mappings__session_dropped(tmp_path):
 
     out = tmp_path / 'bids' / "code" / "bidscoin" / "bids_mappings.tsv"

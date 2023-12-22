@@ -2196,12 +2196,16 @@ def add_bids_mappings(bids_mappings: List[BidsMapping], session: Path, bidsfolde
             else:
                 target_subject = bidsses.name
                 target_session = None
+            if target.relative_to(bidsfolder).parts[0] == "derivatives":
+                target_outfolder = bidsfolder
+            else:
+                target_outfolder = bidsses
             new_entry = {
                 "subject": target_subject,
                 "session": target_session,
                 'SeriesDescription': bids_mapping.run.get("attributes", {}).get("SeriesDescription"),
                 'source': bids_mapping.source.relative_to(session.parent),
-                'BIDS_mapping': target.relative_to(bidsses),
+                'BIDS_mapping': target.relative_to(target_outfolder),
             }
             entries.append(new_entry)
     df_mappings = pd.DataFrame(entries)
