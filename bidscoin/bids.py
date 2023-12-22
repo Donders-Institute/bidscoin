@@ -2213,6 +2213,7 @@ def add_bids_mappings(bids_mappings: List[BidsMapping], session: Path, bidsfolde
 
     # save bids mappings
     out.parent.mkdir(parents=True, exist_ok=True)
+    LOGGER.verbose(f"Writing bids mappings data to: {out}")
     df_combined.to_csv(out, sep='\t', index=False)
 
 
