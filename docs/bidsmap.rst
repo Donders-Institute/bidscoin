@@ -110,7 +110,7 @@ Editing the template bidsmap
        filename:                    # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
        filesize:                    # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
        nrfiles:                     # Number of files in the folder that match the above criteria, e.g. "5/d/d" for matching a number between 500-599
-     attributes: &anat_dicomattr    # An empty / non-matching "reference" dictionary that can be derefenced in other run-items of this data type
+     attributes: &anat_dicomattr    # An empty / non-matching "reference" dictionary that can be dereferenced in other run-items of this data type
        Modality:
        ProtocolName:
        SeriesDescription:

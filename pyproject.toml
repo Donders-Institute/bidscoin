@@ -118,3 +118,10 @@ commands         = make -C docs html
                    linkchecker docs/_build/html/index.html
                    pyspelling -c docs/.pyspelling.yml
 """
+
+# Ref: https://github.com/codespell-project/codespell#using-a-config-file
+[tool.codespell]
+skip = '.git,*.pdf,*.svg,go.sum'
+check-hidden = true
+ignore-regex = '\b(PULS|TE|ALS)\b'
+ignore-words-list = 'compliancy,uptodate,mis'

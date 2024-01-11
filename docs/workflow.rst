@@ -71,7 +71,7 @@ Step 1a: Running the bidsmapper
                             need to be unzipped (in a tempdir) to make the data readable. Default: the
                             value of the study/template bidsmap
       -s, --store           Store provenance data samples in the bidsfolder/code/provenance folder
-                            (useful for inspecting e.g. zipped or transfered datasets)
+                            (useful for inspecting e.g. zipped or transferred datasets)
       -a, --automated       Save the automatically generated bidsmap to disk and without interactively
                             tweaking it with the bidseditor
       -f, --force           Discard the previously saved bidsmap and logfile
@@ -151,7 +151,7 @@ If the preview of the BIDS filename and meta-data both look good, you can store 
 
    The edit window for customizing a bidsmap run item, featuring the DICOM attributes mapped onto BIDS values and (dynamic) metadata values (e.g. ``Comments``). BIDS values that are restricted to a limited set are presented with a drop-down menu.
 
-Finally, if all BIDS output names in the main window are fine, you can click on the [Save] button and proceed with running the bidscoiner tool (step 2). Note that re-running the bidsmapper or bidseditor is always a safe thing to do since these tools will re-use the existing bidsmap yaml-file and will not delete or write anything to disk except to the bidsmap yaml-file.
+Finally, if all BIDS output names in the main window are fine, you can click on the [Save] button and proceed with running the bidscoiner tool (step 2). Note that re-running the bidsmapper or bidseditor is always a safe thing to do since these tools will reuse the existing bidsmap yaml-file and will not delete or write anything to disk except to the bidsmap yaml-file.
 
 Field maps
 ``````````
