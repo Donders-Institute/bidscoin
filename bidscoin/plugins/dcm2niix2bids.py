@@ -293,6 +293,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
             try:
                 physiodata = physio.readphysio(sourcefile)
                 physio.physio2tsv(physiodata, outfolder/bidsname)
+                jsonfiles.update(outfolder.glob(f"{bidsname}.json"))  # add existing created json files: bidsname.json
             except Exception as physioerror:
                 LOGGER.error(f"Could not read/convert physiological file: {sourcefile}\n{physioerror}")
                 continue
