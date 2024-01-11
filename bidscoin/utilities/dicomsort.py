@@ -98,7 +98,6 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
         sessionfolder.mkdir(parents=True, exist_ok=True)
 
     # Sort the dicomfiles in (e.g. DICOM Series) subfolders
-    subfolders = []
     for dicomfile in dicomfiles:
 
         # Check if the DICOM file exists (e.g. in case of DICOMDIRs this may not be the case)
@@ -108,26 +107,24 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
 
         # Create a new subfolder if needed
         if not folderscheme:
-            pathname = sessionfolder
+            destination = sessionfolder
         else:
             subfolder = construct_name(folderscheme, dicomfile, force)
             if not subfolder:
                 LOGGER.error('Cannot create subfolders, aborting dicomsort()...')
                 trackusage('dicomsort_error')
                 return
-            if subfolder not in subfolders:
-                subfolders.append(subfolder)
-            pathname = sessionfolder/subfolder
-            if not pathname.is_dir():
-                LOGGER.info(f"   Creating:  {pathname}")
+            destination = sessionfolder/subfolder
+            if not destination.is_dir():
+                LOGGER.info(f"   Creating:  {destination}")
                 if not dryrun:
-                    pathname.mkdir(parents=True)
+                    destination.mkdir(parents=True)
 
-        # Move and/or rename the dicomfiles in(to) the (sub)folder
+        # Move and/or rename the dicomfiles in(to) the destination (sub)folder
         if namescheme:
-            newfilename = pathname/construct_name(namescheme, dicomfile, force)
+            newfilename = destination/construct_name(namescheme, dicomfile, force)
         else:
-            newfilename = pathname/dicomfile.name
+            newfilename = destination/dicomfile.name
         if newfilename == dicomfile:
             continue
         if newfilename.is_file():
