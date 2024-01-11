@@ -124,4 +124,4 @@ commands         = make -C docs html
 skip = '.git,*.pdf,*.svg,go.sum'
 check-hidden = true
 ignore-regex = '\b(PULS|TE|ALS)\b'
-ignore-words-list = 'compliancy,uptodate'
+ignore-words-list = 'compliancy,uptodate,mis'
