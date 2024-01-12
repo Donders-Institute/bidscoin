@@ -853,7 +853,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
     """
     Read the mapping heuristics from the bidsmap yaml-file. If yamlfile is not fullpath, then 'folder' is first searched before
     the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, then 'bidsmap_template'. So fullpath
-    has precendence over folder and bidsmap.yaml has precedence over the bidsmap_template.
+    has precedence over folder and bidsmap.yaml has precedence over the bidsmap_template.
 
     NB: A run['datasource'] = DataSource object is added to every run-item
 

@@ -189,7 +189,7 @@ As can be seen in the API code snippet below (but also see the default plugins f
    def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
        """
        All the logic to map the Philips PAR/REC fields onto bids labels go into this plugin function. The function is
-       expecte to update / append new runs to the bidsmap_new data structure. The bidsmap options for this plugin can
+       expected to update / append new runs to the bidsmap_new data structure. The bidsmap options for this plugin can
        be found in:
 
        bidsmap_new/old['Options']['plugins']['README']
