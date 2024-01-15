@@ -30,7 +30,8 @@ LOGGER = logging.getLogger(__name__)
 OPTIONS = {'command': 'dcm2niix',                   # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or 'C:\"Program Files"\dcm2niix\dcm2niix.exe' (use quotes to deal with whitespaces in the path)
            'args': '-b y -z y -i n',                # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped NIfTI's, see dcm2niix -h for more information)
            'anon': 'y',                             # Set this anonymization flag to 'y' to round off age and discard acquisition date from the metadata
-           'meta': ['.json', '.tsv', '.tsv.gz']}    # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
+           'meta': ['.json', '.tsv', '.tsv.gz'],    # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
+           'fallback': 'y'}                         # Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recommended, else the suffix data is discarding)
 
 
 def test(options: dict=OPTIONS) -> int:
@@ -199,6 +200,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
 
     # Get started and see what dataformat we have
     options    = bidsmap['Options']['plugins']['dcm2niix2bids']
+    fallback   = 'fallback' if options.get('fallback','y').lower() in ('y', 'yes', 'true') else ''
     datasource = bids.get_datasource(session, {'dcm2niix2bids': options})
     dataformat = datasource.dataformat
     if not dataformat:
@@ -357,10 +359,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                         elif echonr[0:-1].isdecimal():
                             LOGGER.verbose(f"Splitting off echo-number {echonr[0:-1]} from the '{postfix}' postfix")
                             newbidsname = bids.insert_bidskeyval(newbidsname, 'echo', echonr[0:-1].lstrip('0'), bidsignore) # Strip of the 'a', 'b', etc. from `e1a`, `e1b`, etc
-                            newbidsname = bids.get_bidsvalue(newbidsname, 'dummy', echonr[-1])                  # Append the 'a' to the acq-label
+                            newbidsname = bids.get_bidsvalue(newbidsname, fallback, echonr[-1])        # Append the 'a' to the acq-label
                         else:
                             LOGGER.error(f"Unexpected postix '{postfix}' found in {dcm2niixfile}")
-                            newbidsname = bids.get_bidsvalue(newbidsname, 'dummy', postfix)                     # Append the unknown postfix to the acq-label
+                            newbidsname = bids.get_bidsvalue(newbidsname, fallback, postfix)           # Append the unknown postfix to the acq-label
 
                     # Patch the phase entity in the newbidsname with the dcm2niix mag/phase info
                     elif 'part' in run['bids'] and postfix in ('ph','real','imaginary'):                        # e.g. part: ['', 'mag', 'phase', 'real', 'imag', 0]
@@ -406,7 +408,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
 
                     # Append the dcm2niix info to acq-label, may need to be improved / elaborated for future BIDS standards, supporting multi-coil data
                     else:
-                        newbidsname = bids.get_bidsvalue(newbidsname, 'dummy', postfix)
+                        newbidsname = bids.get_bidsvalue(newbidsname, fallback, postfix)
 
                     # Remove the added postfix from the new bidsname
                     newbidsname = newbidsname.replace(f"_{postfix}_",'_')                                       # If it is not last

@@ -43,6 +43,7 @@ The `dcm2niix2bids plugin <./plugins.html#dcm2niix2bids>`__ is the default bidsc
 - ``args``: Argument string that is passed as input to dcm2niix to customize its behavior, e.g. ``-z n -i y`` for ignoring derived data and having uncompressed output data.
 - ``anon``: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
 - ``meta``: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as BIDS (sidecar) files, such as ``['.json', '.tsv', '.tsv.gz']``. You can use this to enrich json sidecar files or add data that is not supported by this plugin. For instance, with each PET DICOM image you can put a small json file with key-value pairs that are not contained in the DICOM header (such as ``{InjectedRadioactivity: 400, InjectedMass: 10}``). NB: Data entered in the meta table of the bidseditor GUI always has priority over data in source json files, which itself has priority over dcm2niix-generated json data.
+- ``fallback``: Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recommended, else the suffix data is discarded)
 
 .. tip::
    - Use the [Set as default] button to put your custom dcm2niix command in your template bidsmap so that you don't have to adjust it anymore for every new study

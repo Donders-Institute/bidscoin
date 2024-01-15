@@ -1797,15 +1797,19 @@ def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bo
 
 def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') -> Union[Path, str]:
     """
-    Sets the bidslabel, i.e. '*_bidskey-*_' is replaced with '*_bidskey-bidsvalue_'. If the key is not in the bidsname
-    then the newvalue is appended to the acquisition label. If newvalue is empty (= default), then the parsed existing
-    bidsvalue is returned and nothing is set
+    Sets the bidslabel, i.e. '*_bidskey-*_' is replaced with '*_bidskey-bidsvalue_'. If the key exists but is not in the
+    bidsname (e.g. 'fallback') then, as a fallback, the newvalue is appended to the acquisition label. If newvalue is empty
+    (= default), then the parsed existing bidsvalue is returned and nothing is set
 
     :param bidsfile:    The bidsname (e.g. as returned from get_bidsname or fullpath)
     :param bidskey:     The name of the bidskey, e.g. 'echo' or 'suffix'
     :param newvalue:    The new bidsvalue. NB: remove non-BIDS compliant characters beforehand (e.g. using sanitize)
     :return:            The bidsname with the new bidsvalue or, if newvalue is empty, the existing bidsvalue
     """
+
+    # Check input
+    if not bidskey and newvalue:
+        return bidsfile                         # No fallback
 
     bidspath = Path(bidsfile).parent
     bidsname = Path(bidsfile).with_suffix('').stem
@@ -1827,8 +1831,8 @@ def get_bidsvalue(bidsfile: Union[str, Path], bidskey: str, newvalue: str='') ->
 
     # Replace the existing bidsvalue with the new value or append the newvalue to the acquisition value
     if newvalue:
-        if f'_{bidskey}-' not in bidsname + 'suffix':
-            if '_acq-' not in bidsname:         # Insert the 'acq' key right after task, ses or sub key-value pair (i.e. order as in entities.yaml)
+        if f'_{bidskey}-' not in bidsname + 'suffix':       # Fallback: Append the newvalue to the 'acq'-value
+            if '_acq-' not in bidsname:                     # Insert the 'acq' key right after task, ses or sub key-value pair (i.e. order as in entities.yaml)
                 keyvals  = bidsname.split('_')
                 keyvals.insert(1 + ('_ses-' in bidsname) + ('_task-' in bidsname), 'acq-')
                 bidsname = '_'.join(keyvals)

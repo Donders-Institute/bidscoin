@@ -35,6 +35,7 @@ Options:
       args: -b y -z y -i n -l n     # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped NIfTI's, see dcm2niix -h for more information)
       anon: y                       # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
       meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata sourcefiles that are copied over to the BIDS sidecar files
+      fallback: y                   # Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recommended, else the suffix data is discarded)
 
 
 DICOM:
