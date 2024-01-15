@@ -71,7 +71,9 @@ anon: Set this anonymization flag to 'y' to round off age and to discard acquisi
 
 meta: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as
     BIDS (sidecar) files, such as ['.json', '.tsv', '.tsv.gz']. You can use this to enrich json sidecar files,
-    or add data that is not supported by this plugin"""
+    or add data that is not supported by this plugin
+
+fallback: Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recommended, else the suffix data is discarded)"""
 
 
 class MainWindow(QMainWindow):
