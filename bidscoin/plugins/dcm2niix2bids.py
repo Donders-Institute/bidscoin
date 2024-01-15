@@ -30,7 +30,8 @@ LOGGER = logging.getLogger(__name__)
 OPTIONS = {'command': 'dcm2niix',                   # Command to run dcm2niix, e.g. "module add dcm2niix/1.0.20180622; dcm2niix" or "PATH=/opt/dcm2niix/bin:$PATH; dcm2niix" or /opt/dcm2niix/bin/dcm2niix or 'C:\"Program Files"\dcm2niix\dcm2niix.exe' (use quotes to deal with whitespaces in the path)
            'args': '-b y -z y -i n',                # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped NIfTI's, see dcm2niix -h for more information)
            'anon': 'y',                             # Set this anonymization flag to 'y' to round off age and discard acquisition date from the metadata
-           'meta': ['.json', '.tsv', '.tsv.gz']}    # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
+           'meta': ['.json', '.tsv', '.tsv.gz'],    # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
+           'fallback': 'acq'}                       # Fallback BIDS label for not mapped dcm2niix postfixes, allowed values are 'acq' or '' (=empty, not mapped postfixes are discarded)
 
 
 def test(options: dict=OPTIONS) -> int:
@@ -51,6 +52,8 @@ def test(options: dict=OPTIONS) -> int:
         return 1
     if 'args' not in {**OPTIONS, **options}:
         LOGGER.warning(f"The expected 'args' key is not defined in the dcm2niix2bids options")
+    if 'fallback' not in {**OPTIONS, **options}:
+        LOGGER.warning(f"The expected 'fallback' key is not defined in the dcm2niix2bids options")
 
     # Test the dcm2niix installation
     errorcode = bcoin.run_command(f"{options.get('command', OPTIONS['command'])} -v", (0,3))
@@ -338,6 +341,10 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
             # Rename all files that got additional postfixes from dcm2niix. See: https://github.com/rordenlab/dcm2niix/blob/master/FILENAMING.md
             dcm2niixpostfixes = ('_c', '_i', '_Eq', '_real', '_imaginary', '_MoCo', '_t', '_Tilt', '_e', '_ph', '_ADC', '_fieldmaphz')      #_c%d, _e%d and _ph (and any combination of these in that order) are for multi-coil data, multi-echo data and phase data
             dcm2niixfiles     = sorted(set([dcm2niixfile for dcm2niixpostfix in dcm2niixpostfixes for dcm2niixfile in outfolder.glob(f"{bidsname}*{dcm2niixpostfix}*.nii*")]))
+            fallback_label = bidsmap['Options']['plugins']['dcm2niix2bids'].get('fallback')
+            if fallback_label and fallback_label != 'acq':
+                LOGGER.warning(f"Invalid fallback label {fallback_label}, allowed values are 'acq' or '', using 'acq' fallback label")
+            fallback_label = 'dummy' if fallback_label or fallback_label is None else ''
 
             for dcm2niixfile in dcm2niixfiles:
 
@@ -357,10 +364,12 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                         elif echonr[0:-1].isdecimal():
                             LOGGER.verbose(f"Splitting off echo-number {echonr[0:-1]} from the '{postfix}' postfix")
                             newbidsname = bids.insert_bidskeyval(newbidsname, 'echo', echonr[0:-1].lstrip('0'), bidsignore) # Strip of the 'a', 'b', etc. from `e1a`, `e1b`, etc
-                            newbidsname = bids.get_bidsvalue(newbidsname, 'dummy', echonr[-1])                  # Append the 'a' to the acq-label
+                            if fallback_label:
+                                newbidsname = bids.get_bidsvalue(newbidsname, fallback_label, echonr[-1])                  # Append the 'a' to the fallback label (acq-label)
                         else:
                             LOGGER.error(f"Unexpected postix '{postfix}' found in {dcm2niixfile}")
-                            newbidsname = bids.get_bidsvalue(newbidsname, 'dummy', postfix)                     # Append the unknown postfix to the acq-label
+                            if fallback_label:
+                                newbidsname = bids.get_bidsvalue(newbidsname, fallback_label, postfix)                   # Append the unknown postfix to the fallback label (acq-label)
 
                     # Patch the phase entity in the newbidsname with the dcm2niix mag/phase info
                     elif 'part' in run['bids'] and postfix in ('ph','real','imaginary'):                        # e.g. part: ['', 'mag', 'phase', 'real', 'imag', 0]
@@ -404,9 +413,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                         newbidsname = newbidsname.replace('_magnitude_ph',   '_fieldmap')                       # Case 3: One magnitude + one fieldmap image in one folder / datasource
                         newbidsname = newbidsname.replace('_fieldmap_ph',    '_fieldmap')                       # Case 3
 
-                    # Append the dcm2niix info to acq-label, may need to be improved / elaborated for future BIDS standards, supporting multi-coil data
-                    else:
-                        newbidsname = bids.get_bidsvalue(newbidsname, 'dummy', postfix)
+                    # Append the dcm2niix info to fallback label (acq-label), may need to be improved / elaborated for future BIDS standards, supporting multi-coil data
+                    elif fallback_label:
+                        newbidsname = bids.get_bidsvalue(newbidsname, fallback_label, postfix)
 
                     # Remove the added postfix from the new bidsname
                     newbidsname = newbidsname.replace(f"_{postfix}_",'_')                                       # If it is not last
