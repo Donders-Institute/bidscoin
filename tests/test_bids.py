@@ -471,6 +471,21 @@ def test_get_bidsname(raw_dicomdir):
     assert bidsname == 'sub-001_acq-pydicom_T0w'
 
 
+def test_get_bidsvalue():
+
+    bidsfile = '/bids/sub-01/anat/sub-01_acq-foo_run-1_T1w.nii.gz'
+
+    assert bids.get_bidsvalue(bidsfile, 'acq')      == 'foo'
+    assert bids.get_bidsvalue(bidsfile, 'fallback') == ''
+    assert bids.get_bidsvalue(bidsfile, 'acq', 'bar') == '/bids/sub-01/anat/sub-01_acq-bar_run-1_T1w.nii.gz'
+    assert bids.get_bidsvalue(bidsfile, 'fallback', 'bar') == '/bids/sub-01/anat/sub-01_acq-foobar_run-1_T1w.nii.gz'
+    assert bids.get_bidsvalue(bidsfile, '', 'bar')         == '/bids/sub-01/anat/sub-01_acq-foo_run-1_T1w.nii.gz'
+
+    bidsfile = 'sub-01_run-1_T1w.nii.gz'
+
+    assert bids.get_bidsvalue(bidsfile, 'fallback', 'bar') == 'sub-01_acq-bar_run-1_T1w.nii.gz'
+
+
 def test_updatemetadata(dcm_file, tmp_path):
     """Test if metadata is added to the dictionary and copied over"""
 
