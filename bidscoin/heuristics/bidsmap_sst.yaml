@@ -35,6 +35,7 @@ Options:
       args: -b y -z y -i n -l n     # Argument string that is passed to dcm2niix. Tip: SPM users may want to use '-z n' (which produces unzipped NIfTI's, see dcm2niix -h for more information)
       anon: y                       # Set this anonymization flag to 'y' to round off age and discard acquisition date from the meta data
       meta: [.json, .tsv, .tsv.gz]  # The file extensions of the equally named metadata sourcefiles that are copied over to the BIDS sidecar files
+      fallback: y                   # Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recommended, else the suffix data is discarded)
 
 
 DICOM:
@@ -449,8 +450,8 @@ DICOM:
       suffix: bold
     meta: &func_meta
       TaskName: <filepath:/.*/...(.*)/.*/>
-      B0FieldSource: <<session>>
-      B0FieldIdentifier: <<session>>
+      B0FieldSource:
+      B0FieldIdentifier:
   - provenance:                         # First match the SBREF bold runs (the normal bold runs don't have SBREF in the seriesdescription)
     attributes:
       <<: *func_dicomattr
@@ -566,8 +567,8 @@ DICOM:
       RepetitionTimePreparation:
       VascularCrushing:
       AcquisitionVoxelSize:
-      B0FieldSource: <<session>>
-      B0FieldIdentifier: <<session>>
+      B0FieldSource:
+      B0FieldIdentifier:
   - provenance:
     attributes:
       <<: *perf_dicomattr
@@ -640,8 +641,8 @@ DICOM:
       chunk:
       suffix: dwi
     meta: &dwi_meta
-      B0FieldSource: <<session>>
-      B0FieldIdentifier: <<session>>
+      B0FieldSource:
+      B0FieldIdentifier:
   - provenance:                         # First match the SBREF dwi runs (the normal dwi runs don't have SBREF in the seriesdescription)
     attributes:
       <<: *dwi_dicomattr
@@ -712,7 +713,7 @@ DICOM:
       chunk:
       suffix: magnitude1
     meta: &fmap_meta
-      B0FieldIdentifier: <<session>>
+      B0FieldIdentifier:
       IntendedFor: <<bold>>
   - provenance:
     attributes:
@@ -821,7 +822,7 @@ DICOM:
       chunk:
       suffix: TB1DAM
     meta: &fmap_meta_B0Field
-      B0FieldIdentifier: <<session>>
+      B0FieldIdentifier:
   - provenance:
     attributes: *fmap_dicomattr
     bids: &fmap_dicoment_TB1EPI         # See: schema/datatypes/fmap.yaml

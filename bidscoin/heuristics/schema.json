@@ -35,7 +35,8 @@
                      "command": { "type": "string" },
                      "args": { "type": ["string", "null"] },
                      "anon": { "type": ["string", "null"] },
-                     "meta": { "type": ["array"] }
+                     "meta": { "type": ["array"] },
+                     "fallback": { "type": ["string", "null"] }
                   }
                }
             }

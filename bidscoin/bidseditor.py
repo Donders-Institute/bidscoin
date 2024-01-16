@@ -71,7 +71,9 @@ anon: Set this anonymization flag to 'y' to round off age and to discard acquisi
 
 meta: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as
     BIDS (sidecar) files, such as ['.json', '.tsv', '.tsv.gz']. You can use this to enrich json sidecar files,
-    or add data that is not supported by this plugin"""
+    or add data that is not supported by this plugin
+
+fallback: Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recommended, else the suffix data is discarded)"""
 
 
 class MainWindow(QMainWindow):
@@ -349,7 +351,7 @@ class MainWindow(QMainWindow):
     def set_tab_options(self):
         """Set the options tab"""
 
-        # Create the bidscoin tabel
+        # Create the bidscoin table
         bidscoin_options = self.output_bidsmap['Options']['bidscoin']
         self.options_label['bidscoin'] = bidscoin_label = QLabel('BIDScoin')
         bidscoin_label.setToolTip(TOOLTIP_BIDSCOIN)
@@ -376,7 +378,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(bidscoin_label)
         layout.addWidget(bidscoin_table)
 
-        # Add the plugin tabels
+        # Add the plugin tables
         for plugin, options in self.output_bidsmap['Options']['plugins'].items():
             plugin_label, plugin_table = self.plugin_table(plugin, options)
             layout.addWidget(plugin_label)
@@ -1182,7 +1184,7 @@ class EditWindow(QDialog):
                 suffix_dropdown.addItems(suffixes)
                 suffix_dropdown.setCurrentIndex(suffix_dropdown.findText(suffix))
                 suffix_dropdown.currentIndexChanged.connect(self.suffix_dropdown_change)
-                suffix_dropdown.setToolTip('The suffix that sets the different run types apart. First make sure the "Data type" dropdown-menu is set correctly before chosing the right suffix here')
+                suffix_dropdown.setToolTip('The suffix that sets the different run types apart. First make sure the "Data type" dropdown-menu is set correctly before choosing the right suffix here')
                 for n, suffix in enumerate(suffixes):
                     suffix_dropdown.setItemData(n, bids.get_suffixhelp(suffix, self.target_datatype), QtCore.Qt.ItemDataRole.ToolTipRole)
                 table.setCellWidget(i, 1, self.spacedwidget(suffix_dropdown))
@@ -1490,7 +1492,7 @@ class EditWindow(QDialog):
             self.done(2)
 
     def export_run(self):
-        """Export the editted run to a (e.g. template) bidsmap on disk"""
+        """Export the edited run to a (e.g. template) bidsmap on disk"""
 
         yamlfile, _ = QFileDialog.getOpenFileName(self, 'Export run item to (template) bidsmap',
                                                   str(bidsmap_template), 'YAML Files (*.yaml *.yml);;All Files (*)')
