@@ -216,7 +216,7 @@ def readphysio(fn: Union[str,Path]) -> dict:
            (dicomdata.get('ImageType')==['ORIGINAL','PRIMARY','RAWDATA',  'NONE'] and dicomdata.get('SpectroscopyData')) or \
            (dicomdata.get('ImageType') in (['ORIGINAL','PRIMARY','RAWDATA','NONE'], ['ORIGINAL','PRIMARY','OTHER','NONE']) and dicomdata.get(physiotag).private_creator=='SIEMENS MR IMA'):
             if dicomdata.get('SpectroscopyData'):
-                physiodata = struct.unpack('<B', dicomdata['SpectroscopyData'].value)[0]
+                physiodata = dicomdata['SpectroscopyData'].value    # XA30-bug. NB: The original Matlab code casts this to uint8 (i.e. to struct.unpack('<'+len(physiodata)*'B', physiodata)
             else:
                 physiodata = dicomdata[physiotag].value
             rows    = int(dicomdata.AcquisitionNumber)
