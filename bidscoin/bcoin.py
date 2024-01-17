@@ -596,7 +596,12 @@ def pulltutorialdata(tutorialfolder: str) -> None:
 
 
 def reportcredits(args: list) -> None:
-    """Shows the duecredit summary of all reports in the bidsfolder"""
+    """
+    Shows the duecredit summary of all reports in the bids or current directory
+
+    :param args: args[0] must be the bidsfolder and args[1:] should be key-value pairs, e.g. args[1] = 'style', args[2] = 'apa'
+    :return:
+    """
 
     if not args:
         return
@@ -605,13 +610,18 @@ def reportcredits(args: list) -> None:
 
     parser = argparse.ArgumentParser()
     cmd_summary.setup_parser(parser)
-    dueargs = parser.parse_args([arg if n%2 else '--'+arg for n,arg in enumerate(args[1:])])    # Assumes key-value pairs, e.g. args[1] = 'style', args[2] = 'apa'
-    for report in sorted((Path(args[0])/'code'/'bidscoin').glob('.duecredit_*')):               # args[0] = bidsfolder
-        print(f"\n{'-'*42}")
-        LOGGER.info(f"DueCredit summary for {report.stem.replace('.duecredit_', '').upper()}():")
-        print(f"{'-'*42}")
-        dueargs.filename = report
-        cmd_summary.run(dueargs)
+    dueargs = parser.parse_args([arg if n%2 else '--'+arg for n,arg in enumerate(args[1:])])
+    reports = sorted((Path(args[0])/'code'/'bidscoin').glob('.duecredit_*'))
+    for report in reports or [Path.cwd()/'.duecredit.p']:
+        tool = report.stem.split('_')[1].upper() if '_' in report.stem else 'BIDScoin'
+        if report.is_file():
+            print(f"\n{'-'*46}")
+            LOGGER.info(f"DueCredit summary for {tool} usage:")
+            print(f"{'-'*46}")
+            dueargs.filename = report
+            cmd_summary.run(dueargs)
+        else:
+            LOGGER.info(f"No DueCredit citation files found in {Path(args[0]).resolve()} and {report.parent}")
 
 
 def settracking(value: str) -> None:
