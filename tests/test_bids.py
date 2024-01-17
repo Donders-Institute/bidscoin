@@ -9,7 +9,6 @@ from pathlib import Path
 from nibabel.testing import data_path
 from pydicom.data import get_testdata_file
 from bidscoin import bcoin, bids, bidsmap_template
-from bidscoin.bids import BidsMapping
 
 bcoin.setup_logging()
 
@@ -462,8 +461,8 @@ def test_rename_runless_to_run1(tmp_path):
     """Test <<>> index renaming run-less files to run-1 files."""
 
     # Create data
-    run                  = {'bids': {'run': '<<>>'}}
-    bids_mappings        = []
+    run                  = {'bids': {'run': '<<>>'}, 'targets': set()}
+    matched_runs        = []
     old_runless_bidsname = 'sub-01_T1w'
     new_run1_bidsname    = 'sub-01_run-1_T1w'
     run2_bidsname        = 'sub-01_run-2_T1w'
@@ -474,7 +473,8 @@ def test_rename_runless_to_run1(tmp_path):
             outfile = (outfolder/file_name).with_suffix(suffix)
             outfile.touch()
             if suffix == '.nii.gz':
-                bids_mappings.append(BidsMapping(Path("dummy_source"), {outfile}, 'anat', run))
+                run["targets"].add(outfile)
+                matched_runs.append(run)
 
     # Create the scans table
     scans_data = {
@@ -489,306 +489,13 @@ def test_rename_runless_to_run1(tmp_path):
     result_scans_table = pd.DataFrame(result_scans_data).set_index('filename')
 
     # Run the function
-    bids.rename_runless_to_run1(bids_mappings, scans_table)
+    bids.rename_runless_to_run1(matched_runs, scans_table)
 
     # Check the results
     assert result_scans_table.equals(scans_table)
     for suffix in ('.nii.gz', '.json'):
         assert (outfolder/old_runless_bidsname).with_suffix(suffix).is_file() is False
         assert (outfolder/new_run1_bidsname).with_suffix(suffix).is_file() is True
-
-
-def test_add_bids_mappings__new(tmp_path):
-    """Test creating new 'bids_mappings.tsv'."""
-
-    sessionfolder = tmp_path/'source'/'sub-01'
-    bidsfolder    = tmp_path/'bids'
-    bidsses       = tmp_path/'bids'/'sub-01'
-    out           = bidsfolder / "code" / "bidscoin" / "bids_mappings.tsv"
-
-    bids_mappings = [
-        BidsMapping(
-            sessionfolder / 'anat_source',
-            {bidsses/'anat'/'sub-01_T1w.nii.gz'},
-            'anat',
-            {'bids': {'run': '<<>>'}, 'attributes': {'SeriesDescription': 't1'} }
-        ),
-        BidsMapping(
-            sessionfolder / 'func_source',
-            {
-                bidsses / 'func' / 'sub-01_task-dummy_bold.nii.gz',
-                bidsses / 'func' / 'sub-01_task-dummy_part-phase_bold.nii.gz'
-            },
-            'func',
-            {'bids': {'run': '<<>>'}, 'attributes': {'SeriesDescription': 'bold'}}
-        )
-    ]
-    expected_df = pd.DataFrame(
-        {
-            "subject": ["sub-01", "sub-01", "sub-01"],
-            "session": ['NaN', 'NaN', 'NaN'],
-            "SeriesDescription": ["t1", "bold", "bold"],
-            "source": [str(Path("sub-01") / src) for src in ["anat_source", "func_source", "func_source"]],
-            "BIDS_mapping": [
-                str(Path(outdir) / file) for outdir, file in [
-                    ("anat", "sub-01_T1w.nii.gz"),
-                    ("func", "sub-01_task-dummy_bold.nii.gz"),
-                    ("func", "sub-01_task-dummy_part-phase_bold.nii.gz")
-                ]
-            ]
-        }
-    )
-
-    # Run the function
-    bids.add_bids_mappings(bids_mappings, sessionfolder, bidsfolder, bidsses)
-
-    # Check the results
-    assert out.is_file() is True
-    result_df = pd.read_csv(out, sep='\t')
-    result_df['session'].fillna('NaN', inplace=True)
-    assert result_df.equals(expected_df)
-
-
-def test_add_bids_mappings__combined(tmp_path):
-    """Test adding new bids_mappings to 'bids_mappings.tsv'."""
-
-    sessionfolder = tmp_path/'source'/'sub-02'
-    bidsfolder    = tmp_path/'bids'
-    bidsses       = tmp_path/'bids'/'sub-02'
-    out           = bidsfolder / "code" / "bidscoin" / "bids_mappings.tsv"
-
-    # Create existing bids_mappings for sub-01
-    existing_df = pd.DataFrame(
-        {
-            "subject": ["sub-01", "sub-01", "sub-01"],
-            "SeriesDescription": ["t1", "bold", "bold"],
-            "source": [str(Path("sub-01") / src) for src in ["anat_source", "func_source", "func_source"]],
-            "BIDS_mapping": [
-                str(Path(outdir) / file) for outdir, file in [
-                    ("anat", "sub-01_T1w.nii.gz"),
-                    ("func", "sub-01_task-dummy_bold.nii.gz"),
-                    ("func", "sub-01_task-dummy_part-phase_bold.nii.gz")
-                ]
-            ]
-        }
-    )
-    out.parent.mkdir(parents=True)
-    existing_df.to_csv(out, sep='\t', index=False)
-
-    bids_mappings = [
-        BidsMapping(
-            sessionfolder / 'anat_source',
-            {bidsses/'anat'/'sub-02_T1w.nii.gz'},
-            'anat',
-            {'bids': {'run': '<<>>'}, 'attributes': {'SeriesDescription': 't1'} }
-        ),
-        BidsMapping(
-            sessionfolder / 'func_source',
-            {
-                bidsses / 'func' / 'sub-02_task-dummy_bold.nii.gz',
-                bidsses / 'func' / 'sub-02_task-dummy_part-phase_bold.nii.gz'
-            },
-            'func',
-            {'bids': {'run': '<<>>'}, 'attributes': {'SeriesDescription': 'bold'}}
-        )
-    ]
-
-    expected_df = pd.DataFrame(
-        {
-            "subject": ["sub-01", "sub-01", "sub-01", "sub-02", "sub-02", "sub-02"],
-            "session": ['NaN', 'NaN', 'NaN', 'NaN', 'NaN', 'NaN'],
-            "SeriesDescription": ["t1", "bold", "bold", "t1", "bold", "bold"],
-            "source": [
-                str(Path(outdir) / file) for outdir, file in [
-                    ("sub-01", "anat_source"),
-                    ("sub-01", "func_source"),
-                    ("sub-01", "func_source"),
-                    ("sub-02", "anat_source"),
-                    ("sub-02", "func_source"),
-                    ("sub-02", "func_source"),
-                ]
-            ],
-            "BIDS_mapping": [
-                str(Path(outdir) / file) for outdir, file in [
-                    ("anat", "sub-01_T1w.nii.gz"),
-                    ("func", "sub-01_task-dummy_bold.nii.gz"),
-                    ("func", "sub-01_task-dummy_part-phase_bold.nii.gz"),
-                    ("anat", "sub-02_T1w.nii.gz"),
-                    ("func", "sub-02_task-dummy_bold.nii.gz"),
-                    ("func", "sub-02_task-dummy_part-phase_bold.nii.gz")
-                ]
-            ]
-        }
-    )
-
-    # Run the function
-    bids.add_bids_mappings(bids_mappings, sessionfolder, bidsfolder, bidsses)
-
-    # Check the results
-    assert out.is_file() is True
-    result_df = pd.read_csv(out, sep='\t')
-    result_df['session'].fillna('NaN', inplace=True)
-    assert result_df.equals(expected_df)
-
-
-def test_add_bids_mappings__session(tmp_path):
-    """Test creating new 'bids_mappings.tsv' with session."""
-
-    sessionfolder = tmp_path / 'source' / 'sub-01' / 'ses-01'
-    bidsfolder = tmp_path / 'bids'
-    bidsses = tmp_path / 'bids' / 'sub-01' / 'ses-01'
-    out = bidsfolder / "code" / "bidscoin" / "bids_mappings.tsv"
-
-    bids_mappings = [
-        BidsMapping(
-            sessionfolder / 'anat_source',
-            {bidsses / 'anat' / 'sub-01_ses-01_T1w.nii.gz'},
-            'anat',
-            {'bids': {'run': '<<>>'}, 'attributes': {'SeriesDescription': 't1'}}
-        ),
-        BidsMapping(
-            sessionfolder / 'func_source',
-            {
-                bidsses / 'func' / 'sub-01_ses-01_task-dummy_bold.nii.gz',
-                bidsses / 'func' / 'sub-01_ses-01_task-dummy_part-phase_bold.nii.gz'
-            },
-            'func',
-            {'bids': {'run': '<<>>'}, 'attributes': {'SeriesDescription': 'bold'}}
-        )
-    ]
-    expected_df = pd.DataFrame(
-        {
-            "subject": ["sub-01", "sub-01", "sub-01"],
-            "session": ['ses-01', 'ses-01', 'ses-01'],
-            "SeriesDescription": ["t1", "bold", "bold"],
-            "source": [str(Path("ses-01") / src) for src in ["anat_source", "func_source", "func_source"]],
-            "BIDS_mapping": [
-                str(Path(outdir) / file) for outdir, file in [
-                    ("anat", "sub-01_ses-01_T1w.nii.gz"),
-                    ("func", "sub-01_ses-01_task-dummy_bold.nii.gz"),
-                    ("func", "sub-01_ses-01_task-dummy_part-phase_bold.nii.gz")
-                ]
-            ]
-        }
-    )
-
-    # Run the function
-    bids.add_bids_mappings(bids_mappings, sessionfolder, bidsfolder, bidsses)
-
-    # Check the results
-    assert out.is_file() is True
-    result_df = pd.read_csv(out, sep='\t')
-    assert result_df.equals(expected_df)
-
-
-def test_add_bids_mappings__derivatives(tmp_path):
-    """Test creating 'bids_mappings.tsv' with derivatives."""
-
-    sessionfolder = tmp_path / 'source' / 'sub-01'
-    bidsfolder = tmp_path / 'bids'
-    bidsses = tmp_path / 'bids' / 'sub-01'
-    out = bidsfolder / "code" / "bidscoin" / "bids_mappings.tsv"
-
-    bids_mappings = [
-        BidsMapping(
-            sessionfolder / 'fmap_source',
-            {bidsfolder / 'derivatives' / 'SIEMENS' / 'fmap' / 'sub-01_TB1RFM.nii.gz'},
-            'fmap',
-            {'bids': {'run': '<<>>'}, 'attributes': {'SeriesDescription': 't1'}}
-        )
-    ]
-    expected_df = pd.DataFrame(
-        {
-            "subject": ["sub-01"],
-            "session": ['NaN'],
-            "SeriesDescription": ["t1"],
-            "source": [str(Path("sub-01") / "fmap_source")],
-            "BIDS_mapping": [str(Path("derivatives") / "SIEMENS" / "fmap" / "sub-01_TB1RFM.nii.gz")]
-        }
-    )
-
-    # Run the function
-    bids.add_bids_mappings(bids_mappings, sessionfolder, bidsfolder, bidsses)
-
-    # Check the results
-    assert out.is_file() is True
-    result_df = pd.read_csv(out, sep='\t')
-    result_df['session'].fillna('NaN', inplace=True)
-    assert result_df.equals(expected_df)
-
-
-def test_drop_session_from_bids_mappings__session_dropped(tmp_path):
-
-    out = tmp_path / 'bids' / "code" / "bidscoin" / "bids_mappings.tsv"
-    existing_df = pd.DataFrame(
-        {
-            "subject": ["sub-01", "sub-01", "sub-01"],
-            "session": [None, None, None],
-            "SeriesDescription": ["t1", "bold", "bold"],
-            "source": [str(Path("sub-01") / src) for src in ["anat_source", "func_source", "func_source"]],
-            "BIDS_mapping": [
-                str(Path(outdir) / file) for outdir, file in [
-                    ("anat", "sub-01_T1w.nii.gz"),
-                    ("func", "sub-01_task-dummy_bold.nii.gz"),
-                    ("func", "sub-01_task-dummy_part-phase_bold.nii.gz")
-                ]
-            ]
-        }
-    )
-    out.parent.mkdir(parents=True)
-    existing_df.to_csv(out, sep='\t', index=False)
-    expected_df = pd.DataFrame(
-        {
-            "subject": ["sub-01", "sub-01", "sub-01"],
-            "SeriesDescription": ["t1", "bold", "bold"],
-            "source": [str(Path("sub-01") / src) for src in ["anat_source", "func_source", "func_source"]],
-            "BIDS_mapping": [
-                str(Path(outdir) / file) for outdir, file in [
-                    ("anat", "sub-01_T1w.nii.gz"),
-                    ("func", "sub-01_task-dummy_bold.nii.gz"),
-                    ("func", "sub-01_task-dummy_part-phase_bold.nii.gz")
-                ]
-            ]
-        }
-    )
-
-    # Run the function
-    bids.drop_session_from_bids_mappings(out)
-
-    # Check the results
-    assert out.is_file() is True
-    result_df = pd.read_csv(out, sep='\t')
-    assert result_df.equals(expected_df)
-
-
-def test_drop_session_from_bids_mappings__session_not_dropped(tmp_path):
-
-    out = tmp_path / 'bids' / "code" / "bidscoin" / "bids_mappings.tsv"
-    expected_df = pd.DataFrame(
-        {
-            "subject": ["sub-01", "sub-01", "sub-01"],
-            "session": ['ses-01', 'ses-01', 'ses-01'],
-            "SeriesDescription": ["t1", "bold", "bold"],
-            "source": [str(Path("ses-01") / src) for src in ["anat_source", "func_source", "func_source"]],
-            "BIDS_mapping": [
-                str(Path(outdir) / file) for outdir, file in [
-                    ("anat", "sub-01_ses-01_T1w.nii.gz"),
-                    ("func", "sub-01_ses-01_task-dummy_bold.nii.gz"),
-                    ("func", "sub-01_ses-01_task-dummy_part-phase_bold.nii.gz")
-                ]
-            ]
-        }
-    )
-    out.parent.mkdir(parents=True)
-    expected_df.to_csv(out, sep='\t', index=False)
-
-    # Run the function
-    bids.drop_session_from_bids_mappings(out)
-
-    # Check the results
-    assert out.is_file() is True
-    result_df = pd.read_csv(out, sep='\t')
-    assert result_df.equals(expected_df)
 
 
 def test_get_bidsname(raw_dicomdir):

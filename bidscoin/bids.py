@@ -313,32 +313,6 @@ class DataSource:
         return value
 
 
-class BidsMapping:
-    """
-    Represents a mapping of BIDS target files from source data.
-    :param source:      Path to source data
-    :param targets:     BIDS target files converted from source data
-    :param datatype:    The BIDS data type of the data source and targets
-    :param run:         Bidsmap run used for conversion
-    """
-    def __init__(self, source: Path, targets: Set[Path], datatype: str, run: Dict):
-        """
-        Initialize BidsMapping.
-        :param source:      Path to source data
-        :param targets:     BIDS target files converted from source data
-        :param datatype:    The BIDS data type of the data source and targets
-        :param run:         Bidsmap run used for conversion
-        """
-        self.source = source
-        self.targets = targets
-        self.datatype = datatype
-        self.run = run
-
-    def __repr__(self):
-        return (f"BidsMapping(source={self.source!r}, targets={self.targets!r}, "
-                f"datatype={self.datatype!r})")
-
-
 def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> Tuple[List[Path], bool]:
     """
     Unpacks and sorts DICOM files in sourcefolder to a temporary folder if sourcefolder contains a DICOMDIR file or .tar.gz, .gz or .zip files
@@ -1398,7 +1372,8 @@ def get_run_(provenance: Union[str, Path]='', dataformat: str='', datatype: str=
                 attributes = {},
                 bids       = {},
                 meta       = {},
-                datasource = datasource)
+                datasource = datasource,
+                targets    = set())
 
 
 def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasource: DataSource) -> dict:
@@ -1514,7 +1489,7 @@ def delete_run(bidsmap: dict, provenance: Union[dict, str], datatype: str= '', d
 
 def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
     """
-    Append a run to the BIDS map
+    Append a run to the BIDS map, without targets
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc.
     :param run:         The run (listitem) that is appended to the datatype
@@ -1538,7 +1513,10 @@ def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
             run_[item].update(run[item])
 
         run = run_
+    else:
+        run = copy.copy(run)  # popping targets will not change original run
 
+    run.pop("targets", None)
     if not bidsmap.get(dataformat):
         bidsmap[dataformat] = {datatype: []}
     if not bidsmap.get(dataformat).get(datatype):
@@ -1970,18 +1948,18 @@ def increment_runindex(outfolder: Path, bidsname: str, run: dict) -> Union[Path,
     return f"{bidsname}.{suffixes}" if suffixes else bidsname
 
 
-def rename_runless_to_run1(bids_mappings: List[BidsMapping], scans_table: pd.DataFrame) -> None:
+def rename_runless_to_run1(matched_runs: List[dict], scans_table: pd.DataFrame) -> None:
     """
-    Adds run-1 label to run-less files that use dynamic index (<<>>) in matched bidsmap entry and for which other runs
-    exist in the output folder. Additionally, 'scans_table' is updated based on the changes.
-    :param bids_mappings:   Bids mappings of source to BIDS targets
+    Adds run-1 label to run-less files that use dynamic index (<<>>) in bidsmap run-items for which files with
+    run-2 label exist in the output folder. Additionally, 'scans_table' is updated based on the changes.
+    :param matched_runs:    Bidsmap run-items with accumulated files under 'target' (all files created via that run-item)
     :param scans_table:     BIDS scans.tsv dataframe with all filenames and acquisition timestamps
     """
-    for bids_mapping in bids_mappings:
-        if bids_mapping.run.get('bids', {}).get('run') != '<<>>':
+    for matched_run in matched_runs:
+        if matched_run.get('bids', {}).get('run') != '<<>>':
             continue
 
-        for bids_target in bids_mapping.targets.copy():  # copy: avoid problems with removing items within loop
+        for bids_target in matched_run["targets"].copy():  # copy: avoid problems with removing items within loop
             bidsname = bids_target.name
             suffixes = ''
             if '.' in bidsname:
@@ -2008,8 +1986,8 @@ def rename_runless_to_run1(bids_mappings: List[BidsMapping], scans_table: pd.Dat
                                 inplace=True
                             )  # NB: '/' as_posix
                     # change bids_target from run-less to run-1
-                    bids_mapping.targets.remove(bids_target)
-                    bids_mapping.targets.add((outfolder / run1_bidsname).with_suffix(suffixes))
+                    matched_run["targets"].remove(bids_target)
+                    matched_run["targets"].add((outfolder / run1_bidsname).with_suffix(suffixes))
 
 
 def updatemetadata(sourcemeta: Path, targetmeta: Path, usermeta: dict, extensions: list, datasource: DataSource) -> dict:
@@ -2166,67 +2144,6 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
                         json.dump(meta, json_fid, indent=4)
 
     return table, meta
-
-
-def add_bids_mappings(bids_mappings: List[BidsMapping], session: Path, bidsfolder: Path, bidsses: Path) -> None:
-    """
-    Create and/or add (if it's not there yet) bids mappings of session to the code/bidscoin/bids_mappings.tsv file
-    :param bids_mappings:       Bids mappings of source to BIDS targets to be added to bids_mappings.tsv
-    :param session:             The full-path name of the subject/session source folder
-    :param bidsfolder:          The name of the BIDS root folder
-    :param bidsses:             The full-path name of the BIDS output `sub-/ses-` folder
-    :return:                    None
-    """
-    # Write mappings
-    out = bidsfolder / "code" / "bidscoin" / "bids_mappings.tsv"
-    if out.is_file():
-        df_existing = pd.read_csv(out, sep='\t')
-        if 'session' not in df_existing.columns:
-            df_existing.insert(1, 'session', None)
-    else:
-        df_existing = pd.DataFrame(columns=['subject', 'session', 'SeriesDescription', 'source', 'BIDS_mapping'])
-
-    # Convert bids_mappings to DataFrame
-    entries = []
-    for bids_mapping in bids_mappings:
-        for target in sorted(bids_mapping.targets):
-            if bidsses.name.startswith('ses-'):
-                target_subject = bidsses.parent.name
-                target_session = bidsses.name
-            else:
-                target_subject = bidsses.name
-                target_session = None
-            if target.relative_to(bidsfolder).parts[0] == "derivatives":
-                target_outfolder = bidsfolder
-            else:
-                target_outfolder = bidsses
-            new_entry = {
-                "subject": target_subject,
-                "session": target_session,
-                'SeriesDescription': bids_mapping.run.get("attributes", {}).get("SeriesDescription"),
-                'source': bids_mapping.source.relative_to(session.parent),
-                'BIDS_mapping': target.relative_to(target_outfolder),
-            }
-            entries.append(new_entry)
-    df_mappings = pd.DataFrame(entries)
-    df_combined = pd.concat([df_existing, df_mappings], ignore_index=True)
-
-    # save bids mappings
-    out.parent.mkdir(parents=True, exist_ok=True)
-    LOGGER.verbose(f"Writing bids mappings data to: {out}")
-    df_combined.to_csv(out, sep='\t', index=False)
-
-
-def drop_session_from_bids_mappings(bids_mappings_file: Path) -> None:
-    """
-    Drops session column from bids_mappings.tsv if no session.
-    :param bids_mappings_file:   Path to bids_mappings.tsv
-    """
-    if bids_mappings_file.exists():
-        df_mappings = pd.read_csv(bids_mappings_file, sep='\t')
-        if df_mappings["session"].isna().all():
-            df_mappings.drop(columns="session", inplace=True)
-            df_mappings.to_csv(bids_mappings_file, sep='\t', index=False)
 
 
 def get_propertieshelp(propertieskey: str) -> str:

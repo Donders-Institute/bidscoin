@@ -12,7 +12,6 @@ from typing import List, Union
 from bids_validator import BIDSValidator
 from pathlib import Path
 from bidscoin import bcoin, bids, due, Doi
-from bidscoin.bids import BidsMapping
 
 LOGGER = logging.getLogger(__name__)
 
@@ -174,11 +173,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
 
     # Get the subject identifiers and the BIDS root folder from the bidsses folder
     if bidsses.name.startswith('ses-'):
-        bidsfolder = bidsses.parent.parent
         subid      = bidsses.parent.name
         sesid      = bidsses.name
     else:
-        bidsfolder = bidsses.parent
         subid      = bidsses.name
         sesid      = ''
 
@@ -200,7 +197,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
         scans_table.index.name = 'filename'
 
     # Loop over all MRS source data files and convert them to BIDS
-    bids_mappings: List[BidsMapping] = []
+    matched_runs: List[dict] = []
     for sourcefile in sourcefiles:
 
         # Get a data source, a matching run from the bidsmap
@@ -210,18 +207,15 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
             LOGGER.info(f"--> Leaving out: {sourcefile}")
-            bids_mappings.append(BidsMapping(sourcefile, {Path(bidsses / 'X')}, datasource.datatype, run))
             continue
 
         # Check that we know this run
         if index is None:
             LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete the MRS output data in {bidsses} to solve this warning")
-            bids_mappings.append(BidsMapping(sourcefile, {Path(bidsses / 'skipped')}, datasource.datatype, run))
             continue
 
         LOGGER.info(f"--> Coining: {sourcefile}")
-        bids_mapping = BidsMapping(sourcefile, set(), datasource.datatype, run)
-        bids_mappings.append(bids_mapping)
+        matched_runs.append(run)
 
         # Create the BIDS session/datatype output folder
         outfolder = bidsses/datasource.datatype
@@ -264,7 +258,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
         if bcoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
             if not list(outfolder.glob(f"{bidsname}.nii*")): continue
 
-        bids_mapping.targets.update(outfolder.glob(f"{bidsname}.*[!json]"))
+        run["targets"].update(outfolder.glob(f"{bidsname}.*[!json]"))  # add files created using this bidsmap run-item (except sidecars)
 
         # Load / copy over and adapt the newly produced json sidecar-file (NB: assumes every NIfTI-file comes with a json-file)
         metadata = bids.updatemetadata(sourcefile, sidecar, run['meta'], options['meta'], datasource)
@@ -294,9 +288,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
             scans_table.loc[sidecar.with_suffix('.nii.gz').relative_to(bidsses).as_posix(), 'acq_time'] = acq_time
 
     # Handle dynamic index for run-1
-    bids.rename_runless_to_run1(bids_mappings, scans_table)
-    # Write bids mappings
-    bids.add_bids_mappings(bids_mappings, session, bidsfolder, bidsses)
+    bids.rename_runless_to_run1(matched_runs, scans_table)
 
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing acquisition time data to: {scans_tsv}")
