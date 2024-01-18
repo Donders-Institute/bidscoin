@@ -232,7 +232,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
         # Save the sourcefile as a BIDS NIfTI file
         nib.save(nib.load(sourcefile), bidsfile)
-        run["targets"].add(bidsfile)
+        datasource.targets.append(bidsfile)
 
         # Load / copy over the source meta-data
         sidecar  = bidsfile.with_suffix('').with_suffix('.json')

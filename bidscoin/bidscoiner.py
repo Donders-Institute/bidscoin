@@ -172,7 +172,6 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
             LOGGER.info('')
             if not jobids:
-
                 LOGGER.info('============== HPC FINISH =============')
                 LOGGER.info('')
                 return
@@ -296,7 +295,6 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     # Clean-up the temporary unpacked data
                     if unpacked:
                         shutil.rmtree(sesfolder)
-
 
     LOGGER.info('-------------- FINISHED! ------------')
     LOGGER.info('')

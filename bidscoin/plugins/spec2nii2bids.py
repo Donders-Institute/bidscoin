@@ -258,7 +258,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
         if bcoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
             if not list(outfolder.glob(f"{bidsname}.nii*")): continue
 
-        run["targets"].update(outfolder.glob(f"{bidsname}.*[!json]"))  # add files created using this bidsmap run-item (except sidecars)
+        # Add files created using this bidsmap run-item (except sidecars)
+        datasource.targets += outfolder.glob(f"{bidsname}.*[!json]")
 
         # Load / copy over and adapt the newly produced json sidecar-file (NB: assumes every NIfTI-file comes with a json-file)
         metadata = bids.updatemetadata(sourcefile, sidecar, run['meta'], options['meta'], datasource)

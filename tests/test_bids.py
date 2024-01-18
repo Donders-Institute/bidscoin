@@ -461,8 +461,9 @@ def test_rename_runless_to_run1(tmp_path):
     """Test <<>> index renaming run-less files to run-1 files."""
 
     # Create data
-    run                  = {'bids': {'run': '<<>>'}, 'targets': set()}
-    matched_runs        = []
+    run                  = bids.get_run_()
+    run['bids']          = {'run': '<<>>'}
+    matched_runs         = []
     old_runless_bidsname = 'sub-01_T1w'
     new_run1_bidsname    = 'sub-01_run-1_T1w'
     run2_bidsname        = 'sub-01_run-2_T1w'
@@ -473,7 +474,7 @@ def test_rename_runless_to_run1(tmp_path):
             outfile = (outfolder/file_name).with_suffix(suffix)
             outfile.touch()
             if suffix == '.nii.gz':
-                run["targets"].add(outfile)
+                run['datasource'].targets.append(outfile)
                 matched_runs.append(run)
 
     # Create the scans table
@@ -564,7 +565,7 @@ def test_updatemetadata(dcm_file, tmp_path):
                 'B0FieldIdentifier': 'Identifier_<<session>>'}
 
     # Test if the user metadata takes precedence
-    metadata = bids.updatemetadata(sourcefile, sidecar, usermeta, ['.json'], extdatasource)
+    metadata = bids.updatemetadata(extdatasource, sidecar, usermeta, ['.json'])
     assert metadata['PatientName']       == 'UserTest'
     assert metadata['DynamicName']       == 'CompressedSamples^MR1'
     assert metadata['B0FieldSource']     == 'Source_01'
@@ -572,10 +573,10 @@ def test_updatemetadata(dcm_file, tmp_path):
     assert not (outfolder/sourcefile.with_suffix('.jsn').name).is_file()
 
     # Test if the source metadata takes precedence
-    metadata = bids.updatemetadata(sourcefile, sidecar, {}, ['.jsn', '.json'], extdatasource)
+    metadata = bids.updatemetadata(extdatasource, sidecar, {}, ['.jsn', '.json'], sourcefile)
     assert metadata['PatientName'] == 'SourceTest'
     assert (outfolder/sourcefile.with_suffix('.jsn').name).is_file()
 
     # Test if the sidecar metadata takes precedence
-    metadata = bids.updatemetadata(sourcefile, sidecar, {}, [], extdatasource)
+    metadata = bids.updatemetadata(extdatasource, sidecar, {}, [])
     assert metadata['PatientName'] == 'SidecarTest'

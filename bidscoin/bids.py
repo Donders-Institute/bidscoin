@@ -53,7 +53,7 @@ with (schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
 
 
 class DataSource:
-    def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str='', subprefix: str='', sesprefix: str=''):
+    def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str='', subprefix: str='', sesprefix: str='', targets: List[Path] = ()):
         """
         A source data type (e.g. DICOM or PAR) that can be converted to BIDS by the plugins
 
@@ -63,6 +63,7 @@ class DataSource:
         :param datatype:    The intended BIDS data type of the data source TODO: move to a separate BidsTarget/Mapping class
         :param subprefix:   The subprefix used in the sourcefolder
         :param sesprefix:   The sesprefix used in the sourcefolder
+        :param targets:     A list of output targets of the source
         """
 
         self.path        = Path(provenance)
@@ -75,6 +76,7 @@ class DataSource:
             self.is_datasource()
         self.subprefix   = subprefix
         self.sesprefix   = sesprefix
+        self.targets     = list(targets)
         self._cache      = {}
 
     def resubprefix(self) -> str:
@@ -1372,8 +1374,7 @@ def get_run_(provenance: Union[str, Path]='', dataformat: str='', datatype: str=
                 attributes = {},
                 bids       = {},
                 meta       = {},
-                datasource = datasource,
-                targets    = set())
+                datasource = datasource)
 
 
 def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasource: DataSource) -> dict:
@@ -1489,7 +1490,7 @@ def delete_run(bidsmap: dict, provenance: Union[dict, str], datatype: str= '', d
 
 def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
     """
-    Append a run to the BIDS map, without targets
+    Append a run to the BIDS map
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc.
     :param run:         The run (listitem) that is appended to the datatype
@@ -1513,10 +1514,7 @@ def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
             run_[item].update(run[item])
 
         run = run_
-    else:
-        run = copy.copy(run)  # popping targets will not change original run
 
-    run.pop("targets", None)
     if not bidsmap.get(dataformat):
         bidsmap[dataformat] = {datatype: []}
     if not bidsmap.get(dataformat).get(datatype):
@@ -1948,19 +1946,22 @@ def increment_runindex(outfolder: Path, bidsname: str, run: dict) -> Union[Path,
     return f"{bidsname}.{suffixes}" if suffixes else bidsname
 
 
-def rename_runless_to_run1(matched_runs: List[dict], scans_table: pd.DataFrame) -> None:
+def rename_runless_to_run1(runs: List[dict], scans_table: pd.DataFrame) -> None:
     """
     Adds run-1 label to run-less files that use dynamic index (<<>>) in bidsmap run-items for which files with
     run-2 label exist in the output folder. Additionally, 'scans_table' is updated based on the changes.
-    :param matched_runs:    Bidsmap run-items with accumulated files under 'target' (all files created via that run-item)
-    :param scans_table:     BIDS scans.tsv dataframe with all filenames and acquisition timestamps
+
+    :param runs:        Bidsmap run-items with accumulated files under datasource.targets (all files created via that run-item)
+    :param scans_table: BIDS scans.tsv dataframe with all filenames and acquisition timestamps
+    :return:
     """
-    for matched_run in matched_runs:
-        if matched_run.get('bids', {}).get('run') != '<<>>':
+
+    for run in runs:
+        if run['bids'].get('run') != '<<>>':
             continue
 
-        for bids_target in matched_run["targets"].copy():  # copy: avoid problems with removing items within loop
-            bidsname = bids_target.name
+        for target in run['datasource'].targets.copy():  # Copy: avoid problems with removing items within loop
+            bidsname = target.name
             suffixes = ''
             if '.' in bidsname:
                 bidsname, suffixes = bidsname.split('.', 1)
@@ -1968,27 +1969,25 @@ def rename_runless_to_run1(matched_runs: List[dict], scans_table: pd.DataFrame) 
                     suffixes = '.' + suffixes
             if get_bidsvalue(bidsname, 'run') == '':
                 run2_bidsname = insert_bidskeyval(bidsname, 'run', '2', False)
-                outfolder = bids_target.parent
+                outfolder = target.parent
                 if list(outfolder.glob(f"{run2_bidsname}.*")):
-                    # add run-1 to run-less bidsname files because run-2 exists
+
+                    # Add run-1 to run-less bidsname files because run-2 exists
                     run1_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
                     for runless_file in outfolder.glob(f"{bidsname}.*"):
                         ext = ''.join(runless_file.suffixes)
-                        run1_file = (runless_file.parent / run1_bidsname).with_suffix(ext)
+                        run1_file = (runless_file.parent/run1_bidsname).with_suffix(ext)
                         LOGGER.info(f"Found run-2 files for <<>> index, renaming\n{runless_file} ->\n{run1_file}")
                         runless_file.replace(run1_file)
 
                         # Change row name in the scans table
                         if f"{outfolder.name}/{bidsname}{ext}" in scans_table.index:
                             LOGGER.verbose(f"Renaming scans entry:\n{outfolder.name}/{bidsname}{ext} ->\n{outfolder.name}/{run1_bidsname}{ext}")
-                            scans_table.rename(
-                                index={f"{outfolder.name}/{bidsname}{ext}": f"{outfolder.name}/{run1_bidsname}{ext}"},
-                                inplace=True
-                            )  # NB: '/' as_posix
-                    # change bids_target from run-less to run-1
-                    matched_run["targets"].remove(bids_target)
-                    matched_run["targets"].add((outfolder / run1_bidsname).with_suffix(suffixes))
+                            scans_table.rename(index={f"{outfolder.name}/{bidsname}{ext}": f"{outfolder.name}/{run1_bidsname}{ext}"}, inplace=True)  # NB: '/' as_posix
 
+                    # Change target from run-less to run-1
+                    run['datasource'].targets.remove(target)
+                    run['datasource'].targets.append((outfolder/run1_bidsname).with_suffix(suffixes))
 
 def updatemetadata(sourcemeta: Path, targetmeta: Path, usermeta: dict, extensions: list, datasource: DataSource) -> dict:
     """
