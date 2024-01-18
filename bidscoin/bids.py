@@ -20,9 +20,8 @@ import pandas as pd
 import ast
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, List, Set, Tuple, Union
+from typing import List, Set, Tuple, Union
 from nibabel.parrec import parse_PAR_header
-from pandas import DataFrame
 from pydicom import dcmread, fileset, datadict
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
@@ -53,7 +52,7 @@ with (schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
 
 
 class DataSource:
-    def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str='', subprefix: str='', sesprefix: str='', targets: set[Path] = ()):
+    def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str='', subprefix: str='', sesprefix: str='', targets: Set[Path] = ()):
         """
         A source data type (e.g. DICOM or PAR) that can be converted to BIDS by the plugins
 
