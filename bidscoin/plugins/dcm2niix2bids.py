@@ -314,7 +314,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                 if not list(outfolder.glob(f"{bidsname}.*nii*")): continue
 
             jsonfiles.update(outfolder.glob(f"{bidsname}.json"))  # add existing created json files: bidsname.json
-            datasource.targets += outfolder.glob(f"{bidsname}.*[!json]")    # Add files created using this run-item (except sidecars)
+            datasource.targets.update(outfolder.glob(f"{bidsname}.*[!json]"))    # Add files created using this run-item (except sidecars)
 
             # Handle the ABCD GE pepolar sequence
             extrafile = list(outfolder.glob(f"{bidsname}a.nii*"))
@@ -428,7 +428,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                 if newbidsfile.is_file():
                     LOGGER.warning(f"Overwriting existing {newbidsfile} file -- check your results carefully!")
                 dcm2niixfile.replace(newbidsfile)
-                datasource.targets.append(newbidsfile)
+                datasource.targets.add(newbidsfile)
 
                 # Rename all associated files (i.e. the json-, bval- and bvec-files)
                 oldjsonfile = dcm2niixfile.with_suffix('').with_suffix('.json')

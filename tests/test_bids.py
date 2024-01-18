@@ -474,7 +474,7 @@ def test_rename_runless_to_run1(tmp_path):
             outfile = (outfolder/file_name).with_suffix(suffix)
             outfile.touch()
             if suffix == '.nii.gz':
-                run['datasource'].targets.append(outfile)
+                run['datasource'].targets.add(outfile)
                 matched_runs.append(run)
 
     # Create the scans table

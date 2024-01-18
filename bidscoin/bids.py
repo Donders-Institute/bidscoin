@@ -53,7 +53,7 @@ with (schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
 
 
 class DataSource:
-    def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str='', subprefix: str='', sesprefix: str='', targets: List[Path] = ()):
+    def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str='', subprefix: str='', sesprefix: str='', targets: set[Path] = ()):
         """
         A source data type (e.g. DICOM or PAR) that can be converted to BIDS by the plugins
 
@@ -76,7 +76,7 @@ class DataSource:
             self.is_datasource()
         self.subprefix   = subprefix
         self.sesprefix   = sesprefix
-        self.targets     = list(targets)
+        self.targets     = set(targets)
         self._cache      = {}
 
     def resubprefix(self) -> str:
@@ -1987,7 +1987,7 @@ def rename_runless_to_run1(runs: List[dict], scans_table: pd.DataFrame) -> None:
 
                     # Change target from run-less to run-1
                     run['datasource'].targets.remove(target)
-                    run['datasource'].targets.append((outfolder/run1_bidsname).with_suffix(suffixes))
+                    run['datasource'].targets.add((outfolder/run1_bidsname).with_suffix(suffixes))
 
 
 def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: dict, extensions: list, sourcemeta: Path = Path()) -> dict:
