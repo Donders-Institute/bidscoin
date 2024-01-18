@@ -236,7 +236,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
         # Load / copy over the source meta-data
         sidecar  = bidsfile.with_suffix('').with_suffix('.json')
-        metadata = bids.updatemetadata(sourcefile, sidecar, run['meta'], meta, datasource)
+        metadata = bids.updatemetadata(datasource, sidecar, run['meta'], meta)
         with sidecar.open('w') as json_fid:
             json.dump(metadata, json_fid, indent=4)
 

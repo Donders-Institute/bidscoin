@@ -1989,7 +1989,8 @@ def rename_runless_to_run1(runs: List[dict], scans_table: pd.DataFrame) -> None:
                     run['datasource'].targets.remove(target)
                     run['datasource'].targets.append((outfolder/run1_bidsname).with_suffix(suffixes))
 
-def updatemetadata(sourcemeta: Path, targetmeta: Path, usermeta: dict, extensions: list, datasource: DataSource) -> dict:
+
+def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: dict, extensions: list, sourcemeta: Path = Path()) -> dict:
     """
     Load the metadata from the target (json sidecar), then add metadata from the source (json sidecar) and finally add
     the user metadata (meta table). Source metadata other than json sidecars are copied over to the target folder. Special
@@ -1997,15 +1998,17 @@ def updatemetadata(sourcemeta: Path, targetmeta: Path, usermeta: dict, extension
 
     NB: In future versions this function could also support more source metadata formats, e.g. yaml, csv- or Excel-files
 
-    :param sourcemeta:  The filepath of the source data file with associated/equally named meta-data files (name may include wildcards)
+    :param datasource:  The data source from which dynamic values are read
     :param targetmeta:  The filepath of the target data file with meta-data
     :param usermeta:    A user metadata dict, e.g. the meta table from a run-item
     :param extensions:  A list of file extensions of the source metadata files, e.g. as specified in bidsmap['Options']['plugins']['plugin']['meta']
-    :param datasource:  The data source from which dynamic values are read
+    :param sourcemeta:  The filepath of the source data file with associated/equally named meta-data files (name may include wildcards). Leave empty to use datasource.path
     :return:            The combined target + source + user metadata
     """
 
     metapool = {}
+    if not sourcemeta.name:
+        sourcemeta = datasource.path
 
     # Add the target metadata to the metadict
     if targetmeta.is_file():
