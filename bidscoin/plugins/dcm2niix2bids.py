@@ -313,8 +313,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
             if bcoin.run_command(command):
                 if not list(outfolder.glob(f"{bidsname}.*nii*")): continue
 
-            jsonfiles.update(outfolder.glob(f"{bidsname}.json"))  # add existing created json files: bidsname.json
-            datasource.targets.update(outfolder.glob(f"{bidsname}.*[!json]"))    # Add files created using this run-item (except sidecars)
+            jsonfiles.update(outfolder.glob(f"{bidsname}.json"))            # add existing created json files: bidsname.json
+            datasource.targets.update(outfolder.glob(f"{bidsname}.*nii*"))  # Add nifti files created using this run-item
 
             # Handle the ABCD GE pepolar sequence
             extrafile = list(outfolder.glob(f"{bidsname}a.nii*"))
@@ -428,6 +428,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                 if newbidsfile.is_file():
                     LOGGER.warning(f"Overwriting existing {newbidsfile} file -- check your results carefully!")
                 dcm2niixfile.replace(newbidsfile)
+                datasource.targets.remove(dcm2niixfile)
                 datasource.targets.add(newbidsfile)
 
                 # Rename all associated files (i.e. the json-, bval- and bvec-files)
@@ -462,8 +463,6 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                             LOGGER.verbose(f"Removing BIDS-invalid b0-file: {bfile} -> {jsonfile}")
                             metadata[ext[1:]] = bdata.values.tolist()
                             bfile.unlink()
-                            if bfile in datasource.targets:
-                                datasource.targets.remove(bfile)
 
             # Save the meta-data to the json sidecar-file
             with jsonfile.open('w') as json_fid:
