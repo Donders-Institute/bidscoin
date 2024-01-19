@@ -429,7 +429,6 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                 if newbidsfile.is_file():
                     LOGGER.warning(f"Overwriting existing {newbidsfile} file -- check your results carefully!")
                 dcm2niixfile.replace(newbidsfile)
-                datasource.targets.remove(dcm2niixfile)
                 datasource.targets.add(newbidsfile)
 
                 # Rename all associated files (i.e. the json-, bval- and bvec-files)
