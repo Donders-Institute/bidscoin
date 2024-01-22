@@ -935,7 +935,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
                     bidsmap[dataformat] = bidsmappings
 
     # Add missing provenance info, run dictionaries and bids entities
-    run_ = get_run_()
+    run_ = create_run()
     for dataformat in bidsmap:
         if dataformat in ('$schema', 'Options'): continue
         bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'] or ''   # Session-less data repositories
@@ -1349,26 +1349,22 @@ def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
     return provenance
 
 
-def get_run_(provenance: Union[str, Path]='', dataformat: str='', datatype: str='', bidsmap: dict=None) -> dict:
+def create_run(datasource: DataSource=None, bidsmap: dict=None) -> dict:
     """
-    Get an empty run-item with the proper structure and provenance info
+    Create an empty run-item with the proper structure, provenance info and a data source
 
-    :param provenance:  The unique provenance that is used to identify the run
-    :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
-    :param datatype:    The bidsmap datatype that is used, e.g. 'anat'
-    :param bidsmap:     The bidsmap, with all the bidscoin options in it
-    :return:            The empty run
+    :param datasource:  The data source that is attached
+    :param bidsmap:     The bidsmap, with all the bidscoin options in it (for prefix/plugin info)
+    :return:            The created run
     """
 
+    datasource = datasource or DataSource()
     if bidsmap:
-        plugins    = bidsmap['Options']['plugins']
-        subprefix  = bidsmap['Options']['bidscoin'].get('subprefix','')
-        sesprefix  = bidsmap['Options']['bidscoin'].get('sesprefix','')
-        datasource = DataSource(provenance, plugins, dataformat, datatype, subprefix, sesprefix)
-    else:
-        datasource = DataSource(provenance, dataformat=dataformat, datatype=datatype)
+        datasource.plugins   = bidsmap['Options']['plugins']
+        datasource.subprefix = bidsmap['Options']['bidscoin'].get('subprefix','')
+        datasource.sesprefix = bidsmap['Options']['bidscoin'].get('sesprefix','')
 
-    return dict(provenance = str(provenance),
+    return dict(provenance = str(datasource.path),
                 properties = {'filepath':'', 'filename':'', 'filesize':'', 'nrfiles':''},
                 attributes = {},
                 bids       = {},
@@ -1393,7 +1389,8 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
         if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
             # Get a clean run (remove comments to avoid overly complicated commentedMaps from ruamel.yaml)
-            run_ = get_run_(datasource.path, datasource.dataformat, datatype, bidsmap)
+            run_ = create_run(datasource, bidsmap)
+            run_['datasource'].datatype = datatype
 
             for propkey, propvalue in run['properties'].items():
                 run_['properties'][propkey] = propvalue
@@ -1497,23 +1494,17 @@ def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
     :return:
     """
 
-    dataformat = run['datasource'].dataformat
-    datatype   = run['datasource'].datatype
-
     # Copy the values from the run to an empty dict
     if clean:
-        run_ = get_run_(run['provenance'], datatype=datatype, bidsmap=bidsmap)
-
+        run_ = create_run(run['datasource'], bidsmap)
         for item in run_:
-            if item == 'provenance':
-                continue
-            if item == 'datasource':
-                run_['datasource'] = run['datasource']
+            if item in ('provenance', 'datasource'):
                 continue
             run_[item].update(run[item])
-
         run = run_
 
+    dataformat = run['datasource'].dataformat
+    datatype   = run['datasource'].datatype
     if not bidsmap.get(dataformat):
         bidsmap[dataformat] = {datatype: []}
     if not bidsmap.get(dataformat).get(datatype):
@@ -1671,15 +1662,15 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
     # Loop through all datatypes and runs; all info goes cleanly into run_ (to avoid formatting problem of the CommentedMap)
     if 'fmap' in bidsdatatypes:
         bidsdatatypes.insert(0, bidsdatatypes.pop(bidsdatatypes.index('fmap'))) # Put fmap at the front (to catch inverted polarity scans first
-    run_ = get_run_(datasource.path, dataformat=datasource.dataformat, bidsmap=bidsmap)
+    run_ = create_run(datasource, bidsmap)
     for datatype in ignoredatatypes + bidsdatatypes + unknowndatatypes:         # The ordered datatypes in which a matching run is searched for
 
         runs                = bidsmap.get(datasource.dataformat, {}).get(datatype)
         datasource.datatype = datatype
-        for run in runs if runs else []:
+        for run in runs or []:
 
             match = any([run[matching][attrkey] not in [None,''] for matching in ('properties','attributes') for attrkey in run[matching]])     # Normally match==True, but make match==False if all attributes are empty
-            run_  = get_run_(datasource.path, datasource.dataformat, datatype, bidsmap)
+            run_  = create_run(datasource, bidsmap)
 
             # Try to see if the sourcefile matches all the filesystem properties
             for propkey, propvalue in run['properties'].items():
@@ -1871,7 +1862,7 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, v
     bidsext  = ''.join(Path(bidsfile).suffixes)
 
     # Parse the key-value pairs and store all the run info
-    run   = get_run_()
+    run   = create_run()
     subid = ''
     sesid = ''
     for keyval in bidsname.split('_'):

@@ -461,7 +461,7 @@ def test_rename_runless_to_run1(tmp_path):
     """Test <<>> index renaming run-less files to run-1 files."""
 
     # Create data
-    run                  = bids.get_run_()
+    run                  = bids.create_run()
     run['bids']          = {'run': '<<>>'}
     matched_runs         = []
     old_runless_bidsname = 'sub-01_T1w'
