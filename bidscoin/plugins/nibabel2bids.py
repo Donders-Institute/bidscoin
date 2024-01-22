@@ -9,9 +9,10 @@ import shutil
 import pandas as pd
 import nibabel as nib
 from bids_validator import BIDSValidator
-from typing import Union
+from typing import List, Union
 from pathlib import Path
 from bidscoin import bids
+
 try:
     from nibabel.testing import data_path
 except ImportError:
@@ -188,6 +189,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         scans_table.index.name = 'filename'
 
     # Collect the different Nibabel source files for all files in the session
+    matched_runs: List[dict] = []
     for sourcefile in sourcefiles:
 
         datasource = bids.DataSource(sourcefile, {'nibabel2bids':options})
@@ -204,6 +206,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
             continue
 
         LOGGER.info(f"--> Coining: {sourcefile}")
+        matched_runs.append(run)
 
         # Create the BIDS session/datatype output folder
         outfolder = bidsses/datasource.datatype
@@ -213,7 +216,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         bidsignore = bids.check_ignore(datasource.datatype, bidsmap['Options']['bidscoin']['bidsignore'])
         bidsname   = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
         bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap['Options']['bidscoin']['bidsignore'], 'file')
-        bidsname   = bids.increment_runindex(outfolder, bidsname, run, scans_table)
+        bidsname   = bids.increment_runindex(outfolder, bidsname, run)
         bidsfile   = (outfolder/bidsname).with_suffix(ext)
 
         # Check if the bidsname is valid
@@ -229,16 +232,20 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
 
         # Save the sourcefile as a BIDS NIfTI file
         nib.save(nib.load(sourcefile), bidsfile)
+        datasource.targets.add(bidsfile)
 
         # Load / copy over the source meta-data
         sidecar  = bidsfile.with_suffix('').with_suffix('.json')
-        metadata = bids.updatemetadata(sourcefile, sidecar, run['meta'], meta, datasource)
+        metadata = bids.updatemetadata(datasource, sidecar, run['meta'], meta)
         with sidecar.open('w') as json_fid:
             json.dump(metadata, json_fid, indent=4)
 
         # Add an entry to the scans_table (we typically don't have useful data to put there)
         acq_time = dateutil.parser.parse(f"1925-01-01T{metadata.get('AcquisitionTime', '')}")
         scans_table.loc[bidsfile.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time.isoformat()
+
+    # Handle dynamic index for run-1
+    bids.rename_runless_to_run1(matched_runs, scans_table)
 
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing data to: {scans_tsv}")

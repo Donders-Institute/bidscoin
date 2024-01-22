@@ -327,7 +327,7 @@ def test_append_run(test_bidsmap):
 
     # Append the run elsewhere in the bidsmap
     bids.append_run(bidsmap, run)
-    assert bidsmap['Foo']['Bar'][0]['provenance'] == run['provenance']
+    assert Path(bidsmap['Foo']['Bar'][0]['provenance']) == Path(run['provenance'])
 
 
 def test_update_bidsmap(test_bidsmap):
@@ -341,8 +341,8 @@ def test_update_bidsmap(test_bidsmap):
 
     # Update the bidsmap
     bids.update_bidsmap(bidsmap, 'func', run)
-    assert bidsmap['DICOM']['anat'][-1]['provenance'] == run['provenance']
-    assert bidsmap['DICOM']['func'] [0]['provenance'] != run['provenance']
+    assert Path(bidsmap['DICOM']['anat'][-1]['provenance']) == Path(run['provenance'])
+    assert Path(bidsmap['DICOM']['func'] [0]['provenance']) != Path(run['provenance'])
 
     # Modify the last anat run-item and update the bidsmap
     run['bids']['foo'] = 'bar'
@@ -372,7 +372,7 @@ def test_exist_run(test_bidsmap):
     assert bids.exist_run(bidsmap, '', run)     == False
 
 
-def test_increment_runindex_no_run1(tmp_path):
+def test_increment_runindex__no_run1(tmp_path):
     """Test if run-index is preserved or added to the bidsname"""
 
     # Test runindex is <<>>, so no run is added to the bidsname
@@ -389,35 +389,43 @@ def test_increment_runindex_no_run1(tmp_path):
     assert bidsname == 'sub-01_run-2_T1w'
 
 
-def test_increment_runindex_rename_run1(tmp_path):
-    """Test runindex is <<>>, so run-2 is added to the bidsname and existing run-less files are renamed to run-1"""
+def test_increment_runindex__runless_exist(tmp_path):
+    """Test run-index is <<>>, so run-2 is added to the bidsname"""
 
     # Create the run-less files
-    old_run1name = 'sub-01_T1w'
-    new_run1name = 'sub-01_run-1_T1w'
-    outfolder    = tmp_path/'bids'/'sub-01'/'anat'
+    outfolder = tmp_path/'bids'/'sub-01'/'anat'
     outfolder.mkdir(parents=True)
     for suffix in ('.nii.gz', '.json'):
-        (outfolder/old_run1name).with_suffix(suffix).touch()
+        (outfolder/'sub-01_T1w').with_suffix(suffix).touch()
 
-    # Create the scans table
-    scans_data         = {'filename': ['anat/sub-01_T2w.nii.gz', f"anat/{old_run1name}.nii.gz"], 'acq_time': ['acq1', 'acq2']}  # One matching run-less file
-    result_scans_data  = {'filename': ['anat/sub-01_T2w.nii.gz', f"anat/{new_run1name}.nii.gz"], 'acq_time': ['acq1', 'acq2']}  # One matching run-1 file
-    scans_table        = pd.DataFrame(scans_data).set_index('filename')
-    result_scans_table = pd.DataFrame(result_scans_data).set_index('filename')
-
-    # Increment the run-index
-    bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w', {'bids': {'run': '<<>>'}}, scans_table)
+    # Test run-index is <<>>, so the run-index is incremented
+    bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w', {'bids': {'run': '<<>>'}})
 
     # Check the results
     assert bidsname == 'sub-01_run-2_T1w'
-    assert result_scans_table.equals(scans_table)
+    assert (outfolder / 'sub-01_T1w').with_suffix(suffix).is_file() is True
+
+
+def test_increment_runindex__runless_run2_exist(tmp_path):
+    """Test run-index is <<>>, so run-3 is added to the bidsname"""
+
+    # Create the files
+    outfolder = tmp_path/'bids'/'sub-01'/'anat'
+    outfolder.mkdir(parents=True)
     for suffix in ('.nii.gz', '.json'):
-        assert (outfolder/old_run1name).with_suffix(suffix).is_file() == False
-        assert (outfolder/new_run1name).with_suffix(suffix).is_file() == True
+        (outfolder/'sub-01_T1w').with_suffix(suffix).touch()
+        (outfolder/'sub-01_run-2_T1w').with_suffix(suffix).touch()
+
+    # Test run-index is <<>>, so the run-index is incremented
+    bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w.nii.gz', {'bids': {'run': '<<>>'}})
+
+    # Check the results
+    assert bidsname == 'sub-01_run-3_T1w.nii.gz'
+    assert (outfolder / 'sub-01_T1w').with_suffix(suffix).is_file() is True
+    assert (outfolder / 'sub-01_run-2_T1w').with_suffix(suffix).is_file() is True
 
 
-def test_increment_runindex_run1_run2_exists(tmp_path):
+def test_increment_runindex__run1_run2_exist(tmp_path):
     """Test if run-3 is added to the bidsname"""
 
     # Create the run-1 and run-2 files
@@ -426,10 +434,6 @@ def test_increment_runindex_run1_run2_exists(tmp_path):
     for suffix in ('.nii.gz', '.json'):
         (outfolder/'sub-01_run-1_T1w').with_suffix(suffix).touch()
         (outfolder/'sub-01_run-2_T1w').with_suffix(suffix).touch()
-
-    # Test run-index is <<>>, so the run-index is incremented
-    bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w.nii.gz', {'bids': {'run': '<<>>'}})
-    assert bidsname == 'sub-01_run-3_T1w.nii.gz'
 
     # Test run-index is <<1>>, so the run-index is incremented
     bidsname = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '<<1>>'}})
@@ -442,6 +446,57 @@ def test_increment_runindex_run1_run2_exists(tmp_path):
     # Test run-index is 2, so the run-index is untouched
     bidsname  = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '2'}})
     assert bidsname == 'sub-01_run-1_T1w'
+
+
+def test_increment_runindex__run2_no_longer_valid(tmp_path):
+    """Test <<>> run-index when run is no longer needed although bidsname contains it (dcm2niix postfixes changed)."""
+
+    # Test runindex is <<>>, run is deleted from bidsname as no run-less or run files with that bidsname exist
+    outfolder = tmp_path/'bids'/'sub-01'/'anat'
+    bidsname  = bids.increment_runindex(outfolder, 'sub-01_run-2_T1w', {'bids': {'run': '<<>>'}})
+    assert bidsname == 'sub-01_T1w'
+
+
+def test_rename_runless_to_run1(tmp_path):
+    """Test <<>> index renaming run-less files to run-1 files."""
+
+    # Create data
+    run                  = bids.create_run()
+    run['bids']          = {'run': '<<>>'}
+    matched_runs         = []
+    old_runless_bidsname = 'sub-01_T1w'
+    new_run1_bidsname    = 'sub-01_run-1_T1w'
+    run2_bidsname        = 'sub-01_run-2_T1w'
+    outfolder            = tmp_path/'bids'/'sub-01'/'anat'
+    outfolder.mkdir(parents=True)
+    for suffix in ('.nii.gz', '.json'):
+        for file_name in (old_runless_bidsname, run2_bidsname):
+            outfile = (outfolder/file_name).with_suffix(suffix)
+            outfile.touch()
+            if suffix == '.nii.gz':
+                run['datasource'].targets.add(outfile)
+                matched_runs.append(run)
+
+    # Create the scans table
+    scans_data = {
+        'filename': ['anat/sub-01_T2w.nii.gz', f"anat/{old_runless_bidsname}.nii.gz", f"anat/{run2_bidsname}.nii.gz"],
+        'acq_time': ['acq1', 'acq2', 'acq3'],
+    }
+    result_scans_data = {
+        'filename': ['anat/sub-01_T2w.nii.gz', f"anat/{new_run1_bidsname}.nii.gz", f"anat/{run2_bidsname}.nii.gz"],
+        'acq_time': ['acq1', 'acq2', 'acq3'],
+    }
+    scans_table        = pd.DataFrame(scans_data).set_index('filename')
+    result_scans_table = pd.DataFrame(result_scans_data).set_index('filename')
+
+    # Run the function
+    bids.rename_runless_to_run1(matched_runs, scans_table)
+
+    # Check the results
+    assert result_scans_table.equals(scans_table)
+    for suffix in ('.nii.gz', '.json'):
+        assert (outfolder/old_runless_bidsname).with_suffix(suffix).is_file() is False
+        assert (outfolder/new_run1_bidsname).with_suffix(suffix).is_file() is True
 
 
 def test_get_bidsname(raw_dicomdir):
@@ -510,7 +565,7 @@ def test_updatemetadata(dcm_file, tmp_path):
                 'B0FieldIdentifier': 'Identifier_<<session>>'}
 
     # Test if the user metadata takes precedence
-    metadata = bids.updatemetadata(sourcefile, sidecar, usermeta, ['.json'], extdatasource)
+    metadata = bids.updatemetadata(extdatasource, sidecar, usermeta, ['.json'])
     assert metadata['PatientName']       == 'UserTest'
     assert metadata['DynamicName']       == 'CompressedSamples^MR1'
     assert metadata['B0FieldSource']     == 'Source_01'
@@ -518,10 +573,10 @@ def test_updatemetadata(dcm_file, tmp_path):
     assert not (outfolder/sourcefile.with_suffix('.jsn').name).is_file()
 
     # Test if the source metadata takes precedence
-    metadata = bids.updatemetadata(sourcefile, sidecar, {}, ['.jsn', '.json'], extdatasource)
+    metadata = bids.updatemetadata(extdatasource, sidecar, {}, ['.jsn', '.json'], sourcefile)
     assert metadata['PatientName'] == 'SourceTest'
     assert (outfolder/sourcefile.with_suffix('.jsn').name).is_file()
 
     # Test if the sidecar metadata takes precedence
-    metadata = bids.updatemetadata(sourcefile, sidecar, {}, [], extdatasource)
+    metadata = bids.updatemetadata(extdatasource, sidecar, {}, [])
     assert metadata['PatientName'] == 'SidecarTest'

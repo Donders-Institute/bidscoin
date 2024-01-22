@@ -10,7 +10,7 @@ import pandas as pd
 import json
 import shutil
 from bids_validator import BIDSValidator
-from typing import Union
+from typing import Union, List
 from pathlib import Path
 from bidscoin import bcoin, bids, lsdirs, due, Doi
 from bidscoin.utilities import physio
@@ -228,6 +228,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
         scans_table.index.name = 'filename'
 
     # Process all the source files or run subfolders
+    matched_runs: List[dict] = []
     sourcefile = Path()
     for source in sources:
 
@@ -254,6 +255,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
             continue
 
         LOGGER.info(f"--> Coining: {source}")
+        matched_runs.append(run)
 
         # Create the BIDS session/datatype output folder
         suffix = datasource.dynamicvalue(run['bids']['suffix'], True, True)
@@ -267,7 +269,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
         bidsignore = bids.check_ignore(datasource.datatype, bidsmap['Options']['bidscoin']['bidsignore'])
         bidsname   = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
         bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap['Options']['bidscoin']['bidsignore'], 'file')
-        bidsname   = bids.increment_runindex(outfolder, bidsname, run, scans_table)
+        bidsname   = bids.increment_runindex(outfolder, bidsname, run)
         jsonfiles  = set()  # Set -> Collect the associated json-files (for updating them later) -- possibly > 1
 
         # Check if the bidsname is valid
@@ -295,7 +297,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
             try:
                 physiodata = physio.readphysio(sourcefile)
                 physio.physio2tsv(physiodata, outfolder/bidsname)
-                jsonfiles.update(outfolder.glob(f"{bidsname}.json"))  # add existing created json files: bidsname.json
+                jsonfiles.update(outfolder.glob(f"{bidsname}.json"))            # add existing created json files: bidsname.json
+                datasource.targets.update(outfolder.glob(f"{bidsname}.*tsv*"))  # Add nifti files created using this run-item
             except Exception as physioerror:
                 LOGGER.error(f"Could not read/convert physiological file: {sourcefile}\n{physioerror}")
                 continue
@@ -311,7 +314,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
             if bcoin.run_command(command):
                 if not list(outfolder.glob(f"{bidsname}.*nii*")): continue
 
-            jsonfiles.update(outfolder.glob(f"{bidsname}.json"))  # add existing created json files: bidsname.json
+            jsonfiles.update(outfolder.glob(f"{bidsname}.json"))            # add existing created json files: bidsname.json
+            datasource.targets.update(outfolder.glob(f"{bidsname}.*nii*"))  # Add nifti files created using this run-item
 
             # Handle the ABCD GE pepolar sequence
             extrafile = list(outfolder.glob(f"{bidsname}a.nii*"))
@@ -419,12 +423,13 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                         LOGGER.warning(f"The {newbidsname} image is a derivate / not BIDS-compliant -- you can probably delete it safely and update {scans_tsv}")
 
                 # Save the NIfTI file with the newly constructed name
-                newbidsname = bids.increment_runindex(outfolder, newbidsname, run, scans_table)                 # Update the runindex now that the acq-label has changed
+                newbidsname = bids.increment_runindex(outfolder, newbidsname, run)                 # Update the runindex now that the acq-label has changed
                 newbidsfile = outfolder/newbidsname
                 LOGGER.verbose(f"Found dcm2niix {postfixes} postfixes, renaming\n{dcm2niixfile} ->\n{newbidsfile}")
                 if newbidsfile.is_file():
                     LOGGER.warning(f"Overwriting existing {newbidsfile} file -- check your results carefully!")
                 dcm2niixfile.replace(newbidsfile)
+                datasource.targets.add(newbidsfile)
 
                 # Rename all associated files (i.e. the json-, bval- and bvec-files)
                 oldjsonfile = dcm2niixfile.with_suffix('').with_suffix('.json')
@@ -443,7 +448,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
         for jsonfile in sorted(jsonfiles):
 
             # Load / copy over the source meta-data
-            metadata = bids.updatemetadata(sourcefile, jsonfile, run['meta'], options['meta'], datasource)
+            metadata = bids.updatemetadata(datasource, jsonfile, run['meta'], options['meta'])
 
             # Remove the bval/bvec files of sbref- and inv-images (produced by dcm2niix but not allowed by the BIDS specifications)
             if (datasource.datatype=='dwi' and suffix=='sbref') or (datasource.datatype=='fmap' and suffix=='epi'):
@@ -485,6 +490,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                     acq_time = 'n/a'
                 scanpath = outputfile[0].relative_to(bidsses)
                 scans_table.loc[scanpath.as_posix(), 'acq_time'] = acq_time
+
+    # Handle dynamic index for run-1
+    bids.rename_runless_to_run1(matched_runs, scans_table)
 
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing acquisition time data to: {scans_tsv}")

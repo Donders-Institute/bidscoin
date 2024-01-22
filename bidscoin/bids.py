@@ -20,9 +20,8 @@ import pandas as pd
 import ast
 from functools import lru_cache
 from pathlib import Path
-from typing import Union, List, Tuple
+from typing import List, Set, Tuple, Union
 from nibabel.parrec import parse_PAR_header
-from pandas import DataFrame
 from pydicom import dcmread, fileset, datadict
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
@@ -53,7 +52,7 @@ with (schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
 
 
 class DataSource:
-    def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str='', subprefix: str='', sesprefix: str=''):
+    def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str='', subprefix: str='', sesprefix: str='', targets: Set[Path] = ()):
         """
         A source data type (e.g. DICOM or PAR) that can be converted to BIDS by the plugins
 
@@ -63,6 +62,7 @@ class DataSource:
         :param datatype:    The intended BIDS data type of the data source TODO: move to a separate BidsTarget/Mapping class
         :param subprefix:   The subprefix used in the sourcefolder
         :param sesprefix:   The sesprefix used in the sourcefolder
+        :param targets:     A list of output targets of the source
         """
 
         self.path        = Path(provenance)
@@ -75,6 +75,7 @@ class DataSource:
             self.is_datasource()
         self.subprefix   = subprefix
         self.sesprefix   = sesprefix
+        self.targets     = set(targets)
         self._cache      = {}
 
     def resubprefix(self) -> str:
@@ -934,7 +935,7 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
                     bidsmap[dataformat] = bidsmappings
 
     # Add missing provenance info, run dictionaries and bids entities
-    run_ = get_run_()
+    run_ = create_run()
     for dataformat in bidsmap:
         if dataformat in ('$schema', 'Options'): continue
         bidsmap[dataformat]['session'] = bidsmap[dataformat]['session'] or ''   # Session-less data repositories
@@ -1348,26 +1349,22 @@ def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
     return provenance
 
 
-def get_run_(provenance: Union[str, Path]='', dataformat: str='', datatype: str='', bidsmap: dict=None) -> dict:
+def create_run(datasource: DataSource=None, bidsmap: dict=None) -> dict:
     """
-    Get an empty run-item with the proper structure and provenance info
+    Create an empty run-item with the proper structure, provenance info and a data source
 
-    :param provenance:  The unique provenance that is used to identify the run
-    :param dataformat:  The information source in the bidsmap that is used, e.g. 'DICOM'
-    :param datatype:    The bidsmap datatype that is used, e.g. 'anat'
-    :param bidsmap:     The bidsmap, with all the bidscoin options in it
-    :return:            The empty run
+    :param datasource:  The data source that is attached
+    :param bidsmap:     The bidsmap, with all the bidscoin options in it (for prefix/plugin info)
+    :return:            The created run
     """
 
+    datasource = datasource or DataSource()
     if bidsmap:
-        plugins    = bidsmap['Options']['plugins']
-        subprefix  = bidsmap['Options']['bidscoin'].get('subprefix','')
-        sesprefix  = bidsmap['Options']['bidscoin'].get('sesprefix','')
-        datasource = DataSource(provenance, plugins, dataformat, datatype, subprefix, sesprefix)
-    else:
-        datasource = DataSource(provenance, dataformat=dataformat, datatype=datatype)
+        datasource.plugins   = bidsmap['Options']['plugins']
+        datasource.subprefix = bidsmap['Options']['bidscoin'].get('subprefix','')
+        datasource.sesprefix = bidsmap['Options']['bidscoin'].get('sesprefix','')
 
-    return dict(provenance = str(provenance),
+    return dict(provenance = str(datasource.path),
                 properties = {'filepath':'', 'filename':'', 'filesize':'', 'nrfiles':''},
                 attributes = {},
                 bids       = {},
@@ -1392,7 +1389,8 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
         if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
             # Get a clean run (remove comments to avoid overly complicated commentedMaps from ruamel.yaml)
-            run_ = get_run_(datasource.path, datasource.dataformat, datatype, bidsmap)
+            run_ = create_run(copy.deepcopy(datasource), bidsmap)
+            run_['datasource'].datatype = datatype
 
             for propkey, propvalue in run['properties'].items():
                 run_['properties'][propkey] = propvalue
@@ -1496,23 +1494,17 @@ def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
     :return:
     """
 
-    dataformat = run['datasource'].dataformat
-    datatype   = run['datasource'].datatype
-
     # Copy the values from the run to an empty dict
     if clean:
-        run_ = get_run_(run['provenance'], datatype=datatype, bidsmap=bidsmap)
-
+        run_ = create_run(run['datasource'], bidsmap)
         for item in run_:
-            if item == 'provenance':
-                continue
-            if item == 'datasource':
-                run_['datasource'] = run['datasource']
+            if item in ('provenance', 'datasource'):
                 continue
             run_[item].update(run[item])
-
         run = run_
 
+    dataformat = run['datasource'].dataformat
+    datatype   = run['datasource'].datatype
     if not bidsmap.get(dataformat):
         bidsmap[dataformat] = {datatype: []}
     if not bidsmap.get(dataformat).get(datatype):
@@ -1670,15 +1662,15 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
     # Loop through all datatypes and runs; all info goes cleanly into run_ (to avoid formatting problem of the CommentedMap)
     if 'fmap' in bidsdatatypes:
         bidsdatatypes.insert(0, bidsdatatypes.pop(bidsdatatypes.index('fmap'))) # Put fmap at the front (to catch inverted polarity scans first
-    run_ = get_run_(datasource.path, dataformat=datasource.dataformat, bidsmap=bidsmap)
+    run_ = create_run(datasource, bidsmap)
     for datatype in ignoredatatypes + bidsdatatypes + unknowndatatypes:         # The ordered datatypes in which a matching run is searched for
 
         runs                = bidsmap.get(datasource.dataformat, {}).get(datatype)
         datasource.datatype = datatype
-        for run in runs if runs else []:
+        for run in runs or []:
 
             match = any([run[matching][attrkey] not in [None,''] for matching in ('properties','attributes') for attrkey in run[matching]])     # Normally match==True, but make match==False if all attributes are empty
-            run_  = get_run_(datasource.path, datasource.dataformat, datatype, bidsmap)
+            run_  = create_run(datasource, bidsmap)
 
             # Try to see if the sourcefile matches all the filesystem properties
             for propkey, propvalue in run['properties'].items():
@@ -1870,7 +1862,7 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, v
     bidsext  = ''.join(Path(bidsfile).suffixes)
 
     # Parse the key-value pairs and store all the run info
-    run   = get_run_()
+    run   = create_run()
     subid = ''
     sesid = ''
     for keyval in bidsname.split('_'):
@@ -1903,19 +1895,17 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, v
     return newbidsfile
 
 
-def increment_runindex(outfolder: Path, bidsname: str, run: dict, scans_table: DataFrame=pd.DataFrame()) -> Union[Path, str]:
+def increment_runindex(outfolder: Path, bidsname: str, run: dict) -> Union[Path, str]:
     """
     Checks if a file with the same bidsname already exists in the folder and then increments the dynamic runindex
     (if any) until no such file is found.
 
     Important side effect for <<>> dynamic value:
-    If the run-less file already exists, start with run-2 and rename the existing run-less files to run-index 1.
-    Also update the scans table accordingly
+    If the run-less file already exists, start with run-2, run-1 will be added later to run-less files
 
     :param outfolder:   The full pathname of the bids output folder
     :param bidsname:    The bidsname with a provisional runindex
     :param run:         The run mapping with the BIDS key-value pairs
-    :param scans_table: BIDS scans.tsv dataframe with all filenames and acquisition timestamps
     :return:            The bidsname with the original or incremented runindex
     """
 
@@ -1930,37 +1920,67 @@ def increment_runindex(outfolder: Path, bidsname: str, run: dict, scans_table: D
     if '.' in bidsname:
         bidsname, suffixes = bidsname.split('.', 1)
 
-    # Catch run-less bidsnames from <<>> dynamic run-values
-    run2_bidsname = insert_bidskeyval(bidsname, 'run', '2', False)
-    if '_run-' not in bidsname and list(outfolder.glob(f"{run2_bidsname}.*")):
-        bidsname = run2_bidsname            # There is more than 1 run, i.e. run-2 already exists and should be normally incremented
+    # Delete runindex from bidsname if no runless files (run-1) exist (e.g. dcm2niix postfixes changed name)
+    runless_bidsname = insert_bidskeyval(bidsname, 'run', '', False)
+    if runval == '<<>>' and '_run-' in bidsname and not list(outfolder.glob(f"{runless_bidsname}.*")):
+        return runless_bidsname
 
     # Increment the run-index if the bidsfile already exists
     while list(outfolder.glob(f"{bidsname}.*")):
         runindex = get_bidsvalue(bidsname, 'run')
         if not runindex:                    # The run-less bids file already exists -> start with run-2
-            bidsname = run2_bidsname
+            bidsname = insert_bidskeyval(bidsname, 'run', '2', False)
         else:                               # Do the normal increment
             bidsname = get_bidsvalue(bidsname, 'run', str(int(runindex) + 1))
-
-    # Adds run-1 key to files with bidsname that don't have run index. Updates scans table respectively
-    if runval == '<<>>' and bidsname == run2_bidsname:
-        old_bidsname = insert_bidskeyval(bidsname, 'run', '', False)
-        new_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
-        for file in outfolder.glob(f"{old_bidsname}.*"):
-            ext = ''.join(file.suffixes)
-            file.replace((outfolder/new_bidsname).with_suffix(ext))
-
-            # Change row name in the scans table
-            if f"{outfolder.name}/{old_bidsname}{ext}" in scans_table.index:
-                LOGGER.verbose(f"Renaming:\n{outfolder/old_bidsname}.* ->\n{outfolder/new_bidsname}.*")
-                scans_table.rename(index={f"{outfolder.name}/{old_bidsname}{ext}":
-                                          f"{outfolder.name}/{new_bidsname}{ext}"}, inplace=True)   # NB: '/' as_posix
 
     return f"{bidsname}.{suffixes}" if suffixes else bidsname
 
 
-def updatemetadata(sourcemeta: Path, targetmeta: Path, usermeta: dict, extensions: list, datasource: DataSource) -> dict:
+def rename_runless_to_run1(runs: List[dict], scans_table: pd.DataFrame) -> None:
+    """
+    Adds run-1 label to run-less files that use dynamic index (<<>>) in bidsmap run-items for which files with
+    run-2 label exist in the output folder. Additionally, 'scans_table' is updated based on the changes.
+
+    :param runs:        Bidsmap run-items with accumulated files under datasource.targets (all files created via that run-item)
+    :param scans_table: BIDS scans.tsv dataframe with all filenames and acquisition timestamps
+    :return:
+    """
+
+    for run in runs:
+        if run['bids'].get('run') != '<<>>':
+            continue
+
+        for target in run['datasource'].targets.copy():  # Copy: avoid problems with removing items within loop
+            bidsname = target.name
+            suffixes = ''
+            if '.' in bidsname:
+                bidsname, suffixes = bidsname.split('.', 1)
+                if suffixes:
+                    suffixes = '.' + suffixes
+            if get_bidsvalue(bidsname, 'run') == '':
+                run2_bidsname = insert_bidskeyval(bidsname, 'run', '2', False)
+                outfolder = target.parent
+                if list(outfolder.glob(f"{run2_bidsname}.*")):
+
+                    # Add run-1 to run-less bidsname files because run-2 exists
+                    run1_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
+                    for runless_file in outfolder.glob(f"{bidsname}.*"):
+                        ext = ''.join(runless_file.suffixes)
+                        run1_file = (runless_file.parent/run1_bidsname).with_suffix(ext)
+                        LOGGER.info(f"Found run-2 files for <<>> index, renaming\n{runless_file} ->\n{run1_file}")
+                        runless_file.replace(run1_file)
+
+                        # Change row name in the scans table
+                        if f"{outfolder.name}/{bidsname}{ext}" in scans_table.index:
+                            LOGGER.verbose(f"Renaming scans entry:\n{outfolder.name}/{bidsname}{ext} ->\n{outfolder.name}/{run1_bidsname}{ext}")
+                            scans_table.rename(index={f"{outfolder.name}/{bidsname}{ext}": f"{outfolder.name}/{run1_bidsname}{ext}"}, inplace=True)  # NB: '/' as_posix
+
+                    # Change target from run-less to run-1
+                    run['datasource'].targets.remove(target)
+                    run['datasource'].targets.add((outfolder/run1_bidsname).with_suffix(suffixes))
+
+
+def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: dict, extensions: list, sourcemeta: Path = Path()) -> dict:
     """
     Load the metadata from the target (json sidecar), then add metadata from the source (json sidecar) and finally add
     the user metadata (meta table). Source metadata other than json sidecars are copied over to the target folder. Special
@@ -1968,15 +1988,17 @@ def updatemetadata(sourcemeta: Path, targetmeta: Path, usermeta: dict, extension
 
     NB: In future versions this function could also support more source metadata formats, e.g. yaml, csv- or Excel-files
 
-    :param sourcemeta:  The filepath of the source data file with associated/equally named meta-data files (name may include wildcards)
+    :param datasource:  The data source from which dynamic values are read
     :param targetmeta:  The filepath of the target data file with meta-data
     :param usermeta:    A user metadata dict, e.g. the meta table from a run-item
     :param extensions:  A list of file extensions of the source metadata files, e.g. as specified in bidsmap['Options']['plugins']['plugin']['meta']
-    :param datasource:  The data source from which dynamic values are read
+    :param sourcemeta:  The filepath of the source data file with associated/equally named meta-data files (name may include wildcards). Leave empty to use datasource.path
     :return:            The combined target + source + user metadata
     """
 
     metapool = {}
+    if not sourcemeta.name:
+        sourcemeta = datasource.path
 
     # Add the target metadata to the metadict
     if targetmeta.is_file():
