@@ -327,7 +327,7 @@ def test_append_run(test_bidsmap):
 
     # Append the run elsewhere in the bidsmap
     bids.append_run(bidsmap, run)
-    assert bidsmap['Foo']['Bar'][0]['provenance'] == run['provenance']
+    assert Path(bidsmap['Foo']['Bar'][0]['provenance']) == Path(run['provenance'])
 
 
 def test_update_bidsmap(test_bidsmap):
@@ -341,8 +341,8 @@ def test_update_bidsmap(test_bidsmap):
 
     # Update the bidsmap
     bids.update_bidsmap(bidsmap, 'func', run)
-    assert bidsmap['DICOM']['anat'][-1]['provenance'] == run['provenance']
-    assert bidsmap['DICOM']['func'] [0]['provenance'] != run['provenance']
+    assert Path(bidsmap['DICOM']['anat'][-1]['provenance']) == Path(run['provenance'])
+    assert Path(bidsmap['DICOM']['func'] [0]['provenance']) != Path(run['provenance'])
 
     # Modify the last anat run-item and update the bidsmap
     run['bids']['foo'] = 'bar'
