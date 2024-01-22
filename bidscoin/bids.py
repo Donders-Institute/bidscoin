@@ -1389,7 +1389,7 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
         if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
             # Get a clean run (remove comments to avoid overly complicated commentedMaps from ruamel.yaml)
-            run_ = create_run(datasource, bidsmap)
+            run_ = create_run(copy.deepcopy(datasource), bidsmap)
             run_['datasource'].datatype = datatype
 
             for propkey, propvalue in run['properties'].items():
