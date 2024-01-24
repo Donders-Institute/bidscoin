@@ -1729,7 +1729,7 @@ def get_derivatives(datatype: str, exceptions: tuple=()) -> list:
 
     if datatype == 'anat':
         return [suffix for suffix in datatyperules[datatype]['parametric']['suffixes']
-                if suffix not in exceptions + ('UNIT1',)]       # The qMRI data (maps)
+                if suffix not in tuple(exceptions) + ('UNIT1',)]        # The qMRI data (maps)
     elif datatype == 'fmap':
         return [suffix for typegroup in datatyperules[datatype] for suffix in datatyperules[datatype][typegroup]['suffixes']
                 if suffix not in exceptions and typegroup not in ('fieldmaps','pepolar')]    # The non-standard fmaps (file collections)
