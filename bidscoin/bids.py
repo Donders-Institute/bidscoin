@@ -353,7 +353,6 @@ def unpack(sesfolder: Path, wildcard: str='', workfolder: Path='', _subprefix: s
 
         # Unpack the zip/tarball files in the temporary folder
         sessions: Set[Path] = set()
-        recursive           = False
         for tarzipfile in [worksesfolder/tarzipfile.name for tarzipfile in tarzipfiles]:
             LOGGER.info(f"Unpacking: {tarzipfile.name} -> {worksesfolder}")
             try:
@@ -363,14 +362,11 @@ def unpack(sesfolder: Path, wildcard: str='', workfolder: Path='', _subprefix: s
                 continue
 
             # Sort the DICOM files in the worksesfolder root immediately (to avoid name collisions)
-            if not (worksesfolder/'DICOMDIR').is_file():
-                if get_dicomfile(worksesfolder).name:
-                    sessions.update(dicomsort.sortsessions(worksesfolder, _subprefix, recursive=False))
-                else:
-                    recursive = True                        # The unzipped data may have leading directory components
+            if not (worksesfolder/'DICOMDIR').is_file() and get_dicomfile(worksesfolder).name:
+                sessions.update(dicomsort.sortsessions(worksesfolder, _subprefix, recursive=False))
 
         # Sort the DICOM files if not sorted yet (e.g. DICOMDIR)
-        sessions.update(dicomsort.sortsessions(worksesfolder, _subprefix, recursive=recursive))
+        sessions.update(dicomsort.sortsessions(worksesfolder, _subprefix, recursive=True))
 
         return sessions, True
 
