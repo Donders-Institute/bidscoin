@@ -6,7 +6,7 @@ import logging
 import uuid
 from pydicom import fileset
 from pathlib import Path
-from typing import List
+from typing import List, Set
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
@@ -136,12 +136,12 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
 
 
 def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folderscheme: str='{SeriesNumber:03d}-{SeriesDescription}',
-                 namescheme: str='', pattern: str=r'.*\.(IMA|dcm)$', recursive: bool=True, force: bool=False, dryrun: bool=False) -> List[Path]:
+                 namescheme: str='', pattern: str=r'.*\.(IMA|dcm)$', recursive: bool=True, force: bool=False, dryrun: bool=False) -> Set[Path]:
     """
     Wrapper around sortsession() to loop over subjects and sessions and map the session DICOM files
 
     :param sourcefolder: The root folder containing the source [sub/][ses/]dicomfiles or the DICOMDIR file
-    :param subprefix:    The prefix for searching the sub folders in session
+    :param subprefix:    The prefix for searching the sub folders in session. Use '' to sort DICOMDIR files directly in sourcefolder
     :param sesprefix:    The prefix for searching the ses folders in sub folder
     :param folderscheme: Optional naming scheme for the sorted (e.g. Series) subfolders. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields', default='{SeriesNumber:03d}-{SeriesDescription}'
     :param namescheme:   Optional naming scheme for renaming the files. Follows the Python string formatting syntax with DICOM field names in curly bracers, e.g. {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA
@@ -159,19 +159,24 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
             sourcefolder = sourcefolder.parent
         else:
             LOGGER.error(f"Unexpected dicomsource argument '{sourcefolder}', aborting dicomsort()...")
-            return []
+            return set()
     elif not sourcefolder.is_dir():
         LOGGER.error(f"Sourcefolder '{sourcefolder}' not found")
-        return []
+        return set()
     if (folderscheme and not validscheme(folderscheme)) or (namescheme and not validscheme(namescheme)):
         LOGGER.error('Wrong scheme input argument(s), aborting dicomsort()...')
-        return []
-    if not subprefix: subprefix = ''
-    if not sesprefix: sesprefix = ''
+        return set()
+
+    # Do a recursive call if a sub- or ses-prefix is given
+    sessions: Set[Path] = set()                 # Collect the sorted session-folders
+    if subprefix or sesprefix:
+        LOGGER.info(f"Searching for subject/session folders in: {sourcefolder}")
+        for subjectfolder in lsdirs(sourcefolder, (subprefix or '') + '*'):
+            for sessionfolder in lsdirs(subjectfolder, sesprefix + '*') if sesprefix else [subjectfolder]:
+                sessions.update(sortsessions(sessionfolder, '', sesprefix, folderscheme, namescheme, pattern, recursive, force, dryrun))
 
     # Use the DICOMDIR file if it is there
-    sessions = []       # Collect the sorted session-folders
-    if (sourcefolder/'DICOMDIR').is_file():
+    elif (sourcefolder/'DICOMDIR').is_file():
         LOGGER.info(f"Reading: {sourcefolder/'DICOMDIR'}")
         dicomdir = fileset.FileSet(sourcefolder/'DICOMDIR')
         for patientid in dicomdir.find_values('PatientID'):
@@ -180,32 +185,21 @@ def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folde
                 study = dicomdir.find(PatientID=patientid, StudyInstanceUID=studyuid)
                 dicomfiles = [Path(instance.path) for instance in study]
                 if dicomfiles:
-                    sessionfolder = sourcefolder/f"{subprefix}{cleanup(patient[0].PatientName)}"/f"{sesprefix}{n:02}-{cleanup(study[0].StudyDescription)}"
+                    if subprefix is '':         # == '' -> Recursive call of sortsessions() -> Sort directly in the sourcefolder
+                        sessionfolder = sourcefolder
+                    else:                       # CLI call -> Sort in subject/session folder
+                        sessionfolder = sourcefolder/f"{subprefix or ''}{cleanup(patient[0].PatientName)}"/f"{sesprefix or ''}{n:02}-{cleanup(study[0].StudyDescription)}"
                     sortsession(sessionfolder, dicomfiles, folderscheme, namescheme, force, dryrun)
-                    sessions.append(sessionfolder)
-
-    # Do a recursive call if a sub- or ses-prefix is given
-    elif subprefix or sesprefix:
-        LOGGER.info(f"Searching for subject/session folders in: {sourcefolder}")
-        for subjectfolder in lsdirs(sourcefolder, subprefix + '*'):
-            if sesprefix:
-                sessionfolders = lsdirs(subjectfolder, sesprefix + '*')
-            else:
-                sessionfolders = [subjectfolder]
-            for sessionfolder in sessionfolders:
-                sessions += sortsessions(sessionfolder, folderscheme=folderscheme, namescheme=namescheme, pattern=pattern, recursive=recursive, dryrun=dryrun)
+                    sessions.add(sessionfolder)
 
     # Sort the DICOM files in the sourcefolder
     else:
-        sessions = [sourcefolder]
-        if recursive:
-            dicomfiles = [dcmfile for dcmfile in sourcefolder.rglob('*') if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
-        else:
-            dicomfiles = [dcmfile for dcmfile in sourcefolder.iterdir()  if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
+        dicomfiles = [dcmfile for dcmfile in sourcefolder.glob('**/*' if recursive else '*') if dcmfile.is_file() and re.match(pattern, str(dcmfile))]
         if dicomfiles:
             sortsession(sourcefolder, dicomfiles, folderscheme, namescheme, force, dryrun)
+            sessions.add(sourcefolder)
 
-    return sorted(set(sessions))
+    return sessions
 
 
 def main():

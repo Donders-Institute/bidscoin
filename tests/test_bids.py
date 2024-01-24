@@ -92,11 +92,11 @@ class TestDataSource:
         assert datasource.dynamicvalue(r'<(0010, 0010)>')                                        == 'CompressedSamplesMR1'
 
 def test_unpack(dicomdir, tmp_path):
-    unpacked = bids.unpack(dicomdir.parent, '', tmp_path)
-    assert unpacked[1]
-    assert len(unpacked[0]) == 6
-    for ses in unpacked[0]:
-        assert 'Doe^Archibald' in ses.parts or 'Doe^Peter' in ses.parts
+    sessions, unpacked = bids.unpack(dicomdir.parent, '', tmp_path, None)
+    assert unpacked
+    assert len(sessions) == 6
+    for session in sessions:
+        assert 'Doe^Archibald' in session.parts or 'Doe^Peter' in session.parts
 
 
 def test_is_dicomfile(dcm_file):
@@ -403,7 +403,7 @@ def test_increment_runindex__runless_exist(tmp_path):
 
     # Check the results
     assert bidsname == 'sub-01_run-2_T1w'
-    assert (outfolder / 'sub-01_T1w').with_suffix(suffix).is_file() is True
+    assert (outfolder/'sub-01_T1w').with_suffix(suffix).is_file() is True
 
 
 def test_increment_runindex__runless_run2_exist(tmp_path):
@@ -421,8 +421,8 @@ def test_increment_runindex__runless_run2_exist(tmp_path):
 
     # Check the results
     assert bidsname == 'sub-01_run-3_T1w.nii.gz'
-    assert (outfolder / 'sub-01_T1w').with_suffix(suffix).is_file() is True
-    assert (outfolder / 'sub-01_run-2_T1w').with_suffix(suffix).is_file() is True
+    assert (outfolder/'sub-01_T1w').with_suffix(suffix).is_file() is True
+    assert (outfolder/'sub-01_run-2_T1w').with_suffix(suffix).is_file() is True
 
 
 def test_increment_runindex__run1_run2_exist(tmp_path):

@@ -10,19 +10,19 @@ bcoin.setup_logging()
 
 def test_dicomsort(tmp_path):
     shutil.copytree(Path(get_testdata_file('DICOMDIR')).parent, tmp_path, dirs_exist_ok=True)
-    session = dicomsort.sortsessions(tmp_path/'DICOMDIR', folderscheme='{SeriesNumber:04d}-{SeriesDescription}', namescheme='{SeriesNumber:02d}_{SeriesDescription}_{AcquisitionNumber}_{InstanceNumber}.IMA', force=True)
-    assert dicomsort.sortsessions(tmp_path/'DICOMDIR', folderscheme='{SeriesNumber:04d]-{SeriesDescription}') == [] # Invalid scheme -> clean return
+    session = sorted(dicomsort.sortsessions(tmp_path/'DICOMDIR', None, folderscheme='{SeriesNumber:04d}-{SeriesDescription}', namescheme='{SeriesNumber:02d}_{SeriesDescription}_{AcquisitionNumber}_{InstanceNumber}.IMA', force=True))
+    assert dicomsort.sortsessions(tmp_path/'DICOMDIR', None, folderscheme='{SeriesNumber:04d]-{SeriesDescription}') == set()  # Invalid scheme -> clean return
     assert dicomsort.validscheme('{foo:04d}-{123}') == True
     assert dicomsort.validscheme('{foo:04d]-{bar}') == False
     assert dicomsort.validscheme('{foo:04}-{bar}')  == False
-    assert (tmp_path/'Doe^Peter').is_dir()                                                                          # Subject (Patient): 98890234 -> Doe^Peter
-    assert (tmp_path/'Doe^Archibald').is_dir()                                                                      #                    77654033 -> Doe^Archibald
-    assert len(list((tmp_path/'Doe^Archibald').rglob('*')))                 == 13                                   #  6 directories +  7 files
-    assert len(list((tmp_path/'Doe^Peter').rglob('*')))                     == 37                                   # 13 directories + 24 files
-    assert session[0].parent.name                                           == 'Doe^Archibald'                      # Subject (Patient)
-    assert session[0].name                                                  == '01-XR C Spine Comp Min 4 Views'     # Session (Study)
-    assert sorted(sorted(session[0].iterdir())[0].iterdir())[0].parent.name == '0001-Cervical LAT'                  # Series -> folderscheme
-    assert sorted(sorted(session[0].iterdir())[0].iterdir())[0].name        == '01_Cervical LAT__1.IMA'             # File   -> namescheme
+    assert (tmp_path/'Doe^Peter').is_dir()                                                                              # Subject (Patient): 98890234 -> Doe^Peter
+    assert (tmp_path/'Doe^Archibald').is_dir()                                                                          #                    77654033 -> Doe^Archibald
+    assert len(list((tmp_path/'Doe^Archibald').rglob('*')))                 == 13                                       #  6 directories +  7 files
+    assert len(list((tmp_path/'Doe^Peter').rglob('*')))                     == 37                                       # 13 directories + 24 files
+    assert session[0].parent.name                                           == 'Doe^Archibald'                          # Subject (Patient)
+    assert session[0].name                                                  == '01-XR C Spine Comp Min 4 Views'         # Session (Study)
+    assert sorted(sorted(session[0].iterdir())[0].iterdir())[0].parent.name == '0001-Cervical LAT'                      # Series -> folderscheme
+    assert sorted(sorted(session[0].iterdir())[0].iterdir())[0].name        == '01_Cervical LAT__1.IMA'                 # File   -> namescheme
 
 
 def test_bidsparticipants(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):

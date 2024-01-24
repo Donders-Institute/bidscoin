@@ -57,7 +57,7 @@ class DataSource:
         A source data type (e.g. DICOM or PAR) that can be converted to BIDS by the plugins
 
         :param provenance:  The full path of a representative file for this data source
-        :param plugins:     The plugins that are used to interact with the source data type
+        :param plugins:     The plugins that are used to interact with the source data type. Uses bidsmap['Options']['plugins'] format
         :param dataformat:  The dataformat name in the bidsmap, e.g. DICOM or PAR
         :param datatype:    The intended BIDS data type of the data source TODO: move to a separate BidsTarget/Mapping class
         :param subprefix:   The subprefix used in the sourcefolder
@@ -314,68 +314,69 @@ class DataSource:
         return value
 
 
-def unpack(sourcefolder: Path, wildcard: str='', workfolder: Path='') -> Tuple[List[Path], bool]:
+def unpack(sesfolder: Path, wildcard: str='', workfolder: Path='', _subprefix: str='') -> Tuple[Set[Path], bool]:
     """
     Unpacks and sorts DICOM files in sourcefolder to a temporary folder if sourcefolder contains a DICOMDIR file or .tar.gz, .gz or .zip files
 
-    :param sourcefolder:    The full pathname of the folder with the source data
-    :param wildcard:        A glob search pattern to select the tarball/zipped files (leave empty to skip unzipping)
-    :param workfolder:      A root folder for temporary data
-    :return:                Either ([unpacked and sorted session folders], True), or ([sourcefolder], False)
+    :param sesfolder:   The full pathname of the folder with the source data
+    :param wildcard:    A glob search pattern to select the tarball/zipped files (leave empty to skip unzipping)
+    :param workfolder:  A root folder for temporary data
+    :param _subprefix:  A pytest helper variable that is passed to dicomsort.sortsessions(args, subprefix=_subprefix)
+    :return:            Either ([unpacked and sorted session folders], True), or ([sourcefolder], False)
     """
 
     # Search for zipped/tarball files
-    tarzipfiles = list(sourcefolder.glob(wildcard)) if wildcard else []
+    tarzipfiles = list(sesfolder.glob(wildcard)) if wildcard else []
 
     # See if we have a flat unsorted (DICOM) data organization, i.e. no directories, but DICOM-files
-    flatDICOM = not lsdirs(sourcefolder) and get_dicomfile(sourcefolder).is_file()
+    flatDICOM = not lsdirs(sesfolder) and get_dicomfile(sesfolder).is_file()
 
     # Check if we are going to do unpacking and/or sorting
-    if tarzipfiles or flatDICOM or (sourcefolder/'DICOMDIR').is_file():
+    if tarzipfiles or flatDICOM or (sesfolder/'DICOMDIR').is_file():
 
         if tarzipfiles:
-            LOGGER.info(f"Found zipped/tarball data in: {sourcefolder}")
+            LOGGER.info(f"Found zipped/tarball data in: {sesfolder}")
         else:
-            LOGGER.info(f"Detected a {'flat' if flatDICOM else 'DICOMDIR'} data-structure in: {sourcefolder}")
+            LOGGER.info(f"Detected a {'flat' if flatDICOM else 'DICOMDIR'} data-structure in: {sesfolder}")
 
         # Create a (temporary) sub/ses workfolder for unpacking the data
         if not workfolder:
             workfolder = Path(tempfile.mkdtemp(dir=tempfile.gettempdir()))
         else:
             workfolder = Path(workfolder)/next(tempfile._get_candidate_names())
-        worksubses = workfolder/sourcefolder.relative_to(sourcefolder.anchor)
-        worksubses.mkdir(parents=True, exist_ok=True)
+        worksesfolder = workfolder/sesfolder.relative_to(sesfolder.anchor)
+        worksesfolder.mkdir(parents=True, exist_ok=True)
 
         # Copy everything over to the workfolder
-        LOGGER.info(f"Making temporary copy: {sourcefolder} -> {worksubses}")
-        shutil.copytree(sourcefolder, worksubses, dirs_exist_ok=True)
+        LOGGER.info(f"Making temporary copy: {sesfolder} -> {worksesfolder}")
+        shutil.copytree(sesfolder, worksesfolder, dirs_exist_ok=True)
 
         # Unpack the zip/tarball files in the temporary folder
-        sessions  = []
-        recursive = False
-        for tarzipfile in [worksubses/tarzipfile.name for tarzipfile in tarzipfiles]:
-            LOGGER.info(f"Unpacking: {tarzipfile.name} -> {worksubses}")
+        sessions: Set[Path] = set()
+        recursive           = False
+        for tarzipfile in [worksesfolder/tarzipfile.name for tarzipfile in tarzipfiles]:
+            LOGGER.info(f"Unpacking: {tarzipfile.name} -> {worksesfolder}")
             try:
-                shutil.unpack_archive(tarzipfile, worksubses)
+                shutil.unpack_archive(tarzipfile, worksesfolder)
             except Exception as unpackerror:
                 LOGGER.warning(f"Could not unpack: {tarzipfile}\n{unpackerror}")
                 continue
 
-            # Sort the DICOM files in the worksubses rootfolder immediately (to avoid name collisions)
-            if not (worksubses/'DICOMDIR').is_file():
-                if get_dicomfile(worksubses).name:
-                    sessions += dicomsort.sortsessions(worksubses, recursive=False)
+            # Sort the DICOM files in the worksesfolder root immediately (to avoid name collisions)
+            if not (worksesfolder/'DICOMDIR').is_file():
+                if get_dicomfile(worksesfolder).name:
+                    sessions.update(dicomsort.sortsessions(worksesfolder, _subprefix, recursive=False))
                 else:
                     recursive = True                        # The unzipped data may have leading directory components
 
         # Sort the DICOM files if not sorted yet (e.g. DICOMDIR)
-        sessions = sorted(set(sessions + dicomsort.sortsessions(worksubses, recursive=recursive)))
+        sessions.update(dicomsort.sortsessions(worksesfolder, _subprefix, recursive=recursive))
 
         return sessions, True
 
     else:
 
-        return [sourcefolder], False
+        return {sesfolder}, False
 
 
 def is_dicomfile(file: Path) -> bool:
@@ -482,7 +483,7 @@ def get_parfiles(folder: Path) -> List[Path]:
         LOGGER.verbose(f"Ignoring hidden folder: {folder}")
         return []
 
-    parfiles = []
+    parfiles: List[Path] = []
     for file in sorted(folder.iterdir()):
         if file.name.startswith('.'):
             LOGGER.verbose(f"Ignoring hidden file: {file}")
