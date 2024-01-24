@@ -375,6 +375,7 @@ def unpack(sesfolder: Path, wildcard: str='', workfolder: Path='', _subprefix: s
         return {sesfolder}, False
 
 
+@lru_cache(maxsize=65536)
 def is_dicomfile(file: Path) -> bool:
     """
     Checks whether a file is a DICOM-file. It uses the feature that Dicoms have the string DICM hardcoded at offset 0x80.
@@ -401,6 +402,7 @@ def is_dicomfile(file: Path) -> bool:
     return False
 
 
+@lru_cache(maxsize=65536)
 def is_dicomfile_siemens(file: Path) -> bool:
     """
     Checks whether a file is a *SIEMENS* DICOM-file. All Siemens Dicoms contain a dump of the
@@ -414,6 +416,7 @@ def is_dicomfile_siemens(file: Path) -> bool:
     return b'ASCCONV BEGIN' in file.open('rb').read()
 
 
+@lru_cache(maxsize=65536)
 def is_parfile(file: Path) -> bool:
     """
     Rudimentary check (on file extensions and whether it exists) whether a file is a Philips PAR file
@@ -508,6 +511,7 @@ def get_datasource(session: Path, plugins: dict, recurse: int=8) -> DataSource:
     return datasource
 
 
+@lru_cache(maxsize=65536)
 def parse_x_protocol(pattern: str, dicomfile: Path) -> str:
     """
     Siemens writes a protocol structure as text into each DICOM file.
@@ -538,7 +542,7 @@ def parse_x_protocol(pattern: str, dicomfile: Path) -> str:
 # Profiling shows this is currently the most expensive function, therefore the (primitive but effective) _DICOMDICT_CACHE optimization
 _DICOMDICT_CACHE = None
 _DICOMFILE_CACHE = None
-@lru_cache(maxsize=4096)
+@lru_cache(maxsize=65536)
 def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
     """
     Robustly extracts a DICOM attribute/tag value from a dictionary or from vendor specific fields.
@@ -619,7 +623,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 # Profiling shows this is currently the most expensive function, therefore the (primitive but effective) cache optimization
 _TWIXHDR_CACHE  = None
 _TWIXFILE_CACHE = None
-@lru_cache(maxsize=4096)
+@lru_cache(maxsize=65536)
 def get_twixfield(tagname: str, twixfile: Path, mraid: int=2) -> Union[str, int]:
     """
     Recursively searches the TWIX file to extract the field value
@@ -690,7 +694,7 @@ def get_twixfield(tagname: str, twixfile: Path, mraid: int=2) -> Union[str, int]
 # Profiling shows this is currently the most expensive function, therefore the (primitive but effective) _PARDICT_CACHE optimization
 _PARDICT_CACHE = None
 _PARFILE_CACHE = None
-@lru_cache(maxsize=4096)
+@lru_cache(maxsize=65536)
 def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
     """
     Uses nibabel to extract the value from a PAR field (NB: nibabel does not yet support XML)
@@ -742,7 +746,7 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
 # Profiling shows this is currently the most expensive function, therefore the (primitive but effective) cache optimization
 _SPARHDR_CACHE  = None
 _SPARFILE_CACHE = None
-@lru_cache(maxsize=4096)
+@lru_cache(maxsize=65536)
 def get_sparfield(tagname: str, sparfile: Path) -> Union[str, int]:
     """
     Extracts the field value from the SPAR header-file
@@ -793,7 +797,7 @@ def get_sparfield(tagname: str, sparfile: Path) -> Union[str, int]:
 # Profiling shows this is currently the most expensive function, therefore the (primitive but effective) cache optimization
 _P7HDR_CACHE  = None
 _P7FILE_CACHE = None
-@lru_cache(maxsize=4096)
+@lru_cache(maxsize=65536)
 def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
     """
     Extracts the field value from the P-file header
@@ -1722,7 +1726,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
     return run_, False
 
 
-def get_derivatives(datatype: str, exceptions: tuple=()) -> list:
+def get_derivatives(datatype: str, exceptions: Union[tuple,list]=()) -> list:
     """
     Retrieves a list of suffixes that are stored in the derivatives folder (e.g. the qMRI maps). TODO: Replace with a more systematic/documented method
     """

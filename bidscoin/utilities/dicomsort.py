@@ -129,7 +129,7 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
             continue
         if newfilename.is_file():
             newfilename = newfilename.with_name(newfilename.stem + str(uuid.uuid4()) + newfilename.suffix)
-            LOGGER.warning(f"File already exists: {dicomfile} -> {newfilename}")
+            LOGGER.debug(f"File already exists, renaming: {dicomfile} -> {newfilename}")
         if not dryrun:
             dicomfile.replace(newfilename)
 

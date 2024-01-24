@@ -24,11 +24,6 @@ Nibabel2bids: a generic plugin for imaging data
 
 The nibabel2bids plugin wraps around the versatile `nibabel <https://nipy.org/nibabel>`__ tool to convert a wide variety of data formats into NIfTI-files. Currently, the default template bidsmap is tailored to NIfTI source data only (but this can readily be extended), and BIDS sidecar files are not automatically produced by nibabel (but see the note further below). Please cite: `DOI: 10.5281/zenodo.591597 <https://doi.org/10.5281/zenodo.591597>`__
 
-Pet2bids: a plugin for PET data
--------------------------------
-
-The 'pet2bids' plugin is an experimental wrapper around the `PET2BIDS <https://github.com/openneuropet/PET2BIDS>`__ tool. PET2BIDS accepts PET imaging and blood data as inputs (e.g. DICOM, ECAT, spreadsheets) and delivers BIDS formatted outputs. An installation of dcm2niix (https://github.com/rordenlab/dcm2niix) is required to convert DICOM data.
-
 .. note::
    Out of the box, BIDScoin plugins typically produce sidecar files that contain metadata from the source headers. However, when such meta-data is missing (e.g. as for nibabel2bids), or when it needs to be appended or overruled, then users can add sidecar files to the source data (as explained `here <./bidsmap.html>`__) or add that meta-data using the bidseditor (the latter takes precedence).
 

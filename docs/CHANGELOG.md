@@ -7,16 +7,18 @@
 ## [4.3.0] - 2023-12-20
 
 ### Added
-- fslmaths preprocessing on slicereport input images
+- Integrated fslmaths preprocessing on slicereport input images
 - A `--cluster` option for running bidscoiner in parallel on a (DRMAA enabled) HPC
 - Option to generate BIDScoin specific duecredit reports
 - Support for BIDS 1.9.0
 - A new special `<<session>>` dynamic meta-data value (most notably useful for creating session specific B0FieldIdentifier/Source tags)
+- Option to exclude datatypes from being saved in bids/derivatives
 
 ### Changed
 - `bidscoiner_plugin()` API: you can just return a personals dict instead of writing it to `participants.tsv`
 - Using DRMAA library for skullstrip (instead of qsub/sbatch)
 - Removed the pet2bids and phys2bids plugins (code is no longer actively developed)
+- Sorting of DICOMDIR files
 
 ## [4.2.1] - 2023-10-30
 

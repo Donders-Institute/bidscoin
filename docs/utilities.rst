@@ -9,19 +9,21 @@ The bidscoin command-line utility serves as a central starting point to test and
 ::
 
     usage: bidscoin [-h] [-l] [-p] [-i INSTALL [INSTALL ...]] [-u UNINSTALL [UNINSTALL ...]]
-                    [-d DOWNLOAD] [-t [TEST]] [-b BIDSMAPTEST] [--tracking {yes,no,show}] [-v]
+                    [-d DOWNLOAD] [-t [TEST]] [-b BIDSMAPTEST] [-c CREDITS [CREDITS ...]]
+                    [--tracking {yes,no,show}] [-v]
 
-    BIDScoin is a toolkit to convert and organize raw data-sets according to the Brain Imaging Data Structure (BIDS)
+    BIDScoin is a toolkit to convert raw data-sets according to the Brain Imaging Data Structure (BIDS)
 
     The basic workflow is to run these two tools:
 
-      $ bidsmapper sourcefolder bidsfolder        # This produces a study bidsmap and launches a GUI
-      $ bidscoiner sourcefolder bidsfolder        # This converts your data to BIDS according to the study bidsmap
+      $ bidsmapper sourcefolder bidsfolder     # This produces a study bidsmap and launches a GUI
+      $ bidscoiner sourcefolder bidsfolder     # This converts your data to BIDS according to the study bidsmap
 
-    Default settings and template bidsmaps are stored in the ".bidscoin" folder in your home directory (you can modify
-    them to your needs with any plain text editor)
+    Default settings and template bidsmaps are stored in the ".bidscoin" folder in your home directory
+    (you can modify them to your needs with any plain text editor)
 
-    Set the environment variable BIDSCOIN_DEBUG=TRUE in your console to run BIDScoin in its more verbose DEBUG logging mode
+    Set the environment variable BIDSCOIN_DEBUG=TRUE to run BIDScoin in a more verbose logging mode.
+    Citation reports can be generated with the help of duecredit (https://github.com/duecredit/duecredit)
 
     For more documentation see: https://bidscoin.readthedocs.io
 
@@ -40,6 +42,10 @@ The bidscoin command-line utility serves as a central starting point to test and
       -b BIDSMAPTEST, --bidsmaptest BIDSMAPTEST
                             Test the run-items and their bidsnames of all normal runs in the study
                             bidsmap. Provide the bids-folder or the bidsmap filepath
+      -c CREDITS [CREDITS ...], --credits CREDITS [CREDITS ...]
+                            Show duecredit citations for your BIDS repository. You can also add duecredit
+                            summary arguments (without dashes), e.g. `style {apa,harvard1}` or `format
+                            {text,bibtex}`.
       --tracking {yes,no,show}
                             Show the usage tracking info {show}, or set usage tracking to {yes} or {no}
       -v, --version         Show the installed version and check for updates
@@ -51,6 +57,8 @@ The bidscoin command-line utility serves as a central starting point to test and
       bidscoin -t my_template_bidsmap
       bidscoin -b my_study_bidsmap
       bidscoin -i data/my_template_bidsmap.yaml downloads/my_plugin.py
+      bidscoin -c myproject/bids
+      bidscoin -c myproject/bids format bibtex
       bidscoin --tracking show
 
 dicomsort

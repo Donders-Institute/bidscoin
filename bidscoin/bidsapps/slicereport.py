@@ -23,22 +23,24 @@ if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[2]))
 from bidscoin import bcoin, bids, lsdirs, bidsversion, trackusage, __version__, DEBUG
 
-html_head = """<!DOCTYPE html>
+html_head = """\
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <title>Slice report</title>
-    <style>
-        body     { color: #D1D1D1; background-color: #181818; font-family: Arial; margin-left: 15px }
-        h1       { color: Orange; font-size: 18px; display: inline-block; border: 1px solid orange;
-                   padding: 10px 20px; border-radius: 10px;}
-        a        { color: inherit; text-decoration: none; }
-        a:hover  { color: Orange; }
-        a:active { color: Yellow; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
+"""
+html_style = """\
+body     { color: #D1D1D1; background-color: #181818; font-family: Arial; margin-left: 15px }
+h1       { color: Orange; font-size: 18px; display: inline-block; border: 1px solid orange;
+           padding: 10px 20px; border-radius: 10px; }
+a        { color: inherit; text-decoration: none; }
+a:hover  { color: Orange; }
+a:active { color: Yellow; }
 """
 
 
@@ -192,6 +194,8 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     # Create the report index file
     report = reportdir/'index.html'
     report.write_text(f'{html_head}<h1>Command:<span style="color: White"> slicereport {" ".join(sys.argv[1:])}</span></h1>\n')
+    style  = reportdir/'style.css'
+    style.write_text(html_style)
 
     # Create a QC tsv-file
     qcfile = reportdir/'qcscores.tsv'
@@ -203,9 +207,11 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     # Loop over the subject/session-directories
     with logging_redirect_tqdm():
         for subject in tqdm(subjects, unit='subject', colour='green', leave=False):
-            sessions = lsdirs(subject, 'ses-*')
+            sessions  = lsdirs(subject, 'ses-*')
+            style_rel = '../../style.css'
             if not sessions:
-                sessions = [subject]
+                sessions  = [subject]
+                style_rel = '../style.css'
             for session in sessions:
 
                 # Write a row in the QC tsv-file
@@ -260,7 +266,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                             metadata = f"\n\n<p>{json.load(meta_fid)}</p>"
                     else:
                         metadata = ''
-                    subreport.write_text(f'{html_head}<h1>{caption}</h1>\n{crossreports}\n<p><image src="{montage.name}"></p>{metadata}\n\n</body></html>')
+                    subreport.write_text(f'{html_head.replace("style.css", style_rel)}<h1>{caption}</h1>\n{crossreports}\n<p><image src="{montage.name}"></p>{metadata}\n\n</body></html>')
 
     # Create a dataset description file if it does not exist
     dataset = reportdir/'dataset_description.json'

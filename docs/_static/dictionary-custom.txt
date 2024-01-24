@@ -294,6 +294,7 @@ tempdir
 tooltip
 tooltips
 tsv
+unhandled
 unevaluated
 url
 v1
