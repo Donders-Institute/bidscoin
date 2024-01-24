@@ -586,6 +586,10 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                             value = elem.value
                             break
 
+                # Try reading the CSA header
+                if not value and value != 0:
+                    pass  # TODO: Add reading CSA header
+
                 if not value and value!=0 and 'Modality' not in dicomdata:
                     raise ValueError(f"Missing mandatory DICOM 'Modality' field in: {dicomfile}")
 
