@@ -1722,15 +1722,17 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
     return run_, False
 
 
-def get_derivatives(datatype: str) -> list:
+def get_derivatives(datatype: str, exceptions: tuple=()) -> list:
     """
     Retrieves a list of suffixes that are stored in the derivatives folder (e.g. the qMRI maps). TODO: Replace with a more systematic/documented method
     """
 
     if datatype == 'anat':
-        return [suffix for suffix in datatyperules[datatype]['parametric']['suffixes'] if suffix not in ('UNIT1',)]                                         # The qMRI data (maps)
+        return [suffix for suffix in datatyperules[datatype]['parametric']['suffixes']
+                if suffix not in exceptions + ('UNIT1',)]       # The qMRI data (maps)
     elif datatype == 'fmap':
-        return [suffix for typegroup in datatyperules[datatype] for suffix in datatyperules[datatype][typegroup]['suffixes'] if typegroup not in ('fieldmaps','pepolar')]     # The non-standard fmaps (file collections)
+        return [suffix for typegroup in datatyperules[datatype] for suffix in datatyperules[datatype][typegroup]['suffixes']
+                if suffix not in exceptions and typegroup not in ('fieldmaps','pepolar')]    # The non-standard fmaps (file collections)
     else:
         return []
 

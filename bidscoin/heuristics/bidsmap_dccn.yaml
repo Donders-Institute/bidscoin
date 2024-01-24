@@ -29,6 +29,7 @@ Options:
     bidsignore: [mrs/, extra_data/, sub-*_ct.*]    # List of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. [extra_data/, pet/, myfile.txt, yourfile.csv]
     unknowntypes: [mrs, extra_data] # A list of datatypes that are converted to BIDS-like datatype folders
     ignoretypes: [exclude]          # A list of datatypes that are excluded / not converted to BIDS
+    notderivative: []               # A list of suffixes that should not be considered as a derivative datatype
     unzip:                          # Wildcard pattern to select tarball/zip-files in the source folders that need to be unzipped (in a tempdir) to expose the data, e.g. '*.tar.gz'
   plugins:                          # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
     dcm2niix2bids:                  # See dcm2niix -h and https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage#General_Usage for more info

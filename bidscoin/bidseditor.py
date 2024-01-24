@@ -46,15 +46,13 @@ HELP_URLS        = {
     # self.ignoredatatypes : HELP_URL_DEFAULT
 }
 
-TOOLTIP_BIDSCOIN = """BIDScoin
-version:      Used to check for version conflicts 
-bidsignore:   List of data types that are added to the .bidsignore file,
-              e.g. extra_data/;myfile.txt;yourfile.csv
-subprefix:    The subject prefix used in the source data folders (e.g. "Pt" is the subprefix if subject folders are named "Pt018", "Pt019", ...)
-sesprefix:    The session prefix used in the source data folders (e.g. "M_" is the subprefix if session folders are named "M_pre", "M_post", ...)
-unknowntypes: Datatypes that are not part of BIDS but that are converted to a BIDS-like entries in the BIDS folder
-ignoretypes:  Datatypes that are excluded / not converted
-unzip:        Wildcard pattern to select tarball/zip-files in the sourcefolders that need to be unzipped (in a tempdir), e.g. '*.tar.gz'"""
+TOOLTIP_BIDSCOIN = f"""BIDScoin
+version:    Used to check for version conflicts 
+bidsignore: List of data types that are added to the .bidsignore file,
+            e.g. extra_data/;myfile.txt;yourfile.csv
+subprefix:  The subject prefix used in the source data folders (e.g. "Pt" is the subprefix if subject folders are named "Pt018", "Pt019", ...)
+sesprefix:  The session prefix used in the source data folders (e.g. "M_" is the subprefix if session folders are named "M_pre", "M_post", ...)
+For more information see: {MAIN_HELP_URL}/options.html"""
 
 TOOLTIP_DCM2NIIX = """dcm2niix2bids
 command: Command to run dcm2niix from the terminal, such as:
@@ -467,7 +465,8 @@ class MainWindow(QMainWindow):
                 subid, sesid = run['datasource'].subid_sesid(subid, sesid or '')
                 bidsname     = bids.get_bidsname(subid, sesid, run, not bids.check_ignore(datatype,self.bidsignore) and datatype not in self.ignoredatatypes)
                 ignore       = bids.check_ignore(datatype, self.bidsignore) or bids.check_ignore(bidsname+'.json', self.bidsignore, 'file')
-                if run['datasource'].dynamicvalue(run['bids']['suffix'], True, True) in bids.get_derivatives(datatype):
+                exceptions   = self.output_bidsmap['Options']['bidscoin'].get('notderivative',())
+                if run['datasource'].dynamicvalue(run['bids']['suffix'], True, True) in bids.get_derivatives(datatype, exceptions):
                     session  = self.bidsfolder/'derivatives'/'[manufacturer]'/subid/sesid
                 else:
                     session  = self.bidsfolder/subid/sesid

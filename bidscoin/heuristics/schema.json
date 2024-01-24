@@ -22,6 +22,7 @@
                   "sesprefix": { "type": ["string", "null"] },
                   "unknowntypes": { "type": ["array"] },
                   "ignoretypes": { "type": ["array"] },
+                  "notderivative": { "type": ["array"] },
                   "unzip": { "type": ["string", "null"] }
                },
                "additionalProperties": false

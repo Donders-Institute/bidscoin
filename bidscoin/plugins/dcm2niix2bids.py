@@ -122,7 +122,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
         return
 
     # Collect the different DICOM/PAR source files for all runs in the session
-    sourcefiles = []
+    sourcefiles: List[Path] = []
     if dataformat == 'DICOM':
         for sourcedir in lsdirs(session, '**/*'):
             for n in range(1):      # Option: Use range(2) to scan two files and catch e.g. magnitude1/2 fieldmap files that are stored in one Series folder (but bidscoiner sees only the first file anyhow and it makes bidsmapper 2x slower :-()
@@ -208,8 +208,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
         return
 
     # Make a list of all the data sources / runs
+    sources: List[Path] = []
     manufacturer = 'UNKNOWN'
-    sources      = []
     if dataformat == 'DICOM':
         sources      = lsdirs(session, '**/*')
         manufacturer = datasource.attributes('Manufacturer')
@@ -258,8 +258,9 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
         matched_runs.append(run)
 
         # Create the BIDS session/datatype output folder
-        suffix = datasource.dynamicvalue(run['bids']['suffix'], True, True)
-        if suffix in bids.get_derivatives(datasource.datatype):
+        suffix     = datasource.dynamicvalue(run['bids']['suffix'], True, True)
+        exceptions = bidsmap['Options']['bidscoin'].get('notderivative', ())
+        if suffix in bids.get_derivatives(datasource.datatype, exceptions):
             outfolder = bidsfolder/'derivatives'/manufacturer.replace(' ','')/subid/sesid/datasource.datatype
         else:
             outfolder = bidsses/datasource.datatype
@@ -472,7 +473,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
             outputfile = [file for file in jsonfile.parent.glob(jsonfile.stem + '.*') if file.suffix in ('.nii','.gz')]     # Find the corresponding NIfTI/tsv.gz file (there should be only one, let's not make assumptions about the .gz extension)
             if not outputfile:
                 LOGGER.exception(f"No data-file found with {jsonfile} when updating {scans_tsv}")
-            elif not bidsignore and not suffix in bids.get_derivatives(datasource.datatype):
+            elif not bidsignore and not suffix in bids.get_derivatives(datasource.datatype, exceptions):
                 acq_time = ''
                 if dataformat == 'DICOM':
                     acq_time = f"{datasource.attributes('AcquisitionDate')}T{datasource.attributes('AcquisitionTime')}"
