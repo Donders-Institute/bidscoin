@@ -490,7 +490,7 @@ def get_parfiles(folder: Path) -> List[Path]:
     return parfiles
 
 
-def get_datasource(session: Path, plugins: dict, recurse: int=2) -> DataSource:
+def get_datasource(session: Path, plugins: dict, recurse: int=8) -> DataSource:
     """Gets a data source from the session inputfolder and its subfolders"""
 
     datasource = DataSource()
