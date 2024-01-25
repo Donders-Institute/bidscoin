@@ -577,7 +577,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                 try:                                                    # Try Pydicom's hexadecimal tag number first
                     value = eval(f"dicomdata[{tagname}].value")         # NB: This may generate e.g. UserWarning: Invalid value 'filepath' used with the 'in' operator: must be an element tag as a 2-tuple or int, or an element keyword
                 except (NameError, KeyError, SyntaxError):
-                    value = dicomdata.get(tagname) if tagname in dicomdata else ''  # Then try and see if it is an attribute name. NB: Do not use dicomdata.get(tagname, '') to avoid using its class attributes (e.g. 'filename')
+                    value = dicomdata.get(tagname,'') if tagname in dicomdata else ''  # Then try and see if it is an attribute name. NB: Do not use dicomdata.get(tagname, '') to avoid using its class attributes (e.g. 'filename')
 
                 # Try a recursive search
                 if not value and value != 0:
@@ -591,11 +591,11 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                     from dicom_parser import Image
 
                     for csa in ('CSASeriesHeaderInfo', 'CSAImageHeaderInfo'):
-                        value = value or Image(dicomfile).header.get(csa)   # Final CSA header attributes in dictionary of dictionaries
-                        for csatag in tagname.split('.'):                   # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
+                        value = value if (value or value==0) else Image(dicomfile).header.get(csa)  # Final CSA header attributes in dictionary of dictionaries
+                        for csatag in tagname.split('.'):                                           # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
                             if isinstance(value, dict):
                                 value = value.get(csatag, '')
-                        if isinstance(value, dict):
+                        if not isinstance(value, int):
                             value = str(value)
 
                 if not value and value != 0 and 'Modality' not in dicomdata:
