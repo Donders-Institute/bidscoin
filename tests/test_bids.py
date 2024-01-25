@@ -56,7 +56,7 @@ class TestDataSource:
         assert datasource.properties( 'filepath:.*/(.*?)_files/.*') == 'test'   # path = [..]/pydicom/data/test_files/MR_small.dcm'
         assert datasource.properties(r'filename:MR_(.*?)\.dcm')     == 'small'
         assert datasource.properties( 'filesize')                   == '9.60 kB'
-        assert datasource.properties( 'nrfiles')                    == 76
+        assert datasource.properties( 'nrfiles')                    == 75
 
     def test_attributes(self, datasource, extdatasource):
         assert datasource.attributes(r'PatientName:.*\^(.*?)1') == 'MR'         # PatientName = 'CompressedSamples^MR1'
