@@ -590,12 +590,11 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                 if not value and value != 0 and find_spec('dicom_parser') and is_dicomfile_siemens(dicomfile):
                     from dicom_parser import Image
 
-                    value = Image(dicomfile).header.get('CSASeriesHeaderInfo')  # Final CSA header attributes in dictionary of dictionaries
-                    for csatag in tagname.split('.'):                           # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
-                        if isinstance(value, dict):
-                            value = value.get(csatag, '')
-                        else:
-                            raise ValueError(f"Cannot parse '{csatag}' from the CSA header")
+                    for header in ('CSASeriesHeaderInfo', 'CSAImageHeaderInfo'):
+                        value = value or Image(dicomfile).header.get(header)    # Final CSA header attributes in dictionary of dictionaries
+                        for csatag in tagname.split('.'):                       # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
+                            if isinstance(value, dict):
+                                value = value.get(csatag, '')
 
                 if not value and value != 0 and 'Modality' not in dicomdata:
                     raise ValueError(f"Missing mandatory DICOM 'Modality' field in: {dicomfile}")
