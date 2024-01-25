@@ -19,6 +19,11 @@ def dcm_file():
 
 
 @pytest.fixture(scope='module')
+def dcm_file_csa():
+    return Path(data_path)/'1.dcm'
+
+
+@pytest.fixture(scope='module')
 def dicomdir():
     return Path(get_testdata_file('DICOMDIR'))
 
@@ -116,6 +121,21 @@ def test_get_datasource(dicomdir):
     datasource = bids.get_datasource(dicomdir.parent, {'dcm2niix2bids': {}})
     assert datasource.is_datasource()
     assert datasource.dataformat == 'DICOM'
+
+
+def test_get_dicomfield(dcm_file_csa):
+
+    value = bids.get_dicomfield('SeriesDescription', dcm_file_csa)              # -> Standard DICOM
+    assert value == 'CBU_DTI_64D_1A'
+
+    value = bids.get_dicomfield('PhaseGradientAmplitude', dcm_file_csa)         # -> CSA Series header
+    assert value == "{'index': 3, 'VR': 'DS', 'VM': 1, 'value': 0.0}"
+
+    value = bids.get_dicomfield('PhaseGradientAmplitude.index', dcm_file_csa)
+    assert value == 3
+
+    value = bids.get_dicomfield('B_matrix.index', dcm_file_csa)                 # -> CSA Image header
+    assert value == 77
 
 
 @pytest.mark.parametrize('template', bcoin.list_plugins()[1])
