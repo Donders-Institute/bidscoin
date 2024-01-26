@@ -22,6 +22,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import List, Set, Tuple, Union
 from nibabel.parrec import parse_PAR_header
+from nibabel.nicom import csareader
 from pydicom import dcmread, fileset, datadict
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
@@ -586,17 +587,31 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                             value = elem.value
                             break
 
-                # Try reading the CSA header
-                if not value and value != 0 and find_spec('dicom_parser') and is_dicomfile_siemens(dicomfile):
-                    from dicom_parser import Image
+                # Try reading the Siemens CSA header. For V* versions the CSA header tag is (0029,1020), for XA versions (0021,1019). TODO: see if dicom_parser is supporting this
+                if not value and value != 0 and is_dicomfile_siemens(dicomfile):
 
-                    for csa in ('CSASeriesHeaderInfo', 'CSAImageHeaderInfo'):
-                        value = value if (value or value==0) else Image(dicomfile).header.get(csa)  # Final CSA header attributes in dictionary of dictionaries
-                        for csatag in tagname.split('.'):                                           # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
-                            if isinstance(value, dict):
-                                value = value.get(csatag, '')
-                        if not isinstance(value, int):
-                            value = str(value)
+                    if find_spec('dicom_parser'):
+                        from dicom_parser import Image
+
+                        for csa in ('CSASeriesHeaderInfo', 'CSAImageHeaderInfo'):
+                            value = value if (value or value==0) else Image(dicomfile).header.get(csa)  # Final CSA header attributes in dictionary of dictionaries
+                            for csatag in tagname.split('.'):                                           # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
+                                if isinstance(value, dict):
+                                    print(f"{csa} tag: {csatag}")
+                                    value = value.get(csatag, '')
+                            if not isinstance(value, int):
+                                value = str(value)
+
+                    else:       # TODO: Fix or delete
+
+                        for type in ('Series', 'Image'):
+                            value = value if (value or value==0) else csareader.get_csa_header(dicomdata, type)     # Final CSA header attributes in dictionary of dictionaries
+                            for csatag in tagname.split('.'):                                                       # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
+                                if isinstance(value, dict):
+                                    print(f"{type} tag: {csatag}")
+                                    value = value.get(csatag, '')
+                            if not isinstance(value, int):
+                                value = str(value)
 
                 if not value and value != 0 and 'Modality' not in dicomdata:
                     raise ValueError(f"Missing mandatory DICOM 'Modality' field in: {dicomfile}")
