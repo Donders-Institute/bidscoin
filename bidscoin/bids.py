@@ -594,20 +594,20 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                         from dicom_parser import Image
 
                         for csa in ('CSASeriesHeaderInfo', 'CSAImageHeaderInfo'):
-                            value = value if (value or value==0) else Image(dicomfile).header.get(csa)  # Final CSA header attributes in dictionary of dictionaries
-                            for csatag in tagname.split('.'):                                           # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
-                                if isinstance(value, dict):
+                            value = value if (value or value==0) else Image(dicomfile).header.get(csa)
+                            for csatag in tagname.split('.'):           # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
+                                if isinstance(value, dict):             # Final CSA header attributes in dictionary of dictionaries
                                     print(f"{csa} tag: {csatag}")
                                     value = value.get(csatag, '')
                             if not isinstance(value, int):
                                 value = str(value)
 
-                    else:       # TODO: Fix or delete
+                    else:
 
                         for type in ('Series', 'Image'):
-                            value = value if (value or value==0) else csareader.get_csa_header(dicomdata, type)     # Final CSA header attributes in dictionary of dictionaries
-                            for csatag in tagname.split('.'):                                                       # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
-                                if isinstance(value, dict):
+                            value = value if (value or value==0) else csareader.get_csa_header(dicomdata, type)['tags']
+                            for csatag in tagname.split('.'):           # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
+                                if isinstance(value, dict):             # Final CSA header attributes in dictionary of dictionaries
                                     print(f"{type} tag: {csatag}")
                                     value = value.get(csatag, '')
                             if not isinstance(value, int):
@@ -628,11 +628,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
             except Exception as dicomerror:
                 LOGGER.warning(f"Could not read {tagname} from {dicomfile}\n{dicomerror}")
-                try:
-                    value = parse_x_protocol(tagname, dicomfile)
-                except Exception as dicomerror:
-                    LOGGER.warning(f'Could not parse {tagname} from {dicomfile}\n{dicomerror}')
-                    value = ''
+                value = ''
 
     # Cast the dicom data type to int or str (i.e. to something that yaml.dump can handle)
     if isinstance(value, int):
