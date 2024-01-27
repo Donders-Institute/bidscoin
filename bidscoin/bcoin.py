@@ -463,11 +463,8 @@ def test_bidsmap(bidsmapfile: str):
 
     bidsmapfile = Path(bidsmapfile)
     if bidsmapfile.is_dir():
-        bidsfolder  = bidsmapfile/'code'/'bidscoin'
-        bidsmapfile = Path()
-    else:
-        bidsfolder  = Path()
-    bidsmap, _ = bids.load_bidsmap(bidsmapfile, bidsfolder, checks=(True, True, True))
+        bidsmapfile = bidsmapfile/'code'/'bidscoin'/'bidsmap.yaml'
+    bidsmap, _ = bids.load_bidsmap(bidsmapfile, checks=(True, True, True))
 
     return bids.validate_bidsmap(bidsmap, 1)
 

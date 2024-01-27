@@ -851,7 +851,7 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
 # ---------------- All function below this point are bidsmap related. TODO: make a class out of them -------------------
 
 
-def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=(), checks: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[dict, Path]:
+def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Union[tuple,list]=(), checks: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[dict, Path]:
     """
     Read the mapping heuristics from the bidsmap yaml-file. If yamlfile is not fullpath, then 'folder' is first searched before
     the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, then 'bidsmap_template'. So fullpath
@@ -859,39 +859,27 @@ def load_bidsmap(yamlfile: Path, folder: Path=Path(), plugins:Union[tuple,list]=
 
     NB: A run['datasource'] = DataSource object is added to every run-item
 
-    :param yamlfile:    The full pathname or basename of the bidsmap yaml-file. If None, the default bidsmap_template file in the heuristics folder is used
-    :param folder:      Only used when yamlfile=basename or None: yamlfile is then first searched for in folder and then falls back to the ./heuristics folder (useful for centrally managed template yaml-files)
+    :param yamlfile:    The full pathname or basename of the bidsmap yaml-file
+    :param folder:      Only used when yamlfile=basename or None: yamlfile is then assumed to be in folder
     :param plugins:     List of plugins to be used (with default options, overrules the plugin list in the study/template bidsmaps). Leave empty to use all plugins in the bidsmap
     :param checks:      Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
     :return:            Tuple with (1) ruamel.yaml dict structure, with all options, BIDS mapping heuristics, labels and attributes, etc. and (2) the fullpath yaml-file
     """
 
     # Input checking
-    if not folder.name or not folder.is_dir():
-        folder = templatefolder
     if not yamlfile.name:
-        yamlfile = folder/'bidsmap.yaml'
-        if not yamlfile.is_file():
-            yamlfile = bidsmap_template
-
-    # Add a standard file-extension if needed
+        yamlfile = Path('bidsmap.yaml')
     if not yamlfile.suffix:
-        yamlfile = yamlfile.with_suffix('.yaml')
-
-    # Get the full path to the bidsmap yaml-file
+        yamlfile = yamlfile.with_suffix('.yaml')    # Add a standard file-extension if needed
     if len(yamlfile.parents) == 1:
-        if (folder/yamlfile).is_file():
-            yamlfile = folder/yamlfile
-        else:
-            yamlfile = templatefolder/yamlfile
-
+        yamlfile = folder/yamlfile                  # Get the full path to the bidsmap yaml-file
     if not yamlfile.is_file():
         LOGGER.verbose(f"No existing bidsmap file found: {yamlfile}")
         return {}, yamlfile
-    elif any(checks):
-        LOGGER.info(f"Reading: {yamlfile}")
 
     # Read the heuristics from the bidsmap file
+    if any(checks):
+        LOGGER.info(f"Reading: {yamlfile}")
     with yamlfile.open('r') as stream:
         bidsmap = yaml.load(stream)
 

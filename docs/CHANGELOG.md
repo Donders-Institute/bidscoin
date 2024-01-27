@@ -15,10 +15,11 @@
 - Option to exclude datatypes from being saved in bids/derivatives
 
 ### Changed
-- `bidscoiner_plugin()` API: you can just return a personals dict instead of writing it to `participants.tsv`
+- `bidscoiner_plugin()` API: you can (should) return a personals dict (instead of writing it to `participants.tsv`) and the datasource targets
 - Using DRMAA library for skullstrip (instead of qsub/sbatch)
 - Removed the pet2bids and phys2bids plugins (code is no longer actively developed)
-- Sorting of DICOMDIR files
+- Sorting of DICOMDIR files is more robust
+- Retrieving the bidsmap yaml-file from the user argument is less fuzzy
 
 ## [4.2.1] - 2023-10-30
 

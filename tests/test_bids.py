@@ -8,7 +8,7 @@ import ruamel.yaml.comments
 from pathlib import Path
 from nibabel.testing import data_path
 from pydicom.data import get_testdata_file
-from bidscoin import bcoin, bids, bidsmap_template
+from bidscoin import bcoin, bids
 
 bcoin.setup_logging()
 
@@ -29,7 +29,7 @@ def par_file():
 
 
 @pytest.fixture(scope='module')
-def test_bidsmap():
+def study_bidsmap():
     """The path to the study bidsmap `test_data/bidsmap.yaml`"""
     return Path(__file__).parent/'test_data'/'bidsmap.yaml'
 
@@ -152,28 +152,37 @@ def test_match_runvalue():
     assert bids.match_runvalue(r'\[1, 2, 3\]',  [1, 2, 3])             == False
 
 
-def test_load_bidsmap(test_bidsmap):
+def test_load_bidsmap(study_bidsmap):
 
-    # Test loading with recommended arguments for load_bidsmap
-    full_arguments_map, return_path = bids.load_bidsmap(Path(test_bidsmap.name), test_bidsmap.parent)
-    assert type(full_arguments_map) == ruamel.yaml.comments.CommentedMap
-    assert full_arguments_map is not []
+    # Test loading with standard arguments for load_bidsmap
+    bidsmap, filepath = bids.load_bidsmap(Path(study_bidsmap.name), study_bidsmap.parent)
+    assert type(bidsmap) == ruamel.yaml.comments.CommentedMap
+    assert bidsmap != {}
+    assert filepath == study_bidsmap
+    assert bidsmap['DICOM']['anat'][0]['provenance'] == '/Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/007-t1_mprage_sag_ipat2_1p0iso/00001_1.3.12.2.1107.5.2.43.66068.2020042808523182387402502.IMA'
 
-    # Test loading with no input folder0, should load default from heuristics folder
-    no_input_folder_map, _ = bids.load_bidsmap(test_bidsmap)
-    assert type(no_input_folder_map) == ruamel.yaml.comments.CommentedMap
-    assert no_input_folder_map is not []
+    # Test loading with fullpath argument
+    bidsmap, _ = bids.load_bidsmap(study_bidsmap)
+    assert type(bidsmap) == ruamel.yaml.comments.CommentedMap
+    assert bidsmap != {}
+    assert bidsmap['DICOM']['anat'][0]['provenance'] == '/Users/galassiae/Projects/bidscoin/bidscointutorial/raw/sub-001/ses-01/007-t1_mprage_sag_ipat2_1p0iso/00001_1.3.12.2.1107.5.2.43.66068.2020042808523182387402502.IMA'
 
-    # Test loading with full path to only bidsmap file
-    full_path_to_bidsmap_map, _ = bids.load_bidsmap(test_bidsmap)
-    assert type(full_path_to_bidsmap_map) == ruamel.yaml.comments.CommentedMap
-    assert no_input_folder_map is not []
+    # Test loading with standard argument for the template bidsmap
+    bidsmap, _ = bids.load_bidsmap(Path('bidsmap_dccn'))
+    assert type(bidsmap) == ruamel.yaml.comments.CommentedMap
+    assert bidsmap != {}
+    assert bidsmap['DICOM']['anat'][0]['provenance'] == 'sub--unknown/ses--unknown/DICOM_anat_id001'
+
+    # Test loading with a dummy argument
+    bidsmap, filepath = bids.load_bidsmap(Path('dummy'))
+    assert bidsmap  == {}
+    assert filepath == bids.templatefolder/'dummy.yaml'
 
 
-def test_validate_bidsmap(test_bidsmap):
+def test_validate_bidsmap(study_bidsmap):
 
     # Load a BIDS-valid study bidsmap
-    bidsmap, _ = bids.load_bidsmap(test_bidsmap)
+    bidsmap, _ = bids.load_bidsmap(study_bidsmap)
     run        = bidsmap['DICOM']['func'][0]
     assert bids.validate_bidsmap(bidsmap) == True
 
@@ -200,32 +209,32 @@ def test_validate_bidsmap(test_bidsmap):
     assert bids.validate_bidsmap(bidsmap) == False
 
 
-def test_check_bidsmap(test_bidsmap):
+def test_check_bidsmap(study_bidsmap):
 
     # Load a template and a study bidsmap
-    template_bidsmap, _ = bids.load_bidsmap(bidsmap_template, checks=(True, True, False))
-    study_bidsmap, _    = bids.load_bidsmap(test_bidsmap)
+    templatebidsmap, _ = bids.load_bidsmap(bids.bidsmap_template, checks=(True, True, False))
+    studybidsmap, _    = bids.load_bidsmap(study_bidsmap)
 
     # Test the output of the template bidsmap
     checks   = (True, True, False)
-    is_valid = bids.check_bidsmap(template_bidsmap, checks)
+    is_valid = bids.check_bidsmap(templatebidsmap, checks)
     for each, check in zip(is_valid, checks):
         assert each in (None, True, False)
         if check:
             assert each in (None, True)
 
     # Test the output of the study bidsmap
-    is_valid = bids.check_bidsmap(study_bidsmap, checks)
+    is_valid = bids.check_bidsmap(studybidsmap, checks)
     for each, check in zip(is_valid, checks):
         assert each in (None, True, False)
         if check:
             assert each == True
 
 
-def test_check_run(test_bidsmap):
+def test_check_run(study_bidsmap):
 
     # Load a bidsmap
-    bidsmap, _ = bids.load_bidsmap(test_bidsmap)
+    bidsmap, _ = bids.load_bidsmap(study_bidsmap)
 
     # Collect the first func run-item
     checks = (True, True, True)             # = (keys, suffixes, values)
@@ -273,10 +282,10 @@ def test_check_ignore():
     assert bids.check_ignore('sub-01_foo.nii',     bidsignore, 'file') == True
 
 
-def test_find_run(test_bidsmap):
+def test_find_run(study_bidsmap):
 
     # Load a bidsmap and create a duplicate dataformat section
-    bidsmap, _     = bids.load_bidsmap(test_bidsmap)
+    bidsmap, _     = bids.load_bidsmap(study_bidsmap)
     bidsmap['PET'] = copy.deepcopy(bidsmap['DICOM'])
 
     # Collect provenance of the first anat run-item
@@ -303,10 +312,10 @@ def test_find_run(test_bidsmap):
     assert run.get('provenance') == tag
 
 
-def test_delete_run(test_bidsmap):
+def test_delete_run(study_bidsmap):
 
     # Load a study bidsmap and delete one anat run
-    bidsmap, _ = bids.load_bidsmap(test_bidsmap)
+    bidsmap, _ = bids.load_bidsmap(study_bidsmap)
     nritems    = len(bidsmap['DICOM']['anat'])
     provenance = bidsmap['DICOM']['anat'][0]['provenance']
     bids.delete_run(bidsmap, provenance)
@@ -315,10 +324,10 @@ def test_delete_run(test_bidsmap):
     assert bids.find_run(bidsmap, provenance) == {}
 
 
-def test_append_run(test_bidsmap):
+def test_append_run(study_bidsmap):
 
     # Load a study bidsmap and delete one anat run
-    bidsmap, _ = bids.load_bidsmap(test_bidsmap)
+    bidsmap, _ = bids.load_bidsmap(study_bidsmap)
 
     # Collect and modify the first anat run-item
     run                          = copy.deepcopy(bidsmap['DICOM']['anat'][0])
@@ -330,10 +339,10 @@ def test_append_run(test_bidsmap):
     assert Path(bidsmap['Foo']['Bar'][0]['provenance']) == Path(run['provenance'])
 
 
-def test_update_bidsmap(test_bidsmap):
+def test_update_bidsmap(study_bidsmap):
 
     # Load a study bidsmap and move the first run-item from func to anat
-    bidsmap, _ = bids.load_bidsmap(test_bidsmap)
+    bidsmap, _ = bids.load_bidsmap(study_bidsmap)
 
     # Collect and modify the first func run-item
     run                        = copy.deepcopy(bidsmap['DICOM']['func'][0])
@@ -350,10 +359,10 @@ def test_update_bidsmap(test_bidsmap):
     assert bidsmap['DICOM']['anat'][-1]['bids']['foo'] == 'bar'
 
 
-def test_exist_run(test_bidsmap):
+def test_exist_run(study_bidsmap):
 
     # Load a bidsmap
-    bidsmap, _ = bids.load_bidsmap(test_bidsmap)
+    bidsmap, _ = bids.load_bidsmap(study_bidsmap)
 
     # Collect the first anat run-item
     run = copy.deepcopy(bidsmap['DICOM']['anat'][0])

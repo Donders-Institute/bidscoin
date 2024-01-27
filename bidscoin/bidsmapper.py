@@ -71,7 +71,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
 
     # Get the heuristics for filling the new bidsmap (NB: plugins are stored in the bidsmaps)
     bidsmap_old, bidsmapfile = bids.load_bidsmap(bidsmapfile,  bidscoinfolder, plugins)
-    template, _              = bids.load_bidsmap(templatefile, bidscoinfolder, plugins, checks=(True, True, False))
+    template, _              = bids.load_bidsmap(templatefile, plugins=plugins, checks=(True, True, False))
 
     # Create the new bidsmap as a copy / bidsmap skeleton with no data type entries (i.e. bidsmap with empty lists)
     if force and bidsmapfile.is_file():
@@ -99,7 +99,6 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     # Start with an empty skeleton if we didn't have an old bidsmap
     if not bidsmap_old:
         bidsmap_old = copy.deepcopy(bidsmap_new)
-        bidsmapfile = bidscoinfolder/'bidsmap.yaml'
 
     # Import the data scanning plugins
     plugins = [bcoin.import_plugin(plugin, ('bidsmapper_plugin',)) for plugin in bidsmap_new['Options']['plugins']]
