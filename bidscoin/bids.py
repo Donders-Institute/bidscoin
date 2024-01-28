@@ -22,6 +22,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import List, Set, Tuple, Union
 from nibabel.parrec import parse_PAR_header
+from nibabel.nicom import csareader
 from pydicom import dcmread, fileset, datadict
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
@@ -581,7 +582,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                 try:                                                    # Try Pydicom's hexadecimal tag number first
                     value = eval(f"dicomdata[{tagname}].value")         # NB: This may generate e.g. UserWarning: Invalid value 'filepath' used with the 'in' operator: must be an element tag as a 2-tuple or int, or an element keyword
                 except (NameError, KeyError, SyntaxError):
-                    value = dicomdata.get(tagname) if tagname in dicomdata else ''  # Then try and see if it is an attribute name. NB: Do not use dicomdata.get(tagname, '') to avoid using its class attributes (e.g. 'filename')
+                    value = dicomdata.get(tagname,'') if tagname in dicomdata else ''  # Then try and see if it is an attribute name. NB: Do not use dicomdata.get(tagname, '') to avoid using its class attributes (e.g. 'filename')
 
                 # Try a recursive search
                 if not value and value != 0:
@@ -590,7 +591,35 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                             value = elem.value
                             break
 
-                if not value and value!=0 and 'Modality' not in dicomdata:
+                # Try reading the Siemens CSA header. For V* versions the CSA header tag is (0029,1020), for XA versions (0021,1019). TODO: see if dicom_parser is supporting this
+                if not value and value != 0 and is_dicomfile_siemens(dicomfile):
+
+                    if find_spec('dicom_parser'):
+                        from dicom_parser import Image
+
+                        for csa in ('CSASeriesHeaderInfo', 'CSAImageHeaderInfo'):
+                            value = value if (value or value==0) else Image(dicomfile).header.get(csa)
+                            for csatag in tagname.split('.'):           # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
+                                if isinstance(value, dict):             # Final CSA header attributes in dictionary of dictionaries
+                                    value = value.get(csatag, '')
+                                    if 'value' in value:                # Normal CSA (i.e. not MrPhoenixProtocol)
+                                        value = value['value']
+                            if value != 0:
+                                value = str(value or '')
+
+                    else:
+
+                        for type in ('Series', 'Image'):
+                            value = value if (value or value==0) else csareader.get_csa_header(dicomdata, type)['tags']
+                            for csatag in tagname.split('.'):           # NB: Currently MrPhoenixProtocol is not supported
+                                if isinstance(value, dict):             # Final CSA header attributes in dictionary of dictionaries
+                                    value = value.get(csatag, {}).get('items', '')
+                                    if isinstance(value, list) and len(value) == 1:
+                                        value = value[0]
+                            if value != 0:
+                                value = str(value or '')
+
+                if not value and value != 0 and 'Modality' not in dicomdata:
                     raise ValueError(f"Missing mandatory DICOM 'Modality' field in: {dicomfile}")
 
                 # XA-30 enhanced DICOM hack: Catch missing EchoNumbers from ice-dims
@@ -605,11 +634,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
             except Exception as dicomerror:
                 LOGGER.warning(f"Could not read {tagname} from {dicomfile}\n{dicomerror}")
-                try:
-                    value = parse_x_protocol(tagname, dicomfile)
-                except Exception as dicomerror:
-                    LOGGER.warning(f'Could not parse {tagname} from {dicomfile}\n{dicomerror}')
-                    value = ''
+                value = ''
 
     # Cast the dicom data type to int or str (i.e. to something that yaml.dump can handle)
     if isinstance(value, int):

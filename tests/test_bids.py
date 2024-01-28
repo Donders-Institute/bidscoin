@@ -19,6 +19,11 @@ def dcm_file():
 
 
 @pytest.fixture(scope='module')
+def dcm_file_csa():
+    return Path(data_path)/'1.dcm'
+
+
+@pytest.fixture(scope='module')
 def dicomdir():
     return Path(get_testdata_file('DICOMDIR'))
 
@@ -56,7 +61,7 @@ class TestDataSource:
         assert datasource.properties( 'filepath:.*/(.*?)_files/.*') == 'test'   # path = [..]/pydicom/data/test_files/MR_small.dcm'
         assert datasource.properties(r'filename:MR_(.*?)\.dcm')     == 'small'
         assert datasource.properties( 'filesize')                   == '9.60 kB'
-        assert datasource.properties( 'nrfiles')                    == 76
+        assert datasource.properties( 'nrfiles')                    in (75,76)  # Depends on the pydicom version
 
     def test_attributes(self, datasource, extdatasource):
         assert datasource.attributes(r'PatientName:.*\^(.*?)1') == 'MR'         # PatientName = 'CompressedSamples^MR1'
@@ -116,6 +121,34 @@ def test_get_datasource(dicomdir):
     datasource = bids.get_datasource(dicomdir.parent, {'dcm2niix2bids': {}})
     assert datasource.is_datasource()
     assert datasource.dataformat == 'DICOM'
+
+
+def test_get_dicomfield(dcm_file_csa):
+
+    # -> Standard DICOM
+    value = bids.get_dicomfield('SeriesDescription', dcm_file_csa)
+    assert value == 'CBU_DTI_64D_1A'
+
+    # -> CSA Series header
+    value = bids.get_dicomfield('PhaseGradientAmplitude', dcm_file_csa)
+    assert value == '0.0'
+
+    # -> CSA Image header
+    value = bids.get_dicomfield('ImaCoilString', dcm_file_csa)
+    assert value == 'T:HEA;HEP'
+
+    value = bids.get_dicomfield('B_matrix', dcm_file_csa)
+    assert value == ''
+
+    # -> CSA MrPhoenixProtocol
+    value = bids.get_dicomfield('MrPhoenixProtocol.tProtocolName', dcm_file_csa)
+    assert value == 'CBU+AF8-DTI+AF8-64D+AF8-1A'
+
+    value = bids.get_dicomfield('MrPhoenixProtocol.sDiffusion', dcm_file_csa)
+    assert value == "{'lDiffWeightings': 2, 'alBValue': [None, 1000], 'lNoiseLevel': 40, 'lDiffDirections': 64, 'ulMode': 256}"
+
+    value = bids.get_dicomfield('MrPhoenixProtocol.sProtConsistencyInfo.tBaselineString', dcm_file_csa)
+    assert value == 'N4_VB17A_LATEST_20090307'
 
 
 @pytest.mark.parametrize('template', bcoin.list_plugins()[1])
