@@ -597,10 +597,11 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                             value = value if (value or value==0) else Image(dicomfile).header.get(csa)
                             for csatag in tagname.split('.'):           # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
                                 if isinstance(value, dict):             # Final CSA header attributes in dictionary of dictionaries
-                                    print(f"{csa} tag: {csatag}")
                                     value = value.get(csatag, '')
+                                    if 'value' in value:                # Normal CSA (i.e. not MrPhoenixProtocol)
+                                        value = value['value']
                             if not isinstance(value, int):
-                                value = str(value)
+                                value = str(value if value is not None else '')
 
                     else:
 
@@ -608,10 +609,11 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                             value = value if (value or value==0) else csareader.get_csa_header(dicomdata, type)['tags']
                             for csatag in tagname.split('.'):           # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
                                 if isinstance(value, dict):             # Final CSA header attributes in dictionary of dictionaries
-                                    print(f"{type} tag: {csatag}")
-                                    value = value.get(csatag, '')
+                                    value = value.get(csatag, {}).get('items', '')
+                                    if isinstance(value, list) and len(value) == 1:
+                                        value = value[0]
                             if not isinstance(value, int):
-                                value = str(value)
+                                value = str(value if value not in (None,[]) else '')
 
                 if not value and value != 0 and 'Modality' not in dicomdata:
                     raise ValueError(f"Missing mandatory DICOM 'Modality' field in: {dicomfile}")
