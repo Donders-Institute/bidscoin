@@ -171,7 +171,7 @@ def test_load_bidsmap(study_bidsmap):
     bidsmap, _ = bids.load_bidsmap(Path('bidsmap_dccn'))
     assert type(bidsmap) == ruamel.yaml.comments.CommentedMap
     assert bidsmap != {}
-    assert bidsmap['DICOM']['anat'][0]['provenance'] == 'sub--unknown/ses--unknown/DICOM_anat_id001'
+    assert bidsmap['DICOM']['anat'][0]['provenance'] == str(Path('sub--unknown/ses--unknown/DICOM_anat_id001'))     # Account for Windows paths
 
     # Test loading with a dummy argument
     bidsmap, filepath = bids.load_bidsmap(Path('dummy'))
