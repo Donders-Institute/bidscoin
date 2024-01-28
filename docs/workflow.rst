@@ -46,12 +46,12 @@ Step 1a: Running the bidsmapper
       -h, --help            show this help message and exit
       -b BIDSMAP, --bidsmap BIDSMAP
                             The study bidsmap file with the mapping heuristics. If the bidsmap filename
-                            is relative (i.e. no '/' in the name) then it is assumed to be located in
+                            is just the basename (i.e. no '/' in the name) then it is assumed to be located in
                             bidsfolder/code/bidscoin. Default: bidsmap.yaml
       -t TEMPLATE, --template TEMPLATE
                             The bidsmap template file with the default heuristics (this could be provided
-                            by your institute). If the bidsmap filename is relative (i.e. no '/' in the
-                            name) then it is assumed to be located in bidsfolder/code/bidscoin. Default:
+                            by your institute). If the bidsmap filename is just the basename (i.e. no '/' in
+                            the name) then it is assumed to be located in the bidscoin config folder. Default:
                             bidsmap_dccn
       -p PLUGINS [PLUGINS ...], --plugins PLUGINS [PLUGINS ...]
                             List of plugins to be used. Default: the plugin list of the study/template
@@ -112,12 +112,12 @@ Step 1b: Running the bidseditor
       -h, --help            show this help message and exit
       -b BIDSMAP, --bidsmap BIDSMAP
                             The study bidsmap file with the mapping heuristics. If the bidsmap filename
-                            is relative (i.e. no "/" in the name) then it is assumed to be located in
+                            is just the basename (i.e. no "/" in the name) then it is assumed to be located in
                             bidsfolder/code/bidscoin. Default: bidsmap.yaml
       -t TEMPLATE, --template TEMPLATE
                             The template bidsmap file with the default heuristics (this could be provided
-                            by your institute). If the bidsmap filename is relative (i.e. no "/" in the
-                            name) then it is assumed to be located in bidsfolder/code/bidscoin. Default:
+                            by your institute). If the bidsmap filename is just the basename (i.e. no "/" in
+                            the name) then it is assumed to be located in the bidscoin config folder. Default:
                             bidsmap_dccn
 
     examples:
@@ -203,7 +203,7 @@ Step 2: Running the bidscoiner
                             be selected
       -b BIDSMAP, --bidsmap BIDSMAP
                             The study bidsmap file with the mapping heuristics. If the bidsmap filename
-                            is relative (i.e. no "/" in the name) then it is assumed to be located in
+                            is just the basename (i.e. no "/" in the name) then it is assumed to be located in
                             bidsfolder/code/bidscoin. Default: bidsmap.yaml
       -f, --force           Process all subjects, regardless of existing subject folders in the
                             bidsfolder. Otherwise these subject folders will be skipped

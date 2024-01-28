@@ -92,7 +92,7 @@ class TestDataSource:
         assert datasource.dynamicvalue(r'<(0010, 0010)>')                                        == 'CompressedSamplesMR1'
 
 def test_unpack(dicomdir, tmp_path):
-    sessions, unpacked = bids.unpack(dicomdir.parent, '', tmp_path, None)
+    sessions, unpacked = bids.unpack(dicomdir.parent, '', tmp_path, None)   # None -> simulate commandline usage of dicomsort()
     assert unpacked
     assert len(sessions) == 6
     for session in sessions:
@@ -124,32 +124,32 @@ def test_load_check_template(template):
     # Load a valid template
     bidsmap, _ = bids.load_bidsmap(template, checks=(False, False, False))
     assert isinstance(bidsmap, dict) and bidsmap
-    assert bids.check_template(bidsmap) == True
+    assert bids.check_template(bidsmap) is True
 
     # Add an invalid data type
     bidsmap['DICOM']['foo'] = bidsmap['DICOM']['extra_data']
-    assert bids.check_template(bidsmap) == False
+    assert bids.check_template(bidsmap) is False
     del bidsmap['DICOM']['foo']
 
     # Remove a valid suffix (BIDS-entity)
     bidsmap['DICOM']['anat'].pop(-2)        # NB: Assumes CT is the last item, MTR the second last
-    assert bids.check_template(bidsmap) == False
+    assert bids.check_template(bidsmap) is False
 
 
 def test_match_runvalue():
-    assert bids.match_runvalue('my_pulse_sequence_name', '_name')      == False
-    assert bids.match_runvalue('my_pulse_sequence_name', '^my.*name$') == True
-    assert bids.match_runvalue('T1_MPRage', '(?i).*(MPRAGE|T1w).*')    == True
-    assert bids.match_runvalue('', None)                               == True
-    assert bids.match_runvalue(None, '')                               == True
-    assert bids.match_runvalue(  [1, 2, 3],     [1,2,  3])             == True
-    assert bids.match_runvalue(  [1,2,  3],    '[1, 2, 3]')            == True
-    assert bids.match_runvalue(  [1, 2, 3],  r'\[1, 2, 3\]')           == True
-    assert bids.match_runvalue( '[1, 2, 3]',   '[1, 2, 3]')            == True
-    assert bids.match_runvalue( '[1, 2, 3]', r'\[1, 2, 3\]')           == True
-    assert bids.match_runvalue( '[1, 2, 3]',    [1, 2, 3])             == True
-    assert bids.match_runvalue( '[1,2,  3]',    [1,2,  3])             == False
-    assert bids.match_runvalue(r'\[1, 2, 3\]',  [1, 2, 3])             == False
+    assert bids.match_runvalue('my_pulse_sequence_name', '_name')      is False
+    assert bids.match_runvalue('my_pulse_sequence_name', '^my.*name$') is True
+    assert bids.match_runvalue('T1_MPRage', '(?i).*(MPRAGE|T1w).*')    is True
+    assert bids.match_runvalue('', None)                               is True
+    assert bids.match_runvalue(None, '')                               is True
+    assert bids.match_runvalue(  [1, 2, 3],     [1,2,  3])             is True
+    assert bids.match_runvalue(  [1,2,  3],    '[1, 2, 3]')            is True
+    assert bids.match_runvalue(  [1, 2, 3],  r'\[1, 2, 3\]')           is True
+    assert bids.match_runvalue( '[1, 2, 3]',   '[1, 2, 3]')            is True
+    assert bids.match_runvalue( '[1, 2, 3]', r'\[1, 2, 3\]')           is True
+    assert bids.match_runvalue( '[1, 2, 3]',    [1, 2, 3])             is True
+    assert bids.match_runvalue( '[1,2,  3]',    [1,2,  3])             is False
+    assert bids.match_runvalue(r'\[1, 2, 3\]',  [1, 2, 3])             is False
 
 
 def test_load_bidsmap(study_bidsmap):
@@ -184,29 +184,29 @@ def test_validate_bidsmap(study_bidsmap):
     # Load a BIDS-valid study bidsmap
     bidsmap, _ = bids.load_bidsmap(study_bidsmap)
     run        = bidsmap['DICOM']['func'][0]
-    assert bids.validate_bidsmap(bidsmap) == True
+    assert bids.validate_bidsmap(bidsmap) is True
 
     # Validate the bids-keys
     run['bids']['flip'] = 'foo'     # Add a false key
-    assert bids.validate_bidsmap(bidsmap) == False
+    assert bids.validate_bidsmap(bidsmap) is False
     del run['bids']['flip']
     del run['bids']['task']         # Remove a required key
-    assert bids.validate_bidsmap(bidsmap) == False
+    assert bids.validate_bidsmap(bidsmap) is False
     run['bids']['task'] = 'foo'
 
     # Check bids-suffix
     run['bids']['suffix'] = 'T1w'   # Set an invalid suffix
-    assert bids.validate_bidsmap(bidsmap) == False
+    assert bids.validate_bidsmap(bidsmap) is False
     run['bids']['suffix'] = 'bold'
 
     # Check bids-values
     run['bids']['task'] = ''        # Remove a required value
-    assert bids.validate_bidsmap(bidsmap) == False
+    assert bids.validate_bidsmap(bidsmap) is False
     run['bids']['task'] = 'f##'     # Add invalid characters (they are cleaned out)
-    assert bids.validate_bidsmap(bidsmap) == True
+    assert bids.validate_bidsmap(bidsmap) is True
     run['bids']['task'] = 'foo'
     run['bids']['run']  = 'a'       # Add an invalid (non-numeric) index
-    assert bids.validate_bidsmap(bidsmap) == False
+    assert bids.validate_bidsmap(bidsmap) is False
 
 
 def test_check_bidsmap(study_bidsmap):
@@ -228,7 +228,7 @@ def test_check_bidsmap(study_bidsmap):
     for each, check in zip(is_valid, checks):
         assert each in (None, True, False)
         if check:
-            assert each == True
+            assert each is True
 
 
 def test_check_run(study_bidsmap):
@@ -272,14 +272,14 @@ def test_check_ignore():
 
     bidsignore = ['mrs/', 'sub-*_foo.*', '*foo/sub-*_bar.*']
 
-    assert bids.check_ignore('mrs',                bidsignore)         == True      # Test default: datatype = 'dir'
-    assert bids.check_ignore('mrs',                bidsignore, 'file') == False
-    assert bids.check_ignore('mrs/sub-01_foo.nii', bidsignore, 'dir')  == False
-    assert bids.check_ignore('mrs/sub-01_bar.nii', bidsignore, 'file') == False
-    assert bids.check_ignore('foo/sub-01_bar.nii', bidsignore, 'file') == True
-    assert bids.check_ignore('bar/sub-01_bar.nii', bidsignore, 'file') == False
-    assert bids.check_ignore('bar/sub-01_foo.nii', bidsignore, 'file') == False
-    assert bids.check_ignore('sub-01_foo.nii',     bidsignore, 'file') == True
+    assert bids.check_ignore('mrs',                bidsignore)         is True      # Test default: datatype = 'dir'
+    assert bids.check_ignore('mrs',                bidsignore, 'file') is False
+    assert bids.check_ignore('mrs/sub-01_foo.nii', bidsignore, 'dir')  is False
+    assert bids.check_ignore('mrs/sub-01_bar.nii', bidsignore, 'file') is False
+    assert bids.check_ignore('foo/sub-01_bar.nii', bidsignore, 'file') is True
+    assert bids.check_ignore('bar/sub-01_bar.nii', bidsignore, 'file') is False
+    assert bids.check_ignore('bar/sub-01_foo.nii', bidsignore, 'file') is False
+    assert bids.check_ignore('sub-01_foo.nii',     bidsignore, 'file') is True
 
 
 def test_find_run(study_bidsmap):
@@ -336,7 +336,7 @@ def test_append_run(study_bidsmap):
 
     # Append the run elsewhere in the bidsmap
     bids.append_run(bidsmap, run)
-    assert Path(bidsmap['Foo']['Bar'][0]['provenance']) == Path(run['provenance'])
+    assert bidsmap['Foo']['Bar'][0]['provenance'] == run['provenance']
 
 
 def test_update_bidsmap(study_bidsmap):
@@ -350,8 +350,8 @@ def test_update_bidsmap(study_bidsmap):
 
     # Update the bidsmap
     bids.update_bidsmap(bidsmap, 'func', run)
-    assert Path(bidsmap['DICOM']['anat'][-1]['provenance']) == Path(run['provenance'])
-    assert Path(bidsmap['DICOM']['func'] [0]['provenance']) != Path(run['provenance'])
+    assert bidsmap['DICOM']['anat'][-1]['provenance'] == run['provenance']
+    assert bidsmap['DICOM']['func'] [0]['provenance'] != run['provenance']
 
     # Modify the last anat run-item and update the bidsmap
     run['bids']['foo'] = 'bar'
@@ -368,17 +368,17 @@ def test_exist_run(study_bidsmap):
     run = copy.deepcopy(bidsmap['DICOM']['anat'][0])
 
     # Find the run in the wrong data type
-    assert bids.exist_run(bidsmap, 'func', run) == False
+    assert bids.exist_run(bidsmap, 'func', run) is False
 
     # Find run with in the right data type and in all datatypes
-    assert bids.exist_run(bidsmap, 'anat', run) == True
-    assert bids.exist_run(bidsmap, '',     run) == True
+    assert bids.exist_run(bidsmap, 'anat', run) is True
+    assert bids.exist_run(bidsmap, '',     run) is True
 
     # Find the wrong run in all datatypes
     run['attributes']['ProtocolName'] = 'abcdefg'
-    assert bids.exist_run(bidsmap, '', run)     == False
+    assert bids.exist_run(bidsmap, '', run)     is False
     run['attributes']['ProtocolName'] = ''
-    assert bids.exist_run(bidsmap, '', run)     == False
+    assert bids.exist_run(bidsmap, '', run)     is False
 
 
 def test_increment_runindex__no_run1(tmp_path):

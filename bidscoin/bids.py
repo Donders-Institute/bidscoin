@@ -314,7 +314,7 @@ class DataSource:
         return value
 
 
-def unpack(sesfolder: Path, wildcard: str='', workfolder: Path='', _subprefix: str='') -> Tuple[Set[Path], bool]:
+def unpack(sesfolder: Path, wildcard: str='', workfolder: Path='', _subprefix: Union[str,None]='') -> Tuple[Set[Path], bool]:
     """
     Unpacks and sorts DICOM files in sourcefolder to a temporary folder if sourcefolder contains a DICOMDIR file or .tar.gz, .gz or .zip files
 

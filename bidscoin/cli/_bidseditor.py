@@ -31,7 +31,7 @@ def get_parser() -> argparse.ArgumentParser:
                                            bidseditor myproject/bids -b my/custom/bidsmap.yaml"""))
 
     parser.add_argument('bidsfolder',      help='The destination folder with the (future) bids data')
-    parser.add_argument('-b','--bidsmap',  help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
-    parser.add_argument('-t','--template', help=f'The template bidsmap file with the default heuristics (this could be provided by your institute). If the bidsmap filename is relative (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: {bidsmap_template.stem}', default=bidsmap_template)
+    parser.add_argument('-b','--bidsmap',  help='The study bidsmap file with the mapping heuristics. If the bidsmap filename is just the basename (i.e. no "/" in the name) then it is assumed to be located in bidsfolder/code/bidscoin. Default: bidsmap.yaml', default='bidsmap.yaml')
+    parser.add_argument('-t','--template', help=f'The template bidsmap file with the default heuristics (this could be provided by your institute). If the bidsmap filename is just the basename (i.e. no "/" in the name) then it is assumed to be located in the bidscoin config folder. Default: {bidsmap_template.stem}', default=bidsmap_template)
 
     return parser

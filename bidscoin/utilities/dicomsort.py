@@ -8,6 +8,7 @@ from pydicom import fileset
 from pathlib import Path
 from typing import List, Set
 from importlib.util import find_spec
+from typing import Union
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
@@ -134,13 +135,13 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
             dicomfile.replace(newfilename)
 
 
-def sortsessions(sourcefolder: Path, subprefix: str='', sesprefix: str='', folderscheme: str='{SeriesNumber:03d}-{SeriesDescription}',
+def sortsessions(sourcefolder: Path, subprefix: Union[str,None]='', sesprefix: str='', folderscheme: str='{SeriesNumber:03d}-{SeriesDescription}',
                  namescheme: str='', pattern: str=r'.*\.(IMA|dcm)$', recursive: bool=True, force: bool=False, dryrun: bool=False) -> Set[Path]:
     """
     Wrapper around sortsession() to loop over subjects and sessions and map the session DICOM files
 
     :param sourcefolder: The root folder containing the source [sub/][ses/]dicomfiles or the DICOMDIR file
-    :param subprefix:    The prefix for searching the sub folders in session. Use '' to sort DICOMDIR files directly in sourcefolder
+    :param subprefix:    The prefix for searching the sub folders in session. Use '' to sort DICOMDIR files directly in sourcefolder (None will add DICOMDIR-based sub-/ses-folders
     :param sesprefix:    The prefix for searching the ses folders in sub folder
     :param folderscheme: Optional naming scheme for the sorted (e.g. Series) subfolders. Follows the Python string formatting syntax with DICOM field names in curly bracers with an optional number of digits for numeric fields', default='{SeriesNumber:03d}-{SeriesDescription}'
     :param namescheme:   Optional naming scheme for renaming the files. Follows the Python string formatting syntax with DICOM field names in curly bracers, e.g. {PatientName}_{SeriesNumber:03d}_{SeriesDescription}_{AcquisitionNumber:05d}_{InstanceNumber:05d}.IMA

@@ -40,7 +40,7 @@ def test_bidscoiner(raw_dicomdir, bids_dicomdir, bidsmap_dicomdir):
         for (path, entry_key), citation in credits.citations.items():
             if entry_key == '10.3389/fninf.2021.770608':
                 assert path                 == 'bidscoin'
-                assert citation.cite_module == True
+                assert citation.cite_module is True
                 assert citation.version     == __version__
 
 
