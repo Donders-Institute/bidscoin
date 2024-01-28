@@ -134,6 +134,9 @@ def test_get_dicomfield(dcm_file_csa):
     assert value == '0.0'
 
     # -> CSA Image header
+    value = bids.get_dicomfield('ImaCoilString', dcm_file_csa)
+    assert value == 'T:HEA;HEP'
+
     value = bids.get_dicomfield('B_matrix', dcm_file_csa)
     assert value == ''
 
