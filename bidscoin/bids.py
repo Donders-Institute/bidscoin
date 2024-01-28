@@ -600,20 +600,20 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                                     value = value.get(csatag, '')
                                     if 'value' in value:                # Normal CSA (i.e. not MrPhoenixProtocol)
                                         value = value['value']
-                            if not isinstance(value, int):
-                                value = str(value if value is not None else '')
+                            if value != 0:
+                                value = str(value or '')
 
                     else:
 
                         for type in ('Series', 'Image'):
                             value = value if (value or value==0) else csareader.get_csa_header(dicomdata, type)['tags']
-                            for csatag in tagname.split('.'):           # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
+                            for csatag in tagname.split('.'):           # NB: Currently MrPhoenixProtocol is not supported
                                 if isinstance(value, dict):             # Final CSA header attributes in dictionary of dictionaries
                                     value = value.get(csatag, {}).get('items', '')
                                     if isinstance(value, list) and len(value) == 1:
                                         value = value[0]
-                            if not isinstance(value, int):
-                                value = str(value if value not in (None,[]) else '')
+                            if value != 0:
+                                value = str(value or '')
 
                 if not value and value != 0 and 'Modality' not in dicomdata:
                     raise ValueError(f"Missing mandatory DICOM 'Modality' field in: {dicomfile}")
