@@ -885,7 +885,7 @@ def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Uni
     NB: A run['datasource'] = DataSource object is added to every run-item
 
     :param yamlfile:    The full pathname or basename of the bidsmap yaml-file
-    :param folder:      Only used when yamlfile=basename or None: yamlfile is then assumed to be in folder
+    :param folder:      Only used when yamlfile=basename and not in the pwd: yamlfile is then assumed to be in folder
     :param plugins:     List of plugins to be used (with default options, overrules the plugin list in the study/template bidsmaps). Leave empty to use all plugins in the bidsmap
     :param checks:      Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
     :return:            Tuple with (1) ruamel.yaml dict structure, with all options, BIDS mapping heuristics, labels and attributes, etc. and (2) the fullpath yaml-file
@@ -896,7 +896,7 @@ def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Uni
         yamlfile = Path('bidsmap.yaml')
     if not yamlfile.suffix:
         yamlfile = yamlfile.with_suffix('.yaml')    # Add a standard file-extension if needed
-    if len(yamlfile.parents) == 1:
+    if len(yamlfile.parents) == 1 and not yamlfile.is_file():
         yamlfile = folder/yamlfile                  # Get the full path to the bidsmap yaml-file
     if not yamlfile.is_file():
         LOGGER.verbose(f"No existing bidsmap file found: {yamlfile}")
@@ -1379,7 +1379,7 @@ def create_run(datasource: DataSource=None, bidsmap: dict=None) -> dict:
         datasource.sesprefix = bidsmap['Options']['bidscoin'].get('sesprefix','')
 
     return dict(provenance = str(datasource.path),
-                properties = {'filepath':'', 'filename':'', 'filesize':'', 'nrfiles':''},
+                properties = {'filepath':'', 'filename':'', 'filesize':'', 'nrfiles':None},
                 attributes = {},
                 bids       = {},
                 meta       = {},
@@ -1733,6 +1733,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
 
             # Stop searching the bidsmap if we have a match
             if match:
+                LOGGER.debug(f"Bidsmap match: {run['provenance']} -> {run_['provenance']}")
                 return run_, True
 
     # We don't have a match (all tests failed, so datatype should be the *last* one, e.g. unknowndatatype)
