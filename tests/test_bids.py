@@ -130,6 +130,10 @@ def test_get_dicomfield(dcm_file_csa):
     value = bids.get_dicomfield('SeriesDescription', dcm_file_csa)
     assert value == 'CBU_DTI_64D_1A'
 
+    # -> The special PhaseEncodingDirection tag
+    value = bids.get_dicomfield('PhaseEncodingDirection', dcm_file_csa)
+    assert value == 'AP'
+
     # -> CSA Series header
     value = bids.get_dicomfield('PhaseGradientAmplitude', dcm_file_csa)
     assert value == '0.0'

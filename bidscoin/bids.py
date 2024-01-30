@@ -602,18 +602,18 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                             if value != 0:
                                 value = str(value or '')
 
-                # Missing PhaseEncodingDirection patch (see https://neurostars.org/t/determining-bids-phaseencodingdirection-from-dicom/612/10)
+                # PhaseEncodingDirection patch (see https://neurostars.org/t/determining-bids-phaseencodingdirection-from-dicom/612/10)
                 if tagname == 'PhaseEncodingDirection' and not value:
                     if 'SIEMENS' in dicomdata.get('Manufacturer').upper():
                         csa = csareader.get_csa_header(dicomdata, 'Image')['tags']
-                        pos = csa.get('PhaseEncodingDirectionPositive',{}).get('items',[None])[0]
-                        dir = dicomdata.get('InPlanePhaseEncodingDirection')
+                        pos = csa.get('PhaseEncodingDirectionPositive',{}).get('items',[None])[0]   # = 0 or 1
+                        dir = dicomdata.get('InPlanePhaseEncodingDirection')                        # = ROW or COL
                         if dir == 'COL' and pos is not None:
                             value = 'AP' if pos else 'PA'
                         elif dir == 'ROW' and pos is not None:
                             value = 'LR' if pos else 'RL'
-                    elif 'GE' in dicomdata.get('Manufacturer').upper():
-                        value = dicomdata.get('RectilinearPhaseEncodeReordering')       # = LINEAR or REVERSE_LINEAR
+                    elif dicomdata.get('Manufacturer','').upper().startswith('GE'):
+                        value = dicomdata.get('RectilinearPhaseEncodeReordering')                   # = LINEAR or REVERSE_LINEAR
 
                 # XA-30 enhanced DICOM hack: Catch missing EchoNumbers from ice-dims
                 if tagname == 'EchoNumbers' and not value:
