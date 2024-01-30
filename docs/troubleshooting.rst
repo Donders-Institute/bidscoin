@@ -47,6 +47,10 @@ My bidsmap is empty
 ^^^^^^^^^^^^^^^^^^^
 After running the bidsmapper, the bidseditor shows an empty bidsmap (i.e no data samples). The most likely cause is that the structure of your raw data repository is not understood by BIDScoin (see `data preparation <./preparation.html>`__ for more info). Another likely cause is that the sub-/ses- prefixes need to be adjusted to your folder names (e.g. when your ). Install and/or add the plugin.
 
+My bidsmap list is much longer than the number of scan types
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Normally the list of items in the bidsmap is a shortlist that represents the different scan types in the dataset. Each scan type is characterised by unique properties and/or attributes specific for that scan type. If your list is much longer then one or more of the properties or attributes in the bidsmap are varying between different acquisitions of the same scan type (which causes bidscoin to classify them as different scan types that are all added to the list). For instance, it sometimes happens that manufacturers write a value for TR or TE in the DICOM header that reflects the measured TR or TE, instead of the TR or TE from the protocol (the measured values typically jitter a tiny bit). If you found out which attribute or property they are, you can open the template bidsmap with an editor and delete them for the scan type that is long-listed (but be careful, this may make the item to generic, yielding false postive matches). An alternative solution is to open your study bidsmap with an editor, delete all the long-listed items except one, and add a custom regular expresion the varying properties and/or attributes (e.g. to catch the jitter)
+
 My subject/session labels are wrong
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Everything seems to work but the ``sub-``/``ses-`` BIDS labels are not what I want. In the bidseditor main window, play around with the ``subject`` regular expressions.
