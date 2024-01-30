@@ -5,6 +5,7 @@ import shutil
 import re
 import json
 import ruamel.yaml.comments
+from importlib.util import find_spec
 from pathlib import Path
 from nibabel.testing import data_path
 from pydicom.data import get_testdata_file
@@ -141,14 +142,15 @@ def test_get_dicomfield(dcm_file_csa):
     assert value == ''
 
     # -> CSA MrPhoenixProtocol
-    value = bids.get_dicomfield('MrPhoenixProtocol.tProtocolName', dcm_file_csa)
-    assert value == 'CBU+AF8-DTI+AF8-64D+AF8-1A'
+    if find_spec('dicom_parser'):
+        value = bids.get_dicomfield('MrPhoenixProtocol.tProtocolName', dcm_file_csa)
+        assert value == 'CBU+AF8-DTI+AF8-64D+AF8-1A'
 
-    value = bids.get_dicomfield('MrPhoenixProtocol.sDiffusion', dcm_file_csa)
-    assert value == "{'lDiffWeightings': 2, 'alBValue': [None, 1000], 'lNoiseLevel': 40, 'lDiffDirections': 64, 'ulMode': 256}"
+        value = bids.get_dicomfield('MrPhoenixProtocol.sDiffusion', dcm_file_csa)
+        assert value == "{'lDiffWeightings': 2, 'alBValue': [None, 1000], 'lNoiseLevel': 40, 'lDiffDirections': 64, 'ulMode': 256}"
 
-    value = bids.get_dicomfield('MrPhoenixProtocol.sProtConsistencyInfo.tBaselineString', dcm_file_csa)
-    assert value == 'N4_VB17A_LATEST_20090307'
+        value = bids.get_dicomfield('MrPhoenixProtocol.sProtConsistencyInfo.tBaselineString', dcm_file_csa)
+        assert value == 'N4_VB17A_LATEST_20090307'
 
 
 @pytest.mark.parametrize('template', bcoin.list_plugins()[1])
