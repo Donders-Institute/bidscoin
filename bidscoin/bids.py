@@ -404,20 +404,6 @@ def is_dicomfile(file: Path) -> bool:
 
 
 @lru_cache(maxsize=65536)
-def is_dicomfile_siemens(file: Path) -> bool:
-    """
-    Checks whether a file is a *SIEMENS* DICOM-file. All Siemens Dicoms contain a dump of the
-    MrProt structure. The dump is marked with a header starting with 'ASCCONV BEGIN'. Though
-    this check is not foolproof, it is very unlikely to fail.
-
-    :param file:    The full pathname of the file
-    :return:        Returns true if a file is a Siemens DICOM-file
-    """
-
-    return b'ASCCONV BEGIN' in file.open('rb').read()
-
-
-@lru_cache(maxsize=65536)
 def is_parfile(file: Path) -> bool:
     """
     Rudimentary check (on file extensions and whether it exists) whether a file is a Philips PAR file
@@ -533,9 +519,6 @@ def parse_x_protocol(pattern: str, dicomfile: Path) -> str:
             if match:
                 return match.group(1).decode('utf-8')
 
-    if not is_dicomfile_siemens(dicomfile):
-        LOGGER.warning(f"Parsing {pattern} may have failed because {dicomfile} does not seem to be a Siemens DICOM file")
-
     LOGGER.warning(f"Pattern: '{regexp.encode('unicode_escape').decode()}' not found in: {dicomfile}")
     return ''
 
@@ -592,7 +575,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                             break
 
                 # Try reading the Siemens CSA header. For V* versions the CSA header tag is (0029,1020), for XA versions (0021,1019). TODO: see if dicom_parser is supporting this
-                if not value and value != 0 and is_dicomfile_siemens(dicomfile):
+                if not value and value != 0 and 'SIEMENS' in dicomdata.get('Manufacturer').upper():
 
                     if find_spec('dicom_parser'):
                         from dicom_parser import Image
