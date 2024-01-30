@@ -442,7 +442,7 @@ DICOM:
       task: <filepath:/.*/...(.*)/.*/>
       acq:
       ce:
-      dir: <RectilinearPhaseEncodeReordering> # = GE (<InPlanePhaseEncodingDirection> only gives COLUMN or ROW)
+      dir: <PhaseEncodingDirection>     # PhaseEncodingDirection is not an existing DICOM tag but parsed from other fields by BIDScoin
       rec:
       run: <<>>
       echo:                             # Or use <EchoNumbers>
@@ -557,7 +557,7 @@ DICOM:
     bids: &perf_dicoment_group1         # See: schema/datatypes/perf.yaml
       acq: <filepath:/.*/...(.*)/.*/>
       rec: <SeriesDescription>
-      dir: <RectilinearPhaseEncodeReordering> # = GE (<InPlanePhaseEncodingDirection> only gives COLUMN or ROW)
+      dir: <PhaseEncodingDirection>     # PhaseEncodingDirection is not an existing DICOM tag but parsed from other fields by BIDScoin
       run: <<>>
       suffix: asl
     meta: &perf_meta
@@ -636,7 +636,7 @@ DICOM:
     bids: &dwi_dicoment_DWI             # See: schema/datatypes/dwi.yaml
       acq: <filepath:/.*/...(.*)/.*/> # More consistent between SBREF and PHYSIO files
       rec:
-      dir: <RectilinearPhaseEncodeReordering> # = GE (<InPlanePhaseEncodingDirection> only gives COLUMN or ROW)
+      dir: <PhaseEncodingDirection>     # PhaseEncodingDirection is not an existing DICOM tag but parsed from other fields by BIDScoin
       run: <<>>
       part: ['', mag, phase, real, imag, 0]
       chunk:
@@ -651,7 +651,7 @@ DICOM:
     bids: &dwi_dicoment_sbref           # See: schema/datatypes/dwi.yaml
       acq: <filepath:/.*/...(.*)/.*/>
       rec:
-      dir: <RectilinearPhaseEncodeReordering> # = GE (<InPlanePhaseEncodingDirection> only gives COLUMN or ROW)
+      dir: <PhaseEncodingDirection>     # PhaseEncodingDirection is not an existing DICOM tag but parsed from other fields by BIDScoin
       run: <<>>
       part: ['', mag, phase, real, imag, 0]
       chunk:
@@ -790,7 +790,7 @@ DICOM:
     bids: &fmap_dicoment_PEPolar        # See: schema/datatypes/fmap.yaml
       acq: <filepath:/.*/...(.*)/.*/>          # NB: <ProtocolName> is consistent between SBREF and PHYSIO files but causes name clashes
       ce:
-      dir: <RectilinearPhaseEncodeReordering> # = GE (<InPlanePhaseEncodingDirection> only gives COLUMN or ROW)
+      dir: <PhaseEncodingDirection>     # PhaseEncodingDirection is not an existing DICOM tag but parsed from other fields by BIDScoin
       run: <<>>
       chunk:
       suffix: epi
@@ -1033,7 +1033,7 @@ DICOM:
       ce:
       task:
       echo: <EchoNumbers>
-      dir: <RectilinearPhaseEncodeReordering> # = GE (<InPlanePhaseEncodingDirection> only gives COLUMN or ROW)
+      dir: <PhaseEncodingDirection>     # PhaseEncodingDirection is not an existing DICOM tag but parsed from other fields by BIDScoin
       run: <<>>
       mod: <SeriesDescription>
       part: ['', mag, phase, real, imag, 0]

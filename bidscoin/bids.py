@@ -619,14 +619,27 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                             if value != 0:
                                 value = str(value or '')
 
-                if not value and value != 0 and 'Modality' not in dicomdata:
-                    raise ValueError(f"Missing mandatory DICOM 'Modality' field in: {dicomfile}")
+                # Missing PhaseEncodingDirection patch (see https://neurostars.org/t/determining-bids-phaseencodingdirection-from-dicom/612/10)
+                if tagname == 'PhaseEncodingDirection' and not value:
+                    if 'SIEMENS' in dicomdata.get('Manufacturer').upper():
+                        csa = csareader.get_csa_header(dicomdata, 'Image')['tags']
+                        pos = csa.get('PhaseEncodingDirectionPositive',{}).get('items',[None])[0]
+                        dir = dicomdata.get('InPlanePhaseEncodingDirection')
+                        if dir == 'COL' and pos is not None:
+                            value = 'AP' if pos else 'PA'
+                        elif dir == 'ROW' and pos is not None:
+                            value = 'LR' if pos else 'RL'
+                    elif 'GE' in dicomdata.get('Manufacturer').upper():
+                        value = dicomdata.get('RectilinearPhaseEncodeReordering')       # = LINEAR or REVERSE_LINEAR
 
                 # XA-30 enhanced DICOM hack: Catch missing EchoNumbers from ice-dims
                 if tagname == 'EchoNumbers' and not value:
                     ice_dims = get_dicomfield('(0021,1106)', dicomfile)
                     if ice_dims:
                         value = ice_dims.split('_')[1]
+
+                if not value and value != 0 and 'Modality' not in dicomdata:
+                    raise ValueError(f"Missing mandatory DICOM 'Modality' field in: {dicomfile}")
 
             except OSError as ioerror:
                 LOGGER.warning(f"Cannot read {tagname} from {dicomfile}\n{ioerror}")
