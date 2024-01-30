@@ -438,7 +438,7 @@ DICOM:
       EchoTime:
       EffectiveEchoTime:
       RepetitionTime:
-      InPlanePhaseEncodingDirection:
+      PhaseEncodingDirection:
     bids: &func_dicoment_func           # See: schema/datatypes/func.yaml
       task: <ProtocolName>              # More consistent between SBREF and PHYSIO files
       acq:
@@ -554,7 +554,7 @@ DICOM:
       EchoTime:
       EffectiveEchoTime:
       RepetitionTime:
-      InPlanePhaseEncodingDirection:
+      PhaseEncodingDirection:
     bids: &perf_dicoment_group1         # See: schema/datatypes/perf.yaml
       acq: <ProtocolName>
       rec: <SeriesDescription>
@@ -633,7 +633,7 @@ DICOM:
       EchoTime:
       EffectiveEchoTime:
       RepetitionTime:
-      InPlanePhaseEncodingDirection:
+      PhaseEncodingDirection:
     bids: &dwi_dicoment_DWI             # See: schema/datatypes/dwi.yaml
       acq: <ProtocolName>               # More consistent between SBREF and PHYSIO files
       rec:
@@ -708,7 +708,7 @@ DICOM:
       EchoTime:
       EffectiveEchoTime:
       RepetitionTime:
-      InPlanePhaseEncodingDirection:
+      PhaseEncodingDirection:
     bids: &fmap_dicoment_fieldmaps      # See: schema/datatypes/fmap.yaml
       acq: <SeriesDescription>
       run: <<>>
@@ -1026,7 +1026,7 @@ DICOM:
       EchoTime:
       EffectiveEchoTime:
       RepetitionTime:
-      InPlanePhaseEncodingDirection:
+      PhaseEncodingDirection:
     bids: &extra_data_bids_dicom
       acq: <ProtocolName>
       inv:
@@ -2079,6 +2079,7 @@ Nibabel:
       EchoTime:
       RepetitionTime:
       InPlanePhaseEncodingDirectionDICOM:
+      PhaseEncodingDirection:
     bids: &anat_nibent_nonparametric    # See: schema/datatypes/anat.yaml
       task:
       acq: <descrip>                    # This will be expanded by the bidsmapper (so the user can edit it)
