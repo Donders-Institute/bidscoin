@@ -1698,7 +1698,7 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
 
                 # Check if the attribute value matches with the info from the sourcefile
                 sourcevalue = datasource.attributes(attrkey, validregexp=True)
-                if attrvalue:
+                if attrvalue or runtime:
                     match = match and match_runvalue(sourcevalue, attrvalue)
 
                 # Fill the empty attribute with the info from the sourcefile
