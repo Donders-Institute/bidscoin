@@ -531,8 +531,10 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
     """
     Robustly extracts a DICOM attribute/tag value from a dictionary or from vendor specific fields.
 
-    NB: One XA-30 enhanced DICOM hack is made, i.e. if `EchoNumbers` is empty then an attempt is made to
+    A XA-20 enhanced DICOM hack is made, i.e. if `EchoNumbers` is empty then an attempt is made to
     read it from the ICE dims (see https://github.com/rordenlab/dcm2niix/blob/master/Siemens/README.md)
+
+    Another hack is to get 'PhaseEncodingDirection` (see https://neurostars.org/t/determining-bids-phaseencodingdirection-from-dicom/612/10)
 
     :param tagname:     DICOM attribute name (e.g. 'SeriesNumber') or Pydicom-style tag number (e.g. '0x00200011', '(0x20,0x11)', '(0020, 0011)', '(20, 11)', '20,11')
     :param dicomfile:   The full pathname of the dicom-file
@@ -574,52 +576,54 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                             value = elem.value
                             break
 
-                # Try reading the Siemens CSA header. For V* versions the CSA header tag is (0029,1020), for XA versions (0021,1019). TODO: see if dicom_parser is supporting this
-                if not value and value != 0 and 'SIEMENS' in dicomdata.get('Manufacturer').upper():
+                if dicomdata.get('Modality') == 'MR':
 
-                    if find_spec('dicom_parser'):
-                        from dicom_parser import Image
+                    # Try reading the Siemens CSA header. For V* versions the CSA header tag is (0029,1020), for XA versions (0021,1019). TODO: see if dicom_parser is supporting this
+                    if not value and value != 0 and 'SIEMENS' in dicomdata.get('Manufacturer').upper() and csareader.get_csa_header(dicomdata):
 
-                        for csa in ('CSASeriesHeaderInfo', 'CSAImageHeaderInfo'):
-                            value = value if (value or value==0) else Image(dicomfile).header.get(csa)
-                            for csatag in tagname.split('.'):           # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
-                                if isinstance(value, dict):             # Final CSA header attributes in dictionary of dictionaries
-                                    value = value.get(csatag, '')
-                                    if 'value' in value:                # Normal CSA (i.e. not MrPhoenixProtocol)
-                                        value = value['value']
-                            if value != 0:
-                                value = str(value or '')
+                        if find_spec('dicom_parser'):
+                            from dicom_parser import Image
 
-                    else:
+                            for csa in ('CSASeriesHeaderInfo', 'CSAImageHeaderInfo'):
+                                value = value if (value or value==0) else Image(dicomfile).header.get(csa)
+                                for csatag in tagname.split('.'):           # E.g. CSA tagname = 'SliceArray.Slice.instance_number.Position.Tra'
+                                    if isinstance(value, dict):             # Final CSA header attributes in dictionary of dictionaries
+                                        value = value.get(csatag, '')
+                                        if 'value' in value:                # Normal CSA (i.e. not MrPhoenixProtocol)
+                                            value = value['value']
+                                if value != 0:
+                                    value = str(value or '')
 
-                        for type in ('Series', 'Image'):
-                            value = value if (value or value==0) else csareader.get_csa_header(dicomdata, type)['tags']
-                            for csatag in tagname.split('.'):           # NB: Currently MrPhoenixProtocol is not supported
-                                if isinstance(value, dict):             # Final CSA header attributes in dictionary of dictionaries
-                                    value = value.get(csatag, {}).get('items', '')
-                                    if isinstance(value, list) and len(value) == 1:
-                                        value = value[0]
-                            if value != 0:
-                                value = str(value or '')
+                        else:
 
-                # PhaseEncodingDirection patch (see https://neurostars.org/t/determining-bids-phaseencodingdirection-from-dicom/612/10)
-                if tagname == 'PhaseEncodingDirection' and not value:
-                    if 'SIEMENS' in dicomdata.get('Manufacturer').upper():
-                        csa = csareader.get_csa_header(dicomdata, 'Image')['tags']
-                        pos = csa.get('PhaseEncodingDirectionPositive',{}).get('items',[None])[0]   # = 0 or 1
-                        dir = dicomdata.get('InPlanePhaseEncodingDirection')                        # = ROW or COL
-                        if dir == 'COL' and pos is not None:
-                            value = 'AP' if pos else 'PA'
-                        elif dir == 'ROW' and pos is not None:
-                            value = 'LR' if pos else 'RL'
-                    elif dicomdata.get('Manufacturer','').upper().startswith('GE'):
-                        value = dicomdata.get('RectilinearPhaseEncodeReordering')                   # = LINEAR or REVERSE_LINEAR
+                            for type in ('Series', 'Image'):
+                                value = value if (value or value==0) else csareader.get_csa_header(dicomdata, type)['tags']
+                                for csatag in tagname.split('.'):           # NB: Currently MrPhoenixProtocol is not supported
+                                    if isinstance(value, dict):             # Final CSA header attributes in dictionary of dictionaries
+                                        value = value.get(csatag, {}).get('items', '')
+                                        if isinstance(value, list) and len(value) == 1:
+                                            value = value[0]
+                                if value != 0:
+                                    value = str(value or '')
 
-                # XA-30 enhanced DICOM hack: Catch missing EchoNumbers from ice-dims
-                if tagname == 'EchoNumbers' and not value:
-                    ice_dims = get_dicomfield('(0021,1106)', dicomfile)
-                    if ice_dims:
-                        value = ice_dims.split('_')[1]
+                    # PhaseEncodingDirection patch (see https://neurostars.org/t/determining-bids-phaseencodingdirection-from-dicom/612/10)
+                    if tagname == 'PhaseEncodingDirection' and not value:
+                        if 'SIEMENS' in dicomdata.get('Manufacturer').upper() and csareader.get_csa_header(dicomdata):
+                            csa = csareader.get_csa_header(dicomdata, 'Image')['tags']
+                            pos = csa.get('PhaseEncodingDirectionPositive',{}).get('items')     # = [0] or [1]
+                            dir = dicomdata.get('InPlanePhaseEncodingDirection')                # = ROW or COL
+                            if dir == 'COL' and pos:
+                                value = 'AP' if pos[0] else 'PA'
+                            elif dir == 'ROW' and pos:
+                                value = 'LR' if pos[0] else 'RL'
+                        elif dicomdata.get('Manufacturer','').upper().startswith('GE'):
+                            value = dicomdata.get('RectilinearPhaseEncodeReordering')           # = LINEAR or REVERSE_LINEAR
+
+                    # XA-20 enhanced DICOM hack: Catch missing EchoNumbers from ice-dims
+                    if tagname == 'EchoNumbers' and not value:
+                        ice_dims = dicomdata.get((0x21, 1106))
+                        if ice_dims and '_' in ice_dims:
+                            value = ice_dims.split('_')[1]
 
                 if not value and value != 0 and 'Modality' not in dicomdata:
                     raise ValueError(f"Missing mandatory DICOM 'Modality' field in: {dicomfile}")
@@ -1652,7 +1656,8 @@ def exist_run(bidsmap: dict, datatype: str, run_item: dict) -> bool:
 def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tuple[dict, bool]:
     """
     Find the first run in the bidsmap with properties and file attributes that match with the data source, and then
-    through the attributes. The datatypes are searched for in this order:
+    through the attributes. Only non-empty properties and attributes are matched, except when runtime is True, then
+    the empty attributes are also matched. The datatypes are searched for in this order:
 
     ignoredatatypes (e.g. 'exclude') -> normal bidsdatatypes (e.g. 'anat') -> unknowndatatypes (e.g. 'extra_data')
 

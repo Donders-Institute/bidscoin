@@ -438,10 +438,8 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
                 if not oldjsonfile.is_file():
                     LOGGER.warning(f"Unexpected file conversion result: {oldjsonfile} not found")
                 else:
-                    if oldjsonfile in jsonfiles:
-                        jsonfiles.remove(oldjsonfile)
-                    if newjsonfile not in jsonfiles:
-                        jsonfiles.add(newjsonfile)
+                    jsonfiles.discard(oldjsonfile)
+                    jsonfiles.add(newjsonfile)
                 for oldfile in outfolder.glob(dcm2niixfile.with_suffix('').stem + '.*'):
                     oldfile.replace(newjsonfile.with_suffix(''.join(oldfile.suffixes)))
 

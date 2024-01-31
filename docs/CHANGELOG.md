@@ -13,6 +13,8 @@
 - Support for BIDS 1.9.0
 - A new special `<<session>>` dynamic meta-data value (most notably useful for creating session specific B0FieldIdentifier/Source tags)
 - Option to exclude datatypes from being saved in bids/derivatives
+- Support for parsing Siemens CSA headers
+- A DICOM parser for retrieving the `<PhaseEncodingDirection>` value (Siemens and GE)
 
 ### Changed
 - `bidscoiner_plugin()` API: you can (should) return a personals dict (instead of writing it to `participants.tsv`) and the datasource targets

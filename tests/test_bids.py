@@ -179,8 +179,10 @@ def test_match_runvalue():
     assert bids.match_runvalue('my_pulse_sequence_name', '_name')      is False
     assert bids.match_runvalue('my_pulse_sequence_name', '^my.*name$') is True
     assert bids.match_runvalue('T1_MPRage', '(?i).*(MPRAGE|T1w).*')    is True
-    assert bids.match_runvalue('', None)                               is True
+    assert bids.match_runvalue(None, None)                             is True
     assert bids.match_runvalue(None, '')                               is True
+    assert bids.match_runvalue('',   None)                             is True
+    assert bids.match_runvalue('',   '')                               is True
     assert bids.match_runvalue(  [1, 2, 3],     [1,2,  3])             is True
     assert bids.match_runvalue(  [1,2,  3],    '[1, 2, 3]')            is True
     assert bids.match_runvalue(  [1, 2, 3],  r'\[1, 2, 3\]')           is True
