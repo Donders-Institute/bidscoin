@@ -20,7 +20,7 @@ import pandas as pd
 import ast
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Set, Tuple, Union
+from typing import List, Set, Tuple, Union, Dict, Any, NewType
 from nibabel.parrec import parse_PAR_header
 from nibabel.nicom import csareader
 from pydicom import dcmread, fileset, datadict
@@ -28,10 +28,21 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[1]))
-from bidscoin import bcoin, schemafolder, templatefolder, bidsmap_template, lsdirs, __version__
+from bidscoin import bcoin, schemafolder, templatefolder, lsdirs, __version__
 from bidscoin.utilities import dicomsort
 from ruamel.yaml import YAML
 yaml = YAML()
+
+# Define custom data types (replace with TypeAlias when Python >= 3.10)
+Plugin     = NewType('Plugin',     Dict[str, Any])
+Options    = NewType('Options',    Dict[str, Dict[str, Any]])
+Properties = NewType('Properties', Dict[str, Any])
+Attributes = NewType('Attributes', Dict[str, Any])
+Bids       = NewType('Bids',       Dict[str, Any])
+Meta       = NewType('Meta',       Dict[str, Any])
+Run        = NewType('Run',        Dict[str, Any])      # Any = Union[Provenance, Properties, Attributes, Bids, Meta, DataSource]]) but we cannot yet refer to DataSource
+Dataformat = NewType('Dataformat', Dict[str, Union[str, List[Run]]])
+Bidsmap    = NewType('Bidsmap',    Dict[str, Union[Options, Dataformat]])
 
 LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +64,7 @@ with (schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
 
 
 class DataSource:
-    def __init__(self, provenance: Union[str, Path]='', plugins: dict=None, dataformat: str='', datatype: str='', subprefix: str='', sesprefix: str='', targets: Set[Path] = ()):
+    def __init__(self, provenance: Union[str, Path]='', plugins: Dict[str, Plugin]=None, dataformat: str='', datatype: str='', subprefix: str='', sesprefix: str='', targets: Set[Path] = ()):
         """
         A source data type (e.g. DICOM or PAR) that can be converted to BIDS by the plugins
 
@@ -66,18 +77,18 @@ class DataSource:
         :param targets:     A list of output targets of the source
         """
 
-        self.path        = Path(provenance)
-        self.datatype    = datatype
-        self.dataformat  = dataformat
-        self.plugins     = plugins
+        self.path: Path         = Path(provenance)
+        self.datatype: str      = datatype
+        self.dataformat: str    = dataformat
+        self.plugins: dict      = plugins
         if not plugins:
             self.plugins = {}
         if not dataformat:
             self.is_datasource()
-        self.subprefix   = subprefix
-        self.sesprefix   = sesprefix
-        self.targets     = set(targets)
-        self._cache      = {}
+        self.subprefix: str     = subprefix
+        self.sesprefix: str     = sesprefix
+        self.targets: Set[Path] = set(targets)
+        self._cache: dict       = {}
 
     def resubprefix(self) -> str:
         """Returns the subprefix with escaped regular expression characters (except '-'). A single '*' wildcard is returned as ''"""
@@ -102,7 +113,7 @@ class DataSource:
                     dataformat = ''
                     LOGGER.exception(f"The {plugin} plugin crashed while reading {self.path}\n{moderror}")
                 if dataformat:
-                    self.dataformat = dataformat
+                    self.dataformat: str = dataformat
                     return True
 
         if self.datatype:
@@ -480,7 +491,7 @@ def get_parfiles(folder: Path) -> List[Path]:
     return parfiles
 
 
-def get_datasource(session: Path, plugins: dict, recurse: int=8) -> DataSource:
+def get_datasource(session: Path, plugins: Dict[str, Plugin], recurse: int=8) -> DataSource:
     """Gets a data source from the session inputfolder and its subfolders"""
 
     datasource = DataSource()
@@ -578,6 +589,25 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
                 if dicomdata.get('Modality') == 'MR':
 
+                    # PhaseEncodingDirection patch (see https://neurostars.org/t/determining-bids-phaseencodingdirection-from-dicom/612/10)
+                    if tagname == 'PhaseEncodingDirection' and not value:
+                        if 'SIEMENS' in dicomdata.get('Manufacturer').upper() and csareader.get_csa_header(dicomdata):
+                            csa = csareader.get_csa_header(dicomdata, 'Image')['tags']
+                            pos = csa.get('PhaseEncodingDirectionPositive',{}).get('items')     # = [0] or [1]
+                            dir = dicomdata.get('InPlanePhaseEncodingDirection')                # = ROW or COL
+                            if dir == 'COL' and pos:
+                                value = 'AP' if pos[0] else 'PA'
+                            elif dir == 'ROW' and pos:
+                                value = 'LR' if pos[0] else 'RL'
+                        elif dicomdata.get('Manufacturer','').upper().startswith('GE'):
+                            value = dicomdata.get('RectilinearPhaseEncodeReordering')           # = LINEAR or REVERSE_LINEAR
+
+                    # XA-20 enhanced DICOM hack: Catch missing EchoNumbers from ice-dims
+                    if tagname == 'EchoNumbers' and not value:
+                        ice_dims = dicomdata.get((0x21, 1106))
+                        if '_' in ice_dims:
+                            value = ice_dims.split('_')[1]
+
                     # Try reading the Siemens CSA header. For V* versions the CSA header tag is (0029,1020), for XA versions (0021,1019). TODO: see if dicom_parser is supporting this
                     if not value and value != 0 and 'SIEMENS' in dicomdata.get('Manufacturer').upper() and csareader.get_csa_header(dicomdata):
 
@@ -605,25 +635,6 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                                             value = value[0]
                                 if value != 0:
                                     value = str(value or '')
-
-                    # PhaseEncodingDirection patch (see https://neurostars.org/t/determining-bids-phaseencodingdirection-from-dicom/612/10)
-                    if tagname == 'PhaseEncodingDirection' and not value:
-                        if 'SIEMENS' in dicomdata.get('Manufacturer').upper() and csareader.get_csa_header(dicomdata):
-                            csa = csareader.get_csa_header(dicomdata, 'Image')['tags']
-                            pos = csa.get('PhaseEncodingDirectionPositive',{}).get('items')     # = [0] or [1]
-                            dir = dicomdata.get('InPlanePhaseEncodingDirection')                # = ROW or COL
-                            if dir == 'COL' and pos:
-                                value = 'AP' if pos[0] else 'PA'
-                            elif dir == 'ROW' and pos:
-                                value = 'LR' if pos[0] else 'RL'
-                        elif dicomdata.get('Manufacturer','').upper().startswith('GE'):
-                            value = dicomdata.get('RectilinearPhaseEncodeReordering')           # = LINEAR or REVERSE_LINEAR
-
-                    # XA-20 enhanced DICOM hack: Catch missing EchoNumbers from ice-dims
-                    if tagname == 'EchoNumbers' and not value:
-                        ice_dims = dicomdata.get((0x21, 1106))
-                        if '_' in ice_dims:
-                            value = ice_dims.split('_')[1]
 
                 if not value and value != 0 and 'Modality' not in dicomdata:
                     raise ValueError(f"Missing mandatory DICOM 'Modality' field in: {dicomfile}")
@@ -876,7 +887,7 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
 # ---------------- All function below this point are bidsmap related. TODO: make a class out of them -------------------
 
 
-def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Union[tuple,list]=(), checks: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[dict, Path]:
+def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Union[tuple,list]=(), checks: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[Bidsmap, Path]:
     """
     Read the mapping heuristics from the bidsmap yaml-file. If yamlfile is not fullpath, then 'folder' is first searched before
     the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, then 'bidsmap_template'. So fullpath
@@ -885,7 +896,7 @@ def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Uni
     NB: A run['datasource'] = DataSource object is added to every run-item
 
     :param yamlfile:    The full pathname or basename of the bidsmap yaml-file
-    :param folder:      Only used when yamlfile=basename and not in the pwd: yamlfile is then assumed to be in folder
+    :param folder:      Used when yamlfile=basename and not in the pwd: yamlfile is then assumed to be in the (bidscoin)folder. A bidsignore file in folder will be added to the bidsmap bidsignore items
     :param plugins:     List of plugins to be used (with default options, overrules the plugin list in the study/template bidsmaps). Leave empty to use all plugins in the bidsmap
     :param checks:      Booleans to check if all (bidskeys, bids-suffixes, bids-values) in the run are present according to the BIDS schema specifications
     :return:            Tuple with (1) ruamel.yaml dict structure, with all options, BIDS mapping heuristics, labels and attributes, etc. and (2) the fullpath yaml-file
@@ -900,13 +911,14 @@ def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Uni
         yamlfile = folder/yamlfile                  # Get the full path to the bidsmap yaml-file
     if not yamlfile.is_file():
         LOGGER.verbose(f"No existing bidsmap file found: {yamlfile}")
-        return {}, yamlfile
+        return Bidsmap({}), yamlfile
+    bidsignorefile = folder.parents[1]/'.bidsignore'
 
     # Read the heuristics from the bidsmap file
     if any(checks):
         LOGGER.info(f"Reading: {yamlfile}")
     with yamlfile.open('r') as stream:
-        bidsmap = yaml.load(stream)
+        bidsmap: Bidsmap = yaml.load(stream)
 
     # Issue a warning if the version in the bidsmap YAML-file is not the same as the bidscoin version
     if 'bidscoin' in bidsmap['Options'] and 'version' in bidsmap['Options']['bidscoin']:
@@ -924,12 +936,15 @@ def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Uni
     subprefix = bidsmap['Options']['bidscoin']['subprefix'] = bidsmap['Options']['bidscoin']['subprefix'] or ''
     sesprefix = bidsmap['Options']['bidscoin']['sesprefix'] = bidsmap['Options']['bidscoin']['sesprefix'] or ''
 
-    # Make sure bidsignore, unknowntypes and ignoretypes are lists
+    # Append the existing .bidsignore data from the bidsfolder and make sure bidsignore, unknowntypes, ignoretypes and notderivative are lists
     if isinstance(bidsmap['Options']['bidscoin'].get('bidsignore'), str):
         bidsmap['Options']['bidscoin']['bidsignore'] = bidsmap['Options']['bidscoin']['bidsignore'].split(';')
-    bidsmap['Options']['bidscoin']['bidsignore']   = bidsmap['Options']['bidscoin'].get('bidsignore') or []
-    bidsmap['Options']['bidscoin']['unknowntypes'] = bidsmap['Options']['bidscoin'].get('unknowntypes') or []
-    bidsmap['Options']['bidscoin']['ignoretypes']  = bidsmap['Options']['bidscoin'].get('ignoretypes') or []
+    if bidsignorefile.is_file():
+        bidsmap['Options']['bidscoin']['bidsignore'] = list(set(list(bidsmap['Options']['bidscoin']['bidsignore']) + bidsignorefile.read_text().splitlines()))
+    bidsmap['Options']['bidscoin']['bidsignore']    = list(set(bidsmap['Options']['bidscoin'].get('bidsignore') or []))
+    bidsmap['Options']['bidscoin']['unknowntypes']  = list(set(bidsmap['Options']['bidscoin'].get('unknowntypes') or []))
+    bidsmap['Options']['bidscoin']['ignoretypes']   = list(set(bidsmap['Options']['bidscoin'].get('ignoretypes') or []))
+    bidsmap['Options']['bidscoin']['notderivative'] = list(set(bidsmap['Options']['bidscoin'].get('notderivative') or []))
 
     # Make sure we get a proper plugin options and dataformat sections (use plugin default bidsmappings when a template bidsmap is loaded)
     if not bidsmap['Options'].get('plugins'):
@@ -997,7 +1012,7 @@ def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Uni
     return bidsmap, yamlfile
 
 
-def save_bidsmap(filename: Path, bidsmap: dict) -> None:
+def save_bidsmap(filename: Path, bidsmap: Bidsmap) -> None:
     """
     Save the BIDSmap as a YAML text file
 
@@ -1028,7 +1043,7 @@ def save_bidsmap(filename: Path, bidsmap: dict) -> None:
         yaml.dump(bidsmap, stream)
 
 
-def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
+def validate_bidsmap(bidsmap: Bidsmap, level: int=1) -> bool:
     """
     Test the bidsname of runs in the bidsmap using the bids-validator
 
@@ -1076,7 +1091,7 @@ def validate_bidsmap(bidsmap: dict, level: int=1) -> bool:
     return valid
 
 
-def check_bidsmap(bidsmap: dict, checks: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
+def check_bidsmap(bidsmap: Bidsmap, checks: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
     """
     Check all non-ignored runs in the bidsmap for required and optional entities using the BIDS schema files
 
@@ -1121,7 +1136,7 @@ def check_bidsmap(bidsmap: dict, checks: Tuple[bool, bool, bool]=(True, True, Tr
     return results
 
 
-def check_template(bidsmap: dict) -> bool:
+def check_template(bidsmap: Bidsmap) -> bool:
     """
     Check all the datatypes in the template bidsmap for required and optional entities using the BIDS schema files
 
@@ -1172,7 +1187,7 @@ def check_template(bidsmap: dict) -> bool:
     return valid
 
 
-def check_run(datatype: str, run: dict, checks: Tuple[bool, bool, bool]=(False, False, False)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
+def check_run(datatype: str, run: Run, checks: Tuple[bool, bool, bool]=(False, False, False)) -> Tuple[Union[bool, None], Union[bool, None], Union[bool, None]]:
     """
     Check run for required and optional entities using the BIDS schema files
 
@@ -1292,7 +1307,7 @@ def check_ignore(entry: str, bidsignore: Union[str,list], datatype: str= 'dir') 
     return ignore
 
 
-def strip_suffix(run: dict) -> dict:
+def strip_suffix(run: Run) -> Run:
     """
     Certain attributes such as SeriesDescriptions (but not ProtocolName!?) may get a suffix like '_SBRef' from the vendor,
     try to strip it off from the BIDS labels
@@ -1340,7 +1355,7 @@ def sanitize(label: str) -> str:
     return re.sub(r'(?u)[^-\w.]', '', label)
 
 
-def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
+def dir_bidsmap(bidsmap: Bidsmap, dataformat: str) -> List[Path]:
     """
     Make a provenance list of all the runs in the bidsmap[dataformat]
 
@@ -1363,7 +1378,7 @@ def dir_bidsmap(bidsmap: dict, dataformat: str) -> List[Path]:
     return provenance
 
 
-def create_run(datasource: DataSource=None, bidsmap: dict=None) -> dict:
+def create_run(datasource: DataSource=None, bidsmap: Bidsmap=None) -> Run:
     """
     Create an empty run-item with the proper structure, provenance info and a data source
 
@@ -1378,15 +1393,15 @@ def create_run(datasource: DataSource=None, bidsmap: dict=None) -> dict:
         datasource.subprefix = bidsmap['Options']['bidscoin'].get('subprefix','')
         datasource.sesprefix = bidsmap['Options']['bidscoin'].get('sesprefix','')
 
-    return dict(provenance = str(datasource.path),
-                properties = {'filepath':'', 'filename':'', 'filesize':'', 'nrfiles':None},
-                attributes = {},
-                bids       = {},
-                meta       = {},
-                datasource = datasource)
+    return Run(dict(provenance = str(datasource.path),
+                    properties = {'filepath':'', 'filename':'', 'filesize':'', 'nrfiles':None},
+                    attributes = {},
+                    bids       = {},
+                    meta       = {},
+                    datasource = datasource))
 
 
-def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasource: DataSource) -> dict:
+def get_run(bidsmap: Bidsmap, datatype: str, suffix_idx: Union[int, str], datasource: DataSource) -> Run:
     """
     Find the (first) run in bidsmap[dataformat][bidsdatatype] with run['bids']['suffix_idx'] == suffix_idx
 
@@ -1434,10 +1449,10 @@ def get_run(bidsmap: dict, datatype: str, suffix_idx: Union[int, str], datasourc
             return run_
 
     LOGGER.error(f"A '{datatype}' run with suffix_idx '{suffix_idx}' cannot be found in bidsmap['{datasource.dataformat}']")
-    return {}
+    return Run({})
 
 
-def find_run(bidsmap: dict, provenance: str, dataformat: str='', datatype: str='') -> dict:
+def find_run(bidsmap: Bidsmap, provenance: str, dataformat: str='', datatype: str='') -> Run:
     """
     Find the (first) run in bidsmap[dataformat][bidsdatatype] with run['provenance'] == provenance
 
@@ -1463,10 +1478,10 @@ def find_run(bidsmap: dict, provenance: str, dataformat: str='', datatype: str='
                     return run
 
     LOGGER.debug(f"Could not find this [{dataformat}][{datatype}] run: '{provenance}")
-    return {}
+    return Run({})
 
 
-def delete_run(bidsmap: dict, provenance: Union[dict, str], datatype: str= '', dataformat: str='') -> None:
+def delete_run(bidsmap: Bidsmap, provenance: Union[dict, str], datatype: str= '', dataformat: str='') -> None:
     """
     Delete the first matching run from the BIDS map
 
@@ -1498,7 +1513,7 @@ def delete_run(bidsmap: dict, provenance: Union[dict, str], datatype: str= '', d
     LOGGER.error(f"Could not find (and delete) this [{dataformat}][{datatype}] run: '{provenance}")
 
 
-def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
+def append_run(bidsmap: Bidsmap, run: Run, clean: bool=True) -> None:
     """
     Append a run to the BIDS map
 
@@ -1527,7 +1542,7 @@ def append_run(bidsmap: dict, run: dict, clean: bool=True) -> None:
         bidsmap[dataformat][datatype].append(run)
 
 
-def update_bidsmap(bidsmap: dict, source_datatype: str, run: dict, clean: bool=True) -> None:
+def update_bidsmap(bidsmap: Bidsmap, source_datatype: str, run: Run, clean: bool=True) -> None:
     """
     Update the BIDS map if the datatype changes:
     1. Remove the source run from the source datatype section
@@ -1613,7 +1628,7 @@ def match_runvalue(attribute, pattern) -> bool:
     return match is not None
 
 
-def exist_run(bidsmap: dict, datatype: str, run_item: dict) -> bool:
+def exist_run(bidsmap: Bidsmap, datatype: str, run_item: Run) -> bool:
     """
     Checks the bidsmap to see if there is already an entry in runlist with the same properties and attributes as in the input run
 
@@ -1653,7 +1668,7 @@ def exist_run(bidsmap: dict, datatype: str, run_item: dict) -> bool:
     return False
 
 
-def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tuple[dict, bool]:
+def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) -> Tuple[Run, bool]:
     """
     Find the first run in the bidsmap with properties and file attributes that match with the data source, and then
     through the attributes. Only non-empty properties and attributes are matched, except when runtime is True, then
@@ -1670,9 +1685,9 @@ def get_matching_run(datasource: DataSource, bidsmap: dict, runtime=False) -> Tu
                         If there is no match then the run is still populated with info from the source-file
     """
 
-    unknowndatatypes = bidsmap['Options']['bidscoin'].get('unknowntypes',[])
-    ignoredatatypes  = bidsmap['Options']['bidscoin'].get('ignoretypes',[])
-    bidsdatatypes    = [dtype for dtype in bidsmap.get(datasource.dataformat) if dtype not in unknowndatatypes + ignoredatatypes + ['subject', 'session']]
+    unknowndatatypes: list = bidsmap['Options']['bidscoin'].get('unknowntypes',[])
+    ignoredatatypes:  list = bidsmap['Options']['bidscoin'].get('ignoretypes',[])
+    bidsdatatypes:    list = [dtype for dtype in bidsmap.get(datasource.dataformat) if dtype not in unknowndatatypes + ignoredatatypes + ['subject', 'session']]
 
     # Loop through all datatypes and runs; all info goes cleanly into run_ (to avoid formatting problem of the CommentedMap)
     if 'fmap' in bidsdatatypes:
@@ -1913,7 +1928,7 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, v
     return newbidsfile
 
 
-def increment_runindex(outfolder: Path, bidsname: str, run: dict) -> Union[Path, str]:
+def increment_runindex(outfolder: Path, bidsname: str, run: Run) -> Union[Path, str]:
     """
     Checks if a file with the same bidsname already exists in the folder and then increments the dynamic runindex
     (if any) until no such file is found.
@@ -1943,7 +1958,7 @@ def increment_runindex(outfolder: Path, bidsname: str, run: dict) -> Union[Path,
     return bidsname
 
 
-def rename_runless_to_run1(runs: List[dict], scans_table: pd.DataFrame) -> None:
+def rename_runless_to_run1(runs: List[Run], scans_table: pd.DataFrame) -> None:
     """
     Adds run-1 label to run-less files that use dynamic index (<<>>) in bidsmap run-items for which files with
     run-2 label exist in the output folder. Additionally, 'scans_table' is updated based on the changes.
@@ -2013,7 +2028,7 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: dict, ext
             metapool = json.load(json_fid)
 
     # Add the source metadata to the metadict or copy it over
-    for ext in extensions:
+    for ext in set(extensions):
         for sourcefile in sourcemeta.parent.glob(sourcemeta.with_suffix('').with_suffix(ext).name):
             LOGGER.info(f"Copying source data from: '{sourcefile}''")
 

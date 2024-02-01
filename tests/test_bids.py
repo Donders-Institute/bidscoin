@@ -9,7 +9,7 @@ from importlib.util import find_spec
 from pathlib import Path
 from nibabel.testing import data_path
 from pydicom.data import get_testdata_file
-from bidscoin import bcoin, bids
+from bidscoin import bcoin, bids, bidsmap_template
 
 bcoin.setup_logging()
 
@@ -253,7 +253,7 @@ def test_validate_bidsmap(study_bidsmap):
 def test_check_bidsmap(study_bidsmap):
 
     # Load a template and a study bidsmap
-    templatebidsmap, _ = bids.load_bidsmap(bids.bidsmap_template, checks=(True, True, False))
+    templatebidsmap, _ = bids.load_bidsmap(bidsmap_template, checks=(True, True, False))
     studybidsmap, _    = bids.load_bidsmap(study_bidsmap)
 
     # Test the output of the template bidsmap

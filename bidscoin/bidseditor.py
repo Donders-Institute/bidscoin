@@ -10,7 +10,7 @@ import ast
 import json
 import csv
 from bids_validator import BIDSValidator
-from typing import Union
+from typing import Union, List, Dict
 from pydicom import dcmread
 from pathlib import Path
 from functools import partial
@@ -23,6 +23,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import bcoin, bids, bidsversion, check_version, trackusage, bidsmap_template, __version__
+from bidscoin.bids import Bidsmap, Plugin, Run
 
 
 ROW_HEIGHT       = 22
@@ -76,7 +77,7 @@ fallback: Appends unhandled dcm2niix suffixes to the `acq` label if 'y' (recomme
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, bidsfolder: Path, input_bidsmap: dict, template_bidsmap: dict, datasaved: bool=False, reset: bool=False):
+    def __init__(self, bidsfolder: Path, input_bidsmap: Bidsmap, template_bidsmap: Bidsmap, datasaved: bool=False, reset: bool=False):
 
         # Set up the main window
         if not reset:
@@ -95,35 +96,35 @@ class MainWindow(QMainWindow):
                 input_bidsmap = {'Options': template_bidsmap['Options']}
 
         # Keep track of the EditWindow status
-        self.editwindow_opened = None                           # The provenance string of the run-item that is opened in the EditWindow
+        self.editwindow_opened: Union[str,None] = None                   # The provenance string of the run-item that is opened in the EditWindow
 
         # Set the input data
-        self.bidsfolder        = Path(bidsfolder)               # The folder where the bids data is / will be stored
-        self.input_bidsmap     = input_bidsmap                  # The original / unedited bidsmap
-        self.output_bidsmap    = copy.deepcopy(input_bidsmap)   # The edited bidsmap
-        self.template_bidsmap  = template_bidsmap               # The bidsmap from which new data type run-items are taken
-        self.datasaved         = datasaved                      # True if data has been saved on disk
-        self.dataformats       = [dataformat for dataformat in input_bidsmap if dataformat and dataformat not in ('$schema','Options') and bids.dir_bidsmap(input_bidsmap, dataformat)]
-        self.unknowndatatypes  = input_bidsmap['Options']['bidscoin'].get('unknowntypes',[])
-        self.ignoredatatypes   = input_bidsmap['Options']['bidscoin'].get('ignoretypes',[])
-        self.bidsignore        = input_bidsmap['Options']['bidscoin'].get('bidsignore',[])
+        self.bidsfolder: Path            = Path(bidsfolder)              # The folder where the bids data is / will be stored
+        self.input_bidsmap: Bidsmap      = input_bidsmap                 # The original / unedited bidsmap
+        self.output_bidsmap: Bidsmap     = copy.deepcopy(input_bidsmap)  # The edited bidsmap
+        self.template_bidsmap: Bidsmap   = template_bidsmap              # The bidsmap from which new data type run-items are taken
+        self.datasaved: bool             = datasaved                     # True if data has been saved on disk
+        self.dataformats: List[str]      = [dataformat for dataformat in input_bidsmap if dataformat and dataformat not in ('$schema','Options') and bids.dir_bidsmap(input_bidsmap, dataformat)]
+        self.bidsignore: List[str]       = input_bidsmap['Options']['bidscoin']['bidsignore']
+        self.unknowndatatypes: List[str] = input_bidsmap['Options']['bidscoin']['unknowntypes']
+        self.ignoredatatypes: List[str]  = input_bidsmap['Options']['bidscoin']['ignoretypes']
 
         # Set up the tabs, add the tables and put the bidsmap data in them
         tabwidget = self.tabwidget = QtWidgets.QTabWidget()
         tabwidget.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
         tabwidget.setTabShape(QtWidgets.QTabWidget.TabShape.Rounded)
 
-        self.subses_table       = {}
-        self.samples_table      = {}
-        self.options_label      = {}
-        self.options_table      = {}
-        self.ordered_file_index = {}
+        self.subses_table: dict       = {}
+        self.samples_table: dict      = {}
+        self.options_label: dict      = {}
+        self.options_table: dict      = {}
+        self.ordered_file_index: dict = {}
         for dataformat in self.dataformats:
             self.set_tab_bidsmap(dataformat)
         self.set_tab_options()
         self.set_tab_filebrowser()
 
-        self.datachanged = False        # Keep track of the bidsmap data status -> True if data has been edited. Do this after updating all the tables (which assigns datachanged = True)
+        self.datachanged: bool = False      # Keep track of the bidsmap data status -> True if data has been edited. Do this after updating all the tables (which assigns datachanged = True)
 
         # Set up the buttons
         buttonbox = QDialogButtonBox()
@@ -282,7 +283,7 @@ class MainWindow(QMainWindow):
         statusbar.setStatusTip('Statusbar')
         self.setStatusBar(statusbar)
 
-    def set_tab_bidsmap(self, dataformat):
+    def set_tab_bidsmap(self, dataformat: str):
         """Set the SOURCE file sample listing tab"""
 
         # Set the Participant labels table
@@ -430,7 +431,7 @@ class MainWindow(QMainWindow):
 
         self.tabwidget.addTab(tab, 'Data browser')
 
-    def update_subses_samples(self, output_bidsmap, dataformat):
+    def update_subses_samples(self, output_bidsmap: Bidsmap, dataformat: str):
         """(Re)populates the sample list with bidsnames according to the bidsmap"""
 
         self.datachanged    = True
@@ -465,7 +466,7 @@ class MainWindow(QMainWindow):
                 subid, sesid = run['datasource'].subid_sesid(subid, sesid or '')
                 bidsname     = bids.get_bidsname(subid, sesid, run, not bids.check_ignore(datatype,self.bidsignore) and datatype not in self.ignoredatatypes)
                 ignore       = bids.check_ignore(datatype, self.bidsignore) or bids.check_ignore(bidsname+'.json', self.bidsignore, 'file')
-                exceptions   = self.output_bidsmap['Options']['bidscoin'].get('notderivative',())
+                exceptions   = self.output_bidsmap['Options']['bidscoin']['notderivative']
                 if run['datasource'].dynamicvalue(run['bids']['suffix'], True, True) in bids.get_derivatives(datatype, exceptions):
                     session  = self.bidsfolder/'derivatives'/'[manufacturer]'/subid/sesid
                 else:
@@ -524,7 +525,7 @@ class MainWindow(QMainWindow):
         samples_table.setSortingEnabled(True)
         samples_table.blockSignals(False)
 
-    def subsescell2bidsmap(self, rowindex: int, colindex:int):
+    def subsescell2bidsmap(self, rowindex: int, colindex: int):
         """Subject or session value has been changed in subject-session table"""
 
         # Only if cell was actually clicked, update
@@ -545,7 +546,7 @@ class MainWindow(QMainWindow):
                 self.output_bidsmap[dataformat][key] = value
                 self.update_subses_samples(self.output_bidsmap, dataformat)
 
-    def open_editwindow(self, provenance: Path=Path(), datatype: str= ''):
+    def open_editwindow(self, provenance: Path=Path(), datatype: str=''):
         """Make sure that index map has been updated"""
 
         dataformat = self.tabwidget.widget(self.tabwidget.currentIndex()).objectName()
@@ -553,7 +554,7 @@ class MainWindow(QMainWindow):
             samples_table = self.samples_table[dataformat]
             clicked       = self.focusWidget()
             rowindex      = samples_table.indexAt(clicked.pos()).row()
-            if rowindex < 0:                                        # This may happen on MacOS (rowindex = -1)? (github issue #131)
+            if rowindex < 0:                                        # This may happen on macOS (rowindex = -1)? (github issue #131)
                 LOGGER.bcdebug(f"User clicked on the [Edit] button (presumably) but PyQt returns pos={clicked.pos()} -> rowindex={rowindex}")
                 return                                              # TODO: Simply changing this to 0? (the value of rowindex when data type is DICOM)
             datatype      = samples_table.item(rowindex, 2).text()
@@ -584,12 +585,12 @@ class MainWindow(QMainWindow):
         """Allow a new edit window to be opened"""
         self.editwindow_opened = None
 
-    def plugin_table(self, plugin: str, options: dict) -> tuple:
+    def plugin_table(self, name: str, plugin: Plugin) -> tuple:
         """:return: a plugin-label and a filled plugin-table"""
 
-        self.options_label[plugin] = plugin_label = QLabel(f"{plugin} - plugin")
-        self.options_table[plugin] = plugin_table = MyQTableWidget()
-        plugin_table.setRowCount(max(len(options.keys()) + 1, 2))           # Add an extra row for new key-value pairs
+        self.options_label[name] = plugin_label = QLabel(f"{name} - plugin")
+        self.options_table[name] = plugin_table = MyQTableWidget()
+        plugin_table.setRowCount(max(len(plugin.keys()) + 1, 2))           # Add an extra row for new key-value pairs
         plugin_table.setColumnCount(3)                                      # columns: [key] [value] [testbutton]
         horizontal_header = plugin_table.horizontalHeader()
         horizontal_header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
@@ -597,16 +598,16 @@ class MainWindow(QMainWindow):
         horizontal_header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         horizontal_header.setVisible(False)
         test_button = QPushButton('Test')                                   # Add a test-button
-        test_button.clicked.connect(partial(self.test_plugin, plugin))
-        test_button.setToolTip(f'Click to test the "{plugin}" installation')
+        test_button.clicked.connect(partial(self.test_plugin, name))
+        test_button.setToolTip(f'Click to test the "{name}" installation')
         plugin_table.setCellWidget(0, 2, test_button)
         delete_button = QPushButton('Remove')                               # Add a delete-button
-        delete_button.clicked.connect(partial(self.del_plugin, plugin))
-        delete_button.setToolTip(f'Click to discard / stop using the "{plugin}" plugin')
+        delete_button.clicked.connect(partial(self.del_plugin, name))
+        delete_button.setToolTip(f'Click to discard / stop using the "{name}" plugin')
         plugin_table.setCellWidget(1, 2, delete_button)
-        plugin_label.setToolTip(bcoin.import_plugin(plugin).__doc__)
-        plugin_table.setToolTip(TOOLTIP_DCM2NIIX if plugin=='dcm2niix2bids' else f"Here you can enter key-value data for the '{plugin}' plugin")
-        for n, (key, value) in enumerate(options.items()):
+        plugin_label.setToolTip(bcoin.import_plugin(name).__doc__)
+        plugin_table.setToolTip(TOOLTIP_DCM2NIIX if name == 'dcm2niix2bids' else f"Here you can enter key-value data for the '{name}' plugin")
+        for n, (key, value) in enumerate(plugin.items()):
             plugin_table.setItem(n, 0, MyWidgetItem(key))
             plugin_table.setItem(n, 1, MyWidgetItem(value))
             plugin_table.setItem(n, 2, MyWidgetItem('', iseditable=False))
@@ -866,28 +867,26 @@ class EditWindow(QDialog):
     # Emit the new bidsmap when done (see docstring)
     done_edit = QtCore.pyqtSignal(dict, str)
 
-    def __init__(self, run, bidsmap: dict, template_bidsmap: dict):
+    def __init__(self, run: Run, bidsmap: Bidsmap, template_bidsmap: Bidsmap):
         super().__init__()
         # Set the data
-        datasource: bids.DataSource = run['datasource']
-        self.datasource        = datasource
-        self.dataformat        = datasource.dataformat  # The data format of the run-item being edited (bidsmap[dataformat][datatype][run-item])
-        self.source_datatype   = datasource.datatype    # The BIDS data type of the original run-item
-        self.target_datatype   = datasource.datatype    # The BIDS data type that the edited run-item is being changed into
-        self.current_datatype  = datasource.datatype    # The BIDS datatype of the run-item just before it is being changed (again)
-        self.unknowndatatypes  = [datatype for datatype in bidsmap['Options']['bidscoin'].get('unknowntypes',[]) if datatype in template_bidsmap[self.dataformat]]
-        self.ignoredatatypes   = [datatype for datatype in bidsmap['Options']['bidscoin'].get('ignoretypes', []) if datatype in template_bidsmap[self.dataformat]]
-        self.bidsdatatypes     = [datatype for datatype in template_bidsmap[self.dataformat] if datatype not in self.unknowndatatypes + self.ignoredatatypes + ['subject', 'session']]
-        self.bidsignore        = bidsmap['Options']['bidscoin'].get('bidsignore',[])
-        self.source_bidsmap    = bidsmap                # The bidsmap at the start of the edit = output_bidsmap in the MainWindow
-        self.target_bidsmap    = copy.deepcopy(bidsmap) # The edited bidsmap -> will be returned as output_bidsmap in the MainWindow
-        self.template_bidsmap  = template_bidsmap       # The bidsmap from which new datatype run-items are taken
-        self.source_run        = run                    # The original run-item from the source bidsmap
-        self.target_run        = copy.deepcopy(run)     # The edited run-item that is inserted in the target_bidsmap
-        self.get_allowed_suffixes()                     # Set the possible suffixes the user can select for a given datatype
-        subid                  = bidsmap[self.dataformat]['subject']
-        sesid                  = bidsmap[self.dataformat]['session']
-        self.subid, self.sesid = datasource.subid_sesid(subid, sesid or '')
+        datasource: bids.DataSource      = run['datasource']
+        self.datasource                  = datasource
+        self.dataformat: str             = datasource.dataformat    # The data format of the run-item being edited (bidsmap[dataformat][datatype][run-item])
+        self.source_datatype: str        = datasource.datatype      # The BIDS data type of the original run-item
+        self.target_datatype: str        = datasource.datatype      # The BIDS data type that the edited run-item is being changed into
+        self.current_datatype: str       = datasource.datatype      # The BIDS datatype of the run-item just before it is being changed (again)
+        self.unknowndatatypes: List[str] = [datatype for datatype in bidsmap['Options']['bidscoin']['unknowntypes'] if datatype in template_bidsmap[self.dataformat]]
+        self.ignoredatatypes: List[str]  = [datatype for datatype in bidsmap['Options']['bidscoin']['ignoretypes']  if datatype in template_bidsmap[self.dataformat]]
+        self.bidsdatatypes: List[str]    = [datatype for datatype in template_bidsmap[self.dataformat] if datatype not in self.unknowndatatypes.union(self.ignoredatatypes, {'subject', 'session'})]
+        self.bidsignore: List[str]       = bidsmap['Options']['bidscoin']['bidsignore']
+        self.source_bidsmap: Bidsmap     = bidsmap                  # The bidsmap at the start of the edit = output_bidsmap in the MainWindow
+        self.target_bidsmap: Bidsmap     = copy.deepcopy(bidsmap)   # The edited bidsmap -> will be returned as output_bidsmap in the MainWindow
+        self.template_bidsmap: Bidsmap   = template_bidsmap         # The bidsmap from which new datatype run-items are taken
+        self.source_run: Run             = run                      # The original run-item from the source bidsmap
+        self.target_run: Run             = copy.deepcopy(run)       # The edited run-item that is inserted in the target_bidsmap
+        self.get_allowed_suffixes()                                 # Set the possible suffixes the user can select for a given datatype
+        self.subid, self.sesid           = datasource.subid_sesid(bidsmap[self.dataformat]['subject'], bidsmap[self.dataformat]['session'] or '')
 
         # Set up the window
         self.setWindowIcon(QtGui.QIcon(str(BIDSCOIN_ICON)))
@@ -1084,13 +1083,13 @@ class EditWindow(QDialog):
 
         allowed_suffixes = {}
         for datatype in self.bidsdatatypes + self.unknowndatatypes + self.ignoredatatypes:
-            allowed_suffixes[datatype] = []
+            allowed_suffixes[datatype] = set()
             for run in self.template_bidsmap[self.dataformat].get(datatype, []):
                 suffix = self.datasource.dynamicvalue(run['bids']['suffix'], True)
-                if suffix and suffix not in allowed_suffixes.get(datatype, []):
-                    allowed_suffixes[datatype].append(suffix)
+                if suffix:
+                    allowed_suffixes[datatype].add(suffix)
 
-        self.allowed_suffixes = allowed_suffixes
+        self.allowed_suffixes: Dict[str, set] = allowed_suffixes
 
     def run2data(self) -> tuple:
         """Derive the tabular data from the target_run, needed to render the edit window
@@ -1555,7 +1554,7 @@ class InspectWindow(QDialog):
                 hdr = Pfile(filename).hdr
                 for field in hdr._fields_:
                     data = getattr(hdr, field[0])
-                    if type(data) == bytes:
+                    if type(data) is bytes:
                         try: data = data.decode('UTF-8')
                         except UnicodeDecodeError: pass
                     text += f"{field[0]}:\t {data}\n"

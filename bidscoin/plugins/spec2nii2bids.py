@@ -12,18 +12,19 @@ from typing import List, Union
 from bids_validator import BIDSValidator
 from pathlib import Path
 from bidscoin import bcoin, bids, due, Doi
+from bidscoin.bids import Bidsmap, Run, Plugin
 
 LOGGER = logging.getLogger(__name__)
 
 # The default options that are set when installing the plugin
-OPTIONS = {'command': 'spec2nii',       # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or 'C:\"Program Files"\spec2nii\spec2nii.exe' (note the quotes to deal with the whitespace)
-           'args': None,                # Argument string that is passed to spec2nii (see spec2nii -h for more information)
-           'anon': 'y',                 # Set this anonymization flag to 'y' to round off age and discard acquisition date from the metadata
-           'meta': ['.json', '.tsv', '.tsv.gz'],  # The file extensions of the equally named metadata source files that are copied over as BIDS sidecar files
-           'multiraid': 2}              # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
+OPTIONS = Plugin({'command': 'spec2nii',    # Command to run spec2nii, e.g. "module add spec2nii; spec2nii" or "PATH=/opt/spec2nii/bin:$PATH; spec2nii" or /opt/spec2nii/bin/spec2nii or 'C:\"Program Files"\spec2nii\spec2nii.exe' (note the quotes to deal with the whitespace)
+                  'args': None,             # Argument string that is passed to spec2nii (see spec2nii -h for more information)
+                  'anon': 'y',              # Set this anonymization flag to 'y' to round off age and discard acquisition date from the metadata
+                  'meta': ['.json', '.tsv', '.tsv.gz'],  # The file extensions of the equally named metadata source files that are copied over as BIDS sidecar files
+                  'multiraid': 2})          # The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
 
 
-def test(options: dict=OPTIONS) -> int:
+def test(options: Plugin=OPTIONS) -> int:
     """
     This plugin shell tests the working of the spec2nii2bids plugin + its bidsmap options
 
@@ -65,7 +66,7 @@ def is_sourcefile(file: Path) -> str:
     return ''
 
 
-def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> str:
+def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: Plugin) -> str:
     """
     This plugin function reads attributes from the supported sourcefile
 
@@ -98,7 +99,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
     LOGGER.error(f"Unsupported MRS data-format: {dataformat}")
 
 
-def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
+def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap, template: Bidsmap, store: dict) -> None:
     """
     All the heuristics spec2nii2bids attributes and properties onto bids labels and meta-data go into this plugin function.
     The function is expected to update / append new runs to the bidsmap_new data structure. The bidsmap options for this plugin
@@ -115,12 +116,12 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     """
 
     # Get the plugin settings
-    plugin = {'spec2nii2bids': bidsmap_new['Options']['plugins']['spec2nii2bids']}
+    plugins = {'spec2nii2bids': Plugin(bidsmap_new['Options']['plugins']['spec2nii2bids'])}
 
     # Update the bidsmap with the info from the source files
     for sourcefile in [file for file in session.rglob('*') if is_sourcefile(file)]:
 
-        datasource = bids.DataSource(sourcefile, plugin)
+        datasource = bids.DataSource(sourcefile, plugins)
         dataformat = datasource.dataformat
 
         # Input checks
@@ -158,7 +159,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
 
 
 @due.dcite(Doi('10.1002/mrm.29418'), description='Multi-format in vivo MR spectroscopy conversion to NIFTI', tags=['reference-implementation'])
-def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None, dict]:
+def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[None, dict]:
     """
     This wrapper function around spec2nii converts the MRS data in the session folder and saves it in the bidsfolder.
     Each saved datafile should be accompanied by a json sidecar file. The bidsmap options for this plugin can be found in:
@@ -197,7 +198,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
         scans_table.index.name = 'filename'
 
     # Loop over all MRS source data files and convert them to BIDS
-    matched_runs: List[dict] = []
+    matched_runs: List[Run] = []
     for sourcefile in sourcefiles:
 
         # Get a data source, a matching run from the bidsmap
@@ -252,14 +253,14 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> Union[None
         elif dataformat == 'Pfile':
             dformat = 'ge'
         else:
-            LOGGER.exception(f"Unsupported dataformat: {dataformat}")
+            LOGGER.error(f"Unsupported dataformat: {dataformat}")
             return
         command = options.get("command", "spec2nii")
         if bcoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
             if not list(outfolder.glob(f"{bidsname}.nii*")): continue
 
         # Add files created using this bidsmap run-item (except sidecars)
-        datasource.targets.add(outfolder.glob(f"{bidsname}.*[!json]"))
+        datasource.targets.update(outfolder.glob(f"{bidsname}.*nii*"))
 
         # Load / copy over and adapt the newly produced json sidecar-file (NB: assumes every NIfTI-file comes with a json-file)
         metadata = bids.updatemetadata(datasource, sidecar, run['meta'], options['meta'])

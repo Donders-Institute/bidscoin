@@ -11,9 +11,10 @@ if find_spec('bidscoin') is None:
     import sys
     sys.path.append(str(Path(__file__).parents[2]))
 from bidscoin import bcoin, bids, lsdirs, trackusage, __version__
+from bidscoin.bids import Bidsmap
 
 
-def scanpersonals(bidsmap: dict, session: Path, personals: dict, keys: list) -> bool:
+def scanpersonals(bidsmap: Bidsmap, session: Path, personals: dict, keys: list) -> bool:
     """
     Converts the session source-files into BIDS-valid NIfTI-files in the corresponding bidsfolder and
     extracts personals (e.g. Age, Sex) from the source header

@@ -19,6 +19,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[1]))
 from bidscoin import bcoin, bids, lsdirs, trackusage, check_version, __version__
+from bidscoin.bids import Bidsmap
 
 _, uptodate, versionmessage = check_version()
 
@@ -182,7 +183,7 @@ def bidsmapper(rawfolder: str, bidsfolder: str, bidsmapfile: str, templatefile: 
     return bidsmap_new
 
 
-def setprefix(bidsmap: dict, subprefix: str, sesprefix: str, rawfolder: Path, update: bool=True) -> tuple:
+def setprefix(bidsmap: Bidsmap, subprefix: str, sesprefix: str, rawfolder: Path, update: bool=True) -> tuple:
     """
     Set the prefix in the Options, subject, session and in all the run['datasource'] objects
 

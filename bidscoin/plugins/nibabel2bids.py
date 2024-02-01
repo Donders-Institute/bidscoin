@@ -12,6 +12,7 @@ from bids_validator import BIDSValidator
 from typing import List, Union
 from pathlib import Path
 from bidscoin import bids
+from bidscoin.bids import Bidsmap, Run, Plugin
 
 try:
     from nibabel.testing import data_path
@@ -22,11 +23,11 @@ except ImportError:
 LOGGER = logging.getLogger(__name__)
 
 # The default/fallback options that are set when installing/using the plugin
-OPTIONS = {'ext': '.nii.gz',                                        # The (nibabel) file extension of the output data, i.e. ``.nii.gz`` or ``.nii``
-           'meta': ['.json', '.tsv', '.tsv.gz', '.bval', '.bvec']}  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
+OPTIONS = Plugin({'ext': '.nii.gz',                                         # The (nibabel) file extension of the output data, i.e. ``.nii.gz`` or ``.nii``
+                  'meta': ['.json', '.tsv', '.tsv.gz', '.bval', '.bvec']})  # The file extensions of the equally named metadata sourcefiles that are copied over as BIDS sidecar files
 
 
-def test(options: dict=OPTIONS) -> int:
+def test(options: Plugin=OPTIONS) -> int:
     """
     Performs a nibabel test
 
@@ -75,14 +76,14 @@ def is_sourcefile(file: Path) -> str:
     return ''
 
 
-def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: dict) -> Union[str, int, float, list]:
+def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: Plugin) -> Union[str, int, float, list]:
     """
     This plugin supports reading attributes from DICOM and PAR dataformats
 
     :param dataformat:  The bidsmap-dataformat of the sourcefile, e.g. DICOM of PAR
     :param sourcefile:  The sourcefile from which the attribute value should be read
     :param attribute:   The attribute key for which the value should be read
-    :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap['Options']
+    :param options:     A dictionary with the plugin options, e.g. taken from the bidsmap['Options']['plugins']
     :return:            The attribute value
     """
 
@@ -101,7 +102,7 @@ def get_attribute(dataformat: str, sourcefile: Path, attribute: str, options: di
     return value
 
 
-def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, template: dict, store: dict) -> None:
+def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap, template: Bidsmap, store: dict) -> None:
     """
     All the logic to map the Nibabel header fields onto bids labels go into this function
 
@@ -114,8 +115,8 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     """
 
     # Get started
-    plugin     = {'nibabel2bids': bidsmap_new['Options']['plugins']['nibabel2bids']}
-    datasource = bids.get_datasource(session, plugin, recurse=2)
+    plugins    = {'nibabel2bids': Plugin(bidsmap_new['Options']['plugins']['nibabel2bids'])}
+    datasource = bids.get_datasource(session, plugins, recurse=2)
     if not datasource.dataformat:
         return
     if not (template[datasource.dataformat] or bidsmap_old[datasource.dataformat]):
@@ -126,7 +127,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
     for sourcefile in [file for file in session.rglob('*') if is_sourcefile(file)]:
 
         # See if we can find a matching run in the old bidsmap
-        datasource = bids.DataSource(sourcefile, plugin, datasource.dataformat)
+        datasource = bids.DataSource(sourcefile, plugins, datasource.dataformat)
         run, match = bids.get_matching_run(datasource, bidsmap_old)
 
         # If not, see if we can find a matching run in the template
@@ -152,7 +153,7 @@ def bidsmapper_plugin(session: Path, bidsmap_new: dict, bidsmap_old: dict, templ
             bids.append_run(bidsmap_new, run)
 
 
-def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
+def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
     """
     The bidscoiner plugin to convert the session Nibabel source-files into BIDS-valid NIfTI-files in the
     corresponding bids session-folder
@@ -189,7 +190,7 @@ def bidscoiner_plugin(session: Path, bidsmap: dict, bidsses: Path) -> None:
         scans_table.index.name = 'filename'
 
     # Collect the different Nibabel source files for all files in the session
-    matched_runs: List[dict] = []
+    matched_runs: List[Run] = []
     for sourcefile in sourcefiles:
 
         datasource = bids.DataSource(sourcefile, {'nibabel2bids':options})
