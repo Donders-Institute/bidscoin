@@ -622,7 +622,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                     # XA-20 enhanced DICOM hack: Catch missing EchoNumbers from ice-dims
                     if tagname == 'EchoNumbers' and not value:
                         ice_dims = dicomdata.get((0x21, 1106))
-                        if ice_dims and '_' in ice_dims:
+                        if '_' in ice_dims:
                             value = ice_dims.split('_')[1]
 
                 if not value and value != 0 and 'Modality' not in dicomdata:
@@ -1571,7 +1571,7 @@ def update_bidsmap(bidsmap: dict, source_datatype: str, run: dict, clean: bool=T
 
     num_runs_out = len(dir_bidsmap(bidsmap, dataformat))
     if num_runs_out != num_runs_in:
-        LOGGER.exception(f"Number of runs in bidsmap['{dataformat}'] changed unexpectedly: {num_runs_in} -> {num_runs_out}")
+        LOGGER.error(f"Number of runs in bidsmap['{dataformat}'] changed unexpectedly: {num_runs_in} -> {num_runs_out}")
 
 
 def match_runvalue(attribute, pattern) -> bool:
@@ -1928,30 +1928,19 @@ def increment_runindex(outfolder: Path, bidsname: str, run: dict) -> Union[Path,
     """
 
     # Check input
-    runval = run['bids'].get('run')
-    runval = str(runval) if runval else ''
+    runval = str(run['bids'].get('run') or '')
     if not (runval.startswith('<<') and runval.endswith('>>') and (runval.replace('<','').replace('>','').isdecimal() or runval == '<<>>')):
         return bidsname
 
-    # Catch file extensions
-    suffixes = ''
-    if '.' in bidsname:
-        bidsname, suffixes = bidsname.split('.', 1)
-
-    # Delete runindex from bidsname if no runless files (run-1) exist (e.g. dcm2niix postfixes changed name)
-    runless_bidsname = insert_bidskeyval(bidsname, 'run', '', False)
-    if runval == '<<>>' and '_run-' in bidsname and not list(outfolder.glob(f"{runless_bidsname}.*")):
-        return runless_bidsname
-
     # Increment the run-index if the bidsfile already exists
-    while list(outfolder.glob(f"{bidsname}.*")):
+    while list(outfolder.glob(f"{Path(bidsname).with_suffix('').stem}.*")):
         runindex = get_bidsvalue(bidsname, 'run')
         if not runindex:                    # The run-less bids file already exists -> start with run-2
             bidsname = insert_bidskeyval(bidsname, 'run', '2', False)
         else:                               # Do the normal increment
             bidsname = get_bidsvalue(bidsname, 'run', str(int(runindex) + 1))
 
-    return f"{bidsname}.{suffixes}" if suffixes else bidsname
+    return bidsname
 
 
 def rename_runless_to_run1(runs: List[dict], scans_table: pd.DataFrame) -> None:
@@ -1968,34 +1957,34 @@ def rename_runless_to_run1(runs: List[dict], scans_table: pd.DataFrame) -> None:
         if run['bids'].get('run') != '<<>>':
             continue
 
-        for target in run['datasource'].targets.copy():  # Copy: avoid problems with removing items within loop
-            bidsname = target.name
-            suffixes = ''
-            if '.' in bidsname:
-                bidsname, suffixes = bidsname.split('.', 1)
-                if suffixes:
-                    suffixes = '.' + suffixes
-            if get_bidsvalue(bidsname, 'run') == '':
-                run2_bidsname = insert_bidskeyval(bidsname, 'run', '2', False)
-                outfolder = target.parent
-                if list(outfolder.glob(f"{run2_bidsname}.*")):
+        for target in run['datasource'].targets.copy():         # Copy: avoid problems with removing items within loop
 
-                    # Add run-1 to run-less bidsname files because run-2 exists
-                    run1_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
-                    for runless_file in outfolder.glob(f"{bidsname}.*"):
-                        ext = ''.join(runless_file.suffixes)
-                        run1_file = (runless_file.parent/run1_bidsname).with_suffix(ext)
-                        LOGGER.info(f"Found run-2 files for <<>> index, renaming\n{runless_file} ->\n{run1_file}")
-                        runless_file.replace(run1_file)
+            outfolder     = target.parent
+            bidsext       = ''.join(target.suffixes)
+            bidsname      = target.with_suffix('').stem
+            run1_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
+            run2_bidsname = insert_bidskeyval(bidsname, 'run', '2', False)
 
-                        # Change row name in the scans table
-                        if f"{outfolder.name}/{bidsname}{ext}" in scans_table.index:
-                            LOGGER.verbose(f"Renaming scans entry:\n{outfolder.name}/{bidsname}{ext} ->\n{outfolder.name}/{run1_bidsname}{ext}")
-                            scans_table.rename(index={f"{outfolder.name}/{bidsname}{ext}": f"{outfolder.name}/{run1_bidsname}{ext}"}, inplace=True)  # NB: '/' as_posix
+            # Rename runless to run-1 if run-2 exists
+            if not get_bidsvalue(bidsname, 'run') and list(outfolder.glob(f"{run2_bidsname}.*")):
 
-                    # Change target from run-less to run-1
-                    run['datasource'].targets.remove(target)
-                    run['datasource'].targets.add((outfolder/run1_bidsname).with_suffix(suffixes))
+                # Add run-1 to run-less bidsname files because run-2 exists
+                for runless_file in outfolder.glob(f"{bidsname}.*"):
+                    ext       = ''.join(runless_file.suffixes)
+                    run1_file = (outfolder/run1_bidsname).with_suffix(ext)
+                    LOGGER.info(f"Found run-2 files for <<>> index, renaming\n{runless_file} ->\n{run1_file}")
+                    runless_file.replace(run1_file)
+
+                # Change row name in the scans table
+                runless_entry = f"{outfolder.name}/{bidsname}{bidsext}"         # NB: '/' as_posix
+                run1_entry    = f"{outfolder.name}/{run1_bidsname}{bidsext}"    # NB: '/' as_posix
+                if runless_entry in scans_table.index:
+                    LOGGER.verbose(f"Renaming scans entry:\n{runless_entry} -> {run1_entry}")
+                    scans_table.rename(index={runless_entry: run1_entry}, inplace=True)
+
+                # Change target from run-less to run-1
+                run['datasource'].targets.remove(target)
+                run['datasource'].targets.add((outfolder/run1_bidsname).with_suffix(bidsext))
 
 
 def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: dict, extensions: list, sourcemeta: Path = Path()) -> dict:

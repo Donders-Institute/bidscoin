@@ -422,21 +422,36 @@ def test_exist_run(study_bidsmap):
     assert bids.exist_run(bidsmap, '', run)     is False
 
 
+def test_insert_bidskeyval():
+
+    bidsname = bids.insert_bidskeyval(Path('bids')/'sub-01'/'anat'/'sub-01_T1w', 'run', 1, True)
+    assert bidsname == Path('bids')/'sub-01'/'anat'/'sub-01_run-1_T1w'
+
+    bidsname = bids.insert_bidskeyval(Path('bids')/'sub-01'/'anat'/'sub-01_run-2_T1w.nii', 'run', '', True)
+    assert bidsname == Path('bids')/'sub-01'/'anat'/'sub-01_T1w.nii'
+
+    bidsname = bids.insert_bidskeyval('sub-01_foo-bar_T1w', 'foo', 'baz', True)
+    assert bidsname == 'sub-01_T1w'
+
+    bidsname = bids.insert_bidskeyval('sub-01_foo-bar_T1w.nii', 'foo', 'baz', False)
+    assert bidsname == 'sub-01_foo-baz_T1w.nii'
+
+
 def test_increment_runindex__no_run1(tmp_path):
     """Test if run-index is preserved or added to the bidsname"""
 
-    # Test runindex is <<>>, so no run is added to the bidsname
     outfolder = tmp_path/'bids'/'sub-01'/'anat'
-    bidsname  = bids.increment_runindex(outfolder, 'sub-01_T1w', {'bids': {'run': '<<>>'}})
+
+    # Test runindex is <<>>, so no run is added to the bidsname
+    bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w', {'bids': {'run': '<<>>'}})
     assert bidsname == 'sub-01_T1w'
 
-    # Test runindex is <<1>>, so run-1 is preserved in the bidsname
-    bidsname = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '<<1>>'}})
-    assert bidsname == 'sub-01_run-1_T1w'
+    bidsname = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w.nii', {'bids': {'run': '<<1>>'}})
+    assert bidsname == 'sub-01_run-1_T1w.nii'
 
     # Test runindex is <<2>>, so run-2 is preserved in the bidsname
-    bidsname = bids.increment_runindex(outfolder, 'sub-01_run-2_T1w', {'bids': {'run': '<<2>>'}})
-    assert bidsname == 'sub-01_run-2_T1w'
+    bidsname = bids.increment_runindex(outfolder, 'sub-01_run-2_T1w.nii.gz', {'bids': {'run': '<<2>>'}})
+    assert bidsname == 'sub-01_run-2_T1w.nii.gz'
 
 
 def test_increment_runindex__runless_exist(tmp_path):
@@ -450,10 +465,7 @@ def test_increment_runindex__runless_exist(tmp_path):
 
     # Test run-index is <<>>, so the run-index is incremented
     bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w', {'bids': {'run': '<<>>'}})
-
-    # Check the results
     assert bidsname == 'sub-01_run-2_T1w'
-    assert (outfolder/'sub-01_T1w').with_suffix(suffix).is_file() is True
 
 
 def test_increment_runindex__runless_run2_exist(tmp_path):
@@ -468,11 +480,7 @@ def test_increment_runindex__runless_run2_exist(tmp_path):
 
     # Test run-index is <<>>, so the run-index is incremented
     bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w.nii.gz', {'bids': {'run': '<<>>'}})
-
-    # Check the results
     assert bidsname == 'sub-01_run-3_T1w.nii.gz'
-    assert (outfolder/'sub-01_T1w').with_suffix(suffix).is_file() is True
-    assert (outfolder/'sub-01_run-2_T1w').with_suffix(suffix).is_file() is True
 
 
 def test_increment_runindex__run1_run2_exist(tmp_path):
@@ -494,17 +502,8 @@ def test_increment_runindex__run1_run2_exist(tmp_path):
     assert bidsname == 'sub-01_run-1_T1w'
 
     # Test run-index is 2, so the run-index is untouched
-    bidsname  = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '2'}})
-    assert bidsname == 'sub-01_run-1_T1w'
-
-
-def test_increment_runindex__run2_no_longer_valid(tmp_path):
-    """Test <<>> run-index when run is no longer needed although bidsname contains it (dcm2niix postfixes changed)."""
-
-    # Test runindex is <<>>, run is deleted from bidsname as no run-less or run files with that bidsname exist
-    outfolder = tmp_path/'bids'/'sub-01'/'anat'
-    bidsname  = bids.increment_runindex(outfolder, 'sub-01_run-2_T1w', {'bids': {'run': '<<>>'}})
-    assert bidsname == 'sub-01_T1w'
+    bidsname  = bids.increment_runindex(outfolder, 'sub-01_run-2_T1w', {'bids': {'run': '2'}})
+    assert bidsname == 'sub-01_run-2_T1w'
 
 
 def test_rename_runless_to_run1(tmp_path):
