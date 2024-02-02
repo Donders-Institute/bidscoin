@@ -17,7 +17,7 @@
 - A DICOM parser for retrieving the `<PhaseEncodingDirection>` value (Siemens and GE)
 
 ### Changed
-- `bidscoiner_plugin()` API: you can (should) return a personals dict (instead of writing it to `participants.tsv`) and the datasource targets
+- `bidscoiner_plugin()` API: you can (should) return a personals dict (instead of writing it to `participants.tsv`)
 - Using DRMAA library for skullstrip (instead of qsub/sbatch)
 - Removed the pet2bids and phys2bids plugins (code is no longer actively developed)
 - Sorting of DICOMDIR files is more robust

@@ -198,7 +198,6 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         scans_table.index.name = 'filename'
 
     # Loop over all MRS source data files and convert them to BIDS
-    matched_runs: List[Run] = []
     for sourcefile in sourcefiles:
 
         # Get a data source, a matching run from the bidsmap
@@ -216,7 +215,6 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
             continue
 
         LOGGER.info(f"--> Coining: {sourcefile}")
-        matched_runs.append(run)
 
         # Create the BIDS session/datatype output folder
         outfolder = bidsses/datasource.datatype
@@ -226,7 +224,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         bidsignore = bids.check_ignore(datasource.datatype, bidsmap['Options']['bidscoin']['bidsignore'])
         bidsname   = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
         bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap['Options']['bidscoin']['bidsignore'], 'file')
-        bidsname   = bids.increment_runindex(outfolder, bidsname, run)
+        bidsname   = bids.increment_runindex(outfolder, bidsname, run, scans_table)
         sidecar    = (outfolder/bidsname).with_suffix('.json')
 
         # Check if the bidsname is valid
@@ -259,9 +257,6 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         if bcoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
             if not list(outfolder.glob(f"{bidsname}.nii*")): continue
 
-        # Add files created using this bidsmap run-item (except sidecars)
-        datasource.targets.update(outfolder.glob(f"{bidsname}.*nii*"))
-
         # Load / copy over and adapt the newly produced json sidecar-file (NB: assumes every NIfTI-file comes with a json-file)
         metadata = bids.updatemetadata(datasource, sidecar, run['meta'], options['meta'])
         with sidecar.open('w') as json_fid:
@@ -289,9 +284,6 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                 LOGGER.warning(f"Could not parse the acquisition time from: {sourcefile}\n{jsonerror}")
                 acq_time = 'n/a'
             scans_table.loc[sidecar.with_suffix('.nii.gz').relative_to(bidsses).as_posix(), 'acq_time'] = acq_time
-
-    # Handle dynamic index for run-1
-    bids.rename_runless_to_run1(matched_runs, scans_table)
 
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing acquisition time data to: {scans_tsv}")

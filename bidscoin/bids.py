@@ -77,18 +77,17 @@ class DataSource:
         :param targets:     A list of output targets of the source
         """
 
-        self.path: Path         = Path(provenance)
-        self.datatype: str      = datatype
-        self.dataformat: str    = dataformat
-        self.plugins: dict      = plugins
+        self.path: Path      = Path(provenance)
+        self.datatype: str   = datatype
+        self.dataformat: str = dataformat
+        self.plugins         = plugins
         if not plugins:
             self.plugins = {}
         if not dataformat:
             self.is_datasource()
-        self.subprefix: str     = subprefix
-        self.sesprefix: str     = sesprefix
-        self.targets: Set[Path] = set(targets)
-        self._cache: dict       = {}
+        self.subprefix: str  = subprefix
+        self.sesprefix: str  = sesprefix
+        self._cache: dict    = {}
 
     def resubprefix(self) -> str:
         """Returns the subprefix with escaped regular expression characters (except '-'). A single '*' wildcard is returned as ''"""
@@ -121,7 +120,7 @@ class DataSource:
 
         return False
 
-    def properties(self, tagname: str, run: dict=None) -> Union[str, int]:
+    def properties(self, tagname: str, run: Run=None) -> Union[str, int]:
         """
         Gets the 'filepath[:regex]', 'filename[:regex]', 'filesize' or 'nrfiles' filesystem property. The filepath (with trailing "/")
         and filename can be parsed using an optional regular expression re.findall(regex, filepath/filename). The last match is returned
@@ -242,7 +241,7 @@ class DataSource:
 
         return attributeval
 
-    def _extattributes(self) -> dict:
+    def _extattributes(self) -> Attributes:
         """
         Read attributes from the json sidecar file if it is there
 
@@ -256,10 +255,10 @@ class DataSource:
                 attributes = json.load(json_fid)
             if not isinstance(attributes, dict):
                 LOGGER.warning(f"Skipping unexpectedly formatted meta-data in: {jsonfile}")
-                return {}
+                return Attributes({})
             self._cache.update(attributes)
 
-        return attributes
+        return Attributes(attributes)
 
     def subid_sesid(self, subid: str=None, sesid: str=None) -> Tuple[str, str]:
         """
@@ -930,7 +929,7 @@ def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Uni
     if bidsmapversion.rsplit('.', 1)[0] != __version__.rsplit('.', 1)[0] and any(checks):
         LOGGER.warning(f'BIDScoiner version conflict: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}')
     elif bidsmapversion != __version__ and any(checks):
-        LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}. This is normally ok but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
+        LOGGER.info(f'BIDScoiner version difference: {yamlfile} was created with version {bidsmapversion}, but this is version {__version__}. This is normally OK but check the https://bidscoin.readthedocs.io/en/latest/CHANGELOG.html')
 
     # Make sure subprefix and sesprefix are strings
     subprefix = bidsmap['Options']['bidscoin']['subprefix'] = bidsmap['Options']['bidscoin']['subprefix'] or ''
@@ -1481,7 +1480,7 @@ def find_run(bidsmap: Bidsmap, provenance: str, dataformat: str='', datatype: st
     return Run({})
 
 
-def delete_run(bidsmap: Bidsmap, provenance: Union[dict, str], datatype: str= '', dataformat: str='') -> None:
+def delete_run(bidsmap: Bidsmap, provenance: Union[Run, str], datatype: str= '', dataformat: str='') -> None:
     """
     Delete the first matching run from the BIDS map
 
@@ -1771,7 +1770,7 @@ def get_derivatives(datatype: str, exceptions: Union[tuple,list]=()) -> list:
         return []
 
 
-def get_bidsname(subid: str, sesid: str, run: dict, validkeys: bool, runtime: bool=False, cleanup: bool=True) -> str:
+def get_bidsname(subid: str, sesid: str, run: Run, validkeys: bool, runtime: bool=False, cleanup: bool=True) -> str:
     """
     Composes a filename as it should be according to the BIDS standard using the BIDS keys in run. The bids values are
     dynamically updated and cleaned, and invalid bids keys and empty bids values are ignored
@@ -1928,17 +1927,18 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, v
     return newbidsfile
 
 
-def increment_runindex(outfolder: Path, bidsname: str, run: Run) -> Union[Path, str]:
+def increment_runindex(outfolder: Path, bidsname: str, run: Run, scans_table: pd.DataFrame=pd.DataFrame()) -> str:
     """
     Checks if a file with the same bidsname already exists in the folder and then increments the dynamic runindex
     (if any) until no such file is found.
 
-    Important side effect for <<>> dynamic value:
-    If the run-less file already exists, start with run-2, run-1 will be added later to run-less files
+    NB: For <<>> runs, if the run-less file already exists, then add 'run-2' to bidsname, rename run-less files to
+    'run-1' and update the `scans_table` accordingly.
 
     :param outfolder:   The full pathname of the bids output folder
-    :param bidsname:    The bidsname with a provisional runindex
+    :param bidsname:    The bidsname with a provisional runindex, e.g. from get_bidsname()
     :param run:         The run mapping with the BIDS key-value pairs
+    :param scans_table: BIDS scans.tsv dataframe with all filenames and e.g. acquisition timestamps
     :return:            The bidsname with the original or incremented runindex
     """
 
@@ -1946,63 +1946,47 @@ def increment_runindex(outfolder: Path, bidsname: str, run: Run) -> Union[Path, 
     runval = str(run['bids'].get('run') or '')
     if not (runval.startswith('<<') and runval.endswith('>>') and (runval.replace('<','').replace('>','').isdecimal() or runval == '<<>>')):
         return bidsname
+    bidsext  = ''.join(Path(bidsname).suffixes)
+    bidsname = bidsname.split('.')[0]
 
-    # Increment the run-index if the bidsfile already exists
-    while list(outfolder.glob(f"{Path(bidsname).with_suffix('').stem}.*")):
-        runindex = get_bidsvalue(bidsname, 'run')
-        if not runindex:                    # The run-less bids file already exists -> start with run-2
-            bidsname = insert_bidskeyval(bidsname, 'run', '2', False)
-        else:                               # Do the normal increment
-            bidsname = get_bidsvalue(bidsname, 'run', str(int(runindex) + 1))
+    # Make an inventory of the runs
+    runless_name  = insert_bidskeyval(bidsname, 'run', '', False)
+    run1_name     = insert_bidskeyval(bidsname, 'run', '1', False)
+    runless_files = list(outfolder.glob(f"{runless_name}.*"))
+    run1_files    = list(outfolder.glob(f"{run1_name}.*"))
 
-    return bidsname
+    # Start incrementing from run-1 if we have already renamed runless to run-1
+    if run1_files and runval == '<<>>':
+        bidsname = run1_name
 
+    # Increment the run-index if the bidsfile already exists until that's no longer the case
+    while list(outfolder.glob(f"{bidsname}.*")):        # The run already exists -> increment the run-index
+        runindex = get_bidsvalue(bidsname, 'run') or '1'    # If run-less -> identify as existing run-1
+        bidsname = insert_bidskeyval(bidsname, 'run', str(int(runindex) + 1), False)
 
-def rename_runless_to_run1(runs: List[Run], scans_table: pd.DataFrame) -> None:
-    """
-    Adds run-1 label to run-less files that use dynamic index (<<>>) in bidsmap run-items for which files with
-    run-2 label exist in the output folder. Additionally, 'scans_table' is updated based on the changes.
+    # Rename run-less to run-1 when dealing with a new run-2
+    if runless_files and get_bidsvalue(bidsname, 'run') == '2':
 
-    :param runs:        Bidsmap run-items with accumulated files under datasource.targets (all files created via that run-item)
-    :param scans_table: BIDS scans.tsv dataframe with all filenames and acquisition timestamps
-    :return:
-    """
+        # Check if everything is OK
+        if runless_files and run1_files:
+            LOGGER.error(f"File already exists, cannot rename {outfolder/runless_name}.* -> {run1_name}.*")
+            return bidsname + bidsext
 
-    for run in runs:
-        if run['bids'].get('run') != '<<>>':
-            continue
+        # Rename run-less to run-1
+        for runless_file in runless_files:
+            LOGGER.info(f"Found run-2 files for <<>> index, renaming\n{runless_file} -> {run1_name}")
+            runless_file.replace((outfolder/run1_name).with_suffix(''.join(runless_file.suffixes)))
 
-        for target in run['datasource'].targets.copy():         # Copy: avoid problems with removing items within loop
+            # Update the scans-tsv file
+            runless_entry = f"{outfolder.name}/{runless_file.name}"      # NB: as posix
+            run1_entry    = insert_bidskeyval(runless_entry, 'run', '1', False)
+            if runless_entry in scans_table.index:
+                scans_table.rename(index={runless_entry: run1_entry}, inplace=True)
 
-            outfolder     = target.parent
-            bidsext       = ''.join(target.suffixes)
-            bidsname      = target.with_suffix('').stem
-            run1_bidsname = insert_bidskeyval(bidsname, 'run', '1', False)
-            run2_bidsname = insert_bidskeyval(bidsname, 'run', '2', False)
-
-            # Rename runless to run-1 if run-2 exists
-            if not get_bidsvalue(bidsname, 'run') and list(outfolder.glob(f"{run2_bidsname}.*")):
-
-                # Add run-1 to run-less bidsname files because run-2 exists
-                for runless_file in outfolder.glob(f"{bidsname}.*"):
-                    ext       = ''.join(runless_file.suffixes)
-                    run1_file = (outfolder/run1_bidsname).with_suffix(ext)
-                    LOGGER.info(f"Found run-2 files for <<>> index, renaming\n{runless_file} ->\n{run1_file}")
-                    runless_file.replace(run1_file)
-
-                # Change row name in the scans table
-                runless_entry = f"{outfolder.name}/{bidsname}{bidsext}"         # NB: '/' as_posix
-                run1_entry    = f"{outfolder.name}/{run1_bidsname}{bidsext}"    # NB: '/' as_posix
-                if runless_entry in scans_table.index:
-                    LOGGER.verbose(f"Renaming scans entry:\n{runless_entry} -> {run1_entry}")
-                    scans_table.rename(index={runless_entry: run1_entry}, inplace=True)
-
-                # Change target from run-less to run-1
-                run['datasource'].targets.remove(target)
-                run['datasource'].targets.add((outfolder/run1_bidsname).with_suffix(bidsext))
+    return bidsname + bidsext
 
 
-def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: dict, extensions: list, sourcemeta: Path = Path()) -> dict:
+def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, extensions: list, sourcemeta: Path = Path()) -> Meta:
     """
     Load the metadata from the target (json sidecar), then add metadata from the source (json sidecar) and finally add
     the user metadata (meta table). Source metadata other than json sidecars are copied over to the target folder. Special
@@ -2076,7 +2060,7 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: dict, ext
     if not metapool.get('B0FieldSource'):     metapool.pop('B0FieldSource', None)
     if not metapool.get('B0FieldIdentifier'): metapool.pop('B0FieldIdentifier', None)
 
-    return metapool
+    return Meta(metapool)
 
 
 def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: dict=None, dryrun: bool=False) -> Tuple[pd.DataFrame, dict]:

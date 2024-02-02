@@ -10,6 +10,7 @@ from pathlib import Path
 from nibabel.testing import data_path
 from pydicom.data import get_testdata_file
 from bidscoin import bcoin, bids, bidsmap_template
+from bidscoin.bids import Run, Plugin
 
 bcoin.setup_logging()
 
@@ -45,14 +46,14 @@ class TestDataSource:
 
     @pytest.fixture()
     def datasource(self, dcm_file):
-        return bids.DataSource(dcm_file, {'dcm2niix2bids': {}}, 'DICOM')
+        return bids.DataSource(dcm_file, {'dcm2niix2bids': Plugin({})}, 'DICOM')
 
     @pytest.fixture()
     def extdatasource(self, dcm_file, tmp_path):
         ext_dcm_file = shutil.copyfile(dcm_file, tmp_path/dcm_file.name)
         with ext_dcm_file.with_suffix('.json').open('w') as sidecar:
             json.dump({'PatientName': 'ExtendedAttributesTest'}, sidecar)
-        return bids.DataSource(ext_dcm_file, {'dcm2niix2bids': {}}, 'DICOM')
+        return bids.DataSource(ext_dcm_file, {'dcm2niix2bids': Plugin({})}, 'DICOM')
 
     def test_is_datasource(self, datasource):
         assert datasource.is_datasource()
@@ -76,7 +77,7 @@ class TestDataSource:
         subsesdir     = tmp_path/'data'/subid/sesid
         subsesdir.mkdir(parents=True)
         subses_file   = shutil.copy(dcm_file, subsesdir)
-        subses_source = bids.DataSource(subses_file, {'dcm2niix2bids': {}}, 'DICOM', subprefix=subprefix, sesprefix=sesprefix)
+        subses_source = bids.DataSource(subses_file, {'dcm2niix2bids': Plugin({})}, 'DICOM', subprefix=subprefix, sesprefix=sesprefix)
         sub, ses      = subses_source.subid_sesid(f"<<filepath:/data/{subses_source.resubprefix()}(.*?)/>>", f"<<filepath:/data/{subses_source.resubprefix()}.*?/{subses_source.resesprefix()}(.*?)/>>")
         expected_sub  = 'sub-' + bids.sanitize(re.sub(f"^{subses_source.resubprefix()}", '', subid)  if subid.startswith(subprefix) or subprefix=='*' else '')  # NB: this expression is too complicated / resembles the actual code too much :-/
         expected_ses  = 'ses-' + bids.sanitize(re.sub(f"^{subses_source.resesprefix()}", '', sesid)) if (subid.startswith(subprefix) or subprefix=='*') and (sesid.startswith(sesprefix) or sesprefix=='*') and sesid else ''
@@ -119,7 +120,7 @@ def test_get_dicomfile(dcm_file, dicomdir):
 
 
 def test_get_datasource(dicomdir):
-    datasource = bids.get_datasource(dicomdir.parent, {'dcm2niix2bids': {}})
+    datasource = bids.get_datasource(dicomdir.parent, {'dcm2niix2bids': Plugin({})})
     assert datasource.is_datasource()
     assert datasource.dataformat == 'DICOM'
 
@@ -323,6 +324,14 @@ def test_check_ignore():
     assert bids.check_ignore('sub-01_foo.nii',     bidsignore, 'file') is True
 
 
+def test_sanitize():
+
+    assert bids.sanitize('<<>>')              == ''
+    assert bids.sanitize('<<1>>')             == '1'
+    assert bids.sanitize('@foo-bar.baz#')     == 'foobarbaz'
+    assert bids.sanitize("Joe's reward_task") == 'Joesrewardtask'
+
+
 def test_find_run(study_bidsmap):
 
     # Load a bidsmap and create a duplicate dataformat section
@@ -424,7 +433,7 @@ def test_exist_run(study_bidsmap):
 
 def test_insert_bidskeyval():
 
-    bidsname = bids.insert_bidskeyval(Path('bids')/'sub-01'/'anat'/'sub-01_T1w', 'run', 1, True)
+    bidsname = bids.insert_bidskeyval(Path('bids')/'sub-01'/'anat'/'sub-01_T1w', 'run', '1', True)
     assert bidsname == Path('bids')/'sub-01'/'anat'/'sub-01_run-1_T1w'
 
     bidsname = bids.insert_bidskeyval(Path('bids')/'sub-01'/'anat'/'sub-01_run-2_T1w.nii', 'run', '', True)
@@ -433,125 +442,80 @@ def test_insert_bidskeyval():
     bidsname = bids.insert_bidskeyval('sub-01_foo-bar_T1w', 'foo', 'baz', True)
     assert bidsname == 'sub-01_T1w'
 
-    bidsname = bids.insert_bidskeyval('sub-01_foo-bar_T1w.nii', 'foo', 'baz', False)
-    assert bidsname == 'sub-01_foo-baz_T1w.nii'
+    bidsname = bids.insert_bidskeyval('anat/sub-01_foo-bar_T1w.nii', 'foo', 'baz', False)
+    assert bidsname == 'anat/sub-01_foo-baz_T1w.nii'
 
 
-def test_increment_runindex__no_run1(tmp_path):
-    """Test if run-index is preserved or added to the bidsname"""
+def test_increment_runindex(tmp_path):
+    """Test if run-index is preserved or added to the bidsname, files are renamed and scans-table updated"""
 
+    # Define the test data
     outfolder = tmp_path/'bids'/'sub-01'/'anat'
+    outfolder.mkdir(parents=True)
+    runless   = 'sub-01_T1w'
+    run1      = 'sub-01_run-1_T1w'
+    run2      = 'sub-01_run-2_T1w'
+    run3      = 'sub-01_run-3_T1w'
 
-    # Test runindex is <<>>, so no run is added to the bidsname
-    bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w', {'bids': {'run': '<<>>'}})
-    assert bidsname == 'sub-01_T1w'
+    # ------- Tests with no existing data -------
 
-    bidsname = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w.nii', {'bids': {'run': '<<1>>'}})
-    assert bidsname == 'sub-01_run-1_T1w.nii'
+    bidsname = bids.increment_runindex(outfolder, runless, Run({'bids': {'run': '<<>>'}}))
+    assert bidsname == runless
 
-    # Test runindex is <<2>>, so run-2 is preserved in the bidsname
-    bidsname = bids.increment_runindex(outfolder, 'sub-01_run-2_T1w.nii.gz', {'bids': {'run': '<<2>>'}})
-    assert bidsname == 'sub-01_run-2_T1w.nii.gz'
+    bidsname = bids.increment_runindex(outfolder, run1 + '.nii', Run({'bids': {'run': '<<1>>'}}))
+    assert bidsname == run1 + '.nii'
 
+    bidsname = bids.increment_runindex(outfolder, run2 + '.nii.gz', Run({'bids': {'run': '<<2>>'}}))
+    assert bidsname == run2 + '.nii.gz'
 
-def test_increment_runindex__runless_exist(tmp_path):
-    """Test run-index is <<>>, so run-2 is added to the bidsname"""
+    # ------- Tests with run-less data -------
 
     # Create the run-less files
-    outfolder = tmp_path/'bids'/'sub-01'/'anat'
-    outfolder.mkdir(parents=True)
     for suffix in ('.nii.gz', '.json'):
-        (outfolder/'sub-01_T1w').with_suffix(suffix).touch()
+        (outfolder/runless).with_suffix(suffix).touch()
 
-    # Test run-index is <<>>, so the run-index is incremented
-    bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w', {'bids': {'run': '<<>>'}})
-    assert bidsname == 'sub-01_run-2_T1w'
+    # Create the scans test tables
+    scans_data      = {'filename': [f"anat/{runless}.nii.gz", 'anat/otherscan.nii.gz'], 'acq_time': ['runless', 'other']}
+    new_scans_data  = {'filename': [f"anat/{run1}.nii.gz",    'anat/otherscan.nii.gz'], 'acq_time': ['runless', 'other']}
+    scans_table     = pd.DataFrame(scans_data    ).set_index('filename')
+    new_scans_table = pd.DataFrame(new_scans_data).set_index('filename')
 
-
-def test_increment_runindex__runless_run2_exist(tmp_path):
-    """Test run-index is <<>>, so run-3 is added to the bidsname"""
-
-    # Create the files
-    outfolder = tmp_path/'bids'/'sub-01'/'anat'
-    outfolder.mkdir(parents=True)
+    # Test renaming of run-less to run-1 + updating scans_table
+    bidsname = bids.increment_runindex(outfolder, runless, Run({'bids': {'run': '<<>>'}}), scans_table)
+    assert bidsname == run2
+    assert scans_table.equals(new_scans_table)
     for suffix in ('.nii.gz', '.json'):
-        (outfolder/'sub-01_T1w').with_suffix(suffix).touch()
-        (outfolder/'sub-01_run-2_T1w').with_suffix(suffix).touch()
+        assert (outfolder/runless).with_suffix(suffix).is_file() is False
+        assert (outfolder/run1   ).with_suffix(suffix).is_file() is True
 
-    # Test run-index is <<>>, so the run-index is incremented
-    bidsname = bids.increment_runindex(outfolder, 'sub-01_T1w.nii.gz', {'bids': {'run': '<<>>'}})
-    assert bidsname == 'sub-01_run-3_T1w.nii.gz'
+    # We now have run-1 files only
+    bidsname = bids.increment_runindex(outfolder, run1, Run({'bids': {'run': '<<1>>'}}))
+    assert bidsname == run2
 
+    # ------- Tests with run-1 & run-2 data -------
 
-def test_increment_runindex__run1_run2_exist(tmp_path):
-    """Test if run-3 is added to the bidsname"""
-
-    # Create the run-1 and run-2 files
-    outfolder = tmp_path/'bids'/'sub-01'/'anat'
-    outfolder.mkdir(parents=True)
+    # Create the run-2 files
     for suffix in ('.nii.gz', '.json'):
-        (outfolder/'sub-01_run-1_T1w').with_suffix(suffix).touch()
-        (outfolder/'sub-01_run-2_T1w').with_suffix(suffix).touch()
+        (outfolder/run2).with_suffix(suffix).touch()
 
-    # Test run-index is <<1>>, so the run-index is incremented
-    bidsname = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '<<1>>'}})
-    assert bidsname == 'sub-01_run-3_T1w'
+    bidsname = bids.increment_runindex(outfolder, runless + '.nii.gz', Run({'bids': {'run': '<<>>'}}), scans_table)
+    assert bidsname == run3 + '.nii.gz'
+    assert scans_table.equals(new_scans_table)      # -> Must remain untouched
 
-    # Test run-index is <<AttrKey>>, so the run-index is untouched
-    bidsname  = bids.increment_runindex(outfolder, 'sub-01_run-1_T1w', {'bids': {'run': '<<AttrKey>>'}})
-    assert bidsname == 'sub-01_run-1_T1w'
+    bidsname = bids.increment_runindex(outfolder, run1, Run({'bids': {'run': '<<1>>'}}))
+    assert bidsname == run3
 
-    # Test run-index is 2, so the run-index is untouched
-    bidsname  = bids.increment_runindex(outfolder, 'sub-01_run-2_T1w', {'bids': {'run': '2'}})
-    assert bidsname == 'sub-01_run-2_T1w'
+    bidsname = bids.increment_runindex(outfolder, run1, Run({'bids': {'run': '<<AttrKey>>'}}))
+    assert bidsname == run1                         # -> Must remain untouched
 
-
-def test_rename_runless_to_run1(tmp_path):
-    """Test <<>> index renaming run-less files to run-1 files."""
-
-    # Create data
-    run                  = bids.create_run()
-    run['bids']          = {'run': '<<>>'}
-    matched_runs         = []
-    old_runless_bidsname = 'sub-01_T1w'
-    new_run1_bidsname    = 'sub-01_run-1_T1w'
-    run2_bidsname        = 'sub-01_run-2_T1w'
-    outfolder            = tmp_path/'bids'/'sub-01'/'anat'
-    outfolder.mkdir(parents=True)
-    for suffix in ('.nii.gz', '.json'):
-        for file_name in (old_runless_bidsname, run2_bidsname):
-            outfile = (outfolder/file_name).with_suffix(suffix)
-            outfile.touch()
-            if suffix == '.nii.gz':
-                run['datasource'].targets.add(outfile)
-                matched_runs.append(run)
-
-    # Create the scans table
-    scans_data = {
-        'filename': ['anat/sub-01_T2w.nii.gz', f"anat/{old_runless_bidsname}.nii.gz", f"anat/{run2_bidsname}.nii.gz"],
-        'acq_time': ['acq1', 'acq2', 'acq3'],
-    }
-    result_scans_data = {
-        'filename': ['anat/sub-01_T2w.nii.gz', f"anat/{new_run1_bidsname}.nii.gz", f"anat/{run2_bidsname}.nii.gz"],
-        'acq_time': ['acq1', 'acq2', 'acq3'],
-    }
-    scans_table        = pd.DataFrame(scans_data).set_index('filename')
-    result_scans_table = pd.DataFrame(result_scans_data).set_index('filename')
-
-    # Run the function
-    bids.rename_runless_to_run1(matched_runs, scans_table)
-
-    # Check the results
-    assert result_scans_table.equals(scans_table)
-    for suffix in ('.nii.gz', '.json'):
-        assert (outfolder/old_runless_bidsname).with_suffix(suffix).is_file() is False
-        assert (outfolder/new_run1_bidsname).with_suffix(suffix).is_file() is True
+    bidsname = bids.increment_runindex(outfolder, run1, Run({'bids': {'run': '2'}}))
+    assert bidsname == run1                         # -> Must remain untouched
 
 
 def test_get_bidsname(raw_dicomdir):
 
     dicomfile   = raw_dicomdir/'Doe^Archibald'/'01-XR C Spine Comp Min 4 Views'/'001-Cervical LAT'/'6154'
-    run         = {'datasource': bids.DataSource(dicomfile, {'dcm2niix2bids': {}}, 'DICOM')}
+    run         = {'datasource': bids.DataSource(dicomfile, {'dcm2niix2bids': Plugin({})}, 'DICOM')}
     run['bids'] = {'acq':'py#dicom', 'foo@':'bar#123', 'run':'<<SeriesNumber>>', 'suffix':'T0w'}
 
     bidsname = bids.get_bidsname('sub-001', 'ses-01', run, validkeys=False, cleanup=False)  # Test default: runtime=False
@@ -587,6 +551,7 @@ def test_get_bidsvalue():
 
     bidsfile = 'sub-01_run-1_T1w.nii.gz'
 
+    assert bids.get_bidsvalue(bidsfile, 'run', '2') == 'sub-01_run-2_T1w.nii.gz'
     assert bids.get_bidsvalue(bidsfile, 'fallback', 'bar') == 'sub-01_acq-bar_run-1_T1w.nii.gz'
 
 
@@ -598,7 +563,7 @@ def test_updatemetadata(dcm_file, tmp_path):
     sourcefile.with_suffix('.jsn').touch()
     with sourcefile.with_suffix('.json').open('w') as fid:
         json.dump({'PatientName': 'SourceTest'}, fid)
-    extdatasource = bids.DataSource(sourcefile, {'dcm2niix2bids': {}}, 'DICOM')
+    extdatasource = bids.DataSource(sourcefile, {'dcm2niix2bids': Plugin({})}, 'DICOM')
 
     # Create the metadata sidecar file
     outfolder = tmp_path/'bids'/'sub-001'/'ses-01'/'anat'
