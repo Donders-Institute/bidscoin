@@ -443,7 +443,7 @@ def test_insert_bidskeyval():
     assert bidsname == 'sub-01_T1w'
 
     bidsname = bids.insert_bidskeyval('anat/sub-01_foo-bar_T1w.nii', 'foo', 'baz', False)
-    assert bidsname == 'anat/sub-01_foo-baz_T1w.nii'
+    assert bidsname == str(Path('anat/sub-01_foo-baz_T1w.nii'))
 
 
 def test_increment_runindex(tmp_path):
