@@ -454,7 +454,7 @@ def get_dicomfile(folder: Path, index: int=0) -> Path:
         files = sorted(folder.iterdir())
 
     idx = 0
-    for file in files:
+    for file in sorted(files):
         if file.name.startswith('.'):
             LOGGER.verbose(f"Ignoring hidden file: {file}")
             continue
