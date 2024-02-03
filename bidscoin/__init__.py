@@ -117,7 +117,7 @@ def bidsversion() -> str:
 
 def lsdirs(folder: Path, wildcard: str='*') -> List[Path]:
     """
-    Gets all directories in a folder, ignores files. Foldernames starting with a dot are considered hidden and will be skipped
+    Gets all sorted directories in a folder, ignores files. Foldernames starting with a dot are considered hidden and will be skipped
 
     :param folder:      The full pathname of the folder
     :param wildcard:    Simple (glob.glob) shell-style wildcards. Use '**/wildcard for recursive search'

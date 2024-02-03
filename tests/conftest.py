@@ -20,8 +20,8 @@ def raw_dicomdir(tmp_path_factory):
     shutil.rmtree(raw/'TINY_ALPHA')                                     # Does not contain normal DICOM fields / evokes warnings or errors
     dicomsort.sortsessions(raw/'DICOMDIR', None)                        # The bidsmapper/coiner are NOT picking up the multi-subject DICOMDIR data properly :-(
     dicomfile = next((raw/'Doe^Peter'/'03-Brain'/'002-TSC RF FAST PILOT/').iterdir())
-    dicomfile.replace(dicomfile.parent/'_.dcm')                         # Make sure this is the first file when sorted
-    sourcesidecar = raw/'Doe^Peter'/'03-Brain'/'002-TSC RF FAST PILOT/_.json'
+    dicomfile.replace(dicomfile.parent/'0_.dcm')                        # Make sure this is the first file when sorted
+    sourcesidecar = raw/'Doe^Peter'/'03-Brain'/'002-TSC RF FAST PILOT/0_.json'
     with sourcesidecar.open('w') as sidecar:
         json.dump({'SeriesDescription': 'TestExtAtrributes',  'Comment': 'TestExtComment'}, sidecar)
     return raw
