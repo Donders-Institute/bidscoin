@@ -2013,7 +2013,7 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, ext
 
     # Add the source metadata to the metadict or copy it over
     for ext in set(extensions):
-        for sourcefile in sourcemeta.parent.glob(sourcemeta.with_suffix('').with_suffix(ext).name):
+        for sourcefile in sorted(sourcemeta.parent.glob(sourcemeta.with_suffix('').with_suffix(ext).name)):
             LOGGER.info(f"Copying source data from: '{sourcefile}''")
 
             # Put the metadata in metadict
