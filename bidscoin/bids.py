@@ -1982,9 +1982,9 @@ def increment_runindex(outfolder: Path, bidsname: str, run: Run, scans_table: pd
             LOGGER.info(f"Found run-2 files for <<>> index, renaming\n{runless_file} -> {run1_name}")
             runless_file.replace((outfolder/run1_name).with_suffix(''.join(runless_file.suffixes)))
 
-            # Update the scans-tsv file
-            runless_entry = f"{outfolder.name}/{runless_file.name}"      # NB: as posix
-            run1_entry    = insert_bidskeyval(runless_entry, 'run', '1', False)
+            # Update the scans-tsv file. NB: as posix
+            runless_entry = f"{outfolder.name}/{runless_file.name}"
+            run1_entry    = f"{outfolder.name}/{insert_bidskeyval(runless_file.name, 'run', '1', False)}"
             if runless_entry in scans_table.index:
                 scans_table.rename(index={runless_entry: run1_entry}, inplace=True)
 
