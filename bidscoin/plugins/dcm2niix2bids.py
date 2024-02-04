@@ -435,11 +435,8 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                 # Rename all associated files (i.e. the json-, bval- and bvec-files)
                 oldjsonfile = dcm2niixfile.with_suffix('').with_suffix('.json')
                 newjsonfile = newbidsfile.with_suffix('').with_suffix('.json')
-                if not oldjsonfile.is_file():
-                    LOGGER.warning(f"Unexpected file conversion result: {oldjsonfile} not found")
-                else:
-                    sidecars.discard(oldjsonfile)
-                    sidecars.add(newjsonfile)
+                sidecars.discard(oldjsonfile)
+                sidecars.add(newjsonfile)
                 for oldfile in outfolder.glob(dcm2niixfile.with_suffix('').stem + '.*'):
                     oldfile.replace(newjsonfile.with_suffix(''.join(oldfile.suffixes)))
 
