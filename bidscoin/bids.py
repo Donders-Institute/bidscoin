@@ -1932,18 +1932,17 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, v
     return newbidsfile
 
 
-def increment_runindex(outfolder: Path, bidsname: str, run: Run, scans_table: pd.DataFrame=pd.DataFrame()) -> str:
+def increment_runindex(outfolder: Path, bidsname: str, run: Run) -> str:
     """
     Checks if a file with the same bidsname already exists in the folder and then increments the dynamic runindex
     (if any) until no such file is found.
 
-    NB: For <<>> runs, if the run-less file already exists, then add 'run-2' to bidsname, rename run-less files to
-    'run-1' and update the `scans_table` accordingly.
+    NB: For <<>> runs, if the run-less file already exists, then add 'run-2' to bidsname and rename run-less files
+    to 'run-1'
 
     :param outfolder:   The full pathname of the bids output folder
     :param bidsname:    The bidsname with a provisional runindex, e.g. from get_bidsname()
     :param run:         The run mapping with the BIDS key-value pairs
-    :param scans_table: BIDS scans.tsv dataframe with all filenames and e.g. acquisition timestamps
     :return:            The bidsname with the original or incremented runindex
     """
 
@@ -1981,12 +1980,6 @@ def increment_runindex(outfolder: Path, bidsname: str, run: Run, scans_table: pd
         for runless_file in runless_files:
             LOGGER.info(f"Found run-2 files for <<>> index, renaming\n{runless_file} -> {run1_name}")
             runless_file.replace((outfolder/run1_name).with_suffix(''.join(runless_file.suffixes)))
-
-            # Update the scans-tsv file. NB: as posix
-            runless_entry = f"{outfolder.name}/{runless_file.name}"
-            run1_entry    = f"{outfolder.name}/{insert_bidskeyval(runless_file.name, 'run', '1', False)}"
-            if runless_entry in scans_table.index:
-                scans_table.rename(index={runless_entry: run1_entry}, inplace=True)
 
     return bidsname + bidsext
 

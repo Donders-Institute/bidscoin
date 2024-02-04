@@ -474,16 +474,9 @@ def test_increment_runindex(tmp_path):
     for suffix in ('.nii.gz', '.json'):
         (outfolder/runless).with_suffix(suffix).touch()
 
-    # Create the scans test tables
-    scans_data      = {'filename': [f"anat/{runless}.nii.gz", 'anat/otherscan.nii.gz'], 'acq_time': ['runless', 'other']}
-    new_scans_data  = {'filename': [f"anat/{run1}.nii.gz",    'anat/otherscan.nii.gz'], 'acq_time': ['runless', 'other']}
-    scans_table     = pd.DataFrame(scans_data    ).set_index('filename')
-    new_scans_table = pd.DataFrame(new_scans_data).set_index('filename')
-
     # Test renaming of run-less to run-1 + updating scans_table
-    bidsname = bids.increment_runindex(outfolder, runless, Run({'bids': {'run': '<<>>'}}), scans_table)
+    bidsname = bids.increment_runindex(outfolder, runless, Run({'bids': {'run': '<<>>'}}))
     assert bidsname == run2
-    assert scans_table.equals(new_scans_table)
     for suffix in ('.nii.gz', '.json'):
         assert (outfolder/runless).with_suffix(suffix).is_file() is False
         assert (outfolder/run1   ).with_suffix(suffix).is_file() is True
@@ -498,9 +491,8 @@ def test_increment_runindex(tmp_path):
     for suffix in ('.nii.gz', '.json'):
         (outfolder/run2).with_suffix(suffix).touch()
 
-    bidsname = bids.increment_runindex(outfolder, runless + '.nii.gz', Run({'bids': {'run': '<<>>'}}), scans_table)
+    bidsname = bids.increment_runindex(outfolder, runless + '.nii.gz', Run({'bids': {'run': '<<>>'}}))
     assert bidsname == run3 + '.nii.gz'
-    assert scans_table.equals(new_scans_table)      # -> Must remain untouched
 
     bidsname = bids.increment_runindex(outfolder, run1, Run({'bids': {'run': '<<1>>'}}))
     assert bidsname == run3

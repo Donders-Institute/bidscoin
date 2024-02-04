@@ -215,7 +215,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
         bidsignore = bids.check_ignore(datasource.datatype, bidsmap['Options']['bidscoin']['bidsignore'])
         bidsname   = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
         bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap['Options']['bidscoin']['bidsignore'], 'file')
-        bidsname   = bids.increment_runindex(outfolder, bidsname, run, scans_table)
+        bidsname   = bids.increment_runindex(outfolder, bidsname, run)
         bidsfile   = (outfolder/bidsname).with_suffix(ext)
 
         # Check if the bidsname is valid
@@ -239,6 +239,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
             json.dump(metadata, json_fid, indent=4)
 
         # Add an entry to the scans_table (we typically don't have useful data to put there)
+        # TODO: Add check for derivative and ignore (as in other plugins)
         acq_time = dateutil.parser.parse(f"1925-01-01T{metadata.get('AcquisitionTime', '')}")
         scans_table.loc[bidsfile.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time.isoformat()
 

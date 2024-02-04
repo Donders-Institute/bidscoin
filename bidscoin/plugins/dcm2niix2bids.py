@@ -268,11 +268,11 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        ignore   = bids.check_ignore(datasource.datatype, bidsignore)
-        bidsname = bids.get_bidsname(subid, sesid, run, not ignore, runtime=True)
-        ignore   = ignore or bids.check_ignore(bidsname+'.json', bidsignore, 'file')
-        bidsname = bids.increment_runindex(outfolder, bidsname, run, scans_table)
-        sidecars = set()        # -> A store for all output targets, in the form of json sidecar-files (which is the easiest)
+        ignore    = bids.check_ignore(datasource.datatype, bidsignore)
+        bidsname  = bids.get_bidsname(subid, sesid, run, not ignore, runtime=True)
+        ignore    = ignore or bids.check_ignore(bidsname+'.json', bidsignore, 'file')
+        bidsname  = bids.increment_runindex(outfolder, bidsname, run)
+        bidsnames = set()        # -> A store for all output targets for this bidsname
 
         # Check if the bidsname is valid
         bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.json').as_posix()
@@ -299,7 +299,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
             try:
                 physiodata = physio.readphysio(sourcefile)
                 physio.physio2tsv(physiodata, outfolder/bidsname)
-                sidecars.add(outfolder/f"{bidsname}.json")             # Collect the created json file
+                bidsnames.add(bidsname)                                 # Collect the bidsname
             except Exception as physioerror:
                 LOGGER.error(f"Could not read/convert physiological file: {sourcefile}\n{physioerror}")
                 continue
@@ -315,9 +315,9 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
             if bcoin.run_command(command) and not next(outfolder.glob(f"{bidsname}.*"), None):
                 continue
 
-            # Collect the json file output file
+            # Collect the bidsname
             if next(outfolder.glob(f"{bidsname}.nii*"), None):
-                sidecars.add(outfolder/f"{bidsname}.json")
+                bidsnames.add(bidsname)
 
             # Handle the ABCD GE pepolar sequence
             extrafile = next(outfolder.glob(f"{bidsname}a.nii*"), None)
@@ -331,7 +331,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                     LOGGER.verbose(f"Renaming GE reversed polarity image: {extrafile} -> {invfile}")
                     extrafile.replace(invfile)
                     extrafile.with_suffix('').with_suffix('.json').replace(invfile.with_suffix('').with_suffix('.json'))
-                    sidecars.add(invfile.with_suffix('').with_suffix('.json'))
+                    bidsnames.add(invfile.with_suffix('').stem)
                 else:
                     LOGGER.error(f"Unexpected variants of {outfolder/bidsname}* were produced by dcm2niix. Possibly this can be remedied by using the dcm2niix -i option (to ignore derived, localizer and 2D images) or by clearing the BIDS folder before running bidscoiner")
 
@@ -425,33 +425,34 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                         LOGGER.warning(f"The {newbidsname} image is a derivate / not BIDS-compliant -- you can probably delete it safely and update {scans_tsv}")
 
                 # Save the NIfTI file with the newly constructed name
-                newbidsname = bids.increment_runindex(outfolder, newbidsname, run, scans_table)                 # Update the runindex now that the name has changed
+                newbidsname = bids.increment_runindex(outfolder, newbidsname, run)                              # Update the runindex now that the name has changed
                 newbidsfile = outfolder/newbidsname
                 LOGGER.verbose(f"Found dcm2niix {postfixes} postfixes, renaming\n{dcm2niixfile} ->\n{newbidsfile}")
                 if newbidsfile.is_file():
                     LOGGER.warning(f"Overwriting existing {newbidsfile} file -- check your results carefully!")
                 dcm2niixfile.replace(newbidsfile)
+                bidsnames.add(newbidsfile.with_suffix('').stem)
 
                 # Rename all associated files (i.e. the json-, bval- and bvec-files)
-                oldjsonfile = dcm2niixfile.with_suffix('').with_suffix('.json')
-                newjsonfile = newbidsfile.with_suffix('').with_suffix('.json')
-                sidecars.discard(oldjsonfile)
-                sidecars.add(newjsonfile)
                 for oldfile in outfolder.glob(dcm2niixfile.with_suffix('').stem + '.*'):
-                    oldfile.replace(newjsonfile.with_suffix(''.join(oldfile.suffixes)))
+                    oldfile.replace(newbidsfile.with_suffix('').with_suffix(''.join(oldfile.suffixes)))
 
-        # Loop over all the newly produced json sidecar-files and adapt the data (NB: assumes every NIfTI-file comes with a json-file)
-        for jsonfile in sorted(sidecars):
+        # Loop over all bidsnames (i.e. the produced output files) and adapt the json sidecar data
+        for bidsname in sorted(bidsnames):
 
-            # Check if everything went OK
-            if not next(outfolder.glob(f"{jsonfile.stem}.*"), None):
-                LOGGER.error(f"Unexpected conversion result, no output files: {outfolder/jsonfile.stem}.*")
-                continue
-            if not jsonfile.is_file():
-                LOGGER.warning(f"Unexpected conversion result, could not find: {jsonfile}")
+            # Check if everything went OK, i.e. find the bidsname NIfTI/tsv.gz file (there should be only one) + json-file
+            try:
+                outputfiles = [file for file in outfolder.glob(f"{bidsname}.*") if file.suffix in ('.nii','.gz')]
+                assert len(outputfiles) == 1
+                outputfile = outputfiles[0]
+            except AssertionError:
+                LOGGER.error(f"Unexpected conversion result, no output files: {outfolder/bidsname}.*")
                 continue
 
             # Load / copy over the source meta-data
+            jsonfile = (outfolder/bidsname).with_suffix('.json')
+            if not jsonfile.is_file():
+                LOGGER.warning(f"Unexpected conversion result, could not find: {jsonfile}")
             metadata = bids.updatemetadata(datasource, jsonfile, run['meta'], options['meta'])
 
             # Remove the bval/bvec files of sbref- and inv-images (produced by dcm2niix but not allowed by the BIDS specifications)
@@ -476,10 +477,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                 json.dump(metadata, json_fid, indent=4)
 
             # Parse the acquisition time from the source header or else from the json file (NB: assuming the source file represents the first acquisition)
-            outputfile = [file for file in jsonfile.parent.glob(jsonfile.stem + '.*') if file.suffix in ('.nii','.gz')]     # Find the corresponding NIfTI/tsv.gz file (there should be only one, let's not make assumptions about the .gz extension)
-            if not outputfile:
-                LOGGER.error(f"No data-file found with {jsonfile} when updating {scans_tsv}")
-            elif not ignore and not suffix in bids.get_derivatives(datasource.datatype, exceptions):
+            if not ignore and not suffix in bids.get_derivatives(datasource.datatype, exceptions):
                 acq_time = ''
                 if dataformat == 'DICOM':
                     acq_time = f"{datasource.attributes('AcquisitionDate')}T{datasource.attributes('AcquisitionTime')}"
@@ -495,7 +493,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                 except Exception as jsonerror:
                     LOGGER.warning(f"Could not parse the acquisition time from: {sourcefile}\n{jsonerror}")
                     acq_time = 'n/a'
-                scanpath = outputfile[0].relative_to(bidsses)
+                scanpath = outputfile.relative_to(bidsses)
                 scans_table.loc[scanpath.as_posix(), 'acq_time'] = acq_time
 
     # Write the scans_table to disk
