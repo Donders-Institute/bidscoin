@@ -389,26 +389,28 @@ def unpack(sesfolder: Path, wildcard: str='', workfolder: Path='', _subprefix: U
 @lru_cache(maxsize=65536)
 def is_dicomfile(file: Path) -> bool:
     """
-    Checks whether a file is a DICOM-file. It uses the feature that Dicoms have the string DICM hardcoded at offset 0x80.
+    Checks whether a file is a DICOM-file. As a quick test, it first uses the feature that Dicoms have the
+    string DICM hardcoded at offset 0x80. If that fails and (the file has a normal DICOM extension, e.g. '.dcm')
+    then it is tested whether pydicom can read the file
 
     :param file:    The full pathname of the file
     :return:        Returns true if a file is a DICOM-file
     """
 
     if file.is_file():
+
+        # Perform a quick test first
         with file.open('rb') as dicomfile:
             dicomfile.seek(0x80, 1)
             if dicomfile.read(4) == b'DICM':
                 return True
-        # Reading non-standard DICOM file
-        if file.suffix.lower() in ('.ima','.dcm','.dicm','.dicom',''):           # Avoid memory problems when reading a very large (e.g. EEG) source file
+
+        # Perform a proof of the pudding test (but avoid memory problems when reading a very large (e.g. EEG) source file)
+        if file.suffix.lower() in ('.ima','.dcm','.dicm','.dicom',''):
             if file.name == 'DICOMDIR':
                 return True
-            dicomdata = dcmread(file, force=True)               # The DICM tag may be missing for anonymized DICOM files
+            dicomdata = dcmread(file, force=True)   # The DICM tag may be missing for anonymized DICOM files. NB: Force=False raises an error for non-DICOM files
             return 'Modality' in dicomdata
-        # else:
-        #     dicomdata = dcmread(file)                         # NB: Raises an error for non-DICOM files
-        #     return 'Modality' in dicomdata
 
     return False
 
@@ -1687,6 +1689,7 @@ def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) ->
     unknowndatatypes: list = bidsmap['Options']['bidscoin'].get('unknowntypes',[])
     ignoredatatypes:  list = bidsmap['Options']['bidscoin'].get('ignoretypes',[])
     bidsdatatypes:    list = [dtype for dtype in bidsmap.get(datasource.dataformat) if dtype not in unknowndatatypes + ignoredatatypes + ['subject', 'session']]
+    dataformat             = Dataformat(bidsmap.get(datasource.dataformat, {}))
 
     # Loop through all datatypes and runs; all info goes cleanly into run_ (to avoid formatting problem of the CommentedMap)
     if 'fmap' in bidsdatatypes:
@@ -1694,7 +1697,9 @@ def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) ->
     run_ = create_run(datasource, bidsmap)
     for datatype in ignoredatatypes + bidsdatatypes + unknowndatatypes:         # The ordered datatypes in which a matching run is searched for
 
-        runs                = bidsmap.get(datasource.dataformat, {}).get(datatype)
+        if datatype not in dataformat:
+            continue
+        runs                = dataformat.get(datatype)
         datasource.datatype = datatype
         for run in runs or []:
 
@@ -2013,7 +2018,7 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, ext
 
     # Add the source metadata to the metadict or copy it over
     for ext in set(extensions):
-        for sourcefile in sorted(sourcemeta.parent.glob(sourcemeta.with_suffix('').with_suffix(ext).name)):
+        for sourcefile in sourcemeta.parent.glob(sourcemeta.with_suffix('').with_suffix(ext).name):
             LOGGER.info(f"Copying source data from: '{sourcefile}''")
 
             # Put the metadata in metadict
