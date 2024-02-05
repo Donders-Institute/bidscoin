@@ -30,7 +30,7 @@ if find_spec('bidscoin') is None:
 from bidscoin import templatefolder, pluginfolder, bidsmap_template, tutorialurl, trackusage, tracking, configfile, config, DEBUG
 
 yaml = YAML()
-yaml.composer.return_alias = lambda s: copy.deepcopy(s)                         # Expand aliases (https://stackoverflow.com/questions/66977002/yaml-anchor-for-sequence/66983530#66983530)
+yaml.representer.ignore_aliases = lambda *data: True                         # Expand aliases (https://stackoverflow.com/questions/66977002/yaml-anchor-for-sequence/66983530#66983530)
 
 LOGGER = logging.getLogger(__name__)
 

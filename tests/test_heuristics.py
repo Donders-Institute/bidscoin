@@ -4,7 +4,7 @@ import copy
 from bidscoin import bcoin, bidscoinroot
 from ruamel.yaml import YAML
 yaml = YAML()
-yaml.composer.return_alias = lambda s: copy.deepcopy(s)                         # Expand aliases (https://stackoverflow.com/questions/66977002/yaml-anchor-for-sequence/66983530#66983530)
+yaml.representer.ignore_aliases = lambda *data: True                         # Expand aliases (https://stackoverflow.com/questions/66977002/yaml-anchor-for-sequence/66983530#66983530)
 
 bcoin.setup_logging()
 

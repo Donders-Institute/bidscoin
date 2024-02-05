@@ -32,9 +32,9 @@ from bidscoin import bcoin, schemafolder, templatefolder, lsdirs, __version__
 from bidscoin.utilities import dicomsort
 from ruamel.yaml import YAML
 yaml = YAML()
-yaml.composer.return_alias = lambda s: copy.deepcopy(s)                         # Expand aliases (https://stackoverflow.com/questions/66977002/yaml-anchor-for-sequence/66983530#66983530)
+yaml.representer.ignore_aliases = lambda *data: True                         # Expand aliases (https://stackoverflow.com/questions/66977002/yaml-anchor-for-sequence/66983530#66983530)
 
-# Define custom data types (replace with TypeAlias when Python >= 3.10)
+# Define custom data types (replace with proper classes or TypeAlias of Python >= 3.10)
 Plugin     = NewType('Plugin',     Dict[str, Any])
 Options    = NewType('Options',    Dict[str, Dict[str, Any]])
 Properties = NewType('Properties', Dict[str, Any])
@@ -920,7 +920,7 @@ def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Uni
     if any(checks):
         LOGGER.info(f"Reading: {yamlfile}")
     with yamlfile.open('r') as stream:
-        bidsmap: Bidsmap = yaml.load(stream)
+        bidsmap = Bidsmap(yaml.load(stream))
 
     # Issue a warning if the version in the bidsmap YAML-file is not the same as the bidscoin version
     if 'bidscoin' in bidsmap['Options'] and 'version' in bidsmap['Options']['bidscoin']:
