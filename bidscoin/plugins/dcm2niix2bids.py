@@ -174,15 +174,9 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
                 run['provenance']      = str(shutil.copyfile(sourcefile, targetfile))
                 run['datasource'].path = targetfile
 
-            # Copy the filled-in run over to the new bidsmap
-            bids.append_run(bidsmap_new, run)
-
-    # Try to automagically set the {part: phase/imag/real} (should work for Siemens data)
-    for datatype in bidsmap_new['DICOM']:
-        if not isinstance(bidsmap_new['DICOM'][datatype], list): continue  # E.g. 'subject', 'session' and empty datatypes
-        for run in bidsmap_new['DICOM'][datatype]:
-            if 'part' in run['bids'] and not run['bids']['part'][-1] and 'ImageType' in run['attributes']:
-                imagetype = ast.literal_eval(run['attributes']['ImageType'])
+            # Try to automagically set the {part: phase/imag/real} (should work for Siemens data)
+            if 'part' in run['bids'] and not run['bids']['part'][-1] and 'ImageType' in run['attributes']:     # part[-1]==0 -> part is not specified
+                imagetype = ast.literal_eval(run['attributes']['ImageType'])        # E.g. ImageType: "['ORIGINAL', 'PRIMARY', 'M', 'ND']"
                 if 'P' in imagetype:
                     run['bids']['part'][-1] = run['bids']['part'].index('phase')
                 # elif 'M' in imagetype:
@@ -191,6 +185,9 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
                     run['bids']['part'][-1] = run['bids']['part'].index('imag')
                 elif 'R' in imagetype:
                     run['bids']['part'][-1] = run['bids']['part'].index('real')
+
+            # Copy the filled-in run over to the new bidsmap
+            bids.append_run(bidsmap_new, run)
 
 
 @due.dcite(Doi('10.1016/j.jneumeth.2016.03.001'), description='dcm2niix: DICOM to NIfTI converter', tags=['reference-implementation'])

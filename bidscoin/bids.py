@@ -32,6 +32,7 @@ from bidscoin import bcoin, schemafolder, templatefolder, lsdirs, __version__
 from bidscoin.utilities import dicomsort
 from ruamel.yaml import YAML
 yaml = YAML()
+yaml.composer.return_alias = lambda s: copy.deepcopy(s)                         # Expand aliases (https://stackoverflow.com/questions/66977002/yaml-anchor-for-sequence/66983530#66983530)
 
 # Define custom data types (replace with TypeAlias when Python >= 3.10)
 Plugin     = NewType('Plugin',     Dict[str, Any])
