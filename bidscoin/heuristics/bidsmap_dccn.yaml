@@ -79,7 +79,7 @@ DICOM:
       rec:
       run: <<>>                   # This will be updated dynamically during bidscoiner runtime (as it depends on the already existing files)
       echo:
-      part: ['', mag, phase, real, imag, 0]   # # This BIDS value list will be shown as a dropdown menu in the bidseditor with the first (empty) item selected (as indicated by the last item, i.e. 0)
+      part: ['', mag, phase, real, imag, 0]   # This BIDS value list will be shown as a dropdown menu in the bidseditor with the first (empty) item selected (as indicated by the last item, i.e. 0)
       chunk:
       suffix: T1w
     meta: {}                      # This is an optional entry for meta-data that will be appended to the json sidecar files produced by the plugin

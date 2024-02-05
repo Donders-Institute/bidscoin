@@ -9,6 +9,7 @@ import dateutil.parser
 import pandas as pd
 import json
 import shutil
+import ast
 from bids_validator import BIDSValidator
 from typing import Union, List
 from pathlib import Path
@@ -173,6 +174,19 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
                 run['provenance']      = str(shutil.copyfile(sourcefile, targetfile))
                 run['datasource'].path = targetfile
 
+            # Try to automagically set the {part: phase/imag/real} (should work for Siemens data)
+            if 'part' in run['bids'] and 'ImageType' in run['attributes']:
+                imagetype = ast.literal_eval(run['attributes']['ImageType'])
+                if not run['bids']['part'][run['bids']['part'][-1]]:        # -> Part if not specified
+                    if 'P' in imagetype:
+                        run['bids']['part'][-1] = run['bids']['part'].index('phase')
+                    # elif 'M' in imagetype:
+                    #     run['bids']['part'][-1] = run['bids']['part'].index('mag')
+                    elif 'I' in imagetype:
+                        run['bids']['part'][-1] = run['bids']['part'].index('imag')
+                    elif 'R' in imagetype:
+                        run['bids']['part'][-1] = run['bids']['part'].index('real')
+
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)
 
@@ -335,7 +349,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                 else:
                     LOGGER.error(f"Unexpected variants of {outfolder/bidsname}* were produced by dcm2niix. Possibly this can be remedied by using the dcm2niix -i option (to ignore derived, localizer and 2D images) or by clearing the BIDS folder before running bidscoiner")
 
-            # Replace uncropped output image with the cropped one
+            # Replace uncropped output image with the cropped one. TODO: fix
             if '-x y' in options.get('args',''):
                 for dcm2niixfile in sorted(outfolder.glob(bidsname + '*_Crop_*')):                              # e.g. *_Crop_1.nii.gz
                     ext         = ''.join(dcm2niixfile.suffixes)
