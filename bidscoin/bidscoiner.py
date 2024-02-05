@@ -324,9 +324,11 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
         for fmap in fmaps:
 
             # Load the existing meta-data
+            jsondata = {}
             jsonfile = bidsses/Path(fmap).with_suffix('').with_suffix('.json')
-            with jsonfile.open('r') as sidecar:
-                jsondata = json.load(sidecar)
+            if jsonfile.is_file():
+                with jsonfile.open('r') as sidecar:
+                    jsondata = json.load(sidecar)
 
             # Search for the imaging files that match the IntendedFor search criteria
             intendedfor = jsondata.get('IntendedFor')
@@ -415,8 +417,9 @@ def addmetadata(bidsses: Path, subid: str, sesid: str) -> None:
                     LOGGER.verbose(f"Adding EchoTime1: {echotime[0]} and EchoTime2: {echotime[1]} to {jsonfile}")
 
             # Save the collected meta-data to disk
-            with jsonfile.open('w') as sidecar:
-                json.dump(jsondata, sidecar, indent=4)
+            if jsondata:
+                with jsonfile.open('w') as sidecar:
+                    json.dump(jsondata, sidecar, indent=4)
 
 
 def main():

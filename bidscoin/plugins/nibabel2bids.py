@@ -235,8 +235,9 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
         # Load / copy over the source meta-data
         sidecar  = bidsfile.with_suffix('').with_suffix('.json')
         metadata = bids.updatemetadata(datasource, sidecar, run['meta'], meta)
-        with sidecar.open('w') as json_fid:
-            json.dump(metadata, json_fid, indent=4)
+        if metadata:
+            with sidecar.open('w') as json_fid:
+                json.dump(metadata, json_fid, indent=4)
 
         # Add an entry to the scans_table (we typically don't have useful data to put there)
         # TODO: Add check for derivative and ignore (as in other plugins)

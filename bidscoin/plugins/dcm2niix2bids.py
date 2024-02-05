@@ -245,7 +245,6 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         # Get a matching run from the bidsmap
         datasource = bids.DataSource(sourcefile, {'dcm2niix2bids': options}, dataformat)
         run, match = bids.get_matching_run(datasource, bidsmap, runtime=True)
-        runindex   = run['bids'].get('run', '')
 
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
@@ -271,6 +270,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         ignore    = bids.check_ignore(datasource.datatype, bidsignore)
         bidsname  = bids.get_bidsname(subid, sesid, run, not ignore, runtime=True)
         ignore    = ignore or bids.check_ignore(bidsname+'.json', bidsignore, 'file')
+        runindex  = bids.get_bidsvalue(bidsname, 'run')
         bidsname  = bids.increment_runindex(outfolder, bidsname, run)
         bidsnames = set()        # -> A store for all output targets for this bidsname
 
@@ -312,7 +312,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                 filename  = bidsname,
                 outfolder = outfolder,
                 source    = source)
-            if bcoin.run_command(command) and not next(outfolder.glob(f"{bidsname}.*"), None):
+            if bcoin.run_command(command) and not next(outfolder.glob(f"{bidsname}*"), None):
                 continue
 
             # Collect the bidsname
@@ -352,10 +352,10 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                 # Strip each dcm2niix postfix and assign it to bids entities in a newly constructed bidsname
                 ext         = ''.join(dcm2niixfile.suffixes)
                 postfixes   = dcm2niixfile.name.split(bidsname)[1].rsplit(ext)[0].split('_')[1:]
-                newbidsname = bids.insert_bidskeyval(dcm2niixfile.name, 'run', bids.sanitize(runindex), ignore)        # Restart the run-index. NB: Unlike bidsname, newbidsname has a file extension
+                newbidsname = bids.insert_bidskeyval(dcm2niixfile.name, 'run', runindex, ignore)        # Restart the run-index. NB: Unlike bidsname, newbidsname has a file extension
                 for postfix in postfixes:
 
-                    # Patch the echo entity in the newbidsname with the dcm2niix echo info                      # NB: We can't rely on the bids-entity info here because manufacturers can e.g. put multiple echos in one series / run-folder
+                    # Patch the echo entity in the newbidsname with the dcm2niix echo info                     # NB: We can't rely on the bids-entity info here because manufacturers can e.g. put multiple echos in one series / run-folder
                     if 'echo' in run['bids'] and postfix.startswith('e'):
                         echonr = f"_{postfix}".replace('_e','')                                                 # E.g. postfix='e1'
                         if not echonr:
@@ -445,8 +445,8 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                 outputfiles = [file for file in outfolder.glob(f"{bidsname}.*") if file.suffix in ('.nii','.gz')]
                 assert len(outputfiles) == 1
                 outputfile = outputfiles[0]
-            except AssertionError:
-                LOGGER.error(f"Unexpected conversion result, no output files: {outfolder/bidsname}.*")
+            except AssertionError as outputerror:
+                LOGGER.error(f"Unexpected conversion result(s): {outfolder/bidsname}.*\n{outputerror}")
                 continue
 
             # Load / copy over the source meta-data
@@ -473,8 +473,9 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                             bfile.unlink()
 
             # Save the meta-data to the json sidecar-file
-            with jsonfile.open('w') as json_fid:
-                json.dump(metadata, json_fid, indent=4)
+            if metadata:
+                with jsonfile.open('w') as json_fid:
+                    json.dump(metadata, json_fid, indent=4)
 
             # Parse the acquisition time from the source header or else from the json file (NB: assuming the source file represents the first acquisition)
             if not ignore and not suffix in bids.get_derivatives(datasource.datatype, exceptions):

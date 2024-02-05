@@ -259,8 +259,9 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
 
         # Load / copy over and adapt the newly produced json sidecar-file (NB: assumes every NIfTI-file comes with a json-file)
         metadata = bids.updatemetadata(datasource, sidecar, run['meta'], options['meta'])
-        with sidecar.open('w') as json_fid:
-            json.dump(metadata, json_fid, indent=4)
+        if metadata:
+            with sidecar.open('w') as json_fid:
+                json.dump(metadata, json_fid, indent=4)
 
         # Parse the acquisition time from the source header or else from the json file (NB: assuming the source file represents the first acquisition)
         suffix     = datasource.dynamicvalue(run['bids']['suffix'], True, True)
