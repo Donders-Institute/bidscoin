@@ -14,6 +14,7 @@ import sys
 import urllib.request
 import time
 import argparse
+import copy
 from duecredit.cmdline import cmd_summary
 from functools import lru_cache
 from importlib.metadata import entry_points
@@ -29,6 +30,7 @@ if find_spec('bidscoin') is None:
 from bidscoin import templatefolder, pluginfolder, bidsmap_template, tutorialurl, trackusage, tracking, configfile, config, DEBUG
 
 yaml = YAML()
+yaml.composer.return_alias = lambda s: copy.deepcopy(s)                         # Expand aliases (https://stackoverflow.com/questions/66977002/yaml-anchor-for-sequence/66983530#66983530)
 
 LOGGER = logging.getLogger(__name__)
 
