@@ -878,7 +878,7 @@ class EditWindow(QDialog):
         self.current_datatype: str       = datasource.datatype      # The BIDS datatype of the run-item just before it is being changed (again)
         self.unknowndatatypes: List[str] = [datatype for datatype in bidsmap['Options']['bidscoin']['unknowntypes'] if datatype in template_bidsmap[self.dataformat]]
         self.ignoredatatypes: List[str]  = [datatype for datatype in bidsmap['Options']['bidscoin']['ignoretypes']  if datatype in template_bidsmap[self.dataformat]]
-        self.bidsdatatypes: List[str]    = [datatype for datatype in template_bidsmap[self.dataformat] if datatype not in self.unknowndatatypes.union(self.ignoredatatypes, {'subject', 'session'})]
+        self.bidsdatatypes: List[str]    = [datatype for datatype in template_bidsmap[self.dataformat] if datatype not in self.unknowndatatypes + self.ignoredatatypes + ['subject', 'session']]
         self.bidsignore: List[str]       = bidsmap['Options']['bidscoin']['bidsignore']
         self.source_bidsmap: Bidsmap     = bidsmap                  # The bidsmap at the start of the edit = output_bidsmap in the MainWindow
         self.target_bidsmap: Bidsmap     = copy.deepcopy(bidsmap)   # The edited bidsmap -> will be returned as output_bidsmap in the MainWindow
