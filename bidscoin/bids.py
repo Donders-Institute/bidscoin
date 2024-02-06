@@ -132,6 +132,9 @@ class DataSource:
         :return:        The property value (posix with a trailing "/" if tagname == 'filepath') or '' if the property could not be parsed from the datasource
         """
 
+        if not self.path.is_file():
+            return ''
+
         try:
             if tagname.startswith('filepath:') and len(tagname) > 9:
                 match = re.findall(tagname[9:], self.path.parent.as_posix() + '/')
@@ -191,6 +194,8 @@ class DataSource:
         """
 
         attributeval = pattern = ''
+        if not self.path.is_file():
+            return ''
 
         try:
             # Split off the regular expression pattern
@@ -1384,12 +1389,12 @@ def create_run(datasource: DataSource=None, bidsmap: Bidsmap=None) -> Run:
     """
     Create an empty run-item with the proper structure, provenance info and a data source
 
-    :param datasource:  The data source that is attached
+    :param datasource:  The data source that is deepcopied and attached
     :param bidsmap:     The bidsmap, with all the bidscoin options in it (for prefix/plugin info)
     :return:            The created run
     """
 
-    datasource = datasource or DataSource()
+    datasource = copy.deepcopy(datasource or DataSource())
     if bidsmap:
         datasource.plugins   = bidsmap['Options']['plugins']
         datasource.subprefix = bidsmap['Options']['bidscoin'].get('subprefix','')
@@ -1420,7 +1425,7 @@ def get_run(bidsmap: Bidsmap, datatype: str, suffix_idx: Union[int, str], dataso
         if index == suffix_idx or run['bids']['suffix'] == suffix_idx:
 
             # Get a clean run (remove comments to avoid overly complicated commentedMaps from ruamel.yaml)
-            run_ = create_run(copy.deepcopy(datasource), bidsmap)
+            run_ = create_run(datasource, bidsmap)
             run_['datasource'].datatype = datatype
 
             for propkey, propvalue in run['properties'].items():
@@ -1531,7 +1536,7 @@ def append_run(bidsmap: Bidsmap, run: Run, clean: bool=True) -> None:
         for item in run_:
             if item in ('provenance', 'datasource'):
                 continue
-            run_[item].update(run[item])
+            run_[item].update(copy.deepcopy(run[item]))
         run = run_
 
     dataformat = run['datasource'].dataformat

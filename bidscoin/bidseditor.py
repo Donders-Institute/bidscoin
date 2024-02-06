@@ -1357,7 +1357,7 @@ class EditWindow(QDialog):
             self.reset()
             return
         else:
-            self.target_run = new_target_run
+            self.target_run = copy.deepcopy(new_target_run)
 
         # Transfer the old entity data to the new run-item if possible and if it's not there yet
         for key, val in old_entities.items():

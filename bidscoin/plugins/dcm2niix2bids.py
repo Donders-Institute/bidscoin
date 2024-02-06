@@ -164,7 +164,23 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
 
             # Communicate with the user if the run was not present in bidsmap_old or in template, i.e. that we found a new sample
             if not match:
+
                 LOGGER.info(f"Discovered '{datasource.datatype}' {dataformat} sample: {sourcefile}")
+
+                # Try to automagically set the {part: phase/imag/real} (should work for Siemens data)
+                if not datasource.datatype=='' and 'part' in run['bids'] and not run['bids']['part'][-1] and run['attributes'].get('ImageType'):    # part[-1]==0 -> part is not specified
+                    imagetype = ast.literal_eval(run['attributes']['ImageType'])                                    # E.g. ImageType = "['ORIGINAL', 'PRIMARY', 'M', 'ND']"
+                    if 'P' in imagetype:
+                        pass
+                        run['bids']['part'][-1] = run['bids']['part'].index('phase')                                # E.g. part = ['', mag, phase, real, imag, 0]
+                    # elif 'M' in imagetype:
+                    #     run['bids']['part'][-1] = run['bids']['part'].index('mag')
+                    elif 'I' in imagetype:
+                        run['bids']['part'][-1] = run['bids']['part'].index('imag')
+                    elif 'R' in imagetype:
+                        run['bids']['part'][-1] = run['bids']['part'].index('real')
+                    if run['bids']['part'][-1]:
+                        LOGGER.verbose(f"Updated {dataformat}/{datasource.datatype} entity: 'part' -> '{run['bids']['part'][run['bids']['part'][-1]]}' ({imagetype})")
 
             # Now work from the provenance store
             if store:
@@ -173,20 +189,6 @@ def bidsmapper_plugin(session: Path, bidsmap_new: Bidsmap, bidsmap_old: Bidsmap,
                 LOGGER.verbose(f"Storing the discovered {dataformat} sample as: {targetfile}")
                 run['provenance']      = str(shutil.copyfile(sourcefile, targetfile))
                 run['datasource'].path = targetfile
-
-            # Try to automagically set the {part: phase/imag/real} (should work for Siemens data)
-            if 'part' in run['bids'] and not run['bids']['part'][-1] and run['attributes'].get('ImageType'):    # part[-1]==0 -> part is not specified
-                imagetype = ast.literal_eval(run['attributes']['ImageType'])                                    # E.g. ImageType = "['ORIGINAL', 'PRIMARY', 'M', 'ND']"
-                if 'P' in imagetype:
-                    run['bids']['part'][-1] = run['bids']['part'].index('phase')                                # E.g. part = ['', mag, phase, real, imag, 0]
-                # elif 'M' in imagetype:
-                #     run['bids']['part'][-1] = run['bids']['part'].index('mag')
-                elif 'I' in imagetype:
-                    run['bids']['part'][-1] = run['bids']['part'].index('imag')
-                elif 'R' in imagetype:
-                    run['bids']['part'][-1] = run['bids']['part'].index('real')
-                if run['bids']['part'][-1]:
-                    LOGGER.verbose(f"Updated {dataformat}/{datasource.datatype} entity: 'part' -> '{run['bids']['part'][run['bids']['part'][-1]]}' ({imagetype})")
 
             # Copy the filled-in run over to the new bidsmap
             bids.append_run(bidsmap_new, run)
