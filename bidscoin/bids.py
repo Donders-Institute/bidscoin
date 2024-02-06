@@ -1434,6 +1434,9 @@ def get_run(bidsmap: Bidsmap, datatype: str, suffix_idx: Union[int, str], dataso
 
             # Replace the dynamic bids values, except the dynamic run-index (e.g. <<>>)
             for bidskey, bidsvalue in run['bids'].items():
+
+                # NB: bidsvalue can be a (mutable) list
+                bidsvalue = copy.copy(bidsvalue)
                 if bidskey == 'run' and bidsvalue and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == '<<>>'):
                     run_['bids'][bidskey] = bidsvalue
                 else:
@@ -1441,6 +1444,9 @@ def get_run(bidsmap: Bidsmap, datatype: str, suffix_idx: Union[int, str], dataso
 
             # Replace the dynamic meta values, except the IntendedFor value (e.g. <<task>>)
             for metakey, metavalue in run['meta'].items():
+
+                # NB: bidsvalue can be a (mutable) list
+                metavalue = copy.copy(metavalue)
                 if metakey == 'IntendedFor':
                     run_['meta'][metakey] = metavalue
                 elif metakey in ('B0FieldSource', 'B0FieldIdentifier') and '<<session>>' in (metavalue or ''):
@@ -1515,24 +1521,22 @@ def delete_run(bidsmap: Bidsmap, provenance: Union[Run, str], datatype: str= '',
     LOGGER.error(f"Could not find (and delete) this [{dataformat}][{datatype}] run: '{provenance}")
 
 
-def append_run(bidsmap: Bidsmap, run: Run, clean: bool=True) -> None:
+def append_run(bidsmap: Bidsmap, run: Run) -> None:
     """
-    Append a run to the BIDS map
+    Append a cleaned-up run to the BIDS map
 
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS labels and attributes, etc.
     :param run:         The run (listitem) that is appended to the datatype
-    :param clean:       A boolean to clean-up commentedMap fields
     :return:
     """
 
     # Copy the values from the run to an empty dict
-    if clean:
-        run_ = create_run(run['datasource'], bidsmap)
-        for item in run_:
-            if item in ('provenance', 'datasource'):
-                continue
-            run_[item].update(copy.deepcopy(run[item]))
-        run = run_
+    run_ = create_run(run['datasource'], bidsmap)
+    for item in run_:
+        if item in ('provenance', 'datasource'):
+            continue
+        run_[item].update(copy.deepcopy(run[item]))
+    run = run_
 
     dataformat = run['datasource'].dataformat
     datatype   = run['datasource'].datatype
@@ -1544,11 +1548,11 @@ def append_run(bidsmap: Bidsmap, run: Run, clean: bool=True) -> None:
         bidsmap[dataformat][datatype].append(run)
 
 
-def update_bidsmap(bidsmap: Bidsmap, source_datatype: str, run: Run, clean: bool=True) -> None:
+def update_bidsmap(bidsmap: Bidsmap, source_datatype: str, run: Run) -> None:
     """
     Update the BIDS map if the datatype changes:
     1. Remove the source run from the source datatype section
-    2. Append the (cleaned) target run to the target datatype section
+    2. Append the (cleaned and deepcopied) target run to the target datatype section
 
     Else:
     1. Use the provenance to look up the index number in that datatype
@@ -1557,7 +1561,6 @@ def update_bidsmap(bidsmap: Bidsmap, source_datatype: str, run: Run, clean: bool
     :param bidsmap:             Full bidsmap data structure, with all options, BIDS labels and attributes, etc.
     :param source_datatype:     The current datatype name, e.g. 'anat'
     :param run:                 The run item that is being moved to run['datasource'].datatype
-    :param clean:               A boolean that is passed to bids.append_run (telling it to clean-up commentedMap fields)
     :return:
     """
 
@@ -1578,7 +1581,7 @@ def update_bidsmap(bidsmap: Bidsmap, source_datatype: str, run: Run, clean: bool
         delete_run(bidsmap, run, source_datatype)
 
         # Append the (cleaned-up) target run
-        append_run(bidsmap, run, clean)
+        append_run(bidsmap, run)
 
     else:
         for index, run_ in enumerate(bidsmap[dataformat][run_datatype]):
@@ -1732,6 +1735,9 @@ def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) ->
             # Try to fill the bids-labels
             for bidskey, bidsvalue in run['bids'].items():
 
+                # NB: bidsvalue can be a (mutable) list
+                bidsvalue = copy.copy(bidsvalue)
+
                 # Replace the dynamic bids values, except the dynamic run-index (e.g. <<>>)
                 if bidskey == 'run' and bidsvalue and (bidsvalue.replace('<','').replace('>','').isdecimal() or bidsvalue == '<<>>'):
                     run_['bids'][bidskey] = bidsvalue
@@ -1743,6 +1749,9 @@ def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) ->
 
             # Try to fill the meta-data
             for metakey, metavalue in run['meta'].items():
+
+                # NB: metavalue can be a (mutable) list
+                metavalue = copy.copy(metavalue)
 
                 # Replace the dynamic meta values, except the IntendedFor value (e.g. <<task>>)
                 if metakey == 'IntendedFor':

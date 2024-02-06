@@ -380,13 +380,18 @@ def test_append_run(study_bidsmap):
     bidsmap, _ = bids.load_bidsmap(study_bidsmap)
 
     # Collect and modify the first anat run-item
-    run                          = copy.deepcopy(bidsmap['DICOM']['anat'][0])
+    datasource                   = bidsmap['DICOM']['anat'][0]['datasource']
+    run                          = bids.create_run(datasource, bidsmap)
     run['datasource'].dataformat = 'Foo'
     run['datasource'].datatype   = 'Bar'
+    run['bids']['part']          = ['', 'mag', 'phase', 'real', 'imag', 3]
 
     # Append the run elsewhere in the bidsmap
     bids.append_run(bidsmap, run)
-    assert Path(bidsmap['Foo']['Bar'][0]['provenance']) == Path(run['provenance'])
+    assert Path(bidsmap['Foo']['Bar'][0]['provenance'])     == Path(run['provenance'])
+    assert Path(bidsmap['DICOM']['anat'][0]['provenance'])  == Path(run['provenance'])
+    assert bidsmap['Foo']['Bar'][0]['bids']['part']         == ['', 'mag', 'phase', 'real', 'imag', 3]
+    assert bidsmap['DICOM']['anat'][0]['bids']['part']      == ['', 'mag', 'phase', 'real', 'imag', 0]
 
 
 def test_update_bidsmap(study_bidsmap):
