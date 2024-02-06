@@ -32,7 +32,7 @@ from bidscoin import bcoin, schemafolder, templatefolder, lsdirs, __version__
 from bidscoin.utilities import dicomsort
 from ruamel.yaml import YAML
 yaml = YAML()
-yaml.representer.ignore_aliases = lambda *data: True                         # Expand aliases (https://stackoverflow.com/questions/66977002/yaml-anchor-for-sequence/66983530#66983530)
+yaml.representer.ignore_aliases = lambda *data: True                         # Expand aliases (https://stackoverflow.com/questions/58091449/disabling-alias-for-yaml-file-in-python)
 
 # Define custom data types (replace with proper classes or TypeAlias of Python >= 3.10)
 Plugin     = NewType('Plugin',     Dict[str, Any])
@@ -132,9 +132,6 @@ class DataSource:
         :return:        The property value (posix with a trailing "/" if tagname == 'filepath') or '' if the property could not be parsed from the datasource
         """
 
-        if not self.path.is_file():
-            return ''
-
         try:
             if tagname.startswith('filepath:') and len(tagname) > 9:
                 match = re.findall(tagname[9:], self.path.parent.as_posix() + '/')
@@ -194,8 +191,6 @@ class DataSource:
         """
 
         attributeval = pattern = ''
-        if not self.path.is_file():
-            return ''
 
         try:
             # Split off the regular expression pattern
