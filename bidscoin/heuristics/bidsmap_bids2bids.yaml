@@ -79,55 +79,71 @@ Nibabel:
       echo: <filename:sub-.*_echo-(.*?)_\.nii.*>
       part: <filename:sub-.*_part-(.*?)_\.nii.*>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: T1w
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_T2w\.nii.*
     attributes: *attr
-    bids: *anat_nibent_nonparametric
+    bids:
+      <<: *anat_nibent_nonparametric
+      suffix: T2w
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_PDw\.nii.*
     attributes: *attr
-    bids: *anat_nibent_nonparametric
+    bids:
+      <<: *anat_nibent_nonparametric
+      suffix: PDw
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_T2starw\.nii.*
     attributes: *attr
-    bids: *anat_nibent_nonparametric
+    bids:
+      <<: *anat_nibent_nonparametric
+      suffix: T2starw
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_FLAIR\.nii.*
     attributes: *attr
-    bids: *anat_nibent_nonparametric
+    bids:
+      <<: *anat_nibent_nonparametric
+      suffix: FLAIR
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_inplaneT1\.nii.*
     attributes: *attr
-    bids: *anat_nibent_nonparametric
+    bids:
+      <<: *anat_nibent_nonparametric
+      suffix: inplaneT1
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_inplaneT2\.nii.*
     attributes: *attr
-    bids: *anat_nibent_nonparametric
+    bids:
+      <<: *anat_nibent_nonparametric
+      suffix: inplaneT2
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_PDT2\.nii.*
     attributes: *attr
-    bids: *anat_nibent_nonparametric
+    bids:
+      <<: *anat_nibent_nonparametric
+      suffix: PDT2
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_angio\.nii.*
     attributes: *attr
-    bids: *anat_nibent_nonparametric
+    bids:
+      <<: *anat_nibent_nonparametric
+      suffix: angio
   - provenance:
     properties:
       <<: *fileprop_anat
@@ -140,97 +156,127 @@ Nibabel:
       rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
       run: <<>>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: T1map
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_T2map\.nii.*
     attributes: *attr
-    bids: *anat_nibent_parametric
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: T2map
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_T2starmap\.nii.*
     attributes: *attr
-    bids: *anat_nibent_parametric
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: T2starmap
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_R1map\.nii.*
     attributes: *attr
-    bids: *anat_nibent_parametric
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: R1map
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_R2map\.nii.*
     attributes: *attr
-    bids: *anat_nibent_parametric
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: R2map
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_R2starmap\.nii.*
     attributes: *attr
-    bids: *anat_nibent_parametric
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: R2starmap
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_PDmap\.nii.*
     attributes: *attr
-    bids: *anat_nibent_parametric
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: PDmap
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_MTRmap\.nii.*
     attributes: *attr
-    bids: *anat_nibent_parametric
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: MTRmap
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_MTsat\.nii.*
     attributes: *attr
-    bids: *anat_nibent_parametric
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: MTsat
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_UNIT1\.nii.*
     attributes: *attr
-    bids: *anat_nibent_parametric
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: UNIT1
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_T1rho\.nii.*
     attributes: *attr
-    bids: *anat_nibent_parametric
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: T1rho
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_MWFmap\.nii.*
     attributes: *attr
-    bids: *anat_nibent_parametric
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: MWFmap
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_MTVmap\.nii.*
     attributes: *attr
-    bids: *anat_nibent_parametric
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: MTVmap
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_Chimap\.nii.*
     attributes: *attr
-    bids: *anat_nibent_parametric
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: Chimap
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_S0map\.nii.*
     attributes: *attr
-    bids: *anat_nibent_parametric
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: S0map
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_M0map\.nii.*
     attributes: *attr
-    bids: *anat_nibent_parametric
+    bids:
+      <<: *anat_nibent_parametric
+      suffix: M0map
   - provenance:
     properties:
       <<: *fileprop_anat
@@ -244,7 +290,7 @@ Nibabel:
       run: <<>>
       mod: <filename:sub-.*_mod-(.*?)_\.nii.*>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: defacemask
   - provenance:
     properties:
       <<: *fileprop_anat
@@ -259,13 +305,15 @@ Nibabel:
       echo: <filename:sub-.*_echo-(.*?)_\.nii.*>
       part: <filename:sub-.*_part-(.*?)_\.nii.*>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: MESE
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_MEGRE\.nii.*
     attributes: *attr
-    bids: *anat_nibent_multiecho
+    bids:
+      <<: *anat_nibent_multiecho
+      suffix: MEGRE
   - provenance:
     properties:
       <<: *fileprop_anat
@@ -281,7 +329,7 @@ Nibabel:
       flip: <filename:sub-.*_flip-(.*?)_\.nii.*>
       part: <filename:sub-.*_part-(.*?)_\.nii.*>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: VFA
   - provenance:
     properties:
       <<: *fileprop_anat
@@ -296,7 +344,7 @@ Nibabel:
       inv: <filename:sub-.*_inv-(.*?)_\.nii.*>
       part: <filename:sub-.*_part-(.*?)_\.nii.*>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: IRT1
   - provenance:
     properties:
       <<: *fileprop_anat
@@ -313,7 +361,7 @@ Nibabel:
       inv: <filename:sub-.*_inv-(.*?)_\.nii.*>
       part: <filename:sub-.*_part-(.*?)_\.nii.*>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: MP2RAGE
   - provenance:
     properties:
       <<: *fileprop_anat
@@ -330,13 +378,15 @@ Nibabel:
       mt: <filename:sub-.*_mt-(.*?)_\.nii.*>
       part: <filename:sub-.*_part-(.*?)_\.nii.*>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: MPM
   - provenance:
     properties:
       <<: *fileprop_anat
       filename: sub-.*_MTS\.nii.*
     attributes: *attr
-    bids: *anat_nibent_vfamt
+    bids:
+      <<: *anat_nibent_vfamt
+      suffix: MTS
   - provenance:
     properties:
       <<: *fileprop_anat
@@ -351,7 +401,7 @@ Nibabel:
       mt: <filename:sub-.*_mt-(.*?)_\.nii.*>
       part: <filename:sub-.*_part-(.*?)_\.nii.*>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: MTR
 
   func:       # ----------------------- All functional runs --------------------
   - provenance:                         # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = bold
@@ -371,7 +421,7 @@ Nibabel:
       echo: <filename:sub-.*_echo-(.*?)_\.nii.*>
       part: <filename:sub-.*_part-(.*?)_\.nii.*>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: bold
     meta: &func_meta
       TaskName: <ProtocolName>
       B0FieldSource:
@@ -381,14 +431,18 @@ Nibabel:
       <<: *fileprop_func
       filename: sub-.*_sbref\.nii.*
     attributes: *attr
-    bids: *func_nibent_func
+    bids:
+      <<: *func_nibent_func
+      suffix: sbref
     meta: *func_meta
   - provenance:
     properties:
       <<: *fileprop_func
       filename: sub-.*_cbv\.nii.*
     attributes: *attr
-    bids: *func_nibent_func
+    bids:
+      <<: *func_nibent_func
+      suffix: cbv
     meta: *func_meta
   - provenance:
     properties:
@@ -403,7 +457,7 @@ Nibabel:
       rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
       run: <<>>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: events
     meta:
       TaskName:
   - provenance:
@@ -420,7 +474,7 @@ Nibabel:
       recording: <filename:sub-.*_recording-(.*?)_\.nii.*>
       run: <<>>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: physio
     meta:
       TaskName:
   - provenance:
@@ -428,7 +482,9 @@ Nibabel:
       <<: *fileprop_func
       filename: sub-.*_stim\..*
     attributes: *attr
-    bids: *func_nibent_timeseries
+    bids:
+      <<: *func_nibent_timeseries
+      suffix: stim
     meta:
       TaskName:
 
@@ -445,7 +501,7 @@ Nibabel:
       rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
       dir: <filename:sub-.*_dir-(.*?)_\.nii.*>
       run: <<>>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: asl
     meta: &perf_meta
       ArterialSpinLabelingType: "CASL / PCASL / PASL"
       PostLabelingDelay:
@@ -461,7 +517,9 @@ Nibabel:
       <<: *fileprop_perf
       filename: sub-.*_m0scan\.nii.*
     attributes: *attr
-    bids: *perf_nibent_group1
+    bids:
+      <<: *perf_nibent_group1
+      suffix: m0scan
     meta: *perf_meta
   - provenance:
     properties:
@@ -473,7 +531,7 @@ Nibabel:
       rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
       dir: <filename:sub-.*_dir-(.*?)_\.nii.*>
       run: <<>>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: aslcontext
     meta: *perf_meta
   - provenance:
     properties:
@@ -484,7 +542,7 @@ Nibabel:
       acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
       rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
       run: <<>>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: asllabeling
     meta: *perf_meta
   - provenance:
     properties:
@@ -516,7 +574,7 @@ Nibabel:
       run: <<>>
       part: <filename:sub-.*_part-(.*?)_\.nii.*>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: dwi
     meta: &dwi_meta
       B0FieldSource:
       B0FieldIdentifier:
@@ -525,7 +583,9 @@ Nibabel:
       <<: *fileprop_dwi
       filename: sub-.*_sbref\.nii.*
     attributes: *attr
-    bids: *dwi_nibent_DWI             # See: schema/datatypes/dwi.yaml
+    bids:
+      <<: *dwi_nibent_DWI             # See: schema/datatypes/dwi.yaml
+      suffix: sbref
     meta: *dwi_meta
   - provenance:
     properties:
@@ -539,7 +599,7 @@ Nibabel:
       part: <filename:sub-.*_part-(.*?)_\.nii.*>
       recording: <filename:sub-.*_recording-(.*?)_\.nii.*>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: physio
 
   fmap:       # ----------------------- All fieldmap runs ----------------------
   - provenance:                         # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = magnitude
@@ -553,7 +613,7 @@ Nibabel:
       acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
       run: <<>>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: magnitude1
     meta: &fmap_meta
       B0FieldIdentifier:
       IntendedFor:
@@ -562,42 +622,54 @@ Nibabel:
       <<: *fileprop_fmap
       filename: sub-.*_magnitude2\.nii.*
     attributes: *attr
-    bids: *fmap_nibent_fieldmaps
+    bids:
+      <<: *fmap_nibent_fieldmaps
+      suffix: magnitude2
     meta: *fmap_meta
   - provenance:
     properties:
       <<: *fileprop_fmap
       filename: sub-.*_magnitude\.nii.*
     attributes: *attr
-    bids: *fmap_nibent_fieldmaps
+    bids:
+      <<: *fmap_nibent_fieldmaps
+      suffix: magnitude
     meta: *fmap_meta
   - provenance:
     properties:
       <<: *fileprop_fmap
       filename: sub-.*_phasediff\.nii.*
     attributes: *attr
-    bids: *fmap_nibent_fieldmaps
+    bids:
+      <<: *fmap_nibent_fieldmaps
+      suffix: phasediff
     meta: *fmap_meta
   - provenance:
     properties:
       <<: *fileprop_fmap
       filename: sub-.*_phase1\.nii.*
     attributes: *attr
-    bids: *fmap_nibent_fieldmaps
+    bids:
+      <<: *fmap_nibent_fieldmaps
+      suffix: phase1
     meta: *fmap_meta
   - provenance:
     properties:
       <<: *fileprop_fmap
       filename: sub-.*_phase2\.nii.*
     attributes: *attr
-    bids: *fmap_nibent_fieldmaps
+    bids:
+      <<: *fmap_nibent_fieldmaps
+      suffix: phase2
     meta: *fmap_meta
   - provenance:
     properties:
       <<: *fileprop_fmap
       filename: sub-.*_fieldmap\.nii.*
     attributes: *attr
-    bids: *fmap_nibent_fieldmaps
+    bids:
+      <<: *fmap_nibent_fieldmaps
+      suffix: fieldmap
     meta: *fmap_meta
   - provenance:
     properties:
@@ -610,14 +682,16 @@ Nibabel:
       dir: <filename:sub-.*_dir-(.*?)_\.nii.*>
       run: <<>>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: epi
     meta: *fmap_meta
   - provenance:
     properties:
       <<: *fileprop_fmap
       filename: sub-.*_m0scan\.nii.*
     attributes: *attr
-    bids: *fmap_nibent_PEPolar
+    bids:
+      <<: *fmap_nibent_PEPolar
+      suffix: m0scan
     meta: *fmap_meta
   - provenance:
     properties:
@@ -633,7 +707,7 @@ Nibabel:
       part: <filename:sub-.*_part-(.*?)_\.nii.*>
       run: <<>>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: TB1DAM
     meta: &fmap_meta_B0Field
       B0FieldIdentifier:
   - provenance:
@@ -651,7 +725,7 @@ Nibabel:
       part: <filename:sub-.*_part-(.*?)_\.nii.*>
       run: <<>>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: TB1EPI
     meta: *fmap_meta_B0Field
   - provenance:
     properties:
@@ -668,7 +742,7 @@ Nibabel:
       part: <filename:sub-.*_part-(.*?)_\.nii.*>
       run: <<>>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: TB1AFI
     meta: *fmap_meta_B0Field
   - provenance:
     properties:
@@ -682,14 +756,18 @@ Nibabel:
       <<: *fileprop_fmap
       filename: sub-.*_TB1RFM\.nii.*
     attributes: *attr
-    bids: *fmap_nibent_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+    bids:
+      <<: *fmap_nibent_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      suffix: TB1RFM
     meta: *fmap_meta_B0Field
   - provenance:
     properties:
       <<: *fileprop_fmap
       filename: sub-.*_RB1COR\.nii.*
     attributes: *attr
-    bids: *fmap_nibent_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+    bids:
+      <<: *fmap_nibent_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+      suffix: RB1COR
     meta: *fmap_meta_B0Field
   - provenance:
     properties:
@@ -706,7 +784,7 @@ Nibabel:
       part: <filename:sub-.*_part-(.*?)_\.nii.*>
       run: <<>>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: TB1SRGE
     meta: *fmap_meta_B0Field
   - provenance:
     properties:
@@ -719,14 +797,16 @@ Nibabel:
       rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
       run: <<>>
       chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
-      suffix: <filename:sub-.*_(.*?)\.nii.*>
+      suffix: TB1map
     meta: *fmap_meta_B0Field
   - provenance:
     properties:
       <<: *fileprop_fmap
       filename: sub-.*_RB1map\.nii.*
     attributes: *attr
-    bids: *fmap_nibent_parametric
+    bids:
+      <<: *fmap_nibent_parametric
+      suffix: RB1map
     meta: *fmap_meta_B0Field
 
   extra_data: # ----------------------- All extra data -------------------------
