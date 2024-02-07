@@ -168,12 +168,12 @@ def test_load_check_template(template: Path):
     assert bids.check_template(bidsmap) is True
 
     # Add an invalid data type
-    bidsmap[dataformat]['foo'] = bidsmap['DICOM']['extra_data']
+    bidsmap[dataformat]['foo'] = bidsmap[dataformat]['extra_data']
     assert bids.check_template(bidsmap) is False
     del bidsmap[dataformat]['foo']
 
     # Remove a valid suffix (BIDS-entity)
-    bidsmap['DICOM']['anat'].pop(-2)        # NB: Assumes CT is the last item, MTR the second last
+    bidsmap[dataformat]['anat'].pop(-2)        # NB: Assumes CT is the last item, MTR the second last
     assert bids.check_template(bidsmap) is False
 
 
