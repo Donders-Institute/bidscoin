@@ -749,7 +749,9 @@ Nibabel:
       <<: *fileprop_fmap
       filename: sub-.*_TB1TFL\.nii.*
     attributes: *attr
-    bids: *fmap_nibent_RFFieldMaps     # See: schema/datatypes/fmap.yaml & https://bids-specification.readthedocs.io/en/stable/99-appendices/11-qmri.html#tb1tfl-and-tb1rfm-specific-notes
+    bids:
+      <<: *fmap_nibent_RFFieldMaps     # See: schema/datatypes/fmap.yaml & https://bids-specification.readthedocs.io/en/stable/99-appendices/11-qmri.html#tb1tfl-and-tb1rfm-specific-notes
+      suffix: TB1TFL
     meta: *fmap_meta_B0Field
   - provenance:
     properties:
