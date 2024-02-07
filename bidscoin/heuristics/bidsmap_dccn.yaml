@@ -2450,21 +2450,6 @@ Nibabel:
       <<: *func_nibent_func
       suffix: sbref
     meta: *func_meta
-  - provenance:
-    properties: *fileprop
-    attributes: *nibattr
-    bids: &func_nibent_timeseries       # See: schema/datatypes/func.yaml
-      task: <descrip>
-      acq:
-      ce:
-      dir:
-      rec:
-      recording:
-      run: <<>>
-      chunk:
-      suffix: physio
-    meta:
-      TaskName:
   - provenance:                         # Then catch the bold runs themselves
     properties:
       <<: *fileprop
@@ -2493,6 +2478,21 @@ Nibabel:
       run: <<>>
       chunk:
       suffix: events
+    meta:
+      TaskName:
+  - provenance:
+    properties: *fileprop
+    attributes: *nibattr
+    bids: &func_nibent_timeseries       # See: schema/datatypes/func.yaml
+      task: <descrip>
+      acq:
+      ce:
+      dir:
+      rec:
+      recording:
+      run: <<>>
+      chunk:
+      suffix: physio
     meta:
       TaskName:
   - provenance:
