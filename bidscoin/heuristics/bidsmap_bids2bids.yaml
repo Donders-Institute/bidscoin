@@ -1,0 +1,762 @@
+# --------------------------------------------------------------------------------
+# This is a template bidsmap with the key-value mappings for the different BIDS
+# datatypes (anat, func, dwi, etc). The datatype attributes are the keys that map
+# onto the BIDS labels. The bidsmap data-structure should be 5 levels deep:
+#
+# dict       : dict     : list     : dict        : dict
+# dataformat : datatype : run-item : bidsmapping : mapping-data
+#
+# NB:
+# 1) This bidsmap is intended to be used by the bidsmapper for data discovery.
+#    Although generally not recommended, it can also be used directly by the bidscoiner
+# 2) This bidsmap is tailored to be used with nibabel to convert existing BIDS datasets
+#    into new (and adapted) BIDS datasets
+#
+# For more information, see: https://bidscoin.readthedocs.io
+# --------------------------------------------------------------------------------
+
+$schema: schema.json
+
+Options:
+# --------------------------------------------------------------------------------
+# General BIDScoin and plugin options
+# --------------------------------------------------------------------------------
+  bidscoin:
+    version: 4.3.0                  # BIDScoin version (should correspond with the version in pyproject.toml)
+    subprefix: sub-                 # The subject prefix of the source data
+    sesprefix: ses-                 # The session prefix of the source data
+    bidsignore: [mrs/, extra_data/, sub-*_ct.*]    # List of entries that are added to the .bidsignore file (for more info, see BIDS specifications), e.g. [extra_data/, pet/, myfile.txt, yourfile.csv]
+    unknowntypes: [mrs, extra_data] # A list of datatypes that are converted to BIDS-like datatype folders
+    ignoretypes: [exclude]          # A list of datatypes that are excluded / not converted to BIDS
+    notderivative: []               # A list of suffixes that should not be considered as a derivative datatype
+    unzip:                          # Wildcard pattern to select tarball/zip-files in the source folders that need to be unzipped (in a tempdir) to expose the data, e.g. '*.tar.gz'
+  plugins:                          # List of plugins with plugin-specific key-value pairs (that can be used by the plugin)
+    nibabel2bids:
+      ext: .nii.gz
+      meta: ['.json', '.tsv', '.tsv.gz', '.bval', '.bvec']
+
+Nibabel:
+# --------------------------------------------------------------------------------
+# Nibabel key-value heuristics (header fields that are mapped to the BIDS labels)
+# --------------------------------------------------------------------------------
+  subject: <<filepath:/sub-(.*?)/>>    # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as subject-label, e.g. <PatientID>
+  session: <<filepath:/sub-.*?/ses-(.*?)/>>     # This filesystem property extracts the subject label from the source directory. NB: Any property or attribute can be used as session-label, e.g. <StudyID>
+
+  anat:       # ----------------------- All anatomical runs --------------------
+  - provenance:                         # The fullpath name of the DICOM file from which the attributes are read. Serves also as a look-up key to find a run in the bidsmap
+    properties: &fileprop_anat          # This is an optional (stub) entry of properties matching (could be added to any run-item)
+      filepath: .*/anat/                # File folder, e.g. ".*/Parkinson/.*" or ".*(phantom|bottle).*"
+      filename: .*_T1w\.nii.*           # File name, e.g. ".*fmap.*" or ".*(fmap|field.?map|B0.?map).*"
+      filesize:                         # File size, e.g. "2[4-6]\d MB" for matching files between 240-269 MB
+      nrfiles:                          # Number of files in the folder
+    attributes: &attr                   # An empty / non-matching reference dictionary that can be dereferenced in other run-items of this data type
+      dim:
+      dim_info:
+      pixdim:
+#      descrip:                         # Unfortunately dcm2niix save the AcquisitionTime in here :-(
+      intent_name:
+      Modality:
+      ProtocolName:
+      SeriesDescription:
+      ImageType:
+      SequenceName:
+      PulseSequenceName:
+      SequenceVariant:
+      ScanningSequence:
+      MRAcquisitionType:
+      SliceThickness:
+      FlipAngle:
+      EchoTime:
+      RepetitionTime:
+      InPlanePhaseEncodingDirectionDICOM:
+      PhaseEncodingDirection:
+    bids: &anat_nibent_nonparametric    # See: schema/datatypes/anat.yaml
+      task: <filename:sub-.*_task-(.*?)_\.nii.*>
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      run: <<>>
+      echo: <filename:sub-.*_echo-(.*?)_\.nii.*>
+      part: <filename:sub-.*_part-(.*?)_\.nii.*>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_T2w\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_nonparametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_PDw\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_nonparametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_T2starw\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_nonparametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_FLAIR\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_nonparametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_inplaneT1\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_nonparametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_inplaneT2\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_nonparametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_PDT2\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_nonparametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_angio\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_nonparametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_T1map\.nii.*
+    attributes: *attr
+    bids: &anat_nibent_parametric       # See: schema/datatypes/anat.yaml
+      task: <filename:sub-.*_task-(.*?)_\.nii.*>
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      run: <<>>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_T2map\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_parametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_T2starmap\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_parametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_R1map\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_parametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_R2map\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_parametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_R2starmap\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_parametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_PDmap\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_parametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_MTRmap\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_parametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_MTsat\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_parametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_UNIT1\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_parametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_T1rho\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_parametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_MWFmap\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_parametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_MTVmap\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_parametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_Chimap\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_parametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_S0map\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_parametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_M0map\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_parametric
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_defacemask\.nii.*
+    attributes: *attr
+    bids: &anat_nibent_defacemask       # See: schema/datatypes/anat.yaml
+      task: <filename:sub-.*_task-(.*?)_\.nii.*>
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      run: <<>>
+      mod: <filename:sub-.*_mod-(.*?)_\.nii.*>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_MESE\.nii.*
+    attributes: *attr
+    bids: &anat_nibent_multiecho        # See: schema/datatypes/anat.yaml
+      task: <filename:sub-.*_task-(.*?)_\.nii.*>
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      run: <<>>
+      echo: <filename:sub-.*_echo-(.*?)_\.nii.*>
+      part: <filename:sub-.*_part-(.*?)_\.nii.*>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_MEGRE\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_multiecho
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_VFA\.nii.*
+    attributes: *attr
+    bids: &anat_nibent_multiflip        # See: schema/datatypes/anat.yaml
+      task: <filename:sub-.*_task-(.*?)_\.nii.*>
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      echo: <filename:sub-.*_echo-(.*?)_\.nii.*>
+      run: <<>>
+      flip: <filename:sub-.*_flip-(.*?)_\.nii.*>
+      part: <filename:sub-.*_part-(.*?)_\.nii.*>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_IRT1\.nii.*
+    attributes: *attr
+    bids: &anat_nibent_multiinv         # See: schema/datatypes/anat.yaml
+      task: <filename:sub-.*_task-(.*?)_\.nii.*>
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      run: <<>>
+      inv: <filename:sub-.*_inv-(.*?)_\.nii.*>
+      part: <filename:sub-.*_part-(.*?)_\.nii.*>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_MP2RAGE\.nii.*
+    attributes: *attr
+    bids: &anat_nibent_mp2rage           # See: schema/datatypes/anat.yaml
+      task: <filename:sub-.*_task-(.*?)_\.nii.*>
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      run: <<>>
+      echo: <filename:sub-.*_echo-(.*?)_\.nii.*>
+      flip: <filename:sub-.*_flip-(.*?)_\.nii.*>
+      inv: <filename:sub-.*_inv-(.*?)_\.nii.*>
+      part: <filename:sub-.*_part-(.*?)_\.nii.*>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_MPM\.nii.*
+    attributes: *attr
+    bids: &anat_nibent_vfamt            # See: schema/datatypes/anat.yaml
+      task: <filename:sub-.*_task-(.*?)_\.nii.*>
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      run: <<>>
+      echo: <filename:sub-.*_echo-(.*?)_\.nii.*>
+      flip: <filename:sub-.*_flip-(.*?)_\.nii.*>
+      mt: <filename:sub-.*_mt-(.*?)_\.nii.*>
+      part: <filename:sub-.*_part-(.*?)_\.nii.*>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_MTS\.nii.*
+    attributes: *attr
+    bids: *anat_nibent_vfamt
+  - provenance:
+    properties:
+      <<: *fileprop_anat
+      filename: sub-.*_MTR\.nii.*
+    attributes: *attr
+    bids: &anat_nibent_mtr              # See: schema/datatypes/anat.yaml
+      task: <filename:sub-.*_task-(.*?)_\.nii.*>
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      run: <<>>
+      mt: <filename:sub-.*_mt-(.*?)_\.nii.*>
+      part: <filename:sub-.*_part-(.*?)_\.nii.*>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+
+  func:       # ----------------------- All functional runs --------------------
+  - provenance:                         # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = bold
+    properties: &fileprop_func
+      filepath: .*/func/
+      filename: sub-.*_bold\.nii.*
+      filesize:
+      nrfiles:
+    attributes: *attr
+    bids: &func_nibent_func             # See: schema/datatypes/func.yaml
+      task: <filename:sub-.*_task-(.*?)_\.nii.*>
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      dir: <filename:sub-.*_dir-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      run: <<>>
+      echo: <filename:sub-.*_echo-(.*?)_\.nii.*>
+      part: <filename:sub-.*_part-(.*?)_\.nii.*>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+    meta: &func_meta
+      TaskName: <ProtocolName>
+      B0FieldSource:
+      B0FieldIdentifier:
+  - provenance:
+    properties:
+      <<: *fileprop_func
+      filename: sub-.*_sbref\.nii.*
+    attributes: *attr
+    bids: *func_nibent_func
+    meta: *func_meta
+  - provenance:
+    properties:
+      <<: *fileprop_func
+      filename: sub-.*_cbv\.nii.*
+    attributes: *attr
+    bids: *func_nibent_func
+    meta: *func_meta
+  - provenance:
+    properties:
+      <<: *fileprop_func
+      filename: sub-.*_events\..*
+    attributes: *attr
+    bids: &func_nibent_events           # See: schema/datatypes/func.yaml
+      task: <filename:sub-.*_task-(.*?)_\.nii.*>
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      dir: <filename:sub-.*_dir-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      run: <<>>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+    meta:
+      TaskName:
+  - provenance:
+    properties:
+      <<: *fileprop_func
+      filename: sub-.*_physio\..*
+    attributes: *attr
+    bids: &func_nibent_timeseries       # See: schema/datatypes/func.yaml
+      task: <filename:sub-.*_task-(.*?)_\.nii.*>
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      dir: <filename:sub-.*_dir-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      recording: <filename:sub-.*_recording-(.*?)_\.nii.*>
+      run: <<>>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+    meta:
+      TaskName:
+  - provenance:
+    properties:
+      <<: *fileprop_func
+      filename: sub-.*_stim\..*
+    attributes: *attr
+    bids: *func_nibent_timeseries
+    meta:
+      TaskName:
+
+  perf:       # ----------------------- All perfusion runs ---------------------
+  - provenance:
+    properties: &fileprop_perf
+      filepath: .*/perf/
+      filename: sub-.*_asl\.nii.*
+      filesize:
+      nrfiles:
+    attributes: *attr
+    bids: &perf_nibent_group1           # See: schema/datatypes/perf.yaml
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      dir: <filename:sub-.*_dir-(.*?)_\.nii.*>
+      run: <<>>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+    meta: &perf_meta
+      ArterialSpinLabelingType: "CASL / PCASL / PASL"
+      PostLabelingDelay:
+      BackgroundSuppression:
+      M0Type: "Separate / Included / Estimate / Absent"
+      RepetitionTimePreparation:
+      VascularCrushing:
+      AcquisitionVoxelSize:
+      B0FieldSource:
+      B0FieldIdentifier:
+  - provenance:
+    properties:
+      <<: *fileprop_perf
+      filename: sub-.*_m0scan\.nii.*
+    attributes: *attr
+    bids: *perf_nibent_group1
+    meta: *perf_meta
+  - provenance:
+    properties:
+      <<: *fileprop_perf
+      filename: sub-.*_aslcontext\.nii.*
+    attributes: *attr
+    bids: &perf_nibent_group2           # See: schema/datatypes/perf.yaml
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      dir: <filename:sub-.*_dir-(.*?)_\.nii.*>
+      run: <<>>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+    meta: *perf_meta
+  - provenance:
+    properties:
+      <<: *fileprop_perf
+      filename: sub-.*_asllabeling\.nii.*
+    attributes: *attr
+    bids: &perf_nibent_group3           # See: schema/datatypes/perf.yaml
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      run: <<>>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+    meta: *perf_meta
+  - provenance:
+    properties:
+      <<: *fileprop_perf
+      filename: sub-.*_physio\.nii.*
+    attributes: *attr
+    bids: &perf_nibent_physio           # See: schema/datatypes/perf.yaml
+      task: <descrip>
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      recording: <filename:sub-.*_recording-(.*?)_\.nii.*>
+      dir: <filename:sub-.*_dir-(.*?)_\.nii.*>
+      run: <<>>
+      suffix: physio
+    meta: *perf_meta
+
+  dwi:        # ----------------------- All diffusion runs ---------------------
+  - provenance:
+    properties: &fileprop_dwi
+      filepath: .*/dwi/
+      filename: sub-.*_dwi\.nii.*
+      filesize:
+      nrfiles:
+    attributes: *attr
+    bids: &dwi_nibent_DWI               # See: schema/datatypes/dwi.yaml
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      dir: <filename:sub-.*_dir-(.*?)_\.nii.*>
+      run: <<>>
+      part: <filename:sub-.*_part-(.*?)_\.nii.*>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+    meta: &dwi_meta
+      B0FieldSource:
+      B0FieldIdentifier:
+  - provenance:
+    properties:
+      <<: *fileprop_dwi
+      filename: sub-.*_sbref\.nii.*
+    attributes: *attr
+    bids: *dwi_nibent_DWI             # See: schema/datatypes/dwi.yaml
+    meta: *dwi_meta
+  - provenance:
+    properties:
+      <<: *fileprop_dwi
+      filename: sub-.*_physio\.nii.*
+    attributes: *attr
+    bids: &dwi_nibent_physio            # See: schema/datatypes/dwi.yaml
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      dir: <filename:sub-.*_dir-(.*?)_\.nii.*>
+      run: <<>>
+      part: <filename:sub-.*_part-(.*?)_\.nii.*>
+      recording: <filename:sub-.*_recording-(.*?)_\.nii.*>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+
+  fmap:       # ----------------------- All fieldmap runs ----------------------
+  - provenance:                         # The first item with empty attributes will not match anything but is used by default when changing datatype in the bidseditor GUI -> suffix = magnitude
+    properties: &fileprop_fmap
+      filepath: .*/fmap/
+      filename: sub-.*_magnitude1\.nii.*
+      filesize:
+      nrfiles:
+    attributes: *attr
+    bids: &fmap_nibent_fieldmaps        # See: schema/datatypes/fmap.yaml
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      run: <<>>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+    meta: &fmap_meta
+      B0FieldIdentifier:
+      IntendedFor:
+  - provenance:
+    properties:
+      <<: *fileprop_fmap
+      filename: sub-.*_magnitude2\.nii.*
+    attributes: *attr
+    bids: *fmap_nibent_fieldmaps
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop_fmap
+      filename: sub-.*_magnitude\.nii.*
+    attributes: *attr
+    bids: *fmap_nibent_fieldmaps
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop_fmap
+      filename: sub-.*_phasediff\.nii.*
+    attributes: *attr
+    bids: *fmap_nibent_fieldmaps
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop_fmap
+      filename: sub-.*_phase1\.nii.*
+    attributes: *attr
+    bids: *fmap_nibent_fieldmaps
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop_fmap
+      filename: sub-.*_phase2\.nii.*
+    attributes: *attr
+    bids: *fmap_nibent_fieldmaps
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop_fmap
+      filename: sub-.*_fieldmap\.nii.*
+    attributes: *attr
+    bids: *fmap_nibent_fieldmaps
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop_fmap
+      filename: sub-.*_epi\.nii.*
+    attributes: *attr
+    bids: &fmap_nibent_PEPolar          # See: schema/datatypes/fmap.yaml
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      dir: <filename:sub-.*_dir-(.*?)_\.nii.*>
+      run: <<>>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop_fmap
+      filename: sub-.*_m0scan\.nii.*
+    attributes: *attr
+    bids: *fmap_nibent_PEPolar
+    meta: *fmap_meta
+  - provenance:
+    properties:
+      <<: *fileprop_fmap
+      filename: sub-.*_TB1DAM\.nii.*
+    attributes: *attr
+    bids: &fmap_nibent_TB1DAM           # See: schema/datatypes/fmap.yaml
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      flip: <filename:sub-.*_flip-(.*?)_\.nii.*>
+      inv: <filename:sub-.*_inv-(.*?)_\.nii.*>
+      part: <filename:sub-.*_part-(.*?)_\.nii.*>
+      run: <<>>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+    meta: &fmap_meta_B0Field
+      B0FieldIdentifier:
+  - provenance:
+    properties:
+      <<: *fileprop_fmap
+      filename: sub-.*_TB1EPI\.nii.*
+    attributes: *attr
+    bids: &fmap_nibent_TB1EPI           # See: schema/datatypes/fmap.yaml
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      flip: <filename:sub-.*_flip-(.*?)_\.nii.*>
+      echo: <filename:sub-.*_echo-(.*?)_\.nii.*>
+      inv: <filename:sub-.*_inv-(.*?)_\.nii.*>
+      part: <filename:sub-.*_part-(.*?)_\.nii.*>
+      run: <<>>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+    meta: *fmap_meta_B0Field
+  - provenance:
+    properties:
+      <<: *fileprop_fmap
+      filename: sub-.*_TB1AFI\.nii.*
+    attributes: *attr
+    bids: &fmap_nibent_RFFieldMaps      # See: schema/datatypes/fmap.yaml
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      flip: <filename:sub-.*_flip-(.*?)_\.nii.*>
+      echo: <filename:sub-.*_echo-(.*?)_\.nii.*>
+      inv: <filename:sub-.*_inv-(.*?)_\.nii.*>
+      part: <filename:sub-.*_part-(.*?)_\.nii.*>
+      run: <<>>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+    meta: *fmap_meta_B0Field
+  - provenance:
+    properties:
+      <<: *fileprop_fmap
+      filename: sub-.*_TB1TFL\.nii.*
+    attributes: *attr
+    bids: *fmap_nibent_RFFieldMaps     # See: schema/datatypes/fmap.yaml & https://bids-specification.readthedocs.io/en/stable/99-appendices/11-qmri.html#tb1tfl-and-tb1rfm-specific-notes
+    meta: *fmap_meta_B0Field
+  - provenance:
+    properties:
+      <<: *fileprop_fmap
+      filename: sub-.*_TB1RFM\.nii.*
+    attributes: *attr
+    bids: *fmap_nibent_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+    meta: *fmap_meta_B0Field
+  - provenance:
+    properties:
+      <<: *fileprop_fmap
+      filename: sub-.*_RB1COR\.nii.*
+    attributes: *attr
+    bids: *fmap_nibent_RFFieldMaps    # See: schema/datatypes/fmap.yaml
+    meta: *fmap_meta_B0Field
+  - provenance:
+    properties:
+      <<: *fileprop_fmap
+      filename: sub-.*_TB1SRGE\.nii.*
+    attributes: *attr
+    bids: &fmap_nibent_TB1SRGE        # See: schema/datatypes/fmap.yaml
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      flip: <filename:sub-.*_flip-(.*?)_\.nii.*>
+      echo: <filename:sub-.*_echo-(.*?)_\.nii.*>
+      inv: <filename:sub-.*_inv-(.*?)_\.nii.*>
+      part: <filename:sub-.*_part-(.*?)_\.nii.*>
+      run: <<>>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+    meta: *fmap_meta_B0Field
+  - provenance:
+    properties:
+      <<: *fileprop_fmap
+      filename: sub-.*_TB1map\.nii.*
+    attributes: *attr
+    bids: &fmap_nibent_parametric     # See: schema/datatypes/fmap.yaml
+      acq: <filename:sub-.*_acq-(.*?)_\.nii.*>
+      ce: <filename:sub-.*_ce-(.*?)_\.nii.*>
+      rec: <filename:sub-.*_rec-(.*?)_\.nii.*>
+      run: <<>>
+      chunk: <filename:sub-.*_chunk-(.*?)_\.nii.*>
+      suffix: <filename:sub-.*_(.*?)\.nii.*>
+    meta: *fmap_meta_B0Field
+  - provenance:
+    properties:
+      <<: *fileprop_fmap
+      filename: sub-.*_RB1map\.nii.*
+    attributes: *attr
+    bids: *fmap_nibent_parametric
+    meta: *fmap_meta_B0Field
+
+  extra_data: # ----------------------- All extra data -------------------------
+  - provenance:
+    properties: *fileprop_fmap
+    attributes: *attr
+    bids:
+      acq: <descrip>
+      inv:
+      rec:
+      ce:
+      task:
+      echo:
+      dir:
+      run: <<>>
+      mod:
+      part: ['', mag, phase, real, imag, 0]
+      suffix: unknown
+
+  exclude:    # ----------------------- Data that will be left out -------------
+  - provenance:
+    properties:
+      filepath:
+      filename:
+      filesize:
+      nrfiles: 
+    attributes: *attr
+    bids:
+      acq: <ProtocolName><descrip>
+      rec: <descrip><ImageType>
+      task: <SeriesDescription>
+      echo: <EchoNumbers>
+      suffix: <ScanningSequence>

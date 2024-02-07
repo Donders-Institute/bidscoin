@@ -1445,7 +1445,7 @@ def get_run(bidsmap: Bidsmap, datatype: str, suffix_idx: Union[int, str], dataso
             # Replace the dynamic meta values, except the IntendedFor value (e.g. <<task>>)
             for metakey, metavalue in run['meta'].items():
 
-                # NB: bidsvalue can be a (mutable) list
+                # NB: metavalue can be a (mutable) list
                 metavalue = copy.copy(metavalue)
                 if metakey == 'IntendedFor':
                     run_['meta'][metakey] = metavalue
