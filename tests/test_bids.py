@@ -163,7 +163,8 @@ def test_load_check_template(template: Path):
 
     # Load a valid template
     bidsmap, _ = bids.load_bidsmap(template, checks=(False, False, False))
-    dataformat = list(bidsmap.keys())[0]
+    for dataformat in bidsmap:
+        if dataformat not in ('$schema', 'Options'): break
     assert isinstance(bidsmap, dict) and bidsmap
     assert bids.check_template(bidsmap) is True
 
