@@ -159,7 +159,9 @@ def test_get_dicomfield(dcm_file_csa):
 
 
 @pytest.mark.parametrize('template', bcoin.list_plugins()[1])
-def test_load_check_template(template):
+def test_load_check_template(template: dict):
+
+    dataformat = list(template.keys())[0]
 
     # Load a valid template
     bidsmap, _ = bids.load_bidsmap(template, checks=(False, False, False))
@@ -167,9 +169,9 @@ def test_load_check_template(template):
     assert bids.check_template(bidsmap) is True
 
     # Add an invalid data type
-    bidsmap['DICOM']['foo'] = bidsmap['DICOM']['extra_data']
+    bidsmap[dataformat]['foo'] = bidsmap['DICOM']['extra_data']
     assert bids.check_template(bidsmap) is False
-    del bidsmap['DICOM']['foo']
+    del bidsmap[dataformat]['foo']
 
     # Remove a valid suffix (BIDS-entity)
     bidsmap['DICOM']['anat'].pop(-2)        # NB: Assumes CT is the last item, MTR the second last
