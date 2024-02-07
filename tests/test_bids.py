@@ -159,12 +159,11 @@ def test_get_dicomfield(dcm_file_csa):
 
 
 @pytest.mark.parametrize('template', bcoin.list_plugins()[1])
-def test_load_check_template(template: dict):
-
-    dataformat = list(template.keys())[0]
+def test_load_check_template(template: Path):
 
     # Load a valid template
     bidsmap, _ = bids.load_bidsmap(template, checks=(False, False, False))
+    dataformat = list(bidsmap.keys())[0]
     assert isinstance(bidsmap, dict) and bidsmap
     assert bids.check_template(bidsmap) is True
 
