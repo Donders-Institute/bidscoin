@@ -1,9 +1,6 @@
 """
 BIDScoin module with bids/bidsmap related helper functions
 
-Some functions are derived from dac2bids.py from Daniel Gomez 29.08.2016
-https://github.com/dangom/dac2bids/blob/master/dac2bids.py
-
 @author: Marcel Zwiers
 """
 
@@ -21,8 +18,6 @@ import ast
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Set, Tuple, Union, Dict, Any, NewType
-from nibabel.parrec import parse_PAR_header
-from nibabel.nicom import csareader
 from pydicom import dcmread, fileset, datadict
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
@@ -32,7 +27,7 @@ from bidscoin import bcoin, schemafolder, templatefolder, lsdirs, __version__
 from bidscoin.utilities import dicomsort
 from ruamel.yaml import YAML
 yaml = YAML()
-yaml.representer.ignore_aliases = lambda *data: True                         # Expand aliases (https://stackoverflow.com/questions/58091449/disabling-alias-for-yaml-file-in-python)
+yaml.representer.ignore_aliases = lambda *data: True                            # Expand aliases (https://stackoverflow.com/questions/58091449/disabling-alias-for-yaml-file-in-python)
 
 # Define custom data types (replace with proper classes or TypeAlias of Python >= 3.10)
 Plugin     = NewType('Plugin',     Dict[str, Any])
@@ -41,7 +36,7 @@ Properties = NewType('Properties', Dict[str, Any])
 Attributes = NewType('Attributes', Dict[str, Any])
 Bids       = NewType('Bids',       Dict[str, Any])
 Meta       = NewType('Meta',       Dict[str, Any])
-Run        = NewType('Run',        Dict[str, Any])      # Any = Union[Provenance, Properties, Attributes, Bids, Meta, DataSource]]) but we cannot yet refer to DataSource
+Run        = NewType('Run',        Dict[str, Any])                              # Any = Union[Provenance, Properties, Attributes, Bids, Meta, DataSource]]) but we cannot yet refer to DataSource
 Dataformat = NewType('Dataformat', Dict[str, Union[str, List[Run]]])
 Bidsmap    = NewType('Bidsmap',    Dict[str, Union[Options, Dataformat]])
 
@@ -518,6 +513,9 @@ def parse_x_protocol(pattern: str, dicomfile: Path) -> str:
     This structure is necessary to recreate a scanning protocol from a DICOM,
     since the DICOM information alone wouldn't be sufficient.
 
+    This function is derived from dac2bids.py from Daniel Gomez 29.08.2016
+    https://github.com/dangom/dac2bids/blob/master/dac2bids.py
+
     :param pattern:     A regular expression: '^' + pattern + '\t = \t(.*)\\n'
     :param dicomfile:   The full pathname of the dicom-file
     :return:            The string extracted values from the dicom-file according to the given pattern
@@ -567,6 +565,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
     else:
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
+            from nibabel.nicom import csareader
             try:
                 if dicomfile != _DICOMFILE_CACHE:
                     if dicomfile.name == 'DICOMDIR':
@@ -606,7 +605,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
                     # XA-20 enhanced DICOM hack: Catch missing EchoNumbers from ice-dims
                     if tagname == 'EchoNumbers' and not value:
-                        ice_dims = dicomdata.get((0x21, 1106))
+                        ice_dims = dicomdata.get((0x21, 1106)) or ''
                         if '_' in ice_dims:
                             value = ice_dims.split('_')[1]
 
@@ -754,6 +753,8 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
 
     else:
         try:
+            from nibabel.parrec import parse_PAR_header
+
             if parfile != _PARFILE_CACHE:
                 pardict = parse_PAR_header(parfile.open('r'))
                 if 'series_type' not in pardict[0]:
@@ -1988,7 +1989,7 @@ def increment_runindex(outfolder: Path, bidsname: str, run: Run) -> str:
 
         # Rename run-less to run-1
         for runless_file in runless_files:
-            LOGGER.info(f"Found run-2 files for <<>> index, renaming\n{runless_file} -> {run1_name}")
+            LOGGER.verbose(f"Found run-2 files for <<>> index, renaming\n{runless_file} -> {run1_name}")
             runless_file.replace((outfolder/run1_name).with_suffix(''.join(runless_file.suffixes)))
 
     return bidsname + bidsext
