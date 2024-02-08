@@ -813,7 +813,11 @@ Nibabel:
 
   extra_data: # ----------------------- All extra data -------------------------
   - provenance:
-    properties: *fileprop_fmap
+    properties:
+      filepath:
+      filename: sub-.*\.(nii|tsv).*
+      filesize:
+      nrfiles:
     attributes: *attr
     bids:
       acq: <filename:sub-.*_acq-(.*?)_.*\.nii.*>
