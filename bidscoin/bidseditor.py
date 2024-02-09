@@ -485,7 +485,8 @@ class MainWindow(QMainWindow):
                 samples_table.item(idx, 3).setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
                 samples_table.item(idx, 1).setToolTip('Double-click to inspect the header information')
                 samples_table.item(idx, 1).setStatusTip(str(provenance.parent) + str(Path('/')))
-                samples_table.item(idx, 3).setStatusTip(str(session) + str(Path('/')))
+                if datatype not in self.ignoredatatypes:
+                    samples_table.item(idx, 3).setStatusTip(str(session) + str(Path('/')))
 
                 if samples_table.item(idx, 3):
                     if ignore:

@@ -15,6 +15,7 @@
 - Option to exclude datatypes from being saved in bids/derivatives
 - Support for parsing Siemens CSA headers
 - A DICOM parser for retrieving the `<PhaseEncodingDirection>` value (Siemens and GE)
+- A `bidsmap_bids2bids` template bidsmap for nibabel2bids to edit existing BIDS datasets
 
 ### Changed
 - `bidscoiner_plugin()` API: you can (should) return a personals dict (instead of writing it to `participants.tsv`)

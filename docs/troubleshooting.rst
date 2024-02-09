@@ -76,15 +76,28 @@ You may get the warning "Cannot reliably change the datatype and/or suffix becau
 
 I have duplicated field maps because of an interrupted session
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-It may happen that due to irregularities during data acquisition you had to reacquire your field-map for part of your data. In that case the `IntendedFor` and `B0FieldIdentifier`/'B0FieldSource` semantics become ambiguous. To handle this situation, you can use json sidecar files to extend the source attributes (see below) or use the limited `IntendedFor` search as described `here <./bidsmap.html#intendedfor>`__ and `here <https://github.com/Donders-Institute/bidscoin/issues/123>`__.
+It may happen that due to irregularities during data acquisition you had to reacquire your field-map for part of your data. In that case the ``IntendedFor`` and ``B0FieldIdentifier``/``B0FieldSource`` semantics become ambiguous. To handle this situation, you can use json sidecar files to extend the source attributes (see below) or use the limited ``IntendedFor`` search as described `here <./bidsmap.html#intendedfor>`__ and `here <https://github.com/Donders-Institute/bidscoin/issues/123>`__.
 
 The bidscoiner says that the IntendedFor search gave no results
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Even if you have specified the IntendedFor value in the bidseditor, you still get `Empty 'IntendedFor' field map value in {..}: the search for {..} gave no results`. This may be because you hardcoded the IntendedFor value instead of providing a search pattern. Or it may be that you provided a correct search pattern but that for some subjects the target images were not acquired or could not be found (e.g. due to irregularities in the acquisition). Check out the BIDS output session(s) mentioned in the warning(s) and see if and how you should update your IntendedFor search pattern accordingly.
+Even if you have specified the IntendedFor value in the bidseditor, you still get `"Empty 'IntendedFor' field map value in {..}: the search for {..} gave no results"`. This may be because you hardcoded the IntendedFor value instead of providing a search pattern. Or it may be that you provided a correct search pattern but that for some subjects the target images were not acquired or could not be found (e.g. due to irregularities in the acquisition). Check out the BIDS output session(s) mentioned in the warning(s) and see if and how you should update your IntendedFor search pattern accordingly.
+
+The bidscoiner says that I need to check my scan.tsv files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This may occur when you use a dynamic run-index (e.g. ``<<>>`` or ``<<1>>``) and the foldernames of your DICOM Series do not start with the DICOM SeriesNumebr (this is default on Siemens). The solution would be to rename your Series folder to alphabetical order (in many cases this can be done with ``disomsort``), or to use another dynamic value, e.g. ``<<SeriesNumber>>`` (the latter will yield properly ordered run-indices, albeit with a variable step, e.g. yielding ``run-2`` + ``run-5`` instead of ``run-1`` + ``run-2``
 
 The data of some subjects need to be treated (mapped) differently
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Sometimes you may have irregularities in your data that make that you would like make exceptions for run-items of certain subjects. There are different ways to do this but most likely the best way to do this is to add a json sidecar file to the source data of those run-items. In the json sidecar file you can store an attribute key-value pair to `overrule or extend the original attribute value of the source data <./bidsmap.html#structure-and-content>`__. For instance, if your fMRI run was acquired with the wrong task presentation, e.g. `task2` instead of `task1`, you can add `SeriesDescription: task2` to the sidecar file to overrule `SeriesDescription: task1` in the DICOM header (to make a more specific exception that shows up as a new run-item in the bidsmap you can change it to e.g. `task1_exception`).
+Sometimes you may have irregularities in your data that make that you would like make exceptions for run-items of certain subjects. There are different ways to do this but most likely the best way to do this is to add a json sidecar file to the source data of those run-items. In the json sidecar file you can store an attribute key-value pair to `overrule or extend the original attribute value of the source data <./bidsmap.html#structure-and-content>`__. For instance, if your fMRI run was acquired with the wrong task presentation, e.g. ``task2`` instead of ``task1``, you can add ``SeriesDescription: task2`` to the sidecar file to overrule ``SeriesDescription: task1`` in the DICOM header (to make a more specific exception that shows up as a new run-item in the bidsmap you can change it to e.g. ``task1_exception``).
+
+I want to rename files or change some data in my existing BIDS directory
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+You can simply use the ``bidseditor`` to make changes to your bidsmap, delete all subject folders in your BIDS output folder and then re-run ``bidscoiner``. However, sometimes you may no longer have access to your source data, or you may have downloaded a publicly shared BIDS dataset (without source data). In that case you can use ``bidscoiner`` in combination with the ``nibabel2bids`` plugin and the ``bidsmap_bids2bids`` bidsmap to create a new BIDS dataset, i.e. like this:
+
+.. code-block:: console
+
+   $ bidsmapper bidsfolder bidsfolder_new -p nibabel2bids -t bidsmap_bids2bids
+   $ bidscoiner bidsfolder bidsfolder_new
 
 More help
 ---------
