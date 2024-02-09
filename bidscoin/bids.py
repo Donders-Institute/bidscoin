@@ -1688,9 +1688,9 @@ def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) ->
     :param datasource:  The data source from which the attributes are read. NB: The datasource.datatype attribute is updated
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS keys and attributes, etc
     :param runtime:     Dynamic <<values>> are expanded if True
-    :return:            (run, provenance) The matching and filled-in / cleaned run item, datatype, and if there is a match,
-                        the provenance (i.e. unique identifier) of the run-item in the bidsmap. If there is no match then
-                        the run is still populated with info from the source-file, but the returned provenance will be ''
+    :return:            (run, provenance) The matching and filled-in / cleaned run item, and if there is a match, the
+                        provenance (i.e. unique identifier) of the run-item in the bidsmap. If there is no match then the
+                        run is still populated with info from the source-file, but the returned provenance will be ''
     """
 
     unknowndatatypes: list = bidsmap['Options']['bidscoin'].get('unknowntypes',[])
@@ -2003,25 +2003,31 @@ def check_runindices(session: Path) -> bool:
     e.g. `extra_data` folders are not checked)
 
     :param session: The session folder with the BIDS entity folders and scans.tsv file
-    :return:        True when acquisition times increase all with the run-indices
+    :return:        True when acquisition times all increase with the run-indices
     """
 
-    # Read or create a scans_table and tsv-file
+    # Read the acquisition times and run-indices from the scans.tsv file
     scans_tsv = next(session.glob('sub-*_scans.tsv'), None)
     if scans_tsv:
         scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
         if 'acq_time' in scans_table.columns:
+
+            # Check all the run-2, run-3, etc scans against their preceding scan
             for scan in scans_table.sort_index().index:
                 runindex = get_bidsvalue(scan, 'run')
-                if runindex and int(runindex) != 1:
+                if runindex and int(runindex) > 1:
                     prevscan = scan.replace(f"_run-{runindex}", f"_run-{int(runindex) - 1}")
+
+                    # Check if the preceding index exists in the table
                     if prevscan not in scans_table.index:
                         LOGGER.warning(f"Missing {prevscan} entry. Please check `{scans_tsv}`\n{scans_table}")
                         return False
+
+                    # Check if the preceding scan was indeed acquired at an earlier time point
                     if not (pd.isna(scans_table.loc[scan, 'acq_time']) or pd.isna(scans_table.loc[prevscan, 'acq_time'])):
                         acq_time = datetime.datetime.fromisoformat(scans_table.loc[scan, 'acq_time'])
                         acq_prev = datetime.datetime.fromisoformat(scans_table.loc[prevscan, 'acq_time'])
-                        if (acq_time - acq_prev).total_seconds() < -10:      # Add 10 seconds leeway to account for saving time of multi-echo scans, etc
+                        if (acq_time - acq_prev).total_seconds() <= 0:
                             LOGGER.warning(f"Acquisition times do not increase with the run-indices. Please check `{scans_tsv}`\n{scans_table}")
                             return False
 
