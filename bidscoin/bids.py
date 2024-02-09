@@ -1675,7 +1675,7 @@ def exist_run(bidsmap: Bidsmap, datatype: str, run_item: Run) -> bool:
     return False
 
 
-def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) -> Tuple[Run, bool]:
+def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) -> Tuple[Run, str]:
     """
     Find the first run in the bidsmap with properties and file attributes that match with the data source, and then
     through the attributes. Only non-empty properties and attributes are matched, except when runtime is True, then
@@ -1688,8 +1688,9 @@ def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) ->
     :param datasource:  The data source from which the attributes are read. NB: The datasource.datatype attribute is updated
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS keys and attributes, etc
     :param runtime:     Dynamic <<values>> are expanded if True
-    :return:            (run, match) The matching and filled-in / cleaned run item, datatype, and True if there is a match
-                        If there is no match then the run is still populated with info from the source-file
+    :return:            (run, provenance) The matching and filled-in / cleaned run item, datatype, and the provenance of
+                        the bidsmap run-item if there is a match. If there is no match then the run is still populated
+                        with info from the source-file, but the returned provenance will be ''
     """
 
     unknowndatatypes: list = bidsmap['Options']['bidscoin'].get('unknowntypes',[])
@@ -1766,10 +1767,10 @@ def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) ->
             # Stop searching the bidsmap if we have a match
             if match:
                 LOGGER.debug(f"Bidsmap match: {run['provenance']} -> {run_['provenance']}")
-                return run_, True
+                return run_, run['provenance']
 
     # We don't have a match (all tests failed, so datatype should be the *last* one, e.g. unknowndatatype)
-    return run_, False
+    return run_, ''
 
 
 def get_derivatives(datatype: str, exceptions: Union[tuple,list]=()) -> list:
