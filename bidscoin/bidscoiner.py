@@ -292,7 +292,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     # Add the special fieldmap metadata (IntendedFor, TE, etc)
                     addmetadata(bidssession, subid, sesid)
 
-                    # TODO: Add a check / repair for the run-indexes using acq_time info in the scans_table
+                    # Check / repair the run-indices using acq_time info in the scans_table
+                    bids.check_runindices(sesfolder)
 
                     # Clean-up the temporary unpacked data
                     if unpacked:

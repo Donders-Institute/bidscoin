@@ -15,6 +15,7 @@ import warnings
 import fnmatch
 import pandas as pd
 import ast
+import datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Set, Tuple, Union, Dict, Any, NewType
@@ -1995,6 +1996,37 @@ def increment_runindex(outfolder: Path, bidsname: str, run: Run) -> str:
     return bidsname + bidsext
 
 
+def check_runindices(session: Path) -> bool:
+    """
+    Checks if the run-indices with the acquisition times stored in the scans.tsv file (NB: that means that scans in
+    e.g. `extra_data` folders are not checked)
+
+    :param session: The session folder with the BIDS entity folders and scans.tsv file
+    :return:        True when acquisition times increase all with the run-indices
+    """
+
+    # Read or create a scans_table and tsv-file
+    scans_tsv = next(session.glob('sub-*_scans.tsv'), None)
+    if scans_tsv:
+        scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
+        if 'acq_time' in scans_table.columns:
+            for scan in scans_table.sort_index().index:
+                runindex = get_bidsvalue(scan, 'run')
+                if runindex and int(runindex) != 1:
+                    prevscan = scan.replace(f"_run-{runindex}", f"_run-{int(runindex) - 1}")
+                    if prevscan not in scans_table.index:
+                        LOGGER.warning(f"Missing {prevscan} entry. Please check `{scans_tsv}`\n{scans_table}")
+                        return False
+                    if not (pd.isna(scans_table.loc[scan, 'acq_time']) or pd.isna(scans_table.loc[prevscan, 'acq_time'])):
+                        acq_time = datetime.datetime.fromisoformat(scans_table.loc[scan, 'acq_time'])
+                        acq_prev = datetime.datetime.fromisoformat(scans_table.loc[prevscan, 'acq_time'])
+                        if (acq_time - acq_prev).total_seconds() < -10:      # Add 10 seconds leeway to account for saving time of multi-echo scans, etc
+                            LOGGER.warning(f"Acquisition times do not increase with the run-indices. Please check `{scans_tsv}`\n{scans_table}")
+                            return False
+
+    return True
+
+
 def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, extensions: list, sourcemeta: Path = Path()) -> Meta:
     """
     Load the metadata from the target (json sidecar), then add metadata from the source (json sidecar) and finally add
@@ -2034,7 +2066,7 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, ext
                     continue
                 for metakey, metaval in metadata.items():
                     if metapool.get(metakey) and metapool.get(metakey) != metaval:
-                        LOGGER.info(f"Overruling {metakey} values in {targetmeta}: {metapool[metakey]} -> {metaval}")
+                        LOGGER.info(f"Overruling {metakey} sourcefile values in {targetmeta}: {metapool[metakey]} -> {metaval}")
                     else:
                         LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
                     metapool[metakey] = metaval or None
@@ -2054,7 +2086,7 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, ext
             except (ValueError, SyntaxError):
                 pass
         if metapool.get(metakey) and metapool.get(metakey) != metaval:
-            LOGGER.info(f"Overruling {metakey} values in {targetmeta}: {metapool[metakey]} -> {metaval}")
+            LOGGER.info(f"Overruling {metakey} bidsmap values in {targetmeta}: {metapool[metakey]} -> {metaval}")
         else:
             LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
         metapool[metakey] = metaval or None

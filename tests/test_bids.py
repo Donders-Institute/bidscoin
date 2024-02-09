@@ -5,6 +5,7 @@ import shutil
 import re
 import json
 import ruamel.yaml.comments
+from datetime import datetime, timedelta
 from importlib.util import find_spec
 from pathlib import Path
 from nibabel.testing import data_path
@@ -144,6 +145,9 @@ def test_get_dicomfield(dcm_file_csa):
     assert value == 'T:HEA;HEP'
 
     value = bids.get_dicomfield('B_matrix', dcm_file_csa)
+    assert value == ''
+
+    value = bids.get_dicomfield('NonExistingTag', dcm_file_csa)
     assert value == ''
 
     # -> CSA MrPhoenixProtocol
@@ -509,6 +513,34 @@ def test_increment_runindex(tmp_path):
 
     bidsname = bids.increment_runindex(outfolder, run1, Run({'bids': {'run': '2'}}))
     assert bidsname == run1                         # -> Must remain untouched
+
+
+def test_check_runindices(tmp_path):
+
+    scans_file = tmp_path/f"sub-01_scans.tsv"
+    acq_time   = datetime.now()
+
+    assert bids.check_runindices(tmp_path) is True
+
+    scans_data = {'filename': ['anat/sub-01_run-1_T1w.nii.gz', 'anat/sub-01_run-2_T1w.nii.gz', 'extra_data/sub-01_run-1_T1w.nii.gz'],
+                  'acq_time': [acq_time.isoformat(), (acq_time + timedelta(minutes=5)).isoformat(), (acq_time - timedelta(minutes=5)).isoformat()]}
+    pd.DataFrame(scans_data).to_csv(scans_file, sep='\t')
+    assert bids.check_runindices(tmp_path) is True
+
+    scans_data = {'filename': ['anat/sub-01_run-1_T1w.nii.gz', 'anat/sub-01_run-2_T1w.nii.gz', 'extra_data/sub-01_run-1_T1w.nii.gz'],
+                  'acq_time': [acq_time.isoformat(), None, (acq_time - timedelta(minutes=5)).isoformat()]}
+    pd.DataFrame(scans_data).to_csv(scans_file, sep='\t', na_rep='n/a')
+    assert bids.check_runindices(tmp_path) is True
+
+    scans_data = {'filename': ['anat/sub-01_T1w.nii.gz', 'anat/sub-01_run-2_T1w.nii.gz', 'extra_data/sub-01_run-1_T1w.nii.gz'],
+                  'acq_time': [acq_time.isoformat(), (acq_time + timedelta(minutes=5)).isoformat(), (acq_time - timedelta(minutes=5)).isoformat()]}
+    pd.DataFrame(scans_data).to_csv(scans_file, sep='\t')
+    assert bids.check_runindices(tmp_path) is False
+
+    scans_data = {'filename': ['anat/sub-01_run-1_T1w.nii.gz', 'anat/sub-01_run-2_T1w.nii.gz', 'anat/sub-01_run-3_T1w.nii.gz'],
+                  'acq_time': [acq_time.isoformat(), (acq_time + timedelta(minutes=10)).isoformat(), (acq_time + timedelta(minutes=5)).isoformat()]}
+    pd.DataFrame(scans_data).to_csv(scans_file, sep='\t')
+    assert bids.check_runindices(tmp_path) is False
 
 
 def test_get_bidsname(raw_dicomdir):
