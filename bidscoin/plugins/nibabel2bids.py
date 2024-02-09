@@ -193,7 +193,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
     for sourcefile in sourcefiles:
 
         datasource = bids.DataSource(sourcefile, {'nibabel2bids':options})
-        run, match = bids.get_matching_run(datasource, bidsmap, runtime=True)
+        run, runid = bids.get_matching_run(datasource, bidsmap, runtime=True)
 
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
@@ -201,7 +201,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
             continue
 
         # Check if we already know this run
-        if not match:
+        if not runid:
             LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
             continue
 

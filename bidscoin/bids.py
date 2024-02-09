@@ -1688,9 +1688,9 @@ def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) ->
     :param datasource:  The data source from which the attributes are read. NB: The datasource.datatype attribute is updated
     :param bidsmap:     Full bidsmap data structure, with all options, BIDS keys and attributes, etc
     :param runtime:     Dynamic <<values>> are expanded if True
-    :return:            (run, provenance) The matching and filled-in / cleaned run item, datatype, and the provenance of
-                        the bidsmap run-item if there is a match. If there is no match then the run is still populated
-                        with info from the source-file, but the returned provenance will be ''
+    :return:            (run, provenance) The matching and filled-in / cleaned run item, datatype, and if there is a match,
+                        the provenance (i.e. unique identifier) of the run-item in the bidsmap. If there is no match then
+                        the run is still populated with info from the source-file, but the returned provenance will be ''
     """
 
     unknowndatatypes: list = bidsmap['Options']['bidscoin'].get('unknowntypes',[])
