@@ -119,6 +119,13 @@ def setup_logging(logfile: Path=Path()):
         if self.isEnabledFor(logging.VERBOSE): self._log(logging.VERBOSE, message, args, **kws)
     logging.Logger.verbose = verbose
 
+    logging.PROVENANCE = 16
+    logging.addLevelName(logging.PROVENANCE, 'PROVENANCE')
+    def provenance(self, message, *args, **kws):
+        if self.isEnabledFor(logging.PROVENANCE):
+            self._log(logging.PROVENANCE, message, args, **kws)
+    logging.Logger.provenance = provenance
+
     # Add a success logging level = 25
     logging.SUCCESS = 25
     logging.addLevelName(logging.SUCCESS, 'SUCCESS')
