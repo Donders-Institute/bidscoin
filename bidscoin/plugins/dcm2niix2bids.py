@@ -257,7 +257,6 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         elif dataformat == 'PAR':
             sourcefile = source
         if not sourcefile.name or not is_sourcefile(sourcefile):
-            bids.bidsprov(bidsses, '', source, '', '', set())           # Write out empty provenance data
             continue
 
         # Get a matching run from the bidsmap
@@ -267,13 +266,13 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
             LOGGER.info(f"--> Leaving out: {source}")
-            bids.bidsprov(bidsses, runid, source, '', datasource.datatype, set())              # Write out empty provenance data
+            bids.bidsprov(bidsses, source, runid, '', datasource.datatype)              # Write out empty provenance data
             continue
 
         # Check if we already know this run
         if not runid:
             LOGGER.error(f"--> Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
-            bids.bidsprov(bidsses, runid, source, '', 'unknown', set())              # Write out empty provenance data
+            bids.bidsprov(bidsses, source)                              # Write out empty provenance data
             continue
 
         LOGGER.info(f"--> Coining: {source}")
@@ -462,22 +461,13 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                     oldfile.replace(newbidsfile.with_suffix('').with_suffix(''.join(oldfile.suffixes)))
 
         # Write out provenance data
-        bids.bidsprov(bidsses, runid, source, command, datasource.datatype, targets)
+        bids.bidsprov(bidsses, source, runid, command, datasource.datatype, targets)
 
         # Loop over all non-derivative targets (i.e. the produced output files) and edit the json sidecar data
         for target in sorted(targets):
 
             # Editing derivative data is out of our scope
             if target.relative_to(bidsfolder).parts[0] == 'derivatives':
-                continue
-
-            # Check if everything went OK, i.e. find the bidsname NIfTI/tsv.gz file (there should be only one) + json-file
-            try:
-                outputfiles = [file for file in outfolder.glob(f"{target.with_suffix('').stem}.*") if file.suffix in ('.nii','.gz')]
-                assert len(outputfiles) == 1
-                outputfile = outputfiles[0]
-            except AssertionError as outputerror:
-                LOGGER.error(f"Unexpected conversion result(s) for {target}, found: {outputfiles}\n{outputerror}")
                 continue
 
             # Load/copy over the source meta-data
@@ -525,8 +515,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                 except Exception as jsonerror:
                     LOGGER.warning(f"Could not parse the acquisition time from: {sourcefile}\n{jsonerror}")
                     acq_time = 'n/a'
-                scanpath = outputfile.relative_to(bidsses)
-                scans_table.loc[scanpath.as_posix(), 'acq_time'] = acq_time
+                scans_table.loc[target.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time
 
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing acquisition time data to: {scans_tsv}")

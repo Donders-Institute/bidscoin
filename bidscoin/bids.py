@@ -2062,7 +2062,7 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, ext
     # Add the source metadata to the metadict or copy it over
     for ext in set(extensions):
         for sourcefile in sourcemeta.parent.glob(sourcemeta.with_suffix('').with_suffix(ext).name):
-            LOGGER.info(f"Copying source data from: '{sourcefile}''")
+            LOGGER.verbose(f"Copying source data from: '{sourcefile}''")
 
             # Put the metadata in metadict
             if ext == '.json':
@@ -2192,15 +2192,15 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
     return table, meta
 
 
-def bidsprov(sesfolder: Path, runid: str, source: Path, command: str, datatype: str, targets: Set[Path]) -> None:
+def bidsprov(sesfolder: Path, source: Path, runid: str='', command: str='', datatype: str='unknown', targets: Set[Path]=()) -> None:
     """
     Save data transformation information in the bids/code/bidscoin folder (in the future this may be done in accordance with BEP028)
 
     :param sesfolder:   The bids session folder
-    :param runid:       The bidsmap runid that was used to map the source data
     :param source:      The source file or folder that is being converted
+    :param runid:       The bidsmap runid that was used to map the source data, e.g. as returned from get_matching_run()
     :param command:     The executed command
-    :param datatype:    The BIDS datatype / name of the subfolder where the targets are saved (e.g. extra_data)
+    :param datatype:    The BIDS datatype/name of the subfolder where the targets are saved (e.g. extra_data)
     :param targets:     The set of output files
     :return:
     """

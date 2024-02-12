@@ -198,13 +198,13 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
             LOGGER.info(f"--> Leaving out: {source}")
-            bids.bidsprov(bidsses, runid, source, '', datasource.datatype, set())              # Write out empty provenance data
+            bids.bidsprov(bidsses, source, runid, '', datasource.datatype)              # Write out empty provenance data
             continue
 
         # Check if we already know this run
         if not runid:
             LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {source}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
-            bids.bidsprov(bidsses, runid, source, '', 'unknown', set())              # Write out empty provenance data
+            bids.bidsprov(bidsses, source)                      # Write out empty provenance data
             continue
 
         LOGGER.info(f"--> Coining: {source}")
@@ -238,7 +238,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
         # Check the output
         if not target.is_file():
             LOGGER.error(f"Output file not found: {target}")
-            bids.bidsprov(bidsses, runid, source, command, datasource.datatype, set())      # Write out empty provenance data
+            bids.bidsprov(bidsses, source, runid, command, datasource.datatype)      # Write out empty provenance data
             continue
 
         # Load/copy over the source meta-data
@@ -254,7 +254,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
             scans_table.loc[target.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time.isoformat()
 
         # Write out provenance data
-        bids.bidsprov(bidsses, runid, source, command, datasource.datatype, {target})
+        bids.bidsprov(bidsses, source, runid, command, datasource.datatype, {target})
 
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing data to: {scans_tsv}")
