@@ -2075,7 +2075,7 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, ext
                     if metapool.get(metakey) and metapool.get(metakey) != metaval:
                         LOGGER.info(f"Overruling {metakey} sourcefile values in {targetmeta}: {metapool[metakey]} -> {metaval}")
                     else:
-                        LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
+                        LOGGER.debug(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
                     metapool[metakey] = metaval or None
 
             # Or just copy over the metadata file
@@ -2095,7 +2095,7 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, ext
         if metapool.get(metakey) and metapool.get(metakey) != metaval:
             LOGGER.info(f"Overruling {metakey} bidsmap values in {targetmeta}: {metapool[metakey]} -> {metaval}")
         else:
-            LOGGER.verbose(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
+            LOGGER.debug(f"Adding '{metakey}: {metaval}' to: {targetmeta}")
         metapool[metakey] = metaval or None
 
     # Update B0FieldIdentifiers / Sources
@@ -2220,7 +2220,7 @@ def bidsprov(sesfolder: Path, runid: str, source: Path, command: str, datatype: 
 
     # Write the provenance data
     provdata.loc[source] = [runid, command, datatype, ', '.join([target.name for target in targets])]
-    LOGGER.verbose(f"Writing provenance data to: {provfile}")
+    LOGGER.debug(f"Writing provenance data to: {provfile}")
     provdata.to_csv(provfile, sep='\t')
 
 

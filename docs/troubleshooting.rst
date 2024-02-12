@@ -84,7 +84,7 @@ Even if you have specified the IntendedFor value in the bidseditor, you still ge
 
 The bidscoiner says that I need to check my scan.tsv files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This may occur when you use a dynamic run-index (e.g. ``<<>>`` or ``<<1>>``) and the foldernames of your DICOM Series do not start with the DICOM SeriesNumebr (this is default on Siemens). The solution would be to rename your Series folder to alphabetical order (in many cases this can be done with ``disomsort``), or to use another dynamic value, e.g. ``<<SeriesNumber>>`` (the latter will yield properly ordered run-indices, albeit with a variable step, e.g. yielding ``run-2`` + ``run-5`` instead of ``run-1`` + ``run-2``
+This may occur when you use a dynamic run-index (e.g. ``<<>>`` or ``<<1>>``) and the folder names of your DICOM Series do not start with the DICOM SeriesNumber (this is default on Siemens). The solution would be to rename your Series folder to alphabetical order (in many cases this can be done with ``disomsort``), or to use another dynamic value, e.g. ``<<SeriesNumber>>`` (the latter will yield properly ordered run-indices, albeit with a variable step, e.g. yielding ``run-2`` + ``run-5`` instead of ``run-1`` + ``run-2``
 
 The data of some subjects need to be treated (mapped) differently
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
