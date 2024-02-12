@@ -364,7 +364,7 @@ def physio2tsv(physio: dict, tsvfile: Union[str, Path]):
     """
 
     # Check input
-    tsvfile = Path(tsvfile).resolve()
+    tsvfile = Path(tsvfile).resolve().with_suffix('').with_suffix('.tsv.gz')
 
     # Set the clock at zero at the start of the MRI acquisition
     starttime = -physio['ACQ'].nonzero()[0][0] / physio['Freq']     # Assumes that the physiological acquisition always starts before the MRI acquisition
@@ -373,8 +373,8 @@ def physio2tsv(physio: dict, tsvfile: Union[str, Path]):
     physiotable = pd.DataFrame(columns=[key for key in physio if key not in ('UUID','ScanDate','Freq','SliceMap','ACQ','Meta')])
     for key in physiotable.columns:
         physiotable[key] = physio[key]
-    LOGGER.info(f"Writing physiological traces to: '{tsvfile.with_suffix('.tsv.gz')}'")
-    physiotable.to_csv(tsvfile.with_suffix('.tsv.gz'), header=False, index=False, sep='\t', compression='infer')
+    LOGGER.info(f"Writing physiological traces to: '{tsvfile}'")
+    physiotable.to_csv(tsvfile, header=False, index=False, sep='\t', compression='infer')
 
     # Write a json side-car file
     try:
@@ -386,7 +386,7 @@ def physio2tsv(physio: dict, tsvfile: Union[str, Path]):
     physio['Meta']['AcquisitionTime']   = dateutil.parser.parse(physio['ScanDate']).strftime('%H:%M:%S')
     physio['Meta']['Columns']           = physiotable.columns.to_list()
     physio['Meta']['GeneratedBy']       = [{'name':'BIDScoin', 'Version':bidscoinversion, 'CodeURL':'https://github.com/Donders-Institute/bidscoin'}]
-    with tsvfile.with_suffix('.json').open('w') as json_fid:
+    with tsvfile.with_suffix('').with_suffix('.json').open('w') as json_fid:
         json.dump(physio['Meta'], json_fid, indent=4)
 
 

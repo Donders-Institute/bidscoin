@@ -190,22 +190,24 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
         scans_table.index.name = 'filename'
 
     # Collect the different Nibabel source files for all files in the session
-    for sourcefile in sourcefiles:
+    for source in sourcefiles:
 
-        datasource = bids.DataSource(sourcefile, {'nibabel2bids':options})
+        datasource = bids.DataSource(source, {'nibabel2bids':options})
         run, runid = bids.get_matching_run(datasource, bidsmap, runtime=True)
 
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
-            LOGGER.info(f"--> Leaving out: {sourcefile}")
+            LOGGER.info(f"--> Leaving out: {source}")
+            bids.bidsprov(bidsses, runid, source, '', datasource.datatype, set())              # Write out empty provenance data
             continue
 
         # Check if we already know this run
         if not runid:
-            LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+            LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {source}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+            bids.bidsprov(bidsses, runid, source, '', 'unknown', set())              # Write out empty provenance data
             continue
 
-        LOGGER.info(f"--> Coining: {sourcefile}")
+        LOGGER.info(f"--> Coining: {source}")
 
         # Create the BIDS session/datatype output folder
         outfolder = bidsses/datasource.datatype
@@ -216,7 +218,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
         bidsname   = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
         bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap['Options']['bidscoin']['bidsignore'], 'file')
         bidsname   = bids.increment_runindex(outfolder, bidsname, run)
-        bidsfile   = (outfolder/bidsname).with_suffix(ext)
+        target     = (outfolder/bidsname).with_suffix(ext)
 
         # Check if the bidsname is valid
         bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.json').as_posix()
@@ -225,24 +227,34 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
             LOGGER.warning(f"The '{bidstest}' output name did not pass the bids-validator test")
 
         # Check if file already exists (-> e.g. when a static runindex is used)
-        if bidsfile.is_file():
-            LOGGER.warning(f"{bidsfile}.* already exists and will be deleted -- check your results carefully!")
-            bidsfile.with_suffix('').with_suffix(ext).unlink()
+        if target.is_file():
+            LOGGER.warning(f"{target} already exists and will be deleted -- check your results carefully!")
+            target.unlink()
 
         # Save the sourcefile as a BIDS NIfTI file
-        nib.save(nib.load(sourcefile), bidsfile)
+        command = f"nib.save(nib.load({source}), {target})"
+        nib.save(nib.load(source), target)
 
-        # Load / copy over the source meta-data
-        sidecar  = bidsfile.with_suffix('').with_suffix('.json')
+        # Check the output
+        if not target.is_file():
+            LOGGER.error(f"Output file not found: {target}")
+            bids.bidsprov(bidsses, runid, source, command, datasource.datatype, set())      # Write out empty provenance data
+            continue
+
+        # Load/copy over the source meta-data
+        sidecar  = target.with_suffix('').with_suffix('.json')
         metadata = bids.updatemetadata(datasource, sidecar, run['meta'], meta)
         if metadata:
             with sidecar.open('w') as json_fid:
                 json.dump(metadata, json_fid, indent=4)
 
         # Add an entry to the scans_table (we typically don't have useful data to put there)
-        # TODO: Add check for derivative and ignore (as in other plugins)
-        acq_time = dateutil.parser.parse(f"1925-01-01T{metadata.get('AcquisitionTime', '')}")
-        scans_table.loc[bidsfile.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time.isoformat()
+        if 'derivatives' not in bidsses.parts:
+            acq_time = dateutil.parser.parse(f"1925-01-01T{metadata.get('AcquisitionTime', '')}")
+            scans_table.loc[target.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time.isoformat()
+
+        # Write out provenance data
+        bids.bidsprov(bidsses, runid, source, command, datasource.datatype, {target})
 
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing data to: {scans_tsv}")

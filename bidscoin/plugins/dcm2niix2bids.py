@@ -257,6 +257,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         elif dataformat == 'PAR':
             sourcefile = source
         if not sourcefile.name or not is_sourcefile(sourcefile):
+            bids.bidsprov(bidsses, '', source, '', '', set())           # Write out empty provenance data
             continue
 
         # Get a matching run from the bidsmap
@@ -266,11 +267,13 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
             LOGGER.info(f"--> Leaving out: {source}")
+            bids.bidsprov(bidsses, runid, source, '', datasource.datatype, set())              # Write out empty provenance data
             continue
 
         # Check if we already know this run
         if not runid:
             LOGGER.error(f"--> Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete {bidsses} to solve this warning")
+            bids.bidsprov(bidsses, runid, source, '', 'unknown', set())              # Write out empty provenance data
             continue
 
         LOGGER.info(f"--> Coining: {source}")
@@ -284,12 +287,12 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         outfolder.mkdir(parents=True, exist_ok=True)
 
         # Compose the BIDS filename using the matched run
-        ignore    = bids.check_ignore(datasource.datatype, bidsignore)
-        bidsname  = bids.get_bidsname(subid, sesid, run, not ignore, runtime=True)
-        ignore    = ignore or bids.check_ignore(bidsname+'.json', bidsignore, 'file')
-        runindex  = bids.get_bidsvalue(bidsname, 'run')
-        bidsname  = bids.increment_runindex(outfolder, bidsname, run)
-        bidsnames = set()        # -> A store for all output targets for this bidsname
+        ignore   = bids.check_ignore(datasource.datatype, bidsignore)
+        bidsname = bids.get_bidsname(subid, sesid, run, not ignore, runtime=True)
+        ignore   = ignore or bids.check_ignore(bidsname+'.json', bidsignore, 'file')
+        runindex = bids.get_bidsvalue(bidsname, 'run')
+        bidsname = bids.increment_runindex(outfolder, bidsname, run)
+        targets  = set()        # -> A store for all fullpath output targets (.nii/.tsv) for this bidsname
 
         # Check if the bidsname is valid
         bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.json').as_posix()
@@ -311,12 +314,15 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
 
         # Convert physiological log files (dcm2niix can't handle these)
         if suffix == 'physio':
+            target  = (outfolder/bidsname).with_suffix('.tsv.gz')
+            command = f"physio.physio2tsv(physio.readphysio({sourcefile}), {target})"
             if bids.get_dicomfile(source, 2).name:                  # TODO: issue warning or support PAR
                 LOGGER.warning(f"Found > 1 DICOM file in {source}, using: {sourcefile}")
             try:
                 physiodata = physio.readphysio(sourcefile)
-                physio.physio2tsv(physiodata, outfolder/bidsname)
-                bidsnames.add(bidsname)                                 # Collect the bidsname
+                physio.physio2tsv(physiodata, target)
+                if target.is_file():
+                    targets.add(target)
             except Exception as physioerror:
                 LOGGER.error(f"Could not read/convert physiological file: {sourcefile}\n{physioerror}")
                 continue
@@ -333,8 +339,9 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                 continue
 
             # Collect the bidsname
-            if next(outfolder.glob(f"{bidsname}.nii*"), None):
-                bidsnames.add(bidsname)
+            target = next(outfolder.glob(f"{bidsname}.nii*"), None)
+            if target:
+                targets.add(target)
 
             # Handle the ABCD GE pepolar sequence
             extrafile = next(outfolder.glob(f"{bidsname}a.nii*"), None)
@@ -348,7 +355,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                     LOGGER.verbose(f"Renaming GE reversed polarity image: {extrafile} -> {invfile}")
                     extrafile.replace(invfile)
                     extrafile.with_suffix('').with_suffix('.json').replace(invfile.with_suffix('').with_suffix('.json'))
-                    bidsnames.add(invfile.with_suffix('').stem)
+                    targets.add(invfile)
                 else:
                     LOGGER.error(f"Unexpected variants of {outfolder/bidsname}* were produced by dcm2niix. Possibly this can be remedied by using the dcm2niix -i option (to ignore derived, localizer and 2D images) or by clearing the BIDS folder before running bidscoiner")
 
@@ -448,26 +455,33 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                 if newbidsfile.is_file():
                     LOGGER.warning(f"Overwriting existing {newbidsfile} file -- check your results carefully!")
                 dcm2niixfile.replace(newbidsfile)
-                bidsnames.add(newbidsfile.with_suffix('').stem)
+                targets.add(newbidsfile)
 
                 # Rename all associated files (i.e. the json-, bval- and bvec-files)
                 for oldfile in outfolder.glob(dcm2niixfile.with_suffix('').stem + '.*'):
                     oldfile.replace(newbidsfile.with_suffix('').with_suffix(''.join(oldfile.suffixes)))
 
-        # Loop over all bidsnames (i.e. the produced output files) and adapt the json sidecar data
-        for bidsname in sorted(bidsnames):
+        # Write out provenance data
+        bids.bidsprov(bidsses, runid, source, command, datasource.datatype, targets)
+
+        # Loop over all non-derivative targets (i.e. the produced output files) and edit the json sidecar data
+        for target in sorted(targets):
+
+            # Editing derivative data is out of our scope
+            if target.relative_to(bidsfolder).parts[0] == 'derivatives':
+                continue
 
             # Check if everything went OK, i.e. find the bidsname NIfTI/tsv.gz file (there should be only one) + json-file
             try:
-                outputfiles = [file for file in outfolder.glob(f"{bidsname}.*") if file.suffix in ('.nii','.gz')]
+                outputfiles = [file for file in outfolder.glob(f"{target.with_suffix('').stem}.*") if file.suffix in ('.nii','.gz')]
                 assert len(outputfiles) == 1
                 outputfile = outputfiles[0]
             except AssertionError as outputerror:
-                LOGGER.error(f"Unexpected conversion result(s): {outfolder/bidsname}.*\n{outputerror}")
+                LOGGER.error(f"Unexpected conversion result(s) for {target}, found: {outputfiles}\n{outputerror}")
                 continue
 
-            # Load / copy over the source meta-data
-            jsonfile = (outfolder/bidsname).with_suffix('.json')
+            # Load/copy over the source meta-data
+            jsonfile = target.with_suffix('').with_suffix('.json')
             if not jsonfile.is_file():
                 LOGGER.warning(f"Unexpected conversion result, could not find: {jsonfile}")
             metadata = bids.updatemetadata(datasource, jsonfile, run['meta'], options['meta'])
@@ -477,7 +491,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                 (datasource.datatype == 'fmap' and suffix == 'epi')   or
                 (datasource.datatype == 'anat' and suffix == 'MP2RAGE')):
                 for ext in ('.bval', '.bvec'):
-                    bfile = jsonfile.with_suffix(ext)
+                    bfile = target.with_suffix('').with_suffix(ext)
                     if bfile.is_file():
                         bdata   = pd.read_csv(bfile, header=None)
                         pattern = f"**/{datasource.datatype}/sub*{suffix}{ext}"
@@ -495,7 +509,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                     json.dump(metadata, json_fid, indent=4)
 
             # Parse the acquisition time from the source header or else from the json file (NB: assuming the source file represents the first acquisition)
-            if not ignore and not suffix in bids.get_derivatives(datasource.datatype, exceptions):
+            if not ignore:
                 acq_time = ''
                 if dataformat == 'DICOM':
                     acq_time = f"{datasource.attributes('AcquisitionDate')}T{datasource.attributes('AcquisitionTime')}"

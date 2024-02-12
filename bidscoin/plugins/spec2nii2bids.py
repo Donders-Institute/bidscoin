@@ -198,23 +198,25 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         scans_table.index.name = 'filename'
 
     # Loop over all MRS source data files and convert them to BIDS
-    for sourcefile in sourcefiles:
+    for source in sourcefiles:
 
         # Get a data source, a matching run from the bidsmap
-        datasource = bids.DataSource(sourcefile, {'spec2nii2bids':options})
+        datasource = bids.DataSource(source, {'spec2nii2bids': options})
         run, runid = bids.get_matching_run(datasource, bidsmap, runtime=True)
 
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
-            LOGGER.info(f"--> Leaving out: {sourcefile}")
+            LOGGER.info(f"--> Leaving out: {source}")
+            bids.bidsprov(bidsses, runid, source, '', datasource.datatype, set())              # Write out empty provenance data
             continue
 
         # Check that we know this run
-        if runid is None:
-            LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {sourcefile}\n-> Re-run the bidsmapper and delete the MRS output data in {bidsses} to solve this warning")
+        if not runid:
+            LOGGER.error(f"Skipping unknown '{datasource.datatype}' run: {source}\n-> Re-run the bidsmapper and delete the MRS output data in {bidsses} to solve this warning")
+            bids.bidsprov(bidsses, runid, source, '', 'unknown', set())              # Write out empty provenance data
             continue
 
-        LOGGER.info(f"--> Coining: {sourcefile}")
+        LOGGER.info(f"--> Coining: {source}")
 
         # Create the BIDS session/datatype output folder
         outfolder = bidsses/datasource.datatype
@@ -225,7 +227,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         bidsname   = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
         bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap['Options']['bidscoin']['bidsignore'], 'file')
         bidsname   = bids.increment_runindex(outfolder, bidsname, run)
-        sidecar    = (outfolder/bidsname).with_suffix('.json')
+        target     = (outfolder/bidsname).with_suffix('.nii.gz')
 
         # Check if the bidsname is valid
         bidstest = (Path('/')/subid/sesid/datasource.datatype/bidsname).with_suffix('.json').as_posix()
@@ -234,17 +236,17 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
             LOGGER.warning(f"The '{bidstest}' output name did not pass the bids-validator test")
 
         # Check if file already exists (-> e.g. when a static runindex is used)
-        if sidecar.is_file():
+        if target.is_file():
             LOGGER.warning(f"{outfolder/bidsname}.* already exists and will be deleted -- check your results carefully!")
             for ext in ('.nii.gz', '.nii', '.json', '.tsv', '.tsv.gz', '.bval', '.bvec'):
-                sidecar.with_suffix(ext).unlink(missing_ok=True)
+                target.with_suffix('').with_suffix(ext).unlink(missing_ok=True)
 
         # Run spec2nii to convert the source-files in the run folder to NIfTI's in the BIDS-folder
         arg  = ''
         args = options.get('args', OPTIONS['args']) or ''
         if dataformat == 'SPAR':
             dformat = 'philips'
-            arg     = f'"{sourcefile.with_suffix(".SDAT")}"'
+            arg     = f'"{source.with_suffix(".SDAT")}"'
         elif dataformat == 'Twix':
             dformat = 'twix'
             arg     = '-e image'
@@ -253,20 +255,23 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         else:
             LOGGER.error(f"Unsupported dataformat: {dataformat}")
             return
-        command = options.get("command", "spec2nii")
-        if bcoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{sourcefile}"'):
-            if not list(outfolder.glob(f"{bidsname}.nii*")): continue
+        command = options.get('command', 'spec2nii')
+        errcode = bcoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{source}"')
+        bids.bidsprov(bidsses, runid, source, command, datasource.datatype, {target} if target.is_file() else set())
+        if not target.is_file():
+            if not errcode:
+                LOGGER.error(f"Output file not found: {target}")
+            continue
 
-        # Load / copy over and adapt the newly produced json sidecar-file (NB: assumes every NIfTI-file comes with a json-file)
+        # Load/copy over and adapt the newly produced json sidecar-file
+        sidecar  = target.with_suffix('').with_suffix('.json')
         metadata = bids.updatemetadata(datasource, sidecar, run['meta'], options['meta'])
         if metadata:
             with sidecar.open('w') as json_fid:
                 json.dump(metadata, json_fid, indent=4)
 
         # Parse the acquisition time from the source header or else from the json file (NB: assuming the source file represents the first acquisition)
-        suffix     = datasource.dynamicvalue(run['bids']['suffix'], True, True)
-        exceptions = bidsmap['Options']['bidscoin'].get('notderivative', ())
-        if not bidsignore and not suffix in bids.get_derivatives(datasource.datatype, exceptions):
+        if not bidsignore:
             acq_time = ''
             if dataformat == 'SPAR':
                 acq_time = datasource.attributes('scan_date')
@@ -282,9 +287,9 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                     acq_time = acq_time.replace(year=1925, month=1, day=1)      # Privacy protection (see BIDS specification)
                 acq_time = acq_time.isoformat()
             except Exception as jsonerror:
-                LOGGER.warning(f"Could not parse the acquisition time from: {sourcefile}\n{jsonerror}")
+                LOGGER.warning(f"Could not parse the acquisition time from: {source}\n{jsonerror}")
                 acq_time = 'n/a'
-            scans_table.loc[sidecar.with_suffix('.nii.gz').relative_to(bidsses).as_posix(), 'acq_time'] = acq_time
+            scans_table.loc[target.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time
 
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing acquisition time data to: {scans_tsv}")

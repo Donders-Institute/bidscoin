@@ -2034,7 +2034,7 @@ def check_runindices(session: Path) -> bool:
     return True
 
 
-def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, extensions: list, sourcemeta: Path = Path()) -> Meta:
+def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, extensions: list, sourcemeta: Path=Path()) -> Meta:
     """
     Load the metadata from the target (json sidecar), then add metadata from the source (json sidecar) and finally add
     the user metadata (meta table). Source metadata other than json sidecars are copied over to the target folder. Special
@@ -2190,6 +2190,38 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
                         json.dump(meta, json_fid, indent=4)
 
     return table, meta
+
+
+def bidsprov(sesfolder: Path, runid: str, source: Path, command: str, datatype: str, targets: Set[Path]) -> None:
+    """
+    Save data transformation information in the bids/code/bidscoin folder (in the future this may be done in accordance with BEP028)
+
+    :param sesfolder:   The bids session folder
+    :param runid:       The bidsmap runid that was used to map the source data
+    :param source:      The source file or folder that is being converted
+    :param command:     The executed command
+    :param datatype:    The BIDS datatype / name of the subfolder where the targets are saved (e.g. extra_data)
+    :param targets:     The set of output files
+    :return:
+    """
+
+    # Check the input
+    bidsfolder = sesfolder.parent
+    if bidsfolder.name.startswith('sub-'):
+        bidsfolder = bidsfolder.parent
+    provfile = bidsfolder/'code'/'bidscoin'/'bidscoiner.prov'
+
+    # Read the provenance data and add the new data to it
+    if provfile.is_file():
+        provdata = pd.read_csv(provfile, sep='\t', index_col='source')
+    else:
+        provdata = pd.DataFrame(columns=['runid', 'command', 'datatype', 'targets'])
+        provdata.index.name = 'source'
+
+    # Write the provenance data
+    provdata.loc[source] = [runid, command, datatype, ', '.join([target.name for target in targets])]
+    LOGGER.verbose(f"Writing provenance data to: {provfile}")
+    provdata.to_csv(provfile, sep='\t')
 
 
 def get_propertieshelp(propertieskey: str) -> str:
