@@ -32,6 +32,7 @@
                "type": "object",
                "additionalProperties": {
                   "type": "object",
+                  "required": ["meta"],
                   "properties": {
                      "command": { "type": "string" },
                      "args": { "type": ["string", "null"] },
