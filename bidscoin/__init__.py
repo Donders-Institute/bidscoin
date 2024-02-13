@@ -22,6 +22,7 @@ import shelve
 import datetime
 import shutil
 import warnings
+import tempfile
 from pathlib import Path
 from importlib import metadata
 from typing import Tuple, Union, List
@@ -62,7 +63,8 @@ pluginfolder = bidscoinroot/'plugins'
 DEBUG = platform.os.getenv('BIDSCOIN_DEBUG','').upper() in ('1', 'TRUE', 'Y', 'YES')
 
 # Create a BIDScoin user configuration directory if needed and load the BIDScoin user settings
-configfile     = Path(platform.os.getenv('BIDSCOIN_CONFIG') or Path.home()/'.bidscoin'/__version__/'config.toml')
+configfile     = Path(platform.os.getenv('BIDSCOIN_CONFIG') or
+                     (Path.home() if Path.home().exists() else Path(tempfile.gettempdir()))/'.bidscoin'/__version__/'config.toml')
 templatefolder = configfile.parent/'templates'
 templatefolder.mkdir(parents=True, exist_ok=True)
 if not configfile.is_file():
