@@ -21,7 +21,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[2]))
 from bidscoin import bcoin, bids, lsdirs, trackusage, DEBUG
-from ..due import due, Doi
+from bidscoin.due import due, Doi
 
 
 @due.dcite(Doi('10.1016/j.neuroimage.2022.119474'), description='Robust, universal skull-stripping for brain images of any type', tags=['reference-implementation'])

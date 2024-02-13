@@ -14,7 +14,7 @@ BIDScoin's library modules named 'bcoin' and, most notably, 'bids'"""
 
 import logging
 from pathlib import Path
-from ..due import due, Doi
+from bidscoin.due import due, Doi
 from bidscoin.bids import Bidsmap, Run, Plugin
 
 LOGGER = logging.getLogger(__name__)

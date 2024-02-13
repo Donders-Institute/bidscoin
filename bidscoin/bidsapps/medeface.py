@@ -23,7 +23,7 @@ from importlib.util import find_spec
 if find_spec('bidscoin') is None:
     sys.path.append(str(Path(__file__).parents[2]))
 from bidscoin import bcoin, bids, lsdirs, trackusage, DEBUG
-from ..due import due, Doi
+from bidscoin.due import due, Doi
 
 
 @due.dcite(Doi('10.5281/zenodo.3524400'), description='A tool to remove facial structure from MRI images', tags=['reference-implementation'])

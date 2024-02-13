@@ -19,10 +19,11 @@ The bidscoin command-line utility serves as a central starting point to test and
       $ bidsmapper sourcefolder bidsfolder     # This produces a study bidsmap and launches a GUI
       $ bidscoiner sourcefolder bidsfolder     # This converts your data to BIDS according to the study bidsmap
 
-    Default settings and template bidsmaps are stored in the ".bidscoin" folder in your home directory
+    Default settings and template bidsmaps are stored in the `.bidscoin` folder in your home directory
     (you can modify them to your needs with any plain text editor)
 
-    Set the environment variable BIDSCOIN_DEBUG=TRUE to run BIDScoin in a more verbose logging mode.
+    Set the environment variable `BIDSCOIN_DEBUG=TRUE` to run BIDScoin in a more verbose logging mode and
+    `BIDSCOIN_CONFIG=/writable/path/to/config.toml` if you like to use a different config file.
     Citation reports can be generated with the help of duecredit (https://github.com/duecredit/duecredit)
 
     For more documentation see: https://bidscoin.readthedocs.io
@@ -202,8 +203,9 @@ The bidsparticipants tool is useful for (re-)generating a participants.tsv file 
       -d, --dryrun          Do not save anything, only print the participants info on screen
       -b BIDSMAP, --bidsmap BIDSMAP
                             The study bidsmap file with the mapping heuristics. If the bidsmap filename
-                            is just the basename (i.e. no "/" in the name) then it is assumed to be located in
-                            bidsfolder/code/bidscoin. Default: bidsmap.yaml
+                            is just the basename (i.e. no "/" in the name) then it is assumed to be
+                            located in the current directory or in bidsfolder/code/bidscoin. Default:
+                            bidsmap.yaml
 
     examples:
       bidsparticipants myproject/raw myproject/bids

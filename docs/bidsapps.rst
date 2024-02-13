@@ -174,7 +174,7 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
 ::
 
     usage: skullstrip [-h] [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-m MASKED]
-                      [-o OUTPUT [OUTPUT ...]] [-f] [-a ARGS] [-c {torque,slurm}]
+                      [-o OUTPUT [OUTPUT ...]] [-f] [-a ARGS] [-c] [-n NATIVESPEC]
                       bidsfolder pattern
 
     A wrapper around FreeSurfer's 'synthstrip' skull stripping tool
@@ -211,14 +211,17 @@ The ``skullstrip``-tool is a wrapper around the synthstrip tool that writes BIDS
       -f, --force           Process images, regardless whether images have already been skullstripped
                             (i.e. if {'SkullStripped': True} in the json sidecar file) (default: False)
       -a ARGS, --args ARGS  Additional arguments that are passed to synthstrip (NB: Use quotes and
-                            include at least one space character to prevent overearly parsing)
-      -c {torque,slurm}, --cluster {torque,slurm}
-                            Use `torque` or `slurm` to submit the skullstrip jobs to a high-performance
-                            compute (HPC) cluster. Can only be used if `--masked` is left empty
+                            include at least one space character to prevent overearly parsing) (default:)
+      -c, --cluster         Use the DRMAA library to submit the skullstrip jobs to a high-performance
+                            compute (HPC) cluster (default: False)
+      -n NATIVESPEC, --nativespec NATIVESPEC
+                            Opaque DRMAA argument with native specifications for submitting skullstrip
+                            jobs to the HPC cluster (NB: Use quotes and include at least one space
+                            character to prevent overearly parsing) (default: -l walltime=0:05:00,mem=8gb)
 
     examples:
       skullstrip myproject/bids anat/*_T1w*
-      skullstrip myproject/bids anat/*_T1w* -p 001 003 -a ' --no-csf'
+      skullstrip myproject/bids anat/*_T1w* -p 001 003 -a " --no-csf"
       skullstrip myproject/bids fmap/*_magnitude1* -m fmap/*_phasediff* -o extra_data fmap
       skullstrip myproject/bids fmap/*_acq-mylabel*_magnitude1* -m fmap/*_acq-mylabel_* -o fmap
 
@@ -231,8 +234,8 @@ Quality control
 
     usage: slicereport [-h] [-o OUTLINEPATTERN] [-i OUTLINEIMAGE]
                        [-p PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]] [-r REPORTFOLDER]
-                       [-x XLINKFOLDER [XLINKFOLDER ...]] [-q QCSCORES [QCSCORES ...]] [-c {torque,slurm}]
-                       [--operations OPERATIONS] [--suboperations SUBOPERATIONS]
+                       [-x XLINKFOLDER [XLINKFOLDER ...]] [-q QCSCORES [QCSCORES ...]]
+                       [-c {torque,slurm}] [--operations OPERATIONS] [--suboperations SUBOPERATIONS]
                        [--options OPTIONS [OPTIONS ...]] [--outputs OUTPUTS [OUTPUTS ...]]
                        [--suboptions SUBOPTIONS [SUBOPTIONS ...]]
                        [--suboutputs SUBOUTPUTS [SUBOUTPUTS ...]]
@@ -247,6 +250,8 @@ Quality control
 
     Requires an existing installation of FSL
 
+    Set the environment variable BIDSCOIN_DEBUG=TRUE to save intermediate data
+
     positional arguments:
       bidsfolder            The bids-directory with the subject data
       pattern               Globlike search pattern to select the images in bidsfolder to be reported,
@@ -255,9 +260,9 @@ Quality control
     options:
       -h, --help            show this help message and exit
       -o OUTLINEPATTERN, --outlinepattern OUTLINEPATTERN
-                            Globlike search pattern to select red outline images that are projected on top
-                            of the reported images (i.e. 'outlinepattern' must yield the same number of
-                            images as 'pattern'. Prepend `outlinedir:` if your outline images are in
+                            Globlike search pattern to select red outline images that are projected on
+                            top of the reported images (i.e. 'outlinepattern' must yield the same number
+                            of images as 'pattern'. Prepend `outlinedir:` if your outline images are in
                             `outlinedir` instead of `bidsdir` (see examples below)`
       -i OUTLINEIMAGE, --outlineimage OUTLINEIMAGE
                             A common red-outline image that is projected on top of all images
@@ -284,13 +289,13 @@ Quality control
                             space character to prevent overearly parsing, e.g. " -Tmean" or "-Tstd -s 3"
                             (default: -Tmean)
       --suboperations SUBOPERATIONS
-                            The same as OPERATIONS but then for the sub-report instead of the main report:
-                            `fslmaths inputimage SUBOPERATIONS subreportimage` (default: -Tmean)
+                            The same as OPERATIONS but then for the sub-report instead of the main
+                            report: `fslmaths inputimage SUBOPERATIONS subreportimage` (default: -Tmean)
       --options OPTIONS [OPTIONS ...]
                             Main options of slicer (see below). (default: "s 1")
       --outputs OUTPUTS [OUTPUTS ...]
-                            Output options of slicer (see below). (default: "x 0.4 x 0.5 x 0.6 y 0.4 y 0.5
-                            y 0.6 z 0.4 z 0.5 z 0.6")
+                            Output options of slicer (see below). (default: "x 0.4 x 0.5 x 0.6 y 0.4 y
+                            0.5 y 0.6 z 0.4 z 0.5 z 0.6")
       --suboptions SUBOPTIONS [SUBOPTIONS ...]
                             Main options of slicer for creating the sub-reports (same as OPTIONS, see
                             below). (default: OPTIONS)
