@@ -1669,6 +1669,7 @@ def bidseditor(bidsfolder: str, bidsmapfile: str='', templatefile: str=bidsmap_t
     # Obtain the initial bidsmap info
     template_bidsmap, templatefile = bids.load_bidsmap(templatefile, checks=(True, True, False))
     input_bidsmap, bidsmapfile     = bids.load_bidsmap(bidsmapfile,  bidsfolder/'code'/'bidscoin')
+    bids.check_template(template_bidsmap)
     if input_bidsmap.get('Options'):
         template_bidsmap['Options'] = input_bidsmap['Options']      # Always use the options of the input bidsmap
 

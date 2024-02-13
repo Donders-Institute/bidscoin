@@ -16,6 +16,7 @@ import fnmatch
 import pandas as pd
 import ast
 import datetime
+import jsonschema
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Set, Tuple, Union, Dict, Any, Iterable, NewType
@@ -1156,7 +1157,7 @@ def check_template(bidsmap: Bidsmap) -> bool:
     bidsignore  = bidsmap['Options']['bidscoin'].get('bidsignore', [])
 
     # Check all the datatypes in the bidsmap
-    LOGGER.info('Checking the bidsmap datatypes:')
+    LOGGER.verbose('Checking the template bidsmap datatypes:')
     for dataformat in bidsmap:
         if dataformat in ('$schema', 'Options'): continue
         for datatype in bidsmap[dataformat]:
@@ -1182,10 +1183,19 @@ def check_template(bidsmap: Bidsmap) -> bool:
                         LOGGER.warning(f"Missing '{suffix}' run-item in: bidsmap[{dataformat}][{datatype}] (NB: this may be fine / a deprecated item)")
                         valid = False
 
+    # Validate against the json schema
+    with (templatefolder/'schema.json').open('r') as stream:
+        schema = json.load(stream)
+    try:
+        jsonschema.validate(bidsmap, schema)
+    except jsonschema.ValidationError as bidsmaperror:
+        LOGGER.warning(f"Invalid template bidsmap:\n{bidsmaperror}")
+        valid = False
+
     if valid:
-        LOGGER.success('All datatypes in the bidsmap are valid')
+        LOGGER.success('All datatypes and options in the template bidsmap are valid')
     else:
-        LOGGER.warning('Not all datatypes in the bidsmap are valid')
+        LOGGER.warning('Not all datatypes and options in the template bidsmap are valid')
 
     return valid
 

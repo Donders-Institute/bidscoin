@@ -30,6 +30,7 @@ dependencies     = ['pandas',
                     'python-dateutil',
                     'nibabel',
                     'bids-validator',
+                    'jsonschema',
                     'drmaa',
                     'duecredit']
 

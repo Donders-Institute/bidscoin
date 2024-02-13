@@ -96,6 +96,9 @@
                "meta": {
                   "description": "The meta-data that will be appended to the json sidecar files produced by the plugin",
                   "type": "object"
+               },
+               "datasource": {
+                  "description": "The data source that will be appended when loading the bidsmap"
                }
             },
             "additionalProperties": false

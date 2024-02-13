@@ -15,9 +15,10 @@
 - A `--cluster` option for running bidscoiner in parallel on a (DRMAA enabled) HPC
 - Option to exclude datatypes from being saved in bids/derivatives
 - A `bidsmap_bids2bids` template bidsmap for nibabel2bids to edit existing BIDS datasets
-- A `bidscoiner.tsv` logfile containing a concise overview of all input to output file conversions
+- A `bidscoiner.tsv` log-file containing a concise overview of all input to output file conversions
 - Integrated fslmaths preprocessing on slicereport input images
 - BIDScoin duecredit reports
+- A new environment variable `BIDSCOIN_CONFIG=/writable/path/to/config.toml` for using a non-default config file
 
 ### Changed
 - `bidscoiner_plugin()` API: you can (should) return a personals dict (instead of writing it to `participants.tsv`)
