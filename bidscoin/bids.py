@@ -18,7 +18,7 @@ import ast
 import datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Set, Tuple, Union, Dict, Any, NewType
+from typing import List, Set, Tuple, Union, Dict, Any, Iterable, NewType
 from pydicom import dcmread, fileset, datadict
 from importlib.util import find_spec
 if find_spec('bidscoin') is None:
@@ -61,7 +61,7 @@ with (schemafolder/'objects'/'metadata.yaml').open('r') as _stream:
 
 
 class DataSource:
-    def __init__(self, provenance: Union[str, Path]='', plugins: Dict[str, Plugin]=None, dataformat: str='', datatype: str='', subprefix: str='', sesprefix: str='', targets: Set[Path] = ()):
+    def __init__(self, provenance: Union[str, Path]='', plugins: Dict[str, Plugin]=None, dataformat: str='', datatype: str='', subprefix: str='', sesprefix: str=''):
         """
         A source data type (e.g. DICOM or PAR) that can be converted to BIDS by the plugins
 
@@ -71,7 +71,6 @@ class DataSource:
         :param datatype:    The intended BIDS data type of the data source TODO: move to a separate BidsTarget/Mapping class
         :param subprefix:   The subprefix used in the sourcefolder
         :param sesprefix:   The sesprefix used in the sourcefolder
-        :param targets:     A list of output targets of the source
         """
 
         self.path: Path      = Path(provenance)
@@ -891,7 +890,7 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
 # ---------------- All function below this point are bidsmap related. TODO: make a class out of them -------------------
 
 
-def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Union[tuple,list]=(), checks: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[Bidsmap, Path]:
+def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Iterable[Union[Path,str]]=(), checks: Tuple[bool, bool, bool]=(True, True, True)) -> Tuple[Bidsmap, Path]:
     """
     Read the mapping heuristics from the bidsmap yaml-file. If yamlfile is not fullpath, then 'folder' is first searched before
     the default 'heuristics'. If yamfile is empty, then first 'bidsmap.yaml' is searched for, then 'bidsmap_template'. So fullpath
@@ -1773,7 +1772,7 @@ def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) ->
     return run_, ''
 
 
-def get_derivatives(datatype: str, exceptions: Union[tuple,list]=()) -> list:
+def get_derivatives(datatype: str, exceptions: Iterable=()) -> list:
     """
     Retrieves a list of suffixes that are stored in the derivatives folder (e.g. the qMRI maps). TODO: Replace with a more systematic/documented method
     """
@@ -2034,7 +2033,7 @@ def check_runindices(session: Path) -> bool:
     return True
 
 
-def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, extensions: list, sourcemeta: Path=Path()) -> Meta:
+def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, extensions: Iterable, sourcemeta: Path=Path()) -> Meta:
     """
     Load the metadata from the target (json sidecar), then add metadata from the source (json sidecar) and finally add
     the user metadata (meta table). Source metadata other than json sidecars are copied over to the target folder. Special
@@ -2192,7 +2191,7 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
     return table, meta
 
 
-def bidsprov(sesfolder: Path, source: Path, runid: str='', datatype: str='unknown', targets: Set[Path]=()) -> None:
+def bidsprov(sesfolder: Path, source: Path, runid: str='', datatype: str='unknown', targets: Iterable[Path]=()) -> None:
     """
     Save data transformation information in the bids/code/bidscoin folder (in the future this may be done in accordance with BEP028)
 

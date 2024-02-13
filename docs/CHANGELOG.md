@@ -4,24 +4,26 @@
 
 ## [dev]
 
-## [4.3.0] - 2023-12-20
+## [4.3.0] - 2024-02-14
 
 ### Added
-- Integrated fslmaths preprocessing on slicereport input images
-- A `--cluster` option for running bidscoiner in parallel on a (DRMAA enabled) HPC
-- Option to generate BIDScoin specific duecredit reports
 - Support for BIDS 1.9.0
 - A new special `<<session>>` dynamic meta-data value (most notably useful for creating session specific B0FieldIdentifier/Source tags)
+- DICOM tags from the Siemens CSA header can now also be used
+- The `dir` entity value can now be parsed from the DICOM header using `<PhaseEncodingDirection>` (Siemens and GE)
+- The bidsmapper now automatically sets the `part` entity value (e.g. `part-phase`) for non-magnitude images (Siemens)
+- A `--cluster` option for running bidscoiner in parallel on a (DRMAA enabled) HPC
 - Option to exclude datatypes from being saved in bids/derivatives
-- Support for parsing Siemens CSA headers
-- A DICOM parser for retrieving the `<PhaseEncodingDirection>` value (Siemens and GE)
 - A `bidsmap_bids2bids` template bidsmap for nibabel2bids to edit existing BIDS datasets
+- A `bidscoiner.tsv` logfile containing a concise overview of all input to output file conversions
+- Integrated fslmaths preprocessing on slicereport input images
+- BIDScoin duecredit reports
 
 ### Changed
 - `bidscoiner_plugin()` API: you can (should) return a personals dict (instead of writing it to `participants.tsv`)
 - Using DRMAA library for skullstrip (instead of qsub/sbatch)
 - Removed the pet2bids and phys2bids plugins (code is no longer actively developed)
-- Sorting of DICOMDIR files is more robust
+- Sorting of DICOMDIR files has changed in some cases to make it more robust
 - Retrieving the bidsmap yaml-file from the user argument is less fuzzy
 
 ## [4.2.1] - 2023-10-30

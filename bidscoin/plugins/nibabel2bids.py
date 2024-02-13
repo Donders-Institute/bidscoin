@@ -231,12 +231,9 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
             LOGGER.warning(f"{target} already exists and will be deleted -- check your results carefully!")
             target.unlink()
 
-        # Save the sourcefile as a BIDS NIfTI file
-        command = f"nib.save(nib.load({source}), {target})"
+        # Save the sourcefile as a BIDS NIfTI file and out provenance data
         nib.save(nib.load(source), target)
-
-        # Write out provenance data
-        bids.bidsprov(bidsses, source, runid, datasource.datatype, {target} if target.is_file() else set())
+        bids.bidsprov(bidsses, source, runid, datasource.datatype, [target] if target.is_file() else [])
 
         # Check the output
         if not target.is_file():

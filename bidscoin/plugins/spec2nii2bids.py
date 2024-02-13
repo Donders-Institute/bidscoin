@@ -257,7 +257,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
             return
         command = options.get('command', 'spec2nii')
         errcode = bcoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{source}"')
-        bids.bidsprov(bidsses, source, runid, datasource.datatype, {target} if target.is_file() else set())
+        bids.bidsprov(bidsses, source, runid, datasource.datatype, [target] if target.is_file() else [])
         if not target.is_file():
             if not errcode:
                 LOGGER.error(f"Output file not found: {target}")
@@ -265,7 +265,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
 
         # Load/copy over and adapt the newly produced json sidecar-file
         sidecar  = target.with_suffix('').with_suffix('.json')
-        metadata = bids.updatemetadata(datasource, sidecar, run['meta'], options['meta'])
+        metadata = bids.updatemetadata(datasource, sidecar, run['meta'], options.get('meta',[]))
         if metadata:
             with sidecar.open('w') as json_fid:
                 json.dump(metadata, json_fid, indent=4)

@@ -474,7 +474,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
             jsonfile = target.with_suffix('').with_suffix('.json')
             if not jsonfile.is_file():
                 LOGGER.warning(f"Unexpected conversion result, could not find: {jsonfile}")
-            metadata = bids.updatemetadata(datasource, jsonfile, run['meta'], options['meta'])
+            metadata = bids.updatemetadata(datasource, jsonfile, run['meta'], options.get('meta',[]))
 
             # Remove the bval/bvec files of sbref- and inv-images (produced by dcm2niix but not allowed by the BIDS specifications)
             if ((datasource.datatype == 'dwi'  and suffix == 'sbref') or
