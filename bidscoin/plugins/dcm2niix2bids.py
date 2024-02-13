@@ -266,7 +266,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
             LOGGER.info(f"--> Leaving out: {source}")
-            bids.bidsprov(bidsses, source, runid, '', datasource.datatype)              # Write out empty provenance data
+            bids.bidsprov(bidsses, source, runid, datasource.datatype)              # Write out empty provenance data
             continue
 
         # Check if we already know this run
@@ -461,7 +461,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                     oldfile.replace(newbidsfile.with_suffix('').with_suffix(''.join(oldfile.suffixes)))
 
         # Write out provenance data
-        bids.bidsprov(bidsses, source, runid, command, datasource.datatype, targets)
+        bids.bidsprov(bidsses, source, runid, datasource.datatype, targets)
 
         # Loop over all non-derivative targets (i.e. the produced output files) and edit the json sidecar data
         for target in sorted(targets):

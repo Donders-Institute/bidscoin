@@ -198,7 +198,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
             LOGGER.info(f"--> Leaving out: {source}")
-            bids.bidsprov(bidsses, source, runid, '', datasource.datatype)              # Write out empty provenance data
+            bids.bidsprov(bidsses, source, runid, datasource.datatype)              # Write out empty provenance data
             continue
 
         # Check if we already know this run
@@ -235,10 +235,12 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
         command = f"nib.save(nib.load({source}), {target})"
         nib.save(nib.load(source), target)
 
+        # Write out provenance data
+        bids.bidsprov(bidsses, source, runid, datasource.datatype, {target} if target.is_file() else set())
+
         # Check the output
         if not target.is_file():
             LOGGER.error(f"Output file not found: {target}")
-            bids.bidsprov(bidsses, source, runid, command, datasource.datatype)      # Write out empty provenance data
             continue
 
         # Load/copy over the source meta-data
@@ -252,9 +254,6 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> None:
         if 'derivatives' not in bidsses.parts:
             acq_time = dateutil.parser.parse(f"1925-01-01T{metadata.get('AcquisitionTime', '')}")
             scans_table.loc[target.relative_to(bidsses).as_posix(), 'acq_time'] = acq_time.isoformat()
-
-        # Write out provenance data
-        bids.bidsprov(bidsses, source, runid, command, datasource.datatype, {target})
 
     # Write the scans_table to disk
     LOGGER.verbose(f"Writing data to: {scans_tsv}")

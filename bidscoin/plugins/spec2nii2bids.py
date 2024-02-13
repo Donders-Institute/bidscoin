@@ -207,7 +207,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         # Check if we should ignore this run
         if datasource.datatype in bidsmap['Options']['bidscoin']['ignoretypes']:
             LOGGER.info(f"--> Leaving out: {source}")
-            bids.bidsprov(bidsses, source, runid, '', datasource.datatype)              # Write out empty provenance data
+            bids.bidsprov(bidsses, source, runid, datasource.datatype)              # Write out empty provenance data
             continue
 
         # Check that we know this run
@@ -257,7 +257,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
             return
         command = options.get('command', 'spec2nii')
         errcode = bcoin.run_command(f'{command} {dformat} -j -f "{bidsname}" -o "{outfolder}" {args} {arg} "{source}"')
-        bids.bidsprov(bidsses, source, runid, command, datasource.datatype, {target} if target.is_file() else set())
+        bids.bidsprov(bidsses, source, runid, datasource.datatype, {target} if target.is_file() else set())
         if not target.is_file():
             if not errcode:
                 LOGGER.error(f"Output file not found: {target}")

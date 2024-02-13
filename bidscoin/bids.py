@@ -2192,14 +2192,13 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
     return table, meta
 
 
-def bidsprov(sesfolder: Path, source: Path, runid: str='', command: str='', datatype: str='unknown', targets: Set[Path]=()) -> None:
+def bidsprov(sesfolder: Path, source: Path, runid: str='', datatype: str='unknown', targets: Set[Path]=()) -> None:
     """
     Save data transformation information in the bids/code/bidscoin folder (in the future this may be done in accordance with BEP028)
 
     :param sesfolder:   The bids session folder
     :param source:      The source file or folder that is being converted
     :param runid:       The bidsmap runid that was used to map the source data, e.g. as returned from get_matching_run()
-    :param command:     The executed command
     :param datatype:    The BIDS datatype/name of the subfolder where the targets are saved (e.g. extra_data)
     :param targets:     The set of output files
     :return:
@@ -2215,11 +2214,11 @@ def bidsprov(sesfolder: Path, source: Path, runid: str='', command: str='', data
     if provfile.is_file():
         provdata = pd.read_csv(provfile, sep='\t', index_col='source')
     else:
-        provdata = pd.DataFrame(columns=['runid', 'command', 'datatype', 'targets'])
+        provdata = pd.DataFrame(columns=['runid', 'datatype', 'targets'])
         provdata.index.name = 'source'
 
     # Write the provenance data
-    provdata.loc[source] = [runid, command, datatype, ', '.join([target.name for target in targets])]
+    provdata.loc[source] = [runid, datatype, ', '.join([target.name for target in targets])]
     LOGGER.debug(f"Writing provenance data to: {provfile}")
     provdata.to_csv(provfile, sep='\t')
 
