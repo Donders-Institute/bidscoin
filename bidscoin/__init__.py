@@ -58,8 +58,11 @@ bidscoinroot = Path(__file__).parent
 schemafolder = bidscoinroot/'schema'
 pluginfolder = bidscoinroot/'plugins'
 
+# Get the BIDSCOIN_DEBUG environment variable to set the log-messages and logging level, etc
+DEBUG = platform.os.getenv('BIDSCOIN_DEBUG','').upper() in ('1', 'TRUE', 'Y', 'YES')
+
 # Create a BIDScoin user configuration directory if needed and load the BIDScoin user settings
-configfile     = Path.home()/'.bidscoin'/__version__/'config.toml'
+configfile     = platform.os.getenv('BIDSCOIN_CONFIG', Path.home()/'.bidscoin'/__version__/'config.toml')
 templatefolder = configfile.parent/'templates'
 templatefolder.mkdir(parents=True, exist_ok=True)
 if not configfile.is_file():
@@ -76,9 +79,6 @@ with configfile.open('+rb') as fid:
 bidsmap_template = Path(config['bidscoin']['bidsmap_template'])
 if not bidsmap_template.is_file():
     warnings.warn(f"Missing template bidsmap: {bidsmap_template} (see {configfile})", RuntimeWarning)
-
-# Get the BIDSCOIN_DEBUG environment variable to set the log-messages and logging level, etc
-DEBUG = platform.os.getenv('BIDSCOIN_DEBUG','').upper() in ('1', 'TRUE', 'Y', 'YES')
 
 # Register the BIDScoin citation
 due.cite(Doi('10.3389/fninf.2021.770608'), description='A versatile toolkit to convert source data to the Brain Imaging Data Structure (BIDS)',
