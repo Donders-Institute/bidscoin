@@ -2208,7 +2208,7 @@ def bidsprov(sesfolder: Path, source: Path, runid: str='', datatype: str='unknow
     bidsfolder = sesfolder.parent
     if bidsfolder.name.startswith('sub-'):
         bidsfolder = bidsfolder.parent
-    provfile = bidsfolder/'code'/'bidscoin'/'bidscoiner.prov'
+    provfile = bidsfolder/'code'/'bidscoin'/'bidscoiner.tsv'
 
     # Read the provenance data and add the new data to it
     if provfile.is_file():
@@ -2216,9 +2216,9 @@ def bidsprov(sesfolder: Path, source: Path, runid: str='', datatype: str='unknow
     else:
         provdata = pd.DataFrame(columns=['runid', 'datatype', 'targets'])
         provdata.index.name = 'source'
+    provdata.loc[source] = [runid, datatype, ', '.join([target.name for target in targets])]
 
     # Write the provenance data
-    provdata.loc[source] = [runid, datatype, ', '.join([target.name for target in targets])]
     LOGGER.debug(f"Writing provenance data to: {provfile}")
     provdata.to_csv(provfile, sep='\t')
 
