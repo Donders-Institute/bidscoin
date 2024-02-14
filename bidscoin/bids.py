@@ -1954,17 +1954,18 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, v
     return newbidsfile
 
 
-def increment_runindex(outfolder: Path, bidsname: str, run: Run) -> str:
+def increment_runindex(outfolder: Path, bidsname: str, run: Run, targets: set=()) -> str:
     """
     Checks if a file with the same bidsname already exists in the folder and then increments the dynamic runindex
     (if any) until no such file is found.
 
     NB: For <<>> runs, if the run-less file already exists, then add 'run-2' to bidsname and rename run-less files
-    to 'run-1'
+    and targets (optional) to 'run-1'
 
     :param outfolder:   The full pathname of the bids output folder
     :param bidsname:    The bidsname with a provisional runindex, e.g. from get_bidsname()
     :param run:         The run mapping with the BIDS key-value pairs
+    :param targets:     The set of output targets that need to remain in sync when renaming a run-less file
     :return:            The bidsname with the original or incremented runindex
     """
 

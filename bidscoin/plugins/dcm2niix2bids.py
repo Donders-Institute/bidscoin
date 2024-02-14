@@ -447,7 +447,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                         LOGGER.warning(f"The {newbidsname} image is a derivate / not BIDS-compliant -- you can probably delete it safely and update {scans_tsv}")
 
                 # Save the NIfTI file with the newly constructed name
-                newbidsname = bids.increment_runindex(outfolder, newbidsname, run)                              # Update the runindex now that the name has changed
+                newbidsname = bids.increment_runindex(outfolder, newbidsname, run, targets)                     # Update the runindex now that the name has changed
                 newbidsfile = outfolder/newbidsname
                 LOGGER.verbose(f"Found dcm2niix {postfixes} postfixes, renaming\n{dcm2niixfile} ->\n{newbidsfile}")
                 if newbidsfile.is_file():
