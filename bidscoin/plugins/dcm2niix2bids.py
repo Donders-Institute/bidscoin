@@ -454,6 +454,13 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                     LOGGER.warning(f"Overwriting existing {newbidsfile} file -- check your results carefully!")
                 dcm2niixfile.replace(newbidsfile)
                 targets.add(newbidsfile)
+                if bids.get_bidsvalue(newbidsfile, 'run') == '2' and str(run['bids'].get('run') or '') == "<<>>":
+                    # run-less file could be changed in the last call of increment_runindex within dcm2niixfiles loop
+                    runless_bidsfile = bids.insert_bidskeyval(newbidsfile, 'run', '', False)
+                    run1_bidsfile = bids.insert_bidskeyval(newbidsfile, 'run', '1', False)
+                    if runless_bidsfile in targets and not runless_bidsfile.is_file() and run1_bidsfile.is_file():
+                        targets.remove(runless_bidsfile)
+                        targets.add(run1_bidsfile)
 
                 # Rename all associated files (i.e. the json-, bval- and bvec-files)
                 for oldfile in outfolder.glob(dcm2niixfile.with_suffix('').stem + '.*'):
