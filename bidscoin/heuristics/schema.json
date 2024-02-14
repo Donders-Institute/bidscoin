@@ -66,7 +66,7 @@
             "required": ["bids"],
             "properties": {
                "provenance": {
-                  "description": "The fullpath name of the data source. Serves also as a look-up key to find a run-item in the bidsmap",
+                  "description": "The fullpath name of the data source. Serves also as a unique identifier to find a run-item in the bidsmap",
                   "type": ["string", "null"]
                },
                "properties": {
