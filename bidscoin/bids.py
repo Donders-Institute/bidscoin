@@ -2023,6 +2023,10 @@ def check_runindices(session: Path) -> bool:
 
             # Check all the run-2, run-3, etc scans against their preceding scan
             for scan in scans_table.sort_index().index:
+
+                if not (session/scan).is_file():
+                    LOGGER.warning(f"File in {scans_tsv.name} does not exist: {scan}")
+
                 runindex = get_bidsvalue(scan, 'run')
                 if runindex and int(runindex) > 1:
                     prevscan = scan.replace(f"_run-{runindex}", f"_run-{int(runindex) - 1}")
