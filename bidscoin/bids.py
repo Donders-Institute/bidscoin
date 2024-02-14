@@ -2218,7 +2218,7 @@ def bidsprov(sesfolder: Path, source: Path, runid: str='', datatype: str='unknow
     if bidsfolder.name.startswith('sub-'):
         bidsfolder = bidsfolder.parent
     provfile = bidsfolder/'code'/'bidscoin'/'bidscoiner.tsv'
-    targets  = [target.relative_to(bidsfolder) for target in targets]
+    targets  = [target.relative_to(bidsfolder) for target in sorted(targets)]
 
     # Read the provenance data and add the new data to it
     if provfile.is_file():
