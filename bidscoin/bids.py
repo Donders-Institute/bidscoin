@@ -2225,7 +2225,7 @@ def bidsprov(sesfolder: Path, source: Path, runid: str='', datatype: str='unknow
     else:
         provdata = pd.DataFrame(columns=['runid', 'datatype', 'targets'])
         provdata.index.name = 'source'
-    provdata.loc[source] = [runid, datatype, ', '.join([f"{'derivatives/' if 'derivatives' in target.parts else ''}{target.name}" for target in targets])]
+    provdata.loc[str(source)] = [runid, datatype, ', '.join([f"{'derivatives/' if 'derivatives' in target.parts else ''}{target.name}" for target in targets])]
 
     # Write the provenance data
     LOGGER.debug(f"Writing provenance data to: {provfile}")
