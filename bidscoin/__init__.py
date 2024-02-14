@@ -16,6 +16,7 @@ For more documentation see: https://bidscoin.readthedocs.io
 import urllib.request, urllib.parse, urllib.error
 import json
 import getpass
+import os
 import platform
 import hashlib
 import shelve
@@ -60,11 +61,11 @@ schemafolder = bidscoinroot/'schema'
 pluginfolder = bidscoinroot/'plugins'
 
 # Get the BIDSCOIN_DEBUG environment variable to set the log-messages and logging level, etc
-DEBUG = platform.os.getenv('BIDSCOIN_DEBUG','').upper() in ('1', 'TRUE', 'Y', 'YES')
+DEBUG = os.getenv('BIDSCOIN_DEBUG','').upper() in ('1', 'TRUE', 'Y', 'YES')
 
 # Create a BIDScoin user configuration directory if needed and load the BIDScoin user settings
-configfile     = Path(platform.os.getenv('BIDSCOIN_CONFIG') or
-                     (Path.home() if Path.home().exists() else Path(tempfile.gettempdir()))/'.bidscoin'/__version__/'config.toml')
+configfile = Path(os.getenv('BIDSCOIN_CONFIG') or
+                  (Path.home() if os.access(Path.home(),os.W_OK) else Path(tempfile.gettempdir()))/'.bidscoin'/__version__/'config.toml')
 templatefolder = configfile.parent/'templates'
 templatefolder.mkdir(parents=True, exist_ok=True)
 if not configfile.is_file():
@@ -149,7 +150,7 @@ def trackusage(event: str, dryrun: bool=False) -> dict:
             'hostid':   hashlib.md5(platform.node().encode('utf8')).hexdigest()}
 
     # Check if the user allows tracking or if it is a dry/test run
-    if not config['bidscoin'].get('trackusage', 'yes') == 'yes' or dryrun or "PYTEST_CURRENT_TEST" in platform.os.environ:
+    if not config['bidscoin'].get('trackusage', 'yes') == 'yes' or dryrun or "PYTEST_CURRENT_TEST" in os.environ:
         return data
 
     # Check if we are not asleep
