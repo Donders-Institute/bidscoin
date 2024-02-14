@@ -248,7 +248,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                     caption   = f"{image.relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(outline.relative_to(outlinesession))+' )' if outlinepattern and outline else ''}"
                     subreport = reportses/f"{bids.insert_bidskeyval(image, 'desc', 'subreport', False).with_suffix('').stem}.html"
                     with report.open('a') as fid:
-                        fid.write(f'\n<p><a href="{subreport.relative_to(reportdir).as_posix()}"><image src="{montage.relative_to(reportdir).as_posix()}"><br>\n{caption}</a></p>\n')
+                        fid.write(f'\n<p><a href="{subreport.relative_to(reportdir).as_posix()}"><img src="{montage.relative_to(reportdir).as_posix()}"><br>\n{caption}</a></p>\n')
 
                     # Add the sub-report
                     if suboutputs:
@@ -266,7 +266,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                             metadata = f"\n\n<p>{json.load(meta_fid)}</p>"
                     else:
                         metadata = ''
-                    subreport.write_text(f'{html_head.replace("style.css", style_rel)}<h1>{caption}</h1>\n{crossreports}\n<p><image src="{montage.name}"></p>{metadata}\n\n</body></html>')
+                    subreport.write_text(f'{html_head.replace("style.css", style_rel)}<h1>{caption}</h1>\n{crossreports}\n<p><img src="{montage.name}"></p>{metadata}\n\n</body></html>')
 
     # Create a dataset description file if it does not exist
     dataset = reportdir/'dataset_description.json'

@@ -9,10 +9,10 @@ import shutil
 import pandas as pd
 import nibabel as nib
 from bids_validator import BIDSValidator
-from typing import List, Union
+from typing import Union
 from pathlib import Path
 from bidscoin import bids
-from bidscoin.bids import Bidsmap, Run, Plugin
+from bidscoin.bids import Bidsmap, Plugin
 
 try:
     from nibabel.testing import data_path

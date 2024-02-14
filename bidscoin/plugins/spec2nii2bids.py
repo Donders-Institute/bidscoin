@@ -8,11 +8,11 @@ import shutil
 import json
 import pandas as pd
 import dateutil.parser
-from typing import List, Union
+from typing import Union
 from bids_validator import BIDSValidator
 from pathlib import Path
 from bidscoin import bcoin, bids, due, Doi
-from bidscoin.bids import Bidsmap, Run, Plugin
+from bidscoin.bids import Bidsmap, Plugin
 
 LOGGER = logging.getLogger(__name__)
 

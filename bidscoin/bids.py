@@ -628,8 +628,8 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
 
                         else:
 
-                            for type in ('Series', 'Image'):
-                                value = value if (value or value==0) else csareader.get_csa_header(dicomdata, type)['tags']
+                            for modality in ('Series', 'Image'):
+                                value = value if (value or value==0) else csareader.get_csa_header(dicomdata, modality)['tags']
                                 for csatag in tagname.split('.'):           # NB: Currently MrPhoenixProtocol is not supported
                                     if isinstance(value, dict):             # Final CSA header attributes in dictionary of dictionaries
                                         value = value.get(csatag, {}).get('items', '')

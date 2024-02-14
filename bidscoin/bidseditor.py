@@ -408,16 +408,16 @@ class MainWindow(QMainWindow):
         label = QLabel(rootfolder)
         label.setWordWrap(True)
 
-        model = self.model = QFileSystemModel()
-        model.setRootPath(rootfolder)
-        model.setFilter(QtCore.QDir.Filter.NoDotAndDotDot | QtCore.QDir.Filter.AllDirs | QtCore.QDir.Filter.Files)
+        filesystem = self.filesystem = QFileSystemModel()
+        filesystem.setRootPath(rootfolder)
+        filesystem.setFilter(QtCore.QDir.Filter.NoDotAndDotDot | QtCore.QDir.Filter.AllDirs | QtCore.QDir.Filter.Files)
         tree = QTreeView()
-        tree.setModel(model)
-        tree.setRootIndex(model.index(rootfolder))
+        tree.setModel(filesystem)
+        tree.setRootIndex(filesystem.index(rootfolder))
         tree.setAnimated(False)
         tree.setSortingEnabled(True)
         tree.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
-        tree.setExpanded(model.index(str(self.bidsfolder)), True)
+        tree.setExpanded(filesystem.index(str(self.bidsfolder)), True)
         tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         tree.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         tree.header().setStretchLastSection(False)
@@ -829,7 +829,7 @@ class MainWindow(QMainWindow):
     def open_inspectwindow(self, index: int):
         """Opens the inspect- or native application-window when a data file in the file-tree tab is double-clicked"""
 
-        datafile = Path(self.model.fileInfo(index).absoluteFilePath())
+        datafile = Path(self.filesystem.fileInfo(index).absoluteFilePath())
         if bids.is_dicomfile(datafile) or bids.is_parfile(datafile):
             self.popup = InspectWindow(datafile)
             self.popup.show()
@@ -1609,8 +1609,6 @@ class MyQTableWidget(QTableWidget):
 
     def minimizeheight(self, minimum: bool=True):
         """Set the vertical QSizePolicy to Minimum"""
-
-        self.minimum = minimum
 
         if minimum:
             self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)

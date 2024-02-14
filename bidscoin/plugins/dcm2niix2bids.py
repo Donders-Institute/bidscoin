@@ -313,8 +313,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
 
         # Convert physiological log files (dcm2niix can't handle these)
         if suffix == 'physio':
-            target  = (outfolder/bidsname).with_suffix('.tsv.gz')
-            command = f"physio.physio2tsv(physio.readphysio({sourcefile}), {target})"
+            target = (outfolder/bidsname).with_suffix('.tsv.gz')
             if bids.get_dicomfile(source, 2).name:                  # TODO: issue warning or support PAR
                 LOGGER.warning(f"Found > 1 DICOM file in {source}, using: {sourcefile}")
             try:
