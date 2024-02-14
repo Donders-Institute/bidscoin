@@ -2001,7 +2001,11 @@ def increment_runindex(outfolder: Path, bidsname: str, run: Run) -> str:
         # Rename run-less to run-1
         for runless_file in runless_files:
             LOGGER.verbose(f"Found run-2 files for <<>> index, renaming\n{runless_file} -> {run1_name}")
-            runless_file.replace((outfolder/run1_name).with_suffix(''.join(runless_file.suffixes)))
+            run1_file = (outfolder/run1_name).with_suffix(''.join(runless_file.suffixes))
+            runless_file.replace(run1_file)
+            if runless_file in targets:
+                targets.remove(runless_file)
+                targets.add(run1_file)
 
     return bidsname + bidsext
 
