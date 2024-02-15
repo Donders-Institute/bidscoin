@@ -294,7 +294,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                     addmetadata(bidssession, subid, sesid)
 
                     # Check / repair the run-indices using acq_time info in the scans_table
-                    bids.check_runindices(sesfolder)
+                    bids.check_runindices(bidssession)
 
                     # Clean-up the temporary unpacked data
                     if unpacked:

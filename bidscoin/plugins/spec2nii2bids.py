@@ -226,7 +226,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
         bidsignore = bids.check_ignore(datasource.datatype, bidsmap['Options']['bidscoin']['bidsignore'])
         bidsname   = bids.get_bidsname(subid, sesid, run, not bidsignore, runtime=True)
         bidsignore = bidsignore or bids.check_ignore(bidsname+'.json', bidsmap['Options']['bidscoin']['bidsignore'], 'file')
-        bidsname   = bids.increment_runindex(outfolder, bidsname, run)
+        bidsname   = bids.increment_runindex(outfolder, bidsname, run, scans_table)
         target     = (outfolder/bidsname).with_suffix('.nii.gz')
 
         # Check if the bidsname is valid

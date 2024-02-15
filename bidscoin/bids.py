@@ -1954,17 +1954,18 @@ def insert_bidskeyval(bidsfile: Union[str, Path], bidskey: str, newvalue: str, v
     return newbidsfile
 
 
-def increment_runindex(outfolder: Path, bidsname: str, run: Run, targets: set=()) -> str:
+def increment_runindex(outfolder: Path, bidsname: str, run: Run, scans_table: pd.DataFrame=None, targets: Set[Path]=()) -> str:
     """
     Checks if a file with the same bidsname already exists in the folder and then increments the dynamic runindex
     (if any) until no such file is found.
 
     NB: For <<>> runs, if the run-less file already exists, then add 'run-2' to bidsname and rename run-less files
-    and targets (optional) to 'run-1'
+    to 'run-1', and, optionally, do the same for entries in scans_table and targets (i.e. keep them in sync)
 
     :param outfolder:   The full pathname of the bids output folder
     :param bidsname:    The bidsname with a provisional runindex, e.g. from get_bidsname()
     :param run:         The run mapping with the BIDS key-value pairs
+    :param scans_table  The scans.tsv tabel that need to remain in sync when renaming a run-less file
     :param targets:     The set of output targets that need to remain in sync when renaming a run-less file
     :return:            The bidsname with the original or incremented runindex
     """
@@ -2007,6 +2008,10 @@ def increment_runindex(outfolder: Path, bidsname: str, run: Run, targets: set=()
             if runless_file in targets:
                 targets.remove(runless_file)
                 targets.add(run1_file)
+            run1_scan    = f"{run1_file.parent.name}/{run1_file.name}"          # NB: as POSIX
+            runless_scan = f"{runless_file.parent.name}/{runless_file.name}"    # NB: as POSIX
+            if scans_table is not None and runless_scan in scans_table.index:
+                scans_table.rename(index={runless_scan: run1_scan}, inplace=True)
 
     return bidsname + bidsext
 
@@ -2024,13 +2029,14 @@ def check_runindices(session: Path) -> bool:
     scans_tsv = next(session.glob('sub-*_scans.tsv'), None)
     if scans_tsv:
         scans_table = pd.read_csv(scans_tsv, sep='\t', index_col='filename')
-        if 'acq_time' in scans_table.columns:
+        for scan in scans_table.sort_index().index:
+
+            # Check if the scan exists
+            if not (session/scan).is_file():
+                LOGGER.warning(f"File in {scans_tsv.name} does not exist: {scan}")
 
             # Check all the run-2, run-3, etc scans against their preceding scan
-            for scan in scans_table.sort_index().index:
-
-                if not (session/scan).is_file():
-                    LOGGER.warning(f"File in {scans_tsv.name} does not exist: {scan}")
+            if 'acq_time' in scans_table.columns:
 
                 runindex = get_bidsvalue(scan, 'run')
                 if runindex and int(runindex) > 1:
@@ -2038,7 +2044,7 @@ def check_runindices(session: Path) -> bool:
 
                     # Check if the preceding index exists in the table
                     if prevscan not in scans_table.index:
-                        LOGGER.warning(f"Missing {prevscan} entry. Please check `{scans_tsv}`\n{scans_table}")
+                        LOGGER.warning(f"Missing {prevscan} entry. Please check `{scans_tsv}`")
                         return False
 
                     # Check if the preceding scan was indeed acquired at an earlier time point
@@ -2046,7 +2052,7 @@ def check_runindices(session: Path) -> bool:
                         acq_time = datetime.datetime.fromisoformat(scans_table.loc[scan, 'acq_time'])
                         acq_prev = datetime.datetime.fromisoformat(scans_table.loc[prevscan, 'acq_time'])
                         if (acq_time - acq_prev).total_seconds() <= 0:
-                            LOGGER.warning(f"Acquisition times do not increase with the run-indices. Please check `{scans_tsv}`\n{scans_table}")
+                            LOGGER.warning(f"Acquisition times do not increase with the run-indices. Please check `{scans_tsv}`")
                             return False
 
     return True
