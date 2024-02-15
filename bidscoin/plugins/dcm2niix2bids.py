@@ -481,16 +481,13 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                 (datasource.datatype == 'anat' and suffix == 'MP2RAGE')):
                 for ext in ('.bval', '.bvec'):
                     bfile = target.with_suffix('').with_suffix(ext)
-                    if bfile.is_file():
-                        bdata   = pd.read_csv(bfile, header=None)
-                        pattern = f"**/{datasource.datatype}/sub*{suffix}{ext}"
+                    if bfile.is_file() and not bids.check_ignore(bfile.name, bidsignore, 'file'):
+                        bdata = pd.read_csv(bfile, header=None)
                         if bdata.any(axis=None) and pattern not in bidsignore:
-                            LOGGER.warning(f"Found unexpected non-zero b-values in '{bfile}': Adding '{pattern}' -> .bidsignore")
-                            bidsignore.append(pattern)
-                        else:
-                            LOGGER.verbose(f"Removing BIDS-invalid b0-file: {bfile} -> {jsonfile}")
-                            metadata[ext[1:]] = bdata.values.tolist()
-                            bfile.unlink()
+                            LOGGER.warning(f"Found unexpected non-zero b-values in '{bfile}'")
+                        LOGGER.verbose(f"Removing BIDS-invalid b0-file: {bfile} -> {jsonfile}")
+                        metadata[ext[1:]] = bdata.values.tolist()
+                        bfile.unlink()
 
             # Save the meta-data to the json sidecar-file
             if metadata:
