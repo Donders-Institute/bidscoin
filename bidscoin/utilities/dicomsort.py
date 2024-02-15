@@ -117,7 +117,7 @@ def sortsession(sessionfolder: Path, dicomfiles: List[Path], folderscheme: str, 
                 return
             destination = sessionfolder/subfolder
             if not destination.is_dir():
-                LOGGER.info(f"   Creating:  {destination}")
+                LOGGER.verbose(f"   Creating:  {destination}")
                 if not dryrun:
                     destination.mkdir(parents=True)
 
