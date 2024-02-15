@@ -483,7 +483,7 @@ def bidscoiner_plugin(session: Path, bidsmap: Bidsmap, bidsses: Path) -> Union[N
                     bfile = target.with_suffix('').with_suffix(ext)
                     if bfile.is_file() and not bids.check_ignore(bfile.name, bidsignore, 'file'):
                         bdata = pd.read_csv(bfile, header=None)
-                        if bdata.any(axis=None) and pattern not in bidsignore:
+                        if bdata.any(axis=None):
                             LOGGER.warning(f"Found unexpected non-zero b-values in '{bfile}'")
                         LOGGER.verbose(f"Removing BIDS-invalid b0-file: {bfile} -> {jsonfile}")
                         metadata[ext[1:]] = bdata.values.tolist()
