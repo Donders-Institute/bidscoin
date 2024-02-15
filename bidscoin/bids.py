@@ -1965,7 +1965,7 @@ def increment_runindex(outfolder: Path, bidsname: str, run: Run, scans_table: pd
     :param outfolder:   The full pathname of the bids output folder
     :param bidsname:    The bidsname with a provisional runindex, e.g. from get_bidsname()
     :param run:         The run mapping with the BIDS key-value pairs
-    :param scans_table  The scans.tsv tabel that need to remain in sync when renaming a run-less file
+    :param scans_table  The scans.tsv table that need to remain in sync when renaming a run-less file
     :param targets:     The set of output targets that need to remain in sync when renaming a run-less file
     :return:            The bidsname with the original or incremented runindex
     """
