@@ -170,7 +170,7 @@ class DataSource:
         except re.error as patternerror:
             LOGGER.error(f"Cannot compile regular expression property pattern '{tagname}': {patternerror}")
 
-        except OSError as ioerror:
+        except (IOError, OSError) as ioerror:
             LOGGER.warning(f"{ioerror}")
 
         return ''
@@ -233,7 +233,7 @@ class DataSource:
         except re.error as patternerror:
             LOGGER.error(f"Cannot compile regular expression attribute pattern '{pattern}': {patternerror}")
 
-        except OSError as ioerror:
+        except (IOError, OSError) as ioerror:
             LOGGER.warning(f"{ioerror}")
 
         return attributeval
@@ -427,7 +427,7 @@ def is_parfile(file: Path) -> bool:
             return True
         elif file.is_file() and file.suffix.lower() == '.xml':
             return True
-    except (OSError, UnicodeDecodeError) as ioerror:
+    except (OSError, IOError, UnicodeDecodeError) as ioerror:
         pass
 
     return False
@@ -641,7 +641,7 @@ def get_dicomfield(tagname: str, dicomfile: Path) -> Union[str, int]:
                 if not value and value != 0 and 'Modality' not in dicomdata:
                     raise ValueError(f"Missing mandatory DICOM 'Modality' field in: {dicomfile}")
 
-            except OSError as ioerror:
+            except (IOError, OSError) as ioerror:
                 LOGGER.warning(f"Cannot read {tagname} from {dicomfile}\n{ioerror}")
                 value = ''
 
@@ -712,7 +712,7 @@ def get_twixfield(tagname: str, twixfile: Path, mraid: int=2) -> Union[str, int]
 
             value = iterget(hdr, tagname)
 
-        except OSError:
+        except (IOError, OSError):
             LOGGER.warning(f'Cannot read {tagname} from {twixfile}')
             value = ''
 
@@ -766,7 +766,7 @@ def get_parfield(tagname: str, parfile: Path) -> Union[str, int]:
                 pardict = _PARDICT_CACHE
             value = pardict[0].get(tagname, '')
 
-        except OSError:
+        except (IOError, OSError):
             LOGGER.warning(f'Cannot read {tagname} from {parfile}')
             value = ''
 
@@ -819,7 +819,7 @@ def get_sparfield(tagname: str, sparfile: Path) -> Union[str, int]:
         except ImportError:
             LOGGER.warning(f"The extra `spec2nii` library could not be found or was not installed (see the BIDScoin install instructions)")
 
-        except OSError:
+        except (IOError, OSError):
             LOGGER.warning(f"Cannot read {tagname} from {sparfile}")
 
         except Exception as sparerror:
@@ -873,7 +873,7 @@ def get_p7field(tagname: str, p7file: Path) -> Union[str, int]:
         except ImportError:
             LOGGER.warning(f"The extra `spec2nii` library could not be found or was not installed (see the BIDScoin install instructions)")
 
-        except OSError:
+        except (IOError, OSError):
             LOGGER.warning(f'Cannot read {tagname} from {p7file}')
 
         except Exception as p7error:

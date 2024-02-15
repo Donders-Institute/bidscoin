@@ -156,12 +156,19 @@ def trackusage(event: str, dryrun: bool=False) -> dict:
     # Check if we are not asleep
     trackfile = configfile.parent/'usage'/f"bidscoin_{data['userid']}"
     trackfile.parent.mkdir(parents=True, exist_ok=True)
-    with shelve.open(str(trackfile), 'c', writeback=True) as tracked:
-        now    = datetime.datetime.now()
-        before = tracked.get(event, now.replace(year=2000))
-        if (now - before).total_seconds() < tracking['sleep'] * 60 * 60:
-            return data
-        tracked[event] = now
+    try:
+        with shelve.open(str(trackfile), 'c', writeback=True) as tracked:
+            now    = datetime.datetime.now()
+            before = tracked.get(event, now.replace(year=2000))
+            if (now - before).total_seconds() < tracking['sleep'] * 60 * 60:
+                return data
+            tracked[event] = now
+
+    except Exception as shelveerror:
+        warnings.warn(f"Please report the following error to the developers:\n{shelveerror}", RuntimeWarning)
+        for corruptfile in trackfile.parent.glob(trackfile.stem + '.*'):
+            corruptfile.unlink()
+        data['event'] = 'trackusage_exception'
 
     # Upload the usage data
     try:

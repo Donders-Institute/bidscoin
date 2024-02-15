@@ -279,7 +279,7 @@ def install_plugins(filenames: List[str]=()) -> None:
         LOGGER.info(f"Installing: '{file}'")
         try:
             shutil.copyfile(file, targetfolder/file.name)
-        except IOError as install_failure:
+        except (IOError, OSError) as install_failure:
             LOGGER.error(f"{install_failure}\nFailed to install: '{file.name}' in '{targetfolder}'")
             continue
         if file.suffix == '.yaml':
@@ -338,7 +338,7 @@ def uninstall_plugins(filenames: List[str]=(), wipe: bool=True) -> None:
         sourcefolder = templatefolder if file.suffix == '.yaml' else pluginfolder
         try:
             (sourcefolder/file.name).unlink()
-        except IOError as uninstall_error:
+        except (IOError, OSError) as uninstall_error:
             LOGGER.error(f"{uninstall_error}\nFailed to uninstall: '{file.name}' from {sourcefolder}")
             continue
         if file.suffix == '.yaml':
@@ -531,7 +531,7 @@ def test_bidscoin(bidsmapfile: Union[Path,dict], options: dict=None, testplugins
             import drmaa
             with drmaa.Session() as s:
                 LOGGER.success(f"The {s.drmaaImplementation} library was successfully imported")
-        except (RuntimeError, OSError, FileNotFoundError, ModuleNotFoundError, ImportError) as drmaaerror:
+        except (RuntimeError, OSError, IOError, FileNotFoundError, ModuleNotFoundError, ImportError) as drmaaerror:
             LOGGER.warning(f"The DRMAA library could not be imported. This is OK if you want to run pydeface locally and not use the option to distribute jobs on a compute cluster\n{drmaaerror}")
     except ModuleNotFoundError:
         pass
