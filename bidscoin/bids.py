@@ -1090,7 +1090,7 @@ def validate_bidsmap(bidsmap: Bidsmap, level: int=1) -> bool:
     if valid:
         LOGGER.success('All generated bidsnames are BIDS-valid')
     else:
-        LOGGER.warning('Not all generated bidsnames are BIDS-valid')
+        LOGGER.warning('Not all generated bidsnames are BIDS-valid (make sure they are BIDS-ignored')
 
     return valid
 

@@ -46,13 +46,13 @@ def readparsefile(fn: Union[bytes,Path], logdatatype: str, firsttime: int=0, exp
     if isinstance(fn, bytes):                           # If fn is a bytestring, we read it directly from DICOM
         lines = fn.decode('UTF-8').splitlines()
     elif isinstance(fn, Path):                          # Otherwise, fn must be a filename
-        LOGGER.info(f"Reading physio log-file: {fn}")
+        LOGGER.verbose(f"Reading physio log-file: {fn}")
         lines = fn.read_text().splitlines()
     else:
         LOGGER.error(f"Wrong input {fn}: {type(fn)}"); raise FileNotFoundError(fn)
 
     # Extract the metadata and physiological traces
-    LOGGER.info(f"Parsing {logdatatype} data...")
+    LOGGER.verbose(f"Parsing {logdatatype} data...")
     for line in [line for line in lines if line]:
 
         # Strip any leading and trailing whitespace and comments
@@ -206,7 +206,7 @@ def readphysio(fn: Union[str,Path]) -> dict:
 
     # First, check if the input points to a valid DICOM file. If so, extract the physiological data
     if fn.is_file() and fn.name != 'DICOMDIR':
-        LOGGER.info(f"Reading physio DICOM file: {fn}")
+        LOGGER.verbose(f"Reading physio DICOM file: {fn}")
         dicomdata    = dcmread(fn, force=True)          # The DICM tag may be missing for anonymized DICOM files
         manufacturer = dicomdata.get('Manufacturer')
         physiotag    = tag.Tag(0x7fe1, 0x1010)          # A private Siemens tag
@@ -233,7 +233,7 @@ def readphysio(fn: Union[str,Path]) -> dict:
                 filenamelen = struct.unpack('<L', filedata[4:8])[0]
                 filename    = filedata[8:8+filenamelen].decode('UTF-8')
                 logdata     = filedata[1024:1024+datalen]
-                LOGGER.info(f"Decoded: {filename}")
+                LOGGER.verbose(f"Decoded: {filename}")
                 if filename.endswith('_Info.log'):
                     fnINFO    = logdata
                 elif filename.endswith('_ECG.log'):
@@ -316,14 +316,14 @@ def readphysio(fn: Union[str,Path]) -> dict:
         if UUID1 != UUID5:
             LOGGER.error('UUID mismatch between Info and EXT files'); raise ValueError(UUID5)
 
-    LOGGER.info(f"Slices in scan:      {nrslices}")
-    LOGGER.info(f"Volumes in scan:     {nrvolumes}")
-    LOGGER.info(f"Echoes per slc/vol:  {nrechoes}")
-    LOGGER.info(f"First timestamp:     {firsttime}")
-    LOGGER.info(f"Last timestamp:      {lasttime}")
-    LOGGER.info(f"Total scan duration: {actualsamples} ticks = {actualsamples / FREQ:.4f} s")
+    LOGGER.verbose(f"Slices in scan:      {nrslices}")
+    LOGGER.verbose(f"Volumes in scan:     {nrvolumes}")
+    LOGGER.verbose(f"Echoes per slc/vol:  {nrechoes}")
+    LOGGER.verbose(f"First timestamp:     {firsttime}")
+    LOGGER.verbose(f"Last timestamp:      {lasttime}")
+    LOGGER.verbose(f"Total scan duration: {actualsamples} ticks = {actualsamples / FREQ:.4f} s")
 
-    LOGGER.info('Formatting ACQ data...')
+    LOGGER.verbose('Formatting ACQ data...')
     ACQ = np.full((expectedsamples, 1), False)
     for v in range(nrvolumes):
         for s in range(nrslices):
@@ -373,7 +373,7 @@ def physio2tsv(physio: dict, tsvfile: Union[str, Path]):
     physiotable = pd.DataFrame(columns=[key for key in physio if key not in ('UUID','ScanDate','Freq','SliceMap','ACQ','Meta')])
     for key in physiotable.columns:
         physiotable[key] = physio[key]
-    LOGGER.info(f"Writing physiological traces to: '{tsvfile}'")
+    LOGGER.verbose(f"Writing physiological traces to: '{tsvfile}'")
     physiotable.to_csv(tsvfile, header=False, index=False, sep='\t', compression='infer')
 
     # Write a json side-car file
