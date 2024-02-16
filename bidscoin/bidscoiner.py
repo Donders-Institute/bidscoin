@@ -212,7 +212,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                 logfile = bidscoinfolder/f"{logfile_tmp.name}"
                 if logfile_tmp.suffix == '.tsv':
                     provdata_tmp = pd.read_csv(logfile_tmp, sep='\t', index_col='source')
-                    provdata.update(provdata_tmp)
+                    provdata     = pd.concat([provdata, provdata_tmp])
                 else:
                     logfile.write_text(f"{logfile.read_text()}\n{logfile_tmp.read_text()}")
                 if logfile_tmp.suffix == '.errors' and logfile_tmp.stat().st_size:
