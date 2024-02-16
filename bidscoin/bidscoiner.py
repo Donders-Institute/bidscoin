@@ -40,21 +40,20 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
     """
 
     # Input checking & defaults
-    rawfolder   = Path(rawfolder).resolve()
-    bidsfolder  = Path(bidsfolder).resolve()
-    bidsmapfile = Path(bidsmapfile)
+    rawfolder      = Path(rawfolder).resolve()
+    bidsfolder     = Path(bidsfolder).resolve()
+    bidsmapfile    = Path(bidsmapfile)
+    bidscoinfolder = bidsfolder/'code'/'bidscoin'
+    bidscoinfolder.mkdir(parents=True, exist_ok=True)
     if not rawfolder.is_dir():
         print(f"Rawfolder '{rawfolder}' not found")
         return
 
     # Start logging
-    bcoin.setup_logging(bidsfolder/'code'/'bidscoin'/'bidscoiner.log')
+    bcoin.setup_logging(bidscoinfolder/'bidscoiner.log')
     LOGGER.info('')
     LOGGER.info(f"-------------- START BIDScoiner {__version__}: BIDS {bidsversion()} ------------")
     LOGGER.info(f">>> bidscoiner sourcefolder={rawfolder} bidsfolder={bidsfolder} subjects={subjects} force={force} bidsmap={bidsmapfile}")
-
-    # Create a code/bidscoin subfolder
-    (bidsfolder/'code'/'bidscoin').mkdir(parents=True, exist_ok=True)
 
     # Create a dataset description file if it does not exist
     dataset_file = bidsfolder/'dataset_description.json'
@@ -97,7 +96,7 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                 f"For more information see: https://github.com/Donders-Institute/bidscoin\n")
 
     # Get the bidsmap heuristics from the bidsmap YAML-file
-    bidsmap, bidsmapfile = bids.load_bidsmap(bidsmapfile, bidsfolder/'code'/'bidscoin')
+    bidsmap, bidsmapfile = bids.load_bidsmap(bidsmapfile, bidscoinfolder)
     dataformats          = [dataformat for dataformat in bidsmap if dataformat and dataformat not in ('$schema','Options')]
     if not bidsmap:
         LOGGER.error(f"No bidsmap file found in {bidsfolder}. Please run the bidsmapper first and/or use the correct bidsfolder")
@@ -180,9 +179,10 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
             bcoin.synchronize(pbatch, jobids)
 
         # Merge the bids subfolders
-        errors = ''
+        errors                                = ''
+        provdata                              = bids.bidsprov(bidsfolder/'dummy', Path())
         participants_table, participants_dict = bids.addparticipant(bidsfolder/'participants.tsv')
-        for bidsfolder_tmp in (bidsfolder/'HPC_work').glob('bids_*'):
+        for bidsfolder_tmp in sorted((bidsfolder/'HPC_work').glob('bids_*')):
 
             subid = bidsfolder_tmp.name[5:]         # Uses name = f"bids_{subid}" (as defined above)
 
@@ -209,8 +209,12 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
             # Copy over the logfiles content
             for logfile_tmp in (bidsfolder_tmp/'code'/'bidscoin').glob('bidscoiner.*'):
-                logfile = bidsfolder/'code'/'bidscoin'/f"{logfile_tmp.name}"
-                logfile.write_text(f"{logfile.read_text()}\n{logfile_tmp.read_text()}")
+                logfile = bidscoinfolder/f"{logfile_tmp.name}"
+                if logfile_tmp.suffix == '.tsv':
+                    provdata_tmp = pd.read_csv(logfile_tmp, sep='\t', index_col='source')
+                    provdata.update(provdata_tmp)
+                else:
+                    logfile.write_text(f"{logfile.read_text()}\n{logfile_tmp.read_text()}")
                 if logfile_tmp.suffix == '.errors' and logfile_tmp.stat().st_size:
                     errors += f"{logfile_tmp.read_text()}\n"
 
@@ -221,7 +225,8 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                 participants_table                  = pd.concat([participants_table, participant_table])
                 participants_dict.update(participant_dict)
 
-        # Save the participants data to disk
+        # Save the provenance and participants data to disk
+        provdata.sort_index().to_csv(bidscoinfolder/'bidscoiner.tsv', sep='\t')
         participants_table.replace('', 'n/a').to_csv(bidsfolder/'participants.tsv', sep='\t', encoding='utf-8', na_rep='n/a')
         with (bidsfolder/'participants.json').open('w') as fid:
             json.dump(participants_dict, fid, indent=4)

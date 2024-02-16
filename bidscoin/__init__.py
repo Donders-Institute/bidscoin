@@ -64,8 +64,8 @@ pluginfolder = bidscoinroot/'plugins'
 DEBUG = os.getenv('BIDSCOIN_DEBUG','').upper() in ('1', 'TRUE', 'Y', 'YES')
 
 # Create a BIDScoin user configuration directory if needed and load the BIDScoin user settings
-configfile = Path(os.getenv('BIDSCOIN_CONFIG') or
-                  (Path.home() if os.access(Path.home(),os.W_OK) else Path(tempfile.gettempdir()))/'.bidscoin'/__version__/'config.toml')
+configfile = Path(os.getenv('BIDSCOIN_CONFIGDIR') or
+                  (Path.home() if os.access(Path.home(),os.W_OK) else Path(tempfile.gettempdir()))/'.bidscoin')/__version__/'config.toml'
 templatefolder = configfile.parent/'templates'
 templatefolder.mkdir(parents=True, exist_ok=True)
 if not configfile.is_file():

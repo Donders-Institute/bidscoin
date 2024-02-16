@@ -18,7 +18,7 @@
 - A `bidscoiner.tsv` log-file containing a concise overview of all input to output file conversions
 - Integrated fslmaths preprocessing on slicereport input images
 - BIDScoin duecredit reports
-- A new environment variable `BIDSCOIN_CONFIG=/writable/path/to/config.toml` for using a non-default config file
+- A new environment variable `BIDSCOIN_CONFIGDIR=/writable/path/to/configdir` for using alternative configurations
 
 ### Changed
 - `bidscoiner_plugin()` API: you can (should) return a personals dict (instead of writing it to `participants.tsv`)

@@ -2216,16 +2216,18 @@ def addparticipant(participants_tsv: Path, subid: str='', sesid: str='', data: d
     return table, meta
 
 
-def bidsprov(sesfolder: Path, source: Path, runid: str='', datatype: str='unknown', targets: Iterable[Path]=()) -> None:
+def bidsprov(sesfolder: Path, source: Path, runid: str='', datatype: str='unknown', targets: Iterable[Path]=()) -> pd.DataFrame:
     """
     Save data transformation information in the bids/code/bidscoin folder (in the future this may be done in accordance with BEP028)
 
-    :param sesfolder:   The bids session folder
+    You can use bidsprov(sesfolder, Path()) to return the provenance dataframe
+
+    :param sesfolder:   The bids subject/session folder
     :param source:      The source file or folder that is being converted
     :param runid:       The bidsmap runid that was used to map the source data, e.g. as returned from get_matching_run()
     :param datatype:    The BIDS datatype/name of the subfolder where the targets are saved (e.g. extra_data)
     :param targets:     The set of output files
-    :return:
+    :return:            The dataframe with the provenance data
     """
 
     # Check the input
@@ -2241,11 +2243,14 @@ def bidsprov(sesfolder: Path, source: Path, runid: str='', datatype: str='unknow
     else:
         provdata = pd.DataFrame(columns=['runid', 'datatype', 'targets'])
         provdata.index.name = 'source'
-    provdata.loc[str(source)] = [runid, datatype, ', '.join([f"{target.parts[1]+':' if target.parts[0]=='derivatives' else ''}{target.name}" for target in targets])]
 
     # Write the provenance data
-    LOGGER.debug(f"Writing provenance data to: {provfile}")
-    provdata.sort_index().to_csv(provfile, sep='\t')
+    if source.name:
+        LOGGER.debug(f"Writing provenance data to: {provfile}")
+        provdata.loc[str(source)] = [runid, datatype, ', '.join([f"{target.parts[1]+':' if target.parts[0]=='derivatives' else ''}{target.name}" for target in targets])]
+        provdata.sort_index().to_csv(provfile, sep='\t')
+
+    return provdata
 
 
 def get_propertieshelp(propertieskey: str) -> str:
