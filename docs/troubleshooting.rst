@@ -88,7 +88,7 @@ This may occur when you use a dynamic run-index (e.g. ``<<>>`` or ``<<1>>``) and
 
 I use dynamic run-indices and now have 'orphan' run-indices in my BIDS directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-BIDScoin automatically increments the run-index based on existing files in the same directory. In rare cases, this procedure can fail, leading to 'orphan' run-indices, e.g. a ``run-2`` file without an accompanying ``run-1`` file. Most likely this is caused by underspecified run-items in the bidsmap, for instance when you have a magnitude as well as a phase item, but you left the ``part`` entity empty (instead of specifying ``part-mag`` and ``part-phase``), i.e. you gave them the same output name (which BIDScoin then has to fix post-hoc). In some rare cases you cannot avoid this problem and then it is advised to use the more robust ``<<1>>`` index, instead of ``<<>>``
+BIDScoin automatically increments the run-index based on existing files in the same directory. In rare cases, this procedure can fail, leading to 'orphan' run-indices, e.g. a ``run-2`` file without an accompanying ``run-1`` file. Most likely this is caused by underspecified run-items in the bidsmap, for instance when you have a magnitude as well as a phase item, but you left the ``part`` entity empty (instead of specifying ``part-mag`` and ``part-phase``), i.e. you gave them the same output name (which BIDScoin then has to fix post-hoc). In rare cases you cannot avoid this problem and then it is advised to use the more robust ``<<1>>`` index, instead of ``<<>>``
 
 The data of some subjects need to be treated (mapped) differently
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
