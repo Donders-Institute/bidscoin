@@ -62,16 +62,6 @@ The `spec2nii2bids plugin <./plugins.html#spec2nii2bids>`__ is an optional bidsc
 - ``meta``: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as BIDS (sidecar) files, such as ``['.json', '.tsv', '.tsv.gz']``. You can use this to enrich json sidecar files or add data that is not supported by this plugin. NB: Data entered in the meta table of the bidseditor GUI always has priority over data in source json files, which itself has priority over dcm2niix-generated json data.
 - ``multiraid``: The mapVBVD argument for selecting the multiraid Twix file to load (default = 2, i.e. 2nd file)
 
-pet2bids - plugin
------------------
-
-The `pet2bids plugin <./plugins.html#pet2bids>`__ is an optional bidscoiner plugin for PET data that is still under development. It relies on `PET2BIDS <https://github.com/openneuropet/PET2BIDS>`__, for which you can set the following options:
-
-- ``command``: Command to run pet2bids, such as ``dcm2niix4pet`` (see the dcm2niix plugin for more examples to set the path)
-- ``args``: Reserved for future releases
-- ``anon``: Set this anonymization flag to 'y' to round off age and to discard acquisition date from the meta data
-- ``meta``: The file extensions of the associated / equally named (meta)data sourcefiles that are copied over as BIDS (sidecar) files, such as ``['.json', '.tsv', '.xls', '.xlsx']``. You can use this to enrich json sidecar files or add data that is not supported by this plugin. NB: Data entered in the meta table of the bidseditor GUI always has priority over data in source json files, which itself has priority over dcm2niix-generated json data.
-
 nibabel2bids - plugin
 ---------------------
 
