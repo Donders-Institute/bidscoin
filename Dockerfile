@@ -1,4 +1,4 @@
-FROM python:3-slim AS builder
+FROM python:3.10-slim AS builder
 
 # Make a dcm2niix build from the latest stable source code
 RUN apt update && apt -y install git build-essential cmake; \
