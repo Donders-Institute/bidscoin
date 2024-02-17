@@ -1,4 +1,4 @@
-FROM python:3-slim AS builder
+FROM python:3:10-slim AS builder
 
 # Make a dcm2niix build from the latest stable source code
 RUN apt update && apt -y install git build-essential cmake; \
@@ -10,7 +10,7 @@ RUN apt update && apt -y install git build-essential cmake; \
 # Or install the latest dcm2niix release from the base repository (= typically outdated)
 # RUN apt update && apt -y install dcm2niix
 
-FROM python:3-slim
+FROM python:3:10-slim
 
 # Install the dcm2niix build. NB: Obsolete with the new `pip install bidscoin[dcm2niix2bids]` extras option
 COPY --from=builder /usr/local/bin/dcm2niix /usr/local/bin/dcm2niix
