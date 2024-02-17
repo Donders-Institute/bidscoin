@@ -15,7 +15,7 @@ Stage: builder
 
 
 Bootstrap: docker
-From: python:3-slim
+From: python:3.11-slim
 Stage: final
 
 %help
