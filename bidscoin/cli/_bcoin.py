@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BIDScoin is a toolkit to convert raw data-sets according to the Brain Imaging Data Structure (BIDS)
+BIDScoin is a toolkit to convert raw data sets according to the Brain Imaging Data Structure (BIDS)
 
 The basic workflow is to run these two tools:
 
