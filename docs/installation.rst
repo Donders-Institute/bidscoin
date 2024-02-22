@@ -106,11 +106,11 @@ Download the Apptainer `definition file <https://github.com/Donders-Institute/bi
 
    $ sudo apptainer build bidscoin.sif apptainer.def
 
-Alternatively, you can first build a Docker image (see instructions in the section below), save it to e.g. `bidscoin.tar` and then convert it into a Apptainer image using:
+Alternatively, you can pull a BIDScoin Docker image and convert it into an Apptainer image using:
 
 .. code-block:: console
 
-   $ sudo apptainer build bidscoin.sif bidscoin.tar
+   $ sudo apptainer build bidscoin.sif docker://marcelzwiers/bidscoin:<version>
 
 Run BIDScoin tools in the container
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
