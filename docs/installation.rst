@@ -89,16 +89,13 @@ Using an Apptainer (Singularity) container
 
 An alternative for installing Python, BIDScoin and it's dependencies yourself is to execute BIDScoin commands using an `Apptainer <https://apptainer.org>`__ container. Executing BIDScoin commands via a container is less simple than running them directly on your host computer, read the `official documentation <https://apptainer.org/docs/user/latest>`__ for installation and usage instructions. NB: "Singularity" has been rebranded as "Apptainer", so Singularity users should replace ``apptainer`` for ``singularity`` in the commands given below.
 
-The Apptainer current image includes:
+The current Apptainer image includes:
 
-* Debian Linux (see https://hub.docker.com/_/python)
-* the latest version of `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__
-* the latest stable release of BIDScoin and its plugins
+* Debian stable,
+* The latest stable release (v4.3.0+qt5) of BIDScoin
+* The latest versions of dcm2niix, pydeface, spec2nii
 
-The current image does not include this (non-free) software needed for some bidsapps:
-
-* FSL (needed for ``deface`` and ``slicereport``)
-* FreeSurfer/synthstrip (needed for ``skullstrip``)
+This image does not include FreeSurfer/synthstrip (needed for ``skullstrip``)
 
 Building the container image
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -150,14 +147,11 @@ If the Apptainer container is not working for you, it is also possible to use a 
 
 The current Docker image includes the same as the Apptainer image:
 
-* Debian Linux (see https://hub.docker.com/_/python)
-* the latest version of `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`__
-* the latest stable release of BIDScoin and its plugins
+* Debian stable,
+* The latest stable release (v4.3.0+qt5) of BIDScoin
+* The latest versions of dcm2niix, pydeface, spec2nii
 
-Likewise, the current image does not include this (non-free) software needed for some bidsapps:
-
-* FSL (needed for ``deface`` and ``slicereport``)
-* FreeSurfer/synthstrip (needed for ``skullstrip``)
+Likewise, the current image does not include FreeSurfer/synthstrip (needed for ``skullstrip``)
 
 Building the container image
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

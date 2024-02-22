@@ -29,6 +29,7 @@ This document describes how to prepare a new BIDScoin release from within the DC
     sudo apptainer build bidscoin.sif apptainer.def
     xhost +
     apptainer exec --cleanenv --env DISPLAY=:0 bidscoin.sif bidscoin -t
+    apptainer exec --cleanenv --env DISPLAY=:0 bidscoin.sif pngappend
     apptainer cache clean
 
 DCCN deployment
@@ -63,6 +64,7 @@ Dockerhub
 
     sudo docker build -t marcelzwiers/bidscoin:$VERSION .
     sudo docker run --rm marcelzwiers/bidscoin:$VERSION bidscoin -v
+    sudo docker run --rm marcelzwiers/bidscoin:$VERSION pngappend
     sudo docker run --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix marcelzwiers/bidscoin:$VERSION bidscoin -t
     sudo docker push marcelzwiers/bidscoin:$VERSION
     sudo docker system prune -a
