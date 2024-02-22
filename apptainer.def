@@ -22,8 +22,8 @@ Stage: final
     This BIDScoin Apptainer image includes:
 
     * Debian stable,
-    * The latest stable release (v4.3.0+qt5) of BIDScoin
-    * The latest versions of dcm2niix, pydeface, spec2nii
+    * The latest stable release of BIDScoin (v4.3.0+qt5)
+    * The latest versions of dcm2niix, pydeface, spec2nii and some FSL tools
 
     The general form to run BIDScoin commands is:
 
@@ -65,7 +65,7 @@ Stage: final
     rm -rf /opt/miniconda3/miniconda.sh
     export PATH=/opt/miniconda3/bin:$PATH
 
-    # Install FSL tools
+    # Install FSL tools needed for (me)deface and slicereport
     conda config --set channel_priority strict      # Needed for pngappend, see: https://github.com/NeuroDesk/neurocontainers/pull/598
     conda install -c conda-forge -c https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/public/ fsl-libvis fsl-avwutils fsl-flirt
 
