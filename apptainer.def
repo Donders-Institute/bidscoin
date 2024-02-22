@@ -3,15 +3,36 @@ From: python:3.10-slim
 Stage: builder
 
 %post
+    apt update && apt -y install git build-essential cmake wget
+
     # Install the latest dcm2niix release from the base repository (= typically outdated)
     # apt update && apt -y install dcm2niix
 
     # Install the latest dcm2niix from sources
-    apt update && apt -y install git build-essential cmake
     git clone https://github.com/rordenlab/dcm2niix.git
     cd dcm2niix; mkdir build && cd build
     cmake -DZLIB_IMPLEMENTATION=Cloudflare -DUSE_JPEGLS=ON -DUSE_OPENJPEG=ON ..
     make install
+
+    # Install the latest miniconda (needed for FSL install)
+    mkdir -p /opt/miniconda3
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /opt/miniconda3/miniconda.sh
+    bash /opt/miniconda3/miniconda.sh -b -u -p /opt/miniconda3
+    export PATH=/opt/miniconda3/bin:$PATH
+    conda init bash
+    . /root/.bashrc
+
+    # Create a conda env and install FSL tools needed for (me)deface and slicereport. NB: Keep the version the same as the Docker base image
+    conda create -n fsl python=3.10
+    conda activate fsl
+    conda config --set channel_priority strict      # Needed for pngappend, see: https://github.com/NeuroDesk/neurocontainers/pull/598
+    conda install -c https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/public/ -c conda-forge fsl-libvis fsl-avwutils fsl-flirt
+
+    # Pack the fsl environment into fsl.tar.gz and unpack it in /opt/fsl
+    conda install -c conda-forge conda-pack
+    conda pack -n fsl
+    mkdir /opt/fsl && tar -xzf fsl.tar.gz -C /opt/fsl
+    /opt/fsl/bin/conda-unpack
 
 
 Bootstrap: docker
@@ -40,14 +61,15 @@ Stage: final
 %files from builder
     # Install dcm2niix. NB: Obsolete with the new `pip install bidscoin[dcm2niix2bids]` extras option
     /usr/local/bin/dcm2niix /usr/local/bin/dcm2niix
+    /opt/fsl /opt/fsl
 
 %environment
-    export PIP_NO_CACHE_DIR=off
-    export FSLDIR=/opt/miniconda3 FSLOUTPUTTYPE=NIFTI_GZ
-    export PATH=/opt/miniconda3/bin:$PATH
+    export FSLDIR=/opt/fsl FSLOUTPUTTYPE=NIFTI_GZ
+    export PATH=$PATH:/opt/fsl/bin
 
 %post
     # Install curl (sometimes needed by dcm2niix) and pigz (to speed up dcm2niix)
+    export PIP_NO_CACHE_DIR=off
     apt update && apt -y --no-install-recommends install pigz curl
 
     # Install the latest stable BIDScoin Qt5 release from Github (install the normal Qt6 branch from PyPi when using recent base images such as Ubuntu:22.04)
@@ -57,17 +79,6 @@ Stage: final
 
     # Uncomment the line below if you get errors like: ImportError: libQt5Core.so.5: cannot open shared object file: No such file or directory
     # strip --remove-section=.note.ABI-tag /usr/lib/x86_64-linux-gnu/libQt5Core.so.5
-
-    # Install the latest miniconda (needed for FSL install). NB: Keep the version the same as the Docker base image (currently Miniconda3-latest == py311)
-    mkdir -p /opt/miniconda3
-    curl https://repo.anaconda.com/miniconda/Miniconda3-py310_23.11.0-2-Linux-x86_64.sh --output /opt/miniconda3/miniconda.sh
-    bash /opt/miniconda3/miniconda.sh -b -u -p /opt/miniconda3
-    rm -rf /opt/miniconda3/miniconda.sh
-    export PATH=/opt/miniconda3/bin:$PATH
-
-    # Install FSL tools needed for (me)deface and slicereport
-    conda config --set channel_priority strict      # Needed for pngappend, see: https://github.com/NeuroDesk/neurocontainers/pull/598
-    conda install -c conda-forge -c https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/public/ fsl-libvis fsl-avwutils fsl-flirt
 
     # Finally, create the necessary links and cache to the most recent shared libraries (= best practise)
     ldconfig
