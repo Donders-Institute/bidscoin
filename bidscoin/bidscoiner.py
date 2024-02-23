@@ -186,6 +186,17 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
 
             subid = bidsfolder_tmp.name[5:]         # Uses name = f"bids_{subid}" (as defined above)
 
+            # Copy over the logfiles content
+            for logfile_tmp in (bidsfolder_tmp/'code'/'bidscoin').glob('bidscoiner.*'):
+                logfile = bidscoinfolder/f"{logfile_tmp.name}"
+                if logfile_tmp.suffix == '.tsv':
+                    provdata_tmp = pd.read_csv(logfile_tmp, sep='\t', index_col='source')
+                    provdata     = pd.concat([provdata, provdata_tmp])
+                else:
+                    logfile.write_text(f"{logfile.read_text()}\n{logfile_tmp.read_text()}")
+                if logfile_tmp.suffix == '.errors' and logfile_tmp.stat().st_size:
+                    errors += f"{logfile_tmp.read_text()}\n"
+
             # Check if data was produced or if it already exists (-> unpacked data)
             if not (bidsfolder_tmp/subid).is_dir():
                 LOGGER.info(f"No HPC data found for: {subid}")
@@ -206,17 +217,6 @@ def bidscoiner(rawfolder: str, bidsfolder: str, subjects: list=(), force: bool=F
                         (bidsfolder/'derivatives'/derivative.name).mkdir(parents=True, exist_ok=True)
                         LOGGER.verbose(f"Moving: {item} -> {bidsfolder}")
                         shutil.move(item, bidsfolder/item.relative_to(bidsfolder_tmp))
-
-            # Copy over the logfiles content
-            for logfile_tmp in (bidsfolder_tmp/'code'/'bidscoin').glob('bidscoiner.*'):
-                logfile = bidscoinfolder/f"{logfile_tmp.name}"
-                if logfile_tmp.suffix == '.tsv':
-                    provdata_tmp = pd.read_csv(logfile_tmp, sep='\t', index_col='source')
-                    provdata     = pd.concat([provdata, provdata_tmp])
-                else:
-                    logfile.write_text(f"{logfile.read_text()}\n{logfile_tmp.read_text()}")
-                if logfile_tmp.suffix == '.errors' and logfile_tmp.stat().st_size:
-                    errors += f"{logfile_tmp.read_text()}\n"
 
             # Update the participants table + dictionary
             if subid not in participants_table.index:
