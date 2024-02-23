@@ -15,16 +15,14 @@ RUN mkdir -p /opt/miniconda3; \
     bash /opt/miniconda3/miniconda.sh -b -u -p /opt/miniconda3; \
     export PATH=/opt/miniconda3/bin:$PATH; \
     conda init bash; \
+    conda config --set channel_priority strict; \
     . /root/.bashrc; \
     \
 # Create a conda env and install FSL tools needed for (me)deface and slicereport. NB: Keep the version the same as the Docker base image
     conda create -n fsl python=3.10; \
-    conda activate fsl; \
-    conda config --set channel_priority strict; \
-    conda install -c https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/public/ -c conda-forge fsl-libvis fsl-avwutils fsl-flirt; \
+    conda install -n fsl -c https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/public/ -c conda-forge fsl-libvis fsl-avwutils fsl-flirt; \
     \
 # Pack the fsl environment into fsl.tar.gz and unpack it in /opt/fsl \
-    conda deactivate; \
     conda install -c conda-forge conda-pack; \
     conda pack -n fsl; \
     mkdir /opt/fsl && tar -xzf fsl.tar.gz -C /opt/fsl; \
