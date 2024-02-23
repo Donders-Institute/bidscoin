@@ -913,8 +913,9 @@ def load_bidsmap(yamlfile: Path=Path(), folder: Path=templatefolder, plugins:Ite
         yamlfile = yamlfile.with_suffix('.yaml')    # Add a standard file-extension if needed
     if len(yamlfile.parents) == 1 and not yamlfile.is_file():
         yamlfile = folder/yamlfile                  # Get the full path to the bidsmap yaml-file
+    yamlfile = yamlfile.resolve()
     if not yamlfile.is_file():
-        LOGGER.verbose(f"No existing bidsmap file found: {yamlfile}")
+        LOGGER.info(f"No existing bidsmap file found: {yamlfile}")
         return Bidsmap({}), yamlfile
     bidsignorefile = folder.parents[1]/'.bidsignore'
 
