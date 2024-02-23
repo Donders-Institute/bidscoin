@@ -43,10 +43,10 @@ COPY --from=builder /usr/local/bin/dcm2niix /usr/local/bin/dcm2niix
 COPY --from=builder /opt/fsl /opt/fsl
 
 ENV FSLDIR=/opt/fsl FSLOUTPUTTYPE=NIFTI_GZ \
-    PATH=$PATH:/opt/fsl/bin
+    PATH=$PATH:/opt/fsl/bin \
+    PIP_NO_CACHE_DIR=off
 
 # First install pyqt5 as Debian package to solve dependencies issues occurring when installed with pip
 # Then install the latest stable BIDScoin release from the local qt5 branch (install the normal Qt6 branch from PyPi when using recent base images such as Ubuntu)
 RUN apt update && apt -y --no-install-recommends install pigz curl python3-pyqt5 && apt clean; \
-    export PIP_NO_CACHE_DIR=off; \
     pip install /opt/bidscoin[spec2nii2bids,deface]
