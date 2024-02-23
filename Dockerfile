@@ -26,12 +26,19 @@ RUN mkdir -p /opt/miniconda3; \
     conda install -c conda-forge conda-pack; \
     conda pack -n fsl; \
     mkdir /opt/fsl && tar -xzf fsl.tar.gz -C /opt/fsl; \
-    /opt/fsl/bin/conda-unpack
+    /opt/fsl/bin/conda-unpack; \
+    \
+# Clone bidscoin and switch to the qt5 branch \
+    git clone https://github.com/Donders-Institute/bidscoin.git /opt/bidscoin; \
+    cd /opt/bidscoin; \
+    git checkout v4.3.0+qt5; \
+    rm -rf docs tests .git
 
 
 FROM python:3.10-slim
 
 # Install the dcm2niix build. NB: Obsolete with the new `pip install bidscoin[dcm2niix2bids]` extras option
+COPY --from=builder /opt/bidscoin /opt/bidscoin
 COPY --from=builder /usr/local/bin/dcm2niix /usr/local/bin/dcm2niix
 COPY --from=builder /opt/fsl /opt/fsl
 
@@ -39,9 +46,7 @@ ENV FSLDIR=/opt/fsl FSLOUTPUTTYPE=NIFTI_GZ \
     PATH=$PATH:/opt/fsl/bin
 
 # First install pyqt5 as Debian package to solve dependencies issues occurring when installed with pip
-# Then install the latest stable BIDScoin Qt5 release from Github (install the normal Qt6 branch from PyPi when using recent base images such as Ubuntu:22.04)
-# Then install the latest miniconda (needed for FSL install) + FSL tools. NB: Keep the version the same as the Docker base image (currently Miniconda3-latest == py311)
-# (see: https://github.com/NeuroDesk/neurocontainers/pull/598)
-RUN apt update && apt -y --no-install-recommends install pigz curl python3-pyqt5 python3-pyqt5.qtx11extras git && apt clean; \
+# Then install the latest stable BIDScoin release from the local qt5 branch (install the normal Qt6 branch from PyPi when using recent base images such as Ubuntu)
+RUN apt update && apt -y --no-install-recommends install pigz curl python3-pyqt5 && apt clean; \
     export PIP_NO_CACHE_DIR=off; \
-    pip install bidscoin[spec2nii2bids,deface]@git+https://github.com/Donders-Institute/bidscoin@v4.3.0+qt5; \
+    pip install /opt/bidscoin[spec2nii2bids,deface]

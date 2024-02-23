@@ -33,6 +33,12 @@ Stage: builder
     mkdir /opt/fsl && tar -xzf fsl.tar.gz -C /opt/fsl
     /opt/fsl/bin/conda-unpack
 
+    # Clone bidscoin and switch to the qt5 branch
+    git clone https://github.com/Donders-Institute/bidscoin.git /opt/bidscoin
+    cd /opt/bidscoin
+    git checkout v4.3.0+qt5
+    rm -rf docs tests .git
+
 
 Bootstrap: docker
 From: python:3.10-slim
@@ -58,7 +64,7 @@ Stage: final
         3) The current image does not include the Freesurfer/synthstrip software (needed for `skullstrip`)
 
 %files from builder
-    # Install dcm2niix. NB: Obsolete with the new `pip install bidscoin[dcm2niix2bids]` extras option
+    /opt/bidscoin /opt/bidscoin
     /usr/local/bin/dcm2niix /usr/local/bin/dcm2niix
     /opt/fsl /opt/fsl
 
@@ -68,13 +74,13 @@ Stage: final
 
 %post
     # Install curl (sometimes needed by dcm2niix) and pigz (to speed up dcm2niix)
-    export PIP_NO_CACHE_DIR=off
     apt update && apt -y --no-install-recommends install pigz curl
 
-    # Install the latest stable BIDScoin Qt5 release from Github (install the normal Qt6 branch from PyPi when using recent base images such as Ubuntu:22.04)
+    # Install the latest stable BIDScoin release from the local qt5 branch (install the normal Qt6 branch from PyPi when using recent base images such as Ubuntu)
     # NOTE: PyQt5 is installed as Debian package to solve dependencies issues occurring when installed with pip
-    apt -y --no-install-recommends install python3-pyqt5 python3-pyqt5.qtx11extras git && apt clean     # Add build-essential for newer python:3-slim base images (pip needs gcc)
-    pip install bidscoin[spec2nii2bids,deface]@git+https://github.com/Donders-Institute/bidscoin@v4.3.0+qt5
+    apt -y --no-install-recommends install python3-pyqt5 && apt clean     # Add build-essential for newer python:3-slim base images (pip needs gcc)
+    export PIP_NO_CACHE_DIR=off
+    pip install /opt/bidscoin[spec2nii2bids,deface]
 
     # Uncomment the line below if you get errors like: ImportError: libQt5Core.so.5: cannot open shared object file: No such file or directory
     # strip --remove-section=.note.ABI-tag /usr/lib/x86_64-linux-gnu/libQt5Core.so.5
