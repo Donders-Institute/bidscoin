@@ -1461,7 +1461,7 @@ def get_run(bidsmap: Bidsmap, datatype: str, suffix_idx: Union[int, str], dataso
                 metavalue = copy.copy(metavalue)
                 if metakey == 'IntendedFor':
                     run_['meta'][metakey] = metavalue
-                elif metakey in ('B0FieldSource', 'B0FieldIdentifier') and '<<session>>' in (metavalue or ''):
+                elif metakey in ('B0FieldSource', 'B0FieldIdentifier') and '<<session>>' in str(metavalue):
                     run_['meta'][metakey] = metavalue
                 else:
                     run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False)
@@ -1769,7 +1769,7 @@ def get_matching_run(datasource: DataSource, bidsmap: Bidsmap, runtime=False) ->
                 # Replace the dynamic meta values, except the IntendedFor value (e.g. <<task>>)
                 if metakey == 'IntendedFor':
                     run_['meta'][metakey] = metavalue
-                elif metakey in ('B0FieldSource', 'B0FieldIdentifier') and '<<session>>' in (metavalue or ''):
+                elif metakey in ('B0FieldSource', 'B0FieldIdentifier') and '<<session>>' in str(metavalue):
                     run_['meta'][metakey] = metavalue
                 else:
                     run_['meta'][metakey] = datasource.dynamicvalue(metavalue, cleanup=False, runtime=runtime)
@@ -2111,7 +2111,7 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, ext
 
     # Add all the metadata to the metadict. NB: the dynamic `IntendedFor` value is handled separately later
     for metakey, metaval in usermeta.items():
-        if metakey != 'IntendedFor' and not (metakey in ('B0FieldSource', 'B0FieldIdentifier') and '<<session>>' in (metaval or '')):
+        if metakey != 'IntendedFor' and not (metakey in ('B0FieldSource', 'B0FieldIdentifier') and '<<session>>' in str(metaval)):
             metaval = datasource.dynamicvalue(metaval, cleanup=False, runtime=True)
             try:
                 metaval = ast.literal_eval(str(metaval))  # E.g. convert stringified list or int back to list or int
@@ -2124,14 +2124,19 @@ def updatemetadata(datasource: DataSource, targetmeta: Path, usermeta: Meta, ext
         metapool[metakey] = metaval or None
 
     # Update B0FieldIdentifiers / Sources
-    if '<<session>>' in (metapool.get('B0FieldSource') or ''):
-        metapool['B0FieldSource']     = metapool['B0FieldSource'].replace('<<session>>', get_bidsvalue(targetmeta, 'ses'))
-    if '<<session>>' in (metapool.get('B0FieldIdentifier') or ''):
-        metapool['B0FieldIdentifier'] = metapool['B0FieldIdentifier'].replace('<<session>>', get_bidsvalue(targetmeta, 'ses'))
+    for key in ('B0FieldSource', 'B0FieldIdentifier'):
 
-    # Remove unused (but added from the template) B0FieldIdentifiers / Sources
-    if not metapool.get('B0FieldSource'):     metapool.pop('B0FieldSource', None)
-    if not metapool.get('B0FieldIdentifier'): metapool.pop('B0FieldIdentifier', None)
+        # Replace <<session>> with the actual session label
+        if '<<session>>' in str(metapool.get(key)):
+            ses = get_bidsvalue(targetmeta, 'ses')
+            if isinstance(metapool[key], str):
+                metapool[key] = metapool[key].replace('<<session>>', ses)
+            elif isinstance(metapool[key], list):
+                metapool[key] = [item.replace('<<session>>', ses) for item in metapool[key]]
+
+        # Remove unused (but added from the template) B0FieldIdentifiers / Sources
+        if not metapool.get(key):
+            metapool.pop(key, None)
 
     return Meta(metapool)
 
