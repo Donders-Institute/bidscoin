@@ -90,8 +90,11 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
     # Create a workdir and the shell command
     workdir  = montage.parent/next(tempfile._get_candidate_names())
     workdir.mkdir()
-    inputdim = nib.load(inputimage).header['dim'][0]
-    mathsimg = f"fslmaths {inputimage} {operations} mathsimg\n" if not (inputdim==3 and operations.strip()=='-Tmean') else ''
+    inputimg = nib.load(inputimage)
+    if '.nii' not in inputimage.suffixes:           # Convert the image to NIfTI
+        inputimage = workdir/inputimage.name
+        nib.save(inputimg, inputimage)
+    mathsimg = f"fslmaths {inputimage} {operations} mathsimg\n" if not (inputimg.header['dim'][0]==3 and operations.strip()=='-Tmean') else ''
     command  = f"cd {workdir}\n" \
                f"{mathsimg}" \
                f"slicer {'mathsimg' if mathsimg else inputimage} {outlineimage} {mainopts} {outputopts}\n" \
@@ -220,9 +223,9 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                         tsv_writer = csv.writer(fid, delimiter='\t')
                         tsv_writer.writerow([str(session.relative_to(bidsdir))] + len(qccols) * ['n/a'])
 
-                # Search for the image(s) to report
+                # Search for the (nibabel supported) image(s) to report
                 LOGGER.info(f"Processing images in: {session.relative_to(bidsdir)}")
-                images = sorted([match for match in session.glob(pattern) if '.nii' in match.suffixes])
+                images = sorted([match for match in session.glob(pattern) if match.suffixes[0] in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes),())])
                 if not images:
                     LOGGER.warning(f"Could not find images using: {session.relative_to(bidsdir)}/{pattern}")
                     continue
