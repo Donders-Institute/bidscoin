@@ -94,7 +94,7 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
     if '.nii' not in inputimage.suffixes:           # Convert the image to NIfTI
         inputimage = workdir/inputimage.with_suffix('').with_suffix('.nii').name
         nib.save(inputimg, inputimage)
-    mathsimg = f"fslmaths {inputimage} {operations} mathsimg\n" if not (inputimg.header['dim'][0]==3 and operations.strip()=='-Tmean') else ''
+    mathsimg = f"fslmaths {inputimage} {operations} mathsimg\n" if not (len(inputimg.shape)==3 and operations.strip()=='-Tmean') else ''
     command  = f"cd {workdir}\n" \
                f"{mathsimg}" \
                f"slicer {'mathsimg' if mathsimg else inputimage} {outlineimage} {mainopts} {outputopts}\n" \
