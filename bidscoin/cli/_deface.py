@@ -1,5 +1,6 @@
 """
-A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface).
+A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface). Pydeface
+requires an existing installation of FSL flirt
 
 Except for BIDS inheritances and IntendedFor usage, this wrapper is BIDS-aware (a 'bidsapp')
 and writes BIDS compliant output

@@ -1,7 +1,7 @@
 """
 A wrapper around the 'pydeface' defacing tool (https://github.com/poldracklab/pydeface) that
 computes a defacing mask on a (temporary) echo-combined image and then applies it to each
-individual echo-image.
+individual echo-image. Pydeface requires an existing installation of FSL flirt
 
 Except for BIDS inheritances and IntendedFor usage, this wrapper is BIDS-aware (a 'bidsapp')
 and writes BIDS compliant output

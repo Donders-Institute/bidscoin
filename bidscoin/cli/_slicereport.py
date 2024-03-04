@@ -1,12 +1,13 @@
 """
-A wrapper around the 'slicer' imaging tool (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Miscvis)
-to generate a web page with a row of image slices for each subject in the BIDS repository, as
-well as individual sub-pages displaying more detailed information. The input images are
-selectable using wildcards, and the output images are configurable via various user options,
-allowing you to quickly create a custom 'slicer' report to do visual quality control on any
-3D/4D imagetype in your repository.
+A wrapper around the 'fslmaths' (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Fslutils) and 'slicer'
+imaging tools (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Miscvis) to generate a web page with a
+row of image slices for each subject in the BIDS repository, as well as individual sub-pages
+displaying more detailed information. The input images are selectable using wildcards (all
+nibabel image formats are supported), and the output images are configurable via various user
+options, allowing you to quickly create a custom 'slicer' report to do visual quality control
+on any 3D/4D imagetype in your repository.
 
-Requires an existing installation of FSL
+Requires an existing installation of FSL tools (i.e. fsl-libvis, fsl-avwutils and fsl-flirt)
 
 Set the environment variable BIDSCOIN_DEBUG=TRUE to save intermediate data
 """
