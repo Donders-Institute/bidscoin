@@ -91,9 +91,13 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
     workdir  = montage.parent/next(tempfile._get_candidate_names())
     workdir.mkdir()
     inputimg = nib.load(inputimage)
-    if '.nii' not in inputimage.suffixes:           # Convert the image to NIfTI
+    if '.nii' not in inputimage.suffixes:           # Convert the input image to NIfTI
         inputimage = workdir/inputimage.with_suffix('').with_suffix('.nii').name
         nib.save(inputimg, inputimage)
+    if '.nii' not in outlineimage.suffixes:         # Convert the outline image to NIfTI
+        outlineimg   = nib.load(outlineimage)
+        outlineimage = workdir/outlineimage.with_suffix('').with_suffix('.nii').name
+        nib.save(outlineimg, outlineimage)
     mathsimg = f"fslmaths {inputimage} {operations} mathsimg\n" if not (len(inputimg.header.get_data_shape())==3 and operations.strip()=='-Tmean') else ''
     command  = f"cd {workdir}\n" \
                f"{mathsimg}" \
@@ -179,7 +183,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     outputs, sliceroutput       = parse_outputs(outputs, 'OUTPUTS')
     suboptions                  = parse_options(suboptions)
     suboutputs, subsliceroutput = parse_outputs(suboutputs, 'SUBOUTPUTS')
-    nib_ext                     = set(sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes),()))
+    valid_exts                  = set(sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes),()))
 
     # Get the list of subjects
     if not subjects:
@@ -227,14 +231,14 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
 
                 # Search for the (nibabel supported) image(s) to report
                 LOGGER.info(f"Processing images in: {session.relative_to(bidsdir)}")
-                images = sorted([match for match in session.glob(pattern) if match.suffixes[0] in nib_ext])
+                images = sorted([match for match in session.glob(pattern) if match.suffixes[0] in valid_exts])
                 if not images:
                     LOGGER.warning(f"Could not find images using: {session.relative_to(bidsdir)}/{pattern}")
                     continue
                 outlineimages = [''] * len(images)
                 if outlinepattern:
                     outlinesession = outlinedir/session.relative_to(bidsdir)
-                    outlineimages  = sorted([match.with_suffix('').with_suffix('') for match in outlinesession.glob(outlinepattern) if match.suffixes[0] in nib_ext])
+                    outlineimages  = sorted([match.with_suffix('').with_suffix('') for match in outlinesession.glob(outlinepattern) if match.suffixes[0] in valid_exts])
                     if len(outlineimages) != len(images):
                         LOGGER.error(f"Nr of outline images ({len(outlineimages)}) in {outlinesession} should be the same as the number of underlying images ({len(images)})")
                         outlineimages = [''] * len(images)
