@@ -84,7 +84,7 @@ def parse_outputs(outputargs: list, name: str) -> tuple:
     return outputs, slices
 
 
-def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopts: str, outputopts: str, sliceroutput: str, montage: Path, cluster: str):
+def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopts: str, outputopts: str, sliceroutput: str, montage: Path, cluster: str, mem: str):
     """Run fslmaths, slicer and pngappend (locally or on the cluster) to create a montage of the sliced images"""
 
     # Create a workdir and the shell command
@@ -103,7 +103,7 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
                + (f"rm -r {workdir}" if not DEBUG else '')
 
     # Wrap the shell command with a cluster submit command
-    mem     = '8' if inputimage.stat().st_size > 50 * 1024**2 else '1'  # Ask for more resources if we have a large (e.g. 4D) input image
+    mem = mem or ('10' if inputimage.stat().st_size > 50 * 1024**2 else '2')  # Ask for more resources if we have a large (e.g. > 50 MB / 4D) input image
     outpath = workdir if DEBUG else tempfile.gettempdir()
     if cluster == 'torque':
         command = f"qsub -l walltime=0:02:00,mem={mem}gb -N slicereport -j oe -o {outpath} << EOF\n#!/bin/bash\n{command}\nEOF"
@@ -122,7 +122,7 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
         sys.exit(process.returncode)
 
 
-def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: str, subjects: list, reportdir: str, crossdirs: str, qccols: list, cluster: str, operations: str, suboperations: str, options: list, outputs: list, suboptions: list, suboutputs: list):
+def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: str, subjects: list, reportdir: str, crossdirs: str, qccols: list, cluster: str, mem: str, operations: str, suboperations: str, options: list, outputs: list, suboptions: list, suboutputs: list):
     """
     :param bidsdir:         The bids-directory with the subject data
     :param pattern:         Globlike search pattern to select the images in bidsdir to be reported, e.g. 'anat/*_T1w*'
@@ -133,6 +133,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     :param crossdirs:       A (list of) folder(s) with cross-linked sub-reports
     :param qccols:          Column names for creating an accompanying tsv-file to store QC-rating scores
     :param cluster:         Use `torque` or `slurm` to submit the slicer jobs to a high-performance compute (HPC) cluster. Leave empty to run slicer on your local computer
+    :param mem:             The amount of requested memory in GB for the cluster jobs
     :param operations:      The fslmath operations performed on the input image: fslmaths inputimage OPERATIONS reportimage
     :param suboperations:   The fslmath operations performed on the input image: fslmaths inputimage SUBOPERATIONS subreportimage
     :param options:         Slicer main options
@@ -178,6 +179,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
     outputs, sliceroutput       = parse_outputs(outputs, 'OUTPUTS')
     suboptions                  = parse_options(suboptions)
     suboutputs, subsliceroutput = parse_outputs(suboutputs, 'SUBOUTPUTS')
+    nib_ext                     = set(sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes),()))
 
     # Get the list of subjects
     if not subjects:
@@ -225,16 +227,16 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
 
                 # Search for the (nibabel supported) image(s) to report
                 LOGGER.info(f"Processing images in: {session.relative_to(bidsdir)}")
-                images = sorted([match for match in session.glob(pattern) if match.suffixes[0] in sum((klass.valid_exts for klass in nib.imageclasses.all_image_classes),())])
+                images = sorted([match for match in session.glob(pattern) if match.suffixes[0] in nib_ext])
                 if not images:
                     LOGGER.warning(f"Could not find images using: {session.relative_to(bidsdir)}/{pattern}")
                     continue
                 outlineimages = [''] * len(images)
                 if outlinepattern:
                     outlinesession = outlinedir/session.relative_to(bidsdir)
-                    outlineimages  = sorted([match.with_suffix('').with_suffix('') for match in outlinesession.glob(outlinepattern) if '.nii' in match.suffixes])
+                    outlineimages  = sorted([match.with_suffix('').with_suffix('') for match in outlinesession.glob(outlinepattern) if match.suffixes[0] in nib_ext])
                     if len(outlineimages) != len(images):
-                        LOGGER.error(f"Nr of outline images ({len(outlineimages)}) in {outlinesession.relative_to(bidsdir)} should be the same as the number of underlying images ({len(images)})")
+                        LOGGER.error(f"Nr of outline images ({len(outlineimages)}) in {outlinesession} should be the same as the number of underlying images ({len(images)})")
                         outlineimages = [''] * len(images)
 
                 # Generate a report row and a sub-report for each session
@@ -245,7 +247,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                     # Generate the sliced image montage
                     outline = outlineimages[n] if outlinepattern else outlineimage
                     montage = reportses/image.with_suffix('').with_suffix('.png').name
-                    slicer_append(image, operations, outline, options, outputs, sliceroutput, montage, cluster)
+                    slicer_append(image, operations, outline, options, outputs, sliceroutput, montage, cluster, mem)
 
                     # Add the montage as a (sub-report linked) row to the report
                     caption   = f"{image.relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(outline.relative_to(outlinesession))+' )' if outlinepattern and outline else ''}"
@@ -256,7 +258,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                     # Add the sub-report
                     if suboutputs:
                         montage = subreport.with_suffix('.png')
-                        slicer_append(image, suboperations, outline, suboptions, suboutputs, subsliceroutput, montage, cluster)
+                        slicer_append(image, suboperations, outline, suboptions, suboutputs, subsliceroutput, montage, cluster, mem)
                     crossreports = ''
                     for crossdir in crossdirs:          # Include niprep reports
                         for crossreport in sorted(Path(crossdir).glob(f"{subject.name.split('_')[0]}*.html")) + sorted((Path(crossdir)/session.relative_to(bidsdir)).glob('*.html')):
@@ -318,6 +320,7 @@ def main():
                     crossdirs      = args.xlinkfolder,
                     qccols         = args.qcscores,
                     cluster        = args.cluster,
+                    mem            = args.mem,
                     operations     = args.operations,
                     suboperations  = args.suboperations,
                     options        = args.options,
