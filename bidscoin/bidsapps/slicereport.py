@@ -93,12 +93,12 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
     inputimg = nib.load(inputimage)
     reorient = ''
     if '.nii' not in inputimage.suffixes:           # Convert the input image to NIfTI
-        inputimage = workdir/inputimage.with_suffix('').with_suffix('.nii.gz').name
+        inputimage = workdir/inputimage.name
         reorient  += f"fslreorient2std {inputimage} {inputimage}\n"
         nib.save(inputimg, inputimage)
     if '.nii' not in outlineimage.suffixes:         # Convert the outline image to NIfTI
         outlineimg   = nib.load(outlineimage)
-        outlineimage = workdir/outlineimage.with_suffix('').with_suffix('.nii.gz').name
+        outlineimage = workdir/outlineimage.name
         reorient    += f"fslreorient2std {outlineimage} {outlineimage}\n"
         nib.save(outlineimg, outlineimage)
     mathsimg = f"fslmaths {inputimage} {operations} mathsimg\n" if not (len(inputimg.header.get_data_shape())==3 and operations.strip()=='-Tmean') else ''
@@ -253,12 +253,12 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 for n, image in enumerate(images):
 
                     # Generate the sliced image montage
-                    outline = outlineimages[n] if outlinepattern else outlineimage
+                    outline = Path(outlineimages[n] if outlinepattern else outlineimage)
                     montage = reportses/image.with_suffix('').with_suffix('.png').name
                     slicer_append(image, operations, outline, options, outputs, sliceroutput, montage, cluster, mem)
 
                     # Add the montage as a (sub-report linked) row to the report
-                    caption   = f"{image.relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(outline.relative_to(outlinesession))+' )' if outlinepattern and outline else ''}"
+                    caption   = f"{image.relative_to(bidsdir)}{'&nbsp;&nbsp;&nbsp;( ../'+str(outline.relative_to(outlinesession))+' )' if outlinepattern and outline.name else ''}"
                     subreport = reportses/f"{bids.insert_bidskeyval(image, 'desc', 'subreport', False).with_suffix('').stem}.html"
                     with report.open('a') as fid:
                         fid.write(f'\n<p><a href="{subreport.relative_to(reportdir).as_posix()}"><img src="{montage.relative_to(reportdir).as_posix()}"><br>\n{caption}</a></p>\n')
