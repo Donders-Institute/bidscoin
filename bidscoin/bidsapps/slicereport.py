@@ -105,7 +105,7 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
     command  = f"cd {workdir}\n" \
                f"{reorient}" \
                f"{mathsimg}" \
-               f"slicer {'mathsimg' if mathsimg else inputimage} {outlineimage} {mainopts} {outputopts}\n" \
+               f"slicer {'mathsimg' if mathsimg else inputimage} {outlineimage if outlineimage.name else ''} {mainopts} {outputopts}\n" \
                f"pngappend {sliceroutput} {montage.name}\n" \
                f"mv {montage.name} {montage.parent}\n" \
                + (f"rm -r {workdir}" if not DEBUG else '')
