@@ -22,7 +22,7 @@ def get_parser():
     epilogue = """
 OPTIONS:
   L                  : Label slices with slice number.
-  l [LUT]            : Use a different colour map from that specified in the header.
+  l [LUT]            : Use a different colour map from that specified in the header (see $FSLDIR/etc/luts)
   i [MIN] [MAX]      : Specify intensity min and max for display range.
   e [THR]            : Use the specified threshold for edges (if > 0 use this proportion of max-min,
                        if < 0, use the absolute value)

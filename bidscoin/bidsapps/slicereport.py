@@ -238,7 +238,7 @@ def slicereport(bidsdir: str, pattern: str, outlinepattern: str, outlineimage: s
                 outlineimages = [''] * len(images)
                 if outlinepattern:
                     outlinesession = outlinedir/session.relative_to(bidsdir)
-                    outlineimages  = sorted([match.with_suffix('').with_suffix('') for match in outlinesession.glob(outlinepattern) if match.suffixes[0] in valid_exts])
+                    outlineimages  = sorted([match for match in outlinesession.glob(outlinepattern) if match.suffixes[0] in valid_exts])
                     if len(outlineimages) != len(images):
                         LOGGER.error(f"Nr of outline images ({len(outlineimages)}) in {outlinesession} should be the same as the number of underlying images ({len(images)})")
                         outlineimages = [''] * len(images)
