@@ -91,15 +91,19 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
     workdir  = montage.parent/next(tempfile._get_candidate_names())
     workdir.mkdir()
     inputimg = nib.load(inputimage)
+    reorient = ''
     if '.nii' not in inputimage.suffixes:           # Convert the input image to NIfTI
         inputimage = workdir/inputimage.with_suffix('').with_suffix('.nii').name
+        reorient  += f"fslreorient2std {inputimage}\n"
         nib.save(inputimg, inputimage)
     if '.nii' not in outlineimage.suffixes:         # Convert the outline image to NIfTI
         outlineimg   = nib.load(outlineimage)
         outlineimage = workdir/outlineimage.with_suffix('').with_suffix('.nii').name
+        reorient    += f"fslreorient2std {outlineimage}\n"
         nib.save(outlineimg, outlineimage)
     mathsimg = f"fslmaths {inputimage} {operations} mathsimg\n" if not (len(inputimg.header.get_data_shape())==3 and operations.strip()=='-Tmean') else ''
     command  = f"cd {workdir}\n" \
+               f"{reorient}" \
                f"{mathsimg}" \
                f"slicer {'mathsimg' if mathsimg else inputimage} {outlineimage} {mainopts} {outputopts}\n" \
                f"pngappend {sliceroutput} {montage.name}\n" \
