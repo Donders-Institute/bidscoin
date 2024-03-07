@@ -92,11 +92,11 @@ def slicer_append(inputimage: Path, operations: str, outlineimage: Path, mainopt
     workdir.mkdir()
     inputimg = nib.load(inputimage)
     reorient = ''
-    if '.nii' not in inputimage.suffixes:           # Convert the input image to NIfTI
+    if '.nii' not in inputimage.suffixes:                               # Convert the input image to NIfTI
         inputimage = workdir/inputimage.name
         reorient  += f"fslreorient2std {inputimage} {inputimage}\n"
         nib.save(inputimg, inputimage)
-    if '.nii' not in outlineimage.suffixes:         # Convert the outline image to NIfTI
+    if outlineimage.name and '.nii' not in outlineimage.suffixes:       # Convert the outline image to NIfTI
         outlineimg   = nib.load(outlineimage)
         outlineimage = workdir/outlineimage.name
         reorient    += f"fslreorient2std {outlineimage} {outlineimage}\n"
